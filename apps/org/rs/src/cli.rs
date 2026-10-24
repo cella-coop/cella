@@ -16,7 +16,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// What a commit must pass: feat check, fixture check, types, cargo check and clippy
+    /// What a commit must pass: feat check, fixture check, types, svelte-check, cargo check and clippy
     Check {
         /// Run one part alone
         part: Option<Part>,
@@ -55,6 +55,16 @@ pub enum Command {
         url: Option<String>,
     },
 
+    /// The shell's dev server on the dev database, signing as a fixture member; starts the cluster if needed
+    Serve {
+        /// The port it listens on, on localhost
+        #[arg(long, default_value_t = 5173)]
+        port: u16,
+    },
+
+    /// Build the shell for production into apps/org/ts/build
+    Build,
+
     /// The Rust and tool tests, then each slice's tests and the e2e scenarios on fresh databases
     Test {
         #[command(subcommand)]
@@ -80,8 +90,10 @@ pub enum Part {
     Feats,
     /// The mock co-ops balance and their links resolve
     Fixtures,
-    /// The TypeScript type check
+    /// The TypeScript type check of the server layers and tools
     Types,
+    /// svelte-check over the shell and every slice's client layers
+    Shell,
     /// cargo check and clippy over the workspace
     Rust,
 }

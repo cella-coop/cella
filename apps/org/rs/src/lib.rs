@@ -10,6 +10,7 @@ mod db;
 mod key;
 mod repo;
 pub mod run;
+mod shell;
 mod test;
 
 use cli::{Command, Ext, Key, Log};
@@ -25,6 +26,8 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Ext { command: Ext::Build } => db::ext_build(&Repo::find()?, &steps).map(|_| ()),
         Command::Migrate { url } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
         Command::Seed { fixture, url } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref()),
+        Command::Serve { port } => shell::serve(&Repo::find()?, &steps, port),
+        Command::Build => shell::build(&Repo::find()?, &steps),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),
     }

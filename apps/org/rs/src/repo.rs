@@ -42,6 +42,18 @@ impl Repo {
         cmd
     }
 
+    /// The shell, the org app's SvelteKit root.
+    pub fn shell_dir(&self) -> PathBuf {
+        self.root.join("apps/org/ts")
+    }
+
+    /// A binary of the shell's npm dependencies, run from the shell's directory.
+    pub fn shell(&self, bin: &str) -> Command {
+        let mut cmd = Command::new("pnpm");
+        cmd.current_dir(self.shell_dir()).args(["exec", bin]);
+        cmd
+    }
+
     /// The npm workspace, installed from the lockfile without the network.
     pub fn install(&self, steps: &Steps) -> Result {
         let mut cmd = self.cmd("pnpm");

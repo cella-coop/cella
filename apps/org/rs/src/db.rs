@@ -82,7 +82,7 @@ impl<'a> Dev<'a> {
         cmds
     }
 
-    fn start(&self, steps: &Steps) -> Result {
+    pub fn start(&self, steps: &Steps) -> Result {
         let dir = ext_build(self.repo, steps)?;
         let pg = self.pg();
         let data = self.repo.data();

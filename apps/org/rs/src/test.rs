@@ -5,6 +5,7 @@ use crate::cli::Test;
 use crate::db::Dev;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
+use crate::shell;
 
 /// The database each slice test file and each e2e scenario runs on, fresh
 /// each time.
@@ -96,7 +97,9 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     }
     let dev = Dev::new(repo);
     dev.up()?;
-    repo.install(steps)?;
+    // A scenario may drive the shell as a browser would, through its built
+    // server; the build is the production one.
+    shell::build(repo, steps)?;
     let lanterne = repo.root.join("apps/org/fixtures/lanterne");
     for (name, file) in chosen {
         steps.run(&format!("db e2e/{name}"), &mut dev.renew(DB, None, Some(&lanterne)), quiet)?;

@@ -11,6 +11,7 @@ use std::ffi::CString;
 
 mod notary;
 mod surface;
+mod vault;
 
 /// The scope's Ed25519 seed, 32 raw bytes in a file only the server reads.
 pub(crate) static KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);

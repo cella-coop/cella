@@ -15,7 +15,7 @@ type is added here before it is signed anywhere.
 
 | Type | Signer | Tag | Binding | Checked by |
 |---|---|---|---|---|
-| write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
+| write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
 | receipt | the scope's notary key, Ed25519 | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived | `cella.verify_log` |
 | log entry | the scope's notary key, Ed25519 | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
 
@@ -30,7 +30,7 @@ scope lanterne.example
 op invoice:invoice:issue
 actor julien@lanterne.example
 device <the device's public key, 64 lowercase hex digits>
-request <SHA-256 of the request's canonical JSON, 64 lowercase hex digits>
+request <SHA-256 of the canonical JSON of {"request": …, "salt": …}, 64 lowercase hex digits>
 nonce <16 random bytes, 32 lowercase hex digits>
 ```
 
@@ -40,8 +40,12 @@ nonce <16 random bytes, 32 lowercase hex digits>
   payload the verdict commits to: the server fills the payload in (an
   invoice's number, a stance's receipt) after the member signed. Its
   canonical JSON has sorted keys, no whitespace and integers only; bytes
-  travel as hex. SHA-256 rather than BLAKE3, because browsers sign with
-  WebCrypto, which has SHA-256 and no BLAKE3.
+  travel as hex. It is hashed with a salt, 32 random bytes as hex that
+  the device draws for each write and sends beside it, as
+  `{"request": …, "salt": …}`, and the notary keeps only the digest: the
+  digest hides what the member typed, so no one holding the log can
+  confirm a guess of it. SHA-256 rather than BLAKE3, because browsers
+  sign with WebCrypto, which has SHA-256 and no BLAKE3.
 - **nonce** makes the signature count once: the notary refuses a write
   whose device and nonce a receipt already holds. A refused write rolls
   back, so its nonce is not spent.
@@ -63,13 +67,23 @@ receipt's time orders nothing; receipt numbers order stances.
 
 | Digest | Function | Tag | Over |
 |---|---|---|---|
-| payload | BLAKE3 derive-key | `cella org 2026-10 log payload` | the payload's canonical JSON |
-| request | SHA-256 | none: the write message's tag separates it | the request's canonical JSON |
+| payload | BLAKE3 derive-key | `cella org 2026-10 log payload` | the canonical JSON of the payload as the log keeps it, each personal value replaced by its commitment |
+| request | SHA-256 | none: the write message's tag separates it | the canonical JSON of `{"request": …, "salt": …}`, a fresh salt each write |
+| personal commitment | BLAKE3 derive-key | `cella org 2026-10 personal commitment` | a fresh 32-byte salt, then the value's canonical JSON; kept in the logged payload as `{"$commit": hex}` |
 | rule text | BLAKE3 derive-key | `cella org 2026-10 rule text` | a rule's definition, as `pg_get_functiondef` gives it |
 | content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-decision-adopts)) |
 
-The payload and request digests are not salted; see the trust doc's
-current limits.
+## Keys derived and sealed
+
+| Key | Derived by | Tag | From |
+|---|---|---|---|
+| vault wrap key | BLAKE3 derive-key | `cella org 2026-10 vault key` | the scope's 32-byte seed, the key file; it seals each vault key |
+| vault key | 32 random bytes, Postgres's `pg_strong_random` | none | one per subject, retention class and year; seals that subject's values |
+
+Both seal with XChaCha20-Poly1305 under a random 24-byte nonce, bound
+as associated data to the row they sit in: a key to its subject, class
+and year, a value to its commitment, subject, class, year and field, so
+a sealed value moved to another row does not open.
 
 ## Keys that sign nothing real
 

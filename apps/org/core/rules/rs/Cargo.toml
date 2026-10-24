@@ -12,6 +12,8 @@ workspace = true
 
 [dependencies]
 blake3 = { workspace = true }
+# The vault's seal; no getrandom: nonces and salts come from the caller.
+chacha20poly1305 = { version = "0.10", default-features = false, features = ["alloc"] }
 loro = { workspace = true }
 ed25519-dalek = { workspace = true }
 serde_json = { workspace = true }

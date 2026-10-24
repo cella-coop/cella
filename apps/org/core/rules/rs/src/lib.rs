@@ -11,6 +11,7 @@ pub mod document;
 pub mod hex;
 pub mod log;
 pub mod sign;
+pub mod vault;
 pub mod vote;
 
 pub use allocate::allocate;
@@ -51,6 +52,10 @@ pub enum Error {
     Signature(&'static str),
     #[error("no canonical form: {0}")]
     Document(String),
+    #[error("a personal-data marker {0}")]
+    Personal(String),
+    #[error("a sealed value does not open under its key and row")]
+    Sealed,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

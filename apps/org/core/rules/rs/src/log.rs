@@ -343,7 +343,7 @@ mod tests {
 
         let notary = Key::from_seed(&[7; 32]).unwrap();
         let device = SigningKey::from_bytes(&[9; 32]);
-        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "decision": "d-2026-012"})).unwrap();
+        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "decision": "d-2026-012"}), &"ab".repeat(32)).unwrap();
         let mut r = Receipt {
             n: 41,
             op: "member:member:admit".into(),

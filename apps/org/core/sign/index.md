@@ -11,14 +11,15 @@ message and its binding are in [signatures](../../../../_corpus/doc/signatures.m
 
 - `plain(request)`: the request as the notary reads it, bytes as hex,
   undefined fields dropped, integers only.
-- `canonical`, `digest`: the request's canonical JSON, sorted keys and no
-  whitespace, and its SHA-256 in hex.
+- `canonical`, `digest(request, salt)`: canonical JSON, sorted keys and
+  no whitespace, and the SHA-256 in hex of `{"request", "salt"}`, which
+  hides the request from anyone holding the digest.
 - `message`: the exact text a device signs.
 - `generate(address)`: a fresh device key, its private half not
   exportable.
 - `signer(scope, actor, device)`: a `Signer`, `(op, request) → Proof`,
-  signing with a fresh 16-byte nonce each write. `Proof` is `{ device,
-  nonce, sig }` in hex.
+  signing with a fresh 32-byte salt and 16-byte nonce each write. `Proof`
+  is `{ device, salt, nonce, sig }` in hex.
 - `fixture(address, label)`: TEST-ONLY. A fixture device's key, derived
   from its address and label so the seed and the tests hold the same key;
   anyone can derive it, so it is never enrolled for a real member.

@@ -8,9 +8,10 @@
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 
 // What a handler hands the notary beside the request, in hex: the signing
-// device's public key, the nonce and the signature.
+// device's public key, the request's salt, the nonce and the signature.
 export interface Proof {
   device: string
+  salt: string
   nonce: string
   sig: string
 }
@@ -81,9 +82,11 @@ export function canonical(v: Json): string {
   return JSON.stringify(v)
 }
 
-// The request's digest: SHA-256 over its canonical JSON, in hex.
-export async function digest(request: Json): Promise<string> {
-  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8(canonical(request)))))
+// The request's digest: SHA-256 over the canonical JSON of the request and
+// its salt, in hex. A fresh salt each write keeps the digest the log holds
+// from confirming a guess of what the member typed.
+export async function digest(request: Json, salt: string): Promise<string> {
+  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', utf8(canonical({ request, salt })))))
 }
 
 export interface Signed {
@@ -124,13 +127,14 @@ export async function fixture(address: string, label: string): Promise<Device> {
   return fromSeed(address, new Uint8Array(seed))
 }
 
-// Signs as `actor` with `device`, a fresh nonce each write.
+// Signs as `actor` with `device`, a fresh salt and nonce each write.
 export function signer(scope: string, actor: string, device: Device | Promise<Device>): Signer {
   return async (op, request) => {
     const d = await device
+    const salt = hex(crypto.getRandomValues(new Uint8Array(32)))
     const nonce = hex(crypto.getRandomValues(new Uint8Array(16)))
-    const text = message({ scope, op, actor, device: d.key, request: await digest(request), nonce })
+    const text = message({ scope, op, actor, device: d.key, request: await digest(request, salt), nonce })
     const sig = new Uint8Array(await crypto.subtle.sign(ED25519, d.secret, utf8(text)))
-    return { device: d.key, nonce, sig: hex(sig) }
+    return { device: d.key, salt, nonce, sig: hex(sig) }
   }
 }

@@ -3,9 +3,10 @@
 //! request and a single-use nonce, so a signature names its request and,
 //! with the notary refusing a nonce twice, counts once.
 //!
-//! The request digest is SHA-256 over the request's canonical JSON, the
-//! same canonical form the log's payload digests use: browsers compute it
-//! with WebCrypto, which has SHA-256 and Ed25519 but no BLAKE3.
+//! The request digest is SHA-256 over the canonical JSON of the request
+//! and a fresh salt, the same canonical form the log's payload digests
+//! use: browsers compute it with WebCrypto, which has SHA-256 and Ed25519
+//! but no BLAKE3.
 
 use crate::hex::hex;
 use crate::log::canonical;
@@ -31,8 +32,20 @@ pub struct Request<'a> {
     pub nonce: &'a str,
 }
 
-pub fn request_digest(v: &Value) -> Result<[u8; 32]> {
-    Ok(Sha256::digest(canonical(v)?.as_bytes()).into())
+/// A request's salt is 32 random bytes, as 64 lowercase hex digits.
+pub const SALT_HEX: usize = 64;
+
+/// The request's digest: SHA-256 over the canonical JSON of
+/// `{"request": …, "salt": …}`. The device draws a fresh salt for each
+/// write and the notary keeps only the digest, so the digest hides what
+/// the member typed: no one can confirm a guess of a request against the
+/// log.
+pub fn request_digest(request: &Value, salt: &str) -> Result<[u8; 32]> {
+    if salt.len() != SALT_HEX || crate::hex::unhex(salt).is_none() {
+        return Err(Error::Field("salt"));
+    }
+    let salted = serde_json::json!({ "request": request, "salt": salt });
+    Ok(Sha256::digest(canonical(&salted)?.as_bytes()).into())
 }
 
 fn text(name: &'static str, v: &str) -> Result<()> {
@@ -79,8 +92,10 @@ mod tests {
     use ed25519_dalek::{Signer, SigningKey};
     use serde_json::json;
 
+    const SALT: &str = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+
     fn signed(key: &SigningKey, request: &Value, nonce: &str) -> ([u8; 32], [u8; 64]) {
-        let digest = request_digest(request).unwrap();
+        let digest = request_digest(request, SALT).unwrap();
         let r = Request { scope: "lanterne.example", op: "invoice:invoice:issue", actor: "julien@lanterne.example", device: key.verifying_key().to_bytes(), digest, nonce };
         (digest, key.sign(r.message().unwrap().as_bytes()).to_bytes())
     }
@@ -94,11 +109,20 @@ mod tests {
         let r = |op, actor, digest, nonce| Request { scope: "lanterne.example", op, actor, device: key.verifying_key().to_bytes(), digest, nonce };
 
         assert!(r("invoice:invoice:issue", "julien@lanterne.example", digest, nonce).verify(&sig).is_ok());
-        let other = request_digest(&json!({"series": "F-2026", "lines": [{"cents": 52001}]})).unwrap();
+        let other = request_digest(&json!({"series": "F-2026", "lines": [{"cents": 52001}]}), SALT).unwrap();
         assert!(r("invoice:invoice:issue", "julien@lanterne.example", other, nonce).verify(&sig).is_err());
         assert!(r("invoice:invoice:void", "julien@lanterne.example", digest, nonce).verify(&sig).is_err());
         assert!(r("invoice:invoice:issue", "chloe@lanterne.example", digest, nonce).verify(&sig).is_err());
         assert!(r("invoice:invoice:issue", "julien@lanterne.example", digest, "ffeeddccbbaa99887766554433221100").verify(&sig).is_err());
+    }
+
+    #[test]
+    fn a_request_digest_is_salted() {
+        let request = json!({"name": "Ana Martin"});
+        let other = "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100";
+        assert_ne!(request_digest(&request, SALT).unwrap(), request_digest(&request, other).unwrap());
+        assert_eq!(request_digest(&request, "short"), Err(Error::Field("salt")));
+        assert_eq!(request_digest(&request, &SALT.to_uppercase()), Err(Error::Field("salt")));
     }
 
     #[test]

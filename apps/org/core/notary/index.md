@@ -24,23 +24,37 @@ The notary is the scope's office for every write, and a layer under every feat r
 | `cella.notary_key()` | the scope's public key |
 | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | the log, its head row and its signed receipts |
 | `cella.rule`, `cella.rule_text`, `cella.keyring`, `cella.power` | the registries: rules per op and their texts, the keyring, the power each op needs |
+| `cella.retention`, `cella.personal` | the retention classes, each with its clock in years, whether the law keeps it (restricted) and its basis; and the columns holding personal data, `(schema, tab, col, class, subject, owner)`, each registered by the feat or graft owning the table, `subject` naming the column that says whose it is. A trigger refuses a column that does not exist or that erasure could not redact: NOT NULL and neither text nor JSON |
+| `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | the vault ([below](#the-vault)); only the owner reads it, but `vault.erased`, which everyone may read |
+| `cella.opened(n)` | entry `n`'s logged payload with its commitments opened: the value, `restricted` or `redacted`; the app's only |
+| `cella.vault_sweep()` | erases the restricted data whose clock has run out on the verdict date; a superuser's, run by `cella vault sweep` |
+| `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
 
 ## Submit
 
-A handler opens a transaction, writes its state, calls `cella.submit` last and commits. `signed` is `{ request, device, nonce, sig }`, bytes in hex: what the member asked for and their device's signature on it ([signatures](../../../../_corpus/doc/signatures.md)). `submit`:
+A handler opens a transaction, writes its state, calls `cella.submit` last and commits. `signed` is `{ request, device, salt, nonce, sig }`, bytes in hex: what the member asked for, the salt its digest is taken with, and their device's signature on it ([signatures](../../../../_corpus/doc/signatures.md)). `submit`:
 
-1. checks the signature over the scope (`cella.scope`), the op, the actor, the device, the request's digest and the nonce;
+1. checks the signature over the scope (`cella.scope`), the op, the actor, the device, the salted request's digest and the nonce;
 2. locks the head row;
 3. asks the keyring, the one function registered in `cella.keyring` (the `key` feat's), whether the device is a current key of the actor;
 4. refuses a nonce a receipt of the same device already holds;
-5. runs every rule registered for the op in `cella.rule (op, fn regprocedure, owner)`, ordered by owner, with `cella.op()`, `cella.actor()` and `cella.device()` set;
-6. signs the receipt and appends the entry naming it.
+5. takes the payload out of personal data ([the vault](#the-vault)): each marked value committed to and sealed, each marked erasure carried out, giving the payload as the log keeps it;
+6. runs every rule registered for the op in `cella.rule (op, fn regprocedure, owner)`, ordered by owner, on that logged payload, with `cella.op()`, `cella.actor()` and `cella.device()` set;
+7. signs the receipt and appends the entry naming it, with the logged payload.
 
 A rule is a `STABLE` function `(payload jsonb) → text` that sees the transaction's own writes and returns `NULL` to accept or a reason to refuse; a volatile rule or one of another shape is an error. The keyring is a `STABLE` function `(actor text, device bytea) → text` of the same kind. Both run as `cella_rules`.
 
 On a refusal, at any step, `submit` raises SQLSTATE `09000` (`triggered_action_exception`) with the reason as the message, so the transaction cannot commit: the state and the verdict roll back together, the verdict number is not used and the nonce is not spent. Feats' triggers raise the same code, so a handler maps `09000` to `Refused`. The rows `submit` returns are therefore always `settled`.
 
-Each receipt holds its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived, hashed with BLAKE3 and signed. Each entry holds its number, op, actor, verdict date, the payload's digest (never the payload), its receipt's number and hash, and each deciding rule's owner, signature and text digest; the text itself goes to `cella.rule_text`. Entries are hashed over the previous hash and signed with Ed25519.
+Each receipt holds its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived, hashed with BLAKE3 and signed. Each entry holds its number, op, actor, verdict date, the digest of the logged payload, its receipt's number and hash, and each deciding rule's owner, signature and text digest; the text itself goes to `cella.rule_text`. Entries are hashed over the previous hash and signed with Ed25519. Beside them, `cella.log.form` keeps the logged payload, personal values replaced by commitments, from which the state folds; `verify_log` checks that it hashes to the entry's digest.
+
+## The vault
+
+Personal data never enters the log. A handler marks each personal value a payload carries, `{"$personal": {"field": "schema.table.column", "subject": …, "value": …}}`, for a field registered in `cella.personal`; every other object key starting with `$` is refused. `submit` replaces it with `{"$commit": hex}`, the BLAKE3 commitment, under its own domain, to a fresh 256-bit salt and the value, and stores in `vault.secret` the commitment, the receipt, the subject, the class, the year, the field, the salt and the value sealed with XChaCha20-Poly1305 under the subject's key for the class and the verdict's year (`vault.key`, made on first use from Postgres's strong random source and itself sealed under a key derived from the scope's seed). The same value written twice commits differently.
+
+A payload marks an erasure as `{"$erase": {"subject": …, "classes": […]}}`, every class when none is named; `submit` carries it out under the head's lock and logs `{"$erasure": {"subject", "erased", "restricted"}}`. For an erasable class (`member-profile`, `contact`) it deletes the subject's keys and sealed values, so its commitments no longer open, and redacts the class's registered columns in the read models (`cella.redact`). A restricted class (`payroll`, `expense-receipt`, `books`), which the law keeps, loses only the keys whose clock has run out and is marked restricted; `cella.vault_sweep()` erases it in full once its clock, counted from the erasure's year, runs out. Either way a tombstone in `vault.erased` refuses any later value of the subject's class: erasure wins. A key's clock runs `years` full years past the end of its year: books from 2025, kept ten years, may be destroyed from 1 January 2036.
+
+`cella.opened(n)` reads an entry's logged payload back with its commitments opened, checking each against its salt: the value, `restricted` while the law keeps it, `redacted` once erased. The log verifies the same before and after an erasure, since erasure deletes what a commitment opens to, never the commitment.
 
 `cella.power (op, power, amount, owner)` names the power each op needs and the payload field holding its amount in cents, registered by the op's feat; the extension holds no rule over it: the `circle-member` graft attaches one to every op listed.
 
@@ -62,4 +76,4 @@ The library is loaded through `shared_preload_libraries` so its settings exist b
 
 `cella ext build` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
 
-`sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-rules-role.sql` creates `cella_rules` and keeps `submit` and `receipt` to the app.
+`sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-rules-role.sql` creates `cella_rules` and keeps `submit` and `receipt` to the app; `sql/003-vault.sql` keeps `opened` to the app and the sweep to a superuser.

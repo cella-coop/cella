@@ -28,6 +28,16 @@ export interface Write<T> {
   payload: (value: T) => Record<string, unknown>
 }
 
+// A personal value in a payload: the notary commits to it, under a fresh
+// salt, and keeps the value in the vault, never in the log. `field` is a
+// column registered in `cella.personal`, as `schema.table.column`;
+// `subject` whose it is, by their address or id.
+export const personal = (field: string, subject: string, value: unknown) => ({ $personal: { field, subject, value } })
+
+// An erasure in a payload: the notary erases the subject's personal data
+// of the classes named, or of every class, as it settles.
+export const erasure = (subject: string, classes?: string[]) => ({ $erase: classes ? { subject, classes } : { subject } })
+
 // SQLSTATE triggered_action_exception: a rule, a feat's trigger or the
 // notary's signature check refused.
 const REFUSED = '09000'

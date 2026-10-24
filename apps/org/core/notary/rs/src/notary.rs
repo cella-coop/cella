@@ -4,6 +4,7 @@
 //! whether a device is current is the keyring's, and whether a write may
 //! pass is its rules', both in SQL.
 
+use crate::vault;
 use crate::{CLOCK, KEY_FILE, SCOPE};
 use cella_rules::hex::{hex, unhex};
 use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule};
@@ -16,27 +17,27 @@ use std::cell::RefCell;
 
 thread_local! {
     static DATE: RefCell<Option<(i32, u8, u8)>> = const { RefCell::new(None) };
-    static KEY: RefCell<Option<(String, Key)>> = const { RefCell::new(None) };
+    static KEY: RefCell<Option<(String, Key, [u8; 32])>> = const { RefCell::new(None) };
     static RECEIPT: RefCell<Option<(i64, String)>> = const { RefCell::new(None) };
     static WRITE: RefCell<Option<Context>> = const { RefCell::new(None) };
 }
 
-fn fail(msg: impl Into<String>) -> ! {
+pub(crate) fn fail(msg: impl Into<String>) -> ! {
     ereport!(ERROR, PgSqlErrorCode::ERRCODE_INTERNAL_ERROR, msg.into());
 }
 
 /// A refusal: SQLSTATE 09000, which the handler maps to `Refused`.
-fn refuse(reason: impl Into<String>, detail: impl Into<String>) -> ! {
+pub(crate) fn refuse(reason: impl Into<String>, detail: impl Into<String>) -> ! {
     ereport!(ERROR, PgSqlErrorCode::ERRCODE_TRIGGERED_ACTION_EXCEPTION, reason.into(), detail.into());
 }
 
-fn spi<T>(r: Result<T, pgrx::spi::Error>) -> T {
+pub(crate) fn spi<T>(r: Result<T, pgrx::spi::Error>) -> T {
     r.unwrap_or_else(|e| fail(format!("cella: {e}")))
 }
 
 /// The first column of the first row, or `None` when there is no row: a
 /// rule whose query finds nothing accepts.
-fn first<T: pgrx::datum::FromDatum + pgrx::datum::IntoDatum>(rows: pgrx::spi::SpiTupleTable<'_>) -> Option<T> {
+pub(crate) fn first<T: pgrx::datum::FromDatum + pgrx::datum::IntoDatum>(rows: pgrx::spi::SpiTupleTable<'_>) -> Option<T> {
     if rows.is_empty() {
         return None;
     }
@@ -70,7 +71,7 @@ fn forget_date() {
     DATE.with(|c| c.borrow_mut().take());
 }
 
-fn iso(d: &pgrx::datum::Date) -> String {
+pub(crate) fn iso(d: &pgrx::datum::Date) -> String {
     format!("{:04}-{:02}-{:02}", d.year(), d.month(), d.day())
 }
 
@@ -78,17 +79,29 @@ fn scope() -> String {
     setting(&SCOPE).unwrap_or_else(|| fail("cella.scope is not set: the scope's address, which every signature names"))
 }
 
-fn with_key<T>(f: impl FnOnce(&Key) -> T) -> T {
+/// The scope's signing key and the key that seals the vault's keys, both
+/// from the seed in the key file.
+fn with_keys<T>(f: impl FnOnce(&Key, &[u8; 32]) -> T) -> T {
     let path = setting(&KEY_FILE).unwrap_or_else(|| fail("cella.key_file is not set"));
     KEY.with(|cell| {
-        let stale = cell.borrow().as_ref().is_none_or(|(p, _)| *p != path);
+        let stale = cell.borrow().as_ref().is_none_or(|(p, _, _)| *p != path);
         if stale {
             let seed = std::fs::read(&path).unwrap_or_else(|e| fail(format!("cella.key_file {path}: {e}")));
             let key = Key::from_seed(&seed).unwrap_or_else(|e| fail(format!("cella.key_file {path}: {e}")));
-            *cell.borrow_mut() = Some((path, key));
+            *cell.borrow_mut() = Some((path, key, cella_rules::vault::wrap_key(&seed)));
         }
-        f(&cell.borrow().as_ref().expect("key loaded").1)
+        let held = cell.borrow();
+        let (_, key, wrap) = held.as_ref().expect("key loaded");
+        f(key, wrap)
     })
+}
+
+fn with_key<T>(f: impl FnOnce(&Key) -> T) -> T {
+    with_keys(|k, _| f(k))
+}
+
+pub(crate) fn wrap_key() -> [u8; 32] {
+    with_keys(|_, w| *w)
 }
 
 pub fn public_key() -> [u8; 32] {
@@ -280,6 +293,7 @@ impl Drop for AsRules {
 struct Signed {
     request: Value,
     device: [u8; 32],
+    salt: String,
     nonce: String,
     sig: [u8; 64],
 }
@@ -289,6 +303,7 @@ fn signed(v: &Value) -> Option<Signed> {
     Some(Signed {
         request: v.get("request")?.clone(),
         device: bytes("device")?.try_into().ok()?,
+        salt: v.get("salt")?.as_str()?.to_string(),
         nonce: v.get("nonce")?.as_str()?.to_string(),
         sig: bytes("sig")?.try_into().ok()?,
     })
@@ -297,16 +312,15 @@ fn signed(v: &Value) -> Option<Signed> {
 pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     let at_ingress = || format!("{op} refused at ingress, before any rule");
     let Some(s) = signed(&envelope.0) else {
-        refuse(format!("{op} is not signed: a write carries its request, device, nonce and sig in hex"), at_ingress());
+        refuse(format!("{op} is not signed: a write carries its request, device, salt, nonce and sig in hex"), at_ingress());
     };
     let scope = scope();
-    let request = sign::request_digest(&s.request).unwrap_or_else(|e| refuse(format!("the request: {e}"), at_ingress()));
+    let request = sign::request_digest(&s.request, &s.salt).unwrap_or_else(|e| refuse(format!("the request: {e}"), at_ingress()));
     let asked = Request { scope: &scope, op, actor, device: s.device, digest: request, nonce: &s.nonce };
     if let Err(e) = asked.verify(&s.sig) {
         refuse(format!("{e}: {op} by {actor} from device {}", &hex(&s.device)[..16]), at_ingress());
     }
     let date = iso(&verdict_date());
-    let digest = log::payload_digest(&payload.0).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
     Spi::connect_mut(|c| {
         let head = spi(c.update("SELECT n, hash FROM cella.head FOR UPDATE", Some(1), &[]));
         let (n, prev) = spi(head.first().get_two::<i64, Vec<u8>>());
@@ -339,9 +353,16 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             refuse(format!("nonce {} was already counted, at receipt {earlier}: a signature counts once", s.nonce), after("the notary"));
         }
 
+        // Personal values out of the payload, under the head's lock, so an
+        // erasure that settled first is seen: what the log keeps, and what
+        // the rules judge, holds commitments in their place.
+        let (number, time) = taken();
+        let form = vault::logged(c, &payload.0, number, &date);
+        let digest = log::payload_digest(&form).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
+
         let registered = rules(c, op);
         for r in &registered {
-            let arg = JsonB(payload.0.clone());
+            let arg = JsonB(form.clone());
             let reason = {
                 let _as = AsRules::enter(role);
                 let rows = spi(c.select(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
@@ -352,7 +373,6 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             }
         }
 
-        let (number, time) = taken();
         let receipt = Receipt {
             n: number,
             op: op.into(),
@@ -406,8 +426,8 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             .map(|r| json!({ "owner": r.owner, "function": r.function, "text": hex(&r.text) }))
             .collect();
         spi(c.update(
-            "INSERT INTO cella.log (n, op, actor, date, payload, receipt, rules, prev, hash, sig)
-             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10)",
+            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, rules, prev, hash, sig)
+             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11)",
             None,
             &[
                 n.into(),
@@ -415,6 +435,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
                 actor.into(),
                 date.into(),
                 digest.to_vec().into(),
+                JsonB(form).into(),
                 number.into(),
                 JsonB(Value::Array(listed)).into(),
                 prev.to_vec().into(),
@@ -446,7 +467,7 @@ pub fn verify_log() -> bool {
     Spi::connect(|c| {
         let rows = spi(c.select(
             "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.rules, l.prev, l.hash, l.sig, l.receipt,
-                    r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig
+                    r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form
              FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
              ORDER BY l.n",
             None,
@@ -477,6 +498,14 @@ pub fn verify_log() -> bool {
                 warning!("cella: log broken at {n}: unreadable entry, or no receipt");
                 return false;
             };
+            // What the log keeps of the payload, commitments in place of
+            // personal values, is what its digest names; erasure deletes
+            // what a commitment opens to, never the commitment.
+            let form = spi(row.get::<JsonB>(21)).map(|j| j.0);
+            if form.and_then(|f| log::payload_digest(&f).ok()) != Some(payload) {
+                warning!("cella: log broken at {n}: the logged payload does not hash to the entry's digest");
+                return false;
+            }
             let entry = Entry {
                 n,
                 op: text(2),

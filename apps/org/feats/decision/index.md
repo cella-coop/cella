@@ -44,6 +44,13 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 - `circle-decision-member`, which this feat declares: a decision's roll, from the seats in its circle, and whether it passes on it.
 
+## Shell
+
+The `decisions` collection, open ones first; a decision's page shows its
+proposal, every stance given as its activity, and closes it (`close`).
+Its roll, its outcome and the stance form are `circle-decision-member`'s;
+the stance it posts is this feat's `vote`, for the acting member.
+
 ## Domain
 
 To port from seedling's `specs/feat/06-decisions.md`, under this repo's labels and grafts.

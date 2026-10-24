@@ -1,0 +1,25 @@
+import type { Db } from '@cella/org-db'
+import type { Decision, Detail, Given } from '../models/decision.ts'
+
+const columns = `id, circle, title, rule, to_char(proposed, 'YYYY-MM-DD') AS proposed,
+  to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
+
+// Open decisions first, then the latest proposed.
+export async function decisions(db: Db): Promise<Decision[]> {
+  const { rows } = await db.query<Decision>(`SELECT ${columns} FROM decision.decision ORDER BY closed IS NOT NULL, proposed DESC, id DESC`)
+  return rows
+}
+
+// A decision, its proposal and every stance given on it, newest first.
+export async function decision(db: Db, id: string): Promise<Detail | null> {
+  const found = await db.query<Detail>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM decision.decision WHERE id = $1`, [id])
+  if (!found.rows[0]) {
+    return null
+  }
+  const given = await db.query<Given>(
+    `SELECT receipt::text AS id, receipt::int AS receipt, member, stance, to_char(at, 'YYYY-MM-DD') AS at
+     FROM decision.vote WHERE decision = $1 ORDER BY receipt DESC`,
+    [id],
+  )
+  return { ...found.rows[0], given: given.rows }
+}

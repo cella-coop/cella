@@ -11,7 +11,8 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { adopt, comment, draft, edit, version } from '@cella/org-document/api'
 import { canonical, createDoc, edits, hash, jcs, order, text, type Frontier } from '@cella/org-document/models'
-import { close, vote } from '@cella/org-decision/api'
+import { close, propose, vote } from '@cella/org-decision/api'
+import { slice } from '@cella/org-graft-decision-document/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -36,6 +37,7 @@ const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.h
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
 const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
 const adopted = async (d: string) => (await one<{ version: string } | undefined>('SELECT version FROM document.adopted WHERE document = $1', [d]))?.version
+const decisions = (db: pg.Client) => slice.extends?.decisions.about?.(db) ?? Promise.resolve({})
 const hashOf = async (v: string) => (await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document.version WHERE id = $1`, [v])).hash
 
 // The card's updates as a member's device holds them after syncing.
@@ -211,6 +213,22 @@ test('a second adoption naming a stale base is refused, and uses no verdict numb
   assert.equal(stale.state === 'refused' && stale.verdict, before)
   assert.equal(await head(), before)
   assert.equal(Number((await one<{ count: string }>(`SELECT count(*) FROM document.adoption WHERE document = $1`, [card])).count), 1)
+})
+
+test('a new decision proposes adopting a version picked from the versions; one that does not exist is refused', async () => {
+  const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
+  assert.ok(offered.versions.some((v) => v.value === 'internal-rules@3' && /, version 3$/.test(v.label)))
+  const motion = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, rule: 'consent' as const, deadline: '2026-12-31', body: '', motions: [{ kind: 'adopt', args: { version } }] })
+  const out = await propose(motion('internal-rules@3'), as(camille))
+  assert.equal(out.state, 'settled', reason(out))
+  const id = (out as { value: { decision: string } }).value.decision
+  assert.deepEqual(
+    await one(`SELECT document, version, encode(hash, 'hex') AS hash FROM decision_document.adoption WHERE decision = $1`, [id]),
+    { document: 'internal-rules', version: 'internal-rules@3', hash: await hashOf('internal-rules@3') },
+  )
+  const before = await head()
+  assert.match(reason(await propose(motion('internal-rules@9'), as(camille))), /no version internal-rules@9/)
+  assert.equal(await head(), before)
 })
 
 test('the log verifies', async () => {

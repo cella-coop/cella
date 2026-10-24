@@ -16,8 +16,17 @@ version) and the version the proposer read it in; no foreign key into
 either feat. The app role may select and insert; the rules role,
 `cella_rules`, may select.
 
+It registers the `adopt` kind with the decision feat (`sql/002-adopt.sql`):
+a motion naming a version, which the New form picks from the versions
+this graft adds to the decisions' `about`. A trigger on the motion
+records the adoption it asks, the version's document and its hash as the
+database gave it, and refuses a version that does not exist.
+
 ## Rules
 
+- `decision_document.asks`, on `decision:decision:propose`: each motion
+  to adopt names a version, and the decision adopts that version's
+  document as it hashes.
 - `decision_document.adopts`, on `document:document:adopt`: the cited
   decision asks to adopt this document, and the version adopted hashes as
   the decision names it. The members consented to content, not to a row:
@@ -47,7 +56,10 @@ decision's content, and the roll's outcome.
   slash menu. Every decision of the scope is offered; a picker that
   searches replaces the list when they are many.
 
-Adopting from the shell is not offered yet.
+- On the New decision form, `Adopt a document version`, with the versions
+  to pick from, newest first by document. The adoption itself, once the
+  decision passes, is the document's `adopt` write, which the shell does
+  not offer yet.
 
 ## Lanterne
 

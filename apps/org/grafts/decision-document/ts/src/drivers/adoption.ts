@@ -28,6 +28,18 @@ export async function summaries(db: Db): Promise<Summary[]> {
   return rows
 }
 
+// The versions a new decision may adopt, as its New form offers them:
+// every saved version of every document, newest first, by its document's
+// title.
+export async function versions(db: Db): Promise<{ value: string; label: string }[]> {
+  const { rows } = await db.query<{ value: string; label: string }>(
+    `SELECT v.id AS value, d.title || ', version ' || v.n AS label
+     FROM document.version v JOIN document.document d ON d.id = v.document
+     ORDER BY d.title, v.n DESC`,
+  )
+  return rows
+}
+
 export async function onDocument(db: Db, document: string): Promise<OnDocument> {
   return { asked: await asked(db, { document }), decisions: await summaries(db) }
 }

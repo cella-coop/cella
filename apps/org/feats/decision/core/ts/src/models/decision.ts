@@ -42,6 +42,16 @@ export interface Arg {
   label: string
   type: 'text' | 'number'
   optional?: boolean
+  // The key of a list of choices in the New form's `about`, which the
+  // kind's graft adds, such as the versions a decision may adopt; the
+  // form offers them instead of a text box.
+  options?: string
+}
+
+// One of an argument's choices.
+export interface Choice {
+  value: string
+  label: string
 }
 
 // A kind of thing a decision decides, registered by the graft that
@@ -87,6 +97,8 @@ export interface Proposed {
 export interface Offered {
   kinds: Kind[]
   circles?: { id: string; name: string; procedure: Rule }[]
+  // The lists of choices the kinds' arguments name, by key.
+  [options: string]: unknown
 }
 
 export interface Vote {

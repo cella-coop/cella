@@ -25,7 +25,7 @@
   <Field label="Deadline" name="deadline" type="date" required />
   <Field label="Decides" name="kind" options={kinds} bind:value={state.kind} />
   {#each state.fields as f (f.name)}
-    <Field label={f.label} name="arg.{f.name}" type={f.type} required={!f.optional} />
+    <Field label={f.label} name="arg.{f.name}" type={f.type} options={state.choices(f)} placeholder={state.choices(f) ? 'Choose…' : undefined} required={!f.optional} />
   {/each}
   <Field label="Proposal" name="body" rows={4} wide />
 </Form>

@@ -12,11 +12,21 @@ export type Decide = 'consent' | 'majority'
 // the verdict date, and the payload field holding its amount in cents when
 // the mandate's limit caps it. The owning feat registers the same in
 // `cella.power`, the source of truth; `cella check feats` keeps the two
-// equal. A write with no power is the actor's own, or is decided.
+// equal. A write with no power declares the check that allows it instead,
+// and nothing is allowed by omission.
 export interface Grant {
   power?: string
   amount?: string
+  check?: Check
 }
+
+// Who may make a write that needs no power, each a rule registered on the
+// op in `cella.rule`, or for `decided` a row in `decision.cites`:
+// - `self`: the actor's own, such as their profile or their devices;
+// - `roll`: a member on the roll of the decision the write names;
+// - `seat`: a member seated in the circle the write concerns;
+// - `decided`: the decision the write cites closed and passed.
+export type Check = 'self' | 'roll' | 'seat' | 'decided'
 
 export interface Confluent extends Grant {
   label: 'confluent'

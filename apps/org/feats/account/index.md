@@ -71,11 +71,12 @@ the holder is whoever holds the role the mandate is granted to.
 | Write | Power | Lanterne |
 |---|---|---|
 | draw | `spend-circle`, up to the mandate's `budget` | each circle lead, 1 000 € a month |
-| surplus.allocate | held by the assembly, exercised by decision | `ag`, majority |
+| surplus.allocate | `allocate-surplus`, until the `account-decision` graft ties the assembly's decision to it | `ag`, majority, once decided; no mandate grants the power |
 | period.close | `close-period` | Julien, as finance |
 
 `002-powers.sql` registers draw's and period.close's powers in
-`cella.power`, and the `circle-member` graft checks them. A draw's budget
+`cella.power`, `004-allocate.sql` surplus.allocate's, and the
+`circle-member` graft checks them. A draw's budget
 is not checked yet: it needs the month's draws summed, which comes with
 the draw's handler.
 

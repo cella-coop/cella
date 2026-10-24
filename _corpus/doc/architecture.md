@@ -287,13 +287,17 @@ two halves of one **slice**, matched by name:
   the command menu, `about` for the collection's header) and its writes as
   form actions, each a handler over a form; what it adds to the
   collections of the feats it joins (`extends`): fields on each row, data
-  on an item, and writes; and reactions to other slices' settled writes
-  (`on`), such as the admissions a passing close makes.
+  on an item, what it adds to the collection's `about`, such as the
+  circles a new decision may be put in, and writes; and reactions to
+  other slices' settled writes (`on`), such as carrying out what a
+  passing decision decides once its close settles.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
   blocks and its header writes); for each collection it extends, columns
-  over the fields it adds, and cards and blocks over its data on an item.
+  over the fields it adds, cards and blocks over its data on an item,
+  and a New form replacing the owner's when it replaces the write behind
+  it, as `key-member`'s invitation carrying a first device does.
 
 The root lists the slices, server and client, and mounts them on five
 routes, the same for every collection: `/[collection]`, the one collection
@@ -304,8 +308,8 @@ events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); and `/act` and `/theme` for the user
 menu. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
-joins; the root may join two feats no graft joins, as it puts a member's
-devices, the `key` feat's, on the member's page. The registry refuses a
+joins; the root may join two feats no graft joins, as it puts on the
+work collections' cards fields from several grafts. The registry refuses a
 collection owned twice, an extension of a feat a graft does not join, and
 two extensions replacing one write. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the

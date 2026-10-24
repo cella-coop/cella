@@ -192,7 +192,8 @@ makes no claim that the host cannot forge a vote.
 
 - Members have device keys from day one. A key is enrolled by the member's
   current key; rotating keys keeps the address. A member's first device
-  comes with their invitation (not built: until then the seed enrols it).
+  comes with their invitation, whose log entry commits to its key, and
+  is enrolled by their admission, in the same transaction.
   Enrolment and revocation are ordered, and the keyring is read under the
   log's head lock, so a revocation that settled first is always seen.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
@@ -243,7 +244,8 @@ erased until their legal clock runs out.
 What the build does not yet do, and what lifts each:
 
 - **The host serves the signing code and relays requests.** A reaction the
-  server runs on a member's behalf, such as admitting on a passing close,
+  server runs on a member's behalf, such as carrying out the suspension a
+  passing decision asks once its close settles,
   is signed with that member's signer as the handler's caller hands it;
   until the native client (rung 4) nothing stops a host signing with keys
   it serves.

@@ -22,9 +22,9 @@ decision. Lanterne's state is that of 24 October 2026.
 |---|---|---|
 | `key.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `key.revoke`, `key.recover` | ordered | right |
-| `circle.nest` | ordered | right, at rung 1 already; **applied**: the comment now says why |
-| `circle-member:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-member` graft, which owns the relationship |
-| `circle.mandate.grant`, `.revoke` | ordered | right |
+| `circle.nest` | ordered | right, at rung 1 already; **applied**: decided, and refused when a nesting settled first makes it a cycle ([tree](#the-circles-form-a-tree)) |
+| `circle-member:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-member` graft, which owns the relationship; both decided |
+| `circle.mandate.grant`, `.revoke` | ordered | right; **applied**: decided, by the circle above the role's |
 | `circle.message` | confluent | right |
 | `document.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
@@ -45,11 +45,11 @@ decision. Lanterne's state is that of 24 October 2026.
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
 | `client.add`, `.update`, `.archive` | confluent | right; erasure must win |
-| `member.invite`, `.profile` | confluent | right |
-| `member.admit`, `.suspend`, `.exit` | ordered | right |
-| `decision.propose` | confluent | right |
+| `member.invite`, `.profile` | confluent | right; **applied**: an invitation carries the invitee's first device |
+| `member.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
+| `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
-| `decision.close` | ordered | right |
+| `decision.close` | ordered | right; **applied**: a passing close admits, seats and enrols in its own verdict |
 | `project.create`, `project:milestone.add`, `.complete`, `project.archive` | confluent | right; rung 2 numbers milestones by device ([work](#work-is-registers)) |
 | `project.budget` | ordered | right: against the shares ([shares](#a-share-never-exceeds-the-budget)) |
 | `member-project:project.share` | bounded on the budget | right |
@@ -57,7 +57,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `member-task:task.assign`, `project-task:task.file` | confluent | right: registers |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
-| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)) |
+| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)) |
 
 ## Nothing posts into a closed period
 
@@ -249,8 +249,12 @@ Owner: the `circle` feat.
 Ordered is right, and needed at rung 1 already: two concurrent server
 transactions can each see no cycle. The `ops.ts` comment ("two offline
 nestings") understated it; **applied**, it now says a cycle can form even
-online. `nest` should also check that the moved subtree's mandates still
-fit within its new parent's.
+online. **Applied**: each circle keeps its path from the assembly; the
+tree's trigger refuses a cycle the write itself sees, and `circle.nests`,
+run under the log's lock, refuses one a nesting settled first made, as
+the second's path no longer follows its parent's. `nest` should also
+check that the moved subtree's mandates still fit within its new
+parent's; it does not yet.
 
 **Lanterne.** Brand under Marketing and Marketing under Brand, proposed
 the same afternoon by Hugo and Malik: the second is refused.
@@ -366,10 +370,59 @@ deciding vote.
 |---|---|---|---|
 | `member.admit` vs `member.invite` | refused: not invited | admitted | admitted without an invitation |
 | `member.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
-| `member.exit` vs the capital account | — | — | **applied**: `account-member` freezes it in the exit's transaction ([capital](#capital-freezes-on-exit)) |
+| `member.exit` vs the capital account | — | — | a graft joining member and the books freezes it in the exit's transaction, on the exit's update of the status |
+| `member.invite` vs `member.invite`, one device key | the second refused: the key is carried | the first refused | one device enrolled for two members |
+| `member.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
 
 `invite` and `profile` are rightly confluent; `admit`, `suspend` and `exit`
-rightly ordered.
+rightly ordered. **Applied**: suspension and exit are decided, citing the
+assembly's decision, and carried out once its close settles; until then
+they needed a power no mandate granted.
+
+## An admission settles with its close
+
+Owners: the `circle-decision-member` graft, which counts the roll; the
+`member` feat, `circle-member` and `key-member` for the state each
+admission changes.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| close admitting M vs `circle-member:position.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
+| close admitting M vs the admission alone | — | — | an active member with no seat and no device, who cannot vote or sign |
+| `decision.propose` vs `decision.vote` on it | the motion is fixed before the stance | no motion is added after it | members consent to one thing and are counted for another |
+
+The close, the admissions it makes, their seats and the devices their
+invitations carried settle in one transaction under one verdict, or not
+at all. Before, the close settled and each admission and seat followed as
+writes of their own, and a refused seat left an active member with none.
+**Applied**: the decision feat's close is a write a graft extends, and
+`circle-decision-member` extends it; the rules of each slice run on the
+close (`decision_member.closes`, `circle_decision_member.settles`, and
+`key-member`'s trigger). What else a decision decides, a suspension, a
+seat, a nesting, a mandate, is carried out after the close, each its own
+decided write: a refusal there leaves the decision passed and the motion
+undone, which its outcome shows.
+
+**Lanterne.** d-2026-012 closes on 31 October: Inès is admitted with her
+20 shares, seated in the assembly and her laptop enrolled, in one verdict.
+
+## A power reaches down the tree
+
+Owners: the `circle-member` graft for how far a power reaches
+(`circle_member.over`); `circle-member-timesheet` and
+`circle-member-project` for what a write concerns.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `timesheet:period.approve` by a lead vs `circle-member:position.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
+| `project.budget` by a lead vs `circle.nest` of the project's circle away | set | refused: the circle is no longer within the lead's | a lead budgets another circle's project |
+
+A power held through a seat reaches the seat's circle and the circles
+within it, never above or across. Both writes are ordered, and so are
+seats and nestings, so the reach is read under the log's lock.
+
+**Lanterne.** Hugo, Brand's lead, may not approve Thomas's October, which
+is Web's; Yusuf may.
 
 ## Erasure wins
 
@@ -522,8 +575,8 @@ October is approved; prepared then, approved by Camille, it accrues on
 |---|---|
 | `circle.message`, `document.comment` | appended; no rule reads them |
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
-| `decision.propose` | a fact; the roll is fixed from the seats when the server receives it, and the cutoff by `close` |
-| `member.invite` | two invitations do no harm |
+| `decision.propose` | a fact; the roll and the motions are fixed when the server receives it, and the cutoff by `close` |
+| `member.invite` | two invitations do no harm, unless they carry one device key, which is refused |
 | `client.add` | duplicates are merged by hand |
 | `project.create`, `task.create` | facts; a project's slug taken twice is refused, a task's number is the server's |
 | `project:milestone.complete` | idempotent: the first day stands |

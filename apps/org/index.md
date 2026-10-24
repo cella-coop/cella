@@ -35,8 +35,15 @@ What it writes, as the member picked in the user menu (dev only), each
 showing its outcome, Settled with its log entry or Refused with the
 rule's reason:
 
-- a stance on an open decision, and closing it, which admits and seats the
-  members a passing admission names;
+- an invitation carrying the invitee's first device; a new decision, by
+  its circle's procedure, with what it decides: admitting, suspending or
+  letting go a member, seating or unseating one, nesting a circle,
+  granting or revoking a mandate, proposed from the New form or from a
+  member's or a circle's page;
+- a stance on an open decision, and closing it, which in the same verdict
+  admits and seats the members a passing decision admits and enrols the
+  devices their invitations carried, then carries out what else it
+  decides;
 - an edit of a document's draft in the block editor, live: each member's
   edits go as Loro updates through the `edit` write and reach everyone
   with the document open as they settle; saving a version, which the
@@ -103,17 +110,21 @@ and admit a member by vote (ordered).
 | `account-payslip` | a surplus's work share divided by salary |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor |
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
-| `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, and whether it passes on it |
-| `circle-member` | positions: who holds which role in which circle |
+| `circle-decision` | nesting circles and granting and revoking mandates by decision |
+| `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
+| `circle-member` | positions: who holds which role in which circle, and how far a power reaches |
+| `circle-member-project` | a lead runs their own circle's projects |
+| `circle-member-timesheet` | a lead approves their own circle's time |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `decision-document` | adoption of a document version by a decision |
-| `decision-member` | admission and suspension by a decision |
+| `decision-member` | admission, suspension and exit by a decision |
 | `expense-member` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
 | `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
+| `key-member` | a member's devices, the first carried by their invitation and enrolled by their admission |
 | `member-project` | shares of a project's budget, never beyond it |
 | `member-task` | who does a task |
 | `member-payslip` | whose a salary and a payslip are |

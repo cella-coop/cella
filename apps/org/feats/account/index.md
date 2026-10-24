@@ -130,8 +130,8 @@ graft's.
 
 ## Lanterne
 
-- The chart is a slice of the PCG: `512` the bank at Crédit Coopératif,
-  `411` clients, `706` services, `44571` VAT collected.
+- The chart is a part of the PCG: `512` the bank at Crédit Coopératif,
+  `401` suppliers, `411` clients, `706` services, `44571` VAT collected.
 - July, August and September 2026 are closed; October is open. Julien
   closes each month in the first week of the next.
 - The 2025 surplus of 61 400 € was allocated in June by d-2026-006:

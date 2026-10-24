@@ -39,8 +39,8 @@ graft's, and whether a member is active the `member` feat's.
   op listed, then and later, as `circle-decision-member` attaches its own
   to `decision.cites`. A write with no power gets no such rule.
 
-Lanterne: Julien issues invoices, records payments, closes periods and
-pays suppliers up to 3 000 € an entry, as finance; Chloé holds no seat with
+Lanterne: Julien issues invoices, records payments, posts entries, closes
+periods and pays suppliers up to 3 000 € a payment, as finance; Chloé holds no seat with
 a mandate, so she does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet.
 

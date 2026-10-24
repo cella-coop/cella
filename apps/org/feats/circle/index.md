@@ -114,6 +114,6 @@ requested by another scope (rung 5) build on these entities later.
 |---|---|---|
 | Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
 | Finance (Julien) | `pay-supplier` | 3 000 € limit |
-| Finance | `issue-invoice`, `record-receipt`, `close-period` | — |
+| Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period` | — |
 | Circle lead | `spend-circle` | 1 000 € budget, a month |
 | Circle lead | `send-quote` | 15 000 € limit |

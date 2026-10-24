@@ -62,6 +62,11 @@ limit = 2000000
 
 [[mandate]]
 role = "finance"
+power = "record-entry"
+text = "record entries in the books"
+
+[[mandate]]
+role = "finance"
 power = "pay-supplier"
 text = "pay suppliers"
 limit = 300000

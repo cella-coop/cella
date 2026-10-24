@@ -34,6 +34,7 @@ before issue, an allocation before its decision).
 | Write | Label | Why |
 |---|---|---|
 | `POST /api/transaction/post` | confluent | an entry always has both sides |
+| `POST /api/transaction/pay` | confluent | a payment to a supplier is an entry like any other |
 | `POST /api/transaction/adjust` | ordered | a correction, named by the entry it corrects |
 
 - **post** posts a balanced entry, in or out. An entry's balance is
@@ -41,6 +42,9 @@ before issue, an allocation before its decision).
   settle in any order and never wait. The right to take money out of a
   share is `account.draw`'s, not this write's; it posts through
   `account-transaction`.
+- **pay** pays a supplier: one entry debiting `401` (fournisseurs) and
+  crediting `512` (the bank) by the amount paid. It commutes as any entry
+  does; what it takes from the bank is capped by the payer's mandate.
 - **adjust** posts a correcting entry, naming the entry it corrects
   (`base: 'corrected'`): the notary refuses a second correction of the
   same entry. Whether a correction also needs the circle's decision is a
@@ -50,15 +54,17 @@ before issue, an allocation before its decision).
 
 | Write | Power | Lanterne |
 |---|---|---|
-| post | `pay-supplier`, within the mandate's limit for the entry's amount, the sum of its debits | Julien, as finance, up to 3 000 € an entry |
+| post | `record-entry`, with no limit | Julien, as finance |
+| pay | `pay-supplier`, within the mandate's limit for the amount paid | Julien, as finance, up to 3 000 € a payment |
 | adjust | held by the circle that keeps the books | `ag`, by its own setting; not checked yet |
 
-`003-powers.sql` registers post's power in `cella.power`, with `amount` as
-the payload field the limit caps; the `circle-member` graft checks it. One
-power covers every post, so a payroll entry above the limit is refused
-too: a power chosen by what an entry posts to (a supplier payment against
-`512`, payroll, VAT) is open. Every member reads the books; reading needs
-no power.
+`003-powers.sql` registers post's power in `cella.power`, and
+`004-pay.sql` pay's, with `amount` as the payload field the limit caps;
+the `circle-member` graft checks both. Keeping the books is a duty, so a
+payroll entry or a VAT return posts under `record-entry` whatever its
+size; a post is not limited by what it credits to `512`, so the cap on a
+supplier payment holds for payments made through pay. Every member reads
+the books; reading needs no power.
 
 ## Invariants
 
@@ -110,9 +116,9 @@ select.
   corrects the entry the payload names, and that entry's latest correction
   before it is the payload's `base`; a second correction from the same base
   is refused.
-- `transaction.amounts`, on `transaction:transaction:post`: the payload's
-  `amount` is the sum of the entry's debits, so the mandate's limit caps
-  what was posted.
+- `transaction.pays`, on `transaction:transaction:pay`: the entry is two
+  lines, `401` debited and `512` credited, each by the payload's `amount`,
+  so the mandate's limit caps what left the bank.
 
 ## Handlers
 
@@ -121,6 +127,8 @@ select.
 - `post` (confluent): records a balanced entry. At rung 1 it is still
   refused when it does not balance or is dated in a closed period, so it
   returns `Refused` beside `Settled`.
+- `pay` (confluent): records a supplier payment, `401` against `512`, and
+  commits its amount; refused beyond the payer's limit.
 - `adjust` (ordered, `base: 'corrected'`): records a correcting entry,
   naming the entry it corrects and the base it read.
 
@@ -136,8 +144,9 @@ do, must name the next number.
 `core/ts/_tests/journal.test.ts`, the feat's slice test (`cella test
 slice transaction`), runs on the app's core and this feat alone: an entry
 balances or is refused, ids are gapless and a refused entry returns its
-number, nothing posted changes, and `transaction.corrects` refuses a
-second correction from the same base.
+number, nothing posted changes, `transaction.pays` takes a payment and
+nothing else, and `transaction.corrects` refuses a second correction from
+the same base.
 
 ## Lanterne
 

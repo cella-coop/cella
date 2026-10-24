@@ -1,6 +1,7 @@
 // The journal alone, on a database holding only the app's core and this
-// feat: entries balance, ids are gapless, nothing posted changes, and a
-// correction names its base. Run by `cella test slice transaction`.
+// feat: entries balance, ids are gapless, nothing posted changes, a payment
+// is exactly one, and a correction names its base. Run by `cella test slice
+// transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -84,6 +85,23 @@ test('nothing posted changes: a correction is a new entry', async () => {
     await assert.rejects(db.query(sql), /the journal is permanent/)
     await db.query('ROLLBACK')
   }
+})
+
+test('a payment is 401 debited and 512 credited by its amount, and nothing else, by transaction.pays', async () => {
+  const pays = async (entry: string | undefined, amount: number) =>
+    (await db.query<{ r: string | null }>('SELECT transaction.pays($1) AS r', [{ entry, amount }])).rows[0].r
+  const paid = await post([{ account: '401', side: 'debit', cents: 2400_00 }, { account: '512', side: 'credit', cents: 2400_00 }])
+  assert.equal(await pays(paid.id, 2400_00), null)
+  assert.match((await pays(paid.id, 1_00)) ?? '', /is not a payment of 100 cents/)
+  const rentPaid = await post(rent)
+  assert.match((await pays(rentPaid.id, 1200_00)) ?? '', /is not a payment of 120000 cents: 401 debited and 512 credited by it, nothing else/)
+  const split = await post([
+    { account: '401', side: 'debit', cents: 2400_00 },
+    { account: '512', side: 'credit', cents: 1200_00 },
+    { account: '512', side: 'credit', cents: 1200_00 },
+  ])
+  assert.match((await pays(split.id, 2400_00)) ?? '', /is not a payment/)
+  assert.equal(await pays('je-9999', 1_00), 'no entry je-9999')
 })
 
 test('a correction names its base, and a second from the same base is refused by transaction.corrects', async () => {

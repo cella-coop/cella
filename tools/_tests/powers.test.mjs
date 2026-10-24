@@ -26,7 +26,7 @@ test('a power in ops.ts that no SQL registers is refused', () => {
 test('a power or amount that differs is refused', () => {
   assert.match(agree([op('invoice:invoice:issue', 'issue-invoice')], [row('invoice:invoice:issue', 'pay-supplier')])[0], /but cella.power registers pay-supplier/)
   assert.match(
-    agree([op('transaction:transaction:post', 'pay-supplier', 'amount')], [row('transaction:transaction:post', 'pay-supplier', null, 'transaction')])[0],
+    agree([op('transaction:transaction:pay', 'pay-supplier', 'amount')], [row('transaction:transaction:pay', 'pay-supplier', null, 'transaction')])[0],
     /needs pay-supplier up to its amount, but cella.power registers pay-supplier$/,
   )
 })

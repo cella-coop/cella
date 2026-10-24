@@ -1,4 +1,4 @@
-# The accounts: a slice of the French chart of accounts, the periods they are
+# The accounts: a part of the French chart of accounts, the periods they are
 # kept in and the surplus allocations, amounts in cents. July to September
 # are closed; October is open.
 
@@ -21,6 +21,11 @@ kind = "equity"
 code = "120"
 label = "Résultat de l'exercice en cours"
 kind = "equity"
+
+[[account]]
+code = "401"
+label = "Fournisseurs"
+kind = "liability"
 
 [[account]]
 code = "411"

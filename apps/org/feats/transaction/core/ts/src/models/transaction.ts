@@ -14,6 +14,14 @@ export interface Entry {
   lines: Line[]
 }
 
+// A payment to a supplier: the amount leaves the bank, 512, and settles
+// what the co-op owes its suppliers, 401.
+export interface Pay {
+  date: string
+  label: string
+  cents: number
+}
+
 // A correcting entry names the entry it corrects and that entry's latest
 // correction it read, or null if it read none.
 export interface Adjust {

@@ -8,7 +8,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
-import { post } from '@cella/org-transaction/api'
+import { pay, post } from '@cella/org-transaction/api'
 import { close, vote } from '@cella/org-decision/api'
 import { profile } from '@cella/org-member/api'
 import { enrol, revoke } from '@cella/org-key/api'
@@ -97,17 +97,43 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
   assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
 })
 
-test('Julien pays a supplier 2 400 € within his 3 000 € limit; 3 200 € is refused, and so is Camille', async () => {
-  const within = await post(paying(2400_00), as(julien))
-  assert.equal(within.state, 'settled')
+test('Julien records October\'s payroll, above any spending limit, under record-entry; Camille holds no record-entry', async () => {
+  const payroll = await post({
+    date: '2026-10-24',
+    label: 'Payroll, October 2026',
+    lines: [
+      { account: '641', side: 'debit', cents: 21_400_00 },
+      { account: '645', side: 'debit', cents: 9_630_00 },
+      { account: '512', side: 'credit', cents: 31_030_00 },
+    ],
+  }, as(julien))
+  assert.equal(payroll.state, 'settled')
+  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [payroll.state === 'settled' && payroll.entry])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member'])
 
   const before = await head()
-  const beyond = await post(paying(3200_00), as(julien))
+  const gerante = await post(paying(100_00), as(camille))
+  assert.match(reason(gerante), /camille@lanterne\.example holds no mandate for record-entry/)
+  assert.equal(await head(), before)
+})
+
+test('Julien pays a supplier 2 400 € within his 3 000 € limit; 3 200 € is refused, and so is Camille', async () => {
+  const within = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc: posters', cents: 2400_00 }, as(julien))
+  assert.equal(within.state, 'settled')
+  const entry = within.state === 'settled' ? within.value.entry : ''
+  const lines = await all<{ account: string; side: string; cents: string }>(
+    'SELECT account, side, cella.cents(amount) AS cents FROM transaction.line WHERE entry = $1 ORDER BY n',
+    [entry],
+  )
+  assert.deepEqual(lines, [{ account: '401', side: 'debit', cents: '240000' }, { account: '512', side: 'credit', cents: '240000' }])
+
+  const before = await head()
+  const beyond = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc: brochures', cents: 3200_00 }, as(julien))
   assert.equal(beyond.state, 'refused')
   assert.match(reason(beyond), /julien@lanterne\.example holds no mandate for pay-supplier up to 3200\.00 €/)
 
   // Camille commits up to 20 000 € as gérante, but holds no pay-supplier.
-  const gerante = await post(paying(100_00), as(camille))
+  const gerante = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc', cents: 100_00 }, as(camille))
   assert.match(reason(gerante), /camille@lanterne\.example holds no mandate for pay-supplier/)
   assert.equal(await head(), before)
 })

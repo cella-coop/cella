@@ -74,7 +74,7 @@ const check = (name) => {
 
   const documents = ids(document.document)
   const versions = new Set((document.document ?? []).flatMap((d) => (d.version ?? []).map((v) => v.id)))
-  for (const c of document.comment ?? []) {
+  for (const c of (document.document ?? []).flatMap((d) => d.comment ?? [])) {
     has(versions, c.version, 'version', 'comment')
     known(c.author, 'comment')
   }

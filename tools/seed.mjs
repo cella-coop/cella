@@ -1,14 +1,16 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
 // carried over from before the log: members and their seats, decisions with
-// their stances, admissions, clients, the chart, periods and journal,
-// invoices with their payments, and the grafts' links. Stances and payments
-// take receipts in file order; a closed decision's cutoff is the receipt
+// their stances, admissions, documents with their versions, comments and
+// adoptions, clients, the chart, periods and journal, invoices with their
+// payments, and the grafts' links. Stances, document updates, adoptions and
+// payments take receipts in file order; a closed decision's cutoff is the receipt
 // after its last stance. Seats load before decisions, whose rolls are fixed
 // from them, and periods close after the journal is in.
 // Usage: node tools/seed.mjs apps/org/fixtures/<co-op>
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { LoroDoc } from 'loro-crdt'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 
@@ -62,6 +64,51 @@ for (const d of decisions) {
 const admissions = read('graft.decision-member').admission ?? []
 for (const a of admissions) {
   await db.query('INSERT INTO decision_member.admission (decision, member, shares) VALUES ($1, $2, $3)', [a.decision, a.member, a.shares])
+}
+
+// Each document's versions become Loro updates, one per version in order,
+// from one peer: the history before the log, with no author. A version
+// records the frontier and version vector its update reached.
+const documents = read('document')
+let versions = 0
+for (const d of documents.document ?? []) {
+  await db.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [d.id, d.title])
+  const loro = new LoroDoc()
+  loro.setPeerId(1n)
+  for (const v of d.version ?? []) {
+    const from = loro.version()
+    loro.getText('body').update(v.body)
+    loro.commit()
+    await db.query(
+      'INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (cella.receipt(), $1, NULL, $2, $3)',
+      [d.id, day(v.saved), loro.export({ mode: 'update', from })],
+    )
+    await db.query(
+      'INSERT INTO document.version (document, n, saved, body, frontier, vv) VALUES ($1, $2, $3, $4, $5, $6)',
+      [d.id, Number(v.id.split('@')[1]), day(v.saved), v.body, JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
+    )
+    versions++
+  }
+}
+for (const c of (documents.document ?? []).flatMap((d) => d.comment ?? [])) {
+  await db.query(
+    'INSERT INTO document.comment (version, author, at, quote, text) VALUES ($1, $2, $3, $4, $5)',
+    [c.version, c.author, day(c.at), c.quote, c.text],
+  )
+}
+
+// What decisions ask to adopt, and the adoptions already made, each from
+// the version adopted before it.
+const adoptions = read('graft.decision-document').adoption ?? []
+for (const a of adoptions) {
+  await db.query('INSERT INTO decision_document.adoption (decision, document, version) VALUES ($1, $2, $3)', [a.decision, a.document, a.version])
+  if (a.adopted) {
+    await db.query(
+      `INSERT INTO document.adoption (receipt, document, version, base, adopted)
+       VALUES (cella.receipt(), $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
+      [a.document, a.version, day(a.adopted)],
+    )
+  }
 }
 
 const clients = read('client').client ?? []
@@ -151,6 +198,6 @@ await db.query('COMMIT')
 await db.end()
 console.log(
   `seed: ${members.length} members, ${positions.length} seats, ${decisions.length} decisions, ${votes} stances, ` +
-    `${admissions.length} admissions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+    `${admissions.length} admissions, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings into ${db.database}`,
 )

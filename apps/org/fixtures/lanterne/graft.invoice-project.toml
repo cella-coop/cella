@@ -1,0 +1,61 @@
+# Which project each invoice bills work of.
+
+[[charge]]
+invoice = "F-2026-0041"
+project = "halles-shop"
+
+[[charge]]
+invoice = "F-2026-0042"
+project = "nuvola-retainer"
+
+[[charge]]
+invoice = "F-2026-0043"
+project = "clairval-site"
+
+[[charge]]
+invoice = "F-2026-0044"
+project = "mauve-posters"
+
+[[charge]]
+invoice = "F-2026-0045"
+project = "ondine-shop"
+
+[[charge]]
+invoice = "F-2026-0046"
+project = "nuvola-retainer"
+
+[[charge]]
+invoice = "F-2026-0047"
+project = "halles-shop"
+
+[[charge]]
+invoice = "F-2026-0048"
+project = "nuvola-retainer"
+
+[[charge]]
+invoice = "F-2026-0049"
+project = "clairval-site"
+
+[[charge]]
+invoice = "F-2026-0050"
+project = "velo-identity"
+
+[[charge]]
+invoice = "F-2026-0051"
+project = "velo-identity"
+
+[[charge]]
+invoice = "F-2026-0052"
+project = "ferrand-packaging"
+
+[[charge]]
+invoice = "F-2026-0053"
+project = "nuvola-retainer"
+
+[[charge]]
+invoice = "F-2026-0054"
+project = "halles-shop"
+
+[[charge]]
+invoice = "F-2026-0055"
+project = "terres-report"

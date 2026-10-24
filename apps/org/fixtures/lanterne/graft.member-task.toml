@@ -1,0 +1,129 @@
+# Who does each task: a member of the circle that runs its project.
+
+[[assignment]]
+task = "t-1"
+member = "yusuf@lanterne.example"
+
+[[assignment]]
+task = "t-2"
+member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-3"
+member = "amina@lanterne.example"
+
+[[assignment]]
+task = "t-4"
+member = "amina@lanterne.example"
+
+[[assignment]]
+task = "t-5"
+member = "yusuf@lanterne.example"
+
+[[assignment]]
+task = "t-6"
+member = "thomas@lanterne.example"
+
+[[assignment]]
+task = "t-7"
+member = "lea@lanterne.example"
+
+[[assignment]]
+task = "t-8"
+member = "lea@lanterne.example"
+
+[[assignment]]
+task = "t-9"
+member = "lea@lanterne.example"
+
+[[assignment]]
+task = "t-10"
+member = "chloe@lanterne.example"
+
+[[assignment]]
+task = "t-11"
+member = "chloe@lanterne.example"
+
+[[assignment]]
+task = "t-12"
+member = "malik@lanterne.example"
+
+[[assignment]]
+task = "t-13"
+member = "malik@lanterne.example"
+
+[[assignment]]
+task = "t-14"
+member = "malik@lanterne.example"
+
+[[assignment]]
+task = "t-15"
+member = "julien@lanterne.example"
+
+[[assignment]]
+task = "t-16"
+member = "hugo@lanterne.example"
+
+[[assignment]]
+task = "t-17"
+member = "sofia@lanterne.example"
+
+[[assignment]]
+task = "t-18"
+member = "hugo@lanterne.example"
+
+[[assignment]]
+task = "t-19"
+member = "sofia@lanterne.example"
+
+[[assignment]]
+task = "t-20"
+member = "camille@lanterne.example"
+
+[[assignment]]
+task = "t-21"
+member = "hugo@lanterne.example"
+
+[[assignment]]
+task = "t-22"
+member = "hugo@lanterne.example"
+
+[[assignment]]
+task = "t-23"
+member = "sofia@lanterne.example"
+
+[[assignment]]
+task = "t-24"
+member = "sofia@lanterne.example"
+
+[[assignment]]
+task = "t-25"
+member = "lea@lanterne.example"
+
+[[assignment]]
+task = "t-26"
+member = "amina@lanterne.example"
+
+[[assignment]]
+task = "t-27"
+member = "camille@lanterne.example"
+
+[[assignment]]
+task = "t-28"
+member = "julien@lanterne.example"
+
+[[assignment]]
+task = "t-29"
+member = "camille@lanterne.example"
+
+[[assignment]]
+task = "t-30"
+member = "yusuf@lanterne.example"
+
+[[assignment]]
+task = "t-31"
+member = "julien@lanterne.example"
+
+[[assignment]]
+task = "t-33"
+member = "thomas@lanterne.example"

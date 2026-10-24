@@ -1,0 +1,474 @@
+# Lanterne's time since timesheets began on 1 September 2026, and its
+# members' months. A run is the same entry logged on every working day,
+# Monday to Friday, from one day to another: the seed logs one entry per
+# day of it. Each member's runs make seven hours a working day, the
+# 35-hour week of the internal rules. Billable time is what the
+# invoices bill, at the rate in graft.project-timesheet.toml; which
+# project a run's time is for is that graft's.
+#
+# September is submitted by everyone and approved: each circle's lead
+# approves their circle's members, Julien in finance the leads, and
+# Camille as gérante Julien. October is open.
+
+# Web
+
+[[run]]
+id = "yusuf-halles"
+member = "yusuf@lanterne.example"
+from = 2026-09-01
+to = 2026-10-09
+hours = 2
+note = "Shop: payments and launch"
+
+[[run]]
+id = "yusuf-halles-care"
+member = "yusuf@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 1
+note = "Shop: care and handover"
+
+[[run]]
+id = "yusuf-terres"
+member = "yusuf@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 1
+note = "Microsite: architecture"
+
+[[run]]
+id = "yusuf-circle"
+member = "yusuf@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 5
+billable = false
+note = "Web circle: reviews, hosting and Inès's onboarding"
+
+[[run]]
+id = "thomas-halles"
+member = "thomas@lanterne.example"
+from = 2026-09-01
+to = 2026-10-09
+hours = 2.5
+note = "Shop: checkout and catalogue"
+
+[[run]]
+id = "thomas-halles-care"
+member = "thomas@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 1.5
+note = "Shop: VAT fixes"
+
+[[run]]
+id = "thomas-upkeep"
+member = "thomas@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 4.5
+billable = false
+note = "Maintenance and hosting"
+
+[[run]]
+id = "thomas-ondine"
+member = "thomas@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 1
+billable = false
+note = "Plugin updates on Atelier Ondine's shop, under its care plan"
+
+[[run]]
+id = "amina-halles"
+member = "amina@lanterne.example"
+from = 2026-09-01
+to = 2026-10-09
+hours = 1
+note = "Shop: product import"
+
+[[run]]
+id = "amina-halles-care"
+member = "amina@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 1.5
+note = "Shop: back-office training"
+
+[[run]]
+id = "amina-terres"
+member = "amina@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 2
+note = "Microsite: build set-up"
+
+[[run]]
+id = "amina-tooling"
+member = "amina@lanterne.example"
+from = 2026-09-01
+to = 2026-10-09
+hours = 6
+billable = false
+note = "Back-end tooling and the studio's servers"
+
+[[run]]
+id = "amina-tooling-oct"
+member = "amina@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 3.5
+billable = false
+note = "Back-end tooling and the studio's servers"
+
+[[run]]
+id = "lea-clairval"
+member = "lea@lanterne.example"
+from = 2026-09-01
+to = 2026-09-04
+hours = 5
+note = "Lot 2: templates and RGAA fixes"
+
+[[run]]
+id = "lea-terres"
+member = "lea@lanterne.example"
+from = 2026-09-14
+to = 2026-10-09
+hours = 1.5
+note = "Microsite: research and wireframes"
+
+[[run]]
+id = "lea-terres-design"
+member = "lea@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 3
+note = "Microsite: design"
+
+[[run]]
+id = "lea-studio-a"
+member = "lea@lanterne.example"
+from = 2026-09-01
+to = 2026-09-04
+hours = 2
+billable = false
+note = "Design system and Lanterne's own site"
+
+[[run]]
+id = "lea-studio-b"
+member = "lea@lanterne.example"
+from = 2026-09-07
+to = 2026-09-11
+hours = 7
+billable = false
+note = "Design system and Lanterne's own site"
+
+[[run]]
+id = "lea-studio-c"
+member = "lea@lanterne.example"
+from = 2026-09-14
+to = 2026-10-09
+hours = 5.5
+billable = false
+note = "Design system and Lanterne's own site"
+
+[[run]]
+id = "lea-studio-d"
+member = "lea@lanterne.example"
+from = 2026-10-12
+to = 2026-10-23
+hours = 4
+billable = false
+note = "Design system and Lanterne's own site"
+
+# Brand
+
+[[run]]
+id = "hugo-velo"
+member = "hugo@lanterne.example"
+from = 2026-09-01
+to = 2026-09-11
+hours = 2
+note = "Identity: logo and guidelines"
+
+[[run]]
+id = "hugo-ferrand"
+member = "hugo@lanterne.example"
+from = 2026-09-01
+to = 2026-09-25
+hours = 3
+note = "Packaging: range and print files"
+
+[[run]]
+id = "hugo-ferrand-print"
+member = "hugo@lanterne.example"
+from = 2026-09-28
+to = 2026-10-23
+hours = 1
+note = "Packaging: proofs and press check"
+
+[[run]]
+id = "hugo-terres"
+member = "hugo@lanterne.example"
+from = 2026-09-14
+to = 2026-10-16
+hours = 0.5
+note = "Report: art direction"
+
+[[run]]
+id = "hugo-circle-a"
+member = "hugo@lanterne.example"
+from = 2026-09-01
+to = 2026-09-11
+hours = 2
+billable = false
+note = "Brand circle: reviews and pitches"
+
+[[run]]
+id = "hugo-circle-b"
+member = "hugo@lanterne.example"
+from = 2026-09-14
+to = 2026-09-25
+hours = 3.5
+billable = false
+note = "Brand circle: reviews and pitches"
+
+[[run]]
+id = "hugo-circle-c"
+member = "hugo@lanterne.example"
+from = 2026-09-28
+to = 2026-10-16
+hours = 5.5
+billable = false
+note = "Brand circle: reviews and pitches"
+
+[[run]]
+id = "hugo-circle-d"
+member = "hugo@lanterne.example"
+from = 2026-10-19
+to = 2026-10-23
+hours = 6
+billable = false
+note = "Brand circle: reviews and pitches"
+
+[[run]]
+id = "sofia-velo"
+member = "sofia@lanterne.example"
+from = 2026-09-01
+to = 2026-09-11
+hours = 2.5
+note = "Identity: guidelines and illustrations"
+
+[[run]]
+id = "sofia-ferrand"
+member = "sofia@lanterne.example"
+from = 2026-09-01
+to = 2026-09-25
+hours = 3.5
+note = "Packaging: die lines and illustrations"
+
+[[run]]
+id = "sofia-terres"
+member = "sofia@lanterne.example"
+from = 2026-09-28
+to = 2026-10-16
+hours = 3
+note = "Report: layout and infographics"
+
+[[run]]
+id = "sofia-studio-a"
+member = "sofia@lanterne.example"
+from = 2026-09-01
+to = 2026-09-11
+hours = 1
+billable = false
+note = "Motion reel and portfolio"
+
+[[run]]
+id = "sofia-studio-b"
+member = "sofia@lanterne.example"
+from = 2026-09-14
+to = 2026-09-25
+hours = 3.5
+billable = false
+note = "Motion reel and portfolio"
+
+[[run]]
+id = "sofia-studio-c"
+member = "sofia@lanterne.example"
+from = 2026-09-28
+to = 2026-10-16
+hours = 4
+billable = false
+note = "Motion reel and portfolio"
+
+[[run]]
+id = "sofia-studio-d"
+member = "sofia@lanterne.example"
+from = 2026-10-19
+to = 2026-10-23
+hours = 7
+billable = false
+note = "Motion reel and portfolio"
+
+[[run]]
+id = "camille-ferrand"
+member = "camille@lanterne.example"
+from = 2026-09-01
+to = 2026-09-25
+hours = 1.5
+note = "Packaging: brand strategy"
+
+[[run]]
+id = "camille-terres"
+member = "camille@lanterne.example"
+from = 2026-09-28
+to = 2026-10-16
+hours = 1.5
+note = "Report: editorial"
+
+[[run]]
+id = "camille-manage-a"
+member = "camille@lanterne.example"
+from = 2026-09-01
+to = 2026-09-25
+hours = 5.5
+billable = false
+note = "Management: contracts, the assembly and the rate card"
+
+[[run]]
+id = "camille-manage-b"
+member = "camille@lanterne.example"
+from = 2026-09-28
+to = 2026-10-16
+hours = 5.5
+billable = false
+note = "Management: contracts, the assembly and the rate card"
+
+[[run]]
+id = "camille-manage-c"
+member = "camille@lanterne.example"
+from = 2026-10-19
+to = 2026-10-23
+hours = 7
+billable = false
+note = "Management: contracts, the assembly and the rate card"
+
+# Marketing
+
+[[run]]
+id = "malik-nuvola"
+member = "malik@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 1.5
+note = "Retainer: strategy and reporting"
+
+[[run]]
+id = "malik-circle"
+member = "malik@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 5.5
+billable = false
+note = "Marketing circle, pitches and the 2027 rate card"
+
+[[run]]
+id = "chloe-nuvola"
+member = "chloe@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 1.5
+note = "Retainer: content and social media"
+
+[[run]]
+id = "chloe-own"
+member = "chloe@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 5.5
+billable = false
+note = "Lanterne's own content and social media"
+
+# Operations
+
+[[run]]
+id = "julien-books"
+member = "julien@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 7
+billable = false
+note = "Books, invoicing, payroll and contracts"
+
+# September, submitted and approved.
+
+[[period]]
+member = "yusuf@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-05
+approver = "julien@lanterne.example"
+
+[[period]]
+member = "thomas@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-02
+approver = "yusuf@lanterne.example"
+
+[[period]]
+member = "amina@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-02
+approved = 2026-10-02
+approver = "yusuf@lanterne.example"
+
+[[period]]
+member = "lea@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-02
+approver = "yusuf@lanterne.example"
+
+[[period]]
+member = "hugo@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-05
+approver = "julien@lanterne.example"
+
+[[period]]
+member = "sofia@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-01
+approver = "hugo@lanterne.example"
+
+[[period]]
+member = "camille@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-02
+approved = 2026-10-05
+approver = "hugo@lanterne.example"
+
+[[period]]
+member = "malik@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-05
+approver = "julien@lanterne.example"
+
+[[period]]
+member = "chloe@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-01
+approver = "malik@lanterne.example"
+
+[[period]]
+member = "julien@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-05
+approver = "camille@lanterne.example"

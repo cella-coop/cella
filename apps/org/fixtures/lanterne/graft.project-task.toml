@@ -1,0 +1,132 @@
+# Which project each task is in, and which milestone by its number. Tasks
+# of the co-op's own, and those of the archived Ondine shop, are in none.
+
+[[filing]]
+task = "t-1"
+project = "halles-shop"
+milestone = 3
+
+[[filing]]
+task = "t-2"
+project = "halles-shop"
+milestone = 3
+
+[[filing]]
+task = "t-3"
+project = "halles-shop"
+milestone = 3
+
+[[filing]]
+task = "t-4"
+project = "halles-shop"
+milestone = 4
+
+[[filing]]
+task = "t-5"
+project = "halles-shop"
+milestone = 4
+
+[[filing]]
+task = "t-6"
+project = "halles-shop"
+milestone = 4
+
+[[filing]]
+task = "t-7"
+project = "halles-shop"
+milestone = 4
+
+[[filing]]
+task = "t-8"
+project = "clairval-site"
+milestone = 2
+
+[[filing]]
+task = "t-9"
+project = "clairval-site"
+milestone = 2
+
+[[filing]]
+task = "t-10"
+project = "nuvola-retainer"
+
+[[filing]]
+task = "t-11"
+project = "nuvola-retainer"
+
+[[filing]]
+task = "t-12"
+project = "nuvola-retainer"
+milestone = 1
+
+[[filing]]
+task = "t-13"
+project = "nuvola-retainer"
+
+[[filing]]
+task = "t-14"
+project = "nuvola-retainer"
+milestone = 2
+
+[[filing]]
+task = "t-15"
+project = "mauve-posters"
+
+[[filing]]
+task = "t-16"
+project = "velo-identity"
+milestone = 1
+
+[[filing]]
+task = "t-17"
+project = "velo-identity"
+milestone = 2
+
+[[filing]]
+task = "t-18"
+project = "ferrand-packaging"
+milestone = 1
+
+[[filing]]
+task = "t-19"
+project = "ferrand-packaging"
+milestone = 2
+
+[[filing]]
+task = "t-20"
+project = "ferrand-packaging"
+milestone = 2
+
+[[filing]]
+task = "t-21"
+project = "ferrand-packaging"
+milestone = 3
+
+[[filing]]
+task = "t-22"
+project = "ferrand-packaging"
+milestone = 3
+
+[[filing]]
+task = "t-23"
+project = "terres-report"
+milestone = 1
+
+[[filing]]
+task = "t-24"
+project = "terres-report"
+milestone = 1
+
+[[filing]]
+task = "t-25"
+project = "terres-report"
+milestone = 2
+
+[[filing]]
+task = "t-26"
+project = "terres-report"
+milestone = 2
+
+[[filing]]
+task = "t-27"
+project = "terres-report"

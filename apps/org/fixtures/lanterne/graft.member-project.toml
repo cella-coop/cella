@@ -1,0 +1,26 @@
+# Shares of project budgets, in cents: what a member may spend for the
+# project on suppliers, print or photography.
+
+[[share]]
+project = "halles-shop"
+member = "yusuf@lanterne.example"
+amount = 150000
+granted = 2026-06-15
+
+[[share]]
+project = "nuvola-retainer"
+member = "malik@lanterne.example"
+amount = 120000
+granted = 2026-09-01
+
+[[share]]
+project = "ferrand-packaging"
+member = "hugo@lanterne.example"
+amount = 200000
+granted = 2026-09-14
+
+[[share]]
+project = "terres-report"
+member = "camille@lanterne.example"
+amount = 300000
+granted = 2026-10-12

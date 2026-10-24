@@ -8,6 +8,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from 'smol-toml'
+import { work } from './fixture/work.mjs'
 import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
 const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
@@ -197,6 +198,8 @@ const check = (name) => {
   if (receivable !== owed) {
     fail(`the books say clients owe ${receivable}, the invoices ${owed}`)
   }
+
+  work(read, fail)
 }
 
 const names = existsSync(root) ? readdirSync(root) : []

@@ -1,0 +1,281 @@
+# Lanterne's tasks as they stand on 24 October 2026, numbered as created.
+# Who does each is the member-task graft's; which project and milestone it
+# is in, the project-task graft's.
+
+[[task]]
+id = "t-1"
+title = "Payment provider go-live checklist"
+status = "done"
+priority = "high"
+created = 2026-09-14
+due = 2026-10-06
+completed = 2026-10-06
+
+[[task]]
+id = "t-2"
+title = "Load test the checkout"
+status = "done"
+priority = "high"
+created = 2026-09-14
+due = 2026-10-05
+completed = 2026-10-05
+
+[[task]]
+id = "t-3"
+title = "Import products from the farmers' spreadsheet"
+status = "done"
+priority = "normal"
+created = 2026-09-01
+due = 2026-09-25
+completed = 2026-09-25
+
+[[task]]
+id = "t-4"
+title = "Train the shops' staff on the back office"
+status = "doing"
+priority = "normal"
+created = 2026-10-08
+due = 2026-10-30
+
+[[task]]
+id = "t-5"
+title = "Write the handover guide"
+status = "todo"
+priority = "normal"
+created = 2026-10-08
+due = 2026-11-20
+
+[[task]]
+id = "t-6"
+title = "Fix VAT display on mixed baskets"
+status = "doing"
+priority = "urgent"
+created = 2026-10-19
+due = 2026-10-27
+
+[[task]]
+id = "t-7"
+title = "Monthly analytics report, October"
+status = "backlog"
+priority = "low"
+created = 2026-10-08
+due = 2026-11-05
+
+[[task]]
+id = "t-8"
+title = "RGAA audit of the templates"
+status = "done"
+priority = "high"
+created = 2026-08-24
+due = 2026-09-03
+completed = 2026-09-03
+
+[[task]]
+id = "t-9"
+title = "Design system tokens and components"
+status = "done"
+priority = "normal"
+created = 2026-08-10
+due = 2026-09-02
+completed = 2026-09-02
+
+[[task]]
+id = "t-10"
+title = "October newsletter"
+status = "done"
+priority = "normal"
+created = 2026-09-28
+due = 2026-10-09
+completed = 2026-10-09
+
+[[task]]
+id = "t-11"
+title = "Social calendar, November"
+status = "doing"
+priority = "normal"
+created = 2026-10-12
+due = 2026-10-28
+
+[[task]]
+id = "t-12"
+title = "Q3 campaign report"
+status = "done"
+priority = "normal"
+created = 2026-09-21
+due = 2026-10-02
+completed = 2026-10-02
+
+[[task]]
+id = "t-13"
+title = "Campaign for the community solar open day"
+status = "todo"
+priority = "high"
+created = 2026-10-12
+due = 2026-11-06
+
+[[task]]
+id = "t-14"
+title = "Q4 review and renewal proposal"
+status = "backlog"
+priority = "normal"
+created = 2026-10-05
+due = 2026-12-11
+
+[[task]]
+id = "t-15"
+title = "Chase the overdue invoice F-2026-0044"
+status = "todo"
+priority = "high"
+created = 2026-10-20
+due = 2026-10-31
+
+[[task]]
+id = "t-16"
+title = "Three logo concepts"
+status = "done"
+priority = "normal"
+created = 2026-08-17
+due = 2026-08-28
+completed = 2026-08-27
+
+[[task]]
+id = "t-17"
+title = "Brand guidelines"
+status = "done"
+priority = "normal"
+created = 2026-08-31
+due = 2026-09-11
+completed = 2026-09-11
+
+[[task]]
+id = "t-18"
+title = "Range concept boards"
+status = "done"
+priority = "high"
+created = 2026-09-01
+due = 2026-09-11
+completed = 2026-09-10
+
+[[task]]
+id = "t-19"
+title = "Die lines for the six packs"
+status = "done"
+priority = "normal"
+created = 2026-09-11
+due = 2026-09-23
+completed = 2026-09-22
+
+[[task]]
+id = "t-20"
+title = "Print-ready files"
+status = "done"
+priority = "high"
+created = 2026-09-14
+due = 2026-09-25
+completed = 2026-09-25
+
+[[task]]
+id = "t-21"
+title = "Press check at the printer"
+status = "todo"
+priority = "high"
+created = 2026-09-28
+due = 2026-11-04
+
+[[task]]
+id = "t-22"
+title = "Order colour proofs"
+status = "doing"
+priority = "normal"
+created = 2026-10-12
+due = 2026-10-29
+
+[[task]]
+id = "t-23"
+title = "Annual report layout"
+status = "done"
+priority = "high"
+created = 2026-09-28
+due = 2026-10-14
+completed = 2026-10-14
+
+[[task]]
+id = "t-24"
+title = "Infographics for the map of the farms"
+status = "done"
+priority = "normal"
+created = 2026-09-28
+due = 2026-10-15
+completed = 2026-10-15
+
+[[task]]
+id = "t-25"
+title = "Microsite wireframes"
+status = "doing"
+priority = "high"
+created = 2026-10-12
+due = 2026-10-30
+
+[[task]]
+id = "t-26"
+title = "Microsite build"
+status = "todo"
+priority = "normal"
+created = 2026-10-12
+due = 2026-11-20
+
+[[task]]
+id = "t-27"
+title = "Quotes for printing the report"
+status = "doing"
+priority = "normal"
+created = 2026-10-14
+due = 2026-10-28
+
+[[task]]
+id = "t-28"
+title = "Close October's books"
+status = "todo"
+priority = "high"
+created = 2026-10-19
+due = 2026-11-05
+
+[[task]]
+id = "t-29"
+title = "Rate card 2027: answer Malik's comment"
+status = "todo"
+priority = "normal"
+created = 2026-10-21
+due = 2026-11-07
+
+[[task]]
+id = "t-30"
+title = "Prepare Inès's onboarding as a member"
+status = "todo"
+priority = "normal"
+created = 2026-10-20
+due = 2026-11-02
+
+[[task]]
+id = "t-31"
+title = "Renew the studio's insurance"
+status = "backlog"
+priority = "low"
+created = 2026-10-05
+due = 2026-12-01
+
+[[task]]
+id = "t-32"
+title = "Portfolio pages for Vélo Solidaire and Maison Ferrand"
+status = "backlog"
+priority = "low"
+created = 2026-10-05
+
+[[task]]
+id = "t-33"
+title = "Plugin updates on Atelier Ondine's shop"
+status = "done"
+priority = "normal"
+created = 2026-09-21
+due = 2026-09-30
+completed = 2026-09-30

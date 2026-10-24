@@ -29,6 +29,9 @@ Camille is the gérante, elected in June 2024 for four years, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
 keeps the books, issues invoices, pays suppliers up to 3 000 € a payment,
 runs the payroll and closes each month. Leads spend up to 1 000 € a month for their circle and quote up to 15 000 €.
+Leads and the gérante run projects and set their budgets, the leads up to
+15 000 € and Camille up to 50 000 €, and approve timesheets, as does
+Julien; every member creates and moves tasks and logs their own time.
 
 ## Where things stand on 24 October 2026
 
@@ -49,6 +52,14 @@ runs the payroll and closes each month. Leads spend up to 1 000 € a month for 
   the 2025 surplus of 61 400 € in June (d-2026-006): 27 630 € to the members
   for their work, 24 560 € to the indivisible reserves and 9 210 € as
   interest on capital.
+- **Work (confluent, bounded and ordered).** Eight projects, one per
+  commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
+  November, Ferrand's packaging waits on its press check, Terres Vives's
+  microsite is under way, Ondine's shop is archived. Thirty-three tasks on
+  the board, each with a member of the circle that runs its project.
+  Timesheets began on 1 September: seven hours a working day for everyone,
+  under a third billable at 80 € an hour. Four members hold shares of
+  project budgets. September is approved; October is open.
 
 ## Files
 
@@ -57,7 +68,15 @@ as the code: an invoice names whom it bills as text, and the link to the
 client record is the `client-invoice` graft's. Amounts are in cents, and a
 mandate's power is an id beside its text. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
-link resolves and the books agree with the invoices.
+link resolves and the books agree with the invoices; `tools/fixture/work.mjs`,
+that shares stay within budgets, an invoice bills a project of its client,
+no one logs more than ten hours a day, and an approved month was submitted
+and approved by someone else.
+
+Time is written as runs: one entry a working day from one day to another
+(`timesheet.toml`), which the seed expands into the 799 entries of
+September and October; which project a run is for is
+`graft.project-timesheet.toml`'s.
 
 Payroll is one entry a month until the payslip feat exists. Device keys are
 TEST-ONLY, derived from each device's address and label when the fixtures

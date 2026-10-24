@@ -1,0 +1,174 @@
+# Lanterne's projects, one for each piece of work a client commissioned,
+# with its milestones as quoted and invoiced. Budgets are in cents, net of
+# VAT, as quoted. Which client each is for is the client-project graft's;
+# the shares of a budget, the member-project graft's.
+
+[[project]]
+id = "halles-shop"
+title = "Les Halles Paysannes, online shop"
+circle = "web"
+started = 2026-06-08
+due = 2026-11-27
+budget = 4800000
+summary = """
+An online shop for a network of farmers' shops: weekly baskets, click and
+collect at six shops, and the farmers' own product sheets. Fixed price in
+four milestones of 12 000 €, invoiced as each is delivered."""
+
+[[project.milestone]]
+title = "Design"
+due = 2026-07-03
+completed = 2026-07-03
+
+[[project.milestone]]
+title = "Build"
+due = 2026-08-28
+completed = 2026-08-27
+
+[[project.milestone]]
+title = "Launch"
+due = 2026-10-09
+completed = 2026-10-08
+
+[[project.milestone]]
+title = "Care and handover"
+due = 2026-11-27
+
+[[project]]
+id = "clairval-site"
+title = "Ville de Clairval, town website"
+circle = "web"
+started = 2026-06-22
+due = 2026-09-04
+budget = 2400000
+summary = """
+The town website rebuilt to RGAA accessibility, won by tender in two lots.
+The build itself is a later tender."""
+
+[[project.milestone]]
+title = "Lot 1: audit and architecture"
+due = 2026-07-15
+completed = 2026-07-15
+
+[[project.milestone]]
+title = "Lot 2: design system and templates"
+due = 2026-09-04
+completed = 2026-09-04
+
+[[project]]
+id = "nuvola-retainer"
+title = "Nuvola Énergie, marketing retainer"
+circle = "marketing"
+started = 2026-01-05
+due = 2026-12-31
+budget = 5760000
+summary = """
+A citizen solar co-op's marketing: strategy, newsletter and social media,
+4 800 € a month, renewed each January."""
+
+[[project.milestone]]
+title = "Q3 review"
+due = 2026-10-02
+completed = 2026-10-02
+
+[[project.milestone]]
+title = "Q4 review and renewal"
+due = 2026-12-11
+
+[[project]]
+id = "mauve-posters"
+title = "Compagnie Mauve Horizon, season posters"
+circle = "brand"
+started = 2026-06-01
+due = 2026-07-21
+budget = 620000
+summary = "Posters and a brochure for the theatre company's 26-27 season."
+
+[[project.milestone]]
+title = "Posters"
+due = 2026-07-10
+completed = 2026-07-10
+
+[[project.milestone]]
+title = "Brochure"
+due = 2026-07-21
+completed = 2026-07-20
+
+[[project]]
+id = "velo-identity"
+title = "Vélo Solidaire, brand identity"
+circle = "brand"
+started = 2026-08-17
+due = 2026-09-11
+budget = 330000
+summary = "A brand identity for a bike repair workshop, at the solidarity rate."
+
+[[project.milestone]]
+title = "Concepts"
+due = 2026-08-28
+completed = 2026-08-28
+
+[[project.milestone]]
+title = "Identity and guidelines"
+due = 2026-09-11
+completed = 2026-09-11
+
+[[project]]
+id = "ferrand-packaging"
+title = "Maison Ferrand, packaging"
+circle = "brand"
+started = 2026-09-01
+due = 2026-11-06
+budget = 1400000
+summary = """
+Packaging for an artisan bakery group's range of six, from concept to the
+press check at the printer."""
+
+[[project.milestone]]
+title = "Range concept"
+due = 2026-09-11
+completed = 2026-09-11
+
+[[project.milestone]]
+title = "Six packs, print-ready"
+due = 2026-09-25
+completed = 2026-09-25
+
+[[project.milestone]]
+title = "Print supervision"
+due = 2026-11-06
+
+[[project]]
+id = "terres-report"
+title = "Fondation Terres Vives, annual report and microsite"
+circle = "brand"
+started = 2026-09-14
+due = 2026-11-27
+budget = 1800000
+summary = """
+The land trust's annual report, in print and as a microsite with its map of
+the farms it holds. Two milestones of 9 000 €."""
+
+[[project.milestone]]
+title = "Report design"
+due = 2026-10-16
+completed = 2026-10-16
+
+[[project.milestone]]
+title = "Microsite"
+due = 2026-11-27
+
+[[project]]
+id = "ondine-shop"
+title = "Atelier Ondine, online shop"
+circle = "web"
+started = 2026-05-18
+due = 2026-07-28
+budget = 950000
+archived = 2026-09-01
+summary = "An online shop for a ceramics studio, at a fixed price."
+
+[[project.milestone]]
+title = "Shop, fixed price"
+due = 2026-07-28
+completed = 2026-07-28

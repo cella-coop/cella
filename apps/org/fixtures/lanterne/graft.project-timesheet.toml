@@ -1,0 +1,95 @@
+# Which project each run of time in timesheet.toml is for; runs named in
+# none are the co-op's own time. And the hourly rate billable time spends
+# a budget at, in cents: the 560 € day rate over a seven-hour day.
+
+[[rate]]
+since = 2026-01-01
+hourly = 8000
+
+[[booking]]
+run = "yusuf-halles"
+project = "halles-shop"
+
+[[booking]]
+run = "yusuf-halles-care"
+project = "halles-shop"
+
+[[booking]]
+run = "yusuf-terres"
+project = "terres-report"
+
+[[booking]]
+run = "thomas-halles"
+project = "halles-shop"
+
+[[booking]]
+run = "thomas-halles-care"
+project = "halles-shop"
+
+[[booking]]
+run = "amina-halles"
+project = "halles-shop"
+
+[[booking]]
+run = "amina-halles-care"
+project = "halles-shop"
+
+[[booking]]
+run = "amina-terres"
+project = "terres-report"
+
+[[booking]]
+run = "lea-clairval"
+project = "clairval-site"
+
+[[booking]]
+run = "lea-terres"
+project = "terres-report"
+
+[[booking]]
+run = "lea-terres-design"
+project = "terres-report"
+
+[[booking]]
+run = "hugo-velo"
+project = "velo-identity"
+
+[[booking]]
+run = "hugo-ferrand"
+project = "ferrand-packaging"
+
+[[booking]]
+run = "hugo-ferrand-print"
+project = "ferrand-packaging"
+
+[[booking]]
+run = "hugo-terres"
+project = "terres-report"
+
+[[booking]]
+run = "sofia-velo"
+project = "velo-identity"
+
+[[booking]]
+run = "sofia-ferrand"
+project = "ferrand-packaging"
+
+[[booking]]
+run = "sofia-terres"
+project = "terres-report"
+
+[[booking]]
+run = "camille-ferrand"
+project = "ferrand-packaging"
+
+[[booking]]
+run = "camille-terres"
+project = "terres-report"
+
+[[booking]]
+run = "malik-nuvola"
+project = "nuvola-retainer"
+
+[[booking]]
+run = "chloe-nuvola"
+project = "nuvola-retainer"

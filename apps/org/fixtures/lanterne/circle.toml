@@ -71,6 +71,16 @@ power = "edit-document"
 text = "edit, version and comment on documents"
 
 [[mandate]]
+role = "member"
+power = "edit-task"
+text = "create, assign, file and move tasks"
+
+[[mandate]]
+role = "member"
+power = "log-time"
+text = "log and submit one's own time"
+
+[[mandate]]
 role = "manager"
 power = "commit"
 text = "sign contracts and commit spending"
@@ -119,3 +129,40 @@ role = "lead"
 power = "send-quote"
 text = "send a quote"
 limit = 1500000
+
+[[mandate]]
+role = "manager"
+power = "manage-project"
+text = "start and run projects"
+
+[[mandate]]
+role = "manager"
+power = "set-budget"
+text = "set a project's budget and grant shares of it"
+limit = 5000000
+
+[[mandate]]
+role = "manager"
+power = "approve-time"
+text = "approve timesheets"
+
+[[mandate]]
+role = "lead"
+power = "manage-project"
+text = "start and run projects"
+
+[[mandate]]
+role = "lead"
+power = "set-budget"
+text = "set a project's budget and grant shares of it"
+limit = 1500000
+
+[[mandate]]
+role = "lead"
+power = "approve-time"
+text = "approve timesheets"
+
+[[mandate]]
+role = "finance"
+power = "approve-time"
+text = "approve timesheets"

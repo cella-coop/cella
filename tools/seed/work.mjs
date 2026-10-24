@@ -1,0 +1,112 @@
+// seed, work: loads a mock co-op's projects with their milestones,
+// budgets and shares, its tasks, and its timesheets into the project,
+// task and timesheet schemas and their grafts' (client-project,
+// invoice-project, member-project, member-task, project-task,
+// member-timesheet, project-timesheet). Invoices load first. A run of time in the fixture is logged as one entry
+// on each working day, Monday to Friday, from its first day to its last.
+// Members and clients load first; an archived project is archived after
+// its milestones are in, and periods are submitted and approved after
+// their entries are in.
+
+// The working days from one ISO day to another, both included.
+export function weekdays(from, to) {
+  const out = []
+  for (let d = new Date(`${from}T00:00:00Z`); d <= new Date(`${to}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + 1)) {
+    if (d.getUTCDay() !== 0 && d.getUTCDay() !== 6) {
+      out.push(d.toISOString().slice(0, 10))
+    }
+  }
+  return out
+}
+
+export async function work(db, read, day) {
+  const projects = read('project').project ?? []
+  for (const p of projects) {
+    await db.query(
+      `INSERT INTO project.project (id, title, circle, summary, started, due, budget)
+       VALUES ($1, $2, $3, $4, $5, $6, cella.amount($7))`,
+      [p.id, p.title, p.circle ?? null, p.summary ?? '', day(p.started), day(p.due), p.budget ?? null],
+    )
+    for (const [i, m] of (p.milestone ?? []).entries()) {
+      await db.query(
+        'INSERT INTO project.milestone (project, n, title, due, completed) VALUES ($1, $2, $3, $4, $5)',
+        [p.id, i + 1, m.title, day(m.due), day(m.completed)],
+      )
+    }
+  }
+
+  for (const c of read('graft.client-project').commission ?? []) {
+    await db.query('INSERT INTO client_project.commission (project, client) VALUES ($1, $2)', [c.project, c.client])
+  }
+  for (const c of read('graft.invoice-project').charge ?? []) {
+    await db.query('INSERT INTO invoice_project.charge (invoice, project) VALUES ($1, $2)', [c.invoice, c.project])
+  }
+
+  const shares = read('graft.member-project').share ?? []
+  for (const s of shares) {
+    await db.query(
+      'INSERT INTO member_project.share (project, member, amount, granted) VALUES ($1, $2, cella.amount($3), $4)',
+      [s.project, s.member, s.amount, day(s.granted)],
+    )
+  }
+
+  const tasks = read('task').task ?? []
+  for (const t of tasks) {
+    await db.query(
+      'INSERT INTO task.task (id, title, status, priority, due, created, completed) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed)],
+    )
+  }
+  // New tasks number on from the fixture's last.
+  const last = Math.max(0, ...tasks.map((t) => Number(t.id.slice(2))))
+  if (last) {
+    await db.query(`SELECT setval('task.number', $1)`, [last])
+  }
+  for (const a of read('graft.member-task').assignment ?? []) {
+    await db.query('INSERT INTO member_task.assignment (task, member) VALUES ($1, $2)', [a.task, a.member])
+  }
+  for (const f of read('graft.project-task').filing ?? []) {
+    await db.query('INSERT INTO project_task.filing (task, project, milestone) VALUES ($1, $2, $3)', [f.task, f.project, f.milestone ?? null])
+  }
+
+  const booked = read('graft.project-timesheet')
+  for (const r of booked.rate ?? []) {
+    await db.query('INSERT INTO project_timesheet.rate (since, hourly) VALUES ($1, cella.amount($2))', [day(r.since), r.hourly])
+  }
+  const projectOf = new Map((booked.booking ?? []).map((b) => [b.run, b.project]))
+  const time = read('timesheet')
+  let entries = 0
+  for (const r of time.run ?? []) {
+    for (const d of weekdays(day(r.from), day(r.to))) {
+      const { rows } = await db.query(
+        'INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+        [r.member, d, Math.round(r.hours * 60), r.billable ?? true, r.note ?? ''],
+      )
+      if (projectOf.has(r.id)) {
+        await db.query('INSERT INTO project_timesheet.booking (entry, project) VALUES ($1, $2)', [rows[0].id, projectOf.get(r.id)])
+      }
+      entries++
+    }
+  }
+  for (const p of time.period ?? []) {
+    await db.query(
+      `INSERT INTO timesheet.period (member, month, submitted) VALUES ($1, $2, $3)
+       ON CONFLICT (member, month) DO UPDATE SET submitted = excluded.submitted`,
+      [p.member, p.month, day(p.submitted)],
+    )
+    if (p.approved) {
+      await db.query('UPDATE timesheet.period SET approved = $3, approver = $4 WHERE member = $1 AND month = $2', [
+        p.member,
+        p.month,
+        day(p.approved),
+        p.approver,
+      ])
+    }
+  }
+
+  for (const p of projects.filter((p) => p.archived)) {
+    await db.query('UPDATE project.project SET archived = $2 WHERE id = $1', [p.id, day(p.archived)])
+  }
+
+  return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${entries} time entries`
+}

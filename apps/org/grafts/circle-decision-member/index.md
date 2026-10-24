@@ -23,6 +23,11 @@ reads this graft, so the roll and everything that counts it live here.
   inserted: it fixes the roll from `circle_member.seated(circle, proposed)`.
   It runs with its owner's rights, since nothing else writes the roll; the
   app role and the rules role, `cella_rules`, may select it.
+- `circle_decision_member.counted`: who was counted, the members on a
+  decision's roll who were active when it closed, fixed by
+  `count_roll`, a trigger as the close writes the decision, in the close's
+  own transaction. A suspension or exit after the close cannot change the
+  outcome; the same trigger rights apply.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -34,7 +39,11 @@ coordination's, counts its five.
 
 - `circle_decision_member.passes(decision)`: whether a decision passes by
   its rule, `cella.consent` or `cella.majority`, over the stances received
-  before its cutoff from the members on its roll who are active.
+  before its cutoff: once it is closed, from the members counted at its
+  close; while it is open, from the members on its roll who are active
+  now.
+- `circle_decision_member.on_roll`, on `decision:decision:vote`: the
+  member is on the decision's roll.
 - `circle_decision_member.carried`, on every op in `decision.cites`: the
   decision the payload cites is closed and passes. The decision feat keeps
   that list; a graft that joins decision to a write's feat declares its op

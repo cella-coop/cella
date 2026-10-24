@@ -76,3 +76,11 @@ reset:
     dropdb --if-exists --force "$PGDATABASE"
     createdb "$PGDATABASE"
 
+# Apply every feat's and graft's migrations, cascading down the tree
+migrate: install
+    node tools/migrate.mjs
+
+# Load Lanterne into the database
+seed: install
+    node tools/seed.mjs apps/org/fixtures/lanterne
+

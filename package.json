@@ -6,6 +6,9 @@
     "feat-check": "node tools/feat-check.mjs"
   },
   "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/pg": "^8.23.1",
+    "pg": "^8.23.1",
     "smol-toml": "^1.9.1"
   }
 }

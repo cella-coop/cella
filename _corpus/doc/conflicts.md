@@ -33,6 +33,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `account.surplus.allocate` | ordered | right |
 | `account.period.close` | ordered | right |
 | `transaction.post` | confluent | **applied**: one write replaces `credit` and `.debit`; an entry's balance is checked on the entry alone |
+| `transaction.pay`, `.payroll` | confluent | right: entries commute; each is a write money leaves the bank through, under its own power, and a post touches no cash account |
 | `transaction.adjust` | ordered, `base: 'corrected'` | **applied**: the decision is now a circle setting, not part of the label |
 | `invoice.issue` | bounded | right; rung 2 needs late-write rules |
 | `invoice.send` | confluent | right |
@@ -49,8 +50,8 @@ decision. Lanterne's state is that of 24 October 2026.
 
 Owner: the `account-transaction` graft. The period is an account's, the
 entry a transaction's; only the graft sees both. Every write that posts an
-entry contends with `account.period.close`: `transaction.post` and
-`.adjust` directly; `invoice.issue`, `.payment` and `.void` through
+entry contends with `account.period.close`: `transaction.post`, `.pay`,
+`.payroll` and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
 `invoice-transaction`; `account.draw` and `account.surplus.allocate`
 through their grafts.
 

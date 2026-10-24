@@ -187,3 +187,6 @@ writes propose, and the close of a passing decision carries them out.
 | Circle lead | `send-quote` | 15 000 € limit |
 | Circle lead | `set-budget` | 15 000 € limit |
 | Circle lead | `manage-project`, `approve-time` | — |
+| Circle lead | `schedule-meeting`, `keep-minutes` | — |
+| Gérante | `schedule-meeting`, `erase-personal-data` | — |
+| Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | — |

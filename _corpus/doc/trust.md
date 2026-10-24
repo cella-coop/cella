@@ -26,7 +26,8 @@ clients without a rewrite.
 ## One server
 
 The notary lives inside Postgres as the `cella` extension, built with pgrx
-on the Rust rules crate (`apps/org/core/notary/rs`, not yet built). The pgrx
+on the pure Rust rules crate (`apps/org/core/notary/rs` over
+`apps/org/core/rules/rs`). The pgrx
 spike (`research/pgrx/`) showed it builds on NixOS against Postgres 18,
 holds one transaction from Node, and keeps a gapless signed log the app's
 role cannot write. Installing it needs a superuser, so a scope runs on a
@@ -44,7 +45,7 @@ sequenceDiagram
     A->>P: begin; state change
     A->>N: select cella.submit(write)
     N->>N: receipt, rules, verdict appended to the log
-    N-->>A: verdict
+    N-->>A: verdict, or a refusal raised
     A->>P: commit if Settled, roll back if Refused
   end
   A-->>D: Settled or Refused
@@ -61,7 +62,9 @@ sequenceDiagram
   again.
 - **The verdict and its state change commit in one transaction.** The
   handler opens it, writes the state, calls `cella.submit` last and commits
-  once; a refusal rolls both back. `submit` holds the log's head lock until
+  once. A refusal raises inside `submit` (SQLSTATE `09000`), so the
+  transaction cannot commit it: both roll back and no number is used.
+  `submit` holds the log's head lock until
   commit, so calling it last keeps ordered writes from queueing behind slow
   transactions. Entries are numbered from that locked head, so an aborted
   write leaves no gap. The log is hash-chained (BLAKE3) and signed

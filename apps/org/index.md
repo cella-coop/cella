@@ -7,8 +7,9 @@ The co-op ERP, for member-governed organisations. One deployment serves one
 scope: a co-op, a joint circle of co-ops, or a federation.
 
 - `core/` is what every feat inherits, one library each: `ops` (write labels,
-  permissions, outcomes), `crypto`, `log`, `keystore` and `notary`, the
-  `cella` Postgres extension (not yet built).
+  permissions, outcomes), `crypto`, `log`, `keystore`, `rules` (the pure
+  rule primitives), `notary` (the `cella` Postgres extension over them) and
+  `db` (a write's transaction).
 - `feats/` holds one domain each; none imports another.
 - `grafts/` joins feats, through their cores.
 - `ts/` assembles the app: the SvelteKit shell, routes and the server.

@@ -35,8 +35,9 @@ A node is a directory with a `feat.toml`. It holds:
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
   core is its shared library layer: `ops` (labels, permissions, outcomes),
-  `crypto`, `log`, `keystore`, `notary` (the `cella` Postgres extension, not
-  yet built), and later `db`, `auth`, `ui`. A leaf feat's core is all of it.
+  `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
+  (the `cella` Postgres extension over them), `db` (a write's transaction),
+  and later `auth`, `ui`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between its child feats.
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
@@ -148,11 +149,18 @@ then its grafts, recursively, each versioned. They are plain SQL, and the
 TypeScript types are generated from the schema; seedling's Drizzle, where
 TypeScript owns the schema, is dropped. The generator is not chosen.
 
+`tools/migrate.mjs` (`just migrate`) walks the tree in that order and applies
+each `sql/` directory's `NNN-*.sql` files, one transaction each, recording
+every file and its hash in `migration.applied`. A file edited after it was
+applied is refused; a change is a new file.
+
 ### Tests
 
 SQL logic is tested in the database. pgTAP tests and Lanterne's
 conformance suite, its cases and their expected verdicts, are gates
-alongside `just check`; neither is wired in yet.
+alongside `just check`; neither is wired in yet. `just test` resets a
+database on the dev cluster (`just db`), migrates, seeds Lanterne and runs
+the slices as node tests through the handlers.
 
 ## Inside a package
 

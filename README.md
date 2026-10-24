@@ -22,7 +22,8 @@ and signs each verdict into a log the members can audit.
 
 This repository works only on the org app.
 
-- `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`), its
+- `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`,
+  `rules`, `notary`, `db`), its
   feats and grafts, and the root that assembles them.
 - `tools/feat-check.mjs` — refuses a dependency the tree does not allow.
 - `_corpus/` — the repository's docs.
@@ -31,5 +32,8 @@ This repository works only on the org app.
 
 ```sh
 nix develop
-just check
+just check      # feat check, types, cargo check, clippy; no database
+just db         # build the cella extension, start Postgres 18 in .data/
+just test       # rules tests, then the slices on a fresh database
+just db-stop
 ```

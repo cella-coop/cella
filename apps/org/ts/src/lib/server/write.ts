@@ -9,6 +9,19 @@ const fields = (data: FormData): Form => ({
   all: (name) => data.getAll(name).map(String),
 })
 
+// Why a write failed, as the page may say it: what a form reader or a
+// handler threw about its input, a plain Error, or a value Postgres could
+// not take (SQLSTATE class 22). Anything else, a bug or the database's
+// internals, is logged here and said generically.
+function reason(e: unknown): string {
+  const code = (e as { code?: unknown }).code
+  if (e instanceof Error && (typeof code === 'string' ? code.startsWith('22') : e.constructor === Error)) {
+    return e.message
+  }
+  console.error(e)
+  return 'the server could not take this write; its output says why'
+}
+
 // One write from a page: the action the collection's slices name, run as
 // the acting member's device, then the reactions to it if it settled. A
 // refusal or a failure is a 4xx, so the form keeps what was typed.
@@ -27,7 +40,7 @@ export async function perform(event: RequestEvent, collection: string, name: str
     try {
       result = await write.run(form, signing, id)
     } catch (e) {
-      return fail(400, { done: { op: write.op, state: 'failed', reason: (e as Error).message, then: [] } satisfies Done })
+      return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
     }
     const { done, request } = result
     if (done.state === 'settled') {

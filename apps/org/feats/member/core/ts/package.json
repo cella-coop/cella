@@ -3,9 +3,11 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./models": "./src/models/index.ts"
+    "./models": "./src/models/index.ts",
+    "./api": "./src/api/index.ts"
   },
   "dependencies": {
+    "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*"
   }
 }

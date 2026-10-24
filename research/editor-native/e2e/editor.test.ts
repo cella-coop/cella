@@ -9,7 +9,7 @@ import { createServer, type ViteDevServer } from 'vite'
 // playwright-driver.browsers, matching playwright-core's version).
 
 const shots = process.env.SHOTS ?? '/tmp/editor-native-shots'
-const port = 5182
+const port = 5191
 
 type Row = { id: string; depth: number; kind: string; props: Record<string, unknown>; text: string; runs: { text: string; marks?: Record<string, unknown> }[] }
 

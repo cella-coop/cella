@@ -33,28 +33,25 @@ before issue, an allocation before its decision).
 
 | Write | Label | Why |
 |---|---|---|
-| `POST /api/transaction/credit` | confluent | deposits merge |
-| `POST /api/transaction/debit` | bounded | from a share; beyond it, ordered |
-| `POST /api/transaction/adjust` | ordered | a correction, which needs a decision |
+| `POST /api/transaction/post` | confluent | an entry always has both sides |
+| `POST /api/transaction/adjust` | ordered | a correction, named by the entry it corrects |
 
-- **credit** posts an entry that brings money in. Sums commute, so two
-  deposits merge in any order and never wait.
-- **debit** posts an entry that takes money out. It spends a share granted
-  in advance from a mandate's limit, so it settles at once within the
-  share, and at rung 2 offline; beyond it, it needs a fresh grant.
-- **adjust** posts a correcting entry. It is ordered and waits on a
-  majority decision, so that no one quietly rewrites the books.
-
-How credit and debit map onto balanced entries, which always do both, is
-open; see [conflicts](../../../../_corpus/doc/conflicts.md).
+- **post** posts a balanced entry, in or out. An entry's balance is
+  checked on the entry alone, so sums of entries commute and two posts
+  settle in any order and never wait. The right to take money out of a
+  share is `account.draw`'s, not this write's; it posts through
+  `account-transaction`.
+- **adjust** posts a correcting entry, naming the entry it corrects
+  (`base: 'corrected'`): the notary refuses a second correction of the
+  same entry. Whether a correction also needs the circle's decision is a
+  circle setting, not part of the write's label.
 
 ## Powers
 
 | Write | Power | Lanterne |
 |---|---|---|
-| credit | `record-receipt` | Julien, as finance |
-| debit | `pay-supplier`, up to the mandate's `max_amount` | Julien, 3 000 € a payment |
-| adjust | held by the circle that keeps the books, by decision | `ag`, majority |
+| post | `record-entry` | Julien, as finance |
+| adjust | held by the circle that keeps the books | `ag`, by its own setting |
 
 Every member reads the books; reading needs no power.
 
@@ -74,8 +71,8 @@ What it does not own:
   `account-transaction` graft's;
 - that an invoice's issue, payments and void post the right entries: the
   `invoice-transaction` graft's;
-- whether a debit's spender holds the power: the mandate, read through
-  `cella.may`.
+- the right to take money out of a share: `account.draw`'s, bounded on
+  the share, which posts through `account-transaction`.
 
 ## What it does not know
 

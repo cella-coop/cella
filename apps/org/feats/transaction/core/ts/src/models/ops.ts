@@ -1,10 +1,9 @@
-import { bounded, confluent, ordered, type Ops } from '@cella/org-ops'
+import { confluent, ordered, type Ops } from '@cella/org-ops'
 
 export const ops = {
-  // deposits merge
-  'transaction:transaction:credit': confluent(),
-  // from a share; beyond it, ordered
-  'transaction:transaction:debit': bounded('share'),
-  // a correction, which needs a decision
-  'transaction:transaction:adjust': ordered({ decide: 'majority' }),
+  // an entry always has both sides; sums of entries commute
+  'transaction:transaction:post': confluent(),
+  // names the entry it corrects; whether it also needs a vote is a
+  // circle setting, not part of the label
+  'transaction:transaction:adjust': ordered({ base: 'corrected' }),
 } satisfies Ops

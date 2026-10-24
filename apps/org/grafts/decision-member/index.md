@@ -18,3 +18,8 @@ An admission cites its decision: this graft declares `member:member:admit` in `d
 ## Handlers
 
 None of its own: the reaction that admits on a passing close needs the roll, so it is `circle-decision-member`'s `closed`.
+
+## Shell
+
+Adds whom a decision admits, with their shares, to the decision's page,
+and the decision admitting a member to theirs.

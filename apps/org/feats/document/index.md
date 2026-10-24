@@ -61,7 +61,7 @@ draft, and the next adoption names a later version.
 | Write | Power | Lanterne |
 |---|---|---|
 | edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
-| adopt | held by the circle the document belongs to, by decision | `ag` for the internal rules, `coordination` for the rate card |
+| adopt | decided: the cited decision asks to adopt this version and carried | `ag` for the internal rules, `coordination` for the rate card |
 
 `002-powers.sql` registers `edit-document` in `cella.power`, and the
 `circle-member` graft checks it as any other: every member holds it

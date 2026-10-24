@@ -9,5 +9,5 @@ export const ops = {
   'document:document:comment': confluent({ power: 'edit-document' }),
   // names the adopted version it replaces, not the draft it saw;
   // refused only if that adopted version moved on
-  'document:document:adopt': ordered({ base: 'adopted' }),
+  'document:document:adopt': ordered({ base: 'adopted', check: 'decided' }),
 } satisfies Ops

@@ -14,8 +14,9 @@
 //                     and roots, its own grafts
 //
 // It also checks that grafts are named and declared, that a package's
-// relative imports stay inside it, that a feat's or graft's ops are named
-// for it, through sql-check.mjs every sql/ file's boundaries, and through
+// relative imports stay inside it and its exports are its public surface,
+// through ui-check.mjs the client layers' rules, that a feat's or graft's
+// ops are named for it, through sql-check.mjs every sql/ file's boundaries, and through
 // powers.mjs that the power each op's label names is the one its SQL
 // registers, and that an op with no power declares a check its SQL backs.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
@@ -26,6 +27,7 @@ import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName } from './sql-check.mjs'
 import { agree, covered, declared } from './powers.mjs'
+import { checkUi } from './ui-check.mjs'
 
 const args = process.argv.slice(2)
 const sql = !args.includes('--no-sql')
@@ -198,12 +200,12 @@ for (const node of nodes) {
 const sources = (dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
-    if (name === 'node_modules') {
+    if (['node_modules', 'build', '.svelte-kit'].includes(name)) {
       continue
     }
     if (statSync(join(repo, path)).isDirectory()) {
       sources(path, out)
-    } else if (/\.(ts|mts|js|mjs)$/.test(name)) {
+    } else if (/\.(ts|mts|js|mjs|svelte)$/.test(name)) {
       out.push(path)
     }
   }
@@ -217,6 +219,23 @@ for (const dir of byName.values()) {
       if (target.startsWith('..')) {
         fail(`${file}: imports ${spec}, outside its package ${dir}; depend on the package instead`)
       }
+    }
+  }
+}
+
+// The client layers' rules: CSS only in the UI core, state only in hooks,
+// no module-level mutable state, no server layer imported by a client one.
+errors.push(...checkUi(repo, [...byName.values()]))
+
+// A package's exports are its public surface: a library's `.`, a slice's
+// `./models`, `./api` (its writes, reads and server slice), `./bindings`
+// and `./app` (its client slice).
+const surface = new Set(['.', './models', './api', './bindings', './app'])
+for (const dir of byName.values()) {
+  const pkg = JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8'))
+  for (const key of Object.keys(pkg.exports ?? {})) {
+    if (!surface.has(key)) {
+      fail(`${dir}/package.json: exports ${key}; a package exports only ${[...surface].join(', ')}`)
     }
   }
 }

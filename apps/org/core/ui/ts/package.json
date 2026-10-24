@@ -1,0 +1,14 @@
+{
+  "name": "@cella/org-ui",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@fontsource/alegreya": "5.3.0",
+    "@fontsource/alegreya-sans": "5.3.0",
+    "phosphor-svelte": "3.1.1",
+    "svelte": "5.57.2"
+  }
+}

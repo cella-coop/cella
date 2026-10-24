@@ -1,0 +1,114 @@
+import type { Component } from 'svelte'
+
+// The client side of a slice: what a feat's collections look like, and
+// what a graft adds to the collections of the feats it joins. Views and
+// pages are configuration over the one collection component and the one
+// detail view; blocks are the components a detail view composes.
+
+export type Group = 'governance' | 'work' | 'finance' | 'platform'
+
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge'
+
+export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
+
+// A column of a collection. In the list view `role` places it: the title,
+// the line under it, or the trailing meta; `hidden` keeps it to the table.
+export interface Column<R = any> {
+  key: string
+  label: string
+  kind?: Kind
+  value: (row: R) => unknown
+  tone?: (row: R) => Tone
+  role?: 'title' | 'sub' | 'meta' | 'hidden'
+}
+
+// A label and value row in the drawer's Properties card.
+export interface Prop {
+  label: string
+  value: unknown
+  kind?: Kind
+  tone?: Tone
+  href?: string
+}
+
+export interface Link {
+  label: string
+  sub?: string
+  href: string
+}
+
+export interface Event {
+  at: string
+  text: string
+  who?: string
+}
+
+// A block: a component the detail view renders in its content, given the
+// item's data, or a graft's data on it, and the item's id.
+export type Block<T = any> = Component<{ data: T; id: string }>
+
+export interface Page<T = any> {
+  eyebrow: string
+  title: (data: T) => string
+  subtitle?: (data: T) => string
+  properties?: (data: T) => Prop[]
+  related?: (data: T) => Link[]
+  activity?: (data: T) => Event[]
+  blocks?: Block<T>[]
+  // Writes on the item, in the header.
+  actions?: Block<T>
+}
+
+export interface View<R = any> {
+  group: Group
+  title: string
+  icon: Component<any>
+  columns: Column<R>[]
+  // A form for a new item, behind the collection's New button.
+  create?: Component<{ rows: R[]; about: any }>
+  // What the header says about the whole collection, such as totals; the
+  // collection's `about`, from its server side, is handed to both.
+  summary?: Component<{ rows: R[]; about: any }>
+  empty?: string
+  // Rows link to their detail; a collection without pages lists only.
+  linked?: boolean
+}
+
+// A collection a feat owns: its view, and its items' page if it has one.
+export interface Owned<R = any, T = any> {
+  view: View<R>
+  page?: Page<T>
+}
+
+// What a graft, or the root, adds to a feat's collection: columns over the
+// fields its server side adds to each row, and cards and blocks over its
+// data on one item.
+export interface Added<E = any> {
+  columns?: Column[]
+  // What the header says over the rows with the fields this adds to them.
+  summary?: Component<{ rows: any[]; about: any }>
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
+}
+
+// The sidebar's navigation, by group.
+export type Nav = { group: string; items: { href: string; title: string; icon: Component<any> }[] }[]
+
+// A member the dev server may act as.
+export interface Person {
+  address: string
+  name: string
+}
+
+// Somewhere the command menu jumps to.
+export interface Jump {
+  title: string
+  sub?: string
+  href: string
+  kind: string
+}
+
+export interface App {
+  name: string
+  collections?: Record<string, Owned>
+  extends?: Record<string, Added>
+}

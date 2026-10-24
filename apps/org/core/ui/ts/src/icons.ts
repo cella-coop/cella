@@ -1,0 +1,13 @@
+// The icons slices may name, Phosphor's, drawn duotone by `Icon`. One list,
+// so the shell's iconography stays one family.
+export { default as Users } from 'phosphor-svelte/lib/Users'
+export { default as CirclesThree } from 'phosphor-svelte/lib/CirclesThree'
+export { default as Scales } from 'phosphor-svelte/lib/Scales'
+export { default as FileText } from 'phosphor-svelte/lib/FileText'
+export { default as Receipt } from 'phosphor-svelte/lib/Receipt'
+export { default as Buildings } from 'phosphor-svelte/lib/Buildings'
+export { default as Bank } from 'phosphor-svelte/lib/Bank'
+export { default as BookOpen } from 'phosphor-svelte/lib/BookOpen'
+export { default as Calendar } from 'phosphor-svelte/lib/Calendar'
+export { default as Notebook } from 'phosphor-svelte/lib/Notebook'
+export { default as SealCheck } from 'phosphor-svelte/lib/SealCheck'

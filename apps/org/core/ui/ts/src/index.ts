@@ -1,0 +1,28 @@
+// Org's UI core: the tokens, the one shell, page frame, collection
+// component, detail view and drawer, and the primitives blocks compose.
+// Only this package holds CSS.
+export type * from './models/view.ts'
+export type { Outcome as Done } from './models/outcome.ts'
+export { said } from './models/outcome.ts'
+export { money, date, short, show } from './models/format.ts'
+export * as icons from './icons.ts'
+
+export { default as Shell } from './components/Shell.svelte'
+export { default as Frame } from './components/Frame.svelte'
+export { default as Collection } from './components/Collection.svelte'
+export { default as Detail } from './components/Detail.svelte'
+export { default as Card } from './components/Card.svelte'
+export { default as Section } from './components/Section.svelte'
+export { default as Properties } from './components/Properties.svelte'
+export { default as Related } from './components/Related.svelte'
+export { default as Activity } from './components/Activity.svelte'
+export { default as Table } from './components/Table.svelte'
+export { default as Cell } from './components/Cell.svelte'
+export { default as Badge } from './components/Badge.svelte'
+export { default as Button } from './components/Button.svelte'
+export { default as Form } from './components/Form.svelte'
+export { default as Field } from './components/Field.svelte'
+export { default as Prose } from './components/Prose.svelte'
+export { default as Stats } from './components/Stats.svelte'
+export { default as Icon } from './components/Icon.svelte'
+export { default as Outcome } from './components/Outcome.svelte'

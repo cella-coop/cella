@@ -46,6 +46,29 @@ pub fn seed(repo: &Repo, steps: &Steps, fixture: &str, url: Option<&str>) -> Res
     steps.run(&format!("seed {fixture}"), &mut [cmd], last_line)
 }
 
+/// Runs `cella.vault_sweep()` as the cluster's superuser, on the verdict
+/// date: erases what the law kept once its clock has run out, and says
+/// what for each subject and class.
+pub fn sweep(repo: &Repo, url: Option<&str>) -> Result {
+    let mut cmd = on(&Dev::new(repo), url, "psql")?;
+    if let Some(url) = url {
+        cmd.args(["-d", url]);
+    }
+    cmd.args(["-X", "-q", "-t", "-A", "-F", " ", "-v", "ON_ERROR_STOP=1", "-c"])
+        .arg("SELECT subject, class, keys, redacted FROM cella.vault_sweep()");
+    let out = Steps::read(&mut cmd)?;
+    let lines: Vec<&str> = out.lines().filter(|l| !l.trim().is_empty()).collect();
+    for line in &lines {
+        let f: Vec<&str> = line.split(' ').collect();
+        if let [subject, class, keys, redacted] = f[..] {
+            let done = if redacted == "t" { ", redacted" } else { ", restricted still" };
+            println!("{subject} {class}: {keys} keys destroyed{done}");
+        }
+    }
+    println!("swept: {} subject classes past their clock", lines.len());
+    Ok(())
+}
+
 /// Runs `cella.verify_log()`; a broken log fails, with the notary's
 /// warnings saying where it breaks.
 pub fn verify(repo: &Repo, url: Option<&str>) -> Result {

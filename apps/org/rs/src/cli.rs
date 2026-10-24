@@ -77,6 +77,12 @@ pub enum Command {
         command: Log,
     },
 
+    /// The vault of personal data
+    Vault {
+        #[command(subcommand)]
+        command: Vault,
+    },
+
     /// The scope's signing key
     Key {
         #[command(subcommand)]
@@ -153,6 +159,16 @@ pub enum Test {
 pub enum Log {
     /// Recheck the log's chain, its receipts, every signature and the head
     Verify {
+        /// A database other than the dev cluster's, such as production's
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum Vault {
+    /// Erase the restricted personal data whose legal clock has run out: payroll after five years, receipts and books after ten
+    Sweep {
         /// A database other than the dev cluster's, such as production's
         #[arg(long, value_name = "URL")]
         url: Option<String>,

@@ -13,7 +13,7 @@ pub mod run;
 mod shell;
 mod test;
 
-use cli::{Command, Ext, Key, Log};
+use cli::{Command, Ext, Key, Log, Vault};
 use repo::Repo;
 use run::{Result, Steps};
 
@@ -30,5 +30,6 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Build => shell::build(&Repo::find()?, &steps),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),
+        Command::Vault { command: Vault::Sweep { url } } => data::sweep(&Repo::find()?, url.as_deref()),
     }
 }

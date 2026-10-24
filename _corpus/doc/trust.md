@@ -239,6 +239,43 @@ keys that expired, and writes an erasure entry; the log still verifies and
 folds the gap to `redacted`. Books and payroll are restricted rather than
 erased until their legal clock runs out.
 
+- **What is personal is declared, column by column.** Each feat registers
+  its personal columns in `cella.personal` with a retention class and the
+  column naming whose it is, and declares every other column the feat
+  check suspects (a name, an email, a phone, an address, a salary, a
+  receipt) not personal, with a column comment. `cella check feats`
+  refuses a suspect column declared neither way.
+- **What the log keeps.** A handler marks each personal value in its
+  payload; `cella.submit` replaces it with a commitment, the BLAKE3 under
+  its own domain of a fresh 256-bit salt and the value, and seals the
+  value and the salt in the vault under the subject's key for the class
+  and the year. The entry's digest and its stored payload hold the
+  commitment, never the value ([signatures](signatures.md#digests)). The
+  request the member signs is hashed with a fresh salt of its own, so its
+  digest in the receipt confirms no guess either.
+- **The keys.** A vault key is 32 random bytes per subject, class and
+  year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
+  scope's seed, so the database alone, without the key file, opens
+  nothing. Destroying a key makes every value it sealed unreadable.
+- **The classes and their clocks**, `cella.retention`: `member-profile`
+  and `contact`, erased when asked; `payroll`, kept five years (Code du
+  travail, art. L3243-4, the employer's copy of each payslip);
+  `expense-receipt` and `books`, kept ten years (Code de commerce, art.
+  L123-22, accounting documents and supporting vouchers). A clock runs
+  in whole years past the end of the year it starts in, as the books'
+  runs from the close of the financial year.
+- **Erasure** is a write: `member:member:erase`, decided, for a member's
+  whole profile; `member:member:forget`, the member's own, for their
+  optional contact fields; `client:client:erase`, under the
+  `erase-personal-data` power, for a person among the clients. Each
+  erases the subject's erasable classes at once, keys, salts and values,
+  and redacts their columns in the read models; the restricted classes
+  stay until `cella vault sweep` finds their clock out. A tombstone
+  refuses any later value of an erased class (EDPB guidelines 02/2025 on
+  processing personal data through blockchain technologies: erasure
+  must remain possible, so the ledger holds no personal data, only what
+  cannot be linked once its key is gone).
+
 ## Current limits
 
 What the build does not yet do, and what lifts each:
@@ -265,14 +302,6 @@ What the build does not yet do, and what lifts each:
   confluent write is submitted on its own and takes its own signed entry.
   Signed batches come with the offline queue at rung 2, which syncs a
   device's confluent writes together.
-- **Payload and request digests are not yet salted.** An entry holds the
-  BLAKE3 digest of its canonical payload, and a receipt the SHA-256 of the
-  request the member signed, so either can be confirmed against the log
-  by anyone who guesses it. Handlers keep personal data out of payloads
-  (an invoice's name billed, a void's reason, a client's field values),
-  but a request carries what the member typed. Salted commitments with
-  the vault lift this before the pilot holds real members' data, in rung
-  1's personal-data increment.
 - **Entries balance and periods are open by triggers in their owners'
   schemas**, PL/pgSQL in `transaction` and `account_transaction`, not yet
   `cella.*` trigger functions.

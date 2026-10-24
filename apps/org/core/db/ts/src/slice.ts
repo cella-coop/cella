@@ -69,6 +69,19 @@ export interface Entry {
   sub?: string
 }
 
+// A live stream of an item, served as server-sent events at
+// `/<collection>/<id>/<name>`: what changes on the item as it changes,
+// such as a document's edits as members make them. `last` is the id of
+// the last event the client saw, when it reconnects; `signal` aborts
+// when it goes away. A stream reads; writes go through the actions.
+export type Stream = (o: {
+  using: <T>(fn: (db: Db) => Promise<T>) => Promise<T>
+  id: string
+  url: URL
+  last: string | null
+  signal: AbortSignal
+}) => ReadableStream<Uint8Array>
+
 // A collection a feat owns: its rows, one item, the items the command menu
 // lists, and the writes its pages make.
 export interface Collection {
@@ -81,6 +94,8 @@ export interface Collection {
   // Writes from the collection's page, such as a new item, and from an
   // item's page.
   actions?: Record<string, Action>
+  // An item's live streams, by name.
+  streams?: Record<string, Stream>
 }
 
 // What a graft, or the root, adds to a collection of a feat it joins:

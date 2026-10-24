@@ -44,9 +44,24 @@ export interface Event {
   who?: string
 }
 
+// A thing of one slice drawn inside another's item, such as a decision
+// inside a document: the slice that knows the kind of thing draws it by
+// its `ref`, from its own data on the item, and offers the things it may
+// embed. A graft declares it on the page of the feat it extends.
+export interface Embed<E = any> {
+  label: string
+  block: Component<{ ref: string; data: E }>
+  choices?: (data: E) => { ref: string; label: string }[]
+}
+
+// The embeds a page's blocks may draw, by kind, each with its slice's
+// data on the item.
+export type Embeds = Record<string, { embed: Embed; data: unknown }>
+
 // A block: a component the detail view renders in its content, given the
-// item's data, or a graft's data on it, and the item's id.
-export type Block<T = any> = Component<{ data: T; id: string }>
+// item's data, or a graft's data on it, the item's id, and the embeds
+// the page's slices draw.
+export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds }>
 
 // A block in a tab of the item's page: a bare block sits in the first.
 export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }
@@ -69,6 +84,8 @@ export interface Page<T = any> {
   // extension may add its own after the owner's.
   tabs?: Tab[]
   blocks?: Placed<T>[]
+  // What this slice draws inside the item's blocks, by kind.
+  embeds?: Record<string, Embed<T>>
   // Writes on the item, in the header.
   actions?: Block<T>
 }

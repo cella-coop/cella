@@ -119,6 +119,15 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Field` (a select with a `placeholder` offers it as a disabled first
   choice, never a blank), `Prose`, `Note` (a quiet line), `Icon`
   (Phosphor, duotone), `Outcome`, `Command`.
+- `Floating`: what floats at a point rather than from a trigger, a menu at
+  the caret or a toolbar over a selection: in the top layer, opened
+  manually, kept in the viewport; a press on its buttons never takes the
+  focus, so the caret stays.
+- `Blocks`: a document of blocks, the block editor's surface and its
+  read-only reader's, and the look of every kind of block (headings, list
+  items with their markers, to-dos, quotes, code, dividers, embeds' cards,
+  a block chosen whole, where a dragged block lands). The document feat's
+  components name its classes and draw nothing of their own.
 - `icons`: the Phosphor icons slices may name.
 
 A `Column` places itself in the list view by `role`: the title, the line
@@ -159,8 +168,10 @@ and down arrow buttons that move things. The primitives:
 - `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
   an item will land, from the tokens.
 
-Dashboard widgets, a table's columns in the View card and the viewer's
-own view tabs reorder this way.
+Dashboard widgets, a table's columns in the View card, the viewer's own
+view tabs and a document's blocks reorder this way; `Popover`,
+`DragHandle`, `sortable` and `useDrag` are exported for slices to
+compose.
 
 ## Dashboards
 
@@ -185,6 +196,9 @@ card, adds, edits, reorders and removes them.
 
 ## Types
 
-`App`, `Owned`, `Added`, `View`, `Page`, `Column`, `Prop`, `Link`, `Event`
-and `Block` describe a slice's client side; `Done` a write's outcome as
+`App`, `Owned`, `Added`, `View`, `Page`, `Column`, `Prop`, `Link`, `Event`,
+`Block` and `Embed` describe a slice's client side; an `Embed` is what a
+slice draws inside another's item (a decision inside a document), which a
+graft declares on the page it extends and the detail view hands every
+block as `embeds`; `Done` a write's outcome as
 the page receives it. A slice's server side is `Slice` in `@cella/org-db`.

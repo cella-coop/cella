@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page as here } from '$app/state'
-  import { Detail, type Block, type Placed, type Tab } from '@cella/org-ui'
+  import { Detail, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
   import { collection, extensions } from '#lib/slices.ts'
   import type { PageProps } from './$types'
 
@@ -32,6 +32,14 @@
       ...added.flatMap((a) => (a.page.blocks ?? []).map((p) => ({ ...place(p), data: a.data }))),
     ].filter((b) => b.tab === tab),
   )
+  // What each slice draws inside the item's blocks, with its data on the
+  // item: a graft's decision inside a document.
+  const embeds: Embeds = $derived(
+    Object.fromEntries([
+      ...Object.entries(page?.embeds ?? {}).map(([k, embed]) => [k, { embed, data: data.item }]),
+      ...added.flatMap((a) => Object.entries(a.page.embeds ?? {}).map(([k, embed]) => [k, { embed, data: a.data }])),
+    ]),
+  )
   const writes = $derived([
     ...(page?.actions ? [{ block: page.actions, data: data.item }] : []),
     ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
@@ -58,7 +66,7 @@
     actions={writes.length ? header : undefined}
   >
     {#each blocks as b}
-      <b.block data={b.data} id={data.id} />
+      <b.block data={b.data} id={data.id} {embeds} />
     {/each}
   </Detail>
 {/if}

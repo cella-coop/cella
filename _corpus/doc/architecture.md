@@ -295,11 +295,14 @@ two halves of one **slice**, matched by name:
   blocks and its header writes); for each collection it extends, columns
   over the fields it adds, and cards and blocks over its data on an item.
 
-The root lists the slices, server and client, and mounts them on four
+The root lists the slices, server and client, and mounts them on five
 routes, the same for every collection: `/[collection]`, the one collection
 component, and `/[collection]/[id]`, the one detail view, each with the
 form actions of the collection's slices; `/search` for the command menu;
-and `/act` and `/theme` for the user menu. A collection's owner is a feat,
+`/[collection]/[id]/[stream]`, an item's live stream as server-sent
+events, which the collection's owner names (`streams`, such as a
+document's edits as they settle); and `/act` and `/theme` for the user
+menu. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
 joins; the root may join two feats no graft joins, as it puts a member's
 devices, the `key` feat's, on the member's page. The registry refuses a

@@ -1,10 +1,12 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Decision, Detail } from '../models/decision.ts'
 import Close from './blocks/Close.svelte'
+import Create from './blocks/Create.svelte'
 import Proposal from './blocks/Proposal.svelte'
 
-// The feat's client side: the decisions, open first, and a decision's page
-// with its proposal, the stances given and its close.
+// The feat's client side: the decisions, open first, a new one with what
+// it decides, and a decision's page with its proposal, the stances given
+// and its close.
 export const app: App = {
   name: 'decision',
   collections: {
@@ -13,6 +15,7 @@ export const app: App = {
         group: 'governance',
         title: 'Decisions',
         icon: icons.Scales,
+        create: Create,
         columns: [
           { key: 'title', label: 'Decision', kind: 'title', role: 'title', value: (d: Decision) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Decision) => d.id },

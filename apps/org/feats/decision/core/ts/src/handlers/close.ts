@@ -1,15 +1,17 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps } from '@cella/org-db'
+import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Close, Closed } from '../models/decision.ts'
 
 const op = 'decision:decision:close'
 
-// Closes a decision on the verdict date and fixes which stances made it:
-// those received before the close's receipt. Whether it may close is the
-// rule's, `decision.closes`.
-export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Closed>> {
-  return write(deps, {
+// The close as a write a graft may extend in its transaction, as
+// circle-decision-member does with the admissions a passing close makes:
+// closes the decision on the verdict date and fixes which stances made
+// it, those received before the close's receipt. Whether it may close is
+// the rule's, `decision.closes`.
+export function closing(input: Close): Write<Closed> {
+  return {
     op,
     request: input,
     state: async (tx) => {
@@ -23,5 +25,9 @@ export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof o
       return { decision: input.decision, closed: row?.closed ?? '', cutoff: Number(row?.cutoff ?? 0) }
     },
     payload: () => ({ ...input }),
-  })
+  }
+}
+
+export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Closed>> {
+  return write(deps, closing(input))
 }

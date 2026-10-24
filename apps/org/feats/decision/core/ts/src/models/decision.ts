@@ -33,6 +33,60 @@ export interface Detail extends Decision {
   body: string
   cutoff: number | null
   given: Given[]
+  motions: Motioned[]
+}
+
+// An argument a motion of a kind takes, as the New form asks for it.
+export interface Arg {
+  name: string
+  label: string
+  type: 'text' | 'number'
+  optional?: boolean
+}
+
+// A kind of thing a decision decides, registered by the graft that
+// carries it out.
+export interface Kind {
+  kind: string
+  label: string
+  fields: Arg[]
+}
+
+// What a decision decides: a motion of a registered kind, its arguments
+// as the kind names them.
+export interface Motion {
+  kind: string
+  args: Record<string, string | number>
+}
+
+export interface Motioned extends Motion {
+  id: string
+  n: number
+  label: string
+}
+
+// A proposal: a decision of a circle, by its rule, open until its
+// deadline, and the motions it decides. Its id and the day it is proposed
+// are the server's.
+export interface Propose {
+  circle: string
+  title: string
+  rule: Rule
+  deadline: string
+  body: string
+  motions: Motion[]
+}
+
+export interface Proposed {
+  decision: string
+  proposed: string
+}
+
+// What the New form offers: the kinds of motion, and the circles a
+// decision may be put in, which a graft joining circles adds.
+export interface Offered {
+  kinds: Kind[]
+  circles?: { id: string; name: string; procedure: Rule }[]
 }
 
 export interface Vote {

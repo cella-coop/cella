@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Decision, Detail, Given } from '../models/decision.ts'
+import type { Decision, Detail, Given, Kind, Motioned } from '../models/decision.ts'
 
 const columns = `id, circle, title, rule, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
@@ -21,5 +21,17 @@ export async function decision(db: Db, id: string): Promise<Detail | null> {
      FROM decision.vote WHERE decision = $1 ORDER BY receipt DESC`,
     [id],
   )
-  return { ...found.rows[0], given: given.rows }
+  const motions = await db.query<Motioned>(
+    `SELECT m.n::text AS id, m.n, m.kind, k.label, m.args
+     FROM decision.motion m JOIN decision.kind k ON k.kind = m.kind
+     WHERE m.decision = $1 ORDER BY m.n`,
+    [id],
+  )
+  return { ...found.rows[0], given: given.rows, motions: motions.rows }
+}
+
+// The kinds of motion the grafts register, by label.
+export async function kinds(db: Db): Promise<Kind[]> {
+  const { rows } = await db.query<Kind>('SELECT kind, label, fields FROM decision.kind ORDER BY label')
+  return rows
 }

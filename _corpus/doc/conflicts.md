@@ -20,22 +20,22 @@ decision. Lanterne's state is that of 24 October 2026.
 
 | Write | Label | Verdict |
 |---|---|---|
-| `key.enrol` | confluent | **wrong**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
+| `key.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `key.revoke`, `key.recover` | ordered | right |
-| `circle.nest` | ordered | right, at rung 1 already |
-| `circle.position.add`, `.remove` | ordered | right |
+| `circle.nest` | ordered | right, at rung 1 already; **applied**: the comment now says why |
+| `circle-member:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-member` graft, which owns the relationship |
 | `circle.mandate.grant`, `.revoke` | ordered | right |
 | `circle.message` | confluent | right |
 | `document.edit`, `.comment` | confluent | right |
-| `document.adopt` | ordered | right |
-| `account.draw` | bounded | right, but **duplicates** `transaction.debit` |
+| `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
+| `account.draw` | bounded | right; **applied**: no longer duplicates, now that credit/debit are one `transaction.post` |
 | `account.surplus.allocate` | ordered | right |
 | `account.period.close` | ordered | right |
-| `transaction.credit`, `.debit` | confluent, bounded | **wrong shape**: an entry both debits and credits |
-| `transaction.adjust` | ordered, majority | ordered is right; **the decision is wrong** |
+| `transaction.post` | confluent | **applied**: one write replaces `credit` and `.debit`; an entry's balance is checked on the entry alone |
+| `transaction.adjust` | ordered, `base: 'corrected'` | **applied**: the decision is now a circle setting, not part of the label |
 | `invoice.issue` | bounded | right; rung 2 needs late-write rules |
 | `invoice.send` | confluent | right |
-| `invoice.payment` | confluent | right; **its invariant is wrong** |
+| `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
 | `client.add`, `.update`, `.archive` | confluent | right; erasure must win |
 | `member.invite`, `.profile` | confluent | right |
@@ -49,8 +49,8 @@ decision. Lanterne's state is that of 24 October 2026.
 
 Owner: the `account-transaction` graft. The period is an account's, the
 entry a transaction's; only the graft sees both. Every write that posts an
-entry contends with `account.period.close`: `transaction.credit`, `.debit`
-and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
+entry contends with `account.period.close`: `transaction.post` and
+`.adjust` directly; `invoice.issue`, `.payment` and `.void` through
 `invoice-transaction`; `account.draw` and `account.surplus.allocate`
 through their grafts.
 
@@ -77,21 +77,21 @@ that day, it would land on 6 October and post in October, flagged.
 
 Owner: the `transaction` feat.
 
-`transaction.credit` and `transaction.debit` are seedling's single-sided
+`transaction.credit` and `transaction.debit` were seedling's single-sided
 transactions. In double entry every entry both debits and credits: a
 supplier payment debits `401` and credits `512`; an invoice payment debits
 `512` and credits `411`. A "credit" write that is confluent and a "debit"
 write that is bounded cannot describe one balanced entry, and which label
 an entry gets would depend on which side the caller chose to name.
 
-The spending authority `debit` carries (`bounded('share')`) is the same
-right `account.draw` spends. Two writes spending one share can each pass
+The spending authority `debit` carried (`bounded('share')`) was the same
+right `account.draw` spends. Two writes spending one share could each pass
 the check alone and together exceed it.
 
-**Recommendation.** One write, `transaction.post`, confluent: an entry's
-balance is checked on the entry alone, and sums of entries commute. The
-authority to take money out is `account.draw`'s, bounded on the share,
-which posts through `account-transaction`.
+**Applied.** One write, `transaction.post`, confluent: an entry's balance
+is checked on the entry alone, and sums of entries commute. The authority
+to take money out is `account.draw`'s, bounded on the share, which posts
+through `account-transaction`.
 
 `transaction.adjust` posts a correcting entry. Two corrections of one
 entry contend: both settle and the books are corrected twice.
@@ -101,11 +101,12 @@ entry contend: both settle and the books are corrected twice.
 | `adjust` vs `adjust` of the same entry | the entry is corrected | refused: its base moved | the error is reversed twice |
 | `adjust` vs `period.close` | as any post | as any post | as any post |
 
-Ordered is right, but `decide: 'majority'` is not: an assembly vote for
+Ordered is right, but `decide: 'majority'` was not: an assembly vote for
 every reversing entry makes the monthly close unworkable, and nothing in
-the conflict needs one. The order comes from the base: an adjustment names
-the entry it corrects and its current correction. Whether a correction also
-needs a decision is the circle's rule, a parameter, not the write's type.
+the conflict needs one. **Applied.** The order comes from the base
+(`ordered({ base: 'corrected' })`): an adjustment names the entry it
+corrects and its current correction. Whether a correction also needs a
+decision is the circle's rule, a parameter, not the write's type.
 
 **Lanterne.** `je-0028`, the August VAT return, carries negative amounts
 and a zero line. Julien corrects it with one reversing entry and one
@@ -123,12 +124,13 @@ Owner: the `invoice` feat; the payments are its collection.
 
 Payments are facts from the bank: refusing one does not return the money.
 A confluent payment cannot uphold an upper bound, and an ordered one would
-refuse a transfer that already happened. The invariant is better stated as
-a reading than a refusal: **an invoice paid beyond its total shows the
-excess as a credit owed to the client**, refunded or applied elsewhere.
-The same bank reference recorded twice merges into one payment, which
-removes the common case. [Architecture](architecture.md#rules) states the
-rule as a refusal; it should change with this.
+refuse a transfer that already happened. **Applied.** The invariant is
+stated as a reading rather than a refusal: an invoice paid beyond its
+total shows the excess as a credit owed to the client, refunded or
+applied elsewhere. The same bank reference recorded twice merges into one
+payment, which removes the common case.
+[Architecture](architecture.md#rules) stated the rule as a refusal; it now
+reads this way.
 
 `void` is ordered against the payments: it settles only if no payment's
 receipt precedes it. A payment that arrives after is an unapplied credit.
@@ -154,7 +156,7 @@ roll has no owner yet: it needs a `circle-decision` graft.
 | `decision.vote` vs `decision.close` | the vote counts | the vote is too late | the outcome changes after it was announced |
 | `decision.vote` vs `member.suspend` / `.exit` | the vote counts if suspension follows close | the vote is dropped | a suspended member's vote decides |
 | `decision.close` vs `member.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
-| `decision.close` vs `circle.position.add` / `.remove` | as admit | as admit | as admit |
+| `decision.close` vs `circle-member:position.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
 
 The roll is not defined. The rule to adopt: the roll is the members active
@@ -184,8 +186,8 @@ every feat that spends, so it belongs below them all.
 
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
-| `account.draw` / `transaction.debit` vs `circle.mandate.revoke` | the spend stands | refused: no power | someone without authority spends |
-| spend vs `circle.position.remove` | the spend stands | refused | as above |
+| `account.draw` vs `circle.mandate.revoke` | the spend stands | refused: no power | someone without authority spends |
+| spend vs `circle-member:position.remove` | the spend stands | refused | as above |
 | spend vs `member.suspend` / `.exit` | the spend stands | refused | as above |
 | `account.draw` vs `account.draw`, one share | both, if the share covers both | both, if it covers both | the share is overspent |
 
@@ -194,10 +196,13 @@ shares, and spends within a share already granted stand. The loss a
 revocation cannot stop is bounded by the share, which is the point of the
 label. Both labels are right.
 
-Lanterne's mandates carry `max_amount` with two meanings: Julien "pays
+Lanterne's mandates carried `max_amount` with two meanings: Julien "pays
 suppliers up to 3 000 €" (a cap per write) and a lead "spends up to
-1 000 € for the circle" (a budget). A cap per write is a permission check;
-a budget is a share that runs out. A mandate should name them apart.
+1 000 € a month for the circle" (a budget). A cap per write is a
+permission check; a budget is a share that runs out. **Applied.** A
+mandate names them apart: `limit` caps a single write, in cents;
+`budget`, with `per` ("month" or "year"), caps a cumulative total over a
+period.
 
 **Rung 2.** A lead's phone holds the circle's share offline; a revocation
 cannot reach it until it syncs. What it spends meanwhile stands, up to the
@@ -218,8 +223,9 @@ Owner: the `circle` feat.
 
 Ordered is right, and needed at rung 1 already: two concurrent server
 transactions can each see no cycle. The `ops.ts` comment ("two offline
-nestings") understates it. `nest` should also check that the moved
-subtree's mandates still fit within its new parent's.
+nestings") understated it; **applied**, it now says a cycle can form even
+online. `nest` should also check that the moved subtree's mandates still
+fit within its new parent's.
 
 **Lanterne.** Brand under Marketing and Marketing under Brand, proposed
 the same afternoon by Hugo and Malik: the second is refused.
@@ -235,11 +241,12 @@ Owner: the `key` feat; signatures are checked at ingress, before any rule.
 | `key.recover` vs `key.recover` | the second refused | the first refused | two new keys for one address |
 | `key.recover` vs `key.revoke` | as two orderings | as two orderings | an attacker's recovery survives the member's revocation |
 
-`enrol` is labelled confluent, but it is not: enrol-then-revoke and
+`enrol` was labelled confluent, but it is not: enrol-then-revoke and
 revoke-then-enrol end differently, and the first order lets a stolen key
-plant a device the revocation does not touch. Enrolment is rare and cheap
-to order. The alternative, revocation cascading to every key the revoked
-key enrolled, also revokes devices the member enrolled legitimately.
+plant a device the revocation does not touch. **Applied**: `enrol` is now
+ordered. Enrolment is rare and cheap to order. The alternative, revocation
+cascading to every key the revoked key enrolled, also revokes devices the
+member enrolled legitimately.
 
 Recovery is ordered, rightly; it should also open a window in which any
 current key of the member cancels it.
@@ -262,10 +269,11 @@ adoption is the `decision-document` graft's.
 | `adopt` @2 vs `adopt` @3, same base | @3 refused: base moved | @2 refused | the adopted text depends on arrival order |
 | `adopt` vs `decision.close` | adopt waits on the outcome | adopt settles if the outcome passed | adopted without consent |
 
-The labels are right. The `ops.ts` comment "refused if that moved on" reads
+The labels are right. The `ops.ts` comment "refused if that moved on" read
 as if editing the draft refuses an adoption; it does not, and must not, or
 no living document could be adopted. What must not have moved is the
-adopted version (`base: 'adopted'`).
+adopted version (`base: 'adopted'`). **Applied**: the comment and the doc
+now say so.
 
 **Lanterne.** Malik keeps editing the rate card after d-2026-011 names
 version 2; if the decision passes on 9 November, version 2 is adopted as
@@ -362,19 +370,26 @@ The matrix found writes no `ops.ts` declares:
 
 ## Recommended label changes
 
-1. `key.enrol`: confluent → **ordered**. Enrol and revoke do not commute;
-   a stolen key can plant a device the revocation misses.
-2. `transaction.credit` and `.debit` → **one `transaction.post`,
-   confluent**. An entry debits and credits; the spending right is
-   `account.draw`'s, so `debit`'s bounded share duplicates it.
-3. `transaction.adjust`: `ordered({ decide: 'majority' })` →
+1. **Applied.** `key.enrol`: confluent → **ordered**. Enrol and revoke do
+   not commute; a stolen key can plant a device the revocation misses.
+2. **Applied.** `transaction.credit` and `.debit` → **one
+   `transaction.post`, confluent**. An entry debits and credits; the
+   spending right is `account.draw`'s, so `debit`'s bounded share
+   duplicated it.
+3. **Applied.** `transaction.adjust`: `ordered({ decide: 'majority' })` →
    **`ordered({ base: 'corrected' })`**. The conflict is two corrections of
    one entry; a decision is the circle's parameter, not the write's type.
-4. `invoice.payment` stays confluent; **its invariant changes** from a
-   refusal to an overpaid credit, and payments merge by bank reference.
-5. `decision.vote` stays confluent; **at rung 2 a stance names its
-   parent**, since receipt order is not signing order across a member's
-   devices.
-6. No other label changes. `circle.nest`'s comment should say it is
-   ordered at rung 1 too, and `document.adopt`'s that the base is the
-   adopted version, not the draft.
+4. **Applied.** `invoice.payment` stays confluent; **its invariant
+   changes** from a refusal to an overpaid credit, and payments merge by
+   bank reference.
+5. **Not yet.** `decision.vote` stays confluent; **at rung 2 a stance
+   names its parent**, since receipt order is not signing order across a
+   member's devices.
+6. **Applied.** No other label changes. `circle.nest`'s comment now says
+   it is ordered at rung 1 too, and `document.adopt`'s that the base is
+   the adopted version, not the draft.
+7. **Applied, beyond this page's recommendations.** Positions move from
+   `circle` to the `circle-member` graft, which owns the relationship:
+   `circle-member:position.add` and `.remove`, both ordered. A mandate's
+   cap splits into `limit` (per write) and `budget` (cumulative, over
+   `per`).

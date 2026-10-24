@@ -97,14 +97,19 @@ No foreign key crosses a feat boundary. A feat handles an unlinked entity
 gracefully: an invoice without a client is unbilled, not invalid. The graft
 adds the link.
 
+A graft may also own writes on the relationship it holds, such as who
+holds a position: its permission is `<graft>:<entity>:<op>`, served as
+`POST /api/<graft>/<op>`, the same pattern as a feat's.
+
 ## Rules
 
 A rule lives at the lowest level that owns it: in a feat if it concerns
 only that feat's collection, in a graft if it concerns a relationship, and
 in a node's core only if it spans everything below that node.
 
-- Payments on an invoice never exceed its total: the invoice feat's rule,
-  since the payments are part of its collection.
+- A payment beyond an invoice's total leaves a credit owed to the client,
+  rather than being refused: the invoice feat's rule, since the payments
+  are part of its collection.
 - Nothing posts into a closed period: the `account-transaction` graft's.
   The period is an account's and the entry a transaction's; neither feat
   sees both, and the graft that resolves an entry's lines to accounts does.

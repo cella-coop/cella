@@ -65,7 +65,7 @@ the holder is whoever holds the role the mandate is granted to.
 
 | Write | Power | Lanterne |
 |---|---|---|
-| draw | `spend-circle`, up to the mandate's `max_amount` | each circle lead, 1 000 € |
+| draw | `spend-circle`, up to the mandate's `budget` | each circle lead, 1 000 € a month |
 | surplus.allocate | held by the assembly, exercised by decision | `ag`, majority |
 | period.close | `close-period` | Julien, as finance |
 

@@ -111,6 +111,13 @@ Circle knows no members, decisions or accounts. Templates of roles for
 common co-op shapes, colleges of a multi-stakeholder co-op and mandates
 requested by another scope (rung 5) build on these entities later.
 
+## Shell
+
+The `circles` collection, in tree order; a circle's page lists its roles,
+those every working circle has among them, and the mandates granted to
+them, with their limits and budgets. Seats are `circle-member`'s. Nesting
+and mandates have no handlers yet, so the shell offers no writes here.
+
 ## Lanterne
 
 | Circle | Parent | Purpose |

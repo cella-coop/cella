@@ -5,7 +5,12 @@ import type { Column } from '../models/view.ts'
 // columns are read through getters, so they follow the page's data.
 export class CollectionState {
   filter = $state('')
-  active = $state(-1)
+  // The keyboard's row, back to none whenever the filter changes the rows
+  // it would index.
+  active = $derived.by(() => {
+    void this.filter
+    return -1
+  })
   creating = $state(false)
   search: HTMLInputElement | undefined = $state()
 

@@ -156,6 +156,17 @@ Issue and payment can still be refused at rung 1, by a gap or by a closed
 period, so their handlers return `Refused` beside `Settled` although their
 labels never wait.
 
+## Shell
+
+The `invoices` collection, the latest first, with what clients owe, what
+is overdue and the credit owed back; overdue reads the server's clock, a
+read no rule depends on. New issues one (`issue`) in a series the feat
+offers. An invoice's page shows its lines and payments and marks it sent
+(`send`). `api/forms.ts` reads the shell's forms into the handlers'
+inputs, amounts typed in euros, so a graft's writes read the same forms:
+`invoice-transaction` replaces issue, payment and void with the writes
+that post them. Whom an invoice bills is `client-invoice`'s.
+
 ## Lanterne
 
 - Series F-2026 runs from 0041 to 0055; the next is 0056.

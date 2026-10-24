@@ -1,3 +1,59 @@
+export type Standing = 'unpaid' | 'partial' | 'paid' | 'overpaid' | 'voided'
+
+// An invoice as the feat lists it, amounts in cents, its standing read
+// from its payments by `invoice.standing`.
+export interface Listed {
+  id: string
+  issued: string
+  due: string
+  bill_to: string
+  label: string
+  total: number
+  paid: number
+  owed: number
+  credit: number
+  state: Standing
+  overdue: boolean
+  sent: string | null
+  voided: string | null
+}
+
+export interface Lined {
+  id: string
+  n: number
+  description: string
+  quantity: string
+  unit_price: number
+  amount: number
+  vat_rate: string
+}
+
+export interface Received {
+  id: string
+  receipt: number
+  at: string
+  amount: number
+  method: string
+  reference: string
+}
+
+export interface Detail extends Listed {
+  series: string
+  number: number
+  net: number
+  vat: number | null
+  reason: string | null
+  lines: Lined[]
+  payments: Received[]
+}
+
+// What issuing a new invoice offers: the series and their next numbers,
+// and the names already billed.
+export interface Issuing {
+  series: { name: string; next: number }[]
+  billed: string[]
+}
+
 export interface Line {
   description: string
   // A decimal, as text, so that 2.5 days stays exact.

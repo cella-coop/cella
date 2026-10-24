@@ -20,6 +20,7 @@ import { parse } from 'smol-toml'
 import pg from 'pg'
 import { fixture } from '../apps/org/core/sign/ts/src/index.ts'
 import { work } from './seed/work.mjs'
+import { finance } from './seed/finance.mjs'
 
 const dir = process.argv[2]
 const read = (file) => {
@@ -250,6 +251,7 @@ for (const p of (books.period ?? []).filter((p) => p.closed)) {
 }
 
 const worked = await work(db, read, day)
+const financed = await finance(db, read, day)
 
 await db.query('COMMIT')
 await db.end()
@@ -257,5 +259,5 @@ console.log(
   `seed: ${members.length} members, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
     `${admissions.length} admissions, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
-    `${postings.length} postings, ${worked} into ${db.database}`,
+    `${postings.length} postings, ${worked}, ${financed} into ${db.database}`,
 )

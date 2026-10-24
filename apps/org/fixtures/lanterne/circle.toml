@@ -99,8 +99,30 @@ limit = 300000
 
 [[mandate]]
 role = "finance"
-power = "run-payroll"
-text = "run the monthly payroll"
+power = "prepare-payroll"
+text = "prepare the monthly pay run"
+
+[[mandate]]
+role = "finance"
+power = "pay-payroll"
+text = "pay the monthly pay run"
+
+[[mandate]]
+role = "manager"
+power = "approve-payroll"
+text = "approve the monthly pay run"
+
+[[mandate]]
+role = "finance"
+power = "reimburse-expense"
+text = "reimburse members' expenses"
+limit = 300000
+
+[[mandate]]
+role = "manager"
+power = "approve-expense"
+text = "approve members' expenses"
+limit = 200000
 
 [[mandate]]
 role = "finance"
@@ -119,8 +141,8 @@ text = "close a period"
 
 [[mandate]]
 role = "lead"
-power = "spend-circle"
-text = "spend for the circle"
+power = "approve-expense"
+text = "approve what the circle's members spend"
 budget = 100000
 per = "month"
 

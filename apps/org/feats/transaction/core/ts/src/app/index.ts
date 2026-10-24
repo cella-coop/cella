@@ -12,7 +12,7 @@ export const app: App = {
         group: 'finance',
         title: 'Transactions',
         caption: 'The journal: every transaction in order',
-        icon: icons.BookOpen,
+        icon: icons.ArrowsLeftRight,
         views: [{ id: 'period', name: 'This period', icon: 'period', where: [{ field: 'date', within: 'month' }] }],
         columns: [
           { key: 'id', label: 'Entry', kind: 'mono', role: 'title', value: (e: Journaled) => e.id },

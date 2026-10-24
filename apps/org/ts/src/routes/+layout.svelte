@@ -11,7 +11,7 @@
 </script>
 
 <svelte:head>
-  <title>{data.scope} · cella</title>
+  <title>{data.scope.name} · cella</title>
 </svelte:head>
 
 <Shell scope={data.scope} {nav} actor={data.actor} actors={data.actors} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer}>

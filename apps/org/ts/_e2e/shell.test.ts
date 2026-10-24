@@ -150,6 +150,14 @@ test('every main page renders on the seed', async () => {
   assert.equal((await page('/decisions/d-1999-001')).status, 404)
 })
 
+test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
+  const { text } = await page('/members')
+  assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
+  assert.ok(text.includes('Lanterne SCOP SARL'), 'its menu gives its legal name')
+  assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
+  assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
+})
+
 test('every collection has a dashboard, its widgets run by the server', async () => {
   const invoices = await page('/invoices?view=dashboard')
   assert.equal(invoices.status, 200)

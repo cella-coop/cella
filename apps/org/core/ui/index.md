@@ -36,9 +36,20 @@ The theme is light, dark or the system's, a cookie the server writes into
 
 ## Components
 
-- `Shell`: the grid, sidebar · content; the scope and the user menu (act
-  as, dev only; theme), the command menu and the navigation, by group; the
-  last write's outcome floats above.
+- `Shell`: the grid, sidebar · content. The sidebar's top is the co-op
+  selector, the co-op's mark and name, its menu listing the scopes the
+  shell serves (one today) with their legal names; its foot is the
+  account menu, the acting member, whose menu holds Act as (dev only,
+  with its warning) and the theme; between them the command menu and the
+  navigation, by group. The last write's outcome floats above.
+- `Popover`: the one popover and menu, opened from its trigger in the
+  top layer (native `popover`), so nothing clips it: Escape and a click
+  outside close it and focus returns to the trigger; anchored by CSS
+  anchor positioning and flipped to stay in the viewport, placed by
+  `models/place.ts` where a browser lacks it; as a menu it focuses its
+  checked or first item and moves with the arrows, Home and End. The ui
+  check refuses a layer floated by hand (`position: absolute` with a
+  `z-index`) anywhere else.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: the
   eyebrow (the group, or on an item the collection, as the way back)

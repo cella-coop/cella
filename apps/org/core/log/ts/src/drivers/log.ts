@@ -10,6 +10,19 @@ export async function scope(db: Db): Promise<string | null> {
   return rows[0].scope
 }
 
+// The scope as a person reads it: its address, and the co-op's name and
+// legal name, which `cella seed` sets on the database beside the address
+// (`cella.scope_name`, `cella.scope_legal_name`); the address stands in
+// for a name not set.
+export async function named(db: Db): Promise<{ address: string | null; name: string | null; legal: string | null }> {
+  const { rows } = await db.query<{ address: string | null; name: string | null; legal: string | null }>(
+    `SELECT nullif(current_setting('cella.scope', true), '') AS address,
+            nullif(current_setting('cella.scope_name', true), '') AS name,
+            nullif(current_setting('cella.scope_legal_name', true), '') AS legal`,
+  )
+  return rows[0]
+}
+
 // Every entry, newest first.
 export async function entries(db: Db): Promise<Entry[]> {
   const { rows } = await db.query<Entry>(`SELECT ${entry} FROM cella.log l JOIN cella.receipt r ON r.n = l.receipt ORDER BY l.n DESC`)

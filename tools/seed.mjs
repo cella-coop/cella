@@ -32,10 +32,14 @@ const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query('BEGIN')
 
-// Every write signature names the scope; a new connection reads it.
+// Every write signature names the scope; a new connection reads it. Its
+// name and legal name ride beside it, for the shell to call the co-op by.
 const scope = read('scope')
-if (scope.address) {
-  await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET cella.scope = ${db.escapeLiteral(scope.address)}`)
+const settings = { 'cella.scope': scope.address, 'cella.scope_name': scope.name, 'cella.scope_legal_name': scope.legal_name }
+for (const [setting, value] of Object.entries(settings)) {
+  if (value) {
+    await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET ${setting} = ${db.escapeLiteral(value)}`)
+  }
 }
 
 const members = read('member').member ?? []

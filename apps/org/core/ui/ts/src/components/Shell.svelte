@@ -8,7 +8,7 @@
   import '@fontsource/alegreya-sans/700.css'
   import '../styles/tokens.css'
   import '../styles/base.css'
-  import CaretDown from 'phosphor-svelte/lib/CaretDown'
+  import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
   import type { Jump, Nav, Person } from '../models/view.ts'
   import type { Outcome as Done } from '../models/outcome.ts'
@@ -16,11 +16,13 @@
   import Command from './Command.svelte'
   import Icon from './Icon.svelte'
   import Outcome from './Outcome.svelte'
+  import Popover from './Popover.svelte'
   import { typing } from '../models/keys.ts'
 
-  // The shell: the sidebar, with the scope, who acts and the navigation,
-  // and the content beside it; the command menu and the last write's
-  // outcome float above both. ] shows or hides every page's drawer.
+  // The shell: the sidebar, the co-op at its top and the acting member's
+  // account at its foot, the command menu and the navigation between, and
+  // the content beside it; the last write's outcome floats above. ] shows
+  // or hides every page's drawer.
   let {
     scope,
     nav,
@@ -33,7 +35,8 @@
     drawer,
     children,
   }: {
-    scope: string
+    // The co-op the shell serves: its address, name and legal name.
+    scope: { address: string; name: string; legal: string | null }
     nav: Nav
     actor: Person | null
     actors: Person[]
@@ -58,46 +61,31 @@
   const collections: Jump[] = $derived(nav.flatMap((g) => g.items.map((i) => ({ title: i.title, href: i.href, kind: g.group }))))
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
   const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
+  const back = $derived(page.url.pathname + page.url.search)
 </script>
 
 <svelte:window {onkeydown} />
 
 <div class="shell">
   <nav class="sidebar" aria-label="Main">
-    <details class="who">
-      <summary>
-        <span class="mark">{scope.slice(0, 1).toUpperCase()}</span>
-        <span class="names">
-          <b>{scope}</b>
-          <span>{actor ? `as ${actor.name}` : 'acting as no one'}</span>
-        </span>
-        <Icon icon={CaretDown} size="0.85em" />
-      </summary>
-      <div class="menu">
-        {#if dev}
-          <p class="label">Act as <span class="dev">dev only</span></p>
-          <p class="hint">The server signs with each member's fixture device key, which anyone can derive.</p>
-          <form method="post" action="/act">
-            <input type="hidden" name="back" value={page.url.pathname + page.url.search} />
-            {#each actors as p (p.address)}
-              <button name="actor" value={p.address} class:on={actor?.address === p.address}>
-                <span class="avatar">{initials(p.name)}</span>{p.name}
-                {#if actor?.address === p.address}<Icon icon={Check} />{/if}
-              </button>
-            {/each}
-          </form>
-        {:else}
-          <p class="hint">Writes need a member's own device; acting as a member is for development only.</p>
-        {/if}
-        <p class="label">Theme</p>
-        <form method="post" action="/theme" class="themes">
-          <input type="hidden" name="back" value={page.url.pathname + page.url.search} />
-          {#each ['system', 'light', 'dark'] as t (t)}
-            <button name="theme" value={t} class:on={theme === t}>{t}</button>
-          {/each}
-        </form>
-      </div>
-    </details>
+    <div class="coop">
+      <Popover label="Co-op: {scope.name}">
+        {#snippet trigger()}
+          <span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span>
+          <b class="name">{scope.name}</b>
+          <Icon icon={CaretUpDown} size="0.9em" />
+        {/snippet}
+        <p class="label">Co-op</p>
+        <button role="menuitemradio" aria-checked="true" class="item">
+          <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
+          <span class="names">
+            <b>{scope.name}</b>
+            <span>{scope.legal ?? scope.address}</span>
+          </span>
+          <Icon icon={Check} />
+        </button>
+      </Popover>
+    </div>
 
     <Command {collections} {source} />
 
@@ -114,9 +102,40 @@
       </ul>
     {/each}
 
-    {#if dev}
-      <p class="footer">Development server · fixture keys</p>
-    {/if}
+    <div class="account">
+      <Popover label="Account: {actor?.name ?? 'no one acting'}" side="top" wide>
+        {#snippet trigger()}
+          <span class="avatar">{actor ? initials(actor.name) : '–'}</span>
+          <span class="names">
+            <b>{actor?.name ?? 'No one acting'}</b>
+            {#if dev}<span class="dev">Development · fixture keys</span>{/if}
+          </span>
+          <Icon icon={CaretUpDown} size="0.9em" />
+        {/snippet}
+        {#if dev}
+          <p class="label">Act as <span class="dev">dev only</span></p>
+          <p class="hint">The server signs with each member's fixture device key, which anyone can derive.</p>
+          <form method="post" action="/act" class="list">
+            <input type="hidden" name="back" value={back} />
+            {#each actors as p (p.address)}
+              <button role="menuitemradio" aria-checked={actor?.address === p.address} class="item" name="actor" value={p.address}>
+                <span class="avatar">{initials(p.name)}</span>{p.name}
+                {#if actor?.address === p.address}<Icon icon={Check} />{/if}
+              </button>
+            {/each}
+          </form>
+        {:else}
+          <p class="hint">Writes need a member's own device; acting as a member is for development only.</p>
+        {/if}
+        <p class="label">Theme</p>
+        <form method="post" action="/theme" class="themes">
+          <input type="hidden" name="back" value={back} />
+          {#each ['system', 'light', 'dark'] as t (t)}
+            <button role="menuitemradio" aria-checked={theme === t} name="theme" value={t} class:on={theme === t}>{t}</button>
+          {/each}
+        </form>
+      </Popover>
+    </div>
   </nav>
 
   <main class="main">{@render children()}</main>
@@ -147,28 +166,17 @@
     min-height: 0;
     overflow: hidden;
   }
-  .who {
-    position: relative;
+  .coop {
     margin-bottom: var(--space-2);
   }
-  summary {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    padding: var(--space-1);
-    border-radius: var(--radius-control);
-    cursor: pointer;
-    list-style: none;
-  }
-  summary::-webkit-details-marker {
-    display: none;
-  }
-  summary:hover {
-    background: var(--hover);
+  .account {
+    margin-top: auto;
+    padding-top: var(--space-2);
   }
   .mark {
     display: grid;
     place-items: center;
+    flex: none;
     width: 1.75rem;
     height: 1.75rem;
     border-radius: 7px;
@@ -177,16 +185,33 @@
     font-family: var(--font-display);
     font-weight: 500;
   }
+  .mark.small {
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 6px;
+  }
+  .name {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: var(--text-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
   .names {
     display: grid;
     flex: 1;
     min-width: 0;
-    line-height: 1.2;
+    line-height: 1.25;
+    text-align: start;
   }
   .names b {
-    font-family: var(--font-display);
     font-weight: 500;
-    font-size: var(--text-md);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .names span {
     font-size: var(--text-xs);
@@ -195,26 +220,19 @@
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .menu {
-    position: absolute;
-    z-index: 40;
-    inset-inline: 0;
-    width: 17rem;
-    margin-top: var(--space-1);
-    padding: var(--space-2);
-    background: var(--float);
-    border-radius: var(--radius-float);
-    box-shadow: var(--shadow-float);
-    display: grid;
-    gap: var(--space-1);
+  .names .dev,
+  .dev {
+    color: var(--warning-text);
   }
-  .menu form {
+  .list {
     display: grid;
   }
-  .menu button {
+  .item,
+  .themes button {
     display: flex;
     align-items: center;
     gap: var(--space-2);
+    width: 100%;
     padding: var(--space-1) var(--space-2);
     border: none;
     border-radius: var(--radius-control);
@@ -222,38 +240,39 @@
     text-align: start;
     cursor: pointer;
   }
-  .menu button:hover {
+  .item:hover,
+  .item:focus-visible,
+  .themes button:hover {
     background: var(--hover);
   }
-  .menu button.on {
+  .item :global(svg:last-child) {
+    margin-inline-start: auto;
     color: var(--accent-text);
   }
-  .menu button :global(svg:last-child) {
-    margin-inline-start: auto;
-  }
-  /* A segmented control, as a collection's layout switch: a sunk well,
-     the chosen segment lifted out of it. */
+  /* A segmented control: a sunk well, the chosen segment lifted out. */
   .themes {
+    display: grid;
     grid-auto-flow: column;
     background: var(--sunk);
     border-radius: var(--radius-control);
     padding: 2px;
   }
-  .menu .themes button {
+  .themes button {
     justify-content: center;
     text-transform: capitalize;
     border-radius: calc(var(--radius-control) - 2px);
     color: var(--text-muted);
   }
-  .menu .themes button.on {
+  .themes button.on {
     background: var(--selected);
     color: var(--text);
   }
   .avatar {
     display: grid;
     place-items: center;
-    width: 1.4rem;
-    height: 1.4rem;
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
     border-radius: 50%;
     background: var(--sunk);
     font-size: var(--text-2xs);
@@ -271,9 +290,6 @@
   }
   .group {
     margin-top: var(--space-3);
-  }
-  .dev {
-    color: var(--warning-text);
   }
   .hint {
     font-size: var(--text-xs);
@@ -302,12 +318,6 @@
     background: var(--hover);
     color: var(--text);
     font-weight: 500;
-  }
-  .footer {
-    margin-top: auto;
-    padding: var(--space-2);
-    font-size: var(--text-xs);
-    color: var(--warning-text);
   }
   @media (max-width: 700px) {
     .shell {

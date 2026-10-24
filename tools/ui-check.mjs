@@ -116,6 +116,17 @@ export function problems(path, text, ui) {
       out.push(`${path}: reorders with ${spec.split('/').pop()} buttons; items reorder by dragging, with the UI core's sortable`)
     }
   }
+  // A menu floated by hand, absolutely positioned over a stacking order,
+  // is clipped by whatever scrolls around it; the UI core's Popover puts
+  // it in the top layer.
+  if (svelte && !path.endsWith('/Popover.svelte')) {
+    for (const [, body] of text.replace(/<script[\s\S]*?<\/script>/g, '').matchAll(/\{([^{}]*)\}/g)) {
+      if (/position:\s*absolute/.test(body) && /z-index/.test(body)) {
+        out.push(`${path}: floats its own layer with position: absolute and z-index; open it in the UI core's Popover`)
+        break
+      }
+    }
+  }
   if (collectionPage.test(path)) {
     for (const tag of new Set(tags(text).filter((t) => t !== 'Collection'))) {
       out.push(`${path}: renders <${tag}> beside the Collection; configure the collection's view instead`)

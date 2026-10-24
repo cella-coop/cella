@@ -53,7 +53,7 @@ Rules never run with the owner's rights. `submit` runs each rule as `cella_rules
 
 - `cella.key_file` (`postgresql.conf` only): a file holding the scope's 32-byte Ed25519 seed. `cella db start` generates a dev key in `.data/notary.key`; it is never committed.
 - `cella.clock` (superuser only): a fixed verdict date, `YYYY-MM-DD`, for fixtures and tests. Unset, the date is the clock's, in UTC, read once per transaction.
-- `cella.scope` (superuser only): the scope's address, such as `lanterne.example`, which every write signature names. Set in `postgresql.conf` or on the database; `cella seed` sets it on the database from the fixture's `scope.toml`.
+- `cella.scope` (superuser only): the scope's address, such as `lanterne.example`, which every write signature names. Set in `postgresql.conf` or on the database; `cella seed` sets it on the database from the fixture's `scope.toml`, and beside it `cella.scope_name` and `cella.scope_legal_name`, the co-op's name and legal name, which the notary never reads and the shell calls the co-op by.
 
 The library is loaded through `shared_preload_libraries` so its settings exist before any session sets them.
 

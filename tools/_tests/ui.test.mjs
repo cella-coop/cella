@@ -111,3 +111,11 @@ test('reorder buttons with up and down arrows are refused; dragging reorders', (
   const sorted = component("  import { sortable } from '../attachments/sortable.ts'", '<ol {@attach sortable(drag, { list: "w", label, onmove })}><li data-drag-item="w" data-drag-index={0}><DragHandle label="Owed" /></li></ol>')
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Widgets.svelte', sorted, true), [])
 })
+
+test('a menu floated by hand is refused; the Popover opens it in the top layer', () => {
+  const floated = component('', '<details><summary>Me</summary><div class="menu">…</div></details>\n<style>\n  .menu {\n    position: absolute;\n    z-index: 40;\n  }\n</style>')
+  assert.match(problems('apps/org/core/ui/ts/src/components/Shell.svelte', floated, true)[0], /floats its own layer/)
+  const stretched = component('', '<a class="s">x</a>\n<style>\n  .s::after {\n    position: absolute;\n    inset: 0;\n  }\n</style>')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Table.svelte', stretched, true), [], 'a stretched link is no layer')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Popover.svelte', floated, true), [])
+})

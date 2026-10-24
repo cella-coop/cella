@@ -3,7 +3,7 @@
 import type { Slice } from '@cella/org-db'
 import { detail, entries, head } from '../drivers/log.ts'
 
-export { detail, entries, head, scope } from '../drivers/log.ts'
+export { detail, entries, head, named, scope } from '../drivers/log.ts'
 
 export const slice: Slice = {
   name: 'log',

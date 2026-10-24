@@ -8,6 +8,7 @@
 //! | `cella.amount` | type, with `=`, `<>`, `<`, `<=`, `>`, `>=`, `+` and casts from `bigint`, to `numeric` | `Amount` |
 //! | `cella.amount(bigint)`, `cella.cents(amount)` | functions | `Amount::new`, `Amount::cents` |
 //! | `cella.allocate(amount, bigint[])` | function | `allocate` |
+//! | `cella.digest(text)`, `cella.digest(bytea)` | functions | `digest`, BLAKE3 of the UTF-8 text or the bytes |
 //! | `cella.consent(member, stance, receipt)` | aggregate | `Tally::consent` |
 //! | `cella.majority(member, stance, receipt)` | aggregate | `Tally::majority` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
@@ -80,6 +81,16 @@ fn amount_add(a: Amount, b: Amount) -> Amount {
 #[pg_extern(immutable, parallel_safe)]
 fn allocate(total: Amount, weights: Vec<i64>) -> Vec<i64> {
     cella_rules::allocate(total.rules(), &weights).unwrap_or_else(|e| refuse(&e))
+}
+
+#[pg_extern(immutable, parallel_safe, name = "digest")]
+fn digest_text(text: &str) -> Vec<u8> {
+    cella_rules::digest(text.as_bytes()).to_vec()
+}
+
+#[pg_extern(immutable, parallel_safe, name = "digest")]
+fn digest_bytes(bytes: &[u8]) -> Vec<u8> {
+    cella_rules::digest(bytes).to_vec()
 }
 
 extension_sql!(

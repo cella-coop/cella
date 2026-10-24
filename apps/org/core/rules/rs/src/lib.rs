@@ -6,11 +6,13 @@
 
 pub mod allocate;
 pub mod amount;
+pub mod digest;
 pub mod log;
 pub mod vote;
 
 pub use allocate::allocate;
 pub use amount::{Amount, Balance};
+pub use digest::digest;
 pub use vote::{Stance, Tally};
 
 use thiserror::Error;

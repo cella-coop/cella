@@ -35,7 +35,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 ## Handlers
 
-- `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch.
+- `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch. A stance for another member, off the roll or on a closed decision returns `Refused`, as the rules and the trigger rule it; the handler throws for none of them.
 - `close` (ordered): sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits.
 
 ## Grafts

@@ -180,7 +180,13 @@ test('a member votes only on a decision whose roll holds them, and only for them
   const logged = await one<{ receipt: string }>('SELECT receipt FROM cella.log WHERE n = $1', [on.state === 'settled' && on.entry])
   assert.equal(stance.receipt, logged.receipt, 'the stance\'s receipt is the one the notary signed')
 
-  await assert.rejects(vote({ decision: 'd-2026-012', member: chloe, stance: 'object' }, as(hugo)), /may not vote for/)
+  const between = await head()
+  const forOther = await vote({ decision: 'd-2026-012', member: chloe, stance: 'object' }, as(hugo))
+  assert.equal(forOther.state, 'refused')
+  assert.match(reason(forOther), /hugo@lanterne\.example may not vote for chloe@lanterne\.example/)
+  assert.equal(await head(), between)
+  const stances = await all(`SELECT FROM decision.vote WHERE decision = 'd-2026-012' AND member = $1 AND stance = 'object'`, [chloe])
+  assert.equal(stances.length, 0)
 })
 
 test('a member edits their own profile, and no one else\'s', async () => {

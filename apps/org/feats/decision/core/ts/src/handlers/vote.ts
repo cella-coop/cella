@@ -7,11 +7,10 @@ const op = 'decision:decision:vote'
 
 // A member's stance, received now; their stance with the highest receipt
 // counts. Logged as a single-entry batch until batching arrives. A stance on
-// a closed decision is refused by the feat's trigger.
+// a closed decision is refused by the feat's trigger; one for another member
+// by `decision.own_stance`, and one off the roll by the
+// circle-decision-member graft's rule, each as Refused.
 export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Cast>> {
-  if (input.member !== deps.actor) {
-    throw new Error(`${deps.actor} may not vote for ${input.member}`)
-  }
   return write(deps, {
     op,
     request: input,

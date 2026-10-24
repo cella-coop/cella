@@ -52,3 +52,10 @@ specs: the invoice's state, then the entry through the transaction feat's
 `record`, then the posting, then `cella.submit` once. A refusal by any rule
 or trigger rolls all of it back; the void of a paid invoice leaves no
 credit note behind.
+
+## Shell
+
+Adds an invoice's postings, line by line, to its page, with the payment
+and void forms; and replaces the invoice feat's issue, payment and void
+with this graft's `issue`, `payment` and `annul`, which post in the same
+verdict, reading the same forms through the invoice feat's `forms`.

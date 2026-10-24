@@ -1,0 +1,231 @@
+// The shell, end to end on a seeded Lanterne: its built server renders
+// every main page, and its form actions make one write of each kind, as a
+// browser posts them, signed by the acting member's fixture device. Run by
+// `cella test`, which builds the shell first, on a fresh database.
+
+import { after, before, test } from 'node:test'
+import assert from 'node:assert/strict'
+import { spawn, type ChildProcess } from 'node:child_process'
+import { createServer } from 'node:net'
+import pg from 'pg'
+import { parse } from 'devalue'
+
+const su = new pg.Client()
+const entry = new URL('../build/index.js', import.meta.url).pathname
+
+let server: ChildProcess | undefined
+let base = ''
+
+const ines = 'ines@lanterne.example'
+const hugo = 'hugo@lanterne.example'
+const camille = 'camille@lanterne.example'
+const julien = 'julien@lanterne.example'
+
+const free = () =>
+  new Promise<number>((resolve) => {
+    const s = createServer()
+    s.listen(0, '127.0.0.1', () => {
+      const port = (s.address() as { port: number }).port
+      s.close(() => resolve(port))
+    })
+  })
+
+// Starts the built server, in dev mode or not, after setting the notary's
+// date for the app role, which each new connection picks up.
+async function start(date: string, dev = true) {
+  await stop()
+  await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
+  const port = await free()
+  base = `http://127.0.0.1:${port}`
+  // adapter-node takes the origin to be https unless a proxy's header says
+  // otherwise; the test speaks plain http, as a proxy in front would say.
+  const env: NodeJS.ProcessEnv = {
+    ...process.env,
+    PORT: String(port),
+    HOST: '127.0.0.1',
+    PROTOCOL_HEADER: 'x-forwarded-proto',
+    CELLA_DEV: dev ? '1' : '',
+  }
+  delete env.DATABASE_URL
+  server = spawn(process.execPath, [entry], { env, stdio: ['ignore', 'pipe', 'inherit'] })
+  for (let i = 0; i < 100; i++) {
+    try {
+      await fetch(`${base}/search`)
+      return
+    } catch {
+      await new Promise((r) => setTimeout(r, 100))
+    }
+  }
+  throw new Error('the shell did not start')
+}
+
+async function stop() {
+  if (server && server.exitCode === null) {
+    const exited = new Promise((r) => server?.once('exit', r))
+    // A graceful stop waits out fetch's kept-alive connections; the test
+    // server holds nothing to finish.
+    server.kill('SIGKILL')
+    await exited
+  }
+  server = undefined
+}
+
+const page = async (path: string) => {
+  const res = await fetch(`${base}${path}`)
+  return { status: res.status, text: await res.text() }
+}
+
+interface Done {
+  op: string
+  state: string
+  entry?: number
+  reason?: string
+  then: Done[]
+}
+
+// Posts a page's named action as an enhanced form does, acting as `actor`.
+async function act(path: string, action: string, fields: Record<string, string | string[]>, actor?: string): Promise<Done> {
+  const body = new URLSearchParams()
+  for (const [k, v] of Object.entries(fields)) {
+    for (const x of [v].flat()) {
+      body.append(k, x)
+    }
+  }
+  const res = await fetch(`${base}${path}?/${action}`, {
+    method: 'POST',
+    body,
+    headers: {
+      origin: base,
+      'x-forwarded-proto': 'http',
+      'x-sveltekit-action': 'true',
+      ...(actor ? { cookie: `cella-act=${actor}` } : {}),
+    },
+  })
+  const result = await res.json()
+  assert.ok(result.data, `${path}?/${action}: ${JSON.stringify(result)}`)
+  return parse(result.data).done
+}
+
+const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
+
+before(async () => {
+  await su.connect()
+  await start('2026-10-24')
+})
+
+after(async () => {
+  await stop()
+  await su.end()
+})
+
+test('every main page renders on the seed', async () => {
+  const pages: [string, string][] = [
+    ['/members', 'Camille Martin'],
+    [`/members/${camille}`, 'Powers held'],
+    ['/circles', 'Assemblée générale'],
+    ['/circles/ag', 'Gérante'],
+    ['/decisions', 'Admit Inès Haddad'],
+    ['/decisions/d-2026-012', 'passes by consent'],
+    ['/documents', 'Rate card 2027'],
+    ['/documents/internal-rules', 'Règlement intérieur'],
+    ['/invoices', 'F-2026-0055'],
+    ['/invoices/F-2026-0044', 'Compagnie Mauve Horizon'],
+    ['/clients', 'Vélo Solidaire'],
+    ['/accounts', 'Banque'],
+    ['/accounts/512', 'Ledger'],
+    ['/periods', '2026-10'],
+    ['/journal', 'je-0001'],
+    ['/journal/je-0001', 'Opening balances'],
+    ['/devices', 'laptop'],
+    ['/log', 'verifies'],
+  ]
+  for (const [path, says] of pages) {
+    const { status, text } = await page(path)
+    assert.equal(status, 200, path)
+    assert.ok(text.includes(says), `${path} says ${says}`)
+  }
+  assert.equal((await page('/nowhere')).status, 404)
+  assert.equal((await page('/decisions/d-1999-001')).status, 404)
+})
+
+test('a write with no one acting fails before any verdict', async () => {
+  const done = await act('/decisions/d-2026-012', 'vote', { stance: 'object' })
+  assert.equal(done.state, 'failed')
+  assert.match(done.reason ?? '', /act as a member first/)
+})
+
+test('Hugo edits the internal rules from a text area: one Loro update, settled', async () => {
+  const { text } = await page('/documents/internal-rules')
+  assert.ok(text.includes('Tuesday is a studio day'))
+  const draft = (await one<{ body: string }>(`SELECT body FROM document.version WHERE id = 'internal-rules@3'`)).body
+  const edited = await act('/documents/internal-rules', 'edit', { text: draft.replace('Tuesday', 'Thursday').replaceAll('\n', '\r\n') }, hugo)
+  assert.deepEqual(edited, { op: 'document:document:edit', state: 'settled', entry: 1, then: [] })
+  assert.ok((await page('/documents/internal-rules')).text.includes('Thursday is a studio day'))
+  const same = await act('/documents/internal-rules', 'edit', { text: draft.replace('Tuesday', 'Thursday') }, hugo)
+  assert.equal(same.state, 'failed', 'an edit that changes nothing is not sent')
+})
+
+test('Julien issues F-2026-0056, posted to the books; Camille, without the power, is refused', async () => {
+  const fields = {
+    series: 'F-2026',
+    bill_to: 'Vélo Solidaire',
+    label: 'Workshop on accessibility',
+    description: ['Workshop', 'Materials'],
+    quantity: ['2', '1'],
+    unit_price: ['450', '120,50'],
+    vat_rate: ['20', '20'],
+  }
+  const refused = await act('/invoices', 'issue', fields, camille)
+  assert.equal(refused.state, 'refused')
+  assert.match(refused.reason ?? '', /holds no mandate for issue-invoice/)
+  const issued = await act('/invoices', 'issue', fields, julien)
+  assert.deepEqual(issued, { op: 'invoice:invoice:issue', state: 'settled', entry: 2, then: [] })
+  const made = await one<{ total: string; entry: string }>(
+    `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0056'`,
+  )
+  assert.deepEqual(made, { total: '122460', entry: 'je-0041' })
+  const { text } = await page('/invoices/F-2026-0056')
+  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0041'))
+  const linked = await act('/invoices/F-2026-0056', 'link', { client: 'velo' }, julien)
+  assert.equal(linked.state, 'settled')
+})
+
+test('Hugo objects to admitting Inès, then consents; closing early is refused', async () => {
+  const objected = await act('/decisions/d-2026-012', 'vote', { stance: 'object' }, hugo)
+  assert.equal(objected.state, 'settled')
+  assert.ok((await page('/decisions/d-2026-012')).text.includes('does not pass by consent'))
+  const consented = await act('/decisions/d-2026-012', 'vote', { stance: 'consent' }, hugo)
+  assert.equal(consented.state, 'settled')
+  const early = await act('/decisions/d-2026-012', 'close', {}, camille)
+  assert.equal(early.state, 'refused')
+  assert.match(early.reason ?? '', /open until 2026-10-31/)
+})
+
+test('closed on 31 October, d-2026-012 admits Inès and seats her, as the close\'s reactions', async () => {
+  await start('2026-10-31')
+  const closed = await act('/decisions/d-2026-012', 'close', {}, camille)
+  assert.equal(closed.state, 'settled')
+  assert.deepEqual(
+    closed.then.map((d) => [d.op, d.state]),
+    [
+      ['member:member:admit', 'settled'],
+      ['circle-member:position:add', 'settled'],
+    ],
+  )
+  const { text } = await page(`/members/${ines}`)
+  assert.ok(text.includes('active') && text.includes('Assemblée générale'))
+  assert.ok((await page('/decisions/d-2026-012')).text.includes('passed by consent'))
+})
+
+test('outside dev mode the server signs for no one', async () => {
+  await start('2026-10-31', false)
+  const done = await act('/decisions/d-2026-011', 'vote', { stance: 'consent' }, camille)
+  assert.equal(done.state, 'failed')
+  assert.match(done.reason ?? '', /signs for no one/)
+})
+
+test('the log the shell wrote verifies, and its page says so', async () => {
+  assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
+  const { text } = await page('/log')
+  assert.ok(text.includes('verifies') && text.includes('decision:decision:close'))
+})

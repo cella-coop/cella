@@ -1,6 +1,7 @@
 import type { Db } from '@cella/org-db'
+import { summaries } from '@cella/org-decision/api'
 import { shown } from '@cella/org-document/api'
-import type { Adopting, Asked, OnDecision, OnDocument, Summary } from '../models/adoption.ts'
+import type { Adopting, Asked, OnDecision, OnDocument } from '../models/adoption.ts'
 
 // What decisions ask to adopt: a decision's, or those on a document.
 export async function asked(db: Db, by: { decision?: string; document?: string }): Promise<Asked[]> {
@@ -14,16 +15,6 @@ export async function asked(db: Db, by: { decision?: string; document?: string }
      WHERE ($1::text IS NULL OR a.decision = $1) AND ($2::text IS NULL OR a.document = $2)
      ORDER BY a.decision DESC`,
     [by.decision ?? null, by.document ?? null],
-  )
-  return rows
-}
-
-// Every decision of the scope, as an embed draws it and the slash menu
-// offers it; a picker that searches replaces the list when they are many.
-export async function summaries(db: Db): Promise<Summary[]> {
-  const { rows } = await db.query<Summary>(
-    `SELECT id, title, circle, rule, to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed
-     FROM decision.decision ORDER BY proposed DESC, id DESC`,
   )
   return rows
 }

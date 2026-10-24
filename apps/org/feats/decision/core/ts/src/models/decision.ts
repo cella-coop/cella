@@ -48,6 +48,17 @@ export interface Arg {
   options?: string
 }
 
+// A decision as a card draws it, inside a document or a meeting's
+// minutes: its title, circle and rule, and where it stands.
+export interface Summary {
+  id: string
+  title: string
+  circle: string
+  rule: string
+  deadline: string
+  closed: string | null
+}
+
 // One of an argument's choices.
 export interface Choice {
   value: string

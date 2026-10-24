@@ -4,6 +4,9 @@ import Close from './blocks/Close.svelte'
 import Create from './blocks/Create.svelte'
 import Proposal from './blocks/Proposal.svelte'
 
+// The decision card, which the grafts that draw a decision elsewhere embed.
+export { default as Card } from './blocks/Card.svelte'
+
 // The feat's client side: the decisions, open first, a new one with what
 // it decides, and a decision's page with its proposal, the stances given
 // and its close.

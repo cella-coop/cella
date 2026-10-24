@@ -1,3 +1,4 @@
+import type { Summary } from '@cella/org-decision/models'
 import type { Add, Added } from '@cella/org-meeting/models'
 
 // An agenda item that tables a decision, and where the decision stands:
@@ -13,15 +14,6 @@ export interface Tabled {
   closed: string | null
 }
 
-// A decision as an embed draws it, and as the agenda offers it.
-export interface Summary {
-  id: string
-  title: string
-  circle: string
-  rule: string
-  deadline: string
-  closed: string | null
-}
 
 // The graft's data on a meeting's page: the items that table decisions,
 // the decisions it may table or its minutes embed, and whether its

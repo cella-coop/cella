@@ -73,6 +73,11 @@ version it adopts, the outcome); and Stances, the roll and the acting
 member's stance. The stances given in time order stay in the drawer's
 Activity card, their one home.
 
+A decision drawn elsewhere is one card, the feat's `Card` (`./app`):
+its title, circle, rule and where it stands, linking to its page, over
+the decisions `summaries` (`./api`) reads. `decision-document` embeds
+it in documents, `decision-meeting` in a meeting's minutes.
+
 ## Domain
 
 Ported from seedling's `specs/feat/06-decisions.md` under this repo's labels and grafts: proposals with what they decide, stances and the close. Amendments, quorums, delegation and closing early once everyone has spoken are not built.

@@ -5,7 +5,7 @@
 import type { Slice } from '@cella/org-db'
 import { onDecision, onDocument, versions } from '../drivers/adoption.ts'
 
-export { asked, summaries, onDecision, onDocument, versions } from '../drivers/adoption.ts'
+export { asked, onDecision, onDocument, versions } from '../drivers/adoption.ts'
 
 export const slice: Slice = {
   name: 'decision-document',

@@ -6,7 +6,7 @@ import { table } from '../handlers/table.ts'
 import { onMeeting, sittings } from '../drivers/tabled.ts'
 
 export { table } from '../handlers/table.ts'
-export { onMeeting, sittings, summaries } from '../drivers/tabled.ts'
+export { onMeeting, sittings } from '../drivers/tabled.ts'
 
 // The decisions a meeting's agenda tables and tabling one, and on a
 // decision's page the meetings it is tabled at.

@@ -1,3 +1,4 @@
+import type { Summary } from '@cella/org-decision/models'
 import type { Canon } from '@cella/org-document/models'
 
 // A document a decision asks to adopt, named by its canonical hash, the
@@ -13,15 +14,6 @@ export interface Asked {
   adopted: string | null
 }
 
-// A decision as an embed draws it.
-export interface Summary {
-  id: string
-  title: string
-  circle: string
-  rule: string
-  deadline: string
-  closed: string | null
-}
 
 // What a decision asks to adopt, as its page shows it: the version in
 // full, as the database canonicalised it, and the version now adopted,

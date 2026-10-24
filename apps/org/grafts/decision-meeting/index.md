@@ -33,9 +33,9 @@ one while the meeting is scheduled; the `decision` embed, so the
 meeting's page reads its minutes' decisions as their document does; on
 a decision's page, the meetings it is tabled at.
 
-The embed's card is drawn here and in `decision-document` alike: two
-grafts of one order cannot share a block, and the card belongs in the
-decision feat's client side.
+The embed's card is the decision feat's `Card`, the one
+`decision-document` draws too, over the decisions the feat's
+`summaries` reads.
 
 ## Lanterne
 

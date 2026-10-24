@@ -51,8 +51,8 @@ decision's content, and the roll's outcome.
   the database computed it, with its version id, its hash and the version
   it would replace, or the day it was adopted.
 - On a document's page, the decisions that adopt its versions, and the
-  `decision` embed: a decision drawn inside the document as a card (its
-  title, circle, rule and whether it is open), and offered in the editor's
+  `decision` embed: a decision drawn inside the document as the decision
+  feat's card (its title, circle, rule and whether it is open), and offered in the editor's
   slash menu. Every decision of the scope is offered; a picker that
   searches replaces the list when they are many.
 

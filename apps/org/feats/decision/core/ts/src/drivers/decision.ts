@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Decision, Detail, Given, Kind, Motioned } from '../models/decision.ts'
+import type { Decision, Detail, Given, Kind, Motioned, Summary } from '../models/decision.ts'
 
 const columns = `id, circle, title, rule, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
@@ -28,6 +28,17 @@ export async function decision(db: Db, id: string): Promise<Detail | null> {
     [id],
   )
   return { ...found.rows[0], given: given.rows, motions: motions.rows }
+}
+
+// Every decision of the scope, the latest first, as a card draws it and a
+// graft offers it: an embed in a document, a decision an agenda tables;
+// a picker that searches replaces the list when they are many.
+export async function summaries(db: Db): Promise<Summary[]> {
+  const { rows } = await db.query<Summary>(
+    `SELECT id, title, circle, rule, to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed
+     FROM decision.decision ORDER BY proposed DESC, id DESC`,
+  )
+  return rows
 }
 
 // The kinds of motion the grafts register, by label.

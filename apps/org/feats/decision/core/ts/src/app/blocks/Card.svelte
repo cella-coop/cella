@@ -1,9 +1,10 @@
 <script lang="ts">
   import { Badge, date } from '@cella/org-ui'
-  import type { Summary } from '../../models/adoption.ts'
+  import type { Summary } from '../../models/decision.ts'
 
-  // A decision embedded in a document: its title, circle, rule and where
-  // it stands, linking to its page.
+  // A decision drawn as a card where another slice shows it, inside a
+  // document or a meeting's minutes: its title, circle, rule and where it
+  // stands, linking to its page. The slice hands the decisions it read.
   let { ref, data }: { ref: string; data: { decisions: Summary[] } } = $props()
   const d = $derived(data.decisions.find((x) => x.id === ref))
 </script>

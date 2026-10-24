@@ -2,7 +2,7 @@
   import { Properties, Section, short, type Embed } from '@cella/org-ui'
   import { Reader } from '@cella/org-document/app'
   import type { OnDecision } from '../../models/adoption.ts'
-  import Card from './Card.svelte'
+  import { Card } from '@cella/org-decision/app'
 
   // The document version a decision asks to adopt, in full: read from the
   // version's canonical form, which the database computed from its

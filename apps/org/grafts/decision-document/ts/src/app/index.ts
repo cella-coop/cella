@@ -1,7 +1,7 @@
 import type { App, Embed } from '@cella/org-ui'
 import type { OnDecision, OnDocument } from '../models/adoption.ts'
+import { Card } from '@cella/org-decision/app'
 import Adoption from './blocks/Adoption.svelte'
-import Card from './blocks/Card.svelte'
 
 // A decision drawn inside a document, and offered by its draft's slash
 // menu: the document feat knows embeds only by kind and ref.

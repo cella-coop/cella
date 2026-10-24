@@ -1,6 +1,6 @@
 import { date, type App, type Embed } from '@cella/org-ui'
 import type { OnMeeting, Sitting } from '../models/tabled.ts'
-import Card from './blocks/Card.svelte'
+import { Card } from '@cella/org-decision/app'
 import Tabled from './blocks/Tabled.svelte'
 
 // A decision drawn inside a meeting's minutes where the meeting's page

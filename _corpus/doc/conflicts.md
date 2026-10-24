@@ -27,6 +27,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `circle.mandate.grant`, `.revoke` | ordered | right |
 | `circle.message` | confluent | right |
 | `document.edit`, `.comment` | confluent | right |
+| `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
 | `account.draw` | bounded | right; **applied**: no longer duplicates, now that credit/debit are one `transaction.post` |
 | `account.surplus.allocate` | ordered | right |
@@ -363,7 +364,7 @@ The matrix found writes no `ops.ts` declares:
 |---|---|---|
 | granting a share or a series | ordered | bounded writes spend rights nothing grants |
 | `account.open` | ordered | account codes are unique in the scope |
-| `document.version` | confluent | adoption names versions nothing saves |
+| `document.version` | confluent | adoption names versions nothing saves; **applied**, now declared |
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
 | erasing a person | ordered | the tombstone must be fixed in the log |
 

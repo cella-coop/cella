@@ -166,10 +166,10 @@ test('the log verifies, records its rules, and catches tampering', async () => {
   )
   assert.deepEqual(admission.rules.map((r) => r.owner), ['circle-decision-member', 'decision-member', 'member'])
   assert.equal(admission.date, '2026-10-31')
-  // A vote's two, the close's one, the admission's three, the seat's one
+  // A vote's two, the close's two, the admission's three, the seat's one
   // beyond the carried rule it shares with the admission, and the edit's.
   const texts = await one<{ count: string }>('SELECT count(*) FROM cella.rule_text')
-  assert.equal(Number(texts.count), 8)
+  assert.equal(Number(texts.count), 9)
 
   await su.query('BEGIN')
   await su.query(`UPDATE cella.log SET actor = 'mallory@lanterne.example' WHERE n = 4`)

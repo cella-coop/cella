@@ -13,6 +13,8 @@ Proposals, votes and outcomes. An outcome is computed from the signed votes, nev
 | `POST /api/decision/vote` | confluent | signed by the member; their latest vote counts |
 | `POST /api/decision/close` | ordered | the notary fixes which votes made the deadline |
 
+None needs a power; each declares the check that allows it. **propose** and **close** need a seat in the decision's circle (`check: 'seat'`), **vote** a place on its roll (`check: 'roll'`) and the stance being the actor's own. Seats and rolls are `circle-decision-member`'s, which registers the rules: `circle_decision_member.sits` on propose and close, `on_roll` on vote. Lanterne's assembly decisions are put and closed by any of its ten members; coordination's by its five.
+
 ## Schema
 
 `decision` (`core/sql/`):

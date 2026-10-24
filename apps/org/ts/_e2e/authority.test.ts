@@ -262,6 +262,10 @@ test('Chloé revokes her phone from her laptop, and the phone signs nothing afte
 
 test('a closed decision\'s outcome stays fixed when a member is suspended after', async () => {
   await on('2026-11-09')
+  const before = await head()
+  const outsider = await close({ decision: 'd-2026-011' }, as(chloe))
+  assert.match(reason(outsider), /chloe@lanterne\.example holds no seat in coordination, so may not close d-2026-011/)
+  assert.equal(await head(), before)
   const closed = await close({ decision: 'd-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')
   assert.equal(await passes('d-2026-011'), false, 'Malik objects')

@@ -44,6 +44,9 @@ coordination's, counts its five.
   now.
 - `circle_decision_member.on_roll`, on `decision:decision:vote`: the
   member is on the decision's roll.
+- `circle_decision_member.sits`, on `decision:decision:propose` and
+  `decision:decision:close`: the actor is an active member seated in the
+  decision's circle on the verdict date.
 - `circle_decision_member.carried`, on every op in `decision.cites`: the
   decision the payload cites is closed and passes. The decision feat keeps
   that list; a graft that joins decision to a write's feat declares its op

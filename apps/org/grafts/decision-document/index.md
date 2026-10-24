@@ -57,7 +57,9 @@ decision's content, and the roll's outcome.
   searches replaces the list when they are many.
 
 - On the New decision form, `Adopt a document version`, with the versions
-  to pick from, newest first by document. The adoption itself, once the
+  to pick from, newest first by document: a meeting's minutes among them,
+  which a circle that adopts its minutes (`circle-meeting`) adopts this
+  way. The adoption itself, once the
   decision passes, is the document's `adopt` write, which the shell does
   not offer yet.
 

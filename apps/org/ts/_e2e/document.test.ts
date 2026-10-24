@@ -231,6 +231,30 @@ test('a new decision proposes adopting a version picked from the versions; one t
   assert.equal(await head(), before)
 })
 
+test('minutes are adopted as any document is: the assembly adopts its June minutes, picked from the versions', async () => {
+  const minutes = 'minutes-ag-2026-06-20'
+  const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
+  assert.ok(offered.versions.some((v) => v.value === `${minutes}@1`))
+  const proposed = await propose(
+    { circle: 'ag', title: 'Adopt the minutes of 20 June', rule: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'adopt', args: { version: `${minutes}@1` } }] },
+    as(camille),
+  )
+  assert.equal(proposed.state, 'settled', reason(proposed))
+  const decision = (proposed as { value: { decision: string } }).value.decision
+  const roll = await all<{ member: string }>(
+    `SELECT r.member FROM circle_decision_member.roll r JOIN member.member m ON m.address = r.member WHERE r.decision = $1 AND m.status = 'active'`,
+    [decision],
+  )
+  for (const { member } of roll) {
+    assert.equal((await vote({ decision, member, stance: 'consent' }, as(member))).state, 'settled')
+  }
+  await on('2026-11-16')
+  assert.equal((await close({ decision }, as(camille))).state, 'settled')
+  const done = await adopt({ document: minutes, version: `${minutes}@1`, base: null, decision }, as(camille))
+  assert.equal(done.state, 'settled', reason(done))
+  assert.equal(await adopted(minutes), `${minutes}@1`)
+})
+
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const log = await one<{ count: string; max: string }>('SELECT count(*), max(n) FROM cella.log')

@@ -22,6 +22,28 @@ the relationship, so the graft owns its writes.
 The app role and the rules role, `cella_rules`, may select. Positions are
 seeded; the writes below have no handlers yet.
 
+## Rules
+
+Who may use a power needs seats and mandates, and so lives here, the
+lowest level that sees both: mandates are the `circle` feat's, seats this
+graft's, and whether a member is active the `member` feat's.
+
+- `circle_member.may(actor, power, cents, day)`: the actor is active and
+  holds, on the day, a seat whose role has a mandate in force for the
+  power, not revoked, within its `limit` when the write carries an amount.
+  A `budget` is not checked: it needs the spend over its period tracked.
+- `circle_member.empowered`, on every op in `cella.power`: the actor may
+  use the op's power on the verdict date, for the amount the payload names
+  in the op's `amount` field. Each feat registers the power its ops need
+  in `cella.power`, a core registry; this graft attaches its rule to every
+  op listed, then and later, as `circle-decision-member` attaches its own
+  to `decision.cites`. A write with no power gets no such rule.
+
+Lanterne: Julien issues invoices, records payments, closes periods and
+pays suppliers up to 3 000 € an entry, as finance; Chloé holds no seat with
+a mandate, so she does none of these; Camille's `commit` mandate, up to
+20 000 €, is not needed by any write yet.
+
 ## Writes
 
 | Write | Label | Why |
@@ -31,7 +53,7 @@ seeded; the writes below have no handlers yet.
 
 - **position.add** and **position.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
-  writes read positions through `cella.may`, so they are ordered.
+  writes read positions through `circle_member.may`, so they are ordered.
 
 ## Powers
 

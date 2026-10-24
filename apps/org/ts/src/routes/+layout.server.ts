@@ -3,7 +3,7 @@ import { using } from '#lib/server/db.ts'
 import { actors, dev } from '#lib/server/device.ts'
 import type { LayoutServerLoad } from './$types'
 
-export const load: LayoutServerLoad = async ({ locals }) =>
+export const load: LayoutServerLoad = async ({ locals, cookies }) =>
   using(async (db) => {
     const people = await actors(db)
     return {
@@ -12,5 +12,8 @@ export const load: LayoutServerLoad = async ({ locals }) =>
       actors: people,
       dev,
       theme: locals.theme,
+      // Whether the viewer left the drawer open, which the shell's toggle
+      // keeps in a cookie.
+      drawer: cookies.get('cella-drawer') !== 'closed',
     }
   })

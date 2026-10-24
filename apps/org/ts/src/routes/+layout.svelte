@@ -14,6 +14,6 @@
   <title>{data.scope} · cella</title>
 </svelte:head>
 
-<Shell scope={data.scope} {nav} actor={data.actor} actors={data.actors} dev={data.dev} theme={data.theme} {outcome} source="/search">
+<Shell scope={data.scope} {nav} actor={data.actor} actors={data.actors} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer}>
   {@render children()}
 </Shell>

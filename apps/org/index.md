@@ -24,8 +24,9 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 is a page in the sidebar: Members, Circles, Decisions and Documents
 (governance); Clients (work); Invoices, Accounts, Periods and Transactions
 (finance); Devices and the Log (platform). Every collection is the same
-component, with a list and a table view, and every item the same detail
-view, its drawer's cards filled by the feat and the grafts that join it.
+component, its drawer's View card holding the filter, the list or table
+layout and the table's columns, and every item the same detail view, its
+drawer's cards filled by the feat and the grafts that join it.
 Ctrl-K jumps to any collection or item.
 
 What it writes, as the member picked in the user menu (dev only), each

@@ -38,10 +38,15 @@ The theme is light, dark or the system's, a cookie the server writes into
   as, dev only; theme), the command menu and the navigation, by group; the
   last write's outcome floats above.
 - `Frame`: the one page frame, a header with eyebrow, title, subtitle and
-  actions, the content, and the drawer when the page has one.
-- `Collection`: the one collection component, the same header, filter,
-  view switcher (list · table, in the URL) and rows for every collection,
-  keyboard first: `j`/`k` move, Enter opens, `/` filters, `c` opens New.
+  actions, the content, and the drawer. The header's last button, or `]`
+  anywhere, shows and hides the drawer on every page at once; a cookie
+  keeps the viewer's choice, so the server renders it.
+- `Collection`: the one collection component, the same header and rows
+  for every collection, and a drawer holding one card, View: the filter,
+  the layout (list · table) and, in a table, its columns, the layout and
+  the hidden columns in the URL. Writes stay in the header. Keyboard
+  first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
+  opens New.
 - `Detail`: the one detail view, the item's blocks in the content and the
   drawer's cards: Properties (label and value rows), Related and Activity.
   Esc goes back to the collection.
@@ -57,7 +62,7 @@ under it, the trailing meta, or the table alone.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu and the dismissed outcome are state classes in `hooks/`
+the command menu, and the dismissed outcome and the drawer's opening are state classes in `hooks/`
 (`CollectionState`, `CommandState`, `ShellState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes.

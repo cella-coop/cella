@@ -16,10 +16,11 @@
   import Command from './Command.svelte'
   import Icon from './Icon.svelte'
   import Outcome from './Outcome.svelte'
+  import { typing } from '../models/keys.ts'
 
   // The shell: the sidebar, with the scope, who acts and the navigation,
   // and the content beside it; the command menu and the last write's
-  // outcome float above both.
+  // outcome float above both. ] shows or hides every page's drawer.
   let {
     scope,
     nav,
@@ -29,6 +30,7 @@
     theme,
     outcome,
     source,
+    drawer,
     children,
   }: {
     scope: string
@@ -39,15 +41,26 @@
     theme: 'light' | 'dark' | 'system'
     outcome: Done | null
     source: string
+    drawer: boolean
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome)
+  const state = useShell(() => outcome, () => drawer)
+
+  function onkeydown(e: KeyboardEvent) {
+    if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {
+      return
+    }
+    state.show()
+    e.preventDefault()
+  }
 
   const collections: Jump[] = $derived(nav.flatMap((g) => g.items.map((i) => ({ title: i.title, href: i.href, kind: g.group }))))
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
   const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
 </script>
+
+<svelte:window {onkeydown} />
 
 <div class="shell">
   <nav class="sidebar" aria-label="Main">

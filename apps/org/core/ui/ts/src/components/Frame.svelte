@@ -1,10 +1,13 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft'
+  import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
+  import { useShell } from '../hooks/useShell.ts'
   import Icon from './Icon.svelte'
 
   // The one page frame: a header with the page's eyebrow, title and
-  // actions, the content, and the drawer when the page has one.
+  // actions, the content, and the drawer when the page has one, which the
+  // header's last button, or ], shows and hides on every page at once.
   let {
     eyebrow,
     title,
@@ -22,9 +25,12 @@
     drawer?: Snippet
     children: Snippet
   } = $props()
+
+  const shell = useShell()
+  const id = $props.id()
 </script>
 
-<div class="frame" class:drawn={drawer}>
+<div class="frame" class:drawn={drawer && shell.drawer}>
   <div class="content">
     <header>
       <div class="heading">
@@ -38,12 +44,29 @@
         <h1>{title}</h1>
         {#if subtitle}<p class="subtitle">{subtitle}</p>{/if}
       </div>
-      {#if actions}<div class="actions">{@render actions()}</div>{/if}
+      {#if actions || drawer}
+        <div class="actions">
+          {@render actions?.()}
+          {#if drawer}
+            <button
+              class="toggle"
+              class:on={shell.drawer}
+              onclick={() => shell.show()}
+              title="{shell.drawer ? 'Hide' : 'Show'} the drawer  ]"
+              aria-label="Drawer"
+              aria-expanded={shell.drawer}
+              aria-controls={id}
+            >
+              <Icon icon={SidebarSimple} />
+            </button>
+          {/if}
+        </div>
+      {/if}
     </header>
     <div class="body">{@render children()}</div>
   </div>
-  {#if drawer}
-    <aside class="drawer">{@render drawer()}</aside>
+  {#if drawer && shell.drawer}
+    <aside class="drawer" {id}>{@render drawer()}</aside>
   {/if}
 </div>
 
@@ -110,6 +133,28 @@
     gap: var(--space-2);
     align-items: end;
     flex-wrap: wrap;
+  }
+  .toggle {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  /* Phosphor draws its sidebar on the left; the drawer is on the right. */
+  .toggle :global(svg) {
+    transform: scaleX(-1);
+  }
+  .toggle:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .toggle.on {
+    color: var(--text);
   }
   .body {
     display: grid;

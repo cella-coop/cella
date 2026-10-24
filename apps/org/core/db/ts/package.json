@@ -1,0 +1,11 @@
+{
+  "name": "@cella/org-db",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-ops": "workspace:*"
+  }
+}

@@ -12,13 +12,12 @@ nixpkgs' Chromium (on port 5192).
 
 ## The package
 
-The npm name `nabu` belongs to a static site generator from 2013. The
-editor is `@aionbuilders/nabu` 0.1.0-beta.0 (2026-06-14), from
+npm `nabu` is a 2013 static site generator; the editor is `@aionbuilders/nabu` 0.1.0-beta.0 (2026-06-14), from
 github.com/aionbuilders/nabu: 74 stars, 59 commits (51 by one author, 8 by
 Claude), none since 2026-06-11. `package.json` says MIT, but neither the
 repository nor the tarball has a licence file. It is about 11,300 lines of
-JavaScript with JSDoc types, shipped as Svelte sources, and two Vite
-plugins sit among its runtime dependencies.
+JavaScript with JSDoc types; two Vite plugins sit among its runtime
+dependencies.
 
 ## How it works
 
@@ -67,12 +66,9 @@ Each one is worked around from outside nabu.
 - **Page-wide state.** The drag handle, the toolbar and the selection read
   the whole page and look blocks up by id. With two editors on one page,
   a drop in one moves the block in the other.
-- **Smaller ones:**
-  - `create()` turns index 0 into "append".
-  - Shift-Tab leaves an empty sublist.
-  - Loro subscriptions are never removed.
-  - `onInit` adds a paragraph to an empty document, so peers must start
-    from the same snapshot.
+- **Smaller:** `create()` turns index 0 into "append"; Shift-Tab leaves an
+  empty sublist; Loro subscriptions are never removed; `onInit` adds a
+  paragraph to an empty document, so peers share a starting snapshot.
 
 ## Test results
 

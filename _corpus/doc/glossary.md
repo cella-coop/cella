@@ -16,7 +16,10 @@ updated = 2026-10-24
 | **slice test** | a test of exactly one slice, in its package's `_tests/`, run by `cella test slice` on a database holding only that slice's part of the tree |
 | **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
 | **increment** | a chunk of build work; never a slice |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore` and the notary |
+| **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
+| **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
+| **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
+| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `ui` and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
 | **subsidiarity** | a rule lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |

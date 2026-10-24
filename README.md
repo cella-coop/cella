@@ -36,9 +36,11 @@ This repository works only on the org app.
 
 ```sh
 nix develop
-cella check       # feat check, fixture check, types, cargo check, clippy; no database
+cella check       # feat check, fixture check, types, svelte-check, cargo check, clippy; no database
 cella db start    # build the cella extension, start Postgres 18 in .data/
 cella test        # Rust and tool tests, each slice's tests, then the e2e scenarios
+cella db reset --seed lanterne
+cella serve       # the shell on http://localhost:5173, acting as a Lanterne member
 cella log verify  # recheck the dev database's log
 cella db stop
 ```

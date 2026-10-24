@@ -34,6 +34,12 @@ only on the org app, `apps/org/`. Read
 - **A rule lives at the lowest level that owns it**: a feat, a graft, or a
   node's core only when it spans everything below.
 - **Personal data never enters the log.** Commit to it; keep it in the vault.
+- **A slice's UI is its own.** A feat mounts its collections in the shell
+  through its `./api` and `./app` slices; a graft extends only the
+  collections of the feats it joins. Blocks compose `@cella/org-ui` and
+  style nothing; state lives in a hook's state class; client code imports
+  no server layer and keeps no module-level mutable state. The shell
+  writes no SQL. See [the shell](_corpus/doc/architecture.md#the-shell).
 - **Docs are present-tense** and say what the thing is. A feat's doc is its
   `index.md`; when you change a feat, update its doc and its `updated`.
 

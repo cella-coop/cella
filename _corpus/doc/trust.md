@@ -221,6 +221,14 @@ What the build does not yet do, and what lifts each:
   is signed with that member's signer as the handler's caller hands it;
   until the native client (rung 4) nothing stops a host signing with keys
   it serves.
+- **The shell's server signs for the member in dev mode.** No device
+  signs in the browser yet, and the server has no sessions. `cella
+  serve` runs it in dev mode, where it signs a write as the member picked
+  in the user menu with that member's TEST-ONLY fixture key, which anyone
+  can derive, and only a key enrolled under that device's label. Outside
+  dev mode it signs for no one and every write fails before a verdict.
+  Signing in the browser with `@cella/org-sign`, which runs on WebCrypto,
+  lifts this.
 - **A mandate's budget is not enforced.** A power's limit per write is
   checked; a budget, a total over a month or a year, needs the spend it
   caps tracked, which comes with `account.draw`.

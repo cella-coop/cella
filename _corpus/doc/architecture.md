@@ -22,7 +22,7 @@ flowchart BT
   circle["feats/circle/core"]
   graft["grafts/decision-member"]
   three["grafts/circle-decision-member"]
-  root["apps/org/ts: shell, routes, server"]
+  root["apps/org/ts: the shell"]
   member --> core
   decision --> core
   circle --> core
@@ -43,7 +43,8 @@ A node is a directory with a `feat.toml`. It holds:
   core is its shared library layer: `ops` (labels, permissions, outcomes),
   `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
   (the `cella` Postgres extension over them), `db` (a write's transaction),
-  `sign` (a device's signature on a write), and later `auth`, `ui`. A leaf feat's core is all of it.
+  `sign` (a device's signature on a write), `ui` (the shell's tokens and
+  components) and later `auth`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between its child feats.
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
@@ -241,8 +242,80 @@ Seedling's layers, innermost first; imports point inward only.
 - Tests in `_tests/` beside `src/`, a feat's or graft's slice tests; an app
   root's e2e tests in `_e2e/`.
 
-A package's `exports` name its public surface: `./models`, `./api` and
-`./bindings`. Nothing else is importable from outside it.
+A package's `exports` name its public surface: a core library's `.`, and a
+slice's `./models`, `./api` (its writes, its reads and its server slice),
+`./bindings` and `./app` (its client slice). Nothing else is importable
+from outside it, and `cella check feats` refuses any other export.
+
+### Client state
+
+The client layers follow seedling's hooks: a component holds no state of
+its own beyond its props and what it derives from them. State lives in a
+**state class**, `hooks/<Name>State.svelte.ts`, with `$state` fields,
+`$derived` fields and methods for its actions, and is reached through one
+hook, `hooks/use<Name>.ts`: `useName(…)` returns the instance in context
+(`createContext`'s `has` and `get`), or creates it, sets it and returns
+it. The first component to call it creates it; its descendants share it.
+A state class starts from the page's data, handed in as getters, so the
+server and the browser render the same state and it follows the page
+when a write refreshes it; nothing loads data from a component. Writes go
+through form actions. No client module keeps mutable state at module
+level, which the server would share between requests.
+
+`cella check feats` enforces what it can see (`tools/ui-check.mjs`): only
+the UI core holds CSS, no other `.svelte` file has a `<style>` or a
+`style` attribute; `$state` appears only in a state class under `hooks/`;
+no client module, nor a component's `<script module>`, declares a
+top-level `let` or `var`; and no `.svelte` file or module under `app/`,
+`hooks/` or `components/` imports a server layer: a package's `api`,
+`drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`.
+
+## The shell
+
+The org app's `ts/` root is the shell, a SvelteKit 3 app that mounts every
+slice; it holds the routes and no feature of its own. Each slice exports
+two halves of one **slice**, matched by name:
+
+- from `./api`, its server side (`Slice` in `@cella/org-db`): the
+  collections it owns, each with its reads (`list`, `item`, `index` for
+  the command menu, `about` for the collection's header) and its writes as
+  form actions, each a handler over a form; what it adds to the
+  collections of the feats it joins (`extends`): fields on each row, data
+  on an item, and writes; and reactions to other slices' settled writes
+  (`on`), such as the admissions a passing close makes.
+- from `./app`, its client side (`App` in `@cella/org-ui`): for each
+  collection it owns, a view (its columns, its New form and its header)
+  and a page (its title, its Properties, Related and Activity cards, its
+  blocks and its header writes); for each collection it extends, columns
+  over the fields it adds, and cards and blocks over its data on an item.
+
+The root lists the slices, server and client, and mounts them on four
+routes, the same for every collection: `/[collection]`, the one collection
+component, and `/[collection]/[id]`, the one detail view, each with the
+form actions of the collection's slices; `/search` for the command menu;
+and `/act` and `/theme` for the user menu. A collection's owner is a feat,
+or the log, a core library. A graft extends only a collection of a feat it
+joins; the root may join two feats no graft joins, as it puts a member's
+devices, the `key` feat's, on the member's page. The registry refuses a
+collection owned twice, an extension of a feat a graft does not join, and
+two extensions replacing one write. An extension's write replaces the
+owner's of the same name: `invoice-transaction`'s issue, which posts the
+invoice in the same transaction, replaces the invoice feat's.
+
+The shell writes no SQL and re-implements no rule: it reads through each
+slice's reads and writes through its handlers, which sign, submit and
+return Settled, Refused or Pending. Its pages show each outcome, with
+the rule's reason when refused. A write is signed by a device of the
+acting member: until a member's device signs in the browser, the dev
+server (`cella serve`, dev mode only) signs with the member's TEST-ONLY
+fixture key, and only when it is the key enrolled under that device's
+label and not revoked; outside dev mode the server signs for no one.
+Until `POST /api/<feat>/<op>` is served, these form actions are the
+writes' only HTTP path.
+
+The UI core, `@cella/org-ui`, holds the tokens and every component the
+slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's
+blocks style nothing themselves.
 
 ## Writes
 

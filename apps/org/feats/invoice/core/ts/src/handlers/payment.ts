@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-ops'
 import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Paid, Payment } from '../models/invoice.ts'
@@ -33,6 +33,6 @@ export const paying = (input: Payment): Write<Paid> => ({
 
 // Confluent: payments add up in any order. At rung 1 a payment is refused
 // only when what it posts is, as into a closed period.
-export async function payment(input: Payment, deps: Deps): Promise<Settled<Paid> | Refused> {
+export async function payment(input: Payment, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Paid>> {
   return write(deps, paying(input))
 }

@@ -1,17 +1,18 @@
 import type { Outcome } from '@cella/org-ops'
-import { settle, type Deps } from '@cella/org-db'
+import { write, type Deps } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Cast, Vote } from '../models/decision.ts'
 
 const op = 'decision:decision:vote'
 
 // A member's stance, received now; their stance with the highest receipt
-// counts. Logged as a single-entry batch until batching arrives.
+// counts. Logged as a single-entry batch until batching arrives. A stance on
+// a closed decision is refused by the feat's trigger.
 export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Cast>> {
   if (input.member !== deps.actor) {
     throw new Error(`${deps.actor} may not vote for ${input.member}`)
   }
-  return settle(deps, {
+  return write(deps, {
     op,
     state: async (tx) => {
       const { rows } = await tx.query<{ receipt: string }>(

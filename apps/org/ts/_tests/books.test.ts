@@ -101,6 +101,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   assert.deepEqual(logged.rules.map((r) => r.owner), ['invoice', 'invoice-transaction'])
 
   const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
+  assert.equal(linked.state, 'settled')
   assert.equal(linked.entry, 2)
 })
 
@@ -182,6 +183,7 @@ test('voiding an unpaid invoice posts a credit note', async () => {
   const s = await standing('F-2026-0056')
   assert.deepEqual([s.state, Number(s.owed)], ['voided', 0])
   const unsent = await send({ invoice: 'F-2026-0056' }, as(julien))
+  assert.equal(unsent.state, 'settled')
   assert.equal(unsent.value.sent, null, 'a voided invoice is not sent')
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [voided.state === 'settled' && voided.entry])
   assert.deepEqual(logged.rules.map((r) => r.owner), ['invoice', 'invoice-transaction'])

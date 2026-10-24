@@ -70,6 +70,7 @@ test('closing before the deadline is refused and uses no verdict number', async 
   assert.equal(await head(), 1)
 
   const consented = await vote({ decision: 'd-2026-012', member: hugo, stance: 'consent' }, as(hugo))
+  assert.equal(consented.state, 'settled')
   assert.equal(consented.entry, 2, 'the next verdict follows the last, with no gap')
   assert.equal(await passes('d-2026-012'), true)
 })
@@ -90,6 +91,11 @@ test('d-2026-012 closes on 31 October, and the graft admits Inès', async () => 
   assert.equal(admitted.length, 1)
   assert.deepEqual(admitted[0], { state: 'settled', entry: 4, value: { member: ines, since: '2026-10-31' } })
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
+
+  const late = await vote({ decision: 'd-2026-012', member: hugo, stance: 'object' }, as(hugo))
+  assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')
+  assert.match(late.state === 'refused' ? late.reason : '', /d-2026-012 is closed/)
+  assert.equal(await head(), 4)
 })
 
 test('admitting under d-2026-011, which Malik blocks, is refused and rolls back', async () => {

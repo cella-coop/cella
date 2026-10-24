@@ -21,7 +21,9 @@ keep signed copies of what concerns them.
 
 Until rung 2 every write goes through the server. The label is in the type
 from the start, so that later rungs move confluent and bounded writes to the
-clients without a rewrite.
+clients without a rewrite. On the server a confluent or bounded write still
+meets its feat's triggers and rules, so its outcome may be `Refused` as well
+as `Settled`; only an ordered write may also be `Pending`.
 
 ## One server
 

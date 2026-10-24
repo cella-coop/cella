@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { settle, type Db, type Deps } from '@cella/org-db'
+import { write, type Db, type Deps } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Add, Archive, Changed, Fields, Update } from '../models/client.ts'
 
@@ -30,7 +30,7 @@ async function set(tx: Db, id: string, fields: Fields): Promise<Changed> {
 const changed = (v: Changed) => ({ ...v, fields: [...v.fields] })
 
 export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)['client:client:add'], Changed>> {
-  return settle(deps, {
+  return write(deps, {
     op: 'client:client:add' satisfies Op,
     state: async (tx) => {
       await tx.query('INSERT INTO client.client (id, name) VALUES ($1, $2)', [input.id, input.name])
@@ -42,7 +42,7 @@ export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)[
 }
 
 export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof ops)['client:client:update'], Changed>> {
-  return settle(deps, {
+  return write(deps, {
     op: 'client:client:update' satisfies Op,
     state: (tx) => set(tx, input.id, input.fields),
     payload: changed,
@@ -52,7 +52,7 @@ export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof
 // Hides the client from lists; it stays for the books, and the invoices
 // that name it are untouched.
 export async function archive(input: Archive, deps: Deps): Promise<Outcome<(typeof ops)['client:client:archive'], Changed>> {
-  return settle(deps, {
+  return write(deps, {
     op: 'client:client:archive' satisfies Op,
     state: (tx) => set(tx, input.id, { status: 'archived' }),
     payload: changed,

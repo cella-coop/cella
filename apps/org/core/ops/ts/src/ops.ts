@@ -37,10 +37,13 @@ export type Permission = `${string}:${string}:${string}`
 
 export type Ops = Record<Permission, Op>
 
-// An ordered write is Pending until its verdict; the others settle at once.
+// An ordered write is Pending until its verdict; the others never wait. Until
+// rung 2 every write still meets the server's rules and triggers, so any of
+// them may be Refused: an unbalanced entry, a comment quoting text its
+// version lacks, a stance on a closed decision.
 export type Outcome<O extends Op, T> = O extends Ordered
   ? Pending | Settled<T> | Refused
-  : Settled<T>
+  : Settled<T> | Refused
 
 export interface Pending {
   state: 'pending'

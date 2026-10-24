@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-ops'
 import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Issue, Issued } from '../models/invoice.ts'
@@ -59,6 +59,6 @@ export const issuing = (input: Issue): Write<Issued> => ({
 
 // Bounded on the series: at rung 1 the server's right never runs out, so it
 // settles at once unless the number would leave a gap or be reused.
-export async function issue(input: Issue, deps: Deps): Promise<Settled<Issued> | Refused> {
+export async function issue(input: Issue, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Issued>> {
   return write(deps, issuing(input))
 }

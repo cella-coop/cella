@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-ops'
 import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Entry, Posted } from '../models/transaction.ts'
@@ -14,8 +14,8 @@ export const posting = (input: Entry): Write<Posted> => ({
 
 // Posts a balanced entry. Confluent: its balance is checked on the entry
 // alone and sums of entries commute. At rung 1 it is still refused when it
-// does not balance or is dated in a closed period, so it returns Refused
-// although its label never waits; at rung 2 a late post is re-dated.
-export async function post(input: Entry, deps: Deps): Promise<Settled<Posted> | Refused> {
+// does not balance or is dated in a closed period; at rung 2 a late post is
+// re-dated.
+export async function post(input: Entry, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Posted>> {
   return write(deps, posting(input))
 }

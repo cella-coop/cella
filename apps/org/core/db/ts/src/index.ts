@@ -52,12 +52,3 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
     return { state: 'refused', verdict: Number(rows[0].n), reason: (e as Error).message }
   }
 }
-
-// A confluent write has no rules to refuse it; a refusal here is a fault.
-export async function settle<T>(deps: Deps, w: Write<T>): Promise<Settled<T>> {
-  const out = await write(deps, w)
-  if (out.state !== 'settled') {
-    throw new Error(`${w.op}: ${out.reason}`)
-  }
-  return out
-}

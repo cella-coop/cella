@@ -25,7 +25,10 @@ or `close-period`; the feat owning a write names the power in
 limit, for a term. Who holds a role is a position, the `circle-member`
 graft's, so whether an actor may use a power is that graft's rule,
 `circle_member.may`: an actor may if a seat they hold on the day carries
-a role with a mandate in force for the power, within its limit.
+a role with a mandate in force for the power, within its limit. A power
+every member holds is granted the same way, through a mandate on a role
+every member is seated in, such as a `member` role in the assembly:
+nothing is allowed by omission.
 
 ## Schema
 
@@ -112,6 +115,7 @@ requested by another scope (rung 5) build on these entities later.
 
 | Role | Power | Cap |
 |---|---|---|
+| Member (every member, in `ag`) | `edit-client`, `edit-document` | — |
 | Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
 | Finance (Julien) | `pay-supplier` | 3 000 € limit |
 | Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period` | — |

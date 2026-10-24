@@ -37,6 +37,12 @@ parent = "coordination"
 purpose = "finance, administration, contracts and tools"
 
 [[role]]
+id = "member"
+circle = "ag"
+name = "Member"
+duty = "every member, seated in the assembly; what every member may do is granted to it"
+
+[[role]]
 id = "manager"
 circle = "ag"
 name = "Gérante"
@@ -53,6 +59,16 @@ id = "finance"
 circle = "operations"
 name = "Finance"
 duty = "issues invoices, pays suppliers and closes the books each month"
+
+[[mandate]]
+role = "member"
+power = "edit-client"
+text = "add and edit clients"
+
+[[mandate]]
+role = "member"
+power = "edit-document"
+text = "edit, version and comment on documents"
 
 [[mandate]]
 role = "manager"

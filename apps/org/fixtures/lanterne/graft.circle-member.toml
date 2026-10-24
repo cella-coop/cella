@@ -1,45 +1,55 @@
-# Who sits where: every member is in the assembly and one working circle; the
-# leads and the manager also sit on coordination.
+# Who sits where: every member is in the assembly, as a member, and in one
+# working circle; the leads and the manager also sit on coordination.
 
 [[position]]
 circle = "ag"
 member = "camille@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "yusuf@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "hugo@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "julien@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "lea@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "thomas@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "sofia@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "malik@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "amina@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "ag"
 member = "chloe@lanterne.example"
+role = "member"
 
 [[position]]
 circle = "brand"

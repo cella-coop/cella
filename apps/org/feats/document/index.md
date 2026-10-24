@@ -60,8 +60,14 @@ draft, and the next adoption names a later version.
 
 | Write | Power | Lanterne |
 |---|---|---|
-| edit, version, comment | `edit-document`, per document | every member |
+| edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
 | adopt | held by the circle the document belongs to, by decision | `ag` for the internal rules, `coordination` for the rate card |
+
+`002-powers.sql` registers `edit-document` in `cella.power`, and the
+`circle-member` graft checks it as any other: every member holds it
+through a mandate on a role every member is seated in, never by
+omission, so a non-member's or a suspended member's device is refused.
+The power covers every document; a power per document is not built.
 
 ## Invariants
 

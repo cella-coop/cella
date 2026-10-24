@@ -52,8 +52,14 @@ ordered write's rule, so none of them waits.
 
 | Write | Power | Lanterne |
 |---|---|---|
-| add, update | `edit-client` | every member |
-| archive | `edit-client` | every member |
+| add, update | `edit-client` | every member, through the `member` role's mandate |
+| archive | `edit-client` | every member, through the `member` role's mandate |
+
+`002-powers.sql` registers the power in `cella.power`, and the
+`circle-member` graft checks it as any other: a power every member holds is
+granted through a mandate on a role every member is seated in, never
+allowed by omission, so a non-member's or a suspended member's device is
+refused.
 
 ## Invariants
 

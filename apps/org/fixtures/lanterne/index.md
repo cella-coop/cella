@@ -13,9 +13,10 @@ name, number and identifier here is invented.
 
 ## People and circles
 
-Every member sits in the general assembly, one member one vote, and in one
-working circle. The leads and the manager also sit on coordination, which
-meets weekly.
+Every member sits in the general assembly, one member one vote, in its
+`member` role, whose mandates let every member edit clients and documents;
+and in one working circle. The leads and the manager also sit on
+coordination, which meets weekly.
 
 | Circle | Members | Lead |
 |---|---|---|

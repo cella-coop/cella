@@ -40,9 +40,11 @@ graft's, and whether a member is active the `member` feat's.
   to `decision.cites`. A write with no power gets no such rule.
 
 Lanterne: Julien issues invoices, records payments, posts entries, closes
-periods and pays suppliers up to 3 000 € a payment, as finance; Chloé holds no seat with
-a mandate, so she does none of these; Camille's `commit` mandate, up to
-20 000 €, is not needed by any write yet.
+periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
+holds only the `member` seat in the assembly, so she edits clients and
+documents and does none of these; Camille's `commit` mandate, up to
+20 000 €, is not needed by any write yet. A suspended member, or an
+invitee with a device, holds nothing.
 
 ## Writes
 

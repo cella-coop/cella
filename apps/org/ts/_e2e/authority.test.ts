@@ -12,6 +12,8 @@ import { pay, post } from '@cella/org-transaction/api'
 import { close, vote } from '@cella/org-decision/api'
 import { profile } from '@cella/org-member/api'
 import { enrol, revoke } from '@cella/org-key/api'
+import { add, update } from '@cella/org-client/api'
+import { comment } from '@cella/org-document/api'
 import type { Deps } from '@cella/org-db'
 import { generate, plain, signer, type Device, type Proof } from '@cella/org-sign'
 import { device, scope, sign } from './lanterne.ts'
@@ -188,6 +190,39 @@ test('a member edits their own profile, and no one else\'s', async () => {
   assert.equal(other.state, 'refused')
   assert.match(reason(other), /hugo@lanterne\.example may not edit chloe@lanterne\.example's profile/)
   assert.equal((await one<{ name: string }>('SELECT name FROM member.member WHERE address = $1', [chloe])).name, 'Chloé Moreau')
+})
+
+test('every active member edits clients and documents through the member role\'s mandates in the assembly', async () => {
+  const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
+  assert.equal(noted.state, 'settled')
+  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member'])
+  const remarked = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Agreed.' }, as(hugo))
+  assert.equal(remarked.state, 'settled')
+})
+
+test('a suspended member\'s device and a non-member\'s are refused: nothing is allowed by omission', async () => {
+  const thomas = 'thomas@lanterne.example'
+  const ines = 'ines@lanterne.example'
+  const before = await head()
+  await su.query(`UPDATE member.member SET status = 'suspended' WHERE address = $1`, [thomas])
+  try {
+    const suspended = await update({ id: 'nuvola', fields: { note: 'Suspended' } }, as(thomas))
+    assert.match(reason(suspended), /thomas@lanterne\.example holds no mandate for edit-client/)
+    const silenced = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Suspended.' }, as(thomas))
+    assert.match(reason(silenced), /thomas@lanterne\.example holds no mandate for edit-document/)
+  } finally {
+    await su.query(`UPDATE member.member SET status = 'active' WHERE address = $1`, [thomas])
+  }
+
+  // Inès is invited, not a member; her device is enrolled here, out of band,
+  // as her invitation will carry it.
+  const laptop = await generate(ines)
+  await su.query(`INSERT INTO key.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2026-10-24')`, [laptop.key, ines])
+  const outsider = { db: app, actor: ines, sign: signer(scope, ines, laptop) }
+  assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-client/)
+  assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /ines@lanterne\.example holds no mandate for edit-document/)
+  assert.equal(await head(), before)
 })
 
 let phone: Device

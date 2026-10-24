@@ -91,10 +91,6 @@ for (const e of entries) {
     )
   }
 }
-const numbered = entries.map((e) => Number(e.id.replace(/^je-/, ''))).filter(Number.isInteger)
-if (numbered.length) {
-  await db.query(`SELECT setval('transaction.entry_no', $1)`, [Math.max(...numbered)])
-}
 
 const invoicing = read('invoice')
 const invoices = invoicing.invoice ?? []

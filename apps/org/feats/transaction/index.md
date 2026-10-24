@@ -85,7 +85,7 @@ journal at rung 3.
 
 `transaction` (`core/sql/`):
 
-- `transaction.entry`: id (`je-0041`, from a sequence), date, label,
+- `transaction.entry`: id (`je-0041`, gapless), date, label,
   `corrects` and the receipt it was posted at; an entry carried over from
   before the log has no receipt.
 - `transaction.line`: the entry, its line number, the account code, a
@@ -94,7 +94,8 @@ journal at rung 3.
 A deferred constraint trigger checks that every entry balances over two
 lines or more; the db library makes it immediate before the verdict, so an
 unbalanced entry is refused inside the write. Another trigger refuses any
-update or delete: the journal is permanent. Both raise SQLSTATE `09000`.
+update or delete: the journal is permanent. A third numbers each entry
+(below). All raise SQLSTATE `09000`.
 The app role may select and insert; the rules role, `cella_rules`, may
 select.
 
@@ -115,8 +116,12 @@ select.
 - `adjust` (ordered, `base: 'corrected'`): records a correcting entry,
   naming the entry it corrects and the base it read.
 
-Entry ids come from a sequence, so a refused write leaves a gap in the
-ids, though never in the log.
+Entry ids are gapless, as the FEC export at rung 3 requires a continuous
+journal. A trigger numbers each entry from `transaction.journal`, a counter
+row the write locks until it commits, as `submit` locks the log's head; a
+refused write rolls the counter back with everything else, so it leaves no
+gap. An entry that names its own id, as the seed's carried-over entries
+do, must name the next number.
 
 ## Lanterne
 

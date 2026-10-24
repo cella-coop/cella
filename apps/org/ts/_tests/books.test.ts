@@ -209,6 +209,19 @@ test('posting into September, which is closed, is refused by the account-transac
   assert.equal(posted.state === 'settled' && posted.entry, before + 1)
 })
 
+test('a refused post leaves no gap in the journal\'s ids', async () => {
+  const last = async () => (await one<{ n: number }>(`SELECT max(substr(id, 4)::int) AS n FROM transaction.entry`)).n
+  const before = await last()
+  const repair = [{ account: '613', side: 'debit' as const, cents: 90_00 }, { account: '512', side: 'credit' as const, cents: 90_00 }]
+  const refused = await post({ date: '2026-09-30', label: 'Plotter repair, late', lines: repair }, as(julien))
+  assert.equal(refused.state, 'refused')
+  const posted = await post({ date: '2026-10-24', label: 'Plotter repair', lines: repair }, as(julien))
+  assert.equal(posted.state, 'settled')
+  assert.equal(posted.value.entry, `je-${String(before + 1).padStart(4, '0')}`)
+  const ids = await one<{ count: string; max: number }>(`SELECT count(*), max(substr(id, 4)::int) FROM transaction.entry`)
+  assert.equal(Number(ids.count), ids.max, 'the journal runs from je-0001 with no gap')
+})
+
 test('a correction names its base, and a second from the same base is refused', async () => {
   const reversal = {
     date: '2026-10-24',

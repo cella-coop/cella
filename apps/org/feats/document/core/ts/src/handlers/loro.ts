@@ -26,6 +26,21 @@ export function text(doc: LoroDoc, frontier?: Frontier): string {
   return out
 }
 
+// The Loro update that turns the draft into `text`, as a plain text area
+// edits it: Loro diffs the two texts into operations from a fresh peer. A
+// browser sends a text area's lines ending in CRLF; the draft's end in LF.
+export async function rewrite(db: Db, document: string, text: string): Promise<Uint8Array> {
+  const doc = await merged(db, document)
+  const from = doc.version()
+  const next = text.replaceAll('\r\n', '\n')
+  if (next === doc.getText(body).toString()) {
+    throw new Error(`${document}: the draft already reads so; nothing to edit`)
+  }
+  doc.getText(body).update(next)
+  doc.commit()
+  return doc.export({ mode: 'update', from })
+}
+
 // The draft's text, merged from every update.
 export async function draft(db: Db, document: string): Promise<string> {
   return text(await merged(db, document))

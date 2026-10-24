@@ -64,6 +64,52 @@ export interface Adopted {
   receipt: number
 }
 
+// A document as the feat lists it.
+export interface Listed {
+  id: string
+  title: string
+  versions: number
+  adopted: string | null
+  edited: string | null
+}
+
+export interface Version {
+  id: string
+  n: number
+  saved: string
+  hash: string
+  adopted: boolean
+}
+
+export interface Note {
+  id: string
+  version: string
+  author: string
+  at: string
+  quote: string
+  text: string
+  resolved: boolean
+}
+
+export interface Update {
+  id: string
+  receipt: number
+  author: string | null
+  at: string
+}
+
+// A document's page: its draft, merged from every update, its versions,
+// the adopted one, its comments and its updates, newest first.
+export interface Page {
+  id: string
+  title: string
+  draft: string
+  adopted: string | null
+  versions: Version[]
+  comments: Note[]
+  updates: Update[]
+}
+
 // Canonical markdown, as `document.version` requires: LF line endings, NFC,
 // no trailing blank lines and one final newline. A version's hash is over
 // exactly this text.

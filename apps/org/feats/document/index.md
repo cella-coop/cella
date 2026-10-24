@@ -141,6 +141,17 @@ addresses. Meeting minutes are documents, linked to their meeting by a
 later `document-meeting` graft. End-to-end encryption of documents, with
 per-document keys, arrives at rung 5.
 
+## Shell
+
+The `documents` collection; a document's page edits the draft in a plain
+text area. `edit` reads the text and `rewrite` diffs it against the merged
+draft into one Loro update, from a fresh peer, refusing to send one that
+changes nothing; the handler then appends it as any edit. The page saves
+the draft as a version (`version`) and comments on one (`comment`). A live
+collaborative editor is not built: two members saving at once each send
+an update, and Loro merges them. What decisions adopt is
+`decision-document`'s.
+
 ## Lanterne
 
 - The internal rules, version 3, were adopted on 20 June 2026 by

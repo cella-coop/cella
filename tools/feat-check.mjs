@@ -15,7 +15,9 @@
 //
 // It also checks that grafts are named and declared, that a package's
 // relative imports stay inside it, that a feat's or graft's ops are named
-// for it, and, through sql-check.mjs, every sql/ file's boundaries.
+// for it, through sql-check.mjs every sql/ file's boundaries, and through
+// powers.mjs that the power each op's label names is the one its SQL
+// registers.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -23,6 +25,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName } from './sql-check.mjs'
+import { agree, declared } from './powers.mjs'
 
 const args = process.argv.slice(2)
 const sql = !args.includes('--no-sql')
@@ -243,7 +246,14 @@ if (sql) {
       known.add(schemaName(g))
     }
   }
-  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known))
+  const powers = []
+  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, powers))
+  // A feat's or graft's ops, not the app core's own types.
+  const owned = [...byName.values()].filter((d) => {
+    const p = place(d)
+    return p && !(p.kind === 'core' && !parentOf(p.node))
+  })
+  errors.push(...agree(await declared(repo, owned), powers))
 }
 
 if (errors.length) {

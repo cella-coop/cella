@@ -11,8 +11,10 @@
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema;
-//   - writes cella.* only to register its rules, on ops of its own feat or
-//     of the feats it joins, under its own name;
+//   - writes cella.* only to register, under its own name: its rules, on
+//     ops of its own feat or of the feats it joins (cella.rule); the power
+//     each of its own ops needs (cella.power), which feat-check compares
+//     with its ops.ts; and, a feat only, the keyring (cella.keyring);
 //   - never sets search_path but on a function, to the catalog;
 //   - never reads the clock or randomness, since rules read
 //     cella.verdict_date(), and has no DO block, which this check cannot
@@ -92,7 +94,7 @@ const walk = (node, visit, key = null) => {
 
 // One parsed tree's references and the statements that need more than a
 // reference check.
-function inspect(tree, o, s, known, fail) {
+function inspect(tree, o, s, known, fail, powers) {
   const ref = (schema, what) => {
     if (schema && !s.allowed.has(schema)) {
       fail(`${what}: ${schema} is outside ${[...s.allowed].filter((x) => !catalog.has(x)).join(', ')}`)
@@ -154,11 +156,13 @@ function inspect(tree, o, s, known, fail) {
   })
   for (const { stmt } of tree.stmts ?? []) {
     const [type, body] = Object.entries(stmt)[0]
-    statement(type, body, o, s, fail, owned, named)
+    statement(type, body, o, s, fail, owned, named, powers)
   }
 }
 
-function statement(type, b, o, s, fail, owned, named) {
+const registries = new Set(['rule', 'power', 'keyring'])
+
+function statement(type, b, o, s, fail, owned, named, powers) {
   switch (type) {
     case 'CreateSchemaStmt':
       owned(b.schemaname, `creates the schema ${b.schemaname}`)
@@ -233,28 +237,43 @@ function statement(type, b, o, s, fail, owned, named) {
     case 'UpdateStmt':
     case 'DeleteStmt':
       if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
-        if (type !== 'InsertStmt' || b.relation.relname !== 'rule') {
-          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules`)
+        if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
+          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers or the keyring`)
+        } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
+          fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
         } else {
-          registers(b, o, s, fail)
+          registers(b, o, s, fail, powers)
         }
       }
       break
   }
 }
 
-// A rule registered under its owner's name, on an op of a feat it may see.
-function registers(b, o, s, fail) {
+// A registration under its owner's name: a rule on an op of a feat it may
+// see; a power only on an op of its own. Literal power rows are collected
+// for feat-check to compare with ops.ts.
+function registers(b, o, s, fail, powers) {
+  const what = b.relation.relname
   const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
+  const literal = (v) => (v.A_Const?.isnull ? null : v.A_Const?.sval?.sval)
   for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
-    const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], v.A_Const?.sval?.sval]))
+    const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], literal(v)]))
     const feat = vals.op?.split(':')[0]
-    if (vals.op && feat !== o.name && !s.feats.includes(feat)) {
+    if (what === 'rule' && vals.op && feat !== o.name && !s.feats.includes(feat)) {
       fail(`registers a rule on ${vals.op}, an op of ${feat}, which ${o.name} does not join`)
     }
-    if (vals.owner !== undefined && vals.owner !== o.name) {
-      fail(`registers a rule as ${vals.owner}, not as itself, ${o.name}`)
+    if (what === 'power' && feat !== o.name) {
+      fail(`registers a power on ${vals.op}, an op of ${feat}: only ${feat} names what its ops need`)
     }
+    if (vals.owner !== undefined && vals.owner !== o.name) {
+      fail(`registers a ${what} as ${vals.owner}, not as itself, ${o.name}`)
+    }
+    if (what === 'power' && vals.op) {
+      powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
+    }
+  }
+  if (what === 'power' && !b.selectStmt?.SelectStmt?.valuesLists) {
+    fail('registers powers from a query: a power is a literal row, so feat-check can compare it with ops.ts')
   }
 }
 
@@ -277,7 +296,8 @@ function plpgsql(lib, fn) {
   return trees
 }
 
-export async function checkSql(repo, apps, known) {
+// Pushes each literal power registration it finds onto `powers`.
+export async function checkSql(repo, apps, known, powers = []) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []
@@ -294,7 +314,7 @@ export async function checkSql(repo, apps, known) {
         fail(`does not parse: ${e.message}`)
         continue
       }
-      inspect(tree, o, s, known, fail)
+      inspect(tree, o, s, known, fail, powers)
       // Locations are byte offsets.
       const bytes = Buffer.from(sql)
       const bodies = []
@@ -315,7 +335,7 @@ export async function checkSql(repo, apps, known) {
         }
       }
       for (const body of bodies) {
-        inspect(body, o, s, known, fail)
+        inspect(body, o, s, known, fail, powers)
       }
     }
   }

@@ -18,9 +18,9 @@ updated = 2026-10-24
 | `cella ext build` | development | packages the `cella` extension with `cargo pgrx package` into `.data/ext`, where the dev cluster loads it |
 | `cella migrate [--url URL]` | both | applies the migrations cascading down the feat tree (`tools/migrate.mjs`), on the dev database or on any database by URL |
 | `cella seed <fixture> [--url URL]` | development | loads a mock co-op from `apps/org/fixtures/`, such as `lanterne` (`tools/seed.mjs`) |
-| `cella test` | development | the rule primitives' tests, this CLI's tests, then each slice's test file on `cella_test`, reset, migrated and seeded with Lanterne first; needs the dev cluster |
-| `cella test rules\|cli\|slice [NAME]` | development | one part alone, or one slice by its file name, such as `admission` |
-| `cella log verify [--url URL]` | both | runs `cella.verify_log()` and prints the log's head and the scope's public key; a broken log fails, with the notary's warnings saying where |
+| `cella test` | development | the rule primitives' tests, this CLI's tests, the node tools' tests (`tools/_tests`), then each slice's test file on `cella_test`, reset, migrated and seeded with Lanterne first; needs the dev cluster |
+| `cella test rules\|cli\|tools\|slice [NAME]` | development | one part alone, or one slice by its file name, such as `admission` |
+| `cella log verify [--url URL]` | both | runs `cella.verify_log()`, which checks every entry, the receipt it names and both signatures on it, the member's and the notary's, and prints the log's head and the scope's public key; a broken log fails, with the notary's warnings saying where |
 | `cella key init <PATH>` | production | writes a new scope signing key, the 32-byte Ed25519 seed `cella.key_file` reads, readable by its owner only and never over an existing file; prints its public key |
 
 The dev cluster is Postgres 18 in `.data/pg`, owned by the user, listening on 127.0.0.1 at `CELLA_PGPORT` (54342) with trust authentication; the dev database is `CELLA_DB` (`cella`). Commands on it connect by the `PG*` variables. `--url` connects anywhere else instead and is handed to the node tools as `DATABASE_URL`; cella never reads `DATABASE_URL` from its own environment, so a production database is only ever named on the command line.

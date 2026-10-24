@@ -14,10 +14,12 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         None => {
             rust(repo, steps, "rules", "cella-rules")?;
             rust(repo, steps, "cli", "cella-cli")?;
+            tools(repo, steps)?;
             slices(repo, steps, None)
         }
         Some(Test::Rules) => rust(repo, steps, "rules", "cella-rules"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
+        Some(Test::Tools) => tools(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
     }
 }
@@ -26,6 +28,18 @@ fn rust(repo: &Repo, steps: &Steps, name: &str, package: &str) -> Result {
     let mut cmd = repo.cmd("cargo");
     cmd.args(["test", "--quiet", "-p", package]);
     steps.run(name, &mut [cmd], passed)
+}
+
+/// The node tools' own tests, `tools/_tests/*.test.mjs`; no database.
+fn tools(repo: &Repo, steps: &Steps) -> Result {
+    repo.install(steps)?;
+    let mut test = repo.cmd("node");
+    test.arg("--test");
+    if !steps.verbose {
+        test.arg("--test-reporter=tap");
+    }
+    test.arg(repo.root.join("tools/_tests/*.test.mjs"));
+    steps.run("tools", &mut [test], tap)
 }
 
 /// Each slice's test file on a database reset, migrated and seeded with

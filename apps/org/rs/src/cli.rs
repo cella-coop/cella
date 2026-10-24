@@ -119,6 +119,8 @@ pub enum Test {
     Rules,
     /// This CLI's tests
     Cli,
+    /// The node tools' tests, such as the feat check's
+    Tools,
     /// The slices end to end, or one by name; needs the dev cluster
     Slice {
         /// A slice's test file name without .test.ts, such as admission
@@ -128,7 +130,7 @@ pub enum Test {
 
 #[derive(Subcommand)]
 pub enum Log {
-    /// Recheck the log's chain, every signature and the head
+    /// Recheck the log's chain, its receipts, every signature and the head
     Verify {
         /// A database other than the dev cluster's, such as production's
         #[arg(long, value_name = "URL")]

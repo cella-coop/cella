@@ -1,11 +1,83 @@
 # The accounts: a part of the French chart of accounts, the periods they are
 # kept in and the surplus allocations, amounts in cents. July to September
-# are closed; October is open. A cash account, the bank, says `cash = true`.
+# are closed; October is open, and so are the months after it to the end of
+# the fiscal year. A cash account, the bank, says `cash = true`; a member's
+# capital account names its member as `holder`, under 1013.
 
 [[account]]
 code = "1013"
 label = "Capital souscrit, appelé, versé"
 kind = "equity"
+
+[[account]]
+code = "101301"
+label = "Capital — Camille Martin"
+kind = "equity"
+parent = "1013"
+holder = "camille@lanterne.example"
+
+[[account]]
+code = "101302"
+label = "Capital — Yusuf Demir"
+kind = "equity"
+parent = "1013"
+holder = "yusuf@lanterne.example"
+
+[[account]]
+code = "101303"
+label = "Capital — Hugo Lefèvre"
+kind = "equity"
+parent = "1013"
+holder = "hugo@lanterne.example"
+
+[[account]]
+code = "101304"
+label = "Capital — Julien Petit"
+kind = "equity"
+parent = "1013"
+holder = "julien@lanterne.example"
+
+[[account]]
+code = "101305"
+label = "Capital — Léa Bernard"
+kind = "equity"
+parent = "1013"
+holder = "lea@lanterne.example"
+
+[[account]]
+code = "101306"
+label = "Capital — Thomas Nguyen"
+kind = "equity"
+parent = "1013"
+holder = "thomas@lanterne.example"
+
+[[account]]
+code = "101307"
+label = "Capital — Sofia Rossi"
+kind = "equity"
+parent = "1013"
+holder = "sofia@lanterne.example"
+
+[[account]]
+code = "101308"
+label = "Capital — Malik Benali"
+kind = "equity"
+parent = "1013"
+holder = "malik@lanterne.example"
+
+[[account]]
+code = "101309"
+label = "Capital — Amina Diallo"
+kind = "equity"
+parent = "1013"
+holder = "amina@lanterne.example"
+
+[[account]]
+code = "101310"
+label = "Capital — Chloé Moreau"
+kind = "equity"
+parent = "1013"
+holder = "chloe@lanterne.example"
 
 [[account]]
 code = "1061"
@@ -14,12 +86,12 @@ kind = "equity"
 
 [[account]]
 code = "1068"
-label = "Autres réserves (impartageables)"
+label = "Autres réserves (impartageables), fonds de développement"
 kind = "equity"
 
 [[account]]
 code = "120"
-label = "Résultat de l'exercice en cours"
+label = "Résultat de l'exercice (bénéfice)"
 kind = "equity"
 
 [[account]]
@@ -33,6 +105,21 @@ label = "Clients"
 kind = "asset"
 
 [[account]]
+code = "421"
+label = "Personnel — rémunérations dues"
+kind = "liability"
+
+[[account]]
+code = "424"
+label = "Participation des salariés aux résultats"
+kind = "liability"
+
+[[account]]
+code = "431"
+label = "Sécurité sociale"
+kind = "liability"
+
+[[account]]
 code = "44566"
 label = "TVA déductible sur autres biens et services"
 kind = "asset"
@@ -43,14 +130,49 @@ label = "TVA collectée"
 kind = "liability"
 
 [[account]]
+code = "455"
+label = "Associés — comptes courants"
+kind = "liability"
+
+[[account]]
+code = "4561"
+label = "Associés — capital souscrit et appelé, non versé"
+kind = "asset"
+
+[[account]]
+code = "457"
+label = "Associés — intérêts aux parts à payer"
+kind = "liability"
+
+[[account]]
 code = "512"
 label = "Banque — Crédit Coopératif"
 kind = "asset"
 cash = true
 
 [[account]]
+code = "606"
+label = "Achats non stockés de matières et fournitures"
+kind = "expense"
+
+[[account]]
 code = "613"
 label = "Locations"
+kind = "expense"
+
+[[account]]
+code = "6251"
+label = "Voyages et déplacements"
+kind = "expense"
+
+[[account]]
+code = "6256"
+label = "Missions"
+kind = "expense"
+
+[[account]]
+code = "6257"
+label = "Réceptions"
 kind = "expense"
 
 [[account]]
@@ -88,12 +210,23 @@ closed = 2026-10-05
 [[period]]
 month = "2026-10"
 
-# The 2025 surplus, split as the statutes require. The decision that approved
-# it is the account-decision graft's link.
+[[period]]
+month = "2026-11"
+
+[[period]]
+month = "2026-12"
+
+# The 2025 surplus, split as the statutes require and the law allows (loi
+# n° 78-763, art. 33): the work share divided among the workers by salary,
+# 15 % to the legal reserve, which is under the capital, the rest of the
+# reserves to the development fund, and interest on capital within both.
+# The decision that approved it is the account-decision graft's link; it is
+# allocated, and posted, by the allocate write.
 [[allocation]]
 id = "al-2025"
 year = 2025
 surplus = 6140000
+basis = "salary"
 
 [[allocation.share]]
 kind = "work"
@@ -101,9 +234,14 @@ percent = 45
 amount = 2763000
 
 [[allocation.share]]
-kind = "reserves"
-percent = 40
-amount = 2456000
+kind = "legal"
+percent = 15
+amount = 921000
+
+[[allocation.share]]
+kind = "development"
+percent = 25
+amount = 1535000
 
 [[allocation.share]]
 kind = "interest"

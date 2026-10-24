@@ -1,0 +1,18 @@
+# The entries each pay run posted. Runs carried over from the previous
+# tool posted their pay and its payment in one entry: wages (641) and the
+# employer's contributions (645) against the bank (512).
+
+[[posting]]
+month = "2026-07"
+event = "carried"
+entry = "je-0009"
+
+[[posting]]
+month = "2026-08"
+event = "carried"
+entry = "je-0019"
+
+[[posting]]
+month = "2026-09"
+event = "carried"
+entry = "je-0031"

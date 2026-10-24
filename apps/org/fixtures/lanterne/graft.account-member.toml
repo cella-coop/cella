@@ -1,0 +1,43 @@
+# What each member may draw on their account, granted in advance, in
+# cents. The value of a share is member.toml's `share_value`; who holds
+# each capital account is account.toml's `holder`.
+
+[[allowance]]
+member = "camille@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "yusuf@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "hugo@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "julien@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "lea@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "thomas@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "sofia@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "malik@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "amina@lanterne.example"
+amount = 50000
+
+[[allowance]]
+member = "chloe@lanterne.example"
+amount = 50000

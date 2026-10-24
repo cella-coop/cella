@@ -10,9 +10,46 @@ label = "Opening balances carried over from the previous accounting tool"
 account = "512"
 debit = 9200000
 
+# Each member's paid-up capital, their shares at 50 €.
 [[entry.line]]
-account = "1013"
-credit = 1300000
+account = "101301"
+credit = 200000
+
+[[entry.line]]
+account = "101302"
+credit = 200000
+
+[[entry.line]]
+account = "101303"
+credit = 200000
+
+[[entry.line]]
+account = "101304"
+credit = 100000
+
+[[entry.line]]
+account = "101305"
+credit = 100000
+
+[[entry.line]]
+account = "101306"
+credit = 100000
+
+[[entry.line]]
+account = "101307"
+credit = 100000
+
+[[entry.line]]
+account = "101308"
+credit = 100000
+
+[[entry.line]]
+account = "101309"
+credit = 100000
+
+[[entry.line]]
+account = "101310"
+credit = 100000
 
 [[entry.line]]
 account = "1061"
@@ -20,11 +57,12 @@ credit = 900000
 
 [[entry.line]]
 account = "1068"
-credit = 3800000
+credit = 860000
 
+# The 2025 result, the surplus d-2026-006 approved, until it is allocated.
 [[entry.line]]
 account = "120"
-credit = 3200000
+credit = 6140000
 
 [[entry]]
 id = "je-0002"

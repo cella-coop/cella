@@ -1,0 +1,86 @@
+# Pay: the rates of the contributions on gross pay, flat until a payroll
+# integration computes them line by line, and the widest ratio the internal
+# rules allow between the highest and the lowest salary (1.6); each
+# member's monthly gross salary, amounts in cents; and the pay runs since
+# the books moved here, one a month, prepared, approved by the gérante and
+# paid on the 28th. July to September were carried over: each posted, and
+# paid, in one entry of the journal (graft.payslip-transaction.toml).
+# September's payslips hold the members' approved hours; timesheets began
+# on 1 September.
+
+[terms]
+employee = 22
+employer = 40
+ratio = 1.6
+
+[[salary]]
+member = "camille@lanterne.example"
+from = 2025-01-01
+gross = 300000
+
+[[salary]]
+member = "yusuf@lanterne.example"
+from = 2025-01-01
+gross = 300000
+
+[[salary]]
+member = "hugo@lanterne.example"
+from = 2025-01-01
+gross = 280000
+
+[[salary]]
+member = "julien@lanterne.example"
+from = 2025-01-01
+gross = 260000
+
+[[salary]]
+member = "lea@lanterne.example"
+from = 2025-01-01
+gross = 250000
+
+[[salary]]
+member = "thomas@lanterne.example"
+from = 2025-01-01
+gross = 250000
+
+[[salary]]
+member = "sofia@lanterne.example"
+from = 2025-01-01
+gross = 240000
+
+[[salary]]
+member = "malik@lanterne.example"
+from = 2025-01-01
+gross = 240000
+
+[[salary]]
+member = "amina@lanterne.example"
+from = 2025-01-01
+gross = 240000
+
+[[salary]]
+member = "chloe@lanterne.example"
+from = 2025-01-01
+gross = 240000
+
+[[run]]
+month = "2026-07"
+generated = 2026-07-24
+approved = 2026-07-27
+approver = "camille@lanterne.example"
+paid = 2026-07-28
+
+[[run]]
+month = "2026-08"
+generated = 2026-08-24
+approved = 2026-08-27
+approver = "camille@lanterne.example"
+paid = 2026-08-28
+
+[[run]]
+month = "2026-09"
+generated = 2026-09-24
+approved = 2026-09-25
+approver = "camille@lanterne.example"
+paid = 2026-09-28
+timed = true

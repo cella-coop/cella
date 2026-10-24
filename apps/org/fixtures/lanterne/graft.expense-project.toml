@@ -1,0 +1,13 @@
+# The project each expense was spent for, to bill on to its client.
+
+[[rebill]]
+expense = "ex-0001"
+project = "ferrand-packaging"
+
+[[rebill]]
+expense = "ex-0002"
+project = "clairval-site"
+
+[[rebill]]
+expense = "ex-0003"
+project = "nuvola-retainer"

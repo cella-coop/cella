@@ -1,0 +1,47 @@
+# What members spent for the co-op in October, amounts in cents: before
+# VAT and the deductible VAT. A category is the account of class 6 it is
+# charged to. Nothing is approved yet: approving one charges it to the
+# books, and the leads approve within 1 000 € a month each.
+
+[[expense]]
+id = "ex-0001"
+member = "sofia@lanterne.example"
+day = 2026-10-19
+label = "Print proofs for the press check"
+category = "606"
+net = 15000
+vat = 3000
+receipt = "receipt-imprimerie-du-parc-1019.pdf"
+submitted = 2026-10-20
+
+[[expense]]
+id = "ex-0002"
+member = "thomas@lanterne.example"
+day = 2026-10-21
+label = "Train to Clairval and back"
+category = "6251"
+net = 7855
+vat = 785
+receipt = "sncf-1021.pdf"
+
+[[expense]]
+id = "ex-0003"
+member = "chloe@lanterne.example"
+day = 2026-10-22
+label = "Coffee and pastries, Nuvola workshop"
+category = "6257"
+net = 4200
+vat = 420
+receipt = "boulangerie-1022.jpg"
+submitted = 2026-10-22
+
+[[expense]]
+id = "ex-0004"
+member = "lea@lanterne.example"
+day = 2026-10-23
+label = "Display font licence"
+category = "626"
+net = 12000
+vat = 2400
+receipt = "foundry-invoice-2291.pdf"
+submitted = 2026-10-23

@@ -185,8 +185,10 @@ makes no claim that the host cannot forge a vote.
   log's head lock, so a revocation that settled first is always seen.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
   federation adds to the design rather than changing it.
-- Signatures are Ed25519 on devices and ML-DSA-44 at the root; encryption is
-  hybrid X25519 + ML-KEM-768 (org's `core/crypto`).
+- Signatures are Ed25519, on devices and at the root, where the notary
+  signs receipts and log entries with the scope's key. Org's `core/crypto`
+  holds ML-DSA-44 behind the same signing seam, and hybrid X25519 +
+  ML-KEM-768 encryption; no rung adopts post-quantum signing yet.
 - Every signed artifact names its binding (parent, sequence, audience or
   freshness), and each signed type is domain-separated; the register of
   signed types, their tags and bindings is [signatures](signatures.md).

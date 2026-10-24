@@ -19,7 +19,9 @@ nothing else can be signed without it.
 
 Device keys are Ed25519, generated on the device with WebCrypto; the
 private key never leaves it. The scope's own key, at the root, is
-ML-DSA-44 and read from a file only the database superuser can read. Every
+Ed25519 too: the notary signs receipts and log entries with it, read from
+a file only the database superuser can read. No signature is
+post-quantum yet. Every
 signed artifact names its binding (the parent, a sequence, its audience)
 and each signed type is domain-separated, so a signature on one thing never
 verifies another.

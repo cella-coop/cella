@@ -5,7 +5,7 @@
   import Rows from 'phosphor-svelte/lib/Rows'
   import TableIcon from 'phosphor-svelte/lib/Table'
   import Plus from 'phosphor-svelte/lib/Plus'
-  import type { Column } from '../models/view.ts'
+  import type { Column, Status } from '../models/view.ts'
   import { control, nearest, typing } from '../models/keys.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
@@ -28,7 +28,7 @@
     href,
     about,
     create,
-    summaries = [],
+    status = [],
     empty = 'Nothing here yet.',
     caption,
   }: {
@@ -40,7 +40,7 @@
     href?: (row: any) => string | undefined
     about?: unknown
     create?: Component<{ rows: any[]; about: any }>
-    summaries?: Component<{ rows: any[]; about: any }>[]
+    status?: Status[]
     empty?: string
   } = $props()
 
@@ -136,7 +136,7 @@
 
 <svelte:window {onkeydown} />
 
-<Frame {eyebrow} {title} {subtitle}>
+<Frame {eyebrow} {title} {subtitle} badges={status.map((s) => s(rows, about)).filter((b) => b !== undefined)}>
   {#snippet actions()}
     {#if create}
       <Button tone="primary" kbd="C" onclick={() => state.toggle()}><Icon icon={Plus} />New</Button>
@@ -177,10 +177,6 @@
       {/if}
     </Card>
   {/snippet}
-
-  {#each summaries as Summary}
-    <Summary {rows} {about} />
-  {/each}
 
   {#if create && state.creating}
     {const Create = $derived(create)}

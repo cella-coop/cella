@@ -49,9 +49,9 @@ Money received posts through the writes that receive it, such as
 ## Shell
 
 Adds each account's debits, credits and balance to the chart, from
-`account_transaction.balance`, with the trial balance over them and the
-cash the cash accounts hold; and an account's ledger, every line posted
-to it, to its page.
+`account_transaction.balance`, with whether the trial balance agrees as
+the collection's status; and an account's ledger, every line posted to
+it, to its page.
 
 ## Lanterne
 

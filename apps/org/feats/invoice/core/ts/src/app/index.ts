@@ -3,12 +3,11 @@ import type { Detail, Listed } from '../models/invoice.ts'
 import Issue from './blocks/Issue.svelte'
 import Lines from './blocks/Lines.svelte'
 import Send from './blocks/Send.svelte'
-import Totals from './blocks/Totals.svelte'
 
 const standing = (i: Listed) => (i.overdue ? 'overdue' : i.state)
 const tones: Record<string, Tone> = { overdue: 'warning', unpaid: 'accent', partial: 'accent', paid: 'positive', overpaid: 'warning', voided: 'neutral' }
 
-// The feat's client side: the invoices, what is owed, a new invoice, and
+// The feat's client side: the invoices, a new invoice, and
 // an invoice's page with its lines and payments.
 export const app: App = {
   name: 'invoice',
@@ -19,7 +18,6 @@ export const app: App = {
         title: 'Invoices',
         icon: icons.Receipt,
         create: Issue,
-        summary: Totals,
         columns: [
           { key: 'id', label: 'Invoice', kind: 'title', role: 'title', value: (i: Listed) => i.id },
           { key: 'bill_to', label: 'Bills', role: 'sub', value: (i: Listed) => i.bill_to },

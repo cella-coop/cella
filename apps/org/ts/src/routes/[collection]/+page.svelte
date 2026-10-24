@@ -24,7 +24,7 @@
       about={data.about}
       href={linked ? href : undefined}
       create={mounted.view.create}
-      summaries={[mounted.view.summary, ...added.map((e) => e.extension.summary)].filter((s) => s !== undefined)}
+      status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}
     />
   {/key}

@@ -46,7 +46,10 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Collection`: the one collection component, the same header and rows
   for every collection, and a drawer holding one card, View: the filter,
   the layout (list · table) and, in a table, its columns, the layout and
-  the hidden columns in the URL. Writes stay in the header. Keyboard
+  the hidden columns in the URL. Writes stay in the header, with the
+  count and any status badge the view and its extensions declare (the
+  log verifies); a collection page renders nothing else, which the ui
+  check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
   opens New.
 - `Detail`: the one detail view, the item's blocks in the content and the

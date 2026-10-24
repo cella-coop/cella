@@ -59,6 +59,8 @@ export interface Page<T = any> {
   actions?: Block<T>
 }
 
+export type Status<R = any> = (rows: R[], about: any) => { label: string; tone: Tone } | undefined
+
 export interface View<R = any> {
   group: Group
   title: string
@@ -69,9 +71,11 @@ export interface View<R = any> {
   columns: Column<R>[]
   // A form for a new item, behind the collection's New button.
   create?: Component<{ rows: R[]; about: any }>
-  // What the header says about the whole collection, such as totals; the
-  // collection's `about`, from its server side, is handed to both.
-  summary?: Component<{ rows: R[]; about: any }>
+  // A badge beside the header's count saying whether the whole collection
+  // holds, as the log's verifying; the collection's `about`, from its
+  // server side, is handed to it and to `create`. Figures over the rows
+  // are a dashboard's widgets, never a component of the page's own.
+  status?: Status<R>
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean
@@ -88,8 +92,8 @@ export interface Owned<R = any, T = any> {
 // data on one item.
 export interface Added<E = any> {
   columns?: Column[]
-  // What the header says over the rows with the fields this adds to them.
-  summary?: Component<{ rows: any[]; about: any }>
+  // A badge over the rows with the fields this adds to them.
+  status?: Status
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
 }
 

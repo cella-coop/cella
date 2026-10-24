@@ -80,3 +80,14 @@ test('the forms that replace them pass, and prose that names them does not trip 
   )
   assert.deepEqual(problems(block, modern, false), [])
 })
+
+test('a collection page renders the Collection alone', () => {
+  const path = 'apps/org/ts/src/routes/[collection]/+page.svelte'
+  const only = component("  import { Collection } from '@cella/org-ui'", '{#if mounted}\n  <!-- one view -->\n  {#key data.name}\n    <Collection title="x" status={[a].filter((s) => s !== undefined)} />\n  {/key}\n{/if}')
+  assert.deepEqual(problems(path, only, false), [])
+  const beside = component("  import { Collection, Stats } from '@cella/org-ui'", '<Stats items={[]} />\n<Collection title="x" />\n<div>totals</div>')
+  const found = problems(path, beside, false)
+  assert.equal(found.length, 2, `${found}`)
+  assert.match(found[0], /renders <Stats> beside the Collection/)
+  assert.match(found[1], /renders <div> beside the Collection/)
+})

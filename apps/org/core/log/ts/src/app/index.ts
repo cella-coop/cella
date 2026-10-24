@@ -1,6 +1,5 @@
 import { icons, short, type App } from '@cella/org-ui'
-import type { Detail, Entry } from '../models/log.ts'
-import Head from './blocks/Head.svelte'
+import type { Detail, Entry, Head } from '../models/log.ts'
 import Rules from './blocks/Rules.svelte'
 
 const owners = (e: Entry) => e.rules.map((r) => r.owner).join(', ')
@@ -15,7 +14,10 @@ export const app: App = {
         group: 'platform',
         title: 'Log',
         icon: icons.Notebook,
-        summary: Head,
+        // `cella.verify_log()` rechecks every entry, receipt and signature on
+        // each load.
+        status: (_: Entry[], head: Head) =>
+          head.verified ? { label: 'log verifies', tone: 'positive' } : { label: 'log broken', tone: 'negative' },
         empty: 'No write has reached the notary yet: the seed is the state before the log.',
         columns: [
           { key: 'n', label: 'Entry', kind: 'number', role: 'title', value: (e: Entry) => e.n },

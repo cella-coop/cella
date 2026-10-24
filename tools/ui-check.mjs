@@ -83,6 +83,13 @@ const mutable = (path, text) => {
   return /^(export\s+)?(let|var)\s/m.test(text)
 }
 
+// A shell's collection page renders the UI core's one Collection and
+// nothing beside it: what a collection shows is configured on it, never a
+// page's own markup. The tags its markup opens, past control blocks.
+const collectionPage = /(^|\/)ts\/src\/routes\/\[collection\]\/\+page\.svelte$/
+const tags = (text) =>
+  [...text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').matchAll(/<([A-Za-z][\w.:-]*)/g)].map((m) => m[1])
+
 // The problems of one source file. `path` is relative to the repository;
 // `ui` says whether it sits in the UI core.
 export function problems(path, text, ui) {
@@ -99,6 +106,11 @@ export function problems(path, text, ui) {
     out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
   }
   out.push(...legacy(path, text))
+  if (collectionPage.test(path)) {
+    for (const tag of new Set(tags(text).filter((t) => t !== 'Collection'))) {
+      out.push(`${path}: renders <${tag}> beside the Collection; configure the collection's view instead`)
+    }
+  }
   if (layer && mutable(path, text)) {
     out.push(`${path}: keeps module-level mutable state, which every request the server renders would share`)
   }

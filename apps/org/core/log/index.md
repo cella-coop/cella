@@ -13,6 +13,7 @@ Copied from cella@2398d87 `distros/core/runtime/rust/log`, where its history liv
 entries, newest first, each with its op, actor, verdict date, receipt and
 deciding rules' owners; an entry with its receipt, hashes and signatures
 and each rule's text from `cella.rule_text`; whether `cella.verify_log()`
-passes, the head and the scope's key; and the scope's address. Its slice
+passes, which the collection's header shows as its status, and the head
+and the scope's key; and the scope's address. Its slice
 mounts the `log` collection, the one a core library owns; it has no
 writes, since only the notary appends.

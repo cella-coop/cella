@@ -2,7 +2,9 @@
   import type { Snippet } from 'svelte'
   import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
+  import type { Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
   // The one page frame: a header with the page's eyebrow, title and
@@ -12,6 +14,7 @@
     eyebrow,
     title,
     subtitle,
+    badges = [],
     back,
     actions,
     drawer,
@@ -20,6 +23,8 @@
     eyebrow: string
     title: string
     subtitle?: string
+    // Whether the whole page's subject holds, beside the subtitle.
+    badges?: { label: string; tone: Tone }[]
     back?: { href: string; label: string }
     actions?: Snippet
     drawer?: Snippet
@@ -42,7 +47,12 @@
           {eyebrow}
         </p>
         <h1>{title}</h1>
-        {#if subtitle}<p class="subtitle">{subtitle}</p>{/if}
+        {#if subtitle || badges.length}
+          <p class="subtitle">
+            {subtitle}
+            {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
+          </p>
+        {/if}
       </div>
       {#if actions || drawer}
         <div class="actions">
@@ -127,6 +137,10 @@
   }
   .subtitle {
     color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
   }
   .actions {
     display: flex;

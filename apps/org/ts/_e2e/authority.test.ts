@@ -8,7 +8,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
-import { pay, payroll, post } from '@cella/org-transaction/api'
+import { pay, post } from '@cella/org-transaction/api'
 import { close, vote } from '@cella/org-decision/api'
 import { profile } from '@cella/org-member/api'
 import { enrol, revoke } from '@cella/org-key/api'
@@ -99,16 +99,8 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
   assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
 })
 
-test('Julien runs October\'s payroll, above any spending limit, under run-payroll; Camille holds no run-payroll', async () => {
-  const october = { date: '2026-10-24', label: 'Payroll, October 2026', wages: 21_400_00, charges: 9_630_00 }
-  const run = await payroll(october, as(julien))
-  assert.equal(run.state, 'settled')
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [run.state === 'settled' && run.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member', 'transaction'])
-
+test('Camille holds no record-entry: her post is refused and uses no verdict number', async () => {
   const before = await head()
-  const gerante = await payroll(october, as(camille))
-  assert.match(reason(gerante), /camille@lanterne\.example holds no mandate for run-payroll/)
   const booked = await post(paying(100_00), as(camille))
   assert.match(reason(booked), /camille@lanterne\.example holds no mandate for record-entry/)
   assert.equal(await head(), before)

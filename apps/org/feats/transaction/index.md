@@ -35,7 +35,6 @@ before issue, an allocation before its decision).
 |---|---|---|
 | `POST /api/transaction/post` | confluent | an entry always has both sides |
 | `POST /api/transaction/pay` | confluent | a payment to a supplier is an entry like any other |
-| `POST /api/transaction/payroll` | confluent | a month's payroll is an entry like any other |
 | `POST /api/transaction/adjust` | ordered | a correction, named by the entry it corrects |
 
 - **post** posts a balanced entry that touches no cash account: it keeps
@@ -47,11 +46,6 @@ before issue, an allocation before its decision).
 - **pay** pays a supplier: one entry debiting `401` (fournisseurs) and
   crediting `512` (the bank) by the amount paid. It commutes as any entry
   does; what it takes from the bank is capped by the payer's mandate.
-- **payroll** runs a month's payroll: one entry debiting wages (`641`)
-  and social charges (`645`) and crediting the bank (`512`) by their sum.
-  Wages are owed whatever their size, so its power has no limit; the
-  entry may hold nothing else. It stands in for the payslip feat, which
-  will post each payslip.
 - **adjust** posts a correcting entry, naming the entry it corrects
   (`base: 'corrected'`): the notary refuses a second correction of the
   same entry. Whether a correction also needs the circle's decision is a
@@ -63,13 +57,13 @@ before issue, an allocation before its decision).
 |---|---|---|
 | post | `record-entry`, with no limit | Julien, as finance |
 | pay | `pay-supplier`, within the mandate's limit for the amount paid | Julien, as finance, up to 3 000 € a payment |
-| payroll | `run-payroll`, with no limit | Julien, as finance |
 | adjust | `record-entry`, with no limit; it may credit a cash account only to undo what it corrects | Julien, as finance |
 
 `003-powers.sql` registers post's power in `cella.power`, and
 `004-pay.sql` pay's, with `amount` as the payload field the limit caps,
-`005-payroll.sql` payroll's and `006-adjust.sql` adjust's; the
-`circle-member` graft checks them.
+and `006-adjust.sql` adjust's; the `circle-member` graft checks them.
+Payroll is not this feat's: a month's pay posts through the `payslip`
+feat's runs, by `payslip-transaction`.
 Keeping the books is a duty, so a VAT return or an accrual posts under
 `record-entry` whatever its size. Every member reads the books; reading
 needs no power.
@@ -92,8 +86,10 @@ What it does not own:
   chart's;
 - that an invoice's issue, payments and void post the right entries: the
   `invoice-transaction` graft's;
-- the right to take money out of a share: `account.draw`'s, bounded on
-  the share, which posts through `account-transaction`.
+- the writes that take money out of the bank besides `pay`: a member's
+  draw (`account-member-transaction`), an expense reimbursed
+  (`expense-transaction`) and a pay run paid (`payslip-transaction`), each
+  posting through `record` under its own right and rule.
 
 ## What it does not know
 
@@ -129,9 +125,6 @@ select.
 - `transaction.pays`, on `transaction:transaction:pay`: the entry is two
   lines, `401` debited and `512` credited, each by the payload's `amount`,
   so the mandate's limit caps what left the bank.
-- `transaction.payroll`, on `transaction:transaction:payroll`: the entry
-  debits only `641` and `645` and credits `512` once, by their sum, since
-  it balances.
 
 ## Handlers
 
@@ -142,8 +135,6 @@ select.
   returns `Refused` beside `Settled`.
 - `pay` (confluent): records a supplier payment, `401` against `512`, and
   commits its amount; refused beyond the payer's limit.
-- `payroll` (confluent): records a month's wages and charges against
-  `512`.
 - `adjust` (ordered, `base: 'corrected'`): records a correcting entry,
   naming the entry it corrects and the base it read.
 
@@ -160,8 +151,7 @@ do, must name the next number.
 slice transaction`), runs on the app's core and this feat alone: an entry
 balances or is refused, ids are gapless and a refused entry returns its
 number, nothing posted changes, `transaction.pays` takes a payment and
-nothing else, `transaction.payroll` a payroll and nothing else, and
-`transaction.corrects` refuses a second correction from the same base.
+nothing else, and `transaction.corrects` refuses a second correction from the same base.
 
 ## Shell
 
@@ -176,10 +166,12 @@ through `invoice-transaction`.
 
 - Forty entries from 1 July to 24 October 2026, `je-0001` to `je-0040`.
 - `je-0001` carries the opening balances over from the previous tool: the
-  bank at 92 000 €, capital, reserves and the year's result against it.
+  bank at 92 000 €, each member's capital, the reserves and the 2025
+  result, 61 400 €, not yet allocated, against it.
 - Each invoice posts an entry on issue (`411` against `706` and `44571`)
   and one per payment (`512` against `411`). `je-0026` is the credit note
   that voided F-2026-0050.
-- Payroll is one entry a month (`641` and `645` against `512`), run by
-  Julien through `payroll` until the payslip feat exists; October's is
-  due on the 28th.
+- July to September's pay runs were carried over as one entry a month,
+  `je-0009`, `je-0019` and `je-0031` (`641` and `645` against `512`),
+  which `payslip-transaction` links to their runs; October's run posts
+  through the payslip feat.

@@ -79,8 +79,11 @@ coordination's, counts its five.
 
 Adds to a decision's page its roll: each member's latest stance received
 before the cutoff, whether the close counted them, the outcome
-`circle_decision_member.passes` computes and, while it is open, the
-stance form, which posts the decision feat's `vote`; and to the list, the
+`circle_decision_member.passes` computes, and the acting member's own
+stance, read by receipt for them. On the roll and open, the stance form
+offers the rule's stances, starts at their latest and posts the decision
+feat's `vote` only for a change; closed, it shows the stance that
+counted; off the roll, it says so; and to the list, the
 turnout and each decision's state: open, passed or rejected, as `passes`
 reads the stances the close froze, in SQL. With it come the Open, Passed
 and Rejected views, and the board decisions open as, grouped by state;

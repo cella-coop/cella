@@ -32,6 +32,9 @@
   <span class="label">{label}</span>
   {#if options}
     <select {id} {name} {required} bind:value>
+      {#if placeholder}
+        <option value="" disabled>{placeholder}</option>
+      {/if}
       {#each options as o (o.value)}
         <option value={o.value}>{o.label}</option>
       {/each}

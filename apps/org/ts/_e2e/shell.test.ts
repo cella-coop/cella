@@ -212,6 +212,16 @@ test('a decision is open, passed or rejected, as the database reads it', async (
   assert.ok((await page('/decisions/d-2026-012')).text.includes('>open<'))
 })
 
+test('the stance form starts at the acting member\'s latest stance, and is not offered off the roll', async () => {
+  const as = async (path: string, actor?: string) =>
+    (await fetch(`${base}${path}`, { headers: actor ? { cookie: `cella-act=${actor}` } : {} })).text()
+  const hugos = await as('/decisions/d-2026-012', hugo)
+  assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
+  assert.ok(hugos.includes('Change stance'), 'and offers to change it')
+  assert.ok(hugos.includes('Now: consent · receipt 33'), 'saying which receipt it is')
+  assert.ok((await as('/decisions/d-2026-012')).includes('Act as a member to give a stance.'))
+})
+
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
   const shifts = [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }]
   assert.equal(drag.shift(shifts, 'state', 'open', 'rejected')?.action, 'close')

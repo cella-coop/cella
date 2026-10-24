@@ -107,8 +107,11 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
   `Properties`, `Related`, `Activity`, `Table`, `Cell`, `Stats`, `Badge`,
-  `Button`, `Form` (a write, posting to a named form action), `Field`,
-  `Prose`, `Icon` (Phosphor, duotone), `Outcome`, `Command`.
+  `Button`, `Form` (a write, posting to a named form action; `ready`
+  false keeps its button disabled while there is nothing to post),
+  `Field` (a select with a `placeholder` offers it as a disabled first
+  choice, never a blank), `Prose`, `Note` (a quiet line), `Icon`
+  (Phosphor, duotone), `Outcome`, `Command`.
 - `icons`: the Phosphor icons slices may name.
 
 A `Column` places itself in the list view by `role`: the title, the line

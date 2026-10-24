@@ -1,4 +1,5 @@
 import type { Db } from '@cella/org-db'
+import { stances, type Stance } from '@cella/org-decision/models'
 import type { Roll, State, Voter } from '../models/roll.ts'
 
 // A decision's state, in SQL over `d`: open until its close, then passed
@@ -9,8 +10,10 @@ const state = `CASE WHEN d.closed IS NULL THEN 'open'
                     ELSE 'rejected' END`
 
 // A decision's roll, each member's latest stance before its cutoff,
-// whether it passes and its state, as the database computes them.
-export async function roll(db: Db, decision: string): Promise<Roll | null> {
+// whether it passes and its state, as the database computes them; and,
+// for the acting member, whether they are on the roll and their latest
+// stance by receipt, the one counted once the decision closed.
+export async function roll(db: Db, decision: string, actor: string | null = null): Promise<Roll | null> {
   const found = await db.query<{ rule: Roll['rule']; closed: string | null; passes: boolean | null; state: State }>(
     `SELECT d.rule, to_char(d.closed, 'YYYY-MM-DD') AS closed, circle_decision_member.passes(d.id) AS passes, ${state} AS state
      FROM decision.decision d WHERE d.id = $1`,
@@ -35,7 +38,24 @@ export async function roll(db: Db, decision: string): Promise<Roll | null> {
      ORDER BY m.name`,
     [decision],
   )
-  return { ...d, voters: voters.rows }
+  const mine = actor
+    ? await db.query<{ stance: Stance; receipt: number; at: string }>(
+        `SELECT v.stance, v.receipt::int AS receipt, to_char(v.at, 'YYYY-MM-DD') AS at
+         FROM decision.vote v JOIN decision.decision d ON d.id = v.decision
+         WHERE v.decision = $1 AND v.member = $2 AND v.receipt < coalesce(d.cutoff, 9223372036854775807)
+         ORDER BY v.receipt DESC LIMIT 1`,
+        [decision, actor],
+      )
+    : null
+  const seated = actor
+    ? (await db.query(`SELECT FROM circle_decision_member.roll WHERE decision = $1 AND member = $2`, [decision, actor])).rowCount
+    : 0
+  return {
+    ...d,
+    voters: voters.rows,
+    stances: stances[d.rule],
+    me: actor ? { address: actor, seated: !!seated, stance: mine?.rows[0] ?? null } : null,
+  }
 }
 
 // Each decision's state, and how many on its roll have given a stance,

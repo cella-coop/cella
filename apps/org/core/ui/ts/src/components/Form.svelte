@@ -15,6 +15,7 @@
     tone = 'primary',
     inline = false,
     reset = true,
+    ready = true,
     children,
   }: {
     action: string
@@ -22,6 +23,8 @@
     tone?: 'primary' | 'quiet' | 'danger'
     inline?: boolean
     reset?: boolean
+    // Whether there is anything to post yet.
+    ready?: boolean
     children?: Snippet
   } = $props()
 
@@ -49,7 +52,7 @@
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}
-  <div class="submit"><Button type="submit" {tone} busy={form.pending}>{submit}</Button></div>
+  <div class="submit"><Button type="submit" {tone} busy={form.pending} disabled={!ready}>{submit}</Button></div>
 </form>
 
 <style>

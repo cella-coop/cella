@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { Field, Form, Section, Stats, Table, type Column, type Tone } from '@cella/org-ui'
-  import { stances } from '@cella/org-decision/models'
+  import { date, Field, Form, Note, Section, Stats, Table, type Column, type Tone } from '@cella/org-ui'
   import { outcome, type Roll, type Voter } from '../../models/roll.ts'
+  import { useStance } from '../../hooks/useStance.ts'
 
   // Who may vote, each one's latest stance before the cutoff, the outcome
-  // computed from them, and, while the decision is open, a stance as the
-  // acting member, which `on_roll` refuses for anyone off the roll.
+  // computed from them, and the acting member's own stance as the server
+  // read it: on the roll and open, the form to give or change it; closed,
+  // the stance that counted; off the roll, a line saying so.
   let { data }: { data: Roll; id: string } = $props()
 
-  const options = $derived(stances[data.rule].map((s) => ({ value: s, label: s })))
+  const mine = $derived(data.me?.stance ?? null)
+  const state = useStance(() => mine?.stance ?? '')
+  const options = $derived(data.stances.map((s) => ({ value: s, label: s })))
   const tones: Record<string, Tone> = { consent: 'positive', for: 'positive', object: 'negative', against: 'negative', abstain: 'neutral' }
   const columns: Column<Voter>[] = [
     { key: 'name', label: 'Member', kind: 'title', value: (v) => v.name ?? v.member },
@@ -17,6 +20,7 @@
     { key: 'counted', label: 'Counted', value: (v) => (data.closed ? (v.counted ? 'yes' : 'no') : 'at the close') },
   ]
   const given = $derived(data.voters.filter((v) => v.stance).length)
+  const said = $derived(mine ? `${mine.stance} · receipt ${mine.receipt} · ${date(mine.at)}` : '')
 </script>
 
 <Stats
@@ -27,14 +31,21 @@
   ]}
 />
 
-{#if !data.closed}
-  <Section title="Your stance">
-    <Form action="vote" submit="Cast stance" inline>
-      <Field label="Stance" name="stance" options={options} />
+<Section title="Your stance">
+  {#if !data.me}
+    <Note text="Act as a member to give a stance." />
+  {:else if !data.me.seated}
+    <Note text="Not on this decision's roll." />
+  {:else if data.closed}
+    <Note text={mine ? `Counted: ${said}.` : 'You gave no stance before the close.'} />
+  {:else}
+    {#if mine}<Note text="Now: {said}." />{/if}
+    <Form action="vote" submit={mine ? 'Change stance' : 'Cast stance'} inline reset={false} ready={state.changed}>
+      <Field label="Stance" name="stance" {options} placeholder="Choose…" bind:value={state.chosen} required />
     </Form>
-  </Section>
-{/if}
+  {/if}
+</Section>
 
 <Section title="Roll" count={data.voters.length}>
-  <Table {columns} rows={data.voters} empty="No voters"href={(v: Voter) => `/members/${v.member}`} />
+  <Table {columns} rows={data.voters} empty="No voters" href={(v: Voter) => `/members/${v.member}`} />
 </Section>

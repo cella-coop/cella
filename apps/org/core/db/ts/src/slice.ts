@@ -85,9 +85,11 @@ export interface Collection {
 
 // What a graft, or the root, adds to a collection of a feat it joins:
 // fields on each row by its id, data for the item's blocks, and writes.
+// An item's data may depend on who looks: `actor` is the acting member's
+// address, or null.
 export interface Extension {
   list?(db: Db): Promise<Record<string, object>>
-  item?(db: Db, id: string): Promise<unknown>
+  item?(db: Db, id: string, actor: string | null): Promise<unknown>
   actions?: Record<string, Action>
 }
 

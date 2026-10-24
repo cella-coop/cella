@@ -8,6 +8,7 @@
     title,
     kbd,
     busy = false,
+    disabled = false,
     onclick,
     children,
   }: {
@@ -18,6 +19,8 @@
     kbd?: string
     // Its action is under way: it keeps focus but reads as unavailable.
     busy?: boolean
+    // Nothing to do yet, as a form with nothing changed.
+    disabled?: boolean
     onclick?: (e: MouseEvent) => void
     children: Snippet
   } = $props()
@@ -26,7 +29,7 @@
 {#if href}
   <a class="button {tone}" {href} {title}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
-  <button class="button {tone}" {type} {title} {onclick} aria-busy={busy} aria-disabled={busy}>
+  <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}
   </button>
 {/if}
@@ -45,6 +48,10 @@
     cursor: pointer;
     white-space: nowrap;
     transition: background var(--fast) var(--ease);
+  }
+  .button:disabled {
+    opacity: 0.5;
+    cursor: default;
   }
   .button[aria-busy='true'] {
     opacity: 0.6;

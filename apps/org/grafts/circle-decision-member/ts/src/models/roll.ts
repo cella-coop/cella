@@ -35,5 +35,10 @@ export interface Roll {
   closed: string | null
   passes: boolean | null
   state: State
+  // The stances the rule counts, which the stance form offers.
+  stances: string[]
+  // The acting member, if any: on the roll or not, and their latest
+  // stance by receipt, the counted one once closed.
+  me: { address: string; seated: boolean; stance: { stance: string; receipt: number; at: string } | null } | null
   voters: Voter[]
 }

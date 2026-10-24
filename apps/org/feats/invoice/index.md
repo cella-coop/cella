@@ -6,8 +6,9 @@ updated = 2026-10-24
 What the co-op bills: issue an invoice, send it, record what is paid
 against it, and void it when it is wrong. An invoice carries everything
 that must appear on it as issued, including the name and address it bills,
-as text; the link to a client record is the `client-invoice` graft's, and
-the entries it posts are the `invoice-transaction` graft's.
+as text; the link to a client record is the `client-invoice` graft's, the
+project whose work it bills the `invoice-project` graft's, and the entries
+it posts are the `invoice-transaction` graft's.
 
 ## Entities
 
@@ -68,8 +69,8 @@ keeps its number, and the void posts a credit note.
 
 `002-powers.sql` registers each in `cella.power`; the `circle-member`
 graft's rule refuses a write by anyone not holding the power on the
-verdict date. Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice
-and belongs to the later `project` feat.
+verdict date. Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice,
+and quoting is not built.
 
 ## Invariants
 
@@ -92,8 +93,9 @@ What it does not own:
 ## What it does not know
 
 Invoice knows no clients, transactions, accounts, projects or timesheets.
-Generating lines from billable time or milestones belongs to later grafts
-with `timesheet` and `project`; e-invoicing through an approved platform
+Which project an invoice bills is `invoice-project`'s; generating lines
+from billable time or milestones belongs to later grafts with `timesheet`
+and `project`; e-invoicing through an approved platform
 arrives at rung 3.
 
 ## Schema

@@ -64,11 +64,12 @@ before issue, an allocation before its decision).
 | post | `record-entry`, with no limit | Julien, as finance |
 | pay | `pay-supplier`, within the mandate's limit for the amount paid | Julien, as finance, up to 3 000 € a payment |
 | payroll | `run-payroll`, with no limit | Julien, as finance |
-| adjust | held by the circle that keeps the books | `ag`, by its own setting; not checked yet |
+| adjust | `record-entry`, with no limit; it may credit a cash account only to undo what it corrects | Julien, as finance |
 
 `003-powers.sql` registers post's power in `cella.power`, and
 `004-pay.sql` pay's, with `amount` as the payload field the limit caps,
-and `005-payroll.sql` payroll's; the `circle-member` graft checks them.
+`005-payroll.sql` payroll's and `006-adjust.sql` adjust's; the
+`circle-member` graft checks them.
 Keeping the books is a duty, so a VAT return or an accrual posts under
 `record-entry` whatever its size. Every member reads the books; reading
 needs no power.

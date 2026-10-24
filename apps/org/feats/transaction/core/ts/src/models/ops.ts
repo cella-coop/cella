@@ -12,5 +12,5 @@ export const ops = {
   'transaction:transaction:payroll': confluent({ power: 'run-payroll' }),
   // names the entry it corrects; whether it also needs a vote is a
   // circle setting, not part of the label
-  'transaction:transaction:adjust': ordered({ base: 'corrected' }),
+  'transaction:transaction:adjust': ordered({ base: 'corrected', power: 'record-entry' }),
 } satisfies Ops

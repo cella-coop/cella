@@ -1,0 +1,5 @@
+name = "transaction"
+group = "finance"
+builtin = false
+rung = 1
+grafts = ["account-transaction"]

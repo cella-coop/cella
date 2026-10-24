@@ -9,7 +9,7 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 - `core/` is what every feat inherits, one library each: `ops` (write labels,
   permissions, outcomes), `crypto`, `log` and `keystore`.
 - `feats/` holds one domain each; none imports another.
-- `grafts/` joins two feats, through their cores.
+- `grafts/` joins feats, through their cores.
 - `ts/` assembles the app: the SvelteKit shell, routes and the server.
 
 ## Feats
@@ -21,14 +21,14 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 | `circle` | governance | 1 | nested units, positions, roles and mandates |
 | `decision` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
-| `ledger` | finance | 1 | the double-entry books |
+| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances |
+| `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
 | `client` | work | 1 | contacts and companies |
 | `meeting` | governance | later | agendas, attendance, minutes |
 | `project` | work | later | initiatives, milestones, budgets and shares |
 | `task` | work | later | assignable work |
 | `timesheet` | work | later | time entries and their periods |
-| `capital` | finance | later | capital accounts, reserves, funds, surplus allocation |
 | `expense` | finance | later | capture, approve, reimburse |
 | `payslip` | finance | later | pay periods and payslips |
 | `agent` | platform | later | agents acting for members, with narrower grants |
@@ -41,8 +41,9 @@ and admit a member by vote (ordered).
 
 | Graft | What it joins |
 |---|---|
+| `account-transaction` | a transaction's lines post to accounts, never into a closed period |
 | `circle-member` | positions: who holds which role in which circle |
 | `client-invoice` | who an invoice bills |
 | `decision-document` | adoption of a document version by a decision |
 | `decision-member` | admission and suspension by a decision |
-| `invoice-ledger` | an invoice and its payments post to the books |
+| `invoice-transaction` | an invoice, its payments and its void post transactions |

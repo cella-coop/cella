@@ -1,4 +1,4 @@
-name = "ledger"
+name = "account"
 group = "finance"
 builtin = false
 rung = 1

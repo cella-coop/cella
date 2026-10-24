@@ -24,7 +24,8 @@ const check = (name) => {
   const document = read('document')
   const client = read('client')
   const invoice = read('invoice')
-  const ledger = read('ledger')
+  const account = read('account')
+  const transaction = read('transaction')
   const key = read('key')
 
   const addresses = ids(member.member, 'address')
@@ -76,8 +77,9 @@ const check = (name) => {
 
   const clients = ids(client.client)
   const invoices = new Map((invoice.invoice ?? []).map((i) => [i.id, i]))
-  const accounts = ids(ledger.account, 'code')
-  const entries = new Map((ledger.entry ?? []).map((e) => [e.id, e]))
+  const accounts = ids(account.account, 'code')
+  const periods = ids(account.period, 'month')
+  const entries = new Map((transaction.entry ?? []).map((e) => [e.id, e]))
 
   // Each graft's links resolve on both sides
   for (const p of read('graft.circle-member').position ?? []) {
@@ -100,9 +102,18 @@ const check = (name) => {
     has(new Set(invoices.keys()), b.invoice, 'invoice', 'billing')
     has(clients, b.client, 'client', 'billing')
   }
-  for (const p of read('graft.invoice-ledger').posting ?? []) {
+  for (const p of read('graft.invoice-transaction').posting ?? []) {
     has(new Set(invoices.keys()), p.invoice, 'invoice', 'posting')
     has(new Set(entries.keys()), p.entry, 'entry', 'posting')
+  }
+
+  // The account-transaction graft: each line's code is an account, and each
+  // entry falls in a period the accounts keep
+  for (const e of entries.values()) {
+    has(periods, e.date.toISOString().slice(0, 7), 'period', `entry ${e.id}`)
+    for (const l of e.line) {
+      has(accounts, l.account, 'account', `entry ${e.id}`)
+    }
   }
 
   // The books balance, entry by entry
@@ -111,9 +122,6 @@ const check = (name) => {
     const credit = e.line.reduce((s, l) => s + (l.credit ?? 0), 0)
     if (debit !== credit) {
       fail(`entry ${e.id} debits ${debit} and credits ${credit}`)
-    }
-    for (const l of e.line) {
-      has(accounts, l.account, 'account', `entry ${e.id}`)
     }
   }
 

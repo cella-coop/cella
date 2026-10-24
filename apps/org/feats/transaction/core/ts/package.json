@@ -1,5 +1,5 @@
 {
-  "name": "@cella/org-ledger",
+  "name": "@cella/org-transaction",
   "private": true,
   "type": "module",
   "exports": {

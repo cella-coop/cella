@@ -1,0 +1,10 @@
+import { bounded, ordered, type Ops } from '@cella/org-ops'
+
+export const ops = {
+  // from a member's share; beyond it, ordered
+  'account:account:draw': bounded('share'),
+  // the assembly's decision splits the surplus
+  'account:surplus:allocate': ordered({ decide: 'majority' }),
+  // nothing posts into a closed period
+  'account:period:close': ordered(),
+} satisfies Ops

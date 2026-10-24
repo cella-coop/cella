@@ -17,7 +17,7 @@ Issue, send and get paid.
 ## Grafts
 
 - `client-invoice`
-- `invoice-ledger`
+- `invoice-transaction`
 
 ## Domain
 

@@ -1,10 +1,10 @@
 {
-  "name": "@cella/org-graft-invoice-ledger",
+  "name": "@cella/org-graft-invoice-transaction",
   "private": true,
   "type": "module",
   "dependencies": {
     "@cella/org-ops": "workspace:*",
     "@cella/org-invoice": "workspace:*",
-    "@cella/org-ledger": "workspace:*"
+    "@cella/org-transaction": "workspace:*"
   }
 }

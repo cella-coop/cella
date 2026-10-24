@@ -9,13 +9,15 @@
     "@cella/org-circle": "workspace:*",
     "@cella/org-decision": "workspace:*",
     "@cella/org-document": "workspace:*",
-    "@cella/org-ledger": "workspace:*",
+    "@cella/org-account": "workspace:*",
+    "@cella/org-transaction": "workspace:*",
     "@cella/org-invoice": "workspace:*",
     "@cella/org-client": "workspace:*",
+    "@cella/org-graft-account-transaction": "workspace:*",
     "@cella/org-graft-circle-member": "workspace:*",
     "@cella/org-graft-client-invoice": "workspace:*",
     "@cella/org-graft-decision-document": "workspace:*",
     "@cella/org-graft-decision-member": "workspace:*",
-    "@cella/org-graft-invoice-ledger": "workspace:*"
+    "@cella/org-graft-invoice-transaction": "workspace:*"
   }
 }

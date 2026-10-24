@@ -1,8 +1,9 @@
-import { confluent, ordered, type Ops } from '@cella/org-ops'
+import { ordered, type Ops } from '@cella/org-ops'
 
 export const ops = {
-  // signed by the member's current key; the address stays
-  'key:key:enrol': confluent(),
+  // ordered against revoke: a stolen key must not enrol a device
+  // that survives its own revocation
+  'key:key:enrol': ordered(),
   // ordered against that device's writes
   'key:key:revoke': ordered(),
   // guardian shares

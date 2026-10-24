@@ -42,12 +42,15 @@ which enrols a new key under the same address.
 
 | Write | Label | Why |
 |---|---|---|
-| `POST /api/key/enrol` | confluent | signed by the member's current key; the address stays |
+| `POST /api/key/enrol` | ordered | a stolen key must not enrol a device that survives its own revocation |
 | `POST /api/key/revoke` | ordered | ordered against that device's writes |
 | `POST /api/key/recover` | ordered | guardian shares |
 
-- **enrol** adds a device, signed by a current key of the same member.
-  Adding to a member's set of keys commutes, so it does not wait.
+- **enrol** adds a device, signed by a current key of the same member. It
+  is ordered against revoke: enrol-then-revoke and revoke-then-enrol must
+  not end differently, and without an order a stolen key could plant a
+  device the revocation does not reach. Enrolment is rare and cheap to
+  order.
 - **revoke** ends a device. It is ordered against that device's writes: a
   write signed by the key and received before the revocation stands; one
   received after is refused.

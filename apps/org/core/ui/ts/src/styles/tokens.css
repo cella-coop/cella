@@ -40,7 +40,7 @@
   --shade-3: calc(0.58 + var(--theme) * 0.27);
   --shade-4: calc(0.58 + var(--theme) * 0.19);
   --shade-5: calc(0.58 + var(--theme) * 0.06);
-  --shade-6: calc(0.58 + var(--theme) * -0.06);
+  --shade-6: calc(0.58 + var(--theme) * -0.1);
   --shade-7: calc(0.58 + var(--theme) * -0.17);
   --shade-8: calc(0.58 + var(--theme) * -0.27);
   --shade-9: calc(0.58 + var(--theme) * -0.36);
@@ -60,9 +60,12 @@
   --text-subtle: oklch(var(--shade-6) var(--tone-base));
 
   /* Accent: the fill keeps its lightness in both themes, so the brand reads
-     the same; border and text follow the ramp to keep contrast. */
-  --accent-fill: oklch(0.6 var(--tone-accent));
-  --accent-border: oklch(var(--shade-5) var(--tone-accent));
+     the same; border and text follow the ramp to keep contrast. WCAG AA
+     sets the steps: subtle text 4.5:1 on the ground and wells, white on
+     the fill 4.5:1, and the focus ring 3:1 on every surface, in both
+     themes. */
+  --accent-fill: oklch(0.55 var(--tone-accent));
+  --accent-border: oklch(var(--shade-6) var(--tone-accent));
   --accent-text: oklch(var(--shade-8) var(--tone-accent));
   --accent-soft: oklch(var(--shade-3) var(--tone-accent) / 55%);
   --on-accent: oklch(0.98 0.01 75);

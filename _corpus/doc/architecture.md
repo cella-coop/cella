@@ -184,9 +184,9 @@ parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
 holds a foreign key out of it; writes `cella.*` other than to register,
-under its own name, its rules on ops of the feats it is or joins, the
-power each of its own ops needs as a literal row, or, a feat only, the
-keyring; sets
+under its own name, its rules on its own ops, those of the feats it
+joins and those of the lower-order grafts it builds on, the power each of
+its own ops needs as a literal row, or, a feat only, the keyring; sets
 `search_path` other than a function's to the catalog; reads the clock or
 randomness; or hides statements in a `DO` block.
 

@@ -12,7 +12,8 @@
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema;
 //   - writes cella.* only to register, under its own name: its rules, on
-//     ops of its own feat or of the feats it joins (cella.rule); the power
+//     ops of its own feat, of the feats it joins or of the lower-order
+//     grafts it builds on (cella.rule); the power
 //     each of its own ops needs (cella.power), which feat-check compares
 //     with its ops.ts; and, a feat only, the keyring (cella.keyring);
 //   - never sets search_path but on a function, to the catalog;
@@ -68,17 +69,17 @@ export function owners(repo, apps) {
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    return { own: null, allowed: new Set(['cella', ...catalog]), feats: [] }
+    return { own: null, allowed: new Set(['cella', ...catalog]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, 'cella', ...catalog]), feats: [o.name] }
+    return { own: o.name, allowed: new Set([o.name, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
   }
   const feats = o.name.split('-')
   const lower = o.grafts.filter((g) => {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...lower.map(schemaOf), 'cella', ...catalog]), feats }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...lower.map(schemaOf), 'cella', ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
 }
 
 const walk = (node, visit, key = null) => {
@@ -259,8 +260,8 @@ function registers(b, o, s, fail, powers) {
   for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
     const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], literal(v)]))
     const feat = vals.op?.split(':')[0]
-    if (what === 'rule' && vals.op && feat !== o.name && !s.feats.includes(feat)) {
-      fail(`registers a rule on ${vals.op}, an op of ${feat}, which ${o.name} does not join`)
+    if (what === 'rule' && vals.op && !s.ops.includes(feat)) {
+      fail(`registers a rule on ${vals.op}, an op of ${feat}, which ${o.name} neither joins nor builds on`)
     }
     if (what === 'power' && feat !== o.name) {
       fail(`registers a power on ${vals.op}, an op of ${feat}: only ${feat} names what its ops need`)

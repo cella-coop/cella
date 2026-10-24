@@ -22,5 +22,7 @@
     text-align: center;
     color: var(--text-muted);
     padding-top: 2px;
+    font-size: 1.15em;
+    line-height: 1.3;
   }
 </style>

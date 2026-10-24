@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte'
   import { useEditor } from '../hooks/useEditor.ts'
   import type { TreeID } from '../model/doc.ts'
 
@@ -6,8 +7,9 @@
   const ed = useEditor()
 
   // The text inside is the editor's, painted from Loro; Svelte draws only
-  // the element.
-  const mount = (el: HTMLElement) => ed.mount(id, el)
+  // the element. Mounting may place the caret, which reads the slash menu's
+  // state; untracked, so that a menu opening never remounts the block.
+  const mount = (el: HTMLElement) => untrack(() => ed.mount(id, el))
 </script>
 
 <div

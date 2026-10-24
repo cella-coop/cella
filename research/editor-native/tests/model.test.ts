@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { blake3 } from '@noble/hashes/blake3.js'
 import { bytesToHex } from '@noble/hashes/utils.js'
 import { createDoc, kind, order, props, text, tree, type TreeID } from '../src/lib/model/doc.ts'
-import { create, indent, merge, move, outdent, retype, runs, split, toggle, insert, paste, fragment } from '../src/lib/model/ops.ts'
+import { shift, create, indent, merge, move, outdent, retype, runs, split, toggle, insert, paste, fragment } from '../src/lib/model/ops.ts'
 import { bytes, canonical, hash, jcs } from '../src/lib/model/canonical.ts'
 import { seed } from '../src/lib/model/seed.ts'
 
@@ -180,5 +180,15 @@ describe('canonical form', () => {
     const two = createDoc(2)
     paste(two, undefined, 0, tree(one).roots().map((n) => fragment(one, n.id as TreeID)))
     expect(canonical(two)).toEqual(canonical(one))
+  })
+})
+
+describe('caret through a remote delta', () => {
+  it('moves with edits before it and holds against edits at or after it', () => {
+    expect(shift(4, [{ insert: 'NB: ' }])).toBe(8)
+    expect(shift(4, [{ retain: 4 }, { insert: 'x' }])).toBe(4)
+    expect(shift(4, [{ retain: 1 }, { delete: 2 }])).toBe(2)
+    expect(shift(4, [{ retain: 2 }, { delete: 5 }])).toBe(2)
+    expect(shift(4, [{ retain: 6 }, { delete: 1 }])).toBe(4)
   })
 })

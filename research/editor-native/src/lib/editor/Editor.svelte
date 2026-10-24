@@ -14,6 +14,7 @@
     onready?.(ed)
     return () => {
       ed.root = null
+      ed.destroy()
     }
   }
 </script>

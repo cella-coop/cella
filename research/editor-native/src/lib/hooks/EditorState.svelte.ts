@@ -1,5 +1,5 @@
 import { flushSync } from 'svelte'
-import { UndoManager, type Cursor, type LoroDoc, type LoroEventBatch } from 'loro-crdt'
+import { UndoManager, type Cursor, type Delta, type LoroDoc, type LoroEventBatch } from 'loro-crdt'
 import { atomic, exists, indexOf, kind, order, parentOf, props, subtree, text, type Kind, type Marks, type Props, type TreeID } from '../model/doc.ts'
 import * as ops from '../model/ops.ts'
 import { caretRect, length, offsetAt, onFirstLine, onLastLine, paint, readSel, writeSel, type Sel } from '../editor/dom.ts'
@@ -65,6 +65,8 @@ export class EditorState {
   #scheduled = false
   #want: Want | null = null
   #caret: Caret | null = null
+  #remote: Want | null = null
+  readonly #unsubscribe: () => void
   #composing: { id: TreeID; at: number; cursor: Cursor | undefined; done: boolean } | null = null
   // Marks toggled with no range, for the next typed text at this caret.
   #pending: { marks: Marks; id: TreeID; at: number } | null = null
@@ -92,14 +94,22 @@ export class EditorState {
         }
       },
     })
-    doc.subscribe((batch) => this.#events(batch))
+    this.#unsubscribe = doc.subscribe((batch) => this.#events(batch))
     this.#rebuild()
+  }
+
+  destroy(): void {
+    this.#unsubscribe()
+    this.undo.free()
   }
 
   // Changes, local or remote, mark the blocks they touch; a flush redraws
   // them. Local edits flush at once; imports in a microtask.
   #events(batch: LoroEventBatch): void {
     for (const e of batch.events) {
+      if (batch.by !== 'local' && e.diff.type === 'text') {
+        this.#shiftCaret(e.path[1] as TreeID, e.diff.diff)
+      }
       if (e.diff.type === 'tree') {
         this.#structure = true
         for (const d of e.diff.diff) {
@@ -159,28 +169,57 @@ export class EditorState {
       flushSync()
     }
     const focused = this.#focusedId()
+    let kept: Want | null = null
     for (const id of this.#dirty) {
       if (this.#composing?.id === id) {
         continue
       }
       const el = this.#els.get(id)
       if (el && exists(this.doc, id)) {
+        // Repainting drops the DOM selection inside; keep it where it was.
+        const s = id === focused ? readSel(el) : null
         paint(el, ops.runs(text(this.doc, id)))
+        if (s) {
+          kept = { id, anchor: s.anchor, focus: s.focus }
+        }
       }
       this.#dirty.delete(id)
     }
     if (this.#want) {
       this.#place(this.#want)
-    } else if (focused && this.#caret?.id === focused && !this.#composing) {
+    } else if (this.#remote && !this.#composing) {
       // A remote edit redrew the block under the caret: put it back where
-      // its Loro cursors now say, so it never jumps.
-      const a = this.doc.getCursorPos(this.#caret.anchor)?.offset
-      const f = this.doc.getCursorPos(this.#caret.focus)?.offset
-      const el = this.#els.get(focused)
-      if (el && a !== undefined && f !== undefined) {
-        writeSel(el, a, f)
+      // the edit moved it, so it never jumps.
+      const el = this.#els.get(this.#remote.id)
+      if (el && (focused === this.#remote.id || document.activeElement === document.body)) {
+        writeSel(el, this.#remote.anchor, this.#remote.focus)
       }
+    } else if (kept) {
+      const el = this.#els.get(kept.id)!
+      writeSel(el, kept.anchor, kept.focus)
     }
+    this.#remote = null
+  }
+
+  // Carry the caret through a remote text edit, from the DOM's selection,
+  // which still shows the text before it until the flush repaints. Cursors
+  // taken on selectionchange would do the same, but that event lags the
+  // keys that move the caret, and a remote edit can land in between.
+  #shiftCaret(id: TreeID, delta: Delta<string>[]): void {
+    if (this.#composing?.id === id) {
+      return
+    }
+    if (this.#remote?.id !== id) {
+      const el = this.#els.get(id)
+      const s = el && document.activeElement === el ? readSel(el) : null
+      if (!s) {
+        return
+      }
+      this.#remote = { id, anchor: s.anchor, focus: s.focus }
+    }
+    const r = this.#remote
+    r.anchor = ops.shift(r.anchor, delta)
+    r.focus = ops.shift(r.focus, delta)
   }
 
   #place(w: Want): void {
@@ -207,6 +246,7 @@ export class EditorState {
   mount(id: TreeID, el: HTMLElement): () => void {
     this.#els.set(id, el)
     paint(el, ops.runs(text(this.doc, id)))
+    this.#dirty.delete(id)
     if (this.#want?.id === id) {
       this.#place(this.#want)
     }
@@ -994,8 +1034,11 @@ export class EditorState {
   // selection, as Notion's does; native selection cannot span two
   // contenteditables.
   pointerdown(e: PointerEvent): void {
-    const row = (e.target as HTMLElement).closest<HTMLElement>('[data-row]')
-    this.#press = (row?.dataset.row as TreeID | undefined) ?? null
+    const target = e.target as HTMLElement
+    // Only a press in a block's text starts a drag-selection; the handle's
+    // press starts a drag and drop.
+    const el = target.closest<HTMLElement>('[data-block]')
+    this.#press = (el?.dataset.block as TreeID | undefined) ?? null
     if (this.range && !(e.target as HTMLElement).closest('[data-handle]')) {
       this.range = null
     }
@@ -1005,13 +1048,19 @@ export class EditorState {
     if (!this.#press || !(e.buttons & 1)) {
       return
     }
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-row]')
+    const el = this.#rowAt(e.clientX, e.clientY)
     const over = el?.dataset.row as TreeID | undefined
     if (over && (over !== this.#press || this.range)) {
       if (!this.range || this.range.focus !== over) {
         this.select(this.#press, over)
       }
     }
+  }
+
+  // The row under a point, in this editor only: two editors share a page.
+  #rowAt(x: number, y: number): HTMLElement | null {
+    const el = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-row]') ?? null
+    return el && this.root?.contains(el) ? el : null
   }
 
   pointerup(): void {
@@ -1131,7 +1180,7 @@ export class EditorState {
       return
     }
     e.preventDefault()
-    const el = document.elementFromPoint(e.clientX, e.clientY)?.closest<HTMLElement>('[data-row]')
+    const el = this.#rowAt(e.clientX, e.clientY)
     const id = el?.dataset.row as TreeID | undefined
     if (!el || !id) {
       return

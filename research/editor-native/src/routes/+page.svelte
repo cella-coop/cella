@@ -2,7 +2,9 @@
   import Editor from '#lib/editor/Editor.svelte'
   import { PairState } from '#lib/hooks/PairState.svelte.ts'
   import type { EditorState } from '#lib/hooks/EditorState.svelte.ts'
-  import { createDoc } from '#lib/model/doc.ts'
+  import { createDoc, order, kind, props, text } from '#lib/model/doc.ts'
+  import { runs } from '#lib/model/ops.ts'
+  import { canonical, jcs } from '#lib/model/canonical.ts'
   import { seed } from '#lib/model/seed.ts'
 
   // Two clients of one document: Ada seeds it with the rate card, Bo starts
@@ -12,6 +14,7 @@
   const bo = createDoc(2)
   bo.import(ada.export({ mode: 'snapshot' }))
   const pair = new PairState(ada, bo)
+  $effect(() => () => pair.destroy())
 
   const sides = [
     { name: 'Ada', doc: ada, i: 0 },
@@ -21,9 +24,14 @@
   let theme = $state<'light' | 'dark' | null>(null)
   const editors: EditorState[] = []
 
+  // A window into the model for the browser tests.
+  const rows = (i: number) => {
+    const doc = pair.docs[i]
+    return order(doc).map((r) => ({ id: r.id, depth: r.depth, kind: kind(doc, r.id), props: props(doc, r.id), text: text(doc, r.id).toString(), runs: runs(text(doc, r.id)) }))
+  }
   const expose = (ed: EditorState) => {
     editors.push(ed)
-    ;(window as unknown as { __spike: unknown }).__spike = { pair, editors }
+    ;(window as unknown as { __spike: unknown }).__spike = { pair, editors, rows, canon: (i: number) => jcs(canonical(pair.docs[i])) }
   }
 
   function flip() {

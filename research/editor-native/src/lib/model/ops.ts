@@ -1,4 +1,4 @@
-import type { LoroDoc, LoroText } from 'loro-crdt'
+import type { Delta, LoroDoc, LoroText } from 'loro-crdt'
 import {
   atomic,
   childrenOf,
@@ -294,4 +294,28 @@ export function paste(doc: LoroDoc, parent: TreeID | undefined, index: number, f
     paste(doc, id, 0, children)
     return id
   })
+}
+
+// An offset carried through a text delta: text inserted before it pushes
+// it on, text deleted before it pulls it back; an insert at the offset
+// itself goes after the caret, so a remote typist never drags it along.
+export function shift(offset: number, delta: Delta<string>[]): number {
+  let pos = 0
+  let out = offset
+  for (const d of delta) {
+    if (d.retain !== undefined) {
+      pos += d.retain
+    } else if (d.insert !== undefined) {
+      const n = typeof d.insert === 'string' ? d.insert.length : 1
+      if (pos < out) {
+        out += n
+      }
+      pos += n
+    } else if (d.delete !== undefined) {
+      if (pos < out) {
+        out -= Math.min(d.delete, out - pos)
+      }
+    }
+  }
+  return out
 }

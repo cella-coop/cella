@@ -11,12 +11,15 @@ export class PairState {
   hashes: [string, string] = $state(['', ''])
   queued: [number, number] = $state([0, 0])
   #queues: [Uint8Array[], Uint8Array[]] = [[], []]
+  #subs: (() => void)[] = []
 
   constructor(a: LoroDoc, b: LoroDoc) {
     this.docs = [a, b]
     for (const i of [0, 1] as const) {
-      this.docs[i].subscribeLocalUpdates((bytes) => this.#send(i, bytes))
-      this.docs[i].subscribe(() => this.#rehash(i))
+      this.#subs.push(
+        this.docs[i].subscribeLocalUpdates((bytes) => this.#send(i, bytes)),
+        this.docs[i].subscribe(() => this.#rehash(i)),
+      )
       this.#rehash(i)
     }
   }
@@ -45,6 +48,12 @@ export class PairState {
       setTimeout(() => this.online && go(), this.delay)
     } else {
       queueMicrotask(go)
+    }
+  }
+
+  destroy(): void {
+    for (const off of this.#subs.splice(0)) {
+      off()
     }
   }
 

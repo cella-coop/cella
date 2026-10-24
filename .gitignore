@@ -3,3 +3,5 @@ node_modules/
 result
 .data/
 .pgrx/
+.svelte-kit/
+apps/org/ts/build/

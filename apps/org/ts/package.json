@@ -2,10 +2,15 @@
   "name": "@cella/org",
   "private": true,
   "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
   "dependencies": {
     "@cella/org-ops": "workspace:*",
     "@cella/org-db": "workspace:*",
     "@cella/org-sign": "workspace:*",
+    "@cella/org-log": "workspace:*",
+    "@cella/org-ui": "workspace:*",
     "@cella/org-key": "workspace:*",
     "@cella/org-member": "workspace:*",
     "@cella/org-circle": "workspace:*",
@@ -22,6 +27,18 @@
     "@cella/org-graft-client-invoice": "workspace:*",
     "@cella/org-graft-decision-document": "workspace:*",
     "@cella/org-graft-decision-member": "workspace:*",
-    "@cella/org-graft-invoice-transaction": "workspace:*"
+    "@cella/org-graft-invoice-transaction": "workspace:*",
+    "loro-crdt": "1.17.1",
+    "pg": "8.23.1",
+    "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-node": "6.0.0",
+    "@sveltejs/kit": "3.1.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "devalue": "5.9.4",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3",
+    "vite": "8.3.5"
   }
 }

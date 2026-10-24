@@ -1,3 +1,4 @@
+export { create, creating, slug } from './create.ts'
 export { edit } from './edit.ts'
 export { version } from './version.ts'
 export { comment } from './comment.ts'

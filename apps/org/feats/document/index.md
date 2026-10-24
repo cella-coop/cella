@@ -48,7 +48,8 @@ one undo step and one update.
 An embed shows a thing of another slice inside the document: the
 document holds only its kind and ref, and the slice that knows the kind
 draws it, through the page's `embeds` (a decision is
-`decision-document`'s). This feat knows no decisions.
+`decision-document`'s, a meeting `document-meeting`'s). This feat knows
+no decisions and no meetings.
 
 ## The canonical form
 
@@ -86,11 +87,15 @@ draft, and the next adoption names a later version.
 
 | Write | Label | Why |
 |---|---|---|
+| `POST /api/document/create` | confluent | a fact; a taken id is refused |
 | `POST /api/document/edit` | confluent | Loro merges them |
 | `POST /api/document/version` | confluent | a version is the document at a frontier; two saves are two versions |
 | `POST /api/document/comment` | confluent | anchored to the text, needs no notary |
 | `POST /api/document/adopt` | ordered | names the adopted version it replaces, not the draft; refused only if that moved on |
 
+- **create** starts a document, named by its title's slug, and may open
+  its draft with blocks as the creator's first edit, as a meeting's
+  minutes open on the meeting's card and agenda.
 - **edit** sends a Loro update. Loro is a CRDT: concurrent edits merge to
   the same document in any order, offline included, with no server
   ruling. An update must import onto the draft and leave it with a
@@ -112,10 +117,10 @@ draft, and the next adoption names a later version.
 
 | Write | Power | Lanterne |
 |---|---|---|
-| edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
+| create, edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
 | adopt | decided: the cited decision asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
 
-`002-powers.sql` registers `edit-document` in `cella.power`, and the
+`002-powers.sql` and `003-create.sql` register `edit-document` in `cella.power`, and the
 `circle-member` graft checks it as any other: every member holds it
 through a mandate on a role every member is seated in, never by
 omission, so a non-member's or a suspended member's device is refused.
@@ -171,6 +176,11 @@ adoptions; the rules role, `cella_rules`, may select.
 
 ## Handlers
 
+- `create` (confluent), and `creating`, its write, which a graft runs in
+  its own, as `document-meeting` begins a meeting's minutes: inserts the
+  document under its id or its title's slug, refusing a taken one, and,
+  given blocks, pastes them into a new Loro document and appends it as
+  the draft's first update, by the creator, committing to its digest.
 - `edit` (confluent): checks the update imports onto the draft and leaves
   it with a canonical form (bytes that are not are thrown, not logged),
   appends it with a receipt and commits to it in the log by its BLAKE3
@@ -207,7 +217,8 @@ would relay through Postgres's `LISTEN` and `NOTIFY`.
 
 ## Shell
 
-The `documents` collection; a document's page edits the draft in the block
+The `documents` collection, with a New form starting an empty document
+by its title; a document's page edits the draft in the block
 editor, under it the draft's hash and whether this member's edits are
 saved, then saves the draft as a version (`version`) and comments on one
 (`comment`). The server renders the draft read-only; the editor takes it

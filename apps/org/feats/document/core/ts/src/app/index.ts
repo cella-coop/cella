@@ -1,5 +1,6 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Listed, Page } from '../models/document.ts'
+import Create from './blocks/Create.svelte'
 import Draft from './blocks/Draft.svelte'
 import History from './blocks/History.svelte'
 
@@ -13,6 +14,7 @@ export const app: App = {
         group: 'governance',
         title: 'Documents',
         icon: icons.FileText,
+        create: Create,
         columns: [
           { key: 'title', label: 'Document', kind: 'title', role: 'title', value: (d: Listed) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Listed) => d.id },

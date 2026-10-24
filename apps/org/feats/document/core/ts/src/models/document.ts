@@ -1,5 +1,6 @@
 import type { Canon } from './canonical.ts'
 import type { TreeID } from './blocks.ts'
+import type { Fragment } from './edits.ts'
 
 // A Loro frontier: the last operation of each peer the document includes.
 export interface OpId {
@@ -8,6 +9,21 @@ export interface OpId {
 }
 
 export type Frontier = OpId[]
+
+// A new document, by its id or its title's slug, and the blocks its
+// draft opens with.
+export interface Create {
+  id?: string
+  title: string
+  blocks?: Fragment[]
+}
+
+export interface Created {
+  document: string
+  // The opening update's receipt and BLAKE3 digest, hex, when it has one.
+  receipt: number | null
+  digest: string | null
+}
 
 export interface Edit {
   document: string

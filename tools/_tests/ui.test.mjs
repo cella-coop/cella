@@ -1,6 +1,6 @@
-// The ui check: CSS only in the UI core, state only in hooks, no
-// module-level mutable state in client code, no server layer imported by a
-// client one.
+// The ui check: CSS only in the UI core, state and effects only in hooks,
+// no module-level mutable state in client code, no server layer imported
+// by a client one, no legacy Svelte or SvelteKit form.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -39,4 +39,44 @@ test('a client layer importing a server layer is refused', () => {
   }
   const server = 'apps/org/feats/invoice/core/ts/src/api/slice.ts'
   assert.deepEqual(problems(server, `import { action } from '@cella/org-db'\nimport { issue } from '../handlers/index.ts'\n`, false), [])
+})
+
+test('an effect outside a hook\'s state class is refused', () => {
+  const effect = '  $effect(() => {\n    node?.scrollIntoView()\n  })'
+  assert.match(problems(block, component(effect), false)[0], /runs an \$effect; an effect lives in a hook's state class/)
+  assert.match(problems('apps/org/core/ui/ts/src/components/Collection.svelte', component(effect), true)[0], /runs an \$effect/)
+  assert.match(problems(block, component('  $effect.pre(() => {})'), false)[0], /runs an \$effect/)
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/hooks/ScrollState.svelte.ts', 'export class S {\n  constructor() {\n    $effect(() => {})\n  }\n}\n', true), [])
+})
+
+test('legacy Svelte and SvelteKit forms are refused, wherever they are written', () => {
+  const refused = [
+    [component('', '<button on:click={go}>Go</button>'), /uses on:event; use an onevent attribute/],
+    [component('', '<div><slot /></div>'), /uses <slot>; use a snippet/],
+    [component('', '<form use:enhance></form>'), /uses use:action; use \{@attach\}/],
+    [component('', '{#each xs as x (x)}{@const y = x * 2}{y}{/each}'), /uses \{@const\}; use a declaration tag/],
+    [component('', '<p>{@html body}</p>'), /uses \{@html\}; use text/],
+    [component('', '<p {...$$restProps}></p>'), /uses \$\$props; use \$props\(\)/],
+    [component('  export let data'), /uses export let; use \$props\(\)/],
+    [component('  $: total = a + b'), /uses \$:; use \$derived/],
+    [component("  import { createEventDispatcher } from 'svelte'"), /uses createEventDispatcher; use a callback prop/],
+    [component("  import { page } from '$app/stores'"), /uses \$app\/stores; use \$app\/state/],
+    [component("  import { x } from '$lib/x'"), /uses \$lib; use #lib/],
+    [component("  import { A } from '$env/static/private'"), /uses \$env; use \$app\/env/],
+    [component("  setContext('k', 1)"), /uses setContext and getContext; use createContext in a hook/],
+  ]
+  for (const [text, message] of refused) {
+    const found = problems(block, text, false)
+    assert.equal(found.length, 1, `${text}: ${found}`)
+    assert.match(found[0], message)
+  }
+  assert.match(problems('apps/org/ts/src/routes/+layout.server.ts', "import { invalidateAll } from '$app/navigation'\n", false)[0], /uses invalidateAll; use refreshAll/)
+})
+
+test('the forms that replace them pass, and prose that names them does not trip the check', () => {
+  const modern = component(
+    "  import { page } from '$app/state'\n  import { fromAction } from 'svelte/attachments'\n  let { data, children } = $props()\n  // never on:click, use:enhance or $app/stores here",
+    '<button onclick={go}>Go</button>\n<form {@attach enhanced}></form>\n{#each xs as x (x)}{const y = $derived(x * 2)}{y}{/each}\n{@render children()}\n<!-- not <slot />, not {@html} -->\n<p>Decided on: the close</p>',
+  )
+  assert.deepEqual(problems(block, modern, false), [])
 })

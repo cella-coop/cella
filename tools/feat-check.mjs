@@ -223,8 +223,9 @@ for (const dir of byName.values()) {
   }
 }
 
-// The client layers' rules: CSS only in the UI core, state only in hooks,
-// no module-level mutable state, no server layer imported by a client one.
+// The client layers' rules: CSS only in the UI core, state and effects
+// only in hooks, no module-level mutable state, no server layer imported
+// by a client one, no legacy Svelte or SvelteKit form.
 errors.push(...checkUi(repo, [...byName.values()]))
 
 // A package's exports are its public surface: a library's `.`, a slice's

@@ -266,9 +266,15 @@ level, which the server would share between requests.
 the UI core holds CSS, no other `.svelte` file has a `<style>` or a
 `style` attribute; `$state` appears only in a state class under `hooks/`;
 no client module, nor a component's `<script module>`, declares a
-top-level `let` or `var`; and no `.svelte` file or module under `app/`,
+top-level `let` or `var`; no `.svelte` file or module under `app/`,
 `hooks/` or `components/` imports a server layer: a package's `api`,
-`drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`.
+`drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`; `$effect`
+appears only in a state class, so a component derives, attaches
+(`{@attach}`) or handles an event instead; and no source uses a legacy
+Svelte or SvelteKit form: `on:event`, `<slot>`, `use:`, `{@const}`,
+`$$props`, `export let`, `$:`, `createEventDispatcher`, string-keyed
+`setContext`/`getContext`, `$app/stores`, `$lib`, `$env` or
+`invalidateAll`, nor `{@html}`.
 
 ## The shell
 

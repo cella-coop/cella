@@ -12,12 +12,59 @@
 // - The client layers import no server layer: no `.svelte` file and no
 //   module under `app/`, `hooks/` or `components/` imports a package's
 //   `api`, its `drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`.
+// - Effects live in hooks too: `$effect` only in a hook's state class; a
+//   component derives, attaches or handles an event instead.
+// - Svelte 5 and SvelteKit 3 only: none of the legacy forms below, which
+//   still compile but are what code written from older knowledge reaches
+//   for, and no `{@html}`, which would render text as markup.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
 const client = /(^|\/)src\/(app|hooks|components)\//
 const server = /(^|\/)(api|drivers|handlers|interfaces)(\/|\.ts$|$)/
+
+// Legacy forms and what replaces each: in a component's markup, in its
+// scripts, and in any source.
+const markup = [
+  [/\son:[a-z]+[=\s>|]/, 'on:event', 'an onevent attribute'],
+  [/<slot[\s/>]/, '<slot>', 'a snippet and {@render}'],
+  [/\suse:[\w$]/, 'use:action', '{@attach}, or fromAction over a legacy action'],
+  [/\{@const\s/, '{@const}', 'a declaration tag, {const x = $derived(…)}'],
+  [/\{@html\s/, '{@html}', 'text, which Svelte escapes'],
+  [/\$\$(props|restProps|slots)\b/, '$$props', '$props()'],
+]
+const scripts = [
+  [/^\s*export\s+let\s/m, 'export let', '$props()'],
+  [/^\s*\$:/m, '$:', '$derived'],
+  [/\bcreateEventDispatcher\b/, 'createEventDispatcher', 'a callback prop'],
+]
+const anywhere = [
+  [/\b(setContext|getContext|hasContext)\s*\(/, 'setContext and getContext', 'createContext in a hook'],
+  [/['"]\$app\/stores['"]/, '$app/stores', '$app/state'],
+  [/['"]\$lib[/'"]/, '$lib', '#lib with the file extension'],
+  [/['"]\$env\//, '$env', '$app/env, declared in src/env.ts'],
+  [/\binvalidateAll\b/, 'invalidateAll', 'refreshAll'],
+]
+
+const legacy = (path, text) => {
+  const out = []
+  const found = (rules, source) => {
+    for (const [re, form, instead] of rules) {
+      if (re.test(source)) {
+        out.push(`${path}: uses ${form}; use ${instead}`)
+      }
+    }
+  }
+  if (path.endsWith('.svelte')) {
+    found(markup, text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<style[\s\S]*?<\/style>/g, '').replace(/<!--[\s\S]*?-->/g, ''))
+    found(scripts, [...text.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map((m) => m[1]).join('\n'))
+  } else if (/\.svelte\.ts$/.test(path)) {
+    found(scripts, text)
+  }
+  found(anywhere, text)
+  return out
+}
 
 const imports = (text) => [...text.matchAll(/(?:from|import)\s*\(?\s*['"]([^'"]+)['"]/g)].map((m) => m[1])
 
@@ -48,6 +95,10 @@ export function problems(path, text, ui) {
   if (/\$state(\.raw)?\s*[(<]/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
     out.push(`${path}: holds $state; state lives in a hook's state class, hooks/*.svelte.ts`)
   }
+  if (/\$effect(\.pre)?\s*\(/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
+    out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
+  }
+  out.push(...legacy(path, text))
   if (layer && mutable(path, text)) {
     out.push(`${path}: keeps module-level mutable state, which every request the server renders would share`)
   }

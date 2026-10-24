@@ -67,7 +67,7 @@ refused.
 - a person's personal data is committed to the log, never written into it.
 
 What it does not own: which invoices bill a client (`client-invoice`),
-which projects serve it (a later `client-project` graft).
+which projects it commissioned (`client-project`).
 
 ## What it does not know
 

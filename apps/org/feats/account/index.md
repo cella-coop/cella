@@ -69,6 +69,11 @@ the holder is whoever holds the role the mandate is granted to.
 | surplus.allocate | held by the assembly, exercised by decision | `ag`, majority |
 | period.close | `close-period` | Julien, as finance |
 
+`002-powers.sql` registers draw's and period.close's powers in
+`cella.power`, and the `circle-member` graft checks them. A draw's budget
+is not checked yet: it needs the month's draws summed, which comes with
+the draw's handler.
+
 ## Invariants
 
 The account feat owns the rules about its own collection:

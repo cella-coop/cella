@@ -8,18 +8,28 @@ export type Label = 'confluent' | 'bounded' | 'ordered'
 // from signed votes. Without one, the notary checks the write's rule alone.
 export type Decide = 'consent' | 'majority'
 
-export interface Confluent {
+// The power a write needs, which the actor must hold through a mandate on
+// the verdict date, and the payload field holding its amount in cents when
+// the mandate's limit caps it. The owning feat registers the same in
+// `cella.power`, the source of truth; `cella check feats` keeps the two
+// equal. A write with no power is the actor's own, or is decided.
+export interface Grant {
+  power?: string
+  amount?: string
+}
+
+export interface Confluent extends Grant {
   label: 'confluent'
 }
 
 // Spends a right granted in advance: a budget share, an invoice series,
 // a draw limit. Works offline until the right runs out (rung 2).
-export interface Bounded {
+export interface Bounded extends Grant {
   label: 'bounded'
   right: string
 }
 
-export interface Ordered {
+export interface Ordered extends Grant {
   label: 'ordered'
   decide?: Decide
   // Names the state the write must find unchanged, as adoption names its base.
@@ -28,8 +38,8 @@ export interface Ordered {
 
 export type Op = Confluent | Bounded | Ordered
 
-export const confluent = (): Confluent => ({ label: 'confluent' })
-export const bounded = (right: string): Bounded => ({ label: 'bounded', right })
+export const confluent = (g: Grant = {}): Confluent => ({ label: 'confluent', ...g })
+export const bounded = (right: string, g: Grant = {}): Bounded => ({ label: 'bounded', right, ...g })
 export const ordered = (o: Omit<Ordered, 'label'> = {}): Ordered => ({ label: 'ordered', ...o })
 
 // One permission per write, `<feat>:<entity>:<op>`, served as POST /api/<feat>/<op>.

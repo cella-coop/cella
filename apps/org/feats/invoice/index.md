@@ -66,7 +66,9 @@ keeps its number, and the void posts a credit note.
 | payment | `record-receipt` | Julien |
 | void | `issue-invoice` | Julien |
 
-Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice
+`002-powers.sql` registers each in `cella.power`; the `circle-member`
+graft's rule refuses a write by anyone not holding the power on the
+verdict date. Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice
 and belongs to the later `project` feat.
 
 ## Invariants

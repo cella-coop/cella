@@ -25,8 +25,10 @@ export async function record(tx: Db, entry: Entry, corrects?: string): Promise<P
 }
 
 // What the log commits to for an entry: integers and codes, no free text.
+// `amount`, the sum of its debits, is what a mandate's limit caps.
 export const committed = (posted: Posted, entry: Entry) => ({
   entry: posted.entry,
   date: entry.date,
+  amount: entry.lines.filter((l) => l.side === 'debit').reduce((sum, l) => sum + l.cents, 0),
   lines: entry.lines.map((l) => ({ ...l })),
 })

@@ -50,10 +50,15 @@ before issue, an allocation before its decision).
 
 | Write | Power | Lanterne |
 |---|---|---|
-| post | `record-entry` | Julien, as finance |
-| adjust | held by the circle that keeps the books | `ag`, by its own setting |
+| post | `pay-supplier`, within the mandate's limit for the entry's amount, the sum of its debits | Julien, as finance, up to 3 000 € an entry |
+| adjust | held by the circle that keeps the books | `ag`, by its own setting; not checked yet |
 
-Every member reads the books; reading needs no power.
+`003-powers.sql` registers post's power in `cella.power`, with `amount` as
+the payload field the limit caps; the `circle-member` graft checks it. One
+power covers every post, so a payroll entry above the limit is refused
+too: a power chosen by what an entry posts to (a supplier payment against
+`512`, payroll, VAT) is open. Every member reads the books; reading needs
+no power.
 
 ## Invariants
 
@@ -105,6 +110,9 @@ select.
   corrects the entry the payload names, and that entry's latest correction
   before it is the payload's `base`; a second correction from the same base
   is refused.
+- `transaction.amounts`, on `transaction:transaction:post`: the payload's
+  `amount` is the sum of the entry's debits, so the mandate's limit caps
+  what was posted.
 
 ## Handlers
 

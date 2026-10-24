@@ -75,4 +75,8 @@ invitee with a device, holds nothing.
 | Write | Power | Lanterne |
 |---|---|---|
 | position.add | none: the decision it cites, which must give this seat | the assembly, admitting a member |
-| position.remove | held by the circle, by decision; the manager's election is the assembly's | each circle for its own seats |
+| position.remove | `appoint`, until a circle's decision decides it | no mandate grants it |
+
+`004-sits.sql` registers position.remove's power, and `circle_member.sits`
+on `circle:circle:message`: the actor is an active member seated in the
+circle on the verdict date.

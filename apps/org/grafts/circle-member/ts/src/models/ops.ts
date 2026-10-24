@@ -5,5 +5,5 @@ export const ops = {
   // as the admission that seats a new member in the assembly
   'circle-member:position:add': ordered({ check: 'decided' }),
   // who holds which role
-  'circle-member:position:remove': ordered(),
+  'circle-member:position:remove': ordered({ power: 'appoint' }),
 } satisfies Ops

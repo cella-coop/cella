@@ -73,6 +73,11 @@ text = "issue invoices"
 
 [[mandate]]
 role = "finance"
+power = "record-receipt"
+text = "record money received"
+
+[[mandate]]
+role = "finance"
 power = "close-period"
 text = "close a period"
 

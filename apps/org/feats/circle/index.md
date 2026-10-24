@@ -20,11 +20,20 @@ junction. Each circle also has a channel for its messages.
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
 A **power** is the id of something a write needs, such as `issue-invoice`
-or `close-period`. A mandate grants one power to one role, with an
-optional limit, for a term. `cella.may(actor, power, amount)` reads
-mandates as rows: an actor may if a role they hold carries the power
-within its limit. Positions live in the `circle-member` graft, so
-`cella.may` reads them there.
+or `close-period`; the feat owning a write names the power in
+`cella.power`. A mandate grants one power to one role, with an optional
+limit, for a term. Who holds a role is a position, the `circle-member`
+graft's, so whether an actor may use a power is that graft's rule,
+`circle_member.may`: an actor may if a seat they hold on the day carries
+a role with a mandate in force for the power, within its limit.
+
+## Schema
+
+`circle` (`core/sql/`): `circle.circle`, `circle.role` and
+`circle.mandate`, as in the entities above; a mandate's `limit` and
+`budget` are `cella.amount`s, and a mandate with no `from` was granted
+before the records began. The app role and the rules role, `cella_rules`,
+may select. They are seeded; the writes below have no handlers yet.
 
 ## Authority
 
@@ -105,6 +114,6 @@ requested by another scope (rung 5) build on these entities later.
 |---|---|---|
 | Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
 | Finance (Julien) | `pay-supplier` | 3 000 € limit |
-| Finance | `issue-invoice`, `close-period` | — |
+| Finance | `issue-invoice`, `record-receipt`, `close-period` | — |
 | Circle lead | `spend-circle` | 1 000 € budget, a month |
 | Circle lead | `send-quote` | 15 000 € limit |

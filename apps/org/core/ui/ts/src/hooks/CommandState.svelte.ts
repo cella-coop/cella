@@ -30,9 +30,20 @@ export class CommandState {
     this.query = ''
     this.active = 0
     this.dialog?.showModal()
-    if (!this.#loaded) {
-      this.#loaded = true
-      this.items = await (await fetch(this.#source())).json()
+    if (this.#loaded) {
+      return
+    }
+    // Loaded once; a failed fetch leaves the collections to jump to and is
+    // tried again on the next open.
+    this.#loaded = true
+    try {
+      const res = await fetch(this.#source())
+      if (!res.ok) {
+        throw new Error(`${this.#source()}: ${res.status}`)
+      }
+      this.items = await res.json()
+    } catch {
+      this.#loaded = false
     }
   }
 

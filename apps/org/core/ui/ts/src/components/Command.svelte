@@ -2,6 +2,7 @@
   import { goto } from '$app/navigation'
   import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
   import type { Jump } from '../models/view.ts'
+  import { nearest } from '../models/keys.ts'
   import { useCommand } from '../hooks/useCommand.ts'
   import Icon from './Icon.svelte'
 
@@ -11,6 +12,7 @@
   let { collections, source }: { collections: Jump[]; source: string } = $props()
 
   const state = useCommand(() => collections, () => source)
+  const results = $props.id()
 
   function go(i: number) {
     const item = state.shown[i]
@@ -57,15 +59,37 @@
 
 <dialog bind:this={state.dialog} class="menu" onclick={onbackdrop} aria-label="Jump to">
   <!-- svelte-ignore a11y_autofocus: the menu opens to type into, as Linear's does -->
-  <input bind:value={state.query} {onkeydown} oninput={() => state.typed()} placeholder="Jump to a collection or an item" aria-label="Jump to" autofocus />
-  <ul role="listbox" aria-label="Results">
+  <!-- A combobox over its listbox: focus stays in the input, and the
+       active option is announced through aria-activedescendant. -->
+  <input
+    bind:value={state.query}
+    {onkeydown}
+    oninput={() => state.typed()}
+    placeholder="Jump to a collection or an item"
+    aria-label="Jump to"
+    role="combobox"
+    aria-expanded="true"
+    aria-autocomplete="list"
+    aria-controls={results}
+    aria-activedescendant={state.shown.length ? `${results}-${state.active}` : undefined}
+    autofocus
+  />
+  <ul role="listbox" id={results} aria-label="Results">
     {#each state.shown as item, i (item.href)}
-      <li role="option" aria-selected={i === state.active}>
-        <button class:active={i === state.active} onclick={() => go(i)} onmousemove={() => (state.active = i)}>
-          <span class="title">{item.title}</span>
-          {#if item.sub}<span class="sub">{item.sub}</span>{/if}
-          <span class="kind">{item.kind}</span>
-        </button>
+      <li
+        role="option"
+        id="{results}-{i}"
+        tabindex="-1"
+        aria-selected={i === state.active}
+        class:active={i === state.active}
+        {@attach nearest(i === state.active)}
+        onclick={() => go(i)}
+        {onkeydown}
+        onmousemove={() => (state.active = i)}
+      >
+        <span class="title">{item.title}</span>
+        {#if item.sub}<span class="sub">{item.sub}</span>{/if}
+        <span class="kind">{item.kind}</span>
       </li>
     {:else}
       <li class="none">Nothing matches.</li>
@@ -128,7 +152,7 @@
     max-height: 50vh;
     overflow-y: auto;
   }
-  li button {
+  [role='option'] {
     display: flex;
     gap: var(--space-3);
     align-items: baseline;
@@ -141,7 +165,7 @@
     cursor: pointer;
     font-size: var(--text-sm);
   }
-  li button.active {
+  [role='option'].active {
     background: var(--hover);
   }
   .title {

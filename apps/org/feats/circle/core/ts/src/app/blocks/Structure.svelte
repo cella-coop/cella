@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { money, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Mandate, Role } from '../../models/circle.ts'
 
   // A circle's roles, and the mandates that grant them powers, each capped
@@ -16,7 +16,7 @@
     { key: 'text', label: 'Grants', value: (m) => m.text },
     { key: 'role', label: 'Role', value: (m) => m.role },
     { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },
-    { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${(m.budget / 100).toLocaleString('fr-FR')} € a ${m.per}`) },
+    { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${money(m.budget)} a ${m.per}`) },
     { key: 'until', label: 'Until', kind: 'date', value: (m) => m.revoked ?? m.until },
   ]
 </script>

@@ -1,4 +1,4 @@
-import { icons, type App, type Tone } from '@cella/org-ui'
+import { icons, money, type App, type Tone } from '@cella/org-ui'
 import type { Detail, Listed } from '../models/invoice.ts'
 import Issue from './blocks/Issue.svelte'
 import Lines from './blocks/Lines.svelte'
@@ -49,7 +49,7 @@ export const app: App = {
           ...(i.voided ? [{ label: 'Voided', value: i.voided, kind: 'date' as const }, { label: 'Why', value: i.reason }] : []),
         ],
         activity: (i: Detail) => [
-          ...i.payments.map((p) => ({ at: p.at, text: `received ${(p.amount / 100).toLocaleString('fr-FR')} €, ${p.reference}` })),
+          ...i.payments.map((p) => ({ at: p.at, text: `received ${money(p.amount)}, ${p.reference}` })),
           ...(i.voided ? [{ at: i.voided, text: 'voided' }] : []),
           ...(i.sent ? [{ at: i.sent, text: 'sent' }] : []),
           { at: i.issued, text: 'issued' },

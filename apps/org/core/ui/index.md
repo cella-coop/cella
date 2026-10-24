@@ -74,12 +74,15 @@ The theme is light, dark or the system's, a cookie the server writes into
   each with its count, the board offered only where a field enumerates.
   A view, its extensions overriding it part by part, declares its
   `look`: its default layout, its board's grouping and columns' order
-  (`lanes`), its cards' fields; circles open as a gallery, decisions as
-  a board. A board move is a write only where a slice declares it
-  (`shifts`: the field, the columns it leaves and enters, the write):
-  the `transfer` attachment lets a card drop only there, and the drop
-  posts that write to the item's page as its button does, signed as the
-  acting member, its outcome shown as any write's and the rows read
+  (`lanes`), its cards' fields; circles and projects open as a gallery,
+  decisions and tasks as a board, timesheets as a table. A board move is
+  a write only where a slice declares it (`shifts`: the field, the
+  columns it leaves and enters, the write): the `transfer` attachment
+  lets a card drop only there, and the drop posts that write to the
+  item's page as its button does, with the column entered as `to`, so
+  one write takes a card into any of several, as a task's move does,
+  signed as the acting member, its outcome shown as any write's and the
+  rows read
   again, so a refused move leaves the card where it was. The view
   bar's tabs are pills (`Pill`): All first, what a bare address shows,
   then any preset the collection or an extension declares as a plain

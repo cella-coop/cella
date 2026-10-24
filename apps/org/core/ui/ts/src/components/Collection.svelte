@@ -154,10 +154,13 @@
 
   // A card dropped in another column: the collection's write for that
   // move, posted to the item's page as its button posts it, signed as the
-  // acting member. The outcome shows as any write's; the rows are read
-  // again, so a refused move leaves the card where it was.
-  async function move(id: string, s: Shift) {
+  // acting member, with the column it entered as `to`, for a write that
+  // takes a card into any of several. The outcome shows as any write's;
+  // the rows are read again, so a refused move leaves the card where it
+  // was.
+  async function move(id: string, s: Shift, to: string) {
     const body = new FormData()
+    body.set('to', to)
     const res = await fetch(`${page.url.pathname}/${encodeURIComponent(id)}?/${s.action}`, {
       method: 'POST',
       body,
@@ -329,7 +332,7 @@
         {shown}
         {href}
         {shifts}
-        onshift={(id, s) => move(id, s)}
+        onshift={(id, s, _, to) => move(id, s, to)}
       />
     {:else}
       <ul class="list">

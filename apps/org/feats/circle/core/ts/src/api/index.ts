@@ -1,8 +1,11 @@
-// The feat's reads and its slice, which the shell mounts. Nesting circles
-// and granting mandates have no handlers yet.
+// The feat's public writes, POST /api/circle/<op> once the server exists,
+// each decided, which circle-decision-member carries out when the
+// decision that asks it passes; its reads, and its slice, which the
+// shell mounts.
 import type { Slice } from '@cella/org-db'
 import { circle, circles } from '../drivers/circle.ts'
 
+export { grant, nest, revoke } from '../handlers/index.ts'
 export { circle, circles } from '../drivers/circle.ts'
 
 export const slice: Slice = {

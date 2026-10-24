@@ -35,8 +35,15 @@ nothing is allowed by omission.
 `circle` (`core/sql/`): `circle.circle`, `circle.role` and
 `circle.mandate`, as in the entities above; a mandate's `limit` and
 `budget` are `cella.amount`s, and a mandate with no `from` was granted
-before the records began. The app role and the rules role, `cella_rules`,
-may select. They are seeded; the writes below have no handlers yet.
+before the records began. Each circle keeps its `path`, its ancestors
+from the assembly down and itself last, which triggers keep as circles
+are added and moved, a moved circle carrying its subtree; so
+`circle.within(part, whole)` asks whether one circle is within another
+without recursion. One circle only has no parent. Triggers refuse a
+nesting that makes a cycle and keep a mandate's grant fixed and a
+revocation standing, raising SQLSTATE `09000`. The app role and the rules
+role, `cella_rules`, may select; the app role may move a circle and grant
+and revoke mandates.
 
 ## Authority
 
@@ -69,32 +76,53 @@ write; see its [doc](../../grafts/circle-member/index.md).
 
 - **nest** sets a circle's parent. Two nestings that are each acyclic can
   together form a cycle, so the notary orders them already at rung 1:
-  two concurrent transactions can each see no cycle.
+  two concurrent transactions can each see no cycle. The tree's trigger
+  refuses a cycle in the write's own view; `circle.nests`, run under the
+  log's lock, refuses one a nesting settled first made.
 - **mandate.grant** and **mandate.revoke** change what a role may do. A
   revocation takes effect at its receipt: a write received after it is
   refused; a share already granted runs out on its own.
-- **message** posts to the channel. Messages merge in any order.
+- **message** posts to the channel. Messages merge in any order; it has
+  no handler yet.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Write | Power or check | Lanterne |
 |---|---|---|
-| nest | `organise-circles`, until the assembly's decision decides it | no mandate grants it |
-| mandate.grant, mandate.revoke | `grant-mandate`, until the granting circle's decision decides it | no mandate grants it; Lanterne's mandates are seeded |
+| nest | decided: the cited decision nests this circle there, and carried | the circle holding both places, or the assembly |
+| mandate.grant, mandate.revoke | decided: the cited decision grants or revokes this mandate, and carried | the circle above the role's, or the assembly |
 | message | seat: an active member seated in the circle | the circle's members |
 
-`002-powers.sql` registers the powers. Nesting and granting are decisions
-once a graft ties a decision to the circle or mandate it changes; until
-then they need powers no Lanterne mandate grants, so neither is allowed by
-omission. A message's seat check is `circle_member.sits`, the
-`circle-member` graft's rule.
+Nesting, granting and revoking are decided: they cite a decision, which
+the `circle-decision` graft checks asks this and was put to a circle that
+may decide it, and `circle-decision-member` that it carried, and which
+`circle-decision-member` carries out when it passes. A message's seat
+check is `circle_member.sits`, the `circle-member` graft's rule.
+
+## Rules
+
+- `circle.nests`, on `circle:circle:nest`: the circle sits under the
+  parent the payload names, and its path is its parent's as it stands.
+- `circle.grants`, on `circle:mandate:grant`: the write granted the
+  mandate the payload names, to that role, for that power, from the
+  verdict date.
+- `circle.revokes`, on `circle:mandate:revoke`: the write revoked the
+  mandate on the verdict date.
+
+## Handlers
+
+- `nest`, `grant`, `revoke` (ordered), each citing its decision: set the
+  parent; insert the mandate from the verdict date, its limit or budget
+  in cents; set `revoked`. Each submits what it did and the decision; a
+  mandate's text is how members read it and stays in the payload.
 
 ## Invariants
 
 The circle feat owns:
 
 - the circles form one tree: no cycle, one root;
-- a mandate grants a power its circle holds, within its parent's limit;
+- a mandate grants a power its circle holds, within its parent's limit
+  (not enforced yet);
 - a mandate caps its power with a `limit` per write or a `budget` over a
   period, never both;
 - a mandate's term has `from` before `until`; a revoked mandate stays
@@ -116,8 +144,17 @@ requested by another scope (rung 5) build on these entities later.
 The `circles` collection, in tree order, as a gallery of cards by
 default; a circle's page lists its roles,
 those every working circle has among them, and the mandates granted to
-them, with their limits and budgets. Seats are `circle-member`'s. Nesting
-and mandates have no handlers yet, so the shell offers no writes here.
+them, with their limits and budgets. Seats are `circle-member`'s.
+Proposing to nest the circle or to grant or revoke its mandates is
+`circle-decision`'s, a seat in it `circle-decision-member`'s: the page's
+writes propose, and the close of a passing decision carries them out.
+
+## Grafts
+
+- `circle-member`: seats, and who may use a power.
+- `circle-decision`: nesting and mandates by decision.
+- `circle-member-project`, `circle-member-timesheet`: a power reaches the
+  circle it is held in and those within it, for projects and timesheets.
 
 ## Lanterne
 
@@ -129,7 +166,7 @@ and mandates have no handlers yet, so the shell offers no writes here.
 
 | Role | Power | Cap |
 |---|---|---|
-| Member (every member, in `ag`) | `edit-client`, `edit-document` | — |
+| Member (every member, in `ag`) | `edit-client`, `edit-document`, `edit-task`, `log-time`, `invite-member` | — |
 | Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
 | Finance (Julien) | `pay-supplier` | 3 000 € limit |
 | Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period` | — |

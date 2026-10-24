@@ -4,12 +4,8 @@ import type { Circle, Detail, Mandate, Role } from '../models/circle.ts'
 // The tree, each circle after its parent, from the assembly down.
 export async function circles(db: Db): Promise<Circle[]> {
   const { rows } = await db.query<Circle>(
-    `WITH RECURSIVE tree AS (
-       SELECT c.*, ARRAY[c.name] AS path FROM circle.circle c WHERE parent IS NULL
-       UNION ALL
-       SELECT c.*, t.path || c.name FROM circle.circle c JOIN tree t ON c.parent = t.id
-     )
-     SELECT id, name, parent, purpose, procedure FROM tree ORDER BY path`,
+    `SELECT c.id, c.name, c.parent, c.purpose, c.procedure FROM circle.circle c
+     ORDER BY (SELECT array_agg(a.name ORDER BY u.i) FROM unnest(c.path) WITH ORDINALITY u(id, i) JOIN circle.circle a ON a.id = u.id)`,
   )
   return rows
 }

@@ -33,6 +33,7 @@
   import Button from './Button.svelte'
   import Card from './Card.svelte'
   import Gallery from './Gallery.svelte'
+  import Pill from './Pill.svelte'
   import Cell from './Cell.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
@@ -256,15 +257,15 @@
     <ul>
       {#each views as v (v.id)}
         <li>
-          <a
+          <Pill
             href={presetLink(v)}
-            class:on={view === v.id}
-            aria-current={view === v.id ? 'page' : undefined}
+            on={view === v.id}
+            icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))}
             title="View {v.name} {noun} {v.count}"
             onclick={() => (state.filter = '')}
           >
-            <Icon icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))} />{v.name}
-          </a>
+            {v.name}
+          </Pill>
         </li>
       {/each}
     </ul>
@@ -280,17 +281,17 @@
       {#each saved.list as c, i (c.id)}
         <DropIndicator show={drag.before('views', i)} axis="x" />
         <li data-drag-item="views" data-drag-index={i}>
-          <a
+          <Pill
             href={customLink(c)}
-            class:on={view === c.id}
-            aria-current={view === c.id ? 'page' : undefined}
+            on={view === c.id}
+            icon={mark(c.icon)}
             title="View {c.name} {noun} {tally(c)}"
             aria-roledescription="draggable view"
             data-drag-handle
             onclick={() => (state.filter = c.spec.q)}
           >
-            <Icon icon={mark(c.icon)} />{c.name}
-          </a>
+            {c.name}
+          </Pill>
         </li>
       {/each}
       <DropIndicator show={drag.before('views', saved.list.length)} axis="x" />
@@ -374,30 +375,6 @@
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-  .viewbar a {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-    height: 1.6rem;
-    padding: 0 var(--space-2);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-    white-space: nowrap;
-  }
-  /* Every tab a pill: quiet, a hairline; hovered, a tint; the open one
-     filled. */
-  .viewbar a:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
-  .viewbar a.on {
-    background: var(--sunk);
-    border-color: transparent;
-    color: var(--text);
-    font-weight: 500;
   }
   .new {
     display: grid;

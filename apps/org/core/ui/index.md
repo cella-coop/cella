@@ -81,11 +81,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   posts that write to the item's page as its button does, signed as the
   acting member, its outcome shown as any write's and the rows read
   again, so a refused move leaves the card where it was. The view
-  bar's tabs are the collection's presets, declared as plain objects on
-  its view, or by an extension over the fields it adds (`views`:
-  invoices' Unpaid and Overdue, decisions' Open, Passed and Rejected,
-  members' Active and Invited, transactions' This period), All
-  after them, then the viewer's own; each tab's tooltip names it with
+  bar's tabs are pills (`Pill`): All first, what a bare address shows,
+  then any preset the collection or an extension declares as a plain
+  object (`views`), then the viewer's own. A preset earns its tab only
+  by showing what the default layout and its filters do not already
+  give; none does today, so every collection has All and the viewer's
+  views. Each tab's tooltip names it with
   its count, and its last button saves a new view. The active view (`v`)
   and what is changed from it (`view`, `where`, `q`, `hide`, `w`) live
   in the URL, so a view is a link and the server renders it, checking
@@ -103,7 +104,13 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Detail`: the one detail view, the item's blocks in the content and the
   drawer's Details panel, its cards stacked as Linear stacks an issue's
   properties: Properties (label and value rows), Related and Activity.
-  Esc goes back to the collection.
+  A page may declare tabs (`tabs`, the first its default), shown as
+  pills in the header when there are two or more, the open one in the
+  URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
+  bare one in the first, and an extension's blocks join the owner's
+  tabs or add their own. A tab earns its place only as a genuinely
+  different view: decisions have Overview and Stances; documents and
+  invoices have one. Esc goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
   `Properties`, `Related`, `Activity`, `Table`, `Cell`, `Stats`, `Badge`,

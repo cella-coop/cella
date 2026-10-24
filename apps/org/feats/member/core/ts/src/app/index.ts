@@ -14,10 +14,6 @@ export const app: App = {
         group: 'governance',
         title: 'Members',
         icon: icons.Users,
-        views: [
-          { id: 'active', name: 'Active', icon: 'done', where: [{ field: 'status', is: ['active'] }] },
-          { id: 'invited', name: 'Invited', icon: 'waiting', where: [{ field: 'status', is: ['invited'] }] },
-        ],
         columns: [
           { key: 'name', label: 'Name', kind: 'title', role: 'title', value: (m: Member) => m.name },
           { key: 'address', label: 'Address', kind: 'mono', role: 'sub', value: (m: Member) => m.address },

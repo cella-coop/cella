@@ -1,6 +1,7 @@
 import type { App, Tone } from '@cella/org-ui'
 import { outcome, states, type Roll, type State } from '../models/roll.ts'
 import Electorate from './blocks/Electorate.svelte'
+import Outcome from './blocks/Outcome.svelte'
 
 const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejected: 'negative' }
 
@@ -24,11 +25,6 @@ export const app: App = {
           tone: (r: { state?: State }) => (r.state ? tones[r.state] : 'neutral'),
         },
       ],
-      views: [
-        { id: 'open', name: 'Open', icon: 'open', where: [{ field: 'state', is: ['open'] }] },
-        { id: 'passed', name: 'Passed', icon: 'done', where: [{ field: 'state', is: ['passed'] }] },
-        { id: 'rejected', name: 'Rejected', icon: 'warning', where: [{ field: 'state', is: ['rejected'] }] },
-      ],
       look: { layout: 'board', by: 'state', lanes: { state: [...states] }, cards: ['circle', 'deadline', 'turnout'] },
       // The close freezes which stances counted; whether it passed is the
       // database's, so Passed and Rejected both take the drop.
@@ -39,7 +35,7 @@ export const app: App = {
           { label: 'Outcome', value: outcome(r).text, kind: 'badge', tone: outcome(r).tone },
           { label: 'On the roll', value: r.voters.length, kind: 'number' },
         ],
-        blocks: [Electorate],
+        blocks: [Outcome, { tab: 'stances', block: Electorate }],
       },
     },
   },

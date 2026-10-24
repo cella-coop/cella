@@ -166,8 +166,7 @@ nothing else, `transaction.payroll` a payroll and nothing else, and
 ## Shell
 
 The journal, as the `transactions` collection, the latest entry first,
-each with the sum of its debits, and a This period view of the current
-month's; an entry's page lists its lines and the
+each with the sum of its debits; an entry's page lists its lines and the
 entries that correct it. `/journal` and its entries' old addresses
 redirect there. Posting
 from the shell is not offered: the pilot's entries come from invoices,

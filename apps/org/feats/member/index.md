@@ -51,8 +51,7 @@ Whether the cited decision asks to admit the member is the `decision-member` gra
 
 ## Shell
 
-The `members` collection, by name, with Active and Invited views; a
-member's page renames them
+The `members` collection, by name; a member's page renames them
 (`profile`), which `member.own_profile` refuses for anyone but the actor.
 Seats and powers are `circle-member`'s, devices the `key` feat's.
 

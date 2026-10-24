@@ -1,11 +1,10 @@
 <script lang="ts">
-  import { date, Field, Form, Note, Section, Stats, Table, type Column, type Tone } from '@cella/org-ui'
-  import { outcome, type Roll, type Voter } from '../../models/roll.ts'
+  import { date, Field, Form, Note, Section, Table, type Column, type Tone } from '@cella/org-ui'
+  import type { Roll, Voter } from '../../models/roll.ts'
   import { useStance } from '../../hooks/useStance.ts'
 
-  // Who may vote, each one's latest stance before the cutoff, the outcome
-  // computed from them, and the acting member's own stance as the server
-  // read it: on the roll and open, the form to give or change it; closed,
+  // Who may vote and each one's latest stance before the cutoff, and the
+  // acting member's own stance as the server read it: on the roll and open, the form to give or change it; closed,
   // the stance that counted; off the roll, a line saying so.
   let { data }: { data: Roll; id: string } = $props()
 
@@ -19,17 +18,8 @@
     { key: 'receipt', label: 'Receipt', kind: 'number', value: (v) => v.receipt },
     { key: 'counted', label: 'Counted', value: (v) => (data.closed ? (v.counted ? 'yes' : 'no') : 'at the close') },
   ]
-  const given = $derived(data.voters.filter((v) => v.stance).length)
   const said = $derived(mine ? `${mine.stance} · receipt ${mine.receipt} · ${date(mine.at)}` : '')
 </script>
-
-<Stats
-  items={[
-    { label: 'Outcome', value: outcome(data).text, kind: 'badge', tone: outcome(data).tone },
-    { label: 'Stances', value: `${given} of ${data.voters.length}` },
-    { label: 'Rule', value: data.rule },
-  ]}
-/>
 
 <Section title="Your stance">
   {#if !data.me}

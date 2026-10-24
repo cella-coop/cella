@@ -208,18 +208,27 @@ test('a decision is open, passed or rejected, as the database reads it', async (
   const { text } = await page('/decisions?view=table')
   assert.ok(text.includes('>passed<'), 'a closed decision that carried reads passed')
   assert.ok(!/closed and|>closed</.test(text), 'no screen says closed for a decision\'s state')
-  assert.match((await page('/decisions')).text, /title="View Passed decisions \d+"/)
   assert.ok((await page('/decisions/d-2026-012')).text.includes('>open<'))
 })
 
 test('the stance form starts at the acting member\'s latest stance, and is not offered off the roll', async () => {
   const as = async (path: string, actor?: string) =>
     (await fetch(`${base}${path}`, { headers: actor ? { cookie: `cella-act=${actor}` } : {} })).text()
-  const hugos = await as('/decisions/d-2026-012', hugo)
+  const hugos = await as('/decisions/d-2026-012?tab=stances', hugo)
   assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
   assert.ok(hugos.includes('Now: consent · receipt 33'), 'saying which receipt it is')
-  assert.ok((await as('/decisions/d-2026-012')).includes('Act as a member to give a stance.'))
+  assert.ok((await as('/decisions/d-2026-012?tab=stances')).includes('Act as a member to give a stance.'))
+})
+
+test('a decision\'s overview says what is decided in full; its stances are their own tab', async () => {
+  const overview = await page('/decisions/d-2026-012')
+  for (const says of ['Overview', 'Stances', 'Proposal', 'Admits', 'Inès Haddad', 'passes by consent', 'Deadline 31 Oct 2026']) {
+    assert.ok(overview.text.includes(says), `the overview says ${says}`)
+  }
+  assert.ok(!overview.text.includes('Latest stance'), 'the roll is not on the overview')
+  const stances = await page('/decisions/d-2026-012?tab=stances')
+  assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('>Proposal<'), 'the stances tab holds the roll alone')
 })
 
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
@@ -236,18 +245,16 @@ test('a card dropped on a closed column is the close write; refused before the d
   assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
 })
 
-test('a collection\'s preset views are tabs with their counts, and a view in the address applies its filter', async () => {
+test('a collection leads with its All tab and its count, and a view in the address applies its filter', async () => {
   const { text } = await page('/invoices')
-  for (const tab of ['View Unpaid invoices', 'View Overdue invoices', 'View All invoices']) {
-    assert.match(text, new RegExp(`title="${tab} \\d+"`), `the invoices show the ${tab} tab with its count`)
-  }
   const all = Number(text.match(/title="View All invoices (\d+)"/)?.[1])
-  const overdue = Number(text.match(/title="View Overdue invoices (\d+)"/)?.[1])
-  assert.ok(overdue > 0 && overdue < all, `${overdue} of ${all} invoices are overdue`)
+  assert.ok(all > 0, 'the invoices show the All tab with its count')
+  assert.equal((text.match(/title="View /g) ?? []).length, 1, 'no preset repeats what the list and its filters show')
   const links = (html: string) => new Set(html.match(/href="\/invoices\/F-[\d-]+"/g))
   assert.equal(links(text).size, all)
-  const filtered = await page('/invoices?v=overdue')
-  assert.equal(links(filtered.text).size, overdue, 'the overdue view lists only the overdue invoices')
+  const overdue = encodeURIComponent(JSON.stringify([{ field: 'state', is: ['overdue'] }]))
+  const filtered = await page(`/invoices?where=${overdue}`)
+  assert.ok(links(filtered.text).size > 0 && links(filtered.text).size < all, 'a condition in the address lists only the rows it keeps')
   const custom = encodeURIComponent(JSON.stringify([{ field: 'state', is: ['paid'] }]))
   const paid = await page(`/invoices?v=c-mine&where=${custom}`)
   assert.ok(links(paid.text).size > 0 && links(paid.text).size < all, 'a saved view\'s conditions in the address filter the rows')

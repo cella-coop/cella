@@ -1,5 +1,6 @@
 import type { App } from '@cella/org-ui'
 import type { Admission } from '../models/admission.ts'
+import Admits from './blocks/Admits.svelte'
 
 // The graft's client side: whom a decision admits, and the decision that
 // admits a member.
@@ -10,6 +11,7 @@ export const app: App = {
       page: {
         properties: (a: Admission[]) => a.map((x) => ({ label: 'Admits', value: `${x.name ?? x.member}, ${x.shares} shares`, href: `/members/${x.member}` })),
         related: (a: Admission[]) => a.map((x) => ({ label: x.name ?? x.member, sub: 'to admit', href: `/members/${x.member}` })),
+        blocks: [Admits],
       },
     },
     members: {

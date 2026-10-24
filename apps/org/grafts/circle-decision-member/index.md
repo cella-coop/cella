@@ -85,10 +85,12 @@ offers the rule's stances, starts at their latest and posts the decision
 feat's `vote` only for a change; closed, it shows the stance that
 counted; off the roll, it says so; and to the list, the
 turnout and each decision's state: open, passed or rejected, as `passes`
-reads the stances the close froze, in SQL. With it come the Open, Passed
-and Rejected views, and the board decisions open as, grouped by state;
+reads the stances the close froze, in SQL. With it comes the board
+decisions open as, grouped by state;
 dragging an open decision into Passed or Rejected is the decision feat's
 `close`, posted as its button posts it, the database deciding which
-column it lands in, and a refused close leaves the card open. Its slice reacts to a settled `decision:decision:close` with
+column it lands in, and a refused close leaves the card open. On a
+decision's page, the outcome sits in its Overview, the roll and the
+stance form in its Stances tab. Its slice reacts to a settled `decision:decision:close` with
 `closed`, so the shell shows the admissions and seats as what followed
 the close.

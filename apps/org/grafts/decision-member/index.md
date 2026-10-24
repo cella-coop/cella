@@ -22,4 +22,5 @@ None of its own: the reaction that admits on a passing close needs the roll, so 
 ## Shell
 
 Adds whom a decision admits, with their shares, to the decision's page,
-and the decision admitting a member to theirs.
+its Overview listing them as what is being decided, and the decision
+admitting a member to theirs.

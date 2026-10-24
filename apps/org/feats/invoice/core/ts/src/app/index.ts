@@ -18,10 +18,6 @@ export const app: App = {
         title: 'Invoices',
         icon: icons.Receipt,
         create: Issue,
-        views: [
-          { id: 'unpaid', name: 'Unpaid', icon: 'open', where: [{ field: 'state', is: ['unpaid', 'partial', 'overdue'] }] },
-          { id: 'overdue', name: 'Overdue', icon: 'warning', where: [{ field: 'state', is: ['overdue'] }] },
-        ],
         dashboard: [
           { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['unpaid', 'partial', 'overdue'] }] },
           { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },

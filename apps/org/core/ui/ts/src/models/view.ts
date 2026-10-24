@@ -48,14 +48,27 @@ export interface Event {
 // item's data, or a graft's data on it, and the item's id.
 export type Block<T = any> = Component<{ data: T; id: string }>
 
+// A block in a tab of the item's page: a bare block sits in the first.
+export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }
+
+// A tab of an item's page, a genuinely different view of the item.
+export interface Tab {
+  id: string
+  label: string
+}
+
 export interface Page<T = any> {
+  // The kind of item, the tooltip on its name.
   eyebrow: string
   title: (data: T) => string
   subtitle?: (data: T) => string
   properties?: (data: T) => Prop[]
   related?: (data: T) => Link[]
   activity?: (data: T) => Event[]
-  blocks?: Block<T>[]
+  // The page's tabs, the first its default, as pills in the header; an
+  // extension may add its own after the owner's.
+  tabs?: Tab[]
+  blocks?: Placed<T>[]
   // Writes on the item, in the header.
   actions?: Block<T>
 }

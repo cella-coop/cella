@@ -54,9 +54,14 @@ the stance it posts is this feat's `vote`, for the acting member.
 A decision's state is open, passed or rejected: open until its close,
 then passed or rejected by the outcome of the stances the close froze.
 The outcome is the graft's, so the state is too: `circle-decision-member`
-reads it in SQL and gives the collection its State column, its Open,
-Passed and Rejected views and its board. This feat reads only whether
-and when a decision closed.
+reads it in SQL and gives the collection its State column and its board.
+This feat reads only whether and when a decision closed.
+
+A decision's page has two tabs: Overview, the proposal in full under its
+deadline, and what the grafts say is decided (whom it admits, the
+version it adopts, the outcome); and Stances, the roll and the acting
+member's stance. The stances given in time order stay in the drawer's
+Activity card, their one home.
 
 ## Domain
 

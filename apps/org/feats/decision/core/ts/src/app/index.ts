@@ -35,6 +35,12 @@ export const app: App = {
         ],
         related: (d: Detail) => [{ label: d.circle, sub: 'circle', href: `/circles/${d.circle}` }],
         activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member.split('@')[0], text: `${g.stance}, receipt ${g.receipt}` })),
+        // The decision itself, and who stands where on it: the roll is the
+        // one view the overview does not already give.
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'stances', label: 'Stances' },
+        ],
         blocks: [Proposal],
         actions: Close,
       },

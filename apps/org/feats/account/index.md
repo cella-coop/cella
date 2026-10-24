@@ -134,6 +134,13 @@ graft's.
   update takes the period's row, which the graft's trigger reads `FOR
   SHARE`, so a concurrent post waits for the close or sees it.
 
+## Shell
+
+The `accounts` collection, the chart by code, and `periods`, the latest
+month first; a period's page closes it (`close`, as the acting member).
+Balances, the trial balance and each account's ledger are
+`account-transaction`'s.
+
 ## Lanterne
 
 - The chart is a part of the PCG: `512` the bank at Crédit Coopératif,

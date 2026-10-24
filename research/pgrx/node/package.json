@@ -1,0 +1,10 @@
+{
+  "name": "cella-pgrx-spike",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "libpg-query": "^18.1.5",
+    "pg": "^8.23.1",
+    "smol-toml": "^1.9.1"
+  }
+}

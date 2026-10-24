@@ -1,0 +1,7 @@
+comment = 'cella core: amounts, consent, the notary log'
+default_version = '@CARGO_VERSION@'
+module_pathname = 'cella'
+relocatable = false
+superuser = true
+trusted = false
+schema = cella

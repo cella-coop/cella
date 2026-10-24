@@ -4,7 +4,9 @@
   import ChartBar from 'phosphor-svelte/lib/ChartBar'
   import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
   import Kanban from 'phosphor-svelte/lib/Kanban'
+  import CalendarDots from 'phosphor-svelte/lib/CalendarDots'
   import type { Column } from '../models/view.ts'
+  import { spans } from '../models/calendar.ts'
   import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
@@ -21,7 +23,9 @@
 
   // The drawer's View card, the same for every collection: the text
   // filter, the conditions on the rows, the layout and, in a table, its
-  // columns, in a dashboard, its widgets; then saving what is shown as
+  // columns, in a gallery or on a board, its cards' fields, in a
+  // calendar, its date, its span and its cards' fields, in a dashboard,
+  // its widgets; then saving what is shown as
   // the viewer's own view, or, on one of theirs, its name, its changes
   // and its removal. A change hands the whole spec on to the collection,
   // which puts it in the address.
@@ -35,6 +39,7 @@
     dashboard,
     shown,
     grouped,
+    placing,
     custom,
     dirty,
     onchange,
@@ -52,6 +57,8 @@
     // enumeration.
     shown: Column[]
     grouped?: string
+    // The date a calendar places the rows by.
+    placing?: string
     custom?: Custom
     dirty: boolean
     onchange: (spec: Spec) => void
@@ -63,15 +70,17 @@
   const views = useViews(() => name)
 
   const groups = $derived(fields.filter((f) => f.type === 'enum'))
-  // A board only where a field enumerates what it groups by.
+  // A board only where a field enumerates what it groups by, a calendar
+  // only where one is a date.
   const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
     [
       { id: 'list' as const, label: 'List', icon: Rows },
       { id: 'table' as const, label: 'Table', icon: TableIcon },
       { id: 'gallery' as const, label: 'Gallery', icon: SquaresFour },
       { id: 'board' as const, label: 'Board', icon: Kanban },
+      { id: 'calendar' as const, label: 'Calendar', icon: CalendarDots },
       { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
-    ].filter((l) => l.id !== 'board' || groups.length > 0),
+    ].filter((l) => (l.id !== 'board' || groups.length > 0) && (l.id !== 'calendar' || dates.length > 0)),
   )
   const enums = $derived(fields.filter((f) => f.type === 'enum' && (values[f.key]?.length ?? 0) > 1))
   const showing = $derived(new Set(shown.map((c) => c.key)))
@@ -122,6 +131,23 @@
     onsave(views.save({ ...spec, q: state.filter }))
   }
 </script>
+
+<!-- The fields a gallery's, a board's or a calendar's cards show. -->
+{#snippet cards()}
+  <fieldset class="columns">
+    <legend class="label">Card fields</legend>
+    <ul>
+      {#each columns.filter((c) => c !== titled) as c (c.key)}
+        <li>
+          <label>
+            <input type="checkbox" checked={showing.has(c.key)} onchange={(e) => card(c.key, e.currentTarget.checked)} />
+            {c.label}
+          </label>
+        </li>
+      {/each}
+    </ul>
+  </fieldset>
+{/snippet}
 
 <Card title="View">
   <div class="filter">
@@ -210,19 +236,25 @@
         </select>
       </label>
     {/if}
-    <fieldset class="columns">
-      <legend class="label">Card fields</legend>
-      <ul>
-        {#each columns.filter((c) => c !== titled) as c (c.key)}
-          <li>
-            <label>
-              <input type="checkbox" checked={showing.has(c.key)} onchange={(e) => card(c.key, e.currentTarget.checked)} />
-              {c.label}
-            </label>
-          </li>
+    {@render cards()}
+  {:else if spec.layout === 'calendar'}
+    <label class="option">
+      <span class="label">Date</span>
+      <select value={placing} onchange={(e) => onchange({ ...spec, q: state.filter, on: e.currentTarget.value })}>
+        {#each dates as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
+      </select>
+    </label>
+    <div class="option">
+      <span class="label">Span</span>
+      <div class="views" role="group" aria-label="Span">
+        {#each spans as s (s)}
+          <button class="span" class:on={spec.span === s} aria-pressed={spec.span === s} onclick={() => onchange({ ...spec, q: state.filter, span: s })}>
+            {s === 'month' ? 'Month' : 'Week'}
+          </button>
         {/each}
-      </ul>
-    </fieldset>
+      </div>
+    </div>
+    {@render cards()}
   {:else if spec.layout === 'dashboard' && dashboard}
     <Widgets
       widgets={dashboard.widgets}
@@ -355,6 +387,10 @@
   .views button.on {
     background: var(--selected);
     color: var(--text);
+  }
+  .views button.span {
+    width: auto;
+    padding: 0 var(--space-2);
   }
   .columns ul {
     list-style: none;

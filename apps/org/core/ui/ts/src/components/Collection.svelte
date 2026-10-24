@@ -22,6 +22,7 @@
     type Spec,
     type Widget,
   } from '../models/query.ts'
+  import { anchor, period } from '../models/calendar.ts'
   import { control, nearest, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
@@ -31,6 +32,7 @@
   import { useViews } from '../hooks/useViews.ts'
   import Board from './Board.svelte'
   import Button from './Button.svelte'
+  import Calendar from './Calendar.svelte'
   import Card from './Card.svelte'
   import Gallery from './Gallery.svelte'
   import Pill from './Pill.svelte'
@@ -43,8 +45,8 @@
   import Viewing from './Viewing.svelte'
 
   // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a table, a gallery, a board or a
-  // dashboard, and the drawer's
+  // every collection, as a list, a table, a gallery, a board, a calendar
+  // or a dashboard, and the drawer's
   // View card holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
   // anything changed from it, live in the address, so a view can be
@@ -135,6 +137,20 @@
   const shown = $derived(
     spec.cards.length ? arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key)) : [...subs, ...metas].filter((c) => c !== grouped),
   )
+
+  // The calendar's date, the first when the view names none, and the
+  // month or week around the day the address is at, else today's.
+  const placing = $derived(typed.find((f) => f.key === spec.on) ?? typed.find((f) => f.type === 'date'))
+  const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
+  const at = (day: string | null) => {
+    const q = new URLSearchParams(page.url.search)
+    if (day) {
+      q.set('at', day)
+    } else {
+      q.delete('at')
+    }
+    return `${page.url.pathname}?${q}`
+  }
 
   // A change to what the active view shows, kept in the address.
   function change(s: Spec) {
@@ -234,6 +250,7 @@
     {dashboard}
     {shown}
     grouped={grouped?.key}
+    placing={placing?.key}
     {custom}
     {dirty}
     onchange={change}
@@ -334,6 +351,8 @@
         {shifts}
         onshift={(id, s, _, to) => move(id, s, to)}
       />
+    {:else if spec.layout === 'calendar' && placing}
+      <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} />
     {:else}
       <ul class="list">
         {#each state.shown as row, i (row.id)}

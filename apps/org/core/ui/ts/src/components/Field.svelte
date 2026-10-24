@@ -14,7 +14,7 @@
   }: {
     label: string
     name: string
-    type?: 'text' | 'number' | 'date' | 'email'
+    type?: 'text' | 'number' | 'date' | 'time' | 'url' | 'email'
     value?: string | number
     options?: { value: string; label: string }[]
     rows?: number

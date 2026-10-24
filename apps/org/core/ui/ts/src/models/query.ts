@@ -1,4 +1,5 @@
 import type { Column, Kind } from './view.ts'
+import { spans, type Span } from './calendar.ts'
 
 // What a collection's rows can be asked: its fields, typed from the columns
 // it declares, and the plain objects a view or a dashboard is made of.
@@ -274,14 +275,17 @@ export function aggregate(ws: Widget[], rows: any[], fs: Field[], today: string)
   })
 }
 
-export const layouts = ['list', 'table', 'gallery', 'board', 'dashboard'] as const
+export const layouts = ['list', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
 
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the
 // keys it moved; the rest follow as declared), the enumeration a board
-// groups by, the fields a gallery's or a board's cards show, and the
-// dashboard's widgets, null for the declared or derived ones.
+// groups by, the fields a gallery's or a board's cards show, the date a
+// calendar places the rows by and whether it shows a month or a week,
+// and the dashboard's widgets, null for the declared or derived ones.
+// Which month or week a calendar shows is not the view's: it is where
+// the viewer is, `at` in the address beside it.
 export interface Spec {
   layout: Layout
   where: Where[]
@@ -290,18 +294,23 @@ export interface Spec {
   order: string[]
   by: string | null
   cards: string[]
+  on: string | null
+  span: Span
   widgets: Widget[] | null
 }
 
 // How a collection looks before a view changes it, as it declares: its
-// layout, the enumeration its board groups by and its cards' fields, and
-// each enumeration's values in the order its board's columns take, an
-// empty column included.
+// layout, the enumeration its board groups by and its cards' fields, each
+// enumeration's values in the order its board's columns take, an empty
+// column included, and the date its calendar places the rows by and its
+// span.
 export interface Look {
   layout?: Layout
   by?: string
   cards?: string[]
   lanes?: Record<string, string[]>
+  on?: string
+  span?: Span
 }
 
 // A board's columns: the declared order of the enumeration's values, then
@@ -338,6 +347,8 @@ export interface Preset {
   order?: string[]
   by?: string
   cards?: string[]
+  on?: string
+  span?: Span
   widgets?: Widget[]
 }
 
@@ -380,7 +391,8 @@ const json = (raw: string | null): unknown => {
 // The view the address asks for: a preset or a custom view by `v`, All
 // when it names none, over the collection's look, its settings
 // overridden by the address's own (`view`, `where`, `q`, `hide`,
-// `order`, `by`, `cards`, `w`), each checked against the fields. What
+// `order`, `by`, `cards`, `on`, `span`, `w`), each checked against the
+// fields. What
 // fails a check falls back to the view's, and is said.
 export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look: Look = {}): { id: string; spec: Spec; errors: string[] } {
   const asked = params.get('v')
@@ -412,9 +424,14 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look
   const asks = params.get('by')
   // None means the first enumeration, which the board chooses itself.
   const by = asks && enums.includes(asks) ? asks : base.by && enums.includes(base.by) ? base.by : null
+  // None means the first date, which the calendar chooses itself.
+  const dates = fs.filter((f) => f.type === 'date').map((f) => f.key)
+  const placing = params.get('on')
+  const on = placing && dates.includes(placing) ? placing : base.on && dates.includes(base.on) ? base.on : null
+  const span = spans.find((s) => s === params.get('span')) ?? base.span
   return {
     id,
-    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), by, cards: list('cards'), widgets: ws },
+    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), by, cards: list('cards'), on, span, widgets: ws },
     errors,
   }
 }
@@ -445,6 +462,12 @@ export function address(id: string, s: Spec, base: Spec): string {
   if (s.by && s.by !== base.by) {
     q.set('by', s.by)
   }
+  if (s.on && s.on !== base.on) {
+    q.set('on', s.on)
+  }
+  if (s.span !== base.span) {
+    q.set('span', s.span)
+  }
   if (!same(s.widgets, base.widgets)) {
     q.set('w', JSON.stringify(s.widgets))
   }
@@ -468,6 +491,8 @@ export const spec = (p?: Preset, look: Look = {}): Spec => ({
   order: p?.order ?? [],
   by: p?.by ?? look.by ?? null,
   cards: p?.cards ?? look.cards ?? [],
+  on: p?.on ?? look.on ?? null,
+  span: p?.span ?? look.span ?? 'month',
   widgets: p?.widgets ?? null,
 })
 

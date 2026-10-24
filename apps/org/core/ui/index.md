@@ -66,16 +66,27 @@ The theme is light, dark or the system's, a cookie the server writes into
   and rows for every collection, and a drawer holding one card, View
   (`Viewing`): the text filter, the conditions on the rows (an
   enumeration's values as chips, a date's month or year), the layout
-  (list · table · gallery · board · dashboard, icon-only so it fits) and,
-  in a table, its columns, in a gallery or on a board, its cards'
-  fields and the board's grouping, in a dashboard, its widgets; and
-  saving what is shown as a view. `Gallery` lays the items out as cards
-  (`Tile`); `Board` puts them in a column per value of an enumeration,
-  each with its count, the board offered only where a field enumerates.
-  A view, its extensions overriding it part by part, declares its
-  `look`: its default layout, its board's grouping and columns' order
-  (`lanes`), its cards' fields; circles and projects open as a gallery,
-  decisions and tasks as a board, timesheets as a table. A board move is
+  (list · table · gallery · board · calendar · dashboard, icon-only so
+  it fits) and, in a table, its columns, in a gallery or on a board, its
+  cards' fields and the board's grouping, in a calendar, the date it
+  places the items by, month or week, and its cards' fields, in a
+  dashboard, its widgets; and saving what is shown as a view. `Gallery`
+  lays the items out as cards (`Tile`); `Board` puts them in a column
+  per value of an enumeration, each with its count, the board offered
+  only where a field enumerates; `Calendar` puts them on the days of a
+  month, in whole weeks from Monday, or of a week, by a date field, in
+  the order of their time where the date holds one
+  (`YYYY-MM-DDTHH:MM`), each tinted by the first of its cards' fields
+  that has a tone, a week showing the fields under each title; the
+  calendar is offered only where a field is a date. Which month or week
+  it shows is where the viewer is, not part of the view: `at` in the
+  address, today when absent, which its arrows and Today link to
+  (`models/calendar.ts`). A view, its extensions overriding it part by
+  part, declares its `look`: its default layout, its board's grouping
+  and columns' order (`lanes`), its cards' fields, its calendar's date
+  (`on`) and span; circles and projects open as a gallery, decisions and
+  tasks as a board, timesheets as a table, meetings as a calendar of
+  months. A board move is
   a write only where a slice declares it (`shifts`: the field, the
   columns it leaves and enters, the write): the `transfer` attachment
   lets a card drop only there, and the drop posts that write to the
@@ -91,7 +102,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   give; none does today, so every collection has All and the viewer's
   views. Each tab's tooltip names it with
   its count, and its last button saves a new view. The active view (`v`)
-  and what is changed from it (`view`, `where`, `q`, `hide`, `w`) live
+  and what is changed from it (`view`, `where`, `q`, `hide`, `order`,
+  `by`, `cards`, `on`, `span`, `w`) live
   in the URL, so a view is a link and the server renders it, checking
   every part against the fields. A viewer's own views are a preference,
   never a record: `ViewsState` keeps them in the browser's storage as a
@@ -119,8 +131,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Properties`, `Related`, `Activity`, `Table`, `Cell`, `Stats`, `Badge`,
   `Button`, `Form` (a write, posting to a named form action; `ready`
   false keeps its button disabled while there is nothing to post),
-  `Field` (a select with a `placeholder` offers it as a disabled first
-  choice, never a blank), `Prose`, `Note` (a quiet line), `Icon`
+  `Field` (text, a number, a date, a time, an address or an email; a
+  select with a `placeholder` offers it as a disabled first choice,
+  never a blank), `Ordered` (a list a slice's writes reorder, as an
+  agenda: each row numbered, with its grip and its columns, and what
+  the slice puts at its end; `fixed` drops the grips once the order may
+  not change), `Prose`, `Note` (a quiet line), `Icon`
   (Phosphor, duotone), `Outcome`, `Command`.
 - `Floating`: what floats at a point rather than from a trigger, a menu at
   the caret or a toolbar over a selection: in the top layer, opened
@@ -172,9 +188,9 @@ and down arrow buttons that move things. The primitives:
   an item will land, from the tokens.
 
 Dashboard widgets, a table's columns in the View card, the viewer's own
-view tabs and a document's blocks reorder this way; `Popover`,
-`DragHandle`, `sortable` and `useDrag` are exported for slices to
-compose.
+view tabs, a document's blocks and a meeting's agenda reorder this way;
+`Popover`, `DragHandle`, `Ordered`, `sortable` and `useDrag` are
+exported for slices to compose.
 
 ## Dashboards
 

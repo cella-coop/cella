@@ -43,7 +43,7 @@ spend up to 1 000 € for their circle and quote up to 15 000 €.
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
   0051, and 0050 was voided and reissued at the solidarity rate.
 - **Books.** Carried over from the previous tool on 1 July; July to September
-  are closed, October is open. The bank holds 42 052 € after October's rent
+  are closed, October is open. The bank holds 39 296 € after October's rent
   and tools; October's payroll is due on the 28th. The assembly allocated
   the 2025 surplus of 61 400 € in June (d-2026-006): 27 630 € to the members
   for their work, 24 560 € to the indivisible reserves and 9 210 € as

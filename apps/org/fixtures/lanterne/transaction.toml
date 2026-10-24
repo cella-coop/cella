@@ -455,15 +455,15 @@ label = "VAT return, 2026-08"
 
 [[entry.line]]
 account = "44571"
-debit = -554000
+debit = 336000
 
 [[entry.line]]
 account = "44566"
-credit = 0
+credit = 60400
 
 [[entry.line]]
 account = "512"
-credit = -554000
+credit = 275600
 
 [[entry]]
 id = "je-0029"
@@ -630,7 +630,7 @@ label = "VAT return, 2026-09"
 
 [[entry.line]]
 account = "44571"
-debit = 1236000
+debit = 682000
 
 [[entry.line]]
 account = "44566"
@@ -638,7 +638,7 @@ credit = 60400
 
 [[entry.line]]
 account = "512"
-credit = 1175600
+credit = 621600
 
 [[entry]]
 id = "je-0040"

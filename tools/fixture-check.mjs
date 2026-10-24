@@ -140,8 +140,15 @@ const check = (name) => {
     }
   }
 
-  // The books balance, entry by entry
+  // The books balance, entry by entry, and a line's side carries its
+  // direction: its amount is positive, on exactly one side
   for (const e of entries.values()) {
+    for (const l of e.line) {
+      const sides = [l.debit, l.credit].filter((x) => x !== undefined)
+      if (sides.length !== 1 || !(sides[0] > 0)) {
+        fail(`entry ${e.id}: a line on account ${l.account} needs one positive amount, debit or credit`)
+      }
+    }
     const debit = e.line.reduce((s, l) => s + (l.debit ?? 0), 0)
     const credit = e.line.reduce((s, l) => s + (l.credit ?? 0), 0)
     if (debit !== credit) {

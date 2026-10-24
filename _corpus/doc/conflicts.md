@@ -26,7 +26,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `circle-member:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-member` graft, which owns the relationship; both decided |
 | `circle.mandate.grant`, `.revoke` | ordered | right; **applied**: decided, by the circle above the role's |
 | `circle.message` | confluent | right |
-| `document.edit`, `.comment` | confluent | right |
+| `document.create`, `.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
 | `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-freezes-on-exit)) |
@@ -58,6 +58,10 @@ decision. Lanterne's state is that of 24 October 2026.
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)) |
+| `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
+| `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
+| `meeting.hold`, `.cancel` | ordered | right: one of them stands, and the hold fixes the agenda and who came |
+| `meeting-member:attendance.mark`, `.record` | confluent | right: a register per member; fixed by the hold |
 
 ## Nothing posts into a closed period
 
@@ -569,6 +573,44 @@ changes after it.
 October is approved; prepared then, approved by Camille, it accrues on
 31 October and Julien pays it from the bank.
 
+## A meeting is held once
+
+Owners: the `meeting` feat for the meeting and its agenda;
+`meeting-member` for who came; `circle-meeting-member` for who is
+expected and who may record them.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `hold` vs `cancel` | the cancel refused: held | the hold refused: cancelled | a meeting both held and cancelled |
+| `hold` vs `item.add`, `.move`, `.remove` | the edit refused: the agenda is fixed | the item is in the agenda held | an agenda changed after the meeting it records |
+| `hold` vs `attendance.mark`, `.record` | the mark refused: who came is fixed | the mark counts | who came, and the quorum, change after the meeting |
+| `item.move` vs `item.move`, two items | both stand | both stand | — |
+| `item.move` vs `item.move`, one item | the later receipt's place | the later receipt's place | — |
+| `item.move` vs `item.remove` | the item is removed | the move refused: no item | — |
+| `attendance.mark` vs `attendance.record`, one member | the later receipt's mark | the later receipt's mark | — |
+| `minute` vs `minute` | one document, the first's | one document, the first's | two documents of one meeting's minutes |
+
+Hold is ordered, as a month's approval is: it fixes, by receipt order,
+which items made the agenda and who was marked, so every edit and mark
+stays confluent while the hold alone is ordered. At rung 1 the item and
+attendance triggers read the meeting `FOR SHARE` and the hold updates
+it. A move sets only its own item's position, the midpoint of its new
+neighbours', so two moves of different items never touch one row; an
+item's place is a register, its last move winning. Quorum is read from
+the marks and the seats on the meeting's day, after the hold, and
+refuses nothing.
+
+**Rung 2.** Positions are numbers the server picks; two devices moving
+offline can pick one, so an item needs a fractional index of its own,
+as a milestone needs an id. A mark made offline before the hold and
+received after it needs a late-write rule: refused, and the minutes say
+who came. Minutes begun on two devices offline make two documents; the
+second should take the first's on sync.
+
+**Lanterne.** Malik holds coordination on 2 November while Hugo, on his
+phone, marks himself present: had the mark arrived first it would
+count; arriving after, it is refused and he stays excused.
+
 ## Uncontested writes
 
 | Write | Why nothing contends |
@@ -581,6 +623,8 @@ October is approved; prepared then, approved by Camille, it accrues on
 | `project.create`, `task.create` | facts; a project's slug taken twice is refused, a task's number is the server's |
 | `project:milestone.complete` | idempotent: the first day stands |
 | `timesheet:period.submit` | idempotent: the first day stands |
+| `document.create`, `meeting.schedule` | facts; a document's slug taken twice is refused, a second meeting of a circle on one day is numbered |
+| `meeting.minute` | idempotent: the first day stands, and the minutes are the document already kept |
 
 ## Missing writes
 

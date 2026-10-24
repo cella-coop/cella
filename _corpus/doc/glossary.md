@@ -43,7 +43,7 @@ updated = 2026-10-24
 | **composed rule** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
 | **power** | the id of something a write needs, such as `issue-invoice`; each op's is registered in `cella.power` |
 | **mandate** | a grant of one power to one role, with an optional limit and term |
-| **role** | a named duty in a circle that mandates attach to: gérante, finance, lead |
+| **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **position** | a member holding a seat, and perhaps a role, in a circle |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
 | **rung** | a step of the ratchet, from the hosted pilot to zero trust |
@@ -80,7 +80,9 @@ updated = 2026-10-24
 | **stand aside** | disagreement recorded without blocking |
 | **consensus** | everyone actively agrees; stricter than consent |
 | **majority** | passes with more for than against among those voting; a supermajority raises the threshold |
-| **quorum** | the participation a decision needs to count |
+| **quorum** | the participation a decision needs to count; a meeting's, the share of its circle's seats present |
+| **agenda** | a meeting's items in order, each tabling perhaps a decision; fixed once the meeting is held |
+| **minutes** | a meeting's record, a document, adopted by decision where its circle says so |
 | **roll** | who may vote on a decision |
 | **delegate** | a member chosen to vote for others at a higher level |
 | **adoption** | a decision making one version of a document binding |

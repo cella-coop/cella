@@ -21,13 +21,14 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 ## The shell
 
 `cella serve` shows Lanterne from the dev database. Each feat's collection
-is a page in the sidebar: Members, Circles, Decisions and Documents
-(governance); Clients, Projects, Tasks and Timesheets (work); Invoices,
+is a page in the sidebar: Members, Circles, Decisions, Documents and
+Meetings (governance); Clients, Projects, Tasks and Timesheets (work); Invoices,
 Accounts, Periods, Allocations, Transactions, Expenses and Payslips
 (finance); Devices and the Log
 (platform). Every collection is the same
-component, its drawer's View card holding the filter, the list or table
-layout and the table's columns, and every item the same detail view, its
+component, its drawer's View card holding the filter, the layout (list,
+table, gallery, board, calendar or dashboard) and its options, and every
+item the same detail view, its
 drawer's cards filled by the feat and the grafts that join it.
 Ctrl-K jumps to any collection or item.
 
@@ -47,7 +48,14 @@ rule's reason:
 - an edit of a document's draft in the block editor, live: each member's
   edits go as Loro updates through the `edit` write and reach everyone
   with the document open as they settle; saving a version, which the
-  database names by its canonical hash; a comment;
+  database names by its canonical hash; a comment; a new document;
+- a meeting of a circle, scheduled by a power that reaches it; its
+  agenda drawn up by the circle's members, its items dragged into order,
+  a decision tabled; members marking themselves present, excused or
+  absent and the secretary recording those seated; held or cancelled
+  (ordered), the hold fixing the agenda and who came; its minutes begun
+  as a document opening on the meeting's card and agenda, then written
+  in the block editor;
 - a new invoice, numbered by the server and posted to the books; a
   payment, posted; a void, its credit note posted; marking it sent;
   linking it to a client;
@@ -88,7 +96,7 @@ never shown, though the shell handles it. How slices mount is in
 | `timesheet` | work | 1 | time entries and members' months |
 | `expense` | finance | 1 | capture, approve within a budget, reimburse |
 | `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
-| `meeting` | governance | later | agendas, attendance, minutes |
+| `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
 Seedling's co-op economics that rung 1 still leaves out: a work share
@@ -112,19 +120,24 @@ and admit a member by vote (ordered).
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
+| `circle-meeting` | a meeting's circle, and how a circle meets: its quorum, and whether its minutes are adopted |
+| `circle-meeting-member` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it |
 | `circle-member` | positions: who holds which role in which circle, and how far a power reaches |
 | `circle-member-project` | a lead runs their own circle's projects |
 | `circle-member-timesheet` | a lead approves their own circle's time |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `decision-document` | adoption of a document version by a decision |
+| `decision-meeting` | the decisions a meeting's agenda tables, and where each stands |
 | `decision-member` | admission, suspension and exit by a decision |
+| `document-meeting` | a meeting's minutes, written as a document |
 | `expense-member` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
 | `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
 | `key-member` | a member's devices, the first carried by their invitation and enrolled by their admission |
+| `meeting-member` | who came to a meeting: present, excused or absent |
 | `member-project` | shares of a project's budget, never beyond it |
 | `member-task` | who does a task |
 | `member-payslip` | whose a salary and a payslip are |

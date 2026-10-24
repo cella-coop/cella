@@ -84,11 +84,12 @@ migrate: install
 seed: install
     node tools/seed.mjs apps/org/fixtures/lanterne
 
-# The slice end to end on a fresh database; needs `just db`
+# The slices end to end, each on a fresh database; needs `just db`
 test: install
     cargo test -p cella-rules
-    CELLA_DB=cella_test just reset migrate seed
-    CELLA_DB=cella_test just _node-test
+    for t in $(find apps -path '*/node_modules' -prune -o -path '*/_tests/*.test.ts' -print | sort); do just _slice "$t" || exit 1; done
 
-_node-test:
-    node --test 'apps/**/_tests/*.test.ts'
+# One slice's test file on a freshly reset, migrated and seeded database
+_slice file:
+    CELLA_DB=cella_test just reset migrate seed
+    PGDATABASE=cella_test node --test {{file}}

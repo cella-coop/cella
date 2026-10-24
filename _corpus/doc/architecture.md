@@ -163,9 +163,9 @@ applied is refused; a change is a new file.
 
 SQL logic is tested in the database. pgTAP tests and Lanterne's
 conformance suite, its cases and their expected verdicts, are gates
-alongside `just check`; neither is wired in yet. `just test` resets a
-database on the dev cluster (`just db`), migrates, seeds Lanterne and runs
-the slices as node tests through the handlers.
+alongside `just check`; neither is wired in yet. `just test` runs each
+slice's node test file through the handlers on its own database on the dev
+cluster (`just db`): reset, migrated and seeded with Lanterne.
 
 ## Inside a package
 

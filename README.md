@@ -34,6 +34,6 @@ This repository works only on the org app.
 nix develop
 just check      # feat check, types, cargo check, clippy; no database
 just db         # build the cella extension, start Postgres 18 in .data/
-just test       # rules tests, then the slices on a fresh database
+just test       # rules tests, then each slice on a fresh database
 just db-stop
 ```

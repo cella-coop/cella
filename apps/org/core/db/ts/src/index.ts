@@ -33,6 +33,9 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
   await db.query('BEGIN')
   try {
     const value = await w.state(db)
+    // Deferred checks, such as an entry balancing, refuse before the
+    // verdict rather than at commit, after it.
+    await db.query('SET CONSTRAINTS ALL IMMEDIATE')
     const { rows } = await db.query<{ verdict: string }>(
       'SELECT verdict FROM cella.submit($1, $2, $3)',
       [w.op, w.payload(value), deps.actor],

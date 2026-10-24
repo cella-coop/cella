@@ -121,7 +121,12 @@ Each feat and each graft owns a Postgres schema and the SQL in it: tables,
 row-level policies, triggers and composed rules, which are plain
 `LANGUAGE sql` functions over the `cella.*` primitives. The SQL sits in a
 `sql/` directory beside the core package: `feats/<feat>/core/sql/`,
-`grafts/<graft>/sql/`.
+`grafts/<graft>/sql/`. A schema takes its owner's name; a graft's hyphens
+become underscores, so `client-invoice` owns the schema `client_invoice`.
+
+A co-op's customisations are custom feats: a feat of its own, with its own
+schema, SQL and grafts, built on the same primitives and enabled by
+decision. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|

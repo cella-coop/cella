@@ -91,7 +91,8 @@ Rules come in four layers:
 | Members' view | members | forms that read back as sentences |
 
 The law for each legal form is ours to write, as primitives and composed
-rules. A co-op's own composed rules are documents adopted by decision.
+rules. A co-op's own rules live in custom feats, each with its own schema,
+enabled by decision.
 
 Composed rules are a declared subset of SQL: `SELECT`, joins over the
 scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`

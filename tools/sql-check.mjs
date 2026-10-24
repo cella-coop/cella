@@ -95,7 +95,7 @@ const walk = (node, visit, key = null) => {
 
 // One parsed tree's references and the statements that need more than a
 // reference check.
-function inspect(tree, o, s, known, fail, powers) {
+function inspect(tree, o, s, known, fail, found) {
   const ref = (schema, what) => {
     if (schema && !s.allowed.has(schema)) {
       fail(`${what}: ${schema} is outside ${[...s.allowed].filter((x) => !catalog.has(x)).join(', ')}`)
@@ -157,13 +157,28 @@ function inspect(tree, o, s, known, fail, powers) {
   })
   for (const { stmt } of tree.stmts ?? []) {
     const [type, body] = Object.entries(stmt)[0]
-    statement(type, body, o, s, fail, owned, named, powers)
+    statement(type, body, o, s, fail, owned, named, found)
   }
 }
 
 const registries = new Set(['rule', 'power', 'keyring'])
 
-function statement(type, b, o, s, fail, owned, named, powers) {
+// The decision feat's register of the ops that cite a decision, whose
+// rows mark an op as decided: the graft that counts a decision's roll
+// attaches its rule to every op listed.
+const cites = { schema: 'decision', table: 'cites' }
+
+function citing(b, o, found) {
+  const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
+  for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
+    const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], v.A_Const?.sval?.sval]))
+    if (vals.op) {
+      found.cites.push({ op: vals.op, owner: o.name })
+    }
+  }
+}
+
+function statement(type, b, o, s, fail, owned, named, found) {
   switch (type) {
     case 'CreateSchemaStmt':
       owned(b.schemaname, `creates the schema ${b.schemaname}`)
@@ -235,6 +250,10 @@ function statement(type, b, o, s, fail, owned, named, powers) {
       }
       break
     case 'InsertStmt':
+      if (b.relation.schemaname === cites.schema && b.relation.relname === cites.table) {
+        citing(b, o, found)
+      }
+    // falls through
     case 'UpdateStmt':
     case 'DeleteStmt':
       if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
@@ -243,7 +262,7 @@ function statement(type, b, o, s, fail, owned, named, powers) {
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
           fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
         } else {
-          registers(b, o, s, fail, powers)
+          registers(b, o, s, fail, found)
         }
       }
       break
@@ -253,7 +272,7 @@ function statement(type, b, o, s, fail, owned, named, powers) {
 // A registration under its owner's name: a rule on an op of a feat it may
 // see; a power only on an op of its own. Literal power rows are collected
 // for feat-check to compare with ops.ts.
-function registers(b, o, s, fail, powers) {
+function registers(b, o, s, fail, found) {
   const what = b.relation.relname
   const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
   const literal = (v) => (v.A_Const?.isnull ? null : v.A_Const?.sval?.sval)
@@ -269,8 +288,11 @@ function registers(b, o, s, fail, powers) {
     if (vals.owner !== undefined && vals.owner !== o.name) {
       fail(`registers a ${what} as ${vals.owner}, not as itself, ${o.name}`)
     }
+    if (what === 'rule' && vals.op) {
+      found.rules.push({ op: vals.op, owner: o.name })
+    }
     if (what === 'power' && vals.op) {
-      powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
+      found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
     }
   }
   if (what === 'power' && !b.selectStmt?.SelectStmt?.valuesLists) {
@@ -297,8 +319,10 @@ function plpgsql(lib, fn) {
   return trees
 }
 
-// Pushes each literal power registration it finds onto `powers`.
-export async function checkSql(repo, apps, known, powers = []) {
+// Collects what the SQL registers as literal rows, for feat-check to
+// compare with each op's label: the powers in cella.power, the rules in
+// cella.rule, and the ops that cite a decision in decision.cites.
+export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []
@@ -315,7 +339,7 @@ export async function checkSql(repo, apps, known, powers = []) {
         fail(`does not parse: ${e.message}`)
         continue
       }
-      inspect(tree, o, s, known, fail, powers)
+      inspect(tree, o, s, known, fail, found)
       // Locations are byte offsets.
       const bytes = Buffer.from(sql)
       const bodies = []
@@ -336,7 +360,7 @@ export async function checkSql(repo, apps, known, powers = []) {
         }
       }
       for (const body of bodies) {
-        inspect(body, o, s, known, fail, powers)
+        inspect(body, o, s, known, fail, found)
       }
     }
   }

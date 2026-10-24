@@ -101,8 +101,12 @@ sequenceDiagram
   graft attaches a rule to every such op that the actor holds, on the
   verdict date, a seat whose role has a mandate granting the power, within
   its limit for the write's amount. A write with no power is the actor's
-  own (a stance, a profile) or decided (an admission, an adoption), and
-  its feat's or graft's rules say so.
+  own (a profile, a device), a member's of a roll or a circle (a stance,
+  a proposal, a close) or decided (an admission, an adoption, a seat):
+  its label declares that check and a rule enforces it, and `cella check
+  feats` refuses an op that names neither, so nothing is allowed by
+  omission. Money leaves a cash account only through writes with their
+  own power and limit (`transaction.pay`, `transaction.payroll`).
 - **Confluent writes are logged in signed batches** once devices queue
   them offline (rung 2); until then each goes through the server's rules
   on its own.

@@ -98,8 +98,9 @@ names is a feat of its node, that a package's relative imports stay inside
 it, and that a feat's or graft's ops are named for it. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
 through `tools/powers.mjs` that the power each op's label names in
-`ops.ts` is the one its SQL registers in `cella.power`. `cella test tools`
-holds their negative tests.
+`ops.ts` is the one its SQL registers in `cella.power`, and that an op
+with no power declares a check its SQL backs ([writes](#writes)).
+`cella test tools` holds their negative tests.
 
 ## Grafts
 
@@ -266,6 +267,21 @@ truth is the row the feat's SQL registers in `cella.power`, which the
 TypeScript, and `cella check feats` refuses any difference. Every write
 is signed by a device of its actor and carries its request
 ([signatures](signatures.md)).
+
+No write is allowed by omission. An op with no power declares the check
+that allows it instead: `self`, the actor's own (a profile, a device);
+`roll`, a member on the roll of the decision it names (a stance);
+`seat`, a member seated in the circle it concerns (proposing or closing
+a decision, a circle's message); or `decided`, the decision it cites
+carried (an admission, an adoption, a seat):
+`confluent({ check: 'seat' })`. A check is backed by SQL: a rule
+registered on the op in `cella.rule`, or for `decided` a row in
+`decision.cites`, to which `circle-decision-member` attaches its rule.
+`cella check feats` refuses an op that names neither a power nor a
+check, and a check no literal row backs; that the rule does what the
+check says is its owner's and its tests'. A write not yet decided as it
+should be, such as granting a mandate before a graft ties the decision
+to it, needs a power no mandate grants until then.
 
 Every critical rule is enforced twice: the handler checks the permission and
 the feat's row-level policies and triggers back it up. An ordered write is

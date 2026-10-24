@@ -2,6 +2,9 @@
   "name": "@cella/org-graft-circle-member",
   "private": true,
   "type": "module",
+  "exports": {
+    "./models": "./src/models/index.ts"
+  },
   "dependencies": {
     "@cella/org-ops": "workspace:*",
     "@cella/org-circle": "workspace:*",

@@ -29,13 +29,14 @@ Who may vote on a decision, its roll, is the `circle-decision-member` graft's: t
 ## Rules
 
 - `decision.closes`, on `decision:decision:close`: the write closed the decision on the verdict date, and not before its deadline. A decision closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
+- `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. That the actor is on the decision's roll is `circle-decision-member`'s rule on the same op. A stance needs no power.
 
 The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent` or `cella.majority` over the roll, as the `circle-decision-member` graft does.
 
 ## Handlers
 
-- `vote` (confluent): the member's own stance, with `cella.receipt()`, logged as a single-entry batch.
-- `close` (ordered): sets the closed date to `cella.verdict_date()` and the cutoff to `cella.receipt()`, then submits.
+- `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch.
+- `close` (ordered): sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits.
 
 ## Grafts
 

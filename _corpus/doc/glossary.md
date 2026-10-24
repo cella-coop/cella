@@ -48,6 +48,10 @@ updated = 2026-10-24
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
 | **rung** | a step of the ratchet, from the hosted pilot to zero trust |
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |
+| **commitment** | what the log keeps of a personal value: the BLAKE3, under its own domain, of a fresh salt and the value, which opens only while the vault holds both |
+| **retention class** | how long the law keeps a kind of personal data: `member-profile` and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
+| **erasure** | an ordered write that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
+| **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
 
 ## Co-ops
 

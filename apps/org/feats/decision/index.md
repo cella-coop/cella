@@ -22,13 +22,15 @@ Proposals, votes and outcomes. An outcome is computed from the signed votes, nev
 
 Triggers keep a closed decision closed and refuse stances on it, raising SQLSTATE `09000`. The app role may select, insert and update decisions, and select and insert votes; the rules role, `cella_rules`, may select both.
 
-Who may vote on a decision, its roll, is the `circle-decision` graft's: the members seated in its circle when it was proposed.
+Who may vote on a decision, its roll, is the `circle-decision-member` graft's: the members seated in its circle when it was proposed.
+
+`decision.cites` lists the writes that cite a decision: each settles only once the decision its payload names has closed and passed. A graft that joins this feat to a write's feat declares the write's op there; the graft that counts the roll attaches its rule to every op listed. The app role and the rules role may select it.
 
 ## Rules
 
 - `decision.closes`, on `decision:decision:close`: the write closed the decision on the verdict date, and not before its deadline. A decision closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
 
-The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent` or `cella.majority` where it is used, as the `decision-member` graft does.
+The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent` or `cella.majority` over the roll, as the `circle-decision-member` graft does.
 
 ## Handlers
 
@@ -37,7 +39,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 ## Grafts
 
-- `circle-decision`, which this feat declares: a decision's roll, from the seats in its circle.
+- `circle-decision-member`, which this feat declares: a decision's roll, from the seats in its circle, and whether it passes on it.
 
 ## Domain
 

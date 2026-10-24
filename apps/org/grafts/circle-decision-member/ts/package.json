@@ -1,0 +1,13 @@
+{
+  "name": "@cella/org-graft-circle-decision-member",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-member": "workspace:*"
+  }
+}

@@ -11,13 +11,10 @@ Admission and suspension by a decision of the members.
 
 ## Rules
 
-- `decision_member.passes(decision)`: whether a decision passes by its rule, `cella.consent` or `cella.majority`, over the stances received before its cutoff from members who are active and on its roll. The roll is the `circle-decision` graft's (`circle_decision.roll`): the members seated in the decision's circle when it was proposed. d-2026-012, the assembly's, counts the ten seated in `ag`; d-2026-011, coordination's, counts its five.
-- `decision_member.admits`, on `member:member:admit`: the cited decision is closed, passes, and asks to admit this member.
+- `decision_member.admits`, on `member:member:admit`: the cited decision asks to admit this member.
+
+An admission cites its decision: this graft declares `member:member:admit` in `decision.cites`, and `circle-decision-member`, which counts the roll, attaches its rule that the decision closed and passed. Who is on a roll needs seats, so it is that three-way graft's, which reads this one; this one does not read it.
 
 ## Handlers
 
-- `closed(decision)`: on a settled close, admits each member the decision asks to admit when `decision_member.passes` says it passes, through the member feat's `admit`; each admission is its own ordered write, decided again by its rules.
-
-## Open
-
-`passes` reads `circle_decision.roll`, another graft's table, which the SQL boundaries in [architecture](../../../../_corpus/doc/architecture.md#sql) do not list: a graft reads only its own schema and those of the feats it joins.
+None of its own: the reaction that admits on a passing close needs the roll, so it is `circle-decision-member`'s `closed`.

@@ -3,13 +3,13 @@ import type { Deps } from '@cella/org-db'
 import { admit } from '@cella/org-member/api'
 import type { Admitted } from '@cella/org-member/models'
 
-// Reacts to a settled close: admits each member the decision asks to admit,
-// when it passes. Whether it passes is `decision_member.passes`, asked of
-// the database; each admission is its own ordered write, and its rules
-// decide again.
+// Reacts to a settled close: admits each member the decision asks to admit
+// (`decision_member.admission`, a lower-order graft's), when it passes on
+// its roll (`circle_decision_member.passes`), asked of the database. Each
+// admission is its own ordered write, and its rules decide again.
 export async function closed(decision: string, deps: Deps): Promise<(Settled<Admitted> | Refused)[]> {
   const { rows } = await deps.db.query<{ member: string; shares: number; passes: boolean }>(
-    `SELECT a.member, a.shares, decision_member.passes(a.decision) AS passes
+    `SELECT a.member, a.shares, circle_decision_member.passes(a.decision) AS passes
      FROM decision_member.admission a
      WHERE a.decision = $1
      ORDER BY a.member`,

@@ -16,7 +16,8 @@ the relationship, so the graft owns its writes.
   ended seat keeps its row with `until`, so who sat where on a past day
   reads back.
 - `circle_member.seated(circle, day)`: the members seated in a circle on a
-  day. The `circle-decision` graft fixes a decision's roll from it.
+  day. The `circle-decision-member` graft, a higher order, fixes a
+  decision's roll from it.
 
 The app role and the rules role, `cella_rules`, may select. Positions are
 seeded; the writes below have no handlers yet.

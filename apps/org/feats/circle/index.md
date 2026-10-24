@@ -84,8 +84,8 @@ The circle feat owns:
 
 What it does not own: who holds which role (`circle-member`), and who
 may vote on a circle's decisions: the roll, the members seated in the
-circle when a decision is proposed, is the `circle-decision` graft's, and
-`decision-member` counts the active members on it.
+circle when a decision is proposed, and the count of the active members
+on it, are the `circle-decision-member` graft's.
 
 ## What it does not know
 

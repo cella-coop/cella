@@ -23,7 +23,7 @@ A person's membership, from invited to exited. Members records who belongs; it d
 
 - `member.admitted`, on `member:member:admit`: the write left the member active, since the verdict date, holding shares.
 
-Whether a decision admits the member is the `decision-member` graft's rule on the same op.
+Whether the cited decision asks to admit the member is the `decision-member` graft's rule on the same op; whether it closed and passed on its roll, `circle-decision-member`'s.
 
 ## Handlers
 

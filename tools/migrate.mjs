@@ -1,6 +1,6 @@
 // migrate: applies each node's SQL down the feat tree — a node's core
 // (core/sql/, then core/<lib>/sql/), then its feats, recursively, then its
-// grafts — each directory's NNN-*.sql files in order, one transaction per
+// grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
 // file. Applied files are recorded with their hash in migration.applied;
 // a file edited after it was applied is refused, never re-run.
 
@@ -14,11 +14,16 @@ const isDir = (p) => existsSync(p) && statSync(p).isDirectory()
 const sorted = (dir) => (isDir(dir) ? readdirSync(dir).sort() : [])
 const isNode = (dir) => existsSync(join(dir, 'feat.toml'))
 
+// A graft reads the grafts that join fewer of its feats, so grafts migrate
+// by order: those joining two feats first, then three, each order by name.
+const order = (g) => g.split('-').length
+const byOrder = (grafts) => grafts.sort((a, b) => order(a) - order(b) || a.localeCompare(b))
+
 const tree = (node) => [
   join(node, 'core', 'sql'),
   ...sorted(join(node, 'core')).map((lib) => join(node, 'core', lib, 'sql')),
   ...sorted(join(node, 'feats')).map((f) => join(node, 'feats', f)).filter(isNode).flatMap(tree),
-  ...sorted(join(node, 'grafts')).map((g) => join(node, 'grafts', g, 'sql')),
+  ...byOrder(sorted(join(node, 'grafts'))).map((g) => join(node, 'grafts', g, 'sql')),
 ]
 
 const apps = sorted(join(repo, 'apps')).map((a) => join(repo, 'apps', a)).filter(isNode)

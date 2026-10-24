@@ -148,8 +148,8 @@ void settled and posted the credit note `je-0026`.
 
 Owners: the `decision-member` graft for membership (admitted, suspended,
 exited); the roll of a circle's decision needs positions too, which are the
-`circle-member` graft's. The roll is the `circle-decision` graft's, which
-the decision feat declares.
+`circle-member` graft's. The roll, and whether a decision passes on it, are
+the `circle-decision-member` graft's, which the decision feat declares.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|

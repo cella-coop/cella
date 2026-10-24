@@ -14,6 +14,12 @@ importers:
       '@types/pg':
         specifier: ^8.23.1
         version: 8.23.1
+      libpg-query:
+        specifier: 18.2.0
+        version: 18.2.0
+      loro-crdt:
+        specifier: 1.17.1
+        version: 1.17.1
       pg:
         specifier: ^8.23.1
         version: 8.23.1
@@ -64,9 +70,15 @@ importers:
 
   apps/org/feats/document/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
+      loro-crdt:
+        specifier: 1.17.1
+        version: 1.17.1
 
   apps/org/feats/invoice/core/ts:
     dependencies:
@@ -131,6 +143,18 @@ importers:
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
 
+  apps/org/grafts/circle-decision-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+
   apps/org/grafts/circle-member/ts:
     dependencies:
       '@cella/org-circle':
@@ -172,9 +196,6 @@ importers:
 
   apps/org/grafts/decision-member/ts:
     dependencies:
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
@@ -226,6 +247,9 @@ importers:
       '@cella/org-graft-account-transaction':
         specifier: workspace:*
         version: link:../grafts/account-transaction/ts
+      '@cella/org-graft-circle-decision-member':
+        specifier: workspace:*
+        version: link:../grafts/circle-decision-member/ts
       '@cella/org-graft-circle-member':
         specifier: workspace:*
         version: link:../grafts/circle-member/ts
@@ -262,6 +286,9 @@ importers:
 
 packages:
 
+  '@pgsql/types@18.0.0':
+    resolution: {integrity: sha512-jtAY4JU7jdVYZ/Vv3zlZqVP+FRWZokyCLKPPCnAApiaJAElpyyiMC3HRiquBu29kSrVs+rkqZD50SUIb/zyEGw==}
+
   '@types/node@24.19.2':
     resolution: {integrity: sha512-93d49wCWJkCyN87MxLpNN6KXPCwFw7bVUg79mGUV1OS40JGWwVCr8n61DXCSqz7CV6/VfPkb7xec7uP2M+QHWQ==}
 
@@ -270,6 +297,12 @@ packages:
 
   '@types/pg@8.23.1':
     resolution: {integrity: sha512-fKVHpikPdg4GKks3JuLEhvwSyvwzF23hnabPy6DD8ljVbC7+6J5dQzdv4arV6jqq57djnMgs1HKBxX4P8aBI3A==}
+
+  libpg-query@18.2.0:
+    resolution: {integrity: sha512-xoNEjLosxCZsDIP9DXjy9/m3g3uc3trfSg2G3hm2CEzqC/DVorogLy7sKOMxPLDRffr2eibbF7klx0ySOPjB6Q==}
+
+  loro-crdt@1.17.1:
+    resolution: {integrity: sha512-83hWRYG6eMMpPezm+yXWlOqCuUsC0BYY1MVCPW9x2zlikgkHhL7GC7Q6JFH+Hjvauyn287Q1MiwTuRW0lUOUag==}
 
   pg-cloudflare@1.4.1:
     resolution: {integrity: sha512-6PQbsFWZcp9EmJEwy5cGQ2La+AMWpP46lgbb8X+U/XsHIUweYDNCpeuKck5RxL2MdVFi7krbbEi5nX4Zh7JhrQ==}
@@ -341,6 +374,8 @@ packages:
 
 snapshots:
 
+  '@pgsql/types@18.0.0': {}
+
   '@types/node@24.19.2':
     dependencies:
       undici-types: 7.24.6
@@ -354,6 +389,12 @@ snapshots:
       '@types/node': 26.6.5
       pg-protocol: 1.16.1
       pg-types: 2.2.0
+
+  libpg-query@18.2.0:
+    dependencies:
+      '@pgsql/types': 18.0.0
+
+  loro-crdt@1.17.1: {}
 
   pg-cloudflare@1.4.1:
     optional: true

@@ -2,11 +2,7 @@
   "name": "@cella/org-graft-decision-member",
   "private": true,
   "type": "module",
-  "exports": {
-    "./api": "./src/api/index.ts"
-  },
   "dependencies": {
-    "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
     "@cella/org-decision": "workspace:*",
     "@cella/org-member": "workspace:*"

@@ -17,6 +17,7 @@
     "@cella/org-client": "workspace:*",
     "@cella/org-graft-account-decision": "workspace:*",
     "@cella/org-graft-account-transaction": "workspace:*",
+    "@cella/org-graft-circle-decision-member": "workspace:*",
     "@cella/org-graft-circle-member": "workspace:*",
     "@cella/org-graft-client-invoice": "workspace:*",
     "@cella/org-graft-decision-document": "workspace:*",

@@ -7,7 +7,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { close, vote } from '@cella/org-decision/api'
 import { admit } from '@cella/org-member/api'
-import { closed } from '@cella/org-graft-decision-member/api'
+import { closed } from '@cella/org-graft-circle-decision-member/api'
 import type { Deps } from '@cella/org-db'
 
 const su = new pg.Client()
@@ -28,7 +28,7 @@ async function on(date: string) {
 const as = (actor: string): Deps => ({ db: app, actor })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT decision_member.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
 const status = async (m: string) => one<{ status: string; since: string | null; shares: number }>(
   `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM member.member WHERE address = $1`,
   [m],
@@ -120,10 +120,10 @@ test('the log verifies, records its rules, and catches tampering', async () => {
   const admission = await one<{ rules: { owner: string }[]; date: string }>(
     `SELECT rules, to_char(date, 'YYYY-MM-DD') AS date FROM cella.log WHERE n = 4`,
   )
-  assert.deepEqual(admission.rules.map((r) => r.owner), ['decision-member', 'member'])
+  assert.deepEqual(admission.rules.map((r) => r.owner), ['circle-decision-member', 'decision-member', 'member'])
   assert.equal(admission.date, '2026-10-31')
   const texts = await one<{ count: string }>('SELECT count(*) FROM cella.rule_text')
-  assert.equal(Number(texts.count), 3)
+  assert.equal(Number(texts.count), 4)
 
   await su.query('BEGIN')
   await su.query(`UPDATE cella.log SET actor = 'mallory@lanterne.example' WHERE n = 4`)

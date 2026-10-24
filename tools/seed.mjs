@@ -172,8 +172,8 @@ for (const a of adoptions) {
 const clients = read('client').client ?? []
 for (const c of clients) {
   await db.query(
-    'INSERT INTO client.client (id, kind, name, form, note) VALUES ($1, $2, $3, $4, $5)',
-    [c.id, c.kind ?? 'company', c.name, c.form ?? null, c.note ?? ''],
+    'INSERT INTO client.client (id, kind, name, form, note, email, phone, parent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+    [c.id, c.kind ?? 'company', c.name, c.form ?? null, c.note ?? '', c.email ?? null, c.phone ?? null, c.parent ?? null],
   )
 }
 

@@ -95,7 +95,8 @@ coordination's, counts its five.
 - `carried(decision)`: on a settled close of a passing decision, carries
   out its other motions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its rules: a
-  suspension or an exit (member feat), a nesting, a grant or a revocation
+  suspension, an exit or the erasure of a former member's personal data
+  (member feat), a nesting, a grant or a revocation
   (circle feat), a seat given or ended (circle-member). A refused one
   leaves the decision passed and that motion undone, as its outcome
   says. The slice runs it as its reaction to `decision:decision:close`.

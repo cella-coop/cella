@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Db, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Act, Acted, Capture, Captured } from '../models/expense.ts'
 
@@ -21,8 +21,13 @@ export const capturing = (input: Capture): Write<Captured> => ({
     )
     return { expense: rows[0].id, member: input.member, day: input.day, category: input.category, amount: Number(rows[0].total) }
   },
-  // The label and the receipt are the member's own and stay out.
-  payload: (v) => ({ ...v }),
+  // The label and the receipt are the member's own: the log commits to
+  // them, and the vault keeps them.
+  payload: (v) => ({
+    ...v,
+    label: personal('expense.expense.label', input.member, input.label),
+    receipt: personal('expense.expense.receipt', input.member, input.receipt ?? null),
+  }),
 })
 
 export async function capture(input: Capture, deps: Deps): Out<'expense:expense:capture', Captured> {

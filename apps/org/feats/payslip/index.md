@@ -68,6 +68,17 @@ the interim `transaction.payroll` and its `run-payroll`.
 insert runs and payslips, and set a run's approval and payment and a
 payslip's minutes; the rules role may select.
 
+## Personal data
+
+A member's salary and each payslip's figures are personal data of class
+`payroll`, registered by the member's address (`003-personal.sql`): the
+law keeps them five years (Code du travail, art. L3243-4). Erasing a
+member who has left restricts them; once their clock runs out `cella
+vault sweep` redacts them to NULL, so the figures are nullable, and
+`payslip.stays` lets an approved run's payslips take that one change
+(`cella.redacting()`). A run's payload holds its totals, never a
+member's figures.
+
 ## Rules
 
 - `payslip.generates`, on `payslip:run:generate`: the run was prepared by

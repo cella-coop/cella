@@ -4,14 +4,15 @@ updated = 2026-10-24
 +++
 
 What a decision decides of a membership: admitting someone invited,
-suspending a member, ending a membership. Declared by the `member` feat.
+suspending a member, ending a membership, erasing a former member's
+personal data. Declared by the `member` feat.
 
 ## Schema
 
 `decision_member` (`sql/`) holds no table: the motions are the decision
 feat's `decision.motion`, of the kinds this graft registers in
-`decision.kind`: `admit` (`member`, `shares`), `suspend` and `exit`
-(`member`). `decision_member.motion` reads them with the member each
+`decision.kind`: `admit` (`member`, `shares`), `suspend`, `exit` and
+`erase` (`member`). `decision_member.motion` reads them with the member each
 names and, for an admission, the shares as a whole number. The app role
 and the rules role, `cella_rules`, may select it.
 
@@ -20,12 +21,12 @@ and the rules role, `cella_rules`, may select it.
 - `decision_member.asks`, on `decision:decision:propose`: each motion of
   these kinds names a member it can apply to: someone invited, with
   shares, to admit; an active member to suspend; an active or suspended
-  one to let go. That only the assembly decides it is
+  one to let go; a member who has left to erase. That only the assembly decides it is
   `circle-decision-member`'s, which knows circles.
 - `decision_member.admits`, on `member:member:admit`: the cited decision
   asks to admit this member, with these shares.
-- `decision_member.ends`, on `member:member:suspend` and `:exit`: the
-  cited decision asks this of this member.
+- `decision_member.ends`, on `member:member:suspend`, `:exit` and
+  `:erase`: the cited decision asks this of this member.
 - `decision_member.closes`, on `decision:decision:close`: every member a
   close admits, as its payload's `admitted` names them, is one the
   decision asks to admit, holding the shares it asks, and was admitted by

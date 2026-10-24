@@ -18,9 +18,11 @@ editing a client never changes an issued invoice.
 
 `parent` names another client in this collection. `form` is the client's
 legal form (`SCIC SA`, `association`, `commune`), which decides its rate
-at Lanterne and, at rung 3, its e-invoicing route. A client's email and
-phone are personal data when the client is a person, and stay out of the
-log.
+at Lanterne and, at rung 3, its e-invoicing route. A client's name,
+email, phone, address and note are registered as personal data, of class
+`contact`, by its id (`003-personal.sql`): every write commits to them
+in the log and keeps them in the vault, and erasing a person redacts
+them.
 
 ## Lifecycle
 
@@ -42,6 +44,7 @@ company and the invoices intact.
 | `POST /api/client/add` | confluent | the last writer wins |
 | `POST /api/client/update` | confluent | the last writer wins |
 | `POST /api/client/archive` | confluent | the last writer wins |
+| `POST /api/client/erase` | ordered | erasure wins over every update, whichever arrives first |
 
 Each field is its own register, so two members updating different fields
 of one client both keep their change, and two updating the same field
@@ -54,6 +57,7 @@ ordered write's rule, so none of them waits.
 |---|---|---|
 | add, update | `edit-client` | every member, through the `member` role's mandate |
 | archive | `edit-client` | every member, through the `member` role's mandate |
+| erase | `erase-personal-data` | the gérante |
 
 `002-powers.sql` registers the power in `cella.power`, and the
 `circle-member` graft checks it as any other: a power every member holds is
@@ -82,13 +86,20 @@ address as JSON. A trigger refuses a parent that is not a company (SQLSTATE
 `09000`), and a check refuses a client its own parent. The app role may
 select, insert and update; the rules role, `cella_rules`, may select.
 
+`client.erases`, on `client:client:erase`: the client is a person, and
+the write erased their contact data and nothing else.
+
 ## Handlers
 
 `add`, `update` and `archive` (confluent) set the given fields from a
 fixed list of columns. At rung 1 the server applies writes in receipt
 order, so the last write to a field wins it, field by field. The log
-commits to the client's id and the names of the fields a write changed,
-never their values. Erasure is not built.
+keeps the client's id, the names of the fields a write changed and their
+values, each personal one as a salted commitment. `erase` (ordered)
+archives a person and submits the erasure of their `contact` class,
+which the notary carries out as it settles: their values and salts
+deleted from the vault, their fields redacted, any later value for them
+refused.
 
 ## Shell
 
@@ -98,7 +109,8 @@ invoices that bill it are `client-invoice`'s.
 
 ## Lanterne
 
-Eight clients, mostly co-ops, associations and small local firms:
+Eight clients, mostly co-ops, associations and small local firms, and
+Margaux Roux, Les Halles' contact for the shop, a person:
 
 | Client | Form | Work |
 |---|---|---|

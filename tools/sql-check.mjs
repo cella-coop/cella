@@ -161,7 +161,32 @@ function inspect(tree, o, s, known, fail, found) {
   }
 }
 
-const registries = new Set(['rule', 'power', 'keyring'])
+const registries = new Set(['rule', 'power', 'keyring', 'personal'])
+
+// A column whose name and type suggest personal data: a person's name,
+// contact details, address, bank details, birth, pay, notes or a
+// receipt's text, held as text, JSON or an amount. Each must be declared,
+// registered in `cella.personal` or commented `not personal: …`.
+const suspect = /^(name|full_name|first_name|last_name|email|phone|mobile|iban|bic|address|street|city|postal_code|birth\w*|salary|gross|net|note|notes|receipt)$/
+const typed = new Set(['text', 'varchar', 'jsonb', 'json', 'amount', 'numeric'])
+
+// Each column a statement creates, by its schema, table, name and type.
+function columns(rel, defs, path, found) {
+  for (const d of defs ?? []) {
+    const c = d.ColumnDef
+    if (c) {
+      found.columns.push({ key: `${rel.schemaname}.${rel.relname}.${c.colname}`, type: strings(c.typeName?.names).at(-1), path })
+    }
+  }
+}
+
+// The suspect columns declared neither personal nor not.
+export function undeclared(found) {
+  const declared = new Set([...found.personal, ...found.impersonal])
+  return found.columns
+    .filter((c) => suspect.test(c.key.split('.')[2]) && typed.has(c.type) && !declared.has(c.key))
+    .map((c) => `${c.path}: ${c.key} may hold personal data: register it in cella.personal, or comment it 'not personal: why'`)
+}
 
 // The decision feat's register of the ops that cite a decision, whose
 // rows mark an op as decided: the graft that counts a decision's roll
@@ -185,6 +210,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
       break
     case 'CreateStmt':
       owned(b.relation.schemaname, `creates ${named(b.relation)}`)
+      if (o.kind !== 'core') {
+        columns(b.relation, b.tableElts, found.at, found)
+      }
       walk(b, (_, n) => {
         if (n.Constraint?.contype === 'CONSTR_FOREIGN' && n.Constraint.pktable?.schemaname !== b.relation.schemaname) {
           fail(`${named(b.relation)} holds a foreign key into ${named(n.Constraint.pktable)}: no foreign key crosses a feat`)
@@ -200,6 +228,19 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'IndexStmt':
     case 'AlterTableStmt':
       owned(b.relation.schemaname, `${type === 'IndexStmt' ? 'indexes' : 'alters'} ${named(b.relation)}`)
+      if (type === 'AlterTableStmt' && o.kind !== 'core') {
+        const added = (b.cmds ?? []).map((c) => c.AlterTableCmd).filter((c) => c?.subtype === 'AT_AddColumn').map((c) => c.def)
+        columns(b.relation, added, found.at, found)
+      }
+      break
+    case 'CommentStmt':
+      if (b.objtype === 'OBJECT_COLUMN') {
+        const parts = strings(b.object?.List?.items)
+        owned(parts[0], `comments on ${parts.join('.')}`)
+        if (/^not personal: ./.test(b.comment ?? '')) {
+          found.impersonal.push(parts.join('.'))
+        }
+      }
       break
     case 'CreateFunctionStmt': {
       const f = strings(b.funcname)
@@ -258,7 +299,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'DeleteStmt':
       if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
         if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
-          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers or the keyring`)
+          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers, its personal columns or the keyring`)
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
           fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
         } else {
@@ -294,6 +335,15 @@ function registers(b, o, s, fail, found) {
     if (what === 'power' && vals.op) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
     }
+    if (what === 'personal') {
+      if (vals.schema !== s.own) {
+        fail(`registers ${vals.schema}.${vals.tab}.${vals.col} as personal: a ${o.kind} registers only its own schema's columns`)
+      }
+      found.personal.push(`${vals.schema}.${vals.tab}.${vals.col}`)
+    }
+  }
+  if (what === 'personal' && !b.selectStmt?.SelectStmt?.valuesLists) {
+    fail('registers personal columns from a query: each is a literal row, so feat-check can see it')
   }
   if (what === 'power' && !b.selectStmt?.SelectStmt?.valuesLists) {
     fail('registers powers from a query: a power is a literal row, so feat-check can compare it with ops.ts')
@@ -322,7 +372,7 @@ function plpgsql(lib, fn) {
 // Collects what the SQL registers as literal rows, for feat-check to
 // compare with each op's label: the powers in cella.power, the rules in
 // cella.rule, and the ops that cite a decision in decision.cites.
-export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [] }) {
+export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []
@@ -339,6 +389,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], rules: [
         fail(`does not parse: ${e.message}`)
         continue
       }
+      found.at = path
       inspect(tree, o, s, known, fail, found)
       // Locations are byte offsets.
       const bytes = Buffer.from(sql)

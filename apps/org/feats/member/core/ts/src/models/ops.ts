@@ -11,4 +11,8 @@ export const ops = {
   'member:member:suspend': ordered({ check: 'decided' }),
   // freezes the capital account; the cited decision ends the membership
   'member:member:exit': ordered({ check: 'decided' }),
+  // erasure wins over every update; the cited decision erases a member who has left
+  'member:member:erase': ordered({ check: 'decided' }),
+  // erasure wins over every update; a member's own contact details
+  'member:member:forget': ordered({ check: 'self' }),
 } satisfies Ops

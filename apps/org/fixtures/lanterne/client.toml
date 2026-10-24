@@ -6,6 +6,17 @@ name = "Les Halles Paysannes"
 form = "SCIC SA"
 note = "a network of farmers' shops; brand refresh and an online shop"
 
+# A person: Les Halles' contact for the shop, whose details are personal
+# data, of class contact.
+[[client]]
+id = "halles-roux"
+kind = "person"
+parent = "halles"
+name = "Margaux Roux"
+email = "margaux.roux@halles-paysannes.example"
+phone = "+33 6 41 27 90 12"
+note = "runs the online shop; prefers mornings"
+
 [[client]]
 id = "clairval"
 name = "Ville de Clairval"

@@ -24,6 +24,7 @@
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
 //! | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | tables, the owner's but `erased` | sealed keys, the salts and sealed values that open commitments, erasures, sweeps |
 //! | `cella.opened(n)` | function | an entry's logged payload, its commitments opened from the vault |
+//! | `cella.redacting()` | function | whether the notary is redacting, for a feat's trigger that keeps a row fixed |
 //! | `cella.vault_sweep()` | function, a superuser's | restricted data erased once its clock runs out |
 
 use crate::{notary, vault};
@@ -482,6 +483,14 @@ SELECT pg_catalog.pg_extension_config_dump('vault.swept', '');
     name = "vault_tables",
     requires = ["notary_tables"],
 );
+
+/// Whether the notary is redacting personal data right now, the one
+/// change a record that never changes takes: a feat's trigger that keeps a
+/// row fixed lets it through. No role can set it.
+#[pg_extern(stable)]
+fn redacting() -> bool {
+    vault::redacting()
+}
 
 /// An entry's payload as the log keeps it, each commitment opened: the
 /// value the vault still holds, `restricted` for a class kept only by law,

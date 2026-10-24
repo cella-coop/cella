@@ -134,6 +134,13 @@ Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
 account's `frozen` and an allocation's `allocated`; the rules role,
 `cella_rules`, may select.
 
+## Personal data
+
+A capital account's label names its member: personal data of class
+`books`, registered by its holder (`006-personal.sql`), which the law
+keeps ten years (Code de commerce, art. L123-22). Erasing a member who
+has left restricts it until `cella vault sweep` redacts it.
+
 ## Rules
 
 - `account.closes`, on `account:period:close`: the write closed the period

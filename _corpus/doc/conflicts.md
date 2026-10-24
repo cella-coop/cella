@@ -44,8 +44,9 @@ decision. Lanterne's state is that of 24 October 2026.
 | `invoice.send` | confluent | right |
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
-| `client.add`, `.update`, `.archive` | confluent | right; erasure must win |
-| `member.invite`, `.profile` | confluent | right; **applied**: an invitation carries the invitee's first device |
+| `client.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
+| `client.erase`, `member.erase`, `.forget` | ordered | right: a tombstone against every later value |
+| `member.invite`, `.profile` | confluent | right; **applied**: an invitation carries the invitee's first device; erasure wins |
 | `member.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
 | `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
@@ -438,8 +439,12 @@ Owner: the feat holding the data (`client`, `member`), with the vault.
 
 Field registers with the last writer winning are right for `client` and
 `member.profile`, except against erasure: an erasure is a tombstone that
-wins over every update, whichever arrives first. **Rung 2**: an update
-queued offline before the erasure must not resurrect the data.
+wins over every update, whichever arrives first. **Applied**:
+`client.erase`, `member.erase` and `member.forget` are ordered, and the
+notary, under the log's lock, refuses any later value of an erased
+subject's class (`vault.erased`); an update that settled first is erased
+with the rest. **Rung 2**: an update queued offline before the erasure
+must not resurrect the data.
 
 ## A share never exceeds the budget
 

@@ -72,6 +72,16 @@ and mandates (`circle-expense-member`).
 `09000`; `expense.total(expense)`. The app role may select, insert and
 update; the rules role may select.
 
+## Personal data
+
+What the member wrote of an expense and the text of its receipt are
+personal data of class `expense-receipt`, registered by the member
+(`003-personal.sql`): supporting vouchers, which the law keeps ten
+years (Code de commerce, art. L123-22). A capture's payload commits to
+them; erasing a member who has left restricts them until `cella vault
+sweep` redacts them, the one change a submitted expense takes
+(`cella.redacting()` in `expense.moves`). Its figures are the books'.
+
 ## Rules
 
 - `expense.captures`, on `expense:expense:capture`: the expense is the

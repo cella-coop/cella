@@ -1,7 +1,7 @@
 import type { Db } from '@cella/org-db'
 import type { Member } from '../models/member.ts'
 
-const columns = `address AS id, address, name, status, to_char(since, 'YYYY-MM-DD') AS since, shares,
+const columns = `address AS id, address, name, email, phone, status, to_char(since, 'YYYY-MM-DD') AS since, shares,
   to_char(invited, 'YYYY-MM-DD') AS invited, to_char(suspended, 'YYYY-MM-DD') AS suspended, to_char(exited, 'YYYY-MM-DD') AS exited`
 
 // Every member, by name.

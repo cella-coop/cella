@@ -182,6 +182,11 @@ limit = 5000000
 
 [[mandate]]
 role = "manager"
+power = "erase-personal-data"
+text = "erase a person's data among the clients, when they ask"
+
+[[mandate]]
+role = "manager"
 power = "approve-time"
 text = "approve timesheets"
 

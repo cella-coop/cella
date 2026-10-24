@@ -52,8 +52,13 @@ export interface Archive {
   id: string
 }
 
-// Which fields a write changed; the log commits to these names, never to
-// the values, which may be a person's.
+// A person among the clients whose contact data is erased.
+export interface Erase {
+  id: string
+}
+
+// Which fields a write changed; the log commits to them and their values,
+// a person's under fresh salts, the values themselves in the vault.
 export interface Changed {
   client: string
   fields: string[]

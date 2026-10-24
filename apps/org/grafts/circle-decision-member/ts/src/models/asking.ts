@@ -1,7 +1,7 @@
 // What a member's or a circle's page proposes: a membership admitted,
-// suspended or ended, or a seat given or ended, each a motion of the
-// graft that carries it out.
-export type Asked = 'admit' | 'suspend' | 'exit' | 'seat' | 'unseat'
+// suspended or ended, a former member's personal data erased, or a seat
+// given or ended, each a motion of the graft that carries it out.
+export type Asked = 'admit' | 'suspend' | 'exit' | 'erase' | 'seat' | 'unseat'
 
 export interface Asking {
   kind: Asked

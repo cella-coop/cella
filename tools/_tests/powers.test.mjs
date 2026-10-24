@@ -8,7 +8,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { agree, covered } from '../powers.mjs'
-import { checkSql } from '../sql-check.mjs'
+import { checkSql, undeclared } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/ops.ts'
 const op = (o, power = null, amount = null, check = null) => ({ op: o, power, amount, check, file })
@@ -53,7 +53,7 @@ async function check(sql) {
       mkdirSync(join(repo, dir), { recursive: true })
       writeFileSync(join(repo, dir, '001.sql'), text)
     }
-    const found = { powers: [], rules: [], cites: [] }
+    const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }
     const known = new Set(['cella', 'circle', 'invoice', 'member', 'decision', 'circle_member', 'circle_invoice_member', 'decision_member', 'invoice_member'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     return { errors, powers: found.powers, found }
@@ -80,7 +80,7 @@ test('only a feat registers the keyring, and nothing else in cella is written', 
   const keyring = await check({ member: `INSERT INTO cella.keyring (fn, owner) VALUES ('member.verifies(text, bytea)', 'member');` })
   assert.deepEqual(keyring.errors, [])
   const log = await check({ member: `INSERT INTO cella.receipt (n) VALUES (1);` })
-  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its rules, its powers or the keyring/)
+  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its rules, its powers, its personal columns or the keyring/)
 })
 
 test('a graft registers rules on ops of the feats it joins and of the lower-order grafts it builds on, and no others', async () => {
@@ -113,6 +113,28 @@ test('a declared check is backed by SQL: a rule on the op, or for decided a row 
     rules: [{ op: 'member:member:profile', owner: 'member' }],
     cites: [{ op: 'member:member:admit', owner: 'decision-member' }],
   }), [])
+})
+
+test('a column that may hold personal data is registered personal or commented not personal, in its own schema', async () => {
+  const table = `CREATE TABLE member.member (address text PRIMARY KEY, name text NOT NULL, shares integer, email text);`
+  const bare = await check({ member: table })
+  assert.deepEqual(undeclared(bare.found), [
+    'apps/org/feats/member/core/sql/001.sql: member.member.address may hold personal data: register it in cella.personal, or comment it \'not personal: why\'',
+    'apps/org/feats/member/core/sql/001.sql: member.member.name may hold personal data: register it in cella.personal, or comment it \'not personal: why\'',
+    'apps/org/feats/member/core/sql/001.sql: member.member.email may hold personal data: register it in cella.personal, or comment it \'not personal: why\'',
+  ])
+  const declared = await check({
+    member: table + `
+      INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
+        ('member', 'member', 'name', 'member-profile', 'address', 'member'),
+        ('member', 'member', 'email', 'contact', 'address', 'member');
+      COMMENT ON COLUMN member.member.address IS 'not personal: a pseudonym';`,
+  })
+  assert.deepEqual([declared.errors, undeclared(declared.found)], [[], []])
+  const added = await check({ member: table + `ALTER TABLE member.member ADD COLUMN phone text;` })
+  assert.match(undeclared(added.found).join('\n'), /member.member.phone may hold personal data/)
+  const foreign = await check({ invoice: `INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES ('member', 'member', 'name', 'contact', 'address', 'invoice');` })
+  assert.match(foreign.errors.join('\n'), /registers member.member.name as personal: a feat registers only its own schema's columns/)
 })
 
 test('the SQL check collects the literal rule and cites rows that back a check', async () => {

@@ -28,6 +28,7 @@ The notary is the scope's office for every write, and a layer under every feat r
 | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | the vault ([below](#the-vault)); only the owner reads it, but `vault.erased`, which everyone may read |
 | `cella.opened(n)` | entry `n`'s logged payload with its commitments opened: the value, `restricted` or `redacted`; the app's only |
 | `cella.vault_sweep()` | erases the restricted data whose clock has run out on the verdict date; a superuser's, run by `cella vault sweep` |
+| `cella.redacting()` | whether the notary is redacting right now: the one change a record that never changes takes, which a feat's trigger keeping a row fixed lets through; no role can set it |
 | `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
 
 ## Submit

@@ -25,7 +25,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
-import { checkSql, placed, schemaName } from './sql-check.mjs'
+import { checkSql, placed, schemaName, undeclared } from './sql-check.mjs'
 import { agree, covered, declared } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 
@@ -266,8 +266,8 @@ if (sql) {
       known.add(schemaName(g))
     }
   }
-  const found = { powers: [], rules: [], cites: [] }
-  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found))
+  const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }
+  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found))
   // A feat's or graft's ops, not the app core's own types.
   const owned = [...byName.values()].filter((d) => {
     const p = place(d)

@@ -5,6 +5,8 @@ export interface Member {
   id: string
   address: string
   name: string
+  email: string | null
+  phone: string | null
   status: Status
   since: string | null
   shares: number
@@ -49,15 +51,30 @@ export interface Ended {
   on: string
 }
 
-// A member's own fields; only those given change.
+// A member's own fields; only those given change. Email and phone are
+// optional, and the member may erase them (`forget`).
 export interface Profile {
   member: string
   name?: string
+  email?: string | null
+  phone?: string | null
 }
 
-// The fields a profile write changed, by name: their values are personal
-// data and stay out of the log.
+// The fields a profile write changed: the log commits to their values,
+// which are personal data, and keeps them in the vault.
 export interface Profiled {
   member: string
   fields: string[]
+}
+
+// An erasure of a member's personal data: all of it, by the decision
+// that asks it, once they have left.
+export interface Erase {
+  member: string
+  decision: string
+}
+
+// A member erases their own contact details.
+export interface Forget {
+  member: string
 }

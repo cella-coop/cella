@@ -114,6 +114,10 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../../core/sign/ts
 
   apps/org/feats/decision/core/ts:
     dependencies:

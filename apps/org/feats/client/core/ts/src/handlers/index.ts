@@ -1,1 +1,1 @@
-export { add, archive, update } from './client.ts'
+export { add, archive, erase, update } from './client.ts'

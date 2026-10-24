@@ -4,7 +4,7 @@ import { action, type Slice } from '@cella/org-db'
 import { update } from '../handlers/index.ts'
 import { client, clients } from '../drivers/client.ts'
 
-export { add, archive, update } from '../handlers/index.ts'
+export { add, archive, erase, update } from '../handlers/index.ts'
 export { client, clients } from '../drivers/client.ts'
 
 export const slice: Slice = {

@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { End, Ended, Invite, Invited } from '../models/member.ts'
 
@@ -8,8 +8,9 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 
 // The invitation as a write a graft may extend in its transaction, as
 // key-member does with the invitee's first device: a new member, invited
-// on the verdict date, holding nothing. The name is personal data and
-// stays out of the log; `member.invites` checks the write made the row.
+// on the verdict date, holding nothing. The name is personal data: the log
+// commits to it and the vault keeps it; `member.invites` checks the write
+// made the row.
 export function inviting(input: Invite): Write<Invited> {
   return {
     op: 'member:member:invite' satisfies Op,
@@ -26,7 +27,7 @@ export function inviting(input: Invite): Write<Invited> {
       )
       return { member: input.address, invited: rows[0].invited }
     },
-    payload: (v) => ({ ...v }),
+    payload: (v) => ({ ...v, name: personal('member.member.name', input.address, input.name) }),
   }
 }
 

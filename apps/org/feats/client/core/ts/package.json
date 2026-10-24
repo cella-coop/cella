@@ -12,5 +12,8 @@
     "@cella/org-ops": "workspace:*",
     "@cella/org-ui": "workspace:*",
     "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@cella/org-sign": "workspace:*"
   }
 }

@@ -12,6 +12,7 @@ use cella_rules::vault::{self, Erase, Marked, NONCE, Personal};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
 use serde_json::{Value, json};
+use std::cell::Cell;
 use std::collections::BTreeSet;
 
 /// N bytes from Postgres's strong random source.
@@ -156,11 +157,36 @@ fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) 
             continue;
         }
         spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.clone().into(), class.clone().into()]));
-        spi(c.update("SELECT cella.redact($1, $2)", None, &[subject.clone().into(), class.clone().into()]));
+        redact(c, &subject, &class);
         tombstone(c, &subject, &class, receipt, date, false);
         erased.push(class);
     }
     json!({ vault::ERASURE: { "subject": e.subject, "erased": erased, "restricted": restricted } })
+}
+
+thread_local! {
+    static REDACTING: Cell<bool> = const { Cell::new(false) };
+}
+
+/// Whether the notary is redacting a subject's columns right now: the one
+/// change a record that never changes takes, which a feat's trigger lets
+/// through by `cella.redacting()`. No role can set it.
+pub fn redacting() -> bool {
+    REDACTING.with(Cell::get)
+}
+
+struct Redacting;
+
+impl Drop for Redacting {
+    fn drop(&mut self) {
+        REDACTING.with(|r| r.set(false));
+    }
+}
+
+fn redact(c: &mut SpiClient<'_>, subject: &str, class: &str) {
+    REDACTING.with(|r| r.set(true));
+    let _during = Redacting;
+    spi(c.update("SELECT cella.redact($1, $2)", None, &[subject.into(), class.into()]));
 }
 
 fn tombstone(c: &mut SpiClient<'_>, subject: &str, class: &str, receipt: i64, date: &str, restricted: bool) {
@@ -273,7 +299,7 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
                 ));
                 destroyed += first::<i64>(left).unwrap_or(0);
                 spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.clone().into(), class.clone().into()]));
-                spi(c.update("SELECT cella.redact($1, $2)", None, &[subject.clone().into(), class.clone().into()]));
+                redact(c, &subject, &class);
                 spi(c.update(
                     "UPDATE vault.erased SET restricted = false WHERE subject = $1 AND class = $2",
                     None,

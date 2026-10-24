@@ -14,6 +14,8 @@ A person's membership, from invited to exited. Members records who belongs; it d
 | `POST /api/member/profile` | confluent | a member's own fields |
 | `POST /api/member/suspend` | ordered | changes who votes |
 | `POST /api/member/exit` | ordered | freezes the capital account |
+| `POST /api/member/erase` | ordered | erasure wins over every update |
+| `POST /api/member/forget` | ordered | erasure wins over every update |
 
 ## Powers
 
@@ -26,13 +28,23 @@ check.
 | admit | decided: the cited decision admits the member and carried | the assembly, by consent |
 | profile | self: the member's own | every member |
 | suspend, exit | decided: the cited decision suspends the member, or ends their membership, and carried | the assembly |
+| erase | decided: the cited decision erases a member who has left, and carried | the assembly |
+| forget | self: the member's own contact details | every member |
 
 `004-powers.sql` registers invite's power in `cella.power`; the decided
 writes are listed in `decision.cites` by the `decision-member` graft.
 
 ## Schema
 
-`member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` (admitted) and shares, and the days it was `invited`, `suspended` and `exited`. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.
+`member` (`core/sql/`): `member.member`, one row per address, with name, optional email and phone, status (`invited`, `active`, `suspended`, `exited`), `since` (admitted) and shares, and the days it was `invited`, `suspended` and `exited`. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.
+
+## Personal data
+
+`006-personal.sql` registers in `cella.personal`, by the member's
+address: the name, of class `member-profile`, and the email and phone,
+of class `contact`; the address itself is the pseudonym every entry
+names the member by, commented not personal. A write carrying any of
+them marks it, so the log commits to it and the vault keeps it.
 
 ## Rules
 
@@ -40,6 +52,8 @@ writes are listed in `decision.cites` by the `decision-member` graft.
 - `member.admitted`, on `member:member:admit`: the write left the member active, since the verdict date, holding shares. The `decision-member` graft runs it again for each member a decision's close admits.
 - `member.own_profile`, on `member:member:profile`: the profile is the actor's own (`cella.actor()`); a profile needs no power.
 - `member.ends`, on `member:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
+- `member.erases`, on `member:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
+- `member.forgets`, on `member:member:forget`: the actor erased their own contact details, and nothing more.
 
 Whether the cited decision asks it is the `decision-member` graft's rule on the same ops; whether it closed and passed on its roll, `circle-decision-member`'s.
 
@@ -48,7 +62,10 @@ Whether the cited decision asks it is the `decision-member` graft's rule on the 
 - `invite` (confluent), and `inviting`, the same as a write a graft extends in its transaction: inserts the member invited on the verdict date, holding nothing; submits `{ member, invited }`, the name left out. The `key-member` graft replaces it in the shell with an invitation carrying the invitee's first device.
 - `admit` (ordered), and `admitting`, its state alone, which the close of the deciding decision runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the rules to refuse. Submits `{ member, shares, decision }`.
 - `suspend`, `exit` (ordered): set the status and its day; submit `{ member, decision }`. `circle-decision-member` carries them out when the decision that asks them passes.
-- `profile` (confluent): sets the member's given fields, the name for now, and submits `{ member, fields }`: the names of the fields changed, never their values.
+- `profile` (confluent): sets the member's given fields, name, email or phone, and submits `{ member, fields, values }`, each value marked personal, so the log keeps a commitment to it.
+- `erase` (ordered): submits `{ member, decision, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the name and contact details deleted from the vault and redacted here, payroll, receipts and the books restricted until their clocks run out. `circle-decision-member` carries it out when the decision that asks it passes.
+- `forget` (ordered): submits `{ member, erasure }`, the erasure of the member's own contact details.
+- The invitation's payload commits to the invitee's name.
 
 ### The exit's hook
 

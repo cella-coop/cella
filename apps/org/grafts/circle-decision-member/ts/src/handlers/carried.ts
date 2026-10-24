@@ -1,6 +1,6 @@
 import { done, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-ops'
-import { exit, suspend } from '@cella/org-member/api'
+import { erase, exit, suspend } from '@cella/org-member/api'
 import { grant, nest, revoke } from '@cella/org-circle/api'
 import { add, remove } from '@cella/org-graft-circle-member/api'
 
@@ -14,6 +14,7 @@ const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
 const writes: Record<string, { op: Permission; run: (a: Args, decision: string, deps: Deps) => Promise<Settled<unknown> | Pending | Refused> }> = {
   suspend: { op: 'member:member:suspend', run: (a, decision, deps) => suspend({ member: String(a.member), decision }, deps) },
   exit: { op: 'member:member:exit', run: (a, decision, deps) => exit({ member: String(a.member), decision }, deps) },
+  erase: { op: 'member:member:erase', run: (a, decision, deps) => erase({ member: String(a.member), decision }, deps) },
   nest: { op: 'circle:circle:nest', run: (a, decision, deps) => nest({ circle: String(a.circle), parent: String(a.parent), decision }, deps) },
   grant: {
     op: 'circle:mandate:grant',

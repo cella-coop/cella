@@ -43,3 +43,27 @@ export interface Posted {
   entry: string
   receipt: number
 }
+
+// An entry as the journal lists it: what it moved, the sum of its debits,
+// in cents.
+export interface Journaled {
+  id: string
+  date: string
+  label: string
+  amount: number
+  corrects: string | null
+  receipt: number | null
+}
+
+export interface Booked {
+  id: string
+  n: number
+  account: string
+  side: Side
+  cents: number
+}
+
+export interface Detail extends Journaled {
+  lines: Booked[]
+  corrected: string[]
+}

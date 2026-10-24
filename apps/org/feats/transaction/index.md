@@ -163,6 +163,13 @@ number, nothing posted changes, `transaction.pays` takes a payment and
 nothing else, `transaction.payroll` a payroll and nothing else, and
 `transaction.corrects` refuses a second correction from the same base.
 
+## Shell
+
+The `journal`, the latest entry first, each with the sum of its debits;
+an entry's page lists its lines and the entries that correct it. Posting
+from the shell is not offered: the pilot's entries come from invoices,
+through `invoice-transaction`.
+
 ## Lanterne
 
 - Forty entries from 1 July to 24 October 2026, `je-0001` to `je-0040`.

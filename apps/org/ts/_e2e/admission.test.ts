@@ -6,10 +6,9 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { LoroDoc } from 'loro-crdt'
 import { close, vote } from '@cella/org-decision/api'
 import { edit } from '@cella/org-document/api'
-import { body } from '@cella/org-document/models'
+import { createDoc, edits } from '@cella/org-document/models'
 import { admit } from '@cella/org-member/api'
 import { closed } from '@cella/org-graft-circle-decision-member/api'
 import { add } from '@cella/org-graft-circle-member/api'
@@ -131,11 +130,11 @@ test('seated in the assembly, Inès edits a document through the member role\'s 
   // carry it.
   const laptop = await generate(ines)
   await su.query(`INSERT INTO key.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2026-10-31')`, [laptop.key, ines])
-  const doc = new LoroDoc()
+  const doc = createDoc()
   const { rows } = await su.query<{ bytes: Buffer }>(`SELECT bytes FROM document.update WHERE document = 'internal-rules' ORDER BY receipt`)
   doc.importBatch(rows.map((r) => new Uint8Array(r.bytes)))
   const from = doc.version()
-  doc.getText(body).insert(0, 'Welcome, Inès.\n')
+  edits.create(doc, undefined, 0, 'paragraph', {}, [{ text: 'Welcome, Inès.' }])
   doc.commit()
   const edited = await edit({ document: 'internal-rules', update: doc.export({ mode: 'update', from }) }, { db: app, actor: ines, sign: signer(scope, ines, laptop) })
   assert.equal(edited.state, 'settled')

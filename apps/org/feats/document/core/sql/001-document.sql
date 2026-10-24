@@ -18,31 +18,37 @@ CREATE TABLE document.update (
 
 CREATE INDEX ON document.update (document);
 
--- A version: the text at a Loro frontier, in canonical markdown (LF line
--- endings, NFC, one final newline), with its BLAKE3 hash, the frontier and
--- its version vector. Numbered per document, `<document>@<n>`; immutable.
+-- A version: the document at a Loro frontier, as a Loro snapshot of it,
+-- with the frontier and its version vector. Its canonical JSON (RFC 8785),
+-- its BLAKE3 hash and its plain text are the database's, computed from
+-- the snapshot by the cella extension, never taken from a client.
+-- Numbered per document, `<document>@<n>`; immutable.
 CREATE TABLE document.version (
   id text PRIMARY KEY,
   document text NOT NULL REFERENCES document.document,
   n integer NOT NULL CHECK (n > 0),
   saved date NOT NULL,
-  body text NOT NULL CHECK (
-    body = normalize(body, NFC) AND strpos(body, E'\r') = 0 AND body ~ '[^\n]\n$'
-  ),
-  hash bytea NOT NULL GENERATED ALWAYS AS (cella.digest(body)) STORED,
+  snapshot bytea NOT NULL,
+  canonical text NOT NULL GENERATED ALWAYS AS (cella.document_canonical(snapshot)) STORED,
+  hash bytea NOT NULL GENERATED ALWAYS AS (cella.document_hash(snapshot)) STORED,
+  plain text NOT NULL GENERATED ALWAYS AS (cella.document_text(snapshot)) STORED,
   frontier jsonb NOT NULL,
   vv jsonb NOT NULL,
   UNIQUE (document, n),
   CHECK (id = document || '@' || n)
 );
 
--- A comment on a version, anchored by the text it quotes.
+-- A comment on a version, on the text it quotes within one block, and
+-- anchored there by Loro cursors at the quote's ends (`{ block, from, to }`,
+-- each cursor in base64), which find the quote in the draft however the
+-- text around it moves.
 CREATE TABLE document.comment (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   version text NOT NULL REFERENCES document.version,
   author text NOT NULL,
   at date NOT NULL,
   quote text NOT NULL CHECK (quote <> ''),
+  anchor jsonb CHECK (anchor IS NULL OR (anchor ? 'block' AND anchor ? 'from' AND anchor ? 'to')),
   text text NOT NULL,
   resolved boolean NOT NULL DEFAULT false
 );
@@ -106,7 +112,7 @@ CREATE TRIGGER permanent BEFORE UPDATE OR DELETE ON document.adoption
 -- A comment quotes text its version holds.
 CREATE FUNCTION document.quotes() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF NOT EXISTS (SELECT FROM document.version v WHERE v.id = NEW.version AND strpos(v.body, NEW.quote) > 0) THEN
+  IF NOT EXISTS (SELECT FROM document.version v WHERE v.id = NEW.version AND strpos(v.plain, NEW.quote) > 0) THEN
     RAISE EXCEPTION '% does not hold the quoted text', NEW.version
       USING ERRCODE = 'triggered_action_exception';
   END IF;

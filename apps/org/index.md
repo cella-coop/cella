@@ -35,9 +35,10 @@ rule's reason:
 
 - a stance on an open decision, and closing it, which admits and seats the
   members a passing admission names;
-- an edit of a document's draft from a plain text area, sent as one Loro
-  update; saving a version; a comment. A live collaborative editor is not
-  built;
+- an edit of a document's draft in the block editor, live: each member's
+  edits go as Loro updates through the `edit` write and reach everyone
+  with the document open as they settle; saving a version, which the
+  database names by its canonical hash; a comment;
 - a new invoice, numbered by the server and posted to the books; a
   payment, posted; a void, its credit note posted; marking it sent;
   linking it to a client;

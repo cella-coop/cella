@@ -66,7 +66,7 @@ receipt's time orders nothing; receipt numbers order stances.
 | payload | BLAKE3 derive-key | `cella org 2026-10 log payload` | the payload's canonical JSON |
 | request | SHA-256 | none: the write message's tag separates it | the request's canonical JSON |
 | rule text | BLAKE3 derive-key | `cella org 2026-10 rule text` | a rule's definition, as `pg_get_functiondef` gives it |
-| content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical text |
+| content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-decision-adopts)) |
 
 The payload and request digests are not salted; see the trust doc's
 current limits.

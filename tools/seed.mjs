@@ -15,7 +15,7 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { LoroDoc } from 'loro-crdt'
+import { anchor, createDoc, edits, outline } from '../apps/org/feats/document/core/ts/src/models/index.ts'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { fixture } from '../apps/org/core/sign/ts/src/index.ts'
@@ -110,41 +110,52 @@ for (const a of admissions) {
 }
 
 // Each document's versions become Loro updates, one per version in order,
-// from one peer: the history before the log, with no author. A version
-// records the frontier and version vector its update reached.
+// from one peer: the history before the log, with no author. Each version's
+// outline is patched onto the one before, keeping the blocks that did not
+// change, and saved as a snapshot, which the database canonicalises and
+// hashes; it records the frontier and version vector its update reached.
 const documents = read('document')
 let versions = 0
 for (const d of documents.document ?? []) {
   await db.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [d.id, d.title])
-  const loro = new LoroDoc()
-  loro.setPeerId(1n)
+  const loro = createDoc(1n)
   for (const v of d.version ?? []) {
     const from = loro.version()
-    loro.getText('body').update(v.body)
+    edits.patch(loro, undefined, outline(v.block ?? [], v.id))
     loro.commit()
     await db.query(
       `INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (${receipt}, $1, NULL, $2, $3)`,
       [d.id, day(v.saved), loro.export({ mode: 'update', from })],
     )
     await db.query(
-      'INSERT INTO document.version (document, n, saved, body, frontier, vv) VALUES ($1, $2, $3, $4, $5, $6)',
-      [d.id, Number(v.id.split('@')[1]), day(v.saved), v.body, JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
+      'INSERT INTO document.version (document, n, saved, snapshot, frontier, vv) VALUES ($1, $2, $3, $4, $5, $6)',
+      [d.id, Number(v.id.split('@')[1]), day(v.saved), loro.export({ mode: 'snapshot' }), JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
     )
     versions++
   }
 }
+// A comment anchors where its version holds its quote, as the comment
+// write does.
 for (const c of (documents.document ?? []).flatMap((d) => d.comment ?? [])) {
+  const { rows } = await db.query('SELECT snapshot FROM document.version WHERE id = $1', [c.version])
+  const doc = createDoc()
+  doc.import(new Uint8Array(rows[0].snapshot))
   await db.query(
-    'INSERT INTO document.comment (version, author, at, quote, text) VALUES ($1, $2, $3, $4, $5)',
-    [c.version, c.author, day(c.at), c.quote, c.text],
+    'INSERT INTO document.comment (version, author, at, quote, anchor, text) VALUES ($1, $2, $3, $4, $5, $6)',
+    [c.version, c.author, day(c.at), c.quote, JSON.stringify(anchor(doc, c.quote)), c.text],
   )
 }
 
-// What decisions ask to adopt, and the adoptions already made, each from
-// the version adopted before it.
+// What decisions ask to adopt, named by the hash the database gave the
+// version, and the adoptions already made, each from the version adopted
+// before it.
 const adoptions = read('graft.decision-document').adoption ?? []
 for (const a of adoptions) {
-  await db.query('INSERT INTO decision_document.adoption (decision, document, version) VALUES ($1, $2, $3)', [a.decision, a.document, a.version])
+  await db.query(
+    `INSERT INTO decision_document.adoption (decision, document, version, hash)
+     SELECT $1, $2, $3, hash FROM document.version WHERE id = $3 AND document = $2`,
+    [a.decision, a.document, a.version],
+  )
   if (a.adopted) {
     await db.query(
       `INSERT INTO document.adoption (receipt, document, version, base, adopted)

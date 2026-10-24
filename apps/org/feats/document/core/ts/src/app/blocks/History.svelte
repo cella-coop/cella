@@ -2,14 +2,16 @@
   import { Field, Form, Section, short, Table, type Column } from '@cella/org-ui'
   import type { Note, Page, Version } from '../../models/document.ts'
 
-  // The saved versions, the adopted one marked, and the comments on them,
-  // each anchored by the text it quotes, which `document.quotes` checks.
+  // The saved versions, each named by its canonical hash, the adopted one
+  // marked, and the comments on them: each on the text it quotes, which
+  // `document.quotes` checks, and anchored there by Loro cursors, which
+  // the draft highlights.
   let { data }: { data: Page; id: string } = $props()
 
   const versions: Column<Version>[] = [
     { key: 'n', label: 'Version', kind: 'title', value: (v) => v.id },
     { key: 'saved', label: 'Saved', kind: 'date', value: (v) => v.saved },
-    { key: 'hash', label: 'BLAKE3', kind: 'mono', value: (v) => short(v.hash, 16) },
+    { key: 'hash', label: 'Hash', kind: 'mono', value: (v) => short(v.hash, 16) },
     { key: 'adopted', label: 'Binding', kind: 'badge', value: (v) => (v.adopted ? 'adopted' : null), tone: () => 'positive' },
   ]
   const comments: Column<Note>[] = [

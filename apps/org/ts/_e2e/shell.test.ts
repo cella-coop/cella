@@ -10,6 +10,7 @@ import { createServer } from 'node:net'
 import pg from 'pg'
 import { parse } from 'devalue'
 import * as drag from '@cella/org-ui/models'
+import { b64, createDoc, order, text as text_ } from '@cella/org-document/models'
 
 const su = new pg.Client()
 const entry = new URL('../build/index.js', import.meta.url).pathname
@@ -266,15 +267,48 @@ test('a write with no one acting fails before any verdict', async () => {
   assert.match(done.reason ?? '', /act as a member first/)
 })
 
-test('Hugo edits the internal rules from a text area: one Loro update, settled', async () => {
+test('Hugo edits the internal rules as the editor does: one Loro update, settled and relayed live', async () => {
   const { text } = await page('/documents/internal-rules')
   assert.ok(text.includes('Tuesday is a studio day'))
-  const draft = (await one<{ body: string }>(`SELECT body FROM document.version WHERE id = 'internal-rules@3'`)).body
-  const edited = await act('/documents/internal-rules', 'edit', { text: draft.replace('Tuesday', 'Thursday').replaceAll('\n', '\r\n') }, hugo)
+
+  // A second member has the document open: its stream opens with what it
+  // lacks, then relays each edit as it settles.
+  const live = await fetch(`${base}/documents/internal-rules/live`)
+  assert.equal(live.headers.get('content-type'), 'text/event-stream')
+  const reader = live.body!.pipeThrough(new TextDecoderStream()).getReader()
+  const events: string[] = []
+  const next = async () => {
+    let buffer = ''
+    while (!buffer.includes('\n\n') || !buffer.includes('event: update')) {
+      const { value, done } = await reader.read()
+      assert.ok(!done, 'the stream ended')
+      buffer += value
+    }
+    events.push(buffer)
+  }
+  await next()
+
+  const doc = createDoc(77n)
+  const rows = (await su.query<{ bytes: Buffer }>(`SELECT bytes FROM document.update WHERE document = 'internal-rules' ORDER BY receipt`)).rows
+  doc.importBatch(rows.map((r) => new Uint8Array(r.bytes)))
+  const from = doc.version()
+  const id = order(doc).find((r) => text_(doc, r.id).toString().includes('Tuesday'))?.id
+  assert.ok(id)
+  const t = text_(doc, id)
+  const at = t.toString().indexOf('Tuesday')
+  t.delete(at, 7)
+  t.insert(at, 'Thursday')
+  doc.commit()
+  const update = b64.encode(doc.export({ mode: 'update', from }))
+  const edited = await act('/documents/internal-rules', 'edit', { update }, hugo)
   assert.deepEqual(edited, { op: 'document:document:edit', state: 'settled', entry: 1, then: [] })
+  await next()
+  assert.ok(events[1].includes(`"update":"${update}"`), 'the edit is relayed as it was sent')
+  await reader.cancel()
+
   assert.ok((await page('/documents/internal-rules')).text.includes('Thursday is a studio day'))
-  const same = await act('/documents/internal-rules', 'edit', { text: draft.replace('Tuesday', 'Thursday') }, hugo)
-  assert.equal(same.state, 'failed', 'an edit that changes nothing is not sent')
+  const junk = await act('/documents/internal-rules', 'edit', { update: 'AAAA' }, hugo)
+  assert.equal(junk.state, 'failed', 'bytes that are not a Loro update are not written')
 })
 
 test('Julien issues F-2026-0056, posted to the books; Camille, without the power, is refused', async () => {

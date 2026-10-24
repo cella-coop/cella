@@ -1,6 +1,8 @@
 import type { Db } from '@cella/org-db'
-import type { Listed, Note, Page, Update, Version } from '../models/document.ts'
-import { draft } from '../handlers/loro.ts'
+import { b64, type Listed, type Note, type Page, type Shown, type Update, type Version } from '../models/document.ts'
+import type { Canon } from '../models/canonical.ts'
+import { merged } from '../handlers/loro.ts'
+import { canonical, hash } from '../models/canonical.ts'
 
 export async function documents(db: Db): Promise<Listed[]> {
   const { rows } = await db.query<Listed>(
@@ -14,7 +16,8 @@ export async function documents(db: Db): Promise<Listed[]> {
 
 export async function document(db: Db, id: string): Promise<Page | null> {
   const found = await db.query<{ id: string; title: string; adopted: string | null }>(
-    `SELECT d.id, d.title, a.version AS adopted FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id WHERE d.id = $1`,
+    `SELECT d.id, d.title, a.version AS adopted
+     FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id WHERE d.id = $1`,
     [id],
   )
   const d = found.rows[0]
@@ -27,7 +30,7 @@ export async function document(db: Db, id: string): Promise<Page | null> {
     [id, d.adopted],
   )
   const comments = await db.query<Note>(
-    `SELECT c.id::text AS id, c.version, c.author, to_char(c.at, 'YYYY-MM-DD') AS at, c.quote, c.text, c.resolved
+    `SELECT c.id::text AS id, c.version, c.author, to_char(c.at, 'YYYY-MM-DD') AS at, c.quote, c.text, c.resolved, c.anchor
      FROM document.comment c JOIN document.version v ON v.id = c.version WHERE v.document = $1 ORDER BY c.id DESC`,
     [id],
   )
@@ -36,5 +39,26 @@ export async function document(db: Db, id: string): Promise<Page | null> {
      FROM document.update WHERE document = $1 ORDER BY receipt DESC`,
     [id],
   )
-  return { ...d, draft: await draft(db, id), versions: versions.rows, comments: comments.rows, updates: updates.rows }
+  const doc = await merged(db, id)
+  return {
+    id: d.id,
+    title: d.title,
+    adopted: d.adopted,
+    snapshot: b64.encode(doc.export({ mode: 'snapshot' })),
+    draft: canonical(doc),
+    hash: hash(doc),
+    versions: versions.rows,
+    comments: comments.rows,
+    updates: updates.rows,
+  }
+}
+
+// A version as the database canonicalised and hashed it.
+export async function shown(db: Db, version: string): Promise<Shown | null> {
+  const { rows } = await db.query<{ id: string; document: string; hash: string; canonical: string }>(
+    `SELECT id, document, encode(hash, 'hex') AS hash, canonical FROM document.version WHERE id = $1`,
+    [version],
+  )
+  const v = rows[0]
+  return v ? { id: v.id, document: v.document, hash: v.hash, canonical: JSON.parse(v.canonical) as Canon } : null
 }

@@ -4,7 +4,7 @@ import Draft from './blocks/Draft.svelte'
 import History from './blocks/History.svelte'
 
 // The feat's client side: the documents, and a document's page with its
-// draft, its versions and the comments on them.
+// draft in the block editor, its versions and the comments on them.
 export const app: App = {
   name: 'document',
   collections: {
@@ -45,3 +45,7 @@ export const app: App = {
     },
   },
 }
+
+// A document read, not edited, from its canonical form: a version on the
+// page of the decision that adopts it.
+export { default as Reader } from '../components/Reader.svelte'

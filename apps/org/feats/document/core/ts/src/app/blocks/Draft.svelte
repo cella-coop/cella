@@ -1,24 +1,43 @@
 <script lang="ts">
-  import { Button, Field, Form, Section } from '@cella/org-ui'
+  import { Form, Note, Section, short, type Embeds } from '@cella/org-ui'
   import type { Page } from '../../models/document.ts'
   import { useDraft } from '../../hooks/useDraft.ts'
+  import Editor from '../../components/Editor.svelte'
+  import Reader from '../../components/Reader.svelte'
 
-  // The draft in a plain text area: saving sends the difference as one Loro
-  // update, merged with everyone else's. A live collaborative editor is not
-  // built; two members editing at once each send their own update, and
-  // Loro merges them.
-  let { data }: { data: Page; id: string } = $props()
+  // The draft, edited together: every member with the document open sees
+  // the others' edits as they settle. The server renders it to read; the
+  // editor takes it over once the browser holds the Loro document. Under
+  // it, the draft's canonical hash, what a version saved now is named by,
+  // and whether this member's edits are saved.
+  let { data, embeds = {} }: { data: Page; id: string; embeds?: Embeds } = $props()
 
-  const draft = useDraft(() => data.draft)
+  const draft = useDraft(() => data)
+  const anchors = $derived(data.comments.filter((c) => !c.resolved && c.anchor).map((c) => c.anchor!))
+  const state = $derived.by(() => {
+    const s = draft.sync
+    if (!s) {
+      return 'opening'
+    }
+    if (s.problem) {
+      return `not saved: ${s.problem}`
+    }
+    if (!s.online) {
+      return s.waiting ? 'offline, edits wait' : 'offline'
+    }
+    return s.waiting ? 'saving' : 'saved'
+  })
 </script>
 
 <Section title="Draft">
-  <Form action="edit" submit="Save edit" reset={false}>
-    <Field label="Markdown, merged from every update" name="text" rows={18} bind:value={draft.text} wide />
-  </Form>
-  {#if draft.dirty}
-    <div><Button onclick={() => draft.revert()}>Discard changes</Button></div>
+  {#if draft.doc}
+    <Editor doc={draft.doc} name={data.title} {anchors} {embeds} />
+  {:else}
+    <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
   {/if}
+  <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={draft.sync?.hash ?? data.hash}>
+    <Note text="BLAKE3 {short(draft.sync?.hash ?? data.hash, 16)} · {state}" />
+  </div>
 </Section>
 
 <Section title="Versions">

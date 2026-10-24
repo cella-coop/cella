@@ -1,5 +1,9 @@
-# Documents and their versions. Bodies are the versions' text; edits between
-# versions are Loro's and are not fixtures.
+# Documents and their versions. Each version is an outline of blocks in
+# reading order: a `type` (paragraph unless named), a `depth` (0 at the top,
+# one more than the block it nests under), the props its type keeps, and its
+# text, plain or as runs with their marks. The seed carries each version
+# over into the next, keeping the blocks that did not change, so edits
+# between versions are Loro's and are not fixtures.
 
 [[document]]
 id = "internal-rules"
@@ -8,24 +12,64 @@ title = "Règlement intérieur"
 [[document.version]]
 id = "internal-rules@3"
 saved = 2026-05-28
-body = """
-# Règlement intérieur
 
-## Working time
-A full-time member works 35 hours a week. Up to three days a week may be
-worked remotely; Tuesday is a studio day for everyone.
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Règlement intérieur"
 
-## Pay
-Pay follows one grid: the ratio between the highest and the lowest salary is
-at most 1.6.
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Working time"
 
-## Rates
-The standard day rate is set each year by coordination. Associations and
-co-ops with fewer than ten staff pay the solidarity rate.
+[[document.version.block]]
+runs = [
+  { text = "A full-time member works " },
+  { text = "35 hours", bold = true },
+  { text = " a week. Up to three days a week may be worked remotely; Tuesday is a studio day for everyone." },
+]
 
-## Clients we refuse
-We do not work for fossil fuel companies, arms makers or political parties.
-"""
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Pay"
+
+[[document.version.block]]
+runs = [
+  { text = "Pay follows one grid: the ratio between the highest and the lowest salary is at most " },
+  { text = "1.6", bold = true },
+  { text = "." },
+]
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Rates"
+
+[[document.version.block]]
+runs = [
+  { text = "The standard day rate is set each year by coordination. Associations and co-ops with fewer than ten staff pay the " },
+  { text = "solidarity", italic = true },
+  { text = " rate." },
+]
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Clients we refuse"
+
+[[document.version.block]]
+type = "bullet"
+text = "Fossil fuel companies"
+
+[[document.version.block]]
+type = "bullet"
+text = "Arms makers"
+
+[[document.version.block]]
+type = "bullet"
+text = "Political parties"
 
 [[document]]
 id = "rate-card-2027"
@@ -34,31 +78,179 @@ title = "Rate card 2027"
 [[document.version]]
 id = "rate-card-2027@1"
 saved = 2026-10-09
-body = """
-# Rate card 2027
 
-| Service | Unit | Standard | Solidarity |
-|---|---|---|---|
-| Day of work | day | 560 € | 380 € |
-| Brand identity | project | from 6 000 € | from 3 300 € |
-| Website | project | from 12 000 € | from 7 500 € |
-| Marketing retainer | month | from 4 800 € | from 2 400 € |
-"""
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Rate card 2027"
+
+[[document.version.block]]
+runs = [
+  { text = "Day rates and project floors for " },
+  { text = "2027", italic = true },
+  { text = ". Associations and co-ops with fewer than ten staff pay the " },
+  { text = "solidarity", bold = true },
+  { text = " rate." },
+]
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Services"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Day of work", bold = true }, { text = " — per day" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: 560 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: 380 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Brand identity", bold = true }, { text = " — per project" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 6 000 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 3 300 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Website", bold = true }, { text = " — per project" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 12 000 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 7 500 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Marketing retainer", bold = true }, { text = " — per month" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 4 800 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 2 400 €"
 
 [[document.version]]
 id = "rate-card-2027@2"
 saved = 2026-10-20
-body = """
-# Rate card 2027
 
-| Service | Unit | Standard | Solidarity |
-|---|---|---|---|
-| Day of work | day | 560 € | 380 € |
-| Brand identity | project | from 6 500 € | from 3 300 € |
-| Website | project | from 12 000 € | from 7 500 € |
-| Online shop | project | from 9 500 € | from 6 000 € |
-| Marketing retainer | month | from 4 800 € | from 2 400 € |
-"""
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Rate card 2027"
+
+[[document.version.block]]
+runs = [
+  { text = "Day rates and project floors for " },
+  { text = "2027", italic = true },
+  { text = ". Associations and co-ops with fewer than ten staff pay the " },
+  { text = "solidarity", bold = true },
+  { text = " rate." },
+]
+
+[[document.version.block]]
+type = "embed"
+embed = "decision"
+ref = "d-2026-011"
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Services"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Day of work", bold = true }, { text = " — per day" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: 560 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: 380 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Brand identity", bold = true }, { text = " — per project" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 6 500 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 3 300 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Website", bold = true }, { text = " — per project" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 12 000 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 7 500 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Online shop", bold = true }, { text = " — per project" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 9 500 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 6 000 €"
+
+[[document.version.block]]
+type = "bullet"
+runs = [{ text = "Marketing retainer", bold = true }, { text = " — per month" }]
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Standard: from 4 800 €"
+
+[[document.version.block]]
+type = "bullet"
+depth = 1
+text = "Solidarity: from 2 400 €"
 
 [[document.comment]]
 version = "rate-card-2027@2"

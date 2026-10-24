@@ -1,11 +1,14 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
 // every surplus allocation splits the whole surplus, every link a graft holds
-// resolves, every address is a member's, and the books agree with the
-// invoices.
+// resolves, every address is a member's, the books agree with the invoices,
+// and every document version is an outline of blocks the document model
+// takes, whose embeds name what exists and whose comments quote text one of
+// its blocks holds.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { parse } from 'smol-toml'
+import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
 const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
 const errors = []
@@ -74,9 +77,29 @@ const check = (name) => {
 
   const documents = ids(document.document)
   const versions = new Set((document.document ?? []).flatMap((d) => (d.version ?? []).map((v) => v.id)))
+  const outlines = new Map()
+  for (const v of (document.document ?? []).flatMap((d) => d.version ?? [])) {
+    try {
+      outlines.set(v.id, outline(v.block ?? [], v.id))
+    } catch (e) {
+      fail(e.message)
+      continue
+    }
+    for (const e of embedded(outlines.get(v.id))) {
+      if (e.embed !== 'decision') {
+        fail(`${v.id}: embeds a ${e.embed}, which nothing draws`)
+      } else {
+        has(decisions, e.ref, 'decision', `${v.id}'s embed`)
+      }
+    }
+  }
+  const texts = (fs) => fs.flatMap((f) => [f.runs.map((r) => r.text).join(''), ...texts(f.children)])
   for (const c of (document.document ?? []).flatMap((d) => d.comment ?? [])) {
     has(versions, c.version, 'version', 'comment')
     known(c.author, 'comment')
+    if (outlines.has(c.version) && !texts(outlines.get(c.version)).some((t) => t.includes(c.quote))) {
+      fail(`comment on ${c.version}: no block holds “${c.quote}”`)
+    }
   }
 
   const clients = ids(client.client)

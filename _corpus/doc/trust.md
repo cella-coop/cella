@@ -203,6 +203,27 @@ makes no claim that the host cannot forge a vote.
   No one holds a group's key alone.
 - Lost keys are recovered from guardian shares.
 
+## What a decision adopts
+
+A decision that adopts a document names its content, not a row: the
+BLAKE3 of the version's canonical form, which anyone holding the version
+can compute again without cella. A document is a Loro tree of blocks; its
+canonical form is that tree as JSON per RFC 8785 (JCS): the blocks in
+reading order, each with its type, the props its type keeps, its text as
+runs with their marks, and its children, block ids left out, so documents
+that read the same hash the same however they were made. Numbers are
+safe integers; a document holding anything else has no canonical form
+and cannot be saved as a version.
+
+The database computes it, from the Loro snapshot a version keeps, in the
+`cella` extension (`cella.document_canonical`, `cella.document_hash`, on
+the `loro` crate pinned to the browser's `loro-crdt`); the server never
+takes a hash from a client. The browser computes the same bytes to
+preview the hash while members edit, and the document feat's tests hold
+the two to the same bytes. An adoption's log entry commits to the hash,
+and `decision-document`'s rule refuses to adopt a version that hashes
+otherwise than the decision names.
+
 ## Personal data
 
 Personal data stays out of the log. Each entry holds commitments, each with

@@ -1,2 +1,8 @@
 export * from './ops.ts'
 export * from './document.ts'
+export * from './blocks.ts'
+export * as edits from './edits.ts'
+export { canonical, jcs, bytes, hash, plain, type Canon, type Block } from './canonical.ts'
+export type { Run, Fragment, Place } from './edits.ts'
+export { anchor } from './anchor.ts'
+export { outline, embedded, type Line } from './outline.ts'

@@ -279,9 +279,14 @@ no living document could be adopted. What must not have moved is the
 adopted version (`base: 'adopted'`). **Applied**: the comment and the doc
 now say so.
 
+A decision names the content it adopts by its canonical hash
+([trust](trust.md#what-a-decision-adopts)), so a version saved later with
+other content cannot ride on its consent, and one saved at the same
+frontier, holding the same content, can.
+
 **Lanterne.** Malik keeps editing the rate card after d-2026-011 names
-version 2; if the decision passes on 9 November, version 2 is adopted as
-read.
+version 2 by its hash; if the decision passes on 9 November, version 2 is
+adopted as read.
 
 ## Invoice numbers are gapless and chronological
 

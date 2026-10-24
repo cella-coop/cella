@@ -1,0 +1,33 @@
+{
+  "name": "editor-nabu-spike",
+  "private": true,
+  "type": "module",
+  "imports": {
+    "#lib/*": "./src/lib/*"
+  },
+  "scripts": {
+    "dev": "vite dev --port 5182 --strictPort",
+    "check": "svelte-kit sync && svelte-check",
+    "test": "vitest run",
+    "e2e": "playwright test"
+  },
+  "dependencies": {
+    "@aionbuilders/nabu": "0.1.0-beta.0",
+    "@fontsource/alegreya": "5.3.0",
+    "@fontsource/alegreya-sans": "5.3.0",
+    "@noble/hashes": "2.4.0",
+    "loro-crdt": "1.17.1",
+    "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.1",
+    "@sveltejs/kit": "3.1.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "fast-check": "4.10.2",
+    "happy-dom": "21.0.4",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
+  }
+}

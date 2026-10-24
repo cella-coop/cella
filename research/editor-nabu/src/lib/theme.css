@@ -1,0 +1,63 @@
+/* nabu's own UI reads --nb-* variables; point them at cella's roles. */
+:root {
+  --nb-bg-surface: var(--float);
+  --nb-bg-surface-sunken: var(--sunk);
+  --nb-bg-surface-hover: var(--hover);
+  --nb-bg-surface-active: var(--accent-soft);
+  --nb-bg-hover: var(--hover);
+  --nb-border: var(--line);
+  --nb-border-subtle: var(--line);
+  --nb-border-focus: var(--accent-border);
+  --nb-text-primary: var(--text);
+  --nb-text-secondary: var(--text-muted);
+  --nb-text-muted: var(--text-subtle);
+  --nb-text-placeholder: var(--text-subtle);
+  --nb-accent: var(--accent-soft);
+  --nb-link: var(--accent-text);
+  --nb-font-mono: var(--font-mono);
+  --nb-shadow-lg: var(--shadow-float);
+  --nb-glass-blur: none;
+  --nb-glass-blur-sm: none;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+}
+
+body {
+  background: var(--ground);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: var(--text-md);
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+input {
+  background: var(--sunk);
+  border: 1px solid transparent;
+  border-radius: var(--radius-control);
+  padding: var(--space-1) var(--space-2);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent-border);
+}
+
+::selection {
+  background: var(--accent-soft);
+}

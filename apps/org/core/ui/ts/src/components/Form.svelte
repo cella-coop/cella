@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { fromAction } from 'svelte/attachments'
-  import { enhance } from '$app/forms'
+  import { enhance, type SubmitFunction } from '$app/forms'
+  import { useForm } from '../hooks/useForm.ts'
   import Button from './Button.svelte'
 
   // A write: the fields post to the page's named action, which signs and
@@ -24,14 +25,31 @@
     children?: Snippet
   } = $props()
 
-  const enhanced = $derived(fromAction(enhance, () => () => async ({ update }: { update: (o: { reset: boolean }) => Promise<void> }) => update({ reset })))
+  const form = useForm()
+
+  // One post at a time: a press while one is under way is dropped, since
+  // each post signs a write of its own.
+  const submitting: SubmitFunction<Record<string, unknown> | undefined, Record<string, unknown> | undefined> = ({ cancel }) => {
+    if (!form.start()) {
+      cancel()
+      return
+    }
+    return async ({ update }) => {
+      try {
+        await update({ reset })
+      } finally {
+        form.done()
+      }
+    }
+  }
+  const enhanced = $derived(fromAction(enhance, () => submitting))
 </script>
 
 <form method="post" action="?/{action}" class="form" class:inline {@attach enhanced}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}
-  <div class="submit"><Button type="submit" {tone}>{submit}</Button></div>
+  <div class="submit"><Button type="submit" {tone} busy={form.pending}>{submit}</Button></div>
 </form>
 
 <style>

@@ -69,6 +69,21 @@ Client knows no invoices, projects or payments. What a client owes is read
 through the `client-invoice` graft. Duplicates, two members adding the
 same company, are merged by hand.
 
+## Schema
+
+`client` (`core/sql/`): `client.client`, with the fields above, the
+address as JSON. A trigger refuses a parent that is not a company (SQLSTATE
+`09000`), and a check refuses a client its own parent. The app role may
+select, insert and update; the rules role, `cella_rules`, may select.
+
+## Handlers
+
+`add`, `update` and `archive` (confluent) set the given fields from a
+fixed list of columns. At rung 1 the server applies writes in receipt
+order, so the last write to a field wins it, field by field. The log
+commits to the client's id and the names of the fields a write changed,
+never their values. Erasure is not built.
+
 ## Lanterne
 
 Eight clients, mostly co-ops, associations and small local firms:

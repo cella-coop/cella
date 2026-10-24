@@ -74,3 +74,13 @@ coordination's, counts its five.
   The two writes are not one transaction: an admission whose seat is
   refused leaves an active member without a seat, until a seat is added
   under the same decision.
+
+## Shell
+
+Adds to a decision's page its roll: each member's latest stance received
+before the cutoff, whether the close counted them, the outcome
+`circle_decision_member.passes` computes and, while it is open, the
+stance form, which posts the decision feat's `vote`; and to the list, the
+turnout. Its slice reacts to a settled `decision:decision:close` with
+`closed`, so the shell shows the admissions and seats as what followed
+the close.

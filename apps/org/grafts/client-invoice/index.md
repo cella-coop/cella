@@ -36,3 +36,10 @@ may select.
 
 `002-powers.sql` registers it in `cella.power`, and the `circle-member`
 graft checks it.
+
+## Shell
+
+Adds to an invoice's page the client it bills, or that it is unbilled,
+with the form that links it (`link`); and to the clients what each owes,
+from `client_invoice.standing`, and to a client's page the invoices that
+bill it.

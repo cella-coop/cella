@@ -45,6 +45,14 @@ decision. Lanterne's state is that of 24 October 2026.
 | `decision.propose` | confluent | right |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
 | `decision.close` | ordered | right |
+| `project.create`, `project:milestone.add`, `.complete`, `project.archive` | confluent | right; rung 2 numbers milestones by device ([work](#work-is-registers)) |
+| `project.budget` | ordered | right: against the shares ([shares](#a-share-never-exceeds-the-budget)) |
+| `member-project:project.share` | bounded on the budget | right |
+| `task.create`, `.move`, `.complete` | confluent | right: field registers, the last writer wins |
+| `member-task:task.assign`, `project-task:task.file` | confluent | right: registers |
+| `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
+| `timesheet.log`, `timesheet:period.submit` | confluent | right |
+| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)) |
 
 ## Nothing posts into a closed period
 
@@ -354,6 +362,72 @@ Field registers with the last writer winning are right for `client` and
 wins over every update, whichever arrives first. **Rung 2**: an update
 queued offline before the erasure must not resurrect the data.
 
+## A share never exceeds the budget
+
+Owner: the `member-project` graft, which sees both the budget (the
+`project` feat's) and the shares (its own).
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `share` vs `share`, one project | both, if what is left covers both | both, if it covers both | the budget is overspent |
+| `share` vs `budget` lowered | the budget is refused below the shares | the share is refused beyond the new budget | shares above the budget |
+| `share` vs `archive` | the share stands | refused: the project is archived | a share of a frozen project |
+| `share` vs `circle.mandate.revoke` of `set-budget` | the share stands | refused: no power | as any spend ([a mandate's limit](#a-mandates-limit)) |
+
+The share is bounded, as `account.draw` is: the only thing two shares can
+break together is the budget running out, the right they spend. Setting
+the budget is ordered against them, by `member_project.covers`. At rung 1
+the share's trigger locks the project's row, so shares and a budget
+change are serialised. **Rung 2**: a lead's device holds a slice of the
+budget offline and grants shares from it.
+
+**Lanterne.** Hugo grants Sofia 13 000 € of Ferrand's packaging budget
+while 12 000 € is left: refused. Once he grants her 600 € beside his own
+2 000 €, lowering the budget to 2 000 € is refused too.
+
+## No time goes into an approved month
+
+Owner: the `timesheet` feat; the entries and the months are its own.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `log` vs `approve`, same month | the entry is in what was approved | the entry is refused | an entry lands in a month already approved, and paid or counted on it |
+| `submit` vs `approve` | the approval settles | refused: not submitted | approved without its member's say |
+| `approve` vs `approve` | the second refused | the first refused | approved twice, by two people |
+| `log` vs `log` | both stand | both stand | — |
+
+`approve` works like `account.period.close`: it fixes, by receipt order,
+which entries made the month, so every log stays confluent while the
+approval alone is ordered. At rung 1 the entry's trigger reads the month
+`FOR SHARE` and the approval updates it. A day of more than 24 hours is
+two logs each fine alone, so it is not refused; it reads as an anomaly.
+
+**Rung 2.** An entry logged offline for a month approved before it
+arrived needs a late-write rule, as a post into a closed period does: it
+is refused for its month and logged into the first open one, flagged.
+
+**Lanterne.** Thomas logs the 30 October on 2 November, after Yusuf
+approved his October that morning: refused.
+
+## Work is registers
+
+Owners: the `task` feat for a task's fields; `member-task` for its
+assignee; `project-task` for its project; `project` for milestones.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `task.move` vs `task.move` | the later receipt's status | the later receipt's status | — |
+| `task.move` vs `task.complete` | done | moved, its day cleared | — |
+| `assign` vs `assign` | the later receipt's assignee | the later receipt's | — |
+| `file` vs `project.archive` | the task stays in the archived project | refused: archived | a task filed into a frozen project |
+| `milestone.add` vs `milestone.add` | numbered n and n+1 | numbered n and n+1 | two milestones numbered n |
+
+A task's fields are registers, the last writer winning each, so every
+task write is confluent. Filing into a project archived meanwhile is
+harmless and reads as such. **Rung 2**: milestones numbered under the
+project's lock collide when two devices add one offline; a milestone
+needs an id of its own, its number a position.
+
 ## Uncontested writes
 
 | Write | Why nothing contends |
@@ -363,6 +437,9 @@ queued offline before the erasure must not resurrect the data.
 | `decision.propose` | a fact; the roll is fixed from the seats when the server receives it, and the cutoff by `close` |
 | `member.invite` | two invitations do no harm |
 | `client.add` | duplicates are merged by hand |
+| `project.create`, `task.create` | facts; a project's slug taken twice is refused, a task's number is the server's |
+| `project:milestone.complete` | idempotent: the first day stands |
+| `timesheet:period.submit` | idempotent: the first day stands |
 
 ## Missing writes
 

@@ -22,8 +22,9 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 
 `cella serve` shows Lanterne from the dev database. Each feat's collection
 is a page in the sidebar: Members, Circles, Decisions and Documents
-(governance); Clients (work); Invoices, Accounts, Periods and Transactions
-(finance); Devices and the Log (platform). Every collection is the same
+(governance); Clients, Projects, Tasks and Timesheets (work); Invoices,
+Accounts, Periods and Transactions (finance); Devices and the Log
+(platform). Every collection is the same
 component, its drawer's View card holding the filter, the list or table
 layout and the table's columns, and every item the same detail view, its
 drawer's cards filled by the feat and the grafts that join it.
@@ -42,7 +43,13 @@ rule's reason:
 - a new invoice, numbered by the server and posted to the books; a
   payment, posted; a void, its credit note posted; marking it sent;
   linking it to a client;
-- a member's own name, a client's note, closing a month.
+- a member's own name, a client's note, closing a month;
+- a project, its milestones, its budget (ordered), its client and the
+  shares of its budget (bounded); a task, given to someone, filed under a
+  project and moved across the board, a drop between columns being the
+  move; time logged as the acting member, alone or against a project, a
+  month submitted by its member and approved by someone else (ordered),
+  which closes it to new entries.
 
 At rung 1 an ordered write settles or is refused at once, so Pending is
 never shown, though the shell handles it. How slices mount is in
@@ -61,20 +68,20 @@ never shown, though the shell handles it. How slices mount is in
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
 | `client` | work | 1 | contacts and companies |
+| `project` | work | 1 | initiatives, their milestones and budgets |
+| `task` | work | 1 | assignable work |
+| `timesheet` | work | 1 | time entries and members' months |
 | `meeting` | governance | later | agendas, attendance, minutes |
-| `project` | work | later | initiatives, milestones, budgets and shares |
-| `task` | work | later | assignable work |
-| `timesheet` | work | later | time entries and their periods |
 | `expense` | finance | later | capture, approve, reimburse |
 | `payslip` | finance | later | pay periods and payslips |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
 Seedling's co-op economics that rung 1 leaves out land with the later
-feats: patronage inputs (hours, wages, revenue per member) with
-`timesheet`, `payslip` and `invoice` through grafts onto `account`;
-buy-in, buyout over years, revolving capital and dues in `account`, once an
-`account-member` graft links capital accounts to members; quotes and
-budgets with `project`.
+feats: patronage inputs (hours, wages, revenue per member) from
+`timesheet`'s approved months, `payslip` and `invoice` through grafts onto
+`account`; buy-in, buyout over years, revolving capital and dues in
+`account`, once an `account-member` graft links capital accounts to
+members; quotes with `project`.
 
 Rung 1's pilot runs one write of each kind end to end: edit a document
 (confluent), issue an invoice (bounded, numbered by the server until rung 2),
@@ -89,6 +96,13 @@ and admit a member by vote (ordered).
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, and whether it passes on it |
 | `circle-member` | positions: who holds which role in which circle |
 | `client-invoice` | who an invoice bills |
+| `client-project` | whom a project is for |
 | `decision-document` | adoption of a document version by a decision |
 | `decision-member` | admission and suspension by a decision |
+| `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
+| `member-project` | shares of a project's budget, never beyond it |
+| `member-task` | who does a task |
+| `member-timesheet` | whose time an entry is, and a member's months |
+| `project-task` | which project and milestone a task is in |
+| `project-timesheet` | time against a project, and what it spent of the budget |

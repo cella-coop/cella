@@ -1,0 +1,61 @@
+# Which client each invoice bills.
+
+[[billing]]
+invoice = "F-2026-0041"
+client = "halles"
+
+[[billing]]
+invoice = "F-2026-0042"
+client = "nuvola"
+
+[[billing]]
+invoice = "F-2026-0043"
+client = "clairval"
+
+[[billing]]
+invoice = "F-2026-0044"
+client = "mauve"
+
+[[billing]]
+invoice = "F-2026-0045"
+client = "ondine"
+
+[[billing]]
+invoice = "F-2026-0046"
+client = "nuvola"
+
+[[billing]]
+invoice = "F-2026-0047"
+client = "halles"
+
+[[billing]]
+invoice = "F-2026-0048"
+client = "nuvola"
+
+[[billing]]
+invoice = "F-2026-0049"
+client = "clairval"
+
+[[billing]]
+invoice = "F-2026-0050"
+client = "velo"
+
+[[billing]]
+invoice = "F-2026-0051"
+client = "velo"
+
+[[billing]]
+invoice = "F-2026-0052"
+client = "ferrand"
+
+[[billing]]
+invoice = "F-2026-0053"
+client = "nuvola"
+
+[[billing]]
+invoice = "F-2026-0054"
+client = "halles"
+
+[[billing]]
+invoice = "F-2026-0055"
+client = "terres"

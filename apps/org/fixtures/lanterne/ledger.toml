@@ -1,0 +1,734 @@
+# The books: a slice of the French chart of accounts and the journal, amounts
+# in cents. Every entry balances. July to September are closed; October is open.
+
+[[account]]
+code = "1013"
+label = "Capital souscrit, appelé, versé"
+kind = "equity"
+
+[[account]]
+code = "1061"
+label = "Réserve légale"
+kind = "equity"
+
+[[account]]
+code = "1068"
+label = "Autres réserves (impartageables)"
+kind = "equity"
+
+[[account]]
+code = "120"
+label = "Résultat de l'exercice en cours"
+kind = "equity"
+
+[[account]]
+code = "411"
+label = "Clients"
+kind = "asset"
+
+[[account]]
+code = "44566"
+label = "TVA déductible sur autres biens et services"
+kind = "asset"
+
+[[account]]
+code = "44571"
+label = "TVA collectée"
+kind = "liability"
+
+[[account]]
+code = "512"
+label = "Banque — Crédit Coopératif"
+kind = "asset"
+
+[[account]]
+code = "613"
+label = "Locations"
+kind = "expense"
+
+[[account]]
+code = "626"
+label = "Frais postaux et de télécommunications, logiciels"
+kind = "expense"
+
+[[account]]
+code = "641"
+label = "Rémunérations du personnel"
+kind = "expense"
+
+[[account]]
+code = "645"
+label = "Charges de sécurité sociale et de prévoyance"
+kind = "expense"
+
+[[account]]
+code = "706"
+label = "Prestations de services"
+kind = "income"
+
+[[period]]
+month = "2026-07"
+closed = 2026-08-05
+
+[[period]]
+month = "2026-08"
+closed = 2026-09-04
+
+[[period]]
+month = "2026-09"
+closed = 2026-10-05
+
+[[period]]
+month = "2026-10"
+
+[[entry]]
+id = "je-0001"
+date = 2026-07-01
+label = "Opening balances carried over from the previous accounting tool"
+
+[[entry.line]]
+account = "512"
+debit = 9200000
+
+[[entry.line]]
+account = "1013"
+credit = 1300000
+
+[[entry.line]]
+account = "1061"
+credit = 900000
+
+[[entry.line]]
+account = "1068"
+credit = 3800000
+
+[[entry.line]]
+account = "120"
+credit = 3200000
+
+[[entry]]
+id = "je-0002"
+date = 2026-07-03
+label = "Invoice F-2026-0041"
+
+[[entry.line]]
+account = "411"
+debit = 1440000
+
+[[entry.line]]
+account = "706"
+credit = 1200000
+
+[[entry.line]]
+account = "44571"
+credit = 240000
+
+[[entry]]
+id = "je-0003"
+date = 2026-07-05
+label = "Studio rent, 2026-07"
+
+[[entry.line]]
+account = "613"
+debit = 240000
+
+[[entry.line]]
+account = "44566"
+debit = 48000
+
+[[entry.line]]
+account = "512"
+credit = 288000
+
+[[entry]]
+id = "je-0004"
+date = 2026-07-06
+label = "Invoice F-2026-0042"
+
+[[entry.line]]
+account = "411"
+debit = 576000
+
+[[entry.line]]
+account = "706"
+credit = 480000
+
+[[entry.line]]
+account = "44571"
+credit = 96000
+
+[[entry]]
+id = "je-0005"
+date = 2026-07-10
+label = "Software and connectivity, 2026-07"
+
+[[entry.line]]
+account = "626"
+debit = 62000
+
+[[entry.line]]
+account = "44566"
+debit = 12400
+
+[[entry.line]]
+account = "512"
+credit = 74400
+
+[[entry]]
+id = "je-0006"
+date = 2026-07-15
+label = "Invoice F-2026-0043"
+
+[[entry.line]]
+account = "411"
+debit = 1440000
+
+[[entry.line]]
+account = "706"
+credit = 1200000
+
+[[entry.line]]
+account = "44571"
+credit = 240000
+
+[[entry]]
+id = "je-0007"
+date = 2026-07-21
+label = "Invoice F-2026-0044"
+
+[[entry.line]]
+account = "411"
+debit = 744000
+
+[[entry.line]]
+account = "706"
+credit = 620000
+
+[[entry.line]]
+account = "44571"
+credit = 124000
+
+[[entry]]
+id = "je-0008"
+date = 2026-07-28
+label = "Invoice F-2026-0045"
+
+[[entry.line]]
+account = "411"
+debit = 1140000
+
+[[entry.line]]
+account = "706"
+credit = 950000
+
+[[entry.line]]
+account = "44571"
+credit = 190000
+
+[[entry]]
+id = "je-0009"
+date = 2026-07-28
+label = "Payroll, 2026-07"
+
+[[entry.line]]
+account = "641"
+debit = 2600000
+
+[[entry.line]]
+account = "645"
+debit = 1040000
+
+[[entry.line]]
+account = "512"
+credit = 3640000
+
+[[entry]]
+id = "je-0010"
+date = 2026-07-29
+label = "Payment of F-2026-0041"
+
+[[entry.line]]
+account = "512"
+debit = 1440000
+
+[[entry.line]]
+account = "411"
+credit = 1440000
+
+[[entry]]
+id = "je-0011"
+date = 2026-07-31
+label = "Payment of F-2026-0042"
+
+[[entry.line]]
+account = "512"
+debit = 576000
+
+[[entry.line]]
+account = "411"
+credit = 576000
+
+[[entry]]
+id = "je-0012"
+date = 2026-08-03
+label = "Invoice F-2026-0046"
+
+[[entry.line]]
+account = "411"
+debit = 576000
+
+[[entry.line]]
+account = "706"
+credit = 480000
+
+[[entry.line]]
+account = "44571"
+credit = 96000
+
+[[entry]]
+id = "je-0013"
+date = 2026-08-05
+label = "Studio rent, 2026-08"
+
+[[entry.line]]
+account = "613"
+debit = 240000
+
+[[entry.line]]
+account = "44566"
+debit = 48000
+
+[[entry.line]]
+account = "512"
+credit = 288000
+
+[[entry]]
+id = "je-0014"
+date = 2026-08-10
+label = "Software and connectivity, 2026-08"
+
+[[entry.line]]
+account = "626"
+debit = 62000
+
+[[entry.line]]
+account = "44566"
+debit = 12400
+
+[[entry.line]]
+account = "512"
+credit = 74400
+
+[[entry]]
+id = "je-0015"
+date = 2026-08-19
+label = "VAT return, 2026-07"
+
+[[entry.line]]
+account = "44571"
+debit = 890000
+
+[[entry.line]]
+account = "44566"
+credit = 60400
+
+[[entry.line]]
+account = "512"
+credit = 829600
+
+[[entry]]
+id = "je-0016"
+date = 2026-08-24
+label = "Payment of F-2026-0045"
+
+[[entry.line]]
+account = "512"
+debit = 1140000
+
+[[entry.line]]
+account = "411"
+credit = 1140000
+
+[[entry]]
+id = "je-0017"
+date = 2026-08-27
+label = "Invoice F-2026-0047"
+
+[[entry.line]]
+account = "411"
+debit = 1440000
+
+[[entry.line]]
+account = "706"
+credit = 1200000
+
+[[entry.line]]
+account = "44571"
+credit = 240000
+
+[[entry]]
+id = "je-0018"
+date = 2026-08-28
+label = "Payment of F-2026-0046"
+
+[[entry.line]]
+account = "512"
+debit = 576000
+
+[[entry.line]]
+account = "411"
+credit = 576000
+
+[[entry]]
+id = "je-0019"
+date = 2026-08-28
+label = "Payroll, 2026-08"
+
+[[entry.line]]
+account = "641"
+debit = 2600000
+
+[[entry.line]]
+account = "645"
+debit = 1040000
+
+[[entry.line]]
+account = "512"
+credit = 3640000
+
+[[entry]]
+id = "je-0020"
+date = 2026-09-01
+label = "Invoice F-2026-0048"
+
+[[entry.line]]
+account = "411"
+debit = 576000
+
+[[entry.line]]
+account = "706"
+credit = 480000
+
+[[entry.line]]
+account = "44571"
+credit = 96000
+
+[[entry]]
+id = "je-0021"
+date = 2026-09-04
+label = "Invoice F-2026-0049"
+
+[[entry.line]]
+account = "411"
+debit = 1440000
+
+[[entry.line]]
+account = "706"
+credit = 1200000
+
+[[entry.line]]
+account = "44571"
+credit = 240000
+
+[[entry]]
+id = "je-0022"
+date = 2026-09-05
+label = "Studio rent, 2026-09"
+
+[[entry.line]]
+account = "613"
+debit = 240000
+
+[[entry.line]]
+account = "44566"
+debit = 48000
+
+[[entry.line]]
+account = "512"
+credit = 288000
+
+[[entry]]
+id = "je-0023"
+date = 2026-09-08
+label = "Payment of F-2026-0043"
+
+[[entry.line]]
+account = "512"
+debit = 1440000
+
+[[entry.line]]
+account = "411"
+credit = 1440000
+
+[[entry]]
+id = "je-0024"
+date = 2026-09-10
+label = "Software and connectivity, 2026-09"
+
+[[entry.line]]
+account = "626"
+debit = 62000
+
+[[entry.line]]
+account = "44566"
+debit = 12400
+
+[[entry.line]]
+account = "512"
+credit = 74400
+
+[[entry]]
+id = "je-0025"
+date = 2026-09-11
+label = "Invoice F-2026-0050"
+
+[[entry.line]]
+account = "411"
+debit = 456000
+
+[[entry.line]]
+account = "706"
+credit = 380000
+
+[[entry.line]]
+account = "44571"
+credit = 76000
+
+[[entry]]
+id = "je-0026"
+date = 2026-09-12
+label = "Credit note for F-2026-0050, voided"
+
+[[entry.line]]
+account = "706"
+debit = 380000
+
+[[entry.line]]
+account = "44571"
+debit = 76000
+
+[[entry.line]]
+account = "411"
+credit = 456000
+
+[[entry]]
+id = "je-0027"
+date = 2026-09-12
+label = "Invoice F-2026-0051"
+
+[[entry.line]]
+account = "411"
+debit = 396000
+
+[[entry.line]]
+account = "706"
+credit = 330000
+
+[[entry.line]]
+account = "44571"
+credit = 66000
+
+[[entry]]
+id = "je-0028"
+date = 2026-09-19
+label = "VAT return, 2026-08"
+
+[[entry.line]]
+account = "44571"
+debit = -554000
+
+[[entry.line]]
+account = "44566"
+credit = 0
+
+[[entry.line]]
+account = "512"
+credit = -554000
+
+[[entry]]
+id = "je-0029"
+date = 2026-09-24
+label = "Payment of F-2026-0047"
+
+[[entry.line]]
+account = "512"
+debit = 1440000
+
+[[entry.line]]
+account = "411"
+credit = 1440000
+
+[[entry]]
+id = "je-0030"
+date = 2026-09-25
+label = "Invoice F-2026-0052"
+
+[[entry.line]]
+account = "411"
+debit = 1680000
+
+[[entry.line]]
+account = "706"
+credit = 1400000
+
+[[entry.line]]
+account = "44571"
+credit = 280000
+
+[[entry]]
+id = "je-0031"
+date = 2026-09-28
+label = "Payroll, 2026-09"
+
+[[entry.line]]
+account = "641"
+debit = 2600000
+
+[[entry.line]]
+account = "645"
+debit = 1040000
+
+[[entry.line]]
+account = "512"
+credit = 3640000
+
+[[entry]]
+id = "je-0032"
+date = 2026-09-29
+label = "Payment of F-2026-0048"
+
+[[entry.line]]
+account = "512"
+debit = 576000
+
+[[entry.line]]
+account = "411"
+credit = 576000
+
+[[entry]]
+id = "je-0033"
+date = 2026-10-01
+label = "Invoice F-2026-0053"
+
+[[entry.line]]
+account = "411"
+debit = 576000
+
+[[entry.line]]
+account = "706"
+credit = 480000
+
+[[entry.line]]
+account = "44571"
+credit = 96000
+
+[[entry]]
+id = "je-0034"
+date = 2026-10-05
+label = "Payment of F-2026-0051"
+
+[[entry.line]]
+account = "512"
+debit = 198000
+
+[[entry.line]]
+account = "411"
+credit = 198000
+
+[[entry]]
+id = "je-0035"
+date = 2026-10-05
+label = "Studio rent, 2026-10"
+
+[[entry.line]]
+account = "613"
+debit = 240000
+
+[[entry.line]]
+account = "44566"
+debit = 48000
+
+[[entry.line]]
+account = "512"
+credit = 288000
+
+[[entry]]
+id = "je-0036"
+date = 2026-10-08
+label = "Invoice F-2026-0054"
+
+[[entry.line]]
+account = "411"
+debit = 1440000
+
+[[entry.line]]
+account = "706"
+credit = 1200000
+
+[[entry.line]]
+account = "44571"
+credit = 240000
+
+[[entry]]
+id = "je-0037"
+date = 2026-10-10
+label = "Software and connectivity, 2026-10"
+
+[[entry.line]]
+account = "626"
+debit = 62000
+
+[[entry.line]]
+account = "44566"
+debit = 12400
+
+[[entry.line]]
+account = "512"
+credit = 74400
+
+[[entry]]
+id = "je-0038"
+date = 2026-10-16
+label = "Invoice F-2026-0055"
+
+[[entry.line]]
+account = "411"
+debit = 1080000
+
+[[entry.line]]
+account = "706"
+credit = 900000
+
+[[entry.line]]
+account = "44571"
+credit = 180000
+
+[[entry]]
+id = "je-0039"
+date = 2026-10-19
+label = "VAT return, 2026-09"
+
+[[entry.line]]
+account = "44571"
+debit = 1236000
+
+[[entry.line]]
+account = "44566"
+credit = 60400
+
+[[entry.line]]
+account = "512"
+credit = 1175600
+
+[[entry]]
+id = "je-0040"
+date = 2026-10-20
+label = "Payment of F-2026-0049"
+
+[[entry.line]]
+account = "512"
+debit = 1440000
+
+[[entry.line]]
+account = "411"
+credit = 1440000

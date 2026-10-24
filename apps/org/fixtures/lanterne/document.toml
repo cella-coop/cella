@@ -1,0 +1,68 @@
+# Documents and their versions. Bodies are the versions' text; edits between
+# versions are Loro's and are not fixtures.
+
+[[document]]
+id = "internal-rules"
+title = "Règlement intérieur"
+
+[[document.version]]
+id = "internal-rules@3"
+saved = 2026-05-28
+body = """
+# Règlement intérieur
+
+## Working time
+A full-time member works 35 hours a week. Up to three days a week may be
+worked remotely; Tuesday is a studio day for everyone.
+
+## Pay
+Pay follows one grid: the ratio between the highest and the lowest salary is
+at most 1.6.
+
+## Rates
+The standard day rate is set each year by coordination. Associations and
+co-ops with fewer than ten staff pay the solidarity rate.
+
+## Clients we refuse
+We do not work for fossil fuel companies, arms makers or political parties.
+"""
+
+[[document]]
+id = "rate-card-2027"
+title = "Rate card 2027"
+
+[[document.version]]
+id = "rate-card-2027@1"
+saved = 2026-10-09
+body = """
+# Rate card 2027
+
+| Service | Unit | Standard | Solidarity |
+|---|---|---|---|
+| Day of work | day | 560 € | 380 € |
+| Brand identity | project | from 6 000 € | from 3 300 € |
+| Website | project | from 12 000 € | from 7 500 € |
+| Marketing retainer | month | from 4 800 € | from 2 400 € |
+"""
+
+[[document.version]]
+id = "rate-card-2027@2"
+saved = 2026-10-20
+body = """
+# Rate card 2027
+
+| Service | Unit | Standard | Solidarity |
+|---|---|---|---|
+| Day of work | day | 560 € | 380 € |
+| Brand identity | project | from 6 500 € | from 3 300 € |
+| Website | project | from 12 000 € | from 7 500 € |
+| Online shop | project | from 9 500 € | from 6 000 € |
+| Marketing retainer | month | from 4 800 € | from 2 400 € |
+"""
+
+[[document.comment]]
+version = "rate-card-2027@2"
+author = "malik@lanterne.example"
+at = 2026-10-21
+quote = "from 4 800 €"
+text = "Nuvola renews in January at the current rate; do we hold it for existing retainers?"

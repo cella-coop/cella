@@ -1,0 +1,118 @@
+# Who sits where: every member is in the assembly and one working circle; the
+# leads and the manager also sit on coordination.
+
+[[position]]
+circle = "ag"
+member = "camille@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "yusuf@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "hugo@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "julien@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "lea@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "thomas@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "sofia@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "malik@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "amina@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "chloe@lanterne.example"
+
+[[position]]
+circle = "brand"
+member = "camille@lanterne.example"
+
+[[position]]
+circle = "web"
+member = "yusuf@lanterne.example"
+role = "lead"
+
+[[position]]
+circle = "brand"
+member = "hugo@lanterne.example"
+role = "lead"
+
+[[position]]
+circle = "operations"
+member = "julien@lanterne.example"
+role = "lead"
+
+[[position]]
+circle = "web"
+member = "lea@lanterne.example"
+
+[[position]]
+circle = "web"
+member = "thomas@lanterne.example"
+
+[[position]]
+circle = "brand"
+member = "sofia@lanterne.example"
+
+[[position]]
+circle = "marketing"
+member = "malik@lanterne.example"
+role = "lead"
+
+[[position]]
+circle = "web"
+member = "amina@lanterne.example"
+
+[[position]]
+circle = "marketing"
+member = "chloe@lanterne.example"
+
+[[position]]
+circle = "ag"
+member = "camille@lanterne.example"
+role = "manager"
+since = 2024-06-20
+until = 2028-06-20
+
+[[position]]
+circle = "operations"
+member = "julien@lanterne.example"
+role = "finance"
+
+[[position]]
+circle = "coordination"
+member = "camille@lanterne.example"
+
+[[position]]
+circle = "coordination"
+member = "yusuf@lanterne.example"
+
+[[position]]
+circle = "coordination"
+member = "hugo@lanterne.example"
+
+[[position]]
+circle = "coordination"
+member = "malik@lanterne.example"
+
+[[position]]
+circle = "coordination"
+member = "julien@lanterne.example"

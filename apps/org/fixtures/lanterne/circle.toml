@@ -1,0 +1,79 @@
+# The co-op's units. The general assembly is every member; coordination is the
+# circle leads and the manager; four working circles sit under it.
+
+[[circle]]
+id = "ag"
+name = "Assemblée générale"
+purpose = "every member, one vote: statutes, admissions, accounts and surplus"
+
+[[circle]]
+id = "coordination"
+name = "Coordination"
+parent = "ag"
+purpose = "weekly: pipeline, staffing and anything that crosses circles"
+
+[[circle]]
+id = "web"
+name = "Web"
+parent = "coordination"
+purpose = "sites, shops and applications"
+
+[[circle]]
+id = "brand"
+name = "Brand"
+parent = "coordination"
+purpose = "identity, print, packaging, illustration and motion"
+
+[[circle]]
+id = "marketing"
+name = "Marketing"
+parent = "coordination"
+purpose = "strategy, content, social media and campaigns"
+
+[[circle]]
+id = "operations"
+name = "Operations"
+parent = "coordination"
+purpose = "finance, administration, contracts and tools"
+
+[[role]]
+id = "manager"
+circle = "ag"
+name = "Gérante"
+duty = "the legal representative, elected by the assembly for four years"
+
+[[role]]
+id = "lead"
+circle = "*"
+name = "Circle lead"
+duty = "runs a working circle and sits on coordination"
+
+[[role]]
+id = "finance"
+circle = "operations"
+name = "Finance"
+duty = "issues invoices, pays suppliers and closes the books each month"
+
+[[mandate]]
+role = "manager"
+power = "sign contracts and commit spending"
+max_amount = 2000000
+
+[[mandate]]
+role = "finance"
+power = "pay suppliers"
+max_amount = 300000
+
+[[mandate]]
+role = "finance"
+power = "issue invoices and close a period"
+
+[[mandate]]
+role = "lead"
+power = "spend for the circle"
+max_amount = 100000
+
+[[mandate]]
+role = "lead"
+power = "send a quote"
+max_amount = 1500000

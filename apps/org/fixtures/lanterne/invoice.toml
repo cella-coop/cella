@@ -1,0 +1,194 @@
+# Invoices in the series F-2026, amounts in cents. An invoice carries the name
+# it bills, as issued; the link to the client record is the client-invoice
+# graft's.
+
+series = "F-2026"
+next = 56
+
+[[invoice]]
+id = "F-2026-0041"
+issued = 2026-07-03
+due = 2026-08-02
+bill_to = "Les Halles Paysannes"
+label = "Online shop, milestone 1 of 4: design"
+net = 1200000
+vat = 240000
+total = 1440000
+
+[[invoice.payment]]
+at = 2026-07-29
+amount = 1440000
+
+[[invoice]]
+id = "F-2026-0042"
+issued = 2026-07-06
+due = 2026-08-05
+bill_to = "Nuvola Énergie"
+label = "Marketing retainer, July"
+net = 480000
+vat = 96000
+total = 576000
+
+[[invoice.payment]]
+at = 2026-07-31
+amount = 576000
+
+[[invoice]]
+id = "F-2026-0043"
+issued = 2026-07-15
+due = 2026-08-14
+bill_to = "Ville de Clairval"
+label = "Town website, lot 1: audit and architecture"
+net = 1200000
+vat = 240000
+total = 1440000
+
+[[invoice.payment]]
+at = 2026-09-08
+amount = 1440000
+
+[[invoice]]
+id = "F-2026-0044"
+issued = 2026-07-21
+due = 2026-08-20
+bill_to = "Compagnie Mauve Horizon"
+label = "Season 26-27 posters and brochure"
+net = 620000
+vat = 124000
+total = 744000
+
+[[invoice]]
+id = "F-2026-0045"
+issued = 2026-07-28
+due = 2026-08-27
+bill_to = "Atelier Ondine"
+label = "Online shop, fixed price"
+net = 950000
+vat = 190000
+total = 1140000
+
+[[invoice.payment]]
+at = 2026-08-24
+amount = 1140000
+
+[[invoice]]
+id = "F-2026-0046"
+issued = 2026-08-03
+due = 2026-09-02
+bill_to = "Nuvola Énergie"
+label = "Marketing retainer, August"
+net = 480000
+vat = 96000
+total = 576000
+
+[[invoice.payment]]
+at = 2026-08-28
+amount = 576000
+
+[[invoice]]
+id = "F-2026-0047"
+issued = 2026-08-27
+due = 2026-09-26
+bill_to = "Les Halles Paysannes"
+label = "Online shop, milestone 2 of 4: build"
+net = 1200000
+vat = 240000
+total = 1440000
+
+[[invoice.payment]]
+at = 2026-09-24
+amount = 1440000
+
+[[invoice]]
+id = "F-2026-0048"
+issued = 2026-09-01
+due = 2026-10-01
+bill_to = "Nuvola Énergie"
+label = "Marketing retainer, September"
+net = 480000
+vat = 96000
+total = 576000
+
+[[invoice.payment]]
+at = 2026-09-29
+amount = 576000
+
+[[invoice]]
+id = "F-2026-0049"
+issued = 2026-09-04
+due = 2026-10-04
+bill_to = "Ville de Clairval"
+label = "Town website, lot 2: design system and templates"
+net = 1200000
+vat = 240000
+total = 1440000
+
+[[invoice.payment]]
+at = 2026-10-20
+amount = 1440000
+
+[[invoice]]
+id = "F-2026-0050"
+issued = 2026-09-11
+due = 2026-10-11
+bill_to = "Vélo Solidaire"
+label = "Brand identity"
+net = 380000
+vat = 76000
+total = 456000
+voided = 2026-09-12
+reason = "wrong amount; reissued as F-2026-0051 at the solidarity rate"
+
+[[invoice]]
+id = "F-2026-0051"
+issued = 2026-09-12
+due = 2026-10-12
+bill_to = "Vélo Solidaire"
+label = "Brand identity, solidarity rate"
+net = 330000
+vat = 66000
+total = 396000
+
+[[invoice.payment]]
+at = 2026-10-05
+amount = 198000
+
+[[invoice]]
+id = "F-2026-0052"
+issued = 2026-09-25
+due = 2026-10-25
+bill_to = "Maison Ferrand"
+label = "Packaging design, range of six"
+net = 1400000
+vat = 280000
+total = 1680000
+
+[[invoice]]
+id = "F-2026-0053"
+issued = 2026-10-01
+due = 2026-10-31
+bill_to = "Nuvola Énergie"
+label = "Marketing retainer, October"
+net = 480000
+vat = 96000
+total = 576000
+
+[[invoice]]
+id = "F-2026-0054"
+issued = 2026-10-08
+due = 2026-11-07
+bill_to = "Les Halles Paysannes"
+label = "Online shop, milestone 3 of 4: launch"
+net = 1200000
+vat = 240000
+total = 1440000
+
+[[invoice]]
+id = "F-2026-0055"
+issued = 2026-10-16
+due = 2026-11-15
+bill_to = "Fondation Terres Vives"
+label = "Annual report and microsite, milestone 1 of 2"
+net = 900000
+vat = 180000
+total = 1080000

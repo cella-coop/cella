@@ -1,0 +1,78 @@
+# Each member's devices. The keys are generated when the fixtures are seeded;
+# Inès enrols her first device when she is admitted.
+
+[[device]]
+address = "camille@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "camille@lanterne.example"
+label = "phone"
+enrolled = 2025-01-15
+
+[[device]]
+address = "yusuf@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "yusuf@lanterne.example"
+label = "phone"
+enrolled = 2025-01-15
+
+[[device]]
+address = "hugo@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "julien@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "julien@lanterne.example"
+label = "phone"
+enrolled = 2025-01-15
+
+[[device]]
+address = "lea@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "thomas@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "sofia@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "malik@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "malik@lanterne.example"
+label = "phone"
+enrolled = 2025-01-15
+
+[[device]]
+address = "amina@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "chloe@lanterne.example"
+label = "laptop"
+enrolled = 2025-01-15
+
+[[device]]
+address = "hugo@lanterne.example"
+label = "old laptop"
+enrolled = 2025-01-15
+revoked = 2026-05-12

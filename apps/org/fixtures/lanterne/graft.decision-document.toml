@@ -1,0 +1,12 @@
+# A document version adopted by a decision. The rate card is up for adoption
+# with d-2026-011, against the version the decision names.
+
+[[adoption]]
+decision = "d-2026-007"
+document = "internal-rules"
+version = "internal-rules@3"
+
+[[adoption]]
+decision = "d-2026-011"
+document = "rate-card-2027"
+version = "rate-card-2027@2"

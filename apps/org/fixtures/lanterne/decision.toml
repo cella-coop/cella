@@ -1,0 +1,202 @@
+# Proposals and the signed votes on them. An outcome is never stored: it is
+# computed from the votes the notary counted before the deadline.
+
+[[decision]]
+id = "d-2026-006"
+circle = "ag"
+title = "Approve the 2025 accounts and allocate the surplus"
+rule = "majority"
+proposed = 2026-06-01
+deadline = 2026-06-20
+closed = 2026-06-20
+body = """
+The 2025 surplus of 61 400 € is allocated as the statutes require: 45 % to
+the members as their share of work (participation), 40 % to the indivisible
+reserves and 15 % as interest on capital.
+"""
+[[decision.vote]]
+member = "camille@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "yusuf@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "hugo@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "julien@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "lea@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "thomas@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "sofia@lanterne.example"
+stance = "abstain"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "malik@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "amina@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "chloe@lanterne.example"
+stance = "for"
+at = 2026-06-20
+
+[[decision]]
+id = "d-2026-007"
+circle = "ag"
+title = "Adopt the internal rules, version 3"
+rule = "consent"
+proposed = 2026-06-01
+deadline = 2026-06-20
+closed = 2026-06-20
+body = "Version 3 adds remote work days and the solidarity rate for associations."
+[[decision.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "sofia@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[decision]]
+id = "d-2026-011"
+circle = "coordination"
+title = "Raise the day rate for 2027"
+rule = "consent"
+proposed = 2026-10-12
+deadline = 2026-11-09
+body = """
+Raise the standard day rate from 520 € to 560 €, keep the solidarity rate
+at 380 €, and publish the rate card as drafted.
+"""
+[[decision.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-13
+
+[[decision.vote]]
+member = "malik@lanterne.example"
+stance = "object"
+at = 2026-10-14
+
+[[decision]]
+id = "d-2026-012"
+circle = "ag"
+title = "Admit Inès Haddad as a member"
+rule = "consent"
+proposed = 2026-10-14
+deadline = 2026-10-31
+body = """
+Inès has worked with the web circle since September 2025 and asks to join.
+She subscribes 20 shares.
+"""
+[[decision.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-10-15
+
+[[decision.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-10-16
+
+[[decision.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-10-17
+
+[[decision.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-10-18
+
+[[decision.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-19
+
+[[decision.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-10-20
+
+[[decision.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-10-21
+
+[[decision.vote]]
+member = "hugo@lanterne.example"
+stance = "object"
+at = 2026-10-21
+
+[[decision.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-10-23
+

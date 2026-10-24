@@ -1,0 +1,126 @@
+# The entries each invoice posted: on issue, on each payment and on a void.
+
+[[posting]]
+invoice = "F-2026-0041"
+event = "issue"
+entry = "je-0002"
+
+[[posting]]
+invoice = "F-2026-0041"
+event = "payment"
+entry = "je-0010"
+
+[[posting]]
+invoice = "F-2026-0042"
+event = "issue"
+entry = "je-0004"
+
+[[posting]]
+invoice = "F-2026-0042"
+event = "payment"
+entry = "je-0011"
+
+[[posting]]
+invoice = "F-2026-0043"
+event = "issue"
+entry = "je-0006"
+
+[[posting]]
+invoice = "F-2026-0043"
+event = "payment"
+entry = "je-0023"
+
+[[posting]]
+invoice = "F-2026-0044"
+event = "issue"
+entry = "je-0007"
+
+[[posting]]
+invoice = "F-2026-0045"
+event = "issue"
+entry = "je-0008"
+
+[[posting]]
+invoice = "F-2026-0045"
+event = "payment"
+entry = "je-0016"
+
+[[posting]]
+invoice = "F-2026-0046"
+event = "issue"
+entry = "je-0012"
+
+[[posting]]
+invoice = "F-2026-0046"
+event = "payment"
+entry = "je-0018"
+
+[[posting]]
+invoice = "F-2026-0047"
+event = "issue"
+entry = "je-0017"
+
+[[posting]]
+invoice = "F-2026-0047"
+event = "payment"
+entry = "je-0029"
+
+[[posting]]
+invoice = "F-2026-0048"
+event = "issue"
+entry = "je-0020"
+
+[[posting]]
+invoice = "F-2026-0048"
+event = "payment"
+entry = "je-0032"
+
+[[posting]]
+invoice = "F-2026-0049"
+event = "issue"
+entry = "je-0021"
+
+[[posting]]
+invoice = "F-2026-0049"
+event = "payment"
+entry = "je-0040"
+
+[[posting]]
+invoice = "F-2026-0050"
+event = "issue"
+entry = "je-0025"
+
+[[posting]]
+invoice = "F-2026-0050"
+event = "void"
+entry = "je-0026"
+
+[[posting]]
+invoice = "F-2026-0051"
+event = "issue"
+entry = "je-0027"
+
+[[posting]]
+invoice = "F-2026-0051"
+event = "payment"
+entry = "je-0034"
+
+[[posting]]
+invoice = "F-2026-0052"
+event = "issue"
+entry = "je-0030"
+
+[[posting]]
+invoice = "F-2026-0053"
+event = "issue"
+entry = "je-0033"
+
+[[posting]]
+invoice = "F-2026-0054"
+event = "issue"
+entry = "je-0036"
+
+[[posting]]
+invoice = "F-2026-0055"
+event = "issue"
+entry = "je-0038"

@@ -243,6 +243,28 @@ cursors still find them. The look is the UI core's `Blocks`; nothing here
 styles itself. `Reader` draws a canonical form read-only, for a version on
 a decision's page.
 
+## Tests
+
+- Slice tests (`core/ts/_tests/`): the edits, marks, outlines, patches and
+  anchors; three peers converging over 300 seeded rounds of random
+  concurrent edits; and the canonical form, the TypeScript one and the
+  database's, byte for byte on 300 random documents, refusing the same
+  ones, with a version's generated columns and immutability.
+- `_e2e/document.test.ts`: concurrent edits, versions named by hash,
+  comments by cursor, adoption by hash under d-2026-011.
+- `_e2e/editor.test.ts`: the editor in Chromium, Firefox and WebKit
+  (nixpkgs' Playwright browsers), two tabs syncing through the shell:
+  typing, Enter and Backspace across blocks, shortcuts, the slash menu and
+  its embeds, Tab, Delete, Ctrl-K, arrows, choosing blocks by keys and by
+  drag, moving them, reordering by grip with pointer and keyboard, the
+  clipboard, composition (driven over CDP in Chromium; elsewhere as the
+  events an IME fires), the caret held through the other tab's edits,
+  undo of one's own edits, offline edits converging, a block repainted
+  after a foreign mutation, and a fuzzer of random keys, compositions and
+  remote edits that checks the page shows the model and the tabs
+  converge. Real IMEs, touch, screen readers and right-to-left text are
+  not tested.
+
 ## Lanterne
 
 - The internal rules, version 3, were adopted on 20 June 2026 by

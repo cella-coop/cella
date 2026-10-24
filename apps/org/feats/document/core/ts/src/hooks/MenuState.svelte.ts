@@ -79,7 +79,10 @@ export class MenuState {
   // The caret moved within a block: the toolbar follows a selection, and
   // the slash menu filters by what follows the `/`, or closes.
   follow(s: Located, t: string): void {
-    this.linking = null
+    const l = this.linking
+    if (l && (l.id !== s.id || l.start !== s.start || l.end !== s.end)) {
+      this.linking = null
+    }
     if (s.collapsed) {
       this.bar = null
     } else {
@@ -165,13 +168,20 @@ export class MenuState {
     const t = text(this.#ed.doc, s.id)
     const had = ops.runs(t, s.start, s.end).find((r) => typeof r.marks?.link === 'string')?.marks?.link
     this.href = typeof had === 'string' ? had : 'https://'
+    // The toolbar holds the popover; selectionchange may not have shown it
+    // yet when the keys come fast.
+    this.#ed.track()
     this.linking = s
     flushSync()
-    const trigger = this.#ed.root?.querySelector<HTMLElement>('[data-link]')?.closest('button')
-    if (trigger && !this.#ed.root?.querySelector('[data-href]:popover-open, :popover-open [data-href]')) {
-      trigger.click()
-    }
-    requestAnimationFrame(() => this.#ed.root?.querySelector<HTMLInputElement>('[data-href] input')?.select())
+    // Opened a frame later, once the toolbar holding it is in the top
+    // layer; opened at once, the browser closes it again.
+    requestAnimationFrame(() => {
+      const trigger = this.#ed.root?.querySelector<HTMLElement>('[data-link]')?.closest('button')
+      if (trigger && !this.#ed.root?.querySelector('[data-href]')?.closest('[popover]')?.matches(':popover-open')) {
+        trigger.click()
+      }
+      this.#ed.root?.querySelector<HTMLInputElement>('[data-href] input')?.select()
+    })
   }
 
   // The address typed: the link goes on the held selection; an empty one

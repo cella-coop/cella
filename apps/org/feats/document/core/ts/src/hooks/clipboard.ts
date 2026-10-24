@@ -5,6 +5,28 @@ import type { EditorState } from './EditorState.svelte.ts'
 const blocksType = 'application/x-cella-blocks'
 const runsType = 'application/x-cella-runs'
 
+// What the clipboard carries, as HTML too: a browser that drops types of
+// its own (Firefox does) keeps HTML, so the fragment or runs ride in a
+// data attribute, with the text inside for the world outside.
+function html(attribute: string, json: string, text: string): string {
+  const el = document.createElement('div')
+  el.setAttribute(attribute, json)
+  el.textContent = text
+  return el.outerHTML
+}
+
+function read(data: DataTransfer, type: string, attribute: string): string {
+  const own = data.getData(type)
+  if (own) {
+    return own
+  }
+  const markup = data.getData('text/html')
+  if (!markup.includes(attribute)) {
+    return ''
+  }
+  return new DOMParser().parseFromString(markup, 'text/html').querySelector(`[${attribute}]`)?.getAttribute(attribute) ?? ''
+}
+
 // The clipboard: chosen blocks travel as fragments, a range of text as
 // runs, and both as plain text for the world outside.
 export class Clipboard {
@@ -23,8 +45,10 @@ export class Clipboard {
     if (ed.chosen.range) {
       e.preventDefault()
       const fs = ed.chosen.roots().map((id) => ops.fragment(ed.doc, id))
+      const text = plain(fs, 0)
       data.setData(blocksType, JSON.stringify(fs))
-      data.setData('text/plain', plain(fs, 0))
+      data.setData('text/html', html('data-cella-blocks', JSON.stringify(fs), text))
+      data.setData('text/plain', text)
       if (cut) {
         ed.chosen.delete()
       }
@@ -36,8 +60,11 @@ export class Clipboard {
     }
     e.preventDefault()
     const t = text(ed.doc, s.id)
-    data.setData(runsType, JSON.stringify(ops.runs(t, s.start, s.end)))
-    data.setData('text/plain', t.toString().slice(s.start, s.end))
+    const rs = JSON.stringify(ops.runs(t, s.start, s.end))
+    const text = t.toString().slice(s.start, s.end)
+    data.setData(runsType, rs)
+    data.setData('text/html', html('data-cella-runs', rs, text))
+    data.setData('text/plain', text)
     if (cut) {
       ed.apply(() => {
         ops.remove(t, s.start, s.end - s.start)
@@ -53,7 +80,7 @@ export class Clipboard {
       return
     }
     e.preventDefault()
-    const blocks = data.getData(blocksType)
+    const blocks = read(data, blocksType, 'data-cella-blocks')
     const s = ed.sel()
     const anchorId = s?.id ?? ed.chosen.roots().at(-1)
     if (!anchorId) {
@@ -78,7 +105,7 @@ export class Clipboard {
     if (!s) {
       return
     }
-    const runsJson = data.getData(runsType)
+    const runsJson = read(data, runsType, 'data-cella-runs')
     const t = text(ed.doc, s.id)
     if (runsJson) {
       const rs = JSON.parse(runsJson) as ops.Run[]

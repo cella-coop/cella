@@ -35,7 +35,7 @@
   {:else}
     <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
   {/if}
-  <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={draft.sync?.hash ?? data.hash}>
+  <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={draft.sync?.hash ?? data.hash} data-state={state}>
     <Note text="BLAKE3 {short(draft.sync?.hash ?? data.hash, 16)} · {state}" />
   </div>
 </Section>

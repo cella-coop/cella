@@ -339,7 +339,15 @@ export class EditorState {
     }
     const el = this.#els.get(id)
     const s = el ? readSel(el) : null
-    return el && s ? { ...s, id, el } : null
+    if (!el || !s) {
+      return null
+    }
+    // A selection the browser leaves inside a surrogate pair, which Loro
+    // refuses, snaps to the code point's start.
+    const str = text(this.doc, id).toString()
+    const anchor = ops.snap(str, s.anchor)
+    const focus = ops.snap(str, s.focus)
+    return { anchor, focus, start: Math.min(anchor, focus), end: Math.max(anchor, focus), collapsed: anchor === focus, id, el }
   }
 
   // Keep the caret as Loro cursors, which survive remote edits, and keep

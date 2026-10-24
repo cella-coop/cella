@@ -24,4 +24,8 @@ export default defineConfig({
     noExternal: ['phosphor-svelte'],
     external: ['loro-crdt', 'pg'],
   },
+  // In the browser, Loro's bundler build imports its WebAssembly as an ES
+  // module, which Vite serves as is; pre-bundling it would split the glue
+  // from the module.
+  optimizeDeps: { exclude: ['loro-crdt'] },
 })

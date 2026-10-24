@@ -377,7 +377,10 @@ export class Input {
     }
     const key = e.key.toLowerCase()
     if (mod && !e.altKey && (key === 'b' || key === 'i' || key === 'e' || key === 'k')) {
+      // The page has its own Ctrl-K, the command menu; in a block, the
+      // key is the editor's.
       e.preventDefault()
+      e.stopPropagation()
       if (key === 'k') {
         ed.menu.link()
       } else {
@@ -402,6 +405,18 @@ export class Input {
     if (e.key === 'Tab') {
       e.preventDefault()
       ed.chosen.nest(e.shiftKey)
+      return
+    }
+    // WebKit asks nothing before a Backspace at a block's start or a
+    // Delete at its end, where the block holds nothing to delete.
+    if (e.key === 'Backspace' && !mod && !e.altKey && s.collapsed && s.start === 0) {
+      e.preventDefault()
+      this.backspaceAtStart(s.id)
+      return
+    }
+    if (e.key === 'Delete' && !mod && !e.altKey && s.collapsed && s.end === text(ed.doc, s.id).length) {
+      e.preventDefault()
+      this.deleteAtEnd(s.id)
       return
     }
     if (e.key === 'Escape') {

@@ -9,7 +9,8 @@
   // through to the surface.
   //
   // - `.block` holds a block: its `.line` (the grip and the `.body`) and
-  //   its `.children`, indented one step; `[data-selected]` on the block
+  //   its `.children`, indented one step; the grip is the UI core's
+//   `DragHandle`, shown on hover; `[data-selected]` on the block
   //   marks it chosen whole, `[data-drop]` on a line where a drag lands.
   // - a body is `.text` (an editable or a reader's text) inside a kind:
   //   `.heading[data-level]`, `.item` with its `.marker` (bullets,
@@ -39,6 +40,9 @@
   .blocks[data-chosen] {
     caret-color: transparent;
   }
+  .blocks[data-chosen] :global(*::selection) {
+    background: transparent;
+  }
   .blocks :global(.children) {
     padding-left: 1.6rem;
   }
@@ -59,29 +63,18 @@
   .blocks :global([data-selected] > .children) {
     background: var(--accent-soft);
   }
-  .blocks :global(.grip) {
-    display: grid;
-    place-items: center;
-    width: 1.25rem;
-    height: 1.6rem;
+  .blocks :global(.line > .handle) {
+    flex: none;
     margin-left: -1.4rem;
-    padding: 0;
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--text-subtle);
+    margin-top: 0.15rem;
     cursor: grab;
     opacity: 0;
     transition: opacity var(--fast) var(--ease);
   }
-  .blocks :global(.line:hover > .grip),
-  .blocks :global(.grip:focus-visible),
-  .blocks :global([data-selected] > .line > .grip) {
+  .blocks :global(.line:hover > .handle),
+  .blocks :global(.line > .handle:focus-visible),
+  .blocks :global([data-selected] > .line > .handle) {
     opacity: 1;
-  }
-  .blocks :global(.grip:hover) {
-    background: var(--hover);
-    color: var(--text);
   }
   .blocks :global([data-dragging]) {
     opacity: 0.4;

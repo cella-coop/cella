@@ -1,3 +1,4 @@
+import { flushSync } from 'svelte'
 import { atomic, exists, text, type TreeID } from '../models/blocks.ts'
 import * as ops from '../models/edits.ts'
 import type { EditorState } from './EditorState.svelte.ts'
@@ -35,10 +36,30 @@ export class ChoiceState {
   })
 
   select(anchor: TreeID, focus: TreeID = anchor): void {
-    this.range = { anchor, focus }
     this.#ed.menu.close()
-    document.getSelection()?.removeAllRanges()
     this.#ed.root?.focus({ preventScroll: true })
+    this.#to({ anchor, focus })
+  }
+
+  // A choice of blocks, mirrored in the page's selection over the same
+  // blocks, unpainted: a browser fires copy and cut only over a selection
+  // (Firefox does not otherwise).
+  #to(range: { anchor: TreeID; focus: TreeID }): void {
+    this.range = range
+    flushSync()
+    const root = this.#ed.root
+    const a = root?.querySelector(`[data-row="${range.anchor}"]`)
+    const f = root?.querySelector(`[data-row="${range.focus}"]`)
+    const s = document.getSelection()
+    if (!a || !f || !s) {
+      return
+    }
+    const [first, last] = a.compareDocumentPosition(f) & Node.DOCUMENT_POSITION_PRECEDING ? [f, a] : [a, f]
+    const r = document.createRange()
+    r.setStartBefore(first)
+    r.setEndAfter(last)
+    s.removeAllRanges()
+    s.addRange(r)
   }
 
   clear(): void {
@@ -151,7 +172,7 @@ export class ChoiceState {
         return
       }
       if (e.shiftKey) {
-        this.range = { anchor: r.anchor, focus: to.id }
+        this.#to({ anchor: r.anchor, focus: to.id })
       } else if (atomic.has(to.kind)) {
         this.select(to.id)
       } else {
@@ -172,6 +193,7 @@ export class ChoiceState {
     if (e.key === 'Escape') {
       e.preventDefault()
       this.range = null
+      document.getSelection()?.removeAllRanges()
       return
     }
     if (e.key === 'Enter') {
@@ -198,7 +220,7 @@ export class ChoiceState {
     }
     if (mod && e.key.toLowerCase() === 'a') {
       e.preventDefault()
-      this.range = { anchor: ed.rows[0].id, focus: ed.rows[ed.rows.length - 1].id }
+      this.#to({ anchor: ed.rows[0].id, focus: ed.rows[ed.rows.length - 1].id })
     }
   }
 

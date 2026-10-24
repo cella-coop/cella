@@ -28,6 +28,10 @@
     onmove: (from, to) => ed.dropAt(from, to),
   })
 
+  // Events from inside a field of the editor's chrome, the link's address,
+  // are the field's.
+  const ours = (e: Event) => !(e.target as HTMLElement).closest('input, textarea, select, [popover]')
+
   // A press on a grip, or on a block without text, chooses it whole.
   function onclick(e: MouseEvent) {
     const t = e.target as HTMLElement
@@ -52,13 +56,13 @@
   data-chosen={ed.chosen.range ? '' : undefined}
   {@attach attach}
   {@attach drag}
-  onbeforeinput={(e: InputEvent) => ed.input.beforeinput(e)}
-  onkeydown={(e: KeyboardEvent) => (ed.chosen.range ? ed.chosen.key(e) : ed.input.key(e))}
+  onbeforeinput={(e: InputEvent) => ours(e) && ed.input.beforeinput(e)}
+  onkeydown={(e: KeyboardEvent) => ours(e) && (ed.chosen.range ? ed.chosen.key(e) : ed.input.key(e))}
   oncompositionstart={() => ed.input.compositionstart()}
   oncompositionend={(e: CompositionEvent) => ed.input.compositionend(e)}
-  oncopy={(e: ClipboardEvent) => ed.clip.copy(e, false)}
-  oncut={(e: ClipboardEvent) => ed.clip.copy(e, true)}
-  onpaste={(e: ClipboardEvent) => ed.clip.paste(e)}
+  oncopy={(e: ClipboardEvent) => ours(e) && ed.clip.copy(e, false)}
+  oncut={(e: ClipboardEvent) => ours(e) && ed.clip.copy(e, true)}
+  onpaste={(e: ClipboardEvent) => ours(e) && ed.clip.paste(e)}
   onpointerdown={(e: PointerEvent) => ed.chosen.pointerdown(e)}
   onpointermove={(e: PointerEvent) => ed.chosen.pointermove(e)}
   {onclick}

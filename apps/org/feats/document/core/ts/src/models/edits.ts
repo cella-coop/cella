@@ -68,7 +68,8 @@ export function marksAt(t: LoroText, at: number): Marks {
   if (at === 0) {
     return {}
   }
-  const r = runs(t, at - 1, at)[0]
+  // The character before, whole: an astral one is two UTF-16 units.
+  const r = runs(t, snap(t.toString(), at - 1), at)[0]
   const m = { ...(r?.marks ?? {}) }
   delete m.link
   return m

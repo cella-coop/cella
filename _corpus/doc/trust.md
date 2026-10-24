@@ -25,33 +25,92 @@ clients without a rewrite.
 
 ## One server
 
+The notary lives inside Postgres as the `cella` extension, built with pgrx
+on the Rust rules crate (`apps/org/core/notary/rs`, not yet built). A pgrx
+spike is settling whether it builds and behaves; if it fails, the notary is
+a module of the app with the same `submit(write) → verdict` interface,
+inside the caller's transaction, and no feat changes.
+
 ```mermaid
 sequenceDiagram
   participant D as Member's device
-  participant A as App
-  participant N as Notary
-  participant P as Postgres
+  participant A as App handler (TypeScript)
+  participant N as cella extension
+  participant P as Feat schemas
   D->>A: signed write
   A->>A: permission check
-  A->>N: ordered write
-  N->>N: receipt, then the rule
-  N->>P: verdict and state change, one transaction
-  P-->>D: Settled or Refused
+  rect rgba(128, 128, 128, 0.15)
+    A->>N: begin; select cella.submit(write)
+    N->>N: receipt, rules, verdict appended to the log
+    N-->>A: verdict
+    A->>P: state change, if Settled
+    A->>P: commit
+  end
+  A-->>D: Settled or Refused
 ```
 
 - **The member signs on their device** (WebCrypto Ed25519). Votes and
   approvals carry the member's own signature, and the governed record cites
   them.
-- **The notary is the only code path that appends to the log.** It signs a
-  receipt when a write arrives, then a numbered verdict; a verdict out of
-  receipt order is proof against it. It never decides an outcome: an outcome
-  is computed from the signed votes, and anyone holding the log can compute
-  it again.
-- **The verdict and its state change commit in one transaction.** The log is
-  hash-chained with a deterministic fold, so the state can always be rebuilt
-  from it and checked. A Merkle tree over the log (RFC 9162) gives inclusion
-  and consistency proofs.
+- **Only the extension's functions may write the log.** No client, script or
+  psql session can append to it any other way. The notary signs a receipt
+  when a write arrives, then a numbered verdict; a verdict out of receipt
+  order is proof against it. It never decides an outcome: an outcome is
+  computed from the signed votes, and anyone holding the log can compute it
+  again.
+- **The verdict and its state change commit in one transaction.** The
+  handler opens it, calls `cella.submit`, writes the state on Settled, and
+  commits once. The log is hash-chained with a deterministic fold, so the
+  state can always be rebuilt from it and checked. A Merkle tree over the
+  log (RFC 9162) gives inclusion and consistency proofs.
+- **A scope's database is the unit** that moves, backs up and replays: state,
+  log, rules and the notary's key together.
 - **Confluent writes skip the rule check** and are logged in signed batches.
+
+## Rules
+
+The extension is cella core's semantics exposed as SQL, wrapping the Rust
+rules crate, which also compiles to WASM for browsers, devices and auditors:
+
+- types: `cella.amount`, positive cents; balances are signed and derived;
+- aggregates: `cella.consent`, `cella.majority`, …; an outcome is folded from
+  the votes, never stored;
+- policy functions: `cella.may(actor, power, amount)` reads mandates as rows;
+- trigger functions that feats and grafts attach: entries balance, periods
+  are open;
+- time: `cella.verdict_date()`, never `now()`;
+- the notary: `cella.submit`, log verification, proofs.
+
+Rules come in four layers:
+
+| Layer | Who changes it | Written as |
+|---|---|---|
+| Primitives | us, by release | Rust: the `cella.*` types, aggregates and functions |
+| Composed rules | power users and module developers, adopted by decision | `LANGUAGE sql` functions over the primitives, in the declared subset |
+| Parameters | circles and the assembly | rows: mandates, limits, the procedure each circle uses |
+| Members' view | members | forms that read back as sentences |
+
+The law for each legal form is ours to write, as primitives and composed
+rules. A co-op's own composed rules are documents adopted by decision.
+
+Composed rules are a declared subset of SQL: `SELECT`, joins over the
+scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
+primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
+rule is checked against the subset with libpg_query when it is adopted, and
+refused outside it. A statement timeout bounds evaluation. The log records
+the text and version of every rule that decided a verdict.
+
+SQL is the source of truth for rules. The browser may preview a rule
+through the WASM primitives but never re-implements one in TypeScript.
+
+Four catches keep local-first (rung 7) open, so that composed rules can run
+without Postgres on a later runtime:
+
+- the declared subset;
+- the primitives in a Rust crate, so devices get them as WASM;
+- each rule's text and version in the log;
+- a conformance suite, Lanterne's cases and their expected verdicts,
+  runnable against any engine: Postgres, PGlite, or a future runtime.
 
 Until the native client (rung 4) the host serves the signing code. The pilot
 guards against outsiders and later tampering, not against the host, and
@@ -82,7 +141,7 @@ erased until their legal clock runs out.
 
 ## Open
 
-- The rules language: TypeScript in the app, with the notary in the same
-  transaction, or shared Rust that devices and auditors can run too.
+- The pgrx spike's outcome, and with it whether the notary is the extension
+  or the fallback module.
 - Whether personal data enters the log only for ordered writes.
 - The late-write rules for offline writes (rung 2).

@@ -30,7 +30,10 @@ cost little now and a rewrite later, so rung 1 keeps all of them:
 - member device keys;
 - personal data out of the log, behind single-use salted commitments;
 - double-entry books;
-- stable addresses and a server key per scope.
+- stable addresses and a server key per scope;
+- rules as Rust primitives and a declared SQL subset, each rule's text and
+  version in the log, and a conformance suite any engine can run
+  ([trust](trust.md#rules)).
 
 ## Rung 1
 

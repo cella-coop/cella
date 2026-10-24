@@ -12,9 +12,15 @@ only on the org app, `apps/org/`. Read
   `just feat-check` must pass; never route around it with a re-export.
 - **Every write has a label and a permission** in its feat's
   `models/ops.ts`. A new write without one is incomplete.
-- **The notary is the only path that appends to the log.** No handler writes
-  the log or settles an ordered write itself.
-- **No foreign key crosses a feat.** The graft owns the junction.
+- **The notary is the only path that appends to the log.** Only the `cella`
+  extension's functions write it; a handler calls `cella.submit` inside its
+  transaction and never writes the log or settles an ordered write itself.
+- **Each feat and each graft owns a Postgres schema**, its SQL in a `sql/`
+  directory beside its core package. A feat's SQL references only its own
+  schema and `cella.*`; a graft's, its own and those of the feats it joins.
+- **No foreign key crosses a feat.** The graft's schema holds the junction.
+- **SQL is the source of truth for rules.** Never re-implement a rule in
+  TypeScript; never call `now()` in a rule, read `cella.verdict_date()`.
 - **A rule lives at the lowest level that owns it**: a feat, a graft, or a
   node's core only when it spans everything below.
 - **Personal data never enters the log.** Commit to it; keep it in the vault.

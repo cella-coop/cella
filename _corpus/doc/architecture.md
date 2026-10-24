@@ -35,8 +35,8 @@ A node is a directory with a `feat.toml`. It holds:
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
   core is its shared library layer: `ops` (labels, permissions, outcomes),
-  `crypto`, `log`, `keystore`, and later `db`, `auth`, `ui`. A leaf feat's
-  core is all of it.
+  `crypto`, `log`, `keystore`, `notary` (the `cella` Postgres extension, not
+  yet built), and later `db`, `auth`, `ui`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between its child feats.
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
@@ -59,8 +59,9 @@ top-level: they sit flat under `apps/org/feats/`. A feat nests under another
 only when it is a genuine sub-feature of that one feat. What everything
 grafts onto belongs in the parent's core, not in a feat.
 
-The notary is a feat of org like any other. Its Rust root builds its
-binary, so the libraries it shares with the app stay in org's core.
+The notary is a feat of org for its own writes, such as `move`. Its engine
+is the `cella` Postgres extension, a package of org's core
+(`apps/org/core/notary/rs`), because every feat's SQL calls it.
 
 ## What may depend on what
 
@@ -109,8 +110,44 @@ in a node's core only if it spans everything below that node.
 - A surplus split adds up to the surplus: the account feat's. That the
   members approved it is the `account-decision` graft's.
 
-The notary checks an ordered write against the rules of the feat and the
-grafts it touches; it holds no rules of its own.
+A rule is SQL in its owner's schema (see [SQL](#sql)). The notary runs
+every rule that attaches to an ordered write, those of the feat and of the
+grafts it touches; it holds no rules of its own beyond the primitives. How
+rules are composed and adopted is in [trust](trust.md#rules).
+
+## SQL
+
+Each feat and each graft owns a Postgres schema and the SQL in it: tables,
+row-level policies, triggers and composed rules, which are plain
+`LANGUAGE sql` functions over the `cella.*` primitives. The SQL sits in a
+`sql/` directory beside the core package: `feats/<feat>/core/sql/`,
+`grafts/<graft>/sql/`.
+
+| SQL in | may reference |
+|---|---|
+| a feat's schema | its own schema; `cella.*` |
+| a graft's schema | its own schema; the schemas of the feats it joins; `cella.*` |
+
+A graft's schema holds the junction, with keys into each feat's tables; no
+foreign key crosses a feat. `feat-check` will enforce these boundaries by
+parsing the SQL with libpg_query; that check is not yet built.
+
+SQL is the source of truth for rules. TypeScript calls them and never
+re-implements one; the browser may preview a rule through the primitives
+compiled to WASM.
+
+### Migrations
+
+Migrations cascade down the feat tree: a node's core first, then its feats,
+then its grafts, recursively, each versioned. They are plain SQL, and the
+TypeScript types are generated from the schema; seedling's Drizzle, where
+TypeScript owns the schema, is dropped. The generator is not chosen.
+
+### Tests
+
+SQL logic is tested in the database. pgTAP tests and Lanterne's
+conformance suite, its cases and their expected verdicts, are gates
+alongside `just check`; neither is wired in yet.
 
 ## Inside a package
 
@@ -118,7 +155,7 @@ Seedling's layers, innermost first; imports point inward only.
 
 - Server: `models` (types, schemas, invariants, `permissions`, `ops.ts`) →
   `interfaces` (repository contracts) → `handlers` (`(input, deps) → Result`,
-  jobs) → `drivers` (Postgres schema and repositories) → `api` (remotes,
+  jobs) → `drivers` (repositories over the feat's schema) → `api` (remotes,
   endpoints, events, subscriptions).
 - Client: `hooks` → `components` → `bindings` (sockets, plugs) → `app`
   (pages, views, panes, blocks).
@@ -143,8 +180,8 @@ The label is part of the type: an ordered write returns `Pending` until its
 verdict. The labels and the path each takes are in [trust](trust.md).
 
 Every critical rule is enforced twice: the handler checks the permission and
-Postgres row-level security backs it up. An ordered write is checked a third
-time by the notary, in a way anyone can replay from the log.
+the feat's row-level policies and triggers back it up. An ordered write is
+checked a third time by the notary, in a way anyone can replay from the log.
 
 ## Feat flags
 

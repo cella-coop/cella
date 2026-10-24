@@ -70,9 +70,12 @@ recovery is not built.
 
 | Write | Power | Lanterne |
 |---|---|---|
-| enrol | the member's own current key | every member, for their own devices |
-| revoke | the member's own key; `revoke-key` for anyone else's, not built | Julien, for a lost device reported by phone |
-| recover | the guardians' threshold | a threshold the assembly sets |
+| enrol | self: the member's own current key | every member, for their own devices |
+| revoke | self: the member's own key; `revoke-key` for anyone else's, not built | Julien, for a lost device reported by phone |
+| recover | the guardians' threshold, once built; until then `recover-key`, which no mandate grants | a threshold the assembly sets |
+
+`002-powers.sql` registers recover's power, so it is never allowed by
+omission.
 
 ## Schema
 

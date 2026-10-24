@@ -161,15 +161,13 @@
     gap: var(--space-4);
     min-width: 0;
   }
+  /* The drawer is the content's own panel; its cards are raised on it. */
   .drawer {
-    background: var(--raised);
     overflow-y: auto;
     padding: var(--space-4);
     display: grid;
     align-content: start;
     gap: var(--space-3);
-    border-start-end-radius: var(--radius-panel);
-    border-end-end-radius: var(--radius-panel);
   }
   @media (max-width: 900px) {
     .drawn {
@@ -179,9 +177,6 @@
     .content {
       overflow: visible;
       padding: var(--space-4);
-    }
-    .drawer {
-      border-radius: 0;
     }
   }
 </style>

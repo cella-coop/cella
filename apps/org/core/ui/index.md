@@ -17,9 +17,9 @@ negative, warning), a shade is a lightness mirrored around a midpoint by
 one sign, `--theme`, so dark mode is that variable and a compressed ladder
 of surfaces. Components read roles, never shades:
 
-- surfaces: `--ground` under the sidebar, `--panel` under the content,
-  `--raised` for the drawer and floating things, `--sunk` for fields,
-  `--hover`;
+- surfaces: `--ground` under the sidebar, `--panel` under the content
+  and its drawer alike, `--raised` for cards and stats on the panel,
+  `--float` for floating things, `--sunk` for fields, `--hover`;
 - text: `--text`, `--text-muted`, `--text-subtle`;
 - accent: `--accent-fill` (fixed lightness in both themes),
   `--accent-border`, `--accent-text`, `--accent-soft`, `--on-accent`;
@@ -50,7 +50,8 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Detail`: the one detail view, the item's blocks in the content and the
   drawer's cards: Properties (label and value rows), Related and Activity.
   Esc goes back to the collection.
-- `Card` (a borderless drawer card), `Section` (a block in the content),
+- `Card` (a borderless card raised on the panel, in the drawer or the
+  content), `Section` (a block in the content),
   `Properties`, `Related`, `Activity`, `Table`, `Cell`, `Stats`, `Badge`,
   `Button`, `Form` (a write, posting to a named form action), `Field`,
   `Prose`, `Icon` (Phosphor, duotone), `Outcome`, `Command`.

@@ -45,8 +45,9 @@
   --shade-8: calc(0.58 + var(--theme) * -0.27);
   --shade-9: calc(0.58 + var(--theme) * -0.36);
 
-  /* Surfaces: the ground the sidebar sits on, the panel the content sits
-     on, raised for the drawer and floating things, sunk for wells. */
+  /* Surfaces: the ground the sidebar sits on, the panel the content and
+     its drawer sit on, raised for cards and stats on the panel, float for
+     floating things, sunk for wells. */
   --ground: oklch(var(--shade-2) var(--tone-base));
   --panel: oklch(var(--shade-0) var(--tone-base));
   --raised: oklch(var(--shade-1) var(--tone-base));

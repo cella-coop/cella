@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
 
-  // A borderless card: a drawer's Properties, Related or Activity, or a
-  // block in the content. Same styling wherever it sits.
+  // A borderless card, raised on the panel: a drawer's Properties, Related,
+  // Activity or View, or a block in the content. Same styling wherever it
+  // sits.
   let { title, count, children }: { title: string; count?: number; children: Snippet } = $props()
 </script>
 
@@ -16,7 +17,7 @@
     display: grid;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-4) var(--space-4);
-    background: var(--panel);
+    background: var(--raised);
     border-radius: var(--radius-panel);
     min-width: 0;
   }

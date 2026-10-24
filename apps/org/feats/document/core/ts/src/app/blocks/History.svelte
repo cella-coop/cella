@@ -27,9 +27,7 @@
 </Section>
 
 <Section title="Comments" count={data.comments.length}>
-  {#if data.comments.length}
-    <Table columns={comments} rows={data.comments} />
-  {/if}
+  <Table columns={comments} rows={data.comments} />
   {#if options.length}
     <Form action="comment" submit="Comment">
       <Field label="On version" name="version" {options} />

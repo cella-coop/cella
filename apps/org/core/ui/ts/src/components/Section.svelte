@@ -1,9 +1,12 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import { useSection } from '../hooks/useSection.ts'
 
   // A block in a page's content: an eyebrow title over what it holds, on
   // the panel itself, so blocks read as one page rather than boxes.
   let { title, count, children }: { title: string; count?: number; children: Snippet } = $props()
+
+  useSection(() => title)
 </script>
 
 <section class="section">

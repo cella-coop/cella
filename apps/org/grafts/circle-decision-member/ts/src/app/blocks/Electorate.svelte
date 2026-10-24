@@ -36,5 +36,5 @@
 {/if}
 
 <Section title="Roll" count={data.voters.length}>
-  <Table {columns} rows={data.voters} href={(v: Voter) => `/members/${v.member}`} />
+  <Table {columns} rows={data.voters} empty="No voters"href={(v: Voter) => `/members/${v.member}`} />
 </Section>

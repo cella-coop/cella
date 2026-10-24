@@ -1,52 +1,68 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
   import { nearest } from '../models/keys.ts'
+  import { useSection } from '../hooks/useSection.ts'
   import Cell from './Cell.svelte'
 
+  // A table of rows; with none, one quiet line in their place, named for
+  // the section it sits in unless `empty` says otherwise, and no headers.
   let {
     columns,
     rows,
     href,
     active = -1,
+    empty,
   }: {
     columns: Column[]
     rows: any[]
     href?: (row: any) => string | undefined
     active?: number
+    empty?: string
   } = $props()
 
+  const section = useSection()
+  const none = $derived(empty ?? (section ? `No ${section().toLowerCase()}` : 'Nothing here yet.'))
   const end = (c: Column) => c.kind === 'money' || c.kind === 'number'
 </script>
 
-<div class="scroll">
-  <table>
-    <thead>
-      <tr>
-        {#each columns as c (c.key)}
-          <th class:end={end(c)}>{c.label}</th>
-        {/each}
-      </tr>
-    </thead>
-    <tbody>
-      {#each rows as row, i (row.id)}
-        {const link = $derived(href?.(row))}
-        <tr class:active={i === active} class:linked={link} {@attach nearest(i === active)}>
-          {#each columns as c, j (c.key)}
-            <td class:end={end(c)}>
-              {#if link && j === 0}
-                <a href={link} class="stretched"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></a>
-              {:else}
-                <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
-              {/if}
-            </td>
+{#if rows.length === 0}
+  <p class="empty">{none}</p>
+{:else}
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          {#each columns as c (c.key)}
+            <th class:end={end(c)}>{c.label}</th>
           {/each}
         </tr>
-      {/each}
-    </tbody>
-  </table>
-</div>
+      </thead>
+      <tbody>
+        {#each rows as row, i (row.id)}
+          {const link = $derived(href?.(row))}
+          <tr class:active={i === active} class:linked={link} {@attach nearest(i === active)}>
+            {#each columns as c, j (c.key)}
+              <td class:end={end(c)}>
+                {#if link && j === 0}
+                  <a href={link} class="stretched"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></a>
+                {:else}
+                  <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
+                {/if}
+              </td>
+            {/each}
+          </tr>
+        {/each}
+      </tbody>
+    </table>
+  </div>
+{/if}
 
 <style>
+  .empty {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    padding-inline: var(--space-3);
+  }
   .scroll {
     overflow-x: auto;
   }

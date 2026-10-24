@@ -24,7 +24,5 @@
   <Table columns={lines} rows={data.lines} />
 </Section>
 <Section title="Payments" count={data.payments.length}>
-  {#if data.payments.length}
-    <Table columns={payments} rows={data.payments} />
-  {/if}
+  <Table columns={payments} rows={data.payments} />
 </Section>

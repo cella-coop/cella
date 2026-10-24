@@ -15,5 +15,5 @@
 </script>
 
 <Section title="Ledger" count={data.movements.length}>
-  <Table {columns} rows={data.movements} href={(m: Movement) => `/transactions/${m.entry}`} />
+  <Table {columns} rows={data.movements} empty="Nothing posted to this account"href={(m: Movement) => `/transactions/${m.entry}`} />
 </Section>

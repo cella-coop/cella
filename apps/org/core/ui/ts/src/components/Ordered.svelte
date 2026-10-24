@@ -7,18 +7,22 @@
   import Cell from './Cell.svelte'
   import DragHandle from './DragHandle.svelte'
   import DropIndicator from './DropIndicator.svelte'
+  import Icon from './Icon.svelte'
+  import X from 'phosphor-svelte/lib/X'
 
   // An ordered list a slice's writes reorder, as an agenda: each row its
-  // number, its grip and its columns, the first its title, and what the
-  // slice puts at its end, such as a removal. A drop calls `onmove` with
-  // the row's index before and after; `fixed` drops the grips once the
-  // order may no longer change. With no rows, one quiet line, as a table
-  // says it.
+  // number, its grip and its columns, the first its title, what the slice
+  // puts at its end, and a quiet removal when the slice offers one. A drop
+  // calls `onmove` with the row's index before and after, a removal
+  // `onremove` with the row; `fixed` drops the grips and the removals once
+  // the list may no longer change. With no rows, one quiet line, as a
+  // table says it.
   let {
     name,
     rows,
     columns,
     onmove,
+    onremove,
     fixed = false,
     end,
   }: {
@@ -27,6 +31,7 @@
     rows: any[]
     columns: Column[]
     onmove: (from: number, to: number) => void
+    onremove?: (row: any) => void
     fixed?: boolean
     end?: Snippet<[any]>
   } = $props()
@@ -49,6 +54,11 @@
           <span class="cell" class:first={j === 0}><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></span>
         {/each}
         {#if end}<span class="end">{@render end(row)}</span>{/if}
+        {#if onremove && !fixed}
+          <button type="button" class="remove" aria-label="Remove {label(i)}" title="Remove {label(i)}" onclick={() => onremove(row)}>
+            <Icon icon={X} />
+          </button>
+        {/if}
       </li>
     {/each}
     <DropIndicator show={drag.before(name, rows.length)} />
@@ -102,5 +112,27 @@
   .end {
     display: flex;
     gap: var(--space-1);
+  }
+  /* A removal, quiet until its row is hovered or it is focused. */
+  .remove {
+    display: grid;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-subtle);
+    opacity: 0;
+    cursor: pointer;
+  }
+  li:hover .remove,
+  .remove:focus-visible {
+    opacity: 1;
+  }
+  .remove:hover {
+    background: var(--hover);
+    color: var(--negative-text);
   }
 </style>

@@ -134,9 +134,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Field` (text, a number, a date, a time, an address or an email; a
   select with a `placeholder` offers it as a disabled first choice,
   never a blank), `Ordered` (a list a slice's writes reorder, as an
-  agenda: each row numbered, with its grip and its columns, and what
-  the slice puts at its end; `fixed` drops the grips once the order may
-  not change), `Prose`, `Note` (a quiet line), `Icon`
+  agenda: each row numbered, with its grip and its columns, what the
+  slice puts at its end and a quiet removal when the slice offers one;
+  `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Icon`
   (Phosphor, duotone), `Outcome`, `Command`.
 - `Floating`: what floats at a point rather than from a trigger, a menu at
   the caret or a toolbar over a selection: in the top layer, opened

@@ -6,6 +6,21 @@ updated = 2026-10-24
 Positions: which member holds which role in which circle. A position is
 the relationship, so the graft owns its writes.
 
+## Schema
+
+`circle_member` (`sql/`):
+
+- `circle_member.position`: a seat, by circle id and member address, with
+  no foreign key into either feat; an optional `role`, and `since` and
+  `until`. A seat with no `since` was held before the records began; an
+  ended seat keeps its row with `until`, so who sat where on a past day
+  reads back.
+- `circle_member.seated(circle, day)`: the members seated in a circle on a
+  day. The `circle-decision` graft fixes a decision's roll from it.
+
+The app role and the rules role, `cella_rules`, may select. Positions are
+seeded; the writes below have no handlers yet.
+
 ## Writes
 
 | Write | Label | Why |

@@ -14,6 +14,8 @@ and signs each verdict into a log the members can audit.
   professional-services worker co-ops.
 - [Glossary](_corpus/doc/glossary.md) — cella's terms and the co-op terms it
   uses.
+- [Conflicts](_corpus/doc/conflicts.md) — every write against the
+  invariants it contends with, testing each label.
 - [Org](apps/org/index.md) — the app and its feats.
 
 ## Layout

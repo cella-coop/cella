@@ -19,12 +19,18 @@ flowchart BT
   core["apps/org/core: ops, crypto, log, keystore, …"]
   member["feats/member/core"]
   decision["feats/decision/core"]
+  circle["feats/circle/core"]
   graft["grafts/decision-member"]
+  three["grafts/circle-decision-member"]
   root["apps/org/ts: shell, routes, server"]
   member --> core
   decision --> core
+  circle --> core
   graft --> member
   graft --> decision
+  three --> graft
+  three --> circle
+  root --> three
   root --> graft
   root --> member
   root --> decision
@@ -69,7 +75,7 @@ is the `cella` Postgres extension, a package of org's core
 | A package in | may depend on |
 |---|---|
 | a feat's core | the other packages of its own core; its ancestors' cores |
-| a graft | the cores of the feats it joins; its node's and their ancestors' cores |
+| a graft | the cores of the feats it joins; its node's and their ancestors' cores; the grafts of its node that join a proper subset of its feats ([graft order](#graft-order)) |
 | a node's root | its own and its ancestors' cores, its feats' cores and roots, its own grafts |
 
 Nothing is ambient: no global module, no library outside the tree, no
@@ -77,11 +83,14 @@ re-export that reaches around it. Third-party crates and npm packages are
 the only dependencies from outside. When two apps need the same library, the
 repository's root becomes the top node and the library moves into its core.
 
+Architecture rules are enforced by tooling wherever a tool can see them.
 `tools/feat-check.mjs` reads each `package.json` and `cargo metadata`, the
-manifests cargo and pnpm read, and not the lockfile, so it runs before an
-install. It places each package by its path and refuses any other edge. It
-also checks that every graft is declared, that its name is in order, and
-that every feat it names is a feat of its node.
+manifests cargo and pnpm read, and not the lockfile. It places each package
+by its path and refuses any other edge. It also checks that every graft is
+declared by a feat it joins, that its name is in order, that every feat it
+names is a feat of its node, that a package's relative imports stay inside
+it, and that a feat's or graft's ops are named for it. Through
+`tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)).
 
 ## Grafts
 
@@ -100,6 +109,26 @@ adds the link.
 A graft may also own writes on the relationship it holds, such as who
 holds a position: its permission is `<graft>:<entity>:<op>`, served as
 `POST /api/<graft>/<op>`, the same pattern as a feat's.
+
+### Graft order
+
+A graft's order is the number of feats it joins. A graft that joins N
+feats may read, in code and in SQL, the feats it joins, the cores below
+them, and the grafts of its node that join a proper subset of its feats:
+`circle-decision-member` reads `circle-member` and `decision-member`.
+Nothing else: no graft of equal or higher order, and no graft that joins a
+feat it does not. Relationships compose upward, so a higher graft builds on
+lower ones and no lower graft ever depends on one above it. Migrations run
+grafts lowest order first.
+
+A relationship that needs another graft's data therefore lives in the
+graft that joins all the feats involved. A decision's roll needs seats
+(circle and member) and the decision, so it is `circle-decision-member`'s,
+and so is everything that counts the roll. A lower graft that needs what a
+higher one decides declares it through a feat they share: a graft that
+cites a decision lists its op in `decision.cites`, and the graft that
+counts the roll attaches its rule to every op listed, so neither reads the
+other.
 
 ## Rules
 
@@ -136,12 +165,19 @@ decision. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a feat's schema | its own schema; `cella.*` |
-| a graft's schema | its own schema; the schemas of the feats it joins; `cella.*` |
+| a node's core | `cella.*`; the catalog |
+| a feat's schema | its own schema; `cella.*`; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins; the schemas of its lower-order grafts; `cella.*`; the catalog |
 
 A graft's schema holds the junction, with keys into each feat's tables; no
-foreign key crosses a feat. `feat-check` will enforce these boundaries by
-parsing the SQL with libpg_query; that check is not yet built.
+foreign key crosses a feat. `feat-check` enforces these boundaries by
+parsing every `sql/` file with libpg_query, Postgres's own parser,
+PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
+that creates, alters, indexes, drops or grants outside its own schema;
+holds a foreign key out of it; writes `cella.*` other than to register its
+own rules, under its own name, on ops of the feats it is or joins; sets
+`search_path` other than a function's to the catalog; reads the clock or
+randomness; or hides statements in a `DO` block.
 
 SQL is the source of truth for rules. TypeScript calls them and never
 re-implements one; the browser may preview a rule through the primitives

@@ -15,9 +15,17 @@ only on the org app, `apps/org/`. Read
 - **The notary is the only path that appends to the log.** Only the `cella`
   extension's functions write it; a handler calls `cella.submit` inside its
   transaction and never writes the log or settles an ordered write itself.
+- **Grafts compose upward.** A graft joining N feats may read, in code and
+  in SQL, the feats it joins and the grafts of its node that join a proper
+  subset of them; never a graft of equal or higher order. A relationship
+  that needs another graft's data lives in the graft joining all its feats.
 - **Each feat and each graft owns a Postgres schema**, its SQL in a `sql/`
   directory beside its core package. A feat's SQL references only its own
-  schema and `cella.*`; a graft's, its own and those of the feats it joins.
+  schema and `cella.*`; a graft's, its own, those of the feats it joins and
+  those of its lower-order grafts. It creates and grants only in its own.
+- **Architecture rules are enforced by tooling** wherever a tool can see
+  them: `just feat-check` checks packages, imports, ops and every `sql/`
+  file. A rule a tool cannot check says so in its doc.
 - **No foreign key crosses a feat.** The graft's schema holds the junction.
 - **SQL is the source of truth for rules.** Never re-implement a rule in
   TypeScript; never call `now()` in a rule, read `cella.verdict_date()`.

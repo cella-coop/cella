@@ -5,6 +5,8 @@ updated = 2026-10-24
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the rule primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-rules` (`core/rules/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
 
+The notary is the scope's office for every write, and a layer under every feat rather than a feat: it holds no collection and has no writes of its own. It signs a receipt when a write arrives, runs the rules that attach to it, then signs a numbered verdict; it never decides an outcome, which is computed from the signed votes and can be computed again by anyone holding the log. Moving a scope's notary is moving its database to another host, a rung-6 concern ([ratchet](../../../../_corpus/doc/ratchet.md#moving-a-notary)); peers, other scopes' notaries, arrive with federation at rung 5.
+
 ## Surface
 
 | SQL | What |

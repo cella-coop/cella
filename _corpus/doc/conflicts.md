@@ -44,7 +44,6 @@ decision. Lanterne's state is that of 24 October 2026.
 | `decision.propose` | confluent | right |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
 | `decision.close` | ordered | right |
-| `notary.move` | ordered | right |
 
 ## Nothing posts into a closed period
 
@@ -358,7 +357,6 @@ queued offline before the erasure must not resurrect the data.
 | `decision.propose` | a fact; the roll is fixed from the seats when the server receives it, and the cutoff by `close` |
 | `member.invite` | two invitations do no harm |
 | `client.add` | duplicates are merged by hand |
-| `notary.move` | ordered against everything: writes received after its receipt go to the new server |
 
 ## Missing writes
 

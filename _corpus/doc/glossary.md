@@ -29,7 +29,7 @@ updated = 2026-10-24
 | **ordered** | a write that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
 | **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
-| **notary** | the scope's office for ordered writes: the `cella` Postgres extension, which alone writes the log |
+| **notary** | the scope's office for every write: the `cella` Postgres extension, a layer of org's core under every feat, not a feat; it alone writes the log |
 | **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
 | **nonce** | the single-use random value in a write's signature, so the signature counts once |
 | **keyring** | the one function that says whether a device is a current key of an address: the `key` feat's, called by the notary before any rule |

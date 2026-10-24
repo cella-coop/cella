@@ -6,7 +6,6 @@
     "@cella/org-ops": "workspace:*",
     "@cella/org-db": "workspace:*",
     "@cella/org-sign": "workspace:*",
-    "@cella/org-notary": "workspace:*",
     "@cella/org-key": "workspace:*",
     "@cella/org-member": "workspace:*",
     "@cella/org-circle": "workspace:*",

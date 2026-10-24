@@ -44,3 +44,13 @@ vote (ordered).
 
 Not in the pilot: the offline queue, statutory exports, the native client,
 federation, Merkle proofs for peers and end-to-end encryption.
+
+## Moving a notary
+
+The notary is the scope's database, so moving it is moving the database to
+another host: state, log, rules and the scope's key together. It arrives
+at rung 6, when peers cosign log heads and a move can be shown to lose no
+write. Its governance write, the scope's decision to move, belongs to the
+feat that holds the scope's hosts and peers, which arrives with
+federation at rung 5; until then the host moves a database as an operator,
+outside the log.

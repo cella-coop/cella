@@ -92,7 +92,10 @@ sequenceDiagram
   restart every connection in the scope, in about 0.2 s, and lose nothing
   committed.
 - **A scope's database is the unit** that moves, backs up and replays: state,
-  log, rules and the notary's key together.
+  log, rules and the notary's key together. The notary is a layer under
+  every feat, not a feat, and has no writes of its own; moving it is moving
+  the database to another host, which arrives at rung 6
+  ([ratchet](ratchet.md#moving-a-notary)).
 - **Who may write is a rule like any other.** Each op that needs a power
   names it in `cella.power`, registered by its feat; the `circle-member`
   graft attaches a rule to every such op that the actor holds, on the

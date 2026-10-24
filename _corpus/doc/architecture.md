@@ -69,9 +69,12 @@ top-level: they sit flat under `apps/org/feats/`. A feat nests under another
 only when it is a genuine sub-feature of that one feat. What everything
 grafts onto belongs in the parent's core, not in a feat.
 
-The notary is a feat of org for its own writes, such as `move`. Its engine
-is the `cella` Postgres extension, a package of org's core
-(`apps/org/core/notary/rs`), because every feat's SQL calls it.
+The notary is not a feat but a layer under every feat: the `cella`
+Postgres extension, a package of org's core (`apps/org/core/notary/rs`),
+which every feat's SQL calls and every write passes through. It holds no
+collection and has no writes of its own. Moving a scope's notary is moving
+its database to another host, which arrives at rung 6
+([ratchet](ratchet.md)).
 
 ## What may depend on what
 

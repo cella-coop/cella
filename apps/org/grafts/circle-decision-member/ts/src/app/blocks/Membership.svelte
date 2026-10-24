@@ -20,7 +20,7 @@
 </script>
 
 {#if data && offered.length}
-  <Popover label="Propose a decision about this membership" menu={false} wide>
+  <Popover label="Propose a decision about this membership" menu={false} wide button>
     {#snippet trigger()}Propose…{/snippet}
     <Form action="propose" submit="Propose">
       <Note text="Put to {data.decider.name}, by {data.decider.procedure}." />

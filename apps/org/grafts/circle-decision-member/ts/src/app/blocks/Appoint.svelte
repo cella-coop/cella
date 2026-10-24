@@ -19,7 +19,7 @@
 </script>
 
 {#if data}
-  <Popover label="Propose a seat in this circle" menu={false} wide>
+  <Popover label="Propose a seat in this circle" menu={false} wide button>
     {#snippet trigger()}Appoint…{/snippet}
     <Form action="appoint" submit="Propose">
       <Note text="Put to {data.decider.name}, by {data.decider.procedure}." />

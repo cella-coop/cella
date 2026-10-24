@@ -16,6 +16,7 @@
     side = 'bottom',
     menu = true,
     wide = false,
+    button = false,
   }: {
     // The trigger's name for assistive technology.
     label: string
@@ -24,6 +25,9 @@
     side?: 'bottom' | 'top'
     menu?: boolean
     wide?: boolean
+    // The trigger reads as a quiet button, as wide as its text, as on a
+    // page; otherwise it fills its row, as in the sidebar.
+    button?: boolean
   } = $props()
 
   const id = $props.id()
@@ -63,7 +67,7 @@
   }
 </script>
 
-<button class="trigger" popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-label={label} style:anchor-name="--{id}">
+<button class="trigger" class:button popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-label={label} style:anchor-name="--{id}">
   {@render trigger()}
 </button>
 <div
@@ -95,6 +99,18 @@
   }
   .trigger:hover {
     background: var(--hover);
+  }
+  .button {
+    width: auto;
+    height: 2rem;
+    padding: 0 var(--space-3);
+    background: var(--sunk);
+    color: var(--text);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    white-space: nowrap;
+    justify-self: start;
+    align-self: end;
   }
   .popover {
     margin: 0;

@@ -17,7 +17,7 @@
 </script>
 
 {#if data}
-  <Popover label="Propose a decision about this circle" menu={false} wide>
+  <Popover label="Propose a decision about this circle" menu={false} wide button>
     {#snippet trigger()}Propose…{/snippet}
     <Form action="put" submit="Propose">
       <Note text="Put to {data.decider.name}, by {data.decider.procedure}." />

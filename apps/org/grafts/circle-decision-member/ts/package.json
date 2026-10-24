@@ -8,6 +8,7 @@
   "dependencies": {
     "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
-    "@cella/org-member": "workspace:*"
+    "@cella/org-member": "workspace:*",
+    "@cella/org-graft-circle-member": "workspace:*"
   }
 }

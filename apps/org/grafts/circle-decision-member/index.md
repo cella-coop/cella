@@ -50,11 +50,24 @@ coordination's, counts its five.
   there (`decision-member` for `member:member:admit`, `decision-document`
   for `document:document:adopt`), and this graft attaches the rule to every
   op listed, then and later. A graft that cites a decision so never reads
-  this one, and this one never names a feat it does not join.
+  this one, and this one never names a feat it does not join. This graft
+  lists `circle-member:position:add` itself, a lower-order graft's op.
+- `circle_decision_member.seats`, on `circle-member:position:add`: the
+  seat is the one an admission gives: the member the cited decision
+  admits (`decision_member.admission`), active, seated from the verdict
+  date in the decision's circle in its `member` role, and not already
+  seated there. A graft may register rules on the ops of the lower-order
+  grafts it builds on, as on its feats'.
 
 ## Handlers
 
 - `closed(decision)`: on a settled close, admits each member the decision
   asks to admit (`decision_member.admission`) when it passes, through the
-  member feat's `admit`; each admission is its own ordered write, decided
-  again by its rules.
+  member feat's `admit`, then seats each one admitted in the decision's
+  circle in its `member` role, through `circle-member`'s `add`. Each is
+  its own ordered write, decided again by its rules, and a seat follows
+  only a settled admission. Lanterne's d-2026-012 seats Inès in `ag`,
+  whose `member` role's mandates let her edit clients and documents.
+  The two writes are not one transaction: an admission whose seat is
+  refused leaves an active member without a seat, until a seat is added
+  under the same decision.

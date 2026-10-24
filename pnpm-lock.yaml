@@ -150,6 +150,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
+      '@cella/org-graft-circle-member':
+        specifier: workspace:*
+        version: link:../../circle-member/ts
       '@cella/org-member':
         specifier: workspace:*
         version: link:../../../feats/member/core/ts
@@ -162,6 +165,9 @@ importers:
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../feats/circle/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
       '@cella/org-member':
         specifier: workspace:*
         version: link:../../../feats/member/core/ts

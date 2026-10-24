@@ -19,8 +19,8 @@ the relationship, so the graft owns its writes.
   day. The `circle-decision-member` graft, a higher order, fixes a
   decision's roll from it.
 
-The app role and the rules role, `cella_rules`, may select. Positions are
-seeded; the writes below have no handlers yet.
+The app role and the rules role, `cella_rules`, may select; the app role
+may insert a seat, through `position.add`. Lanterne's seats are seeded.
 
 ## Rules
 
@@ -56,9 +56,23 @@ invitee with a device, holds nothing.
 - **position.add** and **position.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
   writes read positions through `circle_member.may`, so they are ordered.
+- **position.add** is decided (`check: 'decided'`): it cites the decision
+  that gives the seat. This graft does not join `decision`, so the rules
+  that judge it are `circle-decision-member`'s, a higher order: the cited
+  decision carried, and it gives this seat. Today only an admission gives
+  one, seating the new member in the decision's circle in its `member`
+  role.
+
+## Handlers
+
+- `add` (ordered): inserts the seat from the verdict date and commits its
+  id, circle, member, role and the decision it cites.
+  `circle-decision-member`'s `closed` calls it after an admission
+  settles.
 
 ## Powers
 
 | Write | Power | Lanterne |
 |---|---|---|
-| position.add, position.remove | held by the circle, by decision; the manager's election is the assembly's | each circle for its own seats |
+| position.add | none: the decision it cites, which must give this seat | the assembly, admitting a member |
+| position.remove | held by the circle, by decision; the manager's election is the assembly's | each circle for its own seats |

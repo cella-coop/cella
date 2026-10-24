@@ -20,7 +20,11 @@ it builds on `account-member` and `account-transaction`. Declared by
   under `1013`, next in the chart, and their shares at the share's value
   post on the verdict date, `4561` (what members owe for capital called)
   debited and their capital credited. Paying it in is money received,
-  which posts through a write of its own, not built.
+  which posts through a write of its own, not built. The books never
+  hold an admission back: where a share has no value or the day's
+  period is not open, the admission settles and nothing is subscribed.
+  Being a trigger, it runs inside whichever write admits, the close of
+  the admitting decision included.
 - `draw`: each draw, its member and its entry; `drawn`, each member's
   draws against their limit.
 

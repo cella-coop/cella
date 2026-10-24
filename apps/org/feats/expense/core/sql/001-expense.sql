@@ -46,13 +46,15 @@ BEGIN
     RAISE EXCEPTION '% is %, and cannot become %', OLD.id, OLD.status, NEW.status
       USING ERRCODE = 'triggered_action_exception';
   END IF;
-  IF NEW.status = OLD.status AND OLD.status <> 'draft' THEN
-    RAISE EXCEPTION '% is % already', OLD.id, OLD.status
-      USING ERRCODE = 'triggered_action_exception';
-  END IF;
   IF OLD.status <> 'draft' AND (expense.total(NEW), cella.cents(NEW.vat), NEW.category, NEW.day, NEW.member)
     IS DISTINCT FROM (expense.total(OLD), cella.cents(OLD.vat), OLD.category, OLD.day, OLD.member) THEN
     RAISE EXCEPTION '% was submitted: its figures never change', OLD.id
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  -- Each step is taken once: a second approval, refusal or reimbursement
+  -- of the same expense is refused.
+  IF NEW.status = OLD.status AND OLD.status <> 'draft' THEN
+    RAISE EXCEPTION '% is % already', OLD.id, OLD.status
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;

@@ -1,4 +1,5 @@
-export const statuses = ['draft', 'submitted', 'approved', 'refused', 'reimbursed'] as const
+// In the board's order: the way forward, then the way out.
+export const statuses = ['draft', 'submitted', 'approved', 'reimbursed', 'refused'] as const
 export type Status = (typeof statuses)[number]
 
 // What an expense may be charged to: accounts of class 6 of the French

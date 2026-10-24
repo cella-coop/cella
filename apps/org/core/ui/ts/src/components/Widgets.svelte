@@ -1,18 +1,21 @@
 <script lang="ts">
-  import ArrowUp from 'phosphor-svelte/lib/ArrowUp'
-  import ArrowDown from 'phosphor-svelte/lib/ArrowDown'
   import PencilSimple from 'phosphor-svelte/lib/PencilSimple'
   import X from 'phosphor-svelte/lib/X'
   import Plus from 'phosphor-svelte/lib/Plus'
   import { numeric, ops, type Field, type Widget } from '../models/query.ts'
+  import { reorder } from '../models/drag.ts'
+  import { sortable } from '../attachments/sortable.ts'
   import { useDashboard } from '../hooks/useDashboard.ts'
+  import { useDrag } from '../hooks/useDrag.ts'
   import Button from './Button.svelte'
+  import DragHandle from './DragHandle.svelte'
+  import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
 
-  // The dashboard's part of the View card: its widgets in order, each to
-  // edit, move or remove, and a new one to add. A change hands the whole
-  // list on, which the collection puts in the address; null goes back to
-  // the defaults.
+  // The dashboard's part of the View card: its widgets in order, each
+  // dragged into place, edited or removed, and a new one to add. A change
+  // hands the whole list on, which the collection puts in the address;
+  // null goes back to the defaults.
   let {
     widgets,
     fields,
@@ -28,16 +31,10 @@
   } = $props()
 
   const state = useDashboard()
+  const drag = useDrag()
   const numbers = $derived(fields.filter(numeric))
   const groups = $derived(fields.filter((f) => f.type === 'enum' || f.type === 'date'))
   const on = $derived(fields.find((f) => f.key === state.draft.on))
-
-  function move(i: number, by: number) {
-    const ws = [...widgets]
-    const [w] = ws.splice(i, 1)
-    ws.splice(i + by, 0, w)
-    onchange(ws)
-  }
 
   function save(e: SubmitEvent) {
     e.preventDefault()
@@ -55,17 +52,24 @@
 
 <div class="widgets">
   <p class="label">Widgets</p>
-  <ol>
+  <ol
+    {@attach sortable(drag, {
+      list: 'widgets',
+      label: (i) => widgets[i]?.title ?? 'widget',
+      onmove: (from, to) => onchange(reorder(widgets, from, to)),
+    })}
+  >
     {#each widgets as w, i (i)}
-      <li>
+      <DropIndicator show={drag.before('widgets', i)} />
+      <li data-drag-item="widgets" data-drag-index={i}>
+        <DragHandle label={w.title} />
         <span class="title">{w.title}</span>
         <span class="kind">{w.kind === 'kpi' ? 'figure' : 'chart'}</span>
-        <button title="Move up" aria-label="Move {w.title} up" disabled={i === 0} onclick={() => move(i, -1)}><Icon icon={ArrowUp} /></button>
-        <button title="Move down" aria-label="Move {w.title} down" disabled={i === widgets.length - 1} onclick={() => move(i, 1)}><Icon icon={ArrowDown} /></button>
         <button title="Edit" aria-label="Edit {w.title}" onclick={() => state.open(i, w, fields)}><Icon icon={PencilSimple} /></button>
         <button title="Remove" aria-label="Remove {w.title}" onclick={() => onchange(widgets.filter((_, j) => j !== i))}><Icon icon={X} /></button>
       </li>
     {/each}
+    <DropIndicator show={drag.before('widgets', widgets.length)} />
   </ol>
 
   {#if state.editing !== null}
@@ -185,13 +189,9 @@
     color: var(--text-muted);
     cursor: pointer;
   }
-  li button:hover:not(:disabled) {
+  li button:hover {
     background: var(--hover);
     color: var(--text);
-  }
-  li button:disabled {
-    opacity: 0.35;
-    cursor: default;
   }
   .editor {
     display: grid;

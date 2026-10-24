@@ -9,7 +9,7 @@ export { money, date, short, show } from './models/format.ts'
 export * as icons from './icons.ts'
 
 export { default as Shell } from './components/Shell.svelte'
-export { default as Frame } from './components/Frame.svelte'
+export { default as Frame } from './components/PageFrame.svelte'
 export { default as Collection } from './components/Collection.svelte'
 export { default as Detail } from './components/Detail.svelte'
 export { default as Card } from './components/Card.svelte'

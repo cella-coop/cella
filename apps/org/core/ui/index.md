@@ -39,13 +39,18 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Shell`: the grid, sidebar · content; the scope and the user menu (act
   as, dev only; theme), the command menu and the navigation, by group; the
   last write's outcome floats above.
-- `Frame`: the one page frame, a header with eyebrow, title, subtitle and
-  actions, the content, and the drawer. The header's last button, or `]`
-  anywhere, shows and hides the drawer on every page at once; a cookie
-  keeps the viewer's choice, so the server renders it. The drawer holds
-  panels behind a tab bar of icons at its top right, one tab per panel,
-  the open one marked even when it is the only one: a collection's View,
-  an item's Details.
+- `Frame` (`PageFrame.svelte`): the one page frame, its header one
+  compact row as Linear's, spanning the content and the drawer: the
+  eyebrow (the group, or on an item the collection, as the way back)
+  over the page's name with its count and status badges; the page's
+  tabs right after, a collection's views, scrolling in their own strip;
+  then the page's writes and one quiet icon group, the drawer's panel
+  tabs beside its toggle, which stays there when the drawer is shut.
+  Under it, the content (an item's subtitle first) and the drawer, which
+  scrolls down and never across. The toggle, or `]` anywhere, shows and
+  hides the drawer on every page at once; a cookie keeps the viewer's
+  choice, so the server renders it. One tab per panel, the open one
+  marked even when alone: a collection's View, an item's Details.
 - `Collection`: the one collection component, the same header, view bar
   and rows for every collection, and a drawer holding one card, View
   (`Viewing`): the text filter, the conditions on the rows (an
@@ -92,6 +97,35 @@ the command menu, and the dismissed outcome and the drawer's opening are state c
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `useSection` hands a `Section`'s title down, so an empty
 `Table` in it says "No roles" in one quiet line, with no headers.
+
+## Dragging
+
+Every list that reorders, reorders by dragging; the ui check refuses up
+and down arrow buttons that move things. The primitives:
+
+- `models/drag.ts`: a drag as plain data (the list, the item lifted, the
+  index it would take, pointer or keyboard) and its moves: `start`,
+  `over`, `step`, `drop` (the move, none when it lands where it began),
+  `cancel`, `slot` (where the indicator goes) and `reorder` over a list
+  of any type. Nesting would add a target list to `to`; nothing nests
+  yet.
+- `DragState` and `useDrag()`: the page's one drag as state, so any
+  component shows where an item will land (`before(list, i)`) and dims
+  the lifted one, with the announcement for assistive technology.
+- `sortable(drag, { list, axis, label, onmove })`, an attachment on the
+  list: its items carry `data-drag-item` and `data-drag-index`, each
+  item's handle `data-drag-handle`. The pointer (mouse, touch, pen) lifts
+  past a few pixels, drags a floating preview, scrolls the list's
+  scroller near its edges and drops on release; Escape cancels. On a
+  focused handle the keyboard lifts with Space (or Enter on a button),
+  moves with the arrows, drops with Space or Enter, cancels with Escape,
+  each step announced in a live region. `onmove(from, to)` hears the
+  drop.
+- `DragHandle` (a labelled grip) and `DropIndicator`, the one line where
+  an item will land, from the tokens.
+
+Dashboard widgets, a table's columns in the View card and the viewer's
+own view tabs reorder this way.
 
 ## Dashboards
 

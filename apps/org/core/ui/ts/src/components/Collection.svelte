@@ -5,17 +5,20 @@
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column, Status } from '../models/view.ts'
-  import { address, alike, fields, matches, spec as preset, type Custom, type Preset, type Result, type Spec, type Widget } from '../models/query.ts'
+  import { address, alike, arranged, fields, matches, spec as preset, type Custom, type Preset, type Result, type Spec, type Widget } from '../models/query.ts'
   import { control, nearest, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
+  import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
+  import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
   import Cell from './Cell.svelte'
   import Dashboard from './Dashboard.svelte'
-  import Frame from './Frame.svelte'
+  import DropIndicator from './DropIndicator.svelte'
+  import Frame from './PageFrame.svelte'
   import Icon from './Icon.svelte'
   import Table from './Table.svelte'
   import Viewing from './Viewing.svelte'
@@ -76,22 +79,20 @@
   const state = useCollection(() => kept, () => columns, () => spec.q)
   const shell = useShell()
   const saved = useViews(() => name)
+  const drag = useDrag()
 
   const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
-  const visible = $derived(columns.filter((c) => c === titled || !hidden.has(c.key)))
+  const visible = $derived(arranged(columns, spec.order).filter((c) => c === titled || !hidden.has(c.key)))
 
   const active = $derived(views.find((v) => v.id === view))
   const custom = $derived(saved.find(view))
   const base = $derived(custom?.spec ?? preset(active))
   const dirty = $derived(!alike({ ...spec, q: state.filter }, base))
 
-  const count = (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`
-  const subtitle = $derived(
-    [caption, state.filter ? `${state.shown.length} of ${count(kept.length)} · “${state.filter}”` : count(kept.length)].filter(Boolean).join(' · '),
-  )
+  const count = $derived(state.filter ? `${state.shown.length} of ${kept.length} · “${state.filter}”` : String(kept.length))
   const noun = $derived(title.toLowerCase())
 
   const link = (id: string, s: Spec, p?: Preset) => `${page.url.pathname}${address(id, s, p)}`
@@ -188,7 +189,8 @@
 <Frame
   {eyebrow}
   {title}
-  {subtitle}
+  {count}
+  {caption}
   badges={status.map((s) => s(rows, about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >
@@ -198,7 +200,8 @@
     {/if}
   {/snippet}
 
-  <nav class="bar" aria-label="Views">
+  {#snippet bar()}
+  <nav class="viewbar" aria-label="Views">
     <ul>
       {#each views as v (v.id)}
         <li>
@@ -213,22 +216,37 @@
           </a>
         </li>
       {/each}
-      {#each saved.list as c (c.id)}
-        <li>
+    </ul>
+    <!-- The viewer's own views, which they drag into their order. -->
+    <ul
+      {@attach sortable(drag, {
+        list: 'views',
+        axis: 'x',
+        label: (i) => saved.list[i]?.name ?? 'view',
+        onmove: (from, to) => saved.arrange(from, to),
+      })}
+    >
+      {#each saved.list as c, i (c.id)}
+        <DropIndicator show={drag.before('views', i)} axis="x" />
+        <li data-drag-item="views" data-drag-index={i}>
           <a
             href={customLink(c)}
             class:on={view === c.id}
             aria-current={view === c.id ? 'page' : undefined}
             title="View {c.name} {noun} {tally(c)}"
+            aria-roledescription="draggable view"
+            data-drag-handle
             onclick={() => (state.filter = c.spec.q)}
           >
             <Icon icon={mark(c.icon)} />{c.name}
           </a>
         </li>
       {/each}
+      <DropIndicator show={drag.before('views', saved.list.length)} axis="x" />
     </ul>
     <button class="new" title="Save this as a view" aria-label="Save this as a view" onclick={naming}><Icon icon={Plus} /></button>
   </nav>
+  {/snippet}
 
   {#if errors.length}
     <ul class="errors" role="status">
@@ -278,38 +296,41 @@
 <style>
   /* The view bar, as Linear's: quiet tabs, the active one on a sunk fill,
      and the button that saves what is shown as a new view. */
-  .bar {
+  .viewbar {
     display: flex;
     align-items: center;
-    gap: var(--space-2);
-    margin-top: calc(-1 * var(--space-2));
+    gap: 2px;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
-  .bar ul {
+  .viewbar ul {
     display: flex;
-    flex-wrap: wrap;
     gap: 2px;
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  .bar a {
+  .viewbar a {
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    height: 1.75rem;
+    height: 1.6rem;
     padding: 0 var(--space-2);
-    border-radius: var(--radius-control);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
     font-size: var(--text-sm);
     color: var(--text-muted);
+    white-space: nowrap;
   }
-  .bar a:hover {
+  .viewbar a:hover {
     background: var(--hover);
     color: var(--text);
   }
-  .bar a.on {
+  .viewbar a.on {
     background: var(--sunk);
+    border-color: var(--line);
     color: var(--text);
-    font-weight: 500;
   }
   .new {
     display: grid;
@@ -363,6 +384,7 @@
   }
   .main {
     display: flex;
+    flex: 1 1 auto;
     align-items: baseline;
     gap: var(--space-3);
     min-width: 0;

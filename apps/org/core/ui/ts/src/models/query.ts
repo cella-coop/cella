@@ -278,13 +278,15 @@ export const layouts = ['list', 'table', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
 
 // How a collection is looked at: its layout, the conditions on its rows,
-// the text filter, the table's hidden columns and the dashboard's
+// the text filter, the table's hidden columns and its columns' order (the
+// keys it moved; the rest follow as declared), and the dashboard's
 // widgets, null for the declared or derived ones.
 export interface Spec {
   layout: Layout
   where: Where[]
   q: string
   hide: string[]
+  order: string[]
   widgets: Widget[] | null
 }
 
@@ -297,6 +299,7 @@ export interface Preset {
   layout?: Layout
   where?: Where[]
   hide?: string[]
+  order?: string[]
   widgets?: Widget[]
 }
 
@@ -334,7 +337,8 @@ const json = (raw: string | null): unknown => {
 
 // The view the address asks for: a preset or a custom view by `v`, All
 // when it names none, its settings overridden by the address's own
-// (`view`, `where`, `q`, `hide`, `w`), each checked against the fields.
+// (`view`, `where`, `q`, `hide`, `order`, `w`), each checked against the
+// fields.
 // What fails a check falls back to the view's, and is said.
 export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { id: string; spec: Spec; errors: string[] } {
   const asked = params.get('v')
@@ -360,8 +364,9 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { i
     errors.push(...checked.errors)
   }
   const keys = new Set(fs.map((f) => f.key))
-  const hide = params.has('hide') ? (params.get('hide') ?? '').split(',').filter((k) => keys.has(k)) : (base.hide ?? [])
-  return { id, spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide, widgets: ws }, errors }
+  const list = (name: 'hide' | 'order') =>
+    params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : (base[name] ?? [])
+  return { id, spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), widgets: ws }, errors }
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
@@ -383,6 +388,9 @@ export function address(id: string, spec: Spec, preset?: Preset): string {
   if (!same(spec.hide, preset?.hide ?? [])) {
     q.set('hide', spec.hide.join(','))
   }
+  if (!same(spec.order, preset?.order ?? [])) {
+    q.set('order', spec.order.join(','))
+  }
   if (!same(spec.widgets, preset?.widgets ?? null)) {
     q.set('w', JSON.stringify(spec.widgets))
   }
@@ -397,7 +405,21 @@ export function address(id: string, spec: Spec, preset?: Preset): string {
 export const alike = (a: Spec, b: Spec) => same(a, b)
 
 // What a preset shows before the viewer changes anything.
-export const spec = (p?: Preset): Spec => ({ layout: p?.layout ?? 'list', where: p?.where ?? [], q: '', hide: p?.hide ?? [], widgets: p?.widgets ?? null })
+export const spec = (p?: Preset): Spec => ({
+  layout: p?.layout ?? 'list',
+  where: p?.where ?? [],
+  q: '',
+  hide: p?.hide ?? [],
+  order: p?.order ?? [],
+  widgets: p?.widgets ?? null,
+})
+
+// The columns in a view's order: the keys it moved first, then the rest
+// as the collection declares them.
+export function arranged<C extends { key: string }>(columns: C[], order: string[]): C[] {
+  const moved = order.map((k) => columns.find((c) => c.key === k)).filter((c) => c !== undefined)
+  return [...moved, ...columns.filter((c) => !order.includes(c.key))]
+}
 
 // A saved store as read back from the browser: anything unrecognised is
 // dropped rather than trusted.
@@ -408,7 +430,9 @@ export function saved(x: unknown): Saved {
   }
   for (const [name, list] of Object.entries((x as Saved).views ?? {})) {
     if (Array.isArray(list)) {
-      store.views[name] = list.filter((c) => typeof c?.id === 'string' && /^c-[\w-]{1,40}$/.test(c.id) && typeof c.name === 'string' && typeof c.spec === 'object')
+      store.views[name] = list
+        .filter((c) => typeof c?.id === 'string' && /^c-[\w-]{1,40}$/.test(c.id) && typeof c.name === 'string' && typeof c.spec === 'object')
+        .map((c) => ({ ...c, spec: { ...spec(), ...c.spec } }))
     }
   }
   return store

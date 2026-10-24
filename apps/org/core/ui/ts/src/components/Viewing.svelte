@@ -3,12 +3,17 @@
   import TableIcon from 'phosphor-svelte/lib/Table'
   import ChartBar from 'phosphor-svelte/lib/ChartBar'
   import type { Column } from '../models/view.ts'
-  import type { Custom, Field, Layout, Result, Spec, Where, Widget } from '../models/query.ts'
+  import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
+  import { reorder } from '../models/drag.ts'
   import { marks } from '../marks.ts'
+  import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
+  import { useDrag } from '../hooks/useDrag.ts'
   import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
+  import DragHandle from './DragHandle.svelte'
+  import DropIndicator from './DropIndicator.svelte'
   import Icon from './Icon.svelte'
   import Widgets from './Widgets.svelte'
 
@@ -57,6 +62,8 @@
   const enums = $derived(fields.filter((f) => f.type === 'enum' && (values[f.key]?.length ?? 0) > 1))
   const dates = $derived(fields.filter((f) => f.type === 'date'))
   const hidden = $derived(new Set(spec.hide))
+  const ordered = $derived(arranged(columns, spec.order))
+  const drag = useDrag()
 
   const on = (key: string) => spec.where.find((w) => w.field === key)
   const kept = (key: string, v: string) => {
@@ -133,8 +140,14 @@
     <span class="label">Layout</span>
     <div class="views" role="group" aria-label="Layout">
       {#each layouts as l (l.id)}
-        <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} onclick={() => onchange({ ...spec, q: state.filter, layout: l.id })}>
-          <Icon icon={l.icon} />{l.label}
+        <button
+          class:on={spec.layout === l.id}
+          aria-pressed={spec.layout === l.id}
+          aria-label={l.label}
+          title={l.label}
+          onclick={() => onchange({ ...spec, q: state.filter, layout: l.id })}
+        >
+          <Icon icon={l.icon} />
         </button>
       {/each}
     </div>
@@ -143,17 +156,30 @@
   {#if spec.layout === 'table'}
     <fieldset class="columns">
       <legend class="label">Columns</legend>
-      {#each columns as c (c.key)}
-        <label>
-          <input
-            type="checkbox"
-            checked={c === titled || !hidden.has(c.key)}
-            disabled={c === titled}
-            onchange={(e) => hide(c.key, !e.currentTarget.checked)}
-          />
-          {c.label}
-        </label>
-      {/each}
+      <ul
+        {@attach sortable(drag, {
+          list: 'columns',
+          label: (i) => ordered[i]?.label ?? 'column',
+          onmove: (from, to) => onchange({ ...spec, q: state.filter, order: reorder(ordered, from, to).map((c) => c.key) }),
+        })}
+      >
+        {#each ordered as c, i (c.key)}
+          <DropIndicator show={drag.before('columns', i)} />
+          <li data-drag-item="columns" data-drag-index={i}>
+            <DragHandle label={c.label} />
+            <label>
+              <input
+                type="checkbox"
+                checked={c === titled || !hidden.has(c.key)}
+                disabled={c === titled}
+                onchange={(e) => hide(c.key, !e.currentTarget.checked)}
+              />
+              {c.label}
+            </label>
+          </li>
+        {/each}
+        <DropIndicator show={drag.before('columns', ordered.length)} />
+      </ul>
     </fieldset>
   {:else if spec.layout === 'dashboard' && dashboard}
     <Widgets
@@ -272,11 +298,11 @@
     padding: 2px;
   }
   .views button {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
+    display: grid;
+    place-items: center;
+    width: 2rem;
     height: 1.75rem;
-    padding: 0 var(--space-2);
+    padding: 0;
     border: none;
     border-radius: calc(var(--radius-control) - 2px);
     background: none;
@@ -287,6 +313,18 @@
   .views button.on {
     background: var(--selected);
     color: var(--text);
+  }
+  .columns ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .columns li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
   }
   .columns label {
     display: flex;

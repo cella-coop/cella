@@ -109,6 +109,13 @@ export function problems(path, text, ui) {
     out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
   }
   out.push(...legacy(path, text))
+  // An up or down arrow on a control that moves something is a reorder
+  // button, which dragging replaces.
+  for (const spec of imports(text)) {
+    if (/^phosphor-svelte\/lib\/Arrow(Fat|Line)?(Up|Down)$/.test(spec) && /move/i.test(text.replace(/<script[\s\S]*?<\/script>/g, ''))) {
+      out.push(`${path}: reorders with ${spec.split('/').pop()} buttons; items reorder by dragging, with the UI core's sortable`)
+    }
+  }
   if (collectionPage.test(path)) {
     for (const tag of new Set(tags(text).filter((t) => t !== 'Collection'))) {
       out.push(`${path}: renders <${tag}> beside the Collection; configure the collection's view instead`)

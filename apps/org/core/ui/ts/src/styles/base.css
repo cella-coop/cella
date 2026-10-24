@@ -93,6 +93,37 @@ textarea {
   background: var(--accent-soft);
 }
 
+/* Read by assistive technology, not seen. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Dragging, as `sortable` marks it: handles take the pointer from
+   scrolling, the lifted item dims in place, and its preview floats. */
+[data-drag-handle] {
+  touch-action: none;
+  cursor: grab;
+}
+[data-dragging] {
+  opacity: 0.35;
+}
+.drag-preview {
+  position: fixed;
+  z-index: 60;
+  margin: 0;
+  pointer-events: none;
+  list-style: none;
+  background: var(--float);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-float);
+  cursor: grabbing;
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;

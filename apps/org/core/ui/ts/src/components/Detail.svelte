@@ -6,7 +6,7 @@
   import { typing } from '../models/keys.ts'
   import Activity from './Activity.svelte'
   import Card from './Card.svelte'
-  import Frame from './Frame.svelte'
+  import Frame from './PageFrame.svelte'
   import Properties from './Properties.svelte'
   import Related from './Related.svelte'
 
@@ -56,6 +56,13 @@
   {/if}
 {/snippet}
 
-<Frame {eyebrow} {title} {subtitle} {back} {actions} panels={[{ id: 'details', label: 'Details', icon: Info, body: details }]}>
+<Frame
+  {eyebrow}
+  {title}
+  {back}
+  {actions}
+  {subtitle}
+  panels={[{ id: 'details', label: 'Details', icon: Info, body: details }]}
+>
   {@render children?.()}
 </Frame>

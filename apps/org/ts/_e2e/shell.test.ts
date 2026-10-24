@@ -9,6 +9,7 @@ import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import pg from 'pg'
 import { parse } from 'devalue'
+import * as drag from '@cella/org-ui/models'
 
 const su = new pg.Client()
 const entry = new URL('../build/index.js', import.meta.url).pathname
@@ -165,6 +166,22 @@ test('every collection has a dashboard, its widgets run by the server', async ()
   const refused = await page(`/members?view=dashboard&w=${bad}`)
   assert.equal(refused.status, 200)
   assert.ok(refused.text.includes('names no field of the collection'), 'an undeclared field is refused, and said')
+})
+
+test('widgets reordered as the keyboard drops them stay in their new order', async () => {
+  const ws = [
+    { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' } },
+    { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
+    { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
+  ]
+  // Lifting the first, two steps down and a drop: what the View card hands
+  // the address.
+  const move = drag.drop(drag.step(drag.step(drag.start('widgets', 0, ws.length, 'keyboard'), 1), 1)).move
+  assert.ok(move)
+  const moved = drag.reorder(ws, move.from, move.to)
+  const { text } = await page(`/invoices?view=dashboard&w=${encodeURIComponent(JSON.stringify(moved))}`)
+  const at = (title: string) => text.indexOf(`>${title}<`)
+  assert.ok(at('Overdue') > 0 && at('Overdue') < at('By standing') && at('By standing') < at('Owed'), 'the dashboard renders in the dropped order')
 })
 
 test('a collection\'s preset views are tabs with their counts, and a view in the address applies its filter', async () => {

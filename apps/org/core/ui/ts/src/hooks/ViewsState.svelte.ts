@@ -1,4 +1,5 @@
 import { saved, type Custom, type Saved, type Spec } from '../models/query.ts'
+import { reorder } from '../models/drag.ts'
 
 const key = 'cella-views'
 
@@ -70,16 +71,8 @@ export class ViewsState {
     this.#write()
   }
 
-  move(id: string, by: number) {
-    const i = this.list.findIndex((c) => c.id === id)
-    const j = i + by
-    if (i < 0 || j < 0 || j >= this.list.length) {
-      return
-    }
-    const list = [...this.list]
-    const [c] = list.splice(i, 1)
-    list.splice(j, 0, c)
-    this.list = list
+  arrange(from: number, to: number) {
+    this.list = reorder(this.list, from, to)
     this.#write()
   }
 }

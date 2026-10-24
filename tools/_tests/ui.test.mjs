@@ -97,3 +97,17 @@ test('browser storage is reached only from a hook\'s state class', () => {
   assert.match(problems('apps/org/core/ui/ts/src/components/Collection.svelte', component('  sessionStorage.clear()'), true)[0], /reaches browser storage/)
   assert.deepEqual(problems('apps/org/core/ui/ts/src/hooks/ViewsState.svelte.ts', "export class V {\n  read() {\n    try {\n      return localStorage.getItem('k')\n    } catch {\n      return null\n    }\n  }\n}\n", true), [])
 })
+
+test('reorder buttons with up and down arrows are refused; dragging reorders', () => {
+  const arrows = component(
+    "  import ArrowUp from 'phosphor-svelte/lib/ArrowUp'\n  import ArrowDown from 'phosphor-svelte/lib/ArrowDown'",
+    '<li>{w.title}<button title="Move up" onclick={() => move(i, -1)}><Icon icon={ArrowUp} /></button><button onclick={() => move(i, 1)}><Icon icon={ArrowDown} /></button></li>',
+  )
+  const found = problems('apps/org/core/ui/ts/src/components/Widgets.svelte', arrows, true)
+  assert.equal(found.length, 2, `${found}`)
+  assert.match(found[0], /reorders with ArrowUp buttons; items reorder by dragging/)
+  const disclosure = component("  import CaretDown from 'phosphor-svelte/lib/CaretDown'", '<summary>Menu <Icon icon={CaretDown} /></summary>')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Shell.svelte', disclosure, true), [])
+  const sorted = component("  import { sortable } from '../attachments/sortable.ts'", '<ol {@attach sortable(drag, { list: "w", label, onmove })}><li data-drag-item="w" data-drag-index={0}><DragHandle label="Owed" /></li></ol>')
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Widgets.svelte', sorted, true), [])
+})

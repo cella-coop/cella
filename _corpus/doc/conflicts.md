@@ -148,8 +148,8 @@ void settled and posted the credit note `je-0026`.
 
 Owners: the `decision-member` graft for membership (admitted, suspended,
 exited); the roll of a circle's decision needs positions too, which are the
-`circle-member` graft's. A decision names its circle as text today, so the
-roll has no owner yet: it needs a `circle-decision` graft.
+`circle-member` graft's. The roll is the `circle-decision` graft's, which
+the decision feat declares.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
@@ -159,12 +159,11 @@ roll has no owner yet: it needs a `circle-decision` graft.
 | `decision.close` vs `circle-member:position.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
 
-The roll is not defined. The rule to adopt: the roll is the members active
-and holding a position in the decision's circle at the close's receipt.
-The alternative, the roll at the proposal's receipt, is closer to a ballot
-list and harder to game; it is a question for the operator. Either way the
-labels hold: votes confluent, close, admit, suspend, exit and positions
-ordered.
+**Applied.** The roll is fixed at the proposal: the members holding a
+position in the decision's circle on the day it was proposed, of whom
+those active at the close count. It is closer to a ballot list and harder
+to game than a roll read at the close. The labels hold: votes confluent,
+close, admit, suspend, exit and positions ordered.
 
 **Rung 2.** "A member's latest stance counts" uses receipt order, which is
 not signing order once one member has two devices offline. Hugo objects on
@@ -351,7 +350,7 @@ queued offline before the erasure must not resurrect the data.
 |---|---|
 | `circle.message`, `document.comment` | appended; no rule reads them |
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
-| `decision.propose` | a fact; the roll and the deadline are fixed by `close` |
+| `decision.propose` | a fact; the roll is fixed from the seats when the server receives it, and the cutoff by `close` |
 | `member.invite` | two invitations do no harm |
 | `client.add` | duplicates are merged by hand |
 | `notary.move` | ordered against everything: writes received after its receipt go to the new server |

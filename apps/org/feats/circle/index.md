@@ -82,10 +82,10 @@ The circle feat owns:
 - a mandate's term has `from` before `until`; a revoked mandate stays
   revoked.
 
-What it does not own: who holds which role (`circle-member`), whose vote
-counts in a circle's decisions (`decision-member`, from positions), and
-the electorate of a decision (a later `circle-decision` graft; today a
-decision names its circle as text).
+What it does not own: who holds which role (`circle-member`), and who
+may vote on a circle's decisions: the roll, the members seated in the
+circle when a decision is proposed, is the `circle-decision` graft's, and
+`decision-member` counts the active members on it.
 
 ## What it does not know
 

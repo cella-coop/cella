@@ -53,6 +53,7 @@ and admit a member by vote (ordered).
 |---|---|
 | `account-decision` | a surplus allocation and the decision that approved it |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period |
+| `circle-decision` | a decision's roll: who was seated in its circle when it was proposed |
 | `circle-member` | positions: who holds which role in which circle |
 | `client-invoice` | who an invoice bills |
 | `decision-document` | adoption of a document version by a decision |

@@ -20,7 +20,9 @@ Proposals, votes and outcomes. An outcome is computed from the signed votes, nev
 - `decision.decision`: circle, title, rule (`consent` or `majority`), proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
 - `decision.vote`: a stance by receipt, the decision, the member's address and the day they give. Receipts order stances; only those received before the cutoff count.
 
-Triggers keep a closed decision closed and refuse stances on it, raising SQLSTATE `09000`. The app role may select, insert and update decisions, and select and insert votes.
+Triggers keep a closed decision closed and refuse stances on it, raising SQLSTATE `09000`. The app role may select, insert and update decisions, and select and insert votes; the rules role, `cella_rules`, may select both.
+
+Who may vote on a decision, its roll, is the `circle-decision` graft's: the members seated in its circle when it was proposed.
 
 ## Rules
 
@@ -32,6 +34,10 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 - `vote` (confluent): the member's own stance, with `cella.receipt()`, logged as a single-entry batch.
 - `close` (ordered): sets the closed date to `cella.verdict_date()` and the cutoff to `cella.receipt()`, then submits.
+
+## Grafts
+
+- `circle-decision`, which this feat declares: a decision's roll, from the seats in its circle.
 
 ## Domain
 

@@ -2,4 +2,4 @@ name = "decision"
 group = "governance"
 builtin = true
 rung = 1
-grafts = []
+grafts = ["circle-decision"]

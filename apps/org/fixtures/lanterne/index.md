@@ -33,8 +33,10 @@ expenses up to 3 000 € and closes each month. Leads approve their
 members' expenses up to 1 000 € a month each, Camille up to 2 000 € an
 expense, and leads quote up to 15 000 €.
 Leads and the gérante run projects and set their budgets, the leads up to
-15 000 € and Camille up to 50 000 €, and approve timesheets, as does
-Julien; every member creates and moves tasks and logs their own time.
+15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
+those of their own circle's members; Julien, seated in the assembly as
+treasurer, approves everyone's, as Camille does. Every member creates
+and moves tasks and logs their own time.
 
 ## Where things stand on 24 October 2026
 

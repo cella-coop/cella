@@ -66,6 +66,12 @@ circle = "operations"
 name = "Finance"
 duty = "issues invoices, pays suppliers and closes the books each month"
 
+[[role]]
+id = "treasurer"
+circle = "ag"
+name = "Treasurer"
+duty = "finance's hand in the assembly: approves everyone's time for the pay run"
+
 [[mandate]]
 role = "member"
 power = "edit-client"
@@ -196,9 +202,9 @@ power = "approve-time"
 text = "approve timesheets"
 
 [[mandate]]
-role = "finance"
+role = "treasurer"
 power = "approve-time"
-text = "approve timesheets"
+text = "approve everyone's timesheets"
 
 [[mandate]]
 role = "lead"

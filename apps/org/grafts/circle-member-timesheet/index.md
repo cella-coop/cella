@@ -21,8 +21,8 @@ shell.
 ## Lanterne
 
 Yusuf, Web's lead, approves Thomas's month; Hugo, Brand's, is refused it;
-Camille, the gérante, seated in the assembly, approves anyone's. Julien
-approves within Operations, as its lead and its finance.
+Camille, the gérante, seated in the assembly, approves anyone's, and so
+does Julien, seated there as treasurer, for the pay run.
 
 Slice tests: none of its own; the rule is `circle-member`'s `over` and
 its tests, and the `governance` scenario.

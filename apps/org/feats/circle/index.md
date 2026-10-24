@@ -48,10 +48,14 @@ and revoke mandates.
 ## Authority
 
 The assembly holds every power inherently: the co-op's members are its
-sovereign. A circle grants only powers it holds, by its own mandate or
-from its parent's, and a mandate's limit never exceeds the limit it is
-carved from. Nesting therefore matters: moving a circle changes what it
-can grant. A power exercised "by decision" is held by a circle and used
+sovereign. A mandate is carved from what the circles above hold: from
+the mandates for the same power on the roles of the nearest circle
+above that holds it by a mandate, or else from the assembly, uncapped.
+Its cap never exceeds theirs: one of them is uncapped, or limits a
+write by at least its limit, or budgets the same period by at least its
+budget. A role every working circle has (`*`) is the assembly's to
+grant, and is neither carved nor carved from. Nesting therefore matters:
+moving a circle changes what its mandates are carved from. A power exercised "by decision" is held by a circle and used
 only through a decision of that circle's members.
 
 ## Lifecycle
@@ -108,6 +112,12 @@ check is `circle_member.sits`, the `circle-member` graft's rule.
   verdict date.
 - `circle.revokes`, on `circle:mandate:revoke`: the write revoked the
   mandate on the verdict date.
+- `circle.carves`, on all three: after the write, every mandate in force
+  is carved from what the circles above hold (`circle.beyond(day)`, the
+  first that is not, as a reason). A grant beyond its source is refused;
+  so is a nesting that moves a subtree under circles holding less than
+  its mandates, and a revocation that leaves a mandate carved from it
+  beyond what remains above: revoke the carved mandate first.
 
 ## Handlers
 
@@ -121,8 +131,7 @@ check is `circle_member.sits`, the `circle-member` graft's rule.
 The circle feat owns:
 
 - the circles form one tree: no cycle, one root;
-- a mandate grants a power its circle holds, within its parent's limit
-  (not enforced yet);
+- a mandate is carved from what the circles above hold (`circle.carves`);
 - a mandate caps its power with a `limit` per write or a `budget` over a
   period, never both;
 - a mandate's term has `from` before `until`; a revoked mandate stays
@@ -167,8 +176,14 @@ writes propose, and the close of a passing decision carries them out.
 | Role | Power | Cap |
 |---|---|---|
 | Member (every member, in `ag`) | `edit-client`, `edit-document`, `edit-task`, `log-time`, `invite-member` | — |
-| Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
-| Finance (Julien) | `pay-supplier` | 3 000 € limit |
-| Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period` | — |
-| Circle lead | `spend-circle` | 1 000 € budget, a month |
+| Gérante (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
+| Gérante | `approve-expense` | 2 000 € limit |
+| Gérante | `set-budget` | 50 000 € limit |
+| Gérante | `approve-payroll`, `manage-project`, `approve-time` | — |
+| Treasurer (Julien, in `ag`) | `approve-time` | — |
+| Finance (Julien, in `operations`) | `pay-supplier`, `reimburse-expense` | 3 000 € limit |
+| Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period`, `prepare-payroll`, `pay-payroll` | — |
+| Circle lead (`*`) | `approve-expense` | 1 000 € budget, a month |
 | Circle lead | `send-quote` | 15 000 € limit |
+| Circle lead | `set-budget` | 15 000 € limit |
+| Circle lead | `manage-project`, `approve-time` | — |

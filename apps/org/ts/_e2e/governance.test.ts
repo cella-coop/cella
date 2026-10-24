@@ -3,8 +3,9 @@
 // admits her and the close seats her and enrols the device in the same
 // verdict, or refuses all of it; a suspension by decision stops a
 // member's writes; a nesting that would make a cycle is refused; a
-// mandate is granted by decision; and a lead approves the time of their
-// own circle alone. Run by `cella test` on a fresh database.
+// mandate is granted by decision, and one beyond what the circle above
+// holds is refused; and a lead approves the time of their own circle
+// alone, the treasurer everyone's. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -29,7 +30,9 @@ const hugo = 'hugo@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 const nadia = 'nadia@lanterne.example'
-const coordination = [camille, yusuf, hugo, malik, 'julien@lanterne.example']
+const amina = 'amina@lanterne.example'
+const julien = 'julien@lanterne.example'
+const coordination = [camille, yusuf, hugo, malik, julien]
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -180,8 +183,8 @@ test('coordination grants the finance role send-quote by decision; a grant citin
   )
   assert.deepEqual(granted, { power: 'send-quote', limit: 500000, from: '2026-11-28' })
 
-  const astray = await grant({ role: 'finance', power: 'commit', text: 'commit', decision: proposed.decision }, as(camille))
-  assert.match(reason(astray), /does not grant commit to finance so capped/)
+  const astray = await grant({ role: 'finance', power: 'sign-lease', text: 'sign leases', decision: proposed.decision }, as(camille))
+  assert.match(reason(astray), /does not grant sign-lease to finance so capped/)
 })
 
 test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusuf, Web\'s lead, may', async () => {
@@ -191,6 +194,27 @@ test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusu
   const astray = await approve({ member: thomas, month: '2026-10' }, as(hugo))
   assert.match(reason(astray), /hugo@lanterne\.example holds approve-time over no circle thomas@lanterne\.example sits in/)
   settled(await approve({ member: thomas, month: '2026-10' }, as(yusuf)))
+})
+
+test('Julien, seated in the assembly as treasurer, approves Amina\'s time, which is Web\'s', async () => {
+  settled(await log({ member: amina, day: '2026-10-30', minutes: 300, billable: true }, as(amina)))
+  settled(await submit({ member: amina, month: '2026-10' }, as(amina)))
+  settled(await approve({ member: amina, month: '2026-10' }, as(julien)))
+})
+
+test('a mandate beyond what the circle above holds is refused: finance may not approve expenses beyond the gérante\'s 2 000 €', async () => {
+  await on('2026-12-01')
+  const proposed = settled(
+    await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'approve-expense', text: 'approve expenses', limit: 3000 }, deadline: '2026-12-08', body: '' }, as(camille)),
+  )
+  for (const m of coordination) {
+    settled(await vote({ decision: proposed.decision, member: m, stance: 'consent' }, as(m)))
+  }
+  await on('2026-12-08')
+  settled(await close({ decision: proposed.decision }, as(camille)))
+  const out = await carried(proposed.decision, as(camille))
+  assert.deepEqual(out.map((d) => [d.op, d.state]), [['circle:mandate:grant', 'refused']])
+  assert.match(out[0].reason ?? '', /grants approve-expense to finance beyond what ag holds of it/)
 })
 
 test('the log verifies', async () => {

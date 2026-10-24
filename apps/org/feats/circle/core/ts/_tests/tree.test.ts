@@ -2,7 +2,8 @@
 // this feat: each circle's path follows its parent's, a nesting that makes
 // a cycle is refused, a moved circle carries its subtree, `circle.nests`
 // refuses a cycle a nesting settled first made, and a mandate keeps its
-// grant. Run by `cella test slice circle`.
+// grant and is carved from what the circle above holds. Run by `cella
+// test slice circle`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -84,4 +85,31 @@ test('a mandate keeps its grant, and a revoked one stays revoked', async () => {
   await refused(`UPDATE circle.mandate SET revoked = NULL WHERE id = ${rows[0].id}`, /keeps its grant, and stays revoked/)
   await refused(`UPDATE circle.mandate SET power = 'commit' WHERE id = ${rows[0].id}`, /keeps its grant/)
   assert.match((await rule('revokes', { mandate: Number(rows[0].id) })) ?? '', /was not revoked by this write/)
+})
+
+test('a mandate is carved from what the circle above holds, and a moved subtree takes its new circles\' limits', async () => {
+  const beyond = async () => (await db.query<{ r: string | null }>(`SELECT circle.beyond('2026-10-24') AS r`)).rows[0].r
+  await db.query('BEGIN')
+  try {
+    await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('steward', 'coordination', 'Steward'), ('maker', 'brand', 'Maker'), ('printer', 'print', 'Printer'), ('seller', 'marketing', 'Seller')`)
+    // No circle above holds pay-supplier: the assembly's, uncapped.
+    await db.query(`INSERT INTO circle.mandate (role, power, text, "limit") VALUES ('printer', 'pay-supplier', 'pay', '9000')`)
+    assert.equal(await beyond(), null)
+    await db.query(`INSERT INTO circle.mandate (role, power, text, "limit") VALUES ('steward', 'pay-supplier', 'pay', '5000'), ('maker', 'pay-supplier', 'pay', '3000')`)
+    // print's nearest holder is brand, at 3 000 €; brand's is coordination, at 5 000 €.
+    assert.match((await beyond()) ?? '', /grants pay-supplier to printer beyond what brand holds of it/)
+    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE role = 'printer'`)
+    await db.query(`INSERT INTO circle.mandate (role, power, text, "limit") VALUES ('printer', 'pay-supplier', 'pay', '2000')`)
+    assert.equal(await beyond(), null)
+    // A budget is carved from a budget over the same period.
+    await db.query(`INSERT INTO circle.mandate (role, power, text, budget, per) VALUES ('steward', 'approve-expense', 'approve', '1000', 'month'), ('maker', 'approve-expense', 'approve', '500', 'year')`)
+    assert.match((await beyond()) ?? '', /grants approve-expense to maker beyond what coordination holds of it/)
+    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE role = 'maker' AND power = 'approve-expense'`)
+    // Moved under marketing, whose seller holds pay-supplier at 1 000 €, print's 2 000 € is beyond it.
+    await db.query(`INSERT INTO circle.mandate (role, power, text, "limit") VALUES ('seller', 'pay-supplier', 'pay', '1000')`)
+    await db.query(`UPDATE circle.circle SET parent = 'marketing' WHERE id = 'print'`)
+    assert.match((await beyond()) ?? '', /grants pay-supplier to printer beyond what marketing holds of it/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })

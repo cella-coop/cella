@@ -108,6 +108,11 @@ member = "julien@lanterne.example"
 role = "finance"
 
 [[position]]
+circle = "ag"
+member = "julien@lanterne.example"
+role = "treasurer"
+
+[[position]]
 circle = "coordination"
 member = "camille@lanterne.example"
 

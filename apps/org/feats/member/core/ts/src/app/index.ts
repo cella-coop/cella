@@ -28,7 +28,10 @@ export const app: App = {
         subtitle: (m: Member) => m.address,
         properties: (m: Member) => [
           { label: 'Status', value: m.status, kind: 'badge', tone: tones[m.status] },
+          { label: 'Invited', value: m.invited, kind: 'date' },
           { label: 'Since', value: m.since, kind: 'date' },
+          ...(m.suspended ? [{ label: 'Suspended', value: m.suspended, kind: 'date' as const }] : []),
+          ...(m.exited ? [{ label: 'Exited', value: m.exited, kind: 'date' as const }] : []),
           { label: 'Shares', value: m.shares, kind: 'number' },
           { label: 'Address', value: m.address, kind: 'mono' },
         ],

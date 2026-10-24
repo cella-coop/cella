@@ -1,6 +1,9 @@
 import type { App, Tone } from '@cella/org-ui'
 import { outcome, states, type Roll, type State } from '../models/roll.ts'
+import type { Standing } from '../models/asking.ts'
+import Appoint from './blocks/Appoint.svelte'
 import Electorate from './blocks/Electorate.svelte'
+import Membership from './blocks/Membership.svelte'
 import Outcome from './blocks/Outcome.svelte'
 
 const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejected: 'negative' }
@@ -37,6 +40,15 @@ export const app: App = {
         ],
         blocks: [Outcome, { tab: 'stances', block: Electorate }],
       },
+    },
+    members: {
+      page: {
+        related: (s: Standing | null) => (s?.open ?? []).map((o) => ({ label: o.title, sub: `open until ${o.deadline}`, href: `/decisions/${o.decision}` })),
+        actions: Membership,
+      },
+    },
+    circles: {
+      page: { actions: Appoint },
     },
   },
 }

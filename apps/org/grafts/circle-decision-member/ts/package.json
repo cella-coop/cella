@@ -10,6 +10,7 @@
     "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
     "@cella/org-ui": "workspace:*",
+    "@cella/org-circle": "workspace:*",
     "@cella/org-decision": "workspace:*",
     "@cella/org-member": "workspace:*",
     "@cella/org-graft-circle-member": "workspace:*",

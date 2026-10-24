@@ -7,8 +7,8 @@ export const ops = {
   'member:member:admit': ordered({ decide: 'consent', check: 'decided' }),
   // a member's own fields
   'member:member:profile': confluent({ check: 'self' }),
-  // changes who votes
-  'member:member:suspend': ordered({ power: 'end-membership' }),
-  // freezes the capital account
-  'member:member:exit': ordered({ power: 'end-membership' }),
+  // changes who votes; the cited decision suspends
+  'member:member:suspend': ordered({ check: 'decided' }),
+  // freezes the capital account; the cited decision ends the membership
+  'member:member:exit': ordered({ check: 'decided' }),
 } satisfies Ops

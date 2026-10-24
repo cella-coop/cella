@@ -1,7 +1,7 @@
 # Each member's devices. The seed enrols each with a TEST-ONLY key derived
 # from its address and label, which anyone can compute: fixture keys never
-# belong to a real member. Inès has no device yet: a member's first device
-# comes with their invitation, which is not built.
+# belong to a real member. Inès has no device yet: her first came with her
+# invitation (graft.key-member.toml), and her admission enrols it.
 
 [[device]]
 address = "camille@lanterne.example"

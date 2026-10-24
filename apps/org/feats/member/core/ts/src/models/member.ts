@@ -8,6 +8,10 @@ export interface Member {
   status: Status
   since: string | null
   shares: number
+  // The days the membership moved, where the records hold them.
+  invited: string | null
+  suspended: string | null
+  exited: string | null
 }
 
 // Admission cites the decision that admits; the decision-member graft's
@@ -21,6 +25,28 @@ export interface Admit {
 export interface Admitted {
   member: string
   since: string
+}
+
+// Someone invited to join, by the address they will hold.
+export interface Invite {
+  address: string
+  name: string
+}
+
+export interface Invited {
+  member: string
+  invited: string
+}
+
+// A suspension or an exit, citing the decision that asks it.
+export interface End {
+  member: string
+  decision: string
+}
+
+export interface Ended {
+  member: string
+  on: string
 }
 
 // A member's own fields; only those given change.

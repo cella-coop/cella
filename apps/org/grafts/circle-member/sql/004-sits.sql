@@ -13,7 +13,7 @@ END;
 
 INSERT INTO cella.rule (op, fn, owner) VALUES ('circle:circle:message', 'circle_member.sits(jsonb)', 'circle-member');
 
--- Ending a seat is the circle's decision once its junction exists; until
--- then it needs a power no Lanterne mandate grants.
-INSERT INTO cella.power (op, power, amount, owner) VALUES
-  ('circle-member:position:remove', 'appoint', NULL, 'circle-member');
+-- A seat ends by `circle-member:position:remove`, on the verdict date; it
+-- keeps its row, so who sat where reads back. Both writes are decided:
+-- circle-decision-member, which joins the decision, judges them.
+GRANT UPDATE (until) ON circle_member.position TO cella_app;

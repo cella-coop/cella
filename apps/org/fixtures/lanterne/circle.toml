@@ -81,6 +81,11 @@ power = "log-time"
 text = "log and submit one's own time"
 
 [[mandate]]
+role = "member"
+power = "invite-member"
+text = "invite someone to join, with their first device"
+
+[[mandate]]
 role = "manager"
 power = "commit"
 text = "sign contracts and commit spending"

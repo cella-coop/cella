@@ -36,3 +36,11 @@ export interface Added {
   position: number
   since: string
 }
+
+// A seat to end, named as it was added, and the decision that ends it.
+export type Remove = Add
+
+export interface Removed {
+  position: number
+  until: string
+}

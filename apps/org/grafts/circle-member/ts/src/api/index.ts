@@ -3,7 +3,7 @@
 import type { Slice } from '@cella/org-db'
 import { circlesOf, held, seated, seats } from '../drivers/seat.ts'
 
-export { add } from '../handlers/add.ts'
+export { add, remove, seating } from '../handlers/add.ts'
 export { circlesOf, held, seated, seats } from '../drivers/seat.ts'
 
 // The seats on both sides of the relationship: who sits in a circle, and

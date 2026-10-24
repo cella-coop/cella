@@ -20,7 +20,8 @@ the relationship, so the graft owns its writes.
   decision's roll from it.
 
 The app role and the rules role, `cella_rules`, may select; the app role
-may insert a seat, through `position.add`. Lanterne's seats are seeded.
+may insert a seat, through `position.add`, and end one, through
+`position.remove`. Lanterne's seats are seeded.
 
 ## Rules
 
@@ -38,13 +39,20 @@ graft's, and whether a member is active the `member` feat's.
   in `cella.power`, a core registry; this graft attaches its rule to every
   op listed, then and later, as `circle-decision-member` attaches its own
   to `decision.cites`. A write with no power gets no such rule.
+- `circle_member.over(actor, power, about, day)`: the actor holds the
+  power through a seat in force in the circle `about` or one it is
+  within: a power reaches down the tree from where it is held, never up
+  or across. It checks no limit and no active status, which `may` does
+  for every write; the three-way grafts that know what a write concerns,
+  `circle-member-project` a project's circle and `circle-member-timesheet`
+  a member's seats, narrow `may` with it.
 
 Lanterne: Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
 holds only the `member` seat in the assembly, so she edits clients and
 documents and does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet. A suspended member, or an
-invitee with a device, holds nothing.
+invitee, holds nothing.
 
 ## Writes
 
@@ -56,30 +64,34 @@ invitee with a device, holds nothing.
 - **position.add** and **position.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
   writes read positions through `circle_member.may`, so they are ordered.
-- **position.add** is decided (`check: 'decided'`): it cites the decision
-  that gives the seat. This graft does not join `decision`, so the rules
-  that judge it are `circle-decision-member`'s, a higher order: the cited
-  decision carried, and it gives this seat. Today only an admission gives
-  one, seating the new member in the decision's circle in its `member`
-  role.
+- Both are decided (`check: 'decided'`): each cites the decision that
+  gives or ends the seat. This graft does not join `decision`, so the
+  rules that judge them are `circle-decision-member`'s, a higher order:
+  the cited decision carried, and it gives or ends this seat. An
+  admission gives one, the new member's in the decision's circle in its
+  `member` role; a `seat` or `unseat` motion names any other.
 
 ## Handlers
 
-- `add` (ordered): inserts the seat from the verdict date and commits its
-  id, circle, member, role and the decision it cites.
-  `circle-decision-member`'s `closed` calls it after an admission
-  settles.
+- `add` (ordered), and `seating`, its state alone, which a passing
+  close runs in its own transaction for each member it admits: inserts
+  the seat from the verdict date and commits its id, circle, member, role
+  and the decision it cites.
+- `remove` (ordered): ends the member's seat in the circle, in the role
+  or as a plain member, on the verdict date, and commits the same.
+
+`circle-decision-member` carries out the seats a passing decision gives
+and ends, as its reaction to the close.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Write | Check | Lanterne |
 |---|---|---|
-| position.add | none: the decision it cites, which must give this seat | the assembly, admitting a member |
-| position.remove | `appoint`, until a circle's decision decides it | no mandate grants it |
+| position.add | decided: the decision it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
+| position.remove | decided: the decision it cites ends this seat | the circle above, or the assembly |
 
-`004-sits.sql` registers position.remove's power, and `circle_member.sits`
-on `circle:circle:message`: the actor is an active member seated in the
-circle on the verdict date.
+`004-sits.sql` registers `circle_member.sits` on `circle:circle:message`:
+the actor is an active member seated in the circle on the verdict date.
 
 ## Shell
 

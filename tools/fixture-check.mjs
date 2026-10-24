@@ -10,6 +10,7 @@ import { join } from 'node:path'
 import { parse } from 'smol-toml'
 import { work } from './fixture/work.mjs'
 import { finance } from './fixture/finance.mjs'
+import { governance } from './fixture/governance.mjs'
 import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
 const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
@@ -134,10 +135,6 @@ const check = (name) => {
       has(roles, p.role, 'role', 'position')
     }
   }
-  for (const a of read('graft.decision-member').admission ?? []) {
-    has(decisions, a.decision, 'decision', 'admission')
-    known(a.member, 'admission')
-  }
   for (const a of read('graft.decision-document').adoption ?? []) {
     has(decisions, a.decision, 'decision', 'adoption')
     has(documents, a.document, 'document', 'adoption')
@@ -202,6 +199,7 @@ const check = (name) => {
 
   work(read, fail)
   finance(read, fail)
+  governance(read, fail)
 }
 
 const names = existsSync(root) ? readdirSync(root) : []

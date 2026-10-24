@@ -1,20 +1,21 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
-  import type { Admission } from '../../models/admission.ts'
+  import { verbs, type Asked } from '../../models/admission.ts'
 
-  // Whom the decision admits, with the shares each subscribes: what is
-  // being decided, when it is an admission.
-  let { data }: { data: Admission[]; id: string } = $props()
+  // What the decision asks of members: whom it admits, with the shares
+  // each subscribes, whom it suspends or lets go.
+  let { data }: { data: Asked[]; id: string } = $props()
 
-  const columns: Column<Admission>[] = [
+  const columns: Column<Asked>[] = [
     { key: 'name', label: 'Member', kind: 'title', value: (a) => a.name ?? a.member },
+    { key: 'kind', label: 'It', value: (a) => verbs[a.kind] },
     { key: 'member', label: 'Address', kind: 'mono', value: (a) => a.member },
     { key: 'shares', label: 'Shares', kind: 'number', value: (a) => a.shares },
   ]
 </script>
 
 {#if data.length}
-  <Section title="Admits" count={data.length}>
-    <Table {columns} rows={data} href={(a: Admission) => `/members/${a.member}`} />
+  <Section title="Members" count={data.length}>
+    <Table {columns} rows={data} href={(a: Asked) => `/members/${a.member}`} />
   </Section>
 {/if}

@@ -1,7 +1,7 @@
 import type { Added, App, Column, Look, Nav, Owned, Preset, Shift, Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
-import { app as key, Devices } from '@cella/org-key/app'
+import { app as key } from '@cella/org-key/app'
 import { app as member } from '@cella/org-member/app'
 import { app as circle } from '@cella/org-circle/app'
 import { app as decision } from '@cella/org-decision/app'
@@ -14,6 +14,8 @@ import { app as project } from '@cella/org-project/app'
 import { app as task } from '@cella/org-task/app'
 import { app as timesheet } from '@cella/org-timesheet/app'
 import { app as circleMember } from '@cella/org-graft-circle-member/app'
+import { app as circleDecision } from '@cella/org-graft-circle-decision/app'
+import { app as keyMember } from '@cella/org-graft-key-member/app'
 import { app as circleDecisionMember } from '@cella/org-graft-circle-decision-member/app'
 import { app as decisionMember } from '@cella/org-graft-decision-member/app'
 import { app as decisionDocument } from '@cella/org-graft-decision-document/app'
@@ -41,13 +43,11 @@ import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/
 
 // The client sides the shell mounts, matching the server's slices by
 // name: each feat's views and pages, each graft's extensions, and the
-// root's own, which joins feats no graft joins, such as a member's
-// devices, and the cards of the work collections, whose fields come from
+// root's own: the cards of the work collections, whose fields come from
 // several grafts no one graft may name together.
 const root: App = {
   name: 'org',
   extends: {
-    members: { page: { blocks: [Devices] } },
     projects: { look: { cards: ['client', 'progress', 'budget', 'used'] } },
     tasks: { look: { cards: ['assignee', 'project', 'priority', 'due'] } },
   },
@@ -70,8 +70,10 @@ export const apps: App[] = [
   key,
   log,
   circleMember,
+  circleDecision,
   circleDecisionMember,
   decisionMember,
+  keyMember,
   decisionDocument,
   clientInvoice,
   clientProject,

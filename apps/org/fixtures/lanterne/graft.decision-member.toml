@@ -1,7 +1,0 @@
-# A member admitted or suspended by a decision. Inès is admitted when
-# d-2026-012 closes with no block.
-
-[[admission]]
-decision = "d-2026-012"
-member = "ines@lanterne.example"
-shares = 20

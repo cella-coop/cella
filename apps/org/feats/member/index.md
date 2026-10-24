@@ -22,39 +22,60 @@ check.
 
 | Write | Power or check | Lanterne |
 |---|---|---|
-| invite | `invite-member` | no mandate grants it yet |
+| invite | `invite-member` | every member, through the assembly's `member` role |
 | admit | decided: the cited decision admits the member and carried | the assembly, by consent |
 | profile | self: the member's own | every member |
-| suspend, exit | `end-membership`, until their decisions' junctions are built and they are decided | no mandate grants it |
+| suspend, exit | decided: the cited decision suspends the member, or ends their membership, and carried | the assembly |
 
-`004-powers.sql` registers the powers in `cella.power`.
+`004-powers.sql` registers invite's power in `cella.power`; the decided
+writes are listed in `decision.cites` by the `decision-member` graft.
 
 ## Schema
 
-`member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` and shares. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.
+`member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` (admitted) and shares, and the days it was `invited`, `suspended` and `exited`. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.
 
 ## Rules
 
-- `member.admitted`, on `member:member:admit`: the write left the member active, since the verdict date, holding shares.
+- `member.invites`, on `member:member:invite`: the write invited the member, on the verdict date.
+- `member.admitted`, on `member:member:admit`: the write left the member active, since the verdict date, holding shares. The `decision-member` graft runs it again for each member a decision's close admits.
 - `member.own_profile`, on `member:member:profile`: the profile is the actor's own (`cella.actor()`); a profile needs no power.
+- `member.ends`, on `member:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
 
-Whether the cited decision asks to admit the member is the `decision-member` graft's rule on the same op; whether it closed and passed on its roll, `circle-decision-member`'s.
+Whether the cited decision asks it is the `decision-member` graft's rule on the same ops; whether it closed and passed on its roll, `circle-decision-member`'s.
 
 ## Handlers
 
-- `admit` (ordered): sets the member active since `cella.verdict_date()` with their shares, then submits `{ member, shares, decision }`; the cited decision is an id this feat does not resolve.
+- `invite` (confluent), and `inviting`, the same as a write a graft extends in its transaction: inserts the member invited on the verdict date, holding nothing; submits `{ member, invited }`, the name left out. The `key-member` graft replaces it in the shell with an invitation carrying the invitee's first device.
+- `admit` (ordered), and `admitting`, its state alone, which the close of the deciding decision runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the rules to refuse. Submits `{ member, shares, decision }`.
+- `suspend`, `exit` (ordered): set the status and its day; submit `{ member, decision }`. `circle-decision-member` carries them out when the decision that asks them passes.
 - `profile` (confluent): sets the member's given fields, the name for now, and submits `{ member, fields }`: the names of the fields changed, never their values.
+
+### The exit's hook
+
+An exit freezes the member's capital, which is the books', not this
+feat's. The exit sets `status` to `exited` and `exited` to the verdict
+date in its own transaction, and its payload names the member and the
+decision: a graft joining `member` to the books (`account-member`)
+attaches a trigger to that update, or a rule to `member:member:exit`, and
+so settles or is refused with the exit itself. A reaction to the settled
+op in a slice's `on` runs only for a write made from a page, not for one
+a close carries out, so the freeze belongs in SQL.
 
 ## Grafts
 
 - `decision-member`
+- `key-member`
 
 ## Shell
 
-The `members` collection, by name; a member's page renames them
-(`profile`), which `member.own_profile` refuses for anyone but the actor.
-Seats and powers are `circle-member`'s, devices the `key` feat's.
+The `members` collection, by name; its New form, an invitation, is
+`key-member`'s, which carries the invitee's first device. A member's page
+shows the days the membership moved and renames them (`profile`), which
+`member.own_profile` refuses for anyone but the actor; proposing their
+admission, suspension or exit is `circle-decision-member`'s. Seats and
+powers are `circle-member`'s, devices the `key` feat's.
 
 ## Domain
 
-To port from seedling's `specs/feat/10-members.md`, under this repo's labels and grafts.
+Ported from seedling's `specs/feat/10-members.md` under this repo's labels
+and grafts: probation, leave and member categories are not built.

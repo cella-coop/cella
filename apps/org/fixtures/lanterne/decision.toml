@@ -200,3 +200,9 @@ member = "hugo@lanterne.example"
 stance = "consent"
 at = 2026-10-23
 
+# What d-2026-012 decides beyond its text: Inès is admitted with her 20
+# shares when it closes with no block, and seated in the assembly.
+[[decision.motion]]
+kind = "admit"
+args = { member = "ines@lanterne.example", shares = 20 }
+

@@ -390,6 +390,9 @@ importers:
 
   apps/org/grafts/circle-decision-member/ts:
     dependencies:
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../feats/circle/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -402,6 +405,27 @@ importers:
       '@cella/org-member':
         specifier: workspace:*
         version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/circle-decision/ts:
+    dependencies:
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../feats/circle/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-decision':
+        specifier: workspace:*
+        version: link:../../../feats/decision/core/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../core/ops/ts
@@ -619,6 +643,27 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/key-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-key':
+        specifier: workspace:*
+        version: link:../../../feats/key/core/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/member-payslip/ts:
     dependencies:
       '@cella/org-db':
@@ -816,6 +861,9 @@ importers:
       '@cella/org-graft-account-transaction':
         specifier: workspace:*
         version: link:../grafts/account-transaction/ts
+      '@cella/org-graft-circle-decision':
+        specifier: workspace:*
+        version: link:../grafts/circle-decision/ts
       '@cella/org-graft-circle-decision-member':
         specifier: workspace:*
         version: link:../grafts/circle-decision-member/ts
@@ -849,6 +897,9 @@ importers:
       '@cella/org-graft-invoice-transaction':
         specifier: workspace:*
         version: link:../grafts/invoice-transaction/ts
+      '@cella/org-graft-key-member':
+        specifier: workspace:*
+        version: link:../grafts/key-member/ts
       '@cella/org-graft-member-payslip':
         specifier: workspace:*
         version: link:../grafts/member-payslip/ts

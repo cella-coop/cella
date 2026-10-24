@@ -1,7 +1,7 @@
 import type { Action, Collection, Extension, Reaction, Slice } from '@cella/org-db'
 import type { Permission } from '@cella/org-ops'
 import { slice as log } from '@cella/org-log/api'
-import { devices, slice as key } from '@cella/org-key/api'
+import { slice as key } from '@cella/org-key/api'
 import { slice as member } from '@cella/org-member/api'
 import { slice as circle } from '@cella/org-circle/api'
 import { slice as decision } from '@cella/org-decision/api'
@@ -14,6 +14,8 @@ import { slice as project } from '@cella/org-project/api'
 import { slice as task } from '@cella/org-task/api'
 import { slice as timesheet } from '@cella/org-timesheet/api'
 import { slice as circleMember } from '@cella/org-graft-circle-member/api'
+import { slice as circleDecision } from '@cella/org-graft-circle-decision/api'
+import { slice as keyMember } from '@cella/org-graft-key-member/api'
 import { slice as circleDecisionMember } from '@cella/org-graft-circle-decision-member/api'
 import { slice as decisionMember } from '@cella/org-graft-decision-member/api'
 import { slice as decisionDocument } from '@cella/org-graft-decision-document/api'
@@ -41,13 +43,11 @@ import { slice as payslipTimesheet } from '@cella/org-graft-payslip-timesheet/ap
 import { slice as payslipTransaction } from '@cella/org-graft-payslip-transaction/api'
 
 // The server sides the shell mounts: each feat's collections, each graft's
-// extensions of the feats it joins, and the root's own, which joins feats
-// no graft joins, such as a member's devices.
+// extensions of the feats it joins, and the root's own, which may join
+// feats no graft joins; it joins none today.
 const root: Slice = {
   name: 'org',
-  extends: {
-    members: { item: (db, address) => devices(db, address) },
-  },
+  extends: {},
 }
 
 export const slices: Slice[] = [
@@ -67,8 +67,10 @@ export const slices: Slice[] = [
   key,
   log,
   circleMember,
+  circleDecision,
   circleDecisionMember,
   decisionMember,
+  keyMember,
   decisionDocument,
   clientInvoice,
   clientProject,

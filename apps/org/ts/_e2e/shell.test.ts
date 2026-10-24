@@ -224,7 +224,7 @@ test('the stance form starts at the acting member\'s latest stance, and is not o
 
 test('a decision\'s overview says what is decided in full; its stances are their own tab', async () => {
   const overview = await page('/decisions/d-2026-012')
-  for (const says of ['Overview', 'Stances', 'Proposal', 'Admits', 'Inès Haddad', 'passes by consent', 'Deadline 31 Oct 2026']) {
+  for (const says of ['Overview', 'Stances', 'Proposal', 'admits', 'Inès Haddad', 'passes by consent', 'Deadline 31 Oct 2026']) {
     assert.ok(overview.text.includes(says), `the overview says ${says}`)
   }
   assert.ok(!overview.text.includes('Latest stance'), 'the roll is not on the overview')
@@ -347,19 +347,13 @@ test('Hugo objects to admitting Inès, then consents; closing early is refused',
   assert.match(early.reason ?? '', /open until 2026-10-31/)
 })
 
-test('closed on 31 October, d-2026-012 admits Inès and seats her, as the close\'s reactions', async () => {
+test('closed on 31 October, d-2026-012 admits Inès, seats her and enrols her laptop, in the close\'s own verdict', async () => {
   await start('2026-10-31')
   const closed = await act('/decisions/d-2026-012', 'close', {}, camille)
   assert.equal(closed.state, 'settled')
-  assert.deepEqual(
-    closed.then.map((d) => [d.op, d.state]),
-    [
-      ['member:member:admit', 'settled'],
-      ['circle-member:position:add', 'settled'],
-    ],
-  )
+  assert.deepEqual(closed.then, [], 'nothing follows: the admission is the close')
   const { text } = await page(`/members/${ines}`)
-  assert.ok(text.includes('active') && text.includes('Assemblée générale'))
+  assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('laptop'))
   assert.ok((await page('/decisions/d-2026-012')).text.includes('passed by consent'))
 })
 

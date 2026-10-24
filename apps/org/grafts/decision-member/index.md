@@ -3,24 +3,48 @@ title = "decision-member"
 updated = 2026-10-24
 +++
 
-Admission and suspension by a decision of the members.
+What a decision decides of a membership: admitting someone invited,
+suspending a member, ending a membership. Declared by the `member` feat.
 
 ## Schema
 
-`decision_member` (`sql/`): `decision_member.admission`, a member a decision asks to admit and the shares they subscribe. It names the decision by id and the member by address, with no foreign key into either feat. The app role may select and insert; the rules role, `cella_rules`, may select.
+`decision_member` (`sql/`) holds no table: the motions are the decision
+feat's `decision.motion`, of the kinds this graft registers in
+`decision.kind`: `admit` (`member`, `shares`), `suspend` and `exit`
+(`member`). `decision_member.motion` reads them with the member each
+names and, for an admission, the shares as a whole number. The app role
+and the rules role, `cella_rules`, may select it.
 
 ## Rules
 
-- `decision_member.admits`, on `member:member:admit`: the cited decision asks to admit this member.
+- `decision_member.asks`, on `decision:decision:propose`: each motion of
+  these kinds names a member it can apply to: someone invited, with
+  shares, to admit; an active member to suspend; an active or suspended
+  one to let go. That only the assembly decides it is
+  `circle-decision-member`'s, which knows circles.
+- `decision_member.admits`, on `member:member:admit`: the cited decision
+  asks to admit this member, with these shares.
+- `decision_member.ends`, on `member:member:suspend` and `:exit`: the
+  cited decision asks this of this member.
+- `decision_member.closes`, on `decision:decision:close`: every member a
+  close admits, as its payload's `admitted` names them, is one the
+  decision asks to admit, holding the shares it asks, and was admitted by
+  the close (`member.admitted`, the member feat's rule, run for each).
 
-An admission cites its decision: this graft declares `member:member:admit` in `decision.cites`, and `circle-decision-member`, which counts the roll, attaches its rule that the decision closed and passed. Who is on a roll needs seats, so it is that three-way graft's, which reads this one; this one does not read it.
+The admission, suspension and exit cite their decision: this graft lists
+them in `decision.cites`, and `circle-decision-member`, which counts the
+roll, attaches its rule that it closed and passed. Whether a close
+admits everyone it must, and seats them, needs the roll and seats, so it
+is that three-way graft's; this one never reads it.
 
 ## Handlers
 
-None of its own: the reaction that admits on a passing close needs the roll, so it is `circle-decision-member`'s `closed`.
+None of its own: a close that admits, and the suspensions and exits a
+passing decision carries out, need the roll, so they are
+`circle-decision-member`'s.
 
 ## Shell
 
-Adds whom a decision admits, with their shares, to the decision's page,
-its Overview listing them as what is being decided, and the decision
-admitting a member to theirs.
+Adds to a decision's page what it asks of members, whom it admits with
+their shares, whom it suspends or lets go, and to a member's page the
+decisions that ask something of them.

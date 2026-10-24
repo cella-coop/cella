@@ -1,7 +1,8 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
 // carried over from before the log: the scope's address, members and their
 // devices, circles, roles and mandates, seats, decisions with their
-// stances, admissions, documents with their versions, comments and
+// stances and what they decide, invitations' first devices, documents
+// with their versions, comments and
 // adoptions, clients, the chart, periods and journal, invoices with their
 // payments, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
@@ -21,6 +22,7 @@ import pg from 'pg'
 import { fixture } from '../apps/org/core/sign/ts/src/index.ts'
 import { work } from './seed/work.mjs'
 import { finance } from './seed/finance.mjs'
+import { invitations, motions } from './seed/governance.mjs'
 
 const dir = process.argv[2]
 const read = (file) => {
@@ -47,8 +49,8 @@ for (const [setting, value] of Object.entries(settings)) {
 const members = read('member').member ?? []
 for (const m of members) {
   await db.query(
-    'INSERT INTO member.member (address, name, status, since, shares) VALUES ($1, $2, $3, $4, $5)',
-    [m.address, m.name, m.status, day(m.since), m.shares],
+    'INSERT INTO member.member (address, name, status, since, shares, invited) VALUES ($1, $2, $3, $4, $5, $6)',
+    [m.address, m.name, m.status, day(m.since), m.shares, day(m.invited)],
   )
 }
 
@@ -88,12 +90,14 @@ for (const p of positions) {
 
 const decisions = read('decision').decision ?? []
 let votes = 0
+let moved = 0
 for (const d of decisions) {
   await db.query(
     `INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline, body)
      VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [d.id, d.circle, d.title, d.rule, day(d.proposed), day(d.deadline), d.body ?? ''],
   )
+  moved += await motions(db, d)
   for (const v of d.vote ?? []) {
     await db.query(
       `INSERT INTO decision.vote (receipt, decision, member, stance, at) VALUES (${receipt}, $1, $2, $3, $4)`,
@@ -106,10 +110,7 @@ for (const d of decisions) {
   }
 }
 
-const admissions = read('graft.decision-member').admission ?? []
-for (const a of admissions) {
-  await db.query('INSERT INTO decision_member.admission (decision, member, shares) VALUES ($1, $2, $3)', [a.decision, a.member, a.shares])
-}
+const invited = await invitations(db, read)
 
 // Each document's versions become Loro updates, one per version in order,
 // from one peer: the history before the log, with no author. Each version's
@@ -258,6 +259,6 @@ await db.end()
 console.log(
   `seed: ${members.length} members, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
-    `${admissions.length} admissions, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+    `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed} into ${db.database}`,
 )

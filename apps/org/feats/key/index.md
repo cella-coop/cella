@@ -37,10 +37,10 @@ stateDiagram-v2
 
 A member's first device comes with their invitation: the invitee's device
 makes its key, and the invitation carries it to the admission that makes
-them a member. That needs a `key-member` graft and is not built; until
-then a first device is enrolled by the seed, before the log, and names no
-device that enrolled it. Each later device is enrolled by one of the
-member's current keys. A member who has lost every device recovers from
+them a member, which enrols it in its own transaction, naming no device
+that enrolled it. That is the `key-member` graft's; the devices of
+members admitted before the log are the seed's, which name none either.
+Each later device is enrolled by one of the member's current keys. A member who has lost every device recovers from
 their guardians' shares, which enrols a new key under the same address;
 recovery is not built.
 
@@ -130,9 +130,8 @@ not serve; at rung 5 addresses are recognised across scopes.
 
 ## Shell
 
-The `devices` collection, current ones first. The root mounts an
-address's devices on a member's page, since no graft joins key and
-member. Enrolling and revoking sign from the member's own device, which
+The `devices` collection, current ones first. An address's devices on a
+member's page are `key-member`'s, which joins key and member. Enrolling and revoking sign from the member's own device, which
 the dev shell does not hold, so neither is offered. The dev server signs
 as a member with a device's TEST-ONLY fixture key only when it is the key
 enrolled under that label and not revoked.
@@ -143,4 +142,5 @@ enrolled under that label and not revoked.
   Their keys are TEST-ONLY, derived from each device's address and label,
   so the seed and the tests hold the same keys.
 - Hugo's old laptop was revoked on 12 May 2026: it signs nothing now.
-- Inès has no device: her first comes with her invitation, not built.
+- Inès has no device yet: her invitation carries her laptop's key, which
+  the close of d-2026-012 enrols as it admits her.

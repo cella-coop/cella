@@ -1,29 +1,48 @@
-// The graft's reactions, run when the decision feat's events arrive, its
-// reads, and its slice, which the shell mounts.
-import { done, type Done, type Slice } from '@cella/org-db'
-import { closed } from '../handlers/closed.ts'
+// The graft's writes and reactions, its reads, and its slice, which the
+// shell mounts.
+import { action, type Slice } from '@cella/org-db'
+import { carried } from '../handlers/carried.ts'
+import { close } from '../handlers/close.ts'
+import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
+import { appointing, standing } from '../drivers/asking.ts'
+import * as forms from './forms.ts'
 
-export { closed, type Admission } from '../handlers/closed.ts'
+export { carried } from '../handlers/carried.ts'
+export { close, type Admitted } from '../handlers/close.ts'
+export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
+export { appointing, standing } from '../drivers/asking.ts'
 
 // A decision's roll and outcome on its page and its turnout in the list;
-// and, when a close settles, the admissions it carries and their seats.
+// its close, replaced by one that admits and seats in the same verdict;
+// and, once a close settles, what else it decides, carried out. On a
+// member's page, proposing their admission, suspension or exit; on a
+// circle's, a seat in it.
 export const slice: Slice = {
   name: 'circle-decision-member',
   extends: {
-    decisions: { list: turnout, item: roll },
+    decisions: {
+      list: turnout,
+      item: roll,
+      actions: {
+        close: action('decision:decision:close', (_, id) => ({ decision: id ?? '' }), close),
+      },
+    },
+    members: {
+      item: (db, member) => standing(db, member),
+      actions: {
+        propose: action('decision:decision:propose', (form, id) => forms.standing(form, id ?? ''), put),
+      },
+    },
+    circles: {
+      item: (db, circle) => appointing(db, circle),
+      actions: {
+        appoint: action('decision:decision:propose', (form, id, deps) => forms.appointing(form, id ?? '', deps.db), put),
+      },
+    },
   },
   on: {
-    'decision:decision:close': async (request, deps) => {
-      const out: Done[] = []
-      for (const a of await closed((request as { decision: string }).decision, deps)) {
-        out.push(done('member:member:admit', a.admitted))
-        if (a.seated) {
-          out.push(done('circle-member:position:add', a.seated))
-        }
-      }
-      return out
-    },
+    'decision:decision:close': async (request, deps) => carried((request as { decision: string }).decision, deps),
   },
 }

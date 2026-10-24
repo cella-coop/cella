@@ -184,6 +184,31 @@ test('widgets reordered as the keyboard drops them stay in their new order', asy
   assert.ok(at('Overdue') > 0 && at('Overdue') < at('By standing') && at('By standing') < at('Owed'), 'the dashboard renders in the dropped order')
 })
 
+test('circles open as a gallery and decisions as a board, by what each declares', async () => {
+  const circles = await page('/circles')
+  assert.match(circles.text, /class="gallery[\s"]/, 'circles default to the gallery')
+  assert.ok(circles.text.includes('Seated'), 'a circle\'s card shows its seats')
+  const decisions = await page('/decisions')
+  assert.match(decisions.text, /class="board[\s"]/, 'decisions default to the board')
+  for (const lane of ['open', 'closed and passed', 'closed and failed']) {
+    assert.ok(decisions.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
+  }
+  assert.match((await page('/decisions?view=list')).text, /class="list[\s"]/, 'a view in the address overrides the default')
+})
+
+test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
+  const shifts = [{ by: 'standing', from: ['open'], to: ['closed and passed', 'closed and failed'], action: 'close' }]
+  assert.equal(drag.shift(shifts, 'standing', 'open', 'closed and failed')?.action, 'close')
+  assert.equal(drag.shift(shifts, 'standing', 'closed and passed', 'open'), undefined, 'no write reopens a decision, so no drop does')
+  assert.equal(drag.shift(shifts, 'standing', 'open', 'open'), undefined)
+  const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
+  assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'))
+  const done = await act('/decisions/d-2026-012', 'close', {}, hugo)
+  assert.notEqual(done.state, 'settled', 'the close is refused before its deadline')
+  assert.ok(done.reason, 'and says why')
+  assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
+})
+
 test('a collection\'s preset views are tabs with their counts, and a view in the address applies its filter', async () => {
   const { text } = await page('/invoices')
   for (const tab of ['View Unpaid invoices', 'View Overdue invoices', 'View All invoices']) {

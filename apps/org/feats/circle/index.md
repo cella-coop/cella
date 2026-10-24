@@ -113,7 +113,8 @@ requested by another scope (rung 5) build on these entities later.
 
 ## Shell
 
-The `circles` collection, in tree order; a circle's page lists its roles,
+The `circles` collection, in tree order, as a gallery of cards by
+default; a circle's page lists its roles,
 those every working circle has among them, and the mandates granted to
 them, with their limits and budgets. Seats are `circle-member`'s. Nesting
 and mandates have no handlers yet, so the shell offers no writes here.

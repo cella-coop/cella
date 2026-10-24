@@ -3,7 +3,7 @@ import { aggregate, defaults, fields, matches, resolve, wheres, widgets, type Fi
 import { using } from '#lib/server/db.ts'
 import { mounted, writes } from '#lib/server/slices.ts'
 import { perform } from '#lib/server/write.ts'
-import { columns, dashboard, views } from '#lib/slices.ts'
+import { columns, dashboard, look, views } from '#lib/slices.ts'
 import type { PageServerLoad } from './$types'
 
 // A collection: its owner's rows, with the fields its extensions add to
@@ -18,7 +18,8 @@ export const load: PageServerLoad = async ({ params, url }) => {
   }
   const fs = fields(columns(params.collection))
   const tabs = views(params.collection)
-  const { id, spec, errors } = resolve(url.searchParams, tabs, fs)
+  const looks = look(params.collection)
+  const { id, spec, errors } = resolve(url.searchParams, tabs, fs, looks)
   const today = new Date().toISOString().slice(0, 10)
   return using(async (db) => {
     const owned = await m.collection.list(db)
@@ -37,6 +38,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
       views: tabs.map((p) => ({ ...p, count: count(p.where) })),
       view: id,
       spec,
+      look: looks,
       errors,
       dashboard: spec.layout === 'dashboard' ? run(spec, rows, fs, params.collection, today) : null,
     }

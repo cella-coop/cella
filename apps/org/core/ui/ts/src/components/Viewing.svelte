@@ -2,6 +2,8 @@
   import Rows from 'phosphor-svelte/lib/Rows'
   import TableIcon from 'phosphor-svelte/lib/Table'
   import ChartBar from 'phosphor-svelte/lib/ChartBar'
+  import SquaresFour from 'phosphor-svelte/lib/SquaresFour'
+  import Kanban from 'phosphor-svelte/lib/Kanban'
   import type { Column } from '../models/view.ts'
   import { arranged, type Custom, type Field, type Layout, type Result, type Spec, type Where, type Widget } from '../models/query.ts'
   import { reorder } from '../models/drag.ts'
@@ -31,6 +33,8 @@
     titled,
     values,
     dashboard,
+    shown,
+    grouped,
     custom,
     dirty,
     onchange,
@@ -44,6 +48,10 @@
     titled: Column
     values: Record<string, string[]>
     dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
+    // The fields a gallery's or a board's cards show, and the board's
+    // enumeration.
+    shown: Column[]
+    grouped?: string
     custom?: Custom
     dirty: boolean
     onchange: (spec: Spec) => void
@@ -54,12 +62,24 @@
   const state = useCollection()
   const views = useViews(() => name)
 
-  const layouts: { id: Layout; label: string; icon: typeof Rows }[] = [
-    { id: 'list', label: 'List', icon: Rows },
-    { id: 'table', label: 'Table', icon: TableIcon },
-    { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
-  ]
+  const groups = $derived(fields.filter((f) => f.type === 'enum'))
+  // A board only where a field enumerates what it groups by.
+  const layouts: { id: Layout; label: string; icon: typeof Rows }[] = $derived(
+    [
+      { id: 'list' as const, label: 'List', icon: Rows },
+      { id: 'table' as const, label: 'Table', icon: TableIcon },
+      { id: 'gallery' as const, label: 'Gallery', icon: SquaresFour },
+      { id: 'board' as const, label: 'Board', icon: Kanban },
+      { id: 'dashboard' as const, label: 'Dashboard', icon: ChartBar },
+    ].filter((l) => l.id !== 'board' || groups.length > 0),
+  )
   const enums = $derived(fields.filter((f) => f.type === 'enum' && (values[f.key]?.length ?? 0) > 1))
+  const showing = $derived(new Set(shown.map((c) => c.key)))
+
+  function card(key: string, on: boolean) {
+    const keys = columns.filter((c) => c !== titled && (c.key === key ? on : showing.has(c.key))).map((c) => c.key)
+    onchange({ ...spec, q: state.filter, cards: keys })
+  }
   const dates = $derived(fields.filter((f) => f.type === 'date'))
   const hidden = $derived(new Set(spec.hide))
   const ordered = $derived(arranged(columns, spec.order))
@@ -179,6 +199,28 @@
           </li>
         {/each}
         <DropIndicator show={drag.before('columns', ordered.length)} />
+      </ul>
+    </fieldset>
+  {:else if spec.layout === 'gallery' || spec.layout === 'board'}
+    {#if spec.layout === 'board'}
+      <label class="option">
+        <span class="label">Group by</span>
+        <select value={grouped} onchange={(e) => onchange({ ...spec, q: state.filter, by: e.currentTarget.value })}>
+          {#each groups as f (f.key)}<option value={f.key}>{f.label}</option>{/each}
+        </select>
+      </label>
+    {/if}
+    <fieldset class="columns">
+      <legend class="label">Card fields</legend>
+      <ul>
+        {#each columns.filter((c) => c !== titled) as c (c.key)}
+          <li>
+            <label>
+              <input type="checkbox" checked={showing.has(c.key)} onchange={(e) => card(c.key, e.currentTarget.checked)} />
+              {c.label}
+            </label>
+          </li>
+        {/each}
       </ul>
     </fieldset>
   {:else if spec.layout === 'dashboard' && dashboard}

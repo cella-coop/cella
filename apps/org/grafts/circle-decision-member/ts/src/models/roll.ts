@@ -11,6 +11,11 @@ export interface Voter {
 
 export type Tone = 'neutral' | 'positive' | 'negative'
 
+// Where a decision stands in the list, as the database reads it; a
+// decision closed while no stance counted did not pass.
+export const standings = ['open', 'closed and passed', 'closed and failed'] as const
+export type Standing = (typeof standings)[number]
+
 // How the outcome reads: passing or not while open, passed or failed once
 // closed.
 export function outcome(r: Roll): { text: string; tone: Tone } {

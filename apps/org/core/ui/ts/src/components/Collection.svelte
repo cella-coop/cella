@@ -1,11 +1,27 @@
 <script lang="ts">
   import { tick, type Component } from 'svelte'
-  import { goto } from '$app/navigation'
+  import { applyAction, deserialize } from '$app/forms'
+  import { goto, refreshAll } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column, Status } from '../models/view.ts'
-  import { address, alike, arranged, fields, matches, spec as preset, type Custom, type Preset, type Result, type Spec, type Widget } from '../models/query.ts'
+  import {
+    address,
+    alike,
+    arranged,
+    fields,
+    lanes,
+    matches,
+    spec as preset,
+    type Custom,
+    type Look,
+    type Preset,
+    type Result,
+    type Shift,
+    type Spec,
+    type Widget,
+  } from '../models/query.ts'
   import { control, nearest, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
@@ -13,8 +29,10 @@
   import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
+  import Board from './Board.svelte'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
+  import Gallery from './Gallery.svelte'
   import Cell from './Cell.svelte'
   import Dashboard from './Dashboard.svelte'
   import DropIndicator from './DropIndicator.svelte'
@@ -24,7 +42,8 @@
   import Viewing from './Viewing.svelte'
 
   // The one collection component: the same header, view bar and rows for
-  // every collection, as a list, a table or a dashboard, and the drawer's
+  // every collection, as a list, a table, a gallery, a board or a
+  // dashboard, and the drawer's
   // View card holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
   // anything changed from it, live in the address, so a view can be
@@ -48,6 +67,8 @@
     spec,
     errors = [],
     today,
+    look,
+    shifts,
     dashboard = null,
   }: {
     name: string
@@ -70,6 +91,10 @@
     spec: Spec
     errors?: string[]
     today: string
+    // How the collection looks before a view changes it, and the board
+    // moves it makes writes.
+    look: Look
+    shifts: Shift[]
     // In the dashboard layout, the server's run of its widgets.
     dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
   } = $props()
@@ -89,20 +114,32 @@
 
   const active = $derived(views.find((v) => v.id === view))
   const custom = $derived(saved.find(view))
-  const base = $derived(custom?.spec ?? preset(active))
+  // What a preset, or All for a custom view, shows over the collection's
+  // look: what the server resolves an address against.
+  const resolved = (id: string) => preset(views.find((v) => v.id === id), look)
+  const base = $derived(custom?.spec ?? resolved(view))
   const dirty = $derived(!alike({ ...spec, q: state.filter }, base))
 
   const count = $derived(state.filter ? `${state.shown.length} of ${kept.length} · “${state.filter}”` : String(kept.length))
   const noun = $derived(title.toLowerCase())
 
-  const link = (id: string, s: Spec, p?: Preset) => `${page.url.pathname}${address(id, s, p)}`
-  const presetLink = (p: Preset) => link(p.id, preset(p), p)
+  const link = (id: string, s: Spec) => `${page.url.pathname}${address(id, s, resolved(id))}`
+  const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
   const tally = (c: Custom) => rows.filter((r) => matches(r, c.spec.where, typed, today)).length
 
+  // The gallery's and the board's cards: the view's fields, or the
+  // collection's lines under a title and its trailing meta; and the
+  // board's enumeration, the first when the view names none.
+  const enums = $derived(columns.filter((c) => c.kind === 'badge'))
+  const grouped = $derived(columns.find((c) => c.key === spec.by) ?? enums[0])
+  const shown = $derived(
+    spec.cards.length ? arranged(columns, spec.cards).filter((c) => spec.cards.includes(c.key)) : [...subs, ...metas].filter((c) => c !== grouped),
+  )
+
   // A change to what the active view shows, kept in the address.
   function change(s: Spec) {
-    goto(link(view, s, active), { replace: true, reset: false })
+    goto(link(view, s), { replace: true, reset: false })
   }
 
   function opened(c: Custom) {
@@ -112,8 +149,23 @@
   function remove() {
     if (custom) {
       saved.remove(custom.id)
-      goto(link('all', preset()))
+      goto(link('all', resolved('all')))
     }
+  }
+
+  // A card dropped in another column: the collection's write for that
+  // move, posted to the item's page as its button posts it, signed as the
+  // acting member. The outcome shows as any write's; the rows are read
+  // again, so a refused move leaves the card where it was.
+  async function move(id: string, s: Shift) {
+    const body = new FormData()
+    const res = await fetch(`${page.url.pathname}/${encodeURIComponent(id)}?/${s.action}`, {
+      method: 'POST',
+      body,
+      headers: { 'x-sveltekit-action': 'true' },
+    })
+    await applyAction(deserialize(await res.text()))
+    await refreshAll()
   }
 
   function open(i: number) {
@@ -178,6 +230,8 @@
     {titled}
     {values}
     {dashboard}
+    {shown}
+    grouped={grouped?.key}
     {custom}
     {dirty}
     onchange={change}
@@ -266,6 +320,19 @@
       <p class="empty">{state.filter ? `Nothing matches “${state.filter}”.` : empty}</p>
     {:else if spec.layout === 'table'}
       <Table columns={visible} rows={state.shown} {href} active={state.active} />
+    {:else if spec.layout === 'gallery'}
+      <Gallery rows={state.shown} {titled} {shown} {href} />
+    {:else if spec.layout === 'board' && grouped}
+      <Board
+        rows={state.shown}
+        by={grouped}
+        lanes={lanes(look, grouped.key, values[grouped.key] ?? [])}
+        {titled}
+        {shown}
+        {href}
+        {shifts}
+        onshift={(id, s) => move(id, s)}
+      />
     {:else}
       <ul class="list">
         {#each state.shown as row, i (row.id)}

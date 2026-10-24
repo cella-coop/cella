@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Collection } from '@cella/org-ui'
-  import { collection, columns as all, extensions } from '#lib/slices.ts'
+  import { collection, columns as all, extensions, shifts } from '#lib/slices.ts'
   import type { PageProps } from './$types'
 
   let { data }: PageProps = $props()
@@ -32,6 +32,8 @@
       spec={data.spec}
       errors={data.errors}
       today={data.today}
+      look={data.look}
+      shifts={shifts(data.name)}
       values={data.values}
       dashboard={data.dashboard}
     />

@@ -51,6 +51,48 @@ export const cancel = (): Drag => idle()
 // or after the last when it is the length.
 export const slot = (d: Drag) => (d.to > d.from ? d.to + 1 : d.to)
 
+// Carrying an item between lists, as a board's cards between columns:
+// which item, the list it came from, and the list it would land in, if
+// that list takes it.
+export interface Carry {
+  group: string | null
+  id: string
+  origin: string
+  target: string | null
+  mode: Mode | null
+}
+
+export interface Transfer {
+  id: string
+  from: string
+  to: string
+}
+
+export const empty = (): Carry => ({ group: null, id: '', origin: '', target: null, mode: null })
+
+export const lift = (group: string, id: string, origin: string, mode: Mode): Carry => ({ group, id, origin, target: null, mode })
+
+export const aim = (c: Carry, target: string | null): Carry => (c.group ? { ...c, target } : c)
+
+// What a drop carries where, none when it lands nowhere that takes it or
+// back where it came from, and the carry done either way.
+export function land(c: Carry): { carry: Carry; transfer: Transfer | null } {
+  const transfer = c.group && c.target && c.target !== c.origin ? { id: c.id, from: c.origin, to: c.target } : null
+  return { carry: empty(), transfer }
+}
+
+// The next list along that takes the item, by some places, wrapping, as
+// an arrow key aims it; where it came from counts as a place.
+export function next(c: Carry, lists: string[], takes: (list: string) => boolean, by: number): Carry {
+  const open = lists.filter((l) => l === c.origin || takes(l))
+  if (!c.group || !open.length) {
+    return c
+  }
+  const at = open.indexOf(c.target ?? c.origin)
+  const to = open[(((at + by) % open.length) + open.length) % open.length]
+  return { ...c, target: to === c.origin ? null : to }
+}
+
 // The items in their new order.
 export function reorder<T>(items: T[], from: number, to: number): T[] {
   if (from < 0 || from >= items.length || to < 0 || to >= items.length) {

@@ -1,5 +1,5 @@
 import type { Component, Snippet } from 'svelte'
-import type { Preset, Widget } from './query.ts'
+import type { Look, Preset, Shift, Widget } from './query.ts'
 
 // The client side of a slice: what a feat's collections look like, and
 // what a graft adds to the collections of the feats it joins. Views and
@@ -91,6 +91,10 @@ export interface View<R = any> {
   dashboard?: Widget[]
   // The views offered as tabs before the viewer's own, All after them.
   views?: Preset[]
+  // How it looks before a view changes it, and the board's moves that are
+  // writes.
+  look?: Look
+  shifts?: Shift[]
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean
@@ -111,6 +115,10 @@ export interface Added<E = any> {
   status?: Status
   // Widgets over the fields this adds, after the owner's.
   dashboard?: Widget[]
+  // A look over the fields this adds, each part of which overrides the
+  // owner's, and the board moves it makes writes.
+  look?: Look
+  shifts?: Shift[]
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
 }
 

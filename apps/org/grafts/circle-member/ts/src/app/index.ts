@@ -10,6 +10,7 @@ export const app: App = {
   extends: {
     circles: {
       columns: [{ key: 'seated', label: 'Seated', kind: 'number', role: 'meta', value: (r: { seated?: number }) => r.seated ?? 0 }],
+      look: { cards: ['purpose', 'parent', 'seated'] },
       page: {
         properties: (s: Seat[]) => [{ label: 'Seated', value: new Set(s.filter((x) => !x.until).map((x) => x.member)).size, kind: 'number' }],
         blocks: [Members],

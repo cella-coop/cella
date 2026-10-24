@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Roll, Voter } from '../models/roll.ts'
+import type { Roll, Standing, Voter } from '../models/roll.ts'
 
 // A decision's roll, each member's latest stance before its cutoff, and
 // whether it passes, as the database computes it.
@@ -31,12 +31,24 @@ export async function roll(db: Db, decision: string): Promise<Roll | null> {
   return { ...d, voters: voters.rows }
 }
 
-// How many on each decision's roll have given a stance, by decision.
-export async function turnout(db: Db): Promise<Record<string, { turnout: string }>> {
-  const { rows } = await db.query<{ decision: string; given: number; roll: number }>(
-    `SELECT r.decision, count(*)::int AS roll,
-            count(*) FILTER (WHERE EXISTS (SELECT FROM decision.vote v WHERE v.decision = r.decision AND v.member = r.member))::int AS given
-     FROM circle_decision_member.roll r GROUP BY r.decision`,
+// How many on each decision's roll have given a stance, and where each
+// decision stands: open, or closed and passed or failed as
+// `circle_decision_member.passes` reads its stances, by decision.
+export async function turnout(db: Db): Promise<Record<string, { turnout?: string; standing: Standing }>> {
+  const { rows } = await db.query<{ decision: string; standing: Standing; given: number | null; roll: number | null }>(
+    `SELECT d.id AS decision,
+            CASE WHEN d.closed IS NULL THEN 'open'
+                 WHEN circle_decision_member.passes(d.id) THEN 'closed and passed'
+                 ELSE 'closed and failed' END AS standing,
+            t.roll, t.given
+     FROM decision.decision d
+     LEFT JOIN (
+       SELECT r.decision, count(*)::int AS roll,
+              count(*) FILTER (WHERE EXISTS (SELECT FROM decision.vote v WHERE v.decision = r.decision AND v.member = r.member))::int AS given
+       FROM circle_decision_member.roll r GROUP BY r.decision
+     ) t ON t.decision = d.id`,
   )
-  return Object.fromEntries(rows.map((r) => [r.decision, { turnout: `${r.given} of ${r.roll}` }]))
+  return Object.fromEntries(
+    rows.map((r) => [r.decision, { standing: r.standing, ...(r.roll === null ? {} : { turnout: `${r.given} of ${r.roll}` }) }]),
+  )
 }

@@ -12,6 +12,7 @@ export const app: App = {
         group: 'governance',
         title: 'Circles',
         icon: icons.CirclesThree,
+        look: { layout: 'gallery', cards: ['purpose', 'parent'] },
         columns: [
           { key: 'name', label: 'Circle', kind: 'title', role: 'title', value: (c: Circle) => c.name },
           { key: 'purpose', label: 'Purpose', role: 'sub', value: (c: Circle) => c.purpose },

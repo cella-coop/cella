@@ -274,21 +274,57 @@ export function aggregate(ws: Widget[], rows: any[], fs: Field[], today: string)
   })
 }
 
-export const layouts = ['list', 'table', 'dashboard'] as const
+export const layouts = ['list', 'table', 'gallery', 'board', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
 
 // How a collection is looked at: its layout, the conditions on its rows,
 // the text filter, the table's hidden columns and its columns' order (the
-// keys it moved; the rest follow as declared), and the dashboard's
-// widgets, null for the declared or derived ones.
+// keys it moved; the rest follow as declared), the enumeration a board
+// groups by, the fields a gallery's or a board's cards show, and the
+// dashboard's widgets, null for the declared or derived ones.
 export interface Spec {
   layout: Layout
   where: Where[]
   q: string
   hide: string[]
   order: string[]
+  by: string | null
+  cards: string[]
   widgets: Widget[] | null
 }
+
+// How a collection looks before a view changes it, as it declares: its
+// layout, the enumeration its board groups by and its cards' fields, and
+// each enumeration's values in the order its board's columns take, an
+// empty column included.
+export interface Look {
+  layout?: Layout
+  by?: string
+  cards?: string[]
+  lanes?: Record<string, string[]>
+}
+
+// A board's columns: the declared order of the enumeration's values, then
+// any other value its rows hold.
+export const lanes = (look: Look, by: string, held: string[]): string[] => {
+  const declared = look.lanes?.[by] ?? []
+  return [...declared, ...held.filter((v) => !declared.includes(v))]
+}
+
+// A move between a board's columns that is a write: dropping a card from
+// one of `from` (any, if none) into one of `to` on the board grouped by
+// `by` runs the collection's write `action` on the card's item, as its
+// page's button would. A column no move names takes no drop.
+export interface Shift {
+  by: string
+  from?: string[]
+  to: string[]
+  action: string
+}
+
+// The write a drop makes, if the collection declares one.
+export const shift = (shifts: Shift[], by: string | null, from: string, to: string): Shift | undefined =>
+  from === to ? undefined : shifts.find((s) => s.by === by && s.to.includes(to) && (!s.from || s.from.includes(from)))
 
 // A view a collection declares beside its columns, such as invoices'
 // Unpaid; not editable. `icon` names one of the UI core's marks.
@@ -300,6 +336,8 @@ export interface Preset {
   where?: Where[]
   hide?: string[]
   order?: string[]
+  by?: string
+  cards?: string[]
   widgets?: Widget[]
 }
 
@@ -336,18 +374,18 @@ const json = (raw: string | null): unknown => {
 }
 
 // The view the address asks for: a preset or a custom view by `v`, All
-// when it names none, its settings overridden by the address's own
-// (`view`, `where`, `q`, `hide`, `order`, `w`), each checked against the
-// fields.
-// What fails a check falls back to the view's, and is said.
-export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { id: string; spec: Spec; errors: string[] } {
+// when it names none, over the collection's look, its settings
+// overridden by the address's own (`view`, `where`, `q`, `hide`,
+// `order`, `by`, `cards`, `w`), each checked against the fields. What
+// fails a check falls back to the view's, and is said.
+export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[], look: Look = {}): { id: string; spec: Spec; errors: string[] } {
   const asked = params.get('v')
   const preset = ps.find((p) => p.id === asked)
   const id = preset?.id ?? (asked && /^c-[\w-]{1,40}$/.test(asked) ? asked : all.id)
-  const base = preset ?? ps.find((p) => p.id === id) ?? all
+  const base = spec(preset ?? ps.find((p) => p.id === id) ?? all, look)
   const errors: string[] = []
-  const layout = layouts.find((l) => l === params.get('view')) ?? base.layout ?? 'list'
-  let where = base.where ?? []
+  const layout = layouts.find((l) => l === params.get('view')) ?? base.layout
+  let where = base.where
   const w = json(params.get('where'))
   if (w !== undefined) {
     try {
@@ -356,7 +394,7 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { i
       errors.push(`the view's conditions: ${(e as Error).message}`)
     }
   }
-  let ws: Widget[] | null = base.widgets ?? null
+  let ws: Widget[] | null = base.widgets
   const raw = json(params.get('w'))
   if (raw !== undefined) {
     const checked = widgets(raw, fs)
@@ -364,53 +402,68 @@ export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { i
     errors.push(...checked.errors)
   }
   const keys = new Set(fs.map((f) => f.key))
-  const list = (name: 'hide' | 'order') =>
-    params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : (base[name] ?? [])
-  return { id, spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), widgets: ws }, errors }
+  const list = (name: 'hide' | 'order' | 'cards') =>
+    params.has(name) ? [...new Set((params.get(name) ?? '').split(','))].filter((k) => keys.has(k)) : base[name]
+  const enums = fs.filter((f) => f.type === 'enum').map((f) => f.key)
+  const asks = params.get('by')
+  // None means the first enumeration, which the board chooses itself.
+  const by = asks && enums.includes(asks) ? asks : base.by && enums.includes(base.by) ? base.by : null
+  return {
+    id,
+    spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide: list('hide'), order: list('order'), by, cards: list('cards'), widgets: ws },
+    errors,
+  }
 }
 
 const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 
-// The address of a view: its id, and what its spec changes from its
-// preset's, so a preset's own address is just `?v=<id>`; a custom view's
-// carries its whole spec, for the server knows no custom view.
-export function address(id: string, spec: Spec, preset?: Preset): string {
+// The address of a view: its id, and what its spec changes from `base`,
+// what the server resolves the id to (a preset's spec over the
+// collection's look, or All's for a custom view), so a preset's own
+// address is just `?v=<id>`; a custom view's carries its whole spec, for
+// the server knows no custom view.
+export function address(id: string, s: Spec, base: Spec): string {
   const q = new URLSearchParams()
   if (id !== all.id) {
     q.set('v', id)
   }
-  if (spec.layout !== (preset?.layout ?? 'list')) {
-    q.set('view', spec.layout)
+  if (s.layout !== base.layout) {
+    q.set('view', s.layout)
   }
-  if (!same(spec.where, preset?.where ?? [])) {
-    q.set('where', JSON.stringify(spec.where))
+  if (!same(s.where, base.where)) {
+    q.set('where', JSON.stringify(s.where))
   }
-  if (!same(spec.hide, preset?.hide ?? [])) {
-    q.set('hide', spec.hide.join(','))
+  for (const name of ['hide', 'order', 'cards'] as const) {
+    if (!same(s[name], base[name])) {
+      q.set(name, s[name].join(','))
+    }
   }
-  if (!same(spec.order, preset?.order ?? [])) {
-    q.set('order', spec.order.join(','))
+  if (s.by && s.by !== base.by) {
+    q.set('by', s.by)
   }
-  if (!same(spec.widgets, preset?.widgets ?? null)) {
-    q.set('w', JSON.stringify(spec.widgets))
+  if (!same(s.widgets, base.widgets)) {
+    q.set('w', JSON.stringify(s.widgets))
   }
-  if (spec.q) {
-    q.set('q', spec.q)
+  if (s.q) {
+    q.set('q', s.q)
   }
-  const s = q.toString()
-  return s ? `?${s}` : '?'
+  const out = q.toString()
+  return out ? `?${out}` : '?'
 }
 
 // Whether two specs show the same thing.
 export const alike = (a: Spec, b: Spec) => same(a, b)
 
-// What a preset shows before the viewer changes anything.
-export const spec = (p?: Preset): Spec => ({
-  layout: p?.layout ?? 'list',
+// What a preset shows before the viewer changes anything, over the
+// collection's look.
+export const spec = (p?: Preset, look: Look = {}): Spec => ({
+  layout: p?.layout ?? look.layout ?? 'list',
   where: p?.where ?? [],
   q: '',
   hide: p?.hide ?? [],
   order: p?.order ?? [],
+  by: p?.by ?? look.by ?? null,
+  cards: p?.cards ?? look.cards ?? [],
   widgets: p?.widgets ?? null,
 })
 

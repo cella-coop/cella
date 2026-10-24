@@ -55,8 +55,21 @@ The theme is light, dark or the system's, a cookie the server writes into
   and rows for every collection, and a drawer holding one card, View
   (`Viewing`): the text filter, the conditions on the rows (an
   enumeration's values as chips, a date's month or year), the layout
-  (list · table · dashboard) and, in a table, its columns, in a
-  dashboard, its widgets; and saving what is shown as a view. The view
+  (list · table · gallery · board · dashboard, icon-only so it fits) and,
+  in a table, its columns, in a gallery or on a board, its cards'
+  fields and the board's grouping, in a dashboard, its widgets; and
+  saving what is shown as a view. `Gallery` lays the items out as cards
+  (`Tile`); `Board` puts them in a column per value of an enumeration,
+  each with its count, the board offered only where a field enumerates.
+  A view, its extensions overriding it part by part, declares its
+  `look`: its default layout, its board's grouping and columns' order
+  (`lanes`), its cards' fields; circles open as a gallery, decisions as
+  a board. A board move is a write only where a slice declares it
+  (`shifts`: the field, the columns it leaves and enters, the write):
+  the `transfer` attachment lets a card drop only there, and the drop
+  posts that write to the item's page as its button does, signed as the
+  acting member, its outcome shown as any write's and the rows read
+  again, so a refused move leaves the card where it was. The view
   bar's tabs are the collection's presets, declared as plain objects on
   its view (`views`: invoices' Unpaid and Overdue, decisions' Open and
   Closed, members' Active and Invited, transactions' This period), All

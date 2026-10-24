@@ -7,6 +7,7 @@
 pub mod allocate;
 pub mod amount;
 pub mod digest;
+pub mod document;
 pub mod hex;
 pub mod log;
 pub mod sign;
@@ -48,6 +49,8 @@ pub enum Error {
     Field(&'static str),
     #[error("{0}")]
     Signature(&'static str),
+    #[error("no canonical form: {0}")]
+    Document(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

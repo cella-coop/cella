@@ -9,6 +9,7 @@
 //! | `cella.amount(bigint)`, `cella.cents(amount)` | functions | `Amount::new`, `Amount::cents` |
 //! | `cella.allocate(amount, bigint[])` | function | `allocate` |
 //! | `cella.digest(text)`, `cella.digest(bytea)` | functions | `digest`, BLAKE3 of the UTF-8 text or the bytes |
+//! | `cella.document_canonical(bytea)`, `cella.document_hash(bytea)`, `cella.document_text(bytea)` | functions | `document::canonical`, `document::hash`, `document::plain`, over a Loro snapshot |
 //! | `cella.consent(member, stance, receipt)` | aggregate | `Tally::consent` |
 //! | `cella.majority(member, stance, receipt)` | aggregate | `Tally::majority` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
@@ -93,6 +94,25 @@ fn digest_text(text: &str) -> Vec<u8> {
 #[pg_extern(immutable, parallel_safe, name = "digest")]
 fn digest_bytes(bytes: &[u8]) -> Vec<u8> {
     cella_rules::digest(bytes).to_vec()
+}
+
+// Documents: the canonical JSON of a Loro snapshot's block tree, its
+// BLAKE3, and its plain text. Deterministic for a pinned `loro`, so a
+// generated column may hold them.
+
+#[pg_extern(immutable, parallel_safe)]
+fn document_canonical(snapshot: &[u8]) -> String {
+    cella_rules::document::canonical(snapshot).unwrap_or_else(|e| refuse(&e))
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn document_hash(snapshot: &[u8]) -> Vec<u8> {
+    cella_rules::document::hash(snapshot).unwrap_or_else(|e| refuse(&e)).to_vec()
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn document_text(snapshot: &[u8]) -> String {
+    cella_rules::document::plain(snapshot).unwrap_or_else(|e| refuse(&e))
 }
 
 extension_sql!(

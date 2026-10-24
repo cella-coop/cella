@@ -39,7 +39,7 @@ draft, and the next adoption names a later version.
 |---|---|---|
 | `POST /api/document/edit` | confluent | Loro merges them |
 | `POST /api/document/comment` | confluent | anchored to the text, needs no notary |
-| `POST /api/document/adopt` | ordered | names the version it saw; refused if that moved on |
+| `POST /api/document/adopt` | ordered | names the adopted version it replaces, not the draft; refused only if that moved on |
 
 - **edit** sends Loro updates. Loro is a CRDT: concurrent edits merge to
   the same text in any order, offline included, with no server ruling.

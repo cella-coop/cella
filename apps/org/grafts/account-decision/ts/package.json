@@ -1,0 +1,10 @@
+{
+  "name": "@cella/org-graft-account-decision",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-account": "workspace:*",
+    "@cella/org-decision": "workspace:*"
+  }
+}

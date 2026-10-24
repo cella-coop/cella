@@ -74,6 +74,18 @@ importers:
         specifier: workspace:*
         version: link:../../../../core/ops/ts
 
+  apps/org/grafts/account-decision/ts:
+    dependencies:
+      '@cella/org-account':
+        specifier: workspace:*
+        version: link:../../../feats/account/core/ts
+      '@cella/org-decision':
+        specifier: workspace:*
+        version: link:../../../feats/decision/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+
   apps/org/grafts/account-transaction/ts:
     dependencies:
       '@cella/org-account':
@@ -163,6 +175,9 @@ importers:
       '@cella/org-document':
         specifier: workspace:*
         version: link:../feats/document/core/ts
+      '@cella/org-graft-account-decision':
+        specifier: workspace:*
+        version: link:../grafts/account-decision/ts
       '@cella/org-graft-account-transaction':
         specifier: workspace:*
         version: link:../grafts/account-transaction/ts

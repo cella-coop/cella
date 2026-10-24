@@ -1,5 +1,6 @@
-# The accounts: a slice of the French chart of accounts and the periods they
-# are kept in. July to September are closed; October is open.
+# The accounts: a slice of the French chart of accounts, the periods they are
+# kept in and the surplus allocations, amounts in cents. July to September
+# are closed; October is open.
 
 [[account]]
 code = "1013"
@@ -80,3 +81,25 @@ closed = 2026-10-05
 
 [[period]]
 month = "2026-10"
+
+# The 2025 surplus, split as the statutes require. The decision that approved
+# it is the account-decision graft's link.
+[[allocation]]
+id = "al-2025"
+year = 2025
+surplus = 6140000
+
+[[allocation.share]]
+kind = "work"
+percent = 45
+amount = 2763000
+
+[[allocation.share]]
+kind = "reserves"
+percent = 40
+amount = 2456000
+
+[[allocation.share]]
+kind = "interest"
+percent = 15
+amount = 921000

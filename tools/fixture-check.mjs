@@ -1,6 +1,7 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
-// every link a graft holds resolves, every address is a member's, and the
-// books agree with the invoices.
+// every surplus allocation splits the whole surplus, every link a graft holds
+// resolves, every address is a member's, and the books agree with the
+// invoices.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -54,6 +55,9 @@ const check = (name) => {
   }
   for (const m of circle.mandate ?? []) {
     has(roles, m.role, 'role', 'mandate')
+    if (!/^[a-z]+(-[a-z]+)*$/.test(m.power ?? '')) {
+      fail(`mandate of ${m.role}: power ${m.power} is no id`)
+    }
   }
 
   for (const d of key.device ?? []) {
@@ -79,6 +83,22 @@ const check = (name) => {
   const invoices = new Map((invoice.invoice ?? []).map((i) => [i.id, i]))
   const accounts = ids(account.account, 'code')
   const periods = ids(account.period, 'month')
+  const allocations = ids(account.allocation)
+
+  // A surplus allocation splits the whole surplus, each share at its percent
+  for (const a of account.allocation ?? []) {
+    const shares = a.share ?? []
+    const percent = shares.reduce((s, x) => s + x.percent, 0)
+    const amount = shares.reduce((s, x) => s + x.amount, 0)
+    if (percent !== 100 || amount !== a.surplus) {
+      fail(`allocation ${a.id}: shares make ${percent} % and ${amount}, not 100 % of ${a.surplus}`)
+    }
+    for (const x of shares) {
+      if (x.amount * 100 !== a.surplus * x.percent) {
+        fail(`allocation ${a.id}: the ${x.kind} share is not ${x.percent} % of the surplus`)
+      }
+    }
+  }
   const entries = new Map((transaction.entry ?? []).map((e) => [e.id, e]))
 
   // Each graft's links resolve on both sides
@@ -97,6 +117,10 @@ const check = (name) => {
     has(decisions, a.decision, 'decision', 'adoption')
     has(documents, a.document, 'document', 'adoption')
     has(versions, a.version, 'version', 'adoption')
+  }
+  for (const a of read('graft.account-decision').approval ?? []) {
+    has(allocations, a.allocation, 'allocation', 'approval')
+    has(decisions, a.decision, 'decision', 'approval')
   }
   for (const b of read('graft.client-invoice').billing ?? []) {
     has(new Set(invoices.keys()), b.invoice, 'invoice', 'billing')

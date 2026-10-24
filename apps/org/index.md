@@ -42,6 +42,7 @@ and admit a member by vote (ordered).
 
 | Graft | What it joins |
 |---|---|
+| `account-decision` | a surplus allocation and the decision that approved it |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period |
 | `circle-member` | positions: who holds which role in which circle |
 | `client-invoice` | who an invoice bills |

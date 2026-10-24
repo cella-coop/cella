@@ -2,4 +2,4 @@ name = "account"
 group = "finance"
 builtin = false
 rung = 1
-grafts = []
+grafts = ["account-decision"]

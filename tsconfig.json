@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "target": "es2023",
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "noEmit": true,
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true
+  },
+  "include": ["apps/**/ts/src/**/*.ts", "libs/*/ts/src/**/*.ts"]
+}

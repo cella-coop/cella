@@ -1,0 +1,8 @@
+{
+  "name": "cella",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "feat-check": "node tools/feat-check.mjs"
+  }
+}

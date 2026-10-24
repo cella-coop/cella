@@ -2,14 +2,16 @@
 // (core/sql/, then core/<lib>/sql/), then its feats, recursively, then its
 // grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
 // file. Applied files are recorded with their hash in migration.applied;
-// a file edited after it was applied is refused, never re-run.
+// a file edited after it was applied is refused, never re-run. It connects
+// to DATABASE_URL if set, otherwise by the PG* variables.
 
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
+import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 
-const repo = process.cwd()
+const repo = fileURLToPath(new URL('..', import.meta.url))
 const isDir = (p) => existsSync(p) && statSync(p).isDirectory()
 const sorted = (dir) => (isDir(dir) ? readdirSync(dir).sort() : [])
 const isNode = (dir) => existsSync(join(dir, 'feat.toml'))
@@ -32,7 +34,7 @@ const files = apps
   .filter(isDir)
   .flatMap((dir) => sorted(dir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).map((f) => join(dir, f)))
 
-const db = new pg.Client()
+const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query(`
   CREATE SCHEMA IF NOT EXISTS migration;

@@ -6,6 +6,7 @@
 // payments take receipts in file order; a closed decision's cutoff is the receipt
 // after its last stance. Seats load before decisions, whose rolls are fixed
 // from them, and periods close after the journal is in.
+// It connects to DATABASE_URL if set, otherwise by the PG* variables.
 // Usage: node tools/seed.mjs apps/org/fixtures/<co-op>
 
 import { existsSync, readFileSync } from 'node:fs'
@@ -21,7 +22,7 @@ const read = (file) => {
 }
 const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
-const db = new pg.Client()
+const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query('BEGIN')
 

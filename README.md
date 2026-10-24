@@ -14,6 +14,8 @@ and signs each verdict into a log the members can audit.
 
 ## Layout
 
+This repository works only on the org app.
+
 - `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`), its
   feats and grafts, and the root that assembles them.
 - `tools/feat-check.mjs` — refuses a dependency the tree does not allow.

@@ -1,0 +1,1502 @@
+{
+  "today": "2026-10-24",
+  "circles": [
+    {
+      "id": "ag",
+      "parent": null
+    },
+    {
+      "id": "coordination",
+      "parent": "ag"
+    },
+    {
+      "id": "web",
+      "parent": "coordination"
+    },
+    {
+      "id": "brand",
+      "parent": "coordination"
+    },
+    {
+      "id": "marketing",
+      "parent": "coordination"
+    },
+    {
+      "id": "operations",
+      "parent": "coordination"
+    }
+  ],
+  "members": [
+    {
+      "id": "camille@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "yusuf@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "hugo@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "julien@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "lea@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "thomas@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "sofia@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "malik@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "amina@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "chloe@lanterne.example",
+      "status": "active"
+    },
+    {
+      "id": "ines@lanterne.example",
+      "status": "invited"
+    }
+  ],
+  "positions": [
+    {
+      "member": "camille@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "yusuf@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "hugo@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "julien@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "lea@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "thomas@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "sofia@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "malik@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "amina@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "chloe@lanterne.example",
+      "circle": "ag",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "camille@lanterne.example",
+      "circle": "brand",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "yusuf@lanterne.example",
+      "circle": "web",
+      "role": "lead",
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "hugo@lanterne.example",
+      "circle": "brand",
+      "role": "lead",
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "julien@lanterne.example",
+      "circle": "operations",
+      "role": "lead",
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "lea@lanterne.example",
+      "circle": "web",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "thomas@lanterne.example",
+      "circle": "web",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "sofia@lanterne.example",
+      "circle": "brand",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "malik@lanterne.example",
+      "circle": "marketing",
+      "role": "lead",
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "amina@lanterne.example",
+      "circle": "web",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "chloe@lanterne.example",
+      "circle": "marketing",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "camille@lanterne.example",
+      "circle": "ag",
+      "role": "manager",
+      "since": "2024-06-20",
+      "until": "2028-06-20"
+    },
+    {
+      "member": "julien@lanterne.example",
+      "circle": "operations",
+      "role": "finance",
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "camille@lanterne.example",
+      "circle": "coordination",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "yusuf@lanterne.example",
+      "circle": "coordination",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "hugo@lanterne.example",
+      "circle": "coordination",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "malik@lanterne.example",
+      "circle": "coordination",
+      "role": null,
+      "since": null,
+      "until": null
+    },
+    {
+      "member": "julien@lanterne.example",
+      "circle": "coordination",
+      "role": null,
+      "since": null,
+      "until": null
+    }
+  ],
+  "mandates": [
+    {
+      "role": "manager",
+      "action": "pay_supplier",
+      "max": 2000000,
+      "own_circle": false
+    },
+    {
+      "role": "manager",
+      "action": "spend",
+      "max": 2000000,
+      "own_circle": false
+    },
+    {
+      "role": "manager",
+      "action": "quote",
+      "max": 2000000,
+      "own_circle": false
+    },
+    {
+      "role": "finance",
+      "action": "pay_supplier",
+      "max": 300000,
+      "own_circle": false
+    },
+    {
+      "role": "finance",
+      "action": "issue_invoice",
+      "max": null,
+      "own_circle": false
+    },
+    {
+      "role": "finance",
+      "action": "close_period",
+      "max": null,
+      "own_circle": false
+    },
+    {
+      "role": "lead",
+      "action": "spend",
+      "max": 100000,
+      "own_circle": true
+    },
+    {
+      "role": "lead",
+      "action": "quote",
+      "max": 1500000,
+      "own_circle": false
+    }
+  ],
+  "decisions": [
+    {
+      "id": "d-2026-006",
+      "circle": "ag",
+      "rule": "majority",
+      "deadline": "2026-06-20",
+      "closed": "2026-06-20",
+      "votes": [
+        {
+          "seq": 1,
+          "member": "camille@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 2,
+          "member": "yusuf@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 3,
+          "member": "hugo@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 4,
+          "member": "julien@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 5,
+          "member": "lea@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 6,
+          "member": "thomas@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 7,
+          "member": "sofia@lanterne.example",
+          "stance": "abstain",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 8,
+          "member": "malik@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 9,
+          "member": "amina@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 10,
+          "member": "chloe@lanterne.example",
+          "stance": "for",
+          "at": "2026-06-20"
+        }
+      ]
+    },
+    {
+      "id": "d-2026-007",
+      "circle": "ag",
+      "rule": "consent",
+      "deadline": "2026-06-20",
+      "closed": "2026-06-20",
+      "votes": [
+        {
+          "seq": 11,
+          "member": "camille@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 12,
+          "member": "yusuf@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 13,
+          "member": "hugo@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 14,
+          "member": "julien@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 15,
+          "member": "lea@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 16,
+          "member": "thomas@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 17,
+          "member": "sofia@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 18,
+          "member": "malik@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 19,
+          "member": "amina@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        },
+        {
+          "seq": 20,
+          "member": "chloe@lanterne.example",
+          "stance": "consent",
+          "at": "2026-06-20"
+        }
+      ]
+    },
+    {
+      "id": "d-2026-011",
+      "circle": "coordination",
+      "rule": "consent",
+      "deadline": "2026-11-09",
+      "closed": null,
+      "votes": [
+        {
+          "seq": 21,
+          "member": "camille@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-13"
+        },
+        {
+          "seq": 22,
+          "member": "malik@lanterne.example",
+          "stance": "object",
+          "at": "2026-10-14"
+        }
+      ]
+    },
+    {
+      "id": "d-2026-012",
+      "circle": "ag",
+      "rule": "consent",
+      "deadline": "2026-10-31",
+      "closed": null,
+      "votes": [
+        {
+          "seq": 23,
+          "member": "yusuf@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-15"
+        },
+        {
+          "seq": 24,
+          "member": "amina@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-16"
+        },
+        {
+          "seq": 25,
+          "member": "thomas@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-17"
+        },
+        {
+          "seq": 26,
+          "member": "lea@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-18"
+        },
+        {
+          "seq": 27,
+          "member": "camille@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-19"
+        },
+        {
+          "seq": 28,
+          "member": "julien@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-20"
+        },
+        {
+          "seq": 29,
+          "member": "chloe@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-21"
+        },
+        {
+          "seq": 30,
+          "member": "hugo@lanterne.example",
+          "stance": "object",
+          "at": "2026-10-21"
+        },
+        {
+          "seq": 31,
+          "member": "hugo@lanterne.example",
+          "stance": "consent",
+          "at": "2026-10-23"
+        }
+      ]
+    }
+  ],
+  "periods": [
+    {
+      "month": "2026-07",
+      "closed": "2026-08-05"
+    },
+    {
+      "month": "2026-08",
+      "closed": "2026-09-04"
+    },
+    {
+      "month": "2026-09",
+      "closed": "2026-10-05"
+    },
+    {
+      "month": "2026-10",
+      "closed": null
+    }
+  ],
+  "entries": [
+    {
+      "id": "je-0001",
+      "date": "2026-07-01",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 9200000,
+          "credit": 0
+        },
+        {
+          "account": "1013",
+          "debit": 0,
+          "credit": 1300000
+        },
+        {
+          "account": "1061",
+          "debit": 0,
+          "credit": 900000
+        },
+        {
+          "account": "1068",
+          "debit": 0,
+          "credit": 3800000
+        },
+        {
+          "account": "120",
+          "debit": 0,
+          "credit": 3200000
+        }
+      ]
+    },
+    {
+      "id": "je-0002",
+      "date": "2026-07-03",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1200000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 240000
+        }
+      ]
+    },
+    {
+      "id": "je-0003",
+      "date": "2026-07-05",
+      "lines": [
+        {
+          "account": "613",
+          "debit": 240000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 48000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 288000
+        }
+      ]
+    },
+    {
+      "id": "je-0004",
+      "date": "2026-07-06",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 480000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 96000
+        }
+      ]
+    },
+    {
+      "id": "je-0005",
+      "date": "2026-07-10",
+      "lines": [
+        {
+          "account": "626",
+          "debit": 62000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 12400,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 74400
+        }
+      ]
+    },
+    {
+      "id": "je-0006",
+      "date": "2026-07-15",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1200000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 240000
+        }
+      ]
+    },
+    {
+      "id": "je-0007",
+      "date": "2026-07-21",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 744000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 620000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 124000
+        }
+      ]
+    },
+    {
+      "id": "je-0008",
+      "date": "2026-07-28",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1140000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 950000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 190000
+        }
+      ]
+    },
+    {
+      "id": "je-0009",
+      "date": "2026-07-28",
+      "lines": [
+        {
+          "account": "641",
+          "debit": 2600000,
+          "credit": 0
+        },
+        {
+          "account": "645",
+          "debit": 1040000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 3640000
+        }
+      ]
+    },
+    {
+      "id": "je-0010",
+      "date": "2026-07-29",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 1440000
+        }
+      ]
+    },
+    {
+      "id": "je-0011",
+      "date": "2026-07-31",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 576000
+        }
+      ]
+    },
+    {
+      "id": "je-0012",
+      "date": "2026-08-03",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 480000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 96000
+        }
+      ]
+    },
+    {
+      "id": "je-0013",
+      "date": "2026-08-05",
+      "lines": [
+        {
+          "account": "613",
+          "debit": 240000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 48000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 288000
+        }
+      ]
+    },
+    {
+      "id": "je-0014",
+      "date": "2026-08-10",
+      "lines": [
+        {
+          "account": "626",
+          "debit": 62000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 12400,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 74400
+        }
+      ]
+    },
+    {
+      "id": "je-0015",
+      "date": "2026-08-19",
+      "lines": [
+        {
+          "account": "44571",
+          "debit": 890000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 0,
+          "credit": 60400
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 829600
+        }
+      ]
+    },
+    {
+      "id": "je-0016",
+      "date": "2026-08-24",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 1140000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 1140000
+        }
+      ]
+    },
+    {
+      "id": "je-0017",
+      "date": "2026-08-27",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1200000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 240000
+        }
+      ]
+    },
+    {
+      "id": "je-0018",
+      "date": "2026-08-28",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 576000
+        }
+      ]
+    },
+    {
+      "id": "je-0019",
+      "date": "2026-08-28",
+      "lines": [
+        {
+          "account": "641",
+          "debit": 2600000,
+          "credit": 0
+        },
+        {
+          "account": "645",
+          "debit": 1040000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 3640000
+        }
+      ]
+    },
+    {
+      "id": "je-0020",
+      "date": "2026-09-01",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 480000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 96000
+        }
+      ]
+    },
+    {
+      "id": "je-0021",
+      "date": "2026-09-04",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1200000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 240000
+        }
+      ]
+    },
+    {
+      "id": "je-0022",
+      "date": "2026-09-05",
+      "lines": [
+        {
+          "account": "613",
+          "debit": 240000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 48000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 288000
+        }
+      ]
+    },
+    {
+      "id": "je-0023",
+      "date": "2026-09-08",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 1440000
+        }
+      ]
+    },
+    {
+      "id": "je-0024",
+      "date": "2026-09-10",
+      "lines": [
+        {
+          "account": "626",
+          "debit": 62000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 12400,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 74400
+        }
+      ]
+    },
+    {
+      "id": "je-0025",
+      "date": "2026-09-11",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 456000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 380000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 76000
+        }
+      ]
+    },
+    {
+      "id": "je-0026",
+      "date": "2026-09-12",
+      "lines": [
+        {
+          "account": "706",
+          "debit": 380000,
+          "credit": 0
+        },
+        {
+          "account": "44571",
+          "debit": 76000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 456000
+        }
+      ]
+    },
+    {
+      "id": "je-0027",
+      "date": "2026-09-12",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 396000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 330000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 66000
+        }
+      ]
+    },
+    {
+      "id": "je-0028",
+      "date": "2026-09-19",
+      "lines": [
+        {
+          "account": "44571",
+          "debit": -554000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 0,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": -554000
+        }
+      ]
+    },
+    {
+      "id": "je-0029",
+      "date": "2026-09-24",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 1440000
+        }
+      ]
+    },
+    {
+      "id": "je-0030",
+      "date": "2026-09-25",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1680000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1400000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 280000
+        }
+      ]
+    },
+    {
+      "id": "je-0031",
+      "date": "2026-09-28",
+      "lines": [
+        {
+          "account": "641",
+          "debit": 2600000,
+          "credit": 0
+        },
+        {
+          "account": "645",
+          "debit": 1040000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 3640000
+        }
+      ]
+    },
+    {
+      "id": "je-0032",
+      "date": "2026-09-29",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 576000
+        }
+      ]
+    },
+    {
+      "id": "je-0033",
+      "date": "2026-10-01",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 576000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 480000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 96000
+        }
+      ]
+    },
+    {
+      "id": "je-0034",
+      "date": "2026-10-05",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 198000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 198000
+        }
+      ]
+    },
+    {
+      "id": "je-0035",
+      "date": "2026-10-05",
+      "lines": [
+        {
+          "account": "613",
+          "debit": 240000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 48000,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 288000
+        }
+      ]
+    },
+    {
+      "id": "je-0036",
+      "date": "2026-10-08",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 1200000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 240000
+        }
+      ]
+    },
+    {
+      "id": "je-0037",
+      "date": "2026-10-10",
+      "lines": [
+        {
+          "account": "626",
+          "debit": 62000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 12400,
+          "credit": 0
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 74400
+        }
+      ]
+    },
+    {
+      "id": "je-0038",
+      "date": "2026-10-16",
+      "lines": [
+        {
+          "account": "411",
+          "debit": 1080000,
+          "credit": 0
+        },
+        {
+          "account": "706",
+          "debit": 0,
+          "credit": 900000
+        },
+        {
+          "account": "44571",
+          "debit": 0,
+          "credit": 180000
+        }
+      ]
+    },
+    {
+      "id": "je-0039",
+      "date": "2026-10-19",
+      "lines": [
+        {
+          "account": "44571",
+          "debit": 1236000,
+          "credit": 0
+        },
+        {
+          "account": "44566",
+          "debit": 0,
+          "credit": 60400
+        },
+        {
+          "account": "512",
+          "debit": 0,
+          "credit": 1175600
+        }
+      ]
+    },
+    {
+      "id": "je-0040",
+      "date": "2026-10-20",
+      "lines": [
+        {
+          "account": "512",
+          "debit": 1440000,
+          "credit": 0
+        },
+        {
+          "account": "411",
+          "debit": 0,
+          "credit": 1440000
+        }
+      ]
+    }
+  ],
+  "invoices": [
+    {
+      "id": "F-2026-0041",
+      "total": 1440000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-07-29",
+          "amount": 1440000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0042",
+      "total": 576000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-07-31",
+          "amount": 576000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0043",
+      "total": 1440000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-09-08",
+          "amount": 1440000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0044",
+      "total": 744000,
+      "voided": null,
+      "payments": []
+    },
+    {
+      "id": "F-2026-0045",
+      "total": 1140000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-08-24",
+          "amount": 1140000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0046",
+      "total": 576000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-08-28",
+          "amount": 576000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0047",
+      "total": 1440000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-09-24",
+          "amount": 1440000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0048",
+      "total": 576000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-09-29",
+          "amount": 576000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0049",
+      "total": 1440000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-10-20",
+          "amount": 1440000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0050",
+      "total": 456000,
+      "voided": "2026-09-12",
+      "payments": []
+    },
+    {
+      "id": "F-2026-0051",
+      "total": 396000,
+      "voided": null,
+      "payments": [
+        {
+          "at": "2026-10-05",
+          "amount": 198000
+        }
+      ]
+    },
+    {
+      "id": "F-2026-0052",
+      "total": 1680000,
+      "voided": null,
+      "payments": []
+    },
+    {
+      "id": "F-2026-0053",
+      "total": 576000,
+      "voided": null,
+      "payments": []
+    },
+    {
+      "id": "F-2026-0054",
+      "total": 1440000,
+      "voided": null,
+      "payments": []
+    },
+    {
+      "id": "F-2026-0055",
+      "total": 1080000,
+      "voided": null,
+      "payments": []
+    }
+  ]
+}

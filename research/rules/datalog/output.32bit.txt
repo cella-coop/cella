@@ -1,0 +1,36 @@
+check balance ok
+check overpaid ok
+check voided ok
+decision d-2026-006 passes closed
+decision d-2026-007 passes closed
+decision d-2026-011 fails open
+decision d-2026-012 passes open
+request p01 allow
+request p02 deny
+request p03 allow
+request p04 deny
+request p05 allow
+request p06 deny
+request p07 deny
+request p08 allow
+request p09 deny
+request p10 allow
+request p11 deny
+request p12 deny
+request p13 allow
+request p14 deny
+request p15 allow
+request p16 deny
+request p17 deny
+request p18 allow
+split s1 work=186019 reserves=5891975 interest=62006 ok
+split s2 work=-60490 reserves=6321470 interest=-120980 violations=interest_le_work,interest_max,work_min
+split s3 work=63522 reserves=6074962 interest=1516 violations=interest_le_reserves,interest_max,reserves_min
+split s4 work=186019 reserves=5769478 interest=184503 violations=sum
+write w01 refused closed_period
+write w02 ok
+write w03 refused unbalanced
+write w04 ok
+write w05 refused overpaid
+write w06 refused voided
+write w07 ok

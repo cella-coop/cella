@@ -1,0 +1,44 @@
+// The world as Cedar sees it: entities and the requests each action takes.
+// Aggregates (sums, counts) are not expressible, so the host computes them
+// and passes them in as attributes or context.
+entity Role;
+entity Circle;
+entity Member in [Circle, Role] {
+  leads: Set<Circle>,
+};
+entity Org;
+entity Decision {
+  circle: Circle,
+};
+entity Period {
+  closed: Bool,
+};
+entity Invoice {
+  total: Long,
+  paid: Long,
+  voided: Bool,
+};
+entity Surplus;
+
+action pay_supplier, quote appliesTo {
+  principal: Member, resource: Org, context: { amount: Long },
+};
+action spend appliesTo {
+  principal: Member, resource: Circle, context: { amount: Long },
+};
+action close_period, issue_invoice appliesTo {
+  principal: Member, resource: Org, context: {},
+};
+action vote appliesTo {
+  principal: Member, resource: Decision, context: {},
+};
+action post_entry appliesTo {
+  principal: Member, resource: Period, context: { debit: Long, credit: Long },
+};
+action record_payment appliesTo {
+  principal: Member, resource: Invoice, context: { amount: Long },
+};
+action allocate_surplus appliesTo {
+  principal: Member, resource: Surplus,
+  context: { work: Long, reserves: Long, interest: Long },
+};

@@ -1,0 +1,66 @@
+# Lanterne's rules in CEL. Each rule is one expression over named inputs;
+# money is integer cents, percentages basis points, dates ISO day strings.
+# `sum` is a host function: standard CEL has no fold.
+
+[permission]
+# inputs: request, positions, mandates, decisions
+allowed = '''
+request.action == 'vote'
+  ? decisions.exists(d, d.id == request.decision
+      && positions.exists(p, p.member == request.member && p.circle == d.circle))
+  : mandates.exists(m, m.action == request.action
+      && (m.max == null || request.amount <= m.max)
+      && positions.exists(p, p.member == request.member && p.role == m.role
+          && (p.since == null || p.since <= request.at)
+          && (p.until == null || request.at < p.until)
+          && (!m.own_circle || p.circle == request.circle)))
+'''
+
+[invariant]
+# inputs: entry, periods
+entry_faults = '''
+(periods.exists(p, entry.date.startsWith(p.month + '-') && p.closed == null)
+  ? [] : ['closed_period'])
++ (sum(entry.lines.map(l, l.debit)) == sum(entry.lines.map(l, l.credit))
+  ? [] : ['unbalanced'])
+'''
+# inputs: invoice, amount
+payment_faults = '''
+(invoice.voided != null ? ['voided'] : [])
++ (sum(invoice.payments.map(p, p.amount)) + amount > invoice.total ? ['overpaid'] : [])
+'''
+
+[procedure]
+# inputs: decision, positions; each eligible member's latest stance before the deadline
+counted = '''
+decision.votes.filter(v, v.at <= decision.deadline
+  && positions.exists(p, p.member == v.member && p.circle == decision.circle)
+  && !decision.votes.exists(w, w.member == v.member
+       && w.at <= decision.deadline && w.seq > v.seq))
+'''
+# inputs: decision, counted (the output of `counted`)
+passes = '''
+decision.rule == 'consent'
+  ? !counted.exists(v, v.stance in ['block', 'object'])
+  : size(counted.filter(v, v.stance == 'for')) > size(counted.filter(v, v.stance == 'against'))
+'''
+# inputs: decision, today
+open = 'decision.closed == null && today < decision.deadline'
+
+[computation]
+# inputs: split; reserves take the rounding remainder
+surplus = '''
+{
+  'work': split.surplus * split.work / 10000,
+  'interest': split.surplus * split.interest / 10000,
+  'reserves': split.surplus - split.surplus * split.work / 10000
+              - split.surplus * split.interest / 10000,
+  'violations':
+      (split.work + split.reserves + split.interest == 10000 ? [] : ['sum'])
+    + (split.work >= 2500 ? [] : ['work_min'])
+    + (split.reserves >= 1600 ? [] : ['reserves_min'])
+    + (split.interest <= 3300 ? [] : ['interest_max'])
+    + (split.interest <= split.work ? [] : ['interest_le_work'])
+    + (split.interest <= split.reserves ? [] : ['interest_le_reserves'])
+}
+'''

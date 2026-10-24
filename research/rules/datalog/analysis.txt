@@ -1,0 +1,5 @@
+---------------
+pays_outside_operations
+===============
+camille@lanterne.example	manager	2000000
+===============

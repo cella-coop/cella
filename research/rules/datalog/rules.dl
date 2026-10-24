@@ -1,0 +1,108 @@
+// Lanterne's rules in Soufflé Datalog. Money is integer cents, percentages
+// basis points, dates YYYYMMDD numbers; "" is no role, 0 / 99991231 open dates.
+// Aggregates run over sets, so every line and vote carries an index or seq:
+// two identical lines would otherwise count once.
+
+// Facts
+.decl today(t: number)
+.decl position(member: symbol, circle: symbol, role: symbol, since: number, until: number)
+.decl mandate(role: symbol, action: symbol, cap: number, own_circle: number)
+.decl decision(id: symbol, circle: symbol, rule: symbol, deadline: number, closed: number)
+.decl vote(decision: symbol, seq: number, member: symbol, stance: symbol, at: number)
+.decl period(month: symbol, closed: number)
+.decl entry(id: symbol, month: symbol)
+.decl line(entry: symbol, idx: number, debit: number, credit: number)
+.decl invoice(id: symbol, total: number, voided: number)
+.decl payment(invoice: symbol, idx: number, amount: number)
+.input today, position, mandate, decision, vote, period, entry, line, invoice, payment
+
+// Cases
+.decl request(id: symbol, member: symbol, action: symbol, amount: number, circle: symbol, decision: symbol, at: number)
+.decl proposed(entry: symbol)
+.decl write_payment(id: symbol, invoice: symbol, amount: number)
+.decl split(id: symbol, surplus: number, work: number, reserves: number, interest: number)
+.input request, proposed, write_payment, split
+
+// Rule 1: mandates, and votes by members of the deciding circle
+.decl holds(member: symbol, circle: symbol, role: symbol, at: number)
+holds(M, C, R, At) :- request(_, M, _, _, _, _, At), position(M, C, R, S, U), S <= At, At < U.
+
+.decl allow(id: symbol)
+allow(Id) :- request(Id, M, "vote", _, _, D, At), decision(D, C, _, _, _), holds(M, C, _, At).
+allow(Id) :-
+  request(Id, M, A, Amount, Circle, _, At), A != "vote",
+  mandate(R, A, Max, Own), Amount <= Max,
+  holds(M, PC, R, At), (Own = 0 ; PC = Circle).
+
+.decl deny(id: symbol)
+deny(Id) :- request(Id, _, _, _, _, _, _), !allow(Id).
+
+// Rule 2: invariants. Proposed entries sit in entry and line beside the books.
+.decl open_period(month: symbol)
+open_period(Mo) :- period(Mo, 0).
+
+.decl totals(entry: symbol, debit: number, credit: number)
+totals(E, D, C) :- entry(E, _), D = sum X : { line(E, _, X, _) }, C = sum Y : { line(E, _, _, Y) }.
+
+.decl paid(invoice: symbol, amount: number)
+paid(I, P) :- invoice(I, _, _), P = sum A : { payment(I, _, A) }.
+
+.decl fault(id: symbol, reason: symbol)
+fault(E, "closed_period") :- proposed(E), entry(E, Mo), !open_period(Mo).
+fault(E, "unbalanced") :- totals(E, D, C), D != C.
+fault(W, "voided") :- write_payment(W, I, _), invoice(I, _, 1).
+fault(W, "overpaid") :- write_payment(W, I, A), invoice(I, T, _), paid(I, P), P + A > T.
+
+.decl overpaid(invoice: symbol)
+overpaid(I) :- invoice(I, T, _), paid(I, P), P > T.
+.decl void_paid(invoice: symbol)
+void_paid(I) :- invoice(I, _, 1), payment(I, _, _).
+
+// Rule 3: each eligible member's latest stance before the deadline
+.decl counted(decision: symbol, member: symbol, stance: symbol)
+.decl superseded(decision: symbol, seq: number)
+superseded(D, S1) :-
+  vote(D, S1, M, _, _), vote(D, S2, M, _, At2), decision(D, _, _, Dl, _), At2 <= Dl, S2 > S1.
+counted(D, M, St) :-
+  vote(D, Seq, M, St, At), decision(D, C, _, Dl, _), At <= Dl,
+  position(M, C, _, _, _), !superseded(D, Seq).
+
+.decl objected(decision: symbol)
+objected(D) :- counted(D, _, "block").
+objected(D) :- counted(D, _, "object").
+
+.decl tally(decision: symbol, pro: number, con: number)
+tally(D, F, A) :-
+  decision(D, _, _, _, _),
+  F = count : { counted(D, _, "for") },
+  A = count : { counted(D, _, "against") }.
+
+.decl passes(decision: symbol)
+passes(D) :- decision(D, _, "consent", _, _), !objected(D).
+passes(D) :- decision(D, _, "majority", _, _), tally(D, F, A), F > A.
+
+.decl open(decision: symbol)
+open(D) :- decision(D, _, _, Dl, 0), today(T), T < Dl.
+
+// Rule 4: the SCOP surplus split; reserves take the rounding remainder
+.decl allocation(id: symbol, work: number, reserves: number, interest: number)
+allocation(Id, W, S - W - I, I) :-
+  split(Id, S, Wb, _, Ib), W = S * Wb / 10000, I = S * Ib / 10000.
+
+.decl violation(id: symbol, rule: symbol)
+violation(Id, "sum") :- split(Id, _, W, R, I), W + R + I != 10000.
+violation(Id, "work_min") :- split(Id, _, W, _, _), W < 2500.
+violation(Id, "reserves_min") :- split(Id, _, _, R, _), R < 1600.
+violation(Id, "interest_max") :- split(Id, _, _, _, I), I > 3300.
+violation(Id, "interest_le_work") :- split(Id, _, W, _, I), I > W.
+violation(Id, "interest_le_reserves") :- split(Id, _, _, R, I), I > R.
+
+.output allow, deny, fault, overpaid, void_paid, passes, open, allocation, violation
+
+// Analysis over today's facts (not over every possible fact base):
+// who can pay a supplier without sitting in operations, and up to how much?
+.decl pays_outside_operations(member: symbol, role: symbol, cap: number)
+pays_outside_operations(M, R, Cap) :-
+  today(T), mandate(R, "pay_supplier", Cap, _), position(M, _, R, S, U), S <= T, T < U,
+  !position(M, "operations", _, _, _).
+.output pays_outside_operations(IO=stdout)

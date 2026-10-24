@@ -1,0 +1,32 @@
+## Can anyone outside operations pay a supplier? (policies imply only-operations-pays)
+✗ Policy set 1 implies policy set 2: DOES NOT HOLD
+  Counterexample found:
+principal: Member::"", action: Action::"pay_supplier", resource: Org::""
+context: {amount: -1}
+entities: [
+  Action::"record_payment",
+  Circle::"operations",
+  Action::"pay_supplier",
+  Role::"manager",
+  Action::"issue_invoice",
+  Circle::"",
+  Org::"",
+  Role::"lead",
+  Action::"allocate_surplus",
+  Action::"vote",
+  Role::"finance",
+  Action::"close_period",
+  Action::"quote",
+  Member::"" in [Role::"manager"] {
+    leads: [],
+  },
+  Action::"post_entry",
+  Action::"spend",
+]
+
+## Can anyone pay a supplier more than 20 000 €? (policies imply no-payment-above-20k)
+✓ Policy set 1 implies policy set 2: VERIFIED
+
+## Can a non-member of the AG vote in an AG decision? (policies imply only-ag-votes-in-ag)
+✓ Policy set 1 implies policy set 2: VERIFIED
+

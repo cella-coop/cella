@@ -16,6 +16,7 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 
 | Feat | Group | Rung | What |
 |---|---|---|---|
+| `notary` | platform | 1 | receipts and numbered, signed verdicts; the one path that appends to the log |
 | `key` | platform | 1 | members' devices and their keys |
 | `member` | governance | 1 | a person's membership, invited to exited |
 | `circle` | governance | 1 | nested units, positions, roles and mandates |

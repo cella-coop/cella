@@ -62,6 +62,12 @@ importers:
         specifier: workspace:*
         version: link:../../../../core/ops/ts
 
+  apps/org/feats/notary/core/ts:
+    dependencies:
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+
   apps/org/feats/transaction/core/ts:
     dependencies:
       '@cella/org-ops':
@@ -184,6 +190,9 @@ importers:
       '@cella/org-member':
         specifier: workspace:*
         version: link:../feats/member/core/ts
+      '@cella/org-notary':
+        specifier: workspace:*
+        version: link:../feats/notary/core/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../core/ops/ts

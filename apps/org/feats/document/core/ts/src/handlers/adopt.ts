@@ -12,6 +12,7 @@ const op = 'document:document:adopt' satisfies keyof typeof ops
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Adopted>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ receipt: string; adopted: string }>(
         `INSERT INTO document.adoption (receipt, document, version, base, adopted)

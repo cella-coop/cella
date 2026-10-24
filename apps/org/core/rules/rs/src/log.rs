@@ -1,8 +1,11 @@
-//! The notary log's entries: hashed with BLAKE3 over the previous hash and
-//! the canonical entry, and signed with the scope's Ed25519 key. An entry
-//! carries a digest of its payload, never the payload, so personal data
+//! The notary log: receipts and entries, each hashed with BLAKE3 under its
+//! own domain and signed with the scope's Ed25519 key. A receipt says a
+//! write arrived, carrying the member's signature on it; an entry is the
+//! numbered verdict, chained to the previous entry and naming its receipt.
+//! Both carry a digest of the payload, never the payload, so personal data
 //! stays out of the log.
 
+use crate::sign::Request;
 use crate::{Error, Result};
 use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
 use serde_json::Value;
@@ -10,9 +13,52 @@ use serde_json::Value;
 /// The `prev` of the first entry.
 pub const GENESIS: [u8; 32] = [0; 32];
 
-const ENTRY: &str = "cella org 2026-10 log entry";
-const PAYLOAD: &str = "cella org 2026-10 log payload";
-const RULE: &str = "cella org 2026-10 rule text";
+pub const ENTRY: &str = "cella org 2026-10 log entry";
+pub const RECEIPT: &str = "cella org 2026-10 receipt";
+pub const PAYLOAD: &str = "cella org 2026-10 log payload";
+pub const RULE: &str = "cella org 2026-10 rule text";
+
+/// The notary's acknowledgement that a signed write arrived: its number,
+/// the op, who asked from which device, the member's signature and what
+/// it signed, the digest of the payload the verdict commits to, and when.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Receipt {
+    pub n: i64,
+    pub op: String,
+    pub actor: String,
+    pub device: [u8; 32],
+    pub nonce: String,
+    /// The request's digest, which the member signed.
+    pub request: [u8; 32],
+    /// The member's signature on the request.
+    pub signature: [u8; 64],
+    pub payload: [u8; 32],
+    /// When it arrived, RFC 3339 in UTC; it orders nothing.
+    pub time: String,
+}
+
+impl Receipt {
+    #[must_use]
+    pub fn hash(&self) -> [u8; 32] {
+        let mut h = blake3::Hasher::new_derive_key(RECEIPT);
+        h.update(&self.n.to_be_bytes());
+        field(&mut h, self.op.as_bytes());
+        field(&mut h, self.actor.as_bytes());
+        h.update(&self.device);
+        field(&mut h, self.nonce.as_bytes());
+        h.update(&self.request);
+        h.update(&self.signature);
+        h.update(&self.payload);
+        field(&mut h, self.time.as_bytes());
+        *h.finalize().as_bytes()
+    }
+
+    /// The member's request as signed, in `scope`.
+    #[must_use]
+    pub fn request<'a>(&'a self, scope: &'a str) -> Request<'a> {
+        Request { scope, op: &self.op, actor: &self.actor, device: self.device, digest: self.request, nonce: &self.nonce }
+    }
+}
 
 /// A rule that decided a verdict, by its owner, its signature and the
 /// digest of its text.
@@ -31,6 +77,9 @@ pub struct Entry {
     /// The verdict date, `YYYY-MM-DD`.
     pub date: String,
     pub payload: [u8; 32],
+    /// The receipt this verdict rules on, by number and hash.
+    pub receipt: i64,
+    pub receipt_hash: [u8; 32],
     pub rules: Vec<Rule>,
 }
 
@@ -114,6 +163,8 @@ pub fn hash(prev: &[u8; 32], e: &Entry) -> Result<[u8; 32]> {
     field(&mut h, e.actor.as_bytes());
     field(&mut h, e.date.as_bytes());
     h.update(&e.payload);
+    h.update(&e.receipt.to_be_bytes());
+    h.update(&e.receipt_hash);
     h.update(&(e.rules.len() as u64).to_be_bytes());
     for r in &e.rules {
         field(&mut h, r.owner.as_bytes());
@@ -190,6 +241,28 @@ impl Chain {
         Ok(())
     }
 
+    /// Checks the receipt an entry names: its hash, the notary's signature
+    /// on it, the member's signature on the request in `scope`, and that it
+    /// is the entry's: the same op, actor and payload.
+    pub fn check_receipt(&self, scope: &str, e: &Entry, r: &Receipt, hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
+        let broken = |why| Broken { n: e.n, why };
+        let want = r.hash();
+        if r.n != e.receipt || hash != want || e.receipt_hash != want {
+            return Err(broken("receipt hash mismatch"));
+        }
+        let sig = Signature::from_slice(sig).map_err(|_| broken("malformed receipt signature"))?;
+        if self.public.verify(&want, &sig).is_err() {
+            return Err(broken("receipt signature invalid"));
+        }
+        if r.request(scope).verify(&r.signature).is_err() {
+            return Err(broken("the member's signature does not verify"));
+        }
+        if r.op != e.op || r.actor != e.actor || r.payload != e.payload {
+            return Err(broken("the receipt is another write's"));
+        }
+        Ok(())
+    }
+
     /// How many entries checked so far.
     #[must_use]
     pub fn len(&self) -> i64 {
@@ -214,6 +287,8 @@ mod tests {
             actor: "camille@lanterne.example".into(),
             date: "2026-10-31".into(),
             payload: payload_digest(&json!({"member": "ines@lanterne.example", "shares": 20})).unwrap(),
+            receipt: n + 40,
+            receipt_hash: [n.to_le_bytes()[0]; 32],
             rules: vec![Rule {
                 owner: "decision-member".into(),
                 function: "decision_member.admit(jsonb)".into(),
@@ -259,6 +334,44 @@ mod tests {
         let mut chain = Chain::new(&other.public()).unwrap();
         let (e, p, h, s) = &log[0];
         assert_eq!(chain.check(e, p, h, s), Err(Broken { n: 1, why: "signature invalid" }));
+    }
+
+    #[test]
+    fn receipts_bind_the_member_signature_and_the_entry() {
+        use crate::sign::request_digest;
+        use ed25519_dalek::SigningKey;
+
+        let notary = Key::from_seed(&[7; 32]).unwrap();
+        let device = SigningKey::from_bytes(&[9; 32]);
+        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "decision": "d-2026-012"})).unwrap();
+        let mut r = Receipt {
+            n: 41,
+            op: "member:member:admit".into(),
+            actor: "camille@lanterne.example".into(),
+            device: device.verifying_key().to_bytes(),
+            nonce: "00112233445566778899aabbccddeeff".into(),
+            request,
+            signature: [0; 64],
+            payload: entry(1).payload,
+            time: "2026-10-31T09:00:00.000000Z".into(),
+        };
+        r.signature = device.sign(r.request("lanterne.example").message().unwrap().as_bytes()).to_bytes();
+        let mut e = entry(1);
+        e.receipt_hash = r.hash();
+        let chain = Chain::new(&notary.public()).unwrap();
+        let sig = notary.sign(&r.hash());
+        assert_eq!(chain.check_receipt("lanterne.example", &e, &r, &r.hash(), &sig), Ok(()));
+
+        let broken = |why| Err(Broken { n: 1, why });
+        assert_eq!(chain.check_receipt("other.example", &e, &r, &r.hash(), &sig), broken("the member's signature does not verify"));
+        let mut late = r.clone();
+        late.time = "2026-11-01T09:00:00.000000Z".into();
+        assert_eq!(chain.check_receipt("lanterne.example", &e, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
+        let mut other = e.clone();
+        other.op = "member:member:exit".into();
+        assert_eq!(chain.check_receipt("lanterne.example", &other, &r, &r.hash(), &sig), broken("the receipt is another write's"));
+        let forged = Key::from_seed(&[8; 32]).unwrap().sign(&r.hash());
+        assert_eq!(chain.check_receipt("lanterne.example", &e, &r, &r.hash(), &forged), broken("receipt signature invalid"));
     }
 
     #[test]

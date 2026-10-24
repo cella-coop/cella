@@ -6,6 +6,7 @@
     ".": "./src/index.ts"
   },
   "dependencies": {
-    "@cella/org-ops": "workspace:*"
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-sign": "workspace:*"
   }
 }

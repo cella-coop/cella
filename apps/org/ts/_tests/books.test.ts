@@ -15,6 +15,7 @@ import { send } from '@cella/org-invoice/api'
 import { adjust, post } from '@cella/org-transaction/api'
 import { close } from '@cella/org-account/api'
 import type { Deps } from '@cella/org-db'
+import { sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -29,7 +30,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor })
+const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -98,7 +99,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
     { account: '44571', side: 'credit', cents: 296_00 },
   ])
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = 1')
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member', 'invoice', 'invoice-transaction'])
 
   const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
@@ -186,7 +187,7 @@ test('voiding an unpaid invoice posts a credit note', async () => {
   assert.equal(unsent.state, 'settled')
   assert.equal(unsent.value.sent, null, 'a voided invoice is not sent')
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [voided.state === 'settled' && voided.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member', 'invoice', 'invoice-transaction'])
 })
 
 test('posting into September, which is closed, is refused by the account-transaction graft', async () => {
@@ -260,16 +261,17 @@ test('October closes only after it ends, and then takes no posts', async () => {
   assert.match(reason(again), /2026-10 closed on 2026-11-05/)
 })
 
-// A rule registered and submitted inside a superuser transaction that rolls
-// back, so the probe leaves nothing behind.
+// A rule registered and submitted, signed by Julien, inside a superuser
+// transaction that rolls back, so the probe leaves nothing behind.
 async function probe(body: string, opts = '') {
+  const signed = { request: {}, ...await sign(julien)('probe:probe:run', {}) }
   await su.query('BEGIN')
   try {
     await su.query('CREATE SCHEMA probe')
     await su.query('GRANT USAGE ON SCHEMA probe TO cella_rules')
     await su.query(`CREATE FUNCTION probe.rule(payload jsonb) RETURNS text LANGUAGE sql STABLE ${opts} AS $$ ${body} $$`)
     await su.query(`INSERT INTO cella.rule (op, fn, owner) VALUES ('probe:probe:run', 'probe.rule(jsonb)', 'probe')`)
-    await su.query(`SELECT * FROM cella.submit('probe:probe:run', '{}', 'probe')`)
+    await su.query(`SELECT * FROM cella.submit('probe:probe:run', '{}', $1, $2)`, [julien, signed])
     return ''
   } catch (e) {
     return (e as Error).message
@@ -288,7 +290,7 @@ test('rules run as cella_rules, which reads the scope and can neither write nor 
   await su.query('GRANT USAGE ON SCHEMA scribble TO cella_rules')
   assert.match(await probe('SELECT scribble.write()'), /permission denied for table series/)
   assert.match(await probe(`SELECT nextval('cella.receipt_seq')::text`), /permission denied for sequence receipt_seq/)
-  assert.match(await probe('SELECT verdict::text FROM cella.submit(\'x:y:z\', \'{}\', \'probe\')'), /permission denied for function submit/)
+  assert.match(await probe('SELECT verdict::text FROM cella.submit(\'x:y:z\', \'{}\', \'probe\', \'{}\')'), /permission denied for function submit/)
   await su.query('DROP SCHEMA scribble CASCADE')
 
   const key = (await one<{ key_file: string }>('SHOW cella.key_file')).key_file

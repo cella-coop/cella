@@ -31,8 +31,9 @@ async function posted(tx: Db, invoice: string, event: Event, date: string, label
 function posting<T>(w: Write<T>, post: (tx: Db, value: T) => Promise<string | null>): Write<T & { entry: string | null }> {
   return {
     op: w.op,
-    state: async (tx) => {
-      const value = await w.state(tx)
+    request: w.request,
+    state: async (tx, proof) => {
+      const value = await w.state(tx, proof)
       return { ...value, entry: await post(tx, value) }
     },
     payload: (v) => ({ ...w.payload(v), entry: v.entry }),

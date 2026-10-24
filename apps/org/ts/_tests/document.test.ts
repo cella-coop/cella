@@ -12,6 +12,7 @@ import { adopt, comment, draft, edit, version } from '@cella/org-document/api'
 import { body, canonical, type Frontier } from '@cella/org-document/models'
 import { close, vote } from '@cella/org-decision/api'
 import type { Deps } from '@cella/org-db'
+import { sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -27,7 +28,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor })
+const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)

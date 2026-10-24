@@ -10,6 +10,7 @@ const op = 'document:document:comment' satisfies keyof typeof ops
 export async function comment(input: Comment, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Commented>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ id: string }>(
         `INSERT INTO document.comment (version, author, at, quote, text)

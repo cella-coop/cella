@@ -11,6 +11,7 @@ const op = 'account:period:close' satisfies keyof typeof ops
 export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Closed>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ closed: string }>(
         `UPDATE account.period SET closed = cella.verdict_date() WHERE month = $1

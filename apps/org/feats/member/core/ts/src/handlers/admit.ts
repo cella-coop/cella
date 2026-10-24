@@ -12,6 +12,7 @@ const op = 'member:member:admit'
 export async function admit(input: Admit, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Admitted>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ since: string }>(
         `UPDATE member.member SET status = 'active', since = cella.verdict_date(), shares = $2

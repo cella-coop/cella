@@ -19,6 +19,7 @@ export async function edit(input: Edit, deps: Deps): Promise<Outcome<(typeof ops
   }
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ receipt: string; digest: string }>(
         `INSERT INTO document.update (receipt, document, author, at, bytes)

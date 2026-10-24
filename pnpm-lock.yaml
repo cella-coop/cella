@@ -32,8 +32,13 @@ importers:
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../ops/ts
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../sign/ts
 
   apps/org/core/ops/ts: {}
+
+  apps/org/core/sign/ts: {}
 
   apps/org/feats/account/core/ts:
     dependencies:
@@ -91,6 +96,9 @@ importers:
 
   apps/org/feats/key/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
@@ -280,6 +288,9 @@ importers:
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../core/ops/ts
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../core/sign/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../feats/transaction/core/ts

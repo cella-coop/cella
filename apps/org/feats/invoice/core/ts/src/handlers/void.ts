@@ -9,6 +9,7 @@ const op = 'invoice:invoice:void' satisfies keyof typeof ops
 // `invoice.voids` refuses it once any payment was received.
 export const voiding = (input: Void): Write<Voided> => ({
   op,
+  request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ voided: string }>(
       `UPDATE invoice.invoice SET voided = cella.verdict_date(), reason = $2

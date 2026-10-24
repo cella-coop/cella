@@ -13,6 +13,7 @@ const op = 'document:document:version' satisfies keyof typeof ops
 export async function version(input: Save, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Saved>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const doc = await merged(tx, input.document)
       const frontier = (input.frontier ?? doc.frontiers()) as Frontier

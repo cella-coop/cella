@@ -8,6 +8,7 @@ const op = 'transaction:transaction:post' satisfies keyof typeof ops
 
 export const posting = (input: Entry): Write<Posted> => ({
   op,
+  request: input,
   state: (tx) => record(tx, input),
   payload: (posted) => committed(posted, input),
 })

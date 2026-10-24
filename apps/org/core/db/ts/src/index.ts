@@ -1,4 +1,5 @@
 import type { Permission, Refused, Settled } from '@cella/org-ops'
+import { plain, type Proof, type Signer } from '@cella/org-sign'
 
 // The one thing a handler needs of a connection; a `pg` Client or pool
 // client fits it. A handler holds the connection for its transaction.
@@ -8,37 +9,46 @@ export interface Db {
 
 export interface Deps {
   db: Db
-  // The member the write is for, already authenticated.
+  // The member the write is for.
   actor: string
+  // Signs the write's request as the actor's device; the notary checks it.
+  sign: Signer
 }
 
 export interface Write<T> {
   op: Permission
-  // The state change, inside the transaction, before the verdict.
-  state: (tx: Db) => Promise<T>
+  // What the member asks for, which their device signs.
+  request: unknown
+  // The state change, inside the transaction, before the verdict; `proof`
+  // names the device that signed.
+  state: (tx: Db, proof: Proof) => Promise<T>
   // What the log commits to; it holds a digest of this, never the payload.
   payload: (value: T) => Record<string, unknown>
 }
 
-// SQLSTATE triggered_action_exception: a rule or a feat's trigger refused.
+// SQLSTATE triggered_action_exception: a rule, a feat's trigger or the
+// notary's signature check refused.
 const REFUSED = '09000'
 
 const code = (e: unknown) => (e as { code?: string }).code
 
-// One write, one transaction: the state change, then `cella.submit` last,
-// then commit. A refusal raises inside submit, so the state and the verdict
-// roll back together and the refusal uses no verdict number.
+// One write, one transaction: signed first, as the member's device does
+// before sending, then the state change, then `cella.submit` last, then
+// commit. A refusal raises inside submit, so the state and the verdict roll
+// back together and the refusal uses no verdict number.
 export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Refused> {
   const { db } = deps
+  const request = plain(w.request)
+  const proof = await deps.sign(w.op, request)
   await db.query('BEGIN')
   try {
-    const value = await w.state(db)
+    const value = await w.state(db, proof)
     // Deferred checks, such as an entry balancing, refuse before the
     // verdict rather than at commit, after it.
     await db.query('SET CONSTRAINTS ALL IMMEDIATE')
     const { rows } = await db.query<{ verdict: string }>(
-      'SELECT verdict FROM cella.submit($1, $2, $3)',
-      [w.op, w.payload(value), deps.actor],
+      'SELECT verdict FROM cella.submit($1, $2, $3, $4)',
+      [w.op, w.payload(value), deps.actor, { request, ...proof }],
     )
     await db.query('COMMIT')
     return { state: 'settled', entry: Number(rows[0].verdict), value }

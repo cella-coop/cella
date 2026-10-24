@@ -12,11 +12,13 @@
 //! | `cella.consent(member, stance, receipt)` | aggregate | `Tally::consent` |
 //! | `cella.majority(member, stance, receipt)` | aggregate | `Tally::majority` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
-//! | `cella.receipt()` | function | the next receipt number |
-//! | `cella.submit(op, payload, actor)` | function | runs the op's rules, appends the verdict |
-//! | `cella.verify_log()` | function | `log::Chain` over the whole log |
+//! | `cella.receipt()` | function | the transaction's receipt number |
+//! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
+//! | `cella.op()`, `cella.actor()`, `cella.device()` | functions | the write being judged, for rules |
+//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts |
 //! | `cella.notary_key()` | function | the scope's public key |
-//! | `cella.head`, `cella.log`, `cella.rule`, `cella.rule_text`, `cella.receipt_seq` | tables, sequence | the log and the rule registry |
+//! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
+//! | `cella.rule`, `cella.rule_text`, `cella.keyring`, `cella.power` | tables | the registries: rules per op, the keyring, the power each op needs |
 
 use crate::notary;
 use cella_rules::{Amount as Cents, Tally};
@@ -169,9 +171,12 @@ impl Aggregate<Majority> for Majority {
     }
 }
 
-// The notary: the log, numbered from a locked head row; the rule registry,
-// whose rules submit runs for an op, each returning NULL to accept or a
-// reason to refuse. Only these functions write either; the app role reads.
+// The notary: the log, numbered from a locked head row, each entry naming
+// its signed receipt; the rule registry, whose rules submit runs for an op,
+// each returning NULL to accept or a reason to refuse; the keyring, the one
+// function that says whether a device is an actor's current key; and the
+// power each op needs, which a graft's rule reads. Only these functions
+// write the log and the receipts; migrations register; everyone reads.
 
 extension_sql!(
     r"
@@ -181,12 +186,27 @@ CREATE TABLE cella.head (
     hash bytea NOT NULL
 );
 INSERT INTO cella.head VALUES (true, 0, '\x0000000000000000000000000000000000000000000000000000000000000000');
+CREATE TABLE cella.receipt (
+    n bigint PRIMARY KEY,
+    op text NOT NULL,
+    actor text NOT NULL,
+    device bytea NOT NULL,
+    nonce text NOT NULL,
+    request bytea NOT NULL,
+    signature bytea NOT NULL,
+    payload bytea NOT NULL,
+    at text NOT NULL,
+    hash bytea NOT NULL,
+    sig bytea NOT NULL,
+    UNIQUE (device, nonce)
+);
 CREATE TABLE cella.log (
     n bigint PRIMARY KEY,
     op text NOT NULL,
     actor text NOT NULL,
     date date NOT NULL,
     payload bytea NOT NULL,
+    receipt bigint NOT NULL UNIQUE REFERENCES cella.receipt,
     rules jsonb NOT NULL,
     prev bytea NOT NULL,
     hash bytea NOT NULL,
@@ -203,13 +223,27 @@ CREATE TABLE cella.rule_text (
     fn text NOT NULL,
     body text NOT NULL
 );
+CREATE TABLE cella.keyring (
+    one boolean PRIMARY KEY DEFAULT true CHECK (one),
+    fn regprocedure NOT NULL,
+    owner text NOT NULL
+);
+CREATE TABLE cella.power (
+    op text PRIMARY KEY,
+    power text NOT NULL,
+    amount text,
+    owner text NOT NULL
+);
 CREATE SEQUENCE cella.receipt_seq;
-REVOKE ALL ON cella.head, cella.log, cella.rule, cella.rule_text, cella.receipt_seq FROM PUBLIC;
-GRANT SELECT ON cella.head, cella.log, cella.rule, cella.rule_text TO PUBLIC;
+REVOKE ALL ON cella.head, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power, cella.receipt_seq FROM PUBLIC;
+GRANT SELECT ON cella.head, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power TO PUBLIC;
 SELECT pg_catalog.pg_extension_config_dump('cella.head', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.log', '');
+SELECT pg_catalog.pg_extension_config_dump('cella.receipt', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.rule', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.rule_text', '');
+SELECT pg_catalog.pg_extension_config_dump('cella.keyring', '');
+SELECT pg_catalog.pg_extension_config_dump('cella.power', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.receipt_seq', '');
 ",
     name = "notary_tables",
@@ -224,27 +258,51 @@ fn verdict_date() -> pgrx::datum::Date {
     notary::verdict_date()
 }
 
-/// A receipt number for a write as it arrives. Receipts order stances;
-/// a write that rolls back leaves a gap here, never in the log.
+/// The transaction's receipt number: one write, one receipt, taken at its
+/// first use, by the handler or by `submit`, which signs it. Receipts order
+/// stances; a write that rolls back leaves a gap here, never in the log.
 #[pg_extern(volatile, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn receipt() -> i64 {
     notary::receipt()
 }
 
-/// Runs the op's rules and appends a numbered, signed verdict. Call it last
-/// in the handler's transaction. A refusal raises SQLSTATE 09000 with the
-/// rule's reason, so the transaction rolls back and no number is used; the
-/// rows returned are therefore always settled.
+/// Checks the member's signature on the request, that the device is the
+/// actor's current key and that its nonce is new, then runs the op's rules,
+/// signs the receipt and appends a numbered, signed verdict naming it. Call
+/// it last in the handler's transaction. `signed` is `{request, device,
+/// nonce, sig}`, bytes in hex. A refusal raises SQLSTATE 09000 with its
+/// reason, so the transaction rolls back and no number is used; the rows
+/// returned are therefore always settled.
 #[pg_extern(volatile, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn submit(
     op: &str,
     payload: JsonB,
     actor: &str,
+    signed: JsonB,
 ) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
-    let n = notary::submit(op, &payload, actor);
+    let n = notary::submit(op, &payload, actor, &signed);
     TableIterator::once((n, "settled".to_string(), None))
+}
+
+/// The op of the write `submit` is judging; NULL outside it.
+#[pg_extern(stable)]
+fn op() -> Option<String> {
+    notary::op()
+}
+
+/// The member the write being judged is for; NULL outside `submit`.
+#[pg_extern(stable)]
+fn actor() -> Option<String> {
+    notary::actor()
+}
+
+/// The public key of the device that signed the write being judged; NULL
+/// outside `submit`.
+#[pg_extern(stable)]
+fn device() -> Option<Vec<u8>> {
+    notary::device()
 }
 
 /// Recomputes the chain from the first entry and checks every signature

@@ -10,6 +10,7 @@ const op = 'invoice:invoice:send' satisfies keyof typeof ops
 export async function send(input: Send, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Sent>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ sent: string }>(
         `UPDATE invoice.invoice SET sent = coalesce(sent, cella.verdict_date())

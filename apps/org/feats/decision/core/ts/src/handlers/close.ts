@@ -11,6 +11,7 @@ const op = 'decision:decision:close'
 export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Closed>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ closed: string; cutoff: string }>(
         `UPDATE decision.decision SET closed = cella.verdict_date(), cutoff = cella.receipt()

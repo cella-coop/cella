@@ -19,6 +19,10 @@ pub(crate) static KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CS
 /// its clock once per transaction.
 pub(crate) static CLOCK: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
+/// The scope's address, such as `lanterne.example`, which every write
+/// signature names so that it verifies in no other scope.
+pub(crate) static SCOPE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+
 #[pg_guard]
 pub extern "C-unwind" fn _PG_init() {
     GucRegistry::define_string_guc(
@@ -34,6 +38,14 @@ pub extern "C-unwind" fn _PG_init() {
         c"A fixed verdict date, YYYY-MM-DD",
         c"for fixtures and tests; unset, submit reads the clock once per transaction",
         &CLOCK,
+        GucContext::Suset,
+        GucFlags::default(),
+    );
+    GucRegistry::define_string_guc(
+        c"cella.scope",
+        c"The scope's address, which every write signature names",
+        c"set by a superuser, in postgresql.conf or on the database",
+        &SCOPE,
         GucContext::Suset,
         GucFlags::default(),
     );

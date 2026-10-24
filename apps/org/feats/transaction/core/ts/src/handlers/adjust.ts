@@ -8,6 +8,7 @@ const op = 'transaction:transaction:adjust' satisfies keyof typeof ops
 
 export const adjusting = (input: Adjust): Write<Posted> => ({
   op,
+  request: input,
   state: (tx) => record(tx, input.entry, input.corrects),
   payload: (posted) => ({ ...committed(posted, input.entry), corrects: input.corrects, base: input.base }),
 })

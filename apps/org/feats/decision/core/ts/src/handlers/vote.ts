@@ -14,6 +14,7 @@ export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops
   }
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ receipt: string }>(
         `INSERT INTO decision.vote (receipt, decision, member, stance, at)

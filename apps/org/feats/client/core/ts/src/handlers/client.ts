@@ -32,6 +32,7 @@ const changed = (v: Changed) => ({ ...v, fields: [...v.fields] })
 export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)['client:client:add'], Changed>> {
   return write(deps, {
     op: 'client:client:add' satisfies Op,
+    request: input,
     state: async (tx) => {
       await tx.query('INSERT INTO client.client (id, name) VALUES ($1, $2)', [input.id, input.name])
       const { id, ...fields } = input
@@ -44,6 +45,7 @@ export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)[
 export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof ops)['client:client:update'], Changed>> {
   return write(deps, {
     op: 'client:client:update' satisfies Op,
+    request: input,
     state: (tx) => set(tx, input.id, input.fields),
     payload: changed,
   })
@@ -54,6 +56,7 @@ export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof
 export async function archive(input: Archive, deps: Deps): Promise<Outcome<(typeof ops)['client:client:archive'], Changed>> {
   return write(deps, {
     op: 'client:client:archive' satisfies Op,
+    request: input,
     state: (tx) => set(tx, input.id, { status: 'archived' }),
     payload: changed,
   })

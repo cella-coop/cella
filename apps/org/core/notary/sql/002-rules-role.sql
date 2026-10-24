@@ -13,5 +13,5 @@ GRANT USAGE ON SCHEMA cella TO cella_rules;
 
 -- Only the app appends: a rule that calls submit or takes a receipt would
 -- write through the extension's own rights.
-REVOKE EXECUTE ON FUNCTION cella.submit(text, jsonb, text), cella.receipt() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION cella.submit(text, jsonb, text), cella.receipt() TO cella_app;
+REVOKE EXECUTE ON FUNCTION cella.submit(text, jsonb, text, jsonb), cella.receipt() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION cella.submit(text, jsonb, text, jsonb), cella.receipt() TO cella_app;

@@ -7,7 +7,9 @@
 pub mod allocate;
 pub mod amount;
 pub mod digest;
+pub mod hex;
 pub mod log;
+pub mod sign;
 pub mod vote;
 
 pub use allocate::allocate;
@@ -42,6 +44,10 @@ pub enum Error {
     Float(String),
     #[error("invalid key: {0}")]
     Key(String),
+    #[error("a signed {0} is empty, holds a control character or is malformed")]
+    Field(&'static str),
+    #[error("{0}")]
+    Signature(&'static str),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

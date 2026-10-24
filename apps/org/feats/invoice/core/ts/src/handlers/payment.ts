@@ -11,6 +11,7 @@ const op = 'invoice:invoice:payment' satisfies keyof typeof ops
 // excess as a credit owed to the client.
 export const paying = (input: Payment): Write<Paid> => ({
   op,
+  request: input,
   state: async (tx) => {
     const fresh = await tx.query<{ id: string }>(
       `INSERT INTO invoice.payment (invoice, receipt, at, amount, method, reference)

@@ -9,6 +9,7 @@ const op = 'client-invoice:billing:link' satisfies keyof typeof ops
 export async function link(input: Link, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Link>> {
   return write(deps, {
     op,
+    request: input,
     state: async (tx) => {
       await tx.query(
         `INSERT INTO client_invoice.billing (invoice, client) VALUES ($1, $2)

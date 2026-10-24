@@ -11,6 +11,7 @@ const op = 'invoice:invoice:issue' satisfies keyof typeof ops
 // last with no gap, and any graft's on the op.
 export const issuing = (input: Issue): Write<Issued> => ({
   op,
+  request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string; issued: string; net: string; vat: string | null; total: string }>(
       `WITH spent AS (SELECT invoice.spend($1) AS number),

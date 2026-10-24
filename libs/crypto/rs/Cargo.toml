@@ -1,0 +1,32 @@
+[package]
+name = "cella-crypto"
+description = "Signing, verification, hashing for Cella cells"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+ed25519-dalek = { workspace = true }
+blake3 = { workspace = true }
+rand_core = { workspace = true }
+serde = { workspace = true }
+thiserror = { workspace = true }
+# Zeroize-on-drop for seed/share/recovered-plaintext buffers — the shared
+# secret-scrubbing discipline lib::crypto consumers (app::secret, app::mods,
+# app::home L3) rely on. Secret-returning APIs hand back `Zeroizing<…>`.
+zeroize = { workspace = true }
+# Secret-recovery primitives (sharded model): age multi-recipient
+# encryption + Shamir secret sharing over the Ed25519 seed.
+age = { version = "0.11", default-features = false, features = ["armor"] }
+sharks = "0.5"
+# Post-quantum v1: ML-DSA-44 signing + ML-KEM-768 encapsulation behind the
+# SigningScheme / KemScheme seams (multi-algo dispatch via MULTISIG_* prefixes).
+fips204 = { workspace = true }
+fips203 = { workspace = true }
+chacha20poly1305 = { workspace = true }
+x25519-dalek = { workspace = true }

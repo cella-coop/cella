@@ -1,0 +1,18 @@
+[package]
+name = "cella-keystore"
+description = "Disk-backed cell keypair storage — `<cell>/.private/keypair.seed`"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+cella-crypto = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

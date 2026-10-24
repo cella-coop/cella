@@ -1,0 +1,4 @@
+# Cella on the workshop's forge: its decisions and their steps are
+# _corpus/change/ docs, queued on the workshop's worker page.
+[drift]
+uncited = "warn"

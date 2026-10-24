@@ -16,8 +16,8 @@ check: feat-check fixture-check types rust
 install:
     pnpm install --offline --silent
 
-# Refuse any dependency the feat tree does not allow
-feat-check:
+# Refuse any dependency or SQL reference the feat tree does not allow
+feat-check: install
     node tools/feat-check.mjs
 
 # Mock co-ops balance and their links resolve

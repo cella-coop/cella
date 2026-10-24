@@ -54,7 +54,8 @@
         } ''
           export HOME=$TMPDIR
           cp -r ${self} src && chmod -R u+w src
-          node src/tools/feat-check.mjs src
+          # The SQL boundaries need libpg-query from the npm install.
+          node src/tools/feat-check.mjs --no-sql src
           touch $out
         '';
       });

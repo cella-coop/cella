@@ -8,15 +8,25 @@
 //   a package in      may depend on
 //   a node's core     its own core's packages; its ancestors' cores
 //   a graft           the cores of the feats it joins; its node's and
-//                     their ancestors' cores
+//                     their ancestors' cores; the grafts of its node that
+//                     join a proper subset of its feats (the graft order)
 //   a node's root     its own core and ancestors' cores, its feats' cores
 //                     and roots, its own grafts
+//
+// It also checks that grafts are named and declared, that a package's
+// relative imports stay inside it, that a feat's or graft's ops are named
+// for it, and, through sql-check.mjs, every sql/ file's boundaries.
+// `--no-sql` skips the SQL, which needs the npm install; the flake's check
+// runs without one.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
-import { basename, dirname, join, relative } from 'node:path'
+import { basename, dirname, join, relative, resolve } from 'node:path'
+import { checkSql, placed, schemaName } from './sql-check.mjs'
 
-const repo = process.argv[2] ?? process.cwd()
+const args = process.argv.slice(2)
+const sql = !args.includes('--no-sql')
+const repo = args.find((a) => !a.startsWith('--')) ?? process.cwd()
 const errors = []
 const fail = (msg) => errors.push(msg)
 
@@ -64,6 +74,13 @@ const place = (dir) => {
 
 const describe = (p, dir) => (p ? `${p.kind} ${p.name ?? p.node ?? ''}`.trim() : 'unplaced') + ` (${dir})`
 
+// A graft of lower order: same node, a proper subset of the feats.
+const lower = (from, to) => {
+  const mine = from.name.split('-')
+  const theirs = to.name.split('-')
+  return to.node === from.node && theirs.length < mine.length && theirs.every((f) => mine.includes(f))
+}
+
 const allowed = (from, to) => {
   const lineage = [from.node, ...ancestors(from.node)]
   if (from.kind === 'core') {
@@ -71,7 +88,8 @@ const allowed = (from, to) => {
   }
   if (from.kind === 'graft') {
     const joined = from.name.split('-').map((f) => join(from.node, 'feats', f))
-    return to.kind === 'core' && (lineage.includes(to.node) || joined.includes(to.node))
+    return (to.kind === 'core' && (lineage.includes(to.node) || joined.includes(to.node)))
+      || (to.kind === 'graft' && lower(from, to))
   }
   const kids = childrenOf(from.node)
   return (to.kind === 'core' && (lineage.includes(to.node) || kids.includes(to.node)))
@@ -165,6 +183,67 @@ for (const node of nodes) {
       fail(`${node}: a feat declares graft ${g}, which ${node}/grafts/ does not hold`)
     }
   }
+  for (const kid of kids) {
+    for (const g of grafted(kid).filter((g) => !g.split('-').includes(basename(kid)))) {
+      fail(`${kid}: declares ${g}, which does not join it; the feat that extends declares a graft`)
+    }
+  }
+}
+
+// A package's relative imports stay inside it: no reaching into another
+// package's files around its manifest.
+const sources = (dir, out = []) => {
+  for (const name of readdirSync(join(repo, dir))) {
+    const path = join(dir, name)
+    if (name === 'node_modules') {
+      continue
+    }
+    if (statSync(join(repo, path)).isDirectory()) {
+      sources(path, out)
+    } else if (/\.(ts|mts|js|mjs)$/.test(name)) {
+      out.push(path)
+    }
+  }
+  return out
+}
+for (const dir of byName.values()) {
+  for (const file of sources(dir)) {
+    const text = readFileSync(join(repo, file), 'utf8')
+    for (const [, spec] of text.matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) {
+      const target = relative(join(repo, dir), resolve(join(repo, dirname(file)), spec))
+      if (target.startsWith('..')) {
+        fail(`${file}: imports ${spec}, outside its package ${dir}; depend on the package instead`)
+      }
+    }
+  }
+}
+
+// A feat's or graft's ops are its own: `<feat>:<entity>:<op>`.
+for (const dir of byName.values()) {
+  const p = place(dir)
+  const ops = join(repo, dir, 'src', 'models', 'ops.ts')
+  if (!p || !existsSync(ops) || (p.kind === 'core' && !parentOf(p.node))) {
+    continue
+  }
+  const name = p.kind === 'graft' ? p.name : basename(p.node)
+  for (const [, op] of readFileSync(ops, 'utf8').matchAll(/^\s*'([^']+)':/gm)) {
+    if (op.split(':').length !== 3 || op.split(':')[0] !== name) {
+      fail(`${dir}/src/models/ops.ts: ${op} is not a permission of ${name}, <${name}>:<entity>:<op>`)
+    }
+  }
+}
+
+if (sql) {
+  const apps = existsSync(join(repo, 'apps')) ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter(isNode) : []
+  const known = new Set(['cella'])
+  for (const node of nodes) {
+    childrenOf(node).forEach((k) => known.add(basename(k)))
+    const gdir = join(repo, node, 'grafts')
+    for (const g of existsSync(gdir) ? readdirSync(gdir) : []) {
+      known.add(schemaName(g))
+    }
+  }
+  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known))
 }
 
 if (errors.length) {

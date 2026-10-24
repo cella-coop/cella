@@ -58,13 +58,13 @@ duty = "issues invoices, pays suppliers and closes the books each month"
 role = "manager"
 power = "commit"
 text = "sign contracts and commit spending"
-max_amount = 2000000
+limit = 2000000
 
 [[mandate]]
 role = "finance"
 power = "pay-supplier"
 text = "pay suppliers"
-max_amount = 300000
+limit = 300000
 
 [[mandate]]
 role = "finance"
@@ -80,10 +80,11 @@ text = "close a period"
 role = "lead"
 power = "spend-circle"
 text = "spend for the circle"
-max_amount = 100000
+budget = 100000
+per = "month"
 
 [[mandate]]
 role = "lead"
 power = "send-quote"
 text = "send a quote"
-max_amount = 1500000
+limit = 1500000

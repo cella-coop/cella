@@ -16,7 +16,7 @@ junction. Each circle also has a channel for its messages.
 |---|---|---|
 | circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` is the default decision rule, `consent` or `majority` |
 | role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has |
-| mandate | `id`, `role`, `power`, `text`, `max_amount?`, `from`, `until?`, `revoked?` | `power` is an id; `text` is how members read it |
+| mandate | `id`, `role`, `power`, `text`, `limit?`, `budget?`, `from`, `until?`, `revoked?` | `power` is an id; `text` is how members read it; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year") |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
 A **power** is the id of something a write needs, such as `issue-invoice`
@@ -47,18 +47,17 @@ only through a decision of that circle's members.
 
 | Write | Label | Why |
 |---|---|---|
-| `POST /api/circle/nest` | ordered | two offline nestings can form a cycle |
-| `POST /api/circle/position.add` | ordered | who holds which role |
-| `POST /api/circle/position.remove` | ordered | who holds which role |
-| `POST /api/circle/mandate.grant` | ordered | authority, with limits such as maxAmount |
-| `POST /api/circle/mandate.revoke` | ordered | authority, with limits such as maxAmount |
+| `POST /api/circle/nest` | ordered | two nestings can form a cycle even online |
+| `POST /api/circle/mandate.grant` | ordered | authority, capped by a limit or a budget |
+| `POST /api/circle/mandate.revoke` | ordered | authority, capped by a limit or a budget |
 | `POST /api/circle/message` | confluent | the circle's channel |
 
+Who holds which role is a position, the `circle-member` graft's own
+write; see its [doc](../../grafts/circle-member/index.md).
+
 - **nest** sets a circle's parent. Two nestings that are each acyclic can
-  together form a cycle, so the notary orders them and refuses the second.
-- **position.add** and **position.remove** change who holds a role, and so
-  who may use its powers. Spending writes are checked against them, so
-  they are ordered. The row they write is the `circle-member` graft's.
+  together form a cycle, so the notary orders them already at rung 1:
+  two concurrent transactions can each see no cycle.
 - **mandate.grant** and **mandate.revoke** change what a role may do. A
   revocation takes effect at its receipt: a write received after it is
   refused; a share already granted runs out on its own.
@@ -69,7 +68,6 @@ only through a decision of that circle's members.
 | Write | Power | Lanterne |
 |---|---|---|
 | nest | held by the assembly, by decision | `ag` |
-| position.add, position.remove | held by the circle, by decision; the manager's election is the assembly's | each circle for its own seats |
 | mandate.grant, mandate.revoke | held by the granting circle, by decision | `ag` for the manager's mandate |
 | message | none: every position holder in the circle | the circle's members |
 
@@ -79,6 +77,8 @@ The circle feat owns:
 
 - the circles form one tree: no cycle, one root;
 - a mandate grants a power its circle holds, within its parent's limit;
+- a mandate caps its power with a `limit` per write or a `budget` over a
+  period, never both;
 - a mandate's term has `from` before `until`; a revoked mandate stays
   revoked.
 
@@ -101,10 +101,10 @@ requested by another scope (rung 5) build on these entities later.
 | Coordination | ag | weekly: pipeline, staffing and anything that crosses circles |
 | Web, Brand, Marketing, Operations | coordination | the working circles |
 
-| Role | Power | Limit |
+| Role | Power | Cap |
 |---|---|---|
-| Gérante (Camille, 2024–2028) | `commit` | 20 000 € |
-| Finance (Julien) | `pay-supplier` | 3 000 € |
+| Gérante (Camille, 2024–2028) | `commit` | 20 000 € limit |
+| Finance (Julien) | `pay-supplier` | 3 000 € limit |
 | Finance | `issue-invoice`, `close-period` | — |
-| Circle lead | `spend-circle` | 1 000 € |
-| Circle lead | `send-quote` | 15 000 € |
+| Circle lead | `spend-circle` | 1 000 € budget, a month |
+| Circle lead | `send-quote` | 15 000 € limit |

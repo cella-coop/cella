@@ -27,7 +27,7 @@ meets weekly.
 Camille is the gérante, elected in June 2024 for four years, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
 issues invoices, pays suppliers up to 3 000 € and closes each month. Leads
-spend up to 1 000 € for their circle and quote up to 15 000 €.
+spend up to 1 000 € a month for their circle and quote up to 15 000 €.
 
 ## Where things stand on 24 October 2026
 

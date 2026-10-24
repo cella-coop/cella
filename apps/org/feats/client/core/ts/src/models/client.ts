@@ -10,6 +10,20 @@ export interface Address {
   country: string
 }
 
+// A client as the feat reads it.
+export interface Client {
+  id: string
+  kind: Kind
+  name: string
+  form: string | null
+  email: string | null
+  phone: string | null
+  parent: string | null
+  tags: string[]
+  note: string
+  status: Status
+}
+
 // The fields a client write may set; each is its own register.
 export interface Fields {
   kind?: Kind

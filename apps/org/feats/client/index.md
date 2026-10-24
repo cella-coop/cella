@@ -90,6 +90,12 @@ order, so the last write to a field wins it, field by field. The log
 commits to the client's id and the names of the fields a write changed,
 never their values. Erasure is not built.
 
+## Shell
+
+The `clients` collection, archived ones left out; a client's page edits
+its note (`update`, the note field alone). What a client owes and the
+invoices that bill it are `client-invoice`'s.
+
 ## Lanterne
 
 Eight clients, mostly co-ops, associations and small local firms:

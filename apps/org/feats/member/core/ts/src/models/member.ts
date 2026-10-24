@@ -1,5 +1,15 @@
 export type Status = 'invited' | 'active' | 'suspended' | 'exited'
 
+// A member as the feat reads them; `id` is their address.
+export interface Member {
+  id: string
+  address: string
+  name: string
+  status: Status
+  since: string | null
+  shares: number
+}
+
 // Admission cites the decision that admits; the decision-member graft's
 // rule resolves it, so this feat holds it as an id.
 export interface Admit {

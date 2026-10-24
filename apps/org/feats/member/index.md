@@ -49,6 +49,12 @@ Whether the cited decision asks to admit the member is the `decision-member` gra
 
 - `decision-member`
 
+## Shell
+
+The `members` collection, by name; a member's page renames them
+(`profile`), which `member.own_profile` refuses for anyone but the actor.
+Seats and powers are `circle-member`'s, devices the `key` feat's.
+
 ## Domain
 
 To port from seedling's `specs/feat/10-members.md`, under this repo's labels and grafts.

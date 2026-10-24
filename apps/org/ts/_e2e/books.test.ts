@@ -192,7 +192,7 @@ test('voiding an unpaid invoice posts a credit note', async () => {
 
 test('posting into September, which is closed, is refused by the account-transaction graft', async () => {
   const before = await head()
-  const repair = { label: 'Plotter repair', lines: [{ account: '613', side: 'debit' as const, cents: 180_00 }, { account: '512', side: 'credit' as const, cents: 180_00 }] }
+  const repair = { label: 'Plotter repair', lines: [{ account: '613', side: 'debit' as const, cents: 180_00 }, { account: '401', side: 'credit' as const, cents: 180_00 }] }
 
   const late = await post({ date: '2026-09-30', ...repair }, as(julien))
   assert.equal(late.state, 'refused')
@@ -210,10 +210,28 @@ test('posting into September, which is closed, is refused by the account-transac
   assert.equal(posted.state === 'settled' && posted.entry, before + 1)
 })
 
+test('a post that touches the bank is refused: money leaves it only through pay and payroll', async () => {
+  const before = await head()
+  const out = await post({
+    date: '2026-10-24',
+    label: 'Plotter repair, paid at once',
+    lines: [{ account: '613', side: 'debit', cents: 180_00 }, { account: '512', side: 'credit', cents: 180_00 }],
+  }, as(julien))
+  assert.equal(out.state, 'refused')
+  assert.match(reason(out), /je-\d+ posts to 512, a cash account: money moves through pay or payroll/)
+  const into = await post({
+    date: '2026-10-24',
+    label: 'Deposit',
+    lines: [{ account: '512', side: 'debit', cents: 50_00 }, { account: '401', side: 'credit', cents: 50_00 }],
+  }, as(julien))
+  assert.match(reason(into), /posts to 512, a cash account/)
+  assert.equal(await head(), before)
+})
+
 test('a refused post leaves no gap in the journal\'s ids', async () => {
   const last = async () => (await one<{ n: number }>(`SELECT max(substr(id, 4)::int) AS n FROM transaction.entry`)).n
   const before = await last()
-  const repair = [{ account: '613', side: 'debit' as const, cents: 90_00 }, { account: '512', side: 'credit' as const, cents: 90_00 }]
+  const repair = [{ account: '613', side: 'debit' as const, cents: 90_00 }, { account: '401', side: 'credit' as const, cents: 90_00 }]
   const refused = await post({ date: '2026-09-30', label: 'Plotter repair, late', lines: repair }, as(julien))
   assert.equal(refused.state, 'refused')
   const posted = await post({ date: '2026-10-24', label: 'Plotter repair', lines: repair }, as(julien))
@@ -235,9 +253,19 @@ test('a correction names its base, and a second from the same base is refused', 
   }
   const first = await adjust({ corrects: 'je-0028', base: null, entry: reversal }, as(julien))
   assert.equal(first.state, 'settled')
-  const second = await adjust({ corrects: 'je-0028', base: null, entry: reversal }, as('hugo@lanterne.example'))
+  const second = await adjust({ corrects: 'je-0028', base: null, entry: reversal }, as(julien))
   assert.equal(second.state, 'refused')
   assert.match(reason(second), /je-0028 moved: its correction is je-\d+, not none/)
+
+  // je-0028 credited the bank and debited it nothing, so a correction of it
+  // may return cash to 512 but never take it out.
+  const payout = await adjust({
+    corrects: 'je-0028',
+    base: first.state === 'settled' ? first.value.entry : null,
+    entry: { date: '2026-10-24', label: 'VAT, again', lines: [{ account: '44571', side: 'debit', cents: 100_00 }, { account: '512', side: 'credit', cents: 100_00 }] },
+  }, as(julien))
+  assert.equal(payout.state, 'refused')
+  assert.match(reason(payout), /je-\d+ credits 512 beyond what je-0028 debited it: a correction returns cash, it never pays it out/)
 })
 
 test('the books agree with the invoices, and every entry balances', async () => {
@@ -255,7 +283,7 @@ test('October closes only after it ends, and then takes no posts', async () => {
   await on('2026-11-05')
   const closed = await close({ month: '2026-10' }, as(julien))
   assert.equal(closed.state, 'settled')
-  const late = await post({ date: '2026-10-31', label: 'Late', lines: [{ account: '613', side: 'debit', cents: 1_00 }, { account: '512', side: 'credit', cents: 1_00 }] }, as(julien))
+  const late = await post({ date: '2026-10-31', label: 'Late', lines: [{ account: '613', side: 'debit', cents: 1_00 }, { account: '401', side: 'credit', cents: 1_00 }] }, as(julien))
   assert.match(reason(late), /2026-10 is closed/)
   const again = await close({ month: '2026-10' }, as(julien))
   assert.match(reason(again), /2026-10 closed on 2026-11-05/)

@@ -47,7 +47,7 @@ const verifies = async () => (await one<{ v: boolean }>('SELECT cella.verify_log
 const paying = (cents: number, label = 'Supplier: print proofs') => ({
   date: '2026-10-24',
   label,
-  lines: [{ account: '626', side: 'debit' as const, cents }, { account: '512', side: 'credit' as const, cents }],
+  lines: [{ account: '626', side: 'debit' as const, cents }, { account: '401', side: 'credit' as const, cents }],
 })
 
 before(async () => {

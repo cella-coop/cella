@@ -4,7 +4,9 @@ updated = 2026-10-24
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
-account code and refuses an entry dated in a closed period.
+account code, refuses an entry dated in a closed period, and keeps money
+from leaving a cash account except through the writes with their own
+power and limit.
 
 ## Schema
 
@@ -24,13 +26,29 @@ The app role and the rules role, `cella_rules`, may select the balance.
 
 ## Rules
 
-The open-period rule is this trigger rather than a rule `submit` runs:
-`transaction.post` and `invoice.payment` are confluent, and confluent
-writes skip the rule check, yet every post must meet it. At rung 2 a late
-post is re-dated into the first open period and flagged, instead of
-refused.
+The open-period rule is a trigger rather than a rule `submit` runs, since
+it holds for every write that posts, whatever its op: a transaction's own
+and an invoice's through `invoice-transaction`. At rung 2 a late post is
+re-dated into the first open period and flagged, instead of refused.
+
+An account the chart marks `cash` (the account feat's flag) holds the
+co-op's money, and money leaves one only through `transaction.pay` and
+`transaction.payroll`, each with its own power, whose feat's rules check
+the entry is exactly a payment or a payroll:
+
+- `account_transaction.cashless`, on `transaction:transaction:post`: the
+  entry posts to no cash account, in or out. Keeping the books is not
+  moving money.
+- `account_transaction.restores`, on `transaction:transaction:adjust`: the
+  entry credits no cash account by more than the entry it corrects
+  debited it, so a correction returns cash and never pays it out.
+
+Money received posts through the writes that receive it, such as
+`invoice.payment`.
 
 ## Lanterne
 
 July to September 2026 are closed; October is open. The seeded books give
-the bank 39 296 € and clients 57 180 €.
+the bank, `512`, its one cash account, 39 296 € and clients 57 180 €. A
+post touching `512` is refused; Julien pays suppliers through pay and
+runs the payroll through payroll.

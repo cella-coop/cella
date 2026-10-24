@@ -38,9 +38,10 @@ before issue, an allocation before its decision).
 | `POST /api/transaction/payroll` | confluent | a month's payroll is an entry like any other |
 | `POST /api/transaction/adjust` | ordered | a correction, named by the entry it corrects |
 
-- **post** posts a balanced entry, in or out. An entry's balance is
-  checked on the entry alone, so sums of entries commute and two posts
-  settle in any order and never wait. The right to take money out of a
+- **post** posts a balanced entry that touches no cash account: it keeps
+  the books and moves no money. An entry's balance is checked on the
+  entry alone, so sums of entries commute and two posts settle in any
+  order and never wait. The right to take money out of a
   share is `account.draw`'s, not this write's; it posts through
   `account-transaction`.
 - **pay** pays a supplier: one entry debiting `401` (fournisseurs) and
@@ -84,8 +85,10 @@ The transaction feat owns the rules about entries alone:
 
 What it does not own:
 
-- that a line's account exists and its period is open: the
-  `account-transaction` graft's;
+- that a line's account exists and its period is open, that a post
+  touches no cash account and that a correction pays no cash out: the
+  `account-transaction` graft's, since which accounts are cash is the
+  chart's;
 - that an invoice's issue, payments and void post the right entries: the
   `invoice-transaction` graft's;
 - the right to take money out of a share: `account.draw`'s, bounded on

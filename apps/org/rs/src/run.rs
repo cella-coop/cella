@@ -61,14 +61,15 @@ impl Steps {
             for cmd in cmds.iter_mut() {
                 let status = cmd.status().map_err(|e| Fail::spawn(cmd, &e))?;
                 if !status.success() {
-                    eprintln!("{name:<18}FAIL");
+                    eprintln!("{name:<22} FAIL");
                     return Err(Fail::status(status));
                 }
             }
-            println!("{name:<18}ok {:>5.1}s", start.elapsed().as_secs_f64());
+            println!("{name:<22} ok {:>5.1}s", start.elapsed().as_secs_f64());
             return Ok(());
         }
-        print!("{name:<18}");
+        // The space keeps a label longer than the column apart from its verdict.
+        print!("{name:<22} ");
         let _ = io::stdout().flush();
         let mut stdout = String::new();
         for cmd in cmds.iter_mut() {

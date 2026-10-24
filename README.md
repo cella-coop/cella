@@ -38,7 +38,7 @@ This repository works only on the org app.
 nix develop
 cella check       # feat check, fixture check, types, cargo check, clippy; no database
 cella db start    # build the cella extension, start Postgres 18 in .data/
-cella test        # Rust tests, then each slice on a fresh database
+cella test        # Rust and tool tests, each slice's tests, then the e2e scenarios
 cella log verify  # recheck the dev database's log
 cella db stop
 ```

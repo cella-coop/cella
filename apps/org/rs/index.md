@@ -18,8 +18,10 @@ updated = 2026-10-24
 | `cella ext build` | development | packages the `cella` extension with `cargo pgrx package` into `.data/ext`, where the dev cluster loads it |
 | `cella migrate [--url URL]` | both | applies the migrations cascading down the feat tree (`tools/migrate.mjs`), on the dev database or on any database by URL |
 | `cella seed <fixture> [--url URL]` | development | loads a mock co-op from `apps/org/fixtures/`, such as `lanterne` (`tools/seed.mjs`) |
-| `cella test` | development | the rule primitives' tests, this CLI's tests, the node tools' tests (`tools/_tests`), then each slice's test file on `cella_test`, reset, migrated and seeded with Lanterne first; needs the dev cluster |
-| `cella test rules\|cli\|tools\|slice [NAME]` | development | one part alone, or one slice by its file name, such as `admission` |
+| `cella test` | development | the rule primitives' tests, this CLI's tests, the node tools' tests (`tools/_tests`), then the slice tests and the e2e scenarios; needs the dev cluster |
+| `cella test slice [NAME]` | development | the slice tests, each feat's or graft's `_tests/*.test.ts`, or one slice's by its name, such as `transaction`: for each slice, `cella_test` is renewed and migrated with the app's core and that slice's part of the tree alone, unseeded |
+| `cella test e2e [NAME]` | development | the scenarios across slices, `apps/org/ts/_e2e/*.test.ts`, or one by its file name, such as `admission`: for each, `cella_test` is renewed, migrated whole and seeded with Lanterne |
+| `cella test rules\|cli\|tools` | development | one part alone |
 | `cella log verify [--url URL]` | both | runs `cella.verify_log()`, which checks every entry, the receipt it names and both signatures on it, the member's and the notary's, and prints the log's head and the scope's public key; a broken log fails, with the notary's warnings saying where |
 | `cella key init <PATH>` | production | writes a new scope signing key, the 32-byte Ed25519 seed `cella.key_file` reads, readable by its owner only and never over an existing file; prints its public key |
 
@@ -31,7 +33,7 @@ The flake's `cella` package is a wrapper that runs this crate with `cargo run -q
 
 ## Tests
 
-`tests/help.rs` walks the command tree and runs the built binary's `--help` for every command, checks clap's own consistency, that an unknown command exits 2, and that `key init` writes an owner-only 32-byte key and refuses to overwrite it.
+`tests/help.rs` walks the command tree and runs the built binary's `--help` for every command, checks clap's own consistency, that an unknown command exits 2, and that `key init` writes an owner-only 32-byte key and refuses to overwrite it. `src/test.rs` checks that a test file is placed by where it sits: a slice test in a feat's or graft's `_tests/`, an e2e scenario in an app root's `_e2e/`, and nothing elsewhere.
 
 ## Coming
 

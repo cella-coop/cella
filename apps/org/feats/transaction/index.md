@@ -131,6 +131,14 @@ refused write rolls the counter back with everything else, so it leaves no
 gap. An entry that names its own id, as the seed's carried-over entries
 do, must name the next number.
 
+## Tests
+
+`core/ts/_tests/journal.test.ts`, the feat's slice test (`cella test
+slice transaction`), runs on the app's core and this feat alone: an entry
+balances or is refused, ids are gapless and a refused entry returns its
+number, nothing posted changes, and `transaction.corrects` refuses a
+second correction from the same base.
+
 ## Lanterne
 
 - Forty entries from 1 July to 24 October 2026, `je-0001` to `je-0040`.

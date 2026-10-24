@@ -12,6 +12,10 @@ updated = 2026-10-24
 | **app** | a root feat of the repository; `org` is the ERP |
 | **feat** | a collection of things and the code that keeps it, named for the collection: `member`, `invoice`; imports no other feat |
 | **graft** | a relationship between feats: its junction, model and handlers, named by the feats it joins in alphabetical order (`client-invoice`) |
+| **slice** | a feat or a graft, either one |
+| **slice test** | a test of exactly one slice, in its package's `_tests/`, run by `cella test slice` on a database holding only that slice's part of the tree |
+| **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
+| **increment** | a chunk of build work; never a slice |
 | **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore` and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
 | **subsidiarity** | a rule lives at the lowest level that owns it: a feat, a graft, or a core |

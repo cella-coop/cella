@@ -207,9 +207,22 @@ applied is refused; a change is a new file.
 
 SQL logic is tested in the database. pgTAP tests and Lanterne's
 conformance suite, its cases and their expected verdicts, are gates
-alongside `cella check`; neither is wired in yet. `cella test` runs each
-slice's node test file through the handlers on its own database on the dev
-cluster (`cella db start`): reset, migrated and seeded with Lanterne.
+alongside `cella check`; neither is wired in yet. A slice is a feat or a
+graft, and node tests come in two kinds, placed by where they sit; a test
+file anywhere else fails `cella test`:
+
+- a **slice test** tests exactly one slice, from its package's `_tests/`.
+  `cella test slice [NAME]` runs each slice's tests on a database migrated
+  with the app's core and that slice's part of the tree alone (a feat's
+  own tree; a graft's feats, its lower-order grafts and itself), unseeded,
+  so a slice test cannot lean on a slice it does not own, and a package
+  imports only what its manifest names.
+- an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
+  `cella test e2e [NAME]` runs each on a database migrated whole and
+  seeded with Lanterne, through the handlers.
+
+Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
+for each slice and each scenario.
 
 ## Inside a package
 
@@ -221,7 +234,8 @@ Seedling's layers, innermost first; imports point inward only.
   endpoints, events, subscriptions).
 - Client: `hooks` → `components` → `bindings` (sockets, plugs) → `app`
   (pages, views, panes, blocks).
-- Tests in `_tests/`.
+- Tests in `_tests/` beside `src/`, a feat's or graft's slice tests; an app
+  root's e2e tests in `_e2e/`.
 
 A package's `exports` name its public surface: `./models`, `./api` and
 `./bindings`. Nothing else is importable from outside it.

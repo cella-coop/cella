@@ -55,7 +55,7 @@ pub enum Command {
         url: Option<String>,
     },
 
-    /// The Rust tests, then each slice on a fresh database
+    /// The Rust and tool tests, then each slice's tests and the e2e scenarios on fresh databases
     Test {
         #[command(subcommand)]
         only: Option<Test>,
@@ -125,9 +125,14 @@ pub enum Test {
     Cli,
     /// The node tools' tests, such as the feat check's
     Tools,
-    /// The slices end to end, or one by name; needs the dev cluster
+    /// Each slice's own tests, or one slice's, on a database holding only its part of the tree; needs the dev cluster
     Slice {
-        /// A slice's test file name without .test.ts, such as admission
+        /// A feat or graft, such as transaction or circle-member
+        name: Option<String>,
+    },
+    /// The scenarios across slices on a seeded Lanterne, or one by name; needs the dev cluster
+    E2e {
+        /// A scenario's file name in apps/org/ts/_e2e without .test.ts, such as admission
         name: Option<String>,
     },
 }

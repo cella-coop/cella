@@ -1,4 +1,4 @@
-// The third slice, end to end on a seeded Lanterne: the 2027 rate card is
+// The document scenario, end to end on a seeded Lanterne: the 2027 rate card is
 // edited together and adopted by d-2026-011. Edits are Loro updates that
 // merge in any order; a version is the text at a frontier, hashed; adoption
 // is ordered on its base and waits for the decision to close and pass on

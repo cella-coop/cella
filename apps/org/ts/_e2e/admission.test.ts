@@ -1,4 +1,4 @@
-// The first slice, end to end on a seeded Lanterne: Inès Haddad is admitted
+// The admission scenario, end to end on a seeded Lanterne: Inès Haddad is admitted
 // by the assembly's consent vote, through the cella extension. Run by
 // `cella test` on a fresh database.
 

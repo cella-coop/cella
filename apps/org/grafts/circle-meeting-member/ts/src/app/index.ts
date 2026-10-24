@@ -9,7 +9,7 @@ export const app: App = {
   name: 'circle-meeting-member',
   extends: {
     meetings: {
-      columns: [{ key: 'quorate', label: 'Present of seats', role: 'hidden', value: (r: { quorate?: string }) => r.quorate ?? null }],
+      columns: [{ key: 'quorate', label: 'Seats present', role: 'hidden', value: (r: { quorate?: string }) => r.quorate ?? null }],
       page: {
         properties: (m: OnMeeting | null) =>
           m

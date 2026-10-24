@@ -133,10 +133,11 @@ the header's writes.
 
 - The general assembly of 20 June 2026, held at the studio: the 2025
   accounts and the surplus (d-2026-006) and the internal rules, version 3
-  (d-2026-007); nine of ten present, Chloé excused; its minutes a block
-  document citing both decisions.
+  (d-2026-007); all ten members present; its minutes a block document
+  citing both decisions.
 - Coordination every Monday at 10:00 from 7 September to 19 October,
-  held, over the pipeline, staffing, the rate card (d-2026-011) and
-  Inès's admission (d-2026-012); the 26 October one scheduled.
+  held, at the studio and online, over the pipeline, staffing, the rate
+  card (d-2026-011) and Inès's admission (d-2026-012); Léa came as a
+  guest on 21 September; the 26 October one scheduled.
 - The general assembly of 31 October 2026, scheduled, its agenda Inès's
   admission, the 2027 rate card and the minutes of 20 June.

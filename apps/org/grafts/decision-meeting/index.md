@@ -40,8 +40,8 @@ decision feat's client side.
 ## Lanterne
 
 Coordination tabled the rate card, d-2026-011, on 12 and 19 October,
-and Inès's admission, d-2026-012, on 12 October; the assembly of 31
-October tables both. The assembly of 20 June tabled d-2026-006 and
+and Inès's admission, d-2026-012, on 19 October, once it was proposed;
+the assembly of 31 October tables both. The assembly of 20 June tabled d-2026-006 and
 d-2026-007.
 
 Slice tests: the trigger's two sides.

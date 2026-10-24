@@ -11,6 +11,20 @@ const meeting: Embed<OnDocument | OnMeeting> = {
   choices: (d) => d.meetings.map((m) => ({ ref: m.id, label: `${m.title}, ${date(m.at)}` })),
 }
 
+// Where a meeting's minutes stand: not begun, a draft, or their latest
+// version, adopted or not.
+const n = (version: string | null) => version?.split('@')[1]
+function stands(d: OnMeeting): string {
+  const m = d.minutes
+  if (!m) {
+    return 'not begun'
+  }
+  if (m.adopted) {
+    return `version ${n(m.adopted)}, adopted`
+  }
+  return m.latest ? `version ${n(m.latest)}` : 'draft'
+}
+
 // The graft's client side: a meeting's minutes in a tab of its own, read
 // as the document is, and the meeting card the minutes open with; on a
 // document's page, the meeting it minutes.
@@ -19,9 +33,7 @@ export const app: App = {
   extends: {
     meetings: {
       page: {
-        properties: (d: OnMeeting) => [
-          { label: 'Minutes', value: d.minutes ? (d.minutes.adopted ?? d.minutes.latest ?? 'draft') : 'not begun', kind: 'mono' as const, href: d.minutes ? `/documents/${d.minutes.document}` : undefined },
-        ],
+        properties: (d: OnMeeting) => [{ label: 'Minutes', value: stands(d), href: d.minutes ? `/documents/${d.minutes.document}` : undefined }],
         tabs: [{ id: 'minutes', label: 'Minutes' }],
         blocks: [{ tab: 'minutes', block: Minutes }],
         embeds: { meeting },
@@ -29,7 +41,7 @@ export const app: App = {
     },
     documents: {
       page: {
-        related: (d: OnDocument) => (d.of ? [{ label: d.of.title, sub: `minutes of, ${date(d.of.at)}`, href: `/meetings/${d.of.id}` }] : []),
+        related: (d: OnDocument) => (d.of ? [{ label: d.of.title, sub: `meeting, ${date(d.of.at)}`, href: `/meetings/${d.of.id}` }] : []),
         embeds: { meeting },
       },
     },

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button, Field, Form, Ordered, Section, type Column } from '@cella/org-ui'
+  import { Field, Form, Ordered, Section, type Column } from '@cella/org-ui'
   import type { Detail, Item } from '../../models/meeting.ts'
   import { useAgenda } from '../../hooks/useAgenda.ts'
 
@@ -21,13 +21,14 @@
 </script>
 
 <Section title="Agenda" count={data.agenda.length}>
-  <Ordered name="agenda" rows={agenda.items} {columns} fixed={!open} onmove={(from, to) => agenda.move(from, to)}>
-    {#snippet end(item: Item)}
-      {#if open}
-        <Button title="Remove {item.title}" onclick={() => agenda.remove(item.id)}>Remove</Button>
-      {/if}
-    {/snippet}
-  </Ordered>
+  <Ordered
+    name="agenda"
+    rows={agenda.items}
+    {columns}
+    fixed={!open}
+    onmove={(from, to) => agenda.move(from, to)}
+    onremove={(item: Item) => agenda.remove(item.id)}
+  />
   {#if open}
     <Form action="item" submit="Add item" tone="quiet" inline>
       <Field label="Item" name="title" required />

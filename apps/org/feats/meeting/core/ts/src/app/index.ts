@@ -43,7 +43,7 @@ export const app: App = {
           { label: 'Circle', value: m.circle },
           { label: 'When', value: when(m) },
           { label: 'Place', value: m.place || null },
-          ...(m.link ? [{ label: 'Link', value: m.link.replace(/^https:\/\//, ''), href: m.link }] : []),
+          ...(m.link ? [{ label: 'Link', value: m.link.replace(/^https:\/\//, '').split('/')[0], href: m.link }] : []),
           { label: 'Agenda', value: m.length ? `${m.items} items, ${m.length} min` : `${m.items} items` },
         ],
         activity: (m: Detail) => [

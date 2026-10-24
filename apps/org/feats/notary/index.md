@@ -3,7 +3,11 @@ title = "Notary"
 updated = 2026-10-24
 +++
 
-The server's office for ordered writes. It signs a receipt when a write arrives, checks the write's rule, then signs a numbered verdict; a verdict out of receipt order is proof against it. It is the one path that appends to the log, and it commits each verdict with its state change in one transaction. It never decides an outcome: an outcome is computed from the signed votes, and anyone holding the log can compute it again.
+The server's office for ordered writes. It signs a receipt when a write arrives, runs the rules that attach to it, then signs a numbered verdict; a verdict out of receipt order is proof against it. It never decides an outcome: an outcome is computed from the signed votes, and anyone holding the log can compute it again.
+
+The notary is the `cella` Postgres extension, a package of org's core at `apps/org/core/notary/rs`, not yet built. A handler opens a transaction, calls `select cella.submit(…)`, writes the state on Settled and commits once, so each verdict commits with its state change. Only the extension's functions may write the log. If the pgrx spike fails, the notary is a module of the app with the same `submit(write) → verdict` interface inside the caller's transaction. The transaction and the rules are in [trust](../../../../_corpus/doc/trust.md).
+
+This feat holds the notary's own writes.
 
 ## Writes
 
@@ -12,7 +16,3 @@ The server's office for ordered writes. It signs a receipt when a write arrives,
 | `POST /api/notary/move` | ordered | moving the co-op's notary to another server is an admin power |
 
 Peers, other co-ops' notaries, arrive at rung 5 with federation, and their writes with them; at rung 6 they cosign log heads.
-
-## Roots
-
-Its Rust root, which builds the notary's binary on org's `crypto`, `log` and `keystore`, comes later.

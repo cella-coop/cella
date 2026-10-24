@@ -35,6 +35,13 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 | `payslip` | finance | later | pay periods and payslips |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
+Seedling's co-op economics that rung 1 leaves out land with the later
+feats: patronage inputs (hours, wages, revenue per member) with
+`timesheet`, `payslip` and `invoice` through grafts onto `account`;
+buy-in, buyout over years, revolving capital and dues in `account`, once an
+`account-member` graft links capital accounts to members; quotes and
+budgets with `project`.
+
 Rung 1's pilot runs one write of each kind end to end: edit a document
 (confluent), issue an invoice (bounded, numbered by the server until rung 2),
 and admit a member by vote (ordered).

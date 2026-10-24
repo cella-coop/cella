@@ -27,6 +27,17 @@ import { app as memberTask } from '@cella/org-graft-member-task/app'
 import { app as memberTimesheet } from '@cella/org-graft-member-timesheet/app'
 import { app as projectTask } from '@cella/org-graft-project-task/app'
 import { app as projectTimesheet } from '@cella/org-graft-project-timesheet/app'
+import { app as expense } from '@cella/org-expense/app'
+import { app as payslip } from '@cella/org-payslip/app'
+import { app as accountDecision } from '@cella/org-graft-account-decision/app'
+import { app as accountMember } from '@cella/org-graft-account-member/app'
+import { app as accountMemberTransaction } from '@cella/org-graft-account-member-transaction/app'
+import { app as accountPayslip } from '@cella/org-graft-account-payslip/app'
+import { app as expenseMember } from '@cella/org-graft-expense-member/app'
+import { app as expenseProject } from '@cella/org-graft-expense-project/app'
+import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/app'
+import { app as memberPayslip } from '@cella/org-graft-member-payslip/app'
+import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/app'
 
 // The client sides the shell mounts, matching the server's slices by
 // name: each feat's views and pages, each graft's extensions, and the
@@ -54,6 +65,8 @@ export const apps: App[] = [
   invoice,
   account,
   transaction,
+  expense,
+  payslip,
   key,
   log,
   circleMember,
@@ -70,6 +83,15 @@ export const apps: App[] = [
   projectTimesheet,
   invoiceTransaction,
   accountTransaction,
+  accountDecision,
+  accountMember,
+  accountMemberTransaction,
+  accountPayslip,
+  expenseMember,
+  expenseProject,
+  expenseTransaction,
+  memberPayslip,
+  payslipTransaction,
   root,
 ]
 

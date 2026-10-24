@@ -1,0 +1,62 @@
+# Who came to each meeting held, as its secretary recorded it on the day:
+# Julien for the assembly, Malik for coordination. A member not seated in
+# the circle marks themselves and comes as a guest, as Léa did to present
+# the Halles shop's launch. The meetings still scheduled have no marks.
+
+[[attendance]]
+meeting = "ag-2026-06-20"
+by = "julien@lanterne.example"
+present = [
+  "camille@lanterne.example",
+  "yusuf@lanterne.example",
+  "hugo@lanterne.example",
+  "julien@lanterne.example",
+  "lea@lanterne.example",
+  "thomas@lanterne.example",
+  "sofia@lanterne.example",
+  "malik@lanterne.example",
+  "amina@lanterne.example",
+  "chloe@lanterne.example",
+]
+
+[[attendance]]
+meeting = "coordination-2026-09-07"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-09-14"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-09-21"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-09-21"
+by = "lea@lanterne.example"
+present = ["lea@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-09-28"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+excused = ["hugo@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-10-05"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-10-12"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]
+excused = ["yusuf@lanterne.example"]
+
+[[attendance]]
+meeting = "coordination-2026-10-19"
+by = "malik@lanterne.example"
+present = ["camille@lanterne.example", "yusuf@lanterne.example", "hugo@lanterne.example", "malik@lanterne.example", "julien@lanterne.example"]

@@ -1,0 +1,248 @@
+# Circles meeting, with their agendas in order: each item a title, who
+# presents it and its length in minutes. A held meeting was held on its
+# day. Who came is graft.meeting-member.toml's, the decisions an item
+# tables graft.decision-meeting.toml's, and the minutes
+# graft.document-meeting.toml's. Coordination meets every Monday at ten,
+# at the studio and online; the assembly on a Saturday morning.
+
+[[meeting]]
+id = "ag-2026-06-20"
+circle = "ag"
+title = "Annual general assembly"
+at = 2026-06-20T10:00:00
+place = "Studio, 14 rue des Graviers, Montreuil"
+scheduled = 2026-05-29
+status = "held"
+minuted = 2026-06-20
+
+[[meeting.item]]
+title = "The 2025 accounts and the surplus"
+presenter = "Julien"
+minutes = 45
+
+[[meeting.item]]
+title = "The internal rules, version 3"
+presenter = "Camille"
+minutes = 30
+
+[[meeting]]
+id = "coordination-2026-09-07"
+circle = "coordination"
+title = "Coordination"
+at = 2026-09-07T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 20
+
+[[meeting.item]]
+title = "Staffing for September"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting.item]]
+title = "Timesheets from 1 September"
+presenter = "Julien"
+minutes = 10
+
+[[meeting]]
+id = "coordination-2026-09-14"
+circle = "coordination"
+title = "Coordination"
+at = 2026-09-14T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 20
+
+[[meeting.item]]
+title = "Ferrand packaging: the range concept"
+presenter = "Hugo"
+minutes = 15
+
+[[meeting.item]]
+title = "Staffing"
+presenter = "Yusuf"
+minutes = 10
+
+[[meeting]]
+id = "coordination-2026-09-21"
+circle = "coordination"
+title = "Coordination"
+at = 2026-09-21T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 20
+
+[[meeting.item]]
+title = "Halles shop: the launch plan"
+presenter = "Léa"
+minutes = 15
+
+[[meeting.item]]
+title = "Inès asks to join"
+presenter = "Camille"
+minutes = 10
+
+[[meeting]]
+id = "coordination-2026-09-28"
+circle = "coordination"
+title = "Coordination"
+at = 2026-09-28T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 20
+
+[[meeting.item]]
+title = "Staffing for October"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting.item]]
+title = "2027 rates: a first draft"
+presenter = "Malik"
+minutes = 20
+
+[[meeting]]
+id = "coordination-2026-10-05"
+circle = "coordination"
+title = "Coordination"
+at = 2026-10-05T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 15
+
+[[meeting.item]]
+title = "September's books, closing today"
+presenter = "Julien"
+minutes = 10
+
+[[meeting.item]]
+title = "Rate card 2027, version 1"
+presenter = "Malik"
+minutes = 20
+
+[[meeting]]
+id = "coordination-2026-10-12"
+circle = "coordination"
+title = "Coordination"
+at = 2026-10-12T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 15
+
+[[meeting.item]]
+title = "Raise the day rate for 2027"
+presenter = "Malik"
+minutes = 20
+
+[[meeting.item]]
+title = "Inès's admission: a proposal to the assembly"
+presenter = "Camille"
+minutes = 15
+
+[[meeting]]
+id = "coordination-2026-10-19"
+circle = "coordination"
+title = "Coordination"
+at = 2026-10-19T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+status = "held"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 15
+
+[[meeting.item]]
+title = "The day rate: Malik's objection"
+presenter = "Malik"
+minutes = 20
+
+[[meeting.item]]
+title = "Admit Inès Haddad as a member"
+presenter = "Camille"
+minutes = 10
+
+[[meeting.item]]
+title = "Staffing for November"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting]]
+id = "coordination-2026-10-26"
+circle = "coordination"
+title = "Coordination"
+at = 2026-10-26T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/coordination"
+scheduled = 2026-10-19
+status = "scheduled"
+
+[[meeting.item]]
+title = "Pipeline"
+presenter = "Camille"
+minutes = 15
+
+[[meeting.item]]
+title = "Staffing for November"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting.item]]
+title = "Preparing the assembly of 31 October"
+presenter = "Camille"
+minutes = 20
+
+[[meeting]]
+id = "ag-2026-10-31"
+circle = "ag"
+title = "General assembly"
+at = 2026-10-31T10:00:00
+place = "Studio, 14 rue des Graviers, Montreuil"
+scheduled = 2026-10-01
+status = "scheduled"
+
+[[meeting.item]]
+title = "The minutes of 20 June"
+presenter = "Julien"
+minutes = 10
+
+[[meeting.item]]
+title = "Admit Inès Haddad as a member"
+presenter = "Camille"
+minutes = 20
+
+[[meeting.item]]
+title = "Raise the day rate for 2027"
+presenter = "Malik"
+minutes = 30

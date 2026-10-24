@@ -71,6 +71,16 @@ Julien; every member creates and moves tasks and logs their own time.
   Timesheets began on 1 September: seven hours a working day for everyone,
   under a third billable at 80 € an hour. Four members hold shares of
   project budgets. September is approved; October is open.
+- **Meetings (confluent, then ordered).** The annual assembly met on 20
+  June, all ten members present, approved the 2025 accounts and the
+  internal rules, and Julien, its secretary, wrote its minutes, which the
+  assembly approves at its next session. Coordination has met every
+  Monday since 7 September, Malik its secretary, over the pipeline,
+  staffing, the rate card and Inès's admission; it meets next on 26
+  October. Camille scheduled the assembly of 31 October, its agenda the
+  June minutes, Inès's admission and the rate card. Leads and the
+  gérante schedule meetings; secretaries and leads hold them and record
+  who came; every member marks themselves.
 
 ## Files
 
@@ -88,6 +98,13 @@ Time is written as runs: one entry a working day from one day to another
 (`timesheet.toml`), which the seed expands into the 799 entries of
 September and October; which project a run is for is
 `graft.project-timesheet.toml`'s.
+
+Meetings and their agendas are `meeting.toml`; who came, the decisions
+items table, the minutes and each circle's quorum are its grafts' files;
+`tools/fixture/meeting.mjs` checks that a held meeting met by the
+scope's day and a scheduled one meets after it, that the secretary
+recorded only members seated in the circle, others marking themselves as
+guests, and that no item tables a decision before it was proposed.
 
 Pay runs and expenses are `payslip.toml` and `expense.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its

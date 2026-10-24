@@ -55,6 +55,12 @@ name = "Circle lead"
 duty = "runs a working circle and sits on coordination"
 
 [[role]]
+id = "secretary"
+circle = "*"
+name = "Secretary"
+duty = "keeps a circle's minutes and records who came to its meetings"
+
+[[role]]
 id = "finance"
 circle = "operations"
 name = "Finance"
@@ -193,3 +199,23 @@ text = "approve timesheets"
 role = "finance"
 power = "approve-time"
 text = "approve timesheets"
+
+[[mandate]]
+role = "lead"
+power = "schedule-meeting"
+text = "schedule and cancel the circle's meetings"
+
+[[mandate]]
+role = "manager"
+power = "schedule-meeting"
+text = "schedule and cancel meetings"
+
+[[mandate]]
+role = "secretary"
+power = "keep-minutes"
+text = "hold the circle's meetings, record who came and keep their minutes"
+
+[[mandate]]
+role = "lead"
+power = "keep-minutes"
+text = "hold the circle's meetings, record who came and keep their minutes"

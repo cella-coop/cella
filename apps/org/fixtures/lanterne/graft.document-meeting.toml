@@ -1,0 +1,6 @@
+# Each meeting's minutes, the document they are written in. Coordination's
+# weekly meetings keep no minutes of their own yet.
+
+[[minutes]]
+meeting = "ag-2026-06-20"
+document = "minutes-ag-2026-06-20"

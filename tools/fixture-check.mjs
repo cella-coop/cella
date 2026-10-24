@@ -11,6 +11,7 @@ import { parse } from 'smol-toml'
 import { work } from './fixture/work.mjs'
 import { finance } from './fixture/finance.mjs'
 import { governance } from './fixture/governance.mjs'
+import { meeting, meetingIds } from './fixture/meeting.mjs'
 import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
 const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
@@ -88,11 +89,12 @@ const check = (name) => {
       fail(e.message)
       continue
     }
+    const drawn = { decision: decisions, meeting: meetingIds(read) }
     for (const e of embedded(outlines.get(v.id))) {
-      if (e.embed !== 'decision') {
+      if (!drawn[e.embed]) {
         fail(`${v.id}: embeds a ${e.embed}, which nothing draws`)
       } else {
-        has(decisions, e.ref, 'decision', `${v.id}'s embed`)
+        has(drawn[e.embed], e.ref, e.embed, `${v.id}'s embed`)
       }
     }
   }
@@ -200,6 +202,7 @@ const check = (name) => {
   work(read, fail)
   finance(read, fail)
   governance(read, fail)
+  meeting(read, fail)
 }
 
 const names = existsSync(root) ? readdirSync(root) : []

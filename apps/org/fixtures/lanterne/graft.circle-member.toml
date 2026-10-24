@@ -126,3 +126,15 @@ member = "malik@lanterne.example"
 [[position]]
 circle = "coordination"
 member = "julien@lanterne.example"
+
+# Each takes their circle's minutes, beside the seat they already hold.
+
+[[position]]
+circle = "ag"
+member = "julien@lanterne.example"
+role = "secretary"
+
+[[position]]
+circle = "coordination"
+member = "malik@lanterne.example"
+role = "secretary"

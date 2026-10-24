@@ -258,3 +258,70 @@ author = "malik@lanterne.example"
 at = 2026-10-21
 quote = "from 4 800 €"
 text = "Nuvola renews in January at the current rate; do we hold it for existing retainers?"
+
+# The minutes of the assembly of 20 June 2026, which Julien took and saved
+# two days later; they open on the meeting's card, as minutes begun from
+# a meeting's page do, and cite the decisions the assembly took.
+[[document]]
+id = "minutes-ag-2026-06-20"
+title = "Minutes, Annual general assembly"
+
+[[document.version]]
+id = "minutes-ag-2026-06-20@1"
+saved = 2026-06-22
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Minutes, Annual general assembly"
+
+[[document.version.block]]
+type = "embed"
+embed = "meeting"
+ref = "ag-2026-06-20"
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Present"
+
+[[document.version.block]]
+text = "All ten members, at the studio: Camille, Yusuf, Hugo, Julien, Léa, Thomas, Sofia, Malik, Amina and Chloé. Camille chaired; Julien took the minutes."
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "1. The 2025 accounts and the surplus"
+
+[[document.version.block]]
+runs = [
+  { text = "Julien presented the 2025 accounts, closing on a surplus of " },
+  { text = "61 400 €", bold = true },
+  { text = ". The assembly approved them and split the surplus as loi 78-763, art. 33 allows: 45 % to the members for their work, 15 % to the legal reserve, 25 % to the development fund and 15 % as interest on capital." },
+]
+
+[[document.version.block]]
+type = "embed"
+embed = "decision"
+ref = "d-2026-006"
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "2. The internal rules, version 3"
+
+[[document.version.block]]
+text = "Camille presented version 3, which adds remote work days and the solidarity rate for associations. Every member consented."
+
+[[document.version.block]]
+type = "embed"
+embed = "decision"
+ref = "d-2026-007"
+
+[[document.version.block]]
+type = "heading"
+level = 2
+text = "Closed"
+
+[[document.version.block]]
+text = "The session closed at 12:40."

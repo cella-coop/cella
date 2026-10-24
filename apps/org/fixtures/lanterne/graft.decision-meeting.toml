@@ -1,0 +1,38 @@
+# The decisions agenda items table: the meeting, the item by its place on
+# the agenda, from one, and the decision. A decision is tabled no earlier
+# than it was proposed.
+
+[[tabled]]
+meeting = "ag-2026-06-20"
+item = 1
+decision = "d-2026-006"
+
+[[tabled]]
+meeting = "ag-2026-06-20"
+item = 2
+decision = "d-2026-007"
+
+[[tabled]]
+meeting = "coordination-2026-10-12"
+item = 2
+decision = "d-2026-011"
+
+[[tabled]]
+meeting = "coordination-2026-10-19"
+item = 2
+decision = "d-2026-011"
+
+[[tabled]]
+meeting = "coordination-2026-10-19"
+item = 3
+decision = "d-2026-012"
+
+[[tabled]]
+meeting = "ag-2026-10-31"
+item = 2
+decision = "d-2026-012"
+
+[[tabled]]
+meeting = "ag-2026-10-31"
+item = 3
+decision = "d-2026-011"

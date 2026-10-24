@@ -1,4 +1,4 @@
-import type { Component } from 'svelte'
+import type { Component, Snippet } from 'svelte'
 import type { Widget } from './query.ts'
 
 // The client side of a slice: what a feat's collections look like, and
@@ -58,6 +58,15 @@ export interface Page<T = any> {
   blocks?: Block<T>[]
   // Writes on the item, in the header.
   actions?: Block<T>
+}
+
+// A panel of the drawer, behind its tab: an icon, the label it is named
+// by, and what it holds.
+export interface Panel {
+  id: string
+  label: string
+  icon: Component<any>
+  body: Snippet
 }
 
 export type Status<R = any> = (rows: R[], about: any) => { label: string; tone: Tone } | undefined

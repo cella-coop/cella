@@ -5,6 +5,7 @@
   import Rows from 'phosphor-svelte/lib/Rows'
   import TableIcon from 'phosphor-svelte/lib/Table'
   import ChartBar from 'phosphor-svelte/lib/ChartBar'
+  import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column, Status } from '../models/view.ts'
   import { fields, type Result, type Widget } from '../models/query.ts'
@@ -160,14 +161,7 @@
 
 <svelte:window {onkeydown} />
 
-<Frame {eyebrow} {title} {subtitle} badges={status.map((s) => s(rows, about)).filter((b) => b !== undefined)}>
-  {#snippet actions()}
-    {#if create}
-      <Button tone="primary" kbd="C" onclick={() => state.toggle()}><Icon icon={Plus} />New</Button>
-    {/if}
-  {/snippet}
-
-  {#snippet drawer()}
+{#snippet viewing()}
     <Card title="View">
       <div class="filter">
         <input bind:this={state.search} bind:value={state.filter} placeholder="Filter" aria-label="Filter" />
@@ -202,6 +196,19 @@
         <Widgets widgets={dashboard.widgets} fields={typed} {values} custom={dashboard.custom} onchange={arrange} />
       {/if}
     </Card>
+{/snippet}
+
+<Frame
+  {eyebrow}
+  {title}
+  {subtitle}
+  badges={status.map((s) => s(rows, about)).filter((b) => b !== undefined)}
+  panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
+>
+  {#snippet actions()}
+    {#if create}
+      <Button tone="primary" kbd="C" onclick={() => state.toggle()}><Icon icon={Plus} />New</Button>
+    {/if}
   {/snippet}
 
   {#if create && state.creating}

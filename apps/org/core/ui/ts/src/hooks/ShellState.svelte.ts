@@ -7,6 +7,8 @@ export class ShellState {
   #dismissed: Outcome | null = $state.raw(null)
   readonly #outcome: () => Outcome | null
   drawer = $state(true)
+  // The drawer's open panel, by id; a page without it opens its first.
+  panel: string | null = $state(null)
 
   constructor(outcome: () => Outcome | null, drawer: () => boolean) {
     this.#outcome = outcome
@@ -20,6 +22,10 @@ export class ShellState {
 
   dismiss() {
     this.#dismissed = this.#outcome()
+  }
+
+  choose(panel: string) {
+    this.panel = panel
   }
 
   show(open = !this.drawer) {

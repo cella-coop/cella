@@ -2,14 +2,16 @@
   import type { Snippet } from 'svelte'
   import ArrowLeft from 'phosphor-svelte/lib/ArrowLeft'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
-  import type { Tone } from '../models/view.ts'
+  import type { Panel, Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
   // The one page frame: a header with the page's eyebrow, title and
-  // actions, the content, and the drawer when the page has one, which the
-  // header's last button, or ], shows and hides on every page at once.
+  // actions, the content, and the drawer when the page has panels, which
+  // the header's last button, or ], shows and hides on every page at once.
+  // The drawer's tab bar shows one icon per panel, the open one marked,
+  // even when there is one.
   let {
     eyebrow,
     title,
@@ -17,7 +19,7 @@
     badges = [],
     back,
     actions,
-    drawer,
+    panels = [],
     children,
   }: {
     eyebrow: string
@@ -27,12 +29,14 @@
     badges?: { label: string; tone: Tone }[]
     back?: { href: string; label: string }
     actions?: Snippet
-    drawer?: Snippet
+    panels?: Panel[]
     children: Snippet
   } = $props()
 
   const shell = useShell()
   const id = $props.id()
+  const drawer = $derived(panels.length > 0)
+  const open = $derived(panels.find((p) => p.id === shell.panel) ?? panels[0])
 </script>
 
 <div class="frame" class:drawn={drawer && shell.drawer}>
@@ -75,8 +79,25 @@
     </header>
     <div class="body">{@render children()}</div>
   </div>
-  {#if drawer && shell.drawer}
-    <aside class="drawer" {id}>{@render drawer()}</aside>
+  {#if open && shell.drawer}
+    <aside class="drawer" {id}>
+      <div class="tabs" role="tablist" aria-label="Panels">
+        {#each panels as p (p.id)}
+          <button
+            role="tab"
+            id="{id}-{p.id}"
+            class:on={p === open}
+            aria-selected={p === open}
+            aria-controls="{id}-panel"
+            title={p.label}
+            onclick={() => shell.choose(p.id)}
+          >
+            <Icon icon={p.icon} />
+          </button>
+        {/each}
+      </div>
+      <div class="panel" role="tabpanel" id="{id}-panel" aria-labelledby="{id}-{open.id}">{@render open.body()}</div>
+    </aside>
   {/if}
 </div>
 
@@ -179,6 +200,35 @@
   .drawer {
     overflow-y: auto;
     padding: var(--space-4);
+    display: grid;
+    align-content: start;
+    gap: var(--space-3);
+  }
+  .tabs {
+    display: flex;
+    justify-content: end;
+    gap: 2px;
+  }
+  .tabs button {
+    display: grid;
+    place-items: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .tabs button:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .tabs button.on {
+    background: var(--sunk);
+    color: var(--text);
+  }
+  .panel {
     display: grid;
     align-content: start;
     gap: var(--space-3);

@@ -42,7 +42,10 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Frame`: the one page frame, a header with eyebrow, title, subtitle and
   actions, the content, and the drawer. The header's last button, or `]`
   anywhere, shows and hides the drawer on every page at once; a cookie
-  keeps the viewer's choice, so the server renders it.
+  keeps the viewer's choice, so the server renders it. The drawer holds
+  panels behind a tab bar of icons at its top right, one tab per panel,
+  the open one marked even when it is the only one: a collection's View,
+  an item's Details.
 - `Collection`: the one collection component, the same header and rows
   for every collection, and a drawer holding one card, View: the filter,
   the layout (list · table · dashboard) and, in a table, its columns, in
@@ -54,7 +57,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
   opens New.
 - `Detail`: the one detail view, the item's blocks in the content and the
-  drawer's cards: Properties (label and value rows), Related and Activity.
+  drawer's Details panel, its cards stacked as Linear stacks an issue's
+  properties: Properties (label and value rows), Related and Activity.
   Esc goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),

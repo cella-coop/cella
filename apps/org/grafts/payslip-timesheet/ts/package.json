@@ -1,0 +1,14 @@
+{
+  "name": "@cella/org-graft-payslip-timesheet",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-payslip": "workspace:*",
+    "@cella/org-timesheet": "workspace:*"
+  }
+}

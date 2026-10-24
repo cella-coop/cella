@@ -64,7 +64,7 @@ makes no claim that the host cannot forge a vote.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
   federation adds to the design rather than changing it.
 - Signatures are Ed25519 on devices and ML-DSA-44 at the root; encryption is
-  hybrid X25519 + ML-KEM-768 (`libs/crypto`).
+  hybrid X25519 + ML-KEM-768 (org's `core/crypto`).
 - Every signed artifact names its binding (parent, sequence, audience or
   freshness), and each signed type is domain-separated.
 - Thresholds are signed policy in the log, never flags or unsigned config.

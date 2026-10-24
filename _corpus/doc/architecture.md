@@ -7,7 +7,7 @@ updated = 2026-10-24
 
 Cella is built as a tree of **feats**. The root feats of the repository are
 its **apps**; apps hold feats, feats hold feats, and **grafts** join feats.
-Shared **libs** sit beside the tree and depend on no feat. The rules are
+Each feat's **core** holds the libraries its feats inherit. The rules are
 corpus's composable architecture as ruled on 2026-10-17, with seedling's
 layers inside each package and the write labels of the 2026-10-24 ruling.
 
@@ -15,13 +15,11 @@ layers inside each package and the write labels of the 2026-10-24 ruling.
 
 ```mermaid
 flowchart BT
-  libs["libs/: crypto, log, keystore, …"]
-  core["apps/org/core: labels, permissions, outcomes"]
+  core["apps/org/core: ops, crypto, log, keystore, …"]
   member["feats/member/core"]
   decision["feats/decision/core"]
   graft["grafts/decision-member"]
   root["apps/org/ts: shell, routes, server"]
-  core --> libs
   member --> core
   decision --> core
   graft --> member
@@ -33,8 +31,11 @@ flowchart BT
 
 A node is a directory with a `feat.toml`. It holds:
 
-- `core/` — what the feat is, and the surface its children and grafts may
-  use. A leaf feat's core is all of it.
+- `core/` — what the feat is, and the libraries its children and grafts
+  build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
+  core is its shared library layer: `ops` (labels, permissions, outcomes),
+  `crypto`, `log`, `keystore`, and later `db`, `auth`, `ui`. A leaf feat's
+  core is all of it.
 - `feats/` — its child feats, the same shape. Nesting stays shallow: what
   everything grafts onto belongs in the parent's core.
 - `grafts/` — the joins between its child feats.
@@ -43,20 +44,21 @@ A node is a directory with a `feat.toml`. It holds:
 
 Every package is an ordinary package in its ecosystem: a crate in `rs/`, an
 npm package in `ts/`, one to a directory. The workspaces find them by glob
-(`apps/**/ts`, `libs/*/ts`, `libs/*/rs`), so cargo, pnpm and editors work
-unchanged.
+(`apps/**/ts`, `apps/**/rs`), so cargo, pnpm and editors work unchanged.
 
 ## What may depend on what
 
 | A package in | may depend on |
 |---|---|
-| a shared lib | other shared libs |
-| a feat's core | its ancestors' cores; shared libs |
-| a graft | the cores of the feats it joins; its node's and their ancestors' cores; shared libs |
-| a node's root | its own and its ancestors' cores, its feats' cores and roots, its own grafts; shared libs |
+| a feat's core | the other packages of its own core; its ancestors' cores |
+| a graft | the cores of the feats it joins; its node's and their ancestors' cores |
+| a node's root | its own and its ancestors' cores, its feats' cores and roots, its own grafts |
 
-Nothing is ambient: no global module, no re-export that reaches around the
-tree. `tools/feat-check.mjs` reads the manifests cargo and pnpm already read,
+Nothing is ambient: no global module, no library outside the tree, no
+re-export that reaches around it. Third-party crates and npm packages are
+the only dependencies from outside. When two apps need the same library, the
+repository's root becomes the top node and the library moves into its core.
+`tools/feat-check.mjs` reads the manifests cargo and pnpm already read,
 places each package by its path, and refuses any other edge. It also checks
 that every graft is declared and that every feat it names is a feat of its
 node.
@@ -118,8 +120,8 @@ served and its jobs and subscriptions go inert. Built-in feats are always on.
 
 These calls resolve tensions between the iterations and are not yet ruled:
 
-- **Shared code is `libs/`**, and `core` means only a node's own core, so the
-  word has one meaning.
+- **The notary is a feat of org** with an `rs/` root that builds its binary,
+  so the libraries it shares with the app stay in org's core.
 - **Feats are flat under the app.** Groups are a field in `feat.toml`, not
   directories, so a graft between, say, an invoice and the books sits in one
   place instead of crossing groups.

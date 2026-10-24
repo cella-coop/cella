@@ -1,9 +1,7 @@
 [workspace]
 resolver = "2"
-# Every rs/ package at any depth: a lib, a feat's core, a graft or a node's
-# root. Cargo fails on a glob that matches nothing, so `apps/**/rs` joins
-# the list with the first Rust package under apps/.
-members = ["libs/*/rs"]
+# Every rs/ package at any depth: a package in a core, a graft or a node's root.
+members = ["apps/**/rs"]
 
 [workspace.package]
 version = "0.1.0-alpha"
@@ -13,9 +11,9 @@ authors = ["Matan Bendix Shenhav <matan@shenhav.fyi>"]
 repository = "https://codeberg.org/cella/cella"
 
 [workspace.dependencies]
-cella-crypto = { path = "libs/crypto/rs" }
-cella-log = { path = "libs/log/rs" }
-cella-keystore = { path = "libs/keystore/rs" }
+cella-crypto = { path = "apps/org/core/crypto/rs" }
+cella-log = { path = "apps/org/core/log/rs" }
+cella-keystore = { path = "apps/org/core/keystore/rs" }
 
 ed25519-dalek = { version = "2", default-features = false, features = ["std", "rand_core", "zeroize", "serde"] }
 blake3 = { version = "1", default-features = false, features = ["std", "serde"] }

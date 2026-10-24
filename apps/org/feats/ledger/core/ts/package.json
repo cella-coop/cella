@@ -6,6 +6,6 @@
     "./models": "./src/models/index.ts"
   },
   "dependencies": {
-    "@cella/org-core": "workspace:*"
+    "@cella/org-ops": "workspace:*"
   }
 }

@@ -1,4 +1,4 @@
-import { bounded, confluent, ordered, type Ops } from '@cella/org-core'
+import { bounded, confluent, ordered, type Ops } from '@cella/org-ops'
 
 export const ops = {
   // numbered in a series; the server's own until rung 2 gives devices theirs

@@ -26,8 +26,8 @@
         };
       });
 
-      # Per-feat checks, each built from its own directory, its ancestors'
-      # cores and the libs (lib.fileset), join this once feats hold code.
+      # Per-feat checks, each built from its own directory and its
+      # ancestors' cores (lib.fileset), join this once feats hold code.
       checks = each (pkgs: {
         feat-check = pkgs.runCommand "feat-check" {
           nativeBuildInputs = [ pkgs.nodejs pkgs.cargo ];

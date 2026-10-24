@@ -4,8 +4,8 @@ An ERP for member-governed organisations: co-ops and partnerships. Each
 co-op has its own database and notary. Cella orders the writes that contend
 and signs each verdict into a log the members can audit.
 
-- [Architecture](_corpus/doc/architecture.md) — feats, grafts and libs, and
-  what may depend on what.
+- [Architecture](_corpus/doc/architecture.md) — feats, their cores and grafts,
+  and what may depend on what.
 - [Trust](_corpus/doc/trust.md) — the three kinds of write, the notary and
   the log, keys, personal data.
 - [Ratchet](_corpus/doc/ratchet.md) — the rungs from a hosted pilot to zero
@@ -14,9 +14,8 @@ and signs each verdict into a log the members can audit.
 
 ## Layout
 
-- `apps/org/` — the ERP: its core, feats and grafts, and the root that
-  assembles them.
-- `libs/` — shared libraries: `crypto`, `log`, `keystore`.
+- `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`), its
+  feats and grafts, and the root that assembles them.
 - `tools/feat-check.mjs` — refuses a dependency the tree does not allow.
 - `_corpus/` — the repository's docs.
 

@@ -2,13 +2,15 @@
 // any dependency the tree does not allow. It reads the manifests cargo and
 // pnpm already read, never a list kept by hand.
 //
+// A node's core holds its libraries, one package each (core/<lib>/rs|ts),
+// or is one package itself (core/rs|ts); it is what its feats inherit.
+//
 //   a package in      may depend on
-//   a shared lib      other shared libs
-//   a feat's core     its ancestors' cores; shared libs
+//   a node's core     its own core's packages; its ancestors' cores
 //   a graft           the cores of the feats it joins; its node's and
-//                     their ancestors' cores; shared libs
+//                     their ancestors' cores
 //   a node's root     its own core and ancestors' cores, its feats' cores
-//                     and roots, its own grafts; shared libs
+//                     and roots, its own grafts
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -45,11 +47,11 @@ const childrenOf = (node) => {
 // Where a package sits on the tree, from the directory holding its manifest.
 const place = (dir) => {
   const up = dirname(dir)
-  if (dirname(up) === 'libs') {
-    return { kind: 'lib' }
-  }
   if (basename(up) === 'core' && isNode(dirname(up))) {
     return { kind: 'core', node: dirname(up) }
+  }
+  if (basename(dirname(up)) === 'core' && isNode(dirname(dirname(up)))) {
+    return { kind: 'core', node: dirname(dirname(up)) }
   }
   if (basename(dirname(up)) === 'grafts' && isNode(dirname(dirname(up)))) {
     return { kind: 'graft', node: dirname(dirname(up)), name: basename(up) }
@@ -63,15 +65,9 @@ const place = (dir) => {
 const describe = (p, dir) => (p ? `${p.kind} ${p.name ?? p.node ?? ''}`.trim() : 'unplaced') + ` (${dir})`
 
 const allowed = (from, to) => {
-  if (to.kind === 'lib') {
-    return true
-  }
-  if (from.kind === 'lib') {
-    return false
-  }
   const lineage = [from.node, ...ancestors(from.node)]
   if (from.kind === 'core') {
-    return to.kind === 'core' && ancestors(from.node).includes(to.node)
+    return to.kind === 'core' && lineage.includes(to.node)
   }
   if (from.kind === 'graft') {
     const joined = from.name.split('-').map((f) => join(from.node, 'feats', f))
@@ -83,7 +79,7 @@ const allowed = (from, to) => {
     || (to.kind === 'graft' && to.node === from.node)
 }
 
-// Every package directory: rs/ or ts/ under apps/ and libs/.
+// Every package directory: rs/ or ts/ under apps/.
 const walk = (dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
@@ -97,7 +93,7 @@ const walk = (dir, out = []) => {
   }
   return out
 }
-const dirs = ['apps', 'libs'].filter((d) => existsSync(join(repo, d))).flatMap((d) => walk(d))
+const dirs = existsSync(join(repo, 'apps')) ? walk('apps') : []
 
 // Edges from each ecosystem's manifests.
 const edges = []
@@ -126,7 +122,7 @@ if (existsSync(join(repo, 'Cargo.toml'))) {
 
 for (const dir of dirs) {
   if (!place(dir)) {
-    fail(`${dir}: not on the tree; a package sits in libs/<lib>/, a node's core/, a graft or a node's root`)
+    fail(`${dir}: not on the tree; a package sits in a node's core/ or core/<lib>/, a graft or a node's root`)
   }
 }
 for (const [a, b] of edges) {

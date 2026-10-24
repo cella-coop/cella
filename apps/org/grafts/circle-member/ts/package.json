@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "@cella/org-core": "workspace:*",
+    "@cella/org-ops": "workspace:*",
     "@cella/org-circle": "workspace:*",
     "@cella/org-member": "workspace:*"
   }

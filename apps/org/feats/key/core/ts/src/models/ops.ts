@@ -1,4 +1,4 @@
-import { confluent, ordered, type Ops } from '@cella/org-core'
+import { confluent, ordered, type Ops } from '@cella/org-ops'
 
 export const ops = {
   // signed by the member's current key; the address stays

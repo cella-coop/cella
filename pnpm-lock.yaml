@@ -8,115 +8,115 @@ importers:
 
   .: {}
 
-  apps/org/core/ts: {}
+  apps/org/core/ops/ts: {}
 
   apps/org/feats/circle/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/client/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/decision/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/document/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/invoice/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/key/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/ledger/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/feats/member/core/ts:
     dependencies:
-      '@cella/org-core':
+      '@cella/org-ops':
         specifier: workspace:*
-        version: link:../../../../core/ts
+        version: link:../../../../core/ops/ts
 
   apps/org/grafts/circle-member/ts:
     dependencies:
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../feats/circle/core/ts
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../../../core/ts
       '@cella/org-member':
         specifier: workspace:*
         version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
 
   apps/org/grafts/client-invoice/ts:
     dependencies:
       '@cella/org-client':
         specifier: workspace:*
         version: link:../../../feats/client/core/ts
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../../../core/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
 
   apps/org/grafts/decision-document/ts:
     dependencies:
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../../../core/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
       '@cella/org-document':
         specifier: workspace:*
         version: link:../../../feats/document/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
 
   apps/org/grafts/decision-member/ts:
     dependencies:
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../../../core/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
       '@cella/org-member':
         specifier: workspace:*
         version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
 
   apps/org/grafts/invoice-ledger/ts:
     dependencies:
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../../../core/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
       '@cella/org-ledger':
         specifier: workspace:*
         version: link:../../../feats/ledger/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
 
   apps/org/ts:
     dependencies:
@@ -126,9 +126,6 @@ importers:
       '@cella/org-client':
         specifier: workspace:*
         version: link:../feats/client/core/ts
-      '@cella/org-core':
-        specifier: workspace:*
-        version: link:../core/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../feats/decision/core/ts
@@ -162,3 +159,6 @@ importers:
       '@cella/org-member':
         specifier: workspace:*
         version: link:../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../core/ops/ts

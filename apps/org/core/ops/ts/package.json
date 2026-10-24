@@ -1,5 +1,5 @@
 {
-  "name": "@cella/org-core",
+  "name": "@cella/org-ops",
   "private": true,
   "type": "module",
   "exports": {

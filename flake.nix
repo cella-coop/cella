@@ -39,12 +39,17 @@
         fi
       '';
 
+      # The browsers the e2e scenarios drive, from nixpkgs' playwright-driver,
+      # whose version is the shell's playwright-core's.
+      browsers = pkgs: pkgs.playwright-driver.browsers;
+
       # cella runs from the checkout it is called in: cargo rebuilds it after
       # a change and execs it directly otherwise.
       wrapper = pkgs: pkgs.writeShellApplication {
         name = "cella";
         runtimeInputs = toolchain pkgs;
         text = ''
+          export PLAYWRIGHT_BROWSERS_PATH=''${PLAYWRIGHT_BROWSERS_PATH:-${browsers pkgs}}
           root=''${CELLA_ROOT:-}
           if [ -z "$root" ]; then
             dir=$PWD
@@ -81,6 +86,7 @@
 
           shellHook = ''
             export CELLA_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
+            export PLAYWRIGHT_BROWSERS_PATH=${browsers pkgs}
             ${pgrx pkgs "$CELLA_ROOT"}
           '';
         };

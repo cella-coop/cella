@@ -1,25 +1,21 @@
 // Real browsers against the built shell, for the scenarios that drive the
 // editor as a person does: the shell's server in dev mode on a free port,
 // and Playwright's Chromium, Firefox and WebKit from nixpkgs'
-// playwright-driver.browsers, which playwright-core's version matches.
+// playwright-driver.browsers, which playwright-core's version matches and
+// the devshell and `cella` export as PLAYWRIGHT_BROWSERS_PATH.
 // `BROWSERS` (comma-separated) narrows the browsers run.
 
-import { execFileSync, spawn, type ChildProcess } from 'node:child_process'
+import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import { chromium, firefox, webkit, type BrowserType } from 'playwright-core'
 
 const entry = new URL('../build/index.js', import.meta.url).pathname
-const repo = new URL('../../../..', import.meta.url).pathname
 
 export const engines: Record<string, BrowserType> = { chromium, firefox, webkit }
 
 export function browsers(): [string, BrowserType][] {
   if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
-    process.env.PLAYWRIGHT_BROWSERS_PATH = execFileSync(
-      'nix',
-      ['build', '--no-link', '--print-out-paths', '--inputs-from', repo, 'nixpkgs#playwright-driver.browsers'],
-      { encoding: 'utf8' },
-    ).trim()
+    throw new Error('PLAYWRIGHT_BROWSERS_PATH is not set: run the scenarios through `cella test`, inside `nix develop`')
   }
   const wanted = (process.env.BROWSERS ?? 'chromium,firefox,webkit').split(',')
   return Object.entries(engines).filter(([name]) => wanted.includes(name))

@@ -48,5 +48,10 @@ export const commands = [
 ]
 
 export function engine(snapshot?: Uint8Array, extra: Extension[] = []) {
-  return new Nabu({ snapshot, extensions: [...extensions, ...extra] })
+  const nabu = new Nabu({ snapshot, extensions: [...extensions, ...extra] })
+  // nabu loads the root blocks without their indices, which stay 0 until the
+  // tree first changes; a cross-block delete reads them to find the blocks
+  // in between, and would keep those.
+  nabu.updateRoots()
+  return nabu
 }

@@ -46,9 +46,18 @@ export class EditorState {
             this.move(e.key === 'ArrowUp' ? -1 : 1)
             return nabu.BREAK
           }
-          // nabu nests list items only; elsewhere Tab would leave the editor.
-          if (e.key === 'Tab' && nabu.selection.anchorBlock?.type !== 'list-item') {
+          if (e.key === 'Tab') {
             e.preventDefault()
+            const block = nabu.selection.anchorBlock as any
+            // nabu nests list items only; elsewhere Tab would leave the editor.
+            if (block?.type !== 'list-item') {
+              return nabu.BREAK
+            }
+            // nabu re-focuses a moved item at offset 0, since its element is
+            // remounted; put the caret back where it was.
+            const offset = block.behavior.selection?.from ?? 0
+            block.keydown(e)
+            setTimeout(() => nabu.selection.setCursor(block, offset))
             return nabu.BREAK
           }
         },

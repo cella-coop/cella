@@ -160,3 +160,22 @@ describe('upstream behaviour worth knowing', () => {
     expect(all(nabu).map((b) => b.text)).toEqual(['first', 'meant to be first'])
   })
 })
+
+describe('root indices after load', () => {
+  it('nabu leaves every root block at index 0 until the tree first changes', async () => {
+    const { Nabu } = await import('@aionbuilders/nabu')
+    const { extensions } = await import('../../src/lib/editor/engine.ts')
+    const { seed } = await import('../../src/lib/seed.ts')
+    const raw = new Nabu({ snapshot: seed(), extensions })
+    expect(new Set(raw.children.map((b: any) => b.index))).toEqual(new Set([0]))
+  })
+
+  it('our engine() refreshes them, which cross-block deletes rely on', () => {
+    const nabu = make([
+      { type: 'paragraph', delta: [t('a')] },
+      { type: 'paragraph', delta: [t('b')] },
+      { type: 'paragraph', delta: [t('c')] },
+    ])
+    expect(nabu.children.map((b: any) => b.index)).toEqual([0, 1, 2])
+  })
+})

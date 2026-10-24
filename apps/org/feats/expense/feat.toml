@@ -1,0 +1,5 @@
+name = "expense"
+group = "finance"
+builtin = false
+rung = 1
+grafts = ["circle-expense-member", "expense-member", "expense-project", "expense-transaction"]

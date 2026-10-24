@@ -128,6 +128,15 @@ suspended or left. Passkeys for signing in are the session's, not this
 feat's. At rung 4 the signing code moves into a native client the host does
 not serve; at rung 5 addresses are recognised across scopes.
 
+## Shell
+
+The `devices` collection, current ones first. The root mounts an
+address's devices on a member's page, since no graft joins key and
+member. Enrolling and revoking sign from the member's own device, which
+the dev shell does not hold, so neither is offered. The dev server signs
+as a member with a device's TEST-ONLY fixture key only when it is the key
+enrolled under that label and not revoked.
+
 ## Lanterne
 
 - Fourteen live devices for ten members: four have a laptop and a phone.

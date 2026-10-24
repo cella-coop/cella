@@ -12,6 +12,8 @@ scope: a co-op, a joint circle of co-ops, or a federation.
   `db` (a write's transaction).
 - `feats/` holds one domain each; none imports another.
 - `grafts/` joins feats, through their cores.
+- `rs/` is `cella`, the CLI that runs every development and production
+  task ([its doc](rs/index.md)).
 - `ts/` assembles the app: the SvelteKit shell, routes and the server.
 
 ## Feats

@@ -23,17 +23,22 @@ and signs each verdict into a log the members can audit.
 This repository works only on the org app.
 
 - `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`,
-  `rules`, `notary`, `db`), its
-  feats and grafts, and the root that assembles them.
-- `tools/feat-check.mjs` — refuses a dependency the tree does not allow.
+  `rules`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
+  `cella` CLI, and `ts/`, which assembles the app.
+- `tools/` — the node tools `cella` runs: the feat and fixture checks,
+  migrations and seeds.
 - `_corpus/` — the repository's docs.
 
 ## Develop
 
+`cella` runs every development and production task; see
+[the CLI](apps/org/rs/index.md).
+
 ```sh
 nix develop
-just check      # feat check, types, cargo check, clippy; no database
-just db         # build the cella extension, start Postgres 18 in .data/
-just test       # rules tests, then each slice on a fresh database
-just db-stop
+cella check       # feat check, fixture check, types, cargo check, clippy; no database
+cella db start    # build the cella extension, start Postgres 18 in .data/
+cella test        # Rust tests, then each slice on a fresh database
+cella log verify  # recheck the dev database's log
+cella db stop
 ```

@@ -9,7 +9,7 @@ only on the org app, `apps/org/`. Read
 
 - **A feat imports no other feat.** What feats share goes through a graft
   in their parent's `grafts/`, declared by the feat that extends.
-  `just feat-check` must pass; never route around it with a re-export.
+  `cella check feats` must pass; never route around it with a re-export.
 - **Every write has a label and a permission** in its feat's
   `models/ops.ts`. A new write without one is incomplete.
 - **The notary is the only path that appends to the log.** Only the `cella`
@@ -24,7 +24,7 @@ only on the org app, `apps/org/`. Read
   schema and `cella.*`; a graft's, its own, those of the feats it joins and
   those of its lower-order grafts. It creates and grants only in its own.
 - **Architecture rules are enforced by tooling** wherever a tool can see
-  them: `just feat-check` checks packages, imports, ops and every `sql/`
+  them: `cella check feats` checks packages, imports, ops and every `sql/`
   file. A rule a tool cannot check says so in its doc.
 - **No foreign key crosses a feat.** The graft's schema holds the junction.
 - **SQL is the source of truth for rules.** Never re-implement a rule in
@@ -37,8 +37,11 @@ only on the org app, `apps/org/`. Read
 
 ## Workflow
 
-- `just check` runs the feat check, the type check, `cargo check` and clippy.
-  Keep it green before a commit; never `--no-verify`.
+- `cella` is the one entry point for every development and production task
+  ([the CLI](apps/org/rs/index.md)); add a task to it, never a script
+  beside it. `cella check` runs the feat check, the fixture check, the type
+  check, `cargo check` and clippy. Keep it green before a commit; never
+  `--no-verify`.
 - Small commits with honest messages, by path: `feat(<feat>):`,
   `doc(<feat>):`, `graft(<a>-<b>):`, `lib(<lib>):`, `chore:`.
 - The spec and the code disagreeing is a question for the operator, not

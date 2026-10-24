@@ -47,7 +47,10 @@ A node is a directory with a `feat.toml`. It holds:
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between its child feats.
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
-  its feats into a binary or a shell has one.
+  its feats into a binary or a shell has one. Org's `rs/` root is `cella`,
+  the CLI that is the repository's one entry point for every development and
+  production task ([the CLI](../../apps/org/rs/index.md)); its `ts/` root is
+  the shell.
 
 Every package is an ordinary package in its ecosystem: a crate in `rs/`, an
 npm package in `ts/`, one to a directory. The workspaces find them by glob
@@ -84,10 +87,10 @@ the only dependencies from outside. When two apps need the same library, the
 repository's root becomes the top node and the library moves into its core.
 
 Architecture rules are enforced by tooling wherever a tool can see them.
-`tools/feat-check.mjs` reads each `package.json` and `cargo metadata`, the
-manifests cargo and pnpm read, and not the lockfile. It places each package
-by its path and refuses any other edge. It also checks that every graft is
-declared by a feat it joins, that its name is in order, that every feat it
+`tools/feat-check.mjs` (`cella check feats`) reads each `package.json` and
+`cargo metadata`, the manifests cargo and pnpm read, and not the lockfile.
+It places each package by its path and refuses any other edge. It also
+checks that every graft is declared by a feat it joins, that its name is in order, that every feat it
 names is a feat of its node, that a package's relative imports stay inside
 it, and that a feat's or graft's ops are named for it. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)).
@@ -190,7 +193,7 @@ then its grafts, recursively, each versioned. They are plain SQL, and the
 TypeScript types are generated from the schema; seedling's Drizzle, where
 TypeScript owns the schema, is dropped. The generator is not chosen.
 
-`tools/migrate.mjs` (`just migrate`) walks the tree in that order and applies
+`tools/migrate.mjs` (`cella migrate`) walks the tree in that order and applies
 each `sql/` directory's `NNN-*.sql` files, one transaction each, recording
 every file and its hash in `migration.applied`. A file edited after it was
 applied is refused; a change is a new file.
@@ -199,9 +202,9 @@ applied is refused; a change is a new file.
 
 SQL logic is tested in the database. pgTAP tests and Lanterne's
 conformance suite, its cases and their expected verdicts, are gates
-alongside `just check`; neither is wired in yet. `just test` runs each
+alongside `cella check`; neither is wired in yet. `cella test` runs each
 slice's node test file through the handlers on its own database on the dev
-cluster (`just db`): reset, migrated and seeded with Lanterne.
+cluster (`cella db start`): reset, migrated and seeded with Lanterne.
 
 ## Inside a package
 

@@ -1,7 +1,7 @@
 // The second slice, end to end on a seeded Lanterne: invoices into the
 // books. Issue, payment and void post balanced entries in the same
 // transaction as the invoice write; nothing posts into a closed period; and
-// rules run as a role that reads and cannot write. Run by `just test` on a
+// rules run as a role that reads and cannot write. Run by `cella test` on a
 // fresh database.
 
 import { after, before, test } from 'node:test'

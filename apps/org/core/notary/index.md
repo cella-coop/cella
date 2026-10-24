@@ -36,13 +36,13 @@ Rules never run with the owner's rights. `submit` runs each rule as `cella_rules
 
 ## Settings
 
-- `cella.key_file` (`postgresql.conf` only): a file holding the scope's 32-byte Ed25519 seed. `just db` generates a dev key in `.data/notary.key`; it is never committed.
+- `cella.key_file` (`postgresql.conf` only): a file holding the scope's 32-byte Ed25519 seed. `cella db start` generates a dev key in `.data/notary.key`; it is never committed.
 - `cella.clock` (superuser only): a fixed verdict date, `YYYY-MM-DD`, for fixtures and tests. Unset, the date is the clock's, in UTC, read once per transaction.
 
 The library is loaded through `shared_preload_libraries` so its settings exist before any session sets them.
 
 ## Build
 
-`just ext` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
+`cella ext build` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
 
 `sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-rules-role.sql` creates `cella_rules` and keeps `submit` and `receipt` to the app.

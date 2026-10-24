@@ -2,7 +2,7 @@
 // edited together and adopted by d-2026-011. Edits are Loro updates that
 // merge in any order; a version is the text at a frontier, hashed; adoption
 // is ordered on its base and waits for the decision to close and pass on
-// its roll. Run by `just test` on a fresh database.
+// its roll. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

@@ -1,6 +1,6 @@
 // The first slice, end to end on a seeded Lanterne: Inès Haddad is admitted
 // by the assembly's consent vote, through the cella extension. Run by
-// `just test` on a fresh database.
+// `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

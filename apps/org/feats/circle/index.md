@@ -79,9 +79,15 @@ write; see its [doc](../../grafts/circle-member/index.md).
 
 | Write | Power | Lanterne |
 |---|---|---|
-| nest | held by the assembly, by decision | `ag` |
-| mandate.grant, mandate.revoke | held by the granting circle, by decision | `ag` for the manager's mandate |
-| message | none: every position holder in the circle | the circle's members |
+| nest | `organise-circles`, until the assembly's decision decides it | no mandate grants it |
+| mandate.grant, mandate.revoke | `grant-mandate`, until the granting circle's decision decides it | no mandate grants it; Lanterne's mandates are seeded |
+| message | seat: an active member seated in the circle | the circle's members |
+
+`002-powers.sql` registers the powers. Nesting and granting are decisions
+once a graft ties a decision to the circle or mandate it changes; until
+then they need powers no Lanterne mandate grants, so neither is allowed by
+omission. A message's seat check is `circle_member.sits`, the
+`circle-member` graft's rule.
 
 ## Invariants
 

@@ -22,12 +22,14 @@ A person's membership, from invited to exited. Members records who belongs; it d
 ## Rules
 
 - `member.admitted`, on `member:member:admit`: the write left the member active, since the verdict date, holding shares.
+- `member.own_profile`, on `member:member:profile`: the profile is the actor's own (`cella.actor()`); a profile needs no power.
 
 Whether the cited decision asks to admit the member is the `decision-member` graft's rule on the same op; whether it closed and passed on its roll, `circle-decision-member`'s.
 
 ## Handlers
 
 - `admit` (ordered): sets the member active since `cella.verdict_date()` with their shares, then submits `{ member, shares, decision }`; the cited decision is an id this feat does not resolve.
+- `profile` (confluent): sets the member's given fields, the name for now, and submits `{ member, fields }`: the names of the fields changed, never their values.
 
 ## Grafts
 

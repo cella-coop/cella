@@ -12,3 +12,16 @@ export interface Admitted {
   member: string
   since: string
 }
+
+// A member's own fields; only those given change.
+export interface Profile {
+  member: string
+  name?: string
+}
+
+// The fields a profile write changed, by name: their values are personal
+// data and stay out of the log.
+export interface Profiled {
+  member: string
+  fields: string[]
+}

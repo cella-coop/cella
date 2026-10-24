@@ -15,6 +15,20 @@ A person's membership, from invited to exited. Members records who belongs; it d
 | `POST /api/member/suspend` | ordered | changes who votes |
 | `POST /api/member/exit` | ordered | freezes the capital account |
 
+## Powers
+
+Nothing is allowed by omission: each write needs a power or declares its
+check.
+
+| Write | Power or check | Lanterne |
+|---|---|---|
+| invite | `invite-member` | no mandate grants it yet |
+| admit | decided: the cited decision admits the member and carried | the assembly, by consent |
+| profile | self: the member's own | every member |
+| suspend, exit | `end-membership`, until their decisions' junctions are built and they are decided | no mandate grants it |
+
+`004-powers.sql` registers the powers in `cella.power`.
+
 ## Schema
 
 `member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` and shares. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.

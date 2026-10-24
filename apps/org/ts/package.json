@@ -1,0 +1,21 @@
+{
+  "name": "@cella/org",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cella/org-core": "workspace:*",
+    "@cella/org-key": "workspace:*",
+    "@cella/org-member": "workspace:*",
+    "@cella/org-circle": "workspace:*",
+    "@cella/org-decision": "workspace:*",
+    "@cella/org-document": "workspace:*",
+    "@cella/org-ledger": "workspace:*",
+    "@cella/org-invoice": "workspace:*",
+    "@cella/org-client": "workspace:*",
+    "@cella/org-graft-circle-member": "workspace:*",
+    "@cella/org-graft-client-invoice": "workspace:*",
+    "@cella/org-graft-decision-document": "workspace:*",
+    "@cella/org-graft-decision-member": "workspace:*",
+    "@cella/org-graft-invoice-ledger": "workspace:*"
+  }
+}

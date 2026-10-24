@@ -1,0 +1,10 @@
+{
+  "name": "@cella/org-graft-decision-document",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cella/org-core": "workspace:*",
+    "@cella/org-decision": "workspace:*",
+    "@cella/org-document": "workspace:*"
+  }
+}

@@ -1,0 +1,12 @@
+import { bounded, confluent, ordered, type Ops } from '@cella/org-core'
+
+export const ops = {
+  // numbered in a series; the server's own until rung 2 gives devices theirs
+  'invoice:invoice:issue': bounded('series'),
+  // to a client, or to a peer co-op
+  'invoice:invoice:send': confluent(),
+  // payments add up
+  'invoice:invoice:payment': confluent(),
+  // ordered against the payments
+  'invoice:invoice:void': ordered(),
+} satisfies Ops

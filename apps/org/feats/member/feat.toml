@@ -1,0 +1,5 @@
+name = "member"
+group = "governance"
+builtin = true
+rung = 1
+grafts = ["decision-member"]

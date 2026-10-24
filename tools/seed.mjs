@@ -160,7 +160,7 @@ for (const c of clients) {
 
 const books = read('account')
 for (const a of books.account ?? []) {
-  await db.query('INSERT INTO account.account (code, label, kind) VALUES ($1, $2, $3)', [a.code, a.label, a.kind])
+  await db.query('INSERT INTO account.account (code, label, kind, cash) VALUES ($1, $2, $3, $4)', [a.code, a.label, a.kind, a.cash ?? false])
 }
 for (const p of books.period ?? []) {
   await db.query('INSERT INTO account.period (month) VALUES ($1)', [p.month])

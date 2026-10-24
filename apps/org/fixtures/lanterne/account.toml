@@ -1,6 +1,6 @@
 # The accounts: a part of the French chart of accounts, the periods they are
 # kept in and the surplus allocations, amounts in cents. July to September
-# are closed; October is open.
+# are closed; October is open. A cash account, the bank, says `cash = true`.
 
 [[account]]
 code = "1013"
@@ -46,6 +46,7 @@ kind = "liability"
 code = "512"
 label = "Banque — Crédit Coopératif"
 kind = "asset"
+cash = true
 
 [[account]]
 code = "613"

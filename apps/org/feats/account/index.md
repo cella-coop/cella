@@ -15,7 +15,7 @@ posted to it, which the `account-transaction` graft reads from the
 
 | Entity | Fields | Notes |
 |---|---|---|
-| account | `code`, `label`, `kind`, `parent?`, `holder?`, `frozen` | `code` is unique in the scope and follows the national chart (the French PCG for a SCOP) |
+| account | `code`, `label`, `kind`, `cash`, `parent?`, `holder?`, `frozen` | `code` is unique in the scope and follows the national chart (the French PCG for a SCOP) |
 | period | `month`, `closed?` | one per month of the fiscal year; open until closed, never reopened |
 | allocation | `id`, `year`, `surplus`, `shares[]` | one per fiscal year's surplus |
 | allocation share | `kind`, `percent`, `amount` | `work`, `reserves`, `interest`, or a fund |
@@ -27,6 +27,11 @@ equity accounts distinguished by their code: `1013` holds members' paid-up
 capital, `1061` the legal reserve, `1068` the indivisible reserves. A
 capital account names its member by address, as text; it has no key into
 `member`.
+
+An account marked `cash` holds the co-op's money: the bank, a till. The
+chart says which accounts are cash, and the `account-transaction` graft
+reads the flag to keep money from leaving one except through the writes
+with their own power and limit (`transaction.pay`, `transaction.payroll`).
 
 ## Lifecycle
 
@@ -105,7 +110,7 @@ their grafts (`timesheet`, `payslip`), not here.
 
 `account` (`core/sql/`):
 
-- `account.account`: code, label, kind, parent, holder (an address, as
+- `account.account`: code, label, kind, `cash`, parent, holder (an address, as
   text) and `frozen`.
 - `account.period`: a month (`2026-10`) and the date it `closed`; a
   trigger keeps a closed period closed, raising SQLSTATE `09000`.
@@ -131,7 +136,8 @@ graft's.
 ## Lanterne
 
 - The chart is a part of the PCG: `512` the bank at Crédit Coopératif,
-  `401` suppliers, `411` clients, `706` services, `44571` VAT collected.
+  its one cash account, `401` suppliers, `411` clients, `706` services,
+  `44571` VAT collected.
 - July, August and September 2026 are closed; October is open. Julien
   closes each month in the first week of the next.
 - The 2025 surplus of 61 400 € was allocated in June by d-2026-006:

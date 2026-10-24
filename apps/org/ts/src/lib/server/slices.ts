@@ -10,6 +10,9 @@ import { slice as client } from '@cella/org-client/api'
 import { slice as invoice } from '@cella/org-invoice/api'
 import { slice as account } from '@cella/org-account/api'
 import { slice as transaction } from '@cella/org-transaction/api'
+import { slice as project } from '@cella/org-project/api'
+import { slice as task } from '@cella/org-task/api'
+import { slice as timesheet } from '@cella/org-timesheet/api'
 import { slice as circleMember } from '@cella/org-graft-circle-member/api'
 import { slice as circleDecisionMember } from '@cella/org-graft-circle-decision-member/api'
 import { slice as decisionMember } from '@cella/org-graft-decision-member/api'
@@ -17,6 +20,13 @@ import { slice as decisionDocument } from '@cella/org-graft-decision-document/ap
 import { slice as clientInvoice } from '@cella/org-graft-client-invoice/api'
 import { slice as invoiceTransaction } from '@cella/org-graft-invoice-transaction/api'
 import { slice as accountTransaction } from '@cella/org-graft-account-transaction/api'
+import { slice as clientProject } from '@cella/org-graft-client-project/api'
+import { slice as invoiceProject } from '@cella/org-graft-invoice-project/api'
+import { slice as memberProject } from '@cella/org-graft-member-project/api'
+import { slice as memberTask } from '@cella/org-graft-member-task/api'
+import { slice as memberTimesheet } from '@cella/org-graft-member-timesheet/api'
+import { slice as projectTask } from '@cella/org-graft-project-task/api'
+import { slice as projectTimesheet } from '@cella/org-graft-project-timesheet/api'
 
 // The server sides the shell mounts: each feat's collections, each graft's
 // extensions of the feats it joins, and the root's own, which joins feats
@@ -34,6 +44,9 @@ export const slices: Slice[] = [
   decision,
   document,
   client,
+  project,
+  task,
+  timesheet,
   invoice,
   account,
   transaction,
@@ -44,6 +57,13 @@ export const slices: Slice[] = [
   decisionMember,
   decisionDocument,
   clientInvoice,
+  clientProject,
+  invoiceProject,
+  memberProject,
+  memberTask,
+  memberTimesheet,
+  projectTask,
+  projectTimesheet,
   invoiceTransaction,
   accountTransaction,
   root,

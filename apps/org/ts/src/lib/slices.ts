@@ -10,6 +10,9 @@ import { app as client } from '@cella/org-client/app'
 import { app as invoice } from '@cella/org-invoice/app'
 import { app as account } from '@cella/org-account/app'
 import { app as transaction } from '@cella/org-transaction/app'
+import { app as project } from '@cella/org-project/app'
+import { app as task } from '@cella/org-task/app'
+import { app as timesheet } from '@cella/org-timesheet/app'
 import { app as circleMember } from '@cella/org-graft-circle-member/app'
 import { app as circleDecisionMember } from '@cella/org-graft-circle-decision-member/app'
 import { app as decisionMember } from '@cella/org-graft-decision-member/app'
@@ -17,15 +20,25 @@ import { app as decisionDocument } from '@cella/org-graft-decision-document/app'
 import { app as clientInvoice } from '@cella/org-graft-client-invoice/app'
 import { app as invoiceTransaction } from '@cella/org-graft-invoice-transaction/app'
 import { app as accountTransaction } from '@cella/org-graft-account-transaction/app'
+import { app as clientProject } from '@cella/org-graft-client-project/app'
+import { app as invoiceProject } from '@cella/org-graft-invoice-project/app'
+import { app as memberProject } from '@cella/org-graft-member-project/app'
+import { app as memberTask } from '@cella/org-graft-member-task/app'
+import { app as memberTimesheet } from '@cella/org-graft-member-timesheet/app'
+import { app as projectTask } from '@cella/org-graft-project-task/app'
+import { app as projectTimesheet } from '@cella/org-graft-project-timesheet/app'
 
 // The client sides the shell mounts, matching the server's slices by
 // name: each feat's views and pages, each graft's extensions, and the
 // root's own, which joins feats no graft joins, such as a member's
-// devices.
+// devices, and the cards of the work collections, whose fields come from
+// several grafts no one graft may name together.
 const root: App = {
   name: 'org',
   extends: {
     members: { page: { blocks: [Devices] } },
+    projects: { look: { cards: ['client', 'progress', 'budget', 'used'] } },
+    tasks: { look: { cards: ['assignee', 'project', 'priority', 'due'] } },
   },
 }
 
@@ -35,6 +48,9 @@ export const apps: App[] = [
   decision,
   document,
   client,
+  project,
+  task,
+  timesheet,
   invoice,
   account,
   transaction,
@@ -45,6 +61,13 @@ export const apps: App[] = [
   decisionMember,
   decisionDocument,
   clientInvoice,
+  clientProject,
+  invoiceProject,
+  memberProject,
+  memberTask,
+  memberTimesheet,
+  projectTask,
+  projectTimesheet,
   invoiceTransaction,
   accountTransaction,
   root,

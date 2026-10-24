@@ -193,6 +193,51 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/feats/project/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/feats/task/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/feats/timesheet/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/feats/transaction/core/ts:
     dependencies:
       '@cella/org-db':
@@ -307,6 +352,27 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/client-project/ts:
+    dependencies:
+      '@cella/org-client':
+        specifier: workspace:*
+        version: link:../../../feats/client/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/decision-document/ts:
     dependencies:
       '@cella/org-db':
@@ -349,6 +415,27 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/invoice-project/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-invoice':
+        specifier: workspace:*
+        version: link:../../../feats/invoice/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/invoice-transaction/ts:
     dependencies:
       '@cella/org-db':
@@ -363,6 +450,111 @@ importers:
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/member-project/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/member-task/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-task':
+        specifier: workspace:*
+        version: link:../../../feats/task/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/member-timesheet/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../../../feats/timesheet/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/project-task/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-task':
+        specifier: workspace:*
+        version: link:../../../feats/task/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/project-timesheet/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../../../feats/timesheet/core/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -405,15 +597,36 @@ importers:
       '@cella/org-graft-client-invoice':
         specifier: workspace:*
         version: link:../grafts/client-invoice/ts
+      '@cella/org-graft-client-project':
+        specifier: workspace:*
+        version: link:../grafts/client-project/ts
       '@cella/org-graft-decision-document':
         specifier: workspace:*
         version: link:../grafts/decision-document/ts
       '@cella/org-graft-decision-member':
         specifier: workspace:*
         version: link:../grafts/decision-member/ts
+      '@cella/org-graft-invoice-project':
+        specifier: workspace:*
+        version: link:../grafts/invoice-project/ts
       '@cella/org-graft-invoice-transaction':
         specifier: workspace:*
         version: link:../grafts/invoice-transaction/ts
+      '@cella/org-graft-member-project':
+        specifier: workspace:*
+        version: link:../grafts/member-project/ts
+      '@cella/org-graft-member-task':
+        specifier: workspace:*
+        version: link:../grafts/member-task/ts
+      '@cella/org-graft-member-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/member-timesheet/ts
+      '@cella/org-graft-project-task':
+        specifier: workspace:*
+        version: link:../grafts/project-task/ts
+      '@cella/org-graft-project-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/project-timesheet/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../feats/invoice/core/ts
@@ -429,9 +642,18 @@ importers:
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../feats/project/core/ts
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../core/sign/ts
+      '@cella/org-task':
+        specifier: workspace:*
+        version: link:../feats/task/core/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../feats/timesheet/core/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../feats/transaction/core/ts

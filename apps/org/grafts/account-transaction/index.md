@@ -46,6 +46,13 @@ the entry is exactly a payment or a payroll:
 Money received posts through the writes that receive it, such as
 `invoice.payment`.
 
+## Shell
+
+Adds each account's debits, credits and balance to the chart, from
+`account_transaction.balance`, with the trial balance over them and the
+cash the cash accounts hold; and an account's ledger, every line posted
+to it, to its page.
+
 ## Lanterne
 
 July to September 2026 are closed; October is open. The seeded books give

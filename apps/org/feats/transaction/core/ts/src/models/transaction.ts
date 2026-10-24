@@ -22,6 +22,15 @@ export interface Pay {
   cents: number
 }
 
+// A month's payroll: wages (641) and social charges (645), in cents, paid
+// from the bank, 512, until the payslip feat posts each payslip.
+export interface Payroll {
+  date: string
+  label: string
+  wages: number
+  charges: number
+}
+
 // A correcting entry names the entry it corrects and that entry's latest
 // correction it read, or null if it read none.
 export interface Adjust {

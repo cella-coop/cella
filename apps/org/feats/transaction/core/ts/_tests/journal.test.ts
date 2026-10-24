@@ -104,6 +104,25 @@ test('a payment is 401 debited and 512 credited by its amount, and nothing else,
   assert.equal(await pays('je-9999', 1_00), 'no entry je-9999')
 })
 
+test('a payroll is wages and charges debited and the bank credited once, and nothing else, by transaction.payroll', async () => {
+  const payroll = async (entry: string | undefined) =>
+    (await db.query<{ r: string | null }>('SELECT transaction.payroll($1) AS r', [{ entry }])).rows[0].r
+  const october = await post([
+    { account: '641', side: 'debit', cents: 21_400_00 },
+    { account: '645', side: 'debit', cents: 9_630_00 },
+    { account: '512', side: 'credit', cents: 31_030_00 },
+  ])
+  assert.equal(await payroll(october.id), null)
+  const padded = await post([
+    { account: '641', side: 'debit', cents: 21_400_00 },
+    { account: '626', side: 'debit', cents: 500_00 },
+    { account: '512', side: 'credit', cents: 21_900_00 },
+  ])
+  assert.match((await payroll(padded.id)) ?? '', /is not a payroll: wages \(641\) and charges \(645\) debited, the bank \(512\) credited by their sum, nothing else/)
+  assert.match((await payroll((await post(rent)).id)) ?? '', /is not a payroll/)
+  assert.equal(await payroll('je-9999'), 'no entry je-9999')
+})
+
 test('a correction names its base, and a second from the same base is refused by transaction.corrects', async () => {
   const reverse: Line[] = rent.map((l) => ({ ...l, side: l.side === 'debit' ? 'credit' : 'debit' }))
   const first = await post(reverse, 'je-0001', 1)

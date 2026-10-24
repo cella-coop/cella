@@ -89,6 +89,11 @@ limit = 300000
 
 [[mandate]]
 role = "finance"
+power = "run-payroll"
+text = "run the monthly payroll"
+
+[[mandate]]
+role = "finance"
 power = "issue-invoice"
 text = "issue invoices"
 

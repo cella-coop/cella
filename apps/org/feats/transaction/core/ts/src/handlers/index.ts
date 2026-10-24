@@ -1,4 +1,5 @@
 export { record } from './record.ts'
 export { post, posting } from './post.ts'
 export { pay, paying } from './pay.ts'
+export { payroll, running } from './payroll.ts'
 export { adjust, adjusting } from './adjust.ts'

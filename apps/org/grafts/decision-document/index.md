@@ -29,6 +29,12 @@ Adopting rate-card-2027@2 under d-2026-011 so passes three rules, each at
 the lowest level that sees what it checks: the document's base, the
 decision's request, and the roll's outcome.
 
+## Shell
+
+Adds the version a decision adopts to the decision's page, and the
+decisions that adopt a document's versions to the document's. Adopting
+from the shell is not offered yet.
+
 ## Lanterne
 
 d-2026-007 adopted internal-rules@3 on 20 June 2026; d-2026-011 asks to

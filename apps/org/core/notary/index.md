@@ -27,7 +27,11 @@ On a refusal `submit` raises SQLSTATE `09000` (`triggered_action_exception`) wit
 
 Each entry holds its number, op, actor, verdict date, a BLAKE3 digest of the canonical payload (never the payload), and each deciding rule's owner, signature and text digest; the text itself goes to `cella.rule_text`. Entries are hashed over the previous hash and signed with Ed25519.
 
-The log tables are readable by everyone and writable by no role but the extension's owner; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`, so rules run as the owner.
+The log tables are readable by everyone and writable by no role but the extension's owner; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`. Only `cella_app` may execute `submit` and `receipt`.
+
+## The rules role
+
+Rules never run with the owner's rights. `submit` runs each rule as `cella_rules`, a role that cannot log in, is no superuser, bypasses no row security and owns nothing; each feat and graft grants it `USAGE` and `SELECT` on its own schema, and nothing more. `SET ROLE` is refused inside a security-definer function, so `submit` switches the way Postgres itself does for one: it sets the user id to `cella_rules` in a security-restricted operation around each rule call (`SetUserIdAndSecContext`) and restores it on return, on unwind and, through the transaction's abort, on any error. A rule therefore cannot write a table, take a receipt, call `submit`, read `cella.key_file` or the key file itself; `submit` refuses a rule declared `SECURITY DEFINER`, and the role is refused if it is a superuser or bypasses row security.
 
 ## Settings
 
@@ -40,4 +44,4 @@ The library is loaded through `shared_preload_libraries` so its settings exist b
 
 `just ext` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
 
-`sql/001-cella.sql` creates the extension and the app's role, `cella_app`.
+`sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-rules-role.sql` creates `cella_rules` and keeps `submit` and `receipt` to the app.

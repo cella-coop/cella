@@ -88,7 +88,8 @@ fn rules(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
     let rows = spi(c.select(
         "SELECT r.owner, r.fn::text, quote_ident(n.nspname) || '.' || quote_ident(p.proname),
                 pg_get_functiondef(r.fn), p.provolatile = 'v',
-                p.prorettype = 'text'::regtype AND p.proargtypes = '3802'::oidvector
+                p.prorettype = 'text'::regtype AND p.proargtypes = '3802'::oidvector,
+                p.prosecdef
          FROM cella.rule r
          JOIN pg_proc p ON p.oid = r.fn
          JOIN pg_namespace n ON n.oid = p.pronamespace
@@ -106,9 +107,58 @@ fn rules(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
         if spi(row.get::<bool>(6)) != Some(true) {
             fail(format!("cella: rule {function} must take (payload jsonb) and return text"));
         }
+        if spi(row.get::<bool>(7)) != Some(false) {
+            fail(format!("cella: rule {function} is security definer; a rule runs as {RULES_ROLE}"));
+        }
         Registered { owner: text(1), function, call: text(3), body: text(4) }
     })
     .collect()
+}
+
+/// The role every rule runs as: it may read the scope's schemas and
+/// nothing else, and owns nothing.
+const RULES_ROLE: &str = "cella_rules";
+
+fn rules_role(c: &SpiClient<'_>) -> pg_sys::Oid {
+    let row = spi(c.select(
+        "SELECT oid FROM pg_catalog.pg_roles WHERE rolname = $1 AND NOT rolsuper AND NOT rolbypassrls",
+        Some(1),
+        &[RULES_ROLE.into()],
+    ));
+    spi(row.first().get_one::<pg_sys::Oid>())
+        .unwrap_or_else(|| fail(format!("cella: no role {RULES_ROLE}, or it is a superuser or bypasses row security")))
+}
+
+/// Runs a rule as the rules role, in a security-restricted operation, as
+/// Postgres runs a security-definer function or a maintenance command:
+/// `submit` is a security-definer function, where `SET ROLE` is refused.
+/// The previous user is restored on return and on unwind; an abort
+/// restores it too.
+struct AsRules {
+    user: pg_sys::Oid,
+    context: i32,
+}
+
+impl AsRules {
+    fn enter(role: pg_sys::Oid) -> Self {
+        let mut user = pg_sys::InvalidOid;
+        let mut context = 0;
+        let restricted = (pg_sys::SECURITY_LOCAL_USERID_CHANGE | pg_sys::SECURITY_RESTRICTED_OPERATION) as i32;
+        // SAFETY: plain reads and writes of the backend's user id and
+        // security context, with no error path.
+        unsafe {
+            pg_sys::GetUserIdAndSecContext(&raw mut user, &raw mut context);
+            pg_sys::SetUserIdAndSecContext(role, context | restricted);
+        }
+        Self { user, context }
+    }
+}
+
+impl Drop for AsRules {
+    fn drop(&mut self) {
+        // SAFETY: restores what `enter` read.
+        unsafe { pg_sys::SetUserIdAndSecContext(self.user, self.context) }
+    }
 }
 
 pub fn submit(op: &str, payload: &JsonB, actor: &str) -> i64 {
@@ -123,10 +173,15 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str) -> i64 {
             .unwrap_or_else(|| fail("cella: the head's hash is not 32 bytes"));
 
         let registered = rules(c, op);
+        let role = if registered.is_empty() { pg_sys::InvalidOid } else { rules_role(c) };
         for r in &registered {
             let arg = JsonB(payload.0.clone());
-            let reason = spi(c.update(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
-            if let Some(reason) = spi(reason.first().get_one::<String>()) {
+            let reason = {
+                let _as = AsRules::enter(role);
+                let rows = spi(c.select(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
+                spi(rows.first().get_one::<String>())
+            };
+            if let Some(reason) = reason {
                 ereport!(
                     ERROR,
                     PgSqlErrorCode::ERRCODE_TRIGGERED_ACTION_EXCEPTION,

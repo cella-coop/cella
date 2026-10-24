@@ -17,7 +17,7 @@ A person's membership, from invited to exited. Members records who belongs; it d
 
 ## Schema
 
-`member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` and shares. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update.
+`member` (`core/sql/`): `member.member`, one row per address, with name, status (`invited`, `active`, `suspended`, `exited`), `since` and shares. A trigger lets a status move only along that lifecycle, raising SQLSTATE `09000` otherwise. The app role may select, insert and update; the rules role, `cella_rules`, may select.
 
 ## Rules
 

@@ -22,7 +22,7 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 
 `cella serve` shows Lanterne from the dev database. Each feat's collection
 is a page in the sidebar: Members, Circles, Decisions and Documents
-(governance); Clients (work); Invoices, Accounts, Periods and the Journal
+(governance); Clients (work); Invoices, Accounts, Periods and Transactions
 (finance); Devices and the Log (platform). Every collection is the same
 component, with a list and a table view, and every item the same detail
 view, its drawer's cards filled by the feat and the grafts that join it.

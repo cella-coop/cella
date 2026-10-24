@@ -2,14 +2,16 @@ import { icons, type App } from '@cella/org-ui'
 import type { Detail, Journaled } from '../models/transaction.ts'
 import Lines from './blocks/Lines.svelte'
 
-// The feat's client side: the journal, and an entry's page with its lines.
+// The feat's client side: the journal as the shell's transactions, and an
+// entry's page with its lines.
 export const app: App = {
   name: 'transaction',
   collections: {
-    journal: {
+    transactions: {
       view: {
         group: 'finance',
-        title: 'Journal',
+        title: 'Transactions',
+        caption: 'The journal: every transaction in order',
         icon: icons.BookOpen,
         columns: [
           { key: 'id', label: 'Entry', kind: 'mono', role: 'title', value: (e: Journaled) => e.id },
@@ -20,16 +22,16 @@ export const app: App = {
         ],
       },
       page: {
-        eyebrow: 'Journal entry',
+        eyebrow: 'Transaction',
         title: (e: Detail) => e.id,
         subtitle: (e: Detail) => e.label,
         properties: (e: Detail) => [
           { label: 'Date', value: e.date, kind: 'date' },
           { label: 'Amount', value: e.amount, kind: 'money' },
           { label: 'Receipt', value: e.receipt, kind: 'number' },
-          { label: 'Corrects', value: e.corrects, kind: 'mono', href: e.corrects ? `/journal/${e.corrects}` : undefined },
+          { label: 'Corrects', value: e.corrects, kind: 'mono', href: e.corrects ? `/transactions/${e.corrects}` : undefined },
         ],
-        related: (e: Detail) => e.corrected.map((c) => ({ label: c, sub: 'corrects it', href: `/journal/${c}` })),
+        related: (e: Detail) => e.corrected.map((c) => ({ label: c, sub: 'corrects it', href: `/transactions/${c}` })),
         blocks: [Lines],
       },
     },

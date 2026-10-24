@@ -62,6 +62,9 @@ export interface Page<T = any> {
 export interface View<R = any> {
   group: Group
   title: string
+  // A line under the title saying what the collection is, in its trade's
+  // words.
+  caption?: string
   icon: Component<any>
   columns: Column<R>[]
   // A form for a new item, behind the collection's New button.

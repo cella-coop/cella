@@ -15,5 +15,5 @@
 </script>
 
 <Section title="Ledger" count={data.movements.length}>
-  <Table {columns} rows={data.movements} href={(m: Movement) => `/journal/${m.entry}`} />
+  <Table {columns} rows={data.movements} href={(m: Movement) => `/transactions/${m.entry}`} />
 </Section>

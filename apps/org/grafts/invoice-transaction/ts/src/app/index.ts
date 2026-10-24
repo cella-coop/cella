@@ -10,7 +10,7 @@ export const app: App = {
     invoices: {
       page: {
         related: (p: Posted[]) =>
-          [...new Map(p.map((x) => [x.entry, x])).values()].map((x) => ({ label: x.entry, sub: x.event, href: `/journal/${x.entry}` })),
+          [...new Map(p.map((x) => [x.entry, x])).values()].map((x) => ({ label: x.entry, sub: x.event, href: `/transactions/${x.entry}` })),
         blocks: [Books],
       },
     },

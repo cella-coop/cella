@@ -19,7 +19,7 @@
 </script>
 
 <Section title="Postings" count={data.length}>
-  <Table {columns} rows={data} href={(p: Posted) => `/journal/${p.entry}`} />
+  <Table {columns} rows={data} href={(p: Posted) => `/transactions/${p.entry}`} />
 </Section>
 
 <Section title="Record a payment">

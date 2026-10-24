@@ -28,9 +28,11 @@
     create,
     summaries = [],
     empty = 'Nothing here yet.',
+    caption,
   }: {
     eyebrow: string
     title: string
+    caption?: string
     columns: Column[]
     rows: any[]
     href?: (row: any) => string | undefined
@@ -97,7 +99,7 @@
 
 <svelte:window {onkeydown} />
 
-<Frame {eyebrow} {title} subtitle="{rows.length} {rows.length === 1 ? 'item' : 'items'}">
+<Frame {eyebrow} {title} subtitle={[caption, `${rows.length} ${rows.length === 1 ? 'item' : 'items'}`].filter(Boolean).join(' · ')}>
   {#snippet actions()}
     <input class="filter" bind:this={state.search} bind:value={state.filter} placeholder="Filter  /" aria-label="Filter" />
     <nav class="views" aria-label="View">

@@ -7,12 +7,13 @@ import { entry, journal } from '../drivers/journal.ts'
 export { adjust, adjusting, pay, paying, payroll, post, posting, record, running } from '../handlers/index.ts'
 export { entry, journal } from '../drivers/journal.ts'
 
-// The journal. Posting through the shell is not offered yet: the pilot's
-// entries come from invoices, through the invoice-transaction graft.
+// The journal, as the shell's transactions. Posting through the shell is
+// not offered yet: the pilot's entries come from invoices, through the
+// invoice-transaction graft.
 export const slice: Slice = {
   name: 'transaction',
   collections: {
-    journal: {
+    transactions: {
       list: journal,
       item: entry,
       index: async (db) => (await journal(db)).map((e) => ({ id: e.id, title: e.id, sub: e.label })),

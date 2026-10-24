@@ -18,6 +18,7 @@
     <Collection
       eyebrow={mounted.view.group}
       title={mounted.view.title}
+      caption={mounted.view.caption}
       {columns}
       rows={data.rows}
       about={data.about}

@@ -45,8 +45,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   keeps the viewer's choice, so the server renders it.
 - `Collection`: the one collection component, the same header and rows
   for every collection, and a drawer holding one card, View: the filter,
-  the layout (list · table) and, in a table, its columns, the layout and
-  the hidden columns in the URL. Writes stay in the header, with the
+  the layout (list · table · dashboard) and, in a table, its columns, in
+  a dashboard, its widgets, the layout, the hidden columns and the
+  widgets in the URL. Writes stay in the header, with the
   count and any status badge the view and its extensions declare (the
   log verifies); a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
@@ -73,6 +74,27 @@ the command menu, and the dismissed outcome and the drawer's opening are state c
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `useSection` hands a `Section`'s title down, so an empty
 `Table` in it says "No roles" in one quiet line, with no headers.
+
+## Dashboards
+
+Every collection has a dashboard, the third layout, configured and never
+coded. `models/query.ts`, exported alone as `@cella/org-ui/models` for the
+server, types a collection's fields from its columns' kinds (money and
+number, date, a badge as an enumeration, else text) and defines a widget
+as a plain object: a figure (`kpi`), the count of rows or the sum,
+average, minimum or maximum of a numeric field, or a chart of either,
+grouped by an enumeration (bars) or by a date's month (a line), each
+over optional conditions (an enumeration among some values, a date in
+the current month or year). A view or a graft may declare its widgets
+(`dashboard`); without any, defaults derive from the fields. The
+viewer's own are JSON in the address (`w`), so the server renders them;
+the server checks them against the fields, drops and reports what
+names an undeclared field or asks what a field cannot give, and runs the
+rest over the collection's rows as its read API returns them, building
+no SQL. `Dashboard` draws the results: figures as text, bars with their
+values beside them, a line with its months and values in a table for
+assistive technology and each month's tooltip. `Widgets`, in the View
+card, adds, edits, reorders and removes them.
 
 ## Types
 

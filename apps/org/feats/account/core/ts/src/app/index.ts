@@ -18,6 +18,7 @@ export const app: App = {
           { key: 'code', label: 'Code', kind: 'mono', role: 'title', value: (a: Account) => a.code },
           { key: 'label', label: 'Account', role: 'sub', value: (a: Account) => a.label },
           { key: 'kind', label: 'Kind', kind: 'badge', role: 'hidden', value: (a: Account) => a.kind },
+          { key: 'cash', label: 'Cash', kind: 'badge', role: 'hidden', value: (a: Account) => (a.cash ? 'cash' : 'other') },
         ],
       },
       page: {

@@ -290,8 +290,8 @@ two halves of one **slice**, matched by name:
   on an item, and writes; and reactions to other slices' settled writes
   (`on`), such as the admissions a passing close makes.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
-  collection it owns, a view (its columns, its New form and the status
-  badge its header shows) and a page (its title, its Properties, Related and Activity cards, its
+  collection it owns, a view (its columns, its New form, the status
+  badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
   blocks and its header writes); for each collection it extends, columns
   over the fields it adds, and cards and blocks over its data on an item.
 

@@ -15,6 +15,14 @@ export const date = (iso: unknown) => {
   return Number.isNaN(d.getTime()) ? String(iso) : days.format(d)
 }
 
+const months = new Intl.DateTimeFormat('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })
+
+// A `YYYY-MM` month, as a chart's axis reads it.
+export const month = (ym: string) => {
+  const d = new Date(`${ym}-01T00:00:00Z`)
+  return Number.isNaN(d.getTime()) ? ym : months.format(d)
+}
+
 // A hash or key, shortened to its head.
 export const short = (hex: unknown, n = 10) => (hex ? `${String(hex).slice(0, n)}…` : '—')
 

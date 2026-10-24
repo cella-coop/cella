@@ -4,22 +4,27 @@
   import { page } from '$app/state'
   import Rows from 'phosphor-svelte/lib/Rows'
   import TableIcon from 'phosphor-svelte/lib/Table'
+  import ChartBar from 'phosphor-svelte/lib/ChartBar'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column, Status } from '../models/view.ts'
+  import { fields, type Result, type Widget } from '../models/query.ts'
   import { control, nearest, typing } from '../models/keys.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
   import Cell from './Cell.svelte'
+  import Dashboard from './Dashboard.svelte'
   import Frame from './Frame.svelte'
   import Icon from './Icon.svelte'
   import Table from './Table.svelte'
+  import Widgets from './Widgets.svelte'
 
   // The one collection component: the same header and rows for every
-  // collection, and the drawer's View card holding how they are shown:
-  // the filter, the layout and, in a table, its columns. Keyboard first:
-  // j and k move, Enter opens, / filters, c creates.
+  // collection, as a list, a table or a dashboard, and the drawer's View
+  // card holding how they are shown: the filter, the layout and, in a
+  // table, its columns, in a dashboard, its widgets. Keyboard first: j and
+  // k move, Enter opens, / filters, c creates.
   let {
     eyebrow,
     title,
@@ -31,6 +36,8 @@
     status = [],
     empty = 'Nothing here yet.',
     caption,
+    values = {},
+    dashboard = null,
   }: {
     eyebrow: string
     title: string
@@ -42,6 +49,10 @@
     create?: Component<{ rows: any[]; about: any }>
     status?: Status[]
     empty?: string
+    // Each enumeration's values over the rows, for the editors' choices.
+    values?: Record<string, string[]>
+    // In the dashboard view, the server's run of its widgets.
+    dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
   } = $props()
 
   const state = useCollection(() => rows, () => columns)
@@ -50,10 +61,13 @@
   const views = [
     { id: 'list', label: 'List', icon: Rows },
     { id: 'table', label: 'Table', icon: TableIcon },
+    { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
   ]
-  // The layout and the table's hidden columns live in the address, so a
-  // view can be linked and the server renders it as it is.
-  const view = $derived(page.url.searchParams.get('view') === 'table' ? 'table' : 'list')
+  // The layout, the table's hidden columns and the dashboard's widgets
+  // live in the address, so a view can be linked and the server renders
+  // it as it is.
+  const view = $derived(views.find((v) => v.id === page.url.searchParams.get('view'))?.id ?? 'list')
+  const typed = $derived(fields(columns))
   const hidden = $derived(new Set(page.url.searchParams.get('hide')?.split(',') ?? []))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
@@ -71,6 +85,16 @@
     const query = new URLSearchParams(page.url.search)
     query.set('view', id)
     return `${page.url.pathname}?${query}`
+  }
+
+  function arrange(ws: Widget[] | null) {
+    const query = new URLSearchParams(page.url.search)
+    if (ws) {
+      query.set('w', JSON.stringify(ws))
+    } else {
+      query.delete('w')
+    }
+    goto(`${page.url.pathname}?${query}`, { replace: true, reset: false })
   }
 
   function hide(key: string, off: boolean) {
@@ -174,6 +198,8 @@
             </label>
           {/each}
         </fieldset>
+      {:else if view === 'dashboard' && dashboard}
+        <Widgets widgets={dashboard.widgets} fields={typed} {values} custom={dashboard.custom} onchange={arrange} />
       {/if}
     </Card>
   {/snippet}
@@ -184,7 +210,9 @@
   {/if}
 
   <div class="rows">
-    {#if state.shown.length === 0}
+    {#if view === 'dashboard'}
+      <Dashboard results={dashboard?.results ?? []} errors={dashboard?.errors ?? []} />
+    {:else if state.shown.length === 0}
       <p class="empty">{state.filter ? `Nothing matches “${state.filter}”.` : empty}</p>
     {:else if view === 'table'}
       <Table columns={visible} rows={state.shown} {href} active={state.active} />

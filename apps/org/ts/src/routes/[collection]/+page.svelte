@@ -1,13 +1,13 @@
 <script lang="ts">
   import { Collection } from '@cella/org-ui'
-  import { collection, extensions } from '#lib/slices.ts'
+  import { collection, columns as all, extensions } from '#lib/slices.ts'
   import type { PageProps } from './$types'
 
   let { data }: PageProps = $props()
 
   const mounted = $derived(collection(data.name))
   const added = $derived(extensions(data.name))
-  const columns = $derived([...(mounted?.view.columns ?? []), ...added.flatMap((e) => e.extension.columns ?? [])])
+  const columns = $derived(all(data.name))
   const linked = $derived(mounted?.page && mounted.view.linked !== false)
   const href = (row: { id: string }) => `/${data.name}/${encodeURIComponent(row.id)}`
 </script>
@@ -26,6 +26,8 @@
       create={mounted.view.create}
       status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}
+      values={data.values}
+      dashboard={data.dashboard}
     />
   {/key}
 {/if}

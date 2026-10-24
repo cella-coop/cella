@@ -18,6 +18,13 @@ export const app: App = {
         title: 'Invoices',
         icon: icons.Receipt,
         create: Issue,
+        dashboard: [
+          { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['unpaid', 'partial', 'overdue'] }] },
+          { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
+          { kind: 'kpi', title: 'Invoiced this year', measure: { op: 'sum', field: 'total' }, where: [{ field: 'issued', within: 'year' }] },
+          { kind: 'chart', title: 'Amounts by month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
+          { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
+        ],
         columns: [
           { key: 'id', label: 'Invoice', kind: 'title', role: 'title', value: (i: Listed) => i.id },
           { key: 'bill_to', label: 'Bills', role: 'sub', value: (i: Listed) => i.bill_to },

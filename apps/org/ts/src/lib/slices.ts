@@ -1,4 +1,4 @@
-import type { Added, App, Nav, Owned } from '@cella/org-ui'
+import type { Added, App, Column, Nav, Owned, Widget } from '@cella/org-ui'
 import { app as log } from '@cella/org-log/app'
 import { app as key, Devices } from '@cella/org-key/app'
 import { app as member } from '@cella/org-member/app'
@@ -55,7 +55,20 @@ export const collection = (name: string): Owned | undefined => apps.find((a) => 
 export const extensions = (name: string): { slice: string; extension: Added }[] =>
   apps.flatMap((a) => (a.extends?.[name] ? [{ slice: a.name, extension: a.extends[name] }] : []))
 
-const order = ['governance', 'work', 'finance', 'platform']
+// A collection's columns: its owner's, then each extension's over the
+// fields it adds to the rows.
+export const columns = (name: string): Column[] => [
+  ...(collection(name)?.view.columns ?? []),
+  ...extensions(name).flatMap((e) => e.extension.columns ?? []),
+]
+
+// The dashboard a collection's owner and extensions declare, if they do.
+export const dashboard = (name: string): Widget[] | undefined => {
+  const declared = [...(collection(name)?.view.dashboard ?? []), ...extensions(name).flatMap((e) => e.extension.dashboard ?? [])]
+  return declared.length ? declared : undefined
+}
+
+const order =['governance', 'work', 'finance', 'platform']
 
 export const nav: Nav = order
   .map((group) => ({

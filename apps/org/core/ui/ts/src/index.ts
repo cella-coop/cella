@@ -2,6 +2,7 @@
 // component, detail view and drawer, and the primitives blocks compose.
 // Only this package holds CSS.
 export type * from './models/view.ts'
+export type * from './models/query.ts'
 export type { Outcome as Done } from './models/outcome.ts'
 export { said } from './models/outcome.ts'
 export { money, date, short, show } from './models/format.ts'

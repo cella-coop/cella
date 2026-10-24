@@ -50,7 +50,9 @@ Money received posts through the writes that receive it, such as
 
 Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the trial balance agrees as
-the collection's status; and an account's ledger, every line posted to
+the collection's status, and the chart's dashboard: the debits, the
+credits, the cash the cash accounts hold and the balance by kind; and
+an account's ledger, every line posted to
 it, to its page.
 
 ## Lanterne

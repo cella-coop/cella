@@ -149,6 +149,24 @@ test('every main page renders on the seed', async () => {
   assert.equal((await page('/decisions/d-1999-001')).status, 404)
 })
 
+test('every collection has a dashboard, its widgets run by the server', async () => {
+  const invoices = await page('/invoices?view=dashboard')
+  assert.equal(invoices.status, 200)
+  for (const says of ['Owed', 'Overdue', 'Amounts by month', 'By standing', '€']) {
+    assert.ok(invoices.text.includes(says), `the invoices' dashboard says ${says}`)
+  }
+  const members = await page('/members?view=dashboard')
+  assert.equal(members.status, 200)
+  assert.ok(members.text.includes('By status'), 'the members\' dashboard is derived from their fields')
+  const own = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'Active members', measure: { op: 'count' }, where: [{ field: 'status', is: ['active'] }] }]))
+  const configured = await page(`/members?view=dashboard&w=${own}`)
+  assert.ok(configured.text.includes('Active members'), 'a viewer\'s widgets in the address are run')
+  const bad = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'x', measure: { op: 'sum', field: 'name; DROP TABLE member' } }]))
+  const refused = await page(`/members?view=dashboard&w=${bad}`)
+  assert.equal(refused.status, 200)
+  assert.ok(refused.text.includes('names no field of the collection'), 'an undeclared field is refused, and said')
+})
+
 test('a write with no one acting fails before any verdict', async () => {
   const done = await act('/decisions/d-2026-012', 'vote', { stance: 'object' })
   assert.equal(done.state, 'failed')

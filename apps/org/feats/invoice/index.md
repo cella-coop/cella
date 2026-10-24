@@ -158,7 +158,9 @@ labels never wait.
 
 ## Shell
 
-The `invoices` collection, the latest first, each with its standing;
+The `invoices` collection, the latest first, each with its standing; its
+dashboard shows what is owed and overdue, what was invoiced this year,
+the amounts by month and the invoices by standing;
 overdue reads the server's clock, a read no rule depends on. New issues one (`issue`) in a series the feat
 offers. An invoice's page shows its lines and payments and marks it sent
 (`send`). `api/forms.ts` reads the shell's forms into the handlers'

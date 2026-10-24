@@ -18,6 +18,11 @@ export const app: App = {
         // each load.
         status: (_: Entry[], head: Head) =>
           head.verified ? { label: 'log verifies', tone: 'positive' } : { label: 'log broken', tone: 'negative' },
+        dashboard: [
+          { kind: 'kpi', title: 'Entries', measure: { op: 'count' } },
+          { kind: 'kpi', title: 'This month', measure: { op: 'count' }, where: [{ field: 'date', within: 'month' }] },
+          { kind: 'chart', title: 'Entries by month', measure: { op: 'count' }, by: 'date' },
+        ],
         empty: 'No write has reached the notary yet: the seed is the state before the log.',
         columns: [
           { key: 'n', label: 'Entry', kind: 'number', role: 'title', value: (e: Entry) => e.n },

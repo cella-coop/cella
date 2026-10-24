@@ -1,4 +1,5 @@
 import type { Component } from 'svelte'
+import type { Widget } from './query.ts'
 
 // The client side of a slice: what a feat's collections look like, and
 // what a graft adds to the collections of the feats it joins. Views and
@@ -76,6 +77,9 @@ export interface View<R = any> {
   // server side, is handed to it and to `create`. Figures over the rows
   // are a dashboard's widgets, never a component of the page's own.
   status?: Status<R>
+  // The dashboard's widgets until a viewer configures their own; without
+  // them, defaults derived from the columns' kinds.
+  dashboard?: Widget[]
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean
@@ -94,6 +98,8 @@ export interface Added<E = any> {
   columns?: Column[]
   // A badge over the rows with the fields this adds to them.
   status?: Status
+  // Widgets over the fields this adds, after the owner's.
+  dashboard?: Widget[]
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
 }
 

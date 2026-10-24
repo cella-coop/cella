@@ -45,10 +45,10 @@ export class Clipboard {
     if (ed.chosen.range) {
       e.preventDefault()
       const fs = ed.chosen.roots().map((id) => ops.fragment(ed.doc, id))
-      const text = plain(fs, 0)
+      const said = plain(fs, 0)
       data.setData(blocksType, JSON.stringify(fs))
-      data.setData('text/html', html('data-cella-blocks', JSON.stringify(fs), text))
-      data.setData('text/plain', text)
+      data.setData('text/html', html('data-cella-blocks', JSON.stringify(fs), said))
+      data.setData('text/plain', said)
       if (cut) {
         ed.chosen.delete()
       }
@@ -61,10 +61,10 @@ export class Clipboard {
     e.preventDefault()
     const t = text(ed.doc, s.id)
     const rs = JSON.stringify(ops.runs(t, s.start, s.end))
-    const text = t.toString().slice(s.start, s.end)
+    const said = t.toString().slice(s.start, s.end)
     data.setData(runsType, rs)
-    data.setData('text/html', html('data-cella-runs', rs, text))
-    data.setData('text/plain', text)
+    data.setData('text/html', html('data-cella-runs', rs, said))
+    data.setData('text/plain', said)
     if (cut) {
       ed.apply(() => {
         ops.remove(t, s.start, s.end - s.start)

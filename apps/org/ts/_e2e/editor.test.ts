@@ -462,6 +462,27 @@ for (const [name, engine] of browsers()) {
         await converged()
       })
 
+      it('copies a range of text with its marks, and pastes it in another block', async () => {
+        await fresher()
+        await editable(1).click()
+        // "solidarity", bold, from its start to its end.
+        const at = (await rows())[1].text.indexOf('solidarity')
+        await a.keyboard.press('Control+Home')
+        for (let i = 0; i < at; i++) {
+          await a.keyboard.press('ArrowRight')
+        }
+        for (let i = 0; i < 'solidarity'.length; i++) {
+          await a.keyboard.press('Shift+ArrowRight')
+        }
+        await a.keyboard.press('Control+c')
+        await end(0)
+        await a.keyboard.press('Control+v')
+        const r = await rows()
+        assert.equal(r[0].text, 'Rate card 2027solidarity')
+        assert.deepEqual(r[0].runs.at(-1), { text: 'solidarity', marks: { bold: true } })
+        await converged()
+      })
+
       it('pastes plain text from outside as paragraphs', async () => {
         await fresher()
         // Copied from a text area outside the editor, as from another app.

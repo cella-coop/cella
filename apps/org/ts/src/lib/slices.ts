@@ -40,6 +40,12 @@ import { app as expenseProject } from '@cella/org-graft-expense-project/app'
 import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/app'
 import { app as memberPayslip } from '@cella/org-graft-member-payslip/app'
 import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/app'
+import { app as meeting } from '@cella/org-meeting/app'
+import { app as circleMeeting } from '@cella/org-graft-circle-meeting/app'
+import { app as circleMeetingMember } from '@cella/org-graft-circle-meeting-member/app'
+import { app as decisionMeeting } from '@cella/org-graft-decision-meeting/app'
+import { app as documentMeeting } from '@cella/org-graft-document-meeting/app'
+import { app as meetingMember } from '@cella/org-graft-meeting-member/app'
 
 // The client sides the shell mounts, matching the server's slices by
 // name: each feat's views and pages, each graft's extensions, and the
@@ -58,6 +64,7 @@ export const apps: App[] = [
   circle,
   decision,
   document,
+  meeting,
   client,
   project,
   task,
@@ -94,6 +101,11 @@ export const apps: App[] = [
   expenseTransaction,
   memberPayslip,
   payslipTransaction,
+  circleMeeting,
+  decisionMeeting,
+  documentMeeting,
+  meetingMember,
+  circleMeetingMember,
   root,
 ]
 

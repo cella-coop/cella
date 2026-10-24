@@ -1,0 +1,5 @@
+name = "meeting"
+group = "governance"
+builtin = false
+rung = 1
+grafts = ["circle-meeting", "circle-meeting-member", "decision-meeting", "document-meeting", "meeting-member"]

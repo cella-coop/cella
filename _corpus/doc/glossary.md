@@ -85,3 +85,4 @@ updated = 2026-10-24
 | **delegate** | a member chosen to vote for others at a higher level |
 | **adoption** | a decision making one version of a document binding |
 | **outcome** | the result of a decision, folded from its signed votes, never stored |
+| **open · passed · rejected** | a decision's state: open until its close, then passed or rejected by the outcome of the stances the close froze, read in SQL; "adopted" is a document version's, never a decision's |

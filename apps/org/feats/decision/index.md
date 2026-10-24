@@ -46,11 +46,17 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 ## Shell
 
-The `decisions` collection, open ones first, with Open and Closed views;
-a decision's page shows its
+The `decisions` collection, open ones first; a decision's page shows its
 proposal, every stance given as its activity, and closes it (`close`).
 Its roll, its outcome and the stance form are `circle-decision-member`'s;
 the stance it posts is this feat's `vote`, for the acting member.
+
+A decision's state is open, passed or rejected: open until its close,
+then passed or rejected by the outcome of the stances the close froze.
+The outcome is the graft's, so the state is too: `circle-decision-member`
+reads it in SQL and gives the collection its State column, its Open,
+Passed and Rejected views and its board. This feat reads only whether
+and when a decision closed.
 
 ## Domain
 

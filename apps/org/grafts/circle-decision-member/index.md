@@ -81,10 +81,11 @@ Adds to a decision's page its roll: each member's latest stance received
 before the cutoff, whether the close counted them, the outcome
 `circle_decision_member.passes` computes and, while it is open, the
 stance form, which posts the decision feat's `vote`; and to the list, the
-turnout and where each decision stands (open, closed and passed, closed
-and failed, as `passes` reads it in SQL). Decisions open as a board
-grouped by that standing; dragging an open decision into a closed
-column is the decision feat's `close`, posted as its button posts it,
-and a refused close leaves the card open. Its slice reacts to a settled `decision:decision:close` with
+turnout and each decision's state: open, passed or rejected, as `passes`
+reads the stances the close froze, in SQL. With it come the Open, Passed
+and Rejected views, and the board decisions open as, grouped by state;
+dragging an open decision into Passed or Rejected is the decision feat's
+`close`, posted as its button posts it, the database deciding which
+column it lands in, and a refused close leaves the card open. Its slice reacts to a settled `decision:decision:close` with
 `closed`, so the shell shows the admissions and seats as what followed
 the close.

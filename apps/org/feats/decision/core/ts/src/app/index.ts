@@ -13,24 +13,12 @@ export const app: App = {
         group: 'governance',
         title: 'Decisions',
         icon: icons.Scales,
-        views: [
-          { id: 'open', name: 'Open', icon: 'open', where: [{ field: 'state', is: ['open'] }] },
-          { id: 'closed', name: 'Closed', icon: 'done', where: [{ field: 'state', is: ['closed'] }] },
-        ],
         columns: [
           { key: 'title', label: 'Decision', kind: 'title', role: 'title', value: (d: Decision) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Decision) => d.id },
           { key: 'circle', label: 'Circle', kind: 'mono', role: 'meta', value: (d: Decision) => d.circle },
           { key: 'rule', label: 'Rule', role: 'hidden', value: (d: Decision) => d.rule },
           { key: 'deadline', label: 'Deadline', kind: 'date', role: 'meta', value: (d: Decision) => d.deadline },
-          {
-            key: 'state',
-            label: 'State',
-            kind: 'badge',
-            role: 'meta',
-            value: (d: Decision) => (d.closed ? 'closed' : 'open'),
-            tone: (d: Decision) => (d.closed ? 'neutral' : 'accent'),
-          },
         ],
       },
       page: {
@@ -38,7 +26,6 @@ export const app: App = {
         title: (d: Detail) => d.title,
         subtitle: (d: Detail) => `${d.id} · by ${d.rule} in ${d.circle}`,
         properties: (d: Detail) => [
-          { label: 'State', value: d.closed ? 'closed' : 'open', kind: 'badge', tone: d.closed ? 'neutral' : 'accent' },
           { label: 'Rule', value: d.rule },
           { label: 'Circle', value: d.circle, href: `/circles/${d.circle}` },
           { label: 'Proposed', value: d.proposed, kind: 'date' },

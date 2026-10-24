@@ -115,6 +115,8 @@ export interface Added<E = any> {
   status?: Status
   // Widgets over the fields this adds, after the owner's.
   dashboard?: Widget[]
+  // Preset views over the fields this adds, after the owner's.
+  views?: Preset[]
   // A look over the fields this adds, each part of which overrides the
   // owner's, and the board moves it makes writes.
   look?: Look

@@ -81,7 +81,8 @@ export const shifts = (name: string): Shift[] => [
 ]
 
 // The views a collection offers as tabs: its declared presets and All.
-export const views = (name: string): Preset[] => presets(collection(name)?.view.views)
+export const views = (name: string): Preset[] =>
+  presets([...(collection(name)?.view.views ?? []), ...extensions(name).flatMap((e) => e.extension.views ?? [])])
 
 const order = ['governance', 'work', 'finance', 'platform']
 

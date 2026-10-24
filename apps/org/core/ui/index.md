@@ -71,8 +71,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   acting member, its outcome shown as any write's and the rows read
   again, so a refused move leaves the card where it was. The view
   bar's tabs are the collection's presets, declared as plain objects on
-  its view (`views`: invoices' Unpaid and Overdue, decisions' Open and
-  Closed, members' Active and Invited, transactions' This period), All
+  its view, or by an extension over the fields it adds (`views`:
+  invoices' Unpaid and Overdue, decisions' Open, Passed and Rejected,
+  members' Active and Invited, transactions' This period), All
   after them, then the viewer's own; each tab's tooltip names it with
   its count, and its last button saves a new view. The active view (`v`)
   and what is changed from it (`view`, `where`, `q`, `hide`, `w`) live

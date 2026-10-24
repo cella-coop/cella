@@ -190,17 +190,26 @@ test('circles open as a gallery and decisions as a board, by what each declares'
   assert.ok(circles.text.includes('Seated'), 'a circle\'s card shows its seats')
   const decisions = await page('/decisions')
   assert.match(decisions.text, /class="board[\s"]/, 'decisions default to the board')
-  for (const lane of ['open', 'closed and passed', 'closed and failed']) {
+  for (const lane of ['open', 'passed', 'rejected']) {
     assert.ok(decisions.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
   }
   assert.match((await page('/decisions?view=list')).text, /class="list[\s"]/, 'a view in the address overrides the default')
 })
 
+test('a decision is open, passed or rejected, as the database reads it', async () => {
+  const { text } = await page('/decisions?view=table')
+  assert.ok(text.includes('>passed<'), 'a closed decision that carried reads passed')
+  assert.ok(!/closed and|>closed</.test(text), 'no screen says closed for a decision\'s state')
+  assert.match((await page('/decisions')).text, /title="View Passed decisions \d+"/)
+  assert.ok((await page('/decisions/d-2026-012')).text.includes('>open<'))
+})
+
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
-  const shifts = [{ by: 'standing', from: ['open'], to: ['closed and passed', 'closed and failed'], action: 'close' }]
-  assert.equal(drag.shift(shifts, 'standing', 'open', 'closed and failed')?.action, 'close')
-  assert.equal(drag.shift(shifts, 'standing', 'closed and passed', 'open'), undefined, 'no write reopens a decision, so no drop does')
-  assert.equal(drag.shift(shifts, 'standing', 'open', 'open'), undefined)
+  const shifts = [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }]
+  assert.equal(drag.shift(shifts, 'state', 'open', 'rejected')?.action, 'close')
+  assert.equal(drag.shift(shifts, 'state', 'passed', 'open'), undefined, 'no write reopens a decision, so no drop does')
+  assert.equal(drag.shift(shifts, 'state', 'open', 'open'), undefined)
+  assert.equal(drag.shift(shifts, 'circle', 'open', 'passed'), undefined, 'a move is a write only on the board it is declared for')
   const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
   assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'))
   const done = await act('/decisions/d-2026-012', 'close', {}, hugo)

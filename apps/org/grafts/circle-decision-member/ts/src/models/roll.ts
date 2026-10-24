@@ -11,10 +11,11 @@ export interface Voter {
 
 export type Tone = 'neutral' | 'positive' | 'negative'
 
-// Where a decision stands in the list, as the database reads it; a
-// decision closed while no stance counted did not pass.
-export const standings = ['open', 'closed and passed', 'closed and failed'] as const
-export type Standing = (typeof standings)[number]
+// A decision's state, as the database reads it from its close and the
+// stances the close froze: open, passed or rejected. One closed while no
+// stance counted is rejected.
+export const states = ['open', 'passed', 'rejected'] as const
+export type State = (typeof states)[number]
 
 // How the outcome reads: passing or not while open, passed or failed once
 // closed.
@@ -22,7 +23,7 @@ export function outcome(r: Roll): { text: string; tone: Tone } {
   if (r.passes === null) {
     return { text: 'no stance counts', tone: 'neutral' }
   }
-  const verb = r.closed ? (r.passes ? 'passed' : 'failed') : r.passes ? 'passes' : 'does not pass'
+  const verb = r.closed ? (r.passes ? 'passed' : 'rejected') : r.passes ? 'passes' : 'does not pass'
   return { text: `${verb} by ${r.rule}`, tone: r.passes ? 'positive' : 'negative' }
 }
 
@@ -33,5 +34,6 @@ export interface Roll {
   rule: 'consent' | 'majority'
   closed: string | null
   passes: boolean | null
+  state: State
   voters: Voter[]
 }

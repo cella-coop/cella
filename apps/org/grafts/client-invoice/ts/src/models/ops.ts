@@ -1,0 +1,11 @@
+import { confluent, type Ops } from '@cella/org-ops'
+
+export const ops = {
+  // the last writer wins; an invoice bills one client
+  'client-invoice:billing:link': confluent(),
+} satisfies Ops
+
+export interface Link {
+  invoice: string
+  client: string
+}

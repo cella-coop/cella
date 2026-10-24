@@ -151,6 +151,10 @@ export interface Added<E = any> {
   // owner's, and the board moves it makes writes.
   look?: Look
   shifts?: Shift[]
+  // A New form that replaces the owner's, for the write the extension
+  // replaces with one of its own, as the invitation that carries a first
+  // device replaces the member feat's invite.
+  create?: Component<{ rows: any[]; about: any }>
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
 }
 

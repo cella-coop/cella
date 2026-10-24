@@ -22,7 +22,7 @@
       rows={data.rows}
       about={data.about}
       href={linked ? href : undefined}
-      create={mounted.view.create}
+      create={added.find((e) => e.extension.create)?.extension.create ?? mounted.view.create}
       status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}
       name={data.name}

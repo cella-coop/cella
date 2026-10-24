@@ -29,10 +29,12 @@ export const load: PageServerLoad = async ({ params, url }) => {
       fs.filter((f) => f.type === 'enum').map((f) => [f.key, [...new Set(rows.map((r) => String(f.value(r) ?? '')))].filter(Boolean).sort()]),
     )
     const count = (where: unknown) => rows.filter((r) => matches(r, wheres(where, fs), fs, today)).length
+    const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db)))).filter((a) => a !== undefined)
+    const own = (await m.collection.about?.(db)) ?? null
     return {
       name: params.collection,
       rows,
-      about: (await m.collection.about?.(db)) ?? null,
+      about: abouts.length ? Object.assign({}, own, ...abouts) : own,
       values,
       today,
       views: tabs.map((p) => ({ ...p, count: count(p.where) })),

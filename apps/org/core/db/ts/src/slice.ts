@@ -104,6 +104,9 @@ export interface Collection {
 // address, or null.
 export interface Extension {
   list?(db: Db): Promise<Record<string, object>>
+  // What it adds to the collection's `about`, merged over the owner's,
+  // such as the circles a new decision may be put in.
+  about?(db: Db): Promise<object>
   item?(db: Db, id: string, actor: string | null): Promise<unknown>
   actions?: Record<string, Action>
 }

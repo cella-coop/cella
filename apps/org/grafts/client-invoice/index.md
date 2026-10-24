@@ -27,3 +27,12 @@ may select.
 | `POST /api/client-invoice/link` | confluent | the last writer wins; an invoice bills one client |
 
 - **link** links an invoice to a client, or moves the link.
+
+## Powers
+
+| Write | Power | Lanterne |
+|---|---|---|
+| link | `issue-invoice`: linking an invoice to whom it bills is invoicing | Julien, as finance |
+
+`002-powers.sql` registers it in `cella.power`, and the `circle-member`
+graft checks it.

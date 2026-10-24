@@ -57,8 +57,8 @@
 {/snippet}
 
 <Frame
-  {eyebrow}
   {title}
+  caption={eyebrow}
   {back}
   {actions}
   {subtitle}

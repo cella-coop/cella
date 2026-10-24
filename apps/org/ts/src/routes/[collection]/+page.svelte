@@ -16,7 +16,6 @@
   <!-- Another collection is another view: its filter and keyboard row start afresh. -->
   {#key data.name}
     <Collection
-      eyebrow={mounted.view.group}
       title={mounted.view.title}
       caption={mounted.view.caption}
       {columns}

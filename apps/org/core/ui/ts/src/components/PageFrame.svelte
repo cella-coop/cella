@@ -1,22 +1,21 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
+  import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
   import type { Panel, Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
-  // The one page frame, its header one compact row as Linear's: the
-  // eyebrow (the group, or the collection an item belongs to, as the way
-  // back) over the page's name with its count and status; the page's tabs
-  // right after it, a collection's views, scrolling in their own strip
+  // The one page frame, its header one compact row as Linear's: on an
+  // item, a quiet way back to its collection; the page's name with its
+  // count and status; the page's tabs right after it, a collection's views, scrolling in their own strip
   // when they run out of room; then the page's writes and one quiet icon
   // group, the drawer's panel tabs beside its toggle, which stays there
   // when the drawer is shut. The header spans the content and the drawer
   // on one grid; under it, the content with an item's subtitle, and the
   // drawer. ] shows and hides the drawer on every page at once.
   let {
-    eyebrow,
     title,
     count,
     caption,
@@ -28,7 +27,6 @@
     panels = [],
     children,
   }: {
-    eyebrow: string
     title: string
     // How many items the page shows, after its name.
     count?: string
@@ -60,15 +58,11 @@
   <header class="top">
     <div class="name">
       {#if back}
-        <a href={back.href} class="eyebrow back" title="Back to {back.label}  Esc">{back.label}</a>
-      {:else}
-        <p class="eyebrow">{eyebrow}</p>
+        <a href={back.href} class="back" title="Back to {back.label}  Esc" aria-label="Back to {back.label}"><Icon icon={CaretLeft} /></a>
       {/if}
-      <div class="line">
-        <h1 title={caption}>{title}</h1>
-        {#if count}<span class="count">{count}</span>{/if}
-        {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
-      </div>
+      <h1 title={caption}>{title}</h1>
+      {#if count}<span class="count">{count}</span>{/if}
+      {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
     </div>
     <div class="tabs">{@render bar?.()}</div>
     {#if actions}<div class="actions">{@render actions()}</div>{/if}
@@ -138,28 +132,26 @@
     min-width: 0;
   }
   .name {
-    display: grid;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
     flex: none;
     max-width: 40%;
     min-width: 0;
+    white-space: nowrap;
   }
-  .eyebrow {
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
-    color: var(--text-subtle);
-    line-height: 1.3;
+  .back {
+    display: grid;
+    place-items: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-inline-start: calc(-1 * var(--space-1));
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
   }
   .back:hover {
-    color: var(--accent-text);
-  }
-  .line {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-    min-width: 0;
-    white-space: nowrap;
+    background: var(--hover);
+    color: var(--text);
   }
   h1 {
     font-family: var(--font-ui);

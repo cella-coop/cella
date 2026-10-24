@@ -359,8 +359,12 @@ export interface Saved {
 
 export const all: Preset = { id: 'all', name: 'All' }
 
-// The collection's presets, with All last unless it declares its own.
-export const presets = (declared: Preset[] = []): Preset[] => (declared.some((p) => p.id === all.id) ? declared : [...declared, all])
+// The collection's presets, its default first: All, what a bare address
+// shows, unless it declares its own All, then the others as declared.
+export const presets = (declared: Preset[] = []): Preset[] => {
+  const own = declared.find((p) => p.id === all.id) ?? all
+  return [own, ...declared.filter((p) => p.id !== all.id)]
+}
 
 const json = (raw: string | null): unknown => {
   if (raw === null) {

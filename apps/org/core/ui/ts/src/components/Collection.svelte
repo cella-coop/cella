@@ -51,7 +51,6 @@
   // move, Enter opens, / filters, c creates.
   let {
     name,
-    eyebrow,
     title,
     columns,
     rows,
@@ -72,7 +71,6 @@
     dashboard = null,
   }: {
     name: string
-    eyebrow: string
     title: string
     caption?: string
     columns: Column[]
@@ -241,7 +239,6 @@
 {/snippet}
 
 <Frame
-  {eyebrow}
   {title}
   {count}
   {caption}
@@ -366,14 +363,14 @@
   .viewbar {
     display: flex;
     align-items: center;
-    gap: 2px;
+    gap: var(--space-1);
     min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
   }
   .viewbar ul {
     display: flex;
-    gap: 2px;
+    gap: var(--space-1);
     list-style: none;
     margin: 0;
     padding: 0;
@@ -384,20 +381,23 @@
     gap: var(--space-1);
     height: 1.6rem;
     padding: 0 var(--space-2);
-    border: 1px solid transparent;
+    border: 1px solid var(--line);
     border-radius: var(--radius-pill);
     font-size: var(--text-sm);
     color: var(--text-muted);
     white-space: nowrap;
   }
+  /* Every tab a pill: quiet, a hairline; hovered, a tint; the open one
+     filled. */
   .viewbar a:hover {
     background: var(--hover);
     color: var(--text);
   }
   .viewbar a.on {
     background: var(--sunk);
-    border-color: var(--line);
+    border-color: transparent;
     color: var(--text);
+    font-weight: 500;
   }
   .new {
     display: grid;

@@ -81,7 +81,7 @@
   .dashboard {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
-    gap: var(--space-3);
+    gap: var(--space-4);
   }
   .wide {
     grid-column: span 2;

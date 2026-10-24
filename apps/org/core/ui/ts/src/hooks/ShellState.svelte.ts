@@ -24,8 +24,12 @@ export class ShellState {
     this.#dismissed = this.#outcome()
   }
 
+  // A panel's tab opens the drawer on it.
   choose(panel: string) {
     this.panel = panel
+    if (!this.drawer) {
+      this.show(true)
+    }
   }
 
   show(open = !this.drawer) {

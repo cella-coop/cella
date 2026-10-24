@@ -62,17 +62,34 @@
         <div class="actions">
           {@render actions?.()}
           {#if drawer}
-            <button
-              class="toggle"
-              class:on={shell.drawer}
-              onclick={() => shell.show()}
-              title="{shell.drawer ? 'Hide' : 'Show'} the drawer  ]"
-              aria-label="Drawer"
-              aria-expanded={shell.drawer}
-              aria-controls={id}
-            >
-              <Icon icon={SidebarSimple} />
-            </button>
+            <div class="icons">
+              <div class="tabs" role="tablist" aria-label="Drawer panels">
+                {#each panels as p (p.id)}
+                  <button
+                    role="tab"
+                    id="{id}-{p.id}"
+                    class:on={shell.drawer && p === open}
+                    aria-selected={shell.drawer && p === open}
+                    aria-controls={id}
+                    title={p.label}
+                    aria-label={p.label}
+                    onclick={() => shell.choose(p.id)}
+                  >
+                    <Icon icon={p.icon} />
+                  </button>
+                {/each}
+              </div>
+              <button
+                class="toggle"
+                onclick={() => shell.show()}
+                title="{shell.drawer ? 'Hide' : 'Show'} the drawer  ]"
+                aria-label="Drawer"
+                aria-expanded={shell.drawer}
+                aria-controls={id}
+              >
+                <Icon icon={SidebarSimple} />
+              </button>
+            </div>
           {/if}
         </div>
       {/if}
@@ -80,23 +97,8 @@
     <div class="body">{@render children()}</div>
   </div>
   {#if open && shell.drawer}
-    <aside class="drawer" {id}>
-      <div class="tabs" role="tablist" aria-label="Panels">
-        {#each panels as p (p.id)}
-          <button
-            role="tab"
-            id="{id}-{p.id}"
-            class:on={p === open}
-            aria-selected={p === open}
-            aria-controls="{id}-panel"
-            title={p.label}
-            onclick={() => shell.choose(p.id)}
-          >
-            <Icon icon={p.icon} />
-          </button>
-        {/each}
-      </div>
-      <div class="panel" role="tabpanel" id="{id}-panel" aria-labelledby="{id}-{open.id}">{@render open.body()}</div>
+    <aside class="drawer" aria-label={open.label}>
+      <div class="panel" {id} role="tabpanel" aria-labelledby="{id}-{open.id}">{@render open.body()}</div>
     </aside>
   {/if}
 </div>
@@ -169,6 +171,18 @@
     align-items: end;
     flex-wrap: wrap;
   }
+  /* The header's icon group, as Linear's: the drawer's panel tabs, then
+     the drawer's toggle; quiet icons, the open panel's on a sunk fill. */
+  .icons {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .tabs {
+    display: flex;
+    gap: 2px;
+  }
+  .tabs button,
   .toggle {
     display: grid;
     place-items: center;
@@ -179,48 +193,10 @@
     background: none;
     color: var(--text-muted);
     cursor: pointer;
+    transition: background var(--fast) var(--ease);
   }
-  /* Phosphor draws its sidebar on the left; the drawer is on the right. */
-  .toggle :global(svg) {
-    transform: scaleX(-1);
-  }
+  .tabs button:hover,
   .toggle:hover {
-    background: var(--hover);
-    color: var(--text);
-  }
-  .toggle.on {
-    color: var(--text);
-  }
-  .body {
-    display: grid;
-    gap: var(--space-4);
-    min-width: 0;
-  }
-  /* The drawer is the content's own panel; its cards are raised on it. */
-  .drawer {
-    overflow-y: auto;
-    padding: var(--space-4);
-    display: grid;
-    align-content: start;
-    gap: var(--space-3);
-  }
-  .tabs {
-    display: flex;
-    justify-content: end;
-    gap: 2px;
-  }
-  .tabs button {
-    display: grid;
-    place-items: center;
-    width: 2rem;
-    height: 2rem;
-    border: none;
-    border-radius: var(--radius-control);
-    background: none;
-    color: var(--text-muted);
-    cursor: pointer;
-  }
-  .tabs button:hover {
     background: var(--hover);
     color: var(--text);
   }
@@ -228,10 +204,25 @@
     background: var(--sunk);
     color: var(--text);
   }
+  /* Phosphor draws its sidebar on the left; the drawer is on the right. */
+  .toggle :global(svg) {
+    transform: scaleX(-1);
+  }
+  .body {
+    display: grid;
+    gap: var(--space-4);
+    min-width: 0;
+  }
+  /* The drawer is the content's own panel; its cards are raised on it,
+     spaced as the content's blocks are. */
+  .drawer {
+    overflow-y: auto;
+    padding: var(--space-5) var(--space-4) var(--space-4);
+  }
   .panel {
     display: grid;
     align-content: start;
-    gap: var(--space-3);
+    gap: var(--space-4);
   }
   @media (max-width: 900px) {
     .drawn {

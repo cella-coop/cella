@@ -3,4 +3,52 @@ title = "invoice-transaction"
 updated = 2026-10-24
 +++
 
-An issued invoice, its payments and its void post balanced transactions.
+An issued invoice, its payments and its void post balanced transactions,
+in the same database transaction as the invoice write and under the same
+verdict.
+
+## Postings
+
+For a French SCOP's chart:
+
+| Event | Debit | Credit |
+|---|---|---|
+| issue | `411` clients, the total | `706` services, the net; `44571` VAT collected, the VAT |
+| payment | `512` the bank, the amount | `411` clients, the amount |
+| void | `706`, the net; `44571`, the VAT | `411`, the total: the credit note |
+
+A payment beyond what is owed leaves the client's `411` in credit: the
+credit owed to them. A merged payment, a bank reference already recorded,
+posts nothing.
+
+## Schema
+
+`invoice_transaction` (`sql/`):
+
+- `invoice_transaction.posting`: the entry, the invoice, the event
+  (`issue`, `payment`, `void`) and, for a payment, the invoice feat's
+  payment id; one issue and one void per invoice.
+- `invoice_transaction.lines(invoice, event)` and `.payment_lines(payment)`:
+  the lines an event posts. The handlers ask the database for them, so the
+  postings are SQL's, never TypeScript's.
+
+The app role may select and insert postings; the rules role,
+`cella_rules`, may select.
+
+## Rules
+
+- `invoice_transaction.issued`, on `invoice:invoice:issue`, and
+  `invoice_transaction.voided`, on `invoice:invoice:void`: the invoice has
+  a posting for the event, dated on the issue or the void, whose lines are
+  exactly the event's.
+
+Payments are confluent and carry no rule; that their entry lands in an
+open period is `account-transaction`'s trigger.
+
+## Handlers
+
+`issue`, `payment` and `annul` (the void) wrap the invoice feat's write
+specs: the invoice's state, then the entry through the transaction feat's
+`record`, then the posting, then `cella.submit` once. A refusal by any rule
+or trigger rolls all of it back; the void of a paid invoice leaves no
+credit note behind.

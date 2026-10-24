@@ -2,7 +2,11 @@
   "name": "@cella/org-graft-invoice-transaction",
   "private": true,
   "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts"
+  },
   "dependencies": {
+    "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
     "@cella/org-invoice": "workspace:*",
     "@cella/org-transaction": "workspace:*"

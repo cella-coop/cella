@@ -31,6 +31,9 @@ importers:
 
   apps/org/feats/account/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
@@ -43,6 +46,9 @@ importers:
 
   apps/org/feats/client/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
@@ -64,6 +70,9 @@ importers:
 
   apps/org/feats/invoice/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
@@ -91,6 +100,9 @@ importers:
 
   apps/org/feats/transaction/core/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
@@ -136,6 +148,9 @@ importers:
       '@cella/org-client':
         specifier: workspace:*
         version: link:../../../feats/client/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
@@ -172,6 +187,9 @@ importers:
 
   apps/org/grafts/invoice-transaction/ts:
     dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts

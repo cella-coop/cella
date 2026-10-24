@@ -19,10 +19,13 @@ CREATE TABLE account_member_transaction.draw (
 CREATE INDEX ON account_member_transaction.draw (member);
 
 -- A member admitted subscribes their shares, in the write that admits
--- them: their capital account is opened under 1013, next in the chart, and
--- what they owe for their shares at the share's value is posted, 4561
--- debited and their capital credited, on the verdict date. Paying it in
--- is money received, which posts through a write of its own.
+-- them, whichever it is: their capital account is opened under 1013, next
+-- in the chart, and what they owe for their shares at the share's value is
+-- posted, 4561 debited and their capital credited, on the verdict date.
+-- Paying it in is money received, which posts through a write of its own.
+-- The books never hold an admission back: where the share has no value,
+-- or the verdict date's period is not open, the admission settles and
+-- nothing is subscribed.
 CREATE FUNCTION account_member_transaction.subscribes() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   code text;
@@ -33,9 +36,11 @@ BEGIN
     RETURN NULL;
   END IF;
   SELECT NEW.shares * cella.cents(t.share) INTO cents FROM account_member.terms t;
-  IF cents IS NULL THEN
-    RAISE EXCEPTION '% subscribes % shares, but a share has no value', NEW.address, NEW.shares
-      USING ERRCODE = 'triggered_action_exception';
+  IF cents IS NULL OR NOT EXISTS (
+    SELECT FROM account.period p WHERE p.month = to_char(cella.verdict_date(), 'YYYY-MM') AND p.closed IS NULL
+  ) OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '1013')
+    OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '4561') THEN
+    RETURN NULL;
   END IF;
   SELECT '1013' || lpad((coalesce(max(substr(a.code, 5)::integer), 0) + 1)::text, 2, '0') INTO code
   FROM account.account a WHERE a.parent = '1013' AND a.code ~ '^1013[0-9]{2}$';

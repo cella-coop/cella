@@ -1,4 +1,7 @@
-// A version a decision asks to adopt, and the day it was adopted, once it
+import type { Canon } from '@cella/org-document/models'
+
+// A document a decision asks to adopt, named by its canonical hash, the
+// version the proposer read it in, and the day it was adopted, once it
 // was.
 export interface Asked {
   id: string
@@ -6,5 +9,38 @@ export interface Asked {
   title: string
   document: string
   version: string
+  hash: string
   adopted: string | null
+}
+
+// A decision as an embed draws it.
+export interface Summary {
+  id: string
+  title: string
+  circle: string
+  rule: string
+  deadline: string
+  closed: string | null
+}
+
+// What a decision asks to adopt, as its page shows it: the version in
+// full, as the database canonicalised it, and the version now adopted,
+// which it would replace.
+export interface Adopting extends Asked {
+  name: string
+  canonical: Canon
+  current: string | null
+}
+
+// The graft's data on a decision's page.
+export interface OnDecision {
+  adopting: Adopting[]
+  decisions: Summary[]
+}
+
+// The graft's data on a document's page: the decisions adopting it, and
+// the decisions it may embed.
+export interface OnDocument {
+  asked: Asked[]
+  decisions: Summary[]
 }

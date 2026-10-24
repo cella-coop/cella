@@ -26,10 +26,11 @@ clients without a rewrite.
 ## One server
 
 The notary lives inside Postgres as the `cella` extension, built with pgrx
-on the Rust rules crate (`apps/org/core/notary/rs`, not yet built). A pgrx
-spike is settling whether it builds and behaves; if it fails, the notary is
-a module of the app with the same `submit(write) → verdict` interface,
-inside the caller's transaction, and no feat changes.
+on the Rust rules crate (`apps/org/core/notary/rs`, not yet built). The pgrx
+spike (`research/pgrx/`) showed it builds on NixOS against Postgres 18,
+holds one transaction from Node, and keeps a gapless signed log the app's
+role cannot write. Installing it needs a superuser, so a scope runs on a
+Postgres we operate, never a managed service.
 
 ```mermaid
 sequenceDiagram
@@ -40,11 +41,11 @@ sequenceDiagram
   D->>A: signed write
   A->>A: permission check
   rect rgba(128, 128, 128, 0.15)
-    A->>N: begin; select cella.submit(write)
+    A->>P: begin; state change
+    A->>N: select cella.submit(write)
     N->>N: receipt, rules, verdict appended to the log
     N-->>A: verdict
-    A->>P: state change, if Settled
-    A->>P: commit
+    A->>P: commit if Settled, roll back if Refused
   end
   A-->>D: Settled or Refused
 ```
@@ -59,10 +60,22 @@ sequenceDiagram
   computed from the signed votes, and anyone holding the log can compute it
   again.
 - **The verdict and its state change commit in one transaction.** The
-  handler opens it, calls `cella.submit`, writes the state on Settled, and
-  commits once. The log is hash-chained with a deterministic fold, so the
-  state can always be rebuilt from it and checked. A Merkle tree over the
-  log (RFC 9162) gives inclusion and consistency proofs.
+  handler opens it, writes the state, calls `cella.submit` last and commits
+  once; a refusal rolls both back. `submit` holds the log's head lock until
+  commit, so calling it last keeps ordered writes from queueing behind slow
+  transactions. Entries are numbered from that locked head, so an aborted
+  write leaves no gap. The log is hash-chained (BLAKE3) and signed
+  (Ed25519) with a deterministic fold, so the state can always be rebuilt
+  from it and checked. A Merkle tree over the log (RFC 9162) gives
+  inclusion and consistency proofs.
+- **Order comes from receipts, never from clocks.** A member's latest stance
+  is the one with the highest receipt number, not the latest date.
+- **The scope's key** is read from a file only the database's superuser can
+  read.
+- **A fault in the extension stays bounded.** A Rust panic becomes an
+  ordinary error that aborts the transaction. A hard crash makes Postgres
+  restart every connection in the scope, in about 0.2 s, and lose nothing
+  committed.
 - **A scope's database is the unit** that moves, backs up and replays: state,
   log, rules and the notary's key together.
 - **Confluent writes skip the rule check** and are logged in signed batches.
@@ -97,18 +110,30 @@ enabled by decision.
 Composed rules are a declared subset of SQL: `SELECT`, joins over the
 scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
 primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
-rule is checked against the subset with libpg_query when it is adopted, and
-refused outside it. A statement timeout bounds evaluation. The log records
+rule is written as a `BEGIN ATOMIC` body and checked twice when it is
+adopted: its parse tree against the subset (libpg_query), and its resolved
+dependencies against Postgres's catalogue, which sees the casts and
+operators the parser cannot. A rule outside the subset is refused. A statement timeout bounds evaluation. The log records
 the text and version of every rule that decided a verdict.
 
 SQL is the source of truth for rules. The browser may preview a rule
 through the WASM primitives but never re-implements one in TypeScript.
 
-Four catches keep local-first (rung 7) open, so that composed rules can run
-without Postgres on a later runtime:
+PGlite, Postgres compiled to WASM, cannot load a pgrx extension. On a device
+the primitives first run beside it, as WASM in JavaScript, and composed rules
+wait. To bring them onto devices, the same pure crate is compiled for
+PGlite's toolchain and wrapped in a thin C binding that registers the same
+`cella.*` surface; that binding is research for rung 7.
+
+Five catches keep local-first (rung 7) open, so that composed rules can run
+without the server's Postgres on a later runtime:
 
 - the declared subset;
-- the primitives in a Rust crate, so devices get them as WASM;
+- the primitives in a pure Rust crate with no pgrx in it, so devices get
+  them as WASM;
+- the extension's SQL surface declared in one place: a fixed list of types,
+  functions, aggregates and operators, each a thin wrapper over the crate
+  with no logic of its own, so a second binding only wraps the list;
 - each rule's text and version in the log;
 - a conformance suite, Lanterne's cases and their expected verdicts,
   runnable against any engine: Postgres, PGlite, or a future runtime.
@@ -142,7 +167,5 @@ erased until their legal clock runs out.
 
 ## Open
 
-- The pgrx spike's outcome, and with it whether the notary is the extension
-  or the fallback module.
 - Whether personal data enters the log only for ordered writes.
 - The late-write rules for offline writes (rung 2).

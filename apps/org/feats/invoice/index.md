@@ -94,6 +94,66 @@ Generating lines from billable time or milestones belongs to later grafts
 with `timesheet` and `project`; e-invoicing through an approved platform
 arrives at rung 3.
 
+## Schema
+
+`invoice` (`core/sql/`):
+
+- `invoice.series`: a series, its `next` number and `until`, the last
+  number its right covers. At rung 1 the server holds the only right,
+  granted without end (`until` is NULL), so it never runs out; a device's
+  right at rung 2 ends, and a number past it needs a fresh grant, which
+  is ordered.
+- `invoice.invoice`: as issued, `net`, `vat` and `total` as
+  `cella.amount` (a NULL `vat` is an invoice without VAT), unique by
+  series and number; `sent`, `voided` and `reason` are set once.
+- `invoice.line`: description, quantity (exact decimal), unit price,
+  amount (quantity × unit price, rounded to the cent) and VAT rate.
+- `invoice.payment`: received `at`, amount, method and the bank's
+  reference, with a receipt; unique by invoice and reference.
+- `invoice.spend(series)`: the bounded write's spend. It takes the next
+  number, refuses one already issued (never reused) and refuses once the
+  right has run out.
+- `invoice.standing`: each invoice's total, paid, `owed` and `credit` in
+  cents, and its state (`unpaid`, `partial`, `paid`, `overpaid`,
+  `voided`). The excess of a payment beyond the total is `credit`, owed
+  to the client; on a voided invoice everything paid is.
+
+Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
+up to the net; another keeps an issued invoice and its lines unchanged,
+sent once, voided once and not sent once voided. The app role may select,
+insert, set `sent`, `voided` and `reason`, and spend a series; the rules
+role, `cella_rules`, may select.
+
+## Rules
+
+- `invoice.numbered`, on `invoice:invoice:issue`: the write issued the
+  invoice on the verdict date, with the series' last number, the one after
+  the number before it (no gap) and not dated before it.
+- `invoice.voids`, on `invoice:invoice:void`: the write voided the invoice
+  on the verdict date, and no payment exists; a paid invoice is not voided,
+  and the void uses no verdict number.
+
+That issue and void post their entries is the `invoice-transaction`
+graft's rule on the same ops.
+
+## Handlers
+
+Each handler is also a write spec (`issuing`, `paying`, `voiding`) that a
+graft composes with its own state into one write.
+
+- `issue` (bounded): spends the number and writes the invoice and its
+  lines in one statement, amounts and VAT computed in SQL from the lines;
+  the payload holds the number and amounts, never the name billed.
+- `send` (confluent): sets `sent` once; a voided invoice is left unsent.
+- `payment` (confluent): records the payment with a receipt; a reference
+  already recorded for the invoice merges and returns `merged`.
+- `annul`, the void write (ordered; `void` is a keyword): sets `voided`
+  and the reason; the reason stays out of the log.
+
+Issue and payment can still be refused at rung 1, by a gap or by a closed
+period, so their handlers return `Refused` beside `Settled` although their
+labels never wait.
+
 ## Lanterne
 
 - Series F-2026 runs from 0041 to 0055; the next is 0056.

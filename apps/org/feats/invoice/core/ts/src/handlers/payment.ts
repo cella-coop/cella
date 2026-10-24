@@ -1,0 +1,38 @@
+import type { Refused, Settled } from '@cella/org-ops'
+import { write, type Deps, type Write } from '@cella/org-db'
+import type { ops } from '../models/ops.ts'
+import type { Paid, Payment } from '../models/invoice.ts'
+
+const op = 'invoice:invoice:payment' satisfies keyof typeof ops
+
+// Records money received, with a receipt. A bank reference already recorded
+// for the invoice merges: the payment stands once, and `merged` says so.
+// Nothing is refused for paying too much; `invoice.standing` reads the
+// excess as a credit owed to the client.
+export const paying = (input: Payment): Write<Paid> => ({
+  op,
+  state: async (tx) => {
+    const fresh = await tx.query<{ id: string }>(
+      `INSERT INTO invoice.payment (invoice, receipt, at, amount, method, reference)
+       VALUES ($1, cella.receipt(), $2, cella.amount($3), $4, $5)
+       ON CONFLICT (invoice, reference) DO NOTHING
+       RETURNING id`,
+      [input.invoice, input.at, input.amount, input.method ?? 'transfer', input.reference],
+    )
+    if (fresh.rows.length) {
+      return { invoice: input.invoice, payment: Number(fresh.rows[0].id), at: input.at, merged: false }
+    }
+    const { rows } = await tx.query<{ id: string; at: string }>(
+      `SELECT id, to_char(at, 'YYYY-MM-DD') AS at FROM invoice.payment WHERE invoice = $1 AND reference = $2`,
+      [input.invoice, input.reference],
+    )
+    return { invoice: input.invoice, payment: Number(rows[0].id), at: rows[0].at, merged: true }
+  },
+  payload: (v) => ({ ...v, amount: input.amount }),
+})
+
+// Confluent: payments add up in any order. At rung 1 a payment is refused
+// only when what it posts is, as into a closed period.
+export async function payment(input: Payment, deps: Deps): Promise<Settled<Paid> | Refused> {
+  return write(deps, paying(input))
+}

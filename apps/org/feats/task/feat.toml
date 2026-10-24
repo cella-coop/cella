@@ -2,4 +2,4 @@ name = "task"
 group = "work"
 builtin = false
 rung = 1
-grafts = ["member-task"]
+grafts = ["member-task", "project-task"]

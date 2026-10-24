@@ -13,7 +13,7 @@ updated = 2026-10-24
 | `cella check feats\|fixtures\|types\|rust` | development | one part alone |
 | `cella db start` | development | builds the extension, then starts the dev cluster or restarts it to load a rebuilt one; creates the cluster, its dev key `.data/notary.key` and the database on first use |
 | `cella db stop`, `cella db status` | development | stops the cluster; says whether it runs, exiting 3 when stopped as `pg_ctl` does |
-| `cella db reset [--db NAME]` | development | drops and recreates a database on the cluster |
+| `cella db reset [--db NAME] [--seed FIXTURE]` | development | drops, recreates and migrates a database on the cluster, the dev one by default, and with `--seed` loads a mock co-op into it, such as `lanterne`; a reset never leaves a database unmigrated |
 | `cella db psql [ARGS…]` | development | psql on the dev database; arguments pass through |
 | `cella ext build` | development | packages the `cella` extension with `cargo pgrx package` into `.data/ext`, where the dev cluster loads it |
 | `cella migrate [--url URL]` | both | applies the migrations cascading down the feat tree (`tools/migrate.mjs`), on the dev database or on any database by URL |

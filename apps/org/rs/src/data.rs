@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 use std::process::Command;
 
 use crate::db::Dev;
@@ -24,15 +25,21 @@ pub fn migrate(repo: &Repo, steps: &Steps, url: Option<&str>) -> Result {
     steps.run("migrate", &mut [cmd], last_line)
 }
 
-pub fn seed(repo: &Repo, steps: &Steps, fixture: &str, url: Option<&str>) -> Result {
+/// A mock co-op's directory under `apps/org/fixtures`, by its name.
+pub fn fixture(repo: &Repo, name: &str) -> Result<PathBuf> {
     let fixtures = repo.root.join("apps/org/fixtures");
-    let dir = fixtures.join(fixture);
-    if fixture.contains('/') || !dir.is_dir() {
+    let dir = fixtures.join(name);
+    if name.contains('/') || !dir.is_dir() {
         let known: Vec<String> = fs::read_dir(&fixtures)
             .map(|d| d.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect())
             .unwrap_or_default();
-        return Err(Fail::new(format!("no fixture {fixture}; there are: {}", known.join(", "))));
+        return Err(Fail::new(format!("no fixture {name}; there are: {}", known.join(", "))));
     }
+    Ok(dir)
+}
+
+pub fn seed(repo: &Repo, steps: &Steps, fixture: &str, url: Option<&str>) -> Result {
+    let dir = self::fixture(repo, fixture)?;
     repo.install(steps)?;
     let mut cmd = on(&Dev::new(repo), url, "node")?;
     cmd.arg(repo.root.join("tools/seed.mjs")).arg(dir);

@@ -58,12 +58,8 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     }
     repo.install(steps)?;
     for (name, file) in chosen {
-        let [drop, create] = dev.fresh(DB);
-        let mut migrate = dev.on(DB, "node");
-        migrate.arg(repo.root.join("tools/migrate.mjs"));
-        let mut seed = dev.on(DB, "node");
-        seed.arg(repo.root.join("tools/seed.mjs")).arg(repo.root.join("apps/org/fixtures/lanterne"));
-        steps.run(&format!("fresh {name}"), &mut [drop, create, migrate, seed], quiet)?;
+        let lanterne = repo.root.join("apps/org/fixtures/lanterne");
+        steps.run(&format!("fresh {name}"), &mut dev.renew(DB, None, Some(&lanterne)), quiet)?;
         let mut test = dev.on(DB, "node");
         test.arg("--test");
         if !steps.verbose {

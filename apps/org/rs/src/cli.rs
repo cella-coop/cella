@@ -94,11 +94,15 @@ pub enum Db {
     Stop,
     /// Whether the cluster runs, and where
     Status,
-    /// Drop and recreate a database on the cluster
+    /// Drop, recreate and migrate a database on the cluster, and seed it with --seed
     Reset {
         /// The database, by default the dev one
         #[arg(long)]
         db: Option<String>,
+
+        /// Also load a mock co-op from apps/org/fixtures, such as lanterne
+        #[arg(long, value_name = "FIXTURE")]
+        seed: Option<String>,
     },
     /// psql on the dev database; arguments pass through
     Psql {

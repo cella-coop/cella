@@ -5,9 +5,10 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::cli::Db;
+use crate::data;
 use crate::key;
 use crate::repo::Repo;
-use crate::run::{Fail, Result, Steps, quiet};
+use crate::run::{Fail, Result, Steps, last_line, quiet};
 
 /// The dev cluster: Postgres 18 in .data/pg, owned by the user, on
 /// 127.0.0.1 at `CELLA_PGPORT` (54342), its database `CELLA_DB` (cella).
@@ -59,13 +60,26 @@ impl<'a> Dev<'a> {
         Err(Fail::new("the dev cluster is stopped; run `cella db start`"))
     }
 
-    /// Drops a database if it exists and creates it empty.
-    pub fn fresh(&self, db: &str) -> [Command; 2] {
+    /// Drops a database if it exists, creates it and migrates it: the whole
+    /// tree, or one slice's part of it; then seeds it from a fixture's
+    /// directory, if one is given. Never an unmigrated database.
+    pub fn renew(&self, db: &str, slice: Option<&str>, fixture: Option<&Path>) -> Vec<Command> {
         let mut drop = self.on(db, "dropdb");
         drop.args(["--if-exists", "--force", db]);
         let mut create = self.on(db, "createdb");
         create.arg(db);
-        [drop, create]
+        let mut migrate = self.on(db, "node");
+        migrate.arg(self.repo.root.join("tools/migrate.mjs"));
+        if let Some(slice) = slice {
+            migrate.args(["--slice", slice]);
+        }
+        let mut cmds = vec![drop, create, migrate];
+        if let Some(dir) = fixture {
+            let mut seed = self.on(db, "node");
+            seed.arg(self.repo.root.join("tools/seed.mjs")).arg(dir);
+            cmds.push(seed);
+        }
+        cmds
     }
 
     fn start(&self, steps: &Steps) -> Result {
@@ -143,10 +157,12 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
             println!("stopped");
             Err(Fail { code: 3, msg: None })
         }
-        Db::Reset { db } => {
+        Db::Reset { db, seed } => {
             dev.up()?;
+            let fixture = seed.as_deref().map(|f| data::fixture(repo, f)).transpose()?;
+            repo.install(steps)?;
             let db = db.unwrap_or_else(|| dev.db.clone());
-            steps.run(&format!("reset {db}"), &mut dev.fresh(&db), quiet)
+            steps.run(&format!("reset {db}"), &mut dev.renew(&db, None, fixture.as_deref()), last_line)
         }
         Db::Psql { args } => {
             dev.up()?;

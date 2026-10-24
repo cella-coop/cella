@@ -7,7 +7,7 @@
 
   const columns: Column<Seat>[] = [
     { key: 'member', label: 'Member', kind: 'title', value: (s) => s.memberName ?? s.member },
-    { key: 'role', label: 'Role', value: (s) => s.roleName ?? 'seat' },
+    { key: 'role', label: 'Role', value: (s) => s.roleName },
     { key: 'since', label: 'Since', kind: 'date', value: (s) => s.since },
     { key: 'until', label: 'Until', kind: 'date', value: (s) => s.until },
   ]

@@ -8,7 +8,7 @@
 
   const seats: Column<Seat>[] = [
     { key: 'circle', label: 'Circle', kind: 'title', value: (s) => s.circleName },
-    { key: 'role', label: 'Role', value: (s) => s.roleName ?? 'seat' },
+    { key: 'role', label: 'Role', value: (s) => s.roleName },
     { key: 'since', label: 'Since', kind: 'date', value: (s) => s.since },
     { key: 'until', label: 'Until', kind: 'date', value: (s) => s.until },
   ]

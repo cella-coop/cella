@@ -19,7 +19,7 @@ export const app: App = {
       columns: [{ key: 'circles', label: 'Circles', kind: 'mono', role: 'hidden', value: (r: { circles?: string }) => r.circles }],
       page: {
         related: (d: { seats: Seat[]; held: Held[] }) =>
-          d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? 'seat', href: `/circles/${s.circle}` })),
+          d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),
         blocks: [Seats],
       },
     },

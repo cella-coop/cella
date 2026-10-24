@@ -106,7 +106,12 @@ sequenceDiagram
   its label declares that check and a rule enforces it, and `cella check
   feats` refuses an op that names neither, so nothing is allowed by
   omission. Money leaves a cash account only through writes with their
-  own power and limit (`transaction.pay`, `transaction.payroll`).
+  own right and a rule that checks the entry is exactly what they say:
+  `transaction.pay` and `expense.reimburse` within their power's limit,
+  `payslip:run.pay` under its power, and `account.draw` within the
+  member's own draw limit. A mandate's budget, a total over a month or a
+  year, is checked by the graft that sees what spends it:
+  `circle-expense-member` sums an approver's approvals.
 - **Confluent writes are logged in signed batches** once devices queue
   them offline (rung 2); until then each goes through the server's rules
   on its own.
@@ -250,9 +255,10 @@ What the build does not yet do, and what lifts each:
   dev mode it signs for no one and every write fails before a verdict.
   Signing in the browser with `@cella/org-sign`, which runs on WebCrypto,
   lifts this.
-- **A mandate's budget is not enforced.** A power's limit per write is
-  checked; a budget, a total over a month or a year, needs the spend it
-  caps tracked, which comes with `account.draw`.
+- **A mandate's budget is enforced only on expenses.** A power's limit per
+  write is checked everywhere; a budget only where a graft tracks the
+  spend it caps, so far `approve-expense`'s. A budget over another power
+  needs that power's spend summed by the graft that sees it.
 - **Confluent writes are single-entry log entries, not batches.** Each
   confluent write is submitted on its own and takes its own signed entry.
   Signed batches come with the offline queue at rung 2, which syncs a

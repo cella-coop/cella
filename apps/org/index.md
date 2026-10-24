@@ -23,7 +23,8 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 `cella serve` shows Lanterne from the dev database. Each feat's collection
 is a page in the sidebar: Members, Circles, Decisions and Documents
 (governance); Clients, Projects, Tasks and Timesheets (work); Invoices,
-Accounts, Periods and Transactions (finance); Devices and the Log
+Accounts, Periods, Allocations, Transactions, Expenses and Payslips
+(finance); Devices and the Log
 (platform). Every collection is the same
 component, its drawer's View card holding the filter, the list or table
 layout and the table's columns, and every item the same detail view, its
@@ -49,7 +50,14 @@ rule's reason:
   project and moved across the board, a drop between columns being the
   move; time logged as the acting member, alone or against a project, a
   month submitted by its member and approved by someone else (ordered),
-  which closes it to new entries.
+  which closes it to new entries;
+- an expense claimed as the acting member, submitted, approved within the
+  approver's limit and monthly budget or refused, and reimbursed, each a
+  drop between the board's columns, approval and reimbursement posted;
+  filing one under the project it is billed on to;
+- a month's pay run prepared from approved time, approved and paid, each
+  posted; a member's draw on their own account, within their limit; a
+  year's surplus allocated, citing the decision that approved its split.
 
 At rung 1 an ordered write settles or is refused at once, so Pending is
 never shown, though the shell handles it. How slices mount is in
@@ -71,17 +79,15 @@ never shown, though the shell handles it. How slices mount is in
 | `project` | work | 1 | initiatives, their milestones and budgets |
 | `task` | work | 1 | assignable work |
 | `timesheet` | work | 1 | time entries and members' months |
+| `expense` | finance | 1 | capture, approve within a budget, reimburse |
+| `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
 | `meeting` | governance | later | agendas, attendance, minutes |
-| `expense` | finance | later | capture, approve, reimburse |
-| `payslip` | finance | later | pay periods and payslips |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
-Seedling's co-op economics that rung 1 leaves out land with the later
-feats: patronage inputs (hours, wages, revenue per member) from
-`timesheet`'s approved months, `payslip` and `invoice` through grafts onto
-`account`; buy-in, buyout over years, revolving capital and dues in
-`account`, once an `account-member` graft links capital accounts to
-members; quotes with `project`.
+Seedling's co-op economics that rung 1 still leaves out: a work share
+divided by hours (an `account-timesheet` graft) or by revenue; paying in
+subscribed capital, buyout over years, revolving capital and dues in
+`account`; quotes with `project`.
 
 Rung 1's pilot runs one write of each kind end to end: edit a document
 (confluent), issue an invoice (bounded, numbered by the server until rung 2),
@@ -92,17 +98,27 @@ and admit a member by vote (ordered).
 | Graft | What it joins |
 |---|---|
 | `account-decision` | a surplus allocation and the decision that approved it |
-| `account-transaction` | a transaction's lines post to accounts, never into a closed period |
+| `account-member` | who holds each capital account, the share's value, draw limits, and the freeze on exit |
+| `account-member-transaction` | a member's subscription on admission and their draws, posted |
+| `account-payslip` | a surplus's work share divided by salary |
+| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor |
+| `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, and whether it passes on it |
 | `circle-member` | positions: who holds which role in which circle |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `decision-document` | adoption of a document version by a decision |
 | `decision-member` | admission and suspension by a decision |
+| `expense-member` | whose an expense is |
+| `expense-project` | the project an expense is billed on to |
+| `expense-transaction` | an expense's approval and reimbursement post transactions |
 | `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
 | `member-project` | shares of a project's budget, never beyond it |
 | `member-task` | who does a task |
+| `member-payslip` | whose a salary and a payslip are |
 | `member-timesheet` | whose time an entry is, and a member's months |
+| `payslip-timesheet` | a pay run from approved time |
+| `payslip-transaction` | a pay run's approval and payment post transactions |
 | `project-task` | which project and milestone a task is in |
 | `project-timesheet` | time against a project, and what it spent of the budget |

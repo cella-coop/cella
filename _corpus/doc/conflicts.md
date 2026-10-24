@@ -29,11 +29,16 @@ decision. Lanterne's state is that of 24 October 2026.
 | `document.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
-| `account.draw` | bounded | right; **applied**: no longer duplicates, now that credit/debit are one `transaction.post` |
-| `account.surplus.allocate` | ordered | right |
+| `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-freezes-on-exit)) |
+| `account.surplus.allocate` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
 | `account.period.close` | ordered | right |
 | `transaction.post` | confluent | **applied**: one write replaces `credit` and `.debit`; an entry's balance is checked on the entry alone |
-| `transaction.pay`, `.payroll` | confluent | right: entries commute; each is a write money leaves the bank through, under its own power, and a post touches no cash account |
+| `transaction.pay` | confluent | right: entries commute; it is a write money leaves the bank through, under its own power, and a post touches no cash account; **applied**: `.payroll` is gone, pay runs post through `payslip` |
+| `expense.capture`, `.submit` | confluent | right: the member's own facts |
+| `expense.approve` | bounded on the approver's budget | right ([expenses](#an-expense-is-decided-once-within-a-budget)) |
+| `expense.refuse`, `.reimburse` | ordered | right: one decision per expense, one payment |
+| `expense-project:expense.rebill` | confluent | right: a register |
+| `payslip:run.generate`, `.approve`, `.pay` | ordered | right ([pay](#a-pay-run-reads-approved-time)) |
 | `transaction.adjust` | ordered, `base: 'corrected'` | **applied**: the decision is now a circle setting, not part of the label |
 | `invoice.issue` | bounded | right; rung 2 needs late-write rules |
 | `invoice.send` | confluent | right |
@@ -58,10 +63,13 @@ decision. Lanterne's state is that of 24 October 2026.
 
 Owner: the `account-transaction` graft. The period is an account's, the
 entry a transaction's; only the graft sees both. Every write that posts an
-entry contends with `account.period.close`: `transaction.post`, `.pay`,
-`.payroll` and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
-`invoice-transaction`; `account.draw` and `account.surplus.allocate`
-through their grafts.
+entry contends with `account.period.close`: `transaction.post`, `.pay`
+and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
+`invoice-transaction`; `account.draw` and `account.surplus.allocate`,
+`expense.approve` and `.reimburse`, `payslip:run.approve` and `.pay`
+through their grafts; and `member.admit`, whose subscription posts. An
+admission never waits on the books: where the day's period is not open,
+it subscribes nothing.
 
 | Pair | Post first | Close first | Both confluent |
 |---|---|---|---|
@@ -99,8 +107,9 @@ the check alone and together exceed it.
 
 **Applied.** One write, `transaction.post`, confluent: an entry's balance
 is checked on the entry alone, and sums of entries commute. The authority
-to take money out is `account.draw`'s, bounded on the share, which posts
-through `account-transaction`.
+to take money out is the writes' that carry their own right: `pay`, a
+member's `account.draw` on their limit, an expense's reimbursement and a
+pay run's payment.
 
 `transaction.adjust` posts a correcting entry. Two corrections of one
 entry contend: both settle and the books are corrected twice.
@@ -198,10 +207,10 @@ the roll.
 
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
-| `account.draw` vs `circle.mandate.revoke` | the spend stands | refused: no power | someone without authority spends |
+| `expense.approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | someone without authority spends |
 | spend vs `circle-member:position.remove` | the spend stands | refused | as above |
 | spend vs `member.suspend` / `.exit` | the spend stands | refused | as above |
-| `account.draw` vs `account.draw`, one share | both, if the share covers both | both, if it covers both | the share is overspent |
+| `expense.approve` vs `expense.approve`, one budget | both, if the budget covers both | both, if it covers both | the budget is overspent |
 
 The spend is bounded, the revocation ordered: a revocation stops new
 shares, and spends within a share already granted stand. The loss a
@@ -214,15 +223,19 @@ suppliers up to 3 000 €" (a cap per write) and a lead "spends up to
 permission check; a budget is a share that runs out. **Applied.** A
 mandate names them apart: `limit` caps a single write, in cents;
 `budget`, with `per` ("month" or "year"), caps a cumulative total over a
-period.
+period. **Applied**: a budget is enforced on the writes that spend it,
+by the graft that sees the mandate, the seat and the spend:
+`circle-expense-member` sums what the approver approved over the
+budget's period, this approval included. Two approvals by one member are
+judged one after the other under the log's head lock.
 
 **Rung 2.** A lead's phone holds the circle's share offline; a revocation
 cannot reach it until it syncs. What it spends meanwhile stands, up to the
 share. Shares should be small and expire.
 
-**Lanterne.** Hugo, as Brand's lead, draws 600 € for print proofs on the
-train while coordination revokes his `spend-circle` mandate: the draw
-stands, his remaining 400 € is gone at the next sync.
+**Lanterne.** Hugo, as Brand's lead, approves Sofia's 180 € print proofs
+on the train while coordination revokes his `approve-expense` mandate:
+the approval stands, his remaining 820 € is gone at the next sync.
 
 ## The circles form a tree
 
@@ -321,19 +334,28 @@ F-2026-J-0001 onwards for invoicing at a client's.
 
 ## A surplus is split once, and as the law requires
 
-Owners: the `account` feat for the sums and the legal floors; the
-`account-decision` graft for the approval.
+Owners: the `account` feat for the sums and the floors it sees; the
+`account-transaction` graft for the legal reserve's, which needs the
+books; the `account-decision` graft for the approval.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `surplus.allocate` vs `surplus.allocate`, one year | the second refused | the first refused | the surplus is split twice |
 | `surplus.allocate` vs `decision.close` | waits for the outcome | settles if it passed | split without the assembly |
 | `surplus.allocate` vs the year's last `period.close` | refused: the year is open | settles | a split of a surplus not yet final |
+| `surplus.allocate` vs a post to `1061` or to capital | the floor was read before it | the floor reads it | the legal reserve's 15 % waived on a reserve or a capital that moved |
 
-All ordered; right.
+All ordered; right. **Applied**: the floors are those of loi n° 78-763
+du 19 juillet 1978, art. 33, read on Légifrance in its text in force since
+2 August 2014: 15 % to the legal reserve until it reaches the highest
+amount the capital reached (1°), a development fund (2°), at least 25 %
+to the workers (3°), and interest on capital no more than the reserves'
+allocations nor the workers' (4°). The rules cite the article when they
+refuse.
 
-**Lanterne.** d-2026-006 approved the 2025 split in June, after the 2025
-books were closed: 45 % work, 40 % reserves, 15 % interest.
+**Lanterne.** d-2026-006 approved the 2025 split in June: 45 % work,
+15 % legal reserve, 25 % development fund, 15 % interest. Its result was
+carried over unallocated, and allocating it cites the decision.
 
 ## Membership changes are decided
 
@@ -344,7 +366,7 @@ deciding vote.
 |---|---|---|---|
 | `member.admit` vs `member.invite` | refused: not invited | admitted | admitted without an invitation |
 | `member.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
-| `member.exit` vs the capital account | — | — | no graft freezes it: `account-member` is missing |
+| `member.exit` vs the capital account | — | — | **applied**: `account-member` freezes it in the exit's transaction ([capital](#capital-freezes-on-exit)) |
 
 `invite` and `profile` are rightly confluent; `admit`, `suspend` and `exit`
 rightly ordered.
@@ -428,6 +450,72 @@ harmless and reads as such. **Rung 2**: milestones numbered under the
 project's lock collide when two devices add one offline; a milestone
 needs an id of its own, its number a position.
 
+## Capital freezes on exit
+
+Owners: `account-member` for the freeze, a trigger on the member's
+status in the write that ends the membership, whichever it is;
+`account-member-transaction` for the draws and the subscription.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `account.draw` vs `member.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
+| `account.draw` vs `account.draw`, one member | both, if the limit covers both | both, if it covers both | the limit is overdrawn |
+| `member.admit` vs `account.period.close` of its month | the subscription posts in the month | nothing is subscribed; the admission settles | an admission refused by the books |
+
+The draw is bounded on the member's limit, a right granted in advance;
+the exit is ordered and freezes in its own transaction, so no draw
+settles between the exit and the freeze. A frozen account never thaws
+until it is repaid, which is not built. Subscribing never holds an
+admission back.
+
+**Lanterne.** Thomas draws 300 € of his 500 €; a second 300 € is refused,
+200 € being left. Had Sofia left, her account would freeze in the exit's
+own verdict, and her draw after it would be refused.
+
+## An expense is decided once, within a budget
+
+Owner: the `expense` feat for the lifecycle; `circle-expense-member` for
+the budget; `circle-member` for the power and its limit.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `approve` vs `refuse`, one expense | refused: it is approved | refused: it is refused | an expense both paid and refused |
+| `approve` vs `approve`, one expense | the second refused: approved already | as A | charged twice |
+| `approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | as any spend |
+| `approve` vs `approve`, one approver's month | both, if the budget covers both | both, if it covers both | the budget overspent |
+| `reimburse` vs `reimburse` | the second refused | as A | paid back twice |
+
+`approve` is bounded on the approver's budget; `refuse` and `reimburse`
+are ordered, since only one decision and one payment may stand. At rung 1
+the lifecycle trigger refuses the second of each.
+
+**Lanterne.** Hugo approves Sofia's 180 € proofs; her 960 € plotter repair
+is beyond what is left of his 1 000 €, and Camille approves it as
+gérante, within her 2 000 € limit; Thomas's 2 520 € laptop is beyond
+even hers, and needs the assembly.
+
+## A pay run reads approved time
+
+Owners: the `payslip` feat for the run; `payslip-timesheet` for the time
+it reads; `payslip-transaction` for its postings.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `generate` vs `timesheet:period.approve`, one month | refused: a month is not approved | the run reads the approved time | pay computed from time still changing |
+| `generate` vs `timesheet.log` into the month | the log is refused once approved | as A | as above |
+| `generate` vs `generate`, one month | the second refused | as A | two runs for a month |
+| `approve` vs `pay` | the payment follows | refused: not approved | pay leaves the bank before it is approved |
+| `pay` vs `pay` | the second refused: paid | as A | paid twice |
+| `approve` vs `account.period.close` of the month | the accrual lands in the month | refused: the month is closed | as any post |
+
+All three are ordered. The run waits for every month's approval, which
+is ordered and fixes the month's entries, so the time a run reads never
+changes after it.
+
+**Lanterne.** October's run is refused on 2 November until every member's
+October is approved; prepared then, approved by Camille, it accrues on
+31 October and Julien pays it from the bank.
+
 ## Uncontested writes
 
 | Write | Why nothing contends |
@@ -452,6 +540,9 @@ The matrix found writes no `ops.ts` declares:
 | `document.version` | confluent | adoption names versions nothing saves; **applied**, now declared |
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
 | erasing a person | ordered | the tombstone must be fixed in the log |
+| setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
+| paying in subscribed capital, repaying a departed member's | confluent, ordered | money in and out of `4561` and a frozen account, which nothing posts |
+| opening a period | ordered | the fiscal year's months exist only as the seed made them |
 
 ## Recommended label changes
 

@@ -81,6 +81,43 @@ members, allocations or periods. It does not know a period is closed; the
 graft does. VAT returns and statutory exports such as the FEC read the
 journal at rung 3.
 
+## Schema
+
+`transaction` (`core/sql/`):
+
+- `transaction.entry`: id (`je-0041`, from a sequence), date, label,
+  `corrects` and the receipt it was posted at; an entry carried over from
+  before the log has no receipt.
+- `transaction.line`: the entry, its line number, the account code, a
+  side (`debit` or `credit`) and one positive `cella.amount`.
+
+A deferred constraint trigger checks that every entry balances over two
+lines or more; the db library makes it immediate before the verdict, so an
+unbalanced entry is refused inside the write. Another trigger refuses any
+update or delete: the journal is permanent. Both raise SQLSTATE `09000`.
+The app role may select and insert; the rules role, `cella_rules`, may
+select.
+
+## Rules
+
+- `transaction.corrects`, on `transaction:transaction:adjust`: the entry
+  corrects the entry the payload names, and that entry's latest correction
+  before it is the payload's `base`; a second correction from the same base
+  is refused.
+
+## Handlers
+
+- `record(tx, entry)`: writes an entry and its lines inside a write's
+  transaction. Grafts that post, such as `invoice-transaction`, use it.
+- `post` (confluent): records a balanced entry. At rung 1 it is still
+  refused when it does not balance or is dated in a closed period, so it
+  returns `Refused` beside `Settled`.
+- `adjust` (ordered, `base: 'corrected'`): records a correcting entry,
+  naming the entry it corrects and the base it read.
+
+Entry ids come from a sequence, so a refused write leaves a gap in the
+ids, though never in the log.
+
 ## Lanterne
 
 - Forty entries from 1 July to 24 October 2026, `je-0001` to `je-0040`.

@@ -1,0 +1,28 @@
+export type Side = 'debit' | 'credit'
+
+// One positive amount, in cents, on one side of one account, by its code.
+export interface Line {
+  account: string
+  side: Side
+  cents: number
+}
+
+export interface Entry {
+  // The accounting date, YYYY-MM-DD.
+  date: string
+  label: string
+  lines: Line[]
+}
+
+// A correcting entry names the entry it corrects and that entry's latest
+// correction it read, or null if it read none.
+export interface Adjust {
+  corrects: string
+  base: string | null
+  entry: Entry
+}
+
+export interface Posted {
+  entry: string
+  receipt: number
+}

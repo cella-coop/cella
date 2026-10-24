@@ -119,6 +119,13 @@ dependencies against Postgres's catalogue, which sees the casts and
 operators the parser cannot. A rule outside the subset is refused. A statement timeout bounds evaluation. The log records
 the text and version of every rule that decided a verdict.
 
+A rule runs as `cella_rules`, never with the extension owner's rights:
+`submit` switches to that role in a security-restricted operation around
+each rule, as Postgres does for a security-definer function. The role
+reads only what each feat and graft grants it, its own schema, and can
+write nothing, take no receipt, call no `submit`, and read neither the key
+file nor its setting. A rule declared `SECURITY DEFINER` is refused.
+
 SQL is the source of truth for rules. The browser may preview a rule
 through the WASM primitives but never re-implements one in TypeScript.
 
@@ -167,6 +174,28 @@ retention class and year. Erasure deletes the row and its salt, destroys the
 keys that expired, and writes an erasure entry; the log still verifies and
 folds the gap to `redacted`. Books and payroll are restricted rather than
 erased until their legal clock runs out.
+
+## Current limits
+
+What the build does not yet do, and what lifts each:
+
+- **Receipts are not yet signed.** `cella.receipt()` hands out a number
+  from a sequence; only the numbered verdict is signed. Signed receipts
+  come with members signing their writes on their devices, the rung 1
+  slice that makes order provable against the notary.
+- **Confluent writes are single-entry log entries, not batches.** Each
+  confluent write is submitted on its own and takes its own signed entry.
+  Signed batches come with the offline queue at rung 2, which syncs a
+  device's confluent writes together.
+- **Payload digests are not yet salted.** An entry holds the BLAKE3 digest
+  of its canonical payload, so a payload that can be guessed can be
+  confirmed against the log. Handlers keep personal data out of payloads
+  (an invoice's name billed, a void's reason, a client's field values),
+  and salted commitments with the vault lift this before the pilot holds
+  real members' data, in rung 1's personal-data slice.
+- **Entries balance and periods are open by triggers in their owners'
+  schemas**, PL/pgSQL in `transaction` and `account_transaction`, not yet
+  `cella.*` trigger functions.
 
 ## Open
 

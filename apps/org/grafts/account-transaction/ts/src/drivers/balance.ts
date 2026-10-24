@@ -9,6 +9,12 @@ export async function balances(db: Db): Promise<Record<string, Balance>> {
   return Object.fromEntries(rows.map((r) => [r.code, number(r)]))
 }
 
+// The entry an allocation posted, if it was allocated.
+export async function posted(db: Db, allocation: string): Promise<{ entry: string | null }> {
+  const { rows } = await db.query<{ entry: string }>('SELECT entry FROM account_transaction.allocation WHERE allocation = $1', [allocation])
+  return { entry: rows[0]?.entry ?? null }
+}
+
 // An account's balance and every line posted to it, the latest first.
 export async function ledger(db: Db, code: string): Promise<Ledger> {
   const total = await db.query('SELECT debit, credit, balance FROM account_transaction.balance WHERE code = $1', [code])

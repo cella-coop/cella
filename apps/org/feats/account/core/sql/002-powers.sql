@@ -1,6 +1,5 @@
 -- The power each account write needs; the circle-member graft's rule checks
--- that the actor holds it. A draw's budget, a total over a month, needs
--- spend tracking that is not built: only the power is checked.
+-- that the actor holds it. A draw is the member's own, against their draw
+-- limit, and an allocation is the assembly's decision, so neither is here.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
-  ('account:account:draw', 'spend-circle', NULL, 'account'),
   ('account:period:close', 'close-period', NULL, 'account');

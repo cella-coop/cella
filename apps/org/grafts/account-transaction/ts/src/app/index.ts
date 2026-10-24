@@ -5,7 +5,8 @@ import Movements from './blocks/Movements.svelte'
 const sum = (rows: Partial<Balance>[], f: (r: Partial<Balance>) => number | undefined) => rows.reduce((s, r) => s + (f(r) ?? 0), 0)
 
 // The graft's client side: each account's debits, credits and balance in
-// the chart, whether the trial balance agrees, and an account's ledger.
+// the chart, whether the trial balance agrees, an account's ledger, and
+// the entry an allocation posted.
 export const app: App = {
   name: 'account-transaction',
   extends: {
@@ -34,6 +35,12 @@ export const app: App = {
           { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
         ],
         blocks: [Movements],
+      },
+    },
+    // The entry an allocation posted.
+    allocations: {
+      page: {
+        related: (p: { entry: string | null }) => (p.entry ? [{ label: p.entry, sub: 'posted the split', href: `/transactions/${p.entry}` }] : []),
       },
     },
   },

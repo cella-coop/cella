@@ -2,9 +2,16 @@
   "name": "@cella/org-graft-account-decision",
   "private": true,
   "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
   "dependencies": {
+    "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
+    "@cella/org-ui": "workspace:*",
     "@cella/org-account": "workspace:*",
-    "@cella/org-decision": "workspace:*"
+    "@cella/org-decision": "workspace:*",
+    "svelte": "5.57.2"
   }
 }

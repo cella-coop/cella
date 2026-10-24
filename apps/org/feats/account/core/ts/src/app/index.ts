@@ -1,11 +1,14 @@
 import { icons, type App } from '@cella/org-ui'
 import type { Account, Period } from '../models/account.ts'
+import type { Allocation, Detail } from '../models/allocation.ts'
 import Close from './blocks/Close.svelte'
+import Shares from './blocks/Shares.svelte'
 
 const open = (p: Period) => (p.closed ? 'closed' : 'open')
+const allocated = (a: Allocation) => (a.allocated ? 'allocated' : 'to allocate')
 
-// The feat's client side: the chart of accounts and the periods of the
-// books, and a period's close.
+// The feat's client side: the chart of accounts, the periods of the books
+// and a period's close, and each year's surplus with its split.
 export const app: App = {
   name: 'account',
   collections: {
@@ -54,6 +57,37 @@ export const app: App = {
           { label: 'Closed on', value: p.closed, kind: 'date' },
         ],
         actions: Close,
+      },
+    },
+    allocations: {
+      view: {
+        group: 'finance',
+        title: 'Allocations',
+        caption: 'Each year’s surplus, split as the statutes and the law require',
+        icon: icons.ChartPie,
+        columns: [
+          { key: 'year', label: 'Year', kind: 'title', role: 'title', value: (a: Allocation) => String(a.year) },
+          { key: 'surplus', label: 'Surplus', kind: 'money', role: 'meta', value: (a: Allocation) => a.surplus },
+          { key: 'work', label: 'Work share', kind: 'money', role: 'hidden', value: (a: Allocation) => a.work },
+          { key: 'legal', label: 'Legal reserve', kind: 'money', role: 'hidden', value: (a: Allocation) => a.legal },
+          { key: 'development', label: 'Development fund', kind: 'money', role: 'hidden', value: (a: Allocation) => a.development },
+          { key: 'interest', label: 'Interest', kind: 'money', role: 'hidden', value: (a: Allocation) => a.interest },
+          { key: 'basis', label: 'Work share by', kind: 'badge', role: 'hidden', value: (a: Allocation) => a.basis },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: allocated, tone: (a: Allocation) => (a.allocated ? 'positive' : 'accent') },
+        ],
+        look: { layout: 'table' },
+      },
+      page: {
+        eyebrow: 'Allocation',
+        title: (a: Detail) => `${a.year} surplus`,
+        subtitle: (a: Detail) => (a.allocated ? `allocated on ${a.allocated}` : 'to allocate once the assembly decides'),
+        properties: (a: Detail) => [
+          { label: 'State', value: allocated(a), kind: 'badge', tone: a.allocated ? 'positive' : 'accent' },
+          { label: 'Surplus', value: a.surplus, kind: 'money' },
+          { label: 'Work share by', value: a.basis, kind: 'badge' },
+          { label: 'Allocated on', value: a.allocated, kind: 'date' },
+        ],
+        blocks: [Shares],
       },
     },
   },

@@ -1,6 +1,6 @@
 +++
 title = "Users"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Users
@@ -50,8 +50,8 @@ surplus split, then the assembly.
 | Year-end surplus split in a spreadsheet, opaque to members | critical | `account` allocations, checked against the law and approved by signed vote |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal |
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
-| No live view of margins; overruns found late | high | later: `project` and `timesheet` |
-| Time tracking resented, yet patronage depends on it | medium | later: `timesheet`, as light as it can be |
+| No live view of margins; overruns found late | high | `project`, `timesheet`, `expense` and `invoice` hold every figure; the margin view is not built |
+| Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
 | New members do not understand what they own | medium | the members' view: rules that read back as sentences |
 
 ### People
@@ -67,6 +67,33 @@ surplus split, then the assembly.
 Today such a co-op runs Notion or Asana for projects, Toggl for time,
 Pennylane, QuickBooks or an accountant for the books, and Loomio or a form
 for votes: none of them co-op-aware.
+
+### Not yet answered
+
+What the first target needs that the org app does not do yet, by severity:
+
+- **Critical:** the patronage cycle end to end (the basis the statutes
+  choose, the split between cash and capital credit, a statement per member,
+  federation reports); capital paid in and paid out over years; import from
+  the tools a co-op leaves.
+- **High:** project margins; deliberation on proposals; a P&L and balance
+  sheet.
+- **Medium:** workers who are not members, probation and onboarding; a
+  weekly time grid; buy-in and buyout formulas.
+- **Across personas:** an inbox of what needs me, a co-op dashboard, file
+  attachments, supermajority as a procedure.
+
+## The full profiles
+
+The customer profiles, carried verbatim from seedling (where "Seedling"
+and its module names stand for cella and its feats), grouped by sector and
+size: [index](users/00-index.md) · [small private](users/01-small-private.md)
+· [medium private](users/02-medium-private.md) · [large
+private](users/03-large-private.md) · [small civil](users/04-small-civil.md)
+· [medium civil](users/05-medium-civil.md) · [large
+civil](users/06-large-civil.md) · [small government](users/07-small-gov.md)
+· [medium government](users/08-medium-gov.md) · [large
+government](users/09-large-gov.md).
 
 ## The other segments
 

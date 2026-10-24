@@ -46,11 +46,25 @@ The theme is light, dark or the system's, a cookie the server writes into
   panels behind a tab bar of icons at its top right, one tab per panel,
   the open one marked even when it is the only one: a collection's View,
   an item's Details.
-- `Collection`: the one collection component, the same header and rows
-  for every collection, and a drawer holding one card, View: the filter,
-  the layout (list · table · dashboard) and, in a table, its columns, in
-  a dashboard, its widgets, the layout, the hidden columns and the
-  widgets in the URL. Writes stay in the header, with the
+- `Collection`: the one collection component, the same header, view bar
+  and rows for every collection, and a drawer holding one card, View
+  (`Viewing`): the text filter, the conditions on the rows (an
+  enumeration's values as chips, a date's month or year), the layout
+  (list · table · dashboard) and, in a table, its columns, in a
+  dashboard, its widgets; and saving what is shown as a view. The view
+  bar's tabs are the collection's presets, declared as plain objects on
+  its view (`views`: invoices' Unpaid and Overdue, decisions' Open and
+  Closed, members' Active and Invited, transactions' This period), All
+  after them, then the viewer's own; each tab's tooltip names it with
+  its count, and its last button saves a new view. The active view (`v`)
+  and what is changed from it (`view`, `where`, `q`, `hide`, `w`) live
+  in the URL, so a view is a link and the server renders it, checking
+  every part against the fields. A viewer's own views are a preference,
+  never a record: `ViewsState` keeps them in the browser's storage as a
+  versioned object (`Saved`), ready to move into a member's preferences,
+  and renames, updates and deletes them; presets are not editable. The
+  ui check keeps browser storage to a hook's state class. Writes stay in
+  the header, with the
   count and any status badge the view and its extensions declare (the
   log verifies); a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard

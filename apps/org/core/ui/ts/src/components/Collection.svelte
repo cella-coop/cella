@@ -2,16 +2,15 @@
   import { tick, type Component } from 'svelte'
   import { goto } from '$app/navigation'
   import { page } from '$app/state'
-  import Rows from 'phosphor-svelte/lib/Rows'
-  import TableIcon from 'phosphor-svelte/lib/Table'
-  import ChartBar from 'phosphor-svelte/lib/ChartBar'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column, Status } from '../models/view.ts'
-  import { fields, type Result, type Widget } from '../models/query.ts'
+  import { address, alike, fields, matches, spec as preset, type Custom, type Preset, type Result, type Spec, type Widget } from '../models/query.ts'
   import { control, nearest, typing } from '../models/keys.ts'
+  import { mark } from '../marks.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import { useViews } from '../hooks/useViews.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
   import Cell from './Cell.svelte'
@@ -19,14 +18,17 @@
   import Frame from './Frame.svelte'
   import Icon from './Icon.svelte'
   import Table from './Table.svelte'
-  import Widgets from './Widgets.svelte'
+  import Viewing from './Viewing.svelte'
 
-  // The one collection component: the same header and rows for every
-  // collection, as a list, a table or a dashboard, and the drawer's View
-  // card holding how they are shown: the filter, the layout and, in a
-  // table, its columns, in a dashboard, its widgets. Keyboard first: j and
-  // k move, Enter opens, / filters, c creates.
+  // The one collection component: the same header, view bar and rows for
+  // every collection, as a list, a table or a dashboard, and the drawer's
+  // View card holding how they are shown. The view bar's tabs are the
+  // collection's preset views, then the viewer's own; the active one, and
+  // anything changed from it, live in the address, so a view can be
+  // linked and the server renders it as it is. Keyboard first: j and k
+  // move, Enter opens, / filters, c creates.
   let {
+    name,
     eyebrow,
     title,
     columns,
@@ -38,8 +40,14 @@
     empty = 'Nothing here yet.',
     caption,
     values = {},
+    views,
+    view,
+    spec,
+    errors = [],
+    today,
     dashboard = null,
   }: {
+    name: string
     eyebrow: string
     title: string
     caption?: string
@@ -52,84 +60,83 @@
     empty?: string
     // Each enumeration's values over the rows, for the editors' choices.
     values?: Record<string, string[]>
-    // In the dashboard view, the server's run of its widgets.
+    // The preset views, each with how many rows it keeps.
+    views: (Preset & { count: number })[]
+    // The active view's id, and what it shows, as the server read them.
+    view: string
+    spec: Spec
+    errors?: string[]
+    today: string
+    // In the dashboard layout, the server's run of its widgets.
     dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
   } = $props()
 
-  const state = useCollection(() => rows, () => columns)
-  const shell = useShell()
-
-  const views = [
-    { id: 'list', label: 'List', icon: Rows },
-    { id: 'table', label: 'Table', icon: TableIcon },
-    { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
-  ]
-  // The layout, the table's hidden columns and the dashboard's widgets
-  // live in the address, so a view can be linked and the server renders
-  // it as it is.
-  const view = $derived(views.find((v) => v.id === page.url.searchParams.get('view'))?.id ?? 'list')
   const typed = $derived(fields(columns))
-  const hidden = $derived(new Set(page.url.searchParams.get('hide')?.split(',') ?? []))
+  const kept = $derived(rows.filter((r) => matches(r, spec.where, typed, today)))
+  const state = useCollection(() => kept, () => columns, () => spec.q)
+  const shell = useShell()
+  const saved = useViews(() => name)
+
+  const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
   const subs = $derived(columns.filter((c) => c.role === 'sub'))
   const metas = $derived(columns.filter((c) => c.role === 'meta'))
   const visible = $derived(columns.filter((c) => c === titled || !hidden.has(c.key)))
 
+  const active = $derived(views.find((v) => v.id === view))
+  const custom = $derived(saved.find(view))
+  const base = $derived(custom?.spec ?? preset(active))
+  const dirty = $derived(!alike({ ...spec, q: state.filter }, base))
+
   const count = (n: number) => `${n} ${n === 1 ? 'item' : 'items'}`
   const subtitle = $derived(
-    [caption, state.filter ? `${state.shown.length} of ${count(rows.length)} · “${state.filter}”` : count(rows.length)]
-      .filter(Boolean)
-      .join(' · '),
+    [caption, state.filter ? `${state.shown.length} of ${count(kept.length)} · “${state.filter}”` : count(kept.length)].filter(Boolean).join(' · '),
   )
+  const noun = $derived(title.toLowerCase())
 
-  const switchTo = (id: string) => {
-    const query = new URLSearchParams(page.url.search)
-    query.set('view', id)
-    return `${page.url.pathname}?${query}`
+  const link = (id: string, s: Spec, p?: Preset) => `${page.url.pathname}${address(id, s, p)}`
+  const presetLink = (p: Preset) => link(p.id, preset(p), p)
+  const customLink = (c: Custom) => link(c.id, c.spec)
+  const tally = (c: Custom) => rows.filter((r) => matches(r, c.spec.where, typed, today)).length
+
+  // A change to what the active view shows, kept in the address.
+  function change(s: Spec) {
+    goto(link(view, s, active), { replace: true, reset: false })
   }
 
-  function arrange(ws: Widget[] | null) {
-    const query = new URLSearchParams(page.url.search)
-    if (ws) {
-      query.set('w', JSON.stringify(ws))
-    } else {
-      query.delete('w')
-    }
-    goto(`${page.url.pathname}?${query}`, { replace: true, reset: false })
+  function opened(c: Custom) {
+    goto(customLink(c))
   }
 
-  function hide(key: string, off: boolean) {
-    const keys = new Set(hidden)
-    if (off) {
-      keys.add(key)
-    } else {
-      keys.delete(key)
+  function remove() {
+    if (custom) {
+      saved.remove(custom.id)
+      goto(link('all', preset()))
     }
-    const query = new URLSearchParams(page.url.search)
-    if (keys.size) {
-      query.set('hide', [...keys].join(','))
-    } else {
-      query.delete('hide')
-    }
-    goto(`${page.url.pathname}?${query}`, { replace: true, reset: false })
   }
 
   function open(i: number) {
-    const link = state.shown[i] && href?.(state.shown[i])
-    if (link) {
-      goto(link)
+    const target = state.shown[i] && href?.(state.shown[i])
+    if (target) {
+      goto(target)
     }
   }
 
   // The filter is in the drawer: / opens it first when it is closed.
   async function filter() {
     shell.show(true)
+    shell.choose('view')
     await tick()
     state.focus()
   }
 
+  function naming() {
+    shell.choose('view')
+    saved.naming = true
+  }
+
   function onkeydown(e: KeyboardEvent) {
-    if (e.metaKey || e.ctrlKey || e.altKey) {
+    if (e.metaKey || e.ctrlKey || e.altKey || e.defaultPrevented) {
       return
     }
     if (typing(e)) {
@@ -162,40 +169,20 @@
 <svelte:window {onkeydown} />
 
 {#snippet viewing()}
-    <Card title="View">
-      <div class="filter">
-        <input bind:this={state.search} bind:value={state.filter} placeholder="Filter" aria-label="Filter" />
-        <kbd>/</kbd>
-      </div>
-      <div class="option">
-        <span class="label">Layout</span>
-        <nav class="views" aria-label="Layout">
-          {#each views as v (v.id)}
-            <a href={switchTo(v.id)} class:on={view === v.id} aria-current={view === v.id ? 'page' : undefined}>
-              <Icon icon={v.icon} />{v.label}
-            </a>
-          {/each}
-        </nav>
-      </div>
-      {#if view === 'table'}
-        <fieldset class="columns">
-          <legend class="label">Columns</legend>
-          {#each columns as c (c.key)}
-            <label>
-              <input
-                type="checkbox"
-                checked={c === titled || !hidden.has(c.key)}
-                disabled={c === titled}
-                onchange={(e) => hide(c.key, !e.currentTarget.checked)}
-              />
-              {c.label}
-            </label>
-          {/each}
-        </fieldset>
-      {:else if view === 'dashboard' && dashboard}
-        <Widgets widgets={dashboard.widgets} fields={typed} {values} custom={dashboard.custom} onchange={arrange} />
-      {/if}
-    </Card>
+  <Viewing
+    {name}
+    {spec}
+    fields={typed}
+    {columns}
+    {titled}
+    {values}
+    {dashboard}
+    {custom}
+    {dirty}
+    onchange={change}
+    onsave={opened}
+    onremove={remove}
+  />
 {/snippet}
 
 <Frame
@@ -211,26 +198,64 @@
     {/if}
   {/snippet}
 
+  <nav class="bar" aria-label="Views">
+    <ul>
+      {#each views as v (v.id)}
+        <li>
+          <a
+            href={presetLink(v)}
+            class:on={view === v.id}
+            aria-current={view === v.id ? 'page' : undefined}
+            title="View {v.name} {noun} {v.count}"
+            onclick={() => (state.filter = '')}
+          >
+            <Icon icon={mark(v.icon ?? (v.id === 'all' ? 'all' : undefined))} />{v.name}
+          </a>
+        </li>
+      {/each}
+      {#each saved.list as c (c.id)}
+        <li>
+          <a
+            href={customLink(c)}
+            class:on={view === c.id}
+            aria-current={view === c.id ? 'page' : undefined}
+            title="View {c.name} {noun} {tally(c)}"
+            onclick={() => (state.filter = c.spec.q)}
+          >
+            <Icon icon={mark(c.icon)} />{c.name}
+          </a>
+        </li>
+      {/each}
+    </ul>
+    <button class="new" title="Save this as a view" aria-label="Save this as a view" onclick={naming}><Icon icon={Plus} /></button>
+  </nav>
+
+  {#if errors.length}
+    <ul class="errors" role="status">
+      {#each errors as e (e)}<li>{e}</li>{/each}
+    </ul>
+  {/if}
+
   {#if create && state.creating}
     {const Create = $derived(create)}
     <Card title="New"><Create {rows} {about} /></Card>
   {/if}
 
   <div class="rows">
-    {#if view === 'dashboard'}
+    {#if spec.layout === 'dashboard'}
       <Dashboard results={dashboard?.results ?? []} errors={dashboard?.errors ?? []} />
     {:else if state.shown.length === 0}
       <p class="empty">{state.filter ? `Nothing matches “${state.filter}”.` : empty}</p>
-    {:else if view === 'table'}
+    {:else if spec.layout === 'table'}
       <Table columns={visible} rows={state.shown} {href} active={state.active} />
     {:else}
       <ul class="list">
         {#each state.shown as row, i (row.id)}
-          {const link = $derived(href?.(row))}
+          {const to = $derived(href?.(row))}
           <li class:active={i === state.active} {@attach nearest(i === state.active)}>
             <span class="main">
-              {#if link}
-                <a href={link} class="title stretched">{titled.value(row)}</a>
+              {#if to}
+                <a href={to} class="title stretched">{titled.value(row)}</a>
               {:else}
                 <span class="title">{titled.value(row)}</span>
               {/if}
@@ -251,81 +276,71 @@
 </Frame>
 
 <style>
-  .filter {
-    position: relative;
-  }
-  .filter input {
-    padding-inline-end: 2rem;
-  }
-  .filter kbd {
-    position: absolute;
-    inset-inline-end: var(--space-2);
-    top: 50%;
-    translate: 0 -50%;
-    font-family: var(--font-ui);
-    font-size: var(--text-2xs);
-    color: var(--text-subtle);
-    pointer-events: none;
-  }
-  .option {
+  /* The view bar, as Linear's: quiet tabs, the active one on a sunk fill,
+     and the button that saves what is shown as a new view. */
+  .bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--space-2);
+    margin-top: calc(-1 * var(--space-2));
   }
-  .label {
-    font-size: var(--text-sm);
-    color: var(--text-muted);
-  }
-  .views {
+  .bar ul {
     display: flex;
-    background: var(--sunk);
-    border-radius: var(--radius-control);
-    padding: 2px;
+    flex-wrap: wrap;
+    gap: 2px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
   }
-  .views a {
+  .bar a {
     display: flex;
     align-items: center;
     gap: var(--space-1);
     height: 1.75rem;
     padding: 0 var(--space-2);
-    border-radius: calc(var(--radius-control) - 2px);
+    border-radius: var(--radius-control);
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
-  .views a.on {
-    background: var(--selected);
+  .bar a:hover {
+    background: var(--hover);
     color: var(--text);
   }
-  .columns {
+  .bar a.on {
+    background: var(--sunk);
+    color: var(--text);
+    font-weight: 500;
+  }
+  .new {
     display: grid;
-    gap: var(--space-1);
-    margin: 0;
-    padding: 0;
+    place-items: center;
+    width: 1.75rem;
+    height: 1.75rem;
     border: none;
-  }
-  .columns legend {
-    padding: 0 0 var(--space-1);
-  }
-  .columns label {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    font-size: var(--text-sm);
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
     cursor: pointer;
   }
-  .columns input {
-    width: auto;
-    min-height: 0;
+  .new:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .errors {
     margin: 0;
-    accent-color: var(--accent-fill);
+    padding: var(--space-2) var(--space-3);
+    list-style: none;
+    border-radius: var(--radius-control);
+    background: var(--warning-soft);
+    color: var(--warning-text);
+    font-size: var(--text-sm);
   }
   .list {
     list-style: none;
     margin: 0;
     padding: 0;
   }
-  li {
+  .list li {
     position: relative;
     display: flex;
     align-items: center;
@@ -336,8 +351,8 @@
     border-radius: var(--radius-control);
     font-size: var(--text-sm);
   }
-  li:hover,
-  li.active {
+  .list li:hover,
+  .list li.active {
     background: var(--hover);
   }
   /* The title's link covers its row, so the whole row opens the item. */

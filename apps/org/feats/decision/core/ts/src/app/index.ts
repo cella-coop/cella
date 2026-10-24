@@ -13,6 +13,10 @@ export const app: App = {
         group: 'governance',
         title: 'Decisions',
         icon: icons.Scales,
+        views: [
+          { id: 'open', name: 'Open', icon: 'open', where: [{ field: 'state', is: ['open'] }] },
+          { id: 'closed', name: 'Closed', icon: 'done', where: [{ field: 'state', is: ['closed'] }] },
+        ],
         columns: [
           { key: 'title', label: 'Decision', kind: 'title', role: 'title', value: (d: Decision) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Decision) => d.id },

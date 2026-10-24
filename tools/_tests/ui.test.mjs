@@ -91,3 +91,9 @@ test('a collection page renders the Collection alone', () => {
   assert.match(found[0], /renders <Stats> beside the Collection/)
   assert.match(found[1], /renders <div> beside the Collection/)
 })
+
+test('browser storage is reached only from a hook\'s state class', () => {
+  assert.match(problems(block, component("  const v = localStorage.getItem('cella-views')"), false)[0], /reaches browser storage/)
+  assert.match(problems('apps/org/core/ui/ts/src/components/Collection.svelte', component('  sessionStorage.clear()'), true)[0], /reaches browser storage/)
+  assert.deepEqual(problems('apps/org/core/ui/ts/src/hooks/ViewsState.svelte.ts', "export class V {\n  read() {\n    try {\n      return localStorage.getItem('k')\n    } catch {\n      return null\n    }\n  }\n}\n", true), [])
+})

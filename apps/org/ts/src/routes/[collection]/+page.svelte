@@ -26,6 +26,12 @@
       create={mounted.view.create}
       status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}
+      name={data.name}
+      views={data.views}
+      view={data.view}
+      spec={data.spec}
+      errors={data.errors}
+      today={data.today}
       values={data.values}
       dashboard={data.dashboard}
     />

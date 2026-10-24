@@ -17,9 +17,11 @@ export class CollectionState {
   readonly #rows: () => any[]
   readonly #columns: () => Column[]
 
-  constructor(rows: () => any[], columns: () => Column[]) {
+  // `q`, the text filter the page opened with, as a view's address holds.
+  constructor(rows: () => any[], columns: () => Column[], q: () => string = () => '') {
     this.#rows = rows
     this.#columns = columns
+    this.filter = q()
   }
 
   shown = $derived.by(() => {

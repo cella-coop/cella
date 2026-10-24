@@ -158,7 +158,8 @@ labels never wait.
 
 ## Shell
 
-The `invoices` collection, the latest first, each with its standing; its
+The `invoices` collection, the latest first, each with its standing,
+with Unpaid and Overdue views; its
 dashboard shows what is owed and overdue, what was invoiced this year,
 the amounts by month and the invoices by standing;
 overdue reads the server's clock, a read no rule depends on. New issues one (`issue`) in a series the feat

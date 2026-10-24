@@ -1,0 +1,340 @@
+<script lang="ts">
+  import Rows from 'phosphor-svelte/lib/Rows'
+  import TableIcon from 'phosphor-svelte/lib/Table'
+  import ChartBar from 'phosphor-svelte/lib/ChartBar'
+  import type { Column } from '../models/view.ts'
+  import type { Custom, Field, Layout, Result, Spec, Where, Widget } from '../models/query.ts'
+  import { marks } from '../marks.ts'
+  import { useCollection } from '../hooks/useCollection.ts'
+  import { useViews } from '../hooks/useViews.ts'
+  import Button from './Button.svelte'
+  import Card from './Card.svelte'
+  import Icon from './Icon.svelte'
+  import Widgets from './Widgets.svelte'
+
+  // The drawer's View card, the same for every collection: the text
+  // filter, the conditions on the rows, the layout and, in a table, its
+  // columns, in a dashboard, its widgets; then saving what is shown as
+  // the viewer's own view, or, on one of theirs, its name, its changes
+  // and its removal. A change hands the whole spec on to the collection,
+  // which puts it in the address.
+  let {
+    name,
+    spec,
+    fields,
+    columns,
+    titled,
+    values,
+    dashboard,
+    custom,
+    dirty,
+    onchange,
+    onsave,
+    onremove,
+  }: {
+    name: string
+    spec: Spec
+    fields: Field[]
+    columns: Column[]
+    titled: Column
+    values: Record<string, string[]>
+    dashboard: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
+    custom?: Custom
+    dirty: boolean
+    onchange: (spec: Spec) => void
+    onsave: (view: Custom) => void
+    onremove: () => void
+  } = $props()
+
+  const state = useCollection()
+  const views = useViews(() => name)
+
+  const layouts: { id: Layout; label: string; icon: typeof Rows }[] = [
+    { id: 'list', label: 'List', icon: Rows },
+    { id: 'table', label: 'Table', icon: TableIcon },
+    { id: 'dashboard', label: 'Dashboard', icon: ChartBar },
+  ]
+  const enums = $derived(fields.filter((f) => f.type === 'enum' && (values[f.key]?.length ?? 0) > 1))
+  const dates = $derived(fields.filter((f) => f.type === 'date'))
+  const hidden = $derived(new Set(spec.hide))
+
+  const on = (key: string) => spec.where.find((w) => w.field === key)
+  const kept = (key: string, v: string) => {
+    const w = on(key)
+    return !!w && 'is' in w && w.is.includes(v)
+  }
+  const within = (key: string) => {
+    const w = on(key)
+    return w && 'within' in w ? w.within : ''
+  }
+
+  function where(key: string, w: Where | undefined) {
+    const rest = spec.where.filter((x) => x.field !== key)
+    onchange({ ...spec, q: state.filter, where: w ? [...rest, w] : rest })
+  }
+
+  function toggle(key: string, v: string) {
+    const w = on(key)
+    const is = w && 'is' in w ? w.is : []
+    const next = is.includes(v) ? is.filter((x) => x !== v) : [...is, v]
+    where(key, next.length ? { field: key, is: next } : undefined)
+  }
+
+  function hide(key: string, off: boolean) {
+    const keys = new Set(hidden)
+    if (off) {
+      keys.add(key)
+    } else {
+      keys.delete(key)
+    }
+    onchange({ ...spec, q: state.filter, hide: [...keys] })
+  }
+
+  function save(e: SubmitEvent) {
+    e.preventDefault()
+    onsave(views.save({ ...spec, q: state.filter }))
+  }
+</script>
+
+<Card title="View">
+  <div class="filter">
+    <input bind:this={state.search} bind:value={state.filter} placeholder="Filter" aria-label="Filter" />
+    <kbd>/</kbd>
+  </div>
+
+  {#each enums as f (f.key)}
+    <fieldset class="where">
+      <legend class="label">{f.label}</legend>
+      <div class="chips">
+        {#each values[f.key] as v (v)}
+          <button class="chip" class:on={kept(f.key, v)} aria-pressed={kept(f.key, v)} onclick={() => toggle(f.key, v)}>{v}</button>
+        {/each}
+      </div>
+    </fieldset>
+  {/each}
+  {#each dates as f (f.key)}
+    <label class="option">
+      <span class="label">{f.label}</span>
+      <select
+        value={within(f.key)}
+        onchange={(e) => {
+          const v = e.currentTarget.value
+          where(f.key, v === 'month' || v === 'year' ? { field: f.key, within: v } : undefined)
+        }}
+      >
+        <option value="">any time</option>
+        <option value="month">this month</option>
+        <option value="year">this year</option>
+      </select>
+    </label>
+  {/each}
+
+  <div class="option">
+    <span class="label">Layout</span>
+    <div class="views" role="group" aria-label="Layout">
+      {#each layouts as l (l.id)}
+        <button class:on={spec.layout === l.id} aria-pressed={spec.layout === l.id} onclick={() => onchange({ ...spec, q: state.filter, layout: l.id })}>
+          <Icon icon={l.icon} />{l.label}
+        </button>
+      {/each}
+    </div>
+  </div>
+
+  {#if spec.layout === 'table'}
+    <fieldset class="columns">
+      <legend class="label">Columns</legend>
+      {#each columns as c (c.key)}
+        <label>
+          <input
+            type="checkbox"
+            checked={c === titled || !hidden.has(c.key)}
+            disabled={c === titled}
+            onchange={(e) => hide(c.key, !e.currentTarget.checked)}
+          />
+          {c.label}
+        </label>
+      {/each}
+    </fieldset>
+  {:else if spec.layout === 'dashboard' && dashboard}
+    <Widgets
+      widgets={dashboard.widgets}
+      {fields}
+      {values}
+      custom={dashboard.custom}
+      onchange={(ws) => onchange({ ...spec, q: state.filter, widgets: ws })}
+    />
+  {/if}
+
+  <div class="saving">
+    {#if custom}
+      <label class="option">
+        <span class="label">Name</span>
+        <input value={custom.name} onchange={(e) => views.rename(custom.id, e.currentTarget.value)} aria-label="View name" />
+      </label>
+      <div class="buttons">
+        {#if dirty}
+          <Button tone="primary" onclick={() => views.update(custom.id, { ...spec, q: state.filter })}>Save changes</Button>
+        {/if}
+        <Button onclick={() => (views.naming = true)}>Save as new view</Button>
+        <Button tone="danger" onclick={onremove}>Delete view</Button>
+      </div>
+    {:else if !views.naming}
+      <Button onclick={() => (views.naming = true)}>Save as view</Button>
+    {/if}
+    {#if views.naming}
+      <form class="naming" onsubmit={save}>
+        <!-- svelte-ignore a11y_autofocus: the form opens to name the view -->
+        <input bind:value={views.name} placeholder="Name the view" aria-label="View name" autofocus />
+        <div class="marks" role="radiogroup" aria-label="Icon">
+          {#each Object.entries(marks) as [key, mark] (key)}
+            <button type="button" role="radio" class:on={views.icon === key} aria-checked={views.icon === key} title={key} onclick={() => (views.icon = key)}>
+              <Icon icon={mark} />
+            </button>
+          {/each}
+        </div>
+        <div class="buttons">
+          <Button tone="primary" type="submit">Save view</Button>
+          <Button onclick={() => (views.naming = false)}>Cancel</Button>
+        </div>
+      </form>
+    {/if}
+  </div>
+</Card>
+
+<style>
+  .filter {
+    position: relative;
+  }
+  .filter input {
+    padding-inline-end: 2rem;
+  }
+  .filter kbd {
+    position: absolute;
+    inset-inline-end: var(--space-2);
+    top: 50%;
+    translate: 0 -50%;
+    font-family: var(--font-ui);
+    font-size: var(--text-2xs);
+    color: var(--text-subtle);
+    pointer-events: none;
+  }
+  .option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+  .option select,
+  .option input {
+    width: auto;
+    max-width: 11rem;
+  }
+  .label {
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+  }
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: none;
+    display: grid;
+    gap: var(--space-1);
+  }
+  legend {
+    padding: 0 0 var(--space-1);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .chip {
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 0 var(--space-2);
+    line-height: 1.6rem;
+    font-size: var(--text-xs);
+    background: var(--sunk);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .chip:hover {
+    color: var(--text);
+  }
+  .chip.on {
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+  .views {
+    display: flex;
+    background: var(--sunk);
+    border-radius: var(--radius-control);
+    padding: 2px;
+  }
+  .views button {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    height: 1.75rem;
+    padding: 0 var(--space-2);
+    border: none;
+    border-radius: calc(var(--radius-control) - 2px);
+    background: none;
+    font-size: var(--text-sm);
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .views button.on {
+    background: var(--selected);
+    color: var(--text);
+  }
+  .columns label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+  .columns input {
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    accent-color: var(--accent-fill);
+  }
+  .saving,
+  .naming {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .saving {
+    padding-top: var(--space-2);
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .marks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+  .marks button {
+    display: grid;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .marks button:hover {
+    background: var(--hover);
+  }
+  .marks button.on {
+    background: var(--sunk);
+    color: var(--text);
+  }
+</style>

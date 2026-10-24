@@ -46,7 +46,8 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 ## Shell
 
-The `decisions` collection, open ones first; a decision's page shows its
+The `decisions` collection, open ones first, with Open and Closed views;
+a decision's page shows its
 proposal, every stance given as its activity, and closes it (`close`).
 Its roll, its outcome and the stance form are `circle-decision-member`'s;
 the stance it posts is this feat's `vote`, for the acting member.

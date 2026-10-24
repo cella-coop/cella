@@ -1,24 +1,25 @@
 import { error, type Actions } from '@sveltejs/kit'
-import { aggregate, defaults, fields, widgets } from '@cella/org-ui/models'
+import { aggregate, defaults, fields, matches, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { using } from '#lib/server/db.ts'
 import { mounted, writes } from '#lib/server/slices.ts'
 import { perform } from '#lib/server/write.ts'
-import { columns, dashboard } from '#lib/slices.ts'
+import { columns, dashboard, views } from '#lib/slices.ts'
 import type { PageServerLoad } from './$types'
 
 // A collection: its owner's rows, with the fields its extensions add to
-// each, what its header says about it, each enumeration's values, and,
-// in the dashboard view, its widgets run over the rows: the address's
-// own, checked against the collection's fields, or else the declared or
-// derived defaults.
+// each, what its header says about it, each enumeration's values, and the
+// view the address asks for, checked against the collection's fields:
+// its tabs with how many rows each keeps, and, in the dashboard layout,
+// its widgets run over the rows it keeps.
 export const load: PageServerLoad = async ({ params, url }) => {
   const m = mounted(params.collection)
   if (!m) {
     error(404, `There is no collection ${params.collection}`)
   }
   const fs = fields(columns(params.collection))
-  const board = url.searchParams.get('view') === 'dashboard'
-  const raw = url.searchParams.get('w')
+  const tabs = views(params.collection)
+  const { id, spec, errors } = resolve(url.searchParams, tabs, fs)
+  const today = new Date().toISOString().slice(0, 10)
   return using(async (db) => {
     const owned = await m.collection.list(db)
     const added = await Promise.all(m.extensions.map((e) => e.extension.list?.(db)))
@@ -26,33 +27,30 @@ export const load: PageServerLoad = async ({ params, url }) => {
     const values = Object.fromEntries(
       fs.filter((f) => f.type === 'enum').map((f) => [f.key, [...new Set(rows.map((r) => String(f.value(r) ?? '')))].filter(Boolean).sort()]),
     )
+    const count = (where: unknown) => rows.filter((r) => matches(r, wheres(where, fs), fs, today)).length
     return {
       name: params.collection,
       rows,
       about: (await m.collection.about?.(db)) ?? null,
       values,
-      dashboard: board ? run(raw, rows, fs, params.collection) : null,
+      today,
+      views: tabs.map((p) => ({ ...p, count: count(p.where) })),
+      view: id,
+      spec,
+      errors,
+      dashboard: spec.layout === 'dashboard' ? run(spec, rows, fs, params.collection, today) : null,
     }
   })
 }
 
-function run(raw: string | null, rows: any[], fs: ReturnType<typeof fields>, name: string) {
-  let config: unknown = dashboard(name) ?? defaults(fs)
-  const errors: string[] = []
-  if (raw) {
-    try {
-      config = JSON.parse(raw)
-    } catch {
-      errors.push('the dashboard in the address is not JSON; showing the defaults')
-    }
-  }
-  const checked = widgets(config, fs)
-  const today = new Date().toISOString().slice(0, 10)
+function run(spec: Spec, rows: any[], fs: Field[], name: string, today: string) {
+  const checked = spec.widgets ? { widgets: spec.widgets, errors: [] } : widgets(dashboard(name) ?? defaults(fs), fs)
+  const kept = rows.filter((r) => matches(r, spec.where, fs, today))
   return {
-    custom: raw !== null && !errors.length,
+    custom: spec.widgets !== null,
     widgets: checked.widgets,
-    results: aggregate(checked.widgets, rows, fs, today),
-    errors: [...errors, ...checked.errors],
+    results: aggregate(checked.widgets, kept, fs, today),
+    errors: checked.errors,
   }
 }
 

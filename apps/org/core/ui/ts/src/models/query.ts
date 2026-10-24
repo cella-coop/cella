@@ -273,3 +273,143 @@ export function aggregate(ws: Widget[], rows: any[], fs: Field[], today: string)
     return { kind: 'chart', title: w.title, format: format(w.measure, fs), line, points }
   })
 }
+
+export const layouts = ['list', 'table', 'dashboard'] as const
+export type Layout = (typeof layouts)[number]
+
+// How a collection is looked at: its layout, the conditions on its rows,
+// the text filter, the table's hidden columns and the dashboard's
+// widgets, null for the declared or derived ones.
+export interface Spec {
+  layout: Layout
+  where: Where[]
+  q: string
+  hide: string[]
+  widgets: Widget[] | null
+}
+
+// A view a collection declares beside its columns, such as invoices'
+// Unpaid; not editable. `icon` names one of the UI core's marks.
+export interface Preset {
+  id: string
+  name: string
+  icon?: string
+  layout?: Layout
+  where?: Where[]
+  hide?: string[]
+  widgets?: Widget[]
+}
+
+// A view a viewer saved from what they were looking at: a preference of
+// theirs, never a record of the co-op's.
+export interface Custom {
+  id: string
+  name: string
+  icon?: string
+  spec: Spec
+}
+
+// Every custom view a viewer keeps, by collection; versioned, so it can
+// move from the browser into a member's preferences as it is.
+export interface Saved {
+  v: 1
+  views: Record<string, Custom[]>
+}
+
+export const all: Preset = { id: 'all', name: 'All' }
+
+// The collection's presets, with All last unless it declares its own.
+export const presets = (declared: Preset[] = []): Preset[] => (declared.some((p) => p.id === all.id) ? declared : [...declared, all])
+
+const json = (raw: string | null): unknown => {
+  if (raw === null) {
+    return undefined
+  }
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return Symbol('not JSON')
+  }
+}
+
+// The view the address asks for: a preset or a custom view by `v`, All
+// when it names none, its settings overridden by the address's own
+// (`view`, `where`, `q`, `hide`, `w`), each checked against the fields.
+// What fails a check falls back to the view's, and is said.
+export function resolve(params: URLSearchParams, ps: Preset[], fs: Field[]): { id: string; spec: Spec; errors: string[] } {
+  const asked = params.get('v')
+  const preset = ps.find((p) => p.id === asked)
+  const id = preset?.id ?? (asked && /^c-[\w-]{1,40}$/.test(asked) ? asked : all.id)
+  const base = preset ?? ps.find((p) => p.id === id) ?? all
+  const errors: string[] = []
+  const layout = layouts.find((l) => l === params.get('view')) ?? base.layout ?? 'list'
+  let where = base.where ?? []
+  const w = json(params.get('where'))
+  if (w !== undefined) {
+    try {
+      where = wheres(w, fs)
+    } catch (e) {
+      errors.push(`the view's conditions: ${(e as Error).message}`)
+    }
+  }
+  let ws: Widget[] | null = base.widgets ?? null
+  const raw = json(params.get('w'))
+  if (raw !== undefined) {
+    const checked = widgets(raw, fs)
+    ws = checked.widgets
+    errors.push(...checked.errors)
+  }
+  const keys = new Set(fs.map((f) => f.key))
+  const hide = params.has('hide') ? (params.get('hide') ?? '').split(',').filter((k) => keys.has(k)) : (base.hide ?? [])
+  return { id, spec: { layout, where, q: (params.get('q') ?? '').slice(0, 200), hide, widgets: ws }, errors }
+}
+
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+
+// The address of a view: its id, and what its spec changes from its
+// preset's, so a preset's own address is just `?v=<id>`; a custom view's
+// carries its whole spec, for the server knows no custom view.
+export function address(id: string, spec: Spec, preset?: Preset): string {
+  const q = new URLSearchParams()
+  if (id !== all.id) {
+    q.set('v', id)
+  }
+  if (spec.layout !== (preset?.layout ?? 'list')) {
+    q.set('view', spec.layout)
+  }
+  if (!same(spec.where, preset?.where ?? [])) {
+    q.set('where', JSON.stringify(spec.where))
+  }
+  if (!same(spec.hide, preset?.hide ?? [])) {
+    q.set('hide', spec.hide.join(','))
+  }
+  if (!same(spec.widgets, preset?.widgets ?? null)) {
+    q.set('w', JSON.stringify(spec.widgets))
+  }
+  if (spec.q) {
+    q.set('q', spec.q)
+  }
+  const s = q.toString()
+  return s ? `?${s}` : '?'
+}
+
+// Whether two specs show the same thing.
+export const alike = (a: Spec, b: Spec) => same(a, b)
+
+// What a preset shows before the viewer changes anything.
+export const spec = (p?: Preset): Spec => ({ layout: p?.layout ?? 'list', where: p?.where ?? [], q: '', hide: p?.hide ?? [], widgets: p?.widgets ?? null })
+
+// A saved store as read back from the browser: anything unrecognised is
+// dropped rather than trusted.
+export function saved(x: unknown): Saved {
+  const store: Saved = { v: 1, views: {} }
+  if (typeof x !== 'object' || x === null || (x as Saved).v !== 1 || typeof (x as Saved).views !== 'object') {
+    return store
+  }
+  for (const [name, list] of Object.entries((x as Saved).views ?? {})) {
+    if (Array.isArray(list)) {
+      store.views[name] = list.filter((c) => typeof c?.id === 'string' && /^c-[\w-]{1,40}$/.test(c.id) && typeof c.name === 'string' && typeof c.spec === 'object')
+    }
+  }
+  return store
+}

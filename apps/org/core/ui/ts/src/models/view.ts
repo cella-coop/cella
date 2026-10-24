@@ -1,5 +1,5 @@
 import type { Component, Snippet } from 'svelte'
-import type { Widget } from './query.ts'
+import type { Preset, Widget } from './query.ts'
 
 // The client side of a slice: what a feat's collections look like, and
 // what a graft adds to the collections of the feats it joins. Views and
@@ -89,6 +89,8 @@ export interface View<R = any> {
   // The dashboard's widgets until a viewer configures their own; without
   // them, defaults derived from the columns' kinds.
   dashboard?: Widget[]
+  // The views offered as tabs before the viewer's own, All after them.
+  views?: Preset[]
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean

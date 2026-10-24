@@ -13,6 +13,7 @@ export const app: App = {
         title: 'Transactions',
         caption: 'The journal: every transaction in order',
         icon: icons.BookOpen,
+        views: [{ id: 'period', name: 'This period', icon: 'period', where: [{ field: 'date', within: 'month' }] }],
         columns: [
           { key: 'id', label: 'Entry', kind: 'mono', role: 'title', value: (e: Journaled) => e.id },
           { key: 'label', label: 'Label', role: 'sub', value: (e: Journaled) => e.label },

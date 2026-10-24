@@ -102,6 +102,9 @@ export function problems(path, text, ui) {
   if (/\$state(\.raw)?\s*[(<]/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
     out.push(`${path}: holds $state; state lives in a hook's state class, hooks/*.svelte.ts`)
   }
+  if (/\b(localStorage|sessionStorage|indexedDB)\b/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
+    out.push(`${path}: reaches browser storage; a viewer's preference is kept by a hook's state class, behind try and catch`)
+  }
   if (/\$effect(\.pre)?\s*\(/.test(text) && !(path.endsWith('.svelte.ts') && /(^|\/)hooks\//.test(path))) {
     out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
   }

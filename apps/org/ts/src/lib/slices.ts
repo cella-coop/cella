@@ -1,4 +1,5 @@
-import type { Added, App, Column, Nav, Owned, Widget } from '@cella/org-ui'
+import type { Added, App, Column, Nav, Owned, Preset, Widget } from '@cella/org-ui'
+import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as key, Devices } from '@cella/org-key/app'
 import { app as member } from '@cella/org-member/app'
@@ -68,7 +69,10 @@ export const dashboard = (name: string): Widget[] | undefined => {
   return declared.length ? declared : undefined
 }
 
-const order =['governance', 'work', 'finance', 'platform']
+// The views a collection offers as tabs: its declared presets and All.
+export const views = (name: string): Preset[] => presets(collection(name)?.view.views)
+
+const order = ['governance', 'work', 'finance', 'platform']
 
 export const nav: Nav = order
   .map((group) => ({

@@ -167,6 +167,23 @@ test('every collection has a dashboard, its widgets run by the server', async ()
   assert.ok(refused.text.includes('names no field of the collection'), 'an undeclared field is refused, and said')
 })
 
+test('a collection\'s preset views are tabs with their counts, and a view in the address applies its filter', async () => {
+  const { text } = await page('/invoices')
+  for (const tab of ['View Unpaid invoices', 'View Overdue invoices', 'View All invoices']) {
+    assert.match(text, new RegExp(`title="${tab} \\d+"`), `the invoices show the ${tab} tab with its count`)
+  }
+  const all = Number(text.match(/title="View All invoices (\d+)"/)?.[1])
+  const overdue = Number(text.match(/title="View Overdue invoices (\d+)"/)?.[1])
+  assert.ok(overdue > 0 && overdue < all, `${overdue} of ${all} invoices are overdue`)
+  const links = (html: string) => new Set(html.match(/href="\/invoices\/F-[\d-]+"/g))
+  assert.equal(links(text).size, all)
+  const filtered = await page('/invoices?v=overdue')
+  assert.equal(links(filtered.text).size, overdue, 'the overdue view lists only the overdue invoices')
+  const custom = encodeURIComponent(JSON.stringify([{ field: 'state', is: ['paid'] }]))
+  const paid = await page(`/invoices?v=c-mine&where=${custom}`)
+  assert.ok(links(paid.text).size > 0 && links(paid.text).size < all, 'a saved view\'s conditions in the address filter the rows')
+})
+
 test('a write with no one acting fails before any verdict', async () => {
   const done = await act('/decisions/d-2026-012', 'vote', { stance: 'object' })
   assert.equal(done.state, 'failed')

@@ -180,9 +180,13 @@ d-2026-012. Inès is not on its roll: her admission is what it decides.
 
 ## A mandate's limit
 
-Owner: org's core, through `cella.may(actor, power, amount)`, which reads
-mandates (the `circle` feat's) and positions (`circle-member`'s). It spans
-every feat that spends, so it belongs below them all.
+Owner: the `circle-member` graft, through `circle_member.may(actor, power,
+cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
+and whether the member is active (the `member` feat's). It spans every
+feat that spends, but org's core may read no feat's schema; each feat
+names the power its ops need in `cella.power`, a core registry, and the
+graft attaches its rule to every op listed, as `decision.cites` does for
+the roll.
 
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|

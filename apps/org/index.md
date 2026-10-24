@@ -8,8 +8,8 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 
 - `core/` is what every feat inherits, one library each: `ops` (write labels,
   permissions, outcomes), `crypto`, `log`, `keystore`, `rules` (the pure
-  rule primitives), `notary` (the `cella` Postgres extension over them) and
-  `db` (a write's transaction).
+  rule primitives), `notary` (the `cella` Postgres extension over them),
+  `db` (a write's transaction) and `sign` (a device's signature on a write).
 - `feats/` holds one domain each; none imports another.
 - `grafts/` joins feats, through their cores.
 - `rs/` is `cella`, the CLI that runs every development and production

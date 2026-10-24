@@ -41,27 +41,36 @@ sequenceDiagram
   participant A as App handler (TypeScript)
   participant N as cella extension
   participant P as Feat schemas
-  D->>A: signed write
+  D->>A: request, signed
   A->>A: permission check
   rect rgba(128, 128, 128, 0.15)
     A->>P: begin; state change
-    A->>N: select cella.submit(write)
-    N->>N: receipt, rules, verdict appended to the log
+    A->>N: select cella.submit(op, payload, actor, signed request)
+    N->>N: signature, device and nonce checked; rules; receipt and verdict signed and appended
     N-->>A: verdict, or a refusal raised
     A->>P: commit if Settled, roll back if Refused
   end
   A-->>D: Settled or Refused
 ```
 
-- **The member signs on their device** (WebCrypto Ed25519). Votes and
-  approvals carry the member's own signature, and the governed record cites
-  them.
+- **The member signs every write on their device** (WebCrypto Ed25519):
+  a domain-separated message naming the scope, the op, the actor, the
+  device, the digest of the request and a single-use nonce
+  ([signatures](signatures.md)). `submit` checks it before any rule runs:
+  the signature, then, under the log's head lock, that the device is a
+  current key of the actor (the keyring, the `key` feat's) and that its
+  nonce was never counted. A forged signature, a revoked or another
+  member's device, a reused nonce or a request swapped under a valid
+  signature is refused, and no verdict number is used.
 - **Only the extension's functions may write the log.** No client, script or
-  psql session can append to it any other way. The notary signs a receipt
-  when a write arrives, then a numbered verdict; a verdict out of receipt
-  order is proof against it. It never decides an outcome: an outcome is
-  computed from the signed votes, and anyone holding the log can compute it
-  again.
+  psql session can append to it any other way. Each settled write has one
+  receipt, numbered as it arrives, which the notary signs with the member's
+  signature and the payload's digest in it; the numbered verdict names
+  that receipt by number and hash. Verdicts follow commit order and
+  receipts arrival order, so two concurrent writes may settle in the other
+  order; what is ordered by receipt (stances, cutoffs) reads the receipt.
+  The notary never decides an outcome: an outcome is computed from the
+  signed votes, and anyone holding the log can compute it again.
 - **The verdict and its state change commit in one transaction.** The
   handler opens it, writes the state, calls `cella.submit` last and commits
   once. A refusal raises inside `submit` (SQLSTATE `09000`), so the
@@ -76,14 +85,24 @@ sequenceDiagram
 - **Order comes from receipts, never from clocks.** A member's latest stance
   is the one with the highest receipt number, not the latest date.
 - **The scope's key** is read from a file only the database's superuser can
-  read.
+  read; the scope's address, which every write signature names, is the
+  `cella.scope` setting.
 - **A fault in the extension stays bounded.** A Rust panic becomes an
   ordinary error that aborts the transaction. A hard crash makes Postgres
   restart every connection in the scope, in about 0.2 s, and lose nothing
   committed.
 - **A scope's database is the unit** that moves, backs up and replays: state,
   log, rules and the notary's key together.
-- **Confluent writes skip the rule check** and are logged in signed batches.
+- **Who may write is a rule like any other.** Each op that needs a power
+  names it in `cella.power`, registered by its feat; the `circle-member`
+  graft attaches a rule to every such op that the actor holds, on the
+  verdict date, a seat whose role has a mandate granting the power, within
+  its limit for the write's amount. A write with no power is the actor's
+  own (a stance, a profile) or decided (an admission, an adoption), and
+  its feat's or graft's rules say so.
+- **Confluent writes are logged in signed batches** once devices queue
+  them offline (rung 2); until then each goes through the server's rules
+  on its own.
 
 ## Rules
 
@@ -93,7 +112,10 @@ rules crate, which also compiles to WASM for browsers, devices and auditors:
 - types: `cella.amount`, positive cents; balances are signed and derived;
 - aggregates: `cella.consent`, `cella.majority`, …; an outcome is folded from
   the votes, never stored;
-- policy functions: `cella.may(actor, power, amount)` reads mandates as rows;
+- the write being judged: `cella.op()`, `cella.actor()`, `cella.device()`;
+  whether the actor may use a power is not a primitive but the
+  `circle-member` graft's composed rule, `circle_member.may(actor, power,
+  cents, day)`, since only that graft sees both mandates and seats;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;
 - time: `cella.verdict_date()`, never `now()`;
@@ -157,13 +179,17 @@ makes no claim that the host cannot forge a vote.
 ## Keys and addresses
 
 - Members have device keys from day one. A key is enrolled by the member's
-  current key; rotating keys keeps the address.
+  current key; rotating keys keeps the address. A member's first device
+  comes with their invitation (not built: until then the seed enrols it).
+  Enrolment and revocation are ordered, and the keyring is read under the
+  log's head lock, so a revocation that settled first is always seen.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
   federation adds to the design rather than changing it.
 - Signatures are Ed25519 on devices and ML-DSA-44 at the root; encryption is
   hybrid X25519 + ML-KEM-768 (org's `core/crypto`).
 - Every signed artifact names its binding (parent, sequence, audience or
-  freshness), and each signed type is domain-separated.
+  freshness), and each signed type is domain-separated; the register of
+  signed types, their tags and bindings is [signatures](signatures.md).
 - Thresholds are signed policy in the log, never flags or unsigned config.
   No one holds a group's key alone.
 - Lost keys are recovered from guardian shares.
@@ -181,20 +207,26 @@ erased until their legal clock runs out.
 
 What the build does not yet do, and what lifts each:
 
-- **Receipts are not yet signed.** `cella.receipt()` hands out a number
-  from a sequence; only the numbered verdict is signed. Signed receipts
-  come with members signing their writes on their devices, the rung 1
-  slice that makes order provable against the notary.
+- **The host serves the signing code and relays requests.** A reaction the
+  server runs on a member's behalf, such as admitting on a passing close,
+  is signed with that member's signer as the handler's caller hands it;
+  until the native client (rung 4) nothing stops a host signing with keys
+  it serves.
+- **A mandate's budget is not enforced.** A power's limit per write is
+  checked; a budget, a total over a month or a year, needs the spend it
+  caps tracked, which comes with `account.draw`.
 - **Confluent writes are single-entry log entries, not batches.** Each
   confluent write is submitted on its own and takes its own signed entry.
   Signed batches come with the offline queue at rung 2, which syncs a
   device's confluent writes together.
-- **Payload digests are not yet salted.** An entry holds the BLAKE3 digest
-  of its canonical payload, so a payload that can be guessed can be
-  confirmed against the log. Handlers keep personal data out of payloads
+- **Payload and request digests are not yet salted.** An entry holds the
+  BLAKE3 digest of its canonical payload, and a receipt the SHA-256 of the
+  request the member signed, so either can be confirmed against the log
+  by anyone who guesses it. Handlers keep personal data out of payloads
   (an invoice's name billed, a void's reason, a client's field values),
-  and salted commitments with the vault lift this before the pilot holds
-  real members' data, in rung 1's personal-data slice.
+  but a request carries what the member typed. Salted commitments with
+  the vault lift this before the pilot holds real members' data, in rung
+  1's personal-data increment.
 - **Entries balance and periods are open by triggers in their owners'
   schemas**, PL/pgSQL in `transaction` and `account_transaction`, not yet
   `cella.*` trigger functions.

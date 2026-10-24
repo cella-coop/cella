@@ -26,13 +26,15 @@ updated = 2026-10-24
 | **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
 | **notary** | the scope's office for ordered writes: the `cella` Postgres extension, which alone writes the log |
-| **receipt** | the notary's signed, numbered acknowledgement that a write arrived; order comes from receipts, never from clocks |
+| **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
+| **nonce** | the single-use random value in a write's signature, so the signature counts once |
+| **keyring** | the one function that says whether a device is a current key of an address: the `key` feat's, called by the notary before any rule |
 | **verdict** | the notary's signed ruling on an ordered write, Settled or Refused, committed with its state change |
 | **log** | the scope's hash-chained, signed record of every accepted write, from which the state folds |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed rule** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
-| **power** | the id of something a write needs, such as `issue-invoice` |
+| **power** | the id of something a write needs, such as `issue-invoice`; each op's is registered in `cella.power` |
 | **mandate** | a grant of one power to one role, with an optional limit and term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead |
 | **position** | a member holding a seat, and perhaps a role, in a circle |

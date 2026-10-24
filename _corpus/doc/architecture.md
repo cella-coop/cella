@@ -43,7 +43,7 @@ A node is a directory with a `feat.toml`. It holds:
   core is its shared library layer: `ops` (labels, permissions, outcomes),
   `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
   (the `cella` Postgres extension over them), `db` (a write's transaction),
-  and later `auth`, `ui`. A leaf feat's core is all of it.
+  `sign` (a device's signature on a write), and later `auth`, `ui`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between its child feats.
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
@@ -93,7 +93,10 @@ It places each package by its path and refuses any other edge. It also
 checks that every graft is declared by a feat it joins, that its name is in order, that every feat it
 names is a feat of its node, that a package's relative imports stay inside
 it, and that a feat's or graft's ops are named for it. Through
-`tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)).
+`tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
+through `tools/powers.mjs` that the power each op's label names in
+`ops.ts` is the one its SQL registers in `cella.power`. `cella test tools`
+holds their negative tests.
 
 ## Grafts
 
@@ -177,8 +180,10 @@ foreign key crosses a feat. `feat-check` enforces these boundaries by
 parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
-holds a foreign key out of it; writes `cella.*` other than to register its
-own rules, under its own name, on ops of the feats it is or joins; sets
+holds a foreign key out of it; writes `cella.*` other than to register,
+under its own name, its rules on ops of the feats it is or joins, the
+power each of its own ops needs as a literal row, or, a feat only, the
+keyring; sets
 `search_path` other than a function's to the catalog; reads the clock or
 randomness; or hides statements in a `DO` block.
 
@@ -235,6 +240,15 @@ export const ops = {
 
 The label is part of the type: an ordered write returns `Pending` until its
 verdict. The labels and the path each takes are in [trust](trust.md).
+
+A label also names the power the write needs, and the payload field its
+amount is in when a mandate's limit caps it:
+`confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
+truth is the row the feat's SQL registers in `cella.power`, which the
+`circle-member` graft's rule reads; the label mirrors it for the
+TypeScript, and `cella check feats` refuses any difference. Every write
+is signed by a device of its actor and carries its request
+([signatures](signatures.md)).
 
 Every critical rule is enforced twice: the handler checks the permission and
 the feat's row-level policies and triggers back it up. An ordered write is

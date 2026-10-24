@@ -133,7 +133,8 @@ for (const [a, b] of edges) {
   }
 }
 
-// Grafts: named by the feats they join, declared by the feat that extends.
+// Grafts: named by the feats they join, two or more in alphabetical order,
+// declared by the feat that extends.
 const nodes = [...new Set(dirs.map(place).filter((p) => p && p.node).map((p) => p.node))]
 for (const node of nodes) {
   const kids = childrenOf(node)
@@ -146,7 +147,11 @@ for (const node of nodes) {
   const gdir = join(repo, node, 'grafts')
   const present = existsSync(gdir) ? readdirSync(gdir) : []
   for (const g of present) {
-    for (const part of g.split('-')) {
+    const parts = g.split('-')
+    if (parts.length < 2 || parts.join('-') !== [...new Set(parts)].sort().join('-')) {
+      fail(`${node}/grafts/${g}: a graft is named by two or more distinct feats, in alphabetical order`)
+    }
+    for (const part of parts) {
       if (!kids.includes(join(node, 'feats', part))) {
         fail(`${node}/grafts/${g}: joins ${part}, which is not a feat of ${node}`)
       }

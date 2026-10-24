@@ -66,7 +66,8 @@ A component holds no state of its own: the collection's filter and row,
 the command menu, and the dismissed outcome and the drawer's opening are state classes in `hooks/`
 (`CollectionState`, `CommandState`, `ShellState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
-describes.
+describes. `useSection` hands a `Section`'s title down, so an empty
+`Table` in it says "No roles" in one quiet line, with no headers.
 
 ## Types
 

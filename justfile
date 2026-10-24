@@ -84,3 +84,11 @@ migrate: install
 seed: install
     node tools/seed.mjs apps/org/fixtures/lanterne
 
+# The slice end to end on a fresh database; needs `just db`
+test: install
+    cargo test -p cella-rules
+    CELLA_DB=cella_test just reset migrate seed
+    CELLA_DB=cella_test just _node-test
+
+_node-test:
+    node --test 'apps/**/_tests/*.test.ts'

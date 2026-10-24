@@ -80,3 +80,10 @@ invitee with a device, holds nothing.
 `004-sits.sql` registers position.remove's power, and `circle_member.sits`
 on `circle:circle:message`: the actor is an active member seated in the
 circle on the verdict date.
+
+## Shell
+
+Adds a circle's seats to its page and how many sit in it to the list; and
+to a member's page their seats and the powers they hold through them,
+the mandates `circle_member.may` would grant before any limit is spent,
+and to the list the circles they sit in.

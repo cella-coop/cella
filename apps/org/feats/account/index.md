@@ -96,6 +96,33 @@ grafts. Patronage inputs (hours, wages, revenue per member), buy-in and
 buyout schedules, revolving capital and dues belong to later feats and
 their grafts (`timesheet`, `payslip`), not here.
 
+## Schema
+
+`account` (`core/sql/`):
+
+- `account.account`: code, label, kind, parent, holder (an address, as
+  text) and `frozen`.
+- `account.period`: a month (`2026-10`) and the date it `closed`; a
+  trigger keeps a closed period closed, raising SQLSTATE `09000`.
+
+Allocations and draws are not built yet. The app role may select and set
+a period's `closed`; the rules role, `cella_rules`, may select.
+
+## Rules
+
+- `account.closes`, on `account:period:close`: the write closed the period
+  on the verdict date, after the period ended, and after every period
+  before it.
+
+That nothing posts into a closed period is the `account-transaction`
+graft's.
+
+## Handlers
+
+- `close` (ordered): sets the period's `closed` to the verdict date. The
+  update takes the period's row, which the graft's trigger reads `FOR
+  SHARE`, so a concurrent post waits for the close or sees it.
+
 ## Lanterne
 
 - The chart is a slice of the PCG: `512` the bank at Crédit Coopératif,

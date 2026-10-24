@@ -1,5 +1,7 @@
-# Each member's devices. The keys are generated when the fixtures are seeded;
-# Inès enrols her first device when she is admitted.
+# Each member's devices. The seed enrols each with a TEST-ONLY key derived
+# from its address and label, which anyone can compute: fixture keys never
+# belong to a real member. Inès has no device yet: a member's first device
+# comes with their invitation, which is not built.
 
 [[device]]
 address = "camille@lanterne.example"

@@ -58,5 +58,8 @@ mandate's power is an id beside its text. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
 link resolves and the books agree with the invoices.
 
-Payroll is one entry a month until the payslip feat exists; device keys are
-generated when the fixtures are seeded.
+Payroll is one entry a month until the payslip feat exists. Device keys are
+TEST-ONLY, derived from each device's address and label when the fixtures
+are seeded, so the tests sign with the same keys; anyone can derive them.
+The scope's address, `lanterne.example`, is what every write signature
+names.

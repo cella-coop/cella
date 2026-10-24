@@ -1,11 +1,15 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
-// carried over from before the log: members and their seats, decisions with
-// their stances, admissions, documents with their versions, comments and
+// carried over from before the log: the scope's address, members and their
+// devices, circles, roles and mandates, seats, decisions with their
+// stances, admissions, documents with their versions, comments and
 // adoptions, clients, the chart, periods and journal, invoices with their
 // payments, and the grafts' links. Stances, document updates, adoptions and
-// payments take receipts in file order; a closed decision's cutoff is the receipt
-// after its last stance. Seats load before decisions, whose rolls are fixed
-// from them, and periods close after the journal is in.
+// payments take receipt numbers in file order, unsigned, from before the
+// log; a closed decision's cutoff is the number after its last stance.
+// Seats load before decisions, whose rolls are fixed from them, and periods
+// close after the journal is in. Each device's key is the TEST-ONLY key
+// derived from its address and label (`@cella/org-sign`'s `fixture`), so
+// the tests sign with the keys enrolled here.
 // It connects to DATABASE_URL if set, otherwise by the PG* variables.
 // Usage: node tools/seed.mjs apps/org/fixtures/<co-op>
 
@@ -14,6 +18,7 @@ import { join } from 'node:path'
 import { LoroDoc } from 'loro-crdt'
 import { parse } from 'smol-toml'
 import pg from 'pg'
+import { fixture } from '../apps/org/core/sign/ts/src/index.ts'
 
 const dir = process.argv[2]
 const read = (file) => {
@@ -21,16 +26,49 @@ const read = (file) => {
   return existsSync(path) ? parse(readFileSync(path, 'utf8')) : {}
 }
 const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
+const receipt = `nextval('cella.receipt_seq')`
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query('BEGIN')
+
+// Every write signature names the scope; a new connection reads it.
+const scope = read('scope')
+if (scope.address) {
+  await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET cella.scope = ${db.escapeLiteral(scope.address)}`)
+}
 
 const members = read('member').member ?? []
 for (const m of members) {
   await db.query(
     'INSERT INTO member.member (address, name, status, since, shares) VALUES ($1, $2, $3, $4, $5)',
     [m.address, m.name, m.status, day(m.since), m.shares],
+  )
+}
+
+// A first device is enrolled by the seed, before the log, so it names no
+// device that enrolled it.
+const devices = read('key').device ?? []
+for (const d of devices) {
+  const { key } = await fixture(d.address, d.label)
+  await db.query(
+    `INSERT INTO key.device (key, address, label, enrolled, revoked) VALUES (decode($1, 'hex'), $2, $3, $4, $5)`,
+    [key, d.address, d.label, day(d.enrolled), day(d.revoked)],
+  )
+}
+
+const structure = read('circle')
+for (const c of structure.circle ?? []) {
+  await db.query('INSERT INTO circle.circle (id, name, parent, purpose) VALUES ($1, $2, $3, $4)', [c.id, c.name, c.parent ?? null, c.purpose ?? ''])
+}
+for (const r of structure.role ?? []) {
+  await db.query('INSERT INTO circle.role (id, circle, name, duty) VALUES ($1, $2, $3, $4)', [r.id, r.circle, r.name, r.duty ?? ''])
+}
+for (const m of structure.mandate ?? []) {
+  await db.query(
+    `INSERT INTO circle.mandate (role, power, text, "limit", budget, per, "from", until)
+     VALUES ($1, $2, $3, cella.amount($4), cella.amount($5), $6, $7, $8)`,
+    [m.role, m.power, m.text, m.limit ?? null, m.budget ?? null, m.per ?? null, day(m.from), day(m.until)],
   )
 }
 
@@ -52,13 +90,13 @@ for (const d of decisions) {
   )
   for (const v of d.vote ?? []) {
     await db.query(
-      'INSERT INTO decision.vote (receipt, decision, member, stance, at) VALUES (cella.receipt(), $1, $2, $3, $4)',
+      `INSERT INTO decision.vote (receipt, decision, member, stance, at) VALUES (${receipt}, $1, $2, $3, $4)`,
       [d.id, v.member, v.stance, day(v.at)],
     )
     votes++
   }
   if (d.closed) {
-    await db.query('UPDATE decision.decision SET closed = $2, cutoff = cella.receipt() WHERE id = $1', [d.id, day(d.closed)])
+    await db.query(`UPDATE decision.decision SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
   }
 }
 
@@ -81,7 +119,7 @@ for (const d of documents.document ?? []) {
     loro.getText('body').update(v.body)
     loro.commit()
     await db.query(
-      'INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (cella.receipt(), $1, NULL, $2, $3)',
+      `INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (${receipt}, $1, NULL, $2, $3)`,
       [d.id, day(v.saved), loro.export({ mode: 'update', from })],
     )
     await db.query(
@@ -106,7 +144,7 @@ for (const a of adoptions) {
   if (a.adopted) {
     await db.query(
       `INSERT INTO document.adoption (receipt, document, version, base, adopted)
-       VALUES (cella.receipt(), $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
+       VALUES (${receipt}, $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
       [a.document, a.version, day(a.adopted)],
     )
   }
@@ -163,7 +201,7 @@ for (const i of invoices) {
   for (const [n, p] of (i.payment ?? []).entries()) {
     const { rows } = await db.query(
       `INSERT INTO invoice.payment (invoice, receipt, at, amount, method, reference)
-       VALUES ($1, cella.receipt(), $2, cella.amount($3), $4, $5) RETURNING id`,
+       VALUES ($1, ${receipt}, $2, cella.amount($3), $4, $5) RETURNING id`,
       [i.id, day(p.at), p.amount, p.method ?? 'transfer', p.reference ?? `${i.id}/${n + 1}`],
     )
     ids.push(rows[0].id)
@@ -198,7 +236,8 @@ for (const p of (books.period ?? []).filter((p) => p.closed)) {
 await db.query('COMMIT')
 await db.end()
 console.log(
-  `seed: ${members.length} members, ${positions.length} seats, ${decisions.length} decisions, ${votes} stances, ` +
+  `seed: ${members.length} members, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
+    `${decisions.length} decisions, ${votes} stances, ` +
     `${admissions.length} admissions, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings into ${db.database}`,
 )

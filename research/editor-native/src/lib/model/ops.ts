@@ -169,15 +169,19 @@ export function split(doc: LoroDoc, id: TreeID, at: number): TreeID {
   return after(doc, id, nk, p, tail)
 }
 
-// Merge a block into the one before it: its text is appended, its children
-// follow the target's, and it goes. Returns the caret offset in the target.
+// Merge a block into the one before it: its text is appended, and it goes.
+// Its children take its place when it was the target's own child, and
+// follow the target's children otherwise, so reading order holds. Returns
+// the caret offset in the target.
 export function merge(doc: LoroDoc, into: TreeID, id: TreeID): number {
   const t = text(doc, into)
   const at = t.length
   insertRuns(t, at, runs(text(doc, id)))
   const target = node(doc, into)
+  const own = parentOf(doc, id) === into
+  let i = own ? indexOf(doc, id) : (target.children()?.length ?? 0)
   for (const c of childrenOf(doc, id)) {
-    c.move(target, target.children()?.length ?? 0)
+    c.move(target, i++)
   }
   tree(doc).delete(id)
   return at

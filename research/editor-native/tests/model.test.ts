@@ -53,6 +53,18 @@ describe('split and merge', () => {
   })
 })
 
+it('merges a parent with its first child, keeping the grandchildren in place', () => {
+  const { doc, a, b, c } = doc3()
+  const d = create(doc, undefined, 3, 'paragraph', {}, [{ text: 'delta' }])
+  indent(doc, b)
+  indent(doc, c)
+  indent(doc, c)
+  indent(doc, d)
+  expect(shape(doc)).toEqual(['alpha', '  beta', '    gamma', '  delta'])
+  merge(doc, a, b)
+  expect(shape(doc)).toEqual(['alphabeta', '  gamma', '  delta'])
+})
+
 describe('nesting and moving', () => {
   it('indents under the previous sibling and refuses the first', () => {
     const { doc, a, b, c } = doc3()

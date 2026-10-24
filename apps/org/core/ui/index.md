@@ -19,7 +19,9 @@ of surfaces. Components read roles, never shades:
 
 - surfaces: `--ground` under the sidebar, `--panel` under the content
   and its drawer alike, `--raised` for cards and stats on the panel,
-  `--float` for floating things, `--sunk` for fields, `--hover`;
+  `--float` for floating things, `--sunk` for fields and a segmented
+  control's well, `--selected` for its chosen segment, lighter than the
+  well in both themes, `--hover`;
 - text: `--text`, `--text-muted`, `--text-subtle`;
 - accent: `--accent-fill` (fixed lightness in both themes),
   `--accent-border`, `--accent-text`, `--accent-soft`, `--on-accent`;

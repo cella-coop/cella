@@ -231,15 +231,23 @@
   .menu button :global(svg:last-child) {
     margin-inline-start: auto;
   }
+  /* A segmented control, as a collection's layout switch: a sunk well,
+     the chosen segment lifted out of it. */
   .themes {
     grid-auto-flow: column;
+    background: var(--sunk);
+    border-radius: var(--radius-control);
+    padding: 2px;
   }
-  .themes button {
+  .menu .themes button {
     justify-content: center;
     text-transform: capitalize;
+    border-radius: calc(var(--radius-control) - 2px);
+    color: var(--text-muted);
   }
-  .themes button.on {
-    background: var(--sunk);
+  .menu .themes button.on {
+    background: var(--selected);
+    color: var(--text);
   }
   .avatar {
     display: grid;

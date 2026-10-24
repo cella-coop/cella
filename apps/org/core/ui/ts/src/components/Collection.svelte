@@ -263,7 +263,7 @@
     color: var(--text-muted);
   }
   .views a.on {
-    background: var(--panel);
+    background: var(--selected);
     color: var(--text);
   }
   .columns {

@@ -53,6 +53,10 @@
   --raised: oklch(var(--shade-1) var(--tone-base));
   --sunk: oklch(calc(0.58 + var(--theme) * 0.3) var(--tone-base));
   --float: oklch(var(--shade-0) var(--tone-base));
+  /* The chosen segment of a segmented control, lighter than its sunk well
+     in both themes: the well darkens in light and lightens in dark, so
+     dark sets its own step above it. */
+  --selected: oklch(var(--shade-0) var(--tone-base));
   --hover: oklch(var(--shade-3) var(--tone-base) / 60%);
   --line: oklch(var(--shade-3) var(--tone-base));
 
@@ -130,6 +134,7 @@
     --shade-1: 0.245;
     --shade-2: 0.185;
     --shade-3: 0.28;
+    --selected: oklch(0.37 var(--tone-base));
   }
 }
 
@@ -138,4 +143,5 @@
   --shade-1: 0.245;
   --shade-2: 0.185;
   --shade-3: 0.28;
+  --selected: oklch(0.37 var(--tone-base));
 }

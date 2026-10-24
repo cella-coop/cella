@@ -8,131 +8,105 @@ updated = 2026-10-24
 A Loro-native block editor with no editor library: two editors on two
 LoroDocs, synced in the page and seeded with the 2027 rate card. `pnpm dev`
 serves it on <http://localhost:5181/>, `pnpm test` runs the unit and
-convergence tests, `pnpm e2e` (`run-e2e.sh`) runs the browser tests in
-nixpkgs' Chromium on port 5191. The editor's runtime dependencies are
-`loro-crdt` 1.17.1 and `@noble/hashes` 2.4.0 (BLAKE3, pure JS, for the
-canonical hash only).
+convergence tests, `pnpm e2e` runs the browser tests in nixpkgs' Chromium
+on port 5191. Runtime dependencies: `loro-crdt` 1.17.1, and `@noble/hashes`
+2.4.0 for BLAKE3 (pure JS, canonical hash only).
 
 ## The model
 
-A document is a `LoroTree` named `blocks`. Each node's data map holds
-`type`, the props its kind keeps (`level`, `checked`, `language`,
-`decision`) and a `LoroText`. Every block holds a text, atomic ones too, so
-turning a divider back into a paragraph never races two peers creating the
-text concurrently. Block identity is the tree node id; nesting is tree
-children. Marks are Loro's own: bold, italic and code expand after, link
-expands nowhere. `configTextStyle` is per doc and not in the history, so
-every client configures the same styles in `createDoc`.
+A `LoroTree` of blocks; each node's data map holds `type`, the props its
+kind keeps and a `LoroText`, atomic blocks too, so a retype never races two
+peers creating a text. Identity is the node id; nesting is tree children.
+Marks are Loro's: bold, italic and code expand after, links nowhere.
+`configTextStyle` is per doc, outside the history, so every client sets it
+in `createDoc`. The edits (`model/ops.ts`) are plain functions that never
+commit; one user action is one commit, one undo step, one update.
 
-The edits (`model/ops.ts`) are plain functions on a doc: split, merge,
-indent, outdent (the following siblings become children, so reading order
-holds), move before/after/into, retype, toggle a mark, paste fragments.
-None commits; the caller makes one commit per user action, which is one undo
-step and one update on the wire.
-
-The canonical form is the ordered tree with kind, kept props, text as runs
-with their marks, and children, empty runs and children omitted. Block ids
-are left out: two documents that read the same hash the same however they
-were made. It is serialised per RFC 8785 (JCS, a 15-line serialiser) and
-hashed with BLAKE3. Both sides show the hash live, and the page shows
-"Converged" when they match and nothing is queued.
+The canonical form is the ordered tree (kind, kept props, runs with marks,
+children; empties omitted; block ids left out, so documents that read the
+same hash the same however they were made), serialised per RFC 8785 by a
+15-line JCS writer and hashed with BLAKE3. The page shows both hashes live
+and "Converged" when they match with nothing queued.
 
 ## The editor
 
-Every text block is its own `contenteditable`, painted from Loro by hand;
-Svelte draws the element and never its children. Every `beforeinput` is
-refused and made in Loro instead, using the browser's target range for
-grapheme, word and spelling edits. The exception is composition: the IME
-owns the DOM until `compositionend` (or Safari's `insertFromComposition`),
-when the block is repainted from Loro and the composed text is inserted at a
-Loro cursor taken at `compositionstart`. Remote edits to a composing block
-wait until it ends.
+One `contenteditable` per text block, painted from Loro by hand; Svelte
+draws the element, never its children. Every `beforeinput` is refused and
+made in Loro, using the browser's target range for grapheme, word and
+spelling edits. Composition is the exception: the IME owns the DOM until
+`compositionend` (or Safari's `insertFromComposition`), then the block is
+repainted and the text inserted at a Loro cursor taken at the start; remote
+edits to that block wait. Changes mark the blocks they touch; a flush
+reuses unchanged row objects, so Svelte redraws only changed rows, and
+repaints only dirty texts. A remote edit carries the caret through its
+delta.
 
-Local and remote changes mark the blocks they touch; a flush rebuilds the
-row list only on structural change (row objects are reused, so Svelte redraws
-only changed rows) and repaints only dirty texts. A remote text edit carries
-the caret through its delta, read from the DOM selection before the repaint.
-
-Blocks: one component per kind, including a `decision` card that is atomic,
-selectable and movable. Enter splits (carrying marks; Enter on an empty list
-item ends the list), Backspace at the start resets the kind and then merges,
-Delete at the end merges the next. Arrows cross blocks; Tab and Shift-Tab
-nest. Markdown shortcuts: `#`–`###`, `-`, `1.`, `[]`, `>`, ```` ``` ````,
-`---`. The slash menu filters as you type and is keyboard-driven. Ctrl-B/I/E
-toggle marks (pending marks for the next text when nothing is selected);
-Ctrl-K and the selection toolbar link. Block selection, as in Notion,
-comes from Shift-arrows at a block's edge, Escape, the handle, or a mouse
-drag that leaves its block; selected blocks delete, copy, cut, nest and move
-with Alt-Shift-arrows. The drag handle moves the selection before, after or
-into a block. Blocks copy as fragments with plain text beside them; plain
-text pastes as paragraphs. Undo is Loro's `UndoManager`, this peer only. The
-page can take the link offline and add a delay.
+It has Enter split with marks, Backspace and Delete merge, arrows across
+blocks, Tab nesting, markdown shortcuts (`#`–`###`, `-`, `1.`, `[]`, `>`,
+```` ``` ````, `---`), a filterable keyboard slash menu, Ctrl-B/I/E/K with
+pending marks and a selection toolbar, Notion-style block selection
+(Shift-arrows at an edge, Escape, the handle, or a drag leaving its block)
+that deletes, copies, cuts, nests and moves, a drag handle dropping before,
+after or into a block, fragment and plain-text clipboard, an atomic
+`decision` card, and per-peer undo via `UndoManager`.
 
 ## Lines of code
 
-Non-blank, non-comment lines; the Svelte figures include their CSS.
+Non-blank, non-comment; Svelte includes CSS.
 
-| Part | Files | Lines |
-|---|---|---|
-| Model and canonical form | `model/doc.ts`, `ops.ts`, `canonical.ts` | 416 |
-| Input | `EditorState` (input, keys), `editor/dom.ts` | 534 |
-| Rendering | `EditorState` (flush, caret), block components, `Editable`, `Editor` | 679 |
-| UX chrome | `EditorState` (slash, block selection, clipboard, drag), `Block`, `Slash`, `Toolbar` | 626 |
-| Demo page and sync | `PairState`, routes, seed | 273 |
-| Tests | unit, convergence, e2e | 719 |
+| Part | Lines |
+|---|---|
+| Model and canonical form | 416 |
+| Input (`EditorState` input and keys, `dom.ts`) | 534 |
+| Rendering (flush and caret, block components, `Editable`) | 679 |
+| UX chrome (slash, block selection, clipboard, drag, toolbar) | 626 |
+| Demo page, sync, seed | 273 |
+| Tests | 719 |
 
 ## Tests
 
-- **Unit, 17**: split, merge (with children), indent, outdent, move, marks
-  and their expansion, retype, JCS ordering, canonical bytes, hash stability
-  across peers and across independent seeding, fragment round trip, caret
-  through a remote delta.
-- **Convergence, 1**: three peers, 600 seeded iterations of 1–4 rounds of
-  random concurrent edits (text insert and delete, marks, split, merge, move,
-  indent, outdent, retype, create, delete) with partial gossip, then a full
-  exchange in random order: identical canonical bytes and version vectors
-  every time (about 30 s).
-- **Browser, 22** (Chromium 1248, headless): typing and sync, Enter and
-  Backspace across blocks, markdown shortcuts, the slash menu, Tab nesting,
-  pending bold, Delete-merge, Ctrl-K, stepping onto the decision card,
-  arrows across blocks, Shift-arrow and drag selection with delete, moving a
-  selection, drag-and-drop reorder and nest, block copy and paste, plain-text
-  paste, IME composition over CDP, the caret held while the other side edits
-  the same block (once, and interleaved with every keystroke), local-only
-  undo, and offline queueing. Eight full runs after the last fix passed with
-  no flakes.
+- **Unit, 17**: split, merge with children, indent, outdent, move, marks
+  and expansion, retype, JCS ordering, canonical bytes, hash stability,
+  fragment round trip, caret through a remote delta.
+- **Convergence**: three peers, 600 seeded iterations of random concurrent
+  edits (text, marks, split, merge, move, indent, outdent, retype, create,
+  delete), partial gossip, then a full exchange in random order: identical
+  canonical bytes and version vectors every time.
+- **Browser, 22**: typing, Enter and Backspace across blocks, shortcuts,
+  slash menu, Tab, Delete-merge, Ctrl-K, the decision card, arrows,
+  Shift-arrow and drag selection with delete, moving a selection, drag and
+  drop, block copy and paste, plain-text paste, IME over CDP, the caret held
+  while the other side types in the same block (interleaved per keystroke),
+  local-only undo, offline queueing. Eight full runs after the last fix: no
+  flakes.
 
 ## The hard problems
 
-- **Caret ownership.** The browser tests found two bugs the unit tests could
-  not. A block's mount attachment read the slash menu's state while placing
-  the caret, so opening the menu remounted the block and dropped the caret
-  to 0; it runs untracked now. And `selectionchange` lags the keys that move
-  the caret, so cursors taken there were stale when a remote edit landed;
-  the caret now rides the remote delta from the live DOM selection.
-- **Selection across contenteditables.** A native selection cannot span
-  two editing hosts, so a cross-block selection is a block selection, as in
-  Notion. A text selection from mid-block to mid-block does not exist.
-- **IME.** Tested only with CDP's `imeSetComposition`/`insertText`
-  in Chromium. Real IMEs, Safari's composition order and Android's
-  keyboards, which compose every word, are untested.
-- **UTF-16.** Loro refuses an offset inside a surrogate pair; the DOM hands
-  them out. The convergence test found it; offsets snap to code points.
+- **Caret ownership.** The browser tests found two bugs. A block's mount
+  attachment read the slash menu's state, so opening the menu remounted the
+  block and dropped the caret to 0; it runs untracked now. And
+  `selectionchange` lags the keys, so cursors taken there were stale when a
+  remote edit landed; the caret now rides the delta from the live DOM
+  selection.
+- **Selection across contenteditables.** Native selection cannot span two
+  editing hosts, so a cross-block selection is a block selection, as in
+  Notion; there is no mid-block to mid-block text selection.
+- **IME.** Tested only by CDP emulation in Chromium.
+- **UTF-16.** Loro refuses offsets inside a surrogate pair; the convergence
+  test found it, and offsets snap to code points.
 
-Untested: Firefox, Safari, mobile (touch selection, Gboard, iOS), screen
-readers, large documents, right-to-left text, and extensions that rewrite the
-DOM (Grammarly): nothing reconciles a foreign DOM mutation. Ctrl-K uses
-`window.prompt`. Arrow navigation between wrapped lines relies on caret
-rectangles.
+Untested: Firefox, Safari, mobile (touch selection, Gboard, iOS), real
+IMEs, screen readers, large documents, right-to-left text, and extensions
+that rewrite the DOM: nothing reconciles a foreign mutation. Ctrl-K uses
+`window.prompt`.
 
 ## Verdict
 
-Yes, cella can own this editor. The feature set fits in about 2,250 lines
-that cella controls end to end, with no bindings between a library's model
-and Loro: the tree is the document, and the canonical form falls out of it.
-The cost is the long tail of browser input (mobile composition, Safari,
-foreign DOM mutation), which a library mitigates only where it has met the
-same bugs. Before users touch it, budget a hardening pass on Safari,
+Yes, cella can own this editor. The feature set is about 2,250 lines cella
+controls end to end, with no binding between a library's model and Loro:
+the tree is the document and the canonical form falls out of it. The cost
+is the long tail of browser input, which a library softens only where it
+has met the same bugs. Before users touch it: a hardening pass on Safari,
 Firefox and Android, a MutationObserver fallback that repaints a block
 changed behind the editor's back, and a split of `EditorState` (1,200
 lines) into input, selection and clipboard modules.

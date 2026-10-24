@@ -51,7 +51,9 @@ keeps its number, and the void posts a credit note.
   peer co-op at rung 5. Sending twice does no harm.
 - **payment** records money received. Payments are facts from the bank;
   they add up in any order, and the same bank reference recorded twice
-  merges into one.
+  merges into one payment. An invoice paid beyond its total is not
+  refused: the excess shows as a credit owed to the client, refunded or
+  applied elsewhere.
 - **void** is ordered against the payments: it settles only if no payment
   was received before it, and posts the credit note.
 
@@ -74,9 +76,9 @@ The invoice feat owns the rules about its own collection:
 - `total` = `net` + `vat`, and `net` is the sum of the lines;
 - an issued invoice never changes; a correction is a void and a reissue;
 - numbers in a series are unique, gapless and in date order;
-- payments never exceed the total; see
-  [conflicts](../../../../_corpus/doc/conflicts.md) for how this meets a
-  confluent payment;
+- a payment beyond the total is not refused: it leaves a credit owed to
+  the client, not an overpaid invoice; the same bank reference recorded
+  twice merges into one payment;
 - a voided invoice takes no payment and is not sent again.
 
 What it does not own:

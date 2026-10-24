@@ -12,9 +12,20 @@
 
   const icons = { settled: CheckCircle, refused: XCircle, pending: HourglassMedium, failed: XCircle }
   const all = $derived([outcome, ...outcome.then])
+
+  // Escape dismisses the outcome first, before a page's own Escape, such
+  // as the detail view's way back, which a handled press leaves alone; an
+  // open dialog takes Escape itself.
+  function onkeydown(e: KeyboardEvent) {
+    if (e.key !== 'Escape' || document.querySelector('dialog[open]')) {
+      return
+    }
+    e.preventDefault()
+    ondismiss()
+  }
 </script>
 
-<svelte:window onkeydown={(e) => e.key === 'Escape' && ondismiss()} />
+<svelte:window onkeydowncapture={onkeydown} />
 
 <div class="outcome" role="status" aria-live="polite" data-state={outcome.state}>
   <ul>

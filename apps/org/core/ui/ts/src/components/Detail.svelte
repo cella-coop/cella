@@ -34,7 +34,7 @@
   } = $props()
 
   function onkeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape' && !typing(e) && !document.querySelector('dialog[open]')) {
+    if (e.key === 'Escape' && !e.defaultPrevented && !typing(e) && !document.querySelector('dialog[open]')) {
       goto(back.href)
     }
   }

@@ -6,7 +6,7 @@
   import TableIcon from 'phosphor-svelte/lib/Table'
   import Plus from 'phosphor-svelte/lib/Plus'
   import type { Column } from '../models/view.ts'
-  import { typing } from '../models/keys.ts'
+  import { control, nearest, typing } from '../models/keys.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import Button from './Button.svelte'
   import Card from './Card.svelte'
@@ -83,7 +83,7 @@
     } else if (e.key === 'k' || e.key === 'ArrowUp') {
       state.move(-1)
       e.preventDefault()
-    } else if (e.key === 'Enter' && state.active >= 0) {
+    } else if (e.key === 'Enter' && state.active >= 0 && !control(e)) {
       open(state.active)
     } else if (e.key === '/') {
       state.focus()
@@ -93,11 +93,6 @@
       e.preventDefault()
     }
   }
-
-  // Keeps the keyboard's row in view: the DOM's, so an effect.
-  $effect(() => {
-    document.querySelector(`[data-row="${state.active}"]`)?.scrollIntoView({ block: 'nearest' })
-  })
 </script>
 
 <svelte:window {onkeydown} />
@@ -135,7 +130,7 @@
       <ul class="list">
         {#each state.shown as row, i (row.id)}
           {const link = $derived(href?.(row))}
-          <li class:active={i === state.active} data-row={i}>
+          <li class:active={i === state.active} {@attach nearest(i === state.active)}>
             <span class="main">
               {#if link}
                 <a href={link} class="title stretched">{titled.value(row)}</a>

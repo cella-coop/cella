@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
+  import { nearest } from '../models/keys.ts'
   import Cell from './Cell.svelte'
 
   let {
@@ -29,11 +30,11 @@
     <tbody>
       {#each rows as row, i (row.id)}
         {const link = $derived(href?.(row))}
-        <tr class:active={i === active} class:linked={link} data-row={i}>
+        <tr class:active={i === active} class:linked={link} {@attach nearest(i === active)}>
           {#each columns as c, j (c.key)}
             <td class:end={end(c)}>
               {#if link && j === 0}
-                <a href={link} tabindex="-1"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></a>
+                <a href={link} class="stretched"><Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} /></a>
               {:else}
                 <Cell value={c.value(row)} kind={c.kind} tone={c.tone?.(row)} />
               {/if}
@@ -83,8 +84,15 @@
   tr.active {
     background: var(--hover);
   }
+  /* The first cell's link covers its row, so the whole row opens it and
+     the link is the row's one tab stop. */
   tr.linked {
-    cursor: pointer;
+    position: relative;
+  }
+  .stretched::after {
+    content: '';
+    position: absolute;
+    inset: 0;
   }
   td:first-child,
   th:first-child {

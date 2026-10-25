@@ -1,4 +1,6 @@
-export type Procedure = 'consent' | 'majority'
+// The id of a procedure the decision feat holds: consent, majority, two
+// thirds or one of the co-op's own.
+export type Procedure = string
 
 // A circle as the feat reads it.
 export interface Circle {

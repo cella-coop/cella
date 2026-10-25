@@ -1,5 +1,3 @@
-import type { Rule } from '@cella/org-decision/models'
-
 // The kinds of motion this graft carries: a circle nested, a power
 // granted to a role, a mandate revoked.
 export type Kind = 'nest' | 'grant' | 'revoke'
@@ -14,7 +12,7 @@ export const kinds: { value: Kind; label: string }[] = [
 export interface Deciding {
   id: string
   name: string
-  procedure: Rule
+  procedure: string
 }
 
 // What a circle's page offers to propose: where each kind of decision

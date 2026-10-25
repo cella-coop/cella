@@ -1,6 +1,6 @@
 +++
 title = "circle-decision"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The circles' place and powers, by decision: nesting a circle, granting a
@@ -33,6 +33,9 @@ the revoked mandate's role's circle; a role every working circle has
 - `circle_decision.nests`, `.grants`, `.revokes`, on `circle:circle:nest`,
   `circle:mandate:grant` and `circle:mandate:revoke`: the cited decision
   asks exactly this, the grant's euros in cents.
+
+- `circle_decision.decides_by`, a trigger on a circle written: it decides
+  by a procedure the decision feat holds, raising SQLSTATE `09000`.
 
 The three ops cite a decision: this graft lists them in `decision.cites`,
 and `circle-decision-member`, which counts the roll, attaches its rule

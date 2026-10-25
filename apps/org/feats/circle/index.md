@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The co-op's structure and the authority that flows through it. A circle is
@@ -14,7 +14,7 @@ junction. Each circle also has a channel for its messages.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` is the default decision rule, `consent` or `majority` |
+| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its decisions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the decision feat holds and `circle-decision` checks |
 | role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has |
 | mandate | `id`, `role`, `power`, `text`, `limit?`, `budget?`, `from`, `until?`, `revoked?` | `power` is an id; `text` is how members read it; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year") |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |

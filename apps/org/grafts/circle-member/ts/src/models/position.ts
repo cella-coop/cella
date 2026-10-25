@@ -12,7 +12,7 @@ export interface Seat {
   until: string | null
   // How the seat's circle decides, and whether it is the scope's root,
   // the assembly.
-  procedure: 'consent' | 'majority'
+  procedure: string
   root: boolean
 }
 

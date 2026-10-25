@@ -63,8 +63,9 @@ verdict, reading the same forms through the invoice feat's `forms`.
 ## Import
 
 Invoices to issue from a spreadsheet, a CSV with a row for each line,
-rows sharing an `invoice` making one: the importer `invoices`, each issued
-now as the importing member, numbered in the co-op's series and posted.
+rows sharing an `invoice` making one and an `address` column giving the
+address billed: the importer `invoices`, each issued now as the importing
+member, numbered in the co-op's series and posted.
 Invoices issued before cella are in the old books and come in through the
 FEC as entries, so nothing is posted twice
 ([import](../../feats/import/index.md)).

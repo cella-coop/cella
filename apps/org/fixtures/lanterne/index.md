@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Lanterne
@@ -59,7 +59,9 @@ and moves tasks and logs their own time.
   loi 78-763, art. 33 allows: 27 630 € to the members for their work,
   divided by salary, 9 210 € to the legal reserve, 15 350 € to the
   development fund and 9 210 € as interest on capital; the result was
-  carried over unallocated, and allocating it is Julien's to do.
+  carried over unallocated, and allocating it is Julien's to do. The
+  statutes' terms divide the work share by pay and employ half of each
+  member's part in shares, blocked five years; the rest is paid.
 - **Pay and expenses.** Ten members are salaried, 26 000 € gross a month
   between them, the highest 1.25 times the lowest, within the internal
   rules' 1.6. July to September's pay runs were carried over, one entry
@@ -110,7 +112,8 @@ guests, and that no item tables a decision before it was proposed.
 
 Pay runs and expenses are `payslip.toml` and `expense.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its
-member's shares, the 2025 split honours art. 33, salaries keep within the
+member's shares, the work share's terms divide all of it and govern the
+2025 split, which honours art. 33, salaries keep within the
 ratio and each carried run's entry is exactly its payslips. Device keys are
 TEST-ONLY, derived from each device's address and label when the fixtures
 are seeded, so the tests sign with the same keys; anyone can derive them.

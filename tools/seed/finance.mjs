@@ -1,5 +1,5 @@
-// seed, finance: loads a mock co-op's capital, surplus allocations, pay
-// and expenses into the account, payslip and expense schemas and their
+// seed, finance: loads a mock co-op's capital, the terms of its work share,
+// surplus allocations, pay and expenses into the account, payslip and expense schemas and their
 // grafts' (account-decision, account-member, account-payslip,
 // member-payslip, payslip-transaction, expense-project). The chart, the
 // journal, the members and their time load first: a capital account names
@@ -20,6 +20,12 @@ export async function finance(db, read, day) {
     await db.query('INSERT INTO account_member.allowance (member, amount) VALUES ($1, cella.amount($2))', [a.member, a.amount])
   }
 
+  for (const t of books.terms ?? []) {
+    await db.query(
+      'INSERT INTO account.terms (id, "from", salary, hours, equal, capital, adopted) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, day(t.adopted)],
+    )
+  }
   for (const a of books.allocation ?? []) {
     await db.query('INSERT INTO account.allocation (id, year, surplus, basis) VALUES ($1, $2, cella.amount($3), $4)', [a.id, a.year, a.surplus, a.basis])
     for (const s of a.share ?? []) {

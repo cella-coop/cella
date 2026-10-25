@@ -1,6 +1,7 @@
 // fixture check, finance: a mock co-op's capital, surplus allocations, pay
 // and expenses are consistent. A capital account is a member's, under
 // 1013, and the journal credits it with their shares at the share's value;
+// the work share's terms divide all of it and govern each allocation;
 // an allocation honours a SCOP's floors (loi n° 78-763, art. 33); every
 // salary is a member's, and they keep within the internal rules' ratio; a
 // pay run carried over posted exactly its payslips' pay and charges; an
@@ -37,6 +38,28 @@ export function finance(read, fail) {
   for (const a of read('graft.account-member').allowance ?? []) {
     if (!members.has(a.member)) {
       fail(`allowance: ${a.member} is no member`)
+    }
+  }
+
+  // The work share's terms divide all of it (Code du travail, art.
+  // L3324-5), and each allocation names its year's terms' basis
+  const terms = books.terms ?? []
+  const weights = ['salary', 'hours', 'equal']
+  for (const t of terms) {
+    if (weights.reduce((s, w) => s + (t[w] ?? 0), 0) !== 100) {
+      fail(`terms ${t.id}: they divide ${weights.reduce((s, w) => s + (t[w] ?? 0), 0)} % of the work share, not 100 %`)
+    }
+    if ((t.capital ?? 0) < 0 || (t.capital ?? 0) > 100) {
+      fail(`terms ${t.id}: ${t.capital} % of a part employed in shares`)
+    }
+  }
+  for (const a of books.allocation ?? []) {
+    const t = terms.filter((t) => t.adopted && t.from <= a.year).sort((x, y) => y.from - x.from || iso(y.adopted).localeCompare(iso(x.adopted)))[0]
+    const basis = t ? (weights.find((w) => t[w] === 100) ?? 'mix') : null
+    if (!t) {
+      fail(`allocation ${a.id}: no adopted terms govern ${a.year}`)
+    } else if (a.basis !== basis) {
+      fail(`allocation ${a.id}: it divides by ${a.basis}, not by ${basis} as ${t.id} say`)
     }
   }
 

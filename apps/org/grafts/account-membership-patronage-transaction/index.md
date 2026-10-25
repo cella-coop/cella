@@ -49,6 +49,10 @@ adds them to what they hold, and pays a worker who is no associate all of
 theirs; an entry posting anything beside the split and the shares is
 refused.
 
+## Reads
+
+A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)).
+
 ## Shell
 
 Adds to a statement, once its year is distributed, what the part became:

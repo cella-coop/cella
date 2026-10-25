@@ -1,9 +1,12 @@
 // The reading scenario, end to end on a seeded Lanterne, through the built
 // shell outside dev mode, each page read as a signed-in member: Chloé, a
 // designer holding no power over pay or the books, reads her own pay and
-// capital and no colleague's; Julien, in finance, reads everyone's; and a
-// member's personal values in the log open to them, never to a colleague.
-// Run by `cella test e2e reading`.
+// capital and no colleague's; Julien, in finance, reads everyone's; what
+// sums the whole, the statements, an entry's amount and a share the 2025
+// surplus would give, is the same whoever reads it; a member's personal
+// values in the log open to them, never to a colleague; and a server
+// logging in as the superuser reads as the app role all the same. Run by
+// `cella test e2e reading`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -78,11 +81,21 @@ test('a worker reads their own capital account and its lines, and no colleague\'
   assert.ok((await page('/journal/je-0001', julien)).text.includes('101301'))
 })
 
-test('the statements are every member\'s, whole, whoever reads them', async () => {
+test('what sums the whole is the same whoever reads it: the statements, an entry\'s amount, a share of the surplus', async () => {
   const sql = `SELECT id, amount FROM account_transaction.statement('balance', NULL, '2026-09-30') ORDER BY n`
   assert.deepEqual(await reading(chloe, sql), await reading(julien, sql))
   const equity = (await reading(chloe, sql)).find((r) => r.id === 'capital')
   assert.ok(equity && Number(equity.amount) > 0, 'the capital rubric sums every member\'s capital for Chloé too')
+
+  const amount = `SELECT transaction.amount('je-0001') AS a`
+  assert.deepEqual(await reading(chloe, amount), await reading(julien, amount), 'the opening entry\'s amount counts the lines she may not read')
+
+  // The 2025 surplus, not yet approved: what its work share would give
+  // each worker by pay.
+  const shares = `SELECT member, amount FROM patronage_payslip.work_share WHERE distribution = '2025' ORDER BY member`
+  const everyone = await reading(julien, shares)
+  assert.equal(everyone.length, 10, 'Julien, who distributes the surplus, reads every worker\'s share')
+  assert.deepEqual(await reading(chloe, shares), everyone.filter((s) => s.member === chloe), 'Chloé reads her own, the same as Julien reads it')
 })
 
 test('the log\'s form and the vault are closed to the app; an entry opens to the person it is about, never to a colleague', async () => {
@@ -97,4 +110,13 @@ test('the log\'s form and the vault are closed to the app; an entry opens to the
   assert.equal(mine.o.values.email, 'lea@bernard.example', 'Léa reads her own email back')
   const [theirs] = await reading(chloe, 'SELECT cella.disclosed($1) AS o', [n])
   assert.equal(theirs.o, null, 'Chloé reads none of it')
+})
+
+test('a server logging in as the superuser reads as the app role all the same', async () => {
+  const url = `postgres://${encodeURIComponent(su.user ?? 'postgres')}@${su.host}:${su.port}/${su.database}`
+  await shell.start('2026-10-24', { DATABASE_URL: url })
+  const own = await page('/payslips', chloe)
+  assert.equal(own.status, 200)
+  assert.ok(own.text.includes(`2026-09~${chloe}`) && !own.text.includes(`~${camille}`), 'Chloé reads her own payslips alone')
+  assert.ok(!(await page('/accounts', chloe)).text.includes('101301'))
 })

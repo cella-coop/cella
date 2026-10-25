@@ -59,17 +59,19 @@ export class Shell {
 
   // Starts the built server outside dev mode, as a scope's server runs,
   // after setting the notary's date for the app role, which each new
-  // connection picks up. Sessions end with the server.
-  async start(date: string) {
+  // connection picks up; `env` adds to its environment, such as a
+  // `DATABASE_URL` logging in as another role. Sessions end with the
+  // server.
+  async start(date: string, env: NodeJS.ProcessEnv = {}) {
     await this.stop()
     await this.su.query(`ALTER ROLE cella_app IN DATABASE ${this.su.escapeIdentifier(this.su.database ?? '')} SET cella.clock = '${date}'`)
     const port = await free()
     this.#base = `http://127.0.0.1:${port}`
-    const env: NodeJS.ProcessEnv = { ...process.env, PORT: String(port), HOST: '127.0.0.1', PROTOCOL_HEADER: 'x-forwarded-proto' }
-    delete env.DATABASE_URL
-    delete env.CELLA_DEV
-    delete env.CELLA_SESSION_KEY_FILE
-    this.#server = spawn(process.execPath, [entry], { env, stdio: ['ignore', 'pipe', 'inherit'] })
+    const run: NodeJS.ProcessEnv = { ...process.env, PORT: String(port), HOST: '127.0.0.1', PROTOCOL_HEADER: 'x-forwarded-proto' }
+    delete run.DATABASE_URL
+    delete run.CELLA_DEV
+    delete run.CELLA_SESSION_KEY_FILE
+    this.#server = spawn(process.execPath, [entry], { env: { ...run, ...env }, stdio: ['ignore', 'pipe', 'inherit'] })
     for (let i = 0; i < 100; i++) {
       try {
         await fetch(`${this.#base}/sign-in`)

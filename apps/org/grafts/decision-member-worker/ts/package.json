@@ -1,0 +1,19 @@
+{
+  "name": "@cella/org-graft-decision-member-worker",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-decision": "workspace:*",
+    "@cella/org-member": "workspace:*",
+    "@cella/org-worker": "workspace:*",
+    "@cella/org-graft-decision-member": "workspace:*",
+    "@cella/org-graft-member-worker": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

@@ -181,6 +181,19 @@
     align-items: center;
     flex: none;
   }
+  /* A write in the header keeps it one row: its fields' labels are read,
+     not seen, and its choices stay narrow. */
+  .actions :global(.field .label) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .actions :global(select) {
+    max-width: 16rem;
+  }
   /* The quiet icon group: the drawer's panel tabs, then its toggle; the
      open panel's tab on a sunk fill. */
   .icons {

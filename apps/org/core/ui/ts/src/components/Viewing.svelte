@@ -357,6 +357,10 @@
     background: var(--sunk);
     color: var(--text-muted);
     cursor: pointer;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .chip:hover {
     color: var(--text);

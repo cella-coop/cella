@@ -53,12 +53,15 @@ The theme is light, dark or the system's, a cookie the server writes into
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
-  compact row as Linear's, spanning the content and the drawer: the
-  eyebrow (the group, or on an item the collection, as the way back)
-  over the page's name with its count and status badges; the page's
-  tabs right after, a collection's views, scrolling in their own strip;
-  then the page's writes and one quiet icon group, the drawer's panel
-  tabs beside its toggle, which stays there when the drawer is shut.
+  compact row as Linear's, spanning the content and the drawer: on an
+  item, a quiet caret back to its collection; the page's name, its
+  caption as the name's tooltip, with its count and status badges; the
+  page's tabs right after, a collection's views, scrolling in their own
+  strip; then the page's writes and one quiet icon group, the drawer's
+  panel tabs beside its toggle, which stays there when the drawer is
+  shut. A write in the header keeps the row one line: its fields'
+  labels are read by assistive technology and not seen, and a choice is
+  at most 16rem wide.
   Under it, the content (an item's subtitle first) and the drawer, which
   scrolls down and never across. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
@@ -72,7 +75,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   it fits) and, in a table, its columns, in a gallery or on a board, its
   cards' fields and the board's grouping, in a calendar, the date it
   places the items by, month or week, and its cards' fields, in a
-  dashboard, its widgets; and saving what is shown as a view. `Gallery`
+  dashboard, its widgets; and saving what is shown as a view. A list, a
+  table and a gallery draw a hundred rows at a time, with a button
+  under them to show the next hundred and how many of the rows are
+  drawn; the keyboard moving past the last drawn row draws the next
+  page, and a change to the filter draws the first again. A board and a
+  calendar place every row. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
   per value of an enumeration, each with its count, the board offered
   only where a field enumerates; `Calendar` puts them on the days of a

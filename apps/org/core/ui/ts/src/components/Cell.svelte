@@ -37,6 +37,7 @@
   }
   .empty {
     color: var(--text-subtle);
+    font-family: var(--font-ui);
   }
   .toned[data-tone='negative'] {
     color: var(--negative-text);

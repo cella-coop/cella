@@ -35,6 +35,15 @@
     min-width: 0;
     display: flex;
   }
+  /* A long value ends in an ellipsis inside the card, not past its edge. */
+  dd > :global(*) {
+    min-width: 0;
+    max-width: 100%;
+  }
+  a {
+    display: flex;
+    min-width: 0;
+  }
   a:hover {
     text-decoration: underline;
     text-decoration-color: var(--accent-border);

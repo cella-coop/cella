@@ -27,6 +27,7 @@
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { useCollection } from '../hooks/useCollection.ts'
+  import { PAGE } from '../hooks/CollectionState.svelte.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
@@ -142,6 +143,11 @@
   // month or week around the day the address is at, else today's.
   const placing = $derived(typed.find((f) => f.key === spec.on) ?? typed.find((f) => f.type === 'date'))
   const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
+
+  // A list, a table and a gallery draw a page of rows at a time; a board
+  // and a calendar place every row, and a dashboard draws none.
+  const paging = $derived(!(spec.layout === 'dashboard' || (spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
+
   const at = (day: string | null) => {
     const q = new URLSearchParams(page.url.search)
     if (day) {
@@ -337,9 +343,9 @@
     {:else if state.shown.length === 0}
       <p class="empty">{state.filter ? `Nothing matches “${state.filter}”.` : empty}</p>
     {:else if spec.layout === 'table'}
-      <Table columns={visible} rows={state.shown} {href} active={state.active} />
+      <Table columns={visible} rows={state.paged} {href} active={state.active} />
     {:else if spec.layout === 'gallery'}
-      <Gallery rows={state.shown} {titled} {shown} {href} />
+      <Gallery rows={state.paged} {titled} {shown} {href} />
     {:else if spec.layout === 'board' && grouped}
       <Board
         rows={state.shown}
@@ -355,7 +361,7 @@
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} />
     {:else}
       <ul class="list">
-        {#each state.shown as row, i (row.id)}
+        {#each state.paged as row, i (row.id)}
           {const to = $derived(href?.(row))}
           <li class:active={i === state.active} {@attach nearest(i === state.active)}>
             <span class="main">
@@ -376,6 +382,12 @@
           </li>
         {/each}
       </ul>
+    {/if}
+    {#if paging && state.left > 0}
+      <p class="more">
+        <Button onclick={() => state.extend()}>Show {Math.min(state.left, PAGE)} more</Button>
+        <span>{state.paged.length} of {state.shown.length}</span>
+      </p>
     {/if}
   </div>
 </Frame>
@@ -475,5 +487,14 @@
   .empty {
     color: var(--text-muted);
     padding: var(--space-4) var(--space-3);
+  }
+  .more {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin: var(--space-3) 0 0;
+    padding-inline: var(--space-3);
+    font-size: var(--text-sm);
+    color: var(--text-muted);
   }
 </style>

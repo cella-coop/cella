@@ -39,6 +39,5 @@
     background: var(--sunk);
     border-color: transparent;
     color: var(--text);
-    font-weight: 500;
   }
 </style>

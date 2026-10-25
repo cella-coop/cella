@@ -8,10 +8,13 @@
 <span class="badge {tone}">{@render children()}</span>
 
 <style>
+  /* A long value ends in an ellipsis where its cell runs out. */
   .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-1);
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
     padding: 0 var(--space-2);
     border-radius: var(--radius-pill);
     font-size: var(--text-xs);

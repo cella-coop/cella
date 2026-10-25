@@ -1,0 +1,5 @@
+name = "patronage"
+group = "finance"
+builtin = false
+rung = 1
+grafts = ["account-member-patronage", "account-member-patronage-transaction", "account-patronage", "decision-patronage", "patronage-payslip", "patronage-timesheet", "patronage-transaction"]

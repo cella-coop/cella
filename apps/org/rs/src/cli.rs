@@ -76,11 +76,19 @@ pub enum Command {
         url: Option<String>,
     },
 
-    /// The shell's dev server on the dev database, signing as a fixture member; starts the cluster if needed
+    /// The shell on the dev database, its dev server or with --prod the built one; starts the cluster if needed
     Serve {
         /// The port it listens on, on localhost
         #[arg(long, default_value_t = 5173)]
         port: u16,
+
+        /// Build the shell and run it as a scope's server, outside dev mode, behind TLS
+        #[arg(long)]
+        prod: bool,
+
+        /// A database other than the dev cluster's, for --prod
+        #[arg(long, value_name = "URL", requires = "prod")]
+        url: Option<String>,
     },
 
     /// Build the shell for production into apps/org/ts/build

@@ -29,7 +29,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Import { kind, file, actor, dry_run, url } => {
             data::import(&Repo::find()?, &steps, &data::Import { kind: &kind, file: &file, actor: &actor, dry: dry_run }, url.as_deref())
         }
-        Command::Serve { port } => shell::serve(&Repo::find()?, &steps, port),
+        Command::Serve { port, prod, url } => shell::serve(&Repo::find()?, &steps, port, prod, url.as_deref()),
         Command::Build => shell::build(&Repo::find()?, &steps),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),

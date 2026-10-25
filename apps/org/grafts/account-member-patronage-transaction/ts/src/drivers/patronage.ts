@@ -1,14 +1,15 @@
 import type { Db } from '@cella/org-db'
-import type { Employed, Figure, Movement } from '../models/patronage.ts'
+import type { Employed, Figure, Movement, Owed } from '../models/patronage.ts'
 
-// What a worker's part became, by their statement's id: the shares it
-// bought and the cash it left, and the lines of their capital account with
-// the balance after each.
+// What a worker's part became once it was distributed, by their
+// statement's id: the shares it bought and the cash it left, and the lines
+// of their capital account with the balance after each.
 export async function employed(db: Db, statement: string): Promise<Employed | null> {
   const { rows } = await db.query<{ part: string; worker: string; shares: number | null; capital: string | null; until: string | null; account: string | null; entry: string | null }>(
     `SELECT s.amount AS part, s.worker, c.shares, cella.cents(c.amount) AS capital, to_char(c.until, 'YYYY-MM-DD') AS until, c.account, c.entry
-     FROM account.statement s
-     LEFT JOIN account_member_transaction.credit c ON c.allocation = s.allocation AND c.member = s.worker
+     FROM patronage.statement s
+     JOIN patronage.distribution d ON d.id = s.distribution AND d.distributed IS NOT NULL
+     LEFT JOIN account_member_patronage_transaction.credit c ON c.distribution = s.distribution AND c.member = s.worker
      WHERE s.id = $1`,
     [statement],
   )
@@ -39,31 +40,30 @@ export async function employed(db: Db, statement: string): Promise<Employed | nu
   }
 }
 
-// The figures of an allocated year a SCOP reports to its federation, from
+// The figures of a distributed year a SCOP reports to its federation, from
 // the books and the members. The surplus and its split answer to loi n°
 // 78-763, art. 33, the work share's division and what it employs in shares
 // to the Code du travail; which figures the CG SCOP's annual return and the
 // révision coopérative ask for was not verified against their forms, and
 // the employees' hold on the capital not against the article that sets it.
-export async function figures(db: Db, allocation: string): Promise<Figure[]> {
+export async function figures(db: Db, distribution: string): Promise<Figure[]> {
   const { rows } = await db.query<Record<string, string | null>>(
-    `SELECT a.year, to_char(a.allocated, 'YYYY-MM-DD') AS allocated, cella.cents(a.surplus) AS surplus,
-       account.share_of(a.id, 'legal') AS legal, account.share_of(a.id, 'development') AS development,
-       account.share_of(a.id, 'work') AS work, account.share_of(a.id, 'interest') AS interest,
-       (SELECT count(*) FROM account.statement s WHERE s.allocation = a.id) AS workers,
-       (SELECT count(*) FROM account.statement s JOIN member.member m ON m.address = s.worker WHERE s.allocation = a.id AND m.status = 'active') AS associates_sharing,
-       (SELECT coalesce(sum(cella.cents(c.amount)), 0) FROM account_member_transaction.credit c WHERE c.allocation = a.id) AS employed,
-       (SELECT coalesce(sum(c.shares), 0) FROM account_member_transaction.credit c WHERE c.allocation = a.id) AS shares,
-       (SELECT to_char(max(c.until), 'YYYY-MM-DD') FROM account_member_transaction.credit c WHERE c.allocation = a.id) AS until,
+    `SELECT a.year, to_char(a.distributed, 'YYYY-MM-DD') AS distributed, cella.cents(a.surplus) AS surplus,
+       patronage.share_of(a.id, 'legal') AS legal, patronage.share_of(a.id, 'development') AS development,
+       patronage.share_of(a.id, 'work') AS work, patronage.share_of(a.id, 'interest') AS interest,
+       (SELECT count(*) FROM patronage.statement s WHERE s.distribution = a.id) AS workers,
+       (SELECT count(*) FROM patronage.statement s JOIN member.member m ON m.address = s.worker WHERE s.distribution = a.id AND m.status = 'active') AS associates_sharing,
+       (SELECT coalesce(sum(cella.cents(c.amount)), 0) FROM account_member_patronage_transaction.credit c WHERE c.distribution = a.id) AS employed,
+       (SELECT coalesce(sum(c.shares), 0) FROM account_member_patronage_transaction.credit c WHERE c.distribution = a.id) AS shares,
+       (SELECT to_char(max(c.until), 'YYYY-MM-DD') FROM account_member_patronage_transaction.credit c WHERE c.distribution = a.id) AS until,
        (SELECT count(*) FROM member.member m WHERE m.status = 'active') AS associates,
        (SELECT coalesce(sum(c.subscribed), 0) FROM account_member.capital c WHERE c.status = 'active') AS capital,
        (SELECT coalesce(sum(c.subscribed), 0) FROM account_member.capital c
-        WHERE c.status = 'active' AND EXISTS (SELECT FROM account.statement s WHERE s.allocation = a.id AND s.worker = c.member)) AS employee_capital,
+        WHERE c.status = 'active' AND EXISTS (SELECT FROM patronage.statement s WHERE s.distribution = a.id AND s.worker = c.member)) AS employee_capital,
        coalesce((SELECT -b.balance FROM account_transaction.balance b WHERE b.code = '1061'), 0) AS reserve,
-       coalesce((SELECT max(account_transaction.capital(e.date)) FROM transaction.entry e
-                 WHERE EXISTS (SELECT FROM transaction.line l WHERE l.entry = e.id AND l.account LIKE '101%')), 0) AS highest
-     FROM account.allocation a WHERE a.id = $1 AND a.allocated IS NOT NULL`,
-    [allocation],
+       patronage_transaction.highest() AS highest
+     FROM patronage.distribution a WHERE a.id = $1 AND a.distributed IS NOT NULL`,
+    [distribution],
   )
   const r = rows[0]
   if (!r) {
@@ -84,7 +84,7 @@ export async function figures(db: Db, allocation: string): Promise<Figure[]> {
     { id: 'shares', label: 'Shares issued from the work share', value: n('shares'), unit: 'count', source: 'Code du travail, art. R3323-11', verified: true },
     { id: 'until', label: 'Those shares blocked until', value: r.until, unit: 'date', source: 'Code du travail, art. L3324-10', verified: true },
     { id: 'cash', label: 'Work share paid in cash', value: n('work') - n('employed'), unit: 'cents', source: 'Code du travail, art. L3324-10', verified: true },
-    { id: 'reserve', label: 'Legal reserve after the allocation', value: n('reserve'), unit: 'cents', source: `${art33}, 1°`, verified: true },
+    { id: 'reserve', label: 'Legal reserve after the distribution', value: n('reserve'), unit: 'cents', source: `${art33}, 1°`, verified: true },
     { id: 'highest', label: 'Highest capital reached', value: n('highest'), unit: 'cents', source: `${art33}, 1°`, verified: true },
     { id: 'associates', label: 'Associates today', value: n('associates'), unit: 'count', source: unverified, verified: false },
     { id: 'capital', label: 'Capital subscribed today', value: n('capital'), unit: 'cents', source: unverified, verified: false },
@@ -97,4 +97,26 @@ export async function figures(db: Db, allocation: string): Promise<Figure[]> {
       verified: false,
     },
   ]
+}
+
+// A member's statements, the latest year first, for the member alone: a
+// member's part of the work share is payroll, theirs to see on their own
+// page; finance reads every statement in the collection. What a part
+// employs in shares and pays is what was credited once it is distributed,
+// and what the terms give it today until then.
+export async function owed(db: Db, member: string, actor: string | null): Promise<Owed[]> {
+  if (actor !== member) {
+    return []
+  }
+  const { rows } = await db.query<Owed>(
+    `SELECT s.distribution || ':' || s.worker AS id, s.distribution, s.year, s.part::float8 AS part,
+       coalesce(c.shares, s.shares) AS shares, coalesce(cella.cents(c.amount), s.capital)::float8 AS capital,
+       (s.part - coalesce(cella.cents(c.amount), s.capital))::float8 AS cash, d.distributed IS NOT NULL AS distributed
+     FROM account_member_patronage.split s
+     JOIN patronage.distribution d ON d.id = s.distribution
+     LEFT JOIN account_member_patronage_transaction.credit c ON c.distribution = s.distribution AND c.member = s.worker
+     WHERE s.worker = $1 ORDER BY s.year DESC`,
+    [member],
+  )
+  return rows
 }

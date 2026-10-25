@@ -10,7 +10,7 @@ export interface Movement {
   balance: number
 }
 
-// What a worker's part of a year's work share became when the allocation
+// What a worker's part of a year's work share became when the distribution
 // posted: the shares it bought, blocked until a day the law sets, on which
 // capital account and by which entry; the rest paid in cash; and the
 // account's movements.
@@ -35,4 +35,18 @@ export interface Figure {
   unit: 'cents' | 'count' | 'percent' | 'date'
   source: string
   verified: boolean
+}
+
+// A member's statement of a year's work share, as their page lists it for
+// them: their part, and what it employs in shares and pays, as credited
+// once distributed.
+export interface Owed {
+  id: string
+  distribution: string
+  year: number
+  part: number
+  shares: number
+  capital: number
+  cash: number
+  distributed: boolean
 }

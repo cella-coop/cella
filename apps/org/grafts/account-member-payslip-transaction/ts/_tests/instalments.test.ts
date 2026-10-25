@@ -40,8 +40,8 @@ before(async () => {
        ('641', 'Pay', 'expense', false), ('645', 'Charges', 'expense', false)`,
   )
   await db.query(
-    `INSERT INTO account.terms (id, "from", salary, capital, share, minimum, instalments, delay, repayments, adopted)
-     VALUES ('t-2021', 2021, 100, 50, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
+    `INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted)
+     VALUES ('t-2021', 2021, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
   )
   await db.query(`INSERT INTO account.period (month) VALUES ('2026-11'), ('2026-12')`)
   await db.query(`INSERT INTO member.member (address, name, status, shares) VALUES ($1, 'Inès Haddad', 'invited', 0)`, [ines])

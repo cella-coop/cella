@@ -3,12 +3,10 @@
 // member admitted subscribes their shares, their account opened and the
 // shares called in the same write, never fewer than the statutes ask; a
 // payment in moves what it pays to their account, never beyond what they
-// owe; a draw is refused once frozen or beyond the limit; an allocation
-// employs half of an associate's part of the work share in shares, in its
-// own entry, and pays the rest; and one who leaves has their capital
-// frozen, moved to what is owed them and their repayments drawn up, each
-// paid once, in its turn and not before its day. Run by `cella test
-// slice account-member-transaction`.
+// owe; a draw is refused once frozen or beyond the limit; and one who
+// leaves has their capital frozen, moved to what is owed them and their
+// repayments drawn up, each paid once, in its turn and not before its
+// day. Run by `cella test slice account-member-transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -30,8 +28,8 @@ before(async () => {
        ('455', 'Current accounts', 'liability', false), ('512', 'Bank', 'asset', true)`,
   )
   await db.query(
-    `INSERT INTO account.terms (id, "from", salary, capital, share, minimum, instalments, delay, repayments, adopted)
-     VALUES ('t-2021', 2021, 100, 50, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
+    `INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted)
+     VALUES ('t-2021', 2021, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
   )
   await db.query(`INSERT INTO account.period (month) VALUES ('2026-10'), ('2026-11')`)
   await db.query(
@@ -144,54 +142,19 @@ test('draws add up against the limit, and the rule refuses one not the actor\'s 
   assert.ok(Number(left.drawn) > Number(left.allowance))
 })
 
-test('allocating employs half of an associate\'s part in whole shares, in the allocation\'s entry; a worker who is no associate is paid it all', async () => {
-  // A 2025 surplus whose work share the terms divide by pay, half of an
-  // associate's part in shares; its parts stand in for those a basis graft
-  // makes, and its entry for account-transaction's handler.
-  await db.query(`INSERT INTO account.account (code, label, kind) VALUES ('120', 'Result', 'equity'), ('424', 'Work share owed', 'liability'), ('1061', 'Legal reserve', 'equity')`)
-  await db.query(`INSERT INTO account.allocation (id, year, surplus, basis) VALUES ('al-2025', 2025, cella.amount(346912), 'salary')`)
-  await db.query(`INSERT INTO account.share (allocation, kind, percent, amount) VALUES ('al-2025', 'work', 50, cella.amount(173456)), ('al-2025', 'legal', 50, cella.amount(173456))`)
-  await db.query(`UPDATE account.allocation SET allocated = cella.verdict_date() WHERE id = 'al-2025'`)
-  await db.query(
-    `INSERT INTO account.part (allocation, worker, basis, quantity, amount) VALUES
-       ('al-2025', $1, 'salary', 3000000, cella.amount(123456)), ('al-2025', 'zoe@x', 'salary', 1200000, cella.amount(50000))`,
-    [hugo],
-  )
-  const owed = (await db.query(`SELECT worker, associate, shares, capital, cash, to_char(until, 'YYYY-MM-DD') AS until FROM account_member.patronage ORDER BY worker`)).rows
-  assert.deepEqual(owed, [
-    { worker: hugo, associate: true, shares: 12, capital: '60000', cash: '63456', until: '2031-06-01' },
-    { worker: 'zoe@x', associate: false, shares: 0, capital: '0', cash: '50000', until: '2031-06-01' },
-  ])
-  const shares = (await one<{ shares: number }>('SELECT shares FROM member.member WHERE address = $1', [hugo])).shares
-
+test('Hugo\'s capital account holds 600 €, twelve shares a past year\'s work share bought him', async () => {
+  // Stands in for the distribution that credits them, the patronage
+  // grafts' write.
+  await db.query(`INSERT INTO account.account (code, label, kind) VALUES ('424', 'Work share owed', 'liability')`)
   await db.query('BEGIN')
-  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES (cella.verdict_date(), 'Allocation') RETURNING id`)
-  const entry = rows[0].id
+  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES (cella.verdict_date(), 'Distribution') RETURNING id`)
   await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, row_number() OVER (), account, side, cella.amount(cents) FROM account_transaction.allocation_lines('al-2025')`,
-    [entry],
+    `INSERT INTO transaction.line (entry, n, account, side, amount) VALUES ($1, 1, '424', 'debit', cella.amount(60000)), ($1, 2, '101301', 'credit', cella.amount(60000))`,
+    [rows[0].id],
   )
-  await db.query(`INSERT INTO account_transaction.allocation (allocation, entry) VALUES ('al-2025', $1)`, [entry])
   await db.query('COMMIT')
-
-  assert.deepEqual((await db.query(`SELECT n, account, side, cella.cents(amount) AS cents FROM transaction.line WHERE entry = $1 AND n > 3 ORDER BY n`, [entry])).rows, [
-    { n: 4, account: '424', side: 'debit', cents: '60000' },
-    { n: 5, account: '101301', side: 'credit', cents: '60000' },
-  ])
-  assert.deepEqual(await one(`SELECT member, account, shares, cella.cents(amount) AS cents, entry FROM account_member_transaction.credit`), {
-    member: hugo,
-    account: '101301',
-    shares: 12,
-    cents: '60000',
-    entry,
-  })
-  assert.equal((await one<{ shares: number }>('SELECT shares FROM member.member WHERE address = $1', [hugo])).shares, shares + 12)
-  const rule = async (fn: string) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [{ allocation: 'al-2025' }])).r
-  assert.equal(await rule('account_member_transaction.employed'), null)
-  assert.equal(await rule('account_transaction.allocated'), null)
+  assert.deepEqual(await lines(rows[0].id), [{ account: '424', side: 'debit', cents: '60000' }, { account: '101301', side: 'credit', cents: '60000' }])
 })
-
 test('a member who leaves has their capital frozen for good, moved to 4567, and repaid as the statutes say', async () => {
   await db.query(`UPDATE member.member SET status = 'exited' WHERE address = $1`, [hugo])
   assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101301'`)).frozen, true)

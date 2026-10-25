@@ -50,7 +50,7 @@ surplus split, then the assembly.
 | Year-end surplus split in a spreadsheet, opaque to members | critical | `account` allocations, checked against the law and approved by signed vote; the work share divided by the statutes' terms, a statement for each worker and the year's return to the federation |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal; a subscription paid in at once or in instalments from pay, what is left to pay on 1012, and a departed associate's capital repaid on the statutes' schedule |
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
-| No live view of margins; overruns found late | high | `project`, `timesheet`, `expense` and `invoice` hold every figure; the margin view is not built |
+| No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the co-op's thresholds |
 | Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
 | New members do not understand what they own | medium | the members' view: rules that read back as sentences |
 
@@ -81,8 +81,10 @@ What the first target needs that the org app does not do yet, by severity:
   or in instalments withheld from pay, and a departing associate's capital
   repaid in yearly instalments within five years; a deduction for losses
   on repayment is not built.
-- **High:** project margins; deliberation on proposals; a P&L and balance
-  sheet.
+- **High:** deliberation on proposals. The income statement and the
+  balance sheet are drawn from the journal in the PCG's presentation by
+  month, quarter and year, and each project's margin is live with its
+  burn, its forecasts and a watch; the watch reaches no inbox yet.
 - **Medium:** workers who are not members, probation and onboarding; a
   weekly time grid; buy-in and buyout formulas.
 - **Across personas:** an inbox of what needs me, a co-op dashboard, file

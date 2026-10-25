@@ -94,7 +94,7 @@ never shown, though the shell handles it. How slices mount is in
 | `circle` | governance | 1 | nested units, positions, roles and mandates |
 | `decision` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
-| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances |
+| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, and the financial statements by span |
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
 | `client` | work | 1 | contacts and companies |
@@ -126,7 +126,7 @@ and admit a member by vote (ordered).
 | `account-member-transaction` | a member's subscription called on admission and paid in, their draws, the shares the work share buys, and a departing associate's capital owed and repaid, posted; a year's return to the federation |
 | `account-payslip` | a surplus's work share divided by pay and in equal parts |
 | `account-timesheet` | a surplus's work share divided by time worked |
-| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor |
+| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet |
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
@@ -141,6 +141,7 @@ and admit a member by vote (ordered).
 | `decision-meeting` | the decisions a meeting's agenda tables, and where each stands |
 | `decision-member` | admission, suspension and exit by a decision |
 | `document-meeting` | a meeting's minutes, written as a document |
+| `expense-invoice-project-timesheet` | a project's margin: invoiced less its time's cost and its expenses, its burn, its forecasts and whether it is watched |
 | `expense-member` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
@@ -155,4 +156,4 @@ and admit a member by vote (ordered).
 | `payslip-timesheet` | a pay run from approved time |
 | `payslip-transaction` | a pay run's approval and payment post transactions |
 | `project-task` | which project and milestone a task is in |
-| `project-timesheet` | time against a project, and what it spent of the budget |
+| `project-timesheet` | time against a project, what it spent of the budget and cost the co-op, and its spend at completion |

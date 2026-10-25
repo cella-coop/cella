@@ -66,6 +66,9 @@ updated = 2026-10-25
 | **work share** | the part of the surplus paid to the workers for their work (participation) |
 | **terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares |
 | **statement** | a worker's part of a year's work share, by basis, and what became of it: shares, blocked five years, and cash |
+| **financial statements** | the income statement (compte de résultat) over a month, a quarter or a year and the balance sheet (bilan) at its end, from the journal in the PCG's rubrics, beside the span before; a **statement** alone is a worker's |
+| **margin** | what a project invoiced less what its time cost the co-op and what was spent for it |
+| **burn** | the share of a project's budget its billable time has spent, at the rate card |
 | **indivisible reserves** | surplus kept by the co-op for good, never distributed |
 | **interest on capital** | the part of the surplus paid on members' capital shares, capped by law |
 | **capital account** | a member's equity in the co-op: the shares they paid in and what is credited to them |

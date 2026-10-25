@@ -138,3 +138,40 @@ export function signer(scope: string, actor: string, device: Device | Promise<De
     return { device: d.key, salt, nonce, sig: hex(sig) }
   }
 }
+
+export const SESSION = 'cella org 2026-10 session'
+
+export interface Opening {
+  scope: string
+  actor: string
+  device: string
+  challenge: string
+}
+
+// The exact text a device signs to open a session: the server's
+// single-use challenge, so a signature opens one session and no other.
+export const opening = (o: Opening) => `${SESSION}\nscope ${o.scope}\nactor ${o.actor}\ndevice ${o.device}\nchallenge ${o.challenge}\n`
+
+// Signs a session's opening as `actor` with `device`; the signature in hex.
+export async function open(scope: string, actor: string, device: Device, challenge: string): Promise<string> {
+  const text = opening({ scope, actor, device: device.key, challenge })
+  return hex(new Uint8Array(await crypto.subtle.sign(ED25519, device.secret, utf8(text))))
+}
+
+// Whether `sig`, in hex, is the signature of `text` by the device whose
+// public key is `key`, in hex.
+export async function verify(key: string, text: string, sig: string): Promise<boolean> {
+  if (!/^[0-9a-f]{64}$/.test(key) || !/^[0-9a-f]{128}$/.test(sig)) {
+    return false
+  }
+  const pub = await crypto.subtle.importKey('raw', unhex(key), ED25519, false, ['verify'])
+  return crypto.subtle.verify(ED25519, pub, unhex(sig), utf8(text))
+}
+
+// 32 random bytes in hex, as an invitation's link holds.
+export const random = () => hex(crypto.getRandomValues(new Uint8Array(32)))
+
+// SHA-256 in hex of the bytes a hex string holds, as a link's digest.
+export async function sha256(s: string): Promise<string> {
+  return hex(new Uint8Array(await crypto.subtle.digest('SHA-256', unhex(s))))
+}

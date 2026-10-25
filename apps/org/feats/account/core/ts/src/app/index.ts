@@ -70,7 +70,7 @@ export const app: App = {
       page: {
         eyebrow: 'Period',
         title: (p: Period) => p.month,
-        subtitle: (p: Period) => (p.closed ? `closed on ${p.closed}; nothing posts into it` : 'open: entries dated in it post'),
+        subtitle: (p: Period) => (p.closed ? `closed on ${date(p.closed)}; nothing posts into it` : 'open: an entry dated in it posts'),
         properties: (p: Period) => [
           { label: 'State', value: open(p), kind: 'badge', tone: p.closed ? 'neutral' : 'accent' },
           { label: 'Closed on', value: p.closed, kind: 'date' },
@@ -129,7 +129,7 @@ export const app: App = {
       page: {
         eyebrow: 'Terms',
         title: (t: Terms) => `Terms from ${t.from}`,
-        subtitle: (t: Terms) => (t.adopted ? `adopted on ${t.adopted}` : 'drafted: adopted once the members decide'),
+        subtitle: (t: Terms) => (t.adopted ? `adopted on ${date(t.adopted)}` : 'drafted: adopted once the members decide'),
         properties: (t: Terms) => [
           { label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' },
           { label: 'From', value: String(t.from) },

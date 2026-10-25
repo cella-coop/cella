@@ -14,14 +14,14 @@
   ]
 </script>
 
-{#if data.expenses.length}
-  <Section title="Expenses to bill on" count={data.expenses.length}>
+<Section title="Expenses to bill on" count={data.expenses.length}>
+  {#if data.expenses.length}
     <Stats
       items={[
         { label: 'Approved', value: data.approved, kind: 'money' },
         { label: 'Pending', value: data.pending, kind: 'money' },
       ]}
     />
-    <Table {columns} rows={data.expenses} href={(e: Row) => `/expenses/${e.id}`} />
-  </Section>
-{/if}
+  {/if}
+  <Table {columns} rows={data.expenses} href={(e: Row) => `/expenses/${e.id}`} empty="No expenses for this project yet: a claim billed on to it shows here." />
+</Section>

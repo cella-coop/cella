@@ -26,7 +26,7 @@
   <Form action="payment" submit="Record payment">
     <Field label="Received on" name="at" type="date" required />
     <Field label="Amount, €" name="amount" required />
-    <Field label="Method" name="method" options={methods} />
+    <Field label="Method" name="method" options={methods} placeholder="How it was paid" required />
     <Field label="Bank reference" name="reference" required />
   </Form>
 </Section>

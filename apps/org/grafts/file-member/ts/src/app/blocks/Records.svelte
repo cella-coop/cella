@@ -14,9 +14,7 @@
 </script>
 
 <Section title="Records" count={data.records.length}>
-  {#if data.records.length}
-    <Table {columns} rows={data.records} href={(r: OnFile) => `/files/${r.id}/content`} />
-  {/if}
+  <Table {columns} rows={data.records} href={(r: OnFile) => `/files/${r.id}/content`} empty="No records yet: an identity paper, a signed subscription or a certificate is filed here." />
   <Form action="file" submit="File" tone="quiet" inline>
     <Field label="A record" name="file" type="file" required />
   </Form>

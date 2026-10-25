@@ -24,10 +24,10 @@
   )
 </script>
 
-{#if data.length}
-  <Section title="Return to the federation" count={data.length}>
-    <Table {columns} rows={data} />
+<Section title="Return to the federation" count={data.length}>
+  <Table {columns} rows={data} empty="The return is drawn up once the year's surplus is allocated." />
+  {#if data.length}
     <Note text="Which figures the CG SCOP’s annual return and the révision coopérative ask for is not verified against their forms; the figures marked unverified are offered, not required." />
     <Button href={`data:text/csv;charset=utf-8,${encodeURIComponent(csv)}`} download={`${id}-return.csv`}>Export CSV</Button>
-  </Section>
-{/if}
+  {/if}
+</Section>

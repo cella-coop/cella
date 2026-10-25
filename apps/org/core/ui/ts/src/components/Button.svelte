@@ -5,6 +5,7 @@
     tone = 'quiet',
     type = 'button',
     href,
+    download,
     title,
     kbd,
     busy = false,
@@ -15,6 +16,8 @@
     tone?: 'primary' | 'quiet' | 'danger'
     type?: 'button' | 'submit'
     href?: string
+    // A link that saves what it points to under this name, as an export.
+    download?: string
     title?: string
     kbd?: string
     // Its action is under way: it keeps focus but reads as unavailable.
@@ -27,7 +30,7 @@
 </script>
 
 {#if href}
-  <a class="button {tone}" {href} {title}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
+  <a class="button {tone}" {href} {download} {title}>{@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}</a>
 {:else}
   <button class="button {tone}" {type} {title} {onclick} {disabled} aria-busy={busy} aria-disabled={busy}>
     {@render children()}{#if kbd}<kbd>{kbd}</kbd>{/if}

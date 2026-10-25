@@ -1,11 +1,15 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import type { Member, Status } from '../models/member.ts'
+import Joining from './blocks/Joining.svelte'
 import Profile from './blocks/Profile.svelte'
+import Rights from './blocks/Rights.svelte'
 
 const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', suspended: 'warning', exited: 'neutral' }
 
 // The feat's client side as the shell mounts it: the members collection's
-// view and a member's page.
+// view and a member's page, its tabs the overview, joining, the steps
+// joining asks, and what a member owns and decides, which the grafts
+// joining member fill beside the feat's own.
 export const app: App = {
   name: 'member',
   collections: {
@@ -34,6 +38,15 @@ export const app: App = {
           ...(m.exited ? [{ label: 'Exited', value: m.exited, kind: 'date' as const }] : []),
           { label: 'Shares', value: m.shares, kind: 'number' },
           { label: 'Address', value: m.address, kind: 'mono' },
+        ],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'joining', label: 'Joining' },
+          { id: 'rights', label: 'Own and decide' },
+        ],
+        blocks: [
+          { tab: 'joining', block: Joining },
+          { tab: 'rights', block: Rights },
         ],
         actions: Profile,
       },

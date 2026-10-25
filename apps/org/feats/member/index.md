@@ -1,6 +1,6 @@
 +++
 title = "Member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A person's membership, from invited to exited. Members records who belongs; it decides nothing.
@@ -81,6 +81,7 @@ a close carries out, so the freeze belongs in SQL.
 ## Grafts
 
 - `decision-member`
+- `document-member`
 - `key-member`
 
 ## Shell
@@ -92,7 +93,20 @@ shows the days the membership moved and renames them (`profile`), which
 admission, suspension or exit is `circle-decision-member`'s. Seats and
 powers are `circle-member`'s, devices the `key` feat's.
 
+A member's page has three tabs. Overview holds what the slices show of
+the member. Joining lists what joining asks, step by step, each kept by
+the slice that knows it: the membership's own, invited and then
+admitted; the admission once a probation ends (`decision-member-worker`);
+the texts to read (`document-member`); the circles (`circle-member`); a
+device (`key-member`); and the capital (`account-member`). Own and decide
+reads back in plain sentences what membership is, one member, one vote;
+what the member owns, from the statutes' terms (`account-member`); and
+what they decide, from their seats and mandates (`circle-member`). Each
+slice writes its sentences from its own rules and parameters, so the
+page says what the rules say.
+
 ## Domain
 
 Ported from seedling's `specs/feat/10-members.md` under this repo's labels
-and grafts: probation, leave and member categories are not built.
+and grafts. A candidate's probation is `member-worker`'s, since it is
+served in employment; leave and member categories are not built.

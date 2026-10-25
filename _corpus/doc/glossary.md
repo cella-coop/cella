@@ -55,6 +55,12 @@ updated = 2026-10-25
 | **retention class** | how long the law keeps a kind of personal data: `member-profile` and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
 | **erasure** | an ordered write that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
 | **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
+| **file** | bytes the co-op keeps, named by their BLAKE3, which the database computes and the log commits to: its own papers, receipts, employment and member records; a personal file has a retention class and a subject |
+| **receipt (file)** | a file attached to an expense, of class `expense-receipt`; not the notary's receipt |
+| **import** | a file from another tool brought in through the normal signed writes, each record one write as the importing member, judged by the rules; recorded with what each line came to |
+| **dry run** | an import whose writes are each made and rolled back, saying what would be created and what refused |
+| **FEC** | the fichier des écritures comptables every French accounting tool exports (LPF art. A47 A-1); its entries are carried over into the journal |
+| **carry** | posting an entry from the books of the co-op's last tool, which may open accounts and touch cash, under its own power |
 
 ## Co-ops
 

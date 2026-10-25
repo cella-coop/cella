@@ -290,9 +290,14 @@ two halves of one **slice**, matched by name:
   (`extends`): fields on each row, rows of its own in a collection that
   gathers them from the slices that know each kind (`rows`), as the
   member feat's inbox gathers what waits on a member, data on an item, what it adds to the collection's `about`, such as the
-  circles a new decision may be put in, and writes; and reactions to
+  circles a new decision may be put in, writes, and whether it opens an
+  item's bytes its owner keeps closed (`allows`), as a power over
+  expenses opens a receipt; and reactions to
   other slices' settled writes (`on`), such as carrying out what a
-  passing decision decides once its close settles.
+  passing decision decides once its close settles; and the kinds of file
+  it imports from other tools (`imports`), each record read as one of its
+  own writes, which the root runs as the importing member and records in
+  the import feat.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
@@ -301,19 +306,23 @@ two halves of one **slice**, matched by name:
   and a New form replacing the owner's when it replaces the write behind
   it, as `key-member`'s invitation carrying a first device does.
 
-The root lists the slices, server and client, and mounts them on five
-routes, the same for every collection: `/[collection]`, the one collection
+The root lists the slices, server and client, and mounts them on
+routes that are the same for every collection: `/[collection]`, the one collection
 component, and `/[collection]/[id]`, the one detail view, each with the
 form actions of the collection's slices; `/search` for the command menu;
 `/[collection]/[id]/[stream]`, an item's live stream as server-sent
 events, which the collection's owner names (`streams`, such as a
-document's edits as they settle); `/act` and `/theme` for the user
-menu; and `/`, the co-op's home, a dashboard of widgets pinned from many
+document's edits as they settle); `/[collection]/[id]/content`, an item's
+bytes, such as a file's, which the collection's owner serves (`content`)
+to whom its rule or an extension's `allows` opens them; `/act` and
+`/theme` for the user menu; and `/`, the co-op's home, a dashboard of widgets pinned from many
 collections. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
 joins; the root may join two feats no graft joins, as it puts on the
-work collections' cards fields from several grafts and pins the home's
-widgets until a viewer pins their own. The registry refuses a
+work collections' cards fields from several grafts, pins the home's
+widgets until a viewer pins their own, and runs an import across the
+slices that read its kind. A form posts its files with its fields, and an
+action reads them whole (`Form.file`). The registry refuses a
 collection owned twice, an extension of a feat a graft does not join, and
 two extensions replacing one write. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the

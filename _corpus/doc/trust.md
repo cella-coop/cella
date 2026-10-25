@@ -264,6 +264,12 @@ erased until their legal clock runs out.
   L123-22, accounting documents and supporting vouchers). A clock runs
   in whole years past the end of the year it starts in, as the books'
   runs from the close of the financial year.
+- **A file is personal data whole.** A receipt, an employment record or
+  a member's record is kept in the file feat's part for its class, its
+  name and bytes registered there; the log holds commitments to its name
+  and its BLAKE3, never the bytes, and erasure empties them. Who may open
+  one is a rule, the file feat's and the grafts' that see a power over
+  what it records.
 - **Erasure** is a write: `member:member:erase`, decided, for a member's
   whole profile; `member:member:forget`, the member's own, for their
   optional contact fields; `client:client:erase`, under the
@@ -294,6 +300,10 @@ What the build does not yet do, and what lifts each:
   dev mode it signs for no one and every write fails before a verdict.
   Signing in the browser with `@cella/org-sign`, which runs on WebCrypto,
   lifts this.
+- **`cella import` signs with the fixture devices too.** It imports as a
+  member through their TEST-ONLY fixture key, as the dev server signs, so
+  it imports into the mock co-ops alone; a member's own device signing the
+  import's writes, as for any write, lifts this.
 - **A mandate's budget is enforced only on expenses.** A power's limit per
   write is checked everywhere; a budget only where a graft tracks the
   spend it caps, so far `approve-expense`'s. A budget over another power

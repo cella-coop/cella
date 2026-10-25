@@ -73,10 +73,16 @@ for votes: none of them co-op-aware.
 
 What the first target needs that the org app does not do yet, by severity:
 
-- **Critical:** the work share's cash paid; import from the tools a co-op
-  leaves. The patronage cycle runs end to end: the terms the statutes
-  adopt, the split between shares and cash, a statement per worker and the
-  year's return to the federation, whose required figures are not yet
+- **Critical:** the work share's cash paid. A co-op brings what it had
+  from the tools it leaves, each record through the signed write it would
+  take by hand, tried first in a dry run: members, clients, projects and
+  tasks (Asana's export among them) from CSV, its books from the FEC, its
+  invoices to issue, and each worker's own time from Toggl or Harvest;
+  Notion's exports, whose columns are each database's own, and carrying
+  over open invoices with their old numbers are not built. The patronage
+  cycle runs end to end: the terms the statutes adopt, the split between
+  shares and cash, a statement per worker and the year's return to the
+  federation, whose required figures are not yet
   checked against its forms. Capital is paid in and out by the statutes'
   clauses: a subscription called whole on admission and paid from the bank
   or in instalments withheld from pay, and a departing associate's capital
@@ -97,7 +103,11 @@ What the first target needs that the org app does not do yet, by severity:
   asks and reads back what they own and decide. Ending or changing a
   contract and setting a salary from the shell are not built; a worker
   who is no member books time to a project by their employment.
-- **Across personas:** file attachments. Each member's inbox gathers
+- **Across personas:** files are kept in the scope's database, named by
+  their BLAKE3: an expense's receipts, a worker's employment records, a
+  member's records and the co-op's own papers, each opened by whom it
+  concerns, who uploaded it and whoever holds a power over what it
+  records; files in documents are not built. Each member's inbox gathers
   what waits on them, counted in the sidebar; the home is a dashboard of
   widgets pinned from many collections; a decision is taken by a
   procedure, consent, a majority, two thirds or the co-op's own share of

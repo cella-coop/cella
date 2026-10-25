@@ -704,6 +704,31 @@ second should take the first's on sync.
 phone, marks himself present: had the mark arrived first it would
 count; arriving after, it is refused and he stays excused.
 
+## Files are facts, and imports are the writes they carry
+
+A file never changes, so uploading one is a fact: `file.upload`, and the
+grafts' writes that store a file and attach it, `expense-file:expense.attach`,
+`file-member:member.attach` and `file-worker:worker.attach`, are
+confluent. Two attached commute, a file is attached once, and a receipt
+is refused once its expense is refused or reimbursed, which the expense
+feat orders. The claim that carries its receipt is `expense.capture`
+with the file in the same write, as confluent as the claim.
+
+An import adds no write of its own beyond its record,
+`import:run.record`, a confluent fact: each line is the write it would be
+by hand, with that write's label, so a FEC's entry is as confluent as a
+post and an imported invitation as an invitation. Carrying an entry over,
+`account-transaction:entry.carry`, opens the accounts it names that the
+chart lacks; two carries opening one code keep the first's label and the
+second reads it, so opening within a carry commutes, unlike the missing
+`account.open` below, which names a code and its label alone.
+
+**Lanterne.** Thomas claims his train with its receipt in one write;
+Léa attaches hers to her own expense and is refused on Sofia's. Julien
+carries October over from the old books: the rental paid from the bank
+opens 6135; the fees entry does not balance and is refused, opening
+nothing.
+
 ## Uncontested writes
 
 | Write | Why nothing contends |

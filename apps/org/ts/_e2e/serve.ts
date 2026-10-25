@@ -73,8 +73,9 @@ export class Shell {
     return { status: res.status, text: await res.text() }
   }
 
-  // Posts a page's named action as an enhanced form does, acting as `actor`.
-  async act(path: string, action: string, fields: Record<string, string>, actor: string): Promise<Done> {
+  // Posts a page's named action as an enhanced form does, acting as `actor`;
+  // a field a form repeats, as a grid's rows, is given as pairs.
+  async act(path: string, action: string, fields: Record<string, string> | [string, string][], actor: string): Promise<Done> {
     const res = await fetch(`${this.#base}${path}?/${action}`, {
       method: 'POST',
       body: new URLSearchParams(fields),

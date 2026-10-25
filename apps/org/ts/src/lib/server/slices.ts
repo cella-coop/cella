@@ -199,16 +199,18 @@ export const writes = [
 export const reactions = (op: Permission): Reaction[] => slices.flatMap((s) => s.on?.[op] ?? [])
 
 // A collection's rows as the acting member sees them: its owner's and
-// those its extensions add, each with the fields its extensions add.
+// those its extensions add, each with the fields its extensions add; one
+// query at a time, on the one connection.
 export async function rows(db: Db, name: string, actor: string | null): Promise<{ id: string }[]> {
   const m = collections.get(name)
   if (!m) {
     return []
   }
-  const owned = [
-    ...(await m.collection.list(db, actor)),
-    ...(await Promise.all(m.extensions.map((e) => e.extension.rows?.(db, actor) ?? []))).flat(),
-  ]
-  const added = await Promise.all(m.extensions.map((e) => e.extension.list?.(db)))
+  const owned = await m.collection.list(db, actor)
+  const added: (Record<string, object> | undefined)[] = []
+  for (const e of m.extensions) {
+    owned.push(...((await e.extension.rows?.(db, actor)) ?? []))
+    added.push(await e.extension.list?.(db))
+  }
   return owned.map((r) => Object.assign({}, r, ...added.map((a) => a?.[r.id])))
 }

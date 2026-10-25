@@ -23,6 +23,10 @@ worker is paid for the month they leave and none after;
 of no worker's refused; Inès's payslip though she is no member; Paul's
 for the month he left and none after.
 
+## Reads
+
+`slip` reads as its reader, each worker's payslips as their pay does (`sql/002-reads.sql`).
+
 ## Shell
 
 Adds each payslip's worker by name, and to the people collection each

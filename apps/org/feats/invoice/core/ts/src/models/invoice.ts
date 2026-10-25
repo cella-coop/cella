@@ -63,7 +63,8 @@ export interface Line {
   quantity: string
   // Cents.
   unit_price: number
-  // A percentage: 20 for France's standard rate.
+  // A percentage in hundredths, so that a signed request holds an
+  // integer: 2000 for France's standard rate, 550 for 5,5 %.
   vat_rate: number
 }
 
@@ -127,9 +128,10 @@ export interface Voided {
   voided: string
 }
 
-// The seller as its invoices name it (code de commerce, art. R123-237):
-// the scope's settings, `cella.scope_legal_name` and beside it; a
-// setting not made is null and not printed.
+// The seller as an invoice names it (code de commerce, art. R123-237):
+// the scope's settings, `cella.scope_legal_name` and beside it, kept with
+// the invoice when it issues (`invoice.seller`); a setting not made is
+// null and not printed.
 export interface Seller {
   name: string | null
   form: string | null

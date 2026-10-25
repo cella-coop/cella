@@ -6,7 +6,9 @@ import type { Issue, Issued } from '../models/invoice.ts'
 const op = 'invoice:invoice:issue' satisfies keyof typeof ops
 
 // Spends the series' next number (`invoice.spend`) and issues the invoice
-// on the verdict date, its amounts computed in SQL from its lines. The
+// on the verdict date, its amounts computed in SQL from its lines, each
+// line's VAT rate sent in hundredths of a percent, and the seller kept as
+// the scope's settings name it then (`invoice.seller`). The
 // rules on the op decide: `invoice.numbered`, that the number follows the
 // last with no gap, and any graft's on the op.
 export const issuing = (input: Issue): Write<Issued> => ({
@@ -16,10 +18,10 @@ export const issuing = (input: Issue): Write<Issued> => ({
     const { rows } = await tx.query<{ id: string; issued: string; net: string; vat: string | null; total: string }>(
       `WITH spent AS (SELECT invoice.spend($1) AS number),
        lines AS (
-         SELECT x.n::integer AS n, x.description, x.quantity, x.unit_price, x.vat_rate,
+         SELECT x.n::integer AS n, x.description, x.quantity, x.unit_price, x.vat_rate / 100.0 AS vat_rate,
                 round(x.quantity * x.unit_price)::bigint AS amount
          FROM ROWS FROM (jsonb_to_recordset($5::jsonb)
-                AS (description text, quantity numeric, unit_price bigint, vat_rate numeric))
+                AS (description text, quantity numeric, unit_price bigint, vat_rate bigint))
            WITH ORDINALITY AS x (description, quantity, unit_price, vat_rate, n)
        ),
        sums AS (

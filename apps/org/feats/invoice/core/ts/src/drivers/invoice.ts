@@ -54,7 +54,7 @@ export async function offered(db: Db): Promise<Issuing> {
 }
 
 // What an invoice's PDF prints: the invoice, its VAT by rate from
-// `invoice.taxed`, and the seller from the scope's settings.
+// `invoice.taxed`, and the seller as the invoice issued it.
 export async function printed(db: Db, id: string): Promise<Printed | null> {
   const found = await invoice(db, id)
   if (!found) {
@@ -64,14 +64,6 @@ export async function printed(db: Db, id: string): Promise<Printed | null> {
     'SELECT rate::text AS rate, base::bigint AS base, tax::bigint AS tax FROM invoice.taxed WHERE invoice = $1 ORDER BY rate',
     [id],
   )
-  const seller = await db.query<Seller>(
-    `SELECT nullif(current_setting('cella.scope_legal_name', true), '') AS name,
-            nullif(current_setting('cella.scope_form', true), '') AS form,
-            nullif(current_setting('cella.scope_capital', true), '') AS capital,
-            nullif(current_setting('cella.scope_siren', true), '') AS siren,
-            nullif(current_setting('cella.scope_rcs', true), '') AS rcs,
-            nullif(current_setting('cella.scope_vat', true), '') AS vat,
-            nullif(current_setting('cella.scope_seat', true), '') AS seat`,
-  )
-  return { invoice: found, taxed: taxed.rows.map((t) => cents(t, ['base', 'tax'])), seller: seller.rows[0] }
+  const seller = await db.query<{ seller: Seller }>('SELECT seller FROM invoice.invoice WHERE id = $1', [id])
+  return { invoice: found, taxed: taxed.rows.map((t) => cents(t, ['base', 'tax'])), seller: seller.rows[0].seller }
 }

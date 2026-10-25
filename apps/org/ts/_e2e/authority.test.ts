@@ -77,7 +77,7 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
     series: 'F-2026',
     bill_to: 'Maison Ferrand',
     label: 'Packaging, range of six: print preparation',
-    lines: [{ description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 20 }],
+    lines: [{ description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 2000 }],
   }, as(julien))
   assert.equal(issued.state, 'settled')
   assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
@@ -91,7 +91,7 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
     series: 'F-2026',
     bill_to: 'Atelier Ondine',
     label: 'Newsletter',
-    lines: [{ description: 'Newsletter', quantity: '1', unit_price: 300_00, vat_rate: 20 }],
+    lines: [{ description: 'Newsletter', quantity: '1', unit_price: 300_00, vat_rate: 2000 }],
   }, as(chloe))
   assert.equal(refused.state, 'refused')
   assert.match(reason(refused), /chloe@lanterne\.example holds no mandate for issue-invoice/)

@@ -14,7 +14,7 @@ it posts are the `invoice-transaction` graft's.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| invoice | `id`, `issued`, `due`, `bill_to`, `bill_address?`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, `F-2026-0056` |
+| invoice | `id`, `issued`, `due`, `bill_to`, `bill_address?`, `seller`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, `F-2026-0056` |
 | line | `description`, `quantity`, `unit_price`, `amount`, `vat_rate` | `amount` = quantity × unit price |
 | payment | `at`, `amount`, `method`, `reference` | many per invoice; `reference` is the bank's |
 | series | `name`, `next` | one per year at rung 1; a device's own at rung 2 |
@@ -109,11 +109,19 @@ arrives at rung 3.
   is ordered.
 - `invoice.invoice`: as issued, the name billed (`bill_to`) and its
   address (`bill_address`, its lines separated by newlines; none on an
-  invoice issued before it was kept), `net`, `vat` and `total` as
-  `cella.amount` (a NULL `vat` is an invoice without VAT), unique by
-  series and number; `sent`, `voided` and `reason` are set once.
+  invoice issued before it was kept), the seller's mentions (`seller`,
+  kept as `invoice.seller()` reads them when it issues), `net`, `vat`
+  and `total` as `cella.amount` (a NULL `vat` is an invoice without
+  VAT), unique by series and number; `sent`, `voided` and `reason` are
+  set once.
 - `invoice.line`: description, quantity (exact decimal), unit price,
-  amount (quantity × unit price, rounded to the cent) and VAT rate.
+  amount (quantity × unit price, rounded to the cent) and VAT rate, a
+  percent with two decimals (5,50).
+- `invoice.seller()`: the seller as the scope's settings name it now
+  (`cella.scope_legal_name`, `_form`, `_capital`, `_siren`, `_rcs`,
+  `_vat`, `_seat`), each null where it is not set; `seller`'s default,
+  so an invoice keeps what the settings said the moment it issued. An
+  invoice issued before it was kept took the settings at that upgrade.
 - `invoice.payment`: received `at`, amount, method and the bank's
   reference, with a receipt; unique by invoice and reference.
 - `invoice.spend(series)`: the bounded write's spend. It takes the next
@@ -152,7 +160,8 @@ graft composes with its own state into one write.
 
 - `issue` (bounded): spends the number and writes the invoice and its
   lines in one statement, amounts and VAT computed in SQL from the lines;
-  the payload holds the number and amounts, never the name or address
+  each line's VAT rate comes in hundredths of a percent (550 for 5,5 %),
+  since a signed request holds integers only; the payload holds the number and amounts, never the name or address
   billed.
 - `send` (confluent): sets `sent` once; a voided invoice is left unsent.
 - `payment` (confluent): records the payment with a receipt; a reference
@@ -173,7 +182,7 @@ server's clock, a read no rule depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
 page shows its lines and payments, marks it sent (`send`) and links its
 PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,
-amounts typed in euros, so a graft's writes read the same forms:
+amounts typed in euros and VAT rates in percent (`5,5`), so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
 that post them. Whom an invoice bills is `client-invoice`'s.
 
@@ -190,9 +199,9 @@ and the registry's sheet on business papers (code de commerce R123-237).
 
 | Mention | Printed from | Law |
 |---|---|---|
-| seller's legal name, form, seat; capital where it is fixed | `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "à capital variable" for a capital that varies |
-| SIREN, "RCS" and the registry's town | `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
-| seller's VAT number | `cella.scope_vat` | 242 nonies A, I, 2° |
+| seller's legal name, form, seat; capital where it is fixed | `seller`, from `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "à capital variable" for a capital that varies |
+| SIREN, "RCS" and the registry's town | `seller`, from `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
+| seller's VAT number | `seller`, from `cella.scope_vat` | 242 nonies A, I, 2° |
 | buyer's name and address | `bill_to`, `bill_address` | L441-9; 242 nonies A, I, 1° |
 | number, in one gapless series, and date of issue | `id`, `issued` | 242 nonies A, I, 6° and 7° |
 | each line's quantity, description, unit price before tax and VAT rate | `invoice.line` | 242 nonies A, I, 8° bis |
@@ -201,8 +210,10 @@ and the registry's sheet on business papers (code de commerce R123-237).
 
 The seller's mentions close every page, with its number; a voided
 invoice is marked "ANNULÉE" and its date. Payments are not printed: the
-PDF is the invoice as issued. A setting a host has not made is left out,
-so a scope without its SIREN prints none.
+PDF is the invoice as issued, its seller too: the mentions are kept with
+the invoice when it issues, so a seat that moves later never alters the
+PDF of an invoice issued before. A setting a host had not made is left
+out, so a scope without its SIREN prints none.
 
 Not printed yet:
 
@@ -211,13 +222,9 @@ Not printed yet:
 - the buyer's SIREN, the delivery address and whether it bills goods,
   services or both, which the e-invoicing reform asks of an SME's invoices
   from 1 September 2027;
-- the ground of a VAT exemption, for a line at 0 %; and a rate with a
-  decimal, as 5,5 %, which a signed request cannot carry yet, since it
-  holds integers only;
+- the ground of a VAT exemption, for a line at 0 %;
 - Factur-X and sending through an approved platform, at rung 3.
 
-The seller's mentions are read when the PDF is made, not kept with the
-invoice: a seat that moves changes the PDF of an invoice issued before.
 Légifrance refuses the box this was written on, so the articles are cited
 as the customs and the registry quote them; the "à capital variable"
 mention's article in the code de commerce (among L231-1 to L231-8) was

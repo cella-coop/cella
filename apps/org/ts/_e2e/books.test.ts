@@ -83,8 +83,8 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
     bill_to: 'Maison Ferrand',
     label: 'Packaging, range of six: print preparation',
     lines: [
-      { description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 20 },
-      { description: 'Proofs', quantity: '1', unit_price: 180_00, vat_rate: 20 },
+      { description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 2000 },
+      { description: 'Proofs', quantity: '1', unit_price: 180_00, vat_rate: 2000 },
     ],
   }, as(julien))
   assert.deepEqual(issued, {
@@ -107,7 +107,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
 })
 
 test('a gap or a reused number is refused, and uses no verdict number', async () => {
-  const draft = { series: 'F-2026', bill_to: 'Atelier Ondine', label: 'Shop upkeep', lines: [{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 20 }] }
+  const draft = { series: 'F-2026', bill_to: 'Atelier Ondine', label: 'Shop upkeep', lines: [{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }] }
 
   await su.query(`UPDATE invoice.series SET next = 58 WHERE name = 'F-2026'`)
   const gap = await issue(draft, as(julien))

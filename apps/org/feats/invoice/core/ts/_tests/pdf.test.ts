@@ -1,5 +1,6 @@
 // An issued invoice's PDF, on a database holding only the app's core and
-// this feat: it prints the seller's mentions from the scope's settings,
+// this feat: it prints the seller's mentions as the scope's settings named
+// them when it issued, a decimal VAT rate,
 // the address billed as issued, each line, the VAT by rate adding up to
 // the invoice's, and the terms of payment; it is a well-formed PDF, the
 // same bytes each time, breaking onto pages with the mentions on each.
@@ -8,7 +9,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import type { Deps } from '@cella/org-db'
+import { hundredths, type Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
 import { issue, pdf, printed, slice } from '../src/api/index.ts'
 import type { Issue } from '../src/models/index.ts'
@@ -65,8 +66,8 @@ after(async () => {
 test('the PDF prints the seller, the buyer as issued, each line, the VAT by rate and the terms', async () => {
   const id = await issued(
     draft([
-      { description: 'Design, 2.5 days', quantity: '2.5', unit_price: 600_00, vat_rate: 20 },
-      { description: 'Printed catalogue', quantity: '1', unit_price: 333_33, vat_rate: 10 },
+      { description: 'Design, 2.5 days', quantity: '2.5', unit_price: 600_00, vat_rate: 2000 },
+      { description: 'Printed catalogue', quantity: '1', unit_price: 333_33, vat_rate: 1000 },
     ]),
   )
   const p = await printed(db, id)
@@ -144,7 +145,7 @@ test('a long invoice breaks onto pages, each with the seller\'s mentions and its
     description: `Shop upkeep, week ${n + 1}: product photography, catalogue updates and a review of the orders`,
     quantity: '1',
     unit_price: 100_00,
-    vat_rate: 20,
+    vat_rate: 2000,
   }))
   const id = await issued(draft(lines))
   const p = await printed(db, id)
@@ -164,6 +165,57 @@ test('the address billed is issued with the invoice and never changes', async ()
     db.query(`UPDATE invoice.invoice SET bill_address = 'elsewhere' WHERE id = 'F-2026-0001'`),
     /is issued and never changes/,
   )
+})
+
+test('the seller is kept as issued: a seat that moves later never alters an issued invoice', async () => {
+  await db.query(`SET cella.scope_seat = '3 avenue Gambetta, 75020 Paris, France'`)
+  try {
+    const before = await printed(db, 'F-2026-0001')
+    assert.ok(before)
+    assert.equal(before.seller.seat, settings.scope_seat)
+    assert.ok(text(pdf(before)).includes(`Siège : ${settings.scope_seat}`))
+    const id = await issued(draft([{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }]))
+    const moved = await printed(db, id)
+    assert.equal(moved?.seller.seat, '3 avenue Gambetta, 75020 Paris, France', 'an invoice issued after the move names the new seat')
+    await assert.rejects(
+      db.query(`UPDATE invoice.invoice SET seller = invoice.seller() WHERE id = 'F-2026-0001'`),
+      /is issued and never changes/,
+    )
+  } finally {
+    await db.query(`SET cella.scope_seat = ${db.escapeLiteral(settings.scope_seat)}`)
+  }
+})
+
+test('a VAT rate with a decimal issues, sent in hundredths: 5,5 % and 2,1 %', async () => {
+  const id = await issued(
+    draft([
+      { description: 'Books', quantity: '3', unit_price: 19_99, vat_rate: 550 },
+      { description: 'Press', quantity: '1', unit_price: 120_00, vat_rate: 210 },
+    ]),
+  )
+  const p = await printed(db, id)
+  assert.ok(p)
+  assert.deepEqual(
+    p.taxed.map((t) => [t.rate, t.base, t.tax]),
+    [
+      ['2.10', 120_00, 2_52],
+      ['5.50', 59_97, 3_30],
+    ],
+  )
+  assert.equal(p.invoice.vat, 5_82)
+  assert.deepEqual(p.invoice.lines.map((l) => l.vat_rate), ['5.50', '2.10'])
+  const raw = text(pdf(p))
+  assert.ok(raw.includes(`(TVA 5,5${nbsp}% sur 59,97${nbsp}€)`))
+  assert.ok(raw.includes(`(TVA 2,1${nbsp}% sur 120,00${nbsp}€)`))
+})
+
+test('the form reads a VAT rate in percent into hundredths, and refuses more than two decimals', () => {
+  assert.equal(hundredths('20'), 2000)
+  assert.equal(hundredths('5,5'), 550)
+  assert.equal(hundredths('2.1'), 210)
+  assert.equal(hundredths('0'), 0)
+  assert.throws(() => hundredths('5,555'), /at most two decimals/)
+  assert.throws(() => hundredths('-5'), /at most two decimals/)
 })
 
 test('an invoice\'s bytes are its PDF, for whoever reads it', async () => {

@@ -1,9 +1,9 @@
-import { cents, type Form } from '@cella/org-db'
+import { cents, hundredths, type Form } from '@cella/org-db'
 import type { Issue, Payment, Send, Void } from '../models/invoice.ts'
 
 // What the shell's forms send, read into the handlers' inputs. Amounts are
-// typed in euros and sent in cents; a line repeats its fields once per
-// line, in order.
+// typed in euros and sent in cents, VAT rates typed in percent and sent in
+// hundredths; a line repeats its fields once per line, in order.
 
 export function issue(form: Form): Issue {
   const descriptions = form.all('description')
@@ -11,7 +11,7 @@ export function issue(form: Form): Issue {
   const prices = form.all('unit_price')
   const rates = form.all('vat_rate')
   const lines = descriptions
-    .map((description, i) => ({ description, quantity: quantities[i] ?? '1', unit_price: cents(prices[i] ?? '', false), vat_rate: Number(rates[i] ?? 20) }))
+    .map((description, i) => ({ description, quantity: quantities[i] ?? '1', unit_price: cents(prices[i] ?? '', false), vat_rate: hundredths(rates[i] ?? '20') }))
     .filter((l) => l.description.trim())
   if (!lines.length) {
     throw new Error('an invoice needs at least one line')

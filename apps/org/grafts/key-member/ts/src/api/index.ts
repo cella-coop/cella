@@ -1,17 +1,20 @@
 // The graft's write, its reads and its slice, which the shell mounts: the
 // invitation that carries a first device, replacing the member feat's,
 // and on a member's page that device and every one enrolled under their
-// address.
+// address; and members imported from another tool's list, each invited
+// with their first device.
 import { action, type Slice } from '@cella/org-db'
 import { devices } from '@cella/org-key/api'
 import { invite } from '../handlers/invite.ts'
 import { first } from '../drivers/invitation.ts'
+import { members } from './imports.ts'
 
 export { invite } from '../handlers/invite.ts'
 export { first } from '../drivers/invitation.ts'
 
 export const slice: Slice = {
   name: 'key-member',
+  imports: { members },
   extends: {
     members: {
       item: async (db, member) => ({ first: await first(db, member), devices: await devices(db, member) }),

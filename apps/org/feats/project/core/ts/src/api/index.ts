@@ -1,10 +1,11 @@
 // The feat's public writes, POST /api/project/<op> once the server exists,
 // its reads, the form readers a graft reads the same forms with, and its
-// slice, which the shell mounts.
+// slice, which the shell mounts, with projects imported from a spreadsheet.
 import { action, type Slice } from '@cella/org-db'
 import { add, archive, budget, complete, create } from '../handlers/index.ts'
 import { item, offered, projects } from '../drivers/project.ts'
 import * as forms from './forms.ts'
+import { projects as imported } from './imports.ts'
 
 export { add, archive, budget, complete, create, slug } from '../handlers/index.ts'
 export { item as project, offered, projects } from '../drivers/project.ts'
@@ -12,6 +13,7 @@ export * as forms from './forms.ts'
 
 export const slice: Slice = {
   name: 'project',
+  imports: { projects: imported },
   collections: {
     projects: {
       list: projects,

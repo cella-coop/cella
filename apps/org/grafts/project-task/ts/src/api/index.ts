@@ -5,6 +5,7 @@ import { forms } from '@cella/org-task/api'
 import { file, within } from '../handlers/file.ts'
 import { counts, filed, projectOf, tasksOf } from '../drivers/filing.ts'
 import type { File } from '../models/ops.ts'
+import { tasks as imported } from './imports.ts'
 
 export { file, within } from '../handlers/file.ts'
 export { counts, filed, projectOf, tasksOf } from '../drivers/filing.ts'
@@ -19,9 +20,10 @@ function placed(form: Form, task: string): File {
 }
 
 // Where a task is filed, and filing it; a project's tasks, and a new task
-// already in it.
+// already in it; and tasks imported, each in the project it names.
 export const slice: Slice = {
   name: 'project-task',
+  imports: { tasks: imported },
   extends: {
     tasks: {
       list: projectOf,

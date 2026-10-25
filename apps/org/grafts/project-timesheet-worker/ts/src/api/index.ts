@@ -6,6 +6,7 @@ import { log } from '@cella/org-graft-timesheet-worker/api'
 import { book } from '../handlers/book.ts'
 import { weeks } from '../drivers/week.ts'
 import { cell, type Cell } from '../models/week.ts'
+import { harvest, toggl } from './imports.ts'
 
 export { book } from '../handlers/book.ts'
 export { week, weeks, monday } from '../drivers/week.ts'
@@ -51,9 +52,11 @@ const entered: Action = {
 }
 
 // The acting worker's weeks on the timesheets' page, behind its New
-// button, and the week entered there.
+// button, and the week entered there; and time imported from Toggl's
+// and Harvest's exports.
 export const slice: Slice = {
   name: 'project-timesheet-worker',
+  imports: { toggl, harvest },
   extends: {
     timesheets: {
       about: async (db, actor) => ({ weeks: await weeks(db, actor ?? null) }),

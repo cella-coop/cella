@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Conflicts
@@ -31,6 +31,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
 | `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-freezes-on-exit)) |
 | `account.surplus.allocate` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `account.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already allocated ([work share](#the-work-share-divides-as-the-years-terms-say)) |
 | `account.period.close` | ordered | right |
 | `transaction.post` | confluent | **applied**: one write replaces `credit` and `.debit`; an entry's balance is checked on the entry alone |
 | `transaction.pay` | confluent | right: entries commute; it is a write money leaves the bank through, under its own power, and a post touches no cash account; **applied**: `.payroll` is gone, pay runs post through `payslip` |
@@ -366,6 +367,36 @@ refuse.
 15 % legal reserve, 25 % development fund, 15 % interest. Its result was
 carried over unallocated, and allocating it cites the decision.
 
+## The work share divides as the year's terms say
+
+Owners: the `account` feat for the terms, the portions and their sums;
+the grafts that know each basis for its parts: `account-payslip` by pay
+and in equal parts, `account-timesheet` by time worked; `account-member`
+for the split between shares and cash; `account-member-transaction` for
+the shares posted; `account-decision` for the adoption.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `surplus.allocate` vs `terms.adopt` over its year | the adoption refused: the year is allocated | the allocation divides by the new terms | a split made by terms adopted after it |
+| `surplus.allocate` vs a salary or `timesheet:period.approve` in its year | the parts were fixed by the allocation | the parts read it | parts that no longer add up to what was paid or worked |
+| `surplus.allocate` vs `member.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
+| `terms.adopt` vs `terms.adopt`, one year | the later adopted governs | the later adopted governs | two terms for one year |
+
+All ordered; right. **Applied**: the parts are made by triggers in the
+write that allocates, from the terms, the salaries, the approved time
+and the members as they stand at its verdict, and never change after;
+each basis's rule checks its parts against what it gives, and
+`account.divides` that each portion adds up. The work share divides by
+pay, time worked, equal parts or a mix (Code du travail, art. L3324-5;
+BOI-BIC-PTP-10-30, § 170 and 280), among every employee, associate or
+not (loi n° 78-763, art. 33, 3°); shares bought with it are reserved to
+the associates employed (art. R3323-11) and blocked five years from the
+first day of the sixth month after the year (art. L3324-10). A write
+posts one entry, so the shares are lines of the allocation's.
+
+**Lanterne.** The statutes' terms, `st-2021`, divide the work share by
+pay and employ half of each associate's part in shares at 50 €.
+
 ## Membership changes are decided
 
 Owners: the `member` feat for status; the `decision-member` graft for the
@@ -645,6 +676,8 @@ The matrix found writes no `ops.ts` declares:
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | paying in subscribed capital, repaying a departed member's | confluent, ordered | money in and out of `4561` and a frozen account, which nothing posts |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them |
+| drafting the work share's terms, or an allocation | confluent | adoption and allocation act on drafts nothing writes but the seed |
+| paying out the work share's cash | confluent | what `424` still owes after the shares, which nothing pays |
 
 ## Recommended label changes
 

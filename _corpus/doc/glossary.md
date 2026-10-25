@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Glossary
@@ -64,6 +64,8 @@ updated = 2026-10-24
 | **college** | a class of members in a multi-stakeholder co-op, with its own weight in votes |
 | **surplus** | what remains of a year's income after expenses; a co-op's profit |
 | **work share** | the part of the surplus paid to the workers for their work (participation) |
+| **terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares |
+| **statement** | a worker's part of a year's work share, by basis, and what became of it: shares, blocked five years, and cash |
 | **indivisible reserves** | surplus kept by the co-op for good, never distributed |
 | **interest on capital** | the part of the surplus paid on members' capital shares, capped by law |
 | **capital account** | a member's equity in the co-op: subscribed shares and what is credited to them |

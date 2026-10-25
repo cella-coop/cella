@@ -47,7 +47,7 @@ surplus split, then the assembly.
 | Pain | Severity | Cella's answer |
 |---|---|---|
 | Five to eight disconnected tools; the same data typed twice | critical | one ERP: books, invoices, decisions and members in one scope |
-| Year-end surplus split in a spreadsheet, opaque to members | critical | `account` allocations, checked against the law and approved by signed vote |
+| Year-end surplus split in a spreadsheet, opaque to members | critical | `account` allocations, checked against the law and approved by signed vote; the work share divided by the statutes' terms, a statement for each worker and the year's return to the federation |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal |
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
 | No live view of margins; overruns found late | high | `project`, `timesheet`, `expense` and `invoice` hold every figure; the margin view is not built |
@@ -72,10 +72,11 @@ for votes: none of them co-op-aware.
 
 What the first target needs that the org app does not do yet, by severity:
 
-- **Critical:** the patronage cycle end to end (the basis the statutes
-  choose, the split between cash and capital credit, a statement per member,
-  federation reports); capital paid in and paid out over years; import from
-  the tools a co-op leaves.
+- **Critical:** capital paid in and paid out over years, the work share's
+  cash paid; import from the tools a co-op leaves. The patronage cycle runs
+  end to end: the terms the statutes adopt, the split between shares and
+  cash, a statement per worker and the year's return to the federation,
+  whose required figures are not yet checked against its forms.
 - **High:** project margins; deliberation on proposals; a P&L and balance
   sheet.
 - **Medium:** workers who are not members, probation and onboarding; a

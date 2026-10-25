@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The co-op ERP, for member-governed organisations. One deployment serves one
@@ -72,7 +72,10 @@ rule's reason:
   filing one under the project it is billed on to;
 - a month's pay run prepared from approved time, approved and paid, each
   posted; a member's draw on their own account, within their limit; a
-  year's surplus allocated, citing the decision that approved its split.
+  year's surplus allocated, citing the decision that approved its split,
+  its work share divided among the workers as the year's terms say and
+  half of each associate's part employed in shares, in the same write;
+  the work share's terms adopted, citing the decision that moved them.
 
 At rung 1 an ordered write settles or is refused at once, so Pending is
 never shown, though the shell handles it. How slices mount is in
@@ -100,8 +103,8 @@ never shown, though the shell handles it. How slices mount is in
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
 Seedling's co-op economics that rung 1 still leaves out: a work share
-divided by hours (an `account-timesheet` graft) or by revenue; paying in
-subscribed capital, buyout over years, revolving capital and dues in
+divided by revenue, which French law does not offer a SCOP; paying out
+the work share's cash; paying in subscribed capital, buyout over years, revolving capital and dues in
 `account`; quotes with `project`.
 
 Rung 1's pilot runs one write of each kind end to end: edit a document
@@ -112,10 +115,11 @@ and admit a member by vote (ordered).
 
 | Graft | What it joins |
 |---|---|
-| `account-decision` | a surplus allocation and the decision that approved it |
-| `account-member` | who holds each capital account, the share's value, draw limits, and the freeze on exit |
-| `account-member-transaction` | a member's subscription on admission and their draws, posted |
-| `account-payslip` | a surplus's work share divided by salary |
+| `account-decision` | a surplus allocation and the decision that approved it; the work share's terms and the decision that adopts them |
+| `account-member` | who holds each capital account, the share's value, draw limits, the freeze on exit, and each worker's part of the work share split between shares and cash |
+| `account-member-transaction` | a member's subscription on admission, their draws and the shares the work share buys, posted; a year's return to the federation |
+| `account-payslip` | a surplus's work share divided by pay and in equal parts |
+| `account-timesheet` | a surplus's work share divided by time worked |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor |
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |

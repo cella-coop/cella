@@ -110,6 +110,10 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
 
 fn node_test(dev: &Dev, steps: &Steps, files: &[&PathBuf]) -> std::process::Command {
     let mut test = dev.on(DB, "node");
+    // A scenario that rehearses an operation runs this binary, as a host would.
+    if let Ok(me) = std::env::current_exe() {
+        test.env("CELLA_BIN", me);
+    }
     test.arg("--test");
     if !steps.verbose {
         test.arg("--test-reporter=tap");

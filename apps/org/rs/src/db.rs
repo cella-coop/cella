@@ -97,6 +97,10 @@ impl<'a> Dev<'a> {
         if !key.exists() {
             key::create(&key)?;
         }
+        let vault = data.join("vault.key");
+        if !vault.exists() {
+            key::vault(&vault)?;
+        }
         // Rewritten each time: the paths follow the Nix store. Postgres 18
         // loads the extension from outside the read-only store.
         let config = pg_config();
@@ -109,12 +113,14 @@ impl<'a> Dev<'a> {
              extension_control_path = '$system:{share}'\n\
              dynamic_library_path = '$libdir:{lib}'\n\
              shared_preload_libraries = 'cella'\n\
-             cella.key_file = '{key}'\n",
+             cella.key_file = '{key}'\n\
+             cella.vault_key_file = '{vault}'\n",
             port = self.port,
             data = data.display(),
             share = share.display(),
             lib = lib.display(),
             key = key.display(),
+            vault = vault.display(),
         );
         fs::write(pg.join("cella.conf"), conf).map_err(io(&pg))?;
         let verb = if self.running()? { "restart" } else { "start" };

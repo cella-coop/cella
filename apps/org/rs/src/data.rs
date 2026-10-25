@@ -8,7 +8,7 @@ use crate::run::{Fail, Result, Steps, last_line};
 
 /// A command for a database: the dev cluster's by the PG* variables, or
 /// any by URL through `DATABASE_URL`, which the node tools read.
-fn on(dev: &Dev, url: Option<&str>, program: &str) -> Result<Command> {
+pub fn on(dev: &Dev, url: Option<&str>, program: &str) -> Result<Command> {
     let Some(url) = url else {
         dev.up()?;
         return Ok(dev.cmd(program));
@@ -23,6 +23,31 @@ pub fn migrate(repo: &Repo, steps: &Steps, url: Option<&str>) -> Result {
     let mut cmd = on(&Dev::new(repo), url, "node")?;
     cmd.arg(repo.root.join("tools/migrate.mjs"));
     steps.run("migrate", &mut [cmd], last_line)
+}
+
+/// Locks each new migration's hash in its app's `migrations.lock`; no
+/// database.
+pub fn lock(repo: &Repo, steps: &Steps) -> Result {
+    repo.install(steps)?;
+    let mut cmd = repo.node("migrate.mjs");
+    cmd.arg("--lock");
+    steps.run("lock", &mut [cmd], last_line)
+}
+
+/// Runs `cella.vault_rewrap()` as the cluster's superuser: every vault key
+/// sealed under the current vault key file, those still under the previous
+/// one moved; then the previous file may go.
+pub fn rewrap(repo: &Repo, url: Option<&str>) -> Result {
+    let mut cmd = on(&Dev::new(repo), url, "psql")?;
+    if let Some(url) = url {
+        cmd.args(["-d", url]);
+    }
+    cmd.args(["-X", "-q", "-t", "-A", "-v", "ON_ERROR_STOP=1", "-c"])
+        .arg("SELECT cella.vault_rewrap(), (SELECT count(*) FROM vault.key)");
+    let out = Steps::read(&mut cmd)?;
+    let (moved, all) = out.trim().split_once('|').unwrap_or((out.trim(), "?"));
+    println!("rewrapped: {moved} of {all} vault keys moved to cella.vault_key_file; the previous file now seals none");
+    Ok(())
 }
 
 /// A mock co-op's directory under `apps/org/fixtures`, by its name.

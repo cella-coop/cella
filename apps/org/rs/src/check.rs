@@ -4,7 +4,7 @@ use crate::run::{Result, Steps, last_line, quiet};
 
 /// What a commit must pass, or one part of it; no database.
 pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Result {
-    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Rust], |p| vec![p]);
+    let parts = part.map_or_else(|| vec![Part::Feats, Part::Migrations, Part::Fixtures, Part::Types, Part::Shell, Part::Rust], |p| vec![p]);
     if parts.iter().any(|p| !matches!(p, Part::Rust)) {
         repo.install(steps)?;
     }
@@ -17,6 +17,11 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 }
                 cmd.arg(&repo.root);
                 steps.run("feats", &mut [cmd], last_line)?;
+            }
+            Part::Migrations => {
+                let mut cmd = repo.node("migrate.mjs");
+                cmd.arg("--locked");
+                steps.run("migrations", &mut [cmd], last_line)?;
             }
             Part::Fixtures => {
                 let mut cmd = repo.node("fixture-check.mjs");

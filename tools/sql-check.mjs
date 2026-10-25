@@ -451,7 +451,14 @@ export async function checkSql(repo, apps, known, found = { powers: [], rules: [
   return errors
 }
 
-// Every sql/ directory sits beside a core package or in a graft.
+// Every sql/ directory sits beside a core package or in a graft, but an
+// extension's: beside its control file, its install and upgrade scripts,
+// `<extension>--<version>.sql` and `<extension>--<from>--<to>.sql`, which
+// Postgres runs and no migration does.
+const extension = (repo, dir) =>
+  readdirSync(join(repo, dirname(dir))).some((f) => f.endsWith('.control')) &&
+  readdirSync(join(repo, dir)).every((f) => /^[a-z_]+--[0-9a-z.-]+\.sql$/.test(f))
+
 export function placed(repo, apps) {
   const dirs = new Set(owners(repo, apps).map((o) => o.dir))
   const errors = []
@@ -461,7 +468,7 @@ export function placed(repo, apps) {
         continue
       }
       const path = join(dir, name.name)
-      if (name.name === 'sql' && !dirs.has(path)) {
+      if (name.name === 'sql' && !dirs.has(path) && !extension(repo, path)) {
         errors.push(`${path}: SQL sits in a node's core/sql/, a feat's core/sql/ or a graft's sql/`)
       }
       visit(path)

@@ -14,9 +14,30 @@ use crate::run::{Fail, Result};
 /// `cella.key_file` reads it, owner-only and never over an existing file,
 /// and prints its public key.
 pub fn create(path: &Path) -> Result {
-    let mut seed = Zeroizing::new([0u8; 32]);
-    OsRng.fill_bytes(seed.as_mut());
+    let seed = random();
     let key = Key::from_seed(seed.as_ref()).map_err(|e| Fail::new(e.to_string()))?;
+    write(path, seed.as_ref())?;
+    println!("key {}, public {}", path.display(), hex(&key.public()));
+    Ok(())
+}
+
+/// Writes a new vault key, the 32 random bytes `cella.vault_key_file`
+/// reads, apart from the notary's seed: owner-only and never over an
+/// existing file.
+pub fn vault(path: &Path) -> Result {
+    write(path, random().as_ref())?;
+    println!("vault key {}", path.display());
+    Ok(())
+}
+
+fn random() -> Zeroizing<[u8; 32]> {
+    let mut bytes = Zeroizing::new([0u8; 32]);
+    OsRng.fill_bytes(bytes.as_mut());
+    bytes
+}
+
+/// Writes a key file owner-only, never over an existing file.
+pub fn write(path: &Path, bytes: &[u8]) -> Result {
     let fail = |e: std::io::Error| {
         if e.kind() == ErrorKind::AlreadyExists {
             return Fail::new(format!("{} exists; a key is never overwritten", path.display()));
@@ -24,9 +45,7 @@ pub fn create(path: &Path) -> Result {
         Fail::new(format!("{}: {e}", path.display()))
     };
     let mut file = OpenOptions::new().write(true).create_new(true).mode(0o600).open(path).map_err(fail)?;
-    file.write_all(seed.as_ref()).and_then(|()| file.sync_all()).map_err(fail)?;
-    println!("key {}, public {}", path.display(), hex(&key.public()));
-    Ok(())
+    file.write_all(bytes).and_then(|()| file.sync_all()).map_err(fail)
 }
 
 fn hex(bytes: &[u8]) -> String {
@@ -43,12 +62,8 @@ pub fn session(path: &Path) -> Result {
     if path.exists() {
         return Ok(());
     }
-    let mut bytes = Zeroizing::new([0u8; 32]);
-    OsRng.fill_bytes(bytes.as_mut());
-    let fail = |e: std::io::Error| Fail::new(format!("{}: {e}", path.display()));
     if let Some(dir) = path.parent() {
-        std::fs::create_dir_all(dir).map_err(fail)?;
+        std::fs::create_dir_all(dir).map_err(|e| Fail::new(format!("{}: {e}", dir.display())))?;
     }
-    let mut file = OpenOptions::new().write(true).create_new(true).mode(0o600).open(path).map_err(fail)?;
-    file.write_all(bytes.as_ref()).and_then(|()| file.sync_all()).map_err(fail)
+    write(path, random().as_ref())
 }

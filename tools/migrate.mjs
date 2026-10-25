@@ -1,21 +1,27 @@
 // migrate: applies each node's SQL down the feat tree — a node's core
 // (core/sql/, then core/<lib>/sql/), then its feats, recursively, then its
 // grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
-// file. Applied files are recorded with their hash in migration.applied;
-// a file edited after it was applied is refused, never re-run. It connects
-// to DATABASE_URL if set, otherwise by the PG* variables.
+// file. Applied files are recorded by their stable id (`migrations.mjs`)
+// with their hash in migration.applied; a file edited after it was
+// applied is refused, never re-run. A database that recorded them by path
+// is moved to ids on its first run. It connects to DATABASE_URL if set,
+// otherwise by the PG* variables.
 //
 // `--slice <name>` applies one slice's part of the tree alone, for its
 // slice tests: the app's core and the cores of the feats a slice nests in,
 // then a feat's own tree, or a graft's feats, its lower-order grafts at or
 // below its node and itself. A slice whose SQL reaches past what
 // it may read fails to migrate here.
+//
+// `--locked` checks, with no database, that every app's migrations are
+// append-only against its `migrations.lock`; `--lock` adds the new ones.
 
 import { createHash } from 'node:crypto'
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { basename, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+import { LOCK, formatLock, idOf, parseLock, unlocked } from './migrations.mjs'
 
 const repo = fileURLToPath(new URL('..', import.meta.url))
 const isDir = (p) => existsSync(p) && statSync(p).isDirectory()
@@ -66,6 +72,7 @@ const part = (app, name) => {
 }
 
 const args = process.argv.slice(2)
+const locking = args.includes('--lock') ? 'lock' : args.includes('--locked') ? 'locked' : null
 const at = args.indexOf('--slice')
 const slice = at >= 0 ? args[at + 1] : null
 if (at >= 0 && !slice) {
@@ -82,26 +89,76 @@ if (!dirs) {
 const files = dirs
   .filter(isDir)
   .flatMap((dir) => sorted(dir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).map((f) => join(dir, f)))
+const hashOf = (sql) => createHash('sha256').update(sql).digest('hex')
+
+if (locking) {
+  let errors = []
+  let added = 0
+  let count = 0
+  for (const app of apps) {
+    const lockPath = join(app, LOCK)
+    const lock = parseLock(existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : '')
+    const mine = files
+      .filter((f) => f.startsWith(app + '/'))
+      .map((f) => ({ path: relative(repo, f), id: idOf(relative(repo, f)), hash: hashOf(readFileSync(f, 'utf8')) }))
+    count += mine.length
+    const found = unlocked(lock, mine)
+    if (locking === 'locked') {
+      errors = errors.concat(found)
+      continue
+    }
+    const fresh = mine.filter((f) => !lock.has(f.id))
+    errors = errors.concat(found.filter((e) => !/is not locked/.test(e)))
+    for (const f of fresh) {
+      lock.set(f.id, f.hash)
+      console.log(`migrate: locked ${f.id}`)
+    }
+    added += fresh.length
+    if (fresh.length && !errors.length) {
+      writeFileSync(lockPath, formatLock(lock))
+    }
+  }
+  for (const e of errors) {
+    console.error(`migrate: ${e}`)
+  }
+  if (errors.length) {
+    process.exit(1)
+  }
+  console.log(locking === 'lock' ? `migrate: ${added} locked, ${count - added} already` : `migrate: ${count} migrations locked, append-only`)
+  process.exit(0)
+}
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query(`
   CREATE SCHEMA IF NOT EXISTS migration;
   CREATE TABLE IF NOT EXISTS migration.applied (
-    path text PRIMARY KEY,
+    id text PRIMARY KEY,
     hash text NOT NULL,
     at timestamptz NOT NULL DEFAULT now()
   )`)
-const applied = new Map((await db.query('SELECT path, hash FROM migration.applied')).rows.map((r) => [r.path, r.hash]))
+// A database that recorded its migrations by path moves to their ids.
+const byPath = await db.query(`SELECT FROM information_schema.columns WHERE table_schema = 'migration' AND table_name = 'applied' AND column_name = 'path'`)
+if (byPath.rowCount) {
+  await db.query('BEGIN')
+  await db.query('ALTER TABLE migration.applied RENAME COLUMN path TO id')
+  for (const { id } of (await db.query('SELECT id FROM migration.applied')).rows) {
+    await db.query('UPDATE migration.applied SET id = $1 WHERE id = $2', [idOf(id), id])
+  }
+  await db.query('COMMIT')
+  console.log('migrate: the applied set moved from paths to ids')
+}
+const applied = new Map((await db.query('SELECT id, hash FROM migration.applied')).rows.map((r) => [r.id, r.hash]))
 
 let ran = 0
 for (const file of files) {
   const path = relative(repo, file)
+  const id = idOf(path)
   const sql = readFileSync(file, 'utf8')
-  const hash = createHash('sha256').update(sql).digest('hex')
-  if (applied.has(path)) {
-    if (applied.get(path) !== hash) {
-      console.error(`migrate: ${path} changed after it was applied; add a new migration instead`)
+  const hash = hashOf(sql)
+  if (applied.has(id)) {
+    if (applied.get(id) !== hash) {
+      console.error(`migrate: ${path} (${id}) changed after it was applied; add a new migration instead`)
       process.exit(1)
     }
     continue
@@ -109,7 +166,7 @@ for (const file of files) {
   try {
     await db.query('BEGIN')
     await db.query(sql)
-    await db.query('INSERT INTO migration.applied (path, hash) VALUES ($1, $2)', [path, hash])
+    await db.query('INSERT INTO migration.applied (id, hash) VALUES ($1, $2)', [id, hash])
     await db.query('COMMIT')
   } catch (e) {
     await db.query('ROLLBACK')

@@ -41,6 +41,34 @@ pub enum Command {
     /// Apply every feat's and graft's migrations, cascading down the tree
     Migrate {
         /// A database other than the dev cluster's, such as production's
+        #[arg(long, value_name = "URL", conflicts_with = "lock")]
+        url: Option<String>,
+
+        /// Lock each new migration's hash in its app's migrations.lock, which makes it append-only; no database
+        #[arg(long)]
+        lock: bool,
+    },
+
+    /// Back a database up into a new directory: its dump, the notary's and the vault's key files, and a manifest
+    Backup {
+        /// The directory to write; it must not exist
+        dir: PathBuf,
+
+        /// A database other than the dev cluster's, such as production's, on the host holding its key files
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+    },
+
+    /// Restore a backup into a new database, its key files where the cluster reads them, then check the log verifies and the vault opens
+    Restore {
+        /// A directory `cella backup` wrote
+        dir: PathBuf,
+
+        /// The database to create on the dev cluster, by default the one backed up
+        #[arg(long, conflicts_with = "url")]
+        db: Option<String>,
+
+        /// An empty database on another cluster, such as a new host's, to restore into
         #[arg(long, value_name = "URL")]
         url: Option<String>,
     },
@@ -131,6 +159,8 @@ pub enum Part {
     Shell,
     /// cargo check and clippy over the workspace
     Rust,
+    /// Every locked migration unchanged and every migration locked: migrations are append-only
+    Migrations,
 }
 
 #[derive(Subcommand)]
@@ -202,13 +232,23 @@ pub enum Vault {
         #[arg(long, value_name = "URL")]
         url: Option<String>,
     },
+    /// Seal every vault key under cella.vault_key_file's wrap key, moving those still under cella.vault_key_previous
+    Rewrap {
+        /// A database other than the dev cluster's, such as production's
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]
 pub enum Key {
-    /// Create a scope signing key file, readable by its owner only
+    /// Create a scope signing key file, or with --vault a vault key file, readable by its owner only
     Init {
         /// Where to write it; an existing file is never overwritten
         path: PathBuf,
+
+        /// A vault key, 32 random bytes apart from the notary's, as cella.vault_key_file reads it
+        #[arg(long)]
+        vault: bool,
     },
 }

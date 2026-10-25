@@ -3,6 +3,7 @@
 //! cargo-pgrx, the Postgres binaries, pnpm and the node tools in `tools/` —
 //! as subprocesses from the workspace root, one line per step.
 
+mod backup;
 mod check;
 pub mod cli;
 mod data;
@@ -20,11 +21,15 @@ use run::{Result, Steps};
 pub fn dispatch(command: Command, verbose: bool) -> Result {
     let steps = Steps { verbose };
     match command {
-        Command::Key { command: Key::Init { path } } => key::create(&path),
+        Command::Key { command: Key::Init { path, vault: false } } => key::create(&path),
+        Command::Key { command: Key::Init { path, vault: true } } => key::vault(&path),
         Command::Check { part, no_sql } => check::run(&Repo::find()?, &steps, part, no_sql),
         Command::Db { command } => db::run(&Repo::find()?, &steps, command),
         Command::Ext { command: Ext::Build } => db::ext_build(&Repo::find()?, &steps).map(|_| ()),
-        Command::Migrate { url } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
+        Command::Migrate { url, lock: false } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
+        Command::Migrate { lock: true, .. } => data::lock(&Repo::find()?, &steps),
+        Command::Backup { dir, url } => backup::backup(&Repo::find()?, &dir, url.as_deref()),
+        Command::Restore { dir, db, url } => backup::restore(&Repo::find()?, &steps, &dir, db.as_deref(), url.as_deref()),
         Command::Seed { fixture, url } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref()),
         Command::Import { kind, file, actor, dry_run, url } => {
             data::import(&Repo::find()?, &steps, &data::Import { kind: &kind, file: &file, actor: &actor, dry: dry_run }, url.as_deref())
@@ -34,5 +39,6 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),
         Command::Vault { command: Vault::Sweep { url } } => data::sweep(&Repo::find()?, url.as_deref()),
+        Command::Vault { command: Vault::Rewrap { url } } => data::rewrap(&Repo::find()?, url.as_deref()),
     }
 }

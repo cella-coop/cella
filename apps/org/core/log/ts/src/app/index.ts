@@ -52,7 +52,7 @@ export const app: App = {
         ],
         related: (e: Detail) => [
           ...(e.n > 1 ? [{ label: `Entry ${e.n - 1}`, sub: 'previous', href: `/log/${e.n - 1}` }] : []),
-          { label: e.actor, sub: 'member', href: `/members/${e.actor}` },
+          { label: e.actor, sub: 'member', href: `/people/${e.actor}` },
         ],
         blocks: [Rules],
       },

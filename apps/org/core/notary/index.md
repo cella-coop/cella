@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the rule primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-rules` (`core/rules/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -37,7 +37,7 @@ A handler opens a transaction, writes its state, calls `cella.submit` last and c
 
 1. checks the signature over the scope (`cella.scope`), the op, the actor, the device, the salted request's digest and the nonce;
 2. locks the head row;
-3. asks the keyring, the one function registered in `cella.keyring` (the `key` feat's), whether the device is a current key of the actor;
+3. asks the keyring, the one function registered in `cella.keyring` (the `person` feat's), whether the device is a current key of the actor;
 4. refuses a nonce a receipt of the same device already holds;
 5. takes the payload out of personal data ([the vault](#the-vault)): each marked value committed to and sealed, each marked erasure carried out, giving the payload as the log keeps it;
 6. runs every rule registered for the op in `cella.rule (op, fn regprocedure, owner)`, ordered by owner, on that logged payload, with `cella.op()`, `cella.actor()` and `cella.device()` set;
@@ -53,11 +53,11 @@ Each receipt holds its number, the op, the actor, the device, the nonce, the req
 
 Personal data never enters the log. A handler marks each personal value a payload carries, `{"$personal": {"field": "schema.table.column", "subject": …, "value": …}}`, for a field registered in `cella.personal`; every other object key starting with `$` is refused. `submit` replaces it with `{"$commit": hex}`, the BLAKE3 commitment, under its own domain, to a fresh 256-bit salt and the value, and stores in `vault.secret` the commitment, the receipt, the subject, the class, the year, the field, the salt and the value sealed with XChaCha20-Poly1305 under the subject's key for the class and the verdict's year (`vault.key`, made on first use from Postgres's strong random source and itself sealed under a key derived from the scope's seed). The same value written twice commits differently.
 
-A payload marks an erasure as `{"$erase": {"subject": …, "classes": […]}}`, every class when none is named; `submit` carries it out under the head's lock and logs `{"$erasure": {"subject", "erased", "restricted"}}`. For an erasable class (`member-profile`, `contact`) it deletes the subject's keys and sealed values, so its commitments no longer open, and redacts the class's registered columns in the read models (`cella.redact`). A restricted class (`payroll`, `expense-receipt`, `books`), which the law keeps, loses only the keys whose clock has run out and is marked restricted; `cella.vault_sweep()` erases it in full once its clock, counted from the erasure's year, runs out. Either way a tombstone in `vault.erased` refuses any later value of the subject's class: erasure wins. A key's clock runs `years` full years past the end of its year: books from 2025, kept ten years, may be destroyed from 1 January 2036.
+A payload marks an erasure as `{"$erase": {"subject": …, "classes": […]}}`, every class when none is named; `submit` carries it out under the head's lock and logs `{"$erasure": {"subject", "erased", "restricted"}}`. For an erasable class (`profile`, `contact`) it deletes the subject's keys and sealed values, so its commitments no longer open, and redacts the class's registered columns in the read models (`cella.redact`). A restricted class (`payroll`, `expense-receipt`, `books`), which the law keeps, loses only the keys whose clock has run out and is marked restricted; `cella.vault_sweep()` erases it in full once its clock, counted from the erasure's year, runs out. Either way a tombstone in `vault.erased` refuses any later value of the subject's class: erasure wins. A key's clock runs `years` full years past the end of its year: books from 2025, kept ten years, may be destroyed from 1 January 2036.
 
 `cella.opened(n)` reads an entry's logged payload back with its commitments opened, checking each against its salt: the value, `restricted` while the law keeps it, `redacted` once erased. The log verifies the same before and after an erasure, since erasure deletes what a commitment opens to, never the commitment.
 
-`cella.power (op, power, amount, owner)` names the power each op needs and the payload field holding its amount in cents, registered by the op's feat; the extension holds no rule over it: the `circle-member` graft attaches one to every op listed.
+`cella.power (op, power, amount, owner)` names the power each op needs and the payload field holding its amount in cents, registered by the op's feat; the extension holds no rule over it: the `circle-membership` graft attaches one to every op listed.
 
 The log tables and the registries are readable by everyone and writable by no role but the extension's owner and the migrations; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`. Only `cella_app` may execute `submit` and `receipt`.
 

@@ -60,7 +60,7 @@
     rows,
     href,
     about,
-    create,
+    creates = [],
     status = [],
     empty = 'Nothing here yet.',
     caption,
@@ -81,7 +81,8 @@
     rows: any[]
     href?: (row: any) => string | undefined
     about?: unknown
-    create?: Component<{ rows: any[]; about: any }>
+    // The New forms, each under its title where there are several.
+    creates?: { title?: string; form: Component<{ rows: any[]; about: any }> }[]
     status?: Status[]
     empty?: string
     // Each enumeration's values over the rows, for the editors' choices.
@@ -236,7 +237,7 @@
     } else if (e.key === '/') {
       e.preventDefault()
       filter()
-    } else if (e.key === 'c' && create) {
+    } else if (e.key === 'c' && creates.length) {
       state.toggle()
       e.preventDefault()
     }
@@ -273,7 +274,7 @@
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >
   {#snippet actions()}
-    {#if create}
+    {#if creates.length}
       <Button tone="primary" kbd="C" onclick={() => state.toggle()}><Icon icon={Plus} />New</Button>
     {/if}
   {/snippet}
@@ -332,9 +333,11 @@
     </ul>
   {/if}
 
-  {#if create && state.creating}
-    {const Create = $derived(create)}
-    <Card title="New"><Create {rows} {about} /></Card>
+  {#if state.creating}
+    {#each creates as c (c)}
+      {const Create = $derived(c.form)}
+      <Card title={creates.length > 1 ? (c.title ?? 'New') : 'New'}><Create {rows} {about} /></Card>
+    {/each}
   {/if}
 
   <div class="rows">

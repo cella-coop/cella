@@ -283,15 +283,15 @@ mod tests {
     fn entry(n: i64) -> Entry {
         Entry {
             n,
-            op: "member:member:admit".into(),
+            op: "membership:member:admit".into(),
             actor: "camille@lanterne.example".into(),
             date: "2026-10-31".into(),
             payload: payload_digest(&json!({"member": "ines@lanterne.example", "shares": 20})).unwrap(),
             receipt: n + 40,
             receipt_hash: [n.to_le_bytes()[0]; 32],
             rules: vec![Rule {
-                owner: "decision-member".into(),
-                function: "decision_member.admit(jsonb)".into(),
+                owner: "decision-membership".into(),
+                function: "decision_membership.admit(jsonb)".into(),
                 text: rule_digest("select 1"),
             }],
         }
@@ -346,7 +346,7 @@ mod tests {
         let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "decision": "d-2026-012"}), &"ab".repeat(32)).unwrap();
         let mut r = Receipt {
             n: 41,
-            op: "member:member:admit".into(),
+            op: "membership:member:admit".into(),
             actor: "camille@lanterne.example".into(),
             device: device.verifying_key().to_bytes(),
             nonce: "00112233445566778899aabbccddeeff".into(),
@@ -368,7 +368,7 @@ mod tests {
         late.time = "2026-11-01T09:00:00.000000Z".into();
         assert_eq!(chain.check_receipt("lanterne.example", &e, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
         let mut other = e.clone();
-        other.op = "member:member:exit".into();
+        other.op = "membership:member:exit".into();
         assert_eq!(chain.check_receipt("lanterne.example", &other, &r, &r.hash(), &sig), broken("the receipt is another write's"));
         let forged = Key::from_seed(&[8; 32]).unwrap().sign(&r.hash());
         assert_eq!(chain.check_receipt("lanterne.example", &e, &r, &r.hash(), &forged), broken("receipt signature invalid"));

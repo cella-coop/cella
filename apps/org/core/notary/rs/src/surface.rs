@@ -409,7 +409,7 @@ CREATE TABLE cella.retention (
     basis text NOT NULL
 );
 INSERT INTO cella.retention (class, years, restricted, basis) VALUES
-  ('member-profile', 0, false, 'none: erased when asked (GDPR art. 17)'),
+  ('profile', 0, false, 'none: erased when asked (GDPR art. 17)'),
   ('contact', 0, false, 'none: erased when asked (GDPR art. 17)'),
   ('payroll', 5, true, 'Code du travail, art. L3243-4: the employer keeps a copy of each payslip for five years'),
   ('expense-receipt', 10, true, 'Code de commerce, art. L123-22: supporting vouchers are kept for ten years'),

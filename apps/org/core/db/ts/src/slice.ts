@@ -177,10 +177,13 @@ export interface Importer {
 }
 
 // A slice's server side, which the root mounts: the collections it owns,
-// what it adds to the collections of the feats it joins, its reactions,
+// what it adds to the collections of the feats it joins or nests in, its reactions,
 // and the kinds of file it imports.
 export interface Slice {
   name: string
+  // The feat a nested feat nests in, whose collections it extends as a
+  // graft extends those of the feats it joins: membership's is person.
+  within?: string
   collections?: Record<string, Collection>
   extends?: Record<string, Extension>
   on?: Partial<Record<Permission, Reaction>>

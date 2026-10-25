@@ -350,8 +350,10 @@ form actions of the collection's slices; `/search` for the command menu;
 events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); `/[collection]/[id]/content`, an item's
 bytes, such as a file's, which the collection's owner serves (`content`)
-to whom its rule or an extension's `allows` opens them; `/act` and
-`/theme` for the user menu; `/journal`, the transactions' old address,
+to whom its rule or an extension's `allows` opens them; `/sign-in`,
+`/session`, the challenge and the device's answer to it, and
+`/sign-out`; `/join/[secret]`, an invitation's link, taken up through
+membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
 which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
 collections. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
@@ -370,11 +372,18 @@ invoice in the same transaction, replaces the invoice feat's.
 The shell writes no SQL and re-implements no rule: it reads through each
 slice's reads and writes through its handlers, which sign, submit and
 return Settled, Refused or Pending. Its pages show each outcome, with
-the rule's reason when refused. A write is signed by a device of the
-acting member: until a member's device signs in the browser, the dev
-server (`cella serve`, dev mode only) signs with the member's TEST-ONLY
-fixture key, and only when it is the key enrolled under that device's
-label and not revoked; outside dev mode the server signs for no one.
+the rule's reason when refused. Every route but the sign-in, its session
+and an invitation's link needs a session, a person signed in on one of
+their current devices (`hooks.server.ts`, `lib/server/session.ts`): a
+page asked for without one goes to the sign-in, and anything else is
+refused. A write is signed in the browser by the session's device: the
+action runs as a relay (`lib/server/relay.ts`), and each time a handler
+signs, the post is answered with what to sign; the browser signs it
+(`post` in `@cella/org-ui`) and posts the proof back to the run, which
+goes on to its next signature, a reaction's, or to its outcome
+([trust](trust.md#keys-and-addresses)). The server holds no member's key,
+in dev mode or not; dev mode (`cella serve`) only offers the fixture
+members on the sign-in page, whose TEST-ONLY keys the browser derives.
 Until `POST /api/<feat>/<op>` is served, these form actions are the
 writes' only HTTP path.
 

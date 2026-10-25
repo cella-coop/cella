@@ -52,11 +52,13 @@ decision. Lanterne's state is that of 24 October 2026.
 | `invoice.void` | ordered | right |
 | `client.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
 | `client.erase`, `membership.erase`, `person.forget` | ordered | right: a tombstone against every later value |
-| `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation carries the invitee's first device; erasure wins |
+| `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation is taken up by its link; erasure wins |
+| `membership.link` | confluent | right: links are facts; the first taken up ends them all |
+| `membership.accept` | ordered | right: it enrols a first device, ordered against revoke as `person.enrol` is ([membership](#membership-changes-are-decided)) |
 | `membership.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
 | `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
-| `decision.close` | ordered | right; **applied**: a passing close admits, seats and enrols in its own verdict |
+| `decision.close` | ordered | right; **applied**: a passing close admits and seats in its own verdict |
 | `decision:message.post` | confluent | right: messages commute, each its author's, ordered by receipt; a closed decision takes none, as it takes no stance ([who votes](#who-votes)) |
 | `project.create`, `project:milestone.add`, `.complete`, `project.archive` | confluent | right; rung 2 numbers milestones by device ([work](#work-is-registers)) |
 | `project.budget` | ordered | right: against the shares ([shares](#a-share-never-exceeds-the-budget)) |
@@ -435,7 +437,8 @@ deciding vote.
 | `membership.admit` vs `membership.invite` | refused: not invited | admitted | admitted without an invitation |
 | `membership.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
 | `membership.exit` vs the capital account | — | — | a graft joining membership and the books freezes it in the exit's transaction, on the exit's update of the status |
-| `membership.invite` vs `membership.invite`, one device key | the second refused: the key is carried | the first refused | one device enrolled for two members |
+| `membership.accept` vs `membership.accept`, one invitation | the second refused: taken up | the first refused | one invitation enrols two first devices |
+| `membership.accept` vs `membership.admit` | admitted, signing with the device | refused: no device signs for them | a member admitted unable to sign |
 | `membership.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
 
 `invite` and `profile` are rightly confluent; `admit`, `suspend` and `exit`
@@ -446,7 +449,7 @@ they needed a power no mandate granted.
 ## An admission settles with its close
 
 Owners: the `circle-decision-membership` graft, which counts the roll; the
-`membership` feat, with the first device it enrols, and `circle-membership`
+`membership` feat, which refuses an admission of someone holding no device, and `circle-membership`
 for the state each admission changes.
 
 | Pair | A first | B first | Both confluent |
@@ -455,9 +458,8 @@ for the state each admission changes.
 | close admitting M vs the admission alone | — | — | an active member with no seat and no device, who cannot vote or sign |
 | `decision.propose` vs `decision.vote` on it | the motion is fixed before the stance | no motion is added after it | members consent to one thing and are counted for another |
 
-The close, the admissions it makes, their seats and the devices their
-invitations carried settle in one transaction under one verdict, or not
-at all. Before, the close settled and each admission and seat followed as
+The close, the admissions it makes and their seats settle in one
+transaction under one verdict, or not at all. Before, the close settled and each admission and seat followed as
 writes of their own, and a refused seat left an active member with none.
 **Applied**: the decision feat's close is a write a graft extends, and
 `circle-decision-membership` extends it; the rules of each slice run on the

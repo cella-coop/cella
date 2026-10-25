@@ -1,6 +1,6 @@
 +++
 title = "Signatures"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Signatures
@@ -18,6 +18,7 @@ type is added here before it is signed anywhere.
 | write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
 | receipt | the scope's notary key, Ed25519 | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived | `cella.verify_log` |
 | log entry | the scope's notary key, Ed25519 | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
+| session opening | a member's device, Ed25519 | `cella org 2026-10 session`, the message's first line | the scope, the actor, the device's key and the server's single-use challenge | the shell's server, `opens` in `lib/server/session.ts`, before it keeps a session |
 
 ### A write
 
@@ -56,6 +57,29 @@ The signature is checked strictly (`verify_strict`): no weak keys and no
 malleable signatures. `apps/org/core/sign/ts` builds and signs the message
 in TypeScript; `cella_rules::sign` builds and checks it in Rust.
 
+### A session's opening
+
+A device signs in by signing this text, as a write's, one line each:
+
+```text
+cella org 2026-10 session
+scope lanterne.example
+actor julien@lanterne.example
+device <the device's public key, 64 lowercase hex digits>
+challenge <the server's challenge>
+```
+
+The challenge is the server's: when it expires, two minutes on, 16 random
+bytes, and the server's HMAC-SHA256 over both under its session key, so
+the server keeps nothing until it is answered. Answered, it is spent: one
+signature opens one session. The server then checks the device is a
+current key of the actor, as the keyring says, and keeps the session in a
+cookie it MACs with the same key, naming the actor, the device and when
+it ends, fourteen days on; every request checks again that the device is
+current, so a revocation ends its sessions. A session lets its holder
+read and ask for writes; it signs nothing, and each write is still signed
+by the device, in the browser.
+
 ### A receipt and an entry
 
 `submit` signs the receipt once the write's rules accept, then the entry,
@@ -71,6 +95,7 @@ receipt's time orders nothing; receipt numbers order stances.
 | request | SHA-256 | none: the write message's tag separates it | the canonical JSON of `{"request": …, "salt": …}`, a fresh salt each write |
 | personal commitment | BLAKE3 derive-key | `cella org 2026-10 personal commitment` | a fresh 32-byte salt, then the value's canonical JSON; kept in the logged payload as `{"$commit": hex}` |
 | rule text | BLAKE3 derive-key | `cella org 2026-10 rule text` | a rule's definition, as `pg_get_functiondef` gives it |
+| invitation link | SHA-256 | none: it names a secret no other digest takes | the 32 random bytes an inviter's browser draws, which only the link holds; `membership.link` keeps the digest, and taking the invitation up shows the secret |
 | content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-decision-adopts)) |
 
 ## Keys derived and sealed
@@ -91,7 +116,10 @@ Lanterne's fixture devices hold keys derived from their address and label
 (`fixture` in `@cella/org-sign`, tagged `cella fixture device key,
 test-only, never a member's`). Anyone can compute them; they exist so
 that the seed and the tests hold the same keys, and are never enrolled
-for a real member.
+for a real member. The dev server's sign-in page offers the fixture
+members, and the browser derives the key of the one picked and signs
+with it as with any device; the server signs with none, in dev mode or
+not.
 
 ## Not yet signed
 

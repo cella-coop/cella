@@ -192,8 +192,9 @@ makes no claim that the host cannot forge a vote.
 
 - Members have device keys from day one. A key is enrolled by the member's
   current key; rotating keys keeps the address. A member's first device
-  comes with their invitation, whose log entry commits to its key, and
-  is enrolled by their admission, in the same transaction.
+  is made when they take up their invitation by its one-time link: their
+  browser makes the key, and the acceptance it signs enrols it, its log
+  entry committing to the key and the link.
   Enrolment and revocation are ordered, and the keyring is read under the
   log's head lock, so a revocation that settled first is always seen.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
@@ -208,6 +209,18 @@ makes no claim that the host cannot forge a vote.
 - Thresholds are signed policy in the log, never flags or unsigned config.
   No one holds a group's key alone.
 - Lost keys are recovered from guardian shares.
+- **A person signs in with a device, and the browser signs every write.**
+  The browser keeps each device's key in IndexedDB, made by WebCrypto and
+  not exportable. To sign in, the device signs the server's single-use
+  challenge ([signatures](signatures.md#a-sessions-opening)); the server
+  keeps the session in a cookie it MACs, and every route but the sign-in
+  and an invitation's link needs one whose device is still current. A
+  write from a page runs on the server while the browser signs: each
+  time a handler signs, the post is answered with what to sign, the op,
+  the request made plain and the scope, actor and device, and the browser
+  signs it with that device and posts the proof back to the run it
+  answers, which only the session that started it may. The server holds
+  no member's key.
 
 ## What a decision adopts
 
@@ -286,20 +299,16 @@ erased until their legal clock runs out.
 
 What the build does not yet do, and what lifts each:
 
-- **The host serves the signing code and relays requests.** A reaction the
-  server runs on a member's behalf, such as carrying out the suspension a
-  passing decision asks once its close settles,
-  is signed with that member's signer as the handler's caller hands it;
-  until the native client (rung 4) nothing stops a host signing with keys
-  it serves.
-- **The shell's server signs for the member in dev mode.** No device
-  signs in the browser yet, and the server has no sessions. `cella
-  serve` runs it in dev mode, where it signs a write as the member picked
-  in the user menu with that member's TEST-ONLY fixture key, which anyone
-  can derive, and only a key enrolled under that device's label. Outside
-  dev mode it signs for no one and every write fails before a verdict.
-  Signing in the browser with `@cella/org-sign`, which runs on WebCrypto,
-  lifts this.
+- **The host serves the signing code and says what to sign.** The browser
+  signs the request the server asks it to, its own write's and each
+  reaction's, such as carrying out the suspension a passing decision asks
+  once its close settles, and shows none of it to the member; until the
+  native client (rung 4) nothing stops a host serving code that signs
+  something else with the keys it serves code to.
+- **A write's run lives in one server process.** It waits for each
+  signature up to a minute, holding a database connection, and goes with
+  the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
+  names the key, as `cella serve` does.
 - **`cella import` signs with the fixture devices too.** It imports as a
   member through their TEST-ONLY fixture key, as the dev server signs, so
   it imports into the mock co-ops alone; a member's own device signing the

@@ -54,9 +54,12 @@ const settings = {
   'cella.scope_seat': scope.seat,
   'cella.scope_capital': scope.capital,
 }
+// The seed's own transaction reads them too, so each invoice it issues
+// keeps the seller its mentions name (`invoice.seller`).
 for (const [setting, value] of Object.entries(settings)) {
   if (value) {
     await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET ${setting} = ${db.escapeLiteral(value)}`)
+    await db.query('SELECT set_config($1, $2, true)', [setting, value])
   }
 }
 

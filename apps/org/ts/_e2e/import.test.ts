@@ -3,8 +3,9 @@
 // Camille tries the members' list in a dry run from the Imports page,
 // which invites no one, then imports it, inviting Nadia and Olivier with
 // their devices and refusing Rose, who has none. Julien carries October
-// over from the old books' FEC, opening the rental account it names; the
-// fees entry does not balance and 2025's opening falls in no period, so
+// over from the old books' FEC under his power to carry them over: the
+// rental, paid from the bank before cella, opens the account it names;
+// the fees entry does not balance and 2025's opening falls in no period, so
 // both are refused, and the trial balance still holds. He issues the
 // invoices the spreadsheet lists, numbered and posted. Inès brings her
 // own time from Toggl and Harvest, and others' rows are refused. Camille
@@ -85,8 +86,12 @@ test('Julien carries October over from the old books: two entries posted, the re
     `SELECT sum(cella.cents(amount)) FILTER (WHERE side = 'debit') AS d, sum(cella.cents(amount)) FILTER (WHERE side = 'credit') AS c FROM transaction.line`,
   )
   assert.equal(balance.d, balance.c)
-  const logged = await one<{ form: { opened: string[] } }>(`SELECT form FROM cella.log WHERE n = $1`, [lines[0].done.entry])
-  assert.deepEqual(logged.form.opened, ['6135'])
+  const logged = await one<{ op: string; form: { opened: string[] } }>(`SELECT op, form FROM cella.log WHERE n = $1`, [lines[0].done.entry])
+  assert.deepEqual([logged.op, logged.form.opened], ['account-transaction:entry:carry', ['6135']])
+  // The rental was paid from the bank before cella: carried over, it may
+  // touch a cash account, as a post may not.
+  const paid = await one<{ n: number }>(`SELECT count(*)::int AS n FROM transaction.line l JOIN transaction.entry e ON e.id = l.entry WHERE e.label LIKE 'HA HA-0101%' AND l.account = '512'`)
+  assert.equal(paid.n, 1)
 })
 
 test('Julien issues the spreadsheet\'s invoices, numbered in the series and posted; one with no client is refused', async () => {

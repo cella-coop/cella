@@ -1,7 +1,7 @@
 JournalCode|JournalLib|EcritureNum|EcritureDate|CompteNum|CompteLib|CompAuxNum|CompAuxLib|PieceRef|PieceDate|EcritureLib|Debit|Credit|EcritureLet|DateLet|ValidDate|Montantdevise|Idevise
 HA|Achats|HA-0101|20261005|6135|Locations mobilières|||LOC-1005|20261005|Location de mobilier, salon du livre|400,00|0,00|||20261006||
 HA|Achats|HA-0101|20261005|44566|TVA déductible sur autres biens et services|||LOC-1005|20261005|Location de mobilier, salon du livre|80,00|0,00|||20261006||
-HA|Achats|HA-0101|20261005|401|Fournisseurs|FMOB|Mobilier Event|LOC-1005|20261005|Location de mobilier, salon du livre|0,00|480,00|||20261006||
+HA|Achats|HA-0101|20261005|512|Banque — Crédit Coopératif|||LOC-1005|20261005|Location de mobilier, salon du livre|0,00|480,00|||20261006||
 VT|Ventes|VT-0207|20261012|411|Clients|CONDINE|Atelier Ondine|F-OLD-0411|20261012|Atelier Ondine, signalétique|1440,00|0,00|||20261012||
 VT|Ventes|VT-0207|20261012|706|Prestations de services|||F-OLD-0411|20261012|Atelier Ondine, signalétique|0,00|1200,00|||20261012||
 VT|Ventes|VT-0207|20261012|44571|TVA collectée|||F-OLD-0411|20261012|Atelier Ondine, signalétique|0,00|240,00|||20261012||

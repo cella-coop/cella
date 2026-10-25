@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./models": "./src/models/index.ts",
     "./api": "./src/api/index.ts",
     "./app": "./src/app/index.ts"
   },

@@ -110,6 +110,11 @@ text = "record entries in the books"
 
 [[mandate]]
 role = "finance"
+power = "carry-books"
+text = "carry the books over from the co-op's last tool"
+
+[[mandate]]
+role = "finance"
 power = "pay-supplier"
 text = "pay suppliers"
 limit = 300000

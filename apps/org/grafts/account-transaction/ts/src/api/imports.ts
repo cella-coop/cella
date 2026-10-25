@@ -31,8 +31,8 @@ function sided(f: Record<string, string>): { side: Line['side']; cents: number }
 
 // A company's books from its last tool: each entry, by its journal and
 // number, carried over on its date as the importing member, under their
-// power to record entries, opening in the same write the accounts it
-// names that the chart lacks. An entry in no period of the books, or a
+// power to carry the books over, opening in the same write the accounts
+// it names that the chart lacks. An entry in no period of the books, or a
 // closed one, is refused as one posted by hand is, and so is one that
 // does not balance: the opening balances of a co-op switching to cella
 // are the entries of its à-nouveaux journal, dated in its first open
@@ -60,7 +60,7 @@ export const fec: Importer = {
       entries.set(key, e)
     }
     return [...entries].map(([key, e]): Imported => {
-      const op = 'transaction:transaction:post'
+      const op = 'account-transaction:entry:carry'
       if (e.unread || !e.lines.length) {
         return { line: e.line, label: key, op, refused: 'its date or its amounts cannot be read' }
       }

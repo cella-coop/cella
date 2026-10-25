@@ -2,26 +2,30 @@ import type { Outcome } from '@cella/org-ops'
 import { write, type Deps } from '@cella/org-db'
 import { opening } from '@cella/org-account/api'
 import type { Open } from '@cella/org-account/models'
-import { posting } from '@cella/org-transaction/api'
-import type { Entry, Posted, ops } from '@cella/org-transaction/models'
+import { record } from '@cella/org-transaction/api'
+import type { Entry, Posted } from '@cella/org-transaction/models'
+import type { ops } from '../models/ops.ts'
+
+const op = 'account-transaction:entry:carry' satisfies keyof typeof ops
 
 // Carries an entry over from the co-op's last tool in one write: the
 // accounts it names that the chart lacks, opened of the kind their class
-// makes them, then the entry, posted. The log names the accounts opened,
-// and `account_transaction.opens` checks them.
-export async function carry(
-  entry: Entry,
-  accounts: Open[],
-  deps: Deps,
-): Promise<Outcome<(typeof ops)['transaction:transaction:post'], Posted & { opened: string[] }>> {
-  const w = posting(entry)
+// makes them, then the entry, recorded in the journal. The log commits
+// to the entry's figures, as a post's, and names the accounts opened;
+// `account_transaction.carries` checks both.
+export async function carry(entry: Entry, accounts: Open[], deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Posted & { opened: string[] }>> {
   return write(deps, {
-    op: w.op,
+    op,
     request: { ...entry, accounts },
-    state: async (tx, proof) => {
+    state: async (tx) => {
       const opened = await opening(tx, accounts)
-      return { ...(await w.state(tx, proof)), opened }
+      return { ...(await record(tx, entry)), opened }
     },
-    payload: (v) => ({ ...w.payload(v), opened: v.opened }),
+    payload: (v) => ({
+      entry: v.entry,
+      date: entry.date,
+      lines: entry.lines.map((l) => ({ ...l })),
+      opened: v.opened,
+    }),
   })
 }

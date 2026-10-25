@@ -136,7 +136,7 @@ test('October\'s run waits for every member\'s approved month', async () => {
 })
 
 test('once every October is approved, Julien prepares the run from the approved time', async () => {
-  const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary GROUP BY member ORDER BY member`)).map((r) => r.member)
+  const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary WHERE "from" <= '2026-10-01' GROUP BY member ORDER BY member`)).map((r) => r.member)
   for (const m of members) {
     const submitted = await submitTime({ member: m, month: '2026-10' }, as(m))
     assert.equal(submitted.state, 'settled', reason(submitted))

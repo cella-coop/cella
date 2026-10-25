@@ -84,12 +84,12 @@ test('Malik invites Nadia with her laptop: the invitation carries its key, which
 
 test('only the assembly admits: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
   const astray = await propose(
-    { circle: 'coordination', title: 'Admit Nadia', rule: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 10 } }] },
+    { circle: 'coordination', title: 'Admit Nadia', rule: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(camille),
   )
   assert.match(reason(astray), /only the assembly decides to admit a member, not coordination/)
 
-  const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 10 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
+  const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
   admission = proposed.decision
   assert.equal(admission, 'd-2026-013')
   const d = await one<{ circle: string; title: string; roll: string }>(
@@ -116,7 +116,7 @@ test('a close whose seat is refused refuses the whole close: no admission, no de
 test('the close admits Nadia, seats her in the assembly and enrols her laptop, in one verdict; she signs from it', async () => {
   const before = await head()
   const closed = settled(await close({ decision: admission }, as(camille)))
-  assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 10]])
+  assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 20]])
   assert.equal(await head(), before + 1, 'one log entry')
   assert.equal(await status(nadia), 'active')
   assert.deepEqual(

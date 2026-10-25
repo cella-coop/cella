@@ -1,4 +1,4 @@
-import { icons, type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type Shift, type Widget } from '@cella/org-ui'
+import { icons, type Added, type App, type Column, type Look, type Nav, type Owned, type Pin, type Preset, type Shift, type Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as key } from '@cella/org-key/app'
@@ -127,6 +127,21 @@ export const apps: App[] = [
   timesheetWorker,
   keyWorker,
   root,
+]
+
+// The co-op's home until a viewer pins their own: what a managing
+// director looks at first, the cash, what clients owe, the projects'
+// margins, the decisions open and the meetings ahead. The root's, since
+// it runs over the fields of several slices no one slice joins.
+export const home: Pin[] = [
+  { collection: 'accounts', kind: 'kpi', title: 'Cash', measure: { op: 'sum', field: 'balance' }, where: [{ field: 'cash', is: ['cash'] }] },
+  { collection: 'invoices', kind: 'kpi', title: 'Owed by clients', measure: { op: 'sum', field: 'owed' } },
+  { collection: 'invoices', kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
+  { collection: 'projects', kind: 'kpi', title: 'Margin on projects', measure: { op: 'sum', field: 'margin' } },
+  { collection: 'decisions', kind: 'kpi', title: 'Open decisions', measure: { op: 'count' }, where: [{ field: 'state', is: ['open'] }] },
+  { collection: 'meetings', kind: 'kpi', title: 'Meetings ahead', measure: { op: 'count' }, where: [{ field: 'status', is: ['scheduled'] }] },
+  { collection: 'invoices', kind: 'chart', title: 'Invoiced by month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
+  { collection: 'projects', kind: 'chart', title: 'Projects by watch', measure: { op: 'count' }, by: 'watch' },
 ]
 
 export const collection = (name: string): Owned | undefined => apps.find((a) => a.collections?.[name])?.collections?.[name]

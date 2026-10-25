@@ -1,4 +1,4 @@
-import type { Action, Collection, Extension, Reaction, Slice } from '@cella/org-db'
+import type { Action, Collection, Db, Extension, Reaction, Slice } from '@cella/org-db'
 import type { Permission } from '@cella/org-ops'
 import { slice as log } from '@cella/org-log/api'
 import { slice as key } from '@cella/org-key/api'
@@ -195,3 +195,18 @@ export const writes = [
 
 // The reactions to a settled op, from every slice.
 export const reactions = (op: Permission): Reaction[] => slices.flatMap((s) => s.on?.[op] ?? [])
+
+// A collection's rows as the acting member sees them: its owner's and
+// those its extensions add, each with the fields its extensions add.
+export async function rows(db: Db, name: string, actor: string | null): Promise<{ id: string }[]> {
+  const m = collections.get(name)
+  if (!m) {
+    return []
+  }
+  const owned = [
+    ...(await m.collection.list(db, actor)),
+    ...(await Promise.all(m.extensions.map((e) => e.extension.rows?.(db, actor) ?? []))).flat(),
+  ]
+  const added = await Promise.all(m.extensions.map((e) => e.extension.list?.(db)))
+  return owned.map((r) => Object.assign({}, r, ...added.map((a) => a?.[r.id])))
+}

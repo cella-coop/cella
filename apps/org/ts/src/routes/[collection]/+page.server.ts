@@ -1,7 +1,7 @@
 import { error, type Actions } from '@sveltejs/kit'
 import { aggregate, defaults, fields, matches, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { using } from '#lib/server/db.ts'
-import { mounted, writes } from '#lib/server/slices.ts'
+import { mounted, rows as read, writes } from '#lib/server/slices.ts'
 import { perform } from '#lib/server/write.ts'
 import { columns, dashboard, look, views } from '#lib/slices.ts'
 import type { PageServerLoad } from './$types'
@@ -22,12 +22,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
   const { id, spec, errors } = resolve(url.searchParams, tabs, fs, looks)
   const today = new Date().toISOString().slice(0, 10)
   return using(async (db) => {
-    const owned = [
-      ...(await m.collection.list(db, locals.actor)),
-      ...(await Promise.all(m.extensions.map((e) => e.extension.rows?.(db, locals.actor) ?? []))).flat(),
-    ]
-    const added = await Promise.all(m.extensions.map((e) => e.extension.list?.(db)))
-    const rows = owned.map((r) => Object.assign({}, r, ...added.map((a) => a?.[r.id])))
+    const rows = await read(db, params.collection, locals.actor)
     const values = Object.fromEntries(
       fs.filter((f) => f.type === 'enum').map((f) => [f.key, [...new Set(rows.map((r) => String(f.value(r) ?? '')))].filter(Boolean).sort()]),
     )

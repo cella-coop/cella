@@ -20,7 +20,7 @@ a payroll integration computes them line by line.
 
 A salary and a payslip name their worker by address, as text, in a
 column still called `member`; that it is a worker's, employed in the
-payslip's month, is the `payslip-worker` graft's.
+payslip's month, is the `employment-payslip` graft's.
 
 ## Lifecycle
 
@@ -39,7 +39,7 @@ Preparing needs the approved time, which is the `payslip-timesheet`
 graft's, and approving and paying post, which is `payslip-transaction`'s:
 their writes serve these ops over this feat's `generating`, `approving`
 and `paying` specs. Who a run waits on, the holders of `approve-payroll`
-and then of `pay-payroll`, is `circle-member-payslip`'s, in their inbox.
+and then of `pay-payroll`, is `circle-membership-payslip`'s, in their inbox.
 
 ## Powers
 

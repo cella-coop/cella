@@ -1,5 +1,5 @@
 // The feat's public writes, POST /api/circle/<op> once the server exists,
-// each decided, which circle-decision-member carries out when the
+// each decided, which circle-decision-membership carries out when the
 // decision that asks it passes; its reads, and its slice, which the
 // shell mounts.
 import type { Slice } from '@cella/org-db'

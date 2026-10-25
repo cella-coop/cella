@@ -39,7 +39,7 @@ after(async () => {
 })
 
 test('only the app\'s core and this feat are migrated, and no kind is registered but the test\'s', async () => {
-  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('member', 'decision_member', 'circle_decision_member')`)
+  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('membership', 'decision_membership', 'circle_decision_membership')`)
   assert.deepEqual(rows, [])
   assert.deepEqual((await db.query('SELECT kind FROM decision.kind')).rows, [{ kind: 'admit' }])
 })

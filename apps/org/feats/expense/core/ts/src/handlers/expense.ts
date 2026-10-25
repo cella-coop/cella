@@ -7,7 +7,7 @@ type Op = keyof typeof ops
 type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 
 // Captures a member's expense as a draft. `expense.captures` checks it is
-// the actor's own and spent on a day that has come; the expense-member
+// the actor's own and spent on a day that has come; the expense-membership
 // graft's trigger that the actor is an active member.
 export const capturing = (input: Capture): Write<Captured> => ({
   op: 'expense:expense:capture' satisfies Op,
@@ -57,7 +57,7 @@ export async function submit(input: Act, deps: Deps): Out<'expense:expense:submi
 
 // Approves a submitted expense, spending the approver's budget for the
 // month. The expense-transaction graft wraps it with the entry charging
-// it, and the circle-expense-member graft checks the budget.
+// it, and the circle-expense-membership graft checks the budget.
 export const approving = (input: Act, actor: string): Write<Acted> => ({
   op: 'expense:expense:approve' satisfies Op,
   request: input,

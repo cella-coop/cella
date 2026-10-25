@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -121,7 +121,7 @@ draft, and the next adoption names a later version.
 | adopt | decided: the cited decision asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
 
 `002-powers.sql` and `003-create.sql` register `edit-document` in `cella.power`, and the
-`circle-member` graft checks it as any other: every member holds it
+`circle-membership` graft checks it as any other: every member holds it
 through a mandate on a role every member is seated in, never by
 omission, so a non-member's or a suspended member's device is refused.
 The power covers every document; a power per document is not built.
@@ -137,7 +137,7 @@ The document feat owns:
 
 What it does not own: that the cited decision asks for this content (the
 `decision-document` graft's), that it closed and passed on its roll
-(`circle-decision-member`'s, attached through `decision.cites`), and which
+(`circle-decision-membership`'s, attached through `decision.cites`), and which
 circle a document belongs to (a later `circle-document` graft's; today the
 adopting decision names its circle).
 

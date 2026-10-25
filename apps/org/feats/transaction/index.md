@@ -61,7 +61,7 @@ before issue, a distribution before its approval).
 
 `003-powers.sql` registers post's power in `cella.power`, and
 `004-pay.sql` pay's, with `amount` as the payload field the limit caps,
-and `006-adjust.sql` adjust's; the `circle-member` graft checks them.
+and `006-adjust.sql` adjust's; the `circle-membership` graft checks them.
 Payroll is not this feat's: a month's pay posts through the `payslip`
 feat's runs, by `payslip-transaction`.
 Keeping the books is a duty, so a VAT return or an accrual posts under
@@ -87,7 +87,7 @@ What it does not own:
 - that an invoice's issue, payments and void post the right entries: the
   `invoice-transaction` graft's;
 - the writes that take money out of the bank besides `pay`: a member's
-  draw (`account-member-transaction`), an expense reimbursed
+  draw (`account-membership-transaction`), an expense reimbursed
   (`expense-transaction`) and a pay run paid (`payslip-transaction`), each
   posting through `record` under its own right and rule.
 

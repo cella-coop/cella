@@ -6,7 +6,7 @@ CREATE SEQUENCE expense.number;
 -- the day, what it was for, the account of class 6 it is charged to, the
 -- amount before VAT and the deductible VAT, and the receipt, a reference
 -- until files are stored. Its member is an address, as text; that it is a
--- member's is the expense-member graft's. The label is the member's own
+-- member's is the expense-membership graft's. The label is the member's own
 -- words and stays out of the log.
 CREATE TABLE expense.expense (
   id text PRIMARY KEY DEFAULT 'ex-' || lpad(nextval('expense.number')::text, 4, '0'),

@@ -32,7 +32,7 @@ store behind the same table later.
 
 The table is split by class into four parts, `file.shared` (`none`),
 `file.receipt` (`expense-receipt`), `file.contract` (`payroll`) and
-`file.record` (`member-profile`), so that each part registers its name
+`file.record` (`profile`), so that each part registers its name
 and bytes in `cella.personal` under its own class and erasure finds them
 by it. Redacting the bytes empties the hash generated from them.
 
@@ -44,7 +44,7 @@ by it. Redacting the bytes empties the hash generated from them.
 
 A personal file comes in through the graft that attaches it, in that
 graft's write: a receipt with `expense-file`, an employment record with
-`file-worker`, a member's record with `file-member`. Each stores it with
+`employment-file`, a member's record with `file-membership`. Each stores it with
 this feat's spec, `storing`, and commits to it with `committed`.
 
 ## What the log keeps
@@ -59,7 +59,7 @@ covers the content; the receipt keeps only its salted digest.
 
 `file.opens(id, actor)`: the co-op's own files anyone may; a personal file
 the person it concerns and who uploaded it. A graft that sees a power over
-what a file records opens it to more: `circle-file-member` to whoever
+what a file records opens it to more: `circle-file-membership` to whoever
 holds a power over expenses, pay or members. The shell serves the bytes at
 `/files/<id>/content` only where one of them opens it, as an attachment
 unless it is a picture, a PDF or plain text, and sandboxed.

@@ -1,15 +1,15 @@
 // The retention class of the personal data a file holds, `none` for the
 // co-op's own: receipts, employment records such as contracts, and
 // members' records.
-export const classes = ['none', 'expense-receipt', 'payroll', 'member-profile'] as const
+export const classes = ['none', 'expense-receipt', 'payroll', 'profile'] as const
 export type Class = (typeof classes)[number]
 
 // The part of the file table each class keeps its files in, which names
 // its personal columns in `cella.personal`.
-export const parts: Record<Class, string> = { none: 'shared', 'expense-receipt': 'receipt', payroll: 'contract', 'member-profile': 'record' }
+export const parts: Record<Class, string> = { none: 'shared', 'expense-receipt': 'receipt', payroll: 'contract', profile: 'record' }
 
 // What each class is, in words.
-export const kinds: Record<Class, string> = { none: 'the co-op’s', 'expense-receipt': 'receipt', payroll: 'employment record', 'member-profile': 'member record' }
+export const kinds: Record<Class, string> = { none: 'the co-op’s', 'expense-receipt': 'receipt', payroll: 'employment record', profile: 'personal record' }
 
 // The most a file may hold, as `file.largest()` says: 10 MiB.
 export const largest = 10 * 1024 * 1024

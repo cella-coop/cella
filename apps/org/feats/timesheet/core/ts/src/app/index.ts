@@ -46,7 +46,7 @@ export const app: App = {
           { label: 'Hours', value: e.hours, kind: 'number' },
           { label: 'Kind', value: kind(e), kind: 'badge' },
           { label: 'Day', value: e.day, kind: 'date' },
-          { label: 'Member', value: e.member, kind: 'mono', href: `/members/${e.member}` },
+          { label: 'Member', value: e.member, kind: 'mono', href: `/people/${e.member}` },
         ],
         blocks: [Period],
         actions: Sheet,

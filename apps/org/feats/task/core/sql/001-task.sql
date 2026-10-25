@@ -4,7 +4,7 @@ CREATE SEQUENCE task.number;
 
 -- A work item. Each field is its own register: a move sets the status, a
 -- completion sets it done with its day, and the last write to a field
--- wins it. Who does it and what project it is in are the member-task and
+-- wins it. Who does it and what project it is in are the membership-task and
 -- project-task grafts'.
 CREATE TABLE task.task (
   id text PRIMARY KEY DEFAULT 't-' || nextval('task.number'),

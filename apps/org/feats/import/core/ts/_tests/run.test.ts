@@ -30,9 +30,9 @@ after(async () => {
 
 test('a run is recorded as its importer on the day, its lines counted', async () => {
   const lines = [
-    { line: 2, label: 'ana@test.example', op: 'member:member:invite', state: 'settled' as const, entry: 4 },
-    { line: 3, label: 'line 3', op: 'member:member:invite', state: 'failed' as const, reason: 'a member needs an address and a name' },
-    { line: 4, label: 'bo@test.example', op: 'member:member:invite', state: 'refused' as const, reason: 'no device' },
+    { line: 2, label: 'ana@test.example', op: 'membership:member:invite', state: 'settled' as const, entry: 4 },
+    { line: 3, label: 'line 3', op: 'membership:member:invite', state: 'failed' as const, reason: 'a member needs an address and a name' },
+    { line: 4, label: 'bo@test.example', op: 'membership:member:invite', state: 'refused' as const, reason: 'no device' },
   ]
   const out = await record({ kind: 'members', name: 'members.csv', dry: true, lines }, as)
   assert.equal(out.state, 'settled', out.state === 'refused' ? out.reason : '')

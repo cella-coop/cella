@@ -27,8 +27,8 @@ CREATE TRIGGER open_for_messages BEFORE INSERT ON decision.message
 
 -- decision:message:post — the message is the actor's own, and mentions and
 -- links what its payload names. That the actor sits in the decision's
--- circle is circle-decision-member's rule on the same op; that each
--- mention is a member's and each link a document's, decision-member's and
+-- circle is circle-decision-membership's rule on the same op; that each
+-- mention is a member's and each link a document's, decision-membership's and
 -- decision-document's.
 CREATE FUNCTION decision.posts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

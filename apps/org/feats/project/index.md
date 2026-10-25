@@ -32,9 +32,9 @@ archived project is hidden from lists, kept for the books and frozen.
 
 Setting a budget is ordered because a share spends it: a budget lowered
 while a share is granted could leave the shares above it, which the
-`member-project` graft's rule refuses. Every other write commutes.
+`membership-project` graft's rule refuses. Every other write commutes.
 `002-powers.sql` registers each power in `cella.power`, and the
-`circle-member` graft checks it.
+`circle-membership` graft checks it.
 
 ## Powers
 
@@ -49,7 +49,7 @@ while a share is granted could leave the shares above it, which the
 - an archived project changes no more: no budget, no milestone added or
   completed (`project.stays_archived`, `project.live`, SQLSTATE `09000`);
 - a budget is set by the write that names it (`project.budgets`); that it
-  covers the shares granted from it is `member-project`'s rule on the
+  covers the shares granted from it is `membership-project`'s rule on the
   same op.
 
 ## What it does not know
@@ -57,7 +57,7 @@ while a share is granted could leave the shares above it, which the
 Project knows no clients, tasks, members or time. Whom a project is for is
 `client-project`'s; its tasks, `project-task`'s; its time, what it spent
 of the budget and its spend at completion, `project-timesheet`'s; the
-shares of its budget, `member-project`'s; its margin and whether it is
+shares of its budget, `membership-project`'s; its margin and whether it is
 watched, `expense-invoice-project-timesheet`'s. Quotes and invoicing by milestone are not built.
 
 ## Schema

@@ -32,7 +32,7 @@ export function terms(p: Procedure): string {
 }
 
 // A decision as the feat reads it. Its outcome is never stored: the
-// circle-decision-member graft computes it from the stances on its roll.
+// circle-decision-membership graft computes it from the stances on its roll.
 export interface Decision {
   id: string
   circle: string

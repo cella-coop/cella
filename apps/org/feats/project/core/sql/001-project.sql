@@ -71,7 +71,7 @@ LEFT JOIN project.milestone m ON m.project = p.id
 GROUP BY p.id;
 
 -- project:project:budget — the write set the budget it names. Whether the
--- budget still covers what was shared from it is the member-project
+-- budget still covers what was shared from it is the membership-project
 -- graft's rule on the same op.
 CREATE FUNCTION project.budgets(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

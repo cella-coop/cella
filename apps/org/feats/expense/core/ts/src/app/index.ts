@@ -57,7 +57,7 @@ export const app: App = {
           { label: 'Category', value: `${category(e)}, ${e.category}` },
           { label: 'Spent on', value: e.day, kind: 'date' },
           { label: 'Receipt', value: e.receipt, kind: 'mono' },
-          { label: 'Member', value: e.member, kind: 'mono', href: `/members/${e.member}` },
+          { label: 'Member', value: e.member, kind: 'mono', href: `/people/${e.member}` },
         ],
         activity: (e: Expense) => [
           ...(e.reimbursed ? [{ at: e.reimbursed, text: 'reimbursed' }] : []),

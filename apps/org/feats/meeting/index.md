@@ -1,12 +1,12 @@
 +++
 title = "Meeting"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
 meeting was held. A meeting belongs to a circle, named by its id with no
 foreign key, as a project names its circle; who is expected and who came
-are the grafts' (`circle-meeting-member`, `meeting-member`), the
+are the grafts' (`circle-meeting-membership`, `meeting-membership`), the
 decisions an agenda tables `decision-meeting`'s, and the minutes, a
 document, `document-meeting`'s.
 
@@ -44,7 +44,7 @@ document, `document-meeting`'s.
   tables, runs `adding` in its own write.
 - **hold** and **cancel** settle a scheduled meeting on the verdict date;
   whichever settles first stands. Holding fixes the agenda, and who came,
-  which `meeting-member`'s trigger refuses after it. No meeting is held
+  which `meeting-membership`'s trigger refuses after it. No meeting is held
   before its day.
 - **minute** records the day the minutes were begun; `document-meeting`
   replaces it with the write that also starts the minutes' document.
@@ -57,9 +57,9 @@ document, `document-meeting`'s.
 | item.add, .move, .remove | seat: an active member seated in the meeting's circle | the circle's members |
 | hold, minute | `keep-minutes` | a circle's secretary or its lead |
 
-`002-powers.sql` registers the powers; `circle-member` checks the actor
-holds them and `circle-meeting-member` that they reach the meeting's
-circle, and backs the seat check (`circle_meeting_member.sits`).
+`002-powers.sql` registers the powers; `circle-membership` checks the actor
+holds them and `circle-meeting-membership` that they reach the meeting's
+circle, and backs the seat check (`circle_meeting_membership.sits`).
 
 ## Invariants
 
@@ -71,8 +71,8 @@ The meeting feat owns:
 - a meeting is held on or after its day.
 
 What it does not own: that the circle exists (`circle-meeting`), who is
-expected and whether the meeting is quorate (`circle-meeting-member`),
-who came (`meeting-member`), what decision an item tables
+expected and whether the meeting is quorate (`circle-meeting-membership`),
+who came (`meeting-membership`), what decision an item tables
 (`decision-meeting`) and the minutes' text (`document-meeting`).
 
 ## Schema

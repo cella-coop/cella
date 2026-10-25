@@ -32,7 +32,7 @@ export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Lo
 // Submits a member's month on the verdict date; submitting again keeps
 // the first day. `timesheet.submits` checks it is the actor's own and has
 // time in it. A graft that submits it under a write of its own, as
-// timesheet-worker does by the worker's employment, runs this.
+// employment-timesheet does by the worker's employment, runs this.
 export const submitting = (input: Period): Write<Submitted> => ({
   op: 'timesheet:period:submit' satisfies Op,
   request: input,

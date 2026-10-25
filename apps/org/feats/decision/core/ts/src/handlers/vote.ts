@@ -9,7 +9,7 @@ const op = 'decision:decision:vote'
 // counts. Logged as a single-entry batch until batching arrives. A stance on
 // a closed decision is refused by the feat's trigger; one for another member
 // by `decision.own_stance`, and one off the roll by the
-// circle-decision-member graft's rule, each as Refused.
+// circle-decision-membership graft's rule, each as Refused.
 export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Cast>> {
   return write(deps, {
     op,

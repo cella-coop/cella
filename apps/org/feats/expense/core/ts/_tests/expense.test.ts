@@ -36,7 +36,7 @@ after(async () => {
 })
 
 test('only the app\'s core and this feat are migrated', async () => {
-  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('member', 'transaction', 'expense_member')`)
+  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('membership', 'transaction', 'expense_membership')`)
   assert.deepEqual(rows, [])
 })
 

@@ -33,7 +33,7 @@ reserve, `1068` the development fund, an indivisible reserve; `4567` is
 what the co-op owes associates who left (the PCG's accounts, Règlement
 ANC n° 2014-03, not verified on Légifrance). A capital
 account names its member by address, as text (`holder`); it has no key
-into `member`, and the `account-member` graft checks it.
+into `member`, and the `account-membership` graft checks it.
 
 An account marked `cash` holds the co-op's money: the bank, a till. The
 chart says which accounts are cash, and the `account-transaction` graft
@@ -76,10 +76,10 @@ year.
 | `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
 
 - **draw** is bounded because it spends a right granted in advance, the
-  member's draw limit, which the `account-member` graft holds. A draw
+  member's draw limit, which the `account-membership` graft holds. A draw
   within it settles at once and, at rung 2, offline; beyond it, it is
   refused. It posts, so its handler and its rule are the
-  `account-member-transaction` graft's.
+  `account-membership-transaction` graft's.
 - **terms.adopt** cites the decision that moved to adopt the terms
   (`account-decision`); it settles only if that decision closed and
   passed.
@@ -89,14 +89,14 @@ year.
 - **capital.pay** is confluent because a payment in is a deposit: entries
   commute, and what is left to pay is their sum against the
   subscription. At rung 1 the rule refuses one beyond what is owed. It
-  posts, so its handler and rule are `account-member-transaction`'s.
+  posts, so its handler and rule are `account-membership-transaction`'s.
 - **capital.spread** is the associate's own register, the latest
   standing: no more instalments than the statutes allow. The instalments
   are withheld when a pay run is paid, so its handler and rule are
-  `account-member-payslip-transaction`'s.
+  `account-membership-payslip-transaction`'s.
 - **capital.repay** is ordered because a repayment is paid once and after
   the one before it, and not before the day it falls due. It posts, so
-  its handler and rule are `account-member-transaction`'s.
+  its handler and rule are `account-membership-transaction`'s.
 
 ## Powers
 
@@ -114,7 +114,7 @@ the holder is whoever holds the role the mandate is granted to.
 | capital.repay | `repay-capital` | Julien, as finance |
 
 `002-powers.sql` registers period.close's power in `cella.power`, and
-`006-terms.sql` capital.pay's and capital.repay's; the `circle-member`
+`006-terms.sql` capital.pay's and capital.repay's; the `circle-membership`
 graft checks them.
 
 ## Invariants
@@ -137,13 +137,13 @@ What it does not own:
   `account-patronage`'s;
 - that nothing posts into a closed period: `account-transaction`'s;
 - who holds a capital account, and that it freezes on exit:
-  `account-member`'s; what a member subscribes, pays in and draws, and
+  `account-membership`'s; what a member subscribes, pays in and draws, and
   their capital moved to `4567` and repaid on exit:
-  `account-member-transaction`'s; the instalments withheld from pay:
-  `account-member-payslip-transaction`'s;
+  `account-membership-transaction`'s; the instalments withheld from pay:
+  `account-membership-payslip-transaction`'s;
 - what of a worker's part of the work share buys shares:
-  `account-member-patronage`'s, and the shares credited:
-  `account-member-patronage-transaction`'s;
+  `account-membership-patronage`'s, and the shares credited:
+  `account-membership-patronage-transaction`'s;
 - that the members decided the terms: `account-decision`'s;
 - the statements' figures, summed from the journal:
   `account-transaction`'s.

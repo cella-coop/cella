@@ -2,7 +2,7 @@ import { icons, type App, type Tone } from '@cella/org-ui'
 import { kinds, sized, type Class, type File } from '../models/file.ts'
 import Upload from './blocks/Upload.svelte'
 
-const tones: Record<Class, Tone> = { none: 'neutral', 'expense-receipt': 'accent', payroll: 'warning', 'member-profile': 'positive' }
+const tones: Record<Class, Tone> = { none: 'neutral', 'expense-receipt': 'accent', payroll: 'warning', profile: 'positive' }
 
 // The feat's client side: the files the co-op keeps, a file of its own
 // uploaded from the list, and a file's page, opening its bytes.

@@ -1,5 +1,5 @@
--- The power each meeting write needs; the circle-member graft's rule
--- checks that the actor holds it, and circle-meeting-member that it
+-- The power each meeting write needs; the circle-membership graft's rule
+-- checks that the actor holds it, and circle-meeting-membership that it
 -- reaches the meeting's circle. The agenda's writes need a seat in the
 -- circle instead, a check the same graft backs.
 INSERT INTO cella.power (op, power, amount, owner) VALUES

@@ -66,7 +66,7 @@ distribution is approved.
 - **distribution.distribute** is ordered because the split is posted
   once, after its approval. Its handler is `patronage-transaction`'s,
   which wraps this feat's `distributing` spec with the entry; in that
-  write `account-member-patronage-transaction` credits the shares the
+  write `account-membership-patronage-transaction` credits the shares the
   work share buys as lines of the same entry.
 
 ## Powers
@@ -81,7 +81,7 @@ the holder is whoever holds the role the mandate is granted to.
 | distribution.distribute | `distribute-surplus` | Julien, as finance |
 
 `002-powers.sql` registers distribute's power in `cella.power`; the
-`circle-member` graft checks it.
+`circle-membership` graft checks it.
 
 ## Invariants
 
@@ -115,9 +115,9 @@ What it does not own:
   the capital ever reached (art. 33, 1°), and the split's entry:
   `patronage-transaction`'s, since the reserve and the capital are
   balances of the journal;
-- what of a part buys shares and what is paid: `account-member-patronage`'s,
+- what of a part buys shares and what is paid: `account-membership-patronage`'s,
   and the shares credited to the associates' capital accounts and the
-  return to the federation: `account-member-patronage-transaction`'s.
+  return to the federation: `account-membership-patronage-transaction`'s.
 
 ## What it does not know
 

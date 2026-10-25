@@ -15,12 +15,12 @@ owns a write is the one that knows its fields:
 
 | Kind | Read by | Each record | Formats |
 |---|---|---|---|
-| `members` | `key-member` | an invitation carrying the member's first device | CSV: address, name, key, label |
+| `members` | `membership` | an invitation carrying the member's first device | CSV: address, name, key, label |
 | `clients` | `client` | a client added | CSV: name, kind, form, email, phone, tags, note |
 | `fec` | `account-transaction` | an entry carried over, opening the accounts it names | the FEC (Livre des procédures fiscales, art. A47 A-1) |
 | `invoices` | `invoice-transaction` | an invoice issued and posted | CSV: a row per line |
-| `toggl` | `project-timesheet-worker` | a worker's own time booked to a project, or the co-op's | Toggl Track's detailed report |
-| `harvest` | `project-timesheet-worker` | as Toggl's | Harvest's detailed time report |
+| `toggl` | `employment-project-timesheet` | a worker's own time booked to a project, or the co-op's | Toggl Track's detailed report |
+| `harvest` | `employment-project-timesheet` | as Toggl's | Harvest's detailed time report |
 | `projects` | `project` | a project created | CSV: title, circle, summary, due |
 | `tasks` | `project-task` | a task, in the project it names | CSV, or Asana's task export |
 

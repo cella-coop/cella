@@ -48,7 +48,7 @@ export const app: App = {
           { label: 'Gross', value: p.gross, kind: 'money' },
           { label: 'Net', value: p.net, kind: 'money' },
           { label: 'Hours', value: p.hours, kind: 'number' },
-          { label: 'Member', value: p.member, kind: 'mono', href: `/members/${p.member}` },
+          { label: 'Member', value: p.member, kind: 'mono', href: `/people/${p.member}` },
         ],
         activity: (p: Payslip) => [
           ...(p.paid ? [{ at: p.paid, text: 'paid' }] : []),

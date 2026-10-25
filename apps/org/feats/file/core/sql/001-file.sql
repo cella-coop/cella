@@ -17,7 +17,7 @@ RETURN 10485760;
 -- What it is attached to is the graft's that attaches it.
 CREATE TABLE file.file (
   id text NOT NULL DEFAULT 'fi-' || lpad(nextval('file.number')::text, 4, '0'),
-  class text NOT NULL CHECK (class IN ('none', 'expense-receipt', 'payroll', 'member-profile')),
+  class text NOT NULL CHECK (class IN ('none', 'expense-receipt', 'payroll', 'profile')),
   subject text,
   name text NOT NULL CHECK (name <> ''),
   type text NOT NULL CHECK (type ~ '^[a-z]+/[a-z0-9.+-]+$'),
@@ -37,7 +37,7 @@ CREATE TABLE file.file (
 CREATE TABLE file.shared PARTITION OF file.file FOR VALUES IN ('none');
 CREATE TABLE file.receipt PARTITION OF file.file FOR VALUES IN ('expense-receipt');
 CREATE TABLE file.contract PARTITION OF file.file FOR VALUES IN ('payroll');
-CREATE TABLE file.record PARTITION OF file.file FOR VALUES IN ('member-profile');
+CREATE TABLE file.record PARTITION OF file.file FOR VALUES IN ('profile');
 
 CREATE INDEX ON file.file (hash);
 CREATE INDEX ON file.file (subject);

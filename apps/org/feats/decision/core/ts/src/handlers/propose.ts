@@ -8,7 +8,7 @@ const op = 'decision:decision:propose' satisfies keyof typeof ops
 // Proposes a decision on the verdict date with the motions it decides,
 // numbered the year's next (`d-2026-013`) under a lock on the numbering,
 // so two proposals at once take two numbers. Its roll is fixed as it is
-// inserted, by circle-decision-member; its rule is its procedure's, which
+// inserted, by circle-decision-membership; its rule is its procedure's, which
 // a foreign key keeps; `decision.proposes` checks the
 // write made it, the graft registering each motion's kind checks the
 // motion, and the actor must sit in the circle. The title and the text

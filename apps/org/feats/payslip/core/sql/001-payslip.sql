@@ -12,7 +12,7 @@ CREATE TABLE payslip.terms (
 );
 
 -- A member's monthly gross salary from a day on. The member is an address,
--- as text; that it is a member's is the member-payslip graft's.
+-- as text; that it is a worker's is the employment-payslip graft's.
 CREATE TABLE payslip.salary (
   member text NOT NULL,
   "from" date NOT NULL,

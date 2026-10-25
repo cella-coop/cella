@@ -1,4 +1,4 @@
--- The power each invoice write needs; the circle-member graft's rule checks
+-- The power each invoice write needs; the circle-membership graft's rule checks
 -- that the actor holds it.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('invoice:invoice:issue', 'issue-invoice', NULL, 'invoice'),

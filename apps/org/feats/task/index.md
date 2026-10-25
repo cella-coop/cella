@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -38,7 +38,7 @@ sets any status short of done, and moving a done task back reopens it;
 done is a completion, which records its day and keeps the first one.
 Nothing a task write changes is read by an ordered write's rule, so none
 waits. `002-powers.sql` registers the power in `cella.power`, and the
-`circle-member` graft checks it.
+`circle-membership` graft checks it.
 
 ## Powers
 
@@ -52,7 +52,7 @@ waits. `002-powers.sql` registers the power in `cella.power`, and the
 - its status and priority are among the known ones.
 
 That a task's project exists is `project-task`'s; that its assignee is an
-active member, `member-task`'s.
+active member, `membership-task`'s.
 
 ## Schema
 

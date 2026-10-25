@@ -15,7 +15,7 @@ reimbursed from the bank.
 | expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference the member typed, beside the receipts kept as files |
 
 An expense names its member and its decider by address, as text; that the
-member is an active one is the `expense-member` graft's. Its label and
+member is an active one is the `expense-membership` graft's. Its label and
 receipt are the member's own words and stay out of the log. Its total is
 `expense.total`, the amount before VAT and the deductible VAT.
 
@@ -48,8 +48,8 @@ this feat's `approving` and `reimbursing` specs.
 | refuse | `approve-expense` | as approve |
 | reimburse | `reimburse-expense`, within the mandate's limit | Julien, as finance, up to 3 000 € |
 
-`002-powers.sql` registers them in `cella.power`; the `circle-member`
-graft checks the power and the limit, and the `circle-expense-member`
+`002-powers.sql` registers them in `cella.power`; the `circle-membership`
+graft checks the power and the limit, and the `circle-expense-membership`
 graft the budget.
 
 ## Invariants
@@ -60,11 +60,11 @@ graft the budget.
 - it is decided by someone other than its member, for its whole amount;
 - it is the actor's own when claimed and submitted.
 
-What it does not own: whose it is (`expense-member`), what it charges and
+What it does not own: whose it is (`expense-membership`), what it charges and
 pays in the books (`expense-transaction`), the project it is billed on to
 (`expense-project`), its receipts, kept as files (`expense-file`), and the
 approver's budget, which needs their seats and mandates
-(`circle-expense-member`).
+(`circle-expense-membership`).
 
 ## Schema
 

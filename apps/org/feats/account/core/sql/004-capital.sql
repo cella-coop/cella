@@ -1,6 +1,6 @@
 -- A member's capital account is opened when they subscribe and frozen when
 -- they leave, until it is repaid; a frozen account never thaws. Which
--- member holds one, and when, is the account-member graft's.
+-- member holds one, and when, is the account-membership graft's.
 CREATE FUNCTION account.stays_frozen() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF OLD.frozen AND NOT NEW.frozen THEN

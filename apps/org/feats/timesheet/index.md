@@ -47,10 +47,10 @@ SHARE` and the approval updates it, so Postgres serialises the two.
 Logging and submitting are also the member's own (`timesheet.logs`,
 `timesheet.submits`), and approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
-`circle-member` graft checks them; that a lead approves only their own
-circle's members is `circle-member-timesheet`'s. A worker logs and
+`circle-membership` graft checks them; that a lead approves only their own
+circle's members is `circle-membership-timesheet`'s. A worker logs and
 submits their own time by their employment instead, member or not,
-through `timesheet-worker`'s writes of the same effect, which need no
+through `employment-timesheet`'s writes of the same effect, which need no
 mandate: the shell logs through those, since a worker who is no member
 holds no seat and so no `log-time`.
 
@@ -84,14 +84,14 @@ The `timesheets` collection lists every entry in a table, the latest day
 first, with its worker and project from the grafts; its dashboard sums
 the hours, the billable hours and those awaiting approval, by month and
 by kind, and by worker and by project from the grafts. Its New form is the
-acting worker's week (`project-timesheet-worker`): a project to a row,
+acting worker's week (`employment-project-timesheet`): a project to a row,
 the co-op's own time last, and a day to a column, each cell adding the
 hours typed into it by their employment, booked to the row's project;
 the feat's own one-entry form, with a note, is what that replaces. An
 entry's page shows its worker's month and, in its header, submits it
-while open or approves it once submitted; a worker's page and a member's
-list their months with the same writes (`timesheet-worker`,
-`member-timesheet`).
+while open or approves it once submitted; a person's page
+list their months with the same writes (`employment-timesheet`,
+`membership-timesheet`).
 
 ## Lanterne
 

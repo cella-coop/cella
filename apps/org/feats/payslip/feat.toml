@@ -2,4 +2,4 @@ name = "payslip"
 group = "finance"
 builtin = false
 rung = 1
-grafts = ["circle-member-payslip", "member-payslip", "payslip-timesheet", "payslip-transaction", "payslip-worker"]
+grafts = ["circle-membership-payslip", "employment-payslip", "payslip-timesheet", "payslip-transaction"]

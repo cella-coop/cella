@@ -7,7 +7,7 @@ The co-op's structure and the authority that flows through it. A circle is
 a self-governing unit, after sociocracy: the general assembly, a
 coordination circle, a working team. Circles nest in one tree whose root is
 the assembly. Each circle defines roles, and grants powers to them through
-mandates; who holds a role is a position, the `circle-member` graft's
+mandates; who holds a role is a position, the `circle-membership` graft's
 junction. Each circle also has a channel for its messages.
 
 ## Entities
@@ -22,9 +22,9 @@ junction. Each circle also has a channel for its messages.
 A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
 `cella.power`. A mandate grants one power to one role, with an optional
-limit, for a term. Who holds a role is a position, the `circle-member`
+limit, for a term. Who holds a role is a position, the `circle-membership`
 graft's, so whether an actor may use a power is that graft's rule,
-`circle_member.may`: an actor may if a seat they hold on the day carries
+`circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit. A power
 every member holds is granted the same way, through a mandate on a role
 every member is seated in, such as a `member` role in the assembly:
@@ -75,8 +75,8 @@ only through a decision of that circle's members.
 | `POST /api/circle/mandate.revoke` | ordered | authority, capped by a limit or a budget |
 | `POST /api/circle/message` | confluent | the circle's channel |
 
-Who holds which role is a position, the `circle-member` graft's own
-write; see its [doc](../../grafts/circle-member/index.md).
+Who holds which role is a position, the `circle-membership` graft's own
+write; see its [doc](../../grafts/circle-membership/index.md).
 
 - **nest** sets a circle's parent. Two nestings that are each acyclic can
   together form a cycle, so the notary orders them already at rung 1:
@@ -99,9 +99,9 @@ write; see its [doc](../../grafts/circle-member/index.md).
 
 Nesting, granting and revoking are decided: they cite a decision, which
 the `circle-decision` graft checks asks this and was put to a circle that
-may decide it, and `circle-decision-member` that it carried, and which
-`circle-decision-member` carries out when it passes. A message's seat
-check is `circle_member.sits`, the `circle-member` graft's rule.
+may decide it, and `circle-decision-membership` that it carried, and which
+`circle-decision-membership` carries out when it passes. A message's seat
+check is `circle_membership.sits`, the `circle-membership` graft's rule.
 
 ## Rules
 
@@ -137,10 +137,10 @@ The circle feat owns:
 - a mandate's term has `from` before `until`; a revoked mandate stays
   revoked.
 
-What it does not own: who holds which role (`circle-member`), and who
+What it does not own: who holds which role (`circle-membership`), and who
 may vote on a circle's decisions: the roll, the members seated in the
 circle when a decision is proposed, and the count of the active members
-on it, are the `circle-decision-member` graft's.
+on it, are the `circle-decision-membership` graft's.
 
 ## What it does not know
 
@@ -153,16 +153,16 @@ requested by another scope (rung 5) build on these entities later.
 The `circles` collection, in tree order, as a gallery of cards by
 default; a circle's page lists its roles,
 those every working circle has among them, and the mandates granted to
-them, with their limits and budgets. Seats are `circle-member`'s.
+them, with their limits and budgets. Seats are `circle-membership`'s.
 Proposing to nest the circle or to grant or revoke its mandates is
-`circle-decision`'s, a seat in it `circle-decision-member`'s: the page's
+`circle-decision`'s, a seat in it `circle-decision-membership`'s: the page's
 writes propose, and the close of a passing decision carries them out.
 
 ## Grafts
 
-- `circle-member`: seats, and who may use a power.
+- `circle-membership`: seats, and who may use a power.
 - `circle-decision`: nesting and mandates by decision.
-- `circle-member-project`, `circle-member-timesheet`: a power reaches the
+- `circle-membership-project`, `circle-membership-timesheet`: a power reaches the
   circle it is held in and those within it, for projects and timesheets;
   the months waiting on a member's approval, in their inbox.
 

@@ -6,7 +6,7 @@ import type { Close, Closed } from '../models/decision.ts'
 const op = 'decision:decision:close'
 
 // The close as a write a graft may extend in its transaction, as
-// circle-decision-member does with the admissions a passing close makes:
+// circle-decision-membership does with the admissions a passing close makes:
 // closes the decision on the verdict date and fixes which stances made
 // it, those received before the close's receipt. Whether it may close is
 // the rule's, `decision.closes`.

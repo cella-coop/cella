@@ -1,0 +1,5 @@
+name = "file"
+group = "platform"
+builtin = true
+rung = 1
+grafts = ["circle-file-member", "expense-file", "file-member", "file-worker"]

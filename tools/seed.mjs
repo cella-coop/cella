@@ -39,9 +39,21 @@ await db.connect()
 await db.query('BEGIN')
 
 // Every write signature names the scope; a new connection reads it. Its
-// name and legal name ride beside it, for the shell to call the co-op by.
+// name and legal name ride beside it, for the shell to call the co-op by,
+// and the mentions its invoices print: its form, SIREN, registry, VAT
+// number, seat and, for a fixed capital, its amount.
 const scope = read('scope')
-const settings = { 'cella.scope': scope.address, 'cella.scope_name': scope.name, 'cella.scope_legal_name': scope.legal_name }
+const settings = {
+  'cella.scope': scope.address,
+  'cella.scope_name': scope.name,
+  'cella.scope_legal_name': scope.legal_name,
+  'cella.scope_form': scope.form,
+  'cella.scope_siren': scope.siren,
+  'cella.scope_rcs': scope.rcs,
+  'cella.scope_vat': scope.vat,
+  'cella.scope_seat': scope.seat,
+  'cella.scope_capital': scope.capital,
+}
 for (const [setting, value] of Object.entries(settings)) {
   if (value) {
     await db.query(`ALTER DATABASE ${db.escapeIdentifier(db.database)} SET ${setting} = ${db.escapeLiteral(value)}`)
@@ -259,9 +271,9 @@ if (invoicing.series) {
 for (const i of invoices) {
   const number = Number(i.id.slice(invoicing.series.length + 1))
   await db.query(
-    `INSERT INTO invoice.invoice (id, series, number, issued, due, bill_to, label, net, vat, total, voided, reason)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, cella.amount($8), cella.amount($9), cella.amount($10), $11, $12)`,
-    [i.id, invoicing.series, number, day(i.issued), day(i.due), i.bill_to, i.label, i.net, i.vat || null, i.total, day(i.voided), i.reason ?? null],
+    `INSERT INTO invoice.invoice (id, series, number, issued, due, bill_to, bill_address, label, net, vat, total, voided, reason)
+     VALUES ($1, $2, $3, $4, $5, $6, $13, $7, cella.amount($8), cella.amount($9), cella.amount($10), $11, $12)`,
+    [i.id, invoicing.series, number, day(i.issued), day(i.due), i.bill_to, i.label, i.net, i.vat || null, i.total, day(i.voided), i.reason ?? null, i.bill_address ?? null],
   )
   // The fixture keeps totals; each invoice carries them as one line.
   await db.query(

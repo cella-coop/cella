@@ -237,10 +237,11 @@ test('Hugo edits the internal rules as the editor does: one Loro update, settled
   assert.equal(junk.state, 'failed', 'bytes that are not a Loro update are not written')
 })
 
-test('Julien issues F-2026-0056, posted to the books; Camille, without the power, is refused', async () => {
+test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its page; Camille, without the power, is refused', async () => {
   const fields = {
     series: 'F-2026',
     bill_to: 'Vélo Solidaire',
+    bill_address: '42 rue de Romainville\n93100 Montreuil',
     label: 'Workshop on accessibility',
     description: ['Workshop', 'Materials'],
     quantity: ['2', '1'],
@@ -258,6 +259,13 @@ test('Julien issues F-2026-0056, posted to the books; Camille, without the power
   assert.deepEqual(made, { total: '122460', entry: 'je-0041' })
   const { text } = await page('/invoices/F-2026-0056')
   assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0041'))
+  assert.ok(text.includes('Download PDF'), 'the page offers the invoice as a PDF')
+  const printed = await page('/invoices/F-2026-0056/content')
+  assert.equal(printed.status, 200)
+  assert.equal(printed.type, 'application/pdf')
+  for (const mention of ['%PDF-1.4', '(N', ' F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
+    assert.ok(printed.text.includes(mention), `the PDF prints ${mention}`)
+  }
   const linked = await act('/invoices/F-2026-0056', 'link', { client: 'velo' }, julien)
   assert.equal(linked.state, 'settled')
 })

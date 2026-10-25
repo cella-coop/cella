@@ -1,0 +1,54 @@
+# Each worker's candidacy for membership: the probation they served as a
+# candidate, from and to, both included, and the shares they subscribe if
+# the assembly admits them. Everyone hired after the founding was a
+# candidate from their first day for six months to a year, and admitted
+# the day after; Inès's year ended on 31 August 2026, and d-2026-012 asks
+# the assembly to admit her with her 20 shares.
+
+[[candidacy]]
+worker = "julien@lanterne.example"
+from = 2021-03-15
+to = 2021-08-31
+shares = 20
+
+[[candidacy]]
+worker = "lea@lanterne.example"
+from = 2021-07-12
+to = 2022-01-09
+shares = 20
+
+[[candidacy]]
+worker = "thomas@lanterne.example"
+from = 2021-10-04
+to = 2022-04-03
+shares = 20
+
+[[candidacy]]
+worker = "sofia@lanterne.example"
+from = 2022-03-07
+to = 2022-09-04
+shares = 20
+
+[[candidacy]]
+worker = "malik@lanterne.example"
+from = 2022-05-02
+to = 2022-11-01
+shares = 20
+
+[[candidacy]]
+worker = "amina@lanterne.example"
+from = 2022-12-12
+to = 2023-06-11
+shares = 20
+
+[[candidacy]]
+worker = "chloe@lanterne.example"
+from = 2023-08-07
+to = 2024-02-04
+shares = 20
+
+[[candidacy]]
+worker = "ines@lanterne.example"
+from = 2025-09-01
+to = 2026-08-31
+shares = 20

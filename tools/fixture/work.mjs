@@ -2,10 +2,10 @@
 // consistent. Every link a work graft holds resolves, and an invoice bills
 // a project of the client it bills; shares never exceed
 // their project's budget; a done task, and only a done one, has its day; a
-// member logs a plausible day, ten hours at most, on working days; an
+// worker logs a plausible day, ten hours at most, on working days; an
 // approved month was submitted, and approved by someone else; nothing is
 // booked to a project archived or dated before it started; booked time
-// has a rate and a cost.
+// has a rate and a cost; time is a worker's, on days of their employment.
 
 import { weekdays } from '../seed/work.mjs'
 
@@ -22,6 +22,16 @@ export function work(read, fail) {
   const active = (address, where) => {
     if (!addresses.has(address)) {
       fail(`${where}: ${address} is no active member`)
+    }
+  }
+  // Time is a worker's, member or not, on days of their employment.
+  const workers = new Map((read('worker').worker ?? []).map((w) => [w.address, w]))
+  const employed = (address, from, to, where) => {
+    const w = workers.get(address)
+    if (!w) {
+      fail(`${where}: ${address} is no worker`)
+    } else if (from < iso(w.start) || (w.until && to > iso(w.until))) {
+      fail(`${where}: ${address} is not employed from ${from} to ${to}`)
     }
   }
   const has = (map, id, what, where) => {
@@ -100,7 +110,7 @@ export function work(read, fail) {
   // most, and only on working days.
   const days = new Map()
   for (const r of runs.values()) {
-    active(r.member, `run ${r.id}`)
+    employed(r.member, iso(r.from), iso(r.to), `run ${r.id}`)
     const span = weekdays(iso(r.from), iso(r.to))
     if (!span.length || !(r.hours > 0)) {
       fail(`run ${r.id}: logs no time`)
@@ -118,7 +128,7 @@ export function work(read, fail) {
 
   const months = new Set([...days.keys()].map((k) => k.slice(0, -3)))
   for (const p of time.period ?? []) {
-    active(p.member, `period ${p.month}`)
+    employed(p.member, `${p.month}-01`, `${p.month}-28`, `period ${p.month}`)
     if (!months.has(`${p.member} ${p.month}`)) {
       fail(`period ${p.member} ${p.month}: no time in it`)
     }

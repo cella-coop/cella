@@ -1,0 +1,104 @@
+# Everyone Lanterne employs, member or not: their job, their contract and
+# the time it asks of them a week, in hours. The four founders were hired
+# when the co-op was founded; everyone else was hired six months to a year
+# before the assembly admitted them, after a probation as a candidate
+# (graft.member-worker.toml). Paul left on 30 November 2025, the day his
+# membership ended. Inès, hired on 1 September 2025, is employed but not
+# yet a member. Each hire was recorded on the day its contract started.
+
+[[worker]]
+address = "camille@lanterne.example"
+name = "Camille Martin"
+job = "brand strategist"
+contract = "permanent"
+start = 2021-03-01
+hours = 35
+
+[[worker]]
+address = "yusuf@lanterne.example"
+name = "Yusuf Demir"
+job = "lead developer"
+contract = "permanent"
+start = 2021-03-01
+hours = 35
+
+[[worker]]
+address = "hugo@lanterne.example"
+name = "Hugo Lefèvre"
+job = "graphic designer"
+contract = "permanent"
+start = 2021-03-01
+hours = 35
+
+[[worker]]
+address = "paul@lanterne.example"
+name = "Paul Garnier"
+job = "art director"
+contract = "permanent"
+start = 2021-03-01
+until = 2025-11-30
+hours = 35
+
+[[worker]]
+address = "julien@lanterne.example"
+name = "Julien Petit"
+job = "administration and finance"
+contract = "permanent"
+start = 2021-03-15
+hours = 35
+
+[[worker]]
+address = "lea@lanterne.example"
+name = "Léa Bernard"
+job = "UX and interface designer"
+contract = "permanent"
+start = 2021-07-12
+hours = 35
+
+[[worker]]
+address = "thomas@lanterne.example"
+name = "Thomas Nguyen"
+job = "full-stack developer"
+contract = "permanent"
+start = 2021-10-04
+hours = 35
+
+[[worker]]
+address = "sofia@lanterne.example"
+name = "Sofia Rossi"
+job = "illustrator and motion designer"
+contract = "permanent"
+start = 2022-03-07
+hours = 35
+
+[[worker]]
+address = "malik@lanterne.example"
+name = "Malik Benali"
+job = "marketing strategist"
+contract = "permanent"
+start = 2022-05-02
+hours = 35
+
+[[worker]]
+address = "amina@lanterne.example"
+name = "Amina Diallo"
+job = "backend developer"
+contract = "permanent"
+start = 2022-12-12
+hours = 35
+
+[[worker]]
+address = "chloe@lanterne.example"
+name = "Chloé Moreau"
+job = "content and social media"
+contract = "permanent"
+start = 2023-08-07
+hours = 35
+
+[[worker]]
+address = "ines@lanterne.example"
+name = "Inès Haddad"
+job = "junior developer"
+contract = "permanent"
+start = 2025-09-01
+hours = 35

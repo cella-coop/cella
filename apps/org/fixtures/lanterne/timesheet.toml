@@ -1,14 +1,14 @@
 # Lanterne's time since timesheets began on 1 September 2026, and its
-# members' months. A run is the same entry logged on every working day,
-# Monday to Friday, from one day to another: the seed logs one entry per
-# day of it. Each member's runs make seven hours a working day, the
-# 35-hour week of the internal rules. Billable time is what the
-# invoices bill, at the rate in graft.project-timesheet.toml; which
+# workers' months, the members' and Inès's. A run is the same entry logged
+# on every working day, Monday to Friday, from one day to another: the
+# seed logs one entry per day of it. Each worker's runs make seven hours
+# a working day, the 35-hour week of the internal rules. Billable time is
+# what the invoices bill, at the rate in graft.project-timesheet.toml; which
 # project a run's time is for is that graft's.
 #
 # September is submitted by everyone and approved: each circle's lead
-# approves their circle's members, Julien in finance the leads, and
-# Camille as gérante Julien. October is open.
+# approves their circle's members, Julien in finance the leads and Inès,
+# and Camille as gérante Julien. October is open.
 
 # Web
 
@@ -401,6 +401,19 @@ hours = 7
 billable = false
 note = "Books, invoicing, payroll and contracts"
 
+# Inès works with the web circle on no project of her own yet: her time
+# is reviews, internal tools and training, logged as a worker, since she
+# is no member.
+
+[[run]]
+id = "ines-web"
+member = "ines@lanterne.example"
+from = 2026-09-01
+to = 2026-10-23
+hours = 7
+billable = false
+note = "Web circle: code reviews, internal tools and training"
+
 # September, submitted and approved.
 
 [[period]]
@@ -472,3 +485,10 @@ month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
 approver = "camille@lanterne.example"
+
+[[period]]
+member = "ines@lanterne.example"
+month = "2026-09"
+submitted = 2026-10-01
+approved = 2026-10-05
+approver = "julien@lanterne.example"

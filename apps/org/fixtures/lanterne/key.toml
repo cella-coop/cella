@@ -1,7 +1,9 @@
-# Each member's devices. The seed enrols each with a TEST-ONLY key derived
-# from its address and label, which anyone can compute: fixture keys never
-# belong to a real member. Inès has no device yet: her first came with her
-# invitation (graft.key-member.toml), and her admission enrols it.
+# Each worker's and member's devices. The seed enrols each with a TEST-ONLY
+# key derived from its address and label, which anyone can compute: fixture
+# keys never belong to a real member. Inès's laptop was enrolled with her
+# hire, so she signs her own time though she is no member yet; her
+# invitation carries her phone (graft.key-member.toml), which her
+# admission enrols.
 
 [[device]]
 address = "camille@lanterne.example"
@@ -78,3 +80,8 @@ address = "hugo@lanterne.example"
 label = "old laptop"
 enrolled = 2025-01-15
 revoked = 2026-05-12
+
+[[device]]
+address = "ines@lanterne.example"
+label = "laptop"
+enrolled = 2025-09-01

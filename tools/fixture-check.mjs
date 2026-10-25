@@ -12,6 +12,7 @@ import { work } from './fixture/work.mjs'
 import { finance } from './fixture/finance.mjs'
 import { governance } from './fixture/governance.mjs'
 import { meeting, meetingIds } from './fixture/meeting.mjs'
+import { people } from './fixture/people.mjs'
 import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
 const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
@@ -203,6 +204,7 @@ const check = (name) => {
   finance(read, fail)
   governance(read, fail)
   meeting(read, fail)
+  people(read, fail)
 }
 
 const names = existsSync(root) ? readdirSync(root) : []

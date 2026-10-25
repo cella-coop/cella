@@ -130,6 +130,11 @@ power = "approve-payroll"
 text = "approve the monthly pay run"
 
 [[mandate]]
+role = "manager"
+power = "hire-worker"
+text = "hire workers and open their candidacies"
+
+[[mandate]]
 role = "finance"
 power = "reimburse-expense"
 text = "reimburse members' expenses"

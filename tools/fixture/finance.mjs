@@ -5,7 +5,7 @@
 // repayments, due as the clauses say, add up to it, owed in 4567;
 // the work share's terms divide all of it and govern each allocation;
 // an allocation honours a SCOP's floors (loi n° 78-763, art. 33); every
-// salary is a member's, and they keep within the internal rules' ratio; a
+// salary is a worker's, and they keep within the internal rules' ratio; a
 // pay run carried over posted exactly its payslips' pay and charges; an
 // expense is an active member's, charged to an account of class 6, and
 // billed on to a project that exists.
@@ -14,6 +14,7 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function finance(read, fail) {
   const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
+  const workers = new Set((read('worker').worker ?? []).map((w) => w.address))
   const books = read('account')
   // The share's value and the capital clauses: the latest adopted terms
   // that state them
@@ -112,8 +113,8 @@ export function finance(read, fail) {
   const pay = read('payslip')
   const salaries = pay.salary ?? []
   for (const s of salaries) {
-    if (!members.has(s.member)) {
-      fail(`salary: ${s.member} is no member`)
+    if (!workers.has(s.member)) {
+      fail(`salary: ${s.member} is no worker`)
     }
   }
   const due = (month) => {

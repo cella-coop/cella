@@ -1,9 +1,9 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
-// carried over from before the log: the scope's address, members and their
-// devices, circles, roles and mandates, seats, decisions with their
-// stances and what they decide, invitations' first devices, documents
-// with their versions, comments and
-// adoptions, clients, the chart, periods and journal, invoices with their
+// carried over from before the log: the scope's address, members, workers
+// and their candidacies, their devices, circles, roles and mandates,
+// seats, decisions with their stances and what they decide, invitations'
+// first devices, documents with their versions, comments and adoptions,
+// clients, the chart, periods and journal, invoices with their
 // payments, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
 // log; a closed decision's cutoff is the number after its last stance.
@@ -64,6 +64,26 @@ for (const d of devices) {
     `INSERT INTO key.device (key, address, label, enrolled, revoked) VALUES (decode($1, 'hex'), $2, $3, $4, $5)`,
     [key, d.address, d.label, day(d.enrolled), day(d.revoked)],
   )
+}
+
+// Everyone the co-op employs, member or not, and their candidacies for
+// membership, before their time and their pay load. Each hire is recorded
+// on the day its contract starts.
+const workers = read('worker').worker ?? []
+for (const w of workers) {
+  await db.query(
+    'INSERT INTO worker.worker (address, name, job, contract, start, until, minutes, hired) VALUES ($1, $2, $3, $4, $5, $6, $7, $5)',
+    [w.address, w.name, w.job, w.contract, day(w.start), day(w.until), Math.round(w.hours * 60)],
+  )
+}
+const candidacies = read('graft.member-worker').candidacy ?? []
+for (const c of candidacies) {
+  await db.query('INSERT INTO member_worker.candidacy (worker, "from", "to", shares, opened) VALUES ($1, $2, $3, $4, $2)', [
+    c.worker,
+    day(c.from),
+    day(c.to),
+    c.shares,
+  ])
 }
 
 const structure = read('circle')
@@ -259,7 +279,7 @@ const met = await meetings(db, read, day)
 await db.query('COMMIT')
 await db.end()
 console.log(
-  `seed: ${members.length} members, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
+  `seed: ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
     `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met} into ${db.database}`,

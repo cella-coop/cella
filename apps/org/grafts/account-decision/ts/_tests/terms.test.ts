@@ -1,6 +1,6 @@
-// Terms adopted by decision, on a database holding the app's core, the
-// account and decision feats and this graft: a motion to adopt drafted
-// terms records the adoption it asks for, and one naming no such terms
+// Capital terms adopted by decision, on a database holding the app's
+// core, the account and decision feats and this graft: a motion to adopt
+// drafted terms records the adoption it asks for, and one naming no such terms
 // is refused whatever wrote it; adopting the terms cites a decision that
 // moved to adopt them, never another. That the decision passed is
 // circle-decision-member's, not migrated here. Run by `cella test slice
@@ -20,7 +20,7 @@ const move = (decision: string, n: number, terms: string) =>
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
-  await db.query(`INSERT INTO account.terms (id, "from", salary, hours, capital) VALUES ('st-2027', 2027, 60, 40, 50)`)
+  await db.query(`INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments) VALUES ('st-2027', 2027, cella.amount(5000), 20, 10, 12, 3)`)
   await decide('d-1')
   await decide('d-2')
 })

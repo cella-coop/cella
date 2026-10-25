@@ -1,4 +1,4 @@
-// A decision of the members that moves to adopt the work share's terms,
+// A decision of the members that moves to adopt the capital's terms,
 // and where each stands.
 export interface Adoption {
   id: string

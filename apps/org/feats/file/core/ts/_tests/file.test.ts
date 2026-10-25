@@ -13,6 +13,15 @@ import { fixture, signer } from '@cella/org-sign'
 import { committed, content, file, upload } from '../src/api/index.ts'
 
 const db = new pg.Client()
+
+// Who reads, on the app's role as the server connects: the rows a query
+// returns read as `actor`, or as no one. A stub authority stands in for
+// circle-membership's, which says who holds a power.
+const app = new pg.Client({ user: 'cella_app' })
+const reading = async (actor: string | null, sql: string, values: unknown[] = []) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor ?? ''])
+  return (await app.query(sql, values)).rows
+}
 const scope = 'test.example'
 const camille = 'camille@test.example'
 const sofia = 'sofia@test.example'
@@ -41,6 +50,7 @@ before(async () => {
 })
 
 after(async () => {
+  await app.end()
   await db.end()
 })
 
@@ -114,4 +124,33 @@ test('a personal file\'s name and hash are committed to, and the co-op\'s own ar
   assert.deepEqual(logged.name, { $personal: { field: 'file.receipt.name', subject: sofia, value: 'ticket.png' } })
   assert.deepEqual(logged.hash, { $personal: { field: 'file.receipt.bytes', subject: sofia, value: 'ab' } })
   assert.equal(committed({ ...stored, class: 'none', subject: null }, 'statuts.txt').name, 'statuts.txt')
+})
+
+test('as the app role, the co-op\'s own files are anyone\'s, a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {
+  await app.connect()
+  await db.query(`CREATE SCHEMA mandate`)
+  await db.query(
+    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, day date) RETURNS boolean
+     LANGUAGE sql STABLE RETURN actor = 'lea@test.example' AND power = 'approve-expense'`,
+  )
+  await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
+  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, date)', 'test')`)
+  await db.query(`INSERT INTO cella.reading (what, key, power, owner) VALUES ('file', 'expense-receipt', 'approve-expense', 'test')`)
+  const add = (id: string, cls: string, subject: string | null, uploader: string) =>
+    db.query(
+      `INSERT INTO file.file (id, class, subject, name, type, size, bytes, uploader, uploaded) VALUES ($1, $2, $3, 'x.pdf', 'application/pdf', 3, $4, $5, '2026-10-24')`,
+      [id, cls, subject, abc, uploader],
+    )
+  await add('fi-9001', 'none', null, camille)
+  await add('fi-9002', 'expense-receipt', sofia, sofia)
+  await add('fi-9003', 'payroll', sofia, camille)
+  const ids = async (actor: string | null) => (await reading(actor, `SELECT id FROM file.file WHERE id LIKE 'fi-9%' ORDER BY id`)).map((r) => r.id)
+  assert.deepEqual(await ids(null), ['fi-9001'])
+  assert.deepEqual(await ids('anyone@test.example'), ['fi-9001'])
+  assert.deepEqual(await ids(sofia), ['fi-9001', 'fi-9002', 'fi-9003'])
+  assert.deepEqual(await ids(camille), ['fi-9001', 'fi-9003'])
+  assert.deepEqual(await ids('lea@test.example'), ['fi-9001', 'fi-9002'], 'a power registered for a class reads that class alone')
+  assert.equal(await content(app, 'fi-9002', 'lea@test.example').then((c) => c?.name), 'x.pdf')
+  assert.equal(await content(app, 'fi-9003', 'lea@test.example'), null, 'a file its reader may not read is none to them')
+  await assert.rejects(reading(sofia, 'SELECT id FROM file.receipt'), /permission denied for table receipt/)
 })

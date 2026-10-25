@@ -1,7 +1,8 @@
 import { error, fail, type RequestEvent } from '@sveltejs/kit'
 import type { Done, Form, Upload } from '@cella/org-db'
+import { scope } from '@cella/org-log/api'
 import { using } from './db.ts'
-import { deps } from './device.ts'
+import { answered, proof, relay, type Ask } from './relay.ts'
 import { action, reactions } from './slices.ts'
 
 // A form's fields as text, and the files it carries read whole; a file
@@ -27,7 +28,7 @@ export async function fields(data: FormData): Promise<Form> {
 // handler threw about its input, a plain Error, or a value Postgres could
 // not take (SQLSTATE class 22). Anything else, a bug or the database's
 // internals, is logged here and said generically.
-function reason(e: unknown): string {
+export function reason(e: unknown): string {
   const code = (e as { code?: unknown }).code
   if (e instanceof Error && (typeof code === 'string' ? code.startsWith('22') : e.constructor === Error)) {
     return e.message
@@ -37,31 +38,74 @@ function reason(e: unknown): string {
 }
 
 // One write from a page: the action the collection's slices name, run as
-// the acting member's device, then the reactions to it if it settled. A
-// refusal or a failure is a 4xx, so the form keeps what was typed.
+// the signed-in member and signed by their device through the relay, then
+// the reactions to it if it settled. A refusal or a failure is a 4xx, so
+// the form keeps what was typed. The post that starts it, and each post
+// carrying a proof back, is answered with the run's next step: what the
+// device is to sign, or the outcome.
 export async function perform(event: RequestEvent, collection: string, name: string, id?: string) {
   const write = action(collection, name)
   if (!write) {
     error(404, `${collection} has no write ${name}`)
   }
-  const form = await fields(await event.request.formData())
-  return using(async (db) => {
-    const signing = await deps(db, event.locals.actor)
-    if (typeof signing === 'string') {
-      return fail(403, { done: { op: write.op, state: 'failed', reason: signing, then: [] } satisfies Done })
-    }
-    let result: Awaited<ReturnType<typeof write.run>>
-    try {
-      result = await write.run(form, signing, id)
-    } catch (e) {
-      return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
-    }
-    const { done, request } = result
-    if (done.state === 'settled') {
-      for (const react of reactions(write.op)) {
-        done.then.push(...(await react(request, signing)))
-      }
-    }
-    return done.state === 'refused' ? fail(422, { done }) : { done }
-  })
+  const s = event.locals.session
+  if (!s) {
+    return fail(401, { done: { op: write.op, state: 'failed', reason: 'sign in first', then: [] } satisfies Done })
+  }
+  const data = await event.request.formData()
+  const owner = `${s.actor} ${s.device}`
+  const run = data.get('cella-run')
+  if (typeof run === 'string') {
+    return relayed(owner, run, data)
+  }
+  const form = await fields(data)
+  const address = await using(scope)
+  if (!address) {
+    return fail(503, { done: { op: write.op, state: 'failed', reason: 'the database names no scope', then: [] } satisfies Done })
+  }
+  return step(
+    relay(owner, { scope: address, actor: s.actor, device: s.device }, (sign) =>
+      using(async (db) => {
+        const deps = { db, actor: s.actor, sign }
+        let result: Awaited<ReturnType<typeof write.run>>
+        try {
+          result = await write.run(form, deps, id)
+        } catch (e) {
+          return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
+        }
+        const { done, request } = result
+        if (done.state === 'settled') {
+          for (const react of reactions(write.op)) {
+            done.then.push(...(await react(request, deps)))
+          }
+        }
+        return done.state === 'refused' ? fail(422, { done }) : { done }
+      }),
+    ),
+  )
+}
+
+// A proof the browser posts back to the run it answers, which goes on to
+// its next step; a run that is not the poster's, or is over, is gone.
+export async function relayed(owner: string, id: string, data: FormData) {
+  const run = answered(id, owner)
+  const p = proof(String(data.get('cella-proof') ?? ''))
+  if (!run || !p) {
+    return fail(409, { done: { op: 'none:none:none', state: 'failed', reason: 'this write is over, or is not yours to sign', then: [] } satisfies Done })
+  }
+  run.give(p)
+  return step(run)
+}
+
+// What a post is answered with: the signature the run asks for, or its
+// outcome.
+export async function step<R>(run: { next(): Promise<{ ask: Ask } | { result: R } | { error: unknown }> }) {
+  const s = await run.next()
+  if ('ask' in s) {
+    return { sign: s.ask }
+  }
+  if ('error' in s) {
+    throw s.error
+  }
+  return s.result
 }

@@ -1,26 +1,24 @@
 import { named } from '@cella/org-log/api'
+import { person } from '@cella/org-person/api'
 import { using } from '#lib/server/db.ts'
-import { actors, dev } from '#lib/server/device.ts'
+import { dev } from '#lib/server/device.ts'
 import { rows } from '#lib/server/slices.ts'
 import { counted } from '#lib/slices.ts'
 import type { LayoutServerLoad } from './$types'
 
 export const load: LayoutServerLoad = async ({ locals, cookies }) =>
   using(async (db) => {
-    const people = await actors(db)
     const s = await named(db)
-    // How many rows the counted collections hold for the acting member,
+    const someone = locals.actor ? await person(db, locals.actor) : null
+    // How many rows the counted collections hold for the signed-in member,
     // as what waits on them: the owner's and its extensions'.
     const counts: Record<string, number> = {}
-    for (const name of counted()) {
-      if (locals.actor) {
-        counts[`/${name}`] = (await rows(db, name, locals.actor)).length
-      }
+    for (const name of someone ? counted() : []) {
+      counts[`/${name}`] = (await rows(db, name, someone?.address ?? null)).length
     }
     return {
       scope: { address: s.address ?? 'no scope', name: s.name ?? s.address ?? 'No scope', legal: s.legal },
-      actor: people.find((p) => p.address === locals.actor) ?? null,
-      actors: people,
+      actor: someone && { address: someone.address, name: someone.name },
       dev,
       counts,
       theme: locals.theme,

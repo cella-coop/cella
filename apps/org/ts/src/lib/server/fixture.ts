@@ -7,14 +7,15 @@ import { fixture, signer, type Device } from '@cella/org-sign'
 // derived from their address and a device's label, used only if it is the
 // key enrolled under that label and not revoked. A real member's device
 // holds a key no one can derive, so this signs for fixture members alone.
-// The dev server signs with it, and so does `cella import`.
+// `cella import` signs with it; the dev server's sign-in page lists the
+// members it finds, and the browser derives their keys itself.
 
-async function derived(address: string, label: string, enrolled: string): Promise<Device | null> {
+async function derived(address: string, label: string, enrolled: string): Promise<(Device & { label: string }) | null> {
   const d = await fixture(address, label)
-  return d.key === enrolled ? d : null
+  return d.key === enrolled ? { ...d, label } : null
 }
 
-export async function own(db: Db, address: string): Promise<Device | null> {
+export async function own(db: Db, address: string): Promise<(Device & { label: string }) | null> {
   for (const d of await devices(db, address)) {
     if (d.revoked) {
       continue

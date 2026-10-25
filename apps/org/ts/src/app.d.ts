@@ -1,7 +1,10 @@
 declare global {
   namespace App {
     interface Locals {
-      // The member the dev server signs as; always null outside dev mode.
+      // Who is signed in, and on which of their devices; null on the pages
+      // a person reaches before signing in.
+      session: { actor: string; device: string } | null
+      // The signed-in person's address, or null.
       actor: string | null
       theme: 'light' | 'dark' | 'system'
     }

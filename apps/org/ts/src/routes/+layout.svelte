@@ -1,6 +1,6 @@
 <script lang="ts">
   import { page } from '$app/state'
-  import { Shell, type Done } from '@cella/org-ui'
+  import { Gate, Shell, type Done } from '@cella/org-ui'
   import { nav } from '#lib/slices.ts'
   import type { LayoutProps } from './$types'
 
@@ -14,6 +14,14 @@
   <title>{data.scope.name} · cella</title>
 </svelte:head>
 
-<Shell scope={data.scope} nav={nav(data.counts)} actor={data.actor} actors={data.actors} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer}>
-  {@render children()}
-</Shell>
+<!-- Signed in, the shell; before, the pages a person reaches first, the
+     sign-in and an invitation's link, alone. -->
+{#if data.actor}
+  <Shell scope={data.scope} nav={nav(data.counts)} actor={data.actor} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer}>
+    {@render children()}
+  </Shell>
+{:else}
+  <Gate scope={data.scope}>
+    {@render children()}
+  </Gate>
+{/if}

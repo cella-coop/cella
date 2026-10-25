@@ -6,6 +6,8 @@
   // the rule's reason where it was refused.
   let { data }: { data: Run; id: string } = $props()
 
+  // The table keys its rows by id: a line's is its number.
+  const rows = $derived(data.lines.map((l) => ({ ...l, id: String(l.line) })))
   const tones = { settled: 'positive', pending: 'accent', refused: 'negative', failed: 'warning' } as const
   const columns: Column<Line>[] = [
     { key: 'line', label: 'Line', kind: 'number', value: (l) => l.line },
@@ -17,5 +19,5 @@
 </script>
 
 <Section title={data.dry ? 'What it would make' : 'What it made'} count={data.lines.length}>
-  <Table {columns} rows={data.lines} />
+  <Table {columns} {rows} />
 </Section>

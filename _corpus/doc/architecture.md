@@ -209,7 +209,7 @@ decision. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a node's core | `cella.*`; the catalog |
+| a node's core | `cella.*`; the notary's `vault.*`; the catalog |
 | a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; the catalog |
 | a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; the catalog |
 
@@ -221,9 +221,28 @@ that creates, alters, indexes, drops or grants outside its own schema;
 holds a foreign key out of it; writes `cella.*` other than to register,
 under its own name, its rules on its own ops, those of the feats it
 joins and those of the lower-order grafts it builds on, the power each of
-its own ops needs as a literal row, or, a feat only, the keyring; sets
+its own ops needs as a literal row, the powers that read the rows of its
+own feat or of the feats it joins (`cella.reading`), a feat only the
+keyring, or a graft only the authority that says who holds a power
+(`cella.authority`) and what opens a joined feat's rows to more readers
+(`cella.reach`), each a literal row; sets
 `search_path` other than a function's to the catalog; reads the clock or
-randomness; or hides statements in a `DO` block.
+randomness; or hides statements in a `DO` block. A row-level policy is
+created, and a function altered, only in the owner's own schema.
+
+A table holding a person's pay, time, capital, personal files or a
+capital account's lines keeps row-level security for the app role: the
+person reads their own rows; whoever holds a power its feat names in
+`cella.reading` reads them all; a graft that knows more opens a row
+further through `cella.reach`; a write's transaction and the rules role
+read the whole. The pattern every policy takes, the power checks asked
+once per query:
+`USING ((SELECT cella.sees('<feat>')) OR member = cella.reader() OR
+cella.reaches('<feat>', member))`. A view over such a table reads as its
+reader (`security_invoker`), unless what it shows is a sum every member
+reads, as the statements' rubrics and a project's burn are, or a share
+that needs the whole to divide, which filters its rows by the same test
+instead.
 
 SQL is the source of truth for rules. TypeScript calls them and never
 re-implements one; the browser may preview a rule through the primitives
@@ -376,7 +395,11 @@ the rule's reason when refused. Every route but the sign-in, its session
 and an invitation's link needs a session, a person signed in on one of
 their current devices (`hooks.server.ts`, `lib/server/session.ts`): a
 page asked for without one goes to the sign-in, and anything else is
-refused. A write is signed in the browser by the session's device: the
+refused. Every read is the session's person's: each connection the shell
+takes (`using(actor, …)` in `lib/server/db.ts`) sets `cella.actor` from the
+session before any query and clears it after, so the database's
+row-level policies, not the shell, decide what a page shows
+([trust](trust.md#one-server)). A write is signed in the browser by the session's device: the
 action runs as a relay (`lib/server/relay.ts`), and each time a handler
 signs, the post is answered with what to sign; the browser signs it
 (`post` in `@cella/org-ui`) and posts the proof back to the run, which

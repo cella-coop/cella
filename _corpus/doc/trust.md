@@ -112,6 +112,30 @@ sequenceDiagram
   `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
   year, is checked by the graft that sees what spends it:
   `circle-expense-membership` sums an approver's approvals.
+- **Who may read is a policy in the database.** Every connection the
+  server hands out reads as the session's person: it sets `cella.actor`
+  from the session before any query, and `write` sets it again for its
+  transaction (`cella.reader()`). Each table holding a person's pay, time,
+  capital, personal files or a capital account's lines keeps row-level
+  security for the app role. The person reads their own rows. A feat
+  names in `cella.reading` the powers that read all of them, as its ops
+  name theirs in `cella.power`, and the `circle-membership` graft, as
+  `cella.authority`, says who holds a power on the verdict date: the
+  payroll powers read pay, `approve-time` time, the books' and capital's
+  powers capital. A graft that knows whose a row is opens it further
+  (`cella.reach`): `account-transaction` opens the lines on the co-op's
+  own accounts to every member and a capital account's to its holder, and
+  `circle-file-membership` a class of personal files to the powers over
+  what they record. No one signed in reads none of it. A write's
+  transaction reads the whole state, whoever asked for it (`cella.writing()`):
+  the notary judges whether they may, and a write's state must not depend
+  on who wrote it. The rules role reads everything. The statements,
+  rubric by rubric, a project's burn and a distribution's division sum
+  the whole for every reader; the figures behind them read as their rows
+  do. The log's `form` is the owner's alone, and the vault opens only
+  through `cella.disclosed(n)`: to the entry's writer, to the person
+  every commitment in it is about, or to a holder of the power its op
+  needs.
 - **Confluent writes are logged in signed batches** once devices queue
   them offline (rung 2); until then each goes through the server's rules
   on its own.
@@ -305,6 +329,17 @@ What the build does not yet do, and what lifts each:
   once its close settles, and shows none of it to the member; until the
   native client (rung 4) nothing stops a host serving code that signs
   something else with the keys it serves code to.
+- **The host sets the reader.** The app role may set `cella.actor` and
+  `cella.writing` itself, so the policies hold the server's own code to
+  what each person may read, not a hostile host; the native client
+  (rung 4) and the host's trust (A2) lift this.
+- **Some of what concerns a person is every member's.** The register of
+  members, who holds how many shares, and the journal's entries with
+  their lines on the co-op's own accounts are read by every member, so
+  a colleague's capital paid in shows on the bank's line as an amount,
+  without whose it is; an expense, an invoice and a draw's amount the
+  same. A page that sums rows shows the sum of those its reader reads,
+  but for the statements, the burn and the division.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute, holding a database connection, and goes with
   the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`

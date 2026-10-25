@@ -347,15 +347,16 @@ slice; it holds the routes and no feature of its own. Each slice exports
 two halves of one **slice**, matched by name:
 
 - from `./api`, its server side (`Slice` in `@cella/org-db`): the
-  collections it owns, each with its reads (`list`, as the acting member
-  sees it, `item`, `index` for the command menu, `about` for the
-  collection's header) and its writes as form actions, each a handler
-  over a form; what it adds to the collections of the feats it joins and
-  of the feats they nest in, and a nested feat to its parent's
-  (`extends`, with `within` naming the parent): fields on each row, rows
+  collections it owns, each with its reads (`list`, a SQL select of its
+  rows as the acting member sees them, `item`, `index` for the command
+  menu, `about` for the collection's header) and its writes as form
+  actions, each a handler over a form; what it adds to the collections
+  of the feats it joins and of the feats they nest in, and a nested feat
+  to its parent's (`extends`, with `within` naming the parent): fields
+  on each row (`list`, a select of each row's id and its fields), rows
   of its own in a collection that gathers them from the slices that know
-  each kind (`rows`), as the person feat's inbox gathers what waits on a
-  person, data on an item, what it adds to the collection's `about`, such as the
+  each kind (`rows`, a select too), as the person feat's inbox gathers
+  what waits on a person, data on an item, what it adds to the collection's `about`, such as the
   circles a new decision may be put in, writes, and whether it opens an
   item's bytes its owner keeps closed (`allows`), as a power over
   expenses opens a receipt; and reactions to
@@ -421,6 +422,30 @@ in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
 Until `POST /api/<feat>/<op>` is served, these form actions are the
 writes' only HTTP path.
+
+### Reading at scale
+
+A collection is read in SQL, a page at a time. `@cella/org-db` composes
+its owner's select, the selects of the extensions that add rows, and one
+join per extension that adds fields into one statement (`src/read.ts`),
+each row the JSON of its fields; the view's conditions, its text filter,
+the collection's order and the page's limit run in it, so the server
+holds a page of rows and Postgres the rest. The same statement counts
+the rows each tab keeps and that the sidebar counts, gives each
+enumeration's values, and runs a dashboard's or the home's widgets as
+SQL aggregates. A field is read in SQL as the row holds it under the
+column's key, so a slice's select returns what each badge and date
+column shows under its key, already derived, such as an invoice's
+standing, overdue past its due date; `value` only reads it. The text
+filter matches the values under every column's key. The address holds
+how many rows are drawn (`n`, a hundred more each time "Show more"
+asks) and the text filter, which the page puts there once the typing
+pauses; a board and a calendar place every row the view keeps. The
+viewer's own views live in their browser, so their tabs' counts are
+asked as JSON beside the collection's page (`GET /[collection]`, its
+`where` a list of each view's conditions). "Today", for a date's month
+or year and for every page, is `cella.verdict_date()`, the day in the
+scope's timezone ([the notary](../../apps/org/core/notary/index.md#settings)).
 
 The UI core, `@cella/org-ui`, holds the tokens and every component the
 slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's

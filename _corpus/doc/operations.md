@@ -29,8 +29,10 @@ co-op's names, `cella.scope_name` and `cella.scope_legal_name`, and the
 mentions its invoices print: `cella.scope_form` (with "à capital variable"
 where the capital varies), `cella.scope_capital` (the amount, for a fixed
 capital only), `cella.scope_siren`, `cella.scope_rcs` (the town of its
-registry), `cella.scope_vat` and `cella.scope_seat`, all set with `ALTER
-DATABASE … SET`. An invoice keeps the mentions as they stand when it
+registry), `cella.scope_vat` and `cella.scope_seat`, and the scope's
+timezone, `cella.timezone` (an IANA zone such as `Europe/Paris`, whose
+day the notary dates every verdict by; UTC when unset), all set with
+`ALTER DATABASE … SET`. An invoice keeps the mentions as they stand when it
 issues, so a seat that moves changes the invoices issued after the move
 and never the PDF of one issued before
 ([invoice](../../apps/org/feats/invoice/index.md#the-pdf)). `cella migrate --url` makes

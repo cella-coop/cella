@@ -193,6 +193,10 @@ not name is refused; parts are made only in the write that approves and
 never change; terms that divide less than the whole, or would govern an
 approved year, are refused, and adopted terms never change.
 
+## Reads
+
+A worker's parts of a work share, and so their statement, read for the worker and for whoever holds `distribute-surplus` (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)); distributions and their shares stay everyone's. `patronage.statement` reads as its reader. A write's transaction reads every part.
+
 ## Shell
 
 The `distributions` collection, each year's surplus in a table, the

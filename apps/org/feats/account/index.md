@@ -216,6 +216,10 @@ code of classes 1 to 7 has a place on the balance sheet, a total names
 only rubrics of its own sheet and a line its side, and the spans are each
 month, quarter and year of the books against the one before.
 
+## Reads
+
+A capital account, one with a holder, reads for its holder and for whoever holds `repay-capital`, `record-entry`, `carry-books`, `close-period` or `distribute-surplus`, the powers that read capital (`sql/009-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)); every other account, for anyone. The capital grafts' own tables, what is called, paid, drawn and owed, read by the same powers, as `account`. A write's transaction reads every account.
+
 ## Shell
 
 The `accounts` collection, the chart by code; `periods`, the latest month

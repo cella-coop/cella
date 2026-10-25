@@ -93,6 +93,10 @@ and ends, as its reaction to the close.
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
 the actor is an active member seated in the circle on the verdict date.
 
+## Reads
+
+It is the authority every read asks (`cella.authority`, `sql/006-authority.sql`): `may`, on the verdict date, says whether the reader holds a power a feat names as reading its rows in `cella.reading` ([the pattern](../../../../_corpus/doc/architecture.md#sql)).
+
 ## Shell
 
 Adds a circle's seats to its page and how many sit in it to the list and

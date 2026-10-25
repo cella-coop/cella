@@ -2,6 +2,7 @@ import type { Permission, Refused, Settled } from '@cella/org-ops'
 import { plain, type Proof, type Signer } from '@cella/org-sign'
 
 export * from './slice.ts'
+export * from './import.ts'
 
 // The one thing a handler needs of a connection; a `pg` Client or pool
 // client fits it. A handler holds the connection for its transaction.

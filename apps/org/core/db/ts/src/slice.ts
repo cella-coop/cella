@@ -31,10 +31,19 @@ export function done(op: Permission, outcome: Settled<unknown> | Pending | Refus
   }
 }
 
-// A form's fields, as an action reads them.
+// A file a form carries: its name and media type as the browser gave
+// them, and its bytes.
+export interface Upload {
+  name: string
+  type: string
+  bytes: Uint8Array
+}
+
+// A form's fields, as an action reads them, and the files it carries.
 export interface Form {
   get(name: string): string
   all(name: string): string[]
+  file(name: string): Upload | null
 }
 
 // A write from a page: the form's fields to the handler's input, through
@@ -82,6 +91,14 @@ export type Stream = (o: {
   signal: AbortSignal
 }) => ReadableStream<Uint8Array>
 
+// An item's bytes, served at `/<collection>/<id>/content`, such as a
+// stored file: its name, media type and bytes, and whether its owner's
+// rule lets the acting member open it; where it does not, an extension's
+// `allows` may.
+export interface Content extends Upload {
+  open: boolean
+}
+
 // A collection a feat owns: its rows, one item, the items the command menu
 // lists, and the writes its pages make. Its rows may be the acting
 // member's, as what waits on them: `actor` is their address, or null.
@@ -98,6 +115,8 @@ export interface Collection {
   actions?: Record<string, Action>
   // An item's live streams, by name.
   streams?: Record<string, Stream>
+  // An item's bytes, for the acting member, or null where there are none.
+  content?(db: Db, id: string, actor: string | null): Promise<Content | null>
 }
 
 // What a graft, or the root, adds to a collection of a feat it joins:
@@ -115,6 +134,9 @@ export interface Extension {
   about?(db: Db, actor?: string | null): Promise<object>
   item?(db: Db, id: string, actor: string | null): Promise<unknown>
   actions?: Record<string, Action>
+  // Whether the acting member may open an item's bytes that its owner's
+  // rule keeps closed to them, as a power over expenses opens a receipt.
+  allows?(db: Db, id: string, actor: string | null): Promise<boolean>
 }
 
 // Runs after a settled write of the op, with its request: a slice's
@@ -122,11 +144,34 @@ export interface Extension {
 // closed decision admits.
 export type Reaction = (request: unknown, deps: Deps) => Promise<Done[]>
 
+// One record of a file being imported, as a write: the line it was read
+// from, what it is, and the write that makes it, as the importing member.
+// A line that cannot be read is refused with why, and makes no write.
+export interface Imported {
+  line: number
+  label: string
+  op: Permission
+  run?: (deps: Deps) => Promise<Settled<unknown> | Pending | Refused>
+  refused?: string
+}
+
+// A kind of file a slice imports from another tool, such as members from
+// a CSV or the books from a FEC: what it is, the formats it reads, and
+// each record it reads as a write. `read` throws when the file is not of
+// its kind.
+export interface Importer {
+  title: string
+  formats: string
+  read(text: string, db: Db): Promise<Imported[]>
+}
+
 // A slice's server side, which the root mounts: the collections it owns,
-// what it adds to the collections of the feats it joins, and its reactions.
+// what it adds to the collections of the feats it joins, its reactions,
+// and the kinds of file it imports.
 export interface Slice {
   name: string
   collections?: Record<string, Collection>
   extends?: Record<string, Extension>
   on?: Partial<Record<Permission, Reaction>>
+  imports?: Record<string, Importer>
 }

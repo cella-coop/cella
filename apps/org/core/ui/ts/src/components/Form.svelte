@@ -7,7 +7,7 @@
   import Button from './Button.svelte'
 
   // A write: the fields post to the page's named action, which signs and
-  // submits it; the outcome comes back as the page's form data. `reset`
+  // submits it, files and all; the outcome comes back as the page's form data. `reset`
   // false keeps what was typed after a settled write, for a field whose
   // value follows the page's data.
   let {
@@ -56,7 +56,7 @@
   })
 </script>
 
-<form method="post" action={target} class="form" class:inline {@attach enhanced}>
+<form method="post" enctype="multipart/form-data" action={target} class="form" class:inline {@attach enhanced}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}

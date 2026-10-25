@@ -11,10 +11,11 @@
     step,
     list,
     wide = false,
+    accept,
   }: {
     label: string
     name: string
-    type?: 'text' | 'number' | 'date' | 'time' | 'url' | 'email'
+    type?: 'text' | 'number' | 'date' | 'time' | 'url' | 'email' | 'file'
     value?: string | number
     options?: { value: string; label: string }[]
     rows?: number
@@ -23,6 +24,8 @@
     step?: string
     list?: string[]
     wide?: boolean
+    // For a file, the media types it offers to pick, such as image/*.
+    accept?: string
   } = $props()
 
   const id = $props.id()
@@ -39,6 +42,8 @@
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>
+  {:else if type === 'file'}
+    <input {id} {name} type="file" {required} {accept} />
   {:else if rows}
     <textarea {id} {name} {rows} {required} {placeholder} bind:value></textarea>
   {:else}

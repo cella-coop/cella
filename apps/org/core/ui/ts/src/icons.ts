@@ -24,3 +24,5 @@ export { default as IdentificationBadge } from 'phosphor-svelte/lib/Identificati
 export { default as House } from 'phosphor-svelte/lib/House'
 export { default as Tray } from 'phosphor-svelte/lib/Tray'
 export { default as SquaresFour } from 'phosphor-svelte/lib/SquaresFour'
+export { default as Paperclip } from 'phosphor-svelte/lib/Paperclip'
+export { default as FileArrowUp } from 'phosphor-svelte/lib/FileArrowUp'

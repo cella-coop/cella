@@ -37,6 +37,10 @@ mix of pay and equal parts divides among those paid in the year, half a
 year's pay counting half; approving makes the parts, which both rules
 take; parts no longer what the year's pay gives are refused.
 
+## Reads
+
+`work_share` shows each worker's share to the worker and to whoever holds `distribute-surplus`; the division behind it sees every salary, so each share it shows is the one the approval makes (`sql/002-reads.sql`).
+
 ## Shell
 
 Adds to a distribution's page, until it is approved, how its portion by

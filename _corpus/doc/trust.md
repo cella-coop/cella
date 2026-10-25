@@ -130,9 +130,12 @@ sequenceDiagram
   transaction reads the whole state, whoever asked for it (`cella.writing()`):
   the notary judges whether they may, and a write's state must not depend
   on who wrote it. The rules role reads everything. The statements,
-  rubric by rubric, a project's burn and a distribution's division sum
-  the whole for every reader; the figures behind them read as their rows
-  do. The log's `form` is the owner's alone, and the vault opens only
+  rubric by rubric, an entry's amount, a project's burn, a
+  distribution's divisions and the year's return to the federation sum
+  the whole for every reader, as functions running as their owner; the
+  figures behind them read as their rows do. The server acts as
+  `cella_app` whatever role it logs in as, so an owner's or a
+  superuser's login reads no further. The log's `form` is the owner's alone, and the vault opens only
   through `cella.disclosed(n)`: to the entry's writer, to the person
   every commitment in it is about, or to a holder of the power its op
   needs.
@@ -336,10 +339,18 @@ What the build does not yet do, and what lifts each:
 - **Some of what concerns a person is every member's.** The register of
   members, who holds how many shares, and the journal's entries with
   their lines on the co-op's own accounts are read by every member, so
-  a colleague's capital paid in shows on the bank's line as an amount,
-  without whose it is; an expense, an invoice and a draw's amount the
-  same. A page that sums rows shows the sum of those its reader reads,
-  but for the statements, the burn and the division.
+  a colleague's capital paid in shows on the bank's line as an amount;
+  an expense, an invoice and a draw's amount the same. A page that sums
+  rows shows the sum of those its reader reads, but for the statements,
+  an entry's amount, the burn, the divisions and the return to the
+  federation, which sum the whole.
+- **The log says who wrote what, and lets a guess be checked.** Every
+  member reads each entry's op, actor, date and receipt, and its
+  payload's digest, which is not salted: the journal's receipt names
+  who drew an amount, and a payload with no value marked personal, a
+  time entry's or a capital payment's, is confirmed by guessing it
+  against its digest. Marking pay, time and capital as personal in
+  their payloads, or the log read by role, lifts this.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute, holding a database connection, and goes with
   the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`

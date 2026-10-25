@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Entry, Head } from '../models/log.ts'
 
 const entry = `l.n::text AS id, l.n::int AS n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD') AS date, l.rules,
@@ -21,6 +21,12 @@ export async function named(db: Db): Promise<{ address: string | null; name: str
             nullif(current_setting('cella.scope_legal_name', true), '') AS legal`,
   )
   return rows[0]
+}
+
+// The entries as the collection lists them, newest first.
+export const listing: Read = {
+  sql: `SELECT ${entry} FROM cella.log l JOIN cella.receipt r ON r.n = l.receipt`,
+  order: 'n DESC',
 }
 
 // Every entry, newest first.

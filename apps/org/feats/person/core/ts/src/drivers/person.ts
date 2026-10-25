@@ -1,7 +1,10 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Person } from '../models/person.ts'
 
 const columns = 'address AS id, address, name, email, phone'
+
+// Everyone the co-op knows as the collection lists them, by name.
+export const listing: Read = { sql: `SELECT ${columns} FROM person.person`, order: 'name' }
 
 // Everyone the co-op knows, by name.
 export async function people(db: Db): Promise<Person[]> {

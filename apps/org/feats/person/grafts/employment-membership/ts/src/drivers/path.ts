@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Path, Stage } from '../models/path.ts'
+import type { Path } from '../models/path.ts'
 
 const columns = `p.address, p.name, p.stage, to_char(p.hired, 'YYYY-MM-DD') AS hired, to_char(p.left, 'YYYY-MM-DD') AS left,
   to_char(p.probation, 'YYYY-MM-DD') AS probation, to_char(p.probation_end, 'YYYY-MM-DD') AS "probationEnd", p.pledged,
@@ -14,10 +14,5 @@ export async function path(db: Db, address: string): Promise<Path | null> {
 }
 
 // Each worker's stage, by their address.
-export async function stages(db: Db): Promise<Record<string, { stage: Stage; due: boolean }>> {
-  const { rows } = await db.query<{ address: string; stage: Stage; due: boolean }>(
-    `SELECT p.address, p.stage, (p.stage IN ('candidate', 'invited') AND p.probation_end < cella.verdict_date()) AS due
-     FROM employment_membership.path p WHERE p.hired IS NOT NULL`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.address, { stage: r.stage, due: r.due }]))
-}
+export const stages = `SELECT p.address AS id, p.stage, (p.stage IN ('candidate', 'invited') AND p.probation_end < cella.verdict_date()) AS due
+  FROM employment_membership.path p WHERE p.hired IS NOT NULL`

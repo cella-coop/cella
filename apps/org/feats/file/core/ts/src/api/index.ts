@@ -2,7 +2,7 @@
 // its own write, its reads, and its slice, which the shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { upload } from '../handlers/index.ts'
-import { content, file, files } from '../drivers/file.ts'
+import { content, file, files, listing } from '../drivers/file.ts'
 import * as forms from './forms.ts'
 
 export { committed, request, storing, upload, uploading } from '../handlers/index.ts'
@@ -15,7 +15,7 @@ export const slice: Slice = {
   name: 'file',
   collections: {
     files: {
-      list: files,
+      list: listing,
       item: file,
       content,
       index: async (db) => (await files(db)).map((f) => ({ id: f.id, title: f.name, sub: `${f.id}, ${f.type}` })),

@@ -28,6 +28,13 @@ export interface File {
   uploaded: string
 }
 
+// A file as the collection lists it: its class in words, as its chip
+// shows it, and its retention class.
+export interface Listed extends Omit<File, 'class'> {
+  class: string
+  retention: Class
+}
+
 // A file to store, as a form uploads it, of a class and about a subject;
 // the co-op's own name no subject.
 export interface Store {

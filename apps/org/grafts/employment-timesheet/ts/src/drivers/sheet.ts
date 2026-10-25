@@ -3,12 +3,8 @@ import type { Month, Months } from '../models/sheet.ts'
 
 // Whose each entry is, by entry: the worker's name, which the dashboard
 // groups hours by.
-export async function whose(db: Db): Promise<Record<string, { who: string }>> {
-  const { rows } = await db.query<{ id: string; name: string }>(
-    'SELECT e.id::text AS id, wp.name FROM timesheet.entry e JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = e.member',
-  )
-  return Object.fromEntries(rows.map((r) => [r.id, { who: r.name }]))
-}
+export const whose = `SELECT e.id::text AS id, wp.name AS who
+  FROM timesheet.entry e JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = e.member`
 
 // A worker's months, the latest first, as `actor` sees them.
 export async function months(db: Db, worker: string, actor: string | null): Promise<Months> {

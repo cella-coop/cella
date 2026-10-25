@@ -16,7 +16,7 @@ export const app: App = {
         icon: icons.Notebook,
         // `cella.verify_log()` rechecks every entry, receipt and signature on
         // each load.
-        status: (_: Entry[], head: Head) =>
+        status: (head: Head) =>
           head.verified ? { label: 'log verifies', tone: 'positive' } : { label: 'log broken', tone: 'negative' },
         dashboard: [
           { kind: 'kpi', title: 'Entries', measure: { op: 'count' } },

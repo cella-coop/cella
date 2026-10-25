@@ -1,5 +1,5 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
-import { kinds, sized, type Class, type File } from '../models/file.ts'
+import { kinds, sized, type Class, type File, type Listed } from '../models/file.ts'
 import Upload from './blocks/Upload.svelte'
 
 const tones: Record<Class, Tone> = { none: 'neutral', 'expense-receipt': 'accent', payroll: 'warning', profile: 'positive' }
@@ -19,7 +19,7 @@ export const app: App = {
         columns: [
           { key: 'name', label: 'File', kind: 'title', role: 'title', value: (f: File) => f.name },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (f: File) => f.id },
-          { key: 'class', label: 'Kind', kind: 'badge', role: 'meta', value: (f: File) => kinds[f.class], tone: (f: File) => tones[f.class] },
+          { key: 'class', label: 'Kind', kind: 'badge', role: 'meta', value: (f: Listed) => f.class, tone: (f: Listed) => tones[f.retention] },
           { key: 'size', label: 'Size', role: 'meta', value: (f: File) => sized(f.size) },
           { key: 'uploaded', label: 'Uploaded', kind: 'date', role: 'meta', value: (f: File) => f.uploaded },
           { key: 'type', label: 'Type', kind: 'mono', role: 'hidden', value: (f: File) => f.type },

@@ -2,12 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Pay } from '../models/pay.ts'
 
 // Each payslip's worker, by name, by the payslip's id.
-export async function names(db: Db): Promise<Record<string, { name: string; job: string }>> {
-  const { rows } = await db.query<{ id: string; name: string; job: string }>(
-    `SELECT month || '~' || member AS id, name, job FROM employment_payslip.slip`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.id, { name: r.name, job: r.job }]))
-}
+export const names = `SELECT month || '~' || member AS id, name, job FROM employment_payslip.slip`
 
 // A worker's latest salary and their payslips.
 export async function pay(db: Db, worker: string): Promise<Pay> {
@@ -26,10 +21,5 @@ export async function pay(db: Db, worker: string): Promise<Pay> {
 }
 
 // Each worker's salary in force, by their address.
-export async function salaries(db: Db): Promise<Record<string, { salary: number }>> {
-  const { rows } = await db.query<{ member: string; gross: string }>(
-    `SELECT DISTINCT ON (member) member, cella.cents(gross) AS gross FROM payslip.salary
-     WHERE "from" <= cella.verdict_date() ORDER BY member, "from" DESC`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.member, { salary: Number(r.gross) }]))
-}
+export const salaries = `SELECT DISTINCT ON (member) member AS id, cella.cents(gross) AS salary FROM payslip.salary
+  WHERE "from" <= cella.verdict_date() ORDER BY member, "from" DESC`

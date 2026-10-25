@@ -1,7 +1,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { forget, profile } from '../handlers/index.ts'
-import { devices } from '../drivers/device.ts'
-import { people, person } from '../drivers/person.ts'
+import { devices, listing as listed } from '../drivers/device.ts'
+import { listing, people, person } from '../drivers/person.ts'
 
 // The feat's server side as the shell mounts it: the people collection,
 // read from its schema, each person's devices on their page, and the
@@ -14,7 +14,7 @@ export const slice: Slice = {
   name: 'person',
   collections: {
     people: {
-      list: people,
+      list: listing,
       item: async (db, address) => {
         const found = await person(db, address)
         return found && { ...found, devices: await devices(db, address) }
@@ -25,7 +25,7 @@ export const slice: Slice = {
         forget: action('person:person:forget', (_, id) => ({ person: id ?? '' }), forget),
       },
     },
-    inbox: { list: async () => [] },
-    devices: { list: (db) => devices(db) },
+    inbox: {},
+    devices: { list: listed },
   },
 }

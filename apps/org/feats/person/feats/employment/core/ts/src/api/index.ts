@@ -3,11 +3,11 @@
 // slice, which the shell mounts.
 import { action, type Form, type Slice } from '@cella/org-db'
 import { hire } from '../handlers/index.ts'
-import { today, worker, workers } from '../drivers/worker.ts'
+import { employments, today, worker } from '../drivers/worker.ts'
 import type { Contract, Hire } from '../models/worker.ts'
 
 export { hire, hiring } from '../handlers/index.ts'
-export { today, worker, workers } from '../drivers/worker.ts'
+export { employments, today, worker } from '../drivers/worker.ts'
 
 // Hours a week, typed as a decimal, a comma or a point, sent in whole
 // minutes.
@@ -40,8 +40,7 @@ export const slice: Slice = {
   within: 'person',
   extends: {
     people: {
-      list: async (db) =>
-        Object.fromEntries((await workers(db)).map(({ id, job, contract, start, until, hours, employed }) => [id, { job, contract, start, until, hours, employed }])),
+      list: employments,
       about: today,
       item: async (db, address) => ({ worker: await worker(db, address) }),
       actions: {

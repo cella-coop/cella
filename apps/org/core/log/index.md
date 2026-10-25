@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, folded deterministically into the state.

@@ -1,15 +1,16 @@
-import type { Db } from '@cella/org-db'
-import type { First, Member } from '../models/member.ts'
+import { literal, type Db } from '@cella/org-db'
+import { chips, type First, type Member } from '../models/member.ts'
 
 const columns = `m.address AS id, m.address, p.name, m.status, to_char(m.since, 'YYYY-MM-DD') AS since, m.shares,
   to_char(m.invited, 'YYYY-MM-DD') AS invited, to_char(m.suspended, 'YYYY-MM-DD') AS suspended, to_char(m.exited, 'YYYY-MM-DD') AS exited`
 const from = 'membership.member m JOIN person.person p ON p.address = m.address'
 
-// Every member, by name.
-export async function members(db: Db): Promise<Member[]> {
-  const { rows } = await db.query<Member>(`SELECT ${columns} FROM ${from} ORDER BY p.name`)
-  return rows
-}
+// Each person's membership, by their address, as its chip shows it under
+// `member`.
+export const memberships = `SELECT m.address AS id, m.status,
+  CASE m.status ${Object.entries(chips).map(([s, chip]) => `WHEN ${literal(s)} THEN ${literal(chip)}`).join(' ')} END AS member,
+  to_char(m.since, 'YYYY-MM-DD') AS since, m.shares
+  FROM membership.member m`
 
 export async function member(db: Db, address: string): Promise<Member | null> {
   const { rows } = await db.query<Member>(`SELECT ${columns} FROM ${from} WHERE m.address = $1`, [address])

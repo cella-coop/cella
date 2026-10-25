@@ -2,6 +2,6 @@
 // exists, the writes a graft may run in its transaction, its reads, and
 // its slice, which the shell mounts.
 export { accept, admit, admitting, erase, exit, invite, inviting, link, suspend } from '../handlers/index.ts'
-export { first, invitation, links, member, members } from '../drivers/member.ts'
+export { first, invitation, links, member, memberships } from '../drivers/member.ts'
 export { inbox } from '../drivers/inbox.ts'
 export { slice } from './slice.ts'

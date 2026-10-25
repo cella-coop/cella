@@ -1,7 +1,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { devices } from '@cella/org-person/api'
 import { invite, link } from '../handlers/index.ts'
-import { first, links, member, members } from '../drivers/member.ts'
+import { first, links, member, memberships } from '../drivers/member.ts'
 import { inbox } from '../drivers/inbox.ts'
 import { members as importing } from './imports.ts'
 
@@ -20,7 +20,7 @@ export const slice: Slice = {
   imports: { members: importing },
   extends: {
     people: {
-      list: async (db) => Object.fromEntries((await members(db)).map(({ id, status, since, shares }) => [id, { status, since, shares }])),
+      list: memberships,
       item: async (db, address) => ({
         member: await member(db, address),
         first: await first(db, address),

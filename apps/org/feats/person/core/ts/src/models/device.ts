@@ -6,6 +6,7 @@ export interface Device {
   label: string
   enrolled: string
   revoked: string | null
+  state: 'current' | 'revoked'
 }
 
 // A device a person enrols for their own address: its public key in hex,

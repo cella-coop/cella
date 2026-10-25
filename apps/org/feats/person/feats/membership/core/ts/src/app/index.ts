@@ -1,5 +1,5 @@
 import { short, type App, type Tone } from '@cella/org-ui'
-import type { Membership, Status } from '../models/member.ts'
+import { chips, type Membership, type Status } from '../models/member.ts'
 import Device from './blocks/Device.svelte'
 import Invite from './blocks/Invite.svelte'
 import Joining from './blocks/Joining.svelte'
@@ -7,12 +7,8 @@ import Rights from './blocks/Rights.svelte'
 
 const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', suspended: 'warning', exited: 'neutral' }
 
-// A person's membership as a chip: a member, invited, suspended or a
-// former member.
-const chips: Record<Status, string> = { active: 'member', invited: 'invited', suspended: 'suspended', exited: 'former member' }
-
 // A person's row as the membership adds to it, where they hold one.
-type Row = { status?: Status; since?: string | null; shares?: number }
+type Row = { status?: Status; member?: string; since?: string | null; shares?: number }
 
 // The feat's client side, on its parent's people: each person's
 // membership, a chip to filter and group by; the people collection's
@@ -25,7 +21,7 @@ export const app: App = {
   extends: {
     people: {
       columns: [
-        { key: 'member', label: 'Member', kind: 'badge', role: 'meta', value: (r: Row) => (r.status ? chips[r.status] : ''), tone: (r: Row) => (r.status ? tones[r.status] : 'neutral') },
+        { key: 'member', label: 'Member', kind: 'badge', role: 'meta', value: (r: Row) => r.member ?? '', tone: (r: Row) => (r.status ? tones[r.status] : 'neutral') },
         { key: 'shares', label: 'Shares', kind: 'number', role: 'hidden', value: (r: Row) => r.shares },
         { key: 'since', label: 'Member since', kind: 'date', role: 'hidden', value: (r: Row) => r.since },
       ],

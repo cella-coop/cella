@@ -1,6 +1,9 @@
 export const contracts = ['permanent', 'fixed-term', 'apprenticeship'] as const
 export type Contract = (typeof contracts)[number]
 
+// Each contract in words.
+export const terms: Record<Contract, string> = { permanent: 'Permanent', 'fixed-term': 'Fixed-term', apprenticeship: 'Apprenticeship' }
+
 // An employment as the feat reads it, member or not, with the name of the
 // person who holds it; `id` is their address.
 // Their time a week is in hours; a contract runs from `start` to `until`,

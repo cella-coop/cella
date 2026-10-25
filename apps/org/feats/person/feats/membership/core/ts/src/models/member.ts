@@ -2,6 +2,10 @@ import type { Device } from '@cella/org-person/models'
 
 export type Status = 'invited' | 'active' | 'suspended' | 'exited'
 
+// A person's membership as a chip: a member, invited, suspended or a
+// former member.
+export const chips: Record<Status, string> = { active: 'member', invited: 'invited', suspended: 'suspended', exited: 'former member' }
+
 // A membership as the feat reads it, with the name of the person who holds
 // it; `id` is their address.
 export interface Member {

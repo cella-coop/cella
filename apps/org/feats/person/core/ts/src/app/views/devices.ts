@@ -11,7 +11,7 @@ export const columns: Column<Device>[] = [
     label: 'State',
     kind: 'badge',
     role: 'meta',
-    value: (d) => (d.revoked ? 'revoked' : 'current'),
-    tone: (d) => (d.revoked ? 'neutral' : 'positive'),
+    value: (d) => d.state,
+    tone: (d) => (d.state === 'revoked' ? 'neutral' : 'positive'),
   },
 ]

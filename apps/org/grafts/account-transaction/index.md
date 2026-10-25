@@ -6,7 +6,8 @@ updated = 2026-10-25
 A transaction's lines post to accounts. The graft resolves each line's
 account code, refuses an entry dated in a closed period, keeps money from
 leaving a cash account except through the writes with their own power and
-limit, and posts a surplus allocation's split.
+limit, posts a surplus allocation's split, and draws the financial
+statements from the journal.
 
 ## Schema
 
@@ -27,6 +28,15 @@ limit, and posts a surplus allocation's split.
   the legal reserve to `1061`, the development fund to `1068` and the
   interest on capital to `457`; `capital(day)`, the capital, every account
   of class 101, on a day.
+- `account_transaction.figures(sheet, since, until)`: each account's
+  figure on a sheet over a span, its lines dated from `since` (from the
+  start when null) to `until`, signed by the side of the rubric the
+  account feat places it in; `statement(sheet, since, until)`, the sheet
+  rubric by rubric in its order, a line the sum of its accounts, a total
+  what it adds less what it subtracts, expanded down to its lines, a
+  heading none. The income statement is drawn over a span, the balance
+  sheet over every entry up to its last day. The sums are SQL's; the shell
+  only sets a span beside the one before it.
 
 The app role and the rules role, `cella_rules`, may select the balance and
 the allocations; the app role may insert an allocation's entry.
@@ -77,6 +87,11 @@ the allocation marked, then its entry through the transaction feat's
 an allocation's lines, and the legal reserve's 15 % owed while it is under
 the highest capital, and not once it reaches it, even after the capital
 fell.
+`ts/_tests/statements.test.ts`: from a small journal, the income
+statement sums a span's entries, its result the income less the expenses,
+two months adding up to both; the balance sheet balances at every end,
+its result of the period the income statement's; a line's accounts add
+up to it.
 
 ## Shell
 
@@ -84,8 +99,13 @@ Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the trial balance agrees as
 the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
-account's ledger, every line posted to it, to its page; and to an
-allocation's page the entry it posted, and its `allocate` write.
+account's ledger, every line posted to it, to its page; to an
+allocation's page the entry it posted, and its `allocate` write; and to
+the account feat's `reports`, each span's result and total assets, and on
+a span's page two tabs, the income statement and the balance sheet
+(`Sheet`), each rubric with the span's figure and the span before's, a
+line nothing posted to in either left out, and a line opening on its
+accounts, each linking to its ledger.
 
 ## Lanterne
 
@@ -93,4 +113,7 @@ July to September 2026 are closed; October to December are open. The
 seeded books give the bank, `512`, its one cash account, 39 296 € and
 clients 57 180 €. A post touching `512` is refused; Julien pays suppliers
 through pay. The legal reserve, 9 000 €, is under the capital, 13 000 €,
-so the 2025 split owes it 15 %.
+so the 2025 split owes it 15 %. The statements: a loss of 22 860 € over the
+third quarter, which paid three months' wages against two quarters'
+invoices, and of 80 € over 2026 so far; a balance sheet of 97 080 €,
+with the 2025 result of 61 400 € still to allocate.

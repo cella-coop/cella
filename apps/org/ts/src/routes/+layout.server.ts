@@ -7,7 +7,7 @@ import { counted } from '#lib/slices.ts'
 import type { LayoutServerLoad } from './$types'
 
 export const load: LayoutServerLoad = async ({ locals, cookies }) =>
-  using(async (db) => {
+  using(locals.actor, async (db) => {
     const s = await named(db)
     const someone = locals.actor ? await person(db, locals.actor) : null
     // How many rows the counted collections hold for the signed-in member,

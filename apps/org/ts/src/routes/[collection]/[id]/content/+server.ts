@@ -11,7 +11,7 @@ const shown = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'ap
 // where its owner's rule opens it to them, or else an extension's, as a
 // power over expenses opens their receipts; refused otherwise.
 export const GET: RequestHandler = ({ params, locals }) =>
-  using(async (db) => {
+  using(locals.actor, async (db) => {
     const m = mounted(params.collection)
     const content = m?.collection.content
     if (!m || !content) {

@@ -25,7 +25,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
   const checked = check(given, known)
   const editing = known(url.searchParams.get('c') ?? '') ? (url.searchParams.get('c') as string) : (checked.pins[0]?.collection ?? 'invoices')
   const today = new Date().toISOString().slice(0, 10)
-  return using(async (db) => {
+  return using(locals.actor, async (db) => {
     const read = new Map<string, { id: string }[]>()
     const of = async (name: string) => read.get(name) ?? read.set(name, await rows(db, name, locals.actor)).get(name) ?? []
     const results = []

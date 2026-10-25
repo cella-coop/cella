@@ -29,6 +29,8 @@ if (!kinds().some((k) => k.kind === kind)) {
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL, user: process.env.DATABASE_URL ? undefined : 'cella_app' })
 await db.connect()
 try {
+  // It reads as the importing member, as the server reads for the signed-in one.
+  await db.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
   const deps = await signing(db, actor)
   if (typeof deps === 'string') {
     console.error(deps)

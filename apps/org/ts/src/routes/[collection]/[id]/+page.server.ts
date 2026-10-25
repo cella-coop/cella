@@ -11,7 +11,7 @@ export const load: PageServerLoad = async ({ params, locals }) => {
   if (!m || !item) {
     error(404, `There is no collection ${params.collection} with pages`)
   }
-  return using(async (db) => {
+  return using(locals.actor, async (db) => {
     const found = await item(db, params.id)
     if (!found) {
       error(404, `${params.collection} has no ${params.id}`)

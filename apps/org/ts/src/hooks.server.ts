@@ -13,7 +13,7 @@ const open = (path: string) => path === '/sign-in' || path === '/session' || pat
 // script runs. Every other route needs a session: a page asked for
 // without one goes to the sign-in page, and anything else is refused.
 export const handle: Handle = async ({ event, resolve }) => {
-  event.locals.session = await using((db) => read(db, event.cookies))
+  event.locals.session = await using(null, (db) => read(db, event.cookies))
   event.locals.actor = event.locals.session?.actor ?? null
   const theme = event.cookies.get('cella-theme')
   event.locals.theme = themes.find((t) => t === theme) ?? 'system'

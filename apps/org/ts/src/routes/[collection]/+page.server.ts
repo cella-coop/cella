@@ -21,7 +21,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
   const looks = look(params.collection)
   const { id, spec, errors } = resolve(url.searchParams, tabs, fs, looks)
   const today = new Date().toISOString().slice(0, 10)
-  return using(async (db) => {
+  return using(locals.actor, async (db) => {
     const rows = await read(db, params.collection, locals.actor)
     const values = Object.fromEntries(
       fs.filter((f) => f.type === 'enum').map((f) => [f.key, [...new Set(rows.map((r) => String(f.value(r) ?? '')))].filter(Boolean).sort()]),

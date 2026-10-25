@@ -7,7 +7,7 @@ import type { RequestHandler } from './$types'
 // A session's opening, by a device's signature: GET is a fresh challenge
 // and the scope it is signed for; POST, the device's answer, which opens
 // the session or says why not.
-export const GET: RequestHandler = async () => json({ challenge: challenge(), scope: await using(scope) })
+export const GET: RequestHandler = async () => json({ challenge: challenge(), scope: await using(null, scope) })
 
 export const POST: RequestHandler = async ({ request, cookies, url }) => {
   const o = (await request.json().catch(() => ({}))) as Record<string, unknown>
@@ -15,7 +15,7 @@ export const POST: RequestHandler = async ({ request, cookies, url }) => {
   if (typeof actor !== 'string' || typeof device !== 'string' || typeof c !== 'string' || typeof sig !== 'string') {
     return json({ reason: 'a sign-in names the actor, the device, the challenge and its signature' }, { status: 400 })
   }
-  return using(async (db) => {
+  return using(null, async (db) => {
     const address = await scope(db)
     const s = address ? await opens(db, address, { actor, device, challenge: c, sig }) : 'the database names no scope'
     if (typeof s === 'string') {

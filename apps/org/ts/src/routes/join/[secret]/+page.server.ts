@@ -10,7 +10,7 @@ import type { PageServerLoad } from './$types'
 
 // An invitation's link: whom it invites, while they have not taken it up.
 export const load: PageServerLoad = async ({ params }) => {
-  const invited = await using((db) => invitation(db, params.secret))
+  const invited = await using(null, (db) => invitation(db, params.secret))
   if (!invited) {
     error(404, 'This invitation link is taken up already, or is no one’s')
   }
@@ -38,15 +38,15 @@ export const actions = {
       }
       run.give(p)
     } else {
-      const invited = await using((db) => invitation(db, secret))
-      const address = await using(scope)
+      const invited = await using(null, (db) => invitation(db, secret))
+      const address = await using(null, scope)
       const key = String(data.get('key') ?? '')
       if (!invited || !address) {
         return refused('this invitation link is taken up already, or is no one’s')
       }
       const input = { member: invited.member, secret, key, label: String(data.get('label') ?? '') }
       run = relay(owner, { scope: address, actor: invited.member, device: key }, (sign) =>
-        using(async (db) => {
+        using(null, async (db) => {
           try {
             const done = made('membership:member:accept', await accept(input, { db, actor: invited.member, sign }))
             return done.state === 'settled' ? { done } : fail(422, { done })

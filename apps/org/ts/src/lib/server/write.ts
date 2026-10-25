@@ -59,13 +59,13 @@ export async function perform(event: RequestEvent, collection: string, name: str
     return relayed(owner, run, data)
   }
   const form = await fields(data)
-  const address = await using(scope)
+  const address = await using(s.actor, scope)
   if (!address) {
     return fail(503, { done: { op: write.op, state: 'failed', reason: 'the database names no scope', then: [] } satisfies Done })
   }
   return step(
     relay(owner, { scope: address, actor: s.actor, device: s.device }, (sign) =>
-      using(async (db) => {
+      using(s.actor, async (db) => {
         const deps = { db, actor: s.actor, sign }
         let result: Awaited<ReturnType<typeof write.run>>
         try {

@@ -1,15 +1,16 @@
 -- Whose an account's lines are, which only this graft knows: a line on an
 -- account no one holds reads for every member, and one on a capital
 -- account for its holder and whoever reads capital (`account`'s readers),
--- beside the books' own readers. It reads the chart whole, since what it
--- answers is whose an account is, not whether the reader may see it.
+-- beside the books' own readers. It reads the chart whole, as its owner,
+-- since what it answers is whose an account is, and it answers only for
+-- the reader, so it tells no one else whose an account is.
 CREATE FUNCTION account_transaction.holds(code text, reader text) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  SELECT coalesce(bool_and(a.holder IS NULL OR a.holder = holds.reader OR cella.sees('account') OR cella.reaches('account', a.holder)), false)
+  SELECT coalesce(bool_and(a.holder IS NULL OR a.holder = holds.reader OR cella.reads_all('account') OR cella.reaches('account', a.holder)), false)
   FROM account.account a
-  WHERE a.code = holds.code;
+  WHERE a.code = holds.code AND holds.reader = cella.reader();
 END;
 
 INSERT INTO cella.reach (what, fn, owner) VALUES

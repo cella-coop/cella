@@ -54,6 +54,10 @@ which needs no mandate.
 
 - a booking's entry exists, and its project exists and is not archived.
 
+## Reads
+
+`costed` reads as its reader, each booked entry as its time does; `burn`, a project's time at the co-op's rates, sums the whole for every member (`sql/003-reads.sql`).
+
 ## Shell
 
 Adds to each entry its project's title, and to the timesheets' dashboard

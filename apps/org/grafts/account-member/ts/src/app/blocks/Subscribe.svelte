@@ -20,7 +20,7 @@
             detail:
               data.shares > 0
                 ? `${data.shares} shares of ${money(s.share)}, ${money(data.subscribed)}`
-                : `at least ${s.minimum} shares of ${money(s.share)}, ${money((s.minimum ?? 0) * s.share)}, called on admission; up to ${s.instalments} monthly instalments`,
+                : `at least ${s.minimum} shares of ${money(s.share)}, ${money(s.minimum * s.share)}, called on admission; up to ${s.instalments} monthly instalments`,
           },
         ],
   )

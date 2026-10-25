@@ -4,16 +4,17 @@ updated = 2026-10-25
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
-member may draw, the freeze when a member leaves, and what of a worker's
-part of the work share buys shares. Declared by `account`.
+member may draw, and the freeze when a member leaves. Declared by
+`account`.
 
 ## Schema
 
 `account_member` (`sql/`):
 
 - `account_member.value(day)`: the value of one share on a day, the
-  capital clause of the statutes' terms governing it in the account feat,
-  adopted by the members' decision; NULL before any adopted terms state it.
+  capital clause of the statutes' capital terms governing it in the
+  account feat, adopted by the members' decision; NULL before any adopted
+  terms state it.
   The graft keeps no share value of its own.
 - `account_member.allowance`: what each member may draw on their account,
   granted in advance; the right `account.draw` spends.
@@ -27,15 +28,6 @@ part of the work share buys shares. Declared by `account`.
 - `account_member.capital`: each member's shares at the share's value on
   the verdict date, the account holding them (under `1013`), whether it
   is frozen, and their draw limit.
-- `account_member.patronage`: each worker's part of a year's work share
-  split as the year's terms say: an associate employed in the co-op (an
-  active member whose capital account is not frozen) takes as many whole
-  shares at the share's value as the terms' percent of their part buys,
-  and the rest is paid; anyone else is paid it all (Code du travail, art.
-  R3323-11). Shares so taken are blocked until the first day of the sixth
-  month after the year, five years on (art. L3324-10). It reads today's
-  members; what an allocation employed when it posted is
-  `account-member-transaction`'s record.
 
 Triggers raise SQLSTATE `09000`. The app role and the rules role may
 select.
@@ -50,17 +42,12 @@ does moving a departing one's capital to what is owed them, so both are
 
 Adds each member's subscribed capital to the members list, and to their
 page their capital (subscribed, shares, share value, account, open or
-frozen) and their draw limit, and, to the member alone, their work share
-statements: each year's part, what it bought in shares and what it paid;
-under Joining, the capital an associate subscribes, at least the
-statutes' minimum at the share's value, or the shares they hold; under
-Own and decide, what the member owns read back as sentences from their
-capital and the statutes' terms in force: their shares, how the work
-share divides and what of it buys shares, and how capital is repaid to
-one who leaves; to the chart each capital account's holder; and to a
-statement its member by name. Finance reads every statement in the
-`statements` collection, whose reads, like every read of the shell, are
-not yet restricted.
+frozen) and their draw limit; under Joining, the capital an associate
+subscribes, at least the statutes' minimum at the share's value, or the
+shares they hold; under Own and decide, what the member owns read back as
+sentences from their capital and the statutes' capital terms in force:
+their shares, and how capital is repaid to one who leaves; and to the
+chart each capital account's holder.
 
 ## Lanterne
 

@@ -74,6 +74,8 @@ async function fresh(): Promise<string> {
 before(async () => {
   mkdirSync(shots, { recursive: true })
   await su.connect()
+  // The host carries documents in around the notary, as only a superuser may.
+  await su.query('SET cella.unbound = on')
   ;({ base, stop } = await serve())
 })
 

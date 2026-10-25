@@ -43,6 +43,9 @@ const as = async (actor: string) => {
 
 before(async () => {
   await su.connect()
+  // The host loads fifty thousand time entries around the notary,
+  // as only a superuser may.
+  await su.query('SET cella.unbound = on')
   await shell.start('2026-10-24')
   app = new pg.Client({ user: 'cella_app' })
   await app.connect()

@@ -52,6 +52,9 @@ const balances = async () =>
 
 before(async () => {
   await su.connect()
+  // The host stages a series moved around the notary, as only a
+  // superuser may.
+  await su.query('SET cella.unbound = on')
   await on('2026-10-24')
 })
 
@@ -61,7 +64,7 @@ after(async () => {
 })
 
 test('the seed carries the books over: the trial balance is the fixture\'s', async () => {
-  assert.equal(await head(), 0)
+  assert.equal(await head(), 1)
   const journal = parse(readFileSync(new URL('transaction.toml', fixture), 'utf8')) as {
     entry: { line: { account: string; debit?: number; credit?: number }[] }[]
   }
@@ -89,7 +92,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   }, as(julien))
   assert.deepEqual(issued, {
     state: 'settled',
-    entry: 1,
+    entry: 2,
     value: { invoice: 'F-2026-0056', issued: '2026-10-24', net: 1480_00, vat: 296_00, total: 1776_00, entry: 'je-0041' },
   })
   assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
@@ -98,12 +101,12 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
     { account: '706', side: 'credit', cents: 1480_00 },
     { account: '44571', side: 'credit', cents: 296_00 },
   ])
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = 1')
+  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = 2')
   assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
 
   const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
-  assert.equal(linked.entry, 2)
+  assert.equal(linked.entry, 3)
 })
 
 test('a gap or a reused number is refused, and uses no verdict number', async () => {
@@ -120,7 +123,7 @@ test('a gap or a reused number is refused, and uses no verdict number', async ()
   assert.match(reason(reused), /F-2026-0056 is already issued: a number is never reused/)
 
   await su.query(`UPDATE invoice.series SET next = 57 WHERE name = 'F-2026'`)
-  assert.equal(await head(), 2)
+  assert.equal(await head(), 3)
   assert.equal(Number((await one<{ count: string }>(`SELECT count(*) FROM invoice.invoice`)).count), 16)
 })
 
@@ -299,6 +302,7 @@ async function probe(body: string, opts = '') {
     await su.query('GRANT USAGE ON SCHEMA probe TO cella_rules')
     await su.query(`CREATE FUNCTION probe.rule(payload jsonb) RETURNS text LANGUAGE sql STABLE ${opts} AS $$ ${body} $$`)
     await su.query(`INSERT INTO cella.rule (op, fn, owner) VALUES ('probe:probe:run', 'probe.rule(jsonb)', 'probe')`)
+    await su.query(`SELECT cella.begin('probe:probe:run', $1, decode($2, 'hex'))`, [julien, signed.device])
     await su.query(`SELECT * FROM cella.submit('probe:probe:run', '{}', $1, $2)`, [julien, signed])
     return ''
   } catch (e) {

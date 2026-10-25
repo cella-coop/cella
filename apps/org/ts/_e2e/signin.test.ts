@@ -25,6 +25,8 @@ const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 
 before(async () => {
   await su.connect()
+  // The host revokes a device around the notary, as only a superuser may.
+  await su.query('SET cella.unbound = on')
   await shell.start('2026-10-24')
 })
 

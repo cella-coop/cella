@@ -69,7 +69,7 @@ after(async () => {
 })
 
 test('the seed carries the documents over: internal-rules@3 is adopted, the card\'s draft is @2, named by its hash', async () => {
-  assert.equal(await head(), 0)
+  assert.equal(await head(), 1)
   assert.equal(await adopted('internal-rules'), 'internal-rules@3')
   assert.equal(await adopted(card), undefined)
   const v2 = await one<{ canonical: string; hash: string }>(`SELECT canonical, encode(hash, 'hex') AS hash FROM document.version WHERE id = 'rate-card-2027@2'`)
@@ -104,7 +104,7 @@ test('two editors\' concurrent Loro updates merge to one document', async () => 
   const b = await edit({ document: card, update: his.export({ mode: 'update', from }) }, as(malik))
   assert.equal(a.state, 'settled')
   assert.equal(b.state, 'settled')
-  assert.deepEqual([a.entry, b.entry], [1, 2])
+  assert.deepEqual([a.entry, b.entry], [2, 3])
   assert.match(b.value.digest, /^[0-9a-f]{64}$/)
 
   const merged = jcs(await draft(app, card))
@@ -124,7 +124,7 @@ test('two editors\' concurrent Loro updates merge to one document', async () => 
   edits.retype(broken, block(broken, 'Website'), 'heading', { level: 1.5 })
   broken.commit()
   await assert.rejects(edit({ document: card, update: broken.export({ mode: 'update', from: v }) }, as(malik)), /no canonical form/)
-  assert.equal(await head(), 2)
+  assert.equal(await head(), 3)
 })
 
 test('saving a version snapshots the draft, and the database names it by its canonical hash', async () => {

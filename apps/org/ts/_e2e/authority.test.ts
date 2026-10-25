@@ -52,6 +52,9 @@ const paying = (cents: number, label = 'Supplier: print proofs') => ({
 
 before(async () => {
   await su.connect()
+  // The host stages a member suspended around the notary, as only a
+  // superuser may.
+  await su.query('SET cella.unbound = on')
   await on('2026-10-24')
 })
 

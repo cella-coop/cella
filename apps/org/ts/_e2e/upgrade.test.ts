@@ -77,7 +77,9 @@ test('a 0.1.0-alpha database migrates in place: the extension updated, the appli
 
   cella(['migrate', '--url', host.url('lanterne')])
 
-  assert.equal((await one<{ v: string }>(`SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)).v, '0.3.0')
+  assert.equal((await one<{ v: string }>(`SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)).v, '0.4.0')
+  // Every table it held is a state table now, the notary's trigger on it.
+  assert.ok(Number((await one<{ n: string }>('SELECT count(*) AS n FROM cella.state')).n) > 50)
   assert.deepEqual(await one(`SELECT n::text, encode(hash, 'hex') AS hash FROM cella.head`), before)
   const ids = await one<{ n: string; paths: string }>(
     `SELECT count(*) AS n, count(*) FILTER (WHERE id LIKE 'apps/%') AS paths FROM migration.applied WHERE id LIKE 'org:%' OR id LIKE 'apps/%'`,

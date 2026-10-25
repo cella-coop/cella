@@ -227,7 +227,7 @@ test('Hugo edits the internal rules as the editor does: one Loro update, settled
   doc.commit()
   const update = b64.encode(doc.export({ mode: 'update', from }))
   const edited = await act('/documents/internal-rules', 'edit', { update }, hugo)
-  assert.deepEqual(edited, { op: 'document:document:edit', state: 'settled', entry: 1, then: [] })
+  assert.deepEqual(edited, { op: 'document:document:edit', state: 'settled', entry: 2, then: [] })
   await next()
   assert.ok(events[1].includes(`"update":"${update}"`), 'the edit is relayed as it was sent')
   await reader.cancel()
@@ -252,7 +252,7 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   assert.equal(refused.state, 'refused')
   assert.match(refused.reason ?? '', /holds no mandate for issue-invoice/)
   const issued = await act('/invoices', 'issue', fields, julien)
-  assert.deepEqual(issued, { op: 'invoice:invoice:issue', state: 'settled', entry: 2, then: [] })
+  assert.deepEqual(issued, { op: 'invoice:invoice:issue', state: 'settled', entry: 3, then: [] })
   const made = await one<{ total: string; entry: string }>(
     `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0056'`,
   )

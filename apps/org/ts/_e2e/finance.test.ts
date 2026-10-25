@@ -52,6 +52,8 @@ const lines = (entry: string) =>
 
 before(async () => {
   await su.connect()
+  // The host stands in for an exit around the notary, as only a superuser may.
+  await su.query('SET cella.unbound = on')
   await on('2026-10-24')
 })
 

@@ -1,8 +1,8 @@
 // The admission scenario, end to end on a seeded Lanterne: Inès Haddad is admitted
 // by the assembly's consent vote, through the cella extension, and in the
-// same verdict seated in the assembly and given the device her invitation
-// carried, her phone, with which she edits documents; her laptop came
-// with her hire. Run by `cella test` on a fresh database.
+// same verdict seated in the assembly; she edits documents from the phone
+// on which she took up her invitation, which enrolled it, and her laptop
+// came with her hire. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -52,15 +52,18 @@ after(async () => {
   await su.end()
 })
 
-test('the seed starts an empty, valid log; Inès is invited, her phone carried but not enrolled, her laptop enrolled with her hire', async () => {
+test('the seed starts an empty, valid log; Inès is invited, her phone enrolled when she took up the invitation, her laptop with her hire', async () => {
   assert.equal(await head(), 0)
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   assert.equal((await status(ines)).status, 'invited')
   const phone = await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM membership.invitation WHERE member = $1`, [ines])
   assert.equal(phone.key, (await fixture(ines, 'phone')).key)
   assert.deepEqual(
-    await all(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [ines]),
-    [{ label: 'laptop', enrolled: '2025-09-01' }],
+    await all(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1 ORDER BY enrolled`, [ines]),
+    [
+      { label: 'laptop', enrolled: '2025-09-01' },
+      { label: 'phone', enrolled: '2026-10-01' },
+    ],
   )
 })
 
@@ -95,7 +98,7 @@ test('the app role cannot write the log', async () => {
   await assert.rejects(app.query('DELETE FROM cella.rule'), /permission denied/)
 })
 
-test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès, seats her in the assembly and enrols her phone', async () => {
+test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès and seats her in the assembly', async () => {
   await on('2026-10-31')
   const done = await close({ decision: 'd-2026-012' }, as(camille))
   assert.equal(done.state, 'settled')
@@ -113,7 +116,7 @@ test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès, se
     `SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled, encode(enrolled_by, 'hex') AS by FROM person.device WHERE address = $1 AND label = 'phone'`,
     [ines],
   )
-  assert.deepEqual(phone, { label: 'phone', enrolled: '2026-10-31', by: null })
+  assert.deepEqual(phone, { label: 'phone', enrolled: '2026-10-01', by: null }, 'the phone is the one her invitation enrolled')
 
   const entry = await one<{ op: string; rules: { owner: string }[] }>('SELECT op, rules FROM cella.log WHERE n = 3')
   assert.equal(entry.op, 'decision:decision:close')
@@ -136,7 +139,7 @@ test('a seat no decision gives is refused: not twice, not one the decision does 
   assert.equal(await head(), 3)
 })
 
-test('seated in the assembly, Inès edits a document from the phone her invitation carried', async () => {
+test('seated in the assembly, Inès edits a document from the phone she took up her invitation on', async () => {
   const doc = createDoc()
   const { rows } = await su.query<{ bytes: Buffer }>(`SELECT bytes FROM document.update WHERE document = 'internal-rules' ORDER BY receipt`)
   doc.importBatch(rows.map((r) => new Uint8Array(r.bytes)))

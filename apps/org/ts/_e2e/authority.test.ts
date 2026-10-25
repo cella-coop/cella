@@ -67,7 +67,7 @@ test('the seed enrols every fixture device, and Hugo\'s old laptop is revoked', 
     [hugo],
   )
   assert.deepEqual(devices, [{ label: 'laptop', revoked: null }, { label: 'old laptop', revoked: '2026-05-12' }])
-  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM person.device WHERE revoked IS NULL')).count), 15)
+  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM person.device WHERE revoked IS NULL')).count), 16, 'and Inès\'s phone, enrolled when she took up her invitation')
   const laptop = await device(hugo, 'laptop')
   assert.equal((await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM person.device WHERE address = $1 AND label = 'laptop'`, [hugo])).key, laptop.key)
 })

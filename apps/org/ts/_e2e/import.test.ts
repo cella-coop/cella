@@ -62,14 +62,17 @@ test('Camille tries the members\' list in a dry run, then imports it: Nadia and 
   assert.deepEqual({ dry: tried.dry, settled: tried.settled, refused: tried.refused }, { dry: true, settled: 2, refused: 1 })
   const page = await shell.page(`/imports/${tried.id}`, camille)
   assert.match(page.text, /What it would make/)
-  assert.match(page.text, /its key is missing/)
+  assert.match(page.text, /a member needs an address and a name/)
 
   const real = await shell.upload('/imports', 'run', { kind: 'members', mode: 'import' }, { file }, camille)
   assert.equal(real.state, 'settled', real.reason)
   const invited = await all<{ address: string; status: string }>(`SELECT address, status FROM membership.member WHERE address LIKE '%@lanterne.example' AND address IN ('nadia@lanterne.example', 'olivier@lanterne.example', 'rose@lanterne.example') ORDER BY address`)
   assert.deepEqual(invited, [{ address: 'nadia@lanterne.example', status: 'invited' }, { address: 'olivier@lanterne.example', status: 'invited' }])
-  const carried = await one<{ n: number }>(`SELECT count(*)::int AS n FROM membership.invitation WHERE member IN ('nadia@lanterne.example', 'olivier@lanterne.example')`)
-  assert.equal(carried.n, 2, 'each invitation carries its first device')
+  const waiting = await one<{ links: number; taken: number }>(
+    `SELECT (SELECT count(*)::int FROM membership.link WHERE member IN ($1, $2)) AS links, (SELECT count(*)::int FROM membership.invitation WHERE member IN ($1, $2)) AS taken`,
+    ['nadia@lanterne.example', 'olivier@lanterne.example'],
+  )
+  assert.deepEqual(waiting, { links: 0, taken: 0 }, 'each is given a link from their page, and has taken up nothing yet')
 })
 
 test('Julien carries October over from the old books: two entries posted, the rental account opened, two refused', async () => {

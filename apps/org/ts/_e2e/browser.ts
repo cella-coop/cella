@@ -7,7 +7,7 @@
 
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
-import { chromium, firefox, webkit, type BrowserType } from 'playwright-core'
+import { chromium, firefox, webkit, type BrowserContext, type BrowserType } from 'playwright-core'
 
 const entry = new URL('../build/index.js', import.meta.url).pathname
 
@@ -30,7 +30,8 @@ const free = () =>
     })
   })
 
-// The built shell in dev mode, signing as the member the cookie names.
+// The built shell in dev mode, whose sign-in page offers the fixture
+// members.
 export async function serve(): Promise<{ base: string; stop: () => Promise<void> }> {
   const port = await free()
   const base = `http://127.0.0.1:${port}`
@@ -56,5 +57,21 @@ export async function serve(): Promise<{ base: string; stop: () => Promise<void>
         await exited
       }
     },
+  }
+}
+
+// Signs a browser in as a fixture member, as the dev server's sign-in page
+// offers: the page derives the member's TEST-ONLY device key, keeps it in
+// this browser and signs the server's challenge with it, and the
+// session's cookie is the context's from then on; every write its pages
+// post, this browser signs.
+export async function signIn(context: BrowserContext, base: string, actor: string) {
+  const page = await context.newPage()
+  try {
+    await page.goto(`${base}/sign-in`)
+    await page.getByTitle(actor).click()
+    await page.waitForURL(`${base}/`)
+  } finally {
+    await page.close()
   }
 }

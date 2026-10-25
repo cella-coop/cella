@@ -1,112 +1,31 @@
 // The shell, end to end on a seeded Lanterne: its built server renders
 // every main page, and its form actions make one write of each kind, as a
-// browser posts them, signed by the acting member's fixture device. Run by
-// `cella test`, which builds the shell first, on a fresh database.
+// browser posts them, each signed by the signed-in member's own device,
+// their fixture device held by the test as their browser holds it. Run
+// by `cella test`, which builds the shell first, on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { spawn, type ChildProcess } from 'node:child_process'
-import { createServer } from 'node:net'
 import pg from 'pg'
-import { parse } from 'devalue'
 import * as drag from '@cella/org-ui/models'
 import { b64, createDoc, order, text as text_ } from '@cella/org-document/models'
+import { Shell } from './serve.ts'
 
 const su = new pg.Client()
-const entry = new URL('../build/index.js', import.meta.url).pathname
-
-let server: ChildProcess | undefined
-let base = ''
+const shell = new Shell(su)
 
 const ines = 'ines@lanterne.example'
 const hugo = 'hugo@lanterne.example'
 const camille = 'camille@lanterne.example'
 const julien = 'julien@lanterne.example'
 
-const free = () =>
-  new Promise<number>((resolve) => {
-    const s = createServer()
-    s.listen(0, '127.0.0.1', () => {
-      const port = (s.address() as { port: number }).port
-      s.close(() => resolve(port))
-    })
-  })
+const start = (date: string) => shell.start(date)
 
-// Starts the built server, in dev mode or not, after setting the notary's
-// date for the app role, which each new connection picks up.
-async function start(date: string, dev = true) {
-  await stop()
-  await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
-  const port = await free()
-  base = `http://127.0.0.1:${port}`
-  // adapter-node takes the origin to be https unless a proxy's header says
-  // otherwise; the test speaks plain http, as a proxy in front would say.
-  const env: NodeJS.ProcessEnv = {
-    ...process.env,
-    PORT: String(port),
-    HOST: '127.0.0.1',
-    PROTOCOL_HEADER: 'x-forwarded-proto',
-    CELLA_DEV: dev ? '1' : '',
-  }
-  delete env.DATABASE_URL
-  server = spawn(process.execPath, [entry], { env, stdio: ['ignore', 'pipe', 'inherit'] })
-  for (let i = 0; i < 100; i++) {
-    try {
-      await fetch(`${base}/search`)
-      return
-    } catch {
-      await new Promise((r) => setTimeout(r, 100))
-    }
-  }
-  throw new Error('the shell did not start')
-}
+// A page as a member reads it, Camille unless named.
+const page = (path: string, actor = camille) => shell.page(path, actor)
 
-async function stop() {
-  if (server && server.exitCode === null) {
-    const exited = new Promise((r) => server?.once('exit', r))
-    // A graceful stop waits out fetch's kept-alive connections; the test
-    // server holds nothing to finish.
-    server.kill('SIGKILL')
-    await exited
-  }
-  server = undefined
-}
-
-const page = async (path: string) => {
-  const res = await fetch(`${base}${path}`)
-  return { status: res.status, text: await res.text() }
-}
-
-interface Done {
-  op: string
-  state: string
-  entry?: number
-  reason?: string
-  then: Done[]
-}
-
-// Posts a page's named action as an enhanced form does, acting as `actor`.
-async function act(path: string, action: string, fields: Record<string, string | string[]>, actor?: string): Promise<Done> {
-  const body = new URLSearchParams()
-  for (const [k, v] of Object.entries(fields)) {
-    for (const x of [v].flat()) {
-      body.append(k, x)
-    }
-  }
-  const res = await fetch(`${base}${path}?/${action}`, {
-    method: 'POST',
-    body,
-    headers: {
-      origin: base,
-      'x-forwarded-proto': 'http',
-      'x-sveltekit-action': 'true',
-      ...(actor ? { cookie: `cella-act=${actor}` } : {}),
-    },
-  })
-  const result = await res.json()
-  assert.ok(result.data, `${path}?/${action}: ${JSON.stringify(result)}`)
-  return parse(result.data).done
-}
+// Posts a page's named action as a form does, signed in as `actor`.
+const act = (path: string, action: string, fields: Record<string, string | string[]>, actor: string) => shell.act(path, action, fields, actor)
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 
@@ -116,7 +35,7 @@ before(async () => {
 })
 
 after(async () => {
-  await stop()
+  await shell.stop()
   await su.end()
 })
 
@@ -213,13 +132,12 @@ test('a decision is open, passed or rejected, as the database reads it', async (
 })
 
 test('the stance form starts at the acting member\'s latest stance, and is not offered off the roll', async () => {
-  const as = async (path: string, actor?: string) =>
-    (await fetch(`${base}${path}`, { headers: actor ? { cookie: `cella-act=${actor}` } : {} })).text()
+  const as = async (path: string, actor: string) => (await page(path, actor)).text
   const hugos = await as('/decisions/d-2026-012?tab=stances', hugo)
   assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
   assert.ok(hugos.includes('Now: consent · receipt 33'), 'saying which receipt it is')
-  assert.ok((await as('/decisions/d-2026-012?tab=stances')).includes('Act as a member to give a stance.'))
+  assert.ok((await as('/decisions/d-2026-012?tab=stances', ines)).includes("Not on this decision's roll."), 'Inès, invited, is on no roll')
 })
 
 test('a decision\'s overview says what is decided in full; its stances are their own tab', async () => {
@@ -261,10 +179,18 @@ test('a collection leads with its All tab and its count, and a view in the addre
   assert.ok(links(paid.text).size > 0 && links(paid.text).size < all, 'a saved view\'s conditions in the address filter the rows')
 })
 
-test('a write with no one acting fails before any verdict', async () => {
-  const done = await act('/decisions/d-2026-012', 'vote', { stance: 'object' })
-  assert.equal(done.state, 'failed')
-  assert.match(done.reason ?? '', /act as a member first/)
+test('with no session, a page goes to the sign-in and a write is refused before any verdict', async () => {
+  const receipts = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.receipt')).n
+  const before = await receipts()
+  const unsigned = await shell.page('/decisions/d-2026-012')
+  assert.equal(unsigned.status, 303)
+  assert.equal(unsigned.location, '/sign-in?back=%2Fdecisions%2Fd-2026-012')
+  assert.equal((await shell.page('/sign-in')).status, 200, 'the sign-in page is reached with no session')
+  const posted = await shell.post('/decisions/d-2026-012', 'vote', new URLSearchParams({ stance: 'object' }))
+  assert.equal(posted.status, 401)
+  const forged = `cella-session=${Buffer.from(hugo).toString('base64url')}.${'ab'.repeat(32)}.9999999999999.${'00'.repeat(32)}`
+  assert.equal((await shell.post('/decisions/d-2026-012', 'vote', new URLSearchParams({ stance: 'object' }), forged)).status, 401, 'a cookie the server did not MAC opens no session')
+  assert.equal(await receipts(), before, 'no receipt was taken')
 })
 
 test('Hugo edits the internal rules as the editor does: one Loro update, settled and relayed live', async () => {
@@ -273,7 +199,7 @@ test('Hugo edits the internal rules as the editor does: one Loro update, settled
 
   // A second member has the document open: its stream opens with what it
   // lacks, then relays each edit as it settles.
-  const live = await fetch(`${base}/documents/internal-rules/live`)
+  const live = await fetch(`${shell.base}/documents/internal-rules/live`, { headers: { cookie: await shell.signIn(camille) } })
   assert.equal(live.headers.get('content-type'), 'text/event-stream')
   const reader = live.body!.pipeThrough(new TextDecoderStream()).getReader()
   const events: string[] = []
@@ -347,21 +273,14 @@ test('Hugo objects to admitting Inès, then consents; closing early is refused',
   assert.match(early.reason ?? '', /open until 2026-10-31/)
 })
 
-test('closed on 31 October, d-2026-012 admits Inès, seats her and enrols her laptop, in the close\'s own verdict', async () => {
+test('closed on 31 October, d-2026-012 admits Inès and seats her in the close\'s own verdict; she signs with the phone she took up her invitation on', async () => {
   await start('2026-10-31')
   const closed = await act('/decisions/d-2026-012', 'close', {}, camille)
   assert.equal(closed.state, 'settled')
   assert.deepEqual(closed.then, [], 'nothing follows: the admission is the close')
   const { text } = await page(`/people/${ines}`)
-  assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('laptop'))
+  assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('phone'))
   assert.ok((await page('/decisions/d-2026-012')).text.includes('passed by consent'))
-})
-
-test('outside dev mode the server signs for no one', async () => {
-  await start('2026-10-31', false)
-  const done = await act('/decisions/d-2026-011', 'vote', { stance: 'consent' }, camille)
-  assert.equal(done.state, 'failed')
-  assert.match(done.reason ?? '', /signs for no one/)
 })
 
 test('the log the shell wrote verifies, and its page says so', async () => {

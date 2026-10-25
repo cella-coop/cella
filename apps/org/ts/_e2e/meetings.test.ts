@@ -15,7 +15,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import { chromium, type Browser } from 'playwright-core'
-import { browsers, serve } from './browser.ts'
+import { browsers, serve, signIn } from './browser.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -200,7 +200,7 @@ test('Malik writes them in the block editor, the meeting card drawn among the bl
   try {
     browser = await chromium.launch()
     const context = await browser.newContext({ viewport: { width: 1440, height: 960 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-    await context.addCookies([{ name: 'cella-act', value: malik, url: base }])
+    await signIn(context, base, malik)
     const page = await context.newPage()
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
@@ -223,7 +223,7 @@ test('Malik writes them in the block editor, the meeting card drawn among the bl
     const plain = await one<{ plain: string }>('SELECT plain FROM document.version WHERE document = $1', [minutes])
     assert.match(plain.plain, /Camille, Yusuf, Malik and Julien; Hugo excused; Thomas as a guest\./)
 
-    await context.addCookies([{ name: 'cella-act', value: camille, url: base }])
+    await signIn(context, base, camille)
     for (const [name, path] of [
       ['meetings-calendar', '/meetings?at=2026-10-01'],
       ['meetings-week', '/meetings?span=week&at=2026-10-26'],

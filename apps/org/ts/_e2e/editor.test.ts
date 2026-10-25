@@ -13,7 +13,7 @@ import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
 import { createDoc, edits, type Fragment, type Run } from '@cella/org-document/models'
-import { browsers, serve } from './browser.ts'
+import { browsers, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-editor-shots'
 const camille = 'camille@lanterne.example'
@@ -208,7 +208,7 @@ for (const [name, engine] of browsers()) {
     before(async () => {
       browser = await engine.launch()
       context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-      await context.addCookies([{ name: 'cella-act', value: camille, url: base }])
+      await signIn(context, base, camille)
     })
 
     after(async () => {

@@ -62,24 +62,24 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/invoices/F-2026-0052', 'Maison Ferrand, packaging'],
   ]
   for (const [path, says] of pages) {
-    const { status, text } = await shell.page(path)
+    const { status, text } = await shell.page(path, thomas)
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
-  const projects = await shell.page('/projects')
+  const projects = await shell.page('/projects', thomas)
   assert.match(projects.text, /class="gallery[\s"]/, 'projects open as a gallery')
   assert.ok(projects.text.includes('Les Halles Paysannes') && projects.text.includes('3 / 4'), 'a card names its client and its milestones')
-  const tasks = await shell.page('/tasks')
+  const tasks = await shell.page('/tasks', thomas)
   assert.match(tasks.text, /class="board[\s"]/, 'tasks open as a board')
   for (const l of ['backlog', 'todo', 'doing', 'done']) {
     assert.ok(tasks.text.includes(`data-drop-list="${l}"`), `the board has its ${l} column`)
   }
-  assert.match((await shell.page('/timesheets')).text, /class="table[\s"]|<table/, 'timesheets open as a table')
-  const dashboard = await shell.page('/timesheets?view=dashboard')
+  assert.match((await shell.page('/timesheets', thomas)).text, /class="table[\s"]|<table/, 'timesheets open as a table')
+  const dashboard = await shell.page('/timesheets?view=dashboard', thomas)
   for (const says of ['Hours by worker', 'Hours by project', 'Billable hours', 'Thomas Nguyen', 'Les Halles Paysannes, online shop']) {
     assert.ok(dashboard.text.includes(says), `the timesheets' dashboard says ${says}`)
   }
-  const tabs = await shell.page('/projects/halles-shop')
+  const tabs = await shell.page('/projects/halles-shop', thomas)
   for (const tab of ['Overview', 'Tasks', 'Time']) {
     assert.ok(tabs.text.includes(`>${tab}<`), `a project's page has its ${tab} tab`)
   }
@@ -98,7 +98,7 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const away = await shell.act(`/tasks/${task}`, 'assign', { member: 'ines@lanterne.example' }, yusuf)
   assert.equal(away.state, 'refused')
   assert.match(away.reason ?? '', /ines@lanterne.example is no active member/)
-  assert.ok(lane((await shell.page('/tasks')).text, 'todo').includes('Audit the checkout for RGAA'), 'it waits in To do')
+  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'todo').includes('Audit the checkout for RGAA'), 'it waits in To do')
 })
 
 test('Thomas drags it into Doing, then Done, each drop a write signed as him', async () => {
@@ -106,7 +106,7 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
   // column entered.
   const doing = await shell.act(`/tasks/${task}`, 'move', { to: 'doing' }, thomas)
   assert.deepEqual([doing.op, doing.state], ['task:task:move', 'settled'])
-  assert.ok(lane((await shell.page('/tasks')).text, 'doing').includes('Audit the checkout for RGAA'))
+  assert.ok(lane((await shell.page('/tasks', thomas)).text, 'doing').includes('Audit the checkout for RGAA'))
   const done = await shell.act(`/tasks/${task}`, 'complete', { to: 'done' }, thomas)
   assert.deepEqual([done.op, done.state], ['task:task:complete', 'settled'])
   assert.deepEqual(await one(`SELECT status, to_char(completed, 'YYYY-MM-DD') AS completed FROM task.task WHERE id = $1`, [task]), {
@@ -151,7 +151,7 @@ test('in November Yusuf approves Thomas\'s October, which takes no more entries;
   const self = await shell.act(`/people/${yusuf}`, 'approve', { month: '2026-10' }, yusuf)
   assert.equal(self.state, 'refused')
   assert.match(self.reason ?? '', /yusuf@lanterne.example may not approve their own time/)
-  const { text } = await shell.page(`/people/${thomas}`)
+  const { text } = await shell.page(`/people/${thomas}`, thomas)
   assert.ok(text.includes('Yusuf Demir'), 'his page names who approved his month')
 })
 

@@ -83,7 +83,7 @@ test('every worker has a contract, the members who work and Inès, who is employ
     { address: ines, stage: 'invited' },
     { address: 'paul@lanterne.example', stage: 'gone' },
   ])
-  const { text } = await shell.page('/people')
+  const { text } = await shell.page('/people', camille)
   // Her chips: a worker, and invited to be a member.
   for (const says of ['People', 'Inès Haddad', 'worker', 'invited']) {
     assert.ok(text.includes(says), `the people say ${says}`)
@@ -153,7 +153,7 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
     'at least 20 shares of 50,00',
     'Enrol a device',
     'laptop, enrolled 1 Sept 2025',
-    'phone, carried by the invitation, enrolled on admission',
+    'phone, enrolled 1 Oct 2026 when the invitation was taken up',
     'Sit in the assembly',
     'the admission seats a new member there',
   ]) {
@@ -186,7 +186,7 @@ test('once d-2026-012 admits her, every step of joining is done but a working ci
   const joining = await tab(ines, 'joining', ines)
   assert.equal(joining.match(/to do/g)?.length, 1, 'only a working circle is left to join')
   assert.ok(joining.includes('a circle seats a member by its own decision'))
-  for (const says of ['20 shares of 50,00', 'phone, enrolled 31 Oct 2026', 'Assemblée générale']) {
+  for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assemblée générale']) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
   const rights = await tab(ines, 'rights', ines)
@@ -212,8 +212,7 @@ test('in November Inès submits her October by her employment and Julien approve
 
 test('Bastien\'s probation ends, he is invited, and his admission is proposed from the form his candidacy filled in', async () => {
   await on('2027-05-03')
-  const phone = await fixture(bastien, 'phone')
-  settled(await invite({ address: bastien, name: 'Bastien Roux', key: phone.key, label: 'phone' }, as(thomas)))
+  settled(await invite({ address: bastien, name: 'Bastien Roux' }, as(thomas)))
   const { text } = await shell.page(`/people/${bastien}?tab=joining`, camille)
   assert.ok(text.includes('Propose the admission'), 'the proposal is offered')
   assert.ok(text.includes('value="20"'), 'with the shares he pledged')

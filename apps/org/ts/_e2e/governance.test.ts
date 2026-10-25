@@ -1,7 +1,7 @@
 // The governance scenario, end to end on a seeded Lanterne, through the
-// handlers: Malik invites a friend with her first device, the assembly
-// admits her and the close seats her and enrols the device in the same
-// verdict, or refuses all of it; a suspension by decision stops a
+// handlers: Malik invites a friend by a link, which she takes up on her
+// laptop, enrolling it; the assembly admits her and the close seats her
+// in the same verdict, or refuses all of it; a suspension by decision stops a
 // member's writes; a nesting that would make a cycle is refused; a
 // mandate is granted by decision, and one beyond what the circle above
 // holds is refused; and a lead approves the time of their own circle
@@ -14,10 +14,10 @@ import { propose, vote } from '@cella/org-decision/api'
 import { put as putCircle } from '@cella/org-graft-circle-decision/api'
 import { carried, close, put } from '@cella/org-graft-circle-decision-membership/api'
 import { grant } from '@cella/org-circle/api'
-import { invite } from '@cella/org-membership/api'
+import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
-import { fixture, signer } from '@cella/org-sign'
+import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { scope, sign } from './lanterne.ts'
 
 const su = new pg.Client()
@@ -72,14 +72,30 @@ after(async () => {
 
 let admission = ''
 
-test('Malik invites Nadia with her laptop: the invitation carries its key, which no one can sign with yet', async () => {
+test('Malik invites Nadia with a link; she takes it up on her laptop, which signs its own enrolment, and the link is spent', async () => {
   const laptop = await fixture(nadia, 'laptop')
-  const invited = settled(await invite({ address: nadia, name: 'Nadia Benali', key: laptop.key, label: 'laptop' }, as(malik)))
-  assert.deepEqual(invited, { member: nadia, invited: '2026-10-24', key: laptop.key })
+  const secret = random()
+  const link = await sha256(secret)
+  const invited = settled(await invite({ address: nadia, name: 'Nadia Benali', link }, as(malik)))
+  assert.deepEqual(invited, { member: nadia, invited: '2026-10-24', link })
   assert.equal(await status(nadia), 'invited')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '0')
 
-  await assert.rejects(invite({ address: 'sam@lanterne.example', name: 'Sam', key: laptop.key, label: 'phone' }, as(malik)), /another invitation carries this device key/)
+  await assert.rejects(accept({ member: nadia, secret: random(), key: laptop.key, label: 'laptop' }, as(nadia)), /this link is not an invitation of nadia/)
+  const other = await fixture(nadia, 'phone')
+  const forged = await accept({ member: nadia, secret, key: other.key, label: 'phone' }, as(nadia))
+  assert.equal(forged.state, 'refused', 'a device is enrolled only by an acceptance it signs itself')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '0')
+
+  const accepted = settled(await accept({ member: nadia, secret, key: laptop.key, label: 'laptop' }, as(nadia)))
+  assert.deepEqual(accepted, { member: nadia, link, key: laptop.key, accepted: '2026-10-24' })
+  assert.deepEqual(
+    await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled, enrolled_by FROM person.device WHERE address = $1`, [nadia]),
+    { label: 'laptop', enrolled: '2026-10-24', enrolled_by: null },
+  )
+  await assert.rejects(accept({ member: nadia, secret, key: laptop.key, label: 'laptop' }, as(nadia)), /has taken up their invitation already/)
+  const spent = await link_({ member: nadia, link: await sha256(random()) }, as(malik))
+  assert.match(reason(spent), /has taken up their invitation/, 'no new link once one is taken up')
 })
 
 test('only the assembly admits: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
@@ -109,11 +125,11 @@ test('a close whose seat is refused refuses the whole close: no admission, no de
   assert.equal(await head(), before)
   assert.equal(await status(nadia), 'invited')
   assert.equal((await one<{ closed: string | null }>('SELECT closed FROM decision.decision WHERE id = $1', [admission])).closed, null)
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '0')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '1', 'her laptop, enrolled when she took up the invitation, is all she holds')
   await su.query(`DELETE FROM circle_membership.position WHERE member = $1`, [nadia])
 })
 
-test('the close admits Nadia, seats her in the assembly and enrols her laptop, in one verdict; she signs from it', async () => {
+test('the close admits Nadia and seats her in the assembly, in one verdict; she signs from the laptop she took up her invitation on', async () => {
   const before = await head()
   const closed = settled(await close({ decision: admission }, as(camille)))
   assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 20]])
@@ -125,7 +141,7 @@ test('the close admits Nadia, seats her in the assembly and enrols her laptop, i
   )
   assert.deepEqual(
     await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [nadia]),
-    { label: 'laptop', enrolled: '2026-11-07' },
+    { label: 'laptop', enrolled: '2026-10-24' },
   )
   settled(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia)))
 })

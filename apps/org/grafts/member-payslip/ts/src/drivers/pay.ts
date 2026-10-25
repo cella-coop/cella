@@ -1,12 +1,6 @@
 import type { Db } from '@cella/org-db'
 import type { Pay } from '../models/pay.ts'
 
-// Each payslip's member, by name, by the payslip's id.
-export async function names(db: Db): Promise<Record<string, { name: string }>> {
-  const { rows } = await db.query<{ id: string; name: string }>(`SELECT month || '~' || member AS id, name FROM member_payslip.slip`)
-  return Object.fromEntries(rows.map((r) => [r.id, { name: r.name }]))
-}
-
 // A member's latest salary and their payslips.
 export async function pay(db: Db, member: string): Promise<Pay> {
   const salary = await db.query<{ gross: string }>(

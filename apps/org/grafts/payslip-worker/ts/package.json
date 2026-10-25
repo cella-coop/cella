@@ -1,0 +1,16 @@
+{
+  "name": "@cella/org-graft-payslip-worker",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-payslip": "workspace:*",
+    "@cella/org-worker": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

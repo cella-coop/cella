@@ -31,6 +31,13 @@ async function on(date: string) {
 const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
+// The app's connection reading as `actor`, as the server reads for the
+// signed-in member: what the policies let them see.
+const reading = async (actor: string) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+  return app
+}
+
 // A sheet's figures by rubric over a span; the balance sheet's up to its end.
 async function sheet(kind: 'income' | 'balance', since: string, until: string) {
   const rows = await all<{ id: string; amount: string | null }>('SELECT id, amount FROM account_transaction.statement($1, $2, $3)', [
@@ -79,7 +86,7 @@ test('the balance sheet at the year\'s end balances, and its totals are the tria
 })
 
 test('months add up to their quarter, and quarters to their year', async () => {
-  const f = await figures(app)
+  const f = await figures(await reading(hugo))
   assert.equal(f['2026-07'].result + f['2026-08'].result + f['2026-09'].result, f['2026-Q3'].result)
   assert.equal(f['2026-10'].result + f['2026-11'].result + f['2026-12'].result, f['2026-Q4'].result)
   assert.equal(f['2026-Q3'].result + f['2026-Q4'].result, f['2026'].result)
@@ -88,7 +95,7 @@ test('months add up to their quarter, and quarters to their year', async () => {
 })
 
 test('the page compares a span with the one before, and opens a line on its accounts', async () => {
-  const s = await statements(app, '2026-10')
+  const s = await statements(await reading(hugo), '2026-10')
   assert.ok(s)
   assert.deepEqual(s.columns, ['2026-10', '2026-09'])
   const sold = s.income.find((r) => r.id === 'production-sold')
@@ -99,11 +106,11 @@ test('the page compares a span with the one before, and opens a line on its acco
   const assets = s.balance.find((r) => r.id === 'assets-total')?.amounts
   const liabilities = s.balance.find((r) => r.id === 'liabilities-total')?.amounts
   assert.deepEqual(assets, liabilities)
-  assert.equal(await statements(app, '2031-Q1'), null)
+  assert.equal(await statements(await reading(hugo), '2031-Q1'), null)
 })
 
 test('each project\'s margin, burn and watch, on 25 October', async () => {
-  const m = await margins(app, '2026-10-25')
+  const m = await margins(await reading(hugo), '2026-10-25')
   assert.deepEqual(
     Object.fromEntries(Object.entries(m).map(([p, x]) => [p, x.watch])),
     {
@@ -128,11 +135,11 @@ test('each project\'s margin, burn and watch, on 25 October', async () => {
 })
 
 test('Hugo approves the print proofs billed on to Ferrand: its margin loses them, October\'s income statement gains them', async () => {
-  const before = (await margins(app, '2026-10-25'))['ferrand-packaging']
+  const before = (await margins(await reading(hugo), '2026-10-25'))['ferrand-packaging']
   const october = await sheet('income', '2026-10-01', '2026-10-31')
   const approved = await approve({ expense: 'ex-0001' }, as(hugo))
   assert.equal(approved.state, 'settled')
-  const after = (await margins(app, '2026-10-25'))['ferrand-packaging']
+  const after = (await margins(await reading(hugo), '2026-10-25'))['ferrand-packaging']
   assert.equal(after.expenses, before.expenses + 180_00)
   assert.equal(after.margin, before.margin - 180_00)
   const now = await sheet('income', '2026-10-01', '2026-10-31')

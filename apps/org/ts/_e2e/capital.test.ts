@@ -41,6 +41,13 @@ async function on(date: string) {
 // Inès signs from the laptop her hire enrolled.
 const as = (actor: string): Deps => ({ db: app, actor, sign: actor === ines ? signer(scope, ines, fixture(ines, 'laptop')) : sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
+
+// The app's connection reading as `actor`, as the server reads for the
+// signed-in member: what the policies let them see.
+const reading = async (actor: string) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+  return app
+}
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
 const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
@@ -71,7 +78,7 @@ test('the statutes value a share at 50 €, and Paul, who left, is owed his 1 50
      FROM account.terms t WHERE t.id = account.capital_for(cella.verdict_date())`,
   )
   assert.deepEqual(t, { terms: 'st-2021', share: '5000', minimum: 20, instalments: 10, delay: 12, repayments: 3 })
-  const c = await called(app, paul)
+  const c = await called(await reading(julien), paul)
   assert.deepEqual(
     c.repayments.map((r) => [r.n, r.due, r.amount, r.paid]),
     [
@@ -96,7 +103,7 @@ test('d-2026-012 admits Inès, and in that verdict her 20 shares are called: 1 0
     { account: '4562', side: 'debit', cents: '100000' },
     { account: '1012', side: 'credit', cents: '100000' },
   ])
-  const c = await called(app, ines)
+  const c = await called(await reading(ines), ines)
   assert.deepEqual({ subscribed: c.subscribed, paid: c.paid, unpaid: c.unpaid }, { subscribed: 1_000_00, paid: 0, unpaid: 1_000_00 })
   assert.equal(await balance('101312'), 0, 'her account holds what she pays in, nothing yet')
   await balanced()
@@ -109,7 +116,7 @@ test('she spreads it over the statutes\' ten instalments from her pay; more is r
   assert.match(reason(forHer), /camille@lanterne.example may spread only their own subscription/)
   const p = settled(await spread({ member: ines, instalments: 10 }, as(ines)))
   assert.equal(p.each, 100_00)
-  const mine = await plan(app, ines, ines)
+  const mine = await plan(await reading(ines), ines, ines)
   assert.deepEqual({ instalments: mine.instalments, each: mine.each, since: mine.since, own: mine.own }, { instalments: 10, each: 100_00, since: '2026-10-31', own: true })
 })
 
@@ -137,7 +144,7 @@ test('Paul\'s first repayment is refused the day before it falls due and by the 
   assert.equal(await balance('4567'), -1_000_00)
   const twice = await repay({ member: paul, n: 1 }, as(julien))
   assert.match(reason(twice), /paul@lanterne.example's repayment 1 was paid on 2026-11-30/)
-  const c = await called(app, paul)
+  const c = await called(await reading(julien), paul)
   assert.deepEqual({ repaid: c.repaid, left: c.left, next: c.next }, { repaid: 500_00, left: 1_000_00, next: 2 })
   await balanced()
 })
@@ -171,11 +178,11 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
   assert.equal(await balance('512'), bank - Number(due.net) - Number(due.charges) + 100_00, 'the bank pays her less by the instalment')
   assert.equal(await balance('421'), 0, 'her pay is settled whole')
 
-  const c = await called(app, ines)
+  const c = await called(await reading(ines), ines)
   assert.deepEqual({ paid: c.paid, unpaid: c.unpaid, via: c.payments.map((p) => p.via) }, { paid: 100_00, unpaid: 900_00, via: ['pay'] })
   assert.equal(await balance('101312'), -100_00, 'her account holds what she paid in')
-  const slip = await withheld(app, `2026-11~${ines}`)
+  const slip = await withheld(await reading(ines), `2026-11~${ines}`)
   assert.deepEqual({ amount: slip?.amount, entry: slip?.entry }, { amount: 100_00, entry })
-  assert.equal((await plan(app, ines, ines)).withheld.length, 1)
+  assert.equal((await plan(await reading(ines), ines, ines)).withheld.length, 1)
   await balanced()
 })

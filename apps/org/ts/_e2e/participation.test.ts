@@ -45,6 +45,13 @@ async function on(date: string) {
 
 const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
+
+// The app's connection reading as `actor`, as the server reads for the
+// signed-in member: what the policies let them see.
+const reading = async (actor: string) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+  return app
+}
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' || out.state === 'failed' ? (out.reason ?? '') : '')
 const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
@@ -219,7 +226,7 @@ test('the home shows the co-op’s figures from several collections, and a viewe
 test('Inès logs her week in the grid, booking hours to a project where the mandate refuses her', async () => {
   // Behind the New button, her week from Monday the 19th, the co-op's own
   // time last, the days from her hire to today open.
-  const [now, before] = await weeks(app, ines)
+  const [now, before] = await weeks(await reading(ines), ines)
   assert.deepEqual([now.monday, before.monday], ['2026-10-19', '2026-10-12'])
   assert.equal(now.rows.at(-1)?.title, 'The co-op’s own time')
   assert.deepEqual(

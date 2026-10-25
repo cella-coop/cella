@@ -27,6 +27,7 @@ let app: pg.Client
 const camille = 'camille@lanterne.example'
 const julien = 'julien@lanterne.example'
 const hugo = 'hugo@lanterne.example'
+const chloe = 'chloe@lanterne.example'
 const share = 50_00
 
 async function on(date: string) {
@@ -38,6 +39,13 @@ async function on(date: string) {
 
 const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
+
+// The app's connection reading as `actor`, as the server reads for the
+// signed-in member: what the policies let them see.
+const reading = async (actor: string) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+  return app
+}
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
 const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
@@ -65,7 +73,7 @@ after(async () => {
 })
 
 test('before the approval, no statement is drawn, and the work share would divide by 2025 pay', async () => {
-  assert.deepEqual(await statements(app), [])
+  assert.deepEqual(await statements(await reading(julien)), [])
   const preview = await all<{ amount: string }>(`SELECT amount FROM patronage_payslip.work_share WHERE distribution = '2025'`)
   assert.equal(preview.length, 10)
   assert.equal(preview.reduce((s, p) => s + Number(p.amount), 0), 27_630_00)
@@ -99,8 +107,8 @@ test('approving 2025 divides the work share by pay, to the cent, in the same wri
   assert.equal(camilles?.quantity, String(3_000_00 * 12))
   assert.deepEqual(await one(`SELECT count(*)::int AS n FROM patronage.part WHERE distribution = '2025' AND basis <> 'salary'`), { n: 0 })
 
-  assert.equal(await employed(app, `2025:${camille}`), null, 'nothing is credited before the distribution')
-  assert.deepEqual(await figures(app, '2025'), [], 'the return waits for the distribution')
+  assert.equal(await employed(await reading(julien), `2025:${camille}`), null, 'nothing is credited before the distribution')
+  assert.deepEqual(await figures(await reading(julien), '2025'), [], 'the return waits for the distribution')
   assert.equal(await balance('120'), -61_400_00, 'the result still waits in 120')
 })
 
@@ -147,12 +155,14 @@ test('half of each part buys whole shares at 50 €, blocked until 1 June 2031; 
 })
 
 test('each member reads their statement, which reconciles with the books; their page shows it to them alone', async () => {
-  const listed = await statements(app)
-  assert.equal(listed.length, 10)
+  const listed = await statements(await reading(julien))
+  assert.equal(listed.length, 10, 'whoever distributes the surplus reads every statement')
   assert.equal(listed.reduce((s, x) => s + x.amount, 0), 27_630_00)
+  assert.deepEqual((await statements(await reading(chloe))).map((s) => s.worker), [chloe], 'a worker reads their own alone')
+  assert.equal(await statement(app, `2025:${camille}`), null, 'and not a colleague\'s')
 
   const id = `2025:${camille}`
-  const sheet = await statement(app, id)
+  const sheet = await statement(await reading(camille), id)
   const part = Number(parts.find((p) => p.worker === camille)?.cents)
   assert.equal(sheet?.amount, part)
   assert.deepEqual(sheet?.lines.map((l) => [l.basis, l.weight, l.portion, l.amount]), [['salary', 100, 27_630_00, part]])
@@ -164,11 +174,11 @@ test('each member reads their statement, which reconciles with the books; their 
   assert.equal(became?.movements.at(-1)?.amount, became?.capital)
 
   assert.deepEqual((await owed(app, camille, camille)).map((s) => [s.id, s.part, s.capital + s.cash, s.capital, s.distributed]), [[id, part, part, became?.capital, true]])
-  assert.deepEqual(await owed(app, camille, julien), [])
+  assert.deepEqual(await owed(await reading(julien), camille, julien), [])
 })
 
 test('the year\'s return to the federation reconciles with the split, the parts and the shares', async () => {
-  const f = Object.fromEntries((await figures(app, '2025')).map((x) => [x.id, x.value]))
+  const f = Object.fromEntries((await figures(await reading(julien), '2025')).map((x) => [x.id, x.value]))
   assert.equal(f.surplus, 61_400_00)
   assert.equal(f.work, 27_630_00)
   assert.equal(Number(f.legal) + Number(f.development) + Number(f.work) + Number(f.interest), 61_400_00)

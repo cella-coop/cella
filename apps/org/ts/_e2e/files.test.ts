@@ -69,12 +69,14 @@ test('who opens a file: the person it concerns, who uploaded it, and a power ove
   // fi-0004, Sofia's receipt.
   assert.equal(await opens('fi-0004', sofia), 200)
   assert.equal(await opens('fi-0004', julien), 200, 'finance reimburses expenses')
-  assert.equal(await opens('fi-0004', ines), 403)
-  assert.equal(await opens('fi-0004', thomas), 403)
+  // A file its reader may not read is no file to them: the policy keeps
+  // even its name and that it exists.
+  assert.equal(await opens('fi-0004', ines), 404)
+  assert.equal(await opens('fi-0004', thomas), 404)
   // fi-0003, Inès's contract.
   assert.equal(await opens('fi-0003', ines), 200)
   assert.equal(await opens('fi-0003', camille), 200, 'the manager hires')
-  assert.equal(await opens('fi-0003', thomas), 403)
+  assert.equal(await opens('fi-0003', thomas), 404)
   assert.equal((await shell.page('/files/fi-0099/content', camille)).status, 404)
 })
 

@@ -55,7 +55,7 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/projects/halles-shop?tab=time', 'Spent of the budget'],
     ['/tasks', 'Press check at the printer'],
     ['/tasks/t-6', 'Fix VAT display on mixed baskets'],
-    ['/timesheets', 'Books, invoicing, payroll and contracts'],
+    ['/timesheets', 'Shop: VAT fixes'],
     ['/timesheets?view=dashboard', 'Hours by project'],
     [`/people/${yusuf}`, 'Timesheets'],
     ['/clients/halles', 'Les Halles Paysannes, online shop'],
@@ -66,6 +66,8 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
+  const time = await shell.page('/timesheets', thomas)
+  assert.ok(!time.text.includes('Books, invoicing, payroll and contracts'), 'Thomas reads his own time, not Julien\'s')
   const projects = await shell.page('/projects', thomas)
   assert.match(projects.text, /class="gallery[\s"]/, 'projects open as a gallery')
   assert.ok(projects.text.includes('Les Halles Paysannes') && projects.text.includes('3 / 4'), 'a card names its client and its milestones')

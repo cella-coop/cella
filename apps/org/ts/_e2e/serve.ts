@@ -149,6 +149,14 @@ export class Shell {
     return { status: res.status, type: res.headers.get('content-type'), location: res.headers.get('location'), text: await res.text() }
   }
 
+  // What a path answers as JSON, as a page's script asks it once the page
+  // is in the browser, signed in as `actor`.
+  async json(path: string, actor: string): Promise<unknown> {
+    const res = await fetch(`${this.#base}${path}`, { headers: { accept: 'application/json', cookie: (await this.#session(actor)).cookie } })
+    assert.ok(res.ok, `${path}: ${res.status}`)
+    return res.json()
+  }
+
   // Posts a page's named action as a form does, signed in as `actor`, and
   // signs what the server asks with their device, as the browser does; a
   // field a form repeats, as a grid's rows, is given as pairs.

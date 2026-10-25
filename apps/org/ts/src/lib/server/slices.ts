@@ -1,4 +1,4 @@
-import type { Action, Collection, Db, Extension, Reaction, Slice } from '@cella/org-db'
+import type { Action, Collection, Extension, Reaction, Slice, Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-ops'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -227,19 +227,18 @@ export const writes = [
 // The reactions to a settled op, from every slice.
 export const reactions = (op: Permission): Reaction[] => slices.flatMap((s) => s.on?.[op] ?? [])
 
-// A collection's rows as the acting member sees them: its owner's and
-// those its extensions add, each with the fields its extensions add; one
-// query at a time, on the one connection.
-export async function rows(db: Db, name: string, actor: string | null): Promise<{ id: string }[]> {
+// What a collection's rows are read from: its owner's select, then those
+// of the extensions that add rows of their own, and each extension's
+// select of the fields it adds to them. `@cella/org-db` composes them
+// into one statement, as the acting member reads, and filters, orders and
+// pages it there.
+export function source(name: string): Source | undefined {
   const m = collections.get(name)
   if (!m) {
-    return []
+    return undefined
   }
-  const owned = await m.collection.list(db, actor)
-  const added: (Record<string, object> | undefined)[] = []
-  for (const e of m.extensions) {
-    owned.push(...((await e.extension.rows?.(db, actor)) ?? []))
-    added.push(await e.extension.list?.(db))
+  return {
+    rows: [m.collection.list, ...m.extensions.map((e) => e.extension.rows)].filter((r) => r !== undefined),
+    fields: m.extensions.flatMap((e) => (e.extension.list ? [e.extension.list] : [])),
   }
-  return owned.map((r) => Object.assign({}, r, ...added.map((a) => a?.[r.id])))
 }

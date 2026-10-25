@@ -26,6 +26,8 @@
       caption={mounted.view.caption}
       {columns}
       rows={data.rows}
+      kept={data.kept}
+      matched={data.matched}
       about={data.about}
       href={mounted.view.href ?? (linked ? href : undefined)}
       creates={creates}

@@ -1,10 +1,11 @@
 // A view's configuration, checked against a collection's declared fields
-// before the server runs it, and run over rows. Pure: no database, no
-// server, though `cella test e2e` gives it both.
+// before the server runs it, and what the server measured shaped for the
+// dashboard. Pure: no database, no server, though `cella test e2e` gives
+// it both; `reads` runs the widgets in SQL.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { aggregate, defaults, fields, widget, widgets } from '@cella/org-ui/models'
+import { defaults, fields, result, widget, widgets, type Widget } from '@cella/org-ui/models'
 
 const fs = fields([
   { key: 'id', label: 'Invoice', kind: 'title', value: (r: any) => r.id },
@@ -13,12 +14,6 @@ const fs = fields([
   { key: 'total', label: 'Total', kind: 'money', value: (r: any) => r.total },
   { key: 'owed', label: 'Owed', kind: 'money', value: (r: any) => r.owed },
 ])
-
-const rows = [
-  { id: 'a', state: 'unpaid', issued: '2026-08-02', total: 1000, owed: 1000 },
-  { id: 'b', state: 'overdue', issued: '2026-10-01', total: 500, owed: 300 },
-  { id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0 },
-]
 
 test('the fields are typed from the columns', () => {
   assert.deepEqual(
@@ -70,20 +65,29 @@ test('the defaults are sound widgets over the fields', () => {
   )
 })
 
-test('widgets run over the rows: figures, bars by value, a line through every month', () => {
-  const [owed, overdue, months, standing] = aggregate(
+test('what the server measured is shaped into figures, bars by value and a line through every month', () => {
+  const ws = [
+    { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['unpaid', 'overdue'] }] },
+    { kind: 'kpi', title: 'Average', measure: { op: 'avg', field: 'total' }, where: [{ field: 'state', is: ['voided'] }] },
+    { kind: 'chart', title: 'By month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
+    { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
+  ] satisfies Widget[]
+  const measured = [
+    1300,
+    null,
     [
-      { kind: 'kpi', title: 'Owed', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['unpaid', 'overdue'] }] },
-      { kind: 'kpi', title: 'This month', measure: { op: 'count' }, where: [{ field: 'issued', within: 'month' }] },
-      { kind: 'chart', title: 'By month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
-      { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
+      { label: '2026-08', value: 1000 },
+      { label: '2026-10', value: 700 },
     ],
-    rows,
-    fs,
-    '2026-10-24',
-  )
+    [
+      { label: 'overdue', value: 1 },
+      { label: 'paid', value: 1 },
+      { label: 'unpaid', value: 2 },
+    ],
+  ]
+  const [owed, average, months, standing] = ws.map((w, i) => result(w, measured[i], fs))
   assert.deepEqual(owed, { kind: 'kpi', title: 'Owed', format: 'money', value: 1300 })
-  assert.deepEqual(overdue, { kind: 'kpi', title: 'This month', format: 'number', value: 2 })
+  assert.deepEqual(average, { kind: 'kpi', title: 'Average', format: 'money', value: null }, 'nothing to average over is no figure')
   assert.deepEqual(months, {
     kind: 'chart',
     title: 'By month',
@@ -96,4 +100,5 @@ test('widgets run over the rows: figures, bars by value, a line through every mo
     ],
   })
   assert.equal(standing.kind === 'chart' && standing.line, false)
+  assert.deepEqual(standing.kind === 'chart' && standing.points.map((p) => p.label), ['unpaid', 'overdue', 'paid'], 'bars by value, the largest first')
 })

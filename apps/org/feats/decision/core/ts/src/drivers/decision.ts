@@ -1,9 +1,16 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Decision, Detail, Given, Kind, Motioned, Procedure, Summary } from '../models/decision.ts'
 import type { Message } from '../models/thread.ts'
 
 const columns = `id, circle, title, rule, procedure, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
+
+// The decisions as the collection lists them, open first, then the
+// latest proposed.
+export const listing: Read = {
+  sql: `SELECT ${columns} FROM decision.decision`,
+  order: 'closed IS NOT NULL, proposed DESC, id DESC',
+}
 
 // Open decisions first, then the latest proposed.
 export async function decisions(db: Db): Promise<Decision[]> {

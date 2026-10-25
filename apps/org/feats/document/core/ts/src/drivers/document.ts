@@ -1,16 +1,22 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import { b64, type Listed, type Note, type Page, type Shown, type Update, type Version } from '../models/document.ts'
 import type { Canon } from '../models/canonical.ts'
 import { merged } from '../handlers/loro.ts'
 import { canonical, hash } from '../models/canonical.ts'
 
+const listed = (adopted: string) => `SELECT d.id, d.title, (SELECT count(*)::int FROM document.version v WHERE v.document = d.id) AS versions,
+  ${adopted} AS adopted, (SELECT to_char(max(at), 'YYYY-MM-DD') FROM document.update u WHERE u.document = d.id) AS edited
+  FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id`
+
+// The documents as the collection lists them, by title, each with the
+// version adopted, or "not adopted", as its badge shows it.
+export const listing: Read = {
+  sql: listed(`coalesce(a.version, 'not adopted')`),
+  order: 'title',
+}
+
 export async function documents(db: Db): Promise<Listed[]> {
-  const { rows } = await db.query<Listed>(
-    `SELECT d.id, d.title, (SELECT count(*)::int FROM document.version v WHERE v.document = d.id) AS versions,
-            a.version AS adopted, (SELECT to_char(max(at), 'YYYY-MM-DD') FROM document.update u WHERE u.document = d.id) AS edited
-     FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id
-     ORDER BY d.title`,
-  )
+  const { rows } = await db.query<Listed>(`${listed('a.version')} ORDER BY d.title`)
   return rows
 }
 

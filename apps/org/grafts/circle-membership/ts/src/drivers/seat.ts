@@ -36,21 +36,12 @@ export async function held(db: Db, member: string): Promise<Held[]> {
 }
 
 // The circles each member sits in now, by address.
-export async function circlesOf(db: Db): Promise<Record<string, { circles: string }>> {
-  const { rows } = await db.query<{ member: string; circles: string }>(
-    `SELECT member, string_agg(DISTINCT circle, ', ' ORDER BY circle) AS circles
-     FROM circle_membership.position WHERE until IS NULL GROUP BY member`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.member, { circles: r.circles }]))
-}
+export const circlesOf = `SELECT member AS id, string_agg(DISTINCT circle, ', ' ORDER BY circle) AS circles
+  FROM circle_membership.position WHERE until IS NULL GROUP BY member`
 
-// How many members sit in each circle now, by circle.
-export async function seated(db: Db): Promise<Record<string, { seated: number }>> {
-  const { rows } = await db.query<{ circle: string; seated: number }>(
-    `SELECT circle, count(DISTINCT member)::int AS seated FROM circle_membership.position WHERE until IS NULL GROUP BY circle`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.circle, { seated: r.seated }]))
-}
+// How many members sit in each circle now, by circle, none where no one does.
+export const seated = `SELECT c.id, count(DISTINCT p.member)::int AS seated
+  FROM circle.circle c LEFT JOIN circle_membership.position p ON p.circle = c.id AND p.until IS NULL GROUP BY c.id`
 
 // A member's name, for their page to call them by when they sit nowhere.
 export async function named(db: Db, member: string): Promise<string> {

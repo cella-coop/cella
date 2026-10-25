@@ -17,13 +17,10 @@ export async function onMeeting(db: Db, meeting: string, actor: string | null): 
   )
   const { rows } = await db.query<Quorum>('SELECT seats, present, needed FROM circle_meeting_membership.quorum WHERE meeting = $1', [meeting])
   const keeps = actor
-    ? (await db.query<{ keeps: boolean }>(`SELECT circle_membership.over($1, 'keep-minutes', $2, current_date) AS keeps`, [actor, found.rows[0].circle])).rows[0].keeps
+    ? (await db.query<{ keeps: boolean }>(`SELECT circle_membership.over($1, 'keep-minutes', $2, cella.verdict_date()) AS keeps`, [actor, found.rows[0].circle])).rows[0].keeps
     : false
   return { roll, quorum: rows[0] ?? { seats: 0, present: 0, needed: 0 }, open: found.rows[0].open, actor, keeps }
 }
 
-// Each meeting's quorum, for the collection's rows.
-export async function quorums(db: Db): Promise<Record<string, { quorate: string }>> {
-  const { rows } = await db.query<Quorum & { meeting: string }>('SELECT meeting, seats, present, needed FROM circle_meeting_membership.quorum')
-  return Object.fromEntries(rows.map((q) => [q.meeting, { quorate: `${q.present} of ${q.seats}` }]))
-}
+// Each meeting's seats present, "3 of 5", for the collection's rows.
+export const quorums = `SELECT meeting AS id, present || ' of ' || seats AS quorate FROM circle_meeting_membership.quorum`

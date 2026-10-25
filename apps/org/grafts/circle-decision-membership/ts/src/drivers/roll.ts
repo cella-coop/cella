@@ -1,6 +1,6 @@
 import type { Db } from '@cella/org-db'
 import { stances, type Stance } from '@cella/org-decision/models'
-import type { Roll, State, Voter } from '../models/roll.ts'
+import type { Roll, Voter } from '../models/roll.ts'
 
 // A decision's state, in SQL over `d`: open until its close, then passed
 // or rejected as `circle_decision_membership.passes` reads the stances the
@@ -65,16 +65,11 @@ export async function roll(db: Db, decision: string, actor: string | null = null
 }
 
 // Each decision's state, and how many on its roll have given a stance,
-// by decision.
-export async function turnout(db: Db): Promise<Record<string, { turnout?: string; state: State }>> {
-  const { rows } = await db.query<{ decision: string; state: State; given: number | null; roll: number | null }>(
-    `SELECT d.id AS decision, ${state} AS state, t.roll, t.given
-     FROM decision.decision d
-     LEFT JOIN (
-       SELECT r.decision, count(*)::int AS roll,
-              count(*) FILTER (WHERE EXISTS (SELECT FROM decision.vote v WHERE v.decision = r.decision AND v.member = r.member))::int AS given
-       FROM circle_decision_membership.roll r GROUP BY r.decision
-     ) t ON t.decision = d.id`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.decision, { state: r.state, ...(r.roll === null ? {} : { turnout: `${r.given} of ${r.roll}` }) }]))
-}
+// "4 of 10", by decision; none where it has no roll.
+export const turnout = `SELECT d.id, ${state} AS state, t.given || ' of ' || t.roll AS turnout
+  FROM decision.decision d
+  LEFT JOIN (
+    SELECT r.decision, count(*)::int AS roll,
+           count(*) FILTER (WHERE EXISTS (SELECT FROM decision.vote v WHERE v.decision = r.decision AND v.member = r.member))::int AS given
+    FROM circle_decision_membership.roll r GROUP BY r.decision
+  ) t ON t.decision = d.id`

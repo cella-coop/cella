@@ -1,6 +1,6 @@
 import { action, type Slice } from '@cella/org-db'
 import { close, post, propose, vote } from '../handlers/index.ts'
-import { decision, decisions, kinds, procedures } from '../drivers/decision.ts'
+import { decision, decisions, kinds, listing, procedures } from '../drivers/decision.ts'
 import type { Stance } from '../models/decision.ts'
 import * as forms from './forms.ts'
 
@@ -11,7 +11,7 @@ export const slice: Slice = {
   name: 'decision',
   collections: {
     decisions: {
-      list: decisions,
+      list: listing,
       about: async (db) => ({ kinds: await kinds(db), procedures: await procedures(db) }),
       item: decision,
       index: async (db) => (await decisions(db)).map((d) => ({ id: d.id, title: d.title, sub: d.id })),

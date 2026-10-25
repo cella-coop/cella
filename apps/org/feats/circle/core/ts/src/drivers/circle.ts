@@ -1,12 +1,18 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Circle, Detail, Mandate, Role } from '../models/circle.ts'
+
+// The names from the assembly down to a circle, which order the tree.
+const tree = '(SELECT array_agg(a.name ORDER BY u.i) FROM unnest(c.path) WITH ORDINALITY u(id, i) JOIN circle.circle a ON a.id = u.id)'
+
+// The tree as the collection lists it, each circle after its parent.
+export const listing: Read = {
+  sql: `SELECT c.id, c.name, c.parent, c.purpose, c.procedure, ${tree} AS tree FROM circle.circle c`,
+  order: 'tree',
+}
 
 // The tree, each circle after its parent, from the assembly down.
 export async function circles(db: Db): Promise<Circle[]> {
-  const { rows } = await db.query<Circle>(
-    `SELECT c.id, c.name, c.parent, c.purpose, c.procedure FROM circle.circle c
-     ORDER BY (SELECT array_agg(a.name ORDER BY u.i) FROM unnest(c.path) WITH ORDINALITY u(id, i) JOIN circle.circle a ON a.id = u.id)`,
-  )
+  const { rows } = await db.query<Circle>(`SELECT c.id, c.name, c.parent, c.purpose, c.procedure FROM circle.circle c ORDER BY ${tree}`)
   return rows
 }
 

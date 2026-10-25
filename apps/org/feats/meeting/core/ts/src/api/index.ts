@@ -3,7 +3,7 @@
 // slice, which the shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { add, cancel, hold, minute, move, remove, schedule } from '../handlers/index.ts'
-import { item, meetings, offered } from '../drivers/meeting.ts'
+import { item, listing, meetings, offered } from '../drivers/meeting.ts'
 import * as forms from './forms.ts'
 
 export { add, adding, cancel, hold, minute, minuting, move, remove, schedule } from '../handlers/index.ts'
@@ -14,7 +14,7 @@ export const slice: Slice = {
   name: 'meeting',
   collections: {
     meetings: {
-      list: meetings,
+      list: listing,
       about: offered,
       item,
       index: async (db) => (await meetings(db)).map((m) => ({ id: m.id, title: m.title, sub: `${m.circle}, ${m.at.slice(0, 10)}` })),

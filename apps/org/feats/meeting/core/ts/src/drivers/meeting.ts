@@ -1,10 +1,20 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Item, Meeting, Offered } from '../models/meeting.ts'
 
 const columns = `m.id, m.circle, m.title, to_char(m.at, 'YYYY-MM-DD"T"HH24:MI') AS at, m.place, m.link, m.status,
   to_char(m.settled, 'YYYY-MM-DD') AS settled, to_char(m.minuted, 'YYYY-MM-DD') AS minuted,
   (SELECT count(*)::int FROM meeting.item i WHERE i.meeting = m.id) AS items,
   (SELECT coalesce(sum(i.minutes), 0)::int FROM meeting.item i WHERE i.meeting = m.id) AS length`
+
+// The meetings as the collection lists them, the latest first: the place
+// "online" where there is only a link, and no length while the agenda has
+// none.
+export const listing: Read = {
+  sql: `SELECT id, circle, title, at, coalesce(nullif(place, ''), CASE WHEN link <> '' THEN 'online' END) AS place, link, status,
+          settled, minuted, items, nullif(length, 0) AS length
+        FROM (SELECT ${columns} FROM meeting.meeting m) m`,
+  order: 'at DESC, id',
+}
 
 // Every meeting, the latest first.
 export async function meetings(db: Db): Promise<Meeting[]> {

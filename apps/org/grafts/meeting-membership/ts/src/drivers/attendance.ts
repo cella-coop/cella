@@ -13,12 +13,7 @@ export async function marks(db: Db, meeting: string): Promise<Mark[]> {
 }
 
 // How many were marked present at each meeting.
-export async function present(db: Db): Promise<Record<string, { present: number }>> {
-  const { rows } = await db.query<{ meeting: string; present: number }>(
-    `SELECT meeting, count(*)::int AS present FROM meeting_membership.attendance WHERE status = 'present' GROUP BY meeting`,
-  )
-  return Object.fromEntries(rows.map((r) => [r.meeting, { present: r.present }]))
-}
+export const present = `SELECT meeting AS id, count(*)::int AS present FROM meeting_membership.attendance WHERE status = 'present' GROUP BY meeting`
 
 // The meetings a member was marked at, the latest first.
 export async function attended(db: Db, member: string): Promise<Attended[]> {

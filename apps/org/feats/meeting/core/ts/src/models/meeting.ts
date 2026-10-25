@@ -1,7 +1,9 @@
 export type Status = 'scheduled' | 'held' | 'cancelled'
 
 // A meeting as the collection lists it: `at` is the scope's wall-clock
-// time, `YYYY-MM-DDTHH:MM`; `length` the agenda's minutes, summed.
+// time, `YYYY-MM-DDTHH:MM`; `length` the agenda's minutes, summed. In the
+// list, the place is "online" where there is only a link, and an agenda
+// without minutes has no length.
 export interface Meeting {
   id: string
   circle: string

@@ -1,6 +1,6 @@
 import { action, type Deps, type Slice } from '@cella/org-db'
 import { comment, create, edit, version } from '../handlers/index.ts'
-import { document, documents } from '../drivers/document.ts'
+import { document, documents, listing } from '../drivers/document.ts'
 import { b64, type Edit } from '../models/document.ts'
 import { live, publish } from './live.ts'
 
@@ -21,7 +21,7 @@ export const slice: Slice = {
   name: 'document',
   collections: {
     documents: {
-      list: documents,
+      list: listing,
       item: document,
       index: async (db) => (await documents(db)).map((d) => ({ id: d.id, title: d.title, sub: d.adopted ?? 'not adopted' })),
       actions: {

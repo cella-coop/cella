@@ -1,8 +1,9 @@
 // The statements' presentation alone, on a database holding only the app's
 // core and this feat: each account is placed in one rubric of each sheet
 // by its code's longest prefix, every total names rubrics of its own
-// sheet, and the spans are drawn from the periods of the books. Run by
-// `cella test slice account`.
+// sheet, and the spans are drawn from the periods of the books. The
+// slice's other tests share the database and keep their periods in 2025,
+// so this one reads 2026's spans. Run by `cella test slice account`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -68,7 +69,7 @@ test('the spans are each month, quarter and year of the books, against the one b
   await db.query(`INSERT INTO account.period (month, closed) VALUES ('2026-07', '2026-08-05'), ('2026-08', '2026-09-04'), ('2026-09', '2026-10-05'), ('2026-10', NULL)`)
   const { rows } = await db.query(
     `SELECT id, kind, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until, before, closed
-     FROM account.report ORDER BY until, kind`,
+     FROM account.report WHERE since >= '2026-01-01' ORDER BY until, kind`,
   )
   assert.deepEqual(rows, [
     { id: '2026-07', kind: 'month', since: '2026-07-01', until: '2026-07-31', before: '2026-06', closed: true },

@@ -73,6 +73,12 @@ pub(crate) static SCOPE: GucSetting<Option<CString>> = GucSetting::<Option<CStri
 /// day there, so a cutoff or a close falls on the co-op's day; unset, UTC.
 pub(crate) static TIMEZONE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
+/// Whether state may be written outside a write: a superuser's, for the
+/// migrations, which change the schema and its registries, and for a slice
+/// test, which tests a slice's SQL below the notary. Off, every registered
+/// state table refuses a row no submitting transaction writes.
+pub(crate) static UNBOUND: GucSetting<bool> = GucSetting::<bool>::new(false);
+
 #[pg_guard]
 pub extern "C-unwind" fn _PG_init() {
     GucRegistry::define_string_guc(
@@ -120,6 +126,14 @@ pub extern "C-unwind" fn _PG_init() {
         c"The scope's timezone, whose day is the verdict date",
         c"an IANA zone such as Europe/Paris, set by a superuser on the database; unset, UTC",
         &TIMEZONE,
+        GucContext::Suset,
+        GucFlags::default(),
+    );
+    GucRegistry::define_bool_guc(
+        c"cella.unbound",
+        c"Whether state may be written outside a write",
+        c"a superuser's, for migrations and slice tests; off, a registered state table refuses a row no submitting transaction writes",
+        &UNBOUND,
         GucContext::Suset,
         GucFlags::default(),
     );

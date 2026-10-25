@@ -47,9 +47,11 @@ const REFUSED = '09000'
 const code = (e: unknown) => (e as { code?: string }).code
 
 // One write, one transaction: signed first, as the member's device does
-// before sending, then the state change, then `cella.submit` last, then
-// commit. A refusal raises inside submit, so the state and the verdict roll
-// back together and the refusal uses no verdict number.
+// before sending, then opened with `cella.begin`, then the state change,
+// then `cella.submit` last, then commit. A state table takes rows only in a
+// begun transaction, and one commits only with its verdict. A refusal
+// raises inside submit, so the state and the verdict roll back together
+// and the refusal uses no verdict number.
 export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Refused> {
   const { db } = deps
   const request = plain(w.request)
@@ -59,6 +61,7 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
     // The transaction reads as the actor, and as a write's: its state
     // change sees the whole state, as the rules do.
     await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', 'on', true)`, [deps.actor])
+    await db.query(`SELECT cella.begin($1, $2, decode($3, 'hex'))`, [w.op, deps.actor, proof.device])
     const value = await w.state(db, proof)
     // Deferred checks, such as an entry balancing, refuse before the
     // verdict rather than at commit, after it.

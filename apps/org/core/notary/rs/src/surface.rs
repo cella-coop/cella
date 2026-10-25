@@ -15,7 +15,8 @@
 //! | `cella.share(member, stance, receipt, num, den)` | aggregate | `Tally::share` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
 //! | `cella.receipt()` | function | the transaction's receipt number |
-//! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, that the payload restates the request where it carries the same field, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
+//! | `cella.begin(op, actor, device)` | function | opens a write: the transaction may write the registered state tables and commits only with its verdict |
+//! | `cella.submit(op, payload, actor, signed)` | function | checks the write was begun, the member's signature, that the payload restates the request where it carries the same field, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
 //! | `cella.op()`, `cella.actor()`, `cella.device()` | functions | the write being judged, for rules |
 //! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it |
 //! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
@@ -23,6 +24,7 @@
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
 //! | `cella.signer` | table | every key the notary has signed with, by id, and the first entry each signed |
 //! | `cella.rule`, `cella.rule_text`, `cella.keyring`, `cella.power` | tables | the registries: rules per op, the keyring, the power each op needs |
+//! | `cella.state`, `cella.notarise(tab)`, `cella.notarised()` | table, function, trigger | the registered state tables, each refusing a row no begun transaction writes |
 //! | `cella.retention`, `cella.personal` | tables | the retention classes and their clocks; the columns holding personal data, each feat's own |
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
 //! | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | tables, the owner's but `erased` | sealed keys, the salts and sealed values that open commitments, erasures, sweeps |
@@ -377,6 +379,64 @@ fn submit(
     let n = notary::submit(op, &payload, actor, &signed);
     TableIterator::once((n, "settled".to_string(), None))
 }
+
+/// Opens a write, after `BEGIN` and before its state: the op, the member it
+/// is for and the device that signs it. Until it commits, the transaction
+/// may write the registered state tables; it commits only with the verdict
+/// `submit` appends for the same op, actor and device, and a savepoint
+/// rolled back past it undoes it. One per transaction.
+#[pg_extern(volatile)]
+fn begin(op: &str, actor: &str, device: &[u8]) {
+    notary::begin(op, actor, device);
+}
+
+/// The notary's trigger on every registered state table, row by row and
+/// on a truncate: refuses a change no begun transaction makes, unless the
+/// notary is redacting or a superuser set `cella.unbound`.
+#[pg_trigger]
+fn notarised<'a>(trigger: &'a PgTrigger<'a>) -> Result<Option<PgHeapTuple<'a, AllocatedByPostgres>>, PgTriggerError> {
+    notary::notarised(&format!("{}.{}", trigger.table_schema()?, trigger.table_name()?));
+    Ok(None)
+}
+
+// The registered state tables: every table whose rows only a write may
+// change, each with the notary's trigger, installed by `cella.notarise`,
+// which a superuser runs; the org core runs it on every table a feat or a
+// graft makes. A table is named, not referenced by oid, so a dump keeps it.
+
+extension_sql!(
+    r"
+CREATE TABLE cella.state (
+    schema text NOT NULL,
+    tab text NOT NULL,
+    PRIMARY KEY (schema, tab)
+);
+CREATE FUNCTION cella.notarise(tab regclass) RETURNS boolean LANGUAGE plpgsql
+SET search_path = pg_catalog, pg_temp AS $$
+BEGIN
+  INSERT INTO cella.state (schema, tab)
+  SELECT n.nspname, c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace WHERE c.oid = notarise.tab
+  ON CONFLICT DO NOTHING;
+  IF NOT FOUND THEN
+    RETURN false;
+  END IF;
+  -- A partition takes its row trigger from its table, registered before
+  -- or after it.
+  IF NOT (SELECT c.relispartition FROM pg_class c WHERE c.oid = notarise.tab) THEN
+    EXECUTE format('CREATE CONSTRAINT TRIGGER notarised AFTER INSERT OR UPDATE OR DELETE ON %s FOR EACH ROW EXECUTE FUNCTION cella.notarised()', notarise.tab);
+  END IF;
+  EXECUTE format('CREATE TRIGGER notarised_truncate BEFORE TRUNCATE ON %s FOR EACH STATEMENT EXECUTE FUNCTION cella.notarised()', notarise.tab);
+  RETURN true;
+END
+$$;
+REVOKE ALL ON cella.state FROM PUBLIC;
+GRANT SELECT ON cella.state TO PUBLIC;
+REVOKE EXECUTE ON FUNCTION cella.notarise(regclass) FROM PUBLIC;
+SELECT pg_catalog.pg_extension_config_dump('cella.state', '');
+",
+    name = "state_tables",
+    requires = ["notary_tables", notarised],
+);
 
 /// The op of the write `submit` is judging; NULL outside it.
 #[pg_extern(stable)]

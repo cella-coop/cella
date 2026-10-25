@@ -165,6 +165,9 @@ for (const file of files) {
   }
   try {
     await db.query('BEGIN')
+    // A migration changes the schema and its registries, a superuser's
+    // act, not a write: the notary's trigger lets its rows through.
+    await db.query('SET LOCAL cella.unbound = on')
     await db.query(sql)
     await db.query('INSERT INTO migration.applied (id, hash) VALUES ($1, $2)', [id, hash])
     await db.query('COMMIT')

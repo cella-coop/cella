@@ -1,8 +1,10 @@
 //! The notary's own tests, run in Postgres by `cella test notary`: the
 //! member's signature, the payload restating the request, the nonce, the
-//! keyring, the rules, the chain and the verdict date's day. Each runs in a transaction pgrx rolls
-//! back, on a keyring and devices of its own; the notary signs with a
-//! TEST-ONLY seed that `pg_test::setup` writes to the cluster's key file.
+//! keyring, the rules, the chain, the verdict date's day, and a write
+//! begun before its state, which alone a state table takes rows from.
+//! Each runs in a transaction pgrx rolls back, on a keyring and devices of
+//! its own; the notary signs with a TEST-ONLY seed that `pg_test::setup`
+//! writes to the cluster's key file.
 
 use pgrx::prelude::*;
 
@@ -39,8 +41,9 @@ mod tests {
     /// The scope, a fixed verdict date, the rules role as the org core
     /// grants it, a keyring over
     /// `t.device`, Julien's device 1 and Camille's device 2 enrolled, and
-    /// `t.attempt`, which submits and answers the error it raised, if any,
-    /// as `SQLSTATE message`.
+    /// `t.attempt`, which begins a write and submits it, and `t.tries`,
+    /// which runs a statement, each answering the error it raised, if
+    /// any, as `SQLSTATE message`.
     fn scope() {
         Spi::run(&format!(
             r"
@@ -62,7 +65,16 @@ INSERT INTO cella.keyring (fn, owner) VALUES ('t.keyring(text, bytea)', 't');
 INSERT INTO t.device (actor, device) VALUES ('{JULIEN}', '\x{julien}'), ('{CAMILLE}', '\x{camille}');
 CREATE FUNCTION t.attempt(op text, payload jsonb, actor text, signed jsonb) RETURNS text LANGUAGE plpgsql AS $f$
 BEGIN
+  PERFORM cella.begin(op, actor, decode(signed->>'device', 'hex'));
   PERFORM cella.submit(op, payload, actor, signed);
+  RETURN NULL;
+EXCEPTION WHEN OTHERS THEN
+  RETURN SQLSTATE || ' ' || SQLERRM;
+END
+$f$;
+CREATE FUNCTION t.tries(statement text) RETURNS text LANGUAGE plpgsql AS $f$
+BEGIN
+  EXECUTE statement;
   RETURN NULL;
 EXCEPTION WHEN OTHERS THEN
   RETURN SQLSTATE || ' ' || SQLERRM;
@@ -206,10 +218,70 @@ $f$;
     fn a_nonce_counts_once() {
         scope();
         settle(100);
+        // The next write is another transaction's, which begins afresh.
+        crate::notary::forget_begun();
         let again = json!({ "cents": 200 });
         let error = attempt(&again, JULIEN, &signed(&device(1), JULIEN, &again, NONCE)).expect("a refusal");
         assert!(error.starts_with("09000 ") && error.contains("was already counted"), "{error}");
         assert_eq!(head(), 1);
+    }
+
+    /// Runs a statement; `None` when it passes, else its error.
+    fn tries(statement: &str) -> Option<String> {
+        Spi::get_one_with_args::<String>("SELECT t.tries($1)", &[statement.into()]).expect("a try")
+    }
+
+    fn submits(actor: &str, signed: &Value) -> Option<String> {
+        let submit = format!("SELECT cella.submit('{OP}', '{{\"cents\": 100}}', '{actor}', '{signed}')");
+        tries(&submit)
+    }
+
+    #[pg_test]
+    fn a_write_not_begun_is_refused() {
+        scope();
+        let request = json!({ "cents": 100 });
+        let error = submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
+        assert!(error.starts_with("09000 ") && error.contains("was not begun"), "{error}");
+        assert_eq!(head(), 0);
+    }
+
+    #[pg_test]
+    fn a_verdict_settles_only_the_write_begun() {
+        scope();
+        let request = json!({ "cents": 100 });
+        let camille = hex(&device(2).verifying_key().to_bytes());
+        Spi::run(&format!("SELECT cella.begin('{OP}', '{CAMILLE}', '\\x{camille}')")).expect("a begin");
+        let error = submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
+        assert!(error.contains("is not the write this transaction began, test:thing:make by camille"), "{error}");
+        let again = tries(&format!("SELECT cella.begin('{OP}', '{JULIEN}', '\\x{camille}')")).expect("a refusal");
+        assert!(again.starts_with("09000 ") && again.contains("opened test:thing:make already"), "{again}");
+        assert_eq!(head(), 0);
+    }
+
+    #[pg_test]
+    fn a_state_table_takes_rows_only_inside_a_write() {
+        scope();
+        Spi::run("CREATE TABLE t.thing (n integer); INSERT INTO t.thing VALUES (1)").expect("a table");
+        assert_eq!(Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("registered"), Some(true));
+        assert_eq!(Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("once"), Some(false));
+        let listed = Spi::get_one::<bool>("SELECT EXISTS (SELECT FROM cella.state WHERE schema = 't' AND tab = 'thing')").expect("listed");
+        assert_eq!(listed, Some(true));
+        for statement in ["INSERT INTO t.thing VALUES (2)", "UPDATE t.thing SET n = 3", "DELETE FROM t.thing", "TRUNCATE t.thing"] {
+            let error = tries(statement).expect("a refusal");
+            assert!(error.starts_with("09000 ") && error.contains("t.thing is written outside a write"), "{statement}: {error}");
+        }
+        // A savepoint rolled back past the begin undoes it.
+        let julien = hex(&device(1).verifying_key().to_bytes());
+        let undone = format!("DO $$ BEGIN PERFORM cella.begin('{OP}', '{JULIEN}', '\\x{julien}'); RAISE EXCEPTION 'undone'; END $$");
+        assert!(tries(&undone).is_some_and(|e| e.contains("undone")));
+        assert!(tries("INSERT INTO t.thing VALUES (2)").is_some_and(|e| e.contains("written outside a write")));
+        // A superuser may unbind, as the migrations do.
+        Spi::run("SET LOCAL cella.unbound = on").expect("unbound");
+        assert_eq!(tries("INSERT INTO t.thing VALUES (2)"), None);
+        Spi::run("SET LOCAL cella.unbound = off").expect("bound");
+        Spi::run(&format!("SELECT cella.begin('{OP}', '{JULIEN}', '\\x{julien}')")).expect("a begin");
+        assert_eq!(tries("INSERT INTO t.thing VALUES (3)"), None);
+        assert_eq!(Spi::get_one::<i64>("SELECT count(*) FROM t.thing").expect("the rows"), Some(3));
     }
 
     #[pg_test]

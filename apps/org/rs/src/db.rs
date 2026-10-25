@@ -61,8 +61,8 @@ impl<'a> Dev<'a> {
     }
 
     /// Drops a database if it exists, creates it and migrates it: the whole
-    /// tree, or one slice's part of it; then seeds it from a fixture's
-    /// directory, if one is given. Never an unmigrated database.
+    /// tree, or one slice's part of it, unbound; then seeds it from a
+    /// fixture's directory, if one is given. Never an unmigrated database.
     pub fn renew(&self, db: &str, slice: Option<&str>, fixture: Option<&Path>) -> Vec<Command> {
         let mut drop = self.on(db, "dropdb");
         drop.args(["--if-exists", "--force", db]);
@@ -74,6 +74,13 @@ impl<'a> Dev<'a> {
             migrate.args(["--slice", slice]);
         }
         let mut cmds = vec![drop, create, migrate];
+        if slice.is_some() {
+            // A slice's tests test its SQL below the notary, writing its
+            // rows as they need them, so its database is unbound.
+            let mut unbind = self.on(db, "psql");
+            unbind.args(["-qc", &format!("ALTER DATABASE {db} SET cella.unbound = on")]);
+            cmds.push(unbind);
+        }
         if let Some(dir) = fixture {
             let mut seed = self.on(db, "node");
             seed.arg(self.repo.root.join("tools/seed.mjs")).arg(dir);

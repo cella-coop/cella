@@ -5,13 +5,13 @@
 //! pass is its rules', both in SQL.
 
 use crate::vault;
-use crate::{CLOCK, KEY_FILE, SCOPE, TIMEZONE};
+use crate::{CLOCK, KEY_FILE, SCOPE, TIMEZONE, UNBOUND};
 use cella_rules::hex::{hex, unhex};
 use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule, Signer};
 use cella_rules::sign::{self, Request};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
-use pgrx::{JsonB, PgXactCallbackEvent, register_xact_callback};
+use pgrx::{JsonB, PgSubXactCallbackEvent, PgXactCallbackEvent, register_subxact_callback, register_xact_callback};
 use serde_json::{Value, json};
 use std::cell::RefCell;
 
@@ -195,6 +195,111 @@ impl Drop for During {
     }
 }
 
+/// The write a transaction opened with `cella.begin`, the subtransaction
+/// that opened it, and the one its verdict was appended in, if any: a
+/// savepoint rolled back past either undoes it, as it undoes the state.
+struct Begun {
+    write: Context,
+    sub: pg_sys::SubTransactionId,
+    settled: Option<pg_sys::SubTransactionId>,
+}
+
+thread_local! {
+    static BEGUN: RefCell<Option<Begun>> = const { RefCell::new(None) };
+}
+
+fn begun() -> Option<Context> {
+    BEGUN.with(|b| b.borrow().as_ref().map(|b| b.write.clone()))
+}
+
+fn subtransaction() -> pg_sys::SubTransactionId {
+    // SAFETY: reads the backend's current subtransaction id.
+    unsafe { pg_sys::GetCurrentSubTransactionId() }
+}
+
+/// Opens a write: after `BEGIN`, before its state. Until it commits, the
+/// transaction may write the registered state tables, and it commits only
+/// with the verdict `submit` appends for the same op, actor and device.
+pub fn begin(op: &str, actor: &str, device: &[u8]) {
+    let at_begin = || format!("{op} refused at begin, before its state");
+    let Ok(device) = <[u8; 32]>::try_from(device) else {
+        refuse(format!("{op} names no device: a device is a 32-byte public key"), at_begin());
+    };
+    if let Some(open) = begun() {
+        refuse(format!("{op} is begun in a transaction that opened {} already: one write, one transaction", open.op), at_begin());
+    }
+    let write = Context { op: op.into(), actor: actor.into(), device };
+    BEGUN.with(|b| *b.borrow_mut() = Some(Begun { write, sub: subtransaction(), settled: None }));
+    register_xact_callback(PgXactCallbackEvent::PreCommit, settled);
+    register_xact_callback(PgXactCallbackEvent::PrePrepare, settled);
+    for end in [PgXactCallbackEvent::Commit, PgXactCallbackEvent::Abort, PgXactCallbackEvent::Prepare] {
+        register_xact_callback(end, forget_begun);
+    }
+    // A released savepoint hands the begin and the verdict to its parent;
+    // one rolled back undoes them.
+    register_subxact_callback(PgSubXactCallbackEvent::CommitSub, |sub, parent| {
+        BEGUN.with(|b| {
+            if let Some(b) = b.borrow_mut().as_mut() {
+                if b.sub == sub {
+                    b.sub = parent;
+                }
+                if b.settled == Some(sub) {
+                    b.settled = Some(parent);
+                }
+            }
+        });
+    });
+    register_subxact_callback(PgSubXactCallbackEvent::AbortSub, |sub, _| {
+        BEGUN.with(|b| {
+            let mut held = b.borrow_mut();
+            if held.as_ref().is_some_and(|b| b.sub == sub) {
+                held.take();
+            } else if let Some(b) = held.as_mut().filter(|b| b.settled == Some(sub)) {
+                b.settled = None;
+            }
+        });
+    });
+}
+
+/// The begun write's verdict is appended, in this subtransaction.
+fn settle() {
+    BEGUN.with(|b| {
+        if let Some(b) = b.borrow_mut().as_mut() {
+            b.settled = Some(subtransaction());
+        }
+    });
+}
+
+pub(crate) fn forget_begun() {
+    BEGUN.with(|b| b.borrow_mut().take());
+}
+
+/// Before a begun transaction commits: it appended its verdict, or it
+/// rolls back. A handler that skips `submit`, or a savepoint that rolled
+/// the verdict back, commits nothing.
+fn settled() {
+    let unsettled = BEGUN.with(|b| b.borrow().as_ref().filter(|b| b.settled.is_none()).map(|b| b.write.clone()));
+    if let Some(open) = unsettled {
+        refuse(
+            format!("{} by {} was never submitted: a write's state commits only with its verdict", open.op, open.actor),
+            "refused at commit by the notary",
+        );
+    }
+}
+
+/// The notary's trigger on every registered state table: a row changes
+/// only inside a transaction `cella.begin` opened, while the notary
+/// redacts, or where a superuser set `cella.unbound`.
+pub fn notarised(table: &str) {
+    if begun().is_some() || vault::redacting() || UNBOUND.get() {
+        return;
+    }
+    refuse(
+        format!("{table} is written outside a write: state changes only in a transaction cella.begin opens and cella.submit settles"),
+        "refused by the notary's trigger",
+    );
+}
+
 fn context() -> Option<Context> {
     WRITE.with(|c| c.borrow().clone())
 }
@@ -346,6 +451,15 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     let Some(s) = signed(&envelope.0) else {
         refuse(format!("{op} is not signed: a write carries its request, device, salt, nonce and sig in hex"), at_ingress());
     };
+    // The verdict settles the write the transaction began, and no other.
+    match begun() {
+        None => refuse(format!("{op} was not begun: a write opens with cella.begin(op, actor, device) before its state"), at_ingress()),
+        Some(open) if open.op != op || open.actor != actor || open.device != s.device => refuse(
+            format!("{op} by {actor} is not the write this transaction began, {} by {}", open.op, open.actor),
+            at_ingress(),
+        ),
+        Some(_) => {}
+    }
     let scope = scope();
     let request = sign::request_digest(&s.request, &s.salt).unwrap_or_else(|e| refuse(format!("the request: {e}"), at_ingress()));
     let asked = Request { scope: &scope, op, actor, device: s.device, digest: request, nonce: &s.nonce };
@@ -479,6 +593,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             ],
         ));
         spi(c.update("UPDATE cella.head SET n = $1, hash = $2", None, &[n.into(), hash.to_vec().into()]));
+        settle();
         n
     })
 }

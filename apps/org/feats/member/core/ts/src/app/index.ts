@@ -1,10 +1,14 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import type { Member, Status } from '../models/member.ts'
+import type { Ask } from '../models/inbox.ts'
 import Joining from './blocks/Joining.svelte'
 import Profile from './blocks/Profile.svelte'
 import Rights from './blocks/Rights.svelte'
 
 const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', suspended: 'warning', exited: 'neutral' }
+
+// How each kind of ask stands out: what only the member can give first.
+const asking: Record<string, Tone> = { stance: 'accent', mention: 'accent', approval: 'warning', invitation: 'positive', meeting: 'neutral' }
 
 // The feat's client side as the shell mounts it: the members collection's
 // view and a member's page, its tabs the overview, joining, the steps
@@ -13,6 +17,28 @@ const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', sus
 export const app: App = {
   name: 'member',
   collections: {
+    // What waits on the acting member, each linking to where it is done;
+    // the sidebar counts it.
+    inbox: {
+      view: {
+        group: 'home',
+        title: 'Inbox',
+        caption: 'What waits on you: stances to take, approvals, invitations, meetings to answer and mentions.',
+        icon: icons.Tray,
+        columns: [
+          { key: 'what', label: 'What', kind: 'title', role: 'title', value: (a: Ask) => a.what },
+          { key: 'about', label: 'About', role: 'sub', value: (a: Ask) => a.about },
+          { key: 'kind', label: 'Kind', kind: 'badge', role: 'meta', value: (a: Ask) => a.kind, tone: (a: Ask) => asking[a.kind] ?? 'neutral' },
+          { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (a: Ask) => a.due },
+          { key: 'since', label: 'Since', kind: 'date', role: 'hidden', value: (a: Ask) => a.since },
+        ],
+        look: { layout: 'list', lanes: { kind: ['stance', 'approval', 'meeting', 'mention', 'invitation'] } },
+        empty: 'Nothing waits on you.',
+        linked: false,
+        href: (a: Ask) => a.href,
+        counted: true,
+      },
+    },
     members: {
       view: {
         group: 'governance',

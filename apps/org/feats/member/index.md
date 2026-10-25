@@ -105,6 +105,20 @@ what they decide, from their seats and mandates (`circle-member`). Each
 slice writes its sentences from its own rules and parameters, so the
 page says what the rules say.
 
+The `inbox` collection is what waits on the acting member, at the head
+of the sidebar with its count, each row linking to where it is done.
+This feat keeps it and adds the member's invitation while they are
+invited, to take up on their Joining tab; each slice that knows another
+kind adds its rows (`rows`): a stance to take on an open decision
+(`circle-decision-member`), a mention not yet answered
+(`decision-member`), a meeting to say whether they will come to
+(`circle-meeting-member`), time, expenses and pay runs to approve or
+pay (`circle-member-timesheet`, `circle-expense-member`,
+`circle-member-payslip`). An ask is a row of its kind, what it says,
+what it concerns, since when and by when (`models/inbox.ts`); it leaves
+the inbox when what it waits for is done, read again each time, and
+nothing of it is stored.
+
 ## Domain
 
 Ported from seedling's `specs/feat/10-members.md` under this repo's labels

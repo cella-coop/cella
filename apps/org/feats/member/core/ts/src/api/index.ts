@@ -3,4 +3,5 @@
 // slice, which the shell mounts.
 export { admit, admitting, erase, exit, forget, invite, inviting, profile, suspend } from '../handlers/index.ts'
 export { member, members } from '../drivers/member.ts'
+export { inbox } from '../drivers/inbox.ts'
 export { slice } from './slice.ts'

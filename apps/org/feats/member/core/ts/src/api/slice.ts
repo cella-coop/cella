@@ -1,15 +1,18 @@
 import { action, type Slice } from '@cella/org-db'
 import { forget, invite, profile } from '../handlers/index.ts'
 import { member, members } from '../drivers/member.ts'
+import { inbox } from '../drivers/inbox.ts'
 
 // The feat's server side as the shell mounts it: the members collection,
 // read from its schema, an invitation, which key-member replaces with one
 // carrying the invitee's first device, and the profile write on a
 // member's page. Suspension and exit are decided, carried out when their
-// decision closes.
+// decision closes. And the inbox, what waits on the acting member, which
+// the slices that know each kind of ask fill beside the invitation.
 export const slice: Slice = {
   name: 'member',
   collections: {
+    inbox: { list: inbox },
     members: {
       list: members,
       item: member,

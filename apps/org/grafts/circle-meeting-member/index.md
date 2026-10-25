@@ -1,6 +1,6 @@
 +++
 title = "circle-meeting-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Who is expected at a meeting, whether it is quorate, and who may act on
@@ -43,6 +43,8 @@ and reads as inquorate; what it decides is the decisions' own rules.
 On a meeting's page whether it is quorate, and under its agenda the
 attendance block: the roll, the acting member marking themselves and,
 when their `keep-minutes` reaches the circle, recording anyone expected.
+In the acting member's inbox, each meeting still scheduled, from today,
+that they are expected at and have not marked themselves for.
 
 ## Lanterne
 

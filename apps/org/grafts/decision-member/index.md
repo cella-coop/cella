@@ -54,5 +54,7 @@ passing decision carries out, need the roll, so they are
 Adds to a decision's page what it asks of members, whom it admits with
 their shares, whom it suspends or lets go, and the `member` embed: each
 author and mention in its discussion drawn by name, linking to the
-member's page; and to a member's page the decisions that ask something
-of them.
+member's page; to a member's page the decisions that ask something of
+them; and to the acting member's inbox each message on an open decision
+that mentions them, by someone else, until they post on that decision
+after it.

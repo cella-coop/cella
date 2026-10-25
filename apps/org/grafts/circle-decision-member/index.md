@@ -131,6 +131,10 @@ and a refused close leaves the card open. On a decision's page, the
 outcome sits in its Overview, the roll and the stance form in its
 Stances tab; the writes a close carried out show as what followed it.
 
+In the acting member's inbox, each open decision whose roll they are on,
+active, that they have given no stance on, by its deadline, linking to
+its Stances tab.
+
 On a member's page, Propose…: admitting someone invited, with their
 shares, suspending an active member or ending a membership, put to the
 assembly, and the open decisions about them. On a circle's page,

@@ -6,6 +6,7 @@ import { close } from '../handlers/close.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
 import { appointing, standing } from '../drivers/asking.ts'
+import { stances } from '../drivers/inbox.ts'
 import * as forms from './forms.ts'
 
 export { carried } from '../handlers/carried.ts'
@@ -13,6 +14,7 @@ export { close, type Admitted } from '../handlers/close.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
 export { appointing, standing } from '../drivers/asking.ts'
+export { stances } from '../drivers/inbox.ts'
 
 // A decision's roll and outcome on its page and its turnout in the list;
 // its close, replaced by one that admits and seats in the same verdict;
@@ -35,6 +37,8 @@ export const slice: Slice = {
         propose: action('decision:decision:propose', (form, id) => forms.standing(form, id ?? ''), put),
       },
     },
+    // The stances waiting on the acting member, in their inbox.
+    inbox: { rows: stances },
     circles: {
       item: (db, circle) => appointing(db, circle),
       actions: {

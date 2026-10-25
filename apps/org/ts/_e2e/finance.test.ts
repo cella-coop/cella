@@ -1,7 +1,8 @@
 // The finance scenario, end to end on a seeded Lanterne: expenses claimed,
 // approved within a lead's budget and a gérante's limit and refused beyond
-// them, charged and reimbursed; October's pay run prepared from approved
-// time, approved and paid; draws within a member's limit and refused
+// them, charged and reimbursed; October's pay run prepared from every
+// worker's approved time, Inès's though she is no member, approved and
+// paid; draws within a member's limit and refused
 // beyond it and once their capital is frozen; and the 2025 surplus
 // allocated by the assembly's decision with the legal split. The books
 // balance throughout. Run by `cella test e2e finance`.
@@ -13,7 +14,8 @@ import { capture, submit as claim } from '@cella/org-expense/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay } from '@cella/org-graft-payslip-transaction/api'
-import { approve as approveTime, submit as submitTime } from '@cella/org-timesheet/api'
+import { approve as approveTime } from '@cella/org-timesheet/api'
+import { submit as submitTime } from '@cella/org-graft-timesheet-worker/api'
 import { draw } from '@cella/org-graft-account-member-transaction/api'
 import { allocate } from '@cella/org-graft-account-transaction/api'
 import type { Deps } from '@cella/org-db'
@@ -128,14 +130,16 @@ test('Julien reimburses the print proofs from the bank, and what Sofia was owed 
   await balanced()
 })
 
-test('October\'s run waits for every member\'s approved month', async () => {
+test('October\'s run waits for every worker\'s approved month', async () => {
   await on('2026-11-02')
   const early = await generate({ month: '2026-10' }, as(julien))
   assert.equal(early.state, 'refused')
   assert.match(reason(early), /2026-10 is open, not approved: the run waits for it/)
 })
 
-test('once every October is approved, Julien prepares the run from the approved time', async () => {
+test('once every October is approved, Julien prepares the run from the approved time, Inès\'s with the members\'', async () => {
+  // Each worker submits by their employment, as the shell does; Inès is
+  // no member, and holds no mandate.
   const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary WHERE "from" <= '2026-10-01' GROUP BY member ORDER BY member`)).map((r) => r.member)
   for (const m of members) {
     const submitted = await submitTime({ member: m, month: '2026-10' }, as(m))
@@ -147,7 +151,7 @@ test('once every October is approved, Julien prepares the run from the approved 
   }
   const run = await generate({ month: '2026-10' }, as(julien))
   assert.equal(run.state, 'settled', reason(run))
-  assert.deepEqual(run.state === 'settled' && { payslips: run.value.payslips, gross: run.value.gross }, { payslips: 10, gross: 26_000_00 })
+  assert.deepEqual(run.state === 'settled' && { payslips: run.value.payslips, gross: run.value.gross }, { payslips: 11, gross: 28_200_00 })
   const thomasSlip = await one<{ minutes: number; net: string }>(`SELECT minutes, cella.cents(net) AS net FROM payslip.payslip WHERE month = '2026-10' AND member = $1`, [thomas])
   const logged = await one<{ m: number }>(`SELECT sum(minutes)::int AS m FROM timesheet.entry WHERE member = $1 AND to_char(day, 'YYYY-MM') = '2026-10'`, [thomas])
   assert.equal(thomasSlip.minutes, logged.m)
@@ -164,16 +168,16 @@ test('Camille approves the run, which accrues it in October; Julien pays it, and
   const accrual = approved.state === 'settled' ? approved.value.entry ?? '' : ''
   assert.equal((await one<{ date: string }>(`SELECT to_char(date, 'YYYY-MM-DD') AS date FROM transaction.entry WHERE id = $1`, [accrual])).date, '2026-10-31')
   assert.deepEqual(await lines(accrual), [
-    { account: '641', side: 'debit', cents: '2600000' },
-    { account: '645', side: 'debit', cents: '1040000' },
-    { account: '421', side: 'credit', cents: '2028000' },
-    { account: '431', side: 'credit', cents: '1612000' },
+    { account: '641', side: 'debit', cents: '2820000' },
+    { account: '645', side: 'debit', cents: '1128000' },
+    { account: '421', side: 'credit', cents: '2199600' },
+    { account: '431', side: 'credit', cents: '1748400' },
   ])
 
   const before = await balance('512')
   const paid = await pay({ month: '2026-10' }, as(julien))
   assert.equal(paid.state, 'settled')
-  assert.equal(await balance('512'), before - 36_400_00)
+  assert.equal(await balance('512'), before - 39_480_00)
   assert.equal(await balance('431'), 0)
   const twice = await pay({ month: '2026-10' }, as(julien))
   assert.match(reason(twice), /the 2026-10 run was paid on 2026-11-02/)

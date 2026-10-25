@@ -305,6 +305,21 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/feats/worker/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/account-decision/ts:
     dependencies:
       '@cella/org-account':
@@ -821,6 +836,27 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/key-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-key':
+        specifier: workspace:*
+        version: link:../../../feats/key/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/meeting-member/ts:
     dependencies:
       '@cella/org-db':
@@ -923,6 +959,27 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/member-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/payslip-timesheet/ts:
     dependencies:
       '@cella/org-db':
@@ -955,6 +1012,24 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/payslip-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-payslip':
+        specifier: workspace:*
+        version: link:../../../feats/payslip/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -997,6 +1072,27 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/timesheet-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../../../feats/timesheet/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -1099,6 +1195,9 @@ importers:
       '@cella/org-graft-key-member':
         specifier: workspace:*
         version: link:../grafts/key-member/ts
+      '@cella/org-graft-key-worker':
+        specifier: workspace:*
+        version: link:../grafts/key-worker/ts
       '@cella/org-graft-meeting-member':
         specifier: workspace:*
         version: link:../grafts/meeting-member/ts
@@ -1114,18 +1213,27 @@ importers:
       '@cella/org-graft-member-timesheet':
         specifier: workspace:*
         version: link:../grafts/member-timesheet/ts
+      '@cella/org-graft-member-worker':
+        specifier: workspace:*
+        version: link:../grafts/member-worker/ts
       '@cella/org-graft-payslip-timesheet':
         specifier: workspace:*
         version: link:../grafts/payslip-timesheet/ts
       '@cella/org-graft-payslip-transaction':
         specifier: workspace:*
         version: link:../grafts/payslip-transaction/ts
+      '@cella/org-graft-payslip-worker':
+        specifier: workspace:*
+        version: link:../grafts/payslip-worker/ts
       '@cella/org-graft-project-task':
         specifier: workspace:*
         version: link:../grafts/project-task/ts
       '@cella/org-graft-project-timesheet':
         specifier: workspace:*
         version: link:../grafts/project-timesheet/ts
+      '@cella/org-graft-timesheet-worker':
+        specifier: workspace:*
+        version: link:../grafts/timesheet-worker/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../feats/invoice/core/ts
@@ -1165,6 +1273,9 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../feats/worker/core/ts
       loro-crdt:
         specifier: 1.17.1
         version: 1.17.1

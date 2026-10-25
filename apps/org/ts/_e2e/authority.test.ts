@@ -67,7 +67,7 @@ test('the seed enrols every fixture device, and Hugo\'s old laptop is revoked', 
     [hugo],
   )
   assert.deepEqual(devices, [{ label: 'laptop', revoked: null }, { label: 'old laptop', revoked: '2026-05-12' }])
-  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM key.device WHERE revoked IS NULL')).count), 14)
+  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM key.device WHERE revoked IS NULL')).count), 15)
   const laptop = await device(hugo, 'laptop')
   assert.equal((await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM key.device WHERE address = $1 AND label = 'laptop'`, [hugo])).key, laptop.key)
 })
@@ -208,11 +208,9 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
     await su.query(`UPDATE member.member SET status = 'active' WHERE address = $1`, [thomas])
   }
 
-  // Inès is invited, not a member; her device is enrolled here, out of band,
-  // as her invitation will carry it.
-  const laptop = await generate(ines)
-  await su.query(`INSERT INTO key.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2026-10-24')`, [laptop.key, ines])
-  const outsider = { db: app, actor: ines, sign: signer(scope, ines, laptop) }
+  // Inès is invited, not a member: she signs from the laptop her hire
+  // enrolled, and holds no mandate.
+  const outsider = { db: app, actor: ines, sign: sign(ines) }
   assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-client/)
   assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /ines@lanterne\.example holds no mandate for edit-document/)
   assert.equal(await head(), before)

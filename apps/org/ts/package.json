@@ -23,6 +23,7 @@
     "@cella/org-project": "workspace:*",
     "@cella/org-task": "workspace:*",
     "@cella/org-timesheet": "workspace:*",
+    "@cella/org-worker": "workspace:*",
     "@cella/org-expense": "workspace:*",
     "@cella/org-payslip": "workspace:*",
     "@cella/org-meeting": "workspace:*",
@@ -60,6 +61,10 @@
     "@cella/org-graft-member-timesheet": "workspace:*",
     "@cella/org-graft-project-task": "workspace:*",
     "@cella/org-graft-project-timesheet": "workspace:*",
+    "@cella/org-graft-key-worker": "workspace:*",
+    "@cella/org-graft-member-worker": "workspace:*",
+    "@cella/org-graft-payslip-worker": "workspace:*",
+    "@cella/org-graft-timesheet-worker": "workspace:*",
     "loro-crdt": "1.17.1",
     "pg": "8.23.1",
     "svelte": "5.57.2"

@@ -38,7 +38,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-// Inès signs from the laptop her invitation carried, enrolled by her admission.
+// Inès signs from the laptop her hire enrolled.
 const as = (actor: string): Deps => ({ db: app, actor, sign: actor === ines ? signer(scope, ines, fixture(ines, 'laptop')) : sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
@@ -142,7 +142,7 @@ test('Paul\'s first repayment is refused the day before it falls due and by the 
   await balanced()
 })
 
-test('November\'s run pays Inès for the first time, and its payment withholds her first instalment in its own entry', async () => {
+test('November\'s run pays Inès, a member now, and its payment withholds her first instalment in its own entry', async () => {
   await on('2026-12-01')
   const salaried = (await all<{ member: string }>(`SELECT DISTINCT member FROM payslip.salary WHERE "from" <= '2026-11-01' ORDER BY member`)).map((r) => r.member)
   assert.equal(salaried.length, 11)

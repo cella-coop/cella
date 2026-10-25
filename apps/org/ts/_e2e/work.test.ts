@@ -40,11 +40,11 @@ test('the seed holds Lanterne\'s work: its projects, tasks and two months of tim
             (SELECT count(*) FROM timesheet.entry) AS entries,
             (SELECT count(*) FROM timesheet.period WHERE month = '2026-09' AND approved IS NOT NULL) AS approved`,
   )
-  assert.deepEqual(counts, { projects: '8', tasks: '33', entries: '799', approved: '10' })
+  assert.deepEqual(counts, { projects: '8', tasks: '33', entries: '838', approved: '11' })
   const days = await one<{ off: string }>(
     `SELECT count(*) AS off FROM (SELECT member, day FROM timesheet.entry GROUP BY member, day HAVING sum(minutes) <> 420) d`,
   )
-  assert.equal(days.off, '0', 'every member logs seven hours a working day')
+  assert.equal(days.off, '0', 'every worker logs seven hours a working day')
 })
 
 test('the work pages render, each collection in its own layout', async () => {
@@ -76,7 +76,7 @@ test('the work pages render, each collection in its own layout', async () => {
   }
   assert.match((await shell.page('/timesheets')).text, /class="table[\s"]|<table/, 'timesheets open as a table')
   const dashboard = await shell.page('/timesheets?view=dashboard')
-  for (const says of ['Hours by member', 'Hours by project', 'Billable hours', 'Thomas Nguyen', 'Les Halles Paysannes, online shop']) {
+  for (const says of ['Hours by worker', 'Hours by project', 'Billable hours', 'Thomas Nguyen', 'Les Halles Paysannes, online shop']) {
     assert.ok(dashboard.text.includes(says), `the timesheets' dashboard says ${says}`)
   }
   const tabs = await shell.page('/projects/halles-shop')

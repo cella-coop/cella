@@ -324,6 +324,8 @@ test('rules run as cella_rules, which reads the scope and can neither write nor 
   const key = (await one<{ key_file: string }>('SHOW cella.key_file')).key_file
   assert.match(await probe(`SELECT encode(pg_read_binary_file('${key}'), 'hex')`), /permission denied for function pg_read_binary_file/)
   assert.match(await probe(`SELECT current_setting('cella.key_file')`), /permission denied|must be superuser|privileges of pg_read_all_settings/)
+  assert.match(await probe(`SELECT current_setting('cella.vault_key_file')`), /permission denied|must be superuser|privileges of pg_read_all_settings/)
+  assert.match(await probe('SELECT cella.vault_rewrap()::text'), /permission denied for function vault_rewrap/)
   assert.match(await probe('SELECT NULL::text', 'SECURITY DEFINER'), /security definer; a rule runs as cella_rules/)
 
   await su.query('BEGIN')

@@ -101,7 +101,9 @@ export interface Panel {
   body: Snippet
 }
 
-export type Status<R = any> = (rows: R[], about: any) => { label: string; tone: Tone } | undefined
+// A badge beside the header's count, over the collection's `about`: the
+// rows are paged on the server, so a figure over all of them is read there.
+export type Status = (about: any) => { label: string; tone: Tone } | undefined
 
 export interface View<R = any> {
   group: Group
@@ -117,7 +119,7 @@ export interface View<R = any> {
   // holds, as the log's verifying; the collection's `about`, from its
   // server side, is handed to it and to `create`. Figures over the rows
   // are a dashboard's widgets, never a component of the page's own.
-  status?: Status<R>
+  status?: Status
   // The dashboard's widgets until a viewer configures their own; without
   // them, defaults derived from the columns' kinds.
   dashboard?: Widget[]
@@ -148,7 +150,7 @@ export interface Owned<R = any, T = any> {
 // data on one item.
 export interface Added<E = any> {
   columns?: Column[]
-  // A badge over the rows with the fields this adds to them.
+  // A badge over the collection's `about`, with what this adds to it.
   status?: Status
   // Widgets over the fields this adds, after the owner's.
   dashboard?: Widget[]

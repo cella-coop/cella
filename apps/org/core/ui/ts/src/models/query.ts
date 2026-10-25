@@ -34,7 +34,8 @@ export interface Measure {
 }
 
 // A condition on a row: an enumeration among some of its values, or a date
-// within the current month or year.
+// within the month or the year of the scope's day; the server tests it in
+// SQL, on the value the row holds under the field's key.
 export type Where = { field: string; is: string[] } | { field: string; within: 'month' | 'year' }
 
 export interface Kpi {
@@ -55,6 +56,10 @@ export interface Chart {
 }
 
 export type Widget = Kpi | Chart
+
+// How many rows a list, a table or a gallery draws before it asks the
+// server for more.
+export const PAGE = 100
 
 export const limits = { widgets: 12, pins: 24, title: 80, values: 24, value: 60 }
 
@@ -217,21 +222,6 @@ export function defaults(fs: Field[]): Widget[] {
   ]
 }
 
-// Whether a row meets every condition; `today` is an ISO day.
-export function matches(row: any, ws: Where[], fs: Field[], today: string): boolean {
-  return ws.every((w) => {
-    const f = fs.find((f) => f.key === w.field)
-    const v = f?.value(row)
-    if ('is' in w) {
-      return w.is.includes(String(v ?? ''))
-    }
-    if (!v) {
-      return false
-    }
-    return String(v).slice(0, w.within === 'month' ? 7 : 4) === today.slice(0, w.within === 'month' ? 7 : 4)
-  })
-}
-
 export type Format = 'number' | 'money'
 
 // Where a result's rows come from, on a dashboard over several
@@ -261,24 +251,6 @@ export interface Plot {
 
 export type Result = Figure | Plot
 
-function compute(rows: any[], m: Measure, fs: Field[]): number | null {
-  if (m.op === 'count') {
-    return rows.length
-  }
-  const f = fs.find((f) => f.key === m.field)
-  const xs = rows.map((r) => f?.value(r)).filter((v) => v !== null && v !== undefined && v !== '').map(Number).filter((n) => !Number.isNaN(n))
-  if (m.op === 'sum') {
-    return xs.reduce((s, n) => s + n, 0)
-  }
-  if (!xs.length) {
-    return null
-  }
-  if (m.op === 'avg') {
-    return Math.round(xs.reduce((s, n) => s + n, 0) / xs.length)
-  }
-  return m.op === 'min' ? Math.min(...xs) : Math.max(...xs)
-}
-
 // Every month from the first to the last of some `YYYY-MM` labels, so a
 // line runs through the months nothing happened in.
 function months(labels: string[]): string[] {
@@ -301,31 +273,22 @@ function months(labels: string[]): string[] {
 
 const format = (m: Measure, fs: Field[]): Format => (m.op !== 'count' && fs.find((f) => f.key === m.field)?.type === 'money' ? 'money' : 'number')
 
-// Each widget over the rows, which the server runs on checked widgets.
-export function aggregate(ws: Widget[], rows: any[], fs: Field[], today: string): Result[] {
-  return ws.map((w) => {
-    const kept = rows.filter((r) => matches(r, w.where ?? [], fs, today))
-    if (w.kind === 'kpi') {
-      return { kind: 'kpi', title: w.title, format: format(w.measure, fs), value: compute(kept, w.measure, fs) }
-    }
-    const by = fs.find((f) => f.key === w.by)
-    const line = by?.type === 'date'
-    const groups = new Map<string, any[]>()
-    for (const r of kept) {
-      const v = by?.value(r)
-      const label = line ? (v ? String(v).slice(0, 7) : '') : String(v ?? '—')
-      if (line && !label) {
-        continue
-      }
-      groups.set(label, [...(groups.get(label) ?? []), r])
-    }
-    const labels = line ? months([...groups.keys()]) : [...groups.keys()]
-    const points = labels.map((label) => ({ label, value: groups.has(label) ? (compute(groups.get(label) ?? [], w.measure, fs) ?? 0) : 0 }))
-    if (!line) {
-      points.sort((a, b) => b.value - a.value)
-    }
-    return { kind: 'chart', title: w.title, format: format(w.measure, fs), line, points }
-  })
+// What a widget shows from what the server measured over the rows it
+// keeps (`measures` in `@cella/org-db`): a figure, or a chart's groups,
+// its bars by value, the largest first, and its line through every month
+// from the first to the last.
+export function result(w: Widget, measured: number | null | { label: string; value: number }[], fs: Field[]): Result {
+  if (w.kind === 'kpi') {
+    return { kind: 'kpi', title: w.title, format: format(w.measure, fs), value: typeof measured === 'number' ? measured : null }
+  }
+  const held = new Map((Array.isArray(measured) ? measured : []).map((g) => [g.label, g.value]))
+  const line = fs.find((f) => f.key === w.by)?.type === 'date'
+  const labels = line ? months([...held.keys()]) : [...held.keys()]
+  const points = labels.map((label) => ({ label, value: held.get(label) ?? 0 }))
+  if (!line) {
+    points.sort((a, b) => b.value - a.value)
+  }
+  return { kind: 'chart', title: w.title, format: format(w.measure, fs), line, points }
 }
 
 export const layouts = ['list', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const

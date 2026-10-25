@@ -1,64 +1,64 @@
-import type { Column } from '../models/view.ts'
-
-// How many rows a list, a table or a gallery draws before it asks to show
-// more.
-export const PAGE = 100
-
-// What a collection's page holds while it is looked at: the filter, the
-// row the keyboard is on, how many rows are drawn and whether the New form
-// is open. Rows and columns are read through getters, so they follow the
-// page's data.
+// What a collection's page holds while it is looked at: the text filter
+// as typed, the row the keyboard is on, and whether the New form is open.
+// The rows are the server's: the page of them the address asks for, kept
+// by the view and its filter in SQL. A filter typed goes into the address
+// once the typing pauses, and "Show more" asks for the next page there, so
+// the server reads the rows again; rows and what is left are read through
+// getters, so they follow the page's data.
 export class CollectionState {
-  filter = $state('')
+  #filter = $state('')
   // The keyboard's row, back to none whenever the filter changes the rows
   // it would index.
   active = $derived.by(() => {
-    void this.filter
+    void this.#filter
     return -1
-  })
-  // How many of the shown rows are drawn, back to a page whenever the
-  // filter changes them.
-  limit = $derived.by(() => {
-    void this.filter
-    return PAGE
   })
   creating = $state(false)
   search: HTMLInputElement | undefined = $state()
 
   readonly #rows: () => any[]
-  readonly #columns: () => Column[]
+  readonly #left: () => number
+  readonly #ask: { filter(q: string): void; more(): void }
+  #typing: ReturnType<typeof setTimeout> | undefined
 
-  // `q`, the text filter the page opened with, as a view's address holds.
-  constructor(rows: () => any[], columns: () => Column[], q: () => string = () => '') {
+  // `q`, the text filter the page opened with, as a view's address holds;
+  // `ask` takes a filter or a next page to the address.
+  constructor(rows: () => any[], left: () => number, q: () => string, ask: { filter(q: string): void; more(): void }) {
     this.#rows = rows
-    this.#columns = columns
-    this.filter = q()
+    this.#left = left
+    this.#ask = ask
+    this.#filter = q()
   }
 
-  shown = $derived.by(() => {
-    const q = this.filter.trim().toLowerCase()
-    const rows = this.#rows()
-    if (!q) {
-      return rows
-    }
-    return rows.filter((r) => this.#columns().some((c) => String(c.value(r) ?? '').toLowerCase().includes(q)))
-  })
+  get filter() {
+    return this.#filter
+  }
 
-  // The drawn rows, and how many are left undrawn.
-  paged = $derived(this.shown.slice(0, this.limit))
-  left = $derived(this.shown.length - this.paged.length)
+  set filter(q: string) {
+    this.#filter = q
+    clearTimeout(this.#typing)
+    this.#typing = setTimeout(() => this.#ask.filter(q), 250)
+  }
+
+  get shown() {
+    return this.#rows()
+  }
+
+  get left() {
+    return this.#left()
+  }
 
   extend() {
-    this.limit += PAGE
+    this.#ask.more()
   }
 
-  // The keyboard moving past the last drawn row draws the next page.
+  // The keyboard moving past the last drawn row asks for the next page.
   move(by: number) {
-    const to = Math.max(0, Math.min(this.active + by, this.shown.length - 1))
-    if (to >= this.limit) {
+    const to = Math.max(0, Math.min(this.active + by, this.shown.length - 1 + (this.left > 0 ? 1 : 0)))
+    if (to >= this.shown.length) {
       this.extend()
     }
-    this.active = to
+    this.active = Math.min(to, this.shown.length - 1)
   }
 
   toggle() {

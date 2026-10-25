@@ -12,7 +12,7 @@
     arranged,
     fields,
     lanes,
-    matches,
+    PAGE,
     spec as preset,
     type Custom,
     type Look,
@@ -28,7 +28,6 @@
   import { sortable } from '../attachments/sortable.ts'
   import { post } from '../post.ts'
   import { useCollection } from '../hooks/useCollection.ts'
-  import { PAGE } from '../hooks/CollectionState.svelte.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useShell } from '../hooks/useShell.ts'
   import { useViews } from '../hooks/useViews.ts'
@@ -52,13 +51,17 @@
   // View card holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
   // anything changed from it, live in the address, so a view can be
-  // linked and the server renders it as it is. Keyboard first: j and k
-  // move, Enter opens, / filters, c creates.
+  // linked and the server renders it as it is. The rows are the server's,
+  // kept, filtered and paged in SQL: the page of them the address asks
+  // for, out of `kept`, of which `matched` hold the text filter.
+  // Keyboard first: j and k move, Enter opens, / filters, c creates.
   let {
     name,
     title,
     columns,
     rows,
+    kept,
+    matched,
     href,
     about,
     creates = [],
@@ -80,6 +83,10 @@
     caption?: string
     columns: Column[]
     rows: any[]
+    // How many rows the view keeps, and how many of those hold its text
+    // filter.
+    kept: number
+    matched: number
     href?: (row: any) => string | undefined
     about?: unknown
     // The New forms, each under its title where there are several.
@@ -104,10 +111,30 @@
   } = $props()
 
   const typed = $derived(fields(columns))
-  const kept = $derived(rows.filter((r) => matches(r, spec.where, typed, today)))
-  const state = useCollection(() => kept, () => columns, () => spec.q)
+  const state = useCollection(
+    () => rows,
+    () => matched - rows.length,
+    () => spec.q,
+    {
+      // A filter typed, once the typing pauses, and a next page, each
+      // asked of the server in the address.
+      filter: (q) => {
+        if (q !== spec.q) {
+          change({ ...spec, q })
+        }
+      },
+      more: () => {
+        const q = new URLSearchParams(page.url.search)
+        q.set('n', String(rows.length + PAGE))
+        goto(`${page.url.pathname}?${q}`, { replace: true, reset: false })
+      },
+    },
+  )
   const shell = useShell()
-  const saved = useViews(() => name)
+  const saved = useViews(
+    () => name,
+    () => kept,
+  )
   const drag = useDrag()
 
   const hidden = $derived(new Set(spec.hide))
@@ -124,13 +151,12 @@
   const base = $derived(custom?.spec ?? resolved(view))
   const dirty = $derived(!alike({ ...spec, q: state.filter }, base))
 
-  const count = $derived(state.filter ? `${state.shown.length} of ${kept.length} · “${state.filter}”` : String(kept.length))
+  const count = $derived(spec.q ? `${matched} of ${kept} · “${spec.q}”` : String(kept))
   const noun = $derived(title.toLowerCase())
 
   const link = (id: string, s: Spec) => `${page.url.pathname}${address(id, s, resolved(id))}`
   const presetLink = (p: Preset) => link(p.id, resolved(p.id))
   const customLink = (c: Custom) => link(c.id, c.spec)
-  const tally = (c: Custom) => rows.filter((r) => matches(r, c.spec.where, typed, today)).length
 
   // The gallery's and the board's cards: the view's fields, or the
   // collection's lines under a title and its trailing meta; and the
@@ -147,7 +173,8 @@
   const shownPeriod = $derived(period(anchor(page.url.searchParams.get('at'), today), spec.span, today))
 
   // A list, a table and a gallery draw a page of rows at a time; a board
-  // and a calendar place every row, and a dashboard draws none.
+  // and a calendar place every row the view keeps, and a dashboard draws
+  // none.
   const paging = $derived(!(spec.layout === 'dashboard' || (spec.layout === 'board' && grouped) || (spec.layout === 'calendar' && placing)))
 
   const at = (day: string | null) => {
@@ -266,7 +293,7 @@
   {title}
   {count}
   {caption}
-  badges={status.map((s) => s(rows, about)).filter((b) => b !== undefined)}
+  badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >
   {#snippet actions()}
@@ -308,7 +335,7 @@
             href={customLink(c)}
             on={view === c.id}
             icon={mark(c.icon)}
-            title="View {c.name} {noun} {tally(c)}"
+            title="View {c.name} {noun} {saved.tallies[c.id] ?? ''}"
             aria-roledescription="draggable view"
             data-drag-handle
             onclick={() => (state.filter = c.spec.q)}
@@ -340,11 +367,11 @@
     {#if spec.layout === 'dashboard'}
       <Dashboard results={dashboard?.results ?? []} errors={dashboard?.errors ?? []} />
     {:else if state.shown.length === 0}
-      <p class="empty">{state.filter ? `Nothing matches “${state.filter}”.` : empty}</p>
+      <p class="empty">{spec.q ? `Nothing matches “${spec.q}”.` : empty}</p>
     {:else if spec.layout === 'table'}
-      <Table columns={visible} rows={state.paged} {href} active={state.active} />
+      <Table columns={visible} rows={state.shown} {href} active={state.active} />
     {:else if spec.layout === 'gallery'}
-      <Gallery rows={state.paged} {titled} {shown} {href} />
+      <Gallery rows={state.shown} {titled} {shown} {href} />
     {:else if spec.layout === 'board' && grouped}
       <Board
         rows={state.shown}
@@ -360,7 +387,7 @@
       <Calendar rows={state.shown} on={placing} period={shownPeriod} {titled} {shown} {href} link={at} />
     {:else}
       <ul class="list">
-        {#each state.paged as row, i (row.id)}
+        {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
           <li class:active={i === state.active} {@attach nearest(i === state.active)}>
             <span class="main">
@@ -385,7 +412,7 @@
     {#if paging && state.left > 0}
       <p class="more">
         <Button onclick={() => state.extend()}>Show {Math.min(state.left, PAGE)} more</Button>
-        <span>{state.paged.length} of {state.shown.length}</span>
+        <span>{state.shown.length} of {matched}</span>
       </p>
     {/if}
   </div>

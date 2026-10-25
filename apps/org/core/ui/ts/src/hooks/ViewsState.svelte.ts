@@ -6,20 +6,42 @@ const key = 'cella-views'
 // The viewer's own views of one collection: preferences kept in their
 // browser, never records of the co-op's, so they go through no write and
 // no log. Read once the page is in the browser, as the server cannot; the
-// store is versioned to move into a member's preferences as it is.
+// store is versioned to move into a member's preferences as it is. How
+// many rows each keeps is asked of the server, which renders the page
+// without them, once they are read and again whenever the rows change.
 export class ViewsState {
   list: Custom[] = $state([])
+  tallies: Record<string, number> = $state({})
   // The View card's save form: open, and the name and icon it holds.
   naming = $state(false)
   name = $state('')
   icon = $state('bookmark')
   readonly #collection: () => string
 
-  constructor(collection: () => string) {
+  // `rows` is anything that changes when the rows do, such as how many
+  // the view keeps.
+  constructor(collection: () => string, rows: () => unknown = () => null) {
     this.#collection = collection
     $effect(() => {
       this.list = this.#read().views[this.#collection()] ?? []
     })
+    $effect(() => {
+      void rows()
+      this.#tally(this.#collection(), $state.snapshot(this.list))
+    })
+  }
+
+  // Each view's count, from the collection's JSON read: one request for all.
+  async #tally(collection: string, list: Custom[]) {
+    if (!list.length) {
+      return
+    }
+    const where = encodeURIComponent(JSON.stringify(list.map((c) => c.spec.where)))
+    const answer = await fetch(`/${encodeURIComponent(collection)}?where=${where}`, { headers: { accept: 'application/json' } }).catch(() => null)
+    const counts: unknown = answer?.ok ? await answer.json() : null
+    if (Array.isArray(counts) && collection === this.#collection()) {
+      this.tallies = Object.fromEntries(list.flatMap((c, i) => (typeof counts[i] === 'number' ? [[c.id, counts[i]]] : [])))
+    }
   }
 
   #read(): Saved {

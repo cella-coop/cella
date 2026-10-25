@@ -82,12 +82,16 @@ The theme is light, dark or the system's, a cookie the server writes into
   it fits) and, in a table, its columns, in a gallery or on a board, its
   cards' fields and the board's grouping, in a calendar, the date it
   places the items by, month or week, and its cards' fields, in a
-  dashboard, its widgets; and saving what is shown as a view. A list, a
-  table and a gallery draw a hundred rows at a time, with a button
-  under them to show the next hundred and how many of the rows are
-  drawn; the keyboard moving past the last drawn row draws the next
-  page, and a change to the filter draws the first again. A board and a
-  calendar place every row. `Gallery`
+  dashboard, its widgets; and saving what is shown as a view. Its rows
+  are the server's, kept, filtered, ordered and paged in SQL
+  ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale)):
+  a list, a table and a gallery draw a hundred rows at a time
+  (`PAGE`), with a button under them that asks the address for the
+  next hundred (`n`) and how many of the rows are drawn; the keyboard
+  moving past the last drawn row asks for the next page, and the text
+  filter goes into the address once the typing pauses, which draws the
+  first page again. A board and a calendar place every row the view
+  keeps. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
   per value of an enumeration, each with its count, the board offered
   only where a field enumerates; `Calendar` puts them on the days of a
@@ -118,7 +122,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   by showing what the default layout and its filters do not already
   give; none does today, so every collection has All and the viewer's
   views. Each tab's tooltip names it with
-  its count, and its last button saves a new view. The active view (`v`)
+  its count, the server's for a preset and, for a viewer's own, asked
+  of the collection as JSON once the page is in the browser
+  (`ViewsState.tallies`), and its last button saves a new view. The active view (`v`)
   and what is changed from it (`view`, `where`, `q`, `hide`, `order`,
   `by`, `cards`, `on`, `span`, `w`) live
   in the URL, so a view is a link and the server renders it, checking
@@ -128,8 +134,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   and renames, updates and deletes them; presets are not editable. The
   ui check keeps browser storage to a hook's state class. Writes stay in
   the header, with the
-  count and any status badge the view and its extensions declare (the
-  log verifies); a collection page renders nothing else, which the ui
+  count and any status badge the view and its extensions declare over
+  the collection's `about` (the log verifies), since the page holds
+  only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
   opens New.
@@ -246,13 +253,14 @@ as a plain object: a figure (`kpi`), the count of rows or the sum,
 average, minimum or maximum of a numeric field, or a chart of either,
 grouped by an enumeration (bars) or by a date's month (a line), each
 over optional conditions (an enumeration among some values, a date in
-the current month or year). A view or a graft may declare its widgets
+the month or year of the scope's day). A view or a graft may declare its widgets
 (`dashboard`); without any, defaults derive from the fields. The
 viewer's own are JSON in the address (`w`), so the server renders them;
 the server checks them against the fields, drops and reports what
 names an undeclared field or asks what a field cannot give, and runs the
-rest over the collection's rows as its read API returns them, building
-no SQL. `Dashboard` draws the results: figures as text, bars with their
+rest as SQL aggregates over the collection's rows (`measures` in
+`@cella/org-db`); `result` shapes what they measured into what
+`Dashboard` draws, a line through every month from the first. `Dashboard` draws the results: figures as text, bars with their
 values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
 card, adds, edits, reorders and removes them.
@@ -260,7 +268,7 @@ card, adds, edits, reorders and removes them.
 The co-op's home, `Home`, is one dashboard over many collections. Its
 widgets are pins (`Pin`): a standard widget and the collection it runs
 over, checked by `pins` against that collection's fields and run by the
-server over its rows as the acting member sees them; each card names
+server in SQL over its rows as the acting member sees them; each card names
 its collection and links to it (`from`). The root declares the co-op's
 pins until a viewer makes their own, JSON in the address (`w`) as a
 collection's are. The View card lists them in order, dragged into place

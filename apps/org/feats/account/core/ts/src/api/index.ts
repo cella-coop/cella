@@ -7,17 +7,20 @@ import { account, accounts, period, periods } from '../drivers/account.ts'
 import { allocation, allocations } from '../drivers/allocation.ts'
 import { term, terms } from '../drivers/terms.ts'
 import { statement, statements } from '../drivers/statement.ts'
+import { report, reports } from '../drivers/report.ts'
 
 export { adopt, allocating, close } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
 export { allocation, allocations } from '../drivers/allocation.ts'
 export { term, terms } from '../drivers/terms.ts'
 export { statement, statements } from '../drivers/statement.ts'
+export { report, reports } from '../drivers/report.ts'
 
-// The chart, the periods, the surplus allocations, the work share's terms
-// and each worker's statement; closing a period, which `account.closes`
-// decides and after which nothing posts into it, and adopting terms, which
-// cites the members' decision. Allocating a surplus posts it, so its write
+// The chart, the periods, the surplus allocations, the work share's terms,
+// each worker's statement and the spans the financial statements are drawn
+// for; closing a period, which `account.closes` decides and after which
+// nothing posts into it, and adopting terms, which cites the members'
+// decision. Allocating a surplus posts it, so its write
 // is account-transaction's.
 export const slice: Slice = {
   name: 'account',
@@ -50,6 +53,11 @@ export const slice: Slice = {
       list: statements,
       item: statement,
       index: async (db) => (await statements(db)).map((s) => ({ id: s.id, title: `${s.year} statement`, sub: s.worker })),
+    },
+    reports: {
+      list: reports,
+      item: report,
+      index: async (db) => (await reports(db)).map((r) => ({ id: r.id, title: `${r.id} financial statements`, sub: r.kind })),
     },
   },
 }

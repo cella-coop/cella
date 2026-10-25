@@ -1,14 +1,17 @@
-import { icons, type App } from '@cella/org-ui'
+import { date, icons, type App } from '@cella/org-ui'
 import type { Account, Period } from '../models/account.ts'
 import type { Allocation, Detail } from '../models/allocation.ts'
 import type { Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
+import type { Report } from '../models/report.ts'
 import Close from './blocks/Close.svelte'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 
 const open = (p: Period) => (p.closed ? 'closed' : 'open')
 const allocated = (a: Allocation) => (a.allocated ? 'allocated' : 'to allocate')
+const closed = (r: Report) => (r.closed ? 'closed' : 'open')
+const kinds: Record<Report['kind'], string> = { month: 'Month', quarter: 'Quarter', year: 'Year' }
 const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
 const bases: Record<Terms['basis'], string> = { salary: 'by pay', hours: 'by time worked', equal: 'in equal parts', mix: 'by a mix' }
 const mix = (t: Terms) =>
@@ -23,7 +26,8 @@ const mix = (t: Terms) =>
 
 // The feat's client side: the chart of accounts, the periods of the books
 // and a period's close, each year's surplus with its split, the statutes'
-// terms, and each worker's statement of their part.
+// terms, each worker's statement of their part, and the spans the
+// financial statements are drawn for.
 export const app: App = {
   name: 'account',
   collections: {
@@ -175,6 +179,33 @@ export const app: App = {
         ],
         related: (s: Sheet) => [{ label: `${s.year} surplus`, sub: 'the allocation', href: `/allocations/${s.allocation}` }],
         blocks: [Basis],
+      },
+    },
+    reports: {
+      view: {
+        group: 'finance',
+        title: 'Financial statements',
+        caption: 'The income statement and the balance sheet, by month, quarter and year',
+        icon: icons.ChartLine,
+        columns: [
+          { key: 'id', label: 'Span', kind: 'title', role: 'title', value: (r: Report) => r.id },
+          { key: 'kind', label: 'Kind', kind: 'badge', role: 'hidden', value: (r: Report) => r.kind },
+          { key: 'since', label: 'From', kind: 'date', role: 'hidden', value: (r: Report) => r.since },
+          { key: 'until', label: 'To', kind: 'date', role: 'hidden', value: (r: Report) => r.until },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: closed, tone: (r: Report) => (r.closed ? 'neutral' : 'accent') },
+        ],
+        look: { layout: 'table' },
+      },
+      page: {
+        eyebrow: 'Financial statements',
+        title: (r: Report) => `${kinds[r.kind]} ${r.id}`,
+        subtitle: (r: Report) => `${date(r.since)} to ${date(r.until)}, against ${r.before}${r.closed ? '' : '; open, so its figures may still change'}`,
+        properties: (r: Report) => [
+          { label: 'State', value: closed(r), kind: 'badge', tone: r.closed ? 'neutral' : 'accent' },
+          { label: 'From', value: r.since, kind: 'date' },
+          { label: 'To', value: r.until, kind: 'date' },
+          { label: 'Against', value: r.before, href: r.earlier ? `/reports/${r.before}` : undefined },
+        ],
       },
     },
   },

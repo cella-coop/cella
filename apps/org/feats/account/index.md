@@ -6,7 +6,9 @@ updated = 2026-10-25
 The co-op's accounts and what its members own: the chart of accounts,
 members' capital accounts, reserves and funds, the periods the books are
 kept in, the allocations of each year's surplus, the statutes' terms for
-its work share and its capital, and each worker's part of the work share.
+its work share and its capital, each worker's part of the work share, and
+the presentation of the financial statements, their rubrics and the spans
+they are drawn for.
 This is the
 co-op-specific layer that generic accounting software lacks. An account
 holds no balance of its own: its balance is the sum of the journal lines
@@ -23,6 +25,8 @@ posted to it, which the `account-transaction` graft reads from the
 | allocation share | `kind`, `percent`, `amount` | `work`, `legal` (the legal reserve), `development` (the development fund) or `interest` (on capital); a share of nothing has no row |
 | terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `share?`, `minimum?`, `instalments?`, `delay?`, `repayments?`, `adopted?` | the statutes' terms from a year on: how the work share divides, the weights, in percent, by pay, by time worked and in equal parts, adding up to 100, and the percent of an associate's part that buys shares; and the capital's clauses, stated whole or not at all: the value of a share, the fewest shares an associate subscribes, the most monthly instalments they pay them in, the months after an exit before the first repayment and the number of yearly repayments |
 | part | `allocation`, `worker`, `basis`, `quantity`, `amount` | a worker's part of an allocation's work share on one basis: what they were paid (cents), the minutes they worked, or one equal part, and the cents it gave them |
+| rubric | `id`, `sheet`, `n`, `kind`, `label`, `side?`, `prefixes`, `adds`, `subtracts` | a rubric of the balance sheet or the income statement, in the order the PCG's models list them for a small company: a `heading`; a `line`, gathering the accounts whose code its longest matching prefix names, debit positive on the `debit` side (assets, expenses) and credit positive on the `credit` side (liabilities, income); or a `total`, adding and subtracting other rubrics of its sheet |
+| report | `id`, `kind`, `since`, `until`, `before`, `closed` | a span the statements are drawn for, derived from the periods: each month (`2026-10`), quarter (`2026-Q4`) and year (`2026`) holding one, against the span of the same length before it, closed once every period of it is |
 
 An account's `kind` is its place in the books: `asset`, `liability`,
 `equity`, `income` or `expense`. Capital accounts, reserves and funds are
@@ -39,6 +43,16 @@ An account marked `cash` holds the co-op's money: the bank, a till. The
 chart says which accounts are cash, and the `account-transaction` graft
 reads the flag to keep money from leaving one except through the writes
 with their own power and limit.
+
+The financial statements present the chart in the PCG's rubrics, the
+models of the annual accounts for a small company (Règlement ANC n°
+2014-03, the système de base, art. 821-1 ff., not verified on Légifrance).
+Each account sits in one rubric of each sheet, the line whose prefix of
+its code is longest, and every code of classes 1 to 7 has one: classes 6
+and 7 are the income statement's, and on the balance sheet they are the
+result of the period, not yet carried to `12` by a closing entry, so every
+account is presented once and the balance sheet balances. The fiscal year
+is the calendar year.
 
 ## Lifecycle
 
@@ -133,6 +147,8 @@ The account feat owns the rules about its own collection:
   to its portion of the work share, to the cent;
 - terms divide the whole work share, and are adopted once, never over a
   year already allocated;
+- every account of classes 1 to 7 has a rubric on the balance sheet, and
+  a total adds and subtracts only rubrics of its own sheet;
 - terms state their capital clauses whole or not at all, and repay a
   departing associate within five years of the exit (loi n° 47-1775, art.
   18, the nominal value; the five years as Avise's guide to the SCOP gives
@@ -158,6 +174,8 @@ What it does not own:
 - what of a part buys shares and what is paid: `account-member`'s, and
   the shares posted: `account-member-transaction`'s;
 - that the members decided the terms: `account-decision`'s.
+- the statements' figures, summed from the journal:
+  `account-transaction`'s.
 
 ## What it does not know
 
@@ -166,7 +184,10 @@ balances, its allocation's approval and postings, its capital accounts'
 holders and the parts of its work share arrive through grafts. The work
 share never divides by revenue: French law offers a SCOP pay, time worked
 and equal parts (Code du travail, art. L3324-5). A deduction for losses
-from a repayment, revolving capital and dues are not built.
+from a repayment, revolving capital and dues are not built, nor are a
+fiscal year other than the calendar year, the abridged models, or an
+account placed by the sign of its balance, as a bank overdraft is among
+the debts.
 
 ## Schema
 
@@ -192,6 +213,9 @@ from a repayment, revolving capital and dues are not built.
   only in the write that allocates and never changes after;
   `divided(allocation)` sets each basis's parts against its portion, and
   `account.statement` sums each worker's parts for a year.
+- `account.rubric`: the statements' rubrics, seeded with the PCG's;
+  `rubric_of(sheet, code)` the line an account is presented in.
+- `account.report`: the spans of the books, each with the span before it.
 
 Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
 (a capital account opens on admission) and parts, set a period's
@@ -249,6 +273,11 @@ that divide less than the whole, or would govern an allocated year, are
 refused, and adopted terms never change; the capital's clauses govern
 from the latest adopted terms that state them, are stated whole, fall
 due a year apart after the delay, and repay within five years.
+`core/ts/_tests/report.test.ts`: each account is placed by the longest
+prefix of its code on each sheet, every code of classes 1 to 7 has a place
+on the balance sheet, a total names only rubrics of its own sheet and a
+line its side, and the spans are each month, quarter and year of the
+books against the one before.
 
 ## Shell
 
@@ -259,6 +288,9 @@ in a table, an allocation's page showing its split under a Split tab;
 with its capital clauses; and
 `statements`, each worker's part of each year's work share, a statement's
 page its part basis by basis against each basis's portion and weight.
+`reports`, the financial statements by span, the latest ending first, in
+a table, a span's page naming its days and the span it is compared with;
+its two statements are `account-transaction`'s tabs.
 Printed, a page drops the shell and reads as a document. Balances, the trial
 balance and each account's ledger are `account-transaction`'s; allocating,
 `account-decision`'s form over `account-transaction`'s write.

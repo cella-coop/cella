@@ -83,11 +83,13 @@ rule's reason:
   drop between the board's columns, approval and reimbursement posted;
   filing one under the project it is billed on to;
 - a month's pay run prepared from every worker's approved time, member
-  or not, approved and paid, each posted; a member's draw on their own account, within their limit; a
-  year's surplus allocated, citing the decision that approved its split,
-  its work share divided among the workers as the year's terms say and
-  half of each associate's part employed in shares, in the same write;
-  the statutes' terms adopted, citing the decision that moved them;
+  or not, approved and paid, each posted; a member's draw on their own
+  account, within their limit; a year's distribution approved, citing the
+  decision that approved its split, its work share divided among the
+  workers as the year's terms say in the same write, then distributed by
+  finance, posted and half of each associate's part employed in shares;
+  the statutes' patronage and capital terms adopted, each citing the
+  decision that moved them;
   money an associate pays in on their subscription, recorded from the
   bank; their subscription spread over monthly instalments from their
   pay, on their own page, each withheld when a run is paid; and a
@@ -115,7 +117,8 @@ never shown, though the shell handles it. How slices mount is in
 | `circle` | governance | 1 | nested units, positions, roles and mandates |
 | `decision` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
-| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, and the financial statements by span |
+| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, and the financial statements by span |
+| `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
 | `client` | work | 1 | contacts and companies |
@@ -144,13 +147,14 @@ and admit a member by vote (ordered).
 
 | Graft | What it joins |
 |---|---|
-| `account-decision` | a surplus allocation and the decision that approved it; the work share's terms and the decision that adopts them |
-| `account-member` | who holds each capital account, the share's value from the statutes' terms, draw limits, the freeze on exit, and each worker's part of the work share split between shares and cash; the capital joining asks, and what a member owns, read back from the terms |
+| `account-decision` | the capital terms and the decision that adopts them |
+| `account-member` | who holds each capital account, the share's value from the statutes' terms, draw limits and the freeze on exit; the capital joining asks, and what a member owns, read back from the terms |
+| `account-member-patronage` | each worker's part of the work share split between shares and cash; whose a statement is; the work share's terms read back on a member's page |
+| `account-member-patronage-transaction` | the shares the work share buys, credited to the associates' capital when a distribution posts; what each part became; a year's return to the federation |
 | `account-member-payslip-transaction` | a subscription paid in monthly instalments withheld from pay, posted in the run's payment |
-| `account-member-transaction` | a member's subscription called on admission and paid in, their draws, the shares the work share buys, and a departing associate's capital owed and repaid, posted; a year's return to the federation |
-| `account-payslip` | a surplus's work share divided by pay and in equal parts |
-| `account-timesheet` | a surplus's work share divided by time worked |
-| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet; the books carried over from a FEC |
+| `account-member-transaction` | a member's subscription called on admission and paid in, their draws, and a departing associate's capital owed and repaid, posted |
+| `account-patronage` | a year's split approved only once its books are closed |
+| `account-transaction` | a transaction's lines post to accounts, never into a closed period; the income statement and the balance sheet; the books carried over from a FEC |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
@@ -167,6 +171,7 @@ and admit a member by vote (ordered).
 | `decision-meeting` | the decisions a meeting's agenda tables, and where each stands |
 | `decision-member` | admission, suspension and exit by a decision |
 | `decision-member-worker` | a candidate's admission, proposed from their candidacy once their probation is over |
+| `decision-patronage` | a year's distribution and the decision that approves its split; the work share's terms and the decision that adopts them |
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-member` | who has read the co-op's adopted texts |
 | `expense-file` | an expense's receipts, one carried by its claim |
@@ -186,6 +191,9 @@ and admit a member by vote (ordered).
 | `member-task` | who does a task |
 | `member-timesheet` | no time of a member suspended or gone, and a member's months |
 | `member-worker` | a worker's candidacy and probation, and each person's path from hired to member |
+| `patronage-payslip` | a surplus's work share divided by pay and in equal parts |
+| `patronage-timesheet` | a surplus's work share divided by time worked |
+| `patronage-transaction` | a year's split posted from its result, the legal reserve's floor |
 | `payslip-timesheet` | a pay run from approved time |
 | `payslip-transaction` | a pay run's approval and payment post transactions |
 | `payslip-worker` | whose a salary and a payslip are: a worker's, member or not |

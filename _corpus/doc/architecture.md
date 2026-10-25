@@ -153,8 +153,9 @@ in a node's core only if it spans everything below that node.
 - Nothing posts into a closed period: the `account-transaction` graft's.
   The period is an account's and the entry a transaction's; neither feat
   sees both, and the graft that resolves an entry's lines to accounts does.
-- A surplus split adds up to the surplus: the account feat's. That the
-  members approved it is the `account-decision` graft's.
+- A surplus split adds up to the surplus: the patronage feat's. That the
+  members approved it is the `decision-patronage` graft's, and that the
+  year's books are closed `account-patronage`'s.
 
 A rule is SQL in its owner's schema (see [SQL](#sql)). The notary runs
 every rule that attaches to an ordered write, those of the feat and of the

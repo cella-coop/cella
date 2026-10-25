@@ -77,8 +77,10 @@ updated = 2026-10-25
 | **college** | a class of members in a multi-stakeholder co-op, with its own weight in votes |
 | **surplus** | what remains of a year's income after expenses; a co-op's profit |
 | **work share** | the part of the surplus paid to the workers for their work (participation) |
-| **terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares |
-| **statement** | a worker's part of a year's work share, by basis, and what became of it: shares, blocked five years, and cash |
+| **distribution** | a year's surplus shared out: its split, drafted, approved by the assembly, which fixes each worker's part, and then distributed, posted and its shares credited; the patronage feat's |
+| **patronage terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares |
+| **capital terms** | the statutes' capital clauses: a share's value, the fewest an associate subscribes, the instalments they may pay them in, and how one who leaves is repaid |
+| **statement** | a worker's part of a year's work share, by basis, and what became of it once distributed: shares, blocked five years, and cash |
 | **financial statements** | the income statement (compte de résultat) over a month, a quarter or a year and the balance sheet (bilan) at its end, from the journal in the PCG's rubrics, beside the span before; a **statement** alone is a worker's |
 | **margin** | what a project invoiced less what its time cost the co-op and what was spent for it |
 | **burn** | the share of a project's budget its billable time has spent, at the rate card |
@@ -87,7 +89,7 @@ updated = 2026-10-25
 | **capital account** | a member's equity in the co-op: the shares they paid in and what is credited to them |
 | **subscription** | the shares an associate takes on joining, at the share's value, called whole and paid in at once or in monthly instalments from their pay |
 | **repayment** | what a departed associate is paid back of their capital, at its nominal value, in yearly instalments the statutes set, within five years |
-| **patronage** | a worker's contribution used to divide a surplus; in a SCOP the work share's bases, pay, time worked or equal parts, never revenue |
+| **patronage** | a worker's contribution used to divide a surplus; in a SCOP the work share's bases, pay, time worked or equal parts, never revenue; the feat holding the year-end cycle |
 | **buy-in / buyout** | capital a member subscribes on joining, and its repayment on leaving |
 | **revolving capital** | repaying the oldest retained patronage as new patronage is retained |
 | **dues** | periodic payments every member owes |

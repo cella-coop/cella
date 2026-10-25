@@ -30,8 +30,10 @@ decision. Lanterne's state is that of 24 October 2026.
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
 | `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
-| `account.surplus.allocate` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
-| `account.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already allocated ([work share](#the-work-share-divides-as-the-years-terms-say)) |
+| `account.terms.adopt` | ordered | right: decided, citing the members' decision; the capital's clauses |
+| `patronage.distribution.approve` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `patronage.distribution.distribute` | ordered | right: the approved split posted once, under its own power ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `patronage.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already approved ([work share](#the-work-share-divides-as-the-years-terms-say)) |
 | `account.period.close` | ordered | right |
 | `account.capital.pay` | confluent | right: a deposit; payments commute, and at rung 1 none passes what is owed ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
 | `account.capital.spread` | confluent | right: the associate's own register, the latest standing |
@@ -85,7 +87,7 @@ Owner: the `account-transaction` graft. The period is an account's, the
 entry a transaction's; only the graft sees both. Every write that posts an
 entry contends with `account.period.close`: `transaction.post`, `.pay`
 and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
-`invoice-transaction`; `account.draw` and `account.surplus.allocate`,
+`invoice-transaction`; `account.draw` and `patronage.distribution.distribute`,
 `expense.approve` and `.reimburse`, `payslip:run.approve` and `.pay`
 through their grafts; and `member.admit`, whose subscription posts. An
 admission never waits on the books: where the day's period is not open,
@@ -363,16 +365,19 @@ F-2026-J-0001 onwards for invoicing at a client's.
 
 ## A surplus is split once, and as the law requires
 
-Owners: the `account` feat for the sums and the floors it sees; the
-`account-transaction` graft for the legal reserve's, which needs the
-books; the `account-decision` graft for the approval.
+Owners: the `patronage` feat for the sums and the floors it sees, and the
+lifecycle; the `patronage-transaction` graft for the legal reserve's,
+which needs the books, and the entry; `account-patronage` for the closed
+year; the `decision-patronage` graft for the approval.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `surplus.allocate` vs `surplus.allocate`, one year | the second refused | the first refused | the surplus is split twice |
-| `surplus.allocate` vs `decision.close` | waits for the outcome | settles if it passed | split without the assembly |
-| `surplus.allocate` vs the year's last `period.close` | refused: the year is open | settles | a split of a surplus not yet final |
-| `surplus.allocate` vs a post to `1061` or to capital | the floor was read before it | the floor reads it | the legal reserve's 15 % waived on a reserve or a capital that moved |
+| `distribution.approve` vs `distribution.approve`, one year | the second refused | the first refused | the surplus is split twice |
+| `distribution.approve` vs `decision.close` | waits for the outcome | settles if it passed | split without the assembly |
+| `distribution.approve` vs the year's last `period.close` | refused: the year is open | settles | a split of a surplus not yet final |
+| `distribution.approve` vs a post to `1061` or to capital | the floor was read before it | the floor reads it | the legal reserve's 15 % waived on a reserve or a capital that moved |
+| `distribution.distribute` vs `distribution.distribute` | the second refused | the first refused | the split posted twice |
+| `distribution.distribute` vs `distribution.approve` | refused: not approved | settles | a split posted before the assembly approved it |
 
 All ordered; right. **Applied**: the floors are those of loi n° 78-763
 du 19 juillet 1978, art. 33, read on Légifrance in its text in force since
@@ -384,36 +389,40 @@ refuse.
 
 **Lanterne.** d-2026-006 approved the 2025 split in June: 45 % work,
 15 % legal reserve, 25 % development fund, 15 % interest. Its result was
-carried over unallocated, and allocating it cites the decision.
+carried over undistributed: approving the distribution cites the
+decision, and distributing it is finance's.
 
 ## The work share divides as the year's terms say
 
-Owners: the `account` feat for the terms, the portions and their sums;
-the grafts that know each basis for its parts: `account-payslip` by pay
-and in equal parts, `account-timesheet` by time worked; `account-member`
-for the split between shares and cash; `account-member-transaction` for
-the shares posted; `account-decision` for the adoption.
+Owners: the `patronage` feat for the terms, the portions and their sums;
+the grafts that know each basis for its parts: `patronage-payslip` by
+pay and in equal parts, `patronage-timesheet` by time worked;
+`account-member-patronage` for the split between shares and cash;
+`account-member-patronage-transaction` for the shares credited;
+`decision-patronage` for the adoption.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `surplus.allocate` vs `terms.adopt` over its year | the adoption refused: the year is allocated | the allocation divides by the new terms | a split made by terms adopted after it |
-| `surplus.allocate` vs a salary or `timesheet:period.approve` in its year | the parts were fixed by the allocation | the parts read it | parts that no longer add up to what was paid or worked |
-| `surplus.allocate` vs `member.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
+| `distribution.approve` vs `terms.adopt` over its year | the adoption refused: the year is approved | the approval divides by the new terms | a split made by terms adopted after it |
+| `distribution.approve` vs a salary or `timesheet:period.approve` in its year | the parts were fixed by the approval | the parts read it | parts that no longer add up to what was paid or worked |
+| `distribution.distribute` vs `member.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
 | `terms.adopt` vs `terms.adopt`, one year | the later adopted governs | the later adopted governs | two terms for one year |
 
 All ordered; right. **Applied**: the parts are made by triggers in the
-write that allocates, from the terms, the salaries, the approved time
-and the members as they stand at its verdict, and never change after;
-each basis's rule checks its parts against what it gives, and
-`account.divides` that each portion adds up. The work share divides by
-pay, time worked, equal parts or a mix (Code du travail, art. L3324-5;
-BOI-BIC-PTP-10-30, § 170 and 280), among every employee, associate or
-not (loi n° 78-763, art. 33, 3°); shares bought with it are reserved to
-the associates employed (art. R3323-11) and blocked five years from the
-first day of the sixth month after the year (art. L3324-10). A write
-posts one entry, so the shares are lines of the allocation's.
+write that approves, from the terms, the salaries and the approved time
+as they stand at its verdict, and never change after; each basis's rule
+checks its parts against what it gives, and `patronage.divides` that
+each portion adds up. The shares are credited in the write that
+distributes, from the members as they stand at its verdict. The work
+share divides by pay, time worked, equal parts or a mix (Code du travail,
+art. L3324-5; BOI-BIC-PTP-10-30, § 170 and 280), among every employee,
+associate or not (loi n° 78-763, art. 33, 3°); shares bought with it are
+reserved to the associates employed (art. R3323-11) and blocked five
+years from the first day of the sixth month after the year (art.
+L3324-10). A write posts one entry, so the shares are lines of the
+distribution's.
 
-**Lanterne.** The statutes' terms, `st-2021`, divide the work share by
+**Lanterne.** The statutes' patronage terms, `st-2021`, divide the work share by
 pay and employ half of each associate's part in shares at 50 €.
 
 ## Membership changes are decided
@@ -768,7 +777,7 @@ The matrix found writes no `ops.ts` declares:
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them |
-| drafting the work share's terms, or an allocation | confluent | adoption and allocation act on drafts nothing writes but the seed |
+| drafting the work share's terms, or a distribution | confluent | adoption and approval act on drafts nothing writes but the seed |
 | paying out the work share's cash | confluent | what `424` still owes after the shares, which nothing pays |
 
 ## Recommended label changes

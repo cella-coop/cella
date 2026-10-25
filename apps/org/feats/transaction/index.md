@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -19,7 +19,7 @@ truth for balances, which are summed from it and never stored.
 
 A line names its account by code and holds no key into `account`; the
 `account-transaction` graft resolves the code and refuses one that does not
-exist. Where an entry came from (an invoice, an allocation, a payroll run)
+exist. Where an entry came from (an invoice, a distribution, a payroll run)
 is the producing graft's junction, not a field here: the journal records
 what happened, the grafts record why.
 
@@ -27,7 +27,7 @@ what happened, the grafts record why.
 
 An entry is posted once and is then permanent. There are no drafts in the
 journal: a draft belongs to the feat that produces the entry (an invoice
-before issue, an allocation before its decision).
+before issue, a distribution before its approval).
 
 ## Writes
 
@@ -94,7 +94,7 @@ What it does not own:
 ## What it does not know
 
 Transaction knows no accounts beyond their codes, and no invoices,
-members, allocations or periods. It does not know a period is closed; the
+members, distributions or periods. It does not know a period is closed; the
 graft does. VAT returns and statutory exports such as the FEC read the
 journal at rung 3.
 
@@ -167,7 +167,7 @@ through `invoice-transaction`.
 - Forty entries from 1 July to 24 October 2026, `je-0001` to `je-0040`.
 - `je-0001` carries the opening balances over from the previous tool: the
   bank at 92 000 €, each member's capital, the reserves and the 2025
-  result, 61 400 €, not yet allocated, against it.
+  result, 61 400 €, not yet distributed, against it.
 - Each invoice posts an entry on issue (`411` against `706` and `44571`)
   and one per payment (`512` against `411`). `je-0026` is the credit note
   that voided F-2026-0050.

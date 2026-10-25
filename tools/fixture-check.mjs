@@ -1,5 +1,5 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
-// every surplus allocation splits the whole surplus, every link a graft holds
+// every surplus distribution splits the whole surplus, every link a graft holds
 // resolves, every address is a member's, the books agree with the invoices,
 // and every document version is an outline of blocks the document model
 // takes, whose embeds name what exists and whose comments quote text one of
@@ -34,6 +34,7 @@ const check = (name) => {
   const client = read('client')
   const invoice = read('invoice')
   const account = read('account')
+  const patronage = read('patronage')
   const transaction = read('transaction')
   const key = read('key')
 
@@ -112,19 +113,20 @@ const check = (name) => {
   const invoices = new Map((invoice.invoice ?? []).map((i) => [i.id, i]))
   const accounts = ids(account.account, 'code')
   const periods = ids(account.period, 'month')
-  const allocations = ids(account.allocation)
+  const distributions = ids(patronage.distribution)
 
-  // A surplus allocation splits the whole surplus, each share at its percent
-  for (const a of account.allocation ?? []) {
+  // A surplus distribution splits the whole surplus, each share at its
+  // percent
+  for (const a of patronage.distribution ?? []) {
     const shares = a.share ?? []
     const percent = shares.reduce((s, x) => s + x.percent, 0)
     const amount = shares.reduce((s, x) => s + x.amount, 0)
     if (percent !== 100 || amount !== a.surplus) {
-      fail(`allocation ${a.id}: shares make ${percent} % and ${amount}, not 100 % of ${a.surplus}`)
+      fail(`distribution ${a.id}: shares make ${percent} % and ${amount}, not 100 % of ${a.surplus}`)
     }
     for (const x of shares) {
       if (x.amount * 100 !== a.surplus * x.percent) {
-        fail(`allocation ${a.id}: the ${x.kind} share is not ${x.percent} % of the surplus`)
+        fail(`distribution ${a.id}: the ${x.kind} share is not ${x.percent} % of the surplus`)
       }
     }
   }
@@ -143,8 +145,8 @@ const check = (name) => {
     has(documents, a.document, 'document', 'adoption')
     has(versions, a.version, 'version', 'adoption')
   }
-  for (const a of read('graft.account-decision').approval ?? []) {
-    has(allocations, a.allocation, 'allocation', 'approval')
+  for (const a of read('graft.decision-patronage').approval ?? []) {
+    has(distributions, a.distribution, 'distribution', 'approval')
     has(decisions, a.decision, 'decision', 'approval')
   }
   for (const b of read('graft.client-invoice').billing ?? []) {

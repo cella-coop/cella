@@ -1,10 +1,10 @@
-// fixture check, finance: a mock co-op's capital, surplus allocations, pay
+// fixture check, finance: a mock co-op's capital, surplus distributions, pay
 // and expenses are consistent. A capital account is a member's, under
 // 1013, and the journal credits it with their shares at the share's value,
 // the statutes' capital clause, or, once they left, holds nothing and their
 // repayments, due as the clauses say, add up to it, owed in 4567;
-// the work share's terms divide all of it and govern each allocation;
-// an allocation honours a SCOP's floors (loi n° 78-763, art. 33); every
+// the work share's terms divide all of it and govern each distribution;
+// a distribution honours a SCOP's floors (loi n° 78-763, art. 33); every
 // salary is a worker's, and they keep within the internal rules' ratio; a
 // pay run carried over posted exactly its payslips' pay and charges; an
 // expense is an active member's, charged to an account of class 6, and
@@ -16,9 +16,9 @@ export function finance(read, fail) {
   const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
   const workers = new Set((read('worker').worker ?? []).map((w) => w.address))
   const books = read('account')
+  const patronage = read('patronage')
   // The share's value and the capital clauses: the latest adopted terms
-  // that state them
-  const clauses = (books.terms ?? []).filter((t) => t.adopted && t.share).sort((x, y) => y.from - x.from)[0] ?? {}
+  const clauses = (books.terms ?? []).filter((t) => t.adopted).sort((x, y) => y.from - x.from)[0] ?? {}
   const value = clauses.share
   const repayments = read('graft.account-member-transaction').repayment ?? []
   const accounts = new Map((books.account ?? []).map((a) => [a.code, a]))
@@ -74,8 +74,8 @@ export function finance(read, fail) {
   }
 
   // The work share's terms divide all of it (Code du travail, art.
-  // L3324-5), and each allocation names its year's terms' basis
-  const terms = books.terms ?? []
+  // L3324-5), and each distribution names its year's terms' basis
+  const terms = patronage.terms ?? []
   const weights = ['salary', 'hours', 'equal']
   for (const t of terms) {
     if (weights.reduce((s, w) => s + (t[w] ?? 0), 0) !== 100) {
@@ -85,28 +85,28 @@ export function finance(read, fail) {
       fail(`terms ${t.id}: ${t.capital} % of a part employed in shares`)
     }
   }
-  for (const a of books.allocation ?? []) {
+  for (const a of patronage.distribution ?? []) {
     const t = terms.filter((t) => t.adopted && t.from <= a.year).sort((x, y) => y.from - x.from || iso(y.adopted).localeCompare(iso(x.adopted)))[0]
     const basis = t ? (weights.find((w) => t[w] === 100) ?? 'mix') : null
     if (!t) {
-      fail(`allocation ${a.id}: no adopted terms govern ${a.year}`)
+      fail(`distribution ${a.id}: no adopted terms govern ${a.year}`)
     } else if (a.basis !== basis) {
-      fail(`allocation ${a.id}: it divides by ${a.basis}, not by ${basis} as ${t.id} say`)
+      fail(`distribution ${a.id}: it divides by ${a.basis}, not by ${basis} as ${t.id} say`)
     }
   }
 
   // Art. 33: the work share at least 25 % (3°), the legal reserve 15 % (1°),
   // and interest no more than the reserves nor the work share (4°)
-  for (const a of books.allocation ?? []) {
+  for (const a of patronage.distribution ?? []) {
     const of = (kind) => (a.share ?? []).find((s) => s.kind === kind)?.amount ?? 0
     if (of('work') * 4 < a.surplus) {
-      fail(`allocation ${a.id}: the work share is under 25 % of the surplus`)
+      fail(`distribution ${a.id}: the work share is under 25 % of the surplus`)
     }
     if (of('legal') * 100 < a.surplus * 15) {
-      fail(`allocation ${a.id}: under 15 % goes to the legal reserve`)
+      fail(`distribution ${a.id}: under 15 % goes to the legal reserve`)
     }
     if (of('interest') > of('legal') + of('development') || of('interest') > of('work')) {
-      fail(`allocation ${a.id}: interest on capital exceeds the reserves or the work share`)
+      fail(`distribution ${a.id}: interest on capital exceeds the reserves or the work share`)
     }
   }
 

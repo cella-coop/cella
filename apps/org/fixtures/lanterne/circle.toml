@@ -172,6 +172,11 @@ power = "close-period"
 text = "close a period"
 
 [[mandate]]
+role = "finance"
+power = "distribute-surplus"
+text = "distribute a surplus the assembly approved"
+
+[[mandate]]
 role = "lead"
 power = "approve-expense"
 text = "approve what the circle's members spend"

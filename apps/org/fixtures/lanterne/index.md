@@ -75,10 +75,13 @@ Camille hires, and opens a new hire's candidacy for membership.
   loi 78-763, art. 33 allows: 27 630 € to the members for their work,
   divided by salary, 9 210 € to the legal reserve, 15 350 € to the
   development fund and 9 210 € as interest on capital; the result was
-  carried over unallocated, and allocating it is Julien's to do. The
-  statutes' terms divide the work share by pay and employ half of each
-  member's part in shares, blocked five years; the rest is paid. They
-  value a share at 50 €, ask at least 20 of an associate, paid in at most
+  carried over undistributed. The 2025 distribution (`patronage.toml`) is
+  a draft until its approval cites d-2026-006, which makes each worker's
+  part; distributing it, posting it and crediting its shares, is Julien's
+  to do as finance. The statutes' patronage terms divide the work share by
+  pay and employ half of each member's part in shares, blocked five
+  years; the rest is paid. Their capital terms value a share at 50 €, ask
+  at least 20 of an associate, paid in at most
   10 monthly instalments, and repay one who leaves a year after the exit,
   in three yearly repayments. Paul Garnier, an art director, left on 30
   November 2025: his 30 shares, 1 500 €, are owed him, the first 500 €

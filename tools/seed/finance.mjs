@@ -1,8 +1,8 @@
 // seed, finance: loads a mock co-op's capital, the statutes' terms, surplus
-// allocations, pay and expenses into the account, payslip and expense
-// schemas and their grafts' (account-decision, account-member,
-// account-member-transaction's repayments, account-payslip,
-// member-payslip, payslip-transaction, expense-project). The chart, the
+// distributions, pay and expenses into the account, patronage, payslip and
+// expense schemas and their grafts' (decision-patronage, account-member,
+// account-member-transaction's repayments, member-payslip,
+// payslip-transaction, expense-project). The chart, the
 // journal, the members and their time load first: a capital account names
 // its holder and its parent once every account is in; a pay run's payslips
 // load before it is approved, September's with the minutes of the members'
@@ -19,15 +19,22 @@ export async function finance(db, read, day) {
 
   for (const t of books.terms ?? []) {
     await db.query(
-      `INSERT INTO account.terms (id, "from", salary, hours, equal, capital, share, minimum, instalments, delay, repayments, adopted)
-       VALUES ($1, $2, $3, $4, $5, $6, cella.amount($7), $8, $9, $10, $11, $12)`,
-      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, t.share ?? null, t.minimum ?? null, t.instalments ?? null, t.delay ?? null, t.repayments ?? null, day(t.adopted)],
+      `INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted)
+       VALUES ($1, $2, cella.amount($3), $4, $5, $6, $7, $8)`,
+      [t.id, t.from, t.share, t.minimum, t.instalments, t.delay, t.repayments, day(t.adopted)],
     )
   }
-  for (const a of books.allocation ?? []) {
-    await db.query('INSERT INTO account.allocation (id, year, surplus, basis) VALUES ($1, $2, cella.amount($3), $4)', [a.id, a.year, a.surplus, a.basis])
+  const patronage = read('patronage')
+  for (const t of patronage.terms ?? []) {
+    await db.query(
+      `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, adopted) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, day(t.adopted)],
+    )
+  }
+  for (const a of patronage.distribution ?? []) {
+    await db.query('INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ($1, $2, cella.amount($3), $4)', [a.id, a.year, a.surplus, a.basis])
     for (const s of a.share ?? []) {
-      await db.query('INSERT INTO account.share (allocation, kind, percent, amount) VALUES ($1, $2, $3, cella.amount($4))', [a.id, s.kind, s.percent, s.amount])
+      await db.query('INSERT INTO patronage.share (distribution, kind, percent, amount) VALUES ($1, $2, $3, cella.amount($4))', [a.id, s.kind, s.percent, s.amount])
     }
   }
   for (const r of read('graft.account-member-transaction').repayment ?? []) {
@@ -36,8 +43,8 @@ export async function finance(db, read, day) {
       [r.member, r.n, day(r.due), r.amount, r.entry ?? null, day(r.paid)],
     )
   }
-  for (const a of read('graft.account-decision').approval ?? []) {
-    await db.query('INSERT INTO account_decision.approval (allocation, decision) VALUES ($1, $2)', [a.allocation, a.decision])
+  for (const a of read('graft.decision-patronage').approval ?? []) {
+    await db.query('INSERT INTO decision_patronage.approval (distribution, decision) VALUES ($1, $2)', [a.distribution, a.decision])
   }
 
   const pay = read('payslip')

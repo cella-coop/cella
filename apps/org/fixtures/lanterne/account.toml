@@ -1,5 +1,5 @@
 # The accounts: a part of the French chart of accounts, the periods they are
-# kept in and the surplus allocations, amounts in cents. July to September
+# kept in and the statutes' capital clauses, amounts in cents. July to September
 # are closed; October is open, and so are the months after it to the end of
 # the fiscal year. A cash account, the bank, says `cash = true`; a member's
 # capital account names its member as `holder`, under 1013, and a departed
@@ -238,54 +238,19 @@ month = "2026-11"
 [[period]]
 month = "2026-12"
 
-# The statutes' terms, adopted when the co-op was founded and carried
-# over. The work share divides among the workers by pay, and half of each
-# associate's part is employed in shares of the capital, the rest paid
-# (Code du travail, art. L3324-5 and R3323-11). A share is worth 50 € and
-# an associate subscribes at least 20, paying them in at most 10 monthly
-# instalments; one who leaves is repaid a year after the exit, in three
-# yearly repayments. Later terms are drafted here and adopted by a
-# decision of the assembly that moves to adopt them.
+# The statutes' capital clauses, adopted when the co-op was founded and
+# carried over: a share is worth 50 € and an associate subscribes at least
+# 20, paying them in at most 10 monthly instalments; one who leaves is
+# repaid a year after the exit, in three yearly repayments. How the work
+# share divides is the patronage feat's terms (patronage.toml). Later
+# terms are drafted here and adopted by a decision of the assembly that
+# moves to adopt them.
 [[terms]]
 id = "st-2021"
 from = 2021
-salary = 100
-capital = 50
 share = 5000
 minimum = 20
 instalments = 10
 delay = 12
 repayments = 3
 adopted = 2021-03-01
-
-# The 2025 surplus, split as the statutes require and the law allows (loi
-# n° 78-763, art. 33): the work share divided among the workers by salary,
-# 15 % to the legal reserve, which is under the capital, the rest of the
-# reserves to the development fund, and interest on capital within both.
-# The decision that approved it is the account-decision graft's link; it is
-# allocated, and posted, by the allocate write.
-[[allocation]]
-id = "al-2025"
-year = 2025
-surplus = 6140000
-basis = "salary"
-
-[[allocation.share]]
-kind = "work"
-percent = 45
-amount = 2763000
-
-[[allocation.share]]
-kind = "legal"
-percent = 15
-amount = 921000
-
-[[allocation.share]]
-kind = "development"
-percent = 25
-amount = 1535000
-
-[[allocation.share]]
-kind = "interest"
-percent = 15
-amount = 921000

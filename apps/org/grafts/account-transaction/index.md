@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -51,8 +51,12 @@ power or right and a rule that checks the entry is exactly what they say:
   entry credits no cash account by more than the entry it corrects
   debited it, so a correction returns cash and never pays it out.
 - `account_transaction.allocated`, on `account:surplus:allocate`: the
-  allocation posted one entry, dated the day it was allocated, whose lines
-  are exactly its split.
+  allocation posted one entry, dated the day it was allocated, which
+  posts every line of its split. A write posts one entry, so what a graft
+  above posts in the same write, such as the shares the work share buys,
+  is lines of that entry: they balance among themselves and touch neither
+  the result (`120`) nor a cash account, and the graft that adds them
+  checks they are exactly its own (`004-allocated.sql`).
 - `account_transaction.reserves`, on `account:surplus:allocate`: at least
   15 % of the surplus goes to the legal reserve until the reserve, read
   before this allocation, reaches the highest amount the capital ever

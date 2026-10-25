@@ -68,12 +68,13 @@ export const app: App = {
       view: {
         group: 'finance',
         title: 'Patronage terms',
-        caption: 'The statutes’ terms for the work share: how it divides, and what of it buys shares',
+        caption: 'The statutes’ terms for the work share: how it divides, what of it buys shares, and the most interest capital earns',
         icon: icons.SealCheck,
         columns: [
           { key: 'from', label: 'From', kind: 'title', role: 'title', value: (t: Terms) => String(t.from) },
           { key: 'basis', label: 'Divides', role: 'sub', value: (t: Terms) => `${bases[t.basis]}: ${mix(t)}` },
           { key: 'capital', label: 'In shares %', kind: 'number', role: 'hidden', value: (t: Terms) => t.capital },
+          { key: 'interest', label: 'Interest at most %', kind: 'number', role: 'hidden', value: (t: Terms) => t.interest },
           { key: 'adopted', label: 'Adopted on', kind: 'date', role: 'hidden', value: (t: Terms) => t.adopted },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: adopted, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
         ],
@@ -89,6 +90,7 @@ export const app: App = {
           { label: 'By time worked %', value: t.hours, kind: 'number' },
           { label: 'In equal parts %', value: t.equal, kind: 'number' },
           { label: 'Employed in shares %', value: t.capital, kind: 'number' },
+          { label: 'Interest on capital at most %', value: t.interest, kind: 'number' },
           { label: 'Adopted on', value: t.adopted, kind: 'date' },
         ],
       },

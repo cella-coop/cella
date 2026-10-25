@@ -16,7 +16,7 @@ anyone can replay from the log.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `adopted?` | the statutes' terms for the work share from a year on: the weights, in percent, by which it divides by pay, by time worked and in equal parts, adding up to 100, and the percent of an associate's part that buys shares |
+| terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `interest`, `adopted?` | the statutes' terms for the work share from a year on: the weights, in percent, by which it divides by pay, by time worked and in equal parts, adding up to 100, the percent of an associate's part that buys shares, and the highest rate of interest, in percent, the capital earns; terms with no rate pay none |
 | distribution | `id`, `year`, `surplus`, `basis`, `approved?`, `distributed?` | one per financial year's surplus; `basis` is how the work share divides, as its year's terms say: by `salary`, `hours`, `equal` or a `mix` |
 | share | `kind`, `percent`, `amount` | `work`, `legal` (the legal reserve), `development` (the development fund) or `interest` (on capital); a share of nothing has no row |
 | part | `distribution`, `worker`, `basis`, `quantity`, `amount` | a worker's part of a distribution's work share on one basis: what they were paid (cents), the minutes they worked, or one equal part, and the cents it gave them |
@@ -30,8 +30,14 @@ L3324-5; BOI-BIC-PTP-10-30, § 170 and 280). The work share never divides
 by revenue, which the law does not offer. Employing a part in shares is
 reserved to the associates employed in the co-op (art. R3323-11), and
 what is employed so is blocked five years from the first day of the
-sixth month after the year (art. L3324-10). The fiscal year is the
-calendar year.
+sixth month after the year (art. L3324-10). The interest on capital is
+at most the rate the statutes set, which the law caps at the average of
+the rates of return on private companies' bonds (the TMO) the minister
+published in the three calendar years before the assembly, plus two
+points (loi n° 47-1775 du 10 septembre 1947, art. 14): 5,36 % for an
+assembly in 2026, from the Trésor's six rates published in 2023 to 2025
+(3,14, 3,37, 3,18, 3,26, 3,525 and 3,705 %). The
+fiscal year is the calendar year.
 
 ## Lifecycle
 
@@ -112,9 +118,10 @@ What it does not own:
   parts, `patronage-timesheet`'s by time worked, each the graft that knows
   the basis;
 - that 15 % goes to the legal reserve until it reaches the highest amount
-  the capital ever reached (art. 33, 1°), and the split's entry:
-  `patronage-transaction`'s, since the reserve and the capital are
-  balances of the journal;
+  the capital ever reached (art. 33, 1°), that the interest on capital is
+  at most its terms' rate of the capital (loi n° 47-1775, art. 14), and
+  the split's entry: `patronage-transaction`'s, since the reserve and the
+  capital are balances of the journal;
 - what of a part buys shares and what is paid: `account-membership-patronage`'s,
   and the shares credited to the associates' capital accounts and the
   return to the federation: `account-membership-patronage-transaction`'s.
@@ -126,12 +133,16 @@ or time. Its approval, its parts, its posting and its credits arrive
 through grafts. Paying the cash left owed in `424`, drafting terms or a
 distribution by a write, presence at the year's end and seniority (art.
 33, 3°), and a fiscal year other than the calendar year are not built.
+Nor is the TMO: that the terms' rate is within art. 14's ceiling at each
+assembly that applies them is the members' to adopt, and an assembly
+whose ceiling falls under the terms' rate is not refused.
 
 ## Schema
 
 `patronage` (`core/sql/`):
 
-- `patronage.terms`: the statutes' terms for the work share,
+- `patronage.terms`: the statutes' terms for the work share and the
+  interest on capital (`interest`, added by `005-interest.sql`),
   `stays_adopted` keeping adopted ones as they were; `terms_for(year)`
   names the terms governing a year and `basis_of(terms)` what they divide
   by.
@@ -212,11 +223,13 @@ document.
 ## Lanterne
 
 - The statutes' patronage terms, `st-2021`, carried over, divide the work
-  share by pay and employ half of each associate's part in shares.
+  share by pay, employ half of each associate's part in shares, and pay
+  at most 3,5 % on the capital.
 - The 2025 surplus of 61 400 € is a draft distribution: d-2026-006
   approved its split in June, 27 630 € (45 %) to the members for their
   work, divided by pay, 9 210 € (15 %) to the legal reserve, which is
-  under the capital, 15 350 € (25 %) to the development fund, and 9 210 €
-  (15 %) as interest on capital. Approved citing it, ten parts make
+  under the capital, 24 111,78 € (39,27 %) to the development fund, and
+  448,22 € (0,73 %) as interest on the 13 000 € of capital, 3,45 %, under
+  the 455 € the terms allow. Approved citing it, ten parts make
   27 630,00 €; distributed, they buy 270 shares (13 500 €), blocked until
   1 June 2031, and leave 14 130 € owed in cash.

@@ -42,8 +42,8 @@ test('Lanterne\'s 2025 split adds up and honours the floors', async () => {
   await draft('2025', 2025, 61_400_00, {
     work: [45, 27_630_00],
     legal: [15, 9_210_00],
-    development: [25, 15_350_00],
-    interest: [15, 9_210_00],
+    development: [39.27, 24_111_78],
+    interest: [0.73, 448_22],
   })
   assert.equal(await splits('2025'), null)
 })

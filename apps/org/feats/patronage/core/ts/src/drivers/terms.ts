@@ -2,7 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Terms } from '../models/terms.ts'
 
 const columns = `t.id, t."from", t.salary::float8 AS salary, t.hours::float8 AS hours, t.equal::float8 AS equal,
-  t.capital::float8 AS capital, to_char(t.adopted, 'YYYY-MM-DD') AS adopted, patronage.basis_of(t.id) AS basis`
+  t.capital::float8 AS capital, t.interest::float8 AS interest, to_char(t.adopted, 'YYYY-MM-DD') AS adopted, patronage.basis_of(t.id) AS basis`
 
 // The statutes' terms for the work share, the latest year first, drafts
 // before adopted.

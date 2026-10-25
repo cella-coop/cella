@@ -70,15 +70,38 @@ export class Shell {
 
   async page(path: string, actor?: string) {
     const res = await fetch(`${this.#base}${path}`, { headers: actor ? { cookie: `cella-act=${actor}` } : {} })
-    return { status: res.status, text: await res.text() }
+    return { status: res.status, type: res.headers.get('content-type'), text: await res.text() }
   }
 
   // Posts a page's named action as an enhanced form does, acting as `actor`;
   // a field a form repeats, as a grid's rows, is given as pairs.
   async act(path: string, action: string, fields: Record<string, string> | [string, string][], actor: string): Promise<Done> {
+    return this.#post(path, action, new URLSearchParams(fields), actor)
+  }
+
+  // Posts a page's named action with files, as a form holding a file input
+  // posts it.
+  async upload(
+    path: string,
+    action: string,
+    fields: Record<string, string>,
+    files: Record<string, { name: string; type: string; bytes: Uint8Array }>,
+    actor: string,
+  ): Promise<Done> {
+    const body = new FormData()
+    for (const [k, v] of Object.entries(fields)) {
+      body.append(k, v)
+    }
+    for (const [k, f] of Object.entries(files)) {
+      body.append(k, new Blob([f.bytes as Uint8Array<ArrayBuffer>], { type: f.type }), f.name)
+    }
+    return this.#post(path, action, body, actor)
+  }
+
+  async #post(path: string, action: string, body: URLSearchParams | FormData, actor: string): Promise<Done> {
     const res = await fetch(`${this.#base}${path}?/${action}`, {
       method: 'POST',
-      body: new URLSearchParams(fields),
+      body,
       headers: { origin: this.#base, 'x-forwarded-proto': 'http', 'x-sveltekit-action': 'true', cookie: `cella-act=${actor}` },
     })
     const result = await res.json()

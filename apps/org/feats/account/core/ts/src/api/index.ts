@@ -4,24 +4,18 @@
 import { action, type Slice } from '@cella/org-db'
 import { adopt, close } from '../handlers/index.ts'
 import { account, accounts, period, periods } from '../drivers/account.ts'
-import { allocation, allocations } from '../drivers/allocation.ts'
 import { term, terms } from '../drivers/terms.ts'
-import { statement, statements } from '../drivers/statement.ts'
 import { report, reports } from '../drivers/report.ts'
 
-export { adopt, allocating, close, opening } from '../handlers/index.ts'
+export { adopt, close, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
-export { allocation, allocations } from '../drivers/allocation.ts'
 export { term, terms } from '../drivers/terms.ts'
-export { statement, statements } from '../drivers/statement.ts'
 export { report, reports } from '../drivers/report.ts'
 
-// The chart, the periods, the surplus allocations, the work share's terms,
-// each worker's statement and the spans the financial statements are drawn
-// for; closing a period, which `account.closes` decides and after which
-// nothing posts into it, and adopting terms, which cites the members'
-// decision. Allocating a surplus posts it, so its write
-// is account-transaction's.
+// The chart, the periods, the statutes' capital clauses and the spans the
+// financial statements are drawn for; closing a period, which
+// `account.closes` decides and after which nothing posts into it, and
+// adopting capital clauses, which cites the members' decision.
 export const slice: Slice = {
   name: 'account',
   collections: {
@@ -37,22 +31,12 @@ export const slice: Slice = {
         close: action('account:period:close', (_, id) => ({ month: id ?? '' }), close),
       },
     },
-    allocations: {
-      list: allocations,
-      item: allocation,
-      index: async (db) => (await allocations(db)).map((a) => ({ id: a.id, title: `${a.year} surplus`, sub: a.allocated ? 'allocated' : 'to allocate' })),
-    },
     terms: {
       list: terms,
       item: term,
       actions: {
         adopt: action('account:terms:adopt', (form, id) => ({ terms: id ?? '', decision: form.get('decision') }), adopt),
       },
-    },
-    statements: {
-      list: statements,
-      item: statement,
-      index: async (db) => (await statements(db)).map((s) => ({ id: s.id, title: `${s.year} statement`, sub: s.worker })),
     },
     reports: {
       list: reports,

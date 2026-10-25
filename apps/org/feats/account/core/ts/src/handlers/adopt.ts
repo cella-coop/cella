@@ -5,11 +5,11 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 
 const op = 'account:terms:adopt' satisfies keyof typeof ops
 
-// Adopts drafted terms on the verdict date, citing the members' decision.
-// The rules decide: `account.adopts` that they divide the whole work share
-// and govern no year already allocated, the account-decision graft's that
-// the decision moved to adopt them, and circle-decision-member's that it
-// passed. Adopted terms never change.
+// Adopts drafted capital clauses on the verdict date, citing the members'
+// decision. The rules decide: `account.adopts` that they repay an exit
+// within five years, the account-decision graft's that the decision moved
+// to adopt them, and circle-decision-member's that it passed. Adopted
+// terms never change.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Adopted>> {
   return write(deps, {
     op,

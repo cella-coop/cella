@@ -58,6 +58,8 @@ pub enum Error {
     Personal(String),
     #[error("a sealed value does not open under its key and row")]
     Sealed,
+    #[error("the payload's {0} is not what the member signed")]
+    Restated(String),
 }
 
 pub type Result<T> = std::result::Result<T, Error>;

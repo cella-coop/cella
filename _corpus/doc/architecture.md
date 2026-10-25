@@ -307,11 +307,13 @@ component, and `/[collection]/[id]`, the one detail view, each with the
 form actions of the collection's slices; `/search` for the command menu;
 `/[collection]/[id]/[stream]`, an item's live stream as server-sent
 events, which the collection's owner names (`streams`, such as a
-document's edits as they settle); and `/act` and `/theme` for the user
-menu. A collection's owner is a feat,
+document's edits as they settle); `/act` and `/theme` for the user
+menu; and `/`, the co-op's home, a dashboard of widgets pinned from many
+collections. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
 joins; the root may join two feats no graft joins, as it puts on the
-work collections' cards fields from several grafts. The registry refuses a
+work collections' cards fields from several grafts and pins the home's
+widgets until a viewer pins their own. The registry refuses a
 collection owned twice, an extension of a feat a graft does not join, and
 two extensions replacing one write. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the

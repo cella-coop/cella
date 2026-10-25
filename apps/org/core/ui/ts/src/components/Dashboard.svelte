@@ -6,7 +6,8 @@
   // The one dashboard: each widget's result, computed by the server, as a
   // card. A figure reads as text; a chart's bars carry their values as
   // text beside them, and a line's months and values are in a table for
-  // whoever does not see it, and in each month's tooltip.
+  // whoever does not see it, and in each month's tooltip. On a dashboard
+  // over several collections, each card names the one it runs over.
   let { results, errors = [] }: { results: Result[]; errors?: string[] } = $props()
 
   const show = (v: number | null, f: Format) => (v === null ? '—' : f === 'money' ? money(v) : v.toLocaleString('en-GB'))
@@ -35,6 +36,7 @@
   {#each results as r, i (i)}
     <div class:wide={r.kind === 'chart'}>
       <Card title={r.title}>
+        {#if r.from}<a class="from" href={r.from.href}>{r.from.label}</a>{/if}
         {#if r.kind === 'kpi'}
           <p class="figure">{show(r.value, r.format)}</p>
         {:else if r.points.length === 0}
@@ -93,6 +95,16 @@
   }
   .dashboard > div {
     display: grid;
+  }
+  .from {
+    margin-top: calc(-1 * var(--space-2));
+    font-size: var(--text-xs);
+    color: var(--text-subtle);
+    text-decoration: none;
+  }
+  .from:hover {
+    color: var(--accent-text);
+    text-decoration: underline;
   }
   .figure {
     font-family: var(--font-display);

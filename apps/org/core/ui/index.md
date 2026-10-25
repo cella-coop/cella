@@ -224,6 +224,16 @@ values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
 card, adds, edits, reorders and removes them.
 
+The co-op's home, `Home`, is one dashboard over many collections. Its
+widgets are pins (`Pin`): a standard widget and the collection it runs
+over, checked by `pins` against that collection's fields and run by the
+server over its rows as the acting member sees them; each card names
+its collection and links to it (`from`). The root declares the co-op's
+pins until a viewer makes their own, JSON in the address (`w`) as a
+collection's are. The View card lists them in order, dragged into place
+or removed, and edits one collection's with `Widgets` (`c` in the
+address), `repin` putting them back where the first of them stood.
+
 ## Types
 
 `App`, `Owned`, `Added`, `View`, `Page`, `Column`, `Prop`, `Link`, `Event`,

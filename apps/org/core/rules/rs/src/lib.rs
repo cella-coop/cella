@@ -36,6 +36,8 @@ pub enum Error {
     Misplaced { stance: Stance, rule: &'static str },
     #[error("{member} has two stances at receipt {receipt}")]
     Conflict { member: String, receipt: i64 },
+    #[error("a share of the votes is more than none and at most all of them, got {num}/{den}")]
+    Share { num: i64, den: i64 },
     #[error("allocation needs at least one positive weight")]
     NoWeight,
     #[error("a weight must not be negative, got {0}")]

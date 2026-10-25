@@ -12,6 +12,7 @@
 //! | `cella.document_canonical(bytea)`, `cella.document_hash(bytea)`, `cella.document_text(bytea)` | functions | `document::canonical`, `document::hash`, `document::plain`, over a Loro snapshot |
 //! | `cella.consent(member, stance, receipt)` | aggregate | `Tally::consent` |
 //! | `cella.majority(member, stance, receipt)` | aggregate | `Tally::majority` |
+//! | `cella.share(member, stance, receipt, num, den)` | aggregate | `Tally::share` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
 //! | `cella.receipt()` | function | the transaction's receipt number |
 //! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
@@ -194,6 +195,51 @@ impl Aggregate<Majority> for Majority {
     #[pgrx(immutable, parallel_safe)]
     fn finalize(current: Self::State, _: Self::OrderedSetArgs, _: pg_sys::FunctionCallInfo) -> Self::Finalize {
         current.tally().majority().unwrap_or_else(|e| refuse(&e))
+    }
+}
+
+// A share of the votes cast, the fraction given with each row: the
+// procedure's, the same on every row of a decision. With no rows no one
+// is for, so the fold fails before the fraction is needed.
+#[derive(Clone, Default, Debug, Serialize, Deserialize, PostgresType)]
+pub struct Shares {
+    votes: Votes,
+    of: Option<(i64, i64)>,
+}
+
+#[derive(AggregateName)]
+#[aggregate_name = "share"]
+pub struct Share;
+
+#[pg_aggregate]
+impl Aggregate<Share> for Share {
+    type State = Shares;
+    type Args = (
+        name!(member, String),
+        name!(stance, String),
+        name!(receipt, i64),
+        name!(num, i64),
+        name!(den, i64),
+    );
+    type Finalize = bool;
+    const INITIAL_CONDITION: Option<&'static str> = Some(r#"{"votes":{"rows":[]},"of":null}"#);
+
+    #[pgrx(immutable, parallel_safe)]
+    fn state(mut current: Self::State, (member, stance, receipt, num, den): Self::Args, _: pg_sys::FunctionCallInfo) -> Self::State {
+        if current.of.is_some_and(|of| of != (num, den)) {
+            ereport!(ERROR, PgSqlErrorCode::ERRCODE_DATA_EXCEPTION, "a share of the votes is one fraction for every stance");
+        }
+        current.of = Some((num, den));
+        current.votes.rows.push((member, stance, receipt));
+        current
+    }
+
+    #[pgrx(immutable, parallel_safe)]
+    fn finalize(current: Self::State, _: Self::OrderedSetArgs, _: pg_sys::FunctionCallInfo) -> Self::Finalize {
+        match current.of {
+            Some((num, den)) => current.votes.tally().share(num, den).unwrap_or_else(|e| refuse(&e)),
+            None => false,
+        }
     }
 }
 

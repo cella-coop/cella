@@ -15,7 +15,7 @@ The notary is the scope's office for every write, and a layer under every feat r
 | `cella.amount(bigint)`, `cella.cents(amount)`, `cella.allocate(amount, bigint[])` | construct, unwrap, split exactly by weights |
 | `cella.digest(text)`, `cella.digest(bytea)` | the plain BLAKE3 of the text's UTF-8 bytes or of the bytes, as `b3sum` computes it; immutable, so a generated column may hold it |
 | `cella.document_canonical(bytea)`, `cella.document_hash(bytea)`, `cella.document_text(bytea)` | a Loro snapshot's canonical JSON, its BLAKE3 and its plain text (`cella_rules::document`); immutable, so a document version's generated columns hold them; a snapshot with no canonical form raises SQLSTATE `22000` |
-| `cella.consent(member, stance, receipt)`, `cella.majority(…)` | aggregates; each member's highest-receipt stance counts, so they take no `ORDER BY` |
+| `cella.consent(member, stance, receipt)`, `cella.majority(…)`, `cella.share(member, stance, receipt, num, den)` | aggregates; each member's highest-receipt stance counts, so they take no `ORDER BY`; `share` passes when at least `num` in every `den` of the stances for and against are for |
 | `cella.verdict_date()` | the transaction's verdict date, fixed at first use and recorded by `submit` |
 | `cella.receipt()` | the transaction's receipt number: one write, one receipt, taken at first use from a sequence; a rolled-back write leaves a gap here, never in the log |
 | `cella.submit(op, payload, actor, signed)` | checks the member's signature, the device and the nonce, runs the op's rules, signs the receipt and appends a numbered, signed entry; returns `(verdict, state, reason)` |

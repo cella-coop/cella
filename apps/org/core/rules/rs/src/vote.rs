@@ -107,6 +107,19 @@ impl Tally {
         self.only("majority", &[Stance::For, Stance::Against, Stance::Abstain])?;
         Ok(self.count(Stance::For) > self.count(Stance::Against))
     }
+
+    /// Passes when someone is for and at least `num` in every `den` of the
+    /// stances for and against are for, as two thirds of the votes cast do;
+    /// abstentions count for neither.
+    pub fn share(&self, num: i64, den: i64) -> Result<bool> {
+        self.only("a share of the votes", &[Stance::For, Stance::Against, Stance::Abstain])?;
+        if num <= 0 || den < num {
+            return Err(Error::Share { num, den });
+        }
+        let yes = i128::try_from(self.count(Stance::For)).map_err(|_| Error::Overflow)?;
+        let no = i128::try_from(self.count(Stance::Against)).map_err(|_| Error::Overflow)?;
+        Ok(yes > 0 && yes * i128::from(den) >= i128::from(num) * (yes + no))
+    }
 }
 
 #[cfg(test)]
@@ -178,6 +191,43 @@ mod tests {
         assert_eq!(Tally::default().consent(), Ok(false));
         assert_eq!(tally(&[("a", "abstain")]).consent(), Ok(false));
         assert_eq!(tally(&[("a", "for"), ("b", "against")]).majority(), Ok(false));
+    }
+
+    // Two thirds of the votes cast: six for and three against carry it, at
+    // least two in three; six for and four against do not, though more are
+    // for than against.
+    #[test]
+    fn two_thirds() {
+        let mut votes = vec!["for"; 6];
+        votes.extend(["against"; 3]);
+        votes.push("abstain");
+        let mut t = Tally::default();
+        for (i, s) in (1..).zip(&votes) {
+            t.record(&format!("m{i}"), s, i).unwrap();
+        }
+        assert_eq!(t.share(2, 3), Ok(true));
+        t.record("m10", "against", 11).unwrap();
+        assert_eq!(t.share(2, 3), Ok(false));
+        assert_eq!(t.majority(), Ok(true));
+        t.record("m10", "abstain", 12).unwrap();
+        assert_eq!(t.share(2, 3), Ok(true));
+    }
+
+    #[test]
+    fn a_share_needs_someone_for() {
+        assert_eq!(Tally::default().share(2, 3), Ok(false));
+        assert_eq!(tally(&[("a", "abstain")]).share(1, 2), Ok(false));
+        assert_eq!(tally(&[("a", "for"), ("b", "against")]).share(1, 2), Ok(true));
+        assert_eq!(tally(&[("a", "for"), ("b", "against")]).share(1, 1), Ok(false));
+        assert_eq!(tally(&[("a", "for"), ("b", "abstain")]).share(1, 1), Ok(true));
+    }
+
+    #[test]
+    fn a_share_is_more_than_none_and_at_most_all() {
+        let t = tally(&[("a", "for")]);
+        assert_eq!(t.share(0, 3), Err(Error::Share { num: 0, den: 3 }));
+        assert_eq!(t.share(4, 3), Err(Error::Share { num: 4, den: 3 }));
+        assert!(tally(&[("a", "consent")]).share(2, 3).is_err());
     }
 
     #[test]

@@ -38,7 +38,8 @@ change once it is approved.
 Preparing needs the approved time, which is the `payslip-timesheet`
 graft's, and approving and paying post, which is `payslip-transaction`'s:
 their writes serve these ops over this feat's `generating`, `approving`
-and `paying` specs.
+and `paying` specs. Who a run waits on, the holders of `approve-payroll`
+and then of `pay-payroll`, is `circle-member-payslip`'s, in their inbox.
 
 ## Powers
 

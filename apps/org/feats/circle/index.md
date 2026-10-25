@@ -163,7 +163,8 @@ writes propose, and the close of a passing decision carries them out.
 - `circle-member`: seats, and who may use a power.
 - `circle-decision`: nesting and mandates by decision.
 - `circle-member-project`, `circle-member-timesheet`: a power reaches the
-  circle it is held in and those within it, for projects and timesheets.
+  circle it is held in and those within it, for projects and timesheets;
+  the months waiting on a member's approval, in their inbox.
 
 ## Lanterne
 

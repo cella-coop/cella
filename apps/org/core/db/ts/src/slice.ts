@@ -1,5 +1,6 @@
 import type { Pending, Permission, Refused, Settled } from '@cella/org-ops'
 import type { Db, Deps } from './index.ts'
+import type { Read } from './read.ts'
 
 // What one write did, as the shell shows it: the op, its outcome, and the
 // writes that reacted to it, such as the admissions a passing close makes.
@@ -122,10 +123,13 @@ export interface Content extends Upload {
 }
 
 // A collection a feat owns: its rows, one item, the items the command menu
-// lists, and the writes its pages make. Its rows may be the acting
-// member's, as what waits on them: `actor` is their address, or null.
+// lists, and the writes its pages make. Its rows are a select the shell
+// composes with its extensions' and pages in SQL; they may be the acting
+// member's, as what waits on them, by `cella.reader()`. A collection that
+// only gathers rows from the slices that know each kind has none of its
+// own.
 export interface Collection {
-  list(db: Db, actor: string | null): Promise<{ id: string }[]>
+  list?: Read
   // What the collection's header says about it as a whole, such as
   // whether the log verifies, and what its New form offers, which may be
   // the acting member's, as their week of time.
@@ -146,10 +150,13 @@ export interface Collection {
 // An item's data may depend on who looks: `actor` is the acting member's
 // address, or null.
 export interface Extension {
-  list?(db: Db): Promise<Record<string, object>>
+  // A select of `id` and the fields it adds to the row of that id, which
+  // the shell joins to the owner's rows once.
+  list?: string
   // Rows it adds to a collection that gathers them from the slices that
-  // know each kind, as what waits on the acting member: each its own id.
-  rows?(db: Db, actor: string | null): Promise<{ id: string }[]>
+  // know each kind, as what waits on the acting member (`cella.reader()`):
+  // each its own id.
+  rows?: Read
   // What it adds to the collection's `about`, merged over the owner's,
   // such as the circles a new decision may be put in, or the acting
   // member's week of time.

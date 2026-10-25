@@ -57,7 +57,7 @@ test('Camille tries the members\' list in a dry run, then imports it: Nadia and 
   const file = { name: 'members.csv', type: 'text/csv', bytes: sample('members.csv') }
   const dry = await shell.upload('/imports', 'run', { kind: 'members', mode: 'dry' }, { file }, camille)
   assert.equal(dry.state, 'settled', dry.reason)
-  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM member.member WHERE address IN ('nadia@lanterne.example', 'olivier@lanterne.example')`)).n, 0)
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM membership.member WHERE address IN ('nadia@lanterne.example', 'olivier@lanterne.example')`)).n, 0)
   const tried = await one<{ id: string; dry: boolean; settled: number; refused: number }>(`SELECT id, dry, settled, refused FROM import.run ORDER BY id DESC LIMIT 1`)
   assert.deepEqual({ dry: tried.dry, settled: tried.settled, refused: tried.refused }, { dry: true, settled: 2, refused: 1 })
   const page = await shell.page(`/imports/${tried.id}`, camille)
@@ -66,9 +66,9 @@ test('Camille tries the members\' list in a dry run, then imports it: Nadia and 
 
   const real = await shell.upload('/imports', 'run', { kind: 'members', mode: 'import' }, { file }, camille)
   assert.equal(real.state, 'settled', real.reason)
-  const invited = await all<{ address: string; status: string }>(`SELECT address, status FROM member.member WHERE address LIKE '%@lanterne.example' AND address IN ('nadia@lanterne.example', 'olivier@lanterne.example', 'rose@lanterne.example') ORDER BY address`)
+  const invited = await all<{ address: string; status: string }>(`SELECT address, status FROM membership.member WHERE address LIKE '%@lanterne.example' AND address IN ('nadia@lanterne.example', 'olivier@lanterne.example', 'rose@lanterne.example') ORDER BY address`)
   assert.deepEqual(invited, [{ address: 'nadia@lanterne.example', status: 'invited' }, { address: 'olivier@lanterne.example', status: 'invited' }])
-  const carried = await one<{ n: number }>(`SELECT count(*)::int AS n FROM key_member.invitation WHERE member IN ('nadia@lanterne.example', 'olivier@lanterne.example')`)
+  const carried = await one<{ n: number }>(`SELECT count(*)::int AS n FROM membership.invitation WHERE member IN ('nadia@lanterne.example', 'olivier@lanterne.example')`)
   assert.equal(carried.n, 2, 'each invitation carries its first device')
 })
 

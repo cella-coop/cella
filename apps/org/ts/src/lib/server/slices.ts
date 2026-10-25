@@ -1,8 +1,8 @@
 import type { Action, Collection, Db, Extension, Reaction, Slice } from '@cella/org-db'
 import type { Permission } from '@cella/org-ops'
 import { slice as log } from '@cella/org-log/api'
-import { slice as key } from '@cella/org-key/api'
-import { slice as member } from '@cella/org-member/api'
+import { slice as person } from '@cella/org-person/api'
+import { slice as membership } from '@cella/org-membership/api'
 import { slice as circle } from '@cella/org-circle/api'
 import { slice as decision } from '@cella/org-decision/api'
 import { slice as document } from '@cella/org-document/api'
@@ -14,64 +14,60 @@ import { slice as transaction } from '@cella/org-transaction/api'
 import { slice as project } from '@cella/org-project/api'
 import { slice as task } from '@cella/org-task/api'
 import { slice as timesheet } from '@cella/org-timesheet/api'
-import { slice as worker } from '@cella/org-worker/api'
+import { slice as employment } from '@cella/org-employment/api'
 import { slice as file } from '@cella/org-file/api'
 import { slice as imports } from '@cella/org-import/api'
-import { slice as circleMember } from '@cella/org-graft-circle-member/api'
+import { slice as circleMembership } from '@cella/org-graft-circle-membership/api'
 import { slice as circleDecision } from '@cella/org-graft-circle-decision/api'
-import { slice as keyMember } from '@cella/org-graft-key-member/api'
-import { slice as circleDecisionMember } from '@cella/org-graft-circle-decision-member/api'
-import { slice as decisionMember } from '@cella/org-graft-decision-member/api'
+import { slice as circleDecisionMembership } from '@cella/org-graft-circle-decision-membership/api'
+import { slice as decisionMembership } from '@cella/org-graft-decision-membership/api'
 import { slice as decisionDocument } from '@cella/org-graft-decision-document/api'
 import { slice as clientInvoice } from '@cella/org-graft-client-invoice/api'
 import { slice as invoiceTransaction } from '@cella/org-graft-invoice-transaction/api'
 import { slice as accountTransaction } from '@cella/org-graft-account-transaction/api'
 import { slice as clientProject } from '@cella/org-graft-client-project/api'
 import { slice as invoiceProject } from '@cella/org-graft-invoice-project/api'
-import { slice as memberProject } from '@cella/org-graft-member-project/api'
-import { slice as memberTask } from '@cella/org-graft-member-task/api'
-import { slice as memberTimesheet } from '@cella/org-graft-member-timesheet/api'
+import { slice as membershipProject } from '@cella/org-graft-membership-project/api'
+import { slice as membershipTask } from '@cella/org-graft-membership-task/api'
 import { slice as projectTask } from '@cella/org-graft-project-task/api'
 import { slice as projectTimesheet } from '@cella/org-graft-project-timesheet/api'
 import { slice as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/api'
 import { slice as expense } from '@cella/org-expense/api'
 import { slice as payslip } from '@cella/org-payslip/api'
 import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
-import { slice as accountMember } from '@cella/org-graft-account-member/api'
-import { slice as accountMemberTransaction } from '@cella/org-graft-account-member-transaction/api'
-import { slice as accountMemberPayslipTransaction } from '@cella/org-graft-account-member-payslip-transaction/api'
-import { slice as accountMemberPatronage } from '@cella/org-graft-account-member-patronage/api'
-import { slice as accountMemberPatronageTransaction } from '@cella/org-graft-account-member-patronage-transaction/api'
+import { slice as accountMembership } from '@cella/org-graft-account-membership/api'
+import { slice as accountMembershipTransaction } from '@cella/org-graft-account-membership-transaction/api'
+import { slice as accountMembershipPayslipTransaction } from '@cella/org-graft-account-membership-payslip-transaction/api'
+import { slice as accountMembershipPatronage } from '@cella/org-graft-account-membership-patronage/api'
+import { slice as accountMembershipPatronageTransaction } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { slice as decisionPatronage } from '@cella/org-graft-decision-patronage/api'
 import { slice as patronagePayslip } from '@cella/org-graft-patronage-payslip/api'
 import { slice as patronageTimesheet } from '@cella/org-graft-patronage-timesheet/api'
 import { slice as patronageTransaction } from '@cella/org-graft-patronage-transaction/api'
-import { slice as expenseMember } from '@cella/org-graft-expense-member/api'
+import { slice as expenseMembership } from '@cella/org-graft-expense-membership/api'
 import { slice as expenseProject } from '@cella/org-graft-expense-project/api'
 import { slice as expenseTransaction } from '@cella/org-graft-expense-transaction/api'
-import { slice as memberPayslip } from '@cella/org-graft-member-payslip/api'
 import { slice as payslipTimesheet } from '@cella/org-graft-payslip-timesheet/api'
 import { slice as payslipTransaction } from '@cella/org-graft-payslip-transaction/api'
 import { slice as meeting } from '@cella/org-meeting/api'
 import { slice as circleMeeting } from '@cella/org-graft-circle-meeting/api'
-import { slice as circleMeetingMember } from '@cella/org-graft-circle-meeting-member/api'
+import { slice as circleMeetingMembership } from '@cella/org-graft-circle-meeting-membership/api'
 import { slice as decisionMeeting } from '@cella/org-graft-decision-meeting/api'
 import { slice as documentMeeting } from '@cella/org-graft-document-meeting/api'
-import { slice as meetingMember } from '@cella/org-graft-meeting-member/api'
-import { slice as decisionMemberWorker } from '@cella/org-graft-decision-member-worker/api'
-import { slice as documentMember } from '@cella/org-graft-document-member/api'
-import { slice as keyWorker } from '@cella/org-graft-key-worker/api'
-import { slice as memberWorker } from '@cella/org-graft-member-worker/api'
-import { slice as payslipWorker } from '@cella/org-graft-payslip-worker/api'
-import { slice as timesheetWorker } from '@cella/org-graft-timesheet-worker/api'
-import { slice as circleMemberTimesheet } from '@cella/org-graft-circle-member-timesheet/api'
-import { slice as circleExpenseMember } from '@cella/org-graft-circle-expense-member/api'
-import { slice as circleMemberPayslip } from '@cella/org-graft-circle-member-payslip/api'
-import { slice as projectTimesheetWorker } from '@cella/org-graft-project-timesheet-worker/api'
-import { slice as fileWorker } from '@cella/org-graft-file-worker/api'
-import { slice as fileMember } from '@cella/org-graft-file-member/api'
+import { slice as meetingMembership } from '@cella/org-graft-meeting-membership/api'
+import { slice as decisionEmploymentMembership } from '@cella/org-graft-decision-employment-membership/api'
+import { slice as documentMembership } from '@cella/org-graft-document-membership/api'
+import { slice as employmentMembership } from '@cella/org-graft-employment-membership/api'
+import { slice as employmentPayslip } from '@cella/org-graft-employment-payslip/api'
+import { slice as employmentTimesheet } from '@cella/org-graft-employment-timesheet/api'
+import { slice as circleMembershipTimesheet } from '@cella/org-graft-circle-membership-timesheet/api'
+import { slice as circleExpenseMembership } from '@cella/org-graft-circle-expense-membership/api'
+import { slice as circleMembershipPayslip } from '@cella/org-graft-circle-membership-payslip/api'
+import { slice as employmentProjectTimesheet } from '@cella/org-graft-employment-project-timesheet/api'
+import { slice as employmentFile } from '@cella/org-graft-employment-file/api'
+import { slice as fileMembership } from '@cella/org-graft-file-membership/api'
 import { slice as expenseFile } from '@cella/org-graft-expense-file/api'
-import { slice as circleFileMember } from '@cella/org-graft-circle-file-member/api'
+import { slice as circleFileMembership } from '@cella/org-graft-circle-file-membership/api'
 import { kinds, run } from './import.ts'
 
 // The server sides the shell mounts: each feat's collections, each graft's
@@ -90,7 +86,8 @@ const root: Slice = {
 }
 
 export const slices: Slice[] = [
-  member,
+  person,
+  membership,
   circle,
   decision,
   document,
@@ -99,7 +96,7 @@ export const slices: Slice[] = [
   project,
   task,
   timesheet,
-  worker,
+  employment,
   file,
   imports,
   invoice,
@@ -108,60 +105,55 @@ export const slices: Slice[] = [
   transaction,
   expense,
   payslip,
-  key,
   log,
-  circleMember,
+  circleMembership,
   circleDecision,
-  circleDecisionMember,
-  decisionMember,
-  keyMember,
+  circleDecisionMembership,
+  decisionMembership,
   decisionDocument,
   clientInvoice,
   clientProject,
   invoiceProject,
-  memberProject,
-  memberTask,
-  memberTimesheet,
+  membershipProject,
+  membershipTask,
   projectTask,
   projectTimesheet,
   expenseInvoiceProjectTimesheet,
   invoiceTransaction,
   accountTransaction,
   accountDecision,
-  accountMember,
-  accountMemberTransaction,
-  accountMemberPayslipTransaction,
-  accountMemberPatronageTransaction,
-  accountMemberPatronage,
+  accountMembership,
+  accountMembershipTransaction,
+  accountMembershipPayslipTransaction,
+  accountMembershipPatronageTransaction,
+  accountMembershipPatronage,
   decisionPatronage,
   patronageTransaction,
   patronagePayslip,
   patronageTimesheet,
-  expenseMember,
+  expenseMembership,
   expenseProject,
   expenseTransaction,
-  memberPayslip,
   payslipTimesheet,
   payslipTransaction,
   circleMeeting,
   decisionMeeting,
   documentMeeting,
-  meetingMember,
-  circleMeetingMember,
-  keyWorker,
-  memberWorker,
-  payslipWorker,
-  timesheetWorker,
-  documentMember,
-  decisionMemberWorker,
-  circleMemberTimesheet,
-  circleExpenseMember,
-  circleMemberPayslip,
-  projectTimesheetWorker,
-  fileWorker,
-  fileMember,
+  meetingMembership,
+  circleMeetingMembership,
+  employmentMembership,
+  employmentPayslip,
+  employmentTimesheet,
+  documentMembership,
+  decisionEmploymentMembership,
+  circleMembershipTimesheet,
+  circleExpenseMembership,
+  circleMembershipPayslip,
+  employmentProjectTimesheet,
+  employmentFile,
+  fileMembership,
   expenseFile,
-  circleFileMember,
+  circleFileMembership,
   root,
 ]
 
@@ -181,15 +173,22 @@ for (const s of slices) {
   }
 }
 
-// A graft extends only the collections of the feats it joins; the root
-// may join any.
+// A graft extends only the collections of the feats it joins and of the
+// feats they nest in, and a nested feat those of the feats it nests in;
+// the root may join any.
+const within = new Map(slices.flatMap((s) => (s.within ? [[s.name, s.within] as const] : [])))
+const outer = (feat: string): string[] => {
+  const up = within.get(feat)
+  return up ? [up, ...outer(up)] : []
+}
 for (const s of slices) {
   for (const [name, extension] of Object.entries(s.extends ?? {})) {
     const mounted = collections.get(name)
     if (!mounted) {
       throw new Error(`${s.name} extends ${name}, which no slice owns`)
     }
-    if (s !== root && !s.name.split('-').includes(mounted.owner.name)) {
+    const reach = s.name.split('-').flatMap((f) => [f, ...outer(f)])
+    if (s !== root && !reach.includes(mounted.owner.name)) {
       throw new Error(`${s.name} extends ${name}, ${mounted.owner.name}'s, which it does not join`)
     }
     for (const write of Object.keys(extension.actions ?? {})) {

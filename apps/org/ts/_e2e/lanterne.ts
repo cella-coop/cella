@@ -1,4 +1,4 @@
-// Lanterne's members' devices, as their clients hold them: TEST-ONLY keys
+// Lanterne's people's devices, as their clients hold them: TEST-ONLY keys
 // derived from each device's address and label, the same the seed enrols.
 
 import { readFileSync } from 'node:fs'
@@ -10,7 +10,7 @@ const toml = <T>(file: string) => parse(readFileSync(new URL(file, dir), 'utf8')
 
 export const scope = toml<{ address: string }>('scope.toml').address
 
-const devices = toml<{ device: { address: string; label: string; revoked?: unknown }[] }>('key.toml').device
+const devices = toml<{ device: { address: string; label: string; revoked?: unknown }[] }>('person.toml').device
 const held = new Map<string, Promise<Device>>()
 
 // A member's device: by its label, or their first one not revoked.

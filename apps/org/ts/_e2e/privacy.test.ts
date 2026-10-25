@@ -10,10 +10,10 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-decision/api'
-import { carried, close, put } from '@cella/org-graft-circle-decision-member/api'
+import { carried, close, put } from '@cella/org-graft-circle-decision-membership/api'
 import { erase as eraseClient, update } from '@cella/org-client/api'
 import { capture } from '@cella/org-expense/api'
-import { forget, profile } from '@cella/org-member/api'
+import { forget, profile } from '@cella/org-person/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -52,7 +52,7 @@ async function decided(kind: 'exit' | 'erase', from: string, until: string) {
   await on(from)
   const proposed = settled(await put({ kind, args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { decision: string }
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_decision_member.roll r JOIN member.member m ON m.address = r.member
+    `SELECT r.member FROM circle_decision_membership.roll r JOIN membership.member m ON m.address = r.member
      WHERE r.decision = $1 AND m.status = 'active'`,
     [proposed.decision],
   )
@@ -92,12 +92,12 @@ test('erasure wins: a later update of Margaux\'s email is refused', async () => 
 })
 
 test('Léa gives her email and phone, which the log commits to and the vault opens; then she erases them herself', async () => {
-  const given = settled(await profile({ member: lea, email: 'lea@bernard.example', phone: '+33 7 00 00 00 01' }, as(lea)))
+  const given = settled(await profile({ person: lea, email: 'lea@bernard.example', phone: '+33 7 00 00 00 01' }, as(lea)))
   const opened1 = await opened(given.entry)
   assert.deepEqual([opened1.values.email, opened1.values.phone], ['lea@bernard.example', '+33 7 00 00 00 01'])
-  assert.match(reason(await forget({ member: lea }, as(camille))), /camille@lanterne\.example may not erase lea@lanterne\.example's contact details/)
-  settled(await forget({ member: lea }, as(lea)))
-  assert.deepEqual(await one('SELECT name, email, phone FROM member.member WHERE address = $1', [lea]), { name: 'Léa Bernard', email: 'redacted', phone: 'redacted' })
+  assert.match(reason(await forget({ person: lea }, as(camille))), /camille@lanterne\.example may not erase lea@lanterne\.example's contact details/)
+  settled(await forget({ person: lea }, as(lea)))
+  assert.deepEqual(await one('SELECT name, email, phone FROM person.person WHERE address = $1', [lea]), { name: 'Léa Bernard', email: 'redacted', phone: 'redacted' })
   const opened2 = await opened(given.entry)
   assert.deepEqual([opened2.values.email, opened2.values.phone], ['redacted', 'redacted'])
   assert.equal(await verifies(), true)
@@ -117,14 +117,14 @@ test('Chloé claims a receipt, which the log commits to, and leaves by the assem
   receipt = claimed.entry
   assert.equal((await opened(receipt)).label, 'Taxi to the Mauve première')
   const exit = await decided('exit', '2026-10-24', '2026-11-07')
-  assert.deepEqual(exit.map((d) => [d.op, d.state]), [['member:member:exit', 'settled']])
+  assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exit', 'settled']])
 })
 
 test('the assembly erases Chloé: her name at once; her payslips, receipts and capital account kept, restricted', async () => {
   const done = await decided('erase', '2026-11-08', '2026-11-22')
-  assert.deepEqual(done.map((d) => [d.op, d.state]), [['member:member:erase', 'settled']])
-  assert.equal((await one<{ name: string }>('SELECT name FROM member.member WHERE address = $1', [chloe])).name, 'redacted')
-  assert.deepEqual(await erased(chloe), { books: true, contact: false, 'expense-receipt': true, 'member-profile': false, payroll: true })
+  assert.deepEqual(done.map((d) => [d.op, d.state]), [['membership:member:erase', 'settled']])
+  assert.equal((await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [chloe])).name, 'redacted')
+  assert.deepEqual(await erased(chloe), { books: true, contact: false, 'expense-receipt': true, profile: false, payroll: true })
   // Kept, as the law requires, and no longer opened to readers.
   assert.ok(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n) > 0)
   assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'Taxi to the Mauve première')
@@ -147,7 +147,7 @@ test('the sweep redacts what the law kept once its clock runs out: payroll after
   assert.equal((await one<{ label: string }>(`SELECT label FROM account.account WHERE holder = $1`, [chloe])).label, 'redacted')
   assert.equal((await opened(receipt)).label, 'redacted')
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM vault.key WHERE subject = $1`, [chloe])).n), 0)
-  assert.deepEqual(await erased(chloe), { books: false, contact: false, 'expense-receipt': false, 'member-profile': false, payroll: false })
+  assert.deepEqual(await erased(chloe), { books: false, contact: false, 'expense-receipt': false, profile: false, payroll: false })
   await su.query('RESET cella.clock')
 })
 

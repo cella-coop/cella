@@ -166,7 +166,7 @@ pub enum Test {
     Tools,
     /// Each slice's own tests, or one slice's, on a database holding only its part of the tree; needs the dev cluster
     Slice {
-        /// A feat or graft, such as transaction or circle-member
+        /// A feat or graft, such as transaction or circle-membership
         name: Option<String>,
     },
     /// The scenarios across slices on a seeded Lanterne, or one by name; needs the dev cluster

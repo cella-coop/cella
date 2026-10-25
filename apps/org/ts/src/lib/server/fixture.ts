@@ -1,5 +1,5 @@
 import type { Db, Deps } from '@cella/org-db'
-import { devices } from '@cella/org-key/api'
+import { devices } from '@cella/org-person/api'
 import { scope } from '@cella/org-log/api'
 import { fixture, signer, type Device } from '@cella/org-sign'
 

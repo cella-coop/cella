@@ -16,10 +16,10 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { procedures, propose, vote } from '@cella/org-decision/api'
 import { terms } from '@cella/org-decision/models'
-import { weeks } from '@cella/org-graft-project-timesheet-worker/api'
-import { close } from '@cella/org-graft-circle-decision-member/api'
+import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
 import { book } from '@cella/org-graft-project-timesheet/api'
-import { submit } from '@cella/org-graft-timesheet-worker/api'
+import { submit } from '@cella/org-graft-employment-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
@@ -51,8 +51,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
-const turnout = async (d: string) => one('SELECT counted, given, quorate FROM circle_decision_member.turnout($1)', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
+const turnout = async (d: string) => one('SELECT counted, given, quorate FROM circle_decision_membership.turnout($1)', [d])
 // A page as text, its tags gone.
 const read = async (path: string, actor?: string) => {
   const { status, text } = await shell.page(path, actor)
@@ -242,7 +242,7 @@ test('Inès logs her week in the grid, booking hours to a project where the mand
   assert.equal(logged.state, 'settled', reason(logged))
   assert.deepEqual(
     [logged.op, ...logged.then.map((t) => t.op)],
-    ['timesheet-worker:entry:log', 'project-timesheet-worker:entry:book'],
+    ['employment-timesheet:entry:log', 'employment-project-timesheet:entry:book'],
   )
   const entries = await all(
     `SELECT to_char(e.day, 'YYYY-MM-DD') AS day, e.minutes, e.billable, b.project

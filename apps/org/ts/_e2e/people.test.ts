@@ -14,12 +14,11 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close } from '@cella/org-graft-circle-decision-member/api'
-import { hire } from '@cella/org-graft-key-worker/api'
-import { invite } from '@cella/org-graft-key-member/api'
-import { open } from '@cella/org-graft-member-worker/api'
-import { log as work, submit } from '@cella/org-graft-timesheet-worker/api'
-import { hiring } from '@cella/org-worker/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { invite } from '@cella/org-membership/api'
+import { open } from '@cella/org-graft-employment-membership/api'
+import { log as work, submit } from '@cella/org-graft-employment-timesheet/api'
+import { hire, hiring } from '@cella/org-employment/api'
 import { approve, log } from '@cella/org-timesheet/api'
 import { write, type Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
@@ -59,7 +58,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 // A tab of a member's page, as text, its tags gone.
 const tab = async (member: string, name: string, actor?: string) => {
-  const { status, text } = await shell.page(`/members/${member}?tab=${name}`, actor)
+  const { status, text } = await shell.page(`/people/${member}?tab=${name}`, actor)
   assert.equal(status, 200)
   return text.replace(/<[^>]+>/g, ' ').replace(/&#39;|&rsquo;|’/g, "'").replace(/\s+/g, ' ')
 }
@@ -77,16 +76,17 @@ after(async () => {
 
 test('every worker has a contract, the members who work and Inès, who is employed but no member', async () => {
   const rows = await all<{ address: string; stage: string }>(
-    `SELECT w.address, p.stage FROM worker.worker w JOIN member_worker.path p ON p.address = w.address ORDER BY w.address`,
+    `SELECT w.address, p.stage FROM employment.worker w JOIN employment_membership.path p ON p.address = w.address ORDER BY w.address`,
   )
   assert.equal(rows.length, 12)
   assert.deepEqual(rows.filter((r) => r.stage !== 'member'), [
     { address: ines, stage: 'invited' },
     { address: 'paul@lanterne.example', stage: 'gone' },
   ])
-  const { text } = await shell.page('/workers')
-  for (const says of ['Workers', 'Inès Haddad', 'junior developer', 'invited']) {
-    assert.ok(text.includes(says), `the workers say ${says}`)
+  const { text } = await shell.page('/people')
+  // Her chips: a worker, and invited to be a member.
+  for (const says of ['People', 'Inès Haddad', 'worker', 'invited']) {
+    assert.ok(text.includes(says), `the people say ${says}`)
   }
 })
 
@@ -99,8 +99,8 @@ test('Inès logs her own time by her employment, where the log-time mandate refu
   assert.match(reason(early), /ines@lanterne\.example is not employed on 2025-08-29/)
   const forHer = await work({ member: ines, day: '2026-10-24', minutes: 60, billable: false }, as(thomas))
   assert.match(reason(forHer), /thomas@lanterne\.example may not log time for ines@lanterne\.example/)
-  const shown = await shell.page('/workers/ines@lanterne.example', ines)
-  assert.ok(shown.text.includes('Timesheets') && shown.text.includes('2026-10'), 'her worker page lists her months')
+  const shown = await shell.page('/people/ines@lanterne.example', ines)
+  assert.ok(shown.text.includes('Timesheets') && shown.text.includes('2026-10'), 'her page lists her months')
 })
 
 test('a hire needs the manager\'s power and carries a first device; Camille hires Bastien, who signs from his first day', async () => {
@@ -116,11 +116,14 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
   }
   const byHugo = await hire({ ...contract, key: laptop.key, label: 'laptop' }, as(hugo))
   assert.match(reason(byHugo), /hugo@lanterne\.example holds no mandate for hire-worker/)
-  const bare = await write(as(camille), hiring(contract))
-  assert.match(reason(bare), /bastien@lanterne\.example is hired with no first device/)
+  // A hire whose payload names another key than the device it enrolled.
+  const other = await fixture(bastien, 'phone')
+  const h = hiring({ ...contract, key: laptop.key, label: 'laptop' })
+  const bare = await write(as(camille), { ...h, payload: (v) => ({ ...h.payload(v), key: other.key }) })
+  assert.match(reason(bare), /bastien@lanterne\.example's first device was not enrolled by this hire/)
   const hired = settled(await hire({ ...contract, key: laptop.key, label: 'laptop' }, as(camille)))
   assert.deepEqual({ hired: hired.hired, until: hired.until, key: hired.key }, { hired: '2026-10-24', until: '2028-08-31', key: laptop.key })
-  assert.deepEqual(await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM key.device WHERE address = $1`, [bastien]), {
+  assert.deepEqual(await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [bastien]), {
     label: 'laptop',
     enrolled: '2026-10-24',
   })
@@ -136,7 +139,7 @@ test('Camille opens Bastien\'s candidacy, six months within his contract; none f
   const opened = settled(await open({ worker: bastien, from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(camille)))
   assert.equal(opened.opened, '2026-10-24')
   await assert.rejects(open({ worker: bastien, from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(camille)), /candidacy_pkey/)
-  assert.equal((await one<{ stage: string }>('SELECT stage FROM member_worker.path WHERE address = $1', [bastien])).stage, 'candidate')
+  assert.equal((await one<{ stage: string }>('SELECT stage FROM employment_membership.path WHERE address = $1', [bastien])).stage, 'candidate')
 })
 
 test('Inès\'s member page lists what joining asks of her and reads back what she would own and decide', async () => {
@@ -170,10 +173,10 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
 })
 
 test('Inès marks the internal rules read, her own reading and no one else\'s', async () => {
-  const forLea = await shell.act(`/members/lea@lanterne.example`, 'read', { version: 'internal-rules@3' }, ines)
+  const forLea = await shell.act(`/people/lea@lanterne.example`, 'read', { version: 'internal-rules@3' }, ines)
   assert.match(forLea.reason ?? '', /ines@lanterne\.example may mark only their own reading/)
-  const read = await shell.act(`/members/${ines}`, 'read', { version: 'internal-rules@3' }, ines)
-  assert.deepEqual([read.op, read.state], ['document-member:version:read', 'settled'])
+  const read = await shell.act(`/people/${ines}`, 'read', { version: 'internal-rules@3' }, ines)
+  assert.deepEqual([read.op, read.state], ['document-membership:version:read', 'settled'])
   assert.ok((await tab(ines, 'joining', ines)).includes('internal-rules@3, read 24 Oct 2026'))
 })
 
@@ -211,12 +214,12 @@ test('Bastien\'s probation ends, he is invited, and his admission is proposed fr
   await on('2027-05-03')
   const phone = await fixture(bastien, 'phone')
   settled(await invite({ address: bastien, name: 'Bastien Roux', key: phone.key, label: 'phone' }, as(thomas)))
-  const { text } = await shell.page(`/members/${bastien}?tab=joining`, camille)
+  const { text } = await shell.page(`/people/${bastien}?tab=joining`, camille)
   assert.ok(text.includes('Propose the admission'), 'the proposal is offered')
   assert.ok(text.includes('value="20"'), 'with the shares he pledged')
   assert.ok(text.includes('value="2027-05-17"'), 'and a deadline two weeks on')
   assert.ok(text.includes('Bastien Roux has worked with the co-op since 2 November 2026, and their probation as a candidate ended on 30 April 2027.'))
-  const proposed = await shell.act(`/members/${bastien}`, 'propose', {
+  const proposed = await shell.act(`/people/${bastien}`, 'propose', {
     kind: 'admit',
     shares: '20',
     deadline: '2027-05-17',

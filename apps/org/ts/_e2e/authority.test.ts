@@ -10,8 +10,8 @@ import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
 import { pay, post } from '@cella/org-transaction/api'
 import { close, vote } from '@cella/org-decision/api'
-import { profile } from '@cella/org-member/api'
-import { enrol, revoke } from '@cella/org-key/api'
+import { profile } from '@cella/org-person/api'
+import { enrol, revoke } from '@cella/org-person/api'
 import { add, update } from '@cella/org-client/api'
 import { comment } from '@cella/org-document/api'
 import type { Deps } from '@cella/org-db'
@@ -41,7 +41,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
 const verifies = async () => (await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v
 
 const paying = (cents: number, label = 'Supplier: print proofs') => ({
@@ -63,13 +63,13 @@ after(async () => {
 test('the seed enrols every fixture device, and Hugo\'s old laptop is revoked', async () => {
   assert.equal((await one<{ scope: string }>(`SELECT current_setting('cella.scope') AS scope`)).scope, scope)
   const devices = await all<{ label: string; revoked: string | null }>(
-    `SELECT label, to_char(revoked, 'YYYY-MM-DD') AS revoked FROM key.device WHERE address = $1 ORDER BY label`,
+    `SELECT label, to_char(revoked, 'YYYY-MM-DD') AS revoked FROM person.device WHERE address = $1 ORDER BY label`,
     [hugo],
   )
   assert.deepEqual(devices, [{ label: 'laptop', revoked: null }, { label: 'old laptop', revoked: '2026-05-12' }])
-  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM key.device WHERE revoked IS NULL')).count), 15)
+  assert.equal(Number((await one<{ count: string }>('SELECT count(*) FROM person.device WHERE revoked IS NULL')).count), 15)
   const laptop = await device(hugo, 'laptop')
-  assert.equal((await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM key.device WHERE address = $1 AND label = 'laptop'`, [hugo])).key, laptop.key)
+  assert.equal((await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM person.device WHERE address = $1 AND label = 'laptop'`, [hugo])).key, laptop.key)
 })
 
 test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles', async () => {
@@ -82,7 +82,7 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
   assert.equal(issued.state, 'settled')
   assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member', 'invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
 })
 
 test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no number', async () => {
@@ -176,20 +176,20 @@ test('a member votes only on a decision whose roll holds them, and only for them
   assert.equal(stances.length, 0)
 })
 
-test('a member edits their own profile, and no one else\'s', async () => {
-  const own = await profile({ member: hugo, name: 'Hugo Lefèvre' }, as(hugo))
-  assert.deepEqual(own.state === 'settled' && own.value, { member: hugo, fields: ['name'] })
-  const other = await profile({ member: chloe, name: 'Chloé M.' }, as(hugo))
+test('a person edits their own profile, and no one else\'s', async () => {
+  const own = await profile({ person: hugo, name: 'Hugo Lefèvre' }, as(hugo))
+  assert.deepEqual(own.state === 'settled' && own.value, { person: hugo, fields: ['name'] })
+  const other = await profile({ person: chloe, name: 'Chloé M.' }, as(hugo))
   assert.equal(other.state, 'refused')
   assert.match(reason(other), /hugo@lanterne\.example may not edit chloe@lanterne\.example's profile/)
-  assert.equal((await one<{ name: string }>('SELECT name FROM member.member WHERE address = $1', [chloe])).name, 'Chloé Moreau')
+  assert.equal((await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [chloe])).name, 'Chloé Moreau')
 })
 
 test('every active member edits clients and documents through the member role\'s mandates in the assembly', async () => {
   const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
   assert.equal(noted.state, 'settled')
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-member'])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-membership'])
   const remarked = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Agreed.' }, as(hugo))
   assert.equal(remarked.state, 'settled')
 })
@@ -198,14 +198,14 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   const thomas = 'thomas@lanterne.example'
   const ines = 'ines@lanterne.example'
   const before = await head()
-  await su.query(`UPDATE member.member SET status = 'suspended' WHERE address = $1`, [thomas])
+  await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [thomas])
   try {
     const suspended = await update({ id: 'nuvola', fields: { note: 'Suspended' } }, as(thomas))
     assert.match(reason(suspended), /thomas@lanterne\.example holds no mandate for edit-client/)
     const silenced = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Suspended.' }, as(thomas))
     assert.match(reason(silenced), /thomas@lanterne\.example holds no mandate for edit-document/)
   } finally {
-    await su.query(`UPDATE member.member SET status = 'active' WHERE address = $1`, [thomas])
+    await su.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [thomas])
   }
 
   // Inès is invited, not a member: she signs from the laptop her hire
@@ -223,7 +223,7 @@ test('Chloé enrols a phone, signed by her laptop, and it signs her writes', asy
   const enrolled = await enrol({ address: chloe, label: 'phone', key: phone.key }, as(chloe))
   assert.equal(enrolled.state, 'settled')
   const row = await one<{ by: string; enrolled: string }>(
-    `SELECT encode(enrolled_by, 'hex') AS by, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM key.device WHERE key = decode($1, 'hex')`,
+    `SELECT encode(enrolled_by, 'hex') AS by, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE key = decode($1, 'hex')`,
     [phone.key],
   )
   assert.deepEqual(row, { by: (await device(chloe)).key, enrolled: '2026-10-24' })
@@ -240,7 +240,7 @@ test('an enrolment signed by another member\'s device is refused', async () => {
   const borrowed = await enrol({ address: chloe, label: 'tablet', key: stray.key }, { db: app, actor: chloe, sign: sign(chloe, undefined, hugo) })
   assert.match(reason(borrowed), /hugo@lanterne\.example's laptop signs for hugo@lanterne\.example, not for chloe@lanterne\.example/)
   assert.equal(await head(), before)
-  assert.equal((await all('SELECT FROM key.device WHERE key = decode($1, \'hex\')', [stray.key])).length, 0)
+  assert.equal((await all('SELECT FROM person.device WHERE key = decode($1, \'hex\')', [stray.key])).length, 0)
 })
 
 test('Chloé revokes her phone from her laptop, and the phone signs nothing after', async () => {
@@ -259,18 +259,18 @@ test('a closed decision\'s outcome stays fixed when a member is suspended after'
   const closed = await close({ decision: 'd-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')
   assert.equal(await passes('d-2026-011'), false, 'Malik objects')
-  const counted = await all<{ member: string }>(`SELECT member FROM circle_decision_member.counted WHERE decision = 'd-2026-011' ORDER BY member`)
+  const counted = await all<{ member: string }>(`SELECT member FROM circle_decision_membership.counted WHERE decision = 'd-2026-011' ORDER BY member`)
   assert.equal(counted.length, 5)
 
   // Suspending the objector would let the others' consents pass it, were
   // the roll read now rather than at the close.
-  await su.query(`UPDATE member.member SET status = 'suspended' WHERE address = $1`, [malik])
+  await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [malik])
   const now = await one<{ p: boolean }>(
     `SELECT cella.consent(v.member, v.stance, v.receipt) AS p
      FROM decision.vote v
      JOIN decision.decision d ON d.id = v.decision
-     JOIN circle_decision_member.roll r ON r.decision = v.decision AND r.member = v.member
-     JOIN member.member m ON m.address = v.member AND m.status = 'active'
+     JOIN circle_decision_membership.roll r ON r.decision = v.decision AND r.member = v.member
+     JOIN membership.member m ON m.address = v.member AND m.status = 'active'
      WHERE v.decision = 'd-2026-011' AND v.receipt < d.cutoff`,
   )
   assert.equal(now.p, true, 'read now, Camille\'s consent alone would carry it')

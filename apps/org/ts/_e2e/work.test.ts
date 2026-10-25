@@ -57,7 +57,7 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/tasks/t-6', 'Fix VAT display on mixed baskets'],
     ['/timesheets', 'Books, invoicing, payroll and contracts'],
     ['/timesheets?view=dashboard', 'Hours by project'],
-    [`/members/${yusuf}`, 'Timesheets'],
+    [`/people/${yusuf}`, 'Timesheets'],
     ['/clients/halles', 'Les Halles Paysannes, online shop'],
     ['/invoices/F-2026-0052', 'Maison Ferrand, packaging'],
   ]
@@ -127,31 +127,31 @@ test('Thomas logs time against the shop and submits October; Yusuf cannot approv
   const ahead = await shell.act('/timesheets', 'log', { day: '2026-10-26', hours: '7', billable: 'billable' }, thomas)
   assert.equal(ahead.state, 'refused')
   assert.match(ahead.reason ?? '', /an entry for 2026-10-26 is in the future/)
-  const submitted = await shell.act(`/members/${thomas}`, 'submit', { month: '2026-10' }, thomas)
+  const submitted = await shell.act(`/people/${thomas}`, 'submit', { month: '2026-10' }, thomas)
   assert.equal(submitted.state, 'settled', submitted.reason)
-  const forOther = await shell.act(`/members/${yusuf}`, 'submit', { month: '2026-10' }, thomas)
+  const forOther = await shell.act(`/people/${yusuf}`, 'submit', { month: '2026-10' }, thomas)
   assert.equal(forOther.state, 'refused')
   assert.match(forOther.reason ?? '', /thomas@lanterne.example may not submit yusuf@lanterne.example's time/)
-  const early = await shell.act(`/members/${thomas}`, 'approve', { month: '2026-10' }, yusuf)
+  const early = await shell.act(`/people/${thomas}`, 'approve', { month: '2026-10' }, yusuf)
   assert.equal(early.state, 'refused')
   assert.match(early.reason ?? '', /2026-10 runs until 2026-10-31/)
 })
 
 test('in November Yusuf approves Thomas\'s October, which takes no more entries; his own he may not approve', async () => {
   await shell.start('2026-11-02')
-  const approved = await shell.act(`/members/${thomas}`, 'approve', { month: '2026-10' }, yusuf)
+  const approved = await shell.act(`/people/${thomas}`, 'approve', { month: '2026-10' }, yusuf)
   assert.deepEqual([approved.op, approved.state], ['timesheet:period:approve', 'settled'])
   const late = await shell.act('/timesheets', 'log', { day: '2026-10-30', hours: '1', billable: 'internal' }, thomas)
   assert.equal(late.state, 'refused')
   assert.match(late.reason ?? '', /thomas@lanterne.example's 2026-10 was approved on 2026-11-02: it takes no new entries/)
   const november = await shell.act('/timesheets', 'log', { day: '2026-11-02', hours: '7', billable: 'billable' }, thomas)
   assert.equal(november.state, 'settled', 'November is open')
-  const own = await shell.act(`/members/${yusuf}`, 'submit', { month: '2026-10' }, yusuf)
+  const own = await shell.act(`/people/${yusuf}`, 'submit', { month: '2026-10' }, yusuf)
   assert.equal(own.state, 'settled', own.reason)
-  const self = await shell.act(`/members/${yusuf}`, 'approve', { month: '2026-10' }, yusuf)
+  const self = await shell.act(`/people/${yusuf}`, 'approve', { month: '2026-10' }, yusuf)
   assert.equal(self.state, 'refused')
   assert.match(self.reason ?? '', /yusuf@lanterne.example may not approve their own time/)
-  const { text } = await shell.page(`/members/${thomas}`)
+  const { text } = await shell.page(`/people/${thomas}`)
   assert.ok(text.includes('Yusuf Demir'), 'his page names who approved his month')
 })
 

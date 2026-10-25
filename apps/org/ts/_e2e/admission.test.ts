@@ -10,9 +10,9 @@ import pg from 'pg'
 import { vote } from '@cella/org-decision/api'
 import { edit } from '@cella/org-document/api'
 import { createDoc, edits } from '@cella/org-document/models'
-import { admit } from '@cella/org-member/api'
-import { close } from '@cella/org-graft-circle-decision-member/api'
-import { add } from '@cella/org-graft-circle-member/api'
+import { admit } from '@cella/org-membership/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { add } from '@cella/org-graft-circle-membership/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
 import { scope, sign } from './lanterne.ts'
@@ -36,9 +36,9 @@ const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
 const status = async (m: string) => one<{ status: string; since: string | null; shares: number }>(
-  `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM member.member WHERE address = $1`,
+  `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM membership.member WHERE address = $1`,
   [m],
 )
 
@@ -56,10 +56,10 @@ test('the seed starts an empty, valid log; Inès is invited, her phone carried b
   assert.equal(await head(), 0)
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   assert.equal((await status(ines)).status, 'invited')
-  const phone = await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM key_member.invitation WHERE member = $1`, [ines])
+  const phone = await one<{ key: string }>(`SELECT encode(key, 'hex') AS key FROM membership.invitation WHERE member = $1`, [ines])
   assert.equal(phone.key, (await fixture(ines, 'phone')).key)
   assert.deepEqual(
-    await all(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM key.device WHERE address = $1`, [ines]),
+    await all(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [ines]),
     [{ label: 'laptop', enrolled: '2025-09-01' }],
   )
 })
@@ -105,19 +105,19 @@ test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès, se
 
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
   const sits = await one<{ circle: string; role: string; since: string }>(
-    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_member.position WHERE member = $1`,
+    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.position WHERE member = $1`,
     [ines],
   )
   assert.deepEqual(sits, { circle: 'ag', role: 'member', since: '2026-10-31' })
   const phone = await one<{ label: string; enrolled: string; by: string | null }>(
-    `SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled, encode(enrolled_by, 'hex') AS by FROM key.device WHERE address = $1 AND label = 'phone'`,
+    `SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled, encode(enrolled_by, 'hex') AS by FROM person.device WHERE address = $1 AND label = 'phone'`,
     [ines],
   )
   assert.deepEqual(phone, { label: 'phone', enrolled: '2026-10-31', by: null })
 
   const entry = await one<{ op: string; rules: { owner: string }[] }>('SELECT op, rules FROM cella.log WHERE n = 3')
   assert.equal(entry.op, 'decision:decision:close')
-  assert.deepEqual([...new Set(entry.rules.map((r) => r.owner))].sort(), ['circle-decision-member', 'decision', 'decision-member'])
+  assert.deepEqual([...new Set(entry.rules.map((r) => r.owner))].sort(), ['circle-decision-membership', 'decision', 'decision-membership'])
 
   const late = await vote({ decision: 'd-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')

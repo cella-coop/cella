@@ -15,8 +15,8 @@ import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-t
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay } from '@cella/org-graft-payslip-transaction/api'
 import { approve as approveTime } from '@cella/org-timesheet/api'
-import { submit as submitTime } from '@cella/org-graft-timesheet-worker/api'
-import { draw } from '@cella/org-graft-account-member-transaction/api'
+import { submit as submitTime } from '@cella/org-graft-employment-timesheet/api'
+import { draw } from '@cella/org-graft-account-membership-transaction/api'
 import { approve as approveSplit } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import type { Deps } from '@cella/org-db'
@@ -87,7 +87,7 @@ test('Hugo approves Sofia\'s print proofs within his budget, which charges them;
     { account: '421', side: 'credit', cents: '18000' },
   ])
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner).sort(), ['circle-expense-member', 'circle-member', 'expense', 'expense-transaction'])
+  assert.deepEqual(logged.rules.map((r) => r.owner).sort(), ['circle-expense-membership', 'circle-membership', 'expense', 'expense-transaction'])
 })
 
 test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the gérante\'s 2 000 € limit too', async () => {
@@ -207,7 +207,7 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
   const ruled = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
   assert.deepEqual(
     [...new Set(ruled.rules.map((r) => r.owner))].sort(),
-    ['account-patronage', 'circle-decision-member', 'decision-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
+    ['account-patronage', 'circle-decision-membership', 'decision-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
   const done = await distribute({ distribution: '2025' }, as(julien))
@@ -229,7 +229,7 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
   assert.deepEqual(
     [...new Set(logged.rules.map((r) => r.owner))].sort(),
-    ['account-member-patronage-transaction', 'circle-member', 'patronage', 'patronage-transaction'],
+    ['account-membership-patronage-transaction', 'circle-membership', 'patronage', 'patronage-transaction'],
   )
 
   const again = await distribute({ distribution: '2025' }, as(julien))
@@ -246,7 +246,7 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
 test('a member who leaves has their capital frozen, and draws nothing more', async () => {
   // Stands in for the exit write, whichever makes it: freezing is a
   // trigger on the member's status, in that write's transaction.
-  await su.query(`UPDATE member.member SET status = 'exited' WHERE address = $1`, [sofia])
+  await su.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [sofia])
   assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE holder = $1`, [sofia])).frozen, true)
   const late = await draw({ member: sofia, cents: 10_00 }, as(sofia))
   assert.equal(late.state, 'refused')

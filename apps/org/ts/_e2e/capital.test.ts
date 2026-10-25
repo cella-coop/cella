@@ -12,9 +12,9 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close } from '@cella/org-graft-circle-decision-member/api'
-import { called, pay, repay } from '@cella/org-graft-account-member-transaction/api'
-import { plan, spread, withheld } from '@cella/org-graft-account-member-payslip-transaction/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { called, pay, repay } from '@cella/org-graft-account-membership-transaction/api'
+import { plan, spread, withheld } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay as payRun } from '@cella/org-graft-payslip-transaction/api'
 import { approve as approveTime, log, submit as submitTime } from '@cella/org-timesheet/api'
@@ -90,7 +90,7 @@ test('the statutes value a share at 50 €, and Paul, who left, is owed his 1 50
 test('d-2026-012 admits Inès, and in that verdict her 20 shares are called: 1 000 € owed on her subscription', async () => {
   await on('2026-10-31')
   settled(await close({ decision: 'd-2026-012' }, as(camille)))
-  const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_member_transaction.subscription WHERE member = $1', [ines])
+  const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.equal(s.account, '101312')
   assert.deepEqual(await lines(s.entry), [
     { account: '4562', side: 'debit', cents: '100000' },

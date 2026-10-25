@@ -216,7 +216,7 @@ mod tests {
     #[test]
     fn a_test_file_is_placed_by_where_it_sits() {
         assert_eq!(kind("apps/org/feats/transaction/core/ts/_tests/journal.test.ts").as_deref(), Some("slice transaction"));
-        assert_eq!(kind("apps/org/grafts/circle-member/ts/_tests/may.test.ts").as_deref(), Some("slice circle-member"));
+        assert_eq!(kind("apps/org/grafts/circle-membership/ts/_tests/may.test.ts").as_deref(), Some("slice circle-membership"));
         assert_eq!(kind("apps/org/feats/a/feats/b/core/ts/_tests/x.test.ts").as_deref(), Some("slice b"));
         assert_eq!(kind("apps/org/ts/_e2e/admission.test.ts").as_deref(), Some("e2e"));
     }

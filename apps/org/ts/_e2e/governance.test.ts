@@ -12,9 +12,9 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { propose, vote } from '@cella/org-decision/api'
 import { put as putCircle } from '@cella/org-graft-circle-decision/api'
-import { carried, close, put } from '@cella/org-graft-circle-decision-member/api'
+import { carried, close, put } from '@cella/org-graft-circle-decision-membership/api'
 import { grant } from '@cella/org-circle/api'
-import { invite } from '@cella/org-graft-key-member/api'
+import { invite } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
@@ -51,11 +51,11 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const status = async (m: string) => (await one<{ status: string }>('SELECT status FROM member.member WHERE address = $1', [m]))?.status
+const status = async (m: string) => (await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [m]))?.status
 
 // Every member on a decision's roll consents.
 async function consented(decision: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_member.roll WHERE decision = $1', [decision])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
     settled(await vote({ decision, member, stance: 'consent' }, as(member)))
   }
 }
@@ -77,7 +77,7 @@ test('Malik invites Nadia with her laptop: the invitation carries its key, which
   const invited = settled(await invite({ address: nadia, name: 'Nadia Benali', key: laptop.key, label: 'laptop' }, as(malik)))
   assert.deepEqual(invited, { member: nadia, invited: '2026-10-24', key: laptop.key })
   assert.equal(await status(nadia), 'invited')
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM key.device WHERE address = $1', [nadia])).n, '0')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '0')
 
   await assert.rejects(invite({ address: 'sam@lanterne.example', name: 'Sam', key: laptop.key, label: 'phone' }, as(malik)), /another invitation carries this device key/)
 })
@@ -93,7 +93,7 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
   admission = proposed.decision
   assert.equal(admission, 'd-2026-013')
   const d = await one<{ circle: string; title: string; roll: string }>(
-    `SELECT circle, title, (SELECT count(*) FROM circle_decision_member.roll r WHERE r.decision = d.id) AS roll FROM decision.decision d WHERE id = $1`,
+    `SELECT circle, title, (SELECT count(*) FROM circle_decision_membership.roll r WHERE r.decision = d.id) AS roll FROM decision.decision d WHERE id = $1`,
     [admission],
   )
   assert.deepEqual(d, { circle: 'ag', title: 'Admit Nadia Benali as a member', roll: '10' })
@@ -102,15 +102,15 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
 
 test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
   await on('2026-11-07')
-  await su.query(`INSERT INTO circle_member.position (circle, member, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
+  await su.query(`INSERT INTO circle_membership.position (circle, member, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
   const before = await head()
   const refused = await close({ decision: admission }, as(camille))
   assert.match(reason(refused), /nadia@lanterne\.example already sits in ag as member/)
   assert.equal(await head(), before)
   assert.equal(await status(nadia), 'invited')
   assert.equal((await one<{ closed: string | null }>('SELECT closed FROM decision.decision WHERE id = $1', [admission])).closed, null)
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM key.device WHERE address = $1', [nadia])).n, '0')
-  await su.query(`DELETE FROM circle_member.position WHERE member = $1`, [nadia])
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '0')
+  await su.query(`DELETE FROM circle_membership.position WHERE member = $1`, [nadia])
 })
 
 test('the close admits Nadia, seats her in the assembly and enrols her laptop, in one verdict; she signs from it', async () => {
@@ -120,11 +120,11 @@ test('the close admits Nadia, seats her in the assembly and enrols her laptop, i
   assert.equal(await head(), before + 1, 'one log entry')
   assert.equal(await status(nadia), 'active')
   assert.deepEqual(
-    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_member.position WHERE member = $1', [nadia]),
+    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_membership.position WHERE member = $1', [nadia]),
     { circle: 'ag', role: 'member', since: '2026-11-07' },
   )
   assert.deepEqual(
-    await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM key.device WHERE address = $1`, [nadia]),
+    await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [nadia]),
     { label: 'laptop', enrolled: '2026-11-07' },
   )
   settled(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia)))
@@ -136,7 +136,7 @@ test('Chloé suspended by the assembly\'s decision: carried out after the close,
   await on('2026-11-14')
   settled(await close({ decision: proposed.decision }, as(camille)))
   const then = await carried(proposed.decision, as(camille))
-  assert.deepEqual(then.map((d) => [d.op, d.state]), [['member:member:suspend', 'settled']])
+  assert.deepEqual(then.map((d) => [d.op, d.state]), [['membership:member:suspend', 'settled']])
   assert.equal(await status(chloe), 'suspended')
 
   const logged = await log({ member: chloe, day: '2026-11-14', minutes: 60, billable: false }, as(chloe))

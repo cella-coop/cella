@@ -1,6 +1,5 @@
 import type { Db, Deps } from '@cella/org-db'
-import { members } from '@cella/org-member/api'
-import { workers } from '@cella/org-worker/api'
+import { people } from '@cella/org-person/api'
 import { CELLA_DEV } from '$app/env/private'
 import { own, signing } from './fixture.ts'
 
@@ -10,17 +9,14 @@ import { own, signing } from './fixture.ts'
 
 export const dev = CELLA_DEV
 
-// Who the dev server can act as: members, and workers who are not, with a
-// fixture device in force.
+// Who the dev server can act as: everyone the co-op knows with a fixture
+// device in force.
 export async function actors(db: Db): Promise<{ address: string; name: string }[]> {
   if (!dev) {
     return []
   }
-  const people = await members(db)
-  const known = new Set(people.map((m) => m.address))
-  const all = [...people, ...(await workers(db)).filter((w) => !known.has(w.address))]
   const out = []
-  for (const m of all) {
+  for (const m of await people(db)) {
     if (await own(db, m.address)) {
       out.push({ address: m.address, name: m.name })
     }

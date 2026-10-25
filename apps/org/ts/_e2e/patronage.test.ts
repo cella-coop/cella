@@ -15,9 +15,9 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { adopt, approve, statement, statements } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
-import { employed, figures, owed } from '@cella/org-graft-account-member-patronage-transaction/api'
+import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { propose, vote } from '@cella/org-decision/api'
-import { close } from '@cella/org-graft-circle-decision-member/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -74,7 +74,7 @@ test('before the approval, no statement is drawn, and the work share would divid
   before2025 = new Map(
     (await all<{ member: string; shares: number; b: string }>(
       `SELECT c.member, c.shares, coalesce((SELECT -b.balance FROM account_transaction.balance b WHERE b.code = c.account), 0) AS b
-       FROM account_member.capital c WHERE c.account IS NOT NULL`,
+       FROM account_membership.capital c WHERE c.account IS NOT NULL`,
     )).map((r) => [r.member, { shares: r.shares, capital: Number(r.b) }]),
   )
 })
@@ -116,7 +116,7 @@ test('only finance distributes the approved split, once', async () => {
 test('half of each part buys whole shares at 50 €, blocked until 1 June 2031; the rest is owed in cash', async () => {
   const credits = await all<{ member: string; shares: number; cents: string; until: string; entry: string }>(
     `SELECT member, shares, cella.cents(amount) AS cents, to_char(until, 'YYYY-MM-DD') AS until, entry
-     FROM account_member_patronage_transaction.credit WHERE distribution = '2025' ORDER BY member`,
+     FROM account_membership_patronage_transaction.credit WHERE distribution = '2025' ORDER BY member`,
   )
   assert.equal(credits.length, 10, 'every worker is an associate')
   let capital = 0
@@ -135,7 +135,7 @@ test('half of each part buys whole shares at 50 €, blocked until 1 June 2031; 
   for (const c of credits) {
     const was = before2025.get(c.member)
     const now = await one<{ shares: number; b: string }>(
-      `SELECT c.shares, -b.balance AS b FROM account_member.capital c JOIN account_transaction.balance b ON b.code = c.account WHERE c.member = $1`,
+      `SELECT c.shares, -b.balance AS b FROM account_membership.capital c JOIN account_transaction.balance b ON b.code = c.account WHERE c.member = $1`,
       [c.member],
     )
     assert.equal(now.shares, (was?.shares ?? 0) + c.shares, `${c.member} holds the shares`)
@@ -160,7 +160,7 @@ test('each member reads their statement, which reconciles with the books; their 
 
   const became = await employed(app, id)
   assert.equal((became?.capital ?? 0) + (became?.cash ?? 0), part)
-  assert.equal(became?.movements.at(-1)?.balance, (await one<{ shares: number }>('SELECT shares FROM member.member WHERE address = $1', [camille])).shares * share)
+  assert.equal(became?.movements.at(-1)?.balance, (await one<{ shares: number }>('SELECT shares FROM membership.member WHERE address = $1', [camille])).shares * share)
   assert.equal(became?.movements.at(-1)?.amount, became?.capital)
 
   assert.deepEqual((await owed(app, camille, camille)).map((s) => [s.id, s.part, s.capital + s.cash, s.capital, s.distributed]), [[id, part, part, became?.capital, true]])
@@ -174,7 +174,7 @@ test('the year\'s return to the federation reconciles with the split, the parts 
   assert.equal(Number(f.legal) + Number(f.development) + Number(f.work) + Number(f.interest), 61_400_00)
   assert.equal(f.workers, 10)
   assert.equal(f.associates_sharing, 10)
-  const employedCents = (await one<{ c: string }>(`SELECT sum(cella.cents(amount)) AS c FROM account_member_patronage_transaction.credit WHERE distribution = '2025'`)).c
+  const employedCents = (await one<{ c: string }>(`SELECT sum(cella.cents(amount)) AS c FROM account_membership_patronage_transaction.credit WHERE distribution = '2025'`)).c
   assert.equal(f.employed, Number(employedCents))
   assert.equal(Number(f.employed) + Number(f.cash), 27_630_00)
   assert.equal(f.until, '2031-06-01')
@@ -198,7 +198,7 @@ test('the assembly decides terms mixing pay and time from 2027, and they are ado
     ),
   )
   const decision = proposed.decision
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_member.roll WHERE decision = $1', [decision])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
     settled(await vote({ decision, member, stance: 'consent' }, as(member)))
   }
   const open = await adopt({ terms: 'st-2027', decision }, as(camille))

@@ -10,6 +10,12 @@
   const columns = $derived(all(data.name))
   const linked = $derived(mounted?.page && mounted.view.linked !== false)
   const href = (row: { id: string }) => `/${data.name}/${encodeURIComponent(row.id)}`
+  // The New forms: the owner's, or those of the extensions that offer
+  // their own, the owner's replaced, each under its title.
+  const creates = $derived.by(() => {
+    const own = added.flatMap((e) => (e.extension.create ? [{ title: e.extension.title, form: e.extension.create }] : []))
+    return own.length ? own : mounted?.view.create ? [{ form: mounted.view.create }] : []
+  })
 </script>
 
 {#if mounted}
@@ -22,7 +28,7 @@
       rows={data.rows}
       about={data.about}
       href={mounted.view.href ?? (linked ? href : undefined)}
-      create={added.find((e) => e.extension.create)?.extension.create ?? mounted.view.create}
+      creates={creates}
       status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}
       name={data.name}

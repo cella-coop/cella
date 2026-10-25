@@ -35,7 +35,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_member.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
 const adopted = async (d: string) => (await one<{ version: string } | undefined>('SELECT version FROM document.adopted WHERE document = $1', [d]))?.version
 const decisions = (db: pg.Client) => slice.extends?.decisions.about?.(db) ?? Promise.resolve({})
 const hashOf = async (v: string) => (await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document.version WHERE id = $1`, [v])).hash
@@ -202,7 +202,7 @@ test('once Malik consents and d-2026-011 closes, only content hashing as it name
   assert.deepEqual(done.value, { document: card, version: 'rate-card-2027@2', hash: v2, adopted: '2026-11-09', receipt: done.value.receipt })
   assert.equal(await adopted(card), 'rate-card-2027@2')
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-decision-member', 'decision-document', 'document'])
+  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-decision-membership', 'decision-document', 'document'])
 })
 
 test('a second adoption naming a stale base is refused, and uses no verdict number', async () => {
@@ -242,7 +242,7 @@ test('minutes are adopted as any document is: the assembly adopts its June minut
   assert.equal(proposed.state, 'settled', reason(proposed))
   const decision = (proposed as { value: { decision: string } }).value.decision
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_decision_member.roll r JOIN member.member m ON m.address = r.member WHERE r.decision = $1 AND m.status = 'active'`,
+    `SELECT r.member FROM circle_decision_membership.roll r JOIN membership.member m ON m.address = r.member WHERE r.decision = $1 AND m.status = 'active'`,
     [decision],
   )
   for (const { member } of roll) {

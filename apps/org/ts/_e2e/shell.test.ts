@@ -122,8 +122,8 @@ after(async () => {
 
 test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
-    ['/members', 'Camille Martin'],
-    [`/members/${camille}`, 'Powers held'],
+    ['/people', 'Camille Martin'],
+    [`/people/${camille}`, 'Powers held'],
     ['/circles', 'Assemblée générale'],
     ['/circles/ag', 'Gérante'],
     ['/decisions', 'Admit Inès Haddad'],
@@ -152,7 +152,7 @@ test('every main page renders on the seed', async () => {
 })
 
 test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
-  const { text } = await page('/members')
+  const { text } = await page('/people')
   assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
   assert.ok(text.includes('Lanterne SCOP SARL'), 'its menu gives its legal name')
   assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
@@ -165,14 +165,14 @@ test('every collection has a dashboard, its widgets run by the server', async ()
   for (const says of ['Owed', 'Overdue', 'Amounts by month', 'By standing', '€']) {
     assert.ok(invoices.text.includes(says), `the invoices' dashboard says ${says}`)
   }
-  const members = await page('/members?view=dashboard')
-  assert.equal(members.status, 200)
-  assert.ok(members.text.includes('By status'), 'the members\' dashboard is derived from their fields')
-  const own = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'Active members', measure: { op: 'count' }, where: [{ field: 'status', is: ['active'] }] }]))
-  const configured = await page(`/members?view=dashboard&w=${own}`)
+  const people = await page('/people?view=dashboard')
+  assert.equal(people.status, 200)
+  assert.ok(people.text.includes('By member'), 'the people\'s dashboard is derived from their fields, the membership\'s among them')
+  const own = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'Active members', measure: { op: 'count' }, where: [{ field: 'member', is: ['member'] }] }]))
+  const configured = await page(`/people?view=dashboard&w=${own}`)
   assert.ok(configured.text.includes('Active members'), 'a viewer\'s widgets in the address are run')
   const bad = encodeURIComponent(JSON.stringify([{ kind: 'kpi', title: 'x', measure: { op: 'sum', field: 'name; DROP TABLE member' } }]))
-  const refused = await page(`/members?view=dashboard&w=${bad}`)
+  const refused = await page(`/people?view=dashboard&w=${bad}`)
   assert.equal(refused.status, 200)
   assert.ok(refused.text.includes('names no field of the collection'), 'an undeclared field is refused, and said')
 })
@@ -352,7 +352,7 @@ test('closed on 31 October, d-2026-012 admits Inès, seats her and enrols her la
   const closed = await act('/decisions/d-2026-012', 'close', {}, camille)
   assert.equal(closed.state, 'settled')
   assert.deepEqual(closed.then, [], 'nothing follows: the admission is the close')
-  const { text } = await page(`/members/${ines}`)
+  const { text } = await page(`/people/${ines}`)
   assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('laptop'))
   assert.ok((await page('/decisions/d-2026-012')).text.includes('passed by consent'))
 })

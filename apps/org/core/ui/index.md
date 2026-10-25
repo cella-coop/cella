@@ -39,11 +39,18 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Shell`: the grid, sidebar · content. The sidebar's top is the co-op
   selector, the co-op's mark and name, its menu listing the scopes the
   shell serves (one today) with their legal names; its foot is the
-  account menu, the acting member, whose menu holds Act as (dev only,
-  with its warning) and the theme; between them the command menu and the
+  account menu, the signed-in member, whose menu holds their address,
+  Sign out and the theme; between them the command menu and the
   navigation: its head unnamed, the co-op's Home and the Inbox, then by
   group, a collection the view declares `counted` showing how many rows
   it holds for the acting member. The last write's outcome floats above.
+- `Gate`: what a person reaches before signing in, alone on the page,
+  the co-op's mark and name above one panel; `SignIn` in it, a button for
+  each device this browser keeps for the scope, which signs the server's
+  challenge, the fixture members on the dev server, and a key made here
+  for its person to enrol from a device they hold; and `Join`, an
+  invitation's link opened, whose one button makes the invitee's first
+  device in this browser and takes the invitation up with it.
 - `Popover`: the one popover and menu, opened from its trigger in the
   top layer (native `popover`), so nothing clips it: Escape and a click
   outside close it and focus returns to the trigger; anchored by CSS
@@ -144,8 +151,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Cell`, `Stats`, `Badge`, `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
   what is added, with the totals; the arrows move between open cells),
-  `Button`, `Form` (a write, posting to a named form action, files and all; `ready`
-  false keeps its button disabled while there is nothing to post),
+  `Button`, `Form` (a write, posting to a named form action, files and
+  all, through `post`; `ready` false keeps its button disabled while
+  there is nothing to post),
   `Field` (text, a number, a date, a time, an address, an email or a
   file, which `accept` narrows to the media types it offers; a
   select with a `placeholder` offers it as a disabled first choice,
@@ -174,11 +182,25 @@ says, as an inbox's ask links to where it is done.
 A `Column` places itself in the list view by `role`: the title, the line
 under it, the trailing meta, or the table alone.
 
+## Posting a write
+
+`post(url, body)` is how every write leaves a page, a form's, a dropped
+card's, an agenda's move and a document's edit: it posts to the page's
+action, and while the server answers with what to sign it signs it with
+the device this browser keeps for that scope, actor and device, and posts
+the proof back naming the run it answers ([trust](../../../../_corpus/doc/trust.md#keys-and-addresses)).
+It ends with the write's outcome, as SvelteKit's action result, which
+the caller applies. The devices are kept in IndexedDB by
+`hooks/kept.svelte.ts` (`keep`, `kept`, `held`), each private key a
+CryptoKey the browser made, or derived for a fixture member, never
+exported.
+
 ## State
 
 A component holds no state of its own: the collection's filter and row,
 the command menu, and the dismissed outcome and the drawer's opening are state classes in `hooks/`
-(`CollectionState`, `CommandState`, `ShellState`), each reached through
+(`CollectionState`, `CommandState`, `ShellState`), and the sign-in and
+an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `useSection` hands a `Section`'s title down, so an empty
 `Table` in it says "No roles" in one quiet line, with no headers.

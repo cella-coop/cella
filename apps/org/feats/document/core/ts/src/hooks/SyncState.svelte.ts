@@ -1,4 +1,4 @@
-import { deserialize } from '$app/forms'
+import { post } from '@cella/org-ui'
 import { VersionVector, type LoroDoc } from 'loro-crdt'
 import { hash } from '../models/canonical.ts'
 import { b64, type Relayed } from '../models/document.ts'
@@ -127,12 +127,7 @@ export class SyncState {
     form.set('update', b64.encode(update))
     this.#sending = true
     try {
-      const res = await fetch(`${this.#path()}?/edit`, {
-        method: 'POST',
-        body: form,
-        headers: { 'x-sveltekit-action': 'true', accept: 'application/json' },
-      })
-      const out = deserialize(await res.text())
+      const out = await post(`${this.#path()}?/edit`, form)
       if (out.type === 'success') {
         this.#sent = upto
         this.problem = null

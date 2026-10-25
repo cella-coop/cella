@@ -1,5 +1,6 @@
-import { applyAction, deserialize } from '$app/forms'
+import { applyAction } from '$app/forms'
 import { refreshAll } from '$app/navigation'
+import { post } from '@cella/org-ui'
 import type { Item } from '../models/meeting.ts'
 
 // A meeting's agenda while it is looked at: its items in their order, a
@@ -32,8 +33,7 @@ export class AgendaState {
     for (const [k, v] of Object.entries(fields)) {
       body.set(k, v)
     }
-    const res = await fetch(`${this.#path()}?/${action}`, { method: 'POST', body, headers: { 'x-sveltekit-action': 'true' } })
-    await applyAction(deserialize(await res.text()))
+    await applyAction(await post(`${this.#path()}?/${action}`, body))
     await refreshAll()
   }
 

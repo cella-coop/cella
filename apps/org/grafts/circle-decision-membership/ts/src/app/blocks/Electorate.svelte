@@ -23,7 +23,7 @@
 
 <Section title="Your stance">
   {#if !data.me}
-    <Note text="Act as a member to give a stance." />
+    <Note text="Sign in as a member to give a stance." />
   {:else if !data.me.seated}
     <Note text="Not on this decision's roll." />
   {:else if data.closed}

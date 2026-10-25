@@ -1,15 +1,17 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
-  import { fromAction } from 'svelte/attachments'
-  import { enhance, type SubmitFunction } from '$app/forms'
+  import { applyAction } from '$app/forms'
+  import { refreshAll } from '$app/navigation'
   import { page } from '$app/state'
   import { useForm } from '../hooks/useForm.ts'
+  import { post } from '../post.ts'
   import Button from './Button.svelte'
 
-  // A write: the fields post to the page's named action, which signs and
-  // submits it, files and all; the outcome comes back as the page's form data. `reset`
-  // false keeps what was typed after a settled write, for a field whose
-  // value follows the page's data.
+  // A write: the fields post to the page's named action, files and all,
+  // and this browser's device signs what the server asks (`post`); the
+  // outcome comes back as the page's form data. `reset` false keeps what
+  // was typed after a settled write, for a field whose value follows the
+  // page's data.
   let {
     action,
     submit,
@@ -33,20 +35,25 @@
 
   // One post at a time: a press while one is under way is dropped, since
   // each post signs a write of its own.
-  const submitting: SubmitFunction<Record<string, unknown> | undefined, Record<string, unknown> | undefined> = ({ cancel }) => {
+  async function onsubmit(e: SubmitEvent) {
+    e.preventDefault()
+    const el = e.currentTarget as HTMLFormElement
     if (!form.start()) {
-      cancel()
       return
     }
-    return async ({ update }) => {
-      try {
-        await update({ reset })
-      } finally {
-        form.done()
+    try {
+      const result = await post(el.action, new FormData(el, e.submitter))
+      if (result.type === 'success') {
+        if (reset) {
+          el.reset()
+        }
+        await refreshAll()
       }
+      await applyAction(result)
+    } finally {
+      form.done()
     }
   }
-  const enhanced = $derived(fromAction(enhance, () => submitting))
 
   // The action keeps the page's address, as its open tab, so the page
   // the write returns to is the one it was made from.
@@ -56,7 +63,7 @@
   })
 </script>
 
-<form method="post" enctype="multipart/form-data" action={target} class="form" class:inline {@attach enhanced}>
+<form method="post" enctype="multipart/form-data" action={target} class="form" class:inline {onsubmit}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}

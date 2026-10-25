@@ -27,7 +27,6 @@
     scope,
     nav,
     actor,
-    actors,
     dev,
     theme,
     outcome,
@@ -39,7 +38,6 @@
     scope: { address: string; name: string; legal: string | null }
     nav: Nav
     actor: Person | null
-    actors: Person[]
     dev: boolean
     theme: 'light' | 'dark' | 'system'
     outcome: Done | null
@@ -104,29 +102,21 @@
     {/each}
 
     <div class="account">
-      <Popover label="Account: {actor?.name ?? 'no one acting'}" side="top" wide>
+      <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
           <span class="avatar">{actor ? initials(actor.name) : '–'}</span>
           <span class="names">
-            <b>{actor?.name ?? 'No one acting'}</b>
-            {#if dev}<span class="dev">Development · fixture keys</span>{/if}
+            <b>{actor?.name ?? 'No one signed in'}</b>
+            {#if dev}<span class="dev">Development</span>{/if}
           </span>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
-        {#if dev}
-          <p class="label">Act as <span class="dev">dev only</span></p>
-          <p class="hint">The server signs with each member's fixture device key, which anyone can derive.</p>
-          <form method="post" action="/act" class="list">
-            <input type="hidden" name="back" value={back} />
-            {#each actors as p (p.address)}
-              <button role="menuitemradio" aria-checked={actor?.address === p.address} class="item" name="actor" value={p.address}>
-                <span class="avatar">{initials(p.name)}</span>{p.name}
-                {#if actor?.address === p.address}<Icon icon={Check} />{/if}
-              </button>
-            {/each}
+        {#if actor}
+          <p class="label">Signed in</p>
+          <p class="hint">{actor.address}, on this device</p>
+          <form method="post" action="/sign-out" class="list">
+            <button class="item">Sign out</button>
           </form>
-        {:else}
-          <p class="hint">Writes need a member's own device; acting as a member is for development only.</p>
         {/if}
         <p class="label">Theme</p>
         <form method="post" action="/theme" class="themes">

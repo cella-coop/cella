@@ -1,6 +1,6 @@
 <script lang="ts">
   import { tick, type Component } from 'svelte'
-  import { applyAction, deserialize } from '$app/forms'
+  import { applyAction } from '$app/forms'
   import { goto, refreshAll } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
@@ -26,6 +26,7 @@
   import { control, nearest, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
+  import { post } from '../post.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { PAGE } from '../hooks/CollectionState.svelte.ts'
   import { useDrag } from '../hooks/useDrag.ts'
@@ -184,12 +185,7 @@
   async function move(id: string, s: Shift, to: string) {
     const body = new FormData()
     body.set('to', to)
-    const res = await fetch(`${page.url.pathname}/${encodeURIComponent(id)}?/${s.action}`, {
-      method: 'POST',
-      body,
-      headers: { 'x-sveltekit-action': 'true' },
-    })
-    await applyAction(deserialize(await res.text()))
+    await applyAction(await post(`${page.url.pathname}/${encodeURIComponent(id)}?/${s.action}`, body))
     await refreshAll()
   }
 

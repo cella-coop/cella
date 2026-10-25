@@ -98,6 +98,10 @@ member's account, and one beyond what they owe or not exactly the
 payment is refused; a repayment is refused before its day, out of its
 turn, for the wrong amount or twice, and never changes once paid.
 
+## Reads
+
+Subscriptions, payments in, draws and repayments read as the member's capital account does, for the member and capital's readers (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)); `drawn`, `called` and `owed` read as their reader.
+
 ## Shell
 
 Adds to a person's page their subscription, what they paid in, from the

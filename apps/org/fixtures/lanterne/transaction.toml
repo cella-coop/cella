@@ -51,13 +51,18 @@ credit = 100000
 account = "101310"
 credit = 100000
 
+# Paul's capital, 30 shares, owed him since he left on 30 November 2025.
+[[entry.line]]
+account = "4567"
+credit = 150000
+
 [[entry.line]]
 account = "1061"
 credit = 900000
 
 [[entry.line]]
 account = "1068"
-credit = 860000
+credit = 710000
 
 # The 2025 result, the surplus d-2026-006 approved, until it is allocated.
 [[entry.line]]

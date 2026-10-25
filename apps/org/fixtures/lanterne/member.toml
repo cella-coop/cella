@@ -1,8 +1,6 @@
 # Each member: who they are and where their membership stands. Positions in
 # circles are the circle-member graft's; admission votes the decision-member's.
 
-share_value = 5000
-
 [[member]]
 address = "camille@lanterne.example"
 name = "Camille Martin"
@@ -82,6 +80,15 @@ role = "content and social media"
 status = "active"
 since = 2024-02-05
 shares = 20
+
+[[member]]
+address = "paul@lanterne.example"
+name = "Paul Garnier"
+role = "art director, until 30 November 2025"
+status = "exited"
+since = 2021-03-01
+exited = 2025-11-30
+shares = 30
 
 [[member]]
 address = "ines@lanterne.example"

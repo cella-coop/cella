@@ -1,0 +1,22 @@
+# What a departed associate is repaid of their capital, amounts in cents:
+# Paul left on 30 November 2025, and his 30 shares, 1 500 €, are repaid as
+# st-2021 say, a year after the exit and then yearly, three times. None is
+# paid yet; the first falls due on 30 November 2026.
+
+[[repayment]]
+member = "paul@lanterne.example"
+n = 1
+due = 2026-11-30
+amount = 50000
+
+[[repayment]]
+member = "paul@lanterne.example"
+n = 2
+due = 2027-11-30
+amount = 50000
+
+[[repayment]]
+member = "paul@lanterne.example"
+n = 3
+due = 2028-11-30
+amount = 50000

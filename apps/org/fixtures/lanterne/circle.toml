@@ -153,6 +153,11 @@ text = "record money received"
 
 [[mandate]]
 role = "finance"
+power = "repay-capital"
+text = "repay departed associates' capital"
+
+[[mandate]]
+role = "finance"
 power = "close-period"
 text = "close a period"
 

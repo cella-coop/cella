@@ -63,6 +63,13 @@ member = "chloe@lanterne.example"
 from = 2025-01-01
 gross = 240000
 
+# Inès is paid outside these runs until she is a member; from November
+# 2026, the month after d-2026-012 would admit her, her pay is a run's.
+[[salary]]
+member = "ines@lanterne.example"
+from = 2026-11-01
+gross = 220000
+
 [[run]]
 month = "2026-07"
 generated = 2026-07-24

@@ -50,8 +50,8 @@ for (const [setting, value] of Object.entries(settings)) {
 const members = read('member').member ?? []
 for (const m of members) {
   await db.query(
-    'INSERT INTO member.member (address, name, status, since, shares, invited) VALUES ($1, $2, $3, $4, $5, $6)',
-    [m.address, m.name, m.status, day(m.since), m.shares, day(m.invited)],
+    'INSERT INTO member.member (address, name, status, since, shares, invited, exited) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    [m.address, m.name, m.status, day(m.since), m.shares, day(m.invited), day(m.exited)],
   )
 }
 

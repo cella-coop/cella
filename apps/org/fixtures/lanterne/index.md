@@ -61,11 +61,18 @@ and moves tasks and logs their own time.
   development fund and 9 210 € as interest on capital; the result was
   carried over unallocated, and allocating it is Julien's to do. The
   statutes' terms divide the work share by pay and employ half of each
-  member's part in shares, blocked five years; the rest is paid.
+  member's part in shares, blocked five years; the rest is paid. They
+  value a share at 50 €, ask at least 20 of an associate, paid in at most
+  10 monthly instalments, and repay one who leaves a year after the exit,
+  in three yearly repayments. Paul Garnier, an art director, left on 30
+  November 2025: his 30 shares, 1 500 €, are owed him, the first 500 €
+  due on 30 November 2026.
 - **Pay and expenses.** Ten members are salaried, 26 000 € gross a month
   between them, the highest 1.25 times the lowest, within the internal
   rules' 1.6. July to September's pay runs were carried over, one entry
-  each; October's waits for every member's October to be approved. Four
+  each; October's waits for every member's October to be approved. Inès
+  is paid outside the runs until she is a member; from November, her
+  2 200 € is a run's. Four
   October expenses are claimed, three submitted.
 - **Work (confluent, bounded and ordered).** Eight projects, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
@@ -112,7 +119,9 @@ guests, and that no item tables a decision before it was proposed.
 
 Pay runs and expenses are `payslip.toml` and `expense.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its
-member's shares, the work share's terms divide all of it and govern the
+member's shares at the share's value the statutes give, or, once they
+left, nothing, their repayments adding up to it, due as the statutes
+say, and owed in 4567; the work share's terms divide all of it and govern the
 2025 split, which honours art. 33, salaries keep within the
 ratio and each carried run's entry is exactly its payslips. Device keys are
 TEST-ONLY, derived from each device's address and label when the fixtures

@@ -2,7 +2,14 @@
 # kept in and the surplus allocations, amounts in cents. July to September
 # are closed; October is open, and so are the months after it to the end of
 # the fiscal year. A cash account, the bank, says `cash = true`; a member's
-# capital account names its member as `holder`, under 1013.
+# capital account names its member as `holder`, under 1013, and a departed
+# one's says `frozen = true`. What members subscribed but have not paid is
+# 1012, owed by them in 4562; what is owed to members who left is 4567.
+
+[[account]]
+code = "1012"
+label = "Capital souscrit, appelé, non versé"
+kind = "equity"
 
 [[account]]
 code = "1013"
@@ -79,6 +86,16 @@ kind = "equity"
 parent = "1013"
 holder = "chloe@lanterne.example"
 
+# Paul left on 30 November 2025: his account froze, and what it held is
+# owed him in 4567 until the repayments his exit drew up are paid.
+[[account]]
+code = "101311"
+label = "Capital — Paul Garnier"
+kind = "equity"
+parent = "1013"
+holder = "paul@lanterne.example"
+frozen = true
+
 [[account]]
 code = "1061"
 label = "Réserve légale"
@@ -135,9 +152,14 @@ label = "Associés — comptes courants"
 kind = "liability"
 
 [[account]]
-code = "4561"
-label = "Associés — capital souscrit et appelé, non versé"
+code = "4562"
+label = "Apporteurs — capital appelé, non versé"
 kind = "asset"
+
+[[account]]
+code = "4567"
+label = "Associés — capital à rembourser"
+kind = "liability"
 
 [[account]]
 code = "457"
@@ -216,17 +238,24 @@ month = "2026-11"
 [[period]]
 month = "2026-12"
 
-# The statutes' terms for the work share, adopted when the co-op was
-# founded and carried over: it divides among the workers by pay, and half
-# of each associate's part is employed in shares of the capital, the rest
-# paid (Code du travail, art. L3324-5 and R3323-11). Later terms are
-# drafted here and adopted by a decision of the assembly that moves to
-# adopt them.
+# The statutes' terms, adopted when the co-op was founded and carried
+# over. The work share divides among the workers by pay, and half of each
+# associate's part is employed in shares of the capital, the rest paid
+# (Code du travail, art. L3324-5 and R3323-11). A share is worth 50 € and
+# an associate subscribes at least 20, paying them in at most 10 monthly
+# instalments; one who leaves is repaid a year after the exit, in three
+# yearly repayments. Later terms are drafted here and adopted by a
+# decision of the assembly that moves to adopt them.
 [[terms]]
 id = "st-2021"
 from = 2021
 salary = 100
 capital = 50
+share = 5000
+minimum = 20
+instalments = 10
+delay = 12
+repayments = 3
 adopted = 2021-03-01
 
 # The 2025 surplus, split as the statutes require and the law allows (loi

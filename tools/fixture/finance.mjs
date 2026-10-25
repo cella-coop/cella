@@ -1,6 +1,8 @@
 // fixture check, finance: a mock co-op's capital, surplus allocations, pay
 // and expenses are consistent. A capital account is a member's, under
-// 1013, and the journal credits it with their shares at the share's value;
+// 1013, and the journal credits it with their shares at the share's value,
+// the statutes' capital clause, or, once they left, holds nothing and their
+// repayments, due as the clauses say, add up to it, owed in 4567;
 // the work share's terms divide all of it and govern each allocation;
 // an allocation honours a SCOP's floors (loi n° 78-763, art. 33); every
 // salary is a member's, and they keep within the internal rules' ratio; a
@@ -12,8 +14,12 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function finance(read, fail) {
   const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
-  const value = read('member').share_value
   const books = read('account')
+  // The share's value and the capital clauses: the latest adopted terms
+  // that state them
+  const clauses = (books.terms ?? []).filter((t) => t.adopted && t.share).sort((x, y) => y.from - x.from)[0] ?? {}
+  const value = clauses.share
+  const repayments = read('graft.account-member-transaction').repayment ?? []
   const accounts = new Map((books.account ?? []).map((a) => [a.code, a]))
   const entries = new Map((read('transaction').entry ?? []).map((e) => [e.id, e]))
   const balance = (code) =>
@@ -31,9 +37,34 @@ export function finance(read, fail) {
       fail(`account ${a.code}: ${a.holder} is no member`)
     } else if (a.parent !== '1013') {
       fail(`account ${a.code}: a member's capital account sits under 1013`)
+    } else if (m.status === 'exited') {
+      // A departed associate's capital moved to 4567 when they left, owed
+      // them as their repayments say
+      const theirs = repayments.filter((r) => r.member === m.address)
+      if (!a.frozen) {
+        fail(`account ${a.code}: ${m.address} left, and it is not frozen`)
+      } else if (balance(a.code) !== 0) {
+        fail(`account ${a.code}: ${m.address} left, and it still holds ${balance(a.code)}`)
+      } else if (theirs.reduce((s, r) => s + r.amount, 0) !== m.shares * value) {
+        fail(`repayment: ${m.address}'s add up to ${theirs.reduce((s, r) => s + r.amount, 0)}, not their ${m.shares} shares at ${value}`)
+      }
+      theirs.sort((x, y) => x.n - y.n).forEach((r, k) => {
+        const due = new Date(m.exited)
+        due.setUTCMonth(due.getUTCMonth() + clauses.delay + 12 * k)
+        if (r.n !== k + 1 || iso(r.due) !== iso(due)) {
+          fail(`repayment ${r.n} of ${m.address}: due ${iso(r.due)}, not ${iso(due)} as the statutes say`)
+        }
+      })
+      if (theirs.length !== clauses.repayments) {
+        fail(`repayment: ${m.address} has ${theirs.length}, not the statutes' ${clauses.repayments}`)
+      }
     } else if (balance(a.code) !== m.shares * value) {
       fail(`account ${a.code}: the journal credits it ${balance(a.code)}, not ${m.address}'s ${m.shares} shares at ${value}`)
     }
+  }
+  const owed = repayments.filter((r) => !r.paid).reduce((s, r) => s + r.amount, 0)
+  if (accounts.has('4567') && balance('4567') !== owed) {
+    fail(`account 4567: the journal owes departed associates ${balance('4567')}, not the ${owed} their repayments leave to pay`)
   }
   for (const a of read('graft.account-member').allowance ?? []) {
     if (!members.has(a.member)) {

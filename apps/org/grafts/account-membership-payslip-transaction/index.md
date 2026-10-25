@@ -61,6 +61,10 @@ payment's rules pass; a payment that withholds less is refused; an
 instalment never exceeds what is owed; lines that credit the bank are
 refused by the payment's rule.
 
+## Reads
+
+A plan and what each run withheld read as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)).
+
 ## Shell
 
 Adds to a person's page their instalments from pay: how many, each, since

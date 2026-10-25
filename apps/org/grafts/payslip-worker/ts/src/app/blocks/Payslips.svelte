@@ -1,5 +1,6 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
+  import { tones } from '@cella/org-payslip/models'
   import type { Pay } from '../../models/pay.ts'
 
   // A worker's payslips, month by month.
@@ -10,7 +11,7 @@
     { key: 'month', label: 'Month', value: (p) => p.month },
     { key: 'gross', label: 'Gross', kind: 'money', value: (p) => p.gross },
     { key: 'net', label: 'Net', kind: 'money', value: (p) => p.net },
-    { key: 'state', label: 'Run', kind: 'badge', value: (p) => p.state },
+    { key: 'state', label: 'Run', kind: 'badge', value: (p) => p.state, tone: (p) => tones[p.state] },
   ]
 </script>
 

@@ -1,10 +1,8 @@
-import { icons, type App, type Tone } from '@cella/org-ui'
-import { states, type Payslip, type State } from '../models/payslip.ts'
+import { icons, type App } from '@cella/org-ui'
+import { states, tones, type Payslip } from '../models/payslip.ts'
 import Prepare from './blocks/Prepare.svelte'
 import Run from './blocks/Run.svelte'
 import Slip from './blocks/Slip.svelte'
-
-const tones: Record<State, Tone> = { prepared: 'accent', approved: 'warning', paid: 'positive' }
 
 // The feat's client side: every payslip in a table, with a dashboard of
 // the payroll by month; preparing a month's run; and a payslip's page,

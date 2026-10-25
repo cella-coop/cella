@@ -1,6 +1,10 @@
 export const states = ['prepared', 'approved', 'paid'] as const
 export type State = (typeof states)[number]
 
+// How each state of a run reads wherever a payslip is listed: prepared
+// waits on its approver, approved on its payment.
+export const tones = { prepared: 'accent', approved: 'warning', paid: 'positive' } as const satisfies Record<State, string>
+
 // A member's payslip for a month, amounts in cents, with where its run
 // stands. Hours are those of the member's approved month, where it was
 // timed.

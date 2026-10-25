@@ -10,7 +10,11 @@
   "dependencies": {
     "@cella/org-db": "workspace:*",
     "@cella/org-ops": "workspace:*",
+    "@cella/org-pdf": "workspace:*",
     "@cella/org-ui": "workspace:*",
     "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@cella/org-sign": "workspace:*"
   }
 }

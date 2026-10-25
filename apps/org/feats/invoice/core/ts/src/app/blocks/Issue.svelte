@@ -14,6 +14,7 @@
 <Form action="issue" submit="Issue invoice">
   <Field label="Series" name="series" options={series} />
   <Field label="Bill to" name="bill_to" list={about.billed} required />
+  <Field label="Billing address" name="bill_address" rows={2} placeholder="8 place du Marché, 93100 Montreuil" required wide />
   <Field label="Label" name="label" required wide />
   <Field label="Due (30 days if empty)" name="due" type="date" />
   {#each issue.lines as line, i (line.key)}

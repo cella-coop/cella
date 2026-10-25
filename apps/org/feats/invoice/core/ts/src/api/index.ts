@@ -3,6 +3,7 @@
 // the same transaction and under the same verdict; the form readers let it
 // read the same forms. Its reads, and its slice, which the shell mounts.
 export { annul, issue, issuing, paying, payment, send, voiding } from '../handlers/index.ts'
-export { invoice, invoices, offered } from '../drivers/invoice.ts'
+export { invoice, invoices, offered, printed } from '../drivers/invoice.ts'
+export { pdf } from './pdf.ts'
 export * as forms from './forms.ts'
 export { slice } from './slice.ts'

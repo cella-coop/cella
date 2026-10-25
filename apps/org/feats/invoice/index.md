@@ -14,7 +14,7 @@ it posts are the `invoice-transaction` graft's.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| invoice | `id`, `issued`, `due`, `bill_to`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, `F-2026-0056` |
+| invoice | `id`, `issued`, `due`, `bill_to`, `bill_address?`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, `F-2026-0056` |
 | line | `description`, `quantity`, `unit_price`, `amount`, `vat_rate` | `amount` = quantity × unit price |
 | payment | `at`, `amount`, `method`, `reference` | many per invoice; `reference` is the bank's |
 | series | `name`, `next` | one per year at rung 1; a device's own at rung 2 |
@@ -107,7 +107,9 @@ arrives at rung 3.
   granted without end (`until` is NULL), so it never runs out; a device's
   right at rung 2 ends, and a number past it needs a fresh grant, which
   is ordered.
-- `invoice.invoice`: as issued, `net`, `vat` and `total` as
+- `invoice.invoice`: as issued, the name billed (`bill_to`) and its
+  address (`bill_address`, its lines separated by newlines; none on an
+  invoice issued before it was kept), `net`, `vat` and `total` as
   `cella.amount` (a NULL `vat` is an invoice without VAT), unique by
   series and number; `sent`, `voided` and `reason` are set once.
 - `invoice.line`: description, quantity (exact decimal), unit price,
@@ -121,6 +123,9 @@ arrives at rung 3.
   cents, and its state (`unpaid`, `partial`, `paid`, `overpaid`,
   `voided`). The excess of a payment beyond the total is `credit`, owed
   to the client; on a voided invoice everything paid is.
+- `invoice.taxed`: each invoice's VAT by rate, the net of its lines at
+  the rate and the tax on it in cents, each line's tax rounded as `issue`
+  rounds it, so the rates add up to the invoice's `vat`.
 
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net; another keeps an issued invoice and its lines unchanged,
@@ -147,7 +152,8 @@ graft composes with its own state into one write.
 
 - `issue` (bounded): spends the number and writes the invoice and its
   lines in one statement, amounts and VAT computed in SQL from the lines;
-  the payload holds the number and amounts, never the name billed.
+  the payload holds the number and amounts, never the name or address
+  billed.
 - `send` (confluent): sets `sent` once; a voided invoice is left unsent.
 - `payment` (confluent): records the payment with a receipt; a reference
   already recorded for the invoice merges and returns `merged`.
@@ -162,13 +168,60 @@ labels never wait.
 
 The `invoices` collection, the latest first, each with its standing; its
 dashboard shows what is owed and overdue, what was invoiced this year,
-the amounts by month and the invoices by standing;
-overdue reads the server's clock, a read no rule depends on. New issues one (`issue`) in a series the feat
-offers. An invoice's page shows its lines and payments and marks it sent
-(`send`). `api/forms.ts` reads the shell's forms into the handlers'
-inputs, amounts typed in euros, so a graft's writes read the same forms:
+the amounts by month and the invoices by standing; overdue reads the
+server's clock, a read no rule depends on. New issues one (`issue`) in a
+series the feat offers, to a name and the address billed. An invoice's
+page shows its lines and payments, marks it sent (`send`) and links its
+PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,
+amounts typed in euros, so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
 that post them. Whom an invoice bills is `client-invoice`'s.
+
+## The PDF
+
+An issued invoice's bytes, `/invoices/<id>/content`, are its PDF, which
+the slice's `content` makes on the server from the invoice as issued
+(`printed`, then `pdf`, through [`@cella/org-pdf`](../../core/pdf/index.md))
+and whoever reads the invoice may open. It is in French, as loi n° 94-665
+art. 2 asks of an invoice, and prints the mentions a client's accountant
+checks: the list is the customs' control sheet of March 2026, which cites
+each article (code de commerce L441-9; CGI, annexe II, art. 242 nonies A),
+and the registry's sheet on business papers (code de commerce R123-237).
+
+| Mention | Printed from | Law |
+|---|---|---|
+| seller's legal name, form, seat; capital where it is fixed | `cella.scope_legal_name`, `_form`, `_seat`, `_capital` | L441-9; R123-237; "à capital variable" for a capital that varies |
+| SIREN, "RCS" and the registry's town | `cella.scope_siren`, `_rcs` | R123-237; 242 nonies A, I, 2° |
+| seller's VAT number | `cella.scope_vat` | 242 nonies A, I, 2° |
+| buyer's name and address | `bill_to`, `bill_address` | L441-9; 242 nonies A, I, 1° |
+| number, in one gapless series, and date of issue | `id`, `issued` | 242 nonies A, I, 6° and 7° |
+| each line's quantity, description, unit price before tax and VAT rate | `invoice.line` | 242 nonies A, I, 8° bis |
+| net, VAT at each rate on its base, total | `net`, `invoice.taxed`, `total` | 242 nonies A, I, 10° bis |
+| due date; no discount for paying early; late penalties at the ECB's rate plus ten points; the 40 € recovery indemnity owed by a professional | `due`, and the code's terms | L441-9, I, al. 5; L441-10; D441-5 |
+
+The seller's mentions close every page, with its number; a voided
+invoice is marked "ANNULÉE" and its date. Payments are not printed: the
+PDF is the invoice as issued. A setting a host has not made is left out,
+so a scope without its SIREN prints none.
+
+Not printed yet:
+
+- the date of the service, where it differs from the date of issue
+  (242 nonies A, I, 10°): an invoice keeps none, and its label says it;
+- the buyer's SIREN, the delivery address and whether it bills goods,
+  services or both, which the e-invoicing reform asks of an SME's invoices
+  from 1 September 2027;
+- the ground of a VAT exemption, for a line at 0 %; and a rate with a
+  decimal, as 5,5 %, which a signed request cannot carry yet, since it
+  holds integers only;
+- Factur-X and sending through an approved platform, at rung 3.
+
+The seller's mentions are read when the PDF is made, not kept with the
+invoice: a seat that moves changes the PDF of an invoice issued before.
+Légifrance refuses the box this was written on, so the articles are cited
+as the customs and the registry quote them; the "à capital variable"
+mention's article in the code de commerce (among L231-1 to L231-8) was
+not verified.
 
 ## Lanterne
 
@@ -179,3 +232,6 @@ that post them. Whom an invoice bills is `client-invoice`'s.
   partial.
 - 0050 was voided the day after issue, before any payment, and reissued as
   0051 at the solidarity rate.
+- Every invoice carries its client's address. Lanterne prints as Lanterne
+  SCOP SARL, a SCOP SARL à capital variable registered at RCS Bobigny,
+  the registry for Montreuil; its SIREN and VAT number are placeholders.

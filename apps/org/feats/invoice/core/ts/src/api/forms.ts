@@ -16,7 +16,7 @@ export function issue(form: Form): Issue {
   if (!lines.length) {
     throw new Error('an invoice needs at least one line')
   }
-  return { series: form.get('series'), bill_to: form.get('bill_to'), label: form.get('label'), due: form.get('due') || undefined, lines }
+  return { series: form.get('series'), bill_to: form.get('bill_to'), bill_address: form.get('bill_address').replace(/\r\n?/g, '\n') || undefined, label: form.get('label'), due: form.get('due') || undefined, lines }
 }
 
 export const payment = (form: Form, invoice: string): Payment => ({

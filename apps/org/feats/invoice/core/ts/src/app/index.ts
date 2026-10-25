@@ -51,8 +51,10 @@ export const app: App = {
           { label: 'Issued', value: i.issued, kind: 'date' },
           { label: 'Due', value: i.due, kind: 'date', tone: i.overdue ? 'warning' : undefined },
           { label: 'Sent', value: i.sent, kind: 'date' },
+          ...(i.bill_address ? [{ label: 'Billed at', value: i.bill_address.replaceAll('\n', ', ') }] : []),
           ...(i.voided ? [{ label: 'Voided', value: i.voided, kind: 'date' as const }, { label: 'Why', value: i.reason }] : []),
         ],
+        related: (i: Detail) => [{ label: 'Download PDF', sub: `${i.id}.pdf`, href: `/invoices/${i.id}/content` }],
         activity: (i: Detail) => [
           ...i.payments.map((p) => ({ at: p.at, text: `received ${money(p.amount)}, ${p.reference}` })),
           ...(i.voided ? [{ at: i.voided, text: 'voided' }] : []),

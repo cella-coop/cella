@@ -53,6 +53,8 @@ importers:
 
   apps/org/core/ops/ts: {}
 
+  apps/org/core/pdf/ts: {}
+
   apps/org/core/sign/ts: {}
 
   apps/org/core/ui/ts:
@@ -222,12 +224,19 @@ importers:
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../../core/ops/ts
+      '@cella/org-pdf':
+        specifier: workspace:*
+        version: link:../../../../core/pdf/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../../core/sign/ts
 
   apps/org/feats/meeting/core/ts:
     dependencies:

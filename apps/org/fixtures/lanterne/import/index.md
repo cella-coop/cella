@@ -1,0 +1,29 @@
++++
+title = "Lanterne's imports"
+updated = 2026-10-25
++++
+
+Sample files from the tools a co-op leaves when it moves to cella, one for
+each kind `cella import` and the Imports page read, each with lines the
+rules refuse beside the ones they take:
+
+- `members.csv`: Nadia and Olivier, invited with their first devices;
+  Rose, whose row carries no device key.
+- `clients.csv`: two companies and a person, and Maison Ferrand, a client
+  already.
+- `fec-2026-10.txt`: October from the previous tool's books, a FEC with a
+  bar between its fields. The rental account 6135 and the fees account 6226
+  are new to the chart; the furniture rental and Atelier Ondine's invoice
+  balance; the fees entry does not, and 2025's opening entry falls in no
+  period of the books.
+- `invoices.csv`: two invoices to issue for Atelier Ondine and Vélo
+  Solidaire, the first of two lines, and one with no client.
+- `toggl.csv`: Inès's Toggl detailed report: her time on Ferrand, the
+  co-op's own and Clairval, a row of Thomas's and a project the co-op does
+  not hold.
+- `harvest.csv`: Harvest's detailed time report, two rows of Inès's and one
+  of Malik's.
+- `projects.csv`: two projects, and a row with no title.
+- `tasks.csv`: Asana's task export: two tasks for Ferrand's packaging, one
+  done before the switch, one in no project and one in a project the co-op
+  does not hold.

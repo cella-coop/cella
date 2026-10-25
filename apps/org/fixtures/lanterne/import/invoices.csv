@@ -1,0 +1,5 @@
+invoice,client,label,description,quantity,unit_price,vat_rate,due
+OLD-0412,Atelier Ondine,Workshop and follow-up,Brand workshop (day),1,"1 200,00",20,2026-11-25
+OLD-0412,Atelier Ondine,Workshop and follow-up,Follow-up calls (hours),3,"90,00",20,2026-11-25
+OLD-0413,Vélo Solidaire,Poster reprint,Reprint of the identity posters,1,"350,00",20,
+OLD-0414,,Missing client,Something,1,"10,00",20,

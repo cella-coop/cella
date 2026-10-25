@@ -1,0 +1,4 @@
+Date,Client,Project,Project Code,Task,Notes,Hours,Hours Rounded,Billable?,Invoiced?,Approved?,First Name,Last Name,Roles,Employee?,Billable Rate,Billable Amount,Cost Rate,Cost Amount,Currency,External Reference URL
+2026-10-22,Maison Ferrand,"Maison Ferrand, packaging",,Design,Colour proofs,2.5,2.5,Yes,No,No,Inès,Haddad,,Yes,,,,,EUR,
+2026-10-23,,,,Admin,Expenses,0.75,0.75,No,No,No,Inès,Haddad,,Yes,,,,,EUR,
+2026-10-23,Nuvola Énergie,"Nuvola Énergie, marketing retainer",,Copy,Newsletter,2,2,Yes,No,No,Malik,Benali,,Yes,,,,,EUR,

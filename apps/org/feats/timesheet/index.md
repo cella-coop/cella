@@ -16,7 +16,8 @@ and it is counted against projects' budgets.
 | period | `member`, `month`, `submitted?`, `approved?`, `approver?` | `month` is `YYYY-MM` |
 
 A period is a **month**, not seedling's week: Lanterne's payroll, its
-books and its retainers run by the month, and patronage will sum months.
+books and its retainers run by the month, and the work share by time
+worked sums approved months (`account-timesheet`).
 A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.

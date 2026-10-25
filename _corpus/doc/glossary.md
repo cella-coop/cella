@@ -22,7 +22,7 @@ updated = 2026-10-25
 | **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `ui` and the notary |
+| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `rules`, `ui` and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
 | **subsidiarity** | a rule lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
@@ -33,7 +33,7 @@ updated = 2026-10-25
 | **confluent** | a write that merges in any order and never waits: an edit, a vote cast, a payment |
 | **bounded** | a write that spends a right granted in advance and waits only when the right runs out: a draw, an invoice number |
 | **ordered** | a write that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
-| **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers |
+| **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
 | **notary** | the scope's office for every write: the `cella` Postgres extension, a layer of org's core under every feat, not a feat; it alone writes the log |
 | **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
@@ -45,7 +45,7 @@ updated = 2026-10-25
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed rule** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
 | **power** | the id of something a write needs, such as `issue-invoice`; each op's is registered in `cella.power` |
-| **mandate** | a grant of one power to one role, with an optional limit and term |
+| **mandate** | a grant of one power to one role, with an optional limit per write or budget per month or year, and a term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **position** | a member holding a seat, and perhaps a role, in a circle |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
@@ -87,7 +87,7 @@ updated = 2026-10-25
 | **capital account** | a member's equity in the co-op: the shares they paid in and what is credited to them |
 | **subscription** | the shares an associate takes on joining, at the share's value, called whole and paid in at once or in monthly instalments from their pay |
 | **repayment** | what a departed associate is paid back of their capital, at its nominal value, in yearly instalments the statutes set, within five years |
-| **patronage** | a member's contribution (hours, wages, revenue or trade) used to divide a surplus |
+| **patronage** | a worker's contribution used to divide a surplus; in a SCOP the work share's bases, pay, time worked or equal parts, never revenue |
 | **buy-in / buyout** | capital a member subscribes on joining, and its repayment on leaving |
 | **revolving capital** | repaying the oldest retained patronage as new patronage is retained |
 | **dues** | periodic payments every member owes |

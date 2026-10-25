@@ -67,6 +67,12 @@ feat holds, so the power has no limit.
   month)`: whether a worker is employed on a day, or on any day of a
   month; the grafts that join employment read them.
 
+## Schema
+
+`worker` (`core/sql/`): `worker.worker`; `worker.employed`,
+`worker.employed_in` and `worker.hires`. The app role may select and
+insert; the rules role may select.
+
 ## Personal data
 
 A worker's name is personal data of class `payroll`, registered by their

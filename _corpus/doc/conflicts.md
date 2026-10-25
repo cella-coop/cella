@@ -61,6 +61,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `member-project:project.share` | bounded on the budget | right |
 | `task.create`, `.move`, `.complete` | confluent | right: field registers, the last writer wins |
 | `member-task:task.assign`, `project-task:task.file` | confluent | right: registers |
+| `client-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
@@ -73,6 +74,10 @@ decision. Lanterne's state is that of 24 October 2026.
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
 | `meeting.hold`, `.cancel` | ordered | right: one of them stands, and the hold fixes the agenda and who came |
 | `meeting-member:attendance.mark`, `.record` | confluent | right: a register per member; fixed by the hold |
+| `file.upload` | confluent | right: a fact, the uploader's own; two uploads commute ([files](#files-are-facts-and-imports-are-the-writes-they-carry)) |
+| `expense-file:expense.attach`, `file-member:member.attach`, `file-worker:worker.attach` | confluent | right: facts, a file attached once; a receipt is refused once its expense is refused or reimbursed |
+| `import:run.record` | confluent | right: the importer's own record; each line is the write it carries, with that write's label |
+| `account-transaction:entry.carry` | confluent | right: entries add up in any order, and an account two carries open keeps the first's label |
 
 ## Nothing posts into a closed period
 
@@ -706,6 +711,10 @@ count; arriving after, it is refused and he stays excused.
 
 ## Files are facts, and imports are the writes they carry
 
+Owners: the `file` feat for the files; `expense-file`, `file-member` and
+`file-worker` for what each attaches; the `import` feat for the record;
+`account-transaction` for the carry.
+
 A file never changes, so uploading one is a fact: `file.upload`, and the
 grafts' writes that store a file and attach it, `expense-file:expense.attach`,
 `file-member:member.attach` and `file-worker:worker.attach`, are
@@ -743,6 +752,7 @@ nothing.
 | `timesheet:period.submit` | idempotent: the first day stands |
 | `document.create`, `meeting.schedule` | facts; a document's slug taken twice is refused, a second meeting of a circle on one day is numbered |
 | `meeting.minute` | idempotent: the first day stands, and the minutes are the document already kept |
+| `file.upload`, `import:run.record` | facts; a file never changes, and an import's record is its importer's own |
 
 ## Missing writes
 
@@ -754,7 +764,7 @@ The matrix found writes no `ops.ts` declares:
 | `account.open` | ordered | account codes are unique in the scope |
 | `document.version` | confluent | adoption names versions nothing saves; **applied**, now declared |
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
-| erasing a person | ordered | the tombstone must be fixed in the log |
+| erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `client.erase`, `member.erase` and `.forget` |
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them |

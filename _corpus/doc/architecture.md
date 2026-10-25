@@ -315,7 +315,8 @@ events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); `/[collection]/[id]/content`, an item's
 bytes, such as a file's, which the collection's owner serves (`content`)
 to whom its rule or an extension's `allows` opens them; `/act` and
-`/theme` for the user menu; and `/`, the co-op's home, a dashboard of widgets pinned from many
+`/theme` for the user menu; `/journal`, the transactions' old address,
+which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
 collections. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
 joins; the root may join two feats no graft joins, as it puts on the
@@ -350,8 +351,8 @@ Every write is `POST /api/<feat>/<op>` and maps to one permission,
 
 ```ts
 export const ops = {
-  'member:member:invite': confluent(),
-  'member:member:admit': ordered({ decide: 'consent' }),
+  'member:member:invite': confluent({ power: 'invite-member' }),
+  'member:member:admit': ordered({ decide: 'consent', check: 'decided' }),
 } satisfies Ops
 ```
 

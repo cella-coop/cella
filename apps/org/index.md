@@ -27,8 +27,9 @@ and the meetings ahead until a viewer pins their own, and the Inbox,
 what waits on the acting member, its count beside it. Each feat's
 collection is a page in the sidebar: Members, Circles, Decisions, Documents and
 Meetings (governance); Clients, Projects, Tasks, Timesheets and Workers
-(work); Invoices, Accounts, Periods, Allocations, Transactions, Expenses
-and Payslips (finance); Devices, Files, Imports and the Log (platform).
+(work); Invoices, Accounts, Periods, Allocations, Terms, Statements,
+Financial statements, Transactions, Expenses and Payslips (finance);
+Devices, Files, Imports and the Log (platform).
 Every collection is the same component, its drawer's View card holding the filter, the
 layout (list, table, gallery, board, calendar or dashboard) and its
 options, and every item the same detail view, its
@@ -150,10 +151,10 @@ and admit a member by vote (ordered).
 | `account-payslip` | a surplus's work share divided by pay and in equal parts |
 | `account-timesheet` | a surplus's work share divided by time worked |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet; the books carried over from a FEC |
-| `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
-| `circle-file-member` | who opens a personal file by a power over what it records |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
+| `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
+| `circle-file-member` | who opens a personal file by a power over what it records |
 | `circle-meeting` | a meeting's circle, and how a circle meets: its quorum, and whether its minutes are adopted |
 | `circle-meeting-member` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it |
 | `circle-member` | positions: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
@@ -168,8 +169,8 @@ and admit a member by vote (ordered).
 | `decision-member-worker` | a candidate's admission, proposed from their candidacy once their probation is over |
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-member` | who has read the co-op's adopted texts |
-| `expense-invoice-project-timesheet` | a project's margin: invoiced less its time's cost and its expenses, its burn, its forecasts and whether it is watched |
 | `expense-file` | an expense's receipts, one carried by its claim |
+| `expense-invoice-project-timesheet` | a project's margin: invoiced less its time's cost and its expenses, its burn, its forecasts and whether it is watched |
 | `expense-member` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
@@ -180,9 +181,9 @@ and admit a member by vote (ordered).
 | `key-member` | a member's devices, the first carried by their invitation and enrolled by their admission |
 | `key-worker` | a worker's devices, the first carried by their hire and enrolled with it |
 | `meeting-member` | who came to a meeting: present, excused or absent |
+| `member-payslip` | a member's pay on their page |
 | `member-project` | shares of a project's budget, never beyond it |
 | `member-task` | who does a task |
-| `member-payslip` | a member's pay on their page |
 | `member-timesheet` | no time of a member suspended or gone, and a member's months |
 | `member-worker` | a worker's candidacy and probation, and each person's path from hired to member |
 | `payslip-timesheet` | a pay run from approved time |

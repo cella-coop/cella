@@ -52,7 +52,7 @@ An account the chart marks `cash` (the account feat's flag) holds the
 co-op's money, and money leaves one only through the writes with their own
 power or right and a rule that checks the entry is exactly what they say:
 `transaction.pay`, a supplier payment; `account.draw`, a member's draw;
-`expense.reimburse`, an expense paid back; `payslip.pay`, a pay run.
+`expense.reimburse`, an expense paid back; `payslip:run.pay`, a pay run.
 
 - `account_transaction.cashless`, on `transaction:transaction:post`: the
   entry posts to no cash account, in or out. Keeping the books is not

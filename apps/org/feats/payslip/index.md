@@ -49,8 +49,7 @@ and then of `pay-payroll`, is `circle-member-payslip`'s, in their inbox.
 | approve | `approve-payroll`, no limit | Camille, as gérante |
 | pay | `pay-payroll`, no limit | Julien, as finance |
 
-Wages are owed whatever their size, so no power has a limit. These replace
-the interim `transaction.payroll` and its `run-payroll`.
+Wages are owed whatever their size, so no power has a limit.
 
 ## Invariants
 

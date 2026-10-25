@@ -1,5 +1,6 @@
 //! The notary log: receipts and entries, each hashed with BLAKE3 under its
-//! own domain and signed with the scope's Ed25519 key. A receipt says a
+//! own domain and signed with the scope's Ed25519 key of the day, which
+//! each names by its id ([`Signer`]). A receipt says a
 //! write arrived, carrying the member's signature on it; an entry is the
 //! numbered verdict, chained to the previous entry and naming its receipt.
 //! Both carry a digest of the payload, never the payload, so personal data
@@ -7,7 +8,7 @@
 
 use crate::sign::Request;
 use crate::{Error, Result};
-use ed25519_dalek::{Signature, Signer, SigningKey, Verifier, VerifyingKey};
+use ed25519_dalek::{Signature, Signer as _, SigningKey, Verifier, VerifyingKey};
 use serde_json::Value;
 
 /// The `prev` of the first entry.
@@ -203,24 +204,56 @@ pub struct Broken {
     pub why: &'static str,
 }
 
+/// A key the notary signed with: its id, its public key and the first
+/// entry it signed. Each signs from its `since` until the next one's, so a
+/// rotated or lost key file leaves the entries it signed verifiable, and a
+/// retired key never signs again.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Signer {
+    pub id: i32,
+    pub public: [u8; 32],
+    pub since: i64,
+}
+
 /// Walks a log from its first entry, checking numbering, links, hashes and
-/// signatures.
+/// signatures, each under the key in office at its number.
 pub struct Chain {
-    public: VerifyingKey,
+    signers: Vec<(i32, i64, VerifyingKey)>,
     prev: [u8; 32],
     next: i64,
 }
 
 impl Chain {
-    pub fn new(public: &[u8]) -> Result<Self> {
-        let bytes: [u8; 32] = public
-            .try_into()
-            .map_err(|_| Error::Key(format!("a public key is 32 bytes, got {}", public.len())))?;
-        let public = VerifyingKey::from_bytes(&bytes).map_err(|e| Error::Key(e.to_string()))?;
-        Ok(Self { public, prev: GENESIS, next: 1 })
+    /// A chain over the scope's signers in the order they took office: ids
+    /// from 1 up, the first from entry 1, each later one from a later entry.
+    pub fn new(signers: &[Signer]) -> Result<Self> {
+        let mut out = Vec::with_capacity(signers.len());
+        for (i, s) in signers.iter().enumerate() {
+            let expected = i32::try_from(i + 1).map_err(|_| Error::Key("too many signers".into()))?;
+            if s.id != expected {
+                return Err(Error::Key(format!("signer {} where {expected} was due: ids run from 1 with no gap", s.id)));
+            }
+            let after = out.last().map_or(0, |&(_, since, _)| since);
+            if (i == 0 && s.since != 1) || s.since <= after {
+                return Err(Error::Key(format!("signer {} takes office at entry {}, which is not after its predecessor's", s.id, s.since)));
+            }
+            let public = VerifyingKey::from_bytes(&s.public).map_err(|e| Error::Key(e.to_string()))?;
+            out.push((s.id, s.since, public));
+        }
+        Ok(Self { signers: out, prev: GENESIS, next: 1 })
     }
 
-    pub fn check(&mut self, e: &Entry, prev: &[u8], hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
+    /// The key in office at entry `n`, if it is the one `key` names.
+    fn signer(&self, n: i64, key: i32) -> std::result::Result<&VerifyingKey, &'static str> {
+        let (id, _, public) = self.signers.iter().rev().find(|&&(_, since, _)| since <= n).ok_or("no signer holds this entry")?;
+        if *id != key {
+            return Err("signed by a key that was not in office");
+        }
+        Ok(public)
+    }
+
+    /// Checks entry `e`, signed by the signer `key`.
+    pub fn check(&mut self, e: &Entry, key: i32, prev: &[u8], hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
         let broken = |why| Broken { n: e.n, why };
         if e.n != self.next {
             return Err(broken("gap in numbering"));
@@ -232,8 +265,9 @@ impl Chain {
         if hash != want {
             return Err(broken("hash mismatch"));
         }
+        let public = self.signer(e.n, key).map_err(broken)?;
         let sig = Signature::from_slice(sig).map_err(|_| broken("malformed signature"))?;
-        if self.public.verify(&want, &sig).is_err() {
+        if public.verify(&want, &sig).is_err() {
             return Err(broken("signature invalid"));
         }
         self.prev = want;
@@ -241,17 +275,19 @@ impl Chain {
         Ok(())
     }
 
-    /// Checks the receipt an entry names: its hash, the notary's signature
-    /// on it, the member's signature on the request in `scope`, and that it
-    /// is the entry's: the same op, actor and payload.
-    pub fn check_receipt(&self, scope: &str, e: &Entry, r: &Receipt, hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
+    /// Checks the receipt an entry names, signed by the signer `key`: its
+    /// hash, the notary's signature on it, the member's signature on the
+    /// request in `scope`, and that it is the entry's: the same op, actor
+    /// and payload.
+    pub fn check_receipt(&self, scope: &str, e: &Entry, key: i32, r: &Receipt, hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
         let broken = |why| Broken { n: e.n, why };
         let want = r.hash();
         if r.n != e.receipt || hash != want || e.receipt_hash != want {
             return Err(broken("receipt hash mismatch"));
         }
+        let public = self.signer(e.n, key).map_err(broken)?;
         let sig = Signature::from_slice(sig).map_err(|_| broken("malformed receipt signature"))?;
-        if self.public.verify(&want, &sig).is_err() {
+        if public.verify(&want, &sig).is_err() {
             return Err(broken("receipt signature invalid"));
         }
         if r.request(scope).verify(&r.signature).is_err() {
@@ -316,24 +352,62 @@ mod tests {
             log.push((e, prev, h, key.sign(&h)));
             prev = h;
         }
-        let mut chain = Chain::new(&key.public()).unwrap();
+        let mut chain = Chain::new(&[signer(1, &key, 1)]).unwrap();
         for (e, p, h, s) in &log {
-            chain.check(e, p, h, s).unwrap();
+            chain.check(e, 1, p, h, s).unwrap();
         }
         assert_eq!(chain.len(), 3);
 
-        let mut chain = Chain::new(&key.public()).unwrap();
+        let mut chain = Chain::new(&[signer(1, &key, 1)]).unwrap();
         let (e, p, h, s) = &log[0];
         let mut forged = e.clone();
         forged.actor = "mallory@lanterne.example".into();
-        assert_eq!(chain.check(&forged, p, h, s), Err(Broken { n: 1, why: "hash mismatch" }));
+        assert_eq!(chain.check(&forged, 1, p, h, s), Err(Broken { n: 1, why: "hash mismatch" }));
         let (e, p, h, s) = &log[1];
-        assert_eq!(chain.check(e, p, h, s), Err(Broken { n: 2, why: "gap in numbering" }));
+        assert_eq!(chain.check(e, 1, p, h, s), Err(Broken { n: 2, why: "gap in numbering" }));
 
         let other = Key::from_seed(&[8; 32]).unwrap();
-        let mut chain = Chain::new(&other.public()).unwrap();
+        let mut chain = Chain::new(&[signer(1, &other, 1)]).unwrap();
         let (e, p, h, s) = &log[0];
-        assert_eq!(chain.check(e, p, h, s), Err(Broken { n: 1, why: "signature invalid" }));
+        assert_eq!(chain.check(e, 1, p, h, s), Err(Broken { n: 1, why: "signature invalid" }));
+    }
+
+    fn signer(id: i32, key: &Key, since: i64) -> Signer {
+        Signer { id, public: key.public(), since }
+    }
+
+    #[test]
+    fn a_rotated_key_signs_from_its_entry_and_the_retired_one_never_again() {
+        let (first, second) = (Key::from_seed(&[7; 32]).unwrap(), Key::from_seed(&[8; 32]).unwrap());
+        let mut log = Vec::new();
+        let mut prev = GENESIS;
+        for n in 1..=4 {
+            let e = entry(n);
+            let h = hash(&prev, &e).unwrap();
+            let (id, key) = if n < 3 { (1, &first) } else { (2, &second) };
+            log.push((e, id, prev, h, key.sign(&h)));
+            prev = h;
+        }
+        let signers = [signer(1, &first, 1), signer(2, &second, 3)];
+        let mut chain = Chain::new(&signers).unwrap();
+        for (e, id, p, h, s) in &log {
+            chain.check(e, *id, p, h, s).unwrap();
+        }
+        assert_eq!(chain.len(), 4);
+
+        // The retired key signs entry 3, and says it is still in office.
+        let (e, _, p, h, _) = &log[2];
+        let mut chain = Chain::new(&signers).unwrap();
+        for (e, id, p, h, s) in &log[..2] {
+            chain.check(e, *id, p, h, s).unwrap();
+        }
+        let late = first.sign(h);
+        assert_eq!(chain.check(e, 1, p, h, &late), Err(Broken { n: 3, why: "signed by a key that was not in office" }));
+        assert_eq!(chain.check(e, 2, p, h, &late), Err(Broken { n: 3, why: "signature invalid" }));
+
+        assert!(Chain::new(&[signer(2, &first, 1)]).is_err());
+        assert!(Chain::new(&[signer(1, &first, 2)]).is_err());
+        assert!(Chain::new(&[signer(1, &first, 1), signer(2, &second, 1)]).is_err());
     }
 
     #[test]
@@ -358,20 +432,21 @@ mod tests {
         r.signature = device.sign(r.request("lanterne.example").message().unwrap().as_bytes()).to_bytes();
         let mut e = entry(1);
         e.receipt_hash = r.hash();
-        let chain = Chain::new(&notary.public()).unwrap();
+        let chain = Chain::new(&[signer(1, &notary, 1)]).unwrap();
         let sig = notary.sign(&r.hash());
-        assert_eq!(chain.check_receipt("lanterne.example", &e, &r, &r.hash(), &sig), Ok(()));
+        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &sig), Ok(()));
 
         let broken = |why| Err(Broken { n: 1, why });
-        assert_eq!(chain.check_receipt("other.example", &e, &r, &r.hash(), &sig), broken("the member's signature does not verify"));
+        assert_eq!(chain.check_receipt("other.example", &e, 1, &r, &r.hash(), &sig), broken("the member's signature does not verify"));
         let mut late = r.clone();
         late.time = "2026-11-01T09:00:00.000000Z".into();
-        assert_eq!(chain.check_receipt("lanterne.example", &e, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
+        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
         let mut other = e.clone();
         other.op = "membership:member:exit".into();
-        assert_eq!(chain.check_receipt("lanterne.example", &other, &r, &r.hash(), &sig), broken("the receipt is another write's"));
+        assert_eq!(chain.check_receipt("lanterne.example", &other, 1, &r, &r.hash(), &sig), broken("the receipt is another write's"));
         let forged = Key::from_seed(&[8; 32]).unwrap().sign(&r.hash());
-        assert_eq!(chain.check_receipt("lanterne.example", &e, &r, &r.hash(), &forged), broken("receipt signature invalid"));
+        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &forged), broken("receipt signature invalid"));
+        assert_eq!(chain.check_receipt("lanterne.example", &e, 2, &r, &r.hash(), &sig), broken("signed by a key that was not in office"));
     }
 
     #[test]

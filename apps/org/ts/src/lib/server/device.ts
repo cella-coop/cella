@@ -2,6 +2,7 @@ import type { Db, Deps } from '@cella/org-db'
 import { devices } from '@cella/org-key/api'
 import { scope } from '@cella/org-log/api'
 import { members } from '@cella/org-member/api'
+import { workers } from '@cella/org-worker/api'
 import { fixture, signer, type Device } from '@cella/org-sign'
 import { CELLA_DEV } from '$app/env/private'
 
@@ -31,12 +32,15 @@ async function own(db: Db, address: string): Promise<Device | null> {
   return null
 }
 
-// Who the dev server can act as: members with a fixture device in force.
+// Who the dev server can act as: members, and workers who are not, with a
+// fixture device in force.
 export async function actors(db: Db): Promise<{ address: string; name: string }[]> {
   if (!dev) {
     return []
   }
-  const all = await members(db)
+  const people = await members(db)
+  const known = new Set(people.map((m) => m.address))
+  const all = [...people, ...(await workers(db)).filter((w) => !known.has(w.address))]
   const out = []
   for (const m of all) {
     if (await own(db, m.address)) {

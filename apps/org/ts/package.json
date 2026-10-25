@@ -61,6 +61,8 @@
     "@cella/org-graft-member-timesheet": "workspace:*",
     "@cella/org-graft-project-task": "workspace:*",
     "@cella/org-graft-project-timesheet": "workspace:*",
+    "@cella/org-graft-decision-member-worker": "workspace:*",
+    "@cella/org-graft-document-member": "workspace:*",
     "@cella/org-graft-key-worker": "workspace:*",
     "@cella/org-graft-member-worker": "workspace:*",
     "@cella/org-graft-payslip-worker": "workspace:*",

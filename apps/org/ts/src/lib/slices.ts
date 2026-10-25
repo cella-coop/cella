@@ -50,6 +50,8 @@ import { app as circleMeetingMember } from '@cella/org-graft-circle-meeting-memb
 import { app as decisionMeeting } from '@cella/org-graft-decision-meeting/app'
 import { app as documentMeeting } from '@cella/org-graft-document-meeting/app'
 import { app as meetingMember } from '@cella/org-graft-meeting-member/app'
+import { app as decisionMemberWorker } from '@cella/org-graft-decision-member-worker/app'
+import { app as documentMember } from '@cella/org-graft-document-member/app'
 import { app as keyWorker } from '@cella/org-graft-key-worker/app'
 import { app as memberWorker } from '@cella/org-graft-member-worker/app'
 import { app as payslipWorker } from '@cella/org-graft-payslip-worker/app'
@@ -85,6 +87,8 @@ export const apps: App[] = [
   payslip,
   key,
   log,
+  decisionMemberWorker,
+  documentMember,
   circleMember,
   circleDecision,
   circleDecisionMember,
@@ -118,10 +122,10 @@ export const apps: App[] = [
   documentMeeting,
   meetingMember,
   circleMeetingMember,
-  keyWorker,
   memberWorker,
   payslipWorker,
   timesheetWorker,
+  keyWorker,
   root,
 ]
 

@@ -51,6 +51,8 @@ import { slice as circleMeetingMember } from '@cella/org-graft-circle-meeting-me
 import { slice as decisionMeeting } from '@cella/org-graft-decision-meeting/api'
 import { slice as documentMeeting } from '@cella/org-graft-document-meeting/api'
 import { slice as meetingMember } from '@cella/org-graft-meeting-member/api'
+import { slice as decisionMemberWorker } from '@cella/org-graft-decision-member-worker/api'
+import { slice as documentMember } from '@cella/org-graft-document-member/api'
 import { slice as keyWorker } from '@cella/org-graft-key-worker/api'
 import { slice as memberWorker } from '@cella/org-graft-member-worker/api'
 import { slice as payslipWorker } from '@cella/org-graft-payslip-worker/api'
@@ -120,6 +122,8 @@ export const slices: Slice[] = [
   memberWorker,
   payslipWorker,
   timesheetWorker,
+  documentMember,
+  decisionMemberWorker,
   root,
 ]
 

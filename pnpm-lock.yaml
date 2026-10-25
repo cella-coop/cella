@@ -659,6 +659,33 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/decision-member-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-decision':
+        specifier: workspace:*
+        version: link:../../../feats/decision/core/ts
+      '@cella/org-graft-decision-member':
+        specifier: workspace:*
+        version: link:../../decision-member/ts
+      '@cella/org-graft-member-worker':
+        specifier: workspace:*
+        version: link:../../member-worker/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/decision-member/ts:
     dependencies:
       '@cella/org-db':
@@ -691,6 +718,27 @@ importers:
       '@cella/org-meeting':
         specifier: workspace:*
         version: link:../../../feats/meeting/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/document-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-document':
+        specifier: workspace:*
+        version: link:../../../feats/document/core/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
       '@cella/org-ops':
         specifier: workspace:*
         version: link:../../../core/ops/ts
@@ -1171,9 +1219,15 @@ importers:
       '@cella/org-graft-decision-member':
         specifier: workspace:*
         version: link:../grafts/decision-member/ts
+      '@cella/org-graft-decision-member-worker':
+        specifier: workspace:*
+        version: link:../grafts/decision-member-worker/ts
       '@cella/org-graft-document-meeting':
         specifier: workspace:*
         version: link:../grafts/document-meeting/ts
+      '@cella/org-graft-document-member':
+        specifier: workspace:*
+        version: link:../grafts/document-member/ts
       '@cella/org-graft-expense-invoice-project-timesheet':
         specifier: workspace:*
         version: link:../grafts/expense-invoice-project-timesheet/ts

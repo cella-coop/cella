@@ -113,6 +113,8 @@ export interface Motioned extends Motion {
   id: string
   n: number
   label: string
+  // Its kind's arguments, which name what its args hold.
+  fields: Arg[]
 }
 
 // A proposal: a decision of a circle, by a procedure, open until its

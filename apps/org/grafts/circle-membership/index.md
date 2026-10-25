@@ -99,9 +99,10 @@ It is the authority every read asks (`cella.authority`, `sql/006-authority.sql`)
 
 ## Shell
 
-Adds a circle's seats to its page and how many sit in it to the list and
-its gallery cards; and
-to a person's page their seats and the powers they hold through them,
+Adds a circle's seats to its page, one row per person with every role
+they hold in it, and how many sit in it to the list and its gallery
+cards; and to a person's page their seats and the powers they hold
+through them, each power by its plain name,
 the mandates `circle_membership.may` would grant before any limit is spent,
 and to the list the circles they sit in; under Joining, whether they sit
 in the assembly and in a working circle; and under Own and decide, what

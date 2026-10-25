@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { power, Section, Table, type Column } from '@cella/org-ui'
   import type { Held, Seat } from '../../models/position.ts'
 
   // Where a member sits, and the powers their seats give them: what
@@ -13,7 +13,7 @@
     { key: 'until', label: 'Until', kind: 'date', value: (s) => s.until },
   ]
   const held: Column<Held>[] = [
-    { key: 'power', label: 'Power', kind: 'mono', value: (h) => h.power },
+    { key: 'power', label: 'Power', value: (h) => power(h.power) },
     { key: 'text', label: 'Grants', value: (h) => h.text },
     { key: 'limit', label: 'Limit', kind: 'money', value: (h) => h.limit },
     { key: 'through', label: 'Through', value: (h) => `${h.role} in ${h.circleName}` },

@@ -15,7 +15,7 @@
     { key: 'adopted', label: 'Binding', kind: 'badge', value: (v) => (v.adopted ? 'adopted' : null), tone: () => 'positive' },
   ]
   const comments: Column<Note>[] = [
-    { key: 'author', label: 'Author', kind: 'title', value: (c) => c.author.split('@')[0] },
+    { key: 'author', label: 'Author', kind: 'person', value: (c) => c.author },
     { key: 'version', label: 'On', kind: 'mono', value: (c) => c.version },
     { key: 'quote', label: 'Quoting', value: (c) => `“${c.quote}”` },
     { key: 'text', label: 'Comment', value: (c) => c.text },

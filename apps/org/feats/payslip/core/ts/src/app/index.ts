@@ -20,7 +20,7 @@ export const app: App = {
         columns: [
           { key: 'label', label: 'Payslip', kind: 'title', role: 'title', value: (p: Payslip & { label: string }) => p.label },
           { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (p: Payslip) => p.month },
-          { key: 'member', label: 'Member', kind: 'mono', role: 'hidden', value: (p: Payslip) => p.member },
+          { key: 'member', label: 'Member', kind: 'person', role: 'hidden', value: (p: Payslip) => p.member },
           { key: 'hours', label: 'Hours', kind: 'number', role: 'hidden', value: (p: Payslip) => p.hours },
           { key: 'gross', label: 'Gross', kind: 'money', role: 'meta', value: (p: Payslip) => p.gross },
           { key: 'employee', label: 'Employee contributions', kind: 'money', role: 'hidden', value: (p: Payslip) => p.employee },
@@ -42,13 +42,13 @@ export const app: App = {
       page: {
         eyebrow: 'Payslip',
         title: (p: Payslip) => `Payslip ${p.month}`,
-        subtitle: (p: Payslip) => `${p.member}, run ${p.state}`,
+        subtitle: (p: Payslip) => `Run ${p.state}`,
         properties: (p: Payslip) => [
           { label: 'Run', value: p.state, kind: 'badge', tone: tones[p.state] },
           { label: 'Gross', value: p.gross, kind: 'money' },
           { label: 'Net', value: p.net, kind: 'money' },
           { label: 'Hours', value: p.hours, kind: 'number' },
-          { label: 'Member', value: p.member, kind: 'mono', href: `/people/${p.member}` },
+          { label: 'Member', value: p.member, kind: 'person', href: `/people/${p.member}` },
         ],
         activity: (p: Payslip) => [
           ...(p.paid ? [{ at: p.paid, text: 'paid' }] : []),

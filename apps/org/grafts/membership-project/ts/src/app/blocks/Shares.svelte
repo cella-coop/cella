@@ -1,22 +1,29 @@
 <script lang="ts">
-  import { Field, Form, Section, Table, money, type Column } from '@cella/org-ui'
+  import { Field, Form, Section, Stats, Table, type Column } from '@cella/org-ui'
   import type { Granted, Pot } from '../../models/share.ts'
 
-  // The project's budget split among the members who spend it, and
-  // granting a share from what is left of it. A share beyond it is
-  // refused.
+  // The project's budget split among the members who spend it, what is
+  // shared of it and left as figures, and granting a share from what is
+  // left. A share beyond it is refused.
   let { data }: { data: Pot; id: string } = $props()
 
   const columns: Column<Granted>[] = [
-    { key: 'name', label: 'Member', kind: 'title', value: (s) => s.name },
+    { key: 'member', label: 'Member', kind: 'person', value: (s) => s.member },
     { key: 'amount', label: 'Share', kind: 'money', value: (s) => s.amount },
     { key: 'granted', label: 'Granted', kind: 'date', value: (s) => s.granted },
   ]
   const options = $derived(data.members.map((m) => ({ value: m.address, label: m.name })))
-  const title = $derived(data.budget === null ? 'Shares' : `Shares: ${money(data.shared)} of ${money(data.budget)}, ${money(data.remaining)} left`)
 </script>
 
-<Section {title} count={data.shares.length}>
+<Section title="Shares" count={data.shares.length}>
+  {#if data.budget !== null}
+    <Stats
+      items={[
+        { label: 'Shared', value: data.shared, kind: 'money' },
+        { label: 'Left', value: data.remaining, kind: 'money' },
+      ]}
+    />
+  {/if}
   <Table {columns} rows={data.shares} href={(s: Granted) => `/people/${s.member}`} />
   {#if data.budget !== null && !data.archived}
     <Form action="share" submit="Grant share" tone="quiet" inline>

@@ -62,7 +62,7 @@ collection's `about`; the procedure, its terms in words, which follows
 the circle's until another is chosen; the deadline, the title and the text; and what
 it decides, a kind from `decision.kind`, whose arguments the form then
 asks for. A decision's page shows its proposal and each motion it
-decides, every stance given as its activity, and closes it (`close`).
+decides, its arguments by its kind's labels, a member by name, every stance given as its activity, and closes it (`close`).
 Its roll, its outcome and the stance form are `circle-decision-membership`'s;
 the stance it posts is this feat's `vote`, for the acting member.
 

@@ -3,7 +3,7 @@ import { categories, statuses, type Expense, type Status as Stage } from '../mod
 import Capture from './blocks/Capture.svelte'
 import Status from './blocks/Status.svelte'
 
-const tones: Record<Stage, Tone> = { draft: 'neutral', submitted: 'accent', approved: 'warning', refused: 'negative', reimbursed: 'positive' }
+const tones: Record<Stage, Tone> = { draft: 'neutral', submitted: 'accent', approved: 'accent', refused: 'negative', reimbursed: 'positive' }
 const category = (e: Expense) => categories.find((c) => c.code === e.category)?.label ?? e.category
 
 // The feat's client side: the expenses as a board by status, on which a
@@ -57,7 +57,7 @@ export const app: App = {
           { label: 'Category', value: `${category(e)}, ${e.category}` },
           { label: 'Spent on', value: e.day, kind: 'date' },
           { label: 'Receipt', value: e.receipt, kind: 'mono' },
-          { label: 'Member', value: e.member, kind: 'mono', href: `/people/${e.member}` },
+          { label: 'Member', value: e.member, kind: 'person', href: `/people/${e.member}` },
         ],
         activity: (e: Expense) => [
           ...(e.reimbursed ? [{ at: e.reimbursed, text: 'reimbursed' }] : []),

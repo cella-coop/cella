@@ -19,7 +19,7 @@
 </script>
 
 {#if view && Body}
-  <div class="block" data-row={id} data-kind={view.kind} data-selected={ed.chosen.selected.has(id) || undefined}>
+  <div class="block" data-row={id} data-kind={view.kind} data-last={last || undefined} data-selected={ed.chosen.selected.has(id) || undefined}>
     <div class="line" data-drag-item="blocks" data-drag-index={index} data-drop={drop} data-dragging={ed.drag.dragging('blocks', index) || undefined}>
       <DragHandle {label} />
       <div class="body" data-content>

@@ -8,7 +8,7 @@
   let { data }: { data: Part[]; id: string } = $props()
 
   const columns: Column<Part>[] = [
-    { key: 'member', label: 'Member', kind: 'mono', value: (p) => p.member },
+    { key: 'member', label: 'Member', kind: 'person', value: (p) => p.member },
     { key: 'hours', label: 'Hours approved', kind: 'number', value: (p) => Math.round(p.minutes / 6) / 10 },
     { key: 'amount', label: 'Part', kind: 'money', value: (p) => p.amount },
   ]

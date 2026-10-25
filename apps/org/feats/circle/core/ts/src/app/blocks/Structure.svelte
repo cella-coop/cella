@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { money, Section, Table, type Column } from '@cella/org-ui'
+  import { money, power, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Mandate, Role } from '../../models/circle.ts'
 
   // A circle's roles, and the mandates that grant them powers, each capped
@@ -12,7 +12,7 @@
     { key: 'circle', label: 'Of', kind: 'mono', value: (r) => (r.circle === '*' ? 'every working circle' : r.circle) },
   ]
   const mandates: Column<Mandate>[] = [
-    { key: 'power', label: 'Power', kind: 'mono', value: (m) => m.power },
+    { key: 'power', label: 'Power', value: (m) => power(m.power) },
     { key: 'text', label: 'Grants', value: (m) => m.text },
     { key: 'role', label: 'Role', value: (m) => m.role },
     { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },

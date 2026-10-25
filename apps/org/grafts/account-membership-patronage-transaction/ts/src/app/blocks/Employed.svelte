@@ -3,8 +3,8 @@
   import type { Employed, Movement } from '../../models/patronage.ts'
 
   // What a worker's part became: the shares it bought, blocked until the
-  // day the law sets, the cash it left, and their capital account's
-  // movements with the balance after each.
+  // day the law sets, the cash it leaves owed until a write pays it out,
+  // and their capital account's movements with the balance after each.
   let { data }: { data: Employed | null; id: string } = $props()
 
   const columns: Column<Movement>[] = [
@@ -16,11 +16,11 @@
 </script>
 
 {#if data}
-  <Section title="Paid and employed in shares">
+  <Section title="Owed in cash and employed in shares">
     <Stats
       items={[
         { label: 'Part', value: data.part, kind: 'money' },
-        { label: 'Paid in cash', value: data.cash, kind: 'money' },
+        { label: 'Owed in cash', value: data.cash, kind: 'money' },
         { label: 'In shares', value: data.capital, kind: 'money' },
         { label: 'Shares', value: data.shares, kind: 'number' },
         { label: 'Blocked until', value: data.until, kind: 'date' },

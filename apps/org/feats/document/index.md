@@ -218,10 +218,13 @@ would relay through Postgres's `LISTEN` and `NOTIFY`.
 ## Shell
 
 The `documents` collection, with a New form starting an empty document
-by its title; a document's page edits the draft in the block
-editor, under it the draft's hash and whether this member's edits are
-saved, then saves the draft as a version (`version`) and comments on one
-(`comment`). The server renders the draft read-only; the editor takes it
+by its title; a document's page edits the draft in the block editor,
+over it where the draft stands (saved as the latest version, or changed
+since it), whether this member's edits are saved and that `/` adds a
+block, which an empty block it holds the caret in, and the last block
+when empty, also say; the draft's hash as the page was read is among
+its Properties. The header saves the draft as a version (`version`), and
+the page comments on one (`comment`). The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document.
 
 The editor (`components/`, its state in `hooks/`) draws each block's text

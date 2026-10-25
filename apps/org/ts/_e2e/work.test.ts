@@ -85,7 +85,7 @@ test('the work pages render, each collection in its own layout', async () => {
   for (const tab of ['Overview', 'Tasks', 'Time']) {
     assert.ok(tabs.text.includes(`>${tab}<`), `a project's page has its ${tab} tab`)
   }
-  assert.ok(tabs.text.includes('Invoices: 36') && tabs.text.includes('F-2026-0054'), 'its overview lists what it invoiced')
+  assert.ok(/>Invoices</.test(tabs.text) && />Net<\/dt>.*?36\s000,00\s€/s.test(tabs.text) && tabs.text.includes('F-2026-0054'), 'its overview lists what it invoiced, the net as a figure')
 })
 
 test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'s care', async () => {

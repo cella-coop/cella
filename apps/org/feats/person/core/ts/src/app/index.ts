@@ -46,14 +46,14 @@ export const app: App = {
         icon: icons.Users,
         columns: [
           { key: 'name', label: 'Name', kind: 'title', role: 'title', value: (p: Person) => p.name },
-          { key: 'address', label: 'Address', kind: 'mono', role: 'sub', value: (p: Person) => p.address },
+          { key: 'address', label: 'Address', kind: 'text', role: 'sub', value: (p: Person) => p.address },
         ],
       },
       page: {
         eyebrow: 'Person',
         title: (p: Person) => p.name,
         subtitle: (p: Person) => p.address,
-        properties: (p: Person) => [{ label: 'Address', value: p.address, kind: 'mono' }],
+        properties: (p: Person) => [{ label: 'Address', value: p.address }],
         tabs: [{ id: 'overview', label: 'Overview' }],
         blocks: [Devices],
         actions: Profile,

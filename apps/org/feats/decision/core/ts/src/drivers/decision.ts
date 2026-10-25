@@ -35,7 +35,7 @@ export async function decision(db: Db, id: string): Promise<Detail | null> {
     [id],
   )
   const motions = await db.query<Motioned>(
-    `SELECT m.n::text AS id, m.n, m.kind, k.label, m.args
+    `SELECT m.n::text AS id, m.n, m.kind, k.label, k.fields, m.args
      FROM decision.motion m JOIN decision.kind k ON k.kind = m.kind
      WHERE m.decision = $1 ORDER BY m.n`,
     [id],

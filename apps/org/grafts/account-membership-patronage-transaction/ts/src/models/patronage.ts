@@ -12,8 +12,8 @@ export interface Movement {
 
 // What a worker's part of a year's work share became when the distribution
 // posted: the shares it bought, blocked until a day the law sets, on which
-// capital account and by which entry; the rest paid in cash; and the
-// account's movements.
+// capital account and by which entry; the rest owed in cash, which no
+// write pays out yet; and the account's movements.
 export interface Employed {
   part: number
   shares: number

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Section, Table, money, type Column } from '@cella/org-ui'
+  import { Section, Stats, Table, type Column } from '@cella/org-ui'
   import type { Billed, Invoiced } from '../../models/charge.ts'
 
-  // The invoices that bill this project's work.
+  // The invoices that bill this project's work, and what they bill net.
   let { data }: { data: Invoiced; id: string } = $props()
 
   const columns: Column<Billed>[] = [
@@ -14,6 +14,7 @@
   ]
 </script>
 
-<Section title="Invoices: {money(data.net)} net" count={data.invoices.length}>
+<Section title="Invoices" count={data.invoices.length}>
+  <Stats items={[{ label: 'Net', value: data.net, kind: 'money' }]} />
   <Table {columns} rows={data.invoices} href={(i: Billed) => `/invoices/${i.id}`} />
 </Section>

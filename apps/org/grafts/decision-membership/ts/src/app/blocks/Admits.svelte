@@ -7,9 +7,8 @@
   let { data }: { data: OnDecision; id: string } = $props()
 
   const columns: Column<Asked>[] = [
-    { key: 'name', label: 'Member', kind: 'title', value: (a) => a.name ?? a.member },
+    { key: 'member', label: 'Member', kind: 'person', value: (a) => a.member },
     { key: 'kind', label: 'It', value: (a) => verbs[a.kind] },
-    { key: 'member', label: 'Address', kind: 'mono', value: (a) => a.member },
     { key: 'shares', label: 'Shares', kind: 'number', value: (a) => a.shares },
   ]
 </script>

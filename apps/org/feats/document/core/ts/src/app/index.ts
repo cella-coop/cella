@@ -1,11 +1,13 @@
-import { icons, type App } from '@cella/org-ui'
+import { icons, short, type App } from '@cella/org-ui'
 import type { Listed, Page } from '../models/document.ts'
 import Create from './blocks/Create.svelte'
 import Draft from './blocks/Draft.svelte'
 import History from './blocks/History.svelte'
+import Save from './blocks/Save.svelte'
 
 // The feat's client side: the documents, and a document's page with its
-// draft in the block editor, its versions and the comments on them.
+// draft in the block editor, saved as a version from its header, its
+// versions and the comments on them.
 export const app: App = {
   name: 'document',
   collections: {
@@ -39,10 +41,12 @@ export const app: App = {
           { label: 'Versions', value: d.versions.length, kind: 'number' },
           { label: 'Updates', value: d.updates.length, kind: 'number' },
           { label: 'Comments', value: d.comments.length, kind: 'number' },
+          { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono' },
         ],
         activity: (d: Page) =>
-          d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author?.split('@')[0], text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
+          d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
         blocks: [Draft, History],
+        actions: Save,
       },
     },
   },

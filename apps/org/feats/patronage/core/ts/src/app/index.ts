@@ -5,7 +5,7 @@ import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 
-const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'accent', approved: 'warning', distributed: 'positive' }
+const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approved: 'accent', distributed: 'positive' }
 // A row as its collection lists it: its state, and how terms divide, as
 // the list shows them.
 type Staged = Distribution & { state: ReturnType<typeof stage> }
@@ -97,7 +97,7 @@ export const app: App = {
         icon: icons.Receipt,
         columns: [
           { key: 'year', label: 'Year', kind: 'title', role: 'title', value: (s: Statement) => String(s.year) },
-          { key: 'worker', label: 'Worker', kind: 'mono', role: 'sub', value: (s: Statement) => s.worker },
+          { key: 'worker', label: 'Worker', kind: 'person', role: 'sub', value: (s: Statement) => s.worker },
           { key: 'salary', label: 'By pay', kind: 'money', role: 'hidden', value: (s: Statement) => s.salary },
           { key: 'hours', label: 'By time', kind: 'money', role: 'hidden', value: (s: Statement) => s.hours },
           { key: 'equal', label: 'Equal', kind: 'money', role: 'hidden', value: (s: Statement) => s.equal },
@@ -109,8 +109,7 @@ export const app: App = {
       page: {
         eyebrow: 'Statement',
         title: (s: Sheet) => `${s.year} work share statement`,
-        subtitle: (s: Sheet) =>
-          `${s.worker}${s.distributed ? `, distributed on ${date(s.distributed)}` : s.approved ? `, approved on ${date(s.approved)}` : ''}`,
+        subtitle: (s: Sheet) => (s.distributed ? `Distributed on ${date(s.distributed)}` : s.approved ? `Approved on ${date(s.approved)}` : ''),
         properties: (s: Sheet) => [
           { label: 'Year', value: String(s.year) },
           { label: 'Part', value: s.amount, kind: 'money' },

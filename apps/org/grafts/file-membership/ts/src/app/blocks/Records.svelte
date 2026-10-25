@@ -9,7 +9,7 @@
   const columns: Column<OnFile>[] = [
     { key: 'name', label: 'Record', value: (r) => r.name },
     { key: 'uploaded', label: 'Filed', kind: 'date', value: (r) => r.uploaded },
-    { key: 'uploader', label: 'By', kind: 'mono', value: (r) => r.uploader },
+    { key: 'uploader', label: 'By', kind: 'person', value: (r) => r.uploader },
   ]
 </script>
 

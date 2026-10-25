@@ -43,7 +43,7 @@ export const app: App = {
           { label: 'Cutoff', value: d.cutoff === null ? null : `receipt ${d.cutoff}`, kind: 'mono' },
         ],
         related: (d: Detail) => [{ label: d.circle, sub: 'circle', href: `/circles/${d.circle}` }],
-        activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member.split('@')[0], text: `${g.stance}, receipt ${g.receipt}` })),
+        activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member, text: `${g.stance}, receipt ${g.receipt}` })),
         // The decision itself, who stands where on it, and what its members
         // say about it: the roll and the deliberation are the two views the
         // overview does not already give.

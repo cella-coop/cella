@@ -10,15 +10,14 @@
   type Who = Time['members'][number]
   type Row = Time['entries'][number]
 
-  const who = (address: string) => address.split('@')[0]
   const people: Column<Who>[] = [
-    { key: 'member', label: 'Member', kind: 'title', value: (m) => who(m.member) },
+    { key: 'member', label: 'Member', kind: 'person', value: (m) => m.member },
     { key: 'hours', label: 'Hours', kind: 'number', value: (m) => m.hours },
     { key: 'billable', label: 'Billable', kind: 'number', value: (m) => m.billable },
   ]
   const latest: Column<Row>[] = [
     { key: 'day', label: 'Day', kind: 'date', value: (e) => e.day },
-    { key: 'member', label: 'Member', value: (e) => who(e.member) },
+    { key: 'member', label: 'Member', kind: 'person', value: (e) => e.member },
     { key: 'hours', label: 'Hours', kind: 'number', value: (e) => e.hours },
     { key: 'billable', label: 'Kind', kind: 'badge', value: (e) => (e.billable ? 'billable' : 'internal') },
   ]

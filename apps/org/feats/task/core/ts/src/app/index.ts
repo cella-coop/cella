@@ -3,7 +3,7 @@ import { priorities, statuses, type Priority, type Status as Stage, type Task } 
 import Create from './blocks/Create.svelte'
 import Status from './blocks/Status.svelte'
 
-const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'accent', doing: 'warning', done: 'positive' }
+const tones: Record<Stage, Tone> = { backlog: 'neutral', todo: 'neutral', doing: 'accent', done: 'positive' }
 const urgency: Record<Priority, Tone> = { urgent: 'negative', high: 'warning', normal: 'neutral', low: 'neutral' }
 
 // The feat's client side: the tasks as a board by status, on which a card

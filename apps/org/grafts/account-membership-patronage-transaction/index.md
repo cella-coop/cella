@@ -56,16 +56,16 @@ A credit reads as the member's capital account does, for the member and capital'
 ## Shell
 
 Adds to a statement, once its year is distributed, what the part became:
-paid in cash, in shares and how many, blocked until when, and the
-capital account's movements with the balance after each. Adds to a
-person's page, for the member alone, their work share statements: each
-year's part, what it buys in shares and what it pays, as credited once
-distributed. Finance reads every statement in the `statements`
-collection, whose reads, like every read of the shell, are not yet
-restricted. Adds to a distribution's page, under a Return tab once it is
-distributed, the year's return to the federation: the surplus and its
+owed in cash, until a write pays it out, in shares and how many,
+blocked until when, and the capital account's movements with the
+balance after each. Adds to a person's page, for the member alone, their
+work share statements: each year's part, what it buys in shares and
+what it pays, as credited once distributed. Finance reads every
+statement in the `statements` collection, and a member their own. Adds
+to a distribution's page, under a Return tab once it is distributed,
+the year's return to the federation: the surplus and its
 split (loi n° 78-763, art. 33), the workers sharing the work share and
-the associates among them, what it employed in shares and paid in cash
+the associates among them, what it employed in shares and owed in cash
 (Code du travail, art. R3323-11, L3324-10), the legal reserve and the
 highest capital, the associates and the capital, and the capital the
 employed associates hold, each with its source and whether it was

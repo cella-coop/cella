@@ -70,7 +70,7 @@ export async function figures(db: Db, distribution: string): Promise<Figure[]> {
     { id: 'employed', label: 'Work share employed in shares', value: n('employed'), unit: 'cents', source: 'Code du travail, art. R3323-11', verified: true },
     { id: 'shares', label: 'Shares issued from the work share', value: n('shares'), unit: 'count', source: 'Code du travail, art. R3323-11', verified: true },
     { id: 'until', label: 'Those shares blocked until', value: r.until, unit: 'date', source: 'Code du travail, art. L3324-10', verified: true },
-    { id: 'cash', label: 'Work share paid in cash', value: n('work') - n('employed'), unit: 'cents', source: 'Code du travail, art. L3324-10', verified: true },
+    { id: 'cash', label: 'Work share owed in cash', value: n('work') - n('employed'), unit: 'cents', source: 'Code du travail, art. L3324-10', verified: true },
     { id: 'reserve', label: 'Legal reserve after the distribution', value: n('reserve'), unit: 'cents', source: `${art33}, 1°`, verified: true },
     { id: 'highest', label: 'Highest capital reached', value: n('highest'), unit: 'cents', source: `${art33}, 1°`, verified: true },
     { id: 'associates', label: 'Associates today', value: n('associates'), unit: 'count', source: unverified, verified: false },

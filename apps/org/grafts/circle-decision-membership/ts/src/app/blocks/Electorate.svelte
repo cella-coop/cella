@@ -13,7 +13,7 @@
   const options = $derived(data.stances.map((s) => ({ value: s, label: s })))
   const tones: Record<string, Tone> = { consent: 'positive', for: 'positive', object: 'negative', against: 'negative', abstain: 'neutral' }
   const columns: Column<Voter>[] = [
-    { key: 'name', label: 'Member', kind: 'title', value: (v) => v.name ?? v.member },
+    { key: 'member', label: 'Member', kind: 'person', value: (v) => v.member },
     { key: 'stance', label: 'Latest stance', kind: 'badge', value: (v) => v.stance ?? 'none yet', tone: (v) => (v.stance ? tones[v.stance] : 'neutral') },
     { key: 'receipt', label: 'Receipt', kind: 'number', value: (v) => v.receipt },
     { key: 'counted', label: 'Counted', value: (v) => (data.closed ? (v.counted ? 'yes' : 'no') : 'at the close') },

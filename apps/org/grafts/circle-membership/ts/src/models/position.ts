@@ -16,6 +16,38 @@ export interface Seat {
   root: boolean
 }
 
+// A person's place in one circle, however many seats they hold in it:
+// the roles they hold or held, since their first seat, and until their
+// last one ended, or open while one is held.
+export interface Sitting {
+  id: string
+  member: string
+  roles: string | null
+  since: string | null
+  until: string | null
+}
+
+// A circle's seats as its people: one row each, in the order of their
+// first seat, so a member holding three roles is listed once.
+export function sittings(seats: Seat[]): Sitting[] {
+  const by = new Map<string, Seat[]>()
+  for (const s of seats) {
+    by.set(s.member, [...(by.get(s.member) ?? []), s])
+  }
+  return [...by.entries()].map(([member, held]) => {
+    const roles = [...new Set(held.map((s) => s.roleName).filter((r): r is string => r !== null))]
+    const since = held.map((s) => s.since).filter((d): d is string => d !== null).sort()[0] ?? null
+    const ended = held.map((s) => s.until)
+    return {
+      id: member,
+      member,
+      roles: roles.length ? roles.join(', ') : null,
+      since,
+      until: ended.includes(null) ? null : (ended.sort().at(-1) ?? null),
+    }
+  })
+}
+
 // A mandate a member holds through a seat they hold; amounts in cents.
 export interface Held {
   id: string

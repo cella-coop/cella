@@ -15,7 +15,7 @@
     { value: 'absent', label: 'absent' },
   ]
   const columns: Column<Expected>[] = [
-    { key: 'name', label: 'Member', kind: 'title', value: (e) => e.name },
+    { key: 'member', label: 'Member', kind: 'person', value: (e) => e.member },
     { key: 'seated', label: 'Seat', value: (e) => (e.seated ? 'seated' : 'guest') },
     { key: 'status', label: 'Attendance', kind: 'badge', value: (e) => e.status ?? 'not marked', tone: (e) => (e.status ? tones[e.status] : 'neutral') },
   ]

@@ -6,8 +6,9 @@
 // to DATABASE_URL if set, otherwise by the PG* variables.
 //
 // `--slice <name>` applies one slice's part of the tree alone, for its
-// slice tests: the app's core, then a feat's own tree, or a graft's feats,
-// its lower-order grafts and itself. A slice whose SQL reaches past what
+// slice tests: the app's core and the cores of the feats a slice nests in,
+// then a feat's own tree, or a graft's feats, its lower-order grafts at or
+// below its node and itself. A slice whose SQL reaches past what
 // it may read fails to migrate here.
 
 import { createHash } from 'node:crypto'
@@ -36,23 +37,32 @@ const tree = (node) => [
   ...grafts(node).map((g) => join(node, 'grafts', g, 'sql')),
 ]
 
-// One slice's part of an app: the app's core, then the slice's own SQL
-// and what it reads. Null when the app has no slice of that name.
+// Every node below a node, outermost first, and the nodes a node nests in
+// below the app.
+const below = (node) => feats(node).flatMap((f) => [f, ...below(f)])
+const nest = (app, node) => below(app).filter((n) => node.startsWith(join(n, 'feats') + '/'))
+// Every graft at a node or below, with the node that holds it.
+const held = (node) => [...grafts(node).map((g) => ({ g, node })), ...feats(node).flatMap(held)]
+
+// One slice's part of an app: the app's core and the cores of the feats
+// the slice nests in, then the slice's own SQL and what it reads. Null when
+// the app has no slice of that name.
 const part = (app, name) => {
-  const feat = feats(app).find((f) => basename(f) === name)
+  const feat = below(app).find((f) => basename(f) === name)
   if (feat) {
-    return [...core(app), ...tree(feat)]
+    return [...core(app), ...nest(app, feat).flatMap(core), ...tree(feat)]
   }
-  if (!grafts(app).includes(name)) {
+  const graft = held(app).find((x) => x.g === name)
+  if (!graft) {
     return null
   }
-  const joined = name.split('-')
-  const lower = grafts(app).filter((g) => order(g) < joined.length && g.split('-').every((f) => joined.includes(f)))
-  return [
+  const joined = name.split('-').map((f) => below(app).find((n) => basename(n) === f))
+  const lower = byOrder(held(graft.node).map((x) => x.g).filter((g) => order(g) < joined.length && g.split('-').every((f) => name.split('-').includes(f))))
+  return [...new Set([
     ...core(app),
-    ...joined.flatMap((f) => tree(join(app, 'feats', f))),
-    ...[...lower, name].map((g) => join(app, 'grafts', g, 'sql')),
-  ]
+    ...joined.flatMap((f) => [...nest(app, f).flatMap(core), ...tree(f)]),
+    ...[...lower, name].map((g) => join(held(app).find((x) => x.g === g).node, 'grafts', g, 'sql')),
+  ])]
 }
 
 const args = process.argv.slice(2)

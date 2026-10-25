@@ -3,10 +3,12 @@
 //
 //   SQL in            may reference
 //   a node's core     cella.*; the catalog
-//   a feat            its own schema; cella.*; the catalog
-//   a graft           its own schema; the schemas of the feats it joins; the
-//                     schemas of the grafts of its node that join a proper
-//                     subset of its feats; cella.*; the catalog
+//   a feat            its own schema; those of the feats it nests in;
+//                     cella.*; the catalog
+//   a graft           its own schema; the schemas of the feats it joins and
+//                     of the feats they nest in; the schemas of the grafts
+//                     at or below its node that join a proper subset of its
+//                     feats; cella.*; the catalog
 //
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
@@ -36,13 +38,16 @@ const regtypes = new Set(['regclass', 'regproc', 'regprocedure', 'regtype', 'reg
 const schemaOf = (name) => name.replaceAll('-', '_')
 const strings = (list) => (list ?? []).map((n) => n.String?.sval).filter((s) => s !== undefined)
 
-// Every sql/ directory on the tree and whose it is.
+// Every sql/ directory on the tree and whose it is. A feat carries the
+// feats it nests in, outermost first; a graft, the grafts at or below its
+// node and, by feat, the feats each nests in.
 export function owners(repo, apps) {
   const out = []
+  const list = (dir) => (existsSync(join(repo, dir)) ? readdirSync(join(repo, dir)) : [])
   // An app's core SQL is the core's; a feat's core SQL is the feat's own.
-  const visit = (node, feat) => {
+  const visit = (node, feat, lineage, nests) => {
     const core = join(node, 'core')
-    const owner = feat ? { kind: 'feat', node: dirname(dirname(node)), name: feat } : { kind: 'core', node }
+    const owner = feat ? { kind: 'feat', node: dirname(dirname(node)), name: feat, lineage } : { kind: 'core', node }
     if (existsSync(join(repo, core, 'sql'))) {
       out.push({ dir: join(core, 'sql'), ...owner })
     }
@@ -51,18 +56,19 @@ export function owners(repo, apps) {
         out.push({ dir: join(core, lib, 'sql'), ...owner })
       }
     }
-    const feats = existsSync(join(repo, node, 'feats')) ? readdirSync(join(repo, node, 'feats')) : []
-    for (const f of feats) {
-      visit(join(node, 'feats', f), f)
+    const inner = feat ? [...lineage, feat] : []
+    for (const f of list(join(node, 'feats'))) {
+      nests.set(f, inner)
+      visit(join(node, 'feats', f), f, inner, nests)
     }
-    const grafts = existsSync(join(repo, node, 'grafts')) ? readdirSync(join(repo, node, 'grafts')) : []
-    for (const g of grafts) {
+    const under = (n) => [...list(join(n, 'grafts')), ...list(join(n, 'feats')).flatMap((f) => under(join(n, 'feats', f)))]
+    for (const g of list(join(node, 'grafts'))) {
       if (existsSync(join(repo, node, 'grafts', g, 'sql'))) {
-        out.push({ dir: join(node, 'grafts', g, 'sql'), kind: 'graft', node, name: g, grafts })
+        out.push({ dir: join(node, 'grafts', g, 'sql'), kind: 'graft', node, name: g, grafts: under(node), nests })
       }
     }
   }
-  apps.forEach((app) => visit(app, null))
+  apps.forEach((app) => visit(app, null, [], new Map()))
   return out
 }
 
@@ -72,14 +78,15 @@ function scope(o) {
     return { own: null, allowed: new Set(['cella', ...catalog]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
+    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
   }
   const feats = o.name.split('-')
+  const outer = feats.flatMap((f) => o.nests.get(f) ?? [])
   const lower = o.grafts.filter((g) => {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...lower.map(schemaOf), 'cella', ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
 }
 
 const walk = (node, visit, key = null) => {

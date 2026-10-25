@@ -7,11 +7,17 @@
 //
 //   a package in      may depend on
 //   a node's core     its own core's packages; its ancestors' cores
-//   a graft           the cores of the feats it joins; its node's and
-//                     their ancestors' cores; the grafts of its node that
-//                     join a proper subset of its feats (the graft order)
-//   a node's root     its own core and ancestors' cores, its feats' cores
-//                     and roots, its own grafts
+//   a graft           the cores of the feats it joins and of their
+//                     ancestors; the grafts at or below its node that join
+//                     a proper subset of its feats (the graft order)
+//   a node's root     its own core and ancestors' cores, the cores and
+//                     roots of the feats below it, the grafts at or below
+//                     it
+//
+// A graft sits at the lowest node whose feats, at any depth, hold every
+// feat it joins, and never joins a feat with one nested in it: a child
+// inherits its parent's core. A feat's name is unique in its app, since it
+// names its schema and the grafts that join it.
 //
 // It also checks that grafts are named and declared, that a package's
 // relative imports stay inside it and its exports are its public surface,
@@ -58,6 +64,10 @@ const childrenOf = (node) => {
   const dir = join(repo, node, 'feats')
   return existsSync(dir) ? readdirSync(dir).map((c) => join(node, 'feats', c)).filter(isNode) : []
 }
+const descendants = (node) => childrenOf(node).flatMap((c) => [c, ...descendants(c)])
+// The feat below a node a graft's name part names, at any depth.
+const named = (node, part) => descendants(node).find((d) => basename(d) === part)
+const below = (node, under) => node === under || ancestors(node).includes(under)
 
 // Where a package sits on the tree, from the directory holding its manifest.
 const place = (dir) => {
@@ -79,11 +89,12 @@ const place = (dir) => {
 
 const describe = (p, dir) => (p ? `${p.kind} ${p.name ?? p.node ?? ''}`.trim() : 'unplaced') + ` (${dir})`
 
-// A graft of lower order: same node, a proper subset of the feats.
+// A graft of lower order: at its node or below, a proper subset of the
+// feats.
 const lower = (from, to) => {
   const mine = from.name.split('-')
   const theirs = to.name.split('-')
-  return to.node === from.node && theirs.length < mine.length && theirs.every((f) => mine.includes(f))
+  return below(to.node, from.node) && theirs.length < mine.length && theirs.every((f) => mine.includes(f))
 }
 
 const allowed = (from, to) => {
@@ -92,14 +103,15 @@ const allowed = (from, to) => {
     return to.kind === 'core' && lineage.includes(to.node)
   }
   if (from.kind === 'graft') {
-    const joined = from.name.split('-').map((f) => join(from.node, 'feats', f))
-    return (to.kind === 'core' && (lineage.includes(to.node) || joined.includes(to.node)))
+    const joined = from.name.split('-').map((f) => named(from.node, f)).filter(Boolean)
+    const cores = joined.flatMap((j) => [j, ...ancestors(j)])
+    return (to.kind === 'core' && (lineage.includes(to.node) || cores.includes(to.node)))
       || (to.kind === 'graft' && lower(from, to))
   }
-  const kids = childrenOf(from.node)
-  return (to.kind === 'core' && (lineage.includes(to.node) || kids.includes(to.node)))
-    || (to.kind === 'root' && kids.includes(to.node))
-    || (to.kind === 'graft' && to.node === from.node)
+  const under = descendants(from.node)
+  return (to.kind === 'core' && (lineage.includes(to.node) || under.includes(to.node)))
+    || (to.kind === 'root' && under.includes(to.node))
+    || (to.kind === 'graft' && below(to.node, from.node))
 }
 
 // Every package directory: rs/ or ts/ under apps/.
@@ -157,7 +169,8 @@ for (const [a, b] of edges) {
 }
 
 // Grafts: named by the feats they join, two or more in alphabetical order,
-// declared by the feat that extends.
+// at the lowest node that holds them all, declared by the feat that
+// extends.
 const nodes = [...new Set(dirs.map(place).filter((p) => p && p.node).map((p) => p.node))]
 for (const node of nodes) {
   const kids = childrenOf(node)
@@ -166,7 +179,6 @@ for (const node of nodes) {
       fail(`${kid}: a feat's name has no hyphen; hyphens join feats in a graft's name`)
     }
   }
-  const declared = new Set(kids.flatMap(grafted))
   const gdir = join(repo, node, 'grafts')
   const present = existsSync(gdir) ? readdirSync(gdir) : []
   for (const g of present) {
@@ -174,23 +186,46 @@ for (const node of nodes) {
     if (parts.length < 2 || parts.join('-') !== [...new Set(parts)].sort().join('-')) {
       fail(`${node}/grafts/${g}: a graft is named by two or more distinct feats, in alphabetical order`)
     }
-    for (const part of parts) {
-      if (!kids.includes(join(node, 'feats', part))) {
-        fail(`${node}/grafts/${g}: joins ${part}, which is not a feat of ${node}`)
+    const joined = parts.map((part) => named(node, part))
+    parts.filter((_, i) => !joined[i]).forEach((part) => fail(`${node}/grafts/${g}: joins ${part}, which is not a feat below ${node}`))
+    const found = joined.filter(Boolean)
+    for (const a of found) {
+      for (const b of found.filter((b) => b !== a && below(b, a))) {
+        fail(`${node}/grafts/${g}: joins ${basename(a)} and ${basename(b)}, nested in it; a child inherits its parent's core`)
       }
     }
-    if (!declared.has(g)) {
-      fail(`${node}/grafts/${g}: no feat of ${node} declares it in its feat.toml`)
+    const lowest = kids.find((k) => found.length === parts.length && found.every((f) => below(f, k)))
+    if (lowest) {
+      fail(`${node}/grafts/${g}: every feat it joins is below ${lowest}; a graft sits at the lowest node that holds them all`)
     }
-  }
-  for (const g of declared) {
-    if (!present.includes(g)) {
-      fail(`${node}: a feat declares graft ${g}, which ${node}/grafts/ does not hold`)
+    if (!found.some((f) => grafted(f).includes(g))) {
+      fail(`${node}/grafts/${g}: no feat it joins declares it in its feat.toml`)
     }
   }
   for (const kid of kids) {
     for (const g of grafted(kid).filter((g) => !g.split('-').includes(basename(kid)))) {
       fail(`${kid}: declares ${g}, which does not join it; the feat that extends declares a graft`)
+    }
+  }
+}
+
+// Each app: a feat's name is unique in it, at any depth, and every graft a
+// feat declares sits at some node of it.
+const apps = existsSync(join(repo, 'apps')) ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter(isNode) : []
+for (const app of apps) {
+  const seen = new Map()
+  for (const d of descendants(app)) {
+    seen.has(basename(d))
+      ? fail(`${d}: a feat's name is unique in its app, and ${seen.get(basename(d))} holds it already`)
+      : seen.set(basename(d), d)
+  }
+  const held = new Set([app, ...descendants(app)].flatMap((n) => {
+    const d = join(repo, n, 'grafts')
+    return existsSync(d) ? readdirSync(d) : []
+  }))
+  for (const d of descendants(app)) {
+    for (const g of grafted(d).filter((g) => !held.has(g))) {
+      fail(`${d}: declares graft ${g}, which no node of ${app} holds`)
     }
   }
 }
@@ -257,7 +292,6 @@ for (const dir of byName.values()) {
 }
 
 if (sql) {
-  const apps = existsSync(join(repo, 'apps')) ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter(isNode) : []
   const known = new Set(['cella'])
   for (const node of nodes) {
     childrenOf(node).forEach((k) => known.add(basename(k)))

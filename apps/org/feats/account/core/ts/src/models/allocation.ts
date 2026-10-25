@@ -1,7 +1,7 @@
 export const kinds = ['work', 'legal', 'development', 'interest'] as const
 export type Share = (typeof kinds)[number]
 
-export type Basis = 'salary' | 'hours' | 'equal'
+export type Basis = 'salary' | 'hours' | 'equal' | 'mix'
 
 // A year's surplus, as the statutes split it, and the day it was
 // allocated, if it was.

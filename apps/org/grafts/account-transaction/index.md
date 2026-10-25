@@ -20,7 +20,8 @@ limit, and draws the financial statements from the journal.
   concurrent close are serialised. It raises SQLSTATE `09000`, so the
   write is refused and uses no verdict number.
 - `account_transaction.balance`: the trial balance, each account's debits,
-  credits and signed balance (debit positive) in cents, from the journal.
+  credits and signed balance (debit positive) in cents, from the journal;
+  `agrees()`, whether the whole journal's debits and credits agree.
 - `account_transaction.figures(sheet, since, until)`: each account's
   figure on a sheet over a span, its lines dated from `since` (from the
   start when null) to `until`, signed by the side of the rubric the
@@ -94,13 +95,13 @@ up to it.
 
 ## Reads
 
-It says whose an account's lines are (`holds`, registered in `cella.reach` for `transaction`, `sql/005-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a line on an account no one holds reads for every member, one on a capital account for its holder and capital's readers. `balance` reads as its reader, each account whole where its lines are; `statement` runs as its owner, so the statements by rubric sum the whole journal for every member, while an account's `figures` read as its lines.
+It says whose an account's lines are (`holds`, registered in `cella.reach` for `transaction`, `sql/005-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a line on an account no one holds reads for every member, one on a capital account for its holder and capital's readers. `balance` reads as its reader, each account whole where its lines are; `statement` and `agrees` run as their owner, so the statements by rubric and whether the trial balance agrees are the whole journal's for every member, while an account's `figures` read as its lines.
 
 ## Shell
 
 Adds each account's debits, credits and balance to the chart, from
-`account_transaction.balance`, with whether the trial balance agrees as
-the collection's status, and the chart's dashboard: the debits, the
+`account_transaction.balance`, with whether the whole trial balance agrees
+(`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
 account's ledger, every line posted to it, to its page; and to
 the account feat's `reports`, each span's result and total assets, and on

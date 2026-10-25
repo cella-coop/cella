@@ -24,3 +24,11 @@ ALTER VIEW account_transaction.balance SET (security_invoker = true);
 -- reads: they sum the whole journal whoever reads them. The figures of a
 -- rubric's accounts read as their lines do.
 ALTER FUNCTION account_transaction.statement(text, date, date) SECURITY DEFINER SET search_path = pg_catalog, pg_temp;
+
+-- Whether the trial balance agrees, over the whole journal whoever reads
+-- it: a member who reads only some accounts' lines still learns whether
+-- the co-op's books balance, not whether the part they read does.
+CREATE FUNCTION account_transaction.agrees() RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+RETURN (SELECT coalesce(sum(b.debit), 0) = coalesce(sum(b.credit), 0) FROM account_transaction.balance b);

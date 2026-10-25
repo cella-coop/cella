@@ -9,6 +9,13 @@ export async function balances(db: Db): Promise<Record<string, Balance>> {
   return Object.fromEntries(rows.map((r) => [r.code, number(r)]))
 }
 
+// Whether the whole journal's debits and credits agree, whatever the
+// reader reads of it.
+export async function agrees(db: Db): Promise<{ agrees: boolean }> {
+  const { rows } = await db.query<{ agrees: boolean }>('SELECT account_transaction.agrees() AS agrees')
+  return rows[0]
+}
+
 // An account's balance and every line posted to it, the latest first.
 export async function ledger(db: Db, code: string): Promise<Ledger> {
   const total = await db.query('SELECT debit, credit, balance FROM account_transaction.balance WHERE code = $1', [code])

@@ -5,7 +5,6 @@ import Movements from './blocks/Movements.svelte'
 import Income from './blocks/Income.svelte'
 import Balances from './blocks/Balance.svelte'
 
-const sum = (rows: Partial<Balance>[], f: (r: Partial<Balance>) => number | undefined) => rows.reduce((s, r) => s + (f(r) ?? 0), 0)
 
 // The graft's client side: each account's debits, credits and balance in
 // the chart, whether the trial balance agrees, an account's ledger, and
@@ -16,9 +15,10 @@ export const app: App = {
   extends: {
     accounts: {
       // The journal's debits and credits over the chart agree when every
-      // entry balanced.
-      status: (rows: Partial<Balance>[]) =>
-        sum(rows, (r) => r.debit) === sum(rows, (r) => r.credit)
+      // entry balanced: the whole journal's, which the server says, since
+      // a reader may read only some accounts' lines.
+      status: (_rows: Partial<Balance>[], about: { agrees?: boolean } | null) =>
+        about?.agrees
           ? { label: 'trial balance agrees', tone: 'positive' }
           : { label: 'trial balance off', tone: 'negative' },
       dashboard: [

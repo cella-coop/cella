@@ -69,6 +69,10 @@ pub(crate) static CLOCK: GucSetting<Option<CString>> = GucSetting::<Option<CStri
 /// signature names so that it verifies in no other scope.
 pub(crate) static SCOPE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
+/// The scope's timezone, such as `Europe/Paris`: the verdict date is the
+/// day there, so a cutoff or a close falls on the co-op's day; unset, UTC.
+pub(crate) static TIMEZONE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+
 #[pg_guard]
 pub extern "C-unwind" fn _PG_init() {
     GucRegistry::define_string_guc(
@@ -108,6 +112,14 @@ pub extern "C-unwind" fn _PG_init() {
         c"The scope's address, which every write signature names",
         c"set by a superuser, in postgresql.conf or on the database",
         &SCOPE,
+        GucContext::Suset,
+        GucFlags::default(),
+    );
+    GucRegistry::define_string_guc(
+        c"cella.timezone",
+        c"The scope's timezone, whose day is the verdict date",
+        c"an IANA zone such as Europe/Paris, set by a superuser on the database; unset, UTC",
+        &TIMEZONE,
         GucContext::Suset,
         GucFlags::default(),
     );

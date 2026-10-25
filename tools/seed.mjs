@@ -41,7 +41,8 @@ await db.query('BEGIN')
 // Every write signature names the scope; a new connection reads it. Its
 // name and legal name ride beside it, for the shell to call the co-op by,
 // and the mentions its invoices print: its form, SIREN, registry, VAT
-// number, seat and, for a fixed capital, its amount.
+// number, seat and, for a fixed capital, its amount; and its timezone,
+// whose day the notary dates every verdict by.
 const scope = read('scope')
 const settings = {
   'cella.scope': scope.address,
@@ -53,6 +54,7 @@ const settings = {
   'cella.scope_vat': scope.vat,
   'cella.scope_seat': scope.seat,
   'cella.scope_capital': scope.capital,
+  'cella.timezone': scope.timezone,
 }
 // The seed's own transaction reads them too, so each invoice it issues
 // keeps the seller its mentions name (`invoice.seller`).

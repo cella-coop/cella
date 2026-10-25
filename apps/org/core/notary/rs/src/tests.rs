@@ -1,6 +1,6 @@
 //! The notary's own tests, run in Postgres by `cella test notary`: the
 //! member's signature, the payload restating the request, the nonce, the
-//! keyring, the rules and the chain. Each runs in a transaction pgrx rolls
+//! keyring, the rules, the chain and the verdict date's day. Each runs in a transaction pgrx rolls
 //! back, on a keyring and devices of its own; the notary signs with a
 //! TEST-ONLY seed that `pg_test::setup` writes to the cluster's key file.
 
@@ -351,5 +351,29 @@ $f$;
         settle(100);
         entry_after(log::GENESIS);
         assert!(!verifies());
+    }
+
+    /// The day in a zone, by the clock.
+    fn day_in(zone: &str) -> pgrx::datum::Date {
+        Spi::get_one_with_args::<pgrx::datum::Date>("SELECT (clock_timestamp() AT TIME ZONE $1)::date", &[zone.into()])
+            .expect("the day")
+            .expect("a date")
+    }
+
+    #[pg_test]
+    fn the_verdict_date_is_the_scope_s_day() {
+        // Kiritimati and Baker Island are 26 hours apart: their days never
+        // agree, so the date the notary reads is the zone's it was given.
+        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true)").expect("the zone");
+        let date = Spi::get_one::<pgrx::datum::Date>("SELECT cella.verdict_date()").expect("the verdict date").expect("a date");
+        assert_eq!(date, day_in("Pacific/Kiritimati"));
+        assert_ne!(date, day_in("Etc/GMT+12"));
+    }
+
+    #[pg_test]
+    fn a_fixed_clock_is_the_verdict_date_in_any_zone() {
+        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true), set_config('cella.clock', '2026-10-25', true)").expect("the zone and the clock");
+        let date = Spi::get_one::<String>("SELECT cella.verdict_date()::text").expect("the verdict date");
+        assert_eq!(date.as_deref(), Some("2026-10-25"));
     }
 }

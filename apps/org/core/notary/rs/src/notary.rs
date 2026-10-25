@@ -5,7 +5,7 @@
 //! pass is its rules', both in SQL.
 
 use crate::vault;
-use crate::{CLOCK, KEY_FILE, SCOPE};
+use crate::{CLOCK, KEY_FILE, SCOPE, TIMEZONE};
 use cella_rules::hex::{hex, unhex};
 use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule, Signer};
 use cella_rules::sign::{self, Request};
@@ -55,7 +55,10 @@ pub fn verdict_date() -> pgrx::datum::Date {
         }
         let date: Option<pgrx::datum::Date> = spi(match setting(&CLOCK) {
             Some(c) => Spi::get_one_with_args("SELECT $1::date", &[c.into()]),
-            None => Spi::get_one("SELECT (clock_timestamp() AT TIME ZONE 'UTC')::date"),
+            None => Spi::get_one_with_args(
+                "SELECT (clock_timestamp() AT TIME ZONE $1)::date",
+                &[setting(&TIMEZONE).unwrap_or_else(|| "UTC".into()).into()],
+            ),
         });
         let date = date.unwrap_or_else(|| fail("cella: no verdict date"));
         let fixed = (date.year(), date.month(), date.day());

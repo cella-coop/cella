@@ -92,6 +92,10 @@ two months adding up to both; the balance sheet balances at every end,
 its result of the period the income statement's; a line's accounts add
 up to it.
 
+## Reads
+
+It says whose an account's lines are (`holds`, registered in `cella.reach` for `transaction`, `sql/005-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a line on an account no one holds reads for every member, one on a capital account for its holder and capital's readers. `balance` reads as its reader, each account whole where its lines are; `statement` runs as its owner, so the statements by rubric sum the whole journal for every member, while an account's `figures` read as its lines.
+
 ## Shell
 
 Adds each account's debits, credits and balance to the chart, from

@@ -35,6 +35,7 @@ import { app as accountDecision } from '@cella/org-graft-account-decision/app'
 import { app as accountMember } from '@cella/org-graft-account-member/app'
 import { app as accountMemberTransaction } from '@cella/org-graft-account-member-transaction/app'
 import { app as accountPayslip } from '@cella/org-graft-account-payslip/app'
+import { app as accountTimesheet } from '@cella/org-graft-account-timesheet/app'
 import { app as expenseMember } from '@cella/org-graft-expense-member/app'
 import { app as expenseProject } from '@cella/org-graft-expense-project/app'
 import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/app'
@@ -96,6 +97,7 @@ export const apps: App[] = [
   accountMember,
   accountMemberTransaction,
   accountPayslip,
+  accountTimesheet,
   expenseMember,
   expenseProject,
   expenseTransaction,

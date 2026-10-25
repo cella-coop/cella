@@ -35,6 +35,7 @@ import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
 import { slice as accountMember } from '@cella/org-graft-account-member/api'
 import { slice as accountMemberTransaction } from '@cella/org-graft-account-member-transaction/api'
 import { slice as accountPayslip } from '@cella/org-graft-account-payslip/api'
+import { slice as accountTimesheet } from '@cella/org-graft-account-timesheet/api'
 import { slice as expenseMember } from '@cella/org-graft-expense-member/api'
 import { slice as expenseProject } from '@cella/org-graft-expense-project/api'
 import { slice as expenseTransaction } from '@cella/org-graft-expense-transaction/api'
@@ -93,6 +94,7 @@ export const slices: Slice[] = [
   accountMember,
   accountMemberTransaction,
   accountPayslip,
+  accountTimesheet,
   expenseMember,
   expenseProject,
   expenseTransaction,

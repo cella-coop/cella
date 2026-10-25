@@ -386,6 +386,24 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/account-timesheet/ts:
+    dependencies:
+      '@cella/org-account':
+        specifier: workspace:*
+        version: link:../../../feats/account/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../../../feats/timesheet/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/account-transaction/ts:
     dependencies:
       '@cella/org-account':
@@ -979,6 +997,9 @@ importers:
       '@cella/org-graft-account-payslip':
         specifier: workspace:*
         version: link:../grafts/account-payslip/ts
+      '@cella/org-graft-account-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/account-timesheet/ts
       '@cella/org-graft-account-transaction':
         specifier: workspace:*
         version: link:../grafts/account-transaction/ts

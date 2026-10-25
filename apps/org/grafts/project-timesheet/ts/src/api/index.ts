@@ -5,7 +5,7 @@ import { forms } from '@cella/org-timesheet/api'
 import { book } from '../handlers/book.ts'
 import { burns, projectOf, time } from '../drivers/booking.ts'
 
-export { book } from '../handlers/book.ts'
+export { book, booking, type Booked } from '../handlers/book.ts'
 export { burns, projectOf, time } from '../drivers/booking.ts'
 
 // Each entry's project; each project's time, what it spent of the

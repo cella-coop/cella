@@ -6,7 +6,7 @@ import { approve, log, submit } from '../handlers/index.ts'
 import { entries, entry } from '../drivers/timesheet.ts'
 import * as forms from './forms.ts'
 
-export { approve, log, logging, submit } from '../handlers/index.ts'
+export { approve, log, logging, submit, submitting } from '../handlers/index.ts'
 export { entries, entry, sheet, sheets } from '../drivers/timesheet.ts'
 export * as forms from './forms.ts'
 

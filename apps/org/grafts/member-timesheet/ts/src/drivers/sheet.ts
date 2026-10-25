@@ -1,15 +1,6 @@
 import type { Db } from '@cella/org-db'
 import type { Month, Months } from '../models/sheet.ts'
 
-// Whose each entry is, by entry: the member's name, which the dashboard
-// groups hours by.
-export async function whose(db: Db): Promise<Record<string, { who: string }>> {
-  const { rows } = await db.query<{ id: string; name: string }>(
-    'SELECT e.id::text AS id, m.name FROM timesheet.entry e JOIN member.member m ON m.address = e.member',
-  )
-  return Object.fromEntries(rows.map((r) => [r.id, { who: r.name }]))
-}
-
 // A member's months, the latest first, as `actor` sees them.
 export async function months(db: Db, member: string, actor: string | null): Promise<Months> {
   const { rows } = await db.query<Month>(
@@ -18,5 +9,8 @@ export async function months(db: Db, member: string, actor: string | null): Prom
      FROM member_timesheet.sheet WHERE member = $1 ORDER BY month DESC`,
     [member],
   )
-  return { months: rows, own: actor === member, acting: actor !== null }
+  // Only an active member submits here, by their mandate; a worker who is
+  // not yet one submits from their worker's page.
+  const active = await db.query('SELECT FROM member.member WHERE address = $1 AND status = $2', [member, 'active'])
+  return { months: rows, own: actor === member, active: Boolean(active.rowCount), acting: actor !== null }
 }

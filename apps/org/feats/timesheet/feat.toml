@@ -2,4 +2,4 @@ name = "timesheet"
 group = "work"
 builtin = false
 rung = 1
-grafts = ["member-timesheet", "project-timesheet"]
+grafts = ["member-timesheet", "project-timesheet", "timesheet-worker"]

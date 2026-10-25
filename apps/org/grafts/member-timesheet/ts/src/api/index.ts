@@ -4,9 +4,9 @@
 import { action, type Form, type Slice } from '@cella/org-db'
 import { approve, submit } from '@cella/org-timesheet/api'
 import type { Period } from '@cella/org-timesheet/models'
-import { months, whose } from '../drivers/sheet.ts'
+import { months } from '../drivers/sheet.ts'
 
-export { months, whose } from '../drivers/sheet.ts'
+export { months } from '../drivers/sheet.ts'
 
 const period = (form: Form, member: string | undefined): Period => {
   const month = form.get('month')
@@ -16,14 +16,11 @@ const period = (form: Form, member: string | undefined): Period => {
   return { member, month }
 }
 
-// Whose each entry is; a member's months, and submitting or approving one
-// from their page.
+// A member's months, and submitting or approving one from their page.
+// Whose each entry is, a worker's, is timesheet-worker's.
 export const slice: Slice = {
   name: 'member-timesheet',
   extends: {
-    timesheets: {
-      list: whose,
-    },
     members: {
       item: months,
       actions: {

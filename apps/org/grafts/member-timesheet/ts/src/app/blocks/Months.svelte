@@ -27,7 +27,7 @@
 
 <Section title="Timesheets" count={data.months.length}>
   <Table {columns} rows={data.months} />
-  {#if data.own && open.length}
+  {#if data.own && data.active && open.length}
     <Form action="submit" submit="Submit" tone="quiet" inline>
       <Field label="Month" name="month" options={open} value={open[open.length - 1].value} />
     </Form>

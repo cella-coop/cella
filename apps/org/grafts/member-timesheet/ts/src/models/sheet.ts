@@ -12,5 +12,7 @@ export interface Month extends Sheet {
 export interface Months {
   months: Month[]
   own: boolean
+  // Whether the member is active, and so submits by their mandate.
+  active: boolean
   acting: boolean
 }

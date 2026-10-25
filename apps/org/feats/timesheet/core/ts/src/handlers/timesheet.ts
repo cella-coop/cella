@@ -31,22 +31,25 @@ export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Lo
 
 // Submits a member's month on the verdict date; submitting again keeps
 // the first day. `timesheet.submits` checks it is the actor's own and has
-// time in it.
+// time in it. A graft that submits it under a write of its own, as
+// timesheet-worker does by the worker's employment, runs this.
+export const submitting = (input: Period): Write<Submitted> => ({
+  op: 'timesheet:period:submit' satisfies Op,
+  request: input,
+  state: async (tx) => {
+    const { rows } = await tx.query<{ submitted: string }>(
+      `INSERT INTO timesheet.period (member, month, submitted) VALUES ($1, $2, cella.verdict_date())
+       ON CONFLICT (member, month) DO UPDATE SET submitted = coalesce(timesheet.period.submitted, excluded.submitted)
+       RETURNING to_char(submitted, 'YYYY-MM-DD') AS submitted`,
+      [input.member, input.month],
+    )
+    return { ...input, submitted: rows[0].submitted }
+  },
+  payload: (v) => ({ ...v }),
+})
+
 export async function submit(input: Period, deps: Deps): Out<'timesheet:period:submit', Submitted> {
-  return write(deps, {
-    op: 'timesheet:period:submit' satisfies Op,
-    request: input,
-    state: async (tx) => {
-      const { rows } = await tx.query<{ submitted: string }>(
-        `INSERT INTO timesheet.period (member, month, submitted) VALUES ($1, $2, cella.verdict_date())
-         ON CONFLICT (member, month) DO UPDATE SET submitted = coalesce(timesheet.period.submitted, excluded.submitted)
-         RETURNING to_char(submitted, 'YYYY-MM-DD') AS submitted`,
-        [input.member, input.month],
-      )
-      return { ...input, submitted: rows[0].submitted }
-    },
-    payload: (v) => ({ ...v }),
-  })
+  return write(deps, submitting(input))
 }
 
 // Approves a submitted month on the verdict date, closing it to new

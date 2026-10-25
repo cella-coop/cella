@@ -10,6 +10,10 @@ export interface Seat {
   roleName: string | null
   since: string | null
   until: string | null
+  // How the seat's circle decides, and whether it is the scope's root,
+  // the assembly.
+  procedure: 'consent' | 'majority'
+  root: boolean
 }
 
 // A mandate a member holds through a seat they hold; amounts in cents.

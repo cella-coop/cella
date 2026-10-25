@@ -1,6 +1,6 @@
 +++
 title = "circle-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Positions: which member holds which role in which circle. A position is
@@ -99,4 +99,8 @@ Adds a circle's seats to its page and how many sit in it to the list and
 its gallery cards; and
 to a member's page their seats and the powers they hold through them,
 the mandates `circle_member.may` would grant before any limit is spent,
-and to the list the circles they sit in.
+and to the list the circles they sit in; under Joining, whether they sit
+in the assembly and in a working circle; and under Own and decide, what
+they decide read back as sentences: where they sit, how each of those
+circles decides, and what their mandates let them do, within what
+limit.

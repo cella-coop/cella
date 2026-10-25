@@ -2,7 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Held, Seat } from '../models/position.ts'
 
 const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, m.name AS "memberName", p.role, r.name AS "roleName",
-  to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until`
+  to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until, c.procedure, c.parent IS NULL AS root`
 
 const from = `FROM circle_member.position p
   JOIN circle.circle c ON c.id = p.circle
@@ -50,4 +50,10 @@ export async function seated(db: Db): Promise<Record<string, { seated: number }>
     `SELECT circle, count(DISTINCT member)::int AS seated FROM circle_member.position WHERE until IS NULL GROUP BY circle`,
   )
   return Object.fromEntries(rows.map((r) => [r.circle, { seated: r.seated }]))
+}
+
+// A member's name, for their page to call them by when they sit nowhere.
+export async function named(db: Db, member: string): Promise<string> {
+  const { rows } = await db.query<{ name: string }>('SELECT name FROM member.member WHERE address = $1', [member])
+  return rows[0]?.name ?? member
 }

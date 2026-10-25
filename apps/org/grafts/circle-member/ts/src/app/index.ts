@@ -1,10 +1,13 @@
 import type { App } from '@cella/org-ui'
 import type { Held, Seat } from '../models/position.ts'
+import Circles from './blocks/Circles.svelte'
+import Decides from './blocks/Decides.svelte'
 import Members from './blocks/Members.svelte'
 import Seats from './blocks/Seats.svelte'
 
 // The graft's client side: a circle's seats, and a member's seats and the
-// mandates they hold through them.
+// mandates they hold through them; the circles joining asks, and what a
+// member decides, read back as sentences.
 export const app: App = {
   name: 'circle-member',
   extends: {
@@ -21,7 +24,7 @@ export const app: App = {
       page: {
         related: (d: { seats: Seat[]; held: Held[] }) =>
           d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),
-        blocks: [Seats],
+        blocks: [Seats, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }],
       },
     },
   },

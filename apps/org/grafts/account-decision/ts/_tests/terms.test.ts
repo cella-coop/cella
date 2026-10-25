@@ -13,7 +13,7 @@ import pg from 'pg'
 const db = new pg.Client()
 const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 const decide = (id: string) =>
-  db.query(`INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline) VALUES ($1, 'ag', 'Terms', 'consent', '2026-10-24', '2026-11-07')`, [id])
+  db.query(`INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline) VALUES ($1, 'ag', 'Terms', 'consent', 'consent', '2026-10-24', '2026-11-07')`, [id])
 const move = (decision: string, n: number, terms: string) =>
   db.query(`INSERT INTO decision.motion (decision, n, kind, args) VALUES ($1, $2, 'terms', $3)`, [decision, n, { terms }])
 

@@ -48,7 +48,7 @@ test('invited, her probation over and no decision moving to admit her, Inès is 
 })
 
 test('an open decision to admit her holds the proposal back; once it closes without admitting her, one is due again', async () => {
-  await db.query(`INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline) VALUES ('d-1', 'ag', 'Admit Inès', 'consent', '2026-10-14', '2026-10-31')`)
+  await db.query(`INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline) VALUES ('d-1', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31')`)
   await db.query(`INSERT INTO decision.motion (decision, n, kind, args) VALUES ('d-1', 1, 'admit', '{"member": "ines@lanterne.example", "shares": 20}')`)
   assert.deepEqual((await admissions()).find((a) => a.address === ines), { address: ines, stage: 'invited', decision: 'd-1', due: false })
   await db.query(`UPDATE decision.decision SET closed = '2026-10-31', cutoff = 1 WHERE id = 'd-1'`)

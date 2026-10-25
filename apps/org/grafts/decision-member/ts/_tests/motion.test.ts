@@ -21,11 +21,11 @@ before(async () => {
        ('old@lanterne.example', 'Old', 'exited', 0)`,
   )
   await db.query(
-    `INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline) VALUES
-       ('d-1', 'ag', 'Admit Inès', 'consent', '2026-10-14', '2026-10-31'),
-       ('d-2', 'ag', 'Admit Chloé again', 'consent', '2026-10-14', '2026-10-31'),
-       ('d-3', 'ag', 'Suspend Chloé', 'consent', '2026-10-14', '2026-10-31'),
-       ('d-4', 'ag', 'Let the old go again', 'consent', '2026-10-14', '2026-10-31')`,
+    `INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline) VALUES
+       ('d-1', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('d-2', 'ag', 'Admit Chloé again', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('d-3', 'ag', 'Suspend Chloé', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('d-4', 'ag', 'Let the old go again', 'consent', 'consent', '2026-10-14', '2026-10-31')`,
   )
   await db.query(
     `INSERT INTO decision.motion (decision, n, kind, args) VALUES

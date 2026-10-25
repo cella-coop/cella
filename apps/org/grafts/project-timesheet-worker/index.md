@@ -38,6 +38,16 @@ writes before it, which stand. Entries are permanent, so a cell only
 adds. This week or the one before; a note or an entry's kind other than
 the row's is not offered there.
 
+## Import
+
+Time from Toggl Track's detailed report and Harvest's detailed time
+report: the importers `toggl` and `harvest`, each stretch booked to the
+project the co-op holds under its title, or logged as the co-op's own
+time, as its worker's by their employment. A worker is matched by the
+address Toggl gives, or by name, which Harvest gives instead; a stretch of
+anyone but the importing member is refused, so each worker imports their
+own export ([import](../../feats/import/index.md)).
+
 ## Lanterne
 
 Inès, employed and no member, books her hours to Maison Ferrand's

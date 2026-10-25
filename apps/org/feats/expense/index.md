@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 What members spend for the co-op from their own pocket, to be paid back:
@@ -12,7 +12,7 @@ reimbursed from the bank.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference until files are stored |
+| expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference the member typed, beside the receipts kept as files |
 
 An expense names its member and its decider by address, as text; that the
 member is an active one is the `expense-member` graft's. Its label and
@@ -62,8 +62,9 @@ graft the budget.
 
 What it does not own: whose it is (`expense-member`), what it charges and
 pays in the books (`expense-transaction`), the project it is billed on to
-(`expense-project`), and the approver's budget, which needs their seats
-and mandates (`circle-expense-member`).
+(`expense-project`), its receipts, kept as files (`expense-file`), and the
+approver's budget, which needs their seats and mandates
+(`circle-expense-member`).
 
 ## Schema
 
@@ -112,7 +113,8 @@ The `expenses` collection in Finance, a board by status on which dragging
 a card into the next column is that column's write (submit, approve,
 refuse, reimburse), with a dashboard of what awaits approval and
 reimbursement and the spend by category and month; a new claim as the
-acting member; and an expense's page with its next write.
+acting member, which `expense-file` replaces with one carrying its
+receipt; and an expense's page with its next write and its receipts.
 
 ## Lanterne
 

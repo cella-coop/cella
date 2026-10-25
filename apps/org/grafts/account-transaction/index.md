@@ -75,11 +75,35 @@ power or right and a rule that checks the entry is exactly what they say:
 Money received posts through the writes that receive it, such as
 `invoice.payment`.
 
+## Carrying the books over
+
+A co-op switching to cella brings its books from its last tool as a FEC,
+the file every French accounting tool exports (Livre des procédures
+fiscales, art. L47 A and A47 A-1). Each of its entries is carried over by
+`account-transaction:entry:carry` (confluent, `carry-books`): the accounts
+it names that the chart lacks, opened of the kind their class makes them
+(`account.kind_of`), and the entry recorded, in one write. Its opening
+balances are the à-nouveaux entry, dated in the first open month. Unlike a
+post, a carried entry may touch a cash account, since it records money
+that moved before cella; so it needs a power of its own, which no mandate
+to keep the books grants by itself. The journal's triggers still refuse
+an entry that does not balance or falls in no open period.
+
+- `account_transaction.carries`, on `account-transaction:entry:carry`:
+  the entry the payload names is in the journal on its date with its
+  lines, and each account the payload names as opened is in the chart, of
+  its class's kind.
+
+The FEC is read by this graft's importer, `fec`, one carry for each
+entry, by its journal and number ([import](../../feats/import/index.md)).
+
 ## Handlers
 
 `allocate` (ordered, `decided`) wraps the account feat's `allocating`:
 the allocation marked, then its entry through the transaction feat's
-`record`, then the link, then `cella.submit` once.
+`record`, then the link, then `cella.submit` once. `carry` opens the
+accounts through the account feat's `opening`, then records the entry
+through the transaction feat's `record`.
 
 ## Tests
 

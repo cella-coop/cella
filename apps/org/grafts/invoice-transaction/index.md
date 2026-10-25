@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -59,3 +59,12 @@ Adds an invoice's postings, line by line, to its page, with the payment
 and void forms; and replaces the invoice feat's issue, payment and void
 with this graft's `issue`, `payment` and `annul`, which post in the same
 verdict, reading the same forms through the invoice feat's `forms`.
+
+## Import
+
+Invoices to issue from a spreadsheet, a CSV with a row for each line,
+rows sharing an `invoice` making one: the importer `invoices`, each issued
+now as the importing member, numbered in the co-op's series and posted.
+Invoices issued before cella are in the old books and come in through the
+FEC as entries, so nothing is posted twice
+([import](../../feats/import/index.md)).

@@ -28,8 +28,8 @@ what waits on the acting member, its count beside it. Each feat's
 collection is a page in the sidebar: Members, Circles, Decisions, Documents and
 Meetings (governance); Clients, Projects, Tasks, Timesheets and Workers
 (work); Invoices, Accounts, Periods, Allocations, Transactions, Expenses
-and Payslips (finance); Devices and the Log (platform). Every collection
-is the same component, its drawer's View card holding the filter, the
+and Payslips (finance); Devices, Files, Imports and the Log (platform).
+Every collection is the same component, its drawer's View card holding the filter, the
 layout (list, table, gallery, board, calendar or dashboard) and its
 options, and every item the same detail view, its
 drawer's cards filled by the feat and the grafts that join it.
@@ -91,7 +91,16 @@ rule's reason:
   bank; their subscription spread over monthly instalments from their
   pay, on their own page, each withheld when a run is paid; and a
   departed associate's next repayment paid from the bank, once it falls
-  due.
+  due;
+- an expense claimed with its receipt, or a receipt attached to one
+  later; a worker's employment record filed by whoever hires, a member's
+  own record, and a paper of the co-op's own uploaded, each opening at
+  `/files/<id>/content` to whom it concerns, who uploaded it and whoever
+  holds a power over what it records;
+- a file from another tool imported, or tried in a dry run first, from
+  the Imports page: members with their first devices, clients, the books
+  from the FEC, invoices to issue, a worker's own time from Toggl or
+  Harvest, projects and tasks, each line the write it would be by hand.
 At rung 1 an ordered write settles or is refused at once, so Pending is
 never shown, though the shell handles it. How slices mount is in
 [architecture](../../_corpus/doc/architecture.md#the-shell).
@@ -116,6 +125,8 @@ never shown, though the shell handles it. How slices mount is in
 | `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
 | `worker` | work | 1 | everyone the co-op employs, member or not, and their contracts |
 | `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled |
+| `file` | platform | 1 | the files the co-op keeps, named by their BLAKE3 |
+| `import` | platform | 1 | files brought in from other tools, and what each line came to |
 | `agent` | platform | later | agents acting for members, with narrower grants |
 
 Seedling's co-op economics that rung 1 still leaves out: a work share
@@ -138,8 +149,9 @@ and admit a member by vote (ordered).
 | `account-member-transaction` | a member's subscription called on admission and paid in, their draws, the shares the work share buys, and a departing associate's capital owed and repaid, posted; a year's return to the federation |
 | `account-payslip` | a surplus's work share divided by pay and in equal parts |
 | `account-timesheet` | a surplus's work share divided by time worked |
-| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet |
+| `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet; the books carried over from a FEC |
 | `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
+| `circle-file-member` | who opens a personal file by a power over what it records |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
 | `circle-meeting` | a meeting's circle, and how a circle meets: its quorum, and whether its minutes are adopted |
@@ -157,9 +169,12 @@ and admit a member by vote (ordered).
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-member` | who has read the co-op's adopted texts |
 | `expense-invoice-project-timesheet` | a project's margin: invoiced less its time's cost and its expenses, its burn, its forecasts and whether it is watched |
+| `expense-file` | an expense's receipts, one carried by its claim |
 | `expense-member` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
+| `file-member` | a member's records on their own file |
+| `file-worker` | a worker's employment records, filed by whoever hires |
 | `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
 | `key-member` | a member's devices, the first carried by their invitation and enrolled by their admission |

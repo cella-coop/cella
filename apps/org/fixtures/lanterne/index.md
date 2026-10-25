@@ -110,6 +110,11 @@ Camille hires, and opens a new hire's candidacy for membership.
   June minutes, Inès's admission and the rate card. Leads and the
   gérante schedule meetings; secretaries and leads hold them and record
   who came; every member marks themselves.
+- **Files (confluent).** The statutes as adopted in 2024 are the co-op's
+  own; Camille's subscription form is on her file, Inès's contract on
+  hers, filed by Camille as manager, and Sofia's and Chloé's receipts on
+  their October expenses. Julien, as finance, opens the receipts and
+  Camille, as manager, the contract.
 
 ## Files
 
@@ -137,6 +142,12 @@ items table, the minutes and each circle's quorum are its grafts' files;
 scope's day and a scheduled one meets after it, that the secretary
 recorded only members seated in the circle, others marking themselves as
 guests, and that no item tables a decision before it was proposed.
+
+Files are `file.toml`, each one's bytes in `files/` under its name, and
+what holds them its grafts' files. `import/` holds a sample of each kind
+of file the co-op might bring from the tools it leaves, with lines the
+rules refuse beside the ones they take ([the samples](import/index.md));
+nothing seeds them.
 
 Pay runs and expenses are `payslip.toml` and `expense.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its

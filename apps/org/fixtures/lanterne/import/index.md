@@ -13,9 +13,9 @@ rules refuse beside the ones they take:
   already.
 - `fec-2026-10.txt`: October from the previous tool's books, a FEC with a
   bar between its fields. The rental account 6135 and the fees account 6226
-  are new to the chart; the furniture rental and Atelier Ondine's invoice
-  balance; the fees entry does not, and 2025's opening entry falls in no
-  period of the books.
+  are new to the chart; the furniture rental, paid from the bank, and
+  Atelier Ondine's invoice balance; the fees entry does not, and 2025's
+  opening entry falls in no period of the books.
 - `invoices.csv`: two invoices to issue for Atelier Ondine and Vélo
   Solidaire, the first of two lines, and one with no client.
 - `toggl.csv`: Inès's Toggl detailed report: her time on Ferrand, the

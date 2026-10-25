@@ -136,9 +136,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Cell`, `Stats`, `Badge`, `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
   what is added, with the totals; the arrows move between open cells),
-  `Button`, `Form` (a write, posting to a named form action; `ready`
+  `Button`, `Form` (a write, posting to a named form action, files and all; `ready`
   false keeps its button disabled while there is nothing to post),
-  `Field` (text, a number, a date, a time, an address or an email; a
+  `Field` (text, a number, a date, a time, an address, an email or a
+  file, which `accept` narrows to the media types it offers; a
   select with a `placeholder` offers it as a disabled first choice,
   never a blank), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the

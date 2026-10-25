@@ -1,6 +1,6 @@
 +++
 title = "Client"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The organisations and people the co-op works for: its CRM. Companies and
@@ -106,6 +106,15 @@ refused.
 The `clients` collection, archived ones left out; a client's page edits
 its note (`update`, the note field alone). What a client owes and the
 invoices that bill it are `client-invoice`'s.
+
+## Import
+
+Clients from another tool's list, a CSV with the columns `name` and, if
+it has them, `kind`, `form`, `email`, `phone`, `tags` and `note`: the
+importer `clients`, each line a `client:client:add` as the importing
+member. A client the co-op holds already, by its name, is refused; a
+person among them is labelled by their line, never their name
+([import](../import/index.md)).
 
 ## Lanterne
 

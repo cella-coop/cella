@@ -46,6 +46,14 @@ admission enrols it, and every device enrolled under their address, as
 the key feat lists them; under Joining, whether they hold a device
 that signs, and the one their invitation carries until it is enrolled.
 
+## Import
+
+Members from another tool's list, a CSV with the columns `address`,
+`name`, `key` and `label`: the importer `members`, each line this graft's
+invitation carrying the device the key names. A row without a key is
+refused: an invitation carries the first device of whom it invites
+([import](../../feats/import/index.md)).
+
 ## Lanterne
 
 Inès's invitation carries her phone, whose TEST-ONLY key the seed

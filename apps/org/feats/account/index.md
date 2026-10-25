@@ -216,6 +216,9 @@ the debts.
 - `account.rubric`: the statements' rubrics, seeded with the PCG's;
   `rubric_of(sheet, code)` the line an account is presented in.
 - `account.report`: the spans of the books, each with the span before it.
+- `account.kind_of(code)`: the kind of account a code's class makes it, by
+  the PCG's list of accounts (art. 932-1); an account opened by a write is
+  of this kind.
 
 Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
 (a capital account opens on admission) and parts, set a period's
@@ -258,6 +261,9 @@ L3243-4) and redacted after.
 - `allocating`: the spec that marks an allocation allocated on the verdict
   date, which `account-transaction` wraps with its entry.
 - `adopt` (ordered): sets the terms' `adopted` to the verdict date.
+- `opening`: the spec that opens, inside a write, the accounts the chart
+  lacks, each of its code's kind and under the longest code that begins
+  its own; `account-transaction` carries an entry over with it.
 
 ## Tests
 

@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -40,6 +40,14 @@ its cards and may group by; to a task's page, its project and milestone
 and the form that files it. On a project's page it adds the Tasks tab:
 the project's tasks, open ones first, and a new task already in the
 project, under one of its open milestones if chosen.
+
+## Import
+
+Tasks from a spreadsheet or Asana's task export (`Name`, `Projects`,
+`Due Date`, `Completed At`): the importer `tasks`, each created in the
+project it names by title or id, or in none. A task done before the
+switch, or in a project the co-op does not hold, is refused
+([import](../../feats/import/index.md)).
 
 ## Lanterne
 

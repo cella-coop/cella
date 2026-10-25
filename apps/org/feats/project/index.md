@@ -78,6 +78,13 @@ one, adding the next), its budget and its shares, and its margin; Tasks
 each is a list long enough to crowd the overview. Archive is the header's
 write.
 
+## Import
+
+Projects from a spreadsheet, a CSV with the columns `title` and, if it
+has them, `circle`, `summary` and `due`: the importer `projects`, each
+line a `project:project:create` as the importing member
+([import](../import/index.md)).
+
 ## Lanterne
 
 Eight projects, one for each piece of work its clients commissioned:

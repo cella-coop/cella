@@ -1,5 +1,5 @@
 import { icons, type App } from '@cella/org-ui'
-import type { Decision, Detail } from '../models/decision.ts'
+import { terms, type Decision, type Detail } from '../models/decision.ts'
 import Close from './blocks/Close.svelte'
 import Create from './blocks/Create.svelte'
 import Proposal from './blocks/Proposal.svelte'
@@ -24,15 +24,17 @@ export const app: App = {
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Decision) => d.id },
           { key: 'circle', label: 'Circle', kind: 'mono', role: 'meta', value: (d: Decision) => d.circle },
           { key: 'rule', label: 'Rule', role: 'hidden', value: (d: Decision) => d.rule },
+          { key: 'procedure', label: 'Procedure', kind: 'badge', role: 'hidden', value: (d: Decision) => d.procedure },
           { key: 'deadline', label: 'Deadline', kind: 'date', role: 'meta', value: (d: Decision) => d.deadline },
         ],
       },
       page: {
         eyebrow: 'Decision',
         title: (d: Detail) => d.title,
-        subtitle: (d: Detail) => `${d.id} · by ${d.rule} in ${d.circle}`,
+        subtitle: (d: Detail) => `${d.id} · by ${d.terms.label.toLowerCase()} in ${d.circle}`,
         properties: (d: Detail) => [
-          { label: 'Rule', value: d.rule },
+          { label: 'Procedure', value: d.terms.label },
+          { label: 'Terms', value: terms(d.terms) },
           { label: 'Circle', value: d.circle, href: `/circles/${d.circle}` },
           { label: 'Proposed', value: d.proposed, kind: 'date' },
           { label: 'Deadline', value: d.deadline, kind: 'date' },

@@ -184,7 +184,7 @@ test('the assembly decides terms mixing pay and time from 2027, and they are ado
 
   const proposed = settled(
     await propose(
-      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', rule: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'terms', args: { terms: 'st-2027' } }] },
+      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', procedure: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'terms', args: { terms: 'st-2027' } }] },
       as(camille),
     ),
   )

@@ -1,6 +1,6 @@
 import type { Db, Form } from '@cella/org-db'
-import { kinds } from '../drivers/decision.ts'
-import { stances, type Arg, type Motion, type Propose, type Rule } from '../models/decision.ts'
+import { kinds, procedures } from '../drivers/decision.ts'
+import type { Arg, Motion, Propose } from '../models/decision.ts'
 
 // What the New form sends, read into a proposal: the decision, and at most
 // one motion, its kind's arguments in fields named `arg.<name>`, read as
@@ -15,9 +15,9 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
     }
     motions.push({ kind, args: args(form, declared.fields) })
   }
-  const rule = form.get('rule')
-  if (!(rule in stances)) {
-    throw new Error(`a decision is taken by consent or by majority, not “${rule}”`)
+  const procedure = form.get('procedure')
+  if (!(await procedures(db)).some((p) => p.id === procedure)) {
+    throw new Error(`a decision is taken by a procedure of the co-op’s, not “${procedure}”`)
   }
   if (!form.get('deadline')) {
     throw new Error('a decision needs a deadline')
@@ -25,7 +25,7 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
   return {
     circle: form.get('circle'),
     title: form.get('title'),
-    rule: rule as Rule,
+    procedure,
     deadline: form.get('deadline'),
     body: form.get('body'),
     motions,

@@ -28,9 +28,9 @@ before(async () => {
   await db.connect()
   await db.query(`INSERT INTO decision.kind (kind, label, owner) VALUES ('admit', 'Admit a member', 'test')`)
   await db.query(
-    `INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline) VALUES
-       ('d-2026-012', 'ag', 'Admit Inès', 'consent', '2026-10-14', '2026-10-31'),
-       ('d-2026-013', 'ag', 'Admit someone', 'consent', '2026-10-24', '2026-11-07')`,
+    `INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline) VALUES
+       ('d-2026-012', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('d-2026-013', 'ag', 'Admit someone', 'consent', 'consent', '2026-10-24', '2026-11-07')`,
   )
 })
 

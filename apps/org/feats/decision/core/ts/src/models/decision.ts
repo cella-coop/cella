@@ -8,6 +8,27 @@ export const stances: Record<Rule, Stance[]> = {
   majority: ['for', 'against', 'abstain'],
 }
 
+// How a decision is taken: its rule; for a majority, the share of the
+// votes cast it needs, at least `[num, den]` of those for and against, or
+// none for more for than against; and its quorum, at least `[num, den]`
+// of those counted giving a stance.
+export interface Procedure {
+  id: string
+  label: string
+  rule: Rule
+  share: [number, number] | null
+  quorum: [number, number]
+}
+
+const fraction = ([n, d]: [number, number]) => (n === d ? 'all' : `${n} in ${d}`)
+
+// A procedure's terms in words: "majority of 2 in 3 of the votes cast,
+// quorum 1 in 2".
+export function terms(p: Procedure): string {
+  const rule = p.share ? `${p.rule} of ${fraction(p.share)} of the votes cast` : p.rule
+  return p.quorum[0] ? `${rule}, quorum ${fraction(p.quorum)}` : rule
+}
+
 // A decision as the feat reads it. Its outcome is never stored: the
 // circle-decision-member graft computes it from the stances on its roll.
 export interface Decision {
@@ -15,6 +36,8 @@ export interface Decision {
   circle: string
   title: string
   rule: Rule
+  // The procedure it was proposed under, whose rule is its own.
+  procedure: string
   proposed: string
   deadline: string
   closed: string | null
@@ -32,6 +55,8 @@ export interface Given {
 export interface Detail extends Decision {
   body: string
   cutoff: number | null
+  // The terms of its procedure.
+  terms: Procedure
   given: Given[]
   motions: Motioned[]
 }
@@ -86,13 +111,13 @@ export interface Motioned extends Motion {
   label: string
 }
 
-// A proposal: a decision of a circle, by its rule, open until its
-// deadline, and the motions it decides. Its id and the day it is proposed
-// are the server's.
+// A proposal: a decision of a circle, by a procedure, open until its
+// deadline, and the motions it decides. Its id, the day it is proposed and
+// its rule, its procedure's, are the server's.
 export interface Propose {
   circle: string
   title: string
-  rule: Rule
+  procedure: string
   deadline: string
   body: string
   motions: Motion[]
@@ -103,11 +128,13 @@ export interface Proposed {
   proposed: string
 }
 
-// What the New form offers: the kinds of motion, and the circles a
-// decision may be put in, which a graft joining circles adds.
+// What the New form offers: the kinds of motion, the procedures, and the
+// circles a decision may be put in, each with the procedure it decides by,
+// which a graft joining circles adds.
 export interface Offered {
   kinds: Kind[]
-  circles?: { id: string; name: string; procedure: Rule }[]
+  procedures: Procedure[]
+  circles?: { id: string; name: string; procedure: string }[]
   // The lists of choices the kinds' arguments name, by key.
   [options: string]: unknown
 }

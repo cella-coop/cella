@@ -1,6 +1,6 @@
 +++
 title = "Decision"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Proposals, votes and outcomes. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once.
@@ -19,7 +19,8 @@ None needs a power; each declares the check that allows it. **propose** and **cl
 
 `decision` (`core/sql/`):
 
-- `decision.decision`: circle, title, rule (`consent` or `majority`), proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
+- `decision.decision`: circle, title, rule (`consent` or `majority`), the procedure it is taken by, whose rule it keeps by a foreign key, proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
+- `decision.procedure`: how a decision is taken: its rule; for a majority, the share of the votes cast it needs, at least `share_num` in every `share_den` of those for and against, or none for more for than against; and its quorum, at least `quorum_num` in every `quorum_den` of those counted giving a stance. Consent, majority and two thirds are built in; a co-op adds its own, as Lanterne's ordinary and extraordinary assemblies. A procedure a decision names is fixed (`decision.procedure_kept`); a circle's default names one, which `circle-decision` checks.
 - `decision.vote`: a stance by receipt, the decision, the member's address and the day they give. Receipts order stances; only those received before the cutoff count.
 
 - `decision.kind`: the kinds of thing a decision can decide beyond its text, each registered by the graft that carries it out (`admit`, `suspend` and `exit` by `decision-member`; `nest`, `grant` and `revoke` by `circle-decision`; `seat` and `unseat` by `circle-decision-member`; `adopt` by `decision-document`), with the arguments its motions take as the New form asks for them: text, a number, or one of the choices a graft adds to the collection's `about` under the key the argument's `options` names. This feat knows no kind; it keeps the register, as it keeps `decision.cites`.
@@ -37,12 +38,12 @@ Who may vote on a decision, its roll, is the `circle-decision-member` graft's: t
 - `decision.closes`, on `decision:decision:close`: the write closed the decision on the verdict date, and not before its deadline. A decision closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
 - `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. That the actor is on the decision's roll is `circle-decision-member`'s rule on the same op. A stance needs no power.
 
-The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent` or `cella.majority` over the roll, as the `circle-decision-member` graft does.
+The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the decision's procedure and its quorum, as the `circle-decision-member` graft does.
 
 ## Handlers
 
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch. A stance for another member, off the roll or on a closed decision returns `Refused`, as the rules and the trigger rule it; the handler throws for none of them.
-- `propose` (confluent): inserts the decision, numbered the year's next (`d-2026-013`) under a lock on the numbering, proposed on the verdict date, and its motions; the roll is fixed as it is inserted. Submits `{ decision, circle, rule, deadline, motions }`: the title and the text are the proposer's words and stay out of the log.
+- `propose` (confluent): inserts the decision by the procedure it names, its rule the procedure's, numbered the year's next (`d-2026-013`) under a lock on the numbering, proposed on the verdict date, and its motions; the roll is fixed as it is inserted. Submits `{ decision, circle, procedure, deadline, motions }`: the title and the text are the proposer's words and stay out of the log.
 - `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-decision-member` replaces it in the shell with a close that admits and seats in the same verdict.
 
 ## Grafts
@@ -53,8 +54,8 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 The `decisions` collection, open ones first. Its New form proposes one:
 the circle it is put in, from those `circle-decision` lists in the
-collection's `about`; the rule, which follows the circle's procedure
-until another is chosen; the deadline, the title and the text; and what
+collection's `about`; the procedure, its terms in words, which follows
+the circle's until another is chosen; the deadline, the title and the text; and what
 it decides, a kind from `decision.kind`, whose arguments the form then
 asks for. A decision's page shows its proposal and each motion it
 decides, every stance given as its activity, and closes it (`close`).
@@ -80,4 +81,4 @@ it in documents, `decision-meeting` in a meeting's minutes.
 
 ## Domain
 
-Ported from seedling's `specs/feat/06-decisions.md` under this repo's labels and grafts: proposals with what they decide, stances and the close. Amendments, quorums, delegation and closing early once everyone has spoken are not built.
+Ported from seedling's `specs/feat/06-decisions.md` under this repo's labels and grafts: proposals with what they decide, stances and the close. Amendments, delegation, a second call without a quorum and closing early once everyone has spoken are not built.

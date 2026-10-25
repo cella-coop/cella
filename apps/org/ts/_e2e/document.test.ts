@@ -218,7 +218,7 @@ test('a second adoption naming a stale base is refused, and uses no verdict numb
 test('a new decision proposes adopting a version picked from the versions; one that does not exist is refused', async () => {
   const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === 'internal-rules@3' && /, version 3$/.test(v.label)))
-  const motion = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, rule: 'consent' as const, deadline: '2026-12-31', body: '', motions: [{ kind: 'adopt', args: { version } }] })
+  const motion = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, procedure: 'consent', deadline: '2026-12-31', body: '', motions: [{ kind: 'adopt', args: { version } }] })
   const out = await propose(motion('internal-rules@3'), as(camille))
   assert.equal(out.state, 'settled', reason(out))
   const id = (out as { value: { decision: string } }).value.decision
@@ -236,7 +236,7 @@ test('minutes are adopted as any document is: the assembly adopts its June minut
   const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === `${minutes}@1`))
   const proposed = await propose(
-    { circle: 'ag', title: 'Adopt the minutes of 20 June', rule: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'adopt', args: { version: `${minutes}@1` } }] },
+    { circle: 'ag', title: 'Adopt the minutes of 20 June', procedure: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'adopt', args: { version: `${minutes}@1` } }] },
     as(camille),
   )
   assert.equal(proposed.state, 'settled', reason(proposed))

@@ -1,26 +1,27 @@
-import type { Arg, Choice, Offered, Rule } from '../models/decision.ts'
+import type { Arg, Choice, Offered } from '../models/decision.ts'
 
-// The New decision form's choices: the circle it is put in, the rule,
-// which follows the circle's procedure until one is chosen, and the kind
+// The New decision form's choices: the circle it is put in, the
+// procedure, which follows the circle's until one is chosen, and the kind
 // of motion, whose arguments the form then asks for.
 export class ProposalState {
   circle = $state('')
   kind = $state('')
-  #rule = $state<Rule | ''>('')
+  #procedure = $state('')
   readonly #offered: () => Offered
 
   constructor(offered: () => Offered) {
     this.#offered = offered
   }
 
-  procedure = $derived.by((): Rule | '' => this.#offered().circles?.find((c) => c.id === this.circle)?.procedure ?? '')
+  // The procedure the circle decides by.
+  usual = $derived.by((): string => this.#offered().circles?.find((c) => c.id === this.circle)?.procedure ?? '')
 
-  get rule(): Rule | '' {
-    return this.#rule || this.procedure
+  get procedure(): string {
+    return this.#procedure || this.usual
   }
 
-  set rule(r: Rule | '') {
-    this.#rule = r
+  set procedure(p: string) {
+    this.#procedure = p
   }
 
   fields = $derived.by((): Arg[] => this.#offered().kinds.find((k) => k.kind === this.kind)?.fields ?? [])

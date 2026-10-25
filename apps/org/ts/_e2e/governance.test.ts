@@ -84,7 +84,7 @@ test('Malik invites Nadia with her laptop: the invitation carries its key, which
 
 test('only the assembly admits: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
   const astray = await propose(
-    { circle: 'coordination', title: 'Admit Nadia', rule: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
+    { circle: 'coordination', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(camille),
   )
   assert.match(reason(astray), /only the assembly decides to admit a member, not coordination/)

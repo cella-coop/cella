@@ -116,10 +116,19 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
   }
   const byHugo = await hire({ ...contract, key: laptop.key, label: 'laptop' }, as(hugo))
   assert.match(reason(byHugo), /hugo@lanterne\.example holds no mandate for hire-worker/)
-  // A hire whose payload names another key than the device it enrolled.
+  // A hire whose payload names another key than the member signed: the
+  // notary refuses it before any rule.
   const other = await fixture(bastien, 'phone')
   const h = hiring({ ...contract, key: laptop.key, label: 'laptop' })
-  const bare = await write(as(camille), { ...h, payload: (v) => ({ ...h.payload(v), key: other.key }) })
+  const swapped = await write(as(camille), { ...h, payload: (v) => ({ ...h.payload(v), key: other.key }) })
+  assert.match(reason(swapped), /the payload's key is not what the member signed: employment:worker:hire/)
+  // One whose request and payload name another key than the device it
+  // enrolled: `employment.carries` refuses it.
+  const bare = await write(as(camille), {
+    ...h,
+    request: { ...contract, key: other.key, label: 'laptop' },
+    payload: (v) => ({ ...h.payload(v), key: other.key }),
+  })
   assert.match(reason(bare), /bastien@lanterne\.example's first device was not enrolled by this hire/)
   const hired = settled(await hire({ ...contract, key: laptop.key, label: 'laptop' }, as(camille)))
   assert.deepEqual({ hired: hired.hired, until: hired.until, key: hired.key }, { hired: '2026-10-24', until: '2028-08-31', key: laptop.key })

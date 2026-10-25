@@ -76,7 +76,7 @@ test('members write, personal data among it, and the scope is backed up whole, i
     assert.ok(existsSync(join(backup, f)), f)
   }
   const manifest = readFileSync(join(backup, 'manifest'), 'utf8')
-  assert.match(manifest, /^version 0\.2\.0$/m)
+  assert.match(manifest, /^version 0\.3\.0$/m)
   assert.match(manifest, /^setting - cella\.scope=lanterne\.example$/m)
   assert.match(manifest, new RegExp(`^head ${written} [0-9a-f]{64}$`, 'm'))
   const keys = await one<{ notary: string; vault: string }>(
@@ -106,6 +106,10 @@ test('a new host restores it: its key files written, the log verified at the hea
   const opened = async (c: pg.Client) => (await one<{ o: unknown }>(c, 'SELECT cella.opened($1) AS o', [written])).o
   assert.deepEqual(await opened(restored), await opened(su))
   assert.match(JSON.stringify(await opened(restored)), /julien@petit\.example/)
+  // What each member signed is kept through it: every receipt's salt.
+  const salts = async (c: pg.Client) => (await one<{ s: string }>(c, 'SELECT string_agg(salt, \',\' ORDER BY n) AS s FROM cella.receipt')).s
+  assert.equal((await salts(restored)).split(',').length, written)
+  assert.equal(await salts(restored), await salts(su))
   await restored.end()
 
   assert.throws(() => cella(['restore', backup, '--url', host.url('lanterne')]), /already holds a scope/)

@@ -77,7 +77,7 @@ test('a 0.1.0-alpha database migrates in place: the extension updated, the appli
 
   cella(['migrate', '--url', host.url('lanterne')])
 
-  assert.equal((await one<{ v: string }>(`SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)).v, '0.2.0')
+  assert.equal((await one<{ v: string }>(`SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)).v, '0.3.0')
   assert.deepEqual(await one(`SELECT n::text, encode(hash, 'hex') AS hash FROM cella.head`), before)
   const ids = await one<{ n: string; paths: string }>(
     `SELECT count(*) AS n, count(*) FILTER (WHERE id LIKE 'apps/%') AS paths FROM migration.applied WHERE id LIKE 'org:%' OR id LIKE 'apps/%'`,
@@ -85,6 +85,7 @@ test('a 0.1.0-alpha database migrates in place: the extension updated, the appli
   assert.equal(ids.paths, '0')
   assert.ok(Number(ids.n) > 170)
   assert.ok(await one(`SELECT FROM migration.applied WHERE id = 'org:core/notary/005-signers.sql'`))
+  assert.ok(await one(`SELECT FROM migration.applied WHERE id = 'org:core/notary/006-salts.sql'`))
 })
 
 test('the log verifies under the key that signed it, kept as signer 1 and named by every entry', async () => {
@@ -109,6 +110,11 @@ test('the next write continues the chain under signer 1', async () => {
   assert.equal(await write(julien, { person: julien, email: 'julien@petit.example' }), HUGO + 1)
   assert.deepEqual(await one(`SELECT key FROM cella.log WHERE n = $1`, [HUGO + 1]), { key: 1 })
   assert.equal(await verifies(), true)
+  // Receipts from before 0.3.0 kept no salt; the new one keeps its own.
+  assert.deepEqual(
+    await one(`SELECT count(*) FILTER (WHERE salt IS NULL)::int AS before, count(*) FILTER (WHERE salt IS NOT NULL)::int AS since FROM cella.receipt`),
+    { before: HUGO, since: 1 },
+  )
 })
 
 test('a rotated notary key signs from its first entry; the log verifies once the old key is gone, and the old key never signs again', async () => {

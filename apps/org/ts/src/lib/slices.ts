@@ -9,6 +9,7 @@ import { app as document } from '@cella/org-document/app'
 import { app as client } from '@cella/org-client/app'
 import { app as invoice } from '@cella/org-invoice/app'
 import { app as account } from '@cella/org-account/app'
+import { app as patronage } from '@cella/org-patronage/app'
 import { app as transaction } from '@cella/org-transaction/app'
 import { app as project } from '@cella/org-project/app'
 import { app as task } from '@cella/org-task/app'
@@ -39,8 +40,12 @@ import { app as accountDecision } from '@cella/org-graft-account-decision/app'
 import { app as accountMember } from '@cella/org-graft-account-member/app'
 import { app as accountMemberTransaction } from '@cella/org-graft-account-member-transaction/app'
 import { app as accountMemberPayslipTransaction } from '@cella/org-graft-account-member-payslip-transaction/app'
-import { app as accountPayslip } from '@cella/org-graft-account-payslip/app'
-import { app as accountTimesheet } from '@cella/org-graft-account-timesheet/app'
+import { app as accountMemberPatronage } from '@cella/org-graft-account-member-patronage/app'
+import { app as accountMemberPatronageTransaction } from '@cella/org-graft-account-member-patronage-transaction/app'
+import { app as decisionPatronage } from '@cella/org-graft-decision-patronage/app'
+import { app as patronagePayslip } from '@cella/org-graft-patronage-payslip/app'
+import { app as patronageTimesheet } from '@cella/org-graft-patronage-timesheet/app'
+import { app as patronageTransaction } from '@cella/org-graft-patronage-transaction/app'
 import { app as expenseMember } from '@cella/org-graft-expense-member/app'
 import { app as expenseProject } from '@cella/org-graft-expense-project/app'
 import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/app'
@@ -90,6 +95,7 @@ export const apps: App[] = [
   imports,
   invoice,
   account,
+  patronage,
   transaction,
   expense,
   payslip,
@@ -118,8 +124,12 @@ export const apps: App[] = [
   accountMember,
   accountMemberTransaction,
   accountMemberPayslipTransaction,
-  accountPayslip,
-  accountTimesheet,
+  accountMemberPatronageTransaction,
+  accountMemberPatronage,
+  decisionPatronage,
+  patronageTransaction,
+  patronagePayslip,
+  patronageTimesheet,
   expenseMember,
   expenseProject,
   expenseTransaction,

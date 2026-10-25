@@ -189,6 +189,25 @@ importers:
         specifier: workspace:*
         version: link:../../../../core/sign/ts
 
+  apps/org/feats/import/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../../core/sign/ts
+
   apps/org/feats/invoice/core/ts:
     dependencies:
       '@cella/org-db':
@@ -1472,6 +1491,9 @@ importers:
       '@cella/org-graft-timesheet-worker':
         specifier: workspace:*
         version: link:../grafts/timesheet-worker/ts
+      '@cella/org-import':
+        specifier: workspace:*
+        version: link:../feats/import/core/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../feats/invoice/core/ts

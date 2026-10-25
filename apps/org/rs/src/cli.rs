@@ -55,6 +55,27 @@ pub enum Command {
         url: Option<String>,
     },
 
+    /// Bring a file from another tool into the scope as a member, each record through its signed write; --dry-run undoes them all
+    Import {
+        /// The kind of file: members, clients, fec, invoices, toggl, harvest, projects or tasks
+        kind: String,
+
+        /// The file to import
+        file: PathBuf,
+
+        /// The member who imports it, by address; their fixture device signs, as the dev server does
+        #[arg(long = "as", value_name = "ADDRESS")]
+        actor: String,
+
+        /// Make every write and undo them all, to see what would be created and what refused
+        #[arg(long)]
+        dry_run: bool,
+
+        /// A database other than the dev cluster's
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+    },
+
     /// The shell's dev server on the dev database, signing as a fixture member; starts the cluster if needed
     Serve {
         /// The port it listens on, on localhost

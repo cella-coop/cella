@@ -15,6 +15,7 @@ import { slice as task } from '@cella/org-task/api'
 import { slice as timesheet } from '@cella/org-timesheet/api'
 import { slice as worker } from '@cella/org-worker/api'
 import { slice as file } from '@cella/org-file/api'
+import { slice as imports } from '@cella/org-import/api'
 import { slice as circleMember } from '@cella/org-graft-circle-member/api'
 import { slice as circleDecision } from '@cella/org-graft-circle-decision/api'
 import { slice as keyMember } from '@cella/org-graft-key-member/api'
@@ -66,13 +67,21 @@ import { slice as fileWorker } from '@cella/org-graft-file-worker/api'
 import { slice as fileMember } from '@cella/org-graft-file-member/api'
 import { slice as expenseFile } from '@cella/org-graft-expense-file/api'
 import { slice as circleFileMember } from '@cella/org-graft-circle-file-member/api'
+import { kinds, run } from './import.ts'
 
 // The server sides the shell mounts: each feat's collections, each graft's
 // extensions of the feats it joins, and the root's own, which may join
-// feats no graft joins; it joins none today.
+// feats no graft joins: an import, which runs the writes of whichever
+// slices read the file's kind and records the run in the import feat
+// (`import.ts`).
 const root: Slice = {
   name: 'org',
-  extends: {},
+  extends: {
+    imports: {
+      about: async () => ({ kinds: kinds().map(({ kind, title, formats }) => ({ kind, title, formats })) }),
+      actions: { run: { op: 'import:run:record', run: (form, deps, id) => run.run(form, deps, id) } },
+    },
+  },
 }
 
 export const slices: Slice[] = [
@@ -87,6 +96,7 @@ export const slices: Slice[] = [
   timesheet,
   worker,
   file,
+  imports,
   invoice,
   account,
   transaction,

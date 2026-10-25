@@ -25,6 +25,7 @@
     "@cella/org-timesheet": "workspace:*",
     "@cella/org-worker": "workspace:*",
     "@cella/org-file": "workspace:*",
+    "@cella/org-import": "workspace:*",
     "@cella/org-expense": "workspace:*",
     "@cella/org-payslip": "workspace:*",
     "@cella/org-meeting": "workspace:*",

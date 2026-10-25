@@ -15,6 +15,7 @@ import { app as task } from '@cella/org-task/app'
 import { app as timesheet } from '@cella/org-timesheet/app'
 import { app as worker } from '@cella/org-worker/app'
 import { app as file } from '@cella/org-file/app'
+import { app as imports } from '@cella/org-import/app'
 import { app as circleMember } from '@cella/org-graft-circle-member/app'
 import { app as circleDecision } from '@cella/org-graft-circle-decision/app'
 import { app as keyMember } from '@cella/org-graft-key-member/app'
@@ -86,6 +87,7 @@ export const apps: App[] = [
   timesheet,
   worker,
   file,
+  imports,
   invoice,
   account,
   transaction,

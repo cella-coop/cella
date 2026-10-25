@@ -26,6 +26,9 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Ext { command: Ext::Build } => db::ext_build(&Repo::find()?, &steps).map(|_| ()),
         Command::Migrate { url } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
         Command::Seed { fixture, url } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref()),
+        Command::Import { kind, file, actor, dry_run, url } => {
+            data::import(&Repo::find()?, &steps, &data::Import { kind: &kind, file: &file, actor: &actor, dry: dry_run }, url.as_deref())
+        }
         Command::Serve { port } => shell::serve(&Repo::find()?, &steps, port),
         Command::Build => shell::build(&Repo::find()?, &steps),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),

@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 use crate::db::Dev;
@@ -89,4 +89,30 @@ pub fn verify(repo: &Repo, url: Option<&str>) -> Result {
     }
     println!("log verifies: {head} entries, signed by {public}");
     Ok(())
+}
+
+/// A file from another tool to import, as whom, and whether only as a dry
+/// run.
+pub struct Import<'a> {
+    pub kind: &'a str,
+    pub file: &'a Path,
+    pub actor: &'a str,
+    pub dry: bool,
+}
+
+/// Imports a file from another tool as a member (`tools/import.mjs`): each
+/// record a signed write, or in a dry run every write made and undone;
+/// prints what each line came to and records the run.
+pub fn import(repo: &Repo, steps: &Steps, import: &Import<'_>, url: Option<&str>) -> Result {
+    let file = std::path::absolute(import.file).map_err(|e| Fail::new(format!("{}: {e}", import.file.display())))?;
+    if !file.is_file() {
+        return Err(Fail::new(format!("no file {}", file.display())));
+    }
+    repo.install(steps)?;
+    let mut cmd = on(&Dev::new(repo), url, "node")?;
+    cmd.arg(repo.root.join("tools/import.mjs")).arg(import.kind).arg(&file).arg(import.actor);
+    if import.dry {
+        cmd.arg("--dry-run");
+    }
+    Steps::exec(&mut cmd)
 }

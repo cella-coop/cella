@@ -1,4 +1,4 @@
-address,name,key,label
-nadia@lanterne.example,Nadia Ferhat,3b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29,phone
-olivier@lanterne.example,Olivier Brun,a1c2e3f405162738495a6b7c8d9e0f1a2b3c4d5e6f708192a3b4c5d6e7f80912,laptop
-rose@lanterne.example,Rose Lambert,,
+address,name
+nadia@lanterne.example,Nadia Ferhat
+olivier@lanterne.example,Olivier Brun
+rose.lambert,Rose Lambert

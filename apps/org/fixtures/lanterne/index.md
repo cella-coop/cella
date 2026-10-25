@@ -52,7 +52,8 @@ Camille hires, and opens a new hire's candidacy for membership.
 - **Admission (ordered).** Inès, invited on 30 September, asks to join.
   Seven members have consented to d-2026-012; Hugo objected, then
   consented two days later, and only his latest stance counts. The vote
-  closes on 31 October; her invitation carries her phone.
+  closes on 31 October; she took up her invitation on 1 October, on her
+  phone.
 - **Rate card (confluent, then ordered).** The 2027 rate card has two
   versions. Malik has commented on the second and objected to d-2026-011,
   which would adopt it; the decision is open until 9 November.

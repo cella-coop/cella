@@ -30,21 +30,43 @@ export interface Admitted {
   since: string
 }
 
-// Someone invited to join, by the address they will hold, with their
-// first device: the public key in hex their device made, whose private
-// key never leaves it, and the label they gave the device. Someone the
-// co-op knows already, as a worker, keeps their name.
+// Someone invited to join, by the address they will hold, and the link
+// their invitation is taken up by, if it comes with one: the SHA-256 in
+// hex of a secret the inviter's browser drew, which only the link holds.
+// Someone the co-op knows already, as a worker, keeps their name.
 export interface Invite {
   address: string
   name: string
-  key: string
-  label: string
+  link?: string
 }
 
 export interface Invited {
   member: string
   invited: string
+  link?: string
+}
+
+// A new link for someone invited, as its digest.
+export interface Link {
+  member: string
+  link: string
+}
+
+// An invitation taken up: the link's secret, in hex, and the first device
+// the invitee's browser made, its public key in hex and what they call
+// it; the device signs this write itself.
+export interface Accept {
+  member: string
+  secret: string
   key: string
+  label: string
+}
+
+export interface Accepted {
+  member: string
+  link: string
+  key: string
+  accepted: string
 }
 
 // A suspension or an exit, citing the decision that asks it.
@@ -65,18 +87,20 @@ export interface Erase {
   decision: string
 }
 
-// A first device waiting on its member's admission, or enrolled by it.
+// The first device an invitation enrolled when it was taken up.
 export interface First {
   key: string
   label: string
-  enrolled: string | null
+  accepted: string
 }
 
-// A person's membership on their page, if they hold one, and the first
-// device their invitation carried; and every device enrolled under their
-// address, for the step joining asks.
+// A person's membership on their page, if they hold one; the first device
+// their invitation enrolled, once taken up, and the links it may still be
+// taken up by; and every device enrolled under their address, for the
+// step joining asks.
 export interface Membership {
   member: Member | null
   first: First | null
+  links: number
   devices: Device[]
 }

@@ -2,8 +2,8 @@
 // decided. A motion names a kind a graft registers, and its arguments
 // resolve: a member to admit is invited and subscribes shares, one to
 // suspend or let go is a member; a seat names a circle and a member. Every
-// invited member's invitation carries a first device, without which their
-// admission is refused, and only an invited member's does.
+// invited member has taken up their invitation, with the first device it
+// enrolled, without which their admission is refused, and only they have.
 
 const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke'])
 
@@ -31,16 +31,16 @@ export function governance(read, fail) {
   const carried = new Set()
   for (const i of read('membership').invitation ?? []) {
     if (members.get(i.member)?.status !== 'invited') {
-      fail(`invitation of ${i.member}: carries a device for no one invited`)
+      fail(`invitation of ${i.member}: taken up by no one invited`)
     }
-    if (!i.label) {
-      fail(`invitation of ${i.member}: names its device`)
+    if (!i.label || !(i.accepted instanceof Date)) {
+      fail(`invitation of ${i.member}: names its device and the day it was taken up`)
     }
     carried.add(i.member)
   }
   for (const m of members.values()) {
     if (m.status === 'invited' && !carried.has(m.address)) {
-      fail(`member ${m.address}: invited, with no first device in membership.toml`)
+      fail(`member ${m.address}: invited, with no invitation taken up in membership.toml`)
     }
   }
 }

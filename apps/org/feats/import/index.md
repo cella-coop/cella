@@ -15,7 +15,7 @@ owns a write is the one that knows its fields:
 
 | Kind | Read by | Each record | Formats |
 |---|---|---|---|
-| `members` | `membership` | an invitation carrying the member's first device | CSV: address, name, key, label |
+| `members` | `membership` | an invitation, to be given its link from the member's page | CSV: address, name |
 | `clients` | `client` | a client added | CSV: name, kind, form, email, phone, tags, note |
 | `fec` | `account-transaction` | an entry carried over, opening the accounts it names | the FEC (Livre des procédures fiscales, art. A47 A-1) |
 | `invoices` | `invoice-transaction` | an invoice issued and posted | CSV: a row per line |
@@ -33,8 +33,9 @@ so it says what would be created and what refused; since the notary takes
 one receipt for a transaction, each write runs in its own, and a line is
 judged on the co-op as it stands, not on the lines before it.
 
-Nothing comes in around the rules: an invitation carries a device, a
-worker's time is their own, an entry balances and falls in an open period.
+Nothing comes in around the rules: a member comes in invited, their first
+device made when they take up the invitation, a worker's time is their
+own, an entry balances and falls in an open period.
 So each worker imports their own time export, and a FEC's opening balances
 are an à-nouveaux entry dated in the first open month.
 

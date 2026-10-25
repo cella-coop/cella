@@ -7,8 +7,8 @@ Sample files from the tools a co-op leaves when it moves to cella, one for
 each kind `cella import` and the Imports page read, each with lines the
 rules refuse beside the ones they take:
 
-- `members.csv`: Nadia and Olivier, invited with their first devices;
-  Rose, whose row carries no device key.
+- `members.csv`: Nadia and Olivier, invited, each to be given a link from
+  their page; Rose, whose row carries no address.
 - `clients.csv`: two companies and a person, and Maison Ferrand, a client
   already.
 - `fec-2026-10.txt`: October from the previous tool's books, a FEC with a

@@ -16,7 +16,7 @@ type Row = { status?: Status; since?: string | null; shares?: number }
 
 // The feat's client side, on its parent's people: each person's
 // membership, a chip to filter and group by; the people collection's
-// New form, an invitation with its first device; and on a person's page
+// New form, an invitation and its link; and on a person's page
 // their membership, its tabs joining, the steps joining asks, and what a
 // member owns and decides, which the grafts joining membership fill
 // beside the feat's own.
@@ -43,7 +43,7 @@ export const app: App = {
                 { label: 'Shares', value: m.shares, kind: 'number' as const },
               ]
             : []),
-          ...(f && !f.enrolled ? [{ label: 'First device', value: `${f.label} · ${short(f.key, 12)}, enrolled on admission`, kind: 'mono' as const }] : []),
+          ...(f ? [{ label: 'First device', value: `${f.label} · ${short(f.key, 12)}`, kind: 'mono' as const }, { label: 'Took up', value: f.accepted, kind: 'date' as const }] : []),
         ],
         tabs: [
           { id: 'joining', label: 'Joining' },

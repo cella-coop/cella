@@ -62,14 +62,15 @@ thing never verifies another.
 ```mermaid
 stateDiagram-v2
   direction LR
-  [*] --> enrolled: enrol (signed by a current key), a hire, an admission or recover
+  [*] --> enrolled: enrol (signed by a current key), a hire, an invitation taken up or recover
   enrolled --> revoked: revoke
 ```
 
 A person's first device comes with what brings them in. A hire enrols
 the worker's at once, so they sign their own time from their first day.
-An invitation carries the invitee's, and the admission that makes them a
-member enrols it in its own transaction. Either way the first device names
+An invitation is taken up by its link: the invitee's browser makes their
+first device, which signs the acceptance that enrols it. Either way the
+first device names
 no device that enrolled it, and so do the devices of people the seed
 loads from before the log. Each later device is enrolled by one of the
 person's current keys. A person who has lost every device recovers from
@@ -134,7 +135,7 @@ omission.
   the rules role may select.
 
 The children's SQL reads this schema, as a graft's reads the feats it
-joins: membership enrols the device an invitation carried, and employment
+joins: membership enrols the device an invitation's acceptance makes, and employment
 the one a hire carries.
 
 ## Personal data
@@ -186,7 +187,8 @@ The person feat owns:
 
 - a device belongs to one address, for good;
 - an enrolment is signed by a key of that address that was current at its
-  receipt, or by a recovery, a hire or an admission;
+  receipt, or by a recovery, a hire or an invitation taken up, which the
+  device it enrols signs;
 - a revoked key verifies nothing received after its revocation;
 - the scope's thresholds are signed policy in the log, never a flag.
 
@@ -230,5 +232,5 @@ nothing of it is stored.
   are TEST-ONLY, derived from each device's address and label, so the seed
   and the tests hold the same keys.
 - Hugo's old laptop was revoked on 12 May 2026: it signs nothing now.
-- Inès signs with the laptop her hire enrolled; her invitation carries
-  her phone, which the close of d-2026-012 enrols as it admits her.
+- Inès signs with the laptop her hire enrolled, and with the phone on
+  which she took up her invitation on 1 October.

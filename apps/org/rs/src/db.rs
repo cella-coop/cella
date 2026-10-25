@@ -177,20 +177,35 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
     }
 }
 
-/// Packages the extension into .data/ext, returning that directory.
+/// Packages the extension into .data/ext, returning that directory, with
+/// every script in the notary's `rs/sql/` beside the generated one: pgrx
+/// stages the upgrade scripts alone, and an earlier version's install
+/// script is what a rehearsal installs it at. The directory is emptied
+/// first, so nothing an earlier build staged stays.
 pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
     let dir = repo.data().join("ext");
+    if dir.exists() {
+        fs::remove_dir_all(&dir).map_err(io(&dir))?;
+    }
     let mut cmd = repo.cmd("cargo");
     cmd.args(["pgrx", "package", "-p", "cella", "--debug", "--pg-config"])
         .arg(pg_config())
         .arg("--out-dir")
         .arg(&dir);
     steps.run("ext", &mut [cmd], quiet)?;
+    let share = staged(&dir, &Steps::read(Command::new(pg_config()).arg("--sharedir"))?).join("extension");
+    let scripts = repo.root.join("apps/org/core/notary/rs/sql");
+    for script in fs::read_dir(&scripts).map_err(io(&scripts))? {
+        let from = script.map_err(io(&scripts))?.path();
+        if let Some(name) = from.file_name() {
+            fs::copy(&from, share.join(name)).map_err(io(&from))?;
+        }
+    }
     Ok(dir)
 }
 
 /// The `pg_config` pgrx builds against: the devshell's, else the one on PATH.
-fn pg_config() -> String {
+pub fn pg_config() -> String {
     env::var("PGRX_PG_CONFIG_PATH").unwrap_or_else(|_| "pg_config".into())
 }
 

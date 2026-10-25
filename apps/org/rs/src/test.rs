@@ -16,12 +16,14 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         None => {
             rust(repo, steps, "rules", "cella-rules")?;
             rust(repo, steps, "cli", "cella-cli")?;
+            notary(repo, steps)?;
             tools(repo, steps)?;
             slices(repo, steps, None)?;
             e2e(repo, steps, None)
         }
         Some(Test::Rules) => rust(repo, steps, "rules", "cella-rules"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
+        Some(Test::Notary) => notary(repo, steps),
         Some(Test::Tools) => tools(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
         Some(Test::E2e { name }) => e2e(repo, steps, name.as_deref()),
@@ -32,6 +34,37 @@ fn rust(repo: &Repo, steps: &Steps, name: &str, package: &str) -> Result {
     let mut cmd = repo.cmd("cargo");
     cmd.args(["test", "--quiet", "-p", package]);
     steps.run(name, &mut [cmd], passed)
+}
+
+/// The notary's `#[pg_test]`s, on a cluster pgrx makes for them and drops.
+/// pgrx installs the extension where `pg_config` says; the Nix store is
+/// read-only, so it is handed a `pg_config` naming a share and a lib
+/// directory under `.data/notary-test`, which the cluster loads from as
+/// the dev cluster does. A target directory of its own keeps its
+/// `pg_config` from rebuilding the workspace's bindings.
+fn notary(repo: &Repo, steps: &Steps) -> Result {
+    let dir = repo.data().join("notary-test");
+    let home = dir.join("pgrx");
+    fs::create_dir_all(&home).map_err(|e| Fail::new(format!("{}: {e}", home.display())))?;
+    let wrapper = dir.join("pg_config");
+    let script = format!(
+        "#!/bin/sh\ncase \"$1\" in\n  --sharedir) echo '{share}' ;;\n  --pkglibdir) echo '{lib}' ;;\n  *) exec '{real}' \"$@\" ;;\nesac\n",
+        share = dir.join("share").display(),
+        lib = dir.join("lib").display(),
+        real = crate::db::pg_config(),
+    );
+    let written = fs::write(&wrapper, script).and_then(|()| {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&wrapper, fs::Permissions::from_mode(0o755))
+    });
+    written.map_err(|e| Fail::new(format!("{}: {e}", wrapper.display())))?;
+    let mut cmd = repo.cmd("cargo");
+    cmd.args(["test", "--quiet", "-p", "cella", "--features", "pg_test"])
+        .env("CELLA_NOTARY_TEST", &dir)
+        .env("PGRX_HOME", &home)
+        .env("PGRX_PG_CONFIG_PATH", &wrapper)
+        .env("CARGO_TARGET_DIR", repo.root.join("target/notary-test"));
+    steps.run("notary", &mut [cmd], passed)
 }
 
 /// The node tools' own tests, `tools/_tests/*.test.mjs`; no database.

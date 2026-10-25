@@ -200,6 +200,8 @@ pub enum Test {
     Rules,
     /// This CLI's tests
     Cli,
+    /// The notary's own tests, in Postgres: signature, nonce, keyring and chain
+    Notary,
     /// The node tools' tests, such as the feat check's
     Tools,
     /// Each slice's own tests, or one slice's, on a database holding only its part of the tree; needs the dev cluster

@@ -33,6 +33,7 @@
     "@cella/org-graft-meeting-member": "workspace:*",
     "@cella/org-graft-account-decision": "workspace:*",
     "@cella/org-graft-account-member": "workspace:*",
+    "@cella/org-graft-account-member-payslip-transaction": "workspace:*",
     "@cella/org-graft-account-member-transaction": "workspace:*",
     "@cella/org-graft-account-payslip": "workspace:*",
     "@cella/org-graft-account-timesheet": "workspace:*",

@@ -326,6 +326,33 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/account-member-payslip-transaction/ts:
+    dependencies:
+      '@cella/org-account':
+        specifier: workspace:*
+        version: link:../../../feats/account/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-payslip':
+        specifier: workspace:*
+        version: link:../../../feats/payslip/core/ts
+      '@cella/org-transaction':
+        specifier: workspace:*
+        version: link:../../../feats/transaction/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/account-member-transaction/ts:
     dependencies:
       '@cella/org-account':
@@ -991,6 +1018,9 @@ importers:
       '@cella/org-graft-account-member':
         specifier: workspace:*
         version: link:../grafts/account-member/ts
+      '@cella/org-graft-account-member-payslip-transaction':
+        specifier: workspace:*
+        version: link:../grafts/account-member-payslip-transaction/ts
       '@cella/org-graft-account-member-transaction':
         specifier: workspace:*
         version: link:../grafts/account-member-transaction/ts

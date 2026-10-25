@@ -15,7 +15,9 @@ handler)`, which makes one; `Form`, a form's fields and the files it
 carries (`file`); `cents(typed, positive?)`, an amount typed in euros, a
 comma or a point and spaces between thousands, in whole cents, refused
 unless it is more than nothing where `positive` holds, as every slice's
-form reads one; and `Done`, a write's outcome made plain:
+form reads one; `hundredths(typed)`, a percentage typed the same way,
+`5,5` or `20`, in whole hundredths of a percent (550, 2000), refused
+past two decimals, as a VAT rate rides in a signed request; and `Done`, a write's outcome made plain:
 settled, pending, refused, or failed before any verdict, with the writes
 that reacted to it.
 

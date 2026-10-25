@@ -57,6 +57,17 @@ export function cents(typed: string, positive = true): number {
   return Math.round(n * 100)
 }
 
+// A percentage a form types, `20`, `5,5` or `2.1`, in whole hundredths of
+// a percent, as a signed request holds it: 550 for 5,5 %. Refused below
+// nothing or past two decimals.
+export function hundredths(typed: string): number {
+  const t = typed.replace(/\s/g, '').replace(',', '.')
+  if (!/^\d+(\.\d{1,2})?$/.test(t)) {
+    throw new Error(`“${typed}” is not a percentage with at most two decimals`)
+  }
+  return Math.round(Number(t) * 100)
+}
+
 // A write from a page: the form's fields to the handler's input, through
 // the handler. `id` is the item the page shows, if any.
 export interface Action {

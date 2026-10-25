@@ -5,7 +5,8 @@ updated = 2026-10-25
 
 A year's distribution in the books: distributing an approved split posts
 it from the year's result to where each share goes, in one entry, and the
-legal reserve takes its 15 % until it reaches the highest capital.
+legal reserve takes its 15 % until it reaches the highest capital, and
+the interest on capital comes to no more than its terms' rate of it.
 Declared by `patronage`.
 
 ## Schema
@@ -38,6 +39,14 @@ role may select.
   at least 15 % of the surplus goes to the legal reserve until the
   reserve, read from the journal, reaches the highest amount the capital
   ever reached (loi n° 78-763, art. 33, 1°).
+- `patronage_transaction.interest`, on `patronage:distribution:approve`
+  (`sql/002-interest.sql`): the interest share is at most the rate its
+  year's terms pay of the members' capital, to the cent below (loi n°
+  47-1775, art. 14). The capital is what the journal holds on the day
+  the split is approved, before the shares the work share buys; a year no
+  terms govern, or terms with no rate, pay no interest. That the rate is
+  within art. 14's ceiling, the TMO plus two points, is not checked: the
+  TMO is not known here.
 
 ## Handlers
 
@@ -52,7 +61,9 @@ add their lines to it.
 patronage-transaction`): a distribution's lines; its entry posts the
 split, and is refused when it misses a line or posts beside it what does
 not balance away from the result; the legal reserve's 15 % is owed while
-it is under the highest capital, and no longer once it reaches it.
+it is under the highest capital, and no longer once it reaches it;
+interest under its terms' rate of the capital passes, and interest over
+it, or in a year no terms govern, is refused.
 
 ## Shell
 
@@ -61,6 +72,7 @@ button once the split is approved.
 
 ## Lanterne
 
-Distributing 2025 posts 61 400 € out of `120`: 27 630 € to `424`,
-9 210 € to the legal reserve, 15 350 € to the development fund and
-9 210 € to `457`.
+Approving 2025 finds 13 000 € of capital, so its terms' 3,5 % allows
+455 € of interest, and the split pays 448,22 €. Distributing it posts
+61 400 € out of `120`: 27 630 € to `424`, 9 210 € to the legal reserve,
+24 111,78 € to the development fund and 448,22 € to `457`.

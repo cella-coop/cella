@@ -26,7 +26,7 @@
     />
     <Table {columns} rows={data.draws} href={(d: Drawing) => `/transactions/${d.entry}`} />
     {#if data.frozen}
-      <Note text="Frozen since this member left: it takes no draw until it is repaid." />
+      <Note text="Frozen since this member left: it takes no draw, and what it held is repaid as the statutes say." />
     {:else if data.own && left}
       <Form action="draw" submit="Draw" tone="quiet" inline>
         <Field label="Amount, €" name="amount" required />

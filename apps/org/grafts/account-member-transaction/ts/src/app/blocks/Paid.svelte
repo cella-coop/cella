@@ -21,7 +21,8 @@
     { key: 'n', label: 'Repayment', kind: 'number', value: (r) => r.n },
     { key: 'due', label: 'Due', kind: 'date', value: (r) => r.due },
     { key: 'amount', label: 'Amount', kind: 'money', value: (r) => r.amount },
-    { key: 'state', label: 'State', kind: 'badge', value: (r) => (r.paid ? `repaid ${r.paid}` : 'to repay'), tone: (r) => (r.paid ? 'positive' : 'accent') },
+    { key: 'state', label: 'State', kind: 'badge', value: (r) => (r.paid ? 'repaid' : 'to repay'), tone: (r) => (r.paid ? 'positive' : 'accent') },
+    { key: 'paid', label: 'Repaid on', kind: 'date', value: (r) => r.paid },
   ]
 </script>
 

@@ -138,8 +138,8 @@ export const app: App = {
             : [
                 { label: 'Share value', value: t.share, kind: 'money' as const },
                 { label: 'Fewest shares', value: t.minimum, kind: 'number' as const },
-                { label: 'Monthly instalments, at most', value: t.instalments, kind: 'number' as const },
-                { label: 'First repayment, months after an exit', value: t.delay, kind: 'number' as const },
+                { label: 'Instalments, at most', value: t.instalments, kind: 'number' as const },
+                { label: 'Repaid after, months', value: t.delay, kind: 'number' as const },
                 { label: 'Yearly repayments', value: t.repayments, kind: 'number' as const },
               ]),
           { label: 'Adopted on', value: t.adopted, kind: 'date' },

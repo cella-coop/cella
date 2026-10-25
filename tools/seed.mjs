@@ -2,9 +2,9 @@
 // carried over from before the log: the scope's address, members, workers
 // and their candidacies, their devices, circles, roles and mandates,
 // seats, decisions with their stances and what they decide, invitations'
-// first devices, documents with their versions, comments and adoptions,
-// clients, the chart, periods and journal, invoices with their
-// payments, and the grafts' links. Stances, document updates, adoptions and
+// first devices, documents with their versions, comments, adoptions and
+// who read them, clients, the chart, periods and journal, invoices with
+// their payments, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
 // log; a closed decision's cutoff is the number after its last stance.
 // Seats load before decisions, whose rolls are fixed from them, and periods
@@ -189,6 +189,12 @@ for (const a of adoptions) {
   }
 }
 
+// Who read which binding version of the texts, once each version is in.
+const readings = read('graft.document-member').reading ?? []
+for (const r of readings) {
+  await db.query('INSERT INTO document_member.reading (version, member, read) VALUES ($1, $2, $3)', [r.version, r.member, day(r.read)])
+}
+
 const clients = read('client').client ?? []
 for (const c of clients) {
   await db.query(
@@ -281,6 +287,6 @@ await db.end()
 console.log(
   `seed: ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
-    `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+    `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met} into ${db.database}`,
 )

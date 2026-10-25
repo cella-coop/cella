@@ -36,14 +36,23 @@ Leads and the gérante run projects and set their budgets, the leads up to
 15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
 those of their own circle's members; Julien, seated in the assembly as
 treasurer, approves everyone's, as Camille does. Every member creates
-and moves tasks and logs their own time.
+and moves tasks; every worker logs their own time, by their employment.
+Camille hires, and opens a new hire's candidacy for membership.
 
 ## Where things stand on 24 October 2026
 
-- **Admission (ordered).** Inès Haddad, a junior developer employed since
-  September 2025, asks to join. Seven members have consented to d-2026-012;
-  Hugo objected, then consented two days later, and only his latest stance
-  counts. The vote closes on 31 October.
+- **People (confluent).** Twelve workers, on permanent contracts of 35
+  hours: the ten members, Paul until he left, and Inès Haddad, a junior
+  developer hired on 1 September 2025, employed and no member. Everyone
+  hired after the founding served a probation of six months to a year as
+  a candidate before the assembly admitted them; Inès's ended on 31
+  August 2026. She signs from the laptop her hire enrolled, logs her own
+  time with the web circle, and has not yet marked the internal rules
+  read, which every member has.
+- **Admission (ordered).** Inès, invited on 30 September, asks to join.
+  Seven members have consented to d-2026-012; Hugo objected, then
+  consented two days later, and only his latest stance counts. The vote
+  closes on 31 October; her invitation carries her phone.
 - **Rate card (confluent, then ordered).** The 2027 rate card has two
   versions. Malik has commented on the second and objected to d-2026-011,
   which would adopt it; the decision is open until 9 November.
@@ -70,10 +79,10 @@ and moves tasks and logs their own time.
 - **Pay and expenses.** Ten members are salaried, 26 000 € gross a month
   between them, the highest 1.25 times the lowest, within the internal
   rules' 1.6. July to September's pay runs were carried over, one entry
-  each; October's waits for every member's October to be approved. Inès
-  is paid outside the runs until she is a member; from November, her
-  2 200 € is a run's. Four
-  October expenses are claimed, three submitted.
+  each. Inès was paid apart from them by the previous tool; from October
+  her 2 200 € is a run's, and October's waits for every worker's October
+  to be approved, hers with the members'. Four October expenses are
+  claimed, three submitted.
 - **Work (confluent, bounded and ordered).** Eight projects, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's
@@ -104,11 +113,14 @@ mandate's power is an id beside its text. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
 link resolves and the books agree with the invoices; `tools/fixture/work.mjs`,
 that shares stay within budgets, an invoice bills a project of its client,
-no one logs more than ten hours a day, and an approved month was submitted
-and approved by someone else.
+no one logs more than ten hours a day, time is a worker's on days of
+their employment, and an approved month was submitted and approved by
+someone else; `tools/fixture/people.mjs`, that a contract runs forward
+and names its end where it has one, and that each candidacy's probation
+falls within its worker's employment and ended before their admission.
 
 Time is written as runs: one entry a working day from one day to another
-(`timesheet.toml`), which the seed expands into the 799 entries of
+(`timesheet.toml`), which the seed expands into the 838 entries of
 September and October; which project a run is for is
 `graft.project-timesheet.toml`'s.
 

@@ -257,12 +257,16 @@ TypeScript owns the schema, is dropped. The generator is not chosen.
 
 `tools/migrate.mjs` (`cella migrate`) walks the tree in that order and applies
 each `sql/` directory's `NNN-*.sql` files, one transaction each, recording
-every file by its id and its hash in `migration.applied`. A migration's id
-is stable: its app, the feat or graft whose SQL it is, and its file name,
-`org:membership/003-seats.sql`, or `org:core/notary/001-cella.sql` for a
-core, so a feat that moves in the tree keeps its ids. Renaming a feat
-changes its ids and `cella migrate` maps no old id to a new one, so a feat
-a scope has applied is not renamed.
+every file by its id and its hash in `migration.applied`. A migration
+changes the schema and its registries, a superuser's act and no write,
+so it runs with `cella.unbound` set and the notary's trigger lets its
+rows through; every table it makes is registered as a state table as it
+is made. A migration's id is stable: its app, the feat or graft whose
+SQL it is, and its file name, `org:membership/003-seats.sql`, or
+`org:core/notary/001-cella.sql` for a core, so a feat that moves in the
+tree keeps its ids. Renaming a feat changes its ids and `cella migrate`
+maps no old id to a new one, so a feat a scope has applied is not
+renamed.
 
 Migrations are append-only. A file edited after it was applied is
 refused, and each app's `migrations.lock` keeps every migration's id and
@@ -285,7 +289,9 @@ file anywhere else fails `cella test`:
   with the app's core and that slice's part of the tree alone (a feat's
   own tree; a graft's feats, its lower-order grafts and itself), unseeded,
   so a slice test cannot lean on a slice it does not own, and a package
-  imports only what its manifest names.
+  imports only what its manifest names. Its database is unbound
+  (`cella.unbound`), since a slice test writes the rows it needs below
+  the notary.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
   seeded with Lanterne, through the handlers.
@@ -493,9 +499,13 @@ to it, needs a power no mandate grants until then.
 Every critical invariant is enforced twice: the handler checks the
 permission and the feat's row-level policies and triggers back it up. An
 ordered write is checked a third time by the notary, in a way anyone can
-replay from the log. Authorisation and logging hold only for writes
-through `cella.submit`: at rung 1 nothing in the database refuses state
-written outside a verdict ([trust](trust.md#current-limits)).
+replay from the log. A write's state lands only inside a transaction
+that `cella.begin` opened and `cella.submit` settled: the notary's
+trigger on every table a feat or a graft makes refuses a row written
+outside one, and a begun transaction commits only with its verdict, so
+authorisation and logging hold for every state change but a
+superuser's ([trust](trust.md#one-server)). `write` in `@cella/org-db`
+begins, writes and submits, and a handler writes through it alone.
 
 ## Feat flags
 

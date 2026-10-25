@@ -37,7 +37,10 @@ issues, so a seat that moves changes the invoices issued after the move
 and never the PDF of one issued before
 ([invoice](../../apps/org/feats/invoice/index.md#the-pdf)). `cella migrate --url` makes
 the roles `cella_app` and `cella_rules` and every schema; the server
-connects as `cella_app` or as a role that is a member of it.
+connects as `cella_app` or as a role that is a member of it. A host
+never sets `cella.unbound` on a scope's database or role: it lets a
+session write state outside a write, which the migrations alone do, for
+the file they run ([the notary](../../apps/org/core/notary/index.md#bound)).
 
 ## Keys
 

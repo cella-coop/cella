@@ -14,9 +14,11 @@ only on the org app, `apps/org/`. Read
   `models/ops.ts`. A new write without one is incomplete.
 - **The notary is the only path that appends to the log.** It is a layer,
   the `cella` extension in org's core, not a feat, and has no writes of its
-  own. Only the extension's functions write the log; a handler calls
-  `cella.submit` inside its transaction and never writes the log or settles
-  an ordered write itself.
+  own. Only the extension's functions write the log; a handler writes
+  through `write`, which opens its transaction with `cella.begin` and calls
+  `cella.submit` inside it, and never writes the log or settles an ordered
+  write itself. Every table a feat or a graft makes refuses a row written
+  outside such a transaction.
 - **Grafts compose upward.** A graft joining N feats may read, in code and
   in SQL, the feats it joins and the grafts of its node that join a proper
   subset of them; never a graft of equal or higher order. A relationship

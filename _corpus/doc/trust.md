@@ -44,11 +44,12 @@ sequenceDiagram
   D->>A: request, signed
   A->>A: permission check
   rect rgba(128, 128, 128, 0.15)
-    A->>P: begin; state change
+    A->>N: begin; select cella.begin(op, actor, device)
+    A->>P: state change, which only a begun transaction may write
     A->>N: select cella.submit(op, payload, actor, signed request)
     N->>N: signature, device and nonce checked; rules; receipt and verdict signed and appended
     N-->>A: verdict, or a refusal raised
-    A->>P: commit if Settled, roll back if Refused
+    A->>P: commit if Settled, which only a settled write may; roll back if Refused
   end
   A-->>D: Settled or Refused
 ```
@@ -75,16 +76,32 @@ sequenceDiagram
   The notary never decides an outcome: an outcome is computed from the
   signed votes, and anyone holding the log can compute it again.
 - **The verdict and its state change commit in one transaction.** The
-  handler opens it, writes the state, calls `cella.submit` last and commits
-  once. A refusal raises inside `submit` (SQLSTATE `09000`), so the
-  transaction cannot commit it: both roll back and no number is used.
-  `submit` holds the log's head lock until
+  handler opens it and begins its write, writes the state, calls
+  `cella.submit` last and commits once. A refusal raises inside `submit`
+  (SQLSTATE `09000`), so the transaction cannot commit it: both roll back
+  and no number is used. `submit` holds the log's head lock until
   commit, so calling it last keeps ordered writes from queueing behind slow
   transactions. Entries are numbered from that locked head, so an aborted
   write leaves no gap. The log is hash-chained (BLAKE3) and signed
   (Ed25519) with a deterministic fold, so the state can always be rebuilt
   from it and checked. A Merkle tree over the log (RFC 9162) gives
   inclusion and consistency proofs.
+- **State changes only inside a write.** The handler opens its
+  transaction with `cella.begin(op, actor, device)` before any state, and
+  `submit` settles only the write begun, by the same op, actor and
+  device. Every table a feat or a graft makes is registered in
+  `cella.state` as it is made, and the notary's constraint trigger on it
+  refuses (SQLSTATE `09000`) a row inserted, updated or deleted, or a
+  truncate, in a transaction no `begin` opened. A begun transaction
+  commits only with its verdict, so a handler that skips `submit`, or
+  rolls its verdict back to a savepoint, commits nothing, and a `psql`
+  session, as the app's role or as a superuser, writes no state. The
+  migrations, which change the schema and its registries, and the slice
+  tests, which test a slice's SQL below the notary, write with
+  `cella.unbound`, which only a superuser may set; erasure's redactions
+  are the notary's own. The state a scope held before its log comes in
+  as a write too: the seed carries it in as the log's first entry
+  (`import:state:carry`), which settles on an empty log alone.
 - **Order comes from receipts, never from clocks.** A member's latest stance
   is the one with the highest receipt number, not the latest date.
 - **The scope's key** is read from a file only the database's superuser can
@@ -335,18 +352,16 @@ erased until their legal clock runs out.
 
 What the build does not yet do, and what lifts each:
 
-- **The host can write state outside a verdict.** At rung 1 a state
-  change is bound to its verdict only by the handler calling
-  `cella.submit` in the same transaction. Nothing in the database
-  requires that it did: the app role holds write grants on the feats'
-  tables, and no trigger knows during the state phase which op is
-  writing. A handler's bug, an import or a `psql` session can change
-  state with no entry, and the log still verifies; a rule checks that a
-  write did what its payload names, never that it did nothing else. The
-  feats' triggers hold the invariants whoever writes; authorisation and
-  logging hold only for writes through `submit`. The operator's ruling
-  on enforcing the binding (review A2) lifts this, and until then the
-  pilot trusts its host for it, as the ratchet's first rung does.
+- **A superuser can still write state outside a verdict, and a write can
+  do more than it says.** The notary binds every state change to a
+  verdict against the app's role, a handler, an import and any session
+  that does not unbind, but a superuser can set `cella.unbound`, drop the
+  trigger or replicate around it, as a host can do anything to a database
+  it runs. Within a write, a rule checks that it did what its payload
+  names, never that it did nothing else, so a handler's bug can change
+  more under its verdict than its payload says. The feats' triggers hold
+  the invariants whoever writes. Nothing at rung 1 lifts either: the
+  pilot trusts its host for both, as the ratchet's first rung does.
 
 - **The host serves the signing code and says what to sign.** The browser
   signs the request the server asks it to, its own write's and each

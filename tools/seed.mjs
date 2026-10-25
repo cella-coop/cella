@@ -4,7 +4,7 @@
 // seats, decisions with their stances and what they decide, invitations'
 // first devices, documents with their versions, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
-// their payments, and the grafts' links. Stances, document updates, adoptions and
+// their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
 // log; a closed decision's cutoff is the number after its last stance.
 // Seats load before decisions, whose rolls are fixed from them, and periods
@@ -24,6 +24,7 @@ import { work } from './seed/work.mjs'
 import { finance } from './seed/finance.mjs'
 import { invitations, motions } from './seed/governance.mjs'
 import { meetings } from './seed/meeting.mjs'
+import { files } from './seed/file.mjs'
 
 const dir = process.argv[2]
 const read = (file) => {
@@ -300,6 +301,7 @@ for (const p of (books.period ?? []).filter((p) => p.closed)) {
 const worked = await work(db, read, day)
 const financed = await finance(db, read, day)
 const met = await meetings(db, read, day)
+const filed = await files(db, read, day, dir)
 
 await db.query('COMMIT')
 await db.end()
@@ -307,5 +309,5 @@ console.log(
   `seed: ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
     `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
-    `${postings.length} postings, ${worked}, ${financed}, ${met} into ${db.database}`,
+    `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed} into ${db.database}`,
 )

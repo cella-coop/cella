@@ -170,6 +170,25 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/feats/file/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../../core/sign/ts
+
   apps/org/feats/invoice/core/ts:
     dependencies:
       '@cella/org-db':
@@ -524,6 +543,12 @@ importers:
         specifier: workspace:*
         version: link:../../../feats/member/core/ts
 
+  apps/org/grafts/circle-file-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+
   apps/org/grafts/circle-meeting-member/ts:
     dependencies:
       '@cella/org-circle':
@@ -776,6 +801,31 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/expense-file/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-expense':
+        specifier: workspace:*
+        version: link:../../../feats/expense/core/ts
+      '@cella/org-file':
+        specifier: workspace:*
+        version: link:../../../feats/file/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../core/sign/ts
+
   apps/org/grafts/expense-invoice-project-timesheet/ts:
     dependencies:
       '@cella/org-db':
@@ -847,6 +897,56 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+
+  apps/org/grafts/file-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-file':
+        specifier: workspace:*
+        version: link:../../../feats/file/core/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../core/sign/ts
+
+  apps/org/grafts/file-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-file':
+        specifier: workspace:*
+        version: link:../../../feats/file/core/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+    devDependencies:
+      '@cella/org-sign':
+        specifier: workspace:*
+        version: link:../../../core/sign/ts
 
   apps/org/grafts/invoice-project/ts:
     dependencies:
@@ -1225,6 +1325,9 @@ importers:
       '@cella/org-expense':
         specifier: workspace:*
         version: link:../feats/expense/core/ts
+      '@cella/org-file':
+        specifier: workspace:*
+        version: link:../feats/file/core/ts
       '@cella/org-graft-account-decision':
         specifier: workspace:*
         version: link:../grafts/account-decision/ts
@@ -1255,6 +1358,9 @@ importers:
       '@cella/org-graft-circle-expense-member':
         specifier: workspace:*
         version: link:../grafts/circle-expense-member/ts
+      '@cella/org-graft-circle-file-member':
+        specifier: workspace:*
+        version: link:../grafts/circle-file-member/ts
       '@cella/org-graft-circle-meeting':
         specifier: workspace:*
         version: link:../grafts/circle-meeting/ts
@@ -1294,6 +1400,9 @@ importers:
       '@cella/org-graft-document-member':
         specifier: workspace:*
         version: link:../grafts/document-member/ts
+      '@cella/org-graft-expense-file':
+        specifier: workspace:*
+        version: link:../grafts/expense-file/ts
       '@cella/org-graft-expense-invoice-project-timesheet':
         specifier: workspace:*
         version: link:../grafts/expense-invoice-project-timesheet/ts
@@ -1306,6 +1415,12 @@ importers:
       '@cella/org-graft-expense-transaction':
         specifier: workspace:*
         version: link:../grafts/expense-transaction/ts
+      '@cella/org-graft-file-member':
+        specifier: workspace:*
+        version: link:../grafts/file-member/ts
+      '@cella/org-graft-file-worker':
+        specifier: workspace:*
+        version: link:../grafts/file-worker/ts
       '@cella/org-graft-invoice-project':
         specifier: workspace:*
         version: link:../grafts/invoice-project/ts

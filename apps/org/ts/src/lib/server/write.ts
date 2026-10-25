@@ -1,13 +1,27 @@
 import { error, fail, type RequestEvent } from '@sveltejs/kit'
-import type { Done, Form } from '@cella/org-db'
+import type { Done, Form, Upload } from '@cella/org-db'
 import { using } from './db.ts'
 import { deps } from './device.ts'
 import { action, reactions } from './slices.ts'
 
-const fields = (data: FormData): Form => ({
-  get: (name) => String(data.get(name) ?? ''),
-  all: (name) => data.getAll(name).map(String),
-})
+// A form's fields as text, and the files it carries read whole; a file
+// input left empty carries no file.
+export async function fields(data: FormData): Promise<Form> {
+  const files = new Map<string, Upload>()
+  for (const [name, value] of data) {
+    if (value instanceof File && value.size > 0) {
+      files.set(name, { name: value.name, type: value.type || 'application/octet-stream', bytes: new Uint8Array(await value.arrayBuffer()) })
+    }
+  }
+  return {
+    get: (name) => {
+      const v = data.get(name)
+      return typeof v === 'string' ? v : ''
+    },
+    all: (name) => data.getAll(name).flatMap((v) => (typeof v === 'string' ? [v] : [])),
+    file: (name) => files.get(name) ?? null,
+  }
+}
 
 // Why a write failed, as the page may say it: what a form reader or a
 // handler threw about its input, a plain Error, or a value Postgres could
@@ -30,7 +44,7 @@ export async function perform(event: RequestEvent, collection: string, name: str
   if (!write) {
     error(404, `${collection} has no write ${name}`)
   }
-  const form = fields(await event.request.formData())
+  const form = await fields(await event.request.formData())
   return using(async (db) => {
     const signing = await deps(db, event.locals.actor)
     if (typeof signing === 'string') {

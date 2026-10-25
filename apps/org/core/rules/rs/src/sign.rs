@@ -5,7 +5,7 @@
 //!
 //! The request digest is SHA-256 over the canonical JSON of the request
 //! and a fresh salt, the same canonical form the log's payload digests
-//! use: browsers compute it with WebCrypto, which has SHA-256 and Ed25519
+//! use: browsers compute it with `WebCrypto`, which has SHA-256 and Ed25519
 //! but no BLAKE3.
 
 use crate::hex::hex;

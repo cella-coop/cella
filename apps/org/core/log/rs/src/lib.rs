@@ -27,6 +27,8 @@
 
 pub mod encrypted;
 
+use std::fmt::Write;
+
 use cella_crypto::{CryptoError, PublicKey, hash};
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -91,7 +93,7 @@ impl SchemaId {
     pub fn as_hex(&self) -> String {
         let mut s = String::with_capacity(self.0.len() * 2);
         for b in &self.0 {
-            s.push_str(&format!("{b:02x}"));
+            let _ = write!(s, "{b:02x}");
         }
         s
     }

@@ -1,7 +1,7 @@
 //! The extension's whole SQL surface, in one place. Every type, function,
 //! aggregate, operator, cast and table `cella` exposes is declared here and
 //! nowhere else; each is a thin wrapper over `cella-rules` or the notary's
-//! plumbing, so a second binding (PGlite, a future runtime) wraps this list.
+//! plumbing, so a second binding (`PGlite`, a future runtime) wraps this list.
 //!
 //! | SQL | Kind | Wraps |
 //! |---|---|---|
@@ -555,5 +555,5 @@ fn opened(n: i64) -> Option<JsonB> {
 #[pg_extern(volatile, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn vault_sweep() -> TableIterator<'static, (name!(subject, String), name!(class, String), name!(keys, i64), name!(redacted, bool))> {
-    TableIterator::new(vault::sweep(&notary::iso(&notary::verdict_date())))
+    TableIterator::new(vault::sweep(&notary::iso(notary::verdict_date())))
 }

@@ -71,7 +71,7 @@ fn forget_date() {
     DATE.with(|c| c.borrow_mut().take());
 }
 
-pub(crate) fn iso(d: &pgrx::datum::Date) -> String {
+pub(crate) fn iso(d: pgrx::datum::Date) -> String {
     format!("{:04}-{:02}-{:02}", d.year(), d.month(), d.day())
 }
 
@@ -270,7 +270,7 @@ impl AsRules {
     fn enter(role: pg_sys::Oid) -> Self {
         let mut user = pg_sys::InvalidOid;
         let mut context = 0;
-        let restricted = (pg_sys::SECURITY_LOCAL_USERID_CHANGE | pg_sys::SECURITY_RESTRICTED_OPERATION) as i32;
+        let restricted = (pg_sys::SECURITY_LOCAL_USERID_CHANGE | pg_sys::SECURITY_RESTRICTED_OPERATION).cast_signed();
         // SAFETY: plain reads and writes of the backend's user id and
         // security context, with no error path.
         unsafe {
@@ -320,7 +320,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     if let Err(e) = asked.verify(&s.sig) {
         refuse(format!("{e}: {op} by {actor} from device {}", &hex(&s.device)[..16]), at_ingress());
     }
-    let date = iso(&verdict_date());
+    let date = iso(verdict_date());
     Spi::connect_mut(|c| {
         let head = spi(c.update("SELECT n, hash FROM cella.head FOR UPDATE", Some(1), &[]));
         let (n, prev) = spi(head.first().get_two::<i64, Vec<u8>>());

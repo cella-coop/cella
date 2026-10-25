@@ -1,8 +1,13 @@
 //! Lowercase hex, as signed messages and the log's JSON carry bytes.
 
+use std::fmt::Write;
+
 #[must_use]
 pub fn hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{b:02x}")).collect()
+    bytes.iter().fold(String::with_capacity(bytes.len() * 2), |mut s, b| {
+        let _ = write!(s, "{b:02x}");
+        s
+    })
 }
 
 /// Bytes from lowercase hex; `None` for odd lengths, uppercase or other

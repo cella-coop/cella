@@ -42,7 +42,7 @@ impl Repo {
         cmd
     }
 
-    /// The shell, the org app's SvelteKit root.
+    /// The shell, the org app's `SvelteKit` root.
     pub fn shell_dir(&self) -> PathBuf {
         self.root.join("apps/org/ts")
     }

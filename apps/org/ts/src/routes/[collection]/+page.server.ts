@@ -27,8 +27,8 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
       fs.filter((f) => f.type === 'enum').map((f) => [f.key, [...new Set(rows.map((r) => String(f.value(r) ?? '')))].filter(Boolean).sort()]),
     )
     const count = (where: unknown) => rows.filter((r) => matches(r, wheres(where, fs), fs, today)).length
-    const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db)))).filter((a) => a !== undefined)
-    const own = (await m.collection.about?.(db)) ?? null
+    const abouts = (await Promise.all(m.extensions.map((e) => e.extension.about?.(db, locals.actor)))).filter((a) => a !== undefined)
+    const own = (await m.collection.about?.(db, locals.actor)) ?? null
     return {
       name: params.collection,
       rows,

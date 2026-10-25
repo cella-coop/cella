@@ -55,6 +55,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
 | `decision.close` | ordered | right; **applied**: a passing close admits, seats and enrols in its own verdict |
+| `decision:message.post` | confluent | right: messages commute, each its author's, ordered by receipt; a closed decision takes none, as it takes no stance ([who votes](#who-votes)) |
 | `project.create`, `project:milestone.add`, `.complete`, `project.archive` | confluent | right; rung 2 numbers milestones by device ([work](#work-is-registers)) |
 | `project.budget` | ordered | right: against the shares ([shares](#a-share-never-exceeds-the-budget)) |
 | `member-project:project.share` | bounded on the budget | right |
@@ -66,6 +67,7 @@ decision. Lanterne's state is that of 24 October 2026.
 | `worker.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
 | `member-worker:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
 | `timesheet-worker:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
+| `project-timesheet-worker:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
 | `document-member:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
@@ -189,12 +191,17 @@ the `circle-decision-member` graft's, which the decision feat declares.
 | `decision.close` vs `member.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
 | `decision.close` vs `circle-member:position.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
+| `decision:message.post` vs `decision.close` | the message is part of the deliberation | the message is refused: the deliberation is over | — |
 
 **Applied.** The roll is fixed at the proposal: the members holding a
 position in the decision's circle on the day it was proposed, of whom
 those active at the close count. It is closer to a ballot list and harder
 to game than a roll read at the close. The labels hold: votes confluent,
-close, admit, suspend, exit and positions ordered.
+close, admit, suspend, exit and positions ordered. The procedure, its
+share of the votes cast and its quorum, is fixed with the proposal too,
+and a procedure any decision names cannot change, so the close counts
+by the terms the members saw. Messages are confluent: the close orders
+them as it orders stances, and none outlives it.
 
 **Rung 2.** "A member's latest stance counts" uses receipt order, which is
 not signing order once one member has two devices offline. Hugo objects on

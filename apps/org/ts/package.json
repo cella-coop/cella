@@ -70,6 +70,7 @@
     "@cella/org-graft-circle-member-timesheet": "workspace:*",
     "@cella/org-graft-circle-expense-member": "workspace:*",
     "@cella/org-graft-circle-member-payslip": "workspace:*",
+    "@cella/org-graft-project-timesheet-worker": "workspace:*",
     "loro-crdt": "1.17.1",
     "pg": "8.23.1",
     "svelte": "5.57.2"

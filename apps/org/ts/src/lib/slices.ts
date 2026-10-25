@@ -56,6 +56,7 @@ import { app as keyWorker } from '@cella/org-graft-key-worker/app'
 import { app as memberWorker } from '@cella/org-graft-member-worker/app'
 import { app as payslipWorker } from '@cella/org-graft-payslip-worker/app'
 import { app as timesheetWorker } from '@cella/org-graft-timesheet-worker/app'
+import { app as projectTimesheetWorker } from '@cella/org-graft-project-timesheet-worker/app'
 
 // The client sides the shell mounts, matching the server's slices by
 // name: each feat's views and pages, each graft's extensions, and the
@@ -126,6 +127,7 @@ export const apps: App[] = [
   payslipWorker,
   timesheetWorker,
   keyWorker,
+  projectTimesheetWorker,
   root,
 ]
 

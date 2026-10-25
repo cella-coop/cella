@@ -1130,6 +1130,36 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/project-timesheet-worker/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-graft-project-timesheet':
+        specifier: workspace:*
+        version: link:../../project-timesheet/ts
+      '@cella/org-graft-timesheet-worker':
+        specifier: workspace:*
+        version: link:../../timesheet-worker/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-project':
+        specifier: workspace:*
+        version: link:../../../feats/project/core/ts
+      '@cella/org-timesheet':
+        specifier: workspace:*
+        version: link:../../../feats/timesheet/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      '@cella/org-worker':
+        specifier: workspace:*
+        version: link:../../../feats/worker/core/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/project-timesheet/ts:
     dependencies:
       '@cella/org-db':
@@ -1321,6 +1351,9 @@ importers:
       '@cella/org-graft-project-timesheet':
         specifier: workspace:*
         version: link:../grafts/project-timesheet/ts
+      '@cella/org-graft-project-timesheet-worker':
+        specifier: workspace:*
+        version: link:../grafts/project-timesheet-worker/ts
       '@cella/org-graft-timesheet-worker':
         specifier: workspace:*
         version: link:../grafts/timesheet-worker/ts

@@ -46,6 +46,17 @@ export interface Form {
   file(name: string): Upload | null
 }
 
+// An amount a form types in euros, `1234,56`, `1234.56` or `1 234,56`, in
+// whole cents; more than nothing unless `positive` is false, as an
+// invoice's line may be.
+export function cents(typed: string, positive = true): number {
+  const n = Number(typed.replace(/\s/g, '').replace(',', '.'))
+  if (!typed.trim() || !Number.isFinite(n) || (positive && n <= 0)) {
+    throw new Error(`“${typed}” is not an amount in euros`)
+  }
+  return Math.round(n * 100)
+}
+
 // A write from a page: the form's fields to the handler's input, through
 // the handler. `id` is the item the page shows, if any.
 export interface Action {

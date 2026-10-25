@@ -1,17 +1,9 @@
-import type { Form } from '@cella/org-db'
+import { cents, type Form } from '@cella/org-db'
 import { categories, type Capture } from '../models/expense.ts'
 
 // What the shell's forms send, read into the handlers' inputs. Amounts are
 // typed in euros, a comma or a point, and sent in whole cents; an expense
 // is always the acting member's own.
-
-export function cents(typed: string): number {
-  const n = Number(typed.trim().replace(',', '.'))
-  if (!typed.trim() || !Number.isFinite(n) || n <= 0) {
-    throw new Error(`“${typed}” is not an amount in euros`)
-  }
-  return Math.round(n * 100)
-}
 
 export function capture(form: Form, member: string): Capture {
   const category = form.get('category')

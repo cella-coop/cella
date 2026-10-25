@@ -12,7 +12,10 @@ bytes the owner keeps closed (`allows`), its reactions and the kinds of
 file it imports (`imports`); `Action`, a write
 from a page, the form read into a handler's input; `action(op, input,
 handler)`, which makes one; `Form`, a form's fields and the files it
-carries (`file`); and `Done`, a write's outcome made plain:
+carries (`file`); `cents(typed, positive?)`, an amount typed in euros, a
+comma or a point and spaces between thousands, in whole cents, refused
+unless it is more than nothing where `positive` holds, as every slice's
+form reads one; and `Done`, a write's outcome made plain:
 settled, pending, refused, or failed before any verdict, with the writes
 that reacted to it.
 

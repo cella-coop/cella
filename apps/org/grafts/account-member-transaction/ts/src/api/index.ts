@@ -8,7 +8,7 @@
 // them on exit and employing the work share in shares on allocation are
 // this graft's triggers, in the writes that admit, end a membership and
 // allocate.
-import { action, type Db, type Form, type Slice } from '@cella/org-db'
+import { action, cents, type Db, type Form, type Slice } from '@cella/org-db'
 import { draw } from '../handlers/draw.ts'
 import { pay } from '../handlers/pay.ts'
 import { repay } from '../handlers/repay.ts'
@@ -24,15 +24,6 @@ export { called } from '../drivers/capital.ts'
 export { employed, figures } from '../drivers/patronage.ts'
 export type { Employed, Figure, Movement } from '../models/patronage.ts'
 export type { Called, Payment, Repayment } from '../models/capital.ts'
-
-// Euros as typed, a comma or a point, into whole cents.
-export function cents(typed: string): number {
-  const n = Number(typed.trim().replace(',', '.'))
-  if (!typed.trim() || !Number.isFinite(n) || n <= 0) {
-    throw new Error(`“${typed}” is not an amount in euros`)
-  }
-  return Math.round(n * 100)
-}
 
 const theirs = (member: string | undefined) => {
   if (!member) {

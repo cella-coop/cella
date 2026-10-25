@@ -1,17 +1,9 @@
-import type { Form } from '@cella/org-db'
+import { cents, type Form } from '@cella/org-db'
 import type { Issue, Payment, Send, Void } from '../models/invoice.ts'
 
 // What the shell's forms send, read into the handlers' inputs. Amounts are
 // typed in euros and sent in cents; a line repeats its fields once per
 // line, in order.
-
-export function cents(typed: string): number {
-  const n = Number(typed.replace(/\s/g, '').replace(',', '.'))
-  if (!typed.trim() || !Number.isFinite(n)) {
-    throw new Error(`“${typed}” is not an amount in euros`)
-  }
-  return Math.round(n * 100)
-}
 
 export function issue(form: Form): Issue {
   const descriptions = form.all('description')
@@ -19,7 +11,7 @@ export function issue(form: Form): Issue {
   const prices = form.all('unit_price')
   const rates = form.all('vat_rate')
   const lines = descriptions
-    .map((description, i) => ({ description, quantity: quantities[i] ?? '1', unit_price: cents(prices[i] ?? ''), vat_rate: Number(rates[i] ?? 20) }))
+    .map((description, i) => ({ description, quantity: quantities[i] ?? '1', unit_price: cents(prices[i] ?? '', false), vat_rate: Number(rates[i] ?? 20) }))
     .filter((l) => l.description.trim())
   if (!lines.length) {
     throw new Error('an invoice needs at least one line')
@@ -30,7 +22,7 @@ export function issue(form: Form): Issue {
 export const payment = (form: Form, invoice: string): Payment => ({
   invoice,
   at: form.get('at'),
-  amount: cents(form.get('amount')),
+  amount: cents(form.get('amount'), false),
   method: form.get('method') || undefined,
   reference: form.get('reference'),
 })

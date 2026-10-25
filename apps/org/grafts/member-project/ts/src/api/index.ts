@@ -1,7 +1,6 @@
 // The graft's writes, POST /api/member-project/<op> once the server
 // exists, its reads, and its slice, which the shell mounts.
-import { action, type Slice } from '@cella/org-db'
-import { forms } from '@cella/org-project/api'
+import { action, cents, type Slice } from '@cella/org-db'
 import { share } from '../handlers/share.ts'
 import { held, pot, shared } from '../drivers/share.ts'
 
@@ -18,7 +17,7 @@ export const slice: Slice = {
       actions: {
         share: action(
           'member-project:project:share',
-          (form, id) => ({ project: id ?? '', member: form.get('member'), amount: forms.cents(form.get('amount')) }),
+          (form, id) => ({ project: id ?? '', member: form.get('member'), amount: cents(form.get('amount')) }),
           share,
         ),
       },

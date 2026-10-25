@@ -9,6 +9,15 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
+// Who reads, on the app's role as the server connects: the rows a query
+// returns read as `actor`, or as no one. A stub authority stands in for
+// circle-membership's, which says who holds a power.
+const app = new pg.Client({ user: 'cella_app' })
+const reading = async (actor: string | null, sql: string, values: unknown[] = []) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor ?? ''])
+  return (await app.query(sql, values)).rows
+}
+
 type Line = { account: string; side: 'debit' | 'credit'; cents: number }
 
 // Posts an entry in its own transaction, as a write would, returning its id
@@ -43,6 +52,7 @@ before(async () => {
 })
 
 after(async () => {
+  await app.end()
   await db.end()
 })
 
@@ -113,4 +123,25 @@ test('a correction names its base, and a second from the same base is refused by
   assert.equal(await rule(first.id, null), null)
   assert.equal(await rule(second.id, null), `je-0001 moved: its correction is ${first.id}, not none`)
   assert.equal(await rule(second.id, first.id ?? null), null)
+})
+
+test('as the app role, whoever keeps the books reads every entry and line; a graft opens an account\'s lines further; no one else reads any', async () => {
+  await app.connect()
+  await db.query(`CREATE SCHEMA mandate`)
+  await db.query(
+    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, day date) RETURNS boolean
+     LANGUAGE sql STABLE RETURN actor = 'julien@lanterne.example' AND power = 'record-entry'`,
+  )
+  await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
+  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, date)', 'test')`)
+  await db.query(`CREATE FUNCTION mandate.holds(code text, reader text) RETURNS boolean LANGUAGE sql STABLE RETURN code = '101302' AND reader = 'chloe@lanterne.example'`)
+  await db.query(`INSERT INTO cella.reach (what, fn, owner) VALUES ('transaction', 'mandate.holds(text, text)', 'test')`)
+  const { id } = await post([{ account: '512', side: 'debit', cents: 500_00 }, { account: '101302', side: 'credit', cents: 500_00 }])
+  const count = async (table: string) => Number((await db.query(`SELECT count(*) AS n FROM transaction.${table}`)).rows[0].n)
+  assert.equal((await reading('julien@lanterne.example', 'SELECT id FROM transaction.entry')).length, await count('entry'))
+  assert.equal((await reading('julien@lanterne.example', 'SELECT entry FROM transaction.line')).length, await count('line'))
+  assert.deepEqual(await reading('paul@lanterne.example', 'SELECT id FROM transaction.entry'), [])
+  assert.deepEqual(await reading(null, 'SELECT entry FROM transaction.line'), [])
+  assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT id FROM transaction.entry'), [{ id }], 'she reads the entry that holds a line opened to her')
+  assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT entry, account FROM transaction.line'), [{ entry: id, account: '101302' }], 'and that line alone')
 })

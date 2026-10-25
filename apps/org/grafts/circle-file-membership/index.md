@@ -15,6 +15,10 @@ Only this graft sees both seats and files. Declared by `file`.
 members' records. `circle_file_membership.opens(id, actor)` reads
 `circle_membership.may` on the verdict date.
 
+## Reads
+
+Each opener is also registered as a power that reads its class (`cella.reading`, `sql/002-reads.sql`), so the file feat's policy lets its holder see the file before `opens` opens it.
+
 ## Shell
 
 Extends the files collection with `allows`: the shell serves a file's

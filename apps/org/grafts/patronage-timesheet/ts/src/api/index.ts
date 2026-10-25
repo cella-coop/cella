@@ -13,10 +13,11 @@ export interface Part {
 
 export async function parts(db: Db, distribution: string): Promise<Part[]> {
   const { rows } = await db.query<Part>(
-    `SELECT d.worker AS id, d.worker AS member, d.minutes::float8 AS minutes, d.cents::float8 AS amount
-     FROM patronage_timesheet.division($1) d
-     JOIN patronage.distribution x ON x.id = $1 AND x.approved IS NULL
-     ORDER BY d.cents DESC, d.worker`,
+    `SELECT s.member AS id, s.member, s.minutes::float8 AS minutes, s.amount::float8 AS amount
+     FROM patronage_timesheet.time_share s
+     JOIN patronage.distribution x ON x.id = s.distribution AND x.approved IS NULL
+     WHERE s.distribution = $1
+     ORDER BY s.amount DESC, s.member`,
     [distribution],
   )
   return rows

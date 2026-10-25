@@ -19,6 +19,8 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 - `parts_by_time`, a trigger after a distribution is approved, in that
   write, whichever makes it: it inserts the division into
   `patronage.part`.
+- `time_share`, a view: each worker's share by time worked of each
+  distribution, as the division gives it.
 
 ## Rules
 
@@ -33,10 +35,14 @@ the portion divides by the minutes of approved months in the year alone;
 approving makes the parts, which both rules take; parts no longer what
 the approved time gives are refused.
 
+## Reads
+
+`division` runs as its owner over everyone's approved time, so each share it gives is the one the approval makes, whoever reads it; `time_share` shows each worker's to the worker and to whoever holds `distribute-surplus` (`sql/002-reads.sql`).
+
 ## Shell
 
 Adds to a distribution's page, until it is approved, how its portion by
-time worked would divide, member by member.
+time worked would divide, member by member, each as its reader may read it.
 
 ## Lanterne
 

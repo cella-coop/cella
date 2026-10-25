@@ -9,6 +9,6 @@ export { approvals } from '../drivers/inbox.ts'
 export const slice: Slice = {
   name: 'circle-member-timesheet',
   extends: {
-    inbox: { rows: (db, actor) => approvals(db, actor) },
+    inbox: { rows: approvals },
   },
 }

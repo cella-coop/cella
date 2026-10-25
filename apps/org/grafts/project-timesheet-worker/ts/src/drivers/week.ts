@@ -63,8 +63,11 @@ export async function week(db: Db, worker: string | null, from: string, today: s
 }
 
 // The weeks the grid offers the acting worker: this one and the one
-// before, for the Monday that closes last week's.
-export async function weeks(db: Db, worker: string | null, today = iso(new Date())): Promise<Week[]> {
+// before, for the Monday that closes last week's, today being the
+// notary's.
+export async function weeks(db: Db, worker: string | null): Promise<Week[]> {
+  const { rows } = await db.query<{ today: string }>(`SELECT to_char(cella.verdict_date(), 'YYYY-MM-DD') AS today`)
+  const today = rows[0].today
   const now = monday(today)
   const shown = [await week(db, worker, now, today), await week(db, worker, plus(now, -7), today)]
   return shown.filter((w): w is Week => w !== null)

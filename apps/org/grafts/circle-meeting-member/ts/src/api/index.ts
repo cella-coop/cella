@@ -18,6 +18,6 @@ export const slice: Slice = {
       item: (db, meeting, actor) => onMeeting(db, meeting, actor),
     },
     // The meetings waiting on the acting member's answer, in their inbox.
-    inbox: { rows: (db, actor) => meetings(db, actor) },
+    inbox: { rows: meetings },
   },
 }

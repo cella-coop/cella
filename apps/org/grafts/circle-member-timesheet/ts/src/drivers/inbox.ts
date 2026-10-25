@@ -6,7 +6,7 @@ import type { Ask } from '@cella/org-member/models'
 // `circle_member_timesheet.approves` judges it: holding approve-time over
 // a circle its member sits in, or, for a worker who is no active member,
 // holding it at all.
-export async function approvals(db: Db, actor: string | null, today = new Date().toISOString().slice(0, 10)): Promise<Ask[]> {
+export async function approvals(db: Db, actor: string | null): Promise<Ask[]> {
   const { rows } = await db.query<Ask>(
     `SELECT 'time/' || p.member || '/' || p.month AS id, 'approval' AS kind,
             'Approve ' || p.month || '’s time' AS what, p.member AS about,
@@ -17,13 +17,13 @@ export async function approvals(db: Db, actor: string | null, today = new Date()
          WHEN EXISTS (SELECT FROM member.member m WHERE m.address = p.member AND m.status = 'active') THEN EXISTS (
            SELECT FROM circle_member.position s
            WHERE s.member = p.member
-             AND (s.since IS NULL OR s.since <= $2::date) AND (s.until IS NULL OR s.until > $2::date)
-             AND circle_member.over($1, 'approve-time', s.circle, $2::date)
+             AND (s.since IS NULL OR s.since <= cella.verdict_date()) AND (s.until IS NULL OR s.until > cella.verdict_date())
+             AND circle_member.over($1, 'approve-time', s.circle, cella.verdict_date())
          )
-         ELSE circle_member.may($1, 'approve-time', NULL, $2::date)
+         ELSE circle_member.may($1, 'approve-time', NULL, cella.verdict_date())
        END
      ORDER BY p.month, p.member`,
-    [actor, today],
+    [actor],
   )
   return rows
 }

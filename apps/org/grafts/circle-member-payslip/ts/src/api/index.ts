@@ -8,6 +8,6 @@ export { runs } from '../drivers/inbox.ts'
 export const slice: Slice = {
   name: 'circle-member-payslip',
   extends: {
-    inbox: { rows: (db, actor) => runs(db, actor) },
+    inbox: { rows: runs },
   },
 }

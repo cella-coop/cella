@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Capital, Held, Owed } from '../models/capital.ts'
+import type { Capital, Held, Owed, Rights, Statutes } from '../models/capital.ts'
 
 const columns = `member, name, status, shares, value::float8 AS value, subscribed::float8 AS subscribed, account, frozen,
   allowance::float8 AS allowance`
@@ -50,4 +50,24 @@ export async function named(db: Db, statement: string): Promise<{ member: string
     [statement],
   )
   return rows[0] ?? null
+}
+
+// The statutes' terms in force on the scope's day: those governing this
+// year's work share, and those whose capital clauses govern the day.
+export async function statutes(db: Db): Promise<Statutes | null> {
+  const { rows } = await db.query<Statutes>(
+    `SELECT w.id AS terms, w.salary::float8 AS salary, w.hours::float8 AS hours, w.equal::float8 AS equal, w.capital::float8 AS capital,
+            cella.cents(c.share)::float8 AS share, c.minimum, c.instalments, c.delay, c.repayments
+     FROM account.terms w
+     LEFT JOIN account.terms c ON c.id = account.capital_for(cella.verdict_date())
+     WHERE w.id = account.terms_for(extract(year FROM cella.verdict_date())::integer)`,
+  )
+  return rows[0] ?? null
+}
+
+// A member's capital, their statements for themselves, and the statutes
+// their page reads back: what they own, and what joining asks of them.
+export async function rights(db: Db, member: string, actor: string | null): Promise<Rights | null> {
+  const h = await held(db, member, actor)
+  return h ? { ...h, statutes: await statutes(db) } : null
 }

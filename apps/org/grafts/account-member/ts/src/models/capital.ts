@@ -27,3 +27,26 @@ export interface Owed {
 export interface Held extends Capital {
   statements: Owed[]
 }
+
+// The statutes' terms in force, as a member's page reads them back: how
+// the work share divides, by pay, time worked or in equal parts, in
+// percent, and what part of an associate's share buys capital; a share's
+// value, in cents, the fewest an associate subscribes, the most monthly
+// instalments, and, for one who leaves, the months before the first
+// repayment and the yearly repayments.
+export interface Statutes {
+  terms: string
+  salary: number
+  hours: number
+  equal: number
+  capital: number
+  share: number | null
+  minimum: number | null
+  instalments: number | null
+  delay: number | null
+  repayments: number | null
+}
+
+export interface Rights extends Held {
+  statutes: Statutes | null
+}

@@ -52,10 +52,15 @@ Adds each member's subscribed capital to the members list, and to their
 page their capital (subscribed, shares, share value, account, open or
 frozen) and their draw limit, and, to the member alone, their work share
 statements: each year's part, what it bought in shares and what it paid;
-to the chart each capital account's holder; and to a statement its
-member by name. Finance reads every statement in the `statements`
-collection, whose reads, like every read of the shell, are not yet
-restricted.
+under Joining, the capital an associate subscribes, at least the
+statutes' minimum at the share's value, or the shares they hold; under
+Own and decide, what the member owns read back as sentences from their
+capital and the statutes' terms in force: their shares, how the work
+share divides and what of it buys shares, and how capital is repaid to
+one who leaves; to the chart each capital account's holder; and to a
+statement its member by name. Finance reads every statement in the
+`statements` collection, whose reads, like every read of the shell, are
+not yet restricted.
 
 ## Lanterne
 

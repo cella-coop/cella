@@ -4,7 +4,7 @@
 // asks for, and one naming no such terms is refused whatever wrote it;
 // adopting the terms cites a decision that moved to adopt them, and
 // approving a distribution the decision that approves it, never another.
-// That the decision passed is circle-decision-member's, not migrated here.
+// That the decision passed is circle-decision-membership's, not migrated here.
 // Run by `cella test slice decision-patronage`.
 
 import { after, before, test } from 'node:test'

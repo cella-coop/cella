@@ -1,6 +1,6 @@
 +++
 title = "client-invoice"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Who an invoice bills. An invoice without a link is unbilled, not invalid;
@@ -34,7 +34,7 @@ may select.
 |---|---|---|
 | link | `issue-invoice`: linking an invoice to whom it bills is invoicing | Julien, as finance |
 
-`002-powers.sql` registers it in `cella.power`, and the `circle-member`
+`002-powers.sql` registers it in `cella.power`, and the `circle-membership`
 graft checks it.
 
 ## Shell

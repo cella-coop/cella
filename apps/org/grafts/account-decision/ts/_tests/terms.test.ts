@@ -3,7 +3,7 @@
 // drafted terms records the adoption it asks for, and one naming no such terms
 // is refused whatever wrote it; adopting the terms cites a decision that
 // moved to adopt them, never another. That the decision passed is
-// circle-decision-member's, not migrated here. Run by `cella test slice
+// circle-decision-membership's, not migrated here. Run by `cella test slice
 // account-decision`.
 
 import { after, before, test } from 'node:test'

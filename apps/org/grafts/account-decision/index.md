@@ -26,7 +26,7 @@ The app role may select and insert; the rules role may select.
   adopt terms names drafted terms, and the decision asks to adopt them.
 - `account_decision.adopts`, on `account:terms:adopt`: the cited decision
   moved to adopt these terms.
-- The op is listed in `decision.cites`, so `circle-decision-member`'s
+- The op is listed in `decision.cites`, so `circle-decision-membership`'s
   `carried` attaches to it: the decision closed and passed on its roll.
   Its label declares `check: 'decided'`.
 

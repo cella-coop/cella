@@ -32,7 +32,7 @@ the event; `lines(month, event)`.
   whose entry posts every line of the event. A write posts one entry, so
   what a graft above posts in the same write, such as an instalment of
   capital withheld from an associate's pay
-  (`account-member-payslip-transaction`), is lines of that entry: they
+  (`account-membership-payslip-transaction`), is lines of that entry: they
   balance among themselves and credit neither the bank nor an account the
   event's own lines post to, and the graft that adds them checks they are
   exactly its own.

@@ -32,7 +32,7 @@ role may select.
   which posts every line of its split. A write posts one entry, so what a
   graft above posts in the same write, the work share employed in shares,
   is lines of that entry: they balance among themselves and touch not the
-  year's result, and `account-member-patronage-transaction` checks they
+  year's result, and `account-membership-patronage-transaction` checks they
   are exactly its own and that nothing else is posted.
 - `patronage_transaction.reserves`, on `patronage:distribution:approve`:
   at least 15 % of the surplus goes to the legal reserve until the

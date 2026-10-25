@@ -9,7 +9,7 @@ CREATE TABLE decision_patronage.approval (
 
 -- patronage:distribution:approve — the cited decision is the one that
 -- approves this distribution. That it closed and passed on its roll is
--- circle-decision-member's rule, attached through decision.cites.
+-- circle-decision-membership's rule, attached through decision.cites.
 CREATE FUNCTION decision_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -83,7 +83,7 @@ END;
 INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'decision_patronage.asks(jsonb)', 'decision-patronage');
 
 -- patronage:terms:adopt — the cited decision moved to adopt these terms.
--- That it closed and passed on its roll is circle-decision-member's rule,
+-- That it closed and passed on its roll is circle-decision-membership's rule,
 -- attached through decision.cites.
 CREATE FUNCTION decision_patronage.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

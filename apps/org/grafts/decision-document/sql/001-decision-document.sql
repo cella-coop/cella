@@ -15,7 +15,7 @@ CREATE TABLE decision_document.adoption (
 -- document:document:adopt — the cited decision asks to adopt this
 -- document, and the version adopted hashes as the decision names it: the
 -- members voted on that content, whichever version holds it. That it
--- closed and passed on its roll is circle-decision-member's rule,
+-- closed and passed on its roll is circle-decision-membership's rule,
 -- attached through decision.cites; that the version is the document's
 -- and its base has not moved, the document feat's.
 CREATE FUNCTION decision_document.adopts(payload jsonb) RETURNS text

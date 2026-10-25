@@ -1,6 +1,6 @@
 +++
 title = "client-project"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Whom a project is for. A project without a link is the co-op's own, not
@@ -20,7 +20,7 @@ app role may select, insert and update; the rules role may select.
 | `client-project:project:link` | confluent | `manage-project` | the last writer wins; a project is for one client |
 
 `002-powers.sql` registers the power in `cella.power`, and the
-`circle-member` graft checks it.
+`circle-membership` graft checks it.
 
 ## Invariants
 

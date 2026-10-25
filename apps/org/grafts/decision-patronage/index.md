@@ -32,7 +32,7 @@ The app role may select and insert; the rules role may select.
   adopt them.
 - `decision_patronage.adopts`, on `patronage:terms:adopt`: the cited
   decision moved to adopt these terms.
-- Both ops are listed in `decision.cites`, so `circle-decision-member`'s
+- Both ops are listed in `decision.cites`, so `circle-decision-membership`'s
   `carried` attaches to them: the decision closed and passed on its roll.
   Their labels declare `check: 'decided'`.
 

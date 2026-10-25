@@ -6,7 +6,7 @@ updated = 2026-10-25
 The circles' place and powers, by decision: nesting a circle, granting a
 power to a role, revoking a mandate. Declared by the `circle` feat. Who
 sits where needs members as well, so seats by decision are
-`circle-decision-member`'s, which builds on this graft.
+`circle-decision-membership`'s, which builds on this graft.
 
 ## Schema
 
@@ -38,7 +38,7 @@ the revoked mandate's role's circle; a role every working circle has
   by a procedure the decision feat holds, raising SQLSTATE `09000`.
 
 The three ops cite a decision: this graft lists them in `decision.cites`,
-and `circle-decision-member`, which counts the roll, attaches its rule
+and `circle-decision-membership`, which counts the roll, attaches its rule
 that it carried.
 
 ## Handlers
@@ -48,7 +48,7 @@ that it carried.
   above it, or for a nesting the deepest circle holding both its place
   and the one it moves to, or the assembly for itself; titled with what it
   decides. The writes that carry a passing decision out are
-  `circle-decision-member`'s reaction to its close.
+  `circle-decision-membership`'s reaction to its close.
 
 ## Shell
 

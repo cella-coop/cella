@@ -48,7 +48,7 @@
 </Section>
 
 <Section title="By member" count={data.members.length}>
-  <Table columns={people} rows={data.members} href={(m: Who) => `/members/${m.member}`} />
+  <Table columns={people} rows={data.members} href={(m: Who) => `/people/${m.member}`} />
 </Section>
 
 <Section title="Latest entries" count={data.entries.length}>

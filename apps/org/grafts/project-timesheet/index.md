@@ -47,7 +47,7 @@ The feat's rules judge the entry, the graft's trigger the booking. An
 entry is booked when it is logged; moving it to another project is not
 built. `booking` (`./api`) books the entry any write logs, under that
 write's op: this graft's `book` over the feat's log, and
-`project-timesheet-worker`'s over a worker's log by their employment,
+`employment-project-timesheet`'s over a worker's log by their employment,
 which needs no mandate.
 
 ## Invariants

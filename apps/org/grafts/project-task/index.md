@@ -26,7 +26,7 @@ The app role may select, insert and update; the rules role may select.
 | `task:task:create`, on a project's page | confluent | `edit-task` | the task feat's creation and the filing, in one transaction under its verdict |
 
 `002-powers.sql` registers the power in `cella.power`, and the
-`circle-member` graft checks it.
+`circle-membership` graft checks it.
 
 ## Invariants
 

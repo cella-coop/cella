@@ -38,7 +38,7 @@ database gave it, and refuses a version that does not exist.
   (`decision_document.linked`).
 
 An adoption cites its decision: this graft declares
-`document:document:adopt` in `decision.cites`, and `circle-decision-member`,
+`document:document:adopt` in `decision.cites`, and `circle-decision-membership`,
 which counts the roll, attaches its rule that the decision closed and
 passed. This graft joins two feats and so cannot read the roll, a
 three-way graft's; it never needs to. That the version is the document's

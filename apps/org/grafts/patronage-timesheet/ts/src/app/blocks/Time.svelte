@@ -16,6 +16,6 @@
 
 {#if data.length}
   <Section title="Work share by time worked, as it would divide" count={data.length}>
-    <Table {columns} rows={data} href={(p: Part) => `/members/${p.member}`} />
+    <Table {columns} rows={data} href={(p: Part) => `/people/${p.member}`} />
   </Section>
 {/if}

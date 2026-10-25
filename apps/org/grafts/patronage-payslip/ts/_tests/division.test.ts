@@ -35,7 +35,7 @@ after(async () => {
 })
 
 test('only the app\'s core, the patronage and payslip feats and this graft are migrated', async () => {
-  assert.deepEqual(await rows(`SELECT nspname FROM pg_namespace WHERE nspname IN ('timesheet', 'member', 'patronage_timesheet')`), [])
+  assert.deepEqual(await rows(`SELECT nspname FROM pg_namespace WHERE nspname IN ('timesheet', 'membership', 'patronage_timesheet')`), [])
 })
 
 test('the pay portion divides by what each was paid that year, the equal portion one part each', async () => {

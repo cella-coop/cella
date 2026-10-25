@@ -58,7 +58,7 @@ END;
 INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'account_decision.asks(jsonb)', 'account-decision');
 
 -- account:terms:adopt — the cited decision moved to adopt these terms.
--- That it closed and passed on its roll is circle-decision-member's rule,
+-- That it closed and passed on its roll is circle-decision-membership's rule,
 -- attached through decision.cites.
 CREATE FUNCTION account_decision.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

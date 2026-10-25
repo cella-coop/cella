@@ -1,0 +1,21 @@
+{
+  "name": "@cella/org-graft-employment-project-timesheet",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./models": "./src/models/index.ts",
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-project": "workspace:*",
+    "@cella/org-timesheet": "workspace:*",
+    "@cella/org-employment": "workspace:*",
+    "@cella/org-graft-project-timesheet": "workspace:*",
+    "@cella/org-graft-employment-timesheet": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

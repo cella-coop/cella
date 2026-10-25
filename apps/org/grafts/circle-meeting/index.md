@@ -1,12 +1,12 @@
 +++
 title = "circle-meeting"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A meeting's circle, and how a circle meets. Declared by the `meeting`
 feat. A meeting names its circle as text; this graft checks it exists
 and keeps each circle's setting. Who is expected, the circle's seats, is
-`circle-meeting-member`'s, since seats are the `circle-member` graft's.
+`circle-meeting-membership`'s, since seats are the `circle-membership` graft's.
 
 ## Schema
 

@@ -132,14 +132,15 @@ and admit a member by vote (ordered).
 | `account-payslip` | a surplus's work share divided by pay and in equal parts |
 | `account-timesheet` | a surplus's work share divided by time worked |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor; the income statement and the balance sheet |
-| `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves |
+| `circle-expense-member` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
 | `circle-decision` | nesting circles and granting and revoking mandates by decision |
 | `circle-decision-member` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
 | `circle-meeting` | a meeting's circle, and how a circle meets: its quorum, and whether its minutes are adopted |
 | `circle-meeting-member` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it |
 | `circle-member` | positions: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
+| `circle-member-payslip` | the pay runs waiting on a member to approve or pay them |
 | `circle-member-project` | a lead runs their own circle's projects |
-| `circle-member-timesheet` | a lead approves their own circle's time |
+| `circle-member-timesheet` | a lead approves their own circle's time; the months waiting on a member's approval |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `decision-document` | adoption of a document version by a decision |

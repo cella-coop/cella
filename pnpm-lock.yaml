@@ -515,6 +515,15 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/circle-expense-member/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+
   apps/org/grafts/circle-meeting-member/ts:
     dependencies:
       '@cella/org-circle':
@@ -553,6 +562,24 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+
+  apps/org/grafts/circle-member-payslip/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
+
+  apps/org/grafts/circle-member-timesheet/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-member':
+        specifier: workspace:*
+        version: link:../../../feats/member/core/ts
 
   apps/org/grafts/circle-member/ts:
     dependencies:
@@ -1195,6 +1222,9 @@ importers:
       '@cella/org-graft-circle-decision-member':
         specifier: workspace:*
         version: link:../grafts/circle-decision-member/ts
+      '@cella/org-graft-circle-expense-member':
+        specifier: workspace:*
+        version: link:../grafts/circle-expense-member/ts
       '@cella/org-graft-circle-meeting':
         specifier: workspace:*
         version: link:../grafts/circle-meeting/ts
@@ -1204,6 +1234,12 @@ importers:
       '@cella/org-graft-circle-member':
         specifier: workspace:*
         version: link:../grafts/circle-member/ts
+      '@cella/org-graft-circle-member-payslip':
+        specifier: workspace:*
+        version: link:../grafts/circle-member-payslip/ts
+      '@cella/org-graft-circle-member-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/circle-member-timesheet/ts
       '@cella/org-graft-client-invoice':
         specifier: workspace:*
         version: link:../grafts/client-invoice/ts

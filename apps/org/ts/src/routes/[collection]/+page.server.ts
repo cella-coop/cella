@@ -6,12 +6,12 @@ import { perform } from '#lib/server/write.ts'
 import { columns, dashboard, look, views } from '#lib/slices.ts'
 import type { PageServerLoad } from './$types'
 
-// A collection: its owner's rows, with the fields its extensions add to
-// each, what its header says about it, each enumeration's values, and the
+// A collection: its owner's rows and those its extensions add, as the
+// acting member sees them, with the fields its extensions add to each, what its header says about it, each enumeration's values, and the
 // view the address asks for, checked against the collection's fields:
 // its tabs with how many rows each keeps, and, in the dashboard layout,
 // its widgets run over the rows it keeps.
-export const load: PageServerLoad = async ({ params, url }) => {
+export const load: PageServerLoad = async ({ params, url, locals }) => {
   const m = mounted(params.collection)
   if (!m) {
     error(404, `There is no collection ${params.collection}`)
@@ -22,7 +22,10 @@ export const load: PageServerLoad = async ({ params, url }) => {
   const { id, spec, errors } = resolve(url.searchParams, tabs, fs, looks)
   const today = new Date().toISOString().slice(0, 10)
   return using(async (db) => {
-    const owned = await m.collection.list(db)
+    const owned = [
+      ...(await m.collection.list(db, locals.actor)),
+      ...(await Promise.all(m.extensions.map((e) => e.extension.rows?.(db, locals.actor) ?? []))).flat(),
+    ]
     const added = await Promise.all(m.extensions.map((e) => e.extension.list?.(db)))
     const rows = owned.map((r) => Object.assign({}, r, ...added.map((a) => a?.[r.id])))
     const values = Object.fromEntries(

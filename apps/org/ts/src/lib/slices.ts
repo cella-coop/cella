@@ -1,4 +1,4 @@
-import type { Added, App, Column, Look, Nav, Owned, Preset, Shift, Widget } from '@cella/org-ui'
+import { icons, type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type Shift, type Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as key } from '@cella/org-key/app'
@@ -163,15 +163,26 @@ export const shifts = (name: string): Shift[] => [
 export const views = (name: string): Preset[] =>
   presets([...(collection(name)?.view.views ?? []), ...extensions(name).flatMap((e) => e.extension.views ?? [])])
 
-const order = ['governance', 'work', 'finance', 'platform']
+const order = ['home', 'governance', 'work', 'finance', 'platform']
 
-export const nav: Nav = order
-  .map((group) => ({
-    group,
-    items: apps.flatMap((a) =>
-      Object.entries(a.collections ?? {})
-        .filter(([, c]) => c.view.group === group)
-        .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon })),
-    ),
-  }))
-  .filter((g) => g.items.length)
+// The sidebar: the co-op's home and what waits on the acting member, then
+// each group's collections. `counts` are the counted collections' rows
+// for the acting member, by address.
+export const nav = (counts: Record<string, number> = {}): Nav =>
+  order
+    .map((group) => ({
+      group,
+      items: [
+        ...(group === 'home' ? [{ href: '/', title: 'Home', icon: icons.House }] : []),
+        ...apps.flatMap((a) =>
+          Object.entries(a.collections ?? {})
+            .filter(([, c]) => c.view.group === group)
+            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`] })),
+        ),
+      ],
+    }))
+    .filter((g) => g.items.length)
+
+// The collections the sidebar counts for the acting member.
+export const counted = (): string[] =>
+  apps.flatMap((a) => Object.entries(a.collections ?? {}).flatMap(([name, c]) => (c.view.counted ? [name] : [])))

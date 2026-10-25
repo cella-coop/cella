@@ -57,6 +57,9 @@ import { slice as keyWorker } from '@cella/org-graft-key-worker/api'
 import { slice as memberWorker } from '@cella/org-graft-member-worker/api'
 import { slice as payslipWorker } from '@cella/org-graft-payslip-worker/api'
 import { slice as timesheetWorker } from '@cella/org-graft-timesheet-worker/api'
+import { slice as circleMemberTimesheet } from '@cella/org-graft-circle-member-timesheet/api'
+import { slice as circleExpenseMember } from '@cella/org-graft-circle-expense-member/api'
+import { slice as circleMemberPayslip } from '@cella/org-graft-circle-member-payslip/api'
 
 // The server sides the shell mounts: each feat's collections, each graft's
 // extensions of the feats it joins, and the root's own, which may join
@@ -124,6 +127,9 @@ export const slices: Slice[] = [
   timesheetWorker,
   documentMember,
   decisionMemberWorker,
+  circleMemberTimesheet,
+  circleExpenseMember,
+  circleMemberPayslip,
   root,
 ]
 

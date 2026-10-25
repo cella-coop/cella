@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Section, Table, type Column } from '@cella/org-ui'
+  import { date, Section, Table, type Column } from '@cella/org-ui'
   import type { Path } from '../../models/path.ts'
 
   // The way someone came to membership, step by step: hired, on probation
@@ -12,9 +12,9 @@
     !data
       ? []
       : [
-          ...(data.hired ? [{ id: 'hired', step: 'Hired', day: data.hired, what: data.left ? `left on ${data.left}` : 'employed' }] : []),
+          ...(data.hired ? [{ id: 'hired', step: 'Hired', day: data.hired, what: !data.left ? 'employed' : data.ended ? `left on ${date(data.left)}` : `employed until ${date(data.left)}` }] : []),
           ...(data.probation
-            ? [{ id: 'probation', step: 'Candidate', day: data.probation, what: `probation to ${data.probationEnd}, pledging ${data.pledged} shares` }]
+            ? [{ id: 'probation', step: 'Candidate', day: data.probation, what: `probation to ${date(data.probationEnd)}, pledging ${data.pledged} shares` }]
             : []),
           ...(data.invited ? [{ id: 'invited', step: 'Invited', day: data.invited, what: 'asked to join' }] : []),
           ...(data.admitted ? [{ id: 'admitted', step: 'Member', day: data.admitted, what: 'admitted by the assembly' }] : []),

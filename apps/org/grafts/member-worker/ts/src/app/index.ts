@@ -1,4 +1,4 @@
-import type { App, Event, Tone } from '@cella/org-ui'
+import { date, type App, type Event, type Tone } from '@cella/org-ui'
 import type { Path, Stage } from '../models/path.ts'
 import Candidacy from './blocks/Candidacy.svelte'
 import PathBlock from './blocks/Path.svelte'
@@ -9,7 +9,7 @@ const events = (p: Path | null): Event[] =>
   !p
     ? []
     : [
-        ...(p.probation ? [{ at: p.probation, text: `candidate, on probation to ${p.probationEnd}` }] : []),
+        ...(p.probation ? [{ at: p.probation, text: `candidate, on probation to ${date(p.probationEnd)}` }] : []),
         ...(p.hired ? [{ at: p.hired, text: 'hired' }] : []),
       ]
 

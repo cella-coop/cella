@@ -8,7 +8,7 @@
   let { data }: { data: Path | null; id: string } = $props()
 </script>
 
-{#if data?.stage === 'employee' && !data.left}
+{#if data?.stage === 'employee' && !data.ended}
   <Popover label="Open a candidacy for membership" menu={false} wide button>
     {#snippet trigger()}Candidacy…{/snippet}
     <Form action="candidacy" submit="Open the candidacy">

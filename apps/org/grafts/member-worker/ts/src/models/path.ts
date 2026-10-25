@@ -24,6 +24,8 @@ export interface Path {
   stage: Stage
   hired: string | null
   left: string | null
+  // Whether their contract has ended, by the scope's day.
+  ended: boolean
   probation: string | null
   probationEnd: string | null
   pledged: number | null

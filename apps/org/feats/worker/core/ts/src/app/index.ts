@@ -23,8 +23,6 @@ export const app: App = {
           { key: 'job', label: 'Job', role: 'sub', value: (w: Worker) => w.job },
           { key: 'contract', label: 'Contract', kind: 'badge', role: 'hidden', value: (w: Worker) => contracts[w.contract] },
           { key: 'start', label: 'Since', kind: 'date', role: 'hidden', value: (w: Worker) => w.start },
-          { key: 'until', label: 'Until', kind: 'date', role: 'hidden', value: (w: Worker) => w.until },
-          { key: 'hours', label: 'Hours a week', kind: 'number', role: 'hidden', value: (w: Worker) => w.hours },
           { key: 'employed', label: 'Employed', kind: 'badge', role: 'meta', value: standing, tone },
         ],
         look: { layout: 'table' },

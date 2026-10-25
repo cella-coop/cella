@@ -58,7 +58,7 @@ sequenceDiagram
   device, the digest of the request and a single-use nonce
   ([signatures](signatures.md)). `submit` checks it before any rule runs:
   the signature, then, under the log's head lock, that the device is a
-  current key of the actor (the keyring, the `key` feat's) and that its
+  current key of the actor (the keyring, the `person` feat's) and that its
   nonce was never counted. A forged signature, a revoked or another
   member's device, a reused nonce or a request swapped under a valid
   signature is refused, and no verdict number is used.
@@ -97,7 +97,7 @@ sequenceDiagram
   the database to another host, which arrives at rung 6
   ([ratchet](ratchet.md#moving-a-notary)).
 - **Who may write is a rule like any other.** Each op that needs a power
-  names it in `cella.power`, registered by its feat; the `circle-member`
+  names it in `cella.power`, registered by its feat; the `circle-membership`
   graft attaches a rule to every such op that the actor holds, on the
   verdict date, a seat whose role has a mandate granting the power, within
   its limit for the write's amount. A write with no power is the actor's
@@ -111,7 +111,7 @@ sequenceDiagram
   `payslip:run.pay` and `account:capital.repay` under their power, and
   `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
   year, is checked by the graft that sees what spends it:
-  `circle-expense-member` sums an approver's approvals.
+  `circle-expense-membership` sums an approver's approvals.
 - **Confluent writes are logged in signed batches** once devices queue
   them offline (rung 2); until then each goes through the server's rules
   on its own.
@@ -126,7 +126,7 @@ rules crate, which also compiles to WASM for browsers, devices and auditors:
   the votes, never stored;
 - the write being judged: `cella.op()`, `cella.actor()`, `cella.device()`;
   whether the actor may use a power is not a primitive but the
-  `circle-member` graft's composed rule, `circle_member.may(actor, power,
+  `circle-membership` graft's composed rule, `circle_membership.may(actor, power,
   cents, day)`, since only that graft sees both mandates and seats;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;
@@ -257,7 +257,7 @@ erased until their legal clock runs out.
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
   scope's seed, so the database alone, without the key file, opens
   nothing. Destroying a key makes every value it sealed unreadable.
-- **The classes and their clocks**, `cella.retention`: `member-profile`
+- **The classes and their clocks**, `cella.retention`: `profile`
   and `contact`, erased when asked; `payroll`, kept five years (Code du
   travail, art. L3243-4, the employer's copy of each payslip);
   `expense-receipt` and `books`, kept ten years (Code de commerce, art.
@@ -270,9 +270,9 @@ erased until their legal clock runs out.
   and its BLAKE3, never the bytes, and erasure empties them. Who may open
   one is a rule, the file feat's and the grafts' that see a power over
   what it records.
-- **Erasure** is a write: `member:member:erase`, decided, for a member's
-  whole profile; `member:member:forget`, the member's own, for their
-  optional contact fields; `client:client:erase`, under the
+- **Erasure** is a write: `membership:member:erase`, decided, for a former
+  member's whole profile, the person's; `person:person:forget`, the
+  person's own, for their optional contact fields; `client:client:erase`, under the
   `erase-personal-data` power, for a person among the clients. Each
   erases the subject's erasable classes at once, keys, salts and values,
   and redacts their columns in the read models; the restricted classes

@@ -52,8 +52,8 @@ surplus split, then the assembly.
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
 | No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the co-op's thresholds |
 | Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
-| New members do not understand what they own | medium | a member's page: what joining asks, step by step, each kept by the slice that knows it, and what they own and decide, read back as sentences from the statutes' terms, their seats and their mandates |
-| Workers who are not members, and the probation before admission | medium | `worker`: every worker's contract, member or not, so their time and pay rest on their employment; a candidacy's probation and pledge, and the admission proposed from it once the probation ends |
+| New members do not understand what they own | medium | a member's page among the people: what joining asks, step by step, each kept by the slice that knows it, and what they own and decide, read back as sentences from the statutes' terms, their seats and their mandates |
+| Workers who are not members, and the probation before admission | medium | one `person` for everyone, with `membership` and `employment` nested in it: every worker's contract, member or not, so their time and pay rest on their employment, and a worker invited to join is the same person, their roles chips on the People collection; a candidacy's probation and pledge, and the admission proposed from it once the probation ends |
 
 ### People
 

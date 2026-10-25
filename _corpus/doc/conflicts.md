@@ -20,10 +20,10 @@ decision. Lanterne's state is that of 24 October 2026.
 
 | Write | Label | Verdict |
 |---|---|---|
-| `key.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
-| `key.revoke`, `key.recover` | ordered | right |
+| `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
+| `person.revoke`, `person.recover` | ordered | right |
 | `circle.nest` | ordered | right, at rung 1 already; **applied**: decided, and refused when a nesting settled first makes it a cycle ([tree](#the-circles-form-a-tree)) |
-| `circle-member:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-member` graft, which owns the relationship; both decided |
+| `circle-membership:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
 | `circle.mandate.grant`, `.revoke` | ordered | right; **applied**: decided, by the circle above the role's |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |
@@ -51,33 +51,33 @@ decision. Lanterne's state is that of 24 October 2026.
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
 | `client.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
-| `client.erase`, `member.erase`, `.forget` | ordered | right: a tombstone against every later value |
-| `member.invite`, `.profile` | confluent | right; **applied**: an invitation carries the invitee's first device; erasure wins |
-| `member.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
+| `client.erase`, `membership.erase`, `person.forget` | ordered | right: a tombstone against every later value |
+| `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation carries the invitee's first device; erasure wins |
+| `membership.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
 | `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
 | `decision.close` | ordered | right; **applied**: a passing close admits, seats and enrols in its own verdict |
 | `decision:message.post` | confluent | right: messages commute, each its author's, ordered by receipt; a closed decision takes none, as it takes no stance ([who votes](#who-votes)) |
 | `project.create`, `project:milestone.add`, `.complete`, `project.archive` | confluent | right; rung 2 numbers milestones by device ([work](#work-is-registers)) |
 | `project.budget` | ordered | right: against the shares ([shares](#a-share-never-exceeds-the-budget)) |
-| `member-project:project.share` | bounded on the budget | right |
+| `membership-project:project.share` | bounded on the budget | right |
 | `task.create`, `.move`, `.complete` | confluent | right: field registers, the last writer wins |
-| `member-task:task.assign`, `project-task:task.file` | confluent | right: registers |
+| `membership-task:task.assign`, `project-task:task.file` | confluent | right: registers |
 | `client-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
-| `worker.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
-| `member-worker:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
-| `timesheet-worker:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
-| `project-timesheet-worker:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
-| `document-member:version.read` | confluent | right: the member's own register, its first day standing |
+| `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
+| `employment-membership:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
+| `employment-timesheet:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
+| `employment-project-timesheet:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
+| `document-membership:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
 | `meeting.hold`, `.cancel` | ordered | right: one of them stands, and the hold fixes the agenda and who came |
-| `meeting-member:attendance.mark`, `.record` | confluent | right: a register per member; fixed by the hold |
+| `meeting-membership:attendance.mark`, `.record` | confluent | right: a register per member; fixed by the hold |
 | `file.upload` | confluent | right: a fact, the uploader's own; two uploads commute ([files](#files-are-facts-and-imports-are-the-writes-they-carry)) |
-| `expense-file:expense.attach`, `file-member:member.attach`, `file-worker:worker.attach` | confluent | right: facts, a file attached once; a receipt is refused once its expense is refused or reimbursed |
+| `expense-file:expense.attach`, `file-membership:member.attach`, `employment-file:worker.attach` | confluent | right: facts, a file attached once; a receipt is refused once its expense is refused or reimbursed |
 | `import:run.record` | confluent | right: the importer's own record; each line is the write it carries, with that write's label |
 | `account-transaction:entry.carry` | confluent | right: entries add up in any order, and an account two carries open keeps the first's label |
 
@@ -89,7 +89,7 @@ entry contends with `account.period.close`: `transaction.post`, `.pay`
 and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
 `invoice-transaction`; `account.draw` and `patronage.distribution.distribute`,
 `expense.approve` and `.reimburse`, `payslip:run.approve` and `.pay`
-through their grafts; and `member.admit`, whose subscription posts. An
+through their grafts; and `membership.admit`, whose subscription posts. An
 admission never waits on the books: where the day's period is not open,
 it subscribes nothing.
 
@@ -186,17 +186,17 @@ void settled and posted the credit note `je-0026`.
 
 ## Who votes
 
-Owners: the `decision-member` graft for membership (admitted, suspended,
+Owners: the `decision-membership` graft for membership (admitted, suspended,
 exited); the roll of a circle's decision needs positions too, which are the
-`circle-member` graft's. The roll, and whether a decision passes on it, are
-the `circle-decision-member` graft's, which the decision feat declares.
+`circle-membership` graft's. The roll, and whether a decision passes on it, are
+the `circle-decision-membership` graft's, which the decision feat declares.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `decision.vote` vs `decision.close` | the vote counts | the vote is too late | the outcome changes after it was announced |
-| `decision.vote` vs `member.suspend` / `.exit` | the vote counts if suspension follows close | the vote is dropped | a suspended member's vote decides |
-| `decision.close` vs `member.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
-| `decision.close` vs `circle-member:position.add` / `.remove` | as admit | as admit | as admit |
+| `decision.vote` vs `membership.suspend` / `.exit` | the vote counts if suspension follows close | the vote is dropped | a suspended member's vote decides |
+| `decision.close` vs `membership.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
+| `decision.close` vs `circle-membership:position.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
 | `decision:message.post` vs `decision.close` | the message is part of the deliberation | the message is refused: the deliberation is over | — |
 
@@ -224,9 +224,9 @@ d-2026-012. Inès is not on its roll: her admission is what it decides.
 
 ## A mandate's limit
 
-Owner: the `circle-member` graft, through `circle_member.may(actor, power,
+Owner: the `circle-membership` graft, through `circle_membership.may(actor, power,
 cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
-and whether the member is active (the `member` feat's). It spans every
+and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
 names the power its ops need in `cella.power`, a core registry, and the
 graft attaches its rule to every op listed, as `decision.cites` does for
@@ -235,8 +235,8 @@ the roll.
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
 | `expense.approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | someone without authority spends |
-| spend vs `circle-member:position.remove` | the spend stands | refused | as above |
-| spend vs `member.suspend` / `.exit` | the spend stands | refused | as above |
+| spend vs `circle-membership:position.remove` | the spend stands | refused | as above |
+| spend vs `membership.suspend` / `.exit` | the spend stands | refused | as above |
 | `expense.approve` vs `expense.approve`, one budget | both, if the budget covers both | both, if it covers both | the budget is overspent |
 
 The spend is bounded, the revocation ordered: a revocation stops new
@@ -252,7 +252,7 @@ mandate names them apart: `limit` caps a single write, in cents;
 `budget`, with `per` ("month" or "year"), caps a cumulative total over a
 period. **Applied**: a budget is enforced on the writes that spend it,
 by the graft that sees the mandate, the seat and the spend:
-`circle-expense-member` sums what the approver approved over the
+`circle-expense-membership` sums what the approver approved over the
 budget's period, this approval included. Two approvals by one member are
 judged one after the other under the log's head lock.
 
@@ -288,14 +288,14 @@ the same afternoon by Hugo and Malik: the second is refused.
 
 ## A revoked key signs nothing new
 
-Owner: the `key` feat; signatures are checked at ingress, before any rule.
+Owner: the `person` feat; signatures are checked at ingress, before any rule.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `key.revoke` K vs a write signed by K | the write stands | the write is refused | a thief's writes count |
-| `key.revoke` K vs `key.enrol` signed by K | the new device stays enrolled | the enrolment is refused | a stolen key enrols a device that outlives it |
-| `key.recover` vs `key.recover` | the second refused | the first refused | two new keys for one address |
-| `key.recover` vs `key.revoke` | as two orderings | as two orderings | an attacker's recovery survives the member's revocation |
+| `person.revoke` K vs a write signed by K | the write stands | the write is refused | a thief's writes count |
+| `person.revoke` K vs `person.enrol` signed by K | the new device stays enrolled | the enrolment is refused | a stolen key enrols a device that outlives it |
+| `person.recover` vs `person.recover` | the second refused | the first refused | two new keys for one address |
+| `person.recover` vs `person.revoke` | as two orderings | as two orderings | an attacker's recovery survives the member's revocation |
 
 `enrol` was labelled confluent, but it is not: enrol-then-revoke and
 revoke-then-enrol end differently, and the first order lets a stolen key
@@ -397,15 +397,15 @@ decision, and distributing it is finance's.
 Owners: the `patronage` feat for the terms, the portions and their sums;
 the grafts that know each basis for its parts: `patronage-payslip` by
 pay and in equal parts, `patronage-timesheet` by time worked;
-`account-member-patronage` for the split between shares and cash;
-`account-member-patronage-transaction` for the shares credited;
+`account-membership-patronage` for the split between shares and cash;
+`account-membership-patronage-transaction` for the shares credited;
 `decision-patronage` for the adoption.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `distribution.approve` vs `terms.adopt` over its year | the adoption refused: the year is approved | the approval divides by the new terms | a split made by terms adopted after it |
 | `distribution.approve` vs a salary or `timesheet:period.approve` in its year | the parts were fixed by the approval | the parts read it | parts that no longer add up to what was paid or worked |
-| `distribution.distribute` vs `member.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
+| `distribution.distribute` vs `membership.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
 | `terms.adopt` vs `terms.adopt`, one year | the later adopted governs | the later adopted governs | two terms for one year |
 
 All ordered; right. **Applied**: the parts are made by triggers in the
@@ -427,16 +427,16 @@ pay and employ half of each associate's part in shares at 50 €.
 
 ## Membership changes are decided
 
-Owners: the `member` feat for status; the `decision-member` graft for the
+Owners: the `membership` feat for status; the `decision-membership` graft for the
 deciding vote.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `member.admit` vs `member.invite` | refused: not invited | admitted | admitted without an invitation |
-| `member.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
-| `member.exit` vs the capital account | — | — | a graft joining member and the books freezes it in the exit's transaction, on the exit's update of the status |
-| `member.invite` vs `member.invite`, one device key | the second refused: the key is carried | the first refused | one device enrolled for two members |
-| `member.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
+| `membership.admit` vs `membership.invite` | refused: not invited | admitted | admitted without an invitation |
+| `membership.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
+| `membership.exit` vs the capital account | — | — | a graft joining membership and the books freezes it in the exit's transaction, on the exit's update of the status |
+| `membership.invite` vs `membership.invite`, one device key | the second refused: the key is carried | the first refused | one device enrolled for two members |
+| `membership.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
 
 `invite` and `profile` are rightly confluent; `admit`, `suspend` and `exit`
 rightly ordered. **Applied**: suspension and exit are decided, citing the
@@ -445,13 +445,13 @@ they needed a power no mandate granted.
 
 ## An admission settles with its close
 
-Owners: the `circle-decision-member` graft, which counts the roll; the
-`member` feat, `circle-member` and `key-member` for the state each
-admission changes.
+Owners: the `circle-decision-membership` graft, which counts the roll; the
+`membership` feat, with the first device it enrols, and `circle-membership`
+for the state each admission changes.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| close admitting M vs `circle-member:position.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
+| close admitting M vs `circle-membership:position.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
 | close admitting M vs the admission alone | — | — | an active member with no seat and no device, who cannot vote or sign |
 | `decision.propose` vs `decision.vote` on it | the motion is fixed before the stance | no motion is added after it | members consent to one thing and are counted for another |
 
@@ -460,9 +460,9 @@ invitations carried settle in one transaction under one verdict, or not
 at all. Before, the close settled and each admission and seat followed as
 writes of their own, and a refused seat left an active member with none.
 **Applied**: the decision feat's close is a write a graft extends, and
-`circle-decision-member` extends it; the rules of each slice run on the
-close (`decision_member.closes`, `circle_decision_member.settles`, and
-`key-member`'s trigger). What else a decision decides, a suspension, a
+`circle-decision-membership` extends it; the rules of each slice run on the
+close (`decision_membership.closes`, `circle_decision_membership.settles`, and
+`membership`'s trigger). What else a decision decides, a suspension, a
 seat, a nesting, a mandate, is carried out after the close, each its own
 decided write: a refusal there leaves the decision passed and the motion
 undone, which its outcome shows.
@@ -472,13 +472,13 @@ undone, which its outcome shows.
 
 ## A power reaches down the tree
 
-Owners: the `circle-member` graft for how far a power reaches
-(`circle_member.over`); `circle-member-timesheet` and
-`circle-member-project` for what a write concerns.
+Owners: the `circle-membership` graft for how far a power reaches
+(`circle_membership.over`); `circle-membership-timesheet` and
+`circle-membership-project` for what a write concerns.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `timesheet:period.approve` by a lead vs `circle-member:position.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
+| `timesheet:period.approve` by a lead vs `circle-membership:position.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
 | `project.budget` by a lead vs `circle.nest` of the project's circle away | set | refused: the circle is no longer within the lead's | a lead budgets another circle's project |
 
 A power held through a seat reaches the seat's circle and the circles
@@ -490,16 +490,16 @@ is Web's; Yusuf may.
 
 ## Erasure wins
 
-Owner: the feat holding the data (`client`, `member`), with the vault.
+Owner: the feat holding the data (`client`, `person`), with the vault.
 
 | Pair | A first | B first | Both confluent, last writer wins |
 |---|---|---|---|
-| erase a person vs `client.update` / `member.profile` | the update is erased | the update re-adds the data | personal data returns after erasure |
+| erase a person vs `client.update` / `person.profile` | the update is erased | the update re-adds the data | personal data returns after erasure |
 
 Field registers with the last writer winning are right for `client` and
-`member.profile`, except against erasure: an erasure is a tombstone that
+`person.profile`, except against erasure: an erasure is a tombstone that
 wins over every update, whichever arrives first. **Applied**:
-`client.erase`, `member.erase` and `member.forget` are ordered, and the
+`client.erase`, `membership.erase` and `person.forget` are ordered, and the
 notary, under the log's lock, refuses any later value of an erased
 subject's class (`vault.erased`); an update that settled first is erased
 with the rest. **Rung 2**: an update queued offline before the erasure
@@ -507,7 +507,7 @@ must not resurrect the data.
 
 ## A share never exceeds the budget
 
-Owner: the `member-project` graft, which sees both the budget (the
+Owner: the `membership-project` graft, which sees both the budget (the
 `project` feat's) and the shares (its own).
 
 | Pair | A first | B first | Both confluent |
@@ -519,7 +519,7 @@ Owner: the `member-project` graft, which sees both the budget (the
 
 The share is bounded, as `account.draw` is: the only thing two shares can
 break together is the budget running out, the right they spend. Setting
-the budget is ordered against them, by `member_project.covers`. At rung 1
+the budget is ordered against them, by `membership_project.covers`. At rung 1
 the share's trigger locks the project's row, so shares and a budget
 change are serialised. **Rung 2**: a lead's device holds a slice of the
 budget offline and grants shares from it.
@@ -554,7 +554,7 @@ approved his October that morning: refused.
 
 ## Work is registers
 
-Owners: the `task` feat for a task's fields; `member-task` for its
+Owners: the `task` feat for a task's fields; `membership-task` for its
 assignee; `project-task` for its project; `project` for milestones.
 
 | Pair | A first | B first | Both confluent |
@@ -573,23 +573,23 @@ needs an id of its own, its number a position.
 
 ## Capital is paid in and repaid by the statutes
 
-Owners: `account-member` for the freeze, a trigger on the member's
+Owners: `account-membership` for the freeze, a trigger on the member's
 status in the write that ends the membership, whichever it is;
-`account-member-transaction` for the draws, the subscription, the
+`account-membership-transaction` for the draws, the subscription, the
 payments in and, on exit, the move to what is owed and the repayments;
-`account-member-payslip-transaction` for the instalments withheld from
+`account-membership-payslip-transaction` for the instalments withheld from
 pay; the `account` feat for the statutes' clauses.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `account.draw` vs `member.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
+| `account.draw` vs `membership.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
 | `account.draw` vs `account.draw`, one member | both, if the limit covers both | both, if it covers both | the limit is overdrawn |
-| `member.admit` vs `account.period.close` of its month | the subscription posts in the month | nothing is subscribed; the admission settles | an admission refused by the books |
+| `membership.admit` vs `account.period.close` of its month | the subscription posts in the month | nothing is subscribed; the admission settles | an admission refused by the books |
 | `account.capital.pay` vs `account.capital.pay`, one member | both, if what is owed covers both | both, if it covers both | a subscription paid beyond what it cost |
-| `account.capital.pay` vs `member.exit` | the payment stands; the exit cancels the rest | refused: the exit cancelled what was owed | money taken on a cancelled subscription |
+| `account.capital.pay` vs `membership.exit` | the payment stands; the exit cancels the rest | refused: the exit cancelled what was owed | money taken on a cancelled subscription |
 | `payslip:run.pay` vs `account.capital.spread` | the instalment at the old plan | at the new one | none: the payment reads the plan that stands |
 | `account.capital.repay` vs `account.capital.repay`, one repayment | the second refused: it is paid | the first refused | a repayment paid twice |
-| `member.exit` vs `account.period.close` of its month | the capital moves to 4567 and is drawn up | nothing moves; the capital stays frozen | an exit refused by the books |
+| `membership.exit` vs `account.period.close` of its month | the capital moves to 4567 and is drawn up | nothing moves; the capital stays frozen | an exit refused by the books |
 
 The draw is bounded on the member's limit, a right granted in advance;
 the exit is ordered and freezes in its own transaction, so no draw
@@ -612,8 +612,8 @@ first is refused on 29 November 2026 and paid on the 30th, once.
 
 ## An expense is decided once, within a budget
 
-Owner: the `expense` feat for the lifecycle; `circle-expense-member` for
-the budget; `circle-member` for the power and its limit.
+Owner: the `expense` feat for the lifecycle; `circle-expense-membership` for
+the budget; `circle-membership` for the power and its limit.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
@@ -657,17 +657,17 @@ the bank.
 
 ## A worker's time and pay rest on their employment
 
-Owners: the `worker` feat for the contract; `timesheet-worker` and
-`payslip-worker` for the time and pay that rest on it; `member-worker`
+Owners: the `employment` feat for the contract; `employment-timesheet` and
+`employment-payslip` for the time and pay that rest on it; `employment-membership`
 for the candidacy.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `hire` vs `hire`, one worker | the second refused | the first refused | two contracts for one person, neither the other's end |
-| `hire` vs `timesheet-worker:entry.log` by them | the log stands | refused: no worker | — |
+| `hire` vs `employment-timesheet:entry.log` by them | the log stands | refused: no worker | — |
 | `candidacy.open` vs `candidacy.open`, one worker | the second refused | as A | two probations, two pledges |
-| `candidacy.open` vs `member.admit` | the admission follows | refused: a member is no candidate | — |
-| `timesheet-worker:entry.log` vs `timesheet:period.approve` | as the feat's log | as the feat's log | as the feat's log |
+| `candidacy.open` vs `membership.admit` | the admission follows | refused: a member is no candidate | — |
+| `employment-timesheet:entry.log` vs `timesheet:period.approve` | as the feat's log | as the feat's log | as the feat's log |
 
 Every write is a fact, the hire and the candidacy once each, so all stay
 confluent: what can break is only a second of one, which the key
@@ -683,7 +683,7 @@ refused.
 ## A meeting is held once
 
 Owners: the `meeting` feat for the meeting and its agenda;
-`meeting-member` for who came; `circle-meeting-member` for who is
+`meeting-membership` for who came; `circle-meeting-membership` for who is
 expected and who may record them.
 
 | Pair | A first | B first | Both confluent |
@@ -720,13 +720,13 @@ count; arriving after, it is refused and he stays excused.
 
 ## Files are facts, and imports are the writes they carry
 
-Owners: the `file` feat for the files; `expense-file`, `file-member` and
-`file-worker` for what each attaches; the `import` feat for the record;
+Owners: the `file` feat for the files; `expense-file`, `file-membership` and
+`employment-file` for what each attaches; the `import` feat for the record;
 `account-transaction` for the carry.
 
 A file never changes, so uploading one is a fact: `file.upload`, and the
 grafts' writes that store a file and attach it, `expense-file:expense.attach`,
-`file-member:member.attach` and `file-worker:worker.attach`, are
+`file-membership:member.attach` and `employment-file:worker.attach`, are
 confluent. Two attached commute, a file is attached once, and a receipt
 is refused once its expense is refused or reimbursed, which the expense
 feat orders. The claim that carries its receipt is `expense.capture`
@@ -754,7 +754,7 @@ nothing.
 | `circle.message`, `document.comment` | appended; no rule reads them |
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
 | `decision.propose` | a fact; the roll and the motions are fixed when the server receives it, and the cutoff by `close` |
-| `member.invite` | two invitations do no harm, unless they carry one device key, which is refused |
+| `membership.invite` | two invitations do no harm, unless they carry one device key, which is refused |
 | `client.add` | duplicates are merged by hand |
 | `project.create`, `task.create` | facts; a project's slug taken twice is refused, a task's number is the server's |
 | `project:milestone.complete` | idempotent: the first day stands |
@@ -773,7 +773,7 @@ The matrix found writes no `ops.ts` declares:
 | `account.open` | ordered | account codes are unique in the scope |
 | `document.version` | confluent | adoption names versions nothing saves; **applied**, now declared |
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
-| erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `client.erase`, `member.erase` and `.forget` |
+| erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `client.erase`, `membership.erase` and `.forget` |
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them |
@@ -782,7 +782,7 @@ The matrix found writes no `ops.ts` declares:
 
 ## Recommended label changes
 
-1. **Applied.** `key.enrol`: confluent → **ordered**. Enrol and revoke do
+1. **Applied.** `person.enrol`: confluent → **ordered**. Enrol and revoke do
    not commute; a stolen key can plant a device the revocation misses.
 2. **Applied.** `transaction.credit` and `.debit` → **one
    `transaction.post`, confluent**. An entry debits and credits; the
@@ -801,7 +801,7 @@ The matrix found writes no `ops.ts` declares:
    it is ordered at rung 1 too, and `document.adopt`'s that the base is
    the adopted version, not the draft.
 7. **Applied, beyond this page's recommendations.** Positions move from
-   `circle` to the `circle-member` graft, which owns the relationship:
-   `circle-member:position.add` and `.remove`, both ordered. A mandate's
+   `circle` to the `circle-membership` graft, which owns the relationship:
+   `circle-membership:position.add` and `.remove`, both ordered. A mandate's
    cap splits into `limit` (per write) and `budget` (cumulative, over
    `per`).

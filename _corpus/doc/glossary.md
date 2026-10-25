@@ -10,14 +10,14 @@ updated = 2026-10-25
 | Term | Meaning |
 |---|---|
 | **app** | a root feat of the repository; `org` is the ERP |
-| **feat** | a collection of things and the code that keeps it, named for the collection: `member`, `invoice`; imports no other feat |
-| **graft** | a relationship between feats: its junction, model and handlers, named by the feats it joins in alphabetical order (`client-invoice`) |
+| **feat** | a collection of things and the code that keeps it, named for the collection: `person`, `invoice`; imports no other feat; a feat may hold feats of its own, which inherit its core (**nested feat**) |
+| **graft** | a relationship between feats: its junction, model and handlers, named by the feats it joins in alphabetical order (`client-invoice`), at the lowest node that holds them all |
 | **slice** | a feat or a graft, either one |
 | **slice test** | a test of exactly one slice, in its package's `_tests/`, run by `cella test slice` on a database holding only that slice's part of the tree |
 | **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
 | **increment** | a chunk of build work; never a slice |
 | **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
-| **inbox** | what waits on the acting member, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |
+| **inbox** | what waits on the acting person, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |
 | **home** | the co-op's dashboard, widgets pinned from many collections |
 | **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
@@ -26,9 +26,9 @@ updated = 2026-10-25
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
 | **subsidiarity** | a rule lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
-| **address** | a member's stable name in a scope, `ana@coop-a`; keys rotate under it |
-| **device key** | an Ed25519 key on a member's device that signs their writes |
-| **guardian** | a person holding a share of a member's recovery secret |
+| **address** | a person's stable name in a scope, `ana@coop-a`; keys rotate under it |
+| **device key** | an Ed25519 key on a person's device that signs their writes |
+| **guardian** | a person holding a share of another's recovery secret |
 | **label** | how a write contends: confluent, bounded or ordered; part of its type |
 | **confluent** | a write that merges in any order and never waits: an edit, a vote cast, a payment |
 | **bounded** | a write that spends a right granted in advance and waits only when the right runs out: a draw, an invoice number |
@@ -38,7 +38,7 @@ updated = 2026-10-25
 | **notary** | the scope's office for every write: the `cella` Postgres extension, a layer of org's core under every feat, not a feat; it alone writes the log |
 | **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
 | **nonce** | the single-use random value in a write's signature, so the signature counts once |
-| **keyring** | the one function that says whether a device is a current key of an address: the `key` feat's, called by the notary before any rule |
+| **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any rule |
 | **verdict** | the notary's signed ruling on an ordered write, Settled or Refused, committed with its state change |
 | **log** | the scope's hash-chained, signed record of every accepted write, from which the state folds |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
@@ -52,7 +52,7 @@ updated = 2026-10-25
 | **rung** | a step of the ratchet, from the hosted pilot to zero trust |
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |
 | **commitment** | what the log keeps of a personal value: the BLAKE3, under its own domain, of a fresh salt and the value, which opens only while the vault holds both |
-| **retention class** | how long the law keeps a kind of personal data: `member-profile` and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
+| **retention class** | how long the law keeps a kind of personal data: `profile`, a person's name and records, and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
 | **erasure** | an ordered write that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
 | **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
 | **file** | bytes the co-op keeps, named by their BLAKE3, which the database computes and the log commits to: its own papers, receipts, employment and member records; a personal file has a retention class and a subject |
@@ -70,7 +70,10 @@ updated = 2026-10-25
 | **SCOP** | société coopérative et participative: France's worker co-op, a SARL or SA whose workers hold the majority of capital and votes |
 | **SCIC** | société coopérative d'intérêt collectif: France's multi-stakeholder co-op, its members in colleges |
 | **gérant(e)** | the elected manager and legal representative of a SCOP SARL |
-| **worker** | someone the co-op employs, member or not, under a contract that runs from a first day to a last; their time and pay rest on their employment |
+| **person** | someone the co-op knows, by their address, with their name and devices, whatever they hold; a member if they hold a membership, a worker if they hold an employment, roles derived and never stored |
+| **membership** | a person's belonging to the co-op, invited to exited, with the shares they hold; the feat nested in `person` that keeps it |
+| **employment** | a person's contract with the co-op, member or not; the feat nested in `person` that keeps it |
+| **worker** | a person who holds an employment, under a contract that runs from a first day to a last; their time and pay rest on their employment |
 | **candidate** | a worker serving a probation before the assembly may admit them, pledging the shares they will subscribe |
 | **probation** | the six months to a year a candidate works before the assembly votes on their admission; served in employment, kept with the candidacy |
 | **joining** | what membership asks of a new member, step by step: admitted, the texts read, the capital subscribed, a device enrolled, the circles joined |

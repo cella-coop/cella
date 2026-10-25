@@ -17,22 +17,24 @@ layers inside each package and the write labels and feat rulings of
 ```mermaid
 flowchart BT
   core["apps/org/core: ops, crypto, log, keystore, …"]
-  member["feats/member/core"]
+  person["feats/person/core"]
+  membership["feats/person/feats/membership/core"]
   decision["feats/decision/core"]
   circle["feats/circle/core"]
-  graft["grafts/decision-member"]
-  three["grafts/circle-decision-member"]
+  graft["grafts/decision-membership"]
+  three["grafts/circle-decision-membership"]
   root["apps/org/ts: the shell"]
-  member --> core
+  person --> core
+  membership --> person
   decision --> core
   circle --> core
-  graft --> member
+  graft --> membership
   graft --> decision
   three --> graft
   three --> circle
   root --> three
   root --> graft
-  root --> member
+  root --> membership
   root --> decision
 ```
 
@@ -46,7 +48,8 @@ A node is a directory with a `feat.toml`. It holds:
   `sign` (a device's signature on a write), `ui` (the shell's tokens and
   components) and later `auth`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
-- `grafts/` — the joins between its child feats.
+- `grafts/` — the joins between the feats below it, at any depth, that no
+  child of it holds all of ([grafts](#grafts)).
 - `rs/`, `ts/` — the node's root, which assembles it. Only a node that links
   its feats into a binary or a shell has one. Org's `rs/` root is `cella`,
   the CLI that is the repository's one entry point for every development and
@@ -60,15 +63,27 @@ npm package in `ts/`, one to a directory. The workspaces find them by glob
 ## Feats
 
 A feat is a collection of things and is named for the collection it holds:
-`member`, `decision`, `invoice`. `account` holds the chart of accounts,
+`person`, `decision`, `invoice`. `account` holds the chart of accounts,
 members' capital accounts, reserves and funds, and their periods and
 balances; `transaction` holds the journal's entries, a collection in its own
 right. A federation-facing name more specific than these may come later.
 
-What is a top-level feat is decided case by case, and org's feats are all
-top-level: they sit flat under `apps/org/feats/`. A feat nests under another
-only when it is a genuine sub-feature of that one feat. What everything
-grafts onto belongs in the parent's core, not in a feat.
+What is a top-level feat is decided case by case, and most of org's feats
+are top-level: they sit flat under `apps/org/feats/`. A feat nests under
+another only when it is a genuine sub-feature of that one feat, and
+`person` is the one that holds feats today: `membership` and
+`employment`, under `feats/person/feats/`. A person is who someone is,
+their name, their contact details and their devices; a membership and an
+employment are what they may hold, each with its own days. Nested, the
+children inherit the parent's core, so each reads the person and neither
+knows the other, and a person's roles are derived: a member is a person
+who holds a membership, a worker one who holds an employment. A contact
+and an agent are later children of the same shape. What everything grafts
+onto belongs in the parent's core, not in a feat.
+
+A feat's name is unique in its app, at any depth, since it names its
+schema and the grafts that join it; `cella check feats` refuses a second
+one.
 
 The notary is not a feat but a layer under every feat: the `cella`
 Postgres extension, a package of org's core (`apps/org/core/notary/rs`),
@@ -81,9 +96,9 @@ its database to another host, which arrives at rung 6
 
 | A package in | may depend on |
 |---|---|
-| a feat's core | the other packages of its own core; its ancestors' cores |
-| a graft | the cores of the feats it joins; its node's and their ancestors' cores; the grafts of its node that join a proper subset of its feats ([graft order](#graft-order)) |
-| a node's root | its own and its ancestors' cores, its feats' cores and roots, its own grafts |
+| a feat's core | the other packages of its own core; its ancestors' cores, a nested feat's parent's among them |
+| a graft | the cores of the feats it joins and of their ancestors, its node's among them; the grafts at or below its node that join a proper subset of its feats ([graft order](#graft-order)) |
+| a node's root | its own and its ancestors' cores, the cores and roots of the feats below it, the grafts at or below it |
 
 Nothing is ambient: no global module, no library outside the tree, no
 re-export that reaches around it. Third-party crates and npm packages are
@@ -94,9 +109,11 @@ Architecture rules are enforced by tooling wherever a tool can see them.
 `tools/feat-check.mjs` (`cella check feats`) reads each `package.json` and
 `cargo metadata`, the manifests cargo and pnpm read, and not the lockfile.
 It places each package by its path and refuses any other edge. It also
-checks that every graft is declared by a feat it joins, that its name is in order, that every feat it
-names is a feat of its node, that a package's relative imports stay inside
-it, and that a feat's or graft's ops are named for it. Through
+checks that every graft is declared by a feat it joins, that its name is
+in order, that every feat it names is below its node and that no child of
+its node holds them all, that it joins no feat with one nested in it, that
+a feat's name is unique in its app, that a package's relative imports stay
+inside it, and that a feat's or graft's ops are named for it. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
 through `tools/powers.mjs` that the power each op's label names in
 `ops.ts` is the one its SQL registers in `cella.power`, and that an op
@@ -108,10 +125,22 @@ with no power declares a check its SQL backs ([writes](#writes)).
 A graft owns a relationship between feats: its model, its junction table
 with keys into each, and the handlers that react on either side. It is
 named by the feats it joins, hyphenated in alphabetical order
-(`decision-member`), so a feat's name has no hyphen. Most grafts join two
+(`decision-membership`), so a feat's name has no hyphen. Most grafts join two
 feats; a graft may join more where the relationship needs it, but avoid it
 where two-way grafts will do. The feat that extends the others declares it
 in its `feat.toml`. A graft has no pages of its own.
+
+A graft sits at the lowest node that holds every feat it joins: under that
+node's `grafts/`, where no child of the node holds them all. A graft
+joining two of org's feats sits in `apps/org/grafts/`, and so does one
+joining a nested feat to another of org's, as `decision-membership` joins
+`decision` and `person`'s `membership`; one joining two children of
+`person` sits in `feats/person/grafts/`, as `employment-membership`, a
+worker's candidacy for membership, does. A graft names the feats it joins
+whatever their depth, and never a feat with one nested in it: a child
+already reads its parent, so `membership-person` would join nothing. A
+graft that joins a nested feat reads its parent's core too, as the feat
+does: `decision-membership` reads the member's name from `person`.
 
 No foreign key crosses a feat boundary. A feat handles an unlinked entity
 gracefully: an invoice without a client is unbilled, not invalid. The graft
@@ -125,16 +154,19 @@ holds a position: its permission is `<graft>:<entity>:<op>`, served as
 
 A graft's order is the number of feats it joins. A graft that joins N
 feats may read, in code and in SQL, the feats it joins, the cores below
-them, and the grafts of its node that join a proper subset of its feats:
-`circle-decision-member` reads `circle-member` and `decision-member`.
+them, and the grafts at or below its node that join a proper subset of its
+feats, as `decision-employment-membership` reads `person`'s
+`employment-membership`:
+`circle-decision-membership` reads `circle-membership` and `decision-membership`.
 Nothing else: no graft of equal or higher order, and no graft that joins a
 feat it does not. Relationships compose upward, so a higher graft builds on
 lower ones and no lower graft ever depends on one above it. Migrations run
-grafts lowest order first.
+a node's grafts lowest order first, after every node below it, so a lower
+graft at a nested node is in before the graft above that reads it.
 
 A relationship that needs another graft's data therefore lives in the
 graft that joins all the feats involved. A decision's roll needs seats
-(circle and member) and the decision, so it is `circle-decision-member`'s,
+(circle and member) and the decision, so it is `circle-decision-membership`'s,
 and so is everything that counts the roll. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
 cites a decision lists its op in `decision.cites`, and the graft that
@@ -178,8 +210,8 @@ decision. Custom feats are how cella is extended.
 | SQL in | may reference |
 |---|---|
 | a node's core | `cella.*`; the catalog |
-| a feat's schema | its own schema; `cella.*`; the catalog |
-| a graft's schema | its own schema; the schemas of the feats it joins; the schemas of its lower-order grafts; `cella.*`; the catalog |
+| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; the catalog |
 
 A graft's schema holds the junction, with keys into each feat's tables; no
 foreign key crosses a feat. `feat-check` enforces these boundaries by
@@ -287,10 +319,12 @@ two halves of one **slice**, matched by name:
   collections it owns, each with its reads (`list`, as the acting member
   sees it, `item`, `index` for the command menu, `about` for the
   collection's header) and its writes as form actions, each a handler
-  over a form; what it adds to the collections of the feats it joins
-  (`extends`): fields on each row, rows of its own in a collection that
-  gathers them from the slices that know each kind (`rows`), as the
-  member feat's inbox gathers what waits on a member, data on an item, what it adds to the collection's `about`, such as the
+  over a form; what it adds to the collections of the feats it joins and
+  of the feats they nest in, and a nested feat to its parent's
+  (`extends`, with `within` naming the parent): fields on each row, rows
+  of its own in a collection that gathers them from the slices that know
+  each kind (`rows`), as the person feat's inbox gathers what waits on a
+  person, data on an item, what it adds to the collection's `about`, such as the
   circles a new decision may be put in, writes, and whether it opens an
   item's bytes its owner keeps closed (`allows`), as a power over
   expenses opens a receipt; and reactions to
@@ -304,8 +338,9 @@ two halves of one **slice**, matched by name:
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
   blocks and its header writes); for each collection it extends, columns
   over the fields it adds, cards and blocks over its data on an item,
-  and a New form replacing the owner's when it replaces the write behind
-  it, as `key-member`'s invitation carrying a first device does.
+  and a New form for a write of its own, replacing the owner's, or, where
+  several slices offer one, beside the others under its title, as the
+  people collection takes membership's invitation and employment's hire.
 
 The root lists the slices, server and client, and mounts them on
 routes that are the same for every collection: `/[collection]`, the one collection
@@ -320,13 +355,15 @@ to whom its rule or an extension's `allows` opens them; `/act` and
 which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
 collections. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
-joins; the root may join two feats no graft joins, as it puts on the
+joins, or of a feat one of them nests in, and a nested feat its parent's,
+as membership and employment extend person's people; the root may join
+two feats no graft joins, as it puts on the
 work collections' cards fields from several grafts, pins the home's
 widgets until a viewer pins their own, and runs an import across the
 slices that read its kind. A form posts its files with its fields, and an
 action reads them whole (`Form.file`). The registry refuses a
-collection owned twice, an extension of a feat a graft does not join, and
-two extensions replacing one write. An extension's write replaces the
+collection owned twice, an extension of a feat a slice neither joins nor
+nests in, and two extensions replacing one write. An extension's write replaces the
 owner's of the same name: `invoice-transaction`'s issue, which posts the
 invoice in the same transaction, replaces the invoice feat's.
 
@@ -352,8 +389,8 @@ Every write is `POST /api/<feat>/<op>` and maps to one permission,
 
 ```ts
 export const ops = {
-  'member:member:invite': confluent({ power: 'invite-member' }),
-  'member:member:admit': ordered({ decide: 'consent', check: 'decided' }),
+  'membership:member:invite': confluent({ power: 'invite-member' }),
+  'membership:member:admit': ordered({ decide: 'consent', check: 'decided' }),
 } satisfies Ops
 ```
 
@@ -364,7 +401,7 @@ A label also names the power the write needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
-`circle-member` graft's rule reads; the label mirrors it for the
+`circle-membership` graft's rule reads; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference. Every write
 is signed by a device of its actor and carries its request
 ([signatures](signatures.md)).
@@ -377,7 +414,7 @@ a decision, a circle's message); or `decided`, the decision it cites
 carried (an admission, an adoption, a seat):
 `confluent({ check: 'seat' })`. A check is backed by SQL: a rule
 registered on the op in `cella.rule`, or for `decided` a row in
-`decision.cites`, to which `circle-decision-member` attaches its rule.
+`decision.cites`, to which `circle-decision-membership` attaches its rule.
 `cella check feats` refuses an op that names neither a power nor a
 check, and a check no literal row backs; that the rule does what the
 check says is its owner's and its tests'. A write not yet decided as it

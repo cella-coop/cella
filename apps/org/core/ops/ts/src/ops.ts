@@ -25,8 +25,10 @@ export interface Grant {
 // - `self`: the actor's own, such as their profile or their devices;
 // - `roll`: a member on the roll of the decision the write names;
 // - `seat`: a member seated in the circle the write concerns;
-// - `decided`: the decision the write cites closed and passed.
-export type Check = 'self' | 'roll' | 'seat' | 'decided'
+// - `decided`: the decision the write cites closed and passed;
+// - `first`: the log's first entry, as the state a scope held before its
+//   log is carried in once.
+export type Check = 'self' | 'roll' | 'seat' | 'decided' | 'first'
 
 export interface Confluent extends Grant {
   label: 'confluent'

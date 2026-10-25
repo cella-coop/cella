@@ -60,7 +60,7 @@ export function agree(ops, registered) {
 // The checks a label may declare, and what backs each: a rule registered
 // on the op in cella.rule, or for `decided` a row in decision.cites, to
 // which the graft that counts a decision's roll attaches its rule.
-const checks = new Set(['self', 'roll', 'seat', 'decided'])
+const checks = new Set(['self', 'roll', 'seat', 'decided', 'first'])
 
 // Where an op is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL

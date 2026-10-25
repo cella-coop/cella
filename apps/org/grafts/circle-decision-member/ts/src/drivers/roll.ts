@@ -14,9 +14,15 @@ const state = `CASE WHEN d.closed IS NULL THEN 'open'
 // for the acting member, whether they are on the roll and their latest
 // stance by receipt, the one counted once the decision closed.
 export async function roll(db: Db, decision: string, actor: string | null = null): Promise<Roll | null> {
-  const found = await db.query<{ rule: Roll['rule']; closed: string | null; passes: boolean | null; state: State }>(
-    `SELECT d.rule, to_char(d.closed, 'YYYY-MM-DD') AS closed, circle_decision_member.passes(d.id) AS passes, ${state} AS state
-     FROM decision.decision d WHERE d.id = $1`,
+  const found = await db.query<Omit<Roll, 'stances' | 'me' | 'voters'>>(
+    `SELECT d.rule, p.label AS procedure, to_char(d.closed, 'YYYY-MM-DD') AS closed,
+            circle_decision_member.passes(d.id) AS passes, ${state} AS state,
+            json_build_object('counted', t.counted, 'given', t.given, 'quorate', t.quorate,
+                              'quorum', json_build_array(p.quorum_num, p.quorum_den)) AS turnout
+     FROM decision.decision d
+     JOIN decision.procedure p ON p.id = d.procedure
+     CROSS JOIN LATERAL circle_decision_member.turnout(d.id) t
+     WHERE d.id = $1`,
     [decision],
   )
   const d = found.rows[0]

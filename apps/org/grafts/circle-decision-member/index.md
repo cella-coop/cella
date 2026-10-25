@@ -1,6 +1,6 @@
 +++
 title = "circle-decision-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The electorate: who may vote on a decision, and whether it passes on
@@ -44,11 +44,17 @@ coordination's, counts its five.
 
 ## Rules
 
+- `circle_decision_member.electorate(decision)`: who counts on it, once
+  it is closed the members counted at its close, while it is open the
+  members on its roll who are active now; `stances(decision)`, their
+  stances received before its cutoff; and `turnout(decision)`, how many
+  count, how many of them gave a stance, an abstention taking part, and
+  whether that meets its procedure's quorum.
 - `circle_decision_member.passes(decision)`: whether a decision passes by
-  its rule, `cella.consent` or `cella.majority`, over the stances received
-  before its cutoff: once it is closed, from the members counted at its
-  close; while it is open, from the members on its roll who are active
-  now.
+  its procedure over those stances: its quorum met, and then by its rule,
+  `cella.consent`, or for a majority `cella.majority`, more for than
+  against, or `cella.share`, at least the share of the votes cast the
+  procedure needs, as two thirds, abstentions counting for neither.
 - `circle_decision_member.on_roll`, on `decision:decision:vote`: the
   member is on the decision's roll, and active: a suspended or exited
   member gives no stance.
@@ -109,7 +115,8 @@ coordination's, counts its five.
 
 Adds to a decision's page its roll: each member's latest stance received
 before the cutoff, whether the close counted them, the outcome
-`circle_decision_member.passes` computes, and the acting member's own
+`circle_decision_member.passes` computes by the decision's procedure, how
+many of those counted took part against its quorum, and the acting member's own
 stance, read by receipt for them. On the roll and open, the stance form
 offers the rule's stances, starts at their latest and posts the decision
 feat's `vote` only for a change; closed, it shows the stance that

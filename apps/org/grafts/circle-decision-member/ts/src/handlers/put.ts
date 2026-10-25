@@ -1,7 +1,7 @@
 import type { Refused, Settled } from '@cella/org-ops'
 import type { Deps } from '@cella/org-db'
 import { propose } from '@cella/org-decision/api'
-import type { Proposed, Rule } from '@cella/org-decision/models'
+import type { Proposed } from '@cella/org-decision/models'
 import type { Asking } from '../models/asking.ts'
 
 // Puts what a member's or a circle's page proposes to the circle that
@@ -11,7 +11,7 @@ import type { Asking } from '../models/asking.ts'
 // the motion and that circle's say over it.
 export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> | Refused> {
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
-  const { rows } = await deps.db.query<{ decider: string; procedure: Rule; member: string | null; circle: string | null; role: string | null }>(
+  const { rows } = await deps.db.query<{ decider: string; procedure: string; member: string | null; circle: string | null; role: string | null }>(
     `SELECT d.id AS decider, d.procedure,
             (SELECT m.name FROM member.member m WHERE m.address = $2) AS member,
             (SELECT c.name FROM circle.circle c WHERE c.id = $1) AS circle,
@@ -38,7 +38,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
     {
       circle: found.decider,
       title: titles[input.kind],
-      rule: found.procedure,
+      procedure: found.procedure,
       deadline: input.deadline,
       body: input.body,
       motions: [{ kind: input.kind, args: input.args }],

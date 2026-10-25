@@ -18,13 +18,20 @@ export const states = ['open', 'passed', 'rejected'] as const
 export type State = (typeof states)[number]
 
 // How the outcome reads: passing or not while open, passed or failed once
-// closed.
+// closed, by its procedure; short of its quorum, said so.
 export function outcome(r: Roll): { text: string; tone: Tone } {
   if (r.passes === null) {
     return { text: 'no stance counts', tone: 'neutral' }
   }
   const verb = r.closed ? (r.passes ? 'passed' : 'rejected') : r.passes ? 'passes' : 'does not pass'
-  return { text: `${verb} by ${r.rule}`, tone: r.passes ? 'positive' : 'negative' }
+  const short = r.turnout.quorate ? '' : ', short of its quorum'
+  return { text: `${verb} by ${r.procedure.toLowerCase()}${short}`, tone: r.passes ? 'positive' : 'negative' }
+}
+
+// How many took part, of those counted, and the quorum: "7 of 10, quorum 1 in 4".
+export function taking(r: Roll): string {
+  const [n, d] = r.turnout.quorum
+  return n ? `${r.turnout.given} of ${r.turnout.counted}, quorum ${n === d ? 'all' : `${n} in ${d}`}` : `${r.turnout.given} of ${r.turnout.counted}`
 }
 
 // A decision's electorate and its outcome, computed by
@@ -32,6 +39,11 @@ export function outcome(r: Roll): { text: string; tone: Tone } {
 // no stance counts.
 export interface Roll {
   rule: 'consent' | 'majority'
+  // The label of the procedure it is taken by.
+  procedure: string
+  // Those who count on it, how many of them gave a stance, and whether
+  // that meets its procedure's quorum, `[num, den]` of those counted.
+  turnout: { counted: number; given: number; quorate: boolean; quorum: [number, number] }
   closed: string | null
   passes: boolean | null
   state: State

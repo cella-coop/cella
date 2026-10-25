@@ -14,7 +14,7 @@ export interface Asking {
 export interface Decider {
   id: string
   name: string
-  procedure: 'consent' | 'majority'
+  procedure: string
 }
 
 // On a member's page: what may be proposed of their membership, as it

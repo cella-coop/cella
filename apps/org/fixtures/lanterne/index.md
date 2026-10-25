@@ -74,8 +74,10 @@ Camille hires, and opens a new hire's candidacy for membership.
   is in an account of their own; each may draw up to 500 € on it. The
   assembly approved the 2025 split of 61 400 € in June (d-2026-006), as
   loi 78-763, art. 33 allows: 27 630 € to the members for their work,
-  divided by salary, 9 210 € to the legal reserve, 15 350 € to the
-  development fund and 9 210 € as interest on capital; the result was
+  divided by salary, 9 210 € to the legal reserve, 24 111,78 € to the
+  development fund and 448,22 € as interest on capital, within the 3,5 %
+  of the 13 000 € of capital the statutes pay at most (loi 47-1775, art.
+  14, caps it at 5,36 % for the 2026 assembly); the result was
   carried over undistributed. The 2025 distribution (`patronage.toml`) is
   a draft until its approval cites d-2026-006, which makes each worker's
   part; distributing it, posting it and crediting its shares, is Julien's

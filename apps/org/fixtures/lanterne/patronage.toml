@@ -3,6 +3,10 @@
 # surplus, amounts in cents. The work share divides among the workers by
 # pay, and half of each associate's part is employed in shares of the
 # capital, the rest paid (Code du travail, art. L3324-5 and R3323-11).
+# Interest on capital is at most 3.5 % of it, within the law's ceiling
+# (loi n° 47-1775, art. 14), which for the 2026 assembly is 5.36 %: the
+# TMO the Trésor published in 2023, 2024 and 2025 (3.14, 3.37, 3.18, 3.26,
+# 3.525 and 3.705 %) averages 3.36 %, plus two points.
 # Later terms are drafted here and adopted by a decision of the assembly
 # that moves to adopt them.
 [[terms]]
@@ -10,12 +14,15 @@ id = "st-2021"
 from = 2021
 salary = 100
 capital = 50
+interest = 3.5
 adopted = 2021-03-01
 
 # The 2025 surplus, split as the statutes require and the law allows (loi
 # n° 78-763, art. 33): the work share divided among the workers by salary,
-# 15 % to the legal reserve, which is under the capital, the rest of the
-# reserves to the development fund, and interest on capital within both.
+# 15 % to the legal reserve, which is under the capital, interest of
+# 448,22 € on the 13 000 € of capital, 3.45 %, under the 455 € the terms'
+# 3.5 % allows (loi n° 47-1775, art. 14), and the rest to the development
+# fund.
 # The decision that approves it is the decision-patronage graft's link; it
 # is approved by the approve write, which makes each worker's part, then
 # distributed, posted and its shares credited, by the distribute write.
@@ -37,10 +44,10 @@ amount = 921000
 
 [[distribution.share]]
 kind = "development"
-percent = 25
-amount = 1535000
+percent = 39.27
+amount = 2411178
 
 [[distribution.share]]
 kind = "interest"
-percent = 15
-amount = 921000
+percent = 0.73
+amount = 44822

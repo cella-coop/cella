@@ -4,7 +4,8 @@
 // the statutes' capital clause, or, once they left, holds nothing and their
 // repayments, due as the clauses say, add up to it, owed in 4567;
 // the work share's terms divide all of it and govern each distribution;
-// a distribution honours a SCOP's floors (loi n° 78-763, art. 33); every
+// a distribution honours a SCOP's floors (loi n° 78-763, art. 33) and its
+// terms' rate of interest on capital (loi n° 47-1775, art. 14); every
 // salary is a worker's, and they keep within the internal rules' ratio; a
 // pay run carried over posted exactly its payslips' pay and charges; an
 // expense is an active member's, charged to an account of class 6, and
@@ -107,6 +108,21 @@ export function finance(read, fail) {
     }
     if (of('interest') > of('legal') + of('development') || of('interest') > of('work')) {
       fail(`distribution ${a.id}: interest on capital exceeds the reserves or the work share`)
+    }
+  }
+
+  // Loi n° 47-1775, art. 14: interest on capital at most the rate its
+  // year's terms adopted, of the capital the journal holds
+  const capital = [...entries.values()]
+    .flatMap((e) => e.line)
+    .filter((l) => l.account.startsWith('101'))
+    .reduce((s, l) => s + (l.credit ?? 0) - (l.debit ?? 0), 0)
+  for (const a of patronage.distribution ?? []) {
+    const t = terms.filter((t) => t.adopted && t.from <= a.year).sort((x, y) => y.from - x.from || iso(y.adopted).localeCompare(iso(x.adopted)))[0]
+    const interest = (a.share ?? []).find((s) => s.kind === 'interest')?.amount ?? 0
+    const cap = Math.floor((Math.max(capital, 0) * Math.round((t?.interest ?? 0) * 100)) / 10000)
+    if (interest > cap) {
+      fail(`distribution ${a.id}: interest on capital of ${interest} exceeds the ${t?.interest ?? 0} % its terms pay on ${capital} of capital`)
     }
   }
 

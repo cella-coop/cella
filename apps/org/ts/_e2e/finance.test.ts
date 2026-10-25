@@ -218,10 +218,10 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
   const posted = await lines(entry)
   assert.deepEqual(posted.slice(0, 5).sort((a, b) => a.account.localeCompare(b.account)), [
     { account: '1061', side: 'credit', cents: '921000' },
-    { account: '1068', side: 'credit', cents: '1535000' },
+    { account: '1068', side: 'credit', cents: '2411178' },
     { account: '120', side: 'debit', cents: '6140000' },
     { account: '424', side: 'credit', cents: '2763000' },
-    { account: '457', side: 'credit', cents: '921000' },
+    { account: '457', side: 'credit', cents: '44822' },
   ])
   assert.deepEqual(posted[5], { account: '424', side: 'debit', cents: posted.slice(6).reduce((s, l) => s + Number(l.cents), 0).toString() })
   assert.ok(posted.slice(6).every((l) => l.account.startsWith('1013') && l.side === 'credit'))

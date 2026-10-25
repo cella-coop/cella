@@ -27,8 +27,8 @@ export async function finance(db, read, day) {
   const patronage = read('patronage')
   for (const t of patronage.terms ?? []) {
     await db.query(
-      `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, adopted) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, day(t.adopted)],
+      `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, interest, adopted) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, t.interest ?? 0, day(t.adopted)],
     )
   }
   for (const a of patronage.distribution ?? []) {

@@ -297,7 +297,7 @@ text = "1. The 2025 accounts and the surplus"
 runs = [
   { text = "Julien presented the 2025 accounts, closing on a surplus of " },
   { text = "61 400 €", bold = true },
-  { text = ". The assembly approved them and split the surplus as loi 78-763, art. 33 allows: 45 % to the members for their work, 15 % to the legal reserve, 25 % to the development fund and 15 % as interest on capital." },
+  { text = ". The assembly approved them and split the surplus as loi 78-763, art. 33 allows: 45 % to the members for their work, 15 % to the legal reserve, 39,27 % to the development fund and 0,73 % as interest on capital, 448,22 € on its 13 000 €, within the 3,5 % the statutes pay (loi 47-1775, art. 14)." },
 ]
 
 [[document.version.block]]

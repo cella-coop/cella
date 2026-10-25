@@ -64,7 +64,7 @@ export async function figures(db: Db, distribution: string): Promise<Figure[]> {
     { id: 'legal', label: 'To the legal reserve (réserve légale)', value: n('legal'), unit: 'cents', source: `${art33}, 1°`, verified: true },
     { id: 'development', label: 'To the development fund (fonds de développement)', value: n('development'), unit: 'cents', source: `${art33}, 2°`, verified: true },
     { id: 'work', label: 'Work share (part travailleurs)', value: n('work'), unit: 'cents', source: `${art33}, 3°`, verified: true },
-    { id: 'interest', label: 'Interest on capital (intérêts aux parts)', value: n('interest'), unit: 'cents', source: `${art33}, 4°`, verified: true },
+    { id: 'interest', label: 'Interest on capital (intérêts aux parts)', value: n('interest'), unit: 'cents', source: `${art33}, 4°; loi n° 47-1775, art. 14`, verified: true },
     { id: 'workers', label: 'Workers sharing the work share', value: n('workers'), unit: 'count', source: `${art33}, 3°; BOI-BIC-PTP-10-30, § 90`, verified: true },
     { id: 'associates_sharing', label: 'Of whom associates', value: n('associates_sharing'), unit: 'count', source: 'Code du travail, art. R3323-11', verified: true },
     { id: 'employed', label: 'Work share employed in shares', value: n('employed'), unit: 'cents', source: 'Code du travail, art. R3323-11', verified: true },

@@ -125,16 +125,17 @@ const check = (name) => {
   const distributions = ids(patronage.distribution)
 
   // A surplus distribution splits the whole surplus, each share at its
-  // percent
+  // percent, counted in hundredths of a percent as the schema keeps them
+  const hundredths = (x) => Math.round(x.percent * 100)
   for (const a of patronage.distribution ?? []) {
     const shares = a.share ?? []
-    const percent = shares.reduce((s, x) => s + x.percent, 0)
+    const percent = shares.reduce((s, x) => s + hundredths(x), 0) / 100
     const amount = shares.reduce((s, x) => s + x.amount, 0)
     if (percent !== 100 || amount !== a.surplus) {
       fail(`distribution ${a.id}: shares make ${percent} % and ${amount}, not 100 % of ${a.surplus}`)
     }
     for (const x of shares) {
-      if (x.amount * 100 !== a.surplus * x.percent) {
+      if (x.amount * 10000 !== a.surplus * hundredths(x)) {
         fail(`distribution ${a.id}: the ${x.kind} share is not ${x.percent} % of the surplus`)
       }
     }

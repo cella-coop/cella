@@ -19,3 +19,10 @@ export interface Period {
   month: string
   closed: string | null
 }
+
+// An account to open in the chart, by its code and label; its kind is its
+// code's class's.
+export interface Open {
+  code: string
+  label: string
+}

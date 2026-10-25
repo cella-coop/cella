@@ -9,7 +9,7 @@ import { term, terms } from '../drivers/terms.ts'
 import { statement, statements } from '../drivers/statement.ts'
 import { report, reports } from '../drivers/report.ts'
 
-export { adopt, allocating, close } from '../handlers/index.ts'
+export { adopt, allocating, close, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
 export { allocation, allocations } from '../drivers/allocation.ts'
 export { term, terms } from '../drivers/terms.ts'

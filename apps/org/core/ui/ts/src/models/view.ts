@@ -180,3 +180,23 @@ export interface App {
   collections?: Record<string, Owned>
   extends?: Record<string, Added>
 }
+
+// An account a statement's line gathers, with its figure in each column,
+// linking to its ledger.
+export interface SheetAccount {
+  code: string
+  label: string
+  href: string
+  amounts: number[]
+}
+
+// A rubric of a financial statement, with its figure in each column: a
+// heading names what follows and has none; a line gathers accounts, which
+// it opens on; a total sums lines.
+export interface SheetRow {
+  id: string
+  kind: 'heading' | 'line' | 'total'
+  label: string
+  amounts: (number | null)[]
+  accounts?: SheetAccount[]
+}

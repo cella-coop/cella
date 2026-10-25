@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -128,7 +128,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   invoices have one. Esc goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
-  `Properties`, `Related`, `Activity`, `Table`, `Cell`, `Stats`, `Badge`,
+  `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
+  statement: headings, lines and ruled-off totals with a figure per
+  column, a line opening on its accounts, each linking to its ledger),
+  `Cell`, `Stats`, `Badge`,
   `Button`, `Form` (a write, posting to a named form action; `ready`
   false keeps its button disabled while there is nothing to post),
   `Field` (text, a number, a date, a time, an address or an email; a

@@ -3,7 +3,7 @@
 
   // The work share's portion by time worked, as it would divide by each
   // member's approved hours that year; the parts add up to the portion
-  // to the cent. Once allocated, the parts are the statements'.
+  // to the cent. Once approved, the parts are the statements'.
   type Part = { id: string; member: string; minutes: number; amount: number }
   let { data }: { data: Part[]; id: string } = $props()
 

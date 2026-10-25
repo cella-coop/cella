@@ -1,5 +1,5 @@
 {
-  "name": "@cella/org-graft-account-timesheet",
+  "name": "@cella/org-graft-patronage-timesheet",
   "private": true,
   "type": "module",
   "exports": {
@@ -9,7 +9,7 @@
   "dependencies": {
     "@cella/org-db": "workspace:*",
     "@cella/org-ui": "workspace:*",
-    "@cella/org-account": "workspace:*",
+    "@cella/org-patronage": "workspace:*",
     "@cella/org-timesheet": "workspace:*",
     "svelte": "5.57.2"
   }

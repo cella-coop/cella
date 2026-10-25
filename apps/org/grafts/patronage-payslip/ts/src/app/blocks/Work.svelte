@@ -3,7 +3,7 @@
 
   // The work share's portion by pay, as it would divide in proportion to
   // what each was paid in the surplus's year; the parts add up to the
-  // portion to the cent. Once allocated, the parts are the statements'.
+  // portion to the cent. Once approved, the parts are the statements'.
   type Part = { id: string; member: string; basis: number; amount: number }
   let { data }: { data: Part[]; id: string } = $props()
 

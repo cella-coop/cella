@@ -1,8 +1,8 @@
 // The work share divided by time worked, on a database holding the app's
-// core, the account and timesheet feats and this graft: the portion that
+// core, the patronage and timesheet feats and this graft: the portion that
 // divides by time divides by the minutes of each member's approved months
-// in the year alone, to the cent; allocating makes the parts in that
-// write, which the rules take. Run by `cella test slice account-timesheet`.
+// in the year alone, to the cent; approving makes the parts in that
+// write, which the rules take. Run by `cella test slice patronage-timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -22,7 +22,7 @@ const approve = (member: string, month: string) =>
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
-  await db.query(`INSERT INTO account.terms (id, "from", hours, capital, adopted) VALUES ('t-2020', 2020, 100, 0, '2020-01-10')`)
+  await db.query(`INSERT INTO patronage.terms (id, "from", hours, capital, adopted) VALUES ('t-2020', 2020, 100, 0, '2020-01-10')`)
   await worked('ana@x', '2025-03-03', 360)
   await worked('ana@x', '2025-03-04', 240)
   await worked('ben@x', '2025-03-03', 300)
@@ -31,40 +31,40 @@ before(async () => {
   await approve('ana@x', '2025-03')
   await approve('ben@x', '2025-03')
   await approve('ana@x', '2024-12')
-  await db.query(`INSERT INTO account.allocation (id, year, surplus, basis) VALUES ('al-2025', 2025, cella.amount(1800000), 'hours')`)
-  await db.query(`INSERT INTO account.share (allocation, kind, percent, amount) VALUES ('al-2025', 'work', 50, cella.amount(900000)), ('al-2025', 'legal', 50, cella.amount(900000))`)
+  await db.query(`INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ('2025', 2025, cella.amount(1800000), 'hours')`)
+  await db.query(`INSERT INTO patronage.share (distribution, kind, percent, amount) VALUES ('2025', 'work', 50, cella.amount(900000)), ('2025', 'legal', 50, cella.amount(900000))`)
 })
 
 after(async () => {
   await db.end()
 })
 
-test('only the app\'s core, the account and timesheet feats and this graft are migrated', async () => {
-  assert.deepEqual(await rows(`SELECT nspname FROM pg_namespace WHERE nspname IN ('payslip', 'member', 'account_payslip')`), [])
+test('only the app\'s core, the patronage and timesheet feats and this graft are migrated', async () => {
+  assert.deepEqual(await rows(`SELECT nspname FROM pg_namespace WHERE nspname IN ('payslip', 'member', 'patronage_payslip')`), [])
 })
 
 test('the portion divides by the minutes of approved months in the year alone', async () => {
-  assert.deepEqual(await rows(`SELECT member, minutes FROM account_timesheet.basis(2025) ORDER BY member`), [
+  assert.deepEqual(await rows(`SELECT member, minutes FROM patronage_timesheet.basis(2025) ORDER BY member`), [
     { member: 'ana@x', minutes: '600' },
     { member: 'ben@x', minutes: '300' },
   ])
-  assert.deepEqual(await rows(`SELECT worker, minutes, cents FROM account_timesheet.division('al-2025') ORDER BY worker`), [
+  assert.deepEqual(await rows(`SELECT worker, minutes, cents FROM patronage_timesheet.division('2025') ORDER BY worker`), [
     { worker: 'ana@x', minutes: '600', cents: '600000' },
     { worker: 'ben@x', minutes: '300', cents: '300000' },
   ])
 })
 
-test('allocating makes the parts in that write, which both rules take', async () => {
-  await db.query(`UPDATE account.allocation SET allocated = cella.verdict_date() WHERE id = 'al-2025'`)
-  assert.deepEqual(await rows(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM account.part ORDER BY worker`), [
+test('approving makes the parts in that write, which both rules take', async () => {
+  await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
+  assert.deepEqual(await rows(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part ORDER BY worker`), [
     { worker: 'ana@x', basis: 'hours', quantity: '600', cents: '600000' },
     { worker: 'ben@x', basis: 'hours', quantity: '300', cents: '300000' },
   ])
-  assert.equal(await rule('account_timesheet.divides', { allocation: 'al-2025' }), null)
-  assert.equal(await rule('account.divides', { allocation: 'al-2025' }), null)
+  assert.equal(await rule('patronage_timesheet.divides', { distribution: '2025' }), null)
+  assert.equal(await rule('patronage.divides', { distribution: '2025' }), null)
 })
 
 test('parts no longer what the approved time gives are refused', async () => {
   await approve('ben@x', '2025-04')
-  assert.equal(await rule('account_timesheet.divides', { allocation: 'al-2025' }), 'al-2025\'s parts by time worked are not its portion divided by the minutes approved in 2025')
+  assert.equal(await rule('patronage_timesheet.divides', { distribution: '2025' }), '2025\'s parts by time worked are not its portion divided by the minutes approved in 2025')
 })

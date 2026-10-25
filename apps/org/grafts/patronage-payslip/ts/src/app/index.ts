@@ -2,10 +2,10 @@ import type { App } from '@cella/org-ui'
 import Work from './blocks/Work.svelte'
 
 // The graft's client side: a surplus's work share, member by member, on
-// the allocation's page.
+// the distribution's page.
 export const app: App = {
-  name: 'account-payslip',
+  name: 'patronage-payslip',
   extends: {
-    allocations: { page: { blocks: [Work] } },
+    distributions: { page: { blocks: [Work] } },
   },
 }

@@ -39,7 +39,7 @@ the rules', and who reads ([below](#reads)):
 | `cella.reader()`, `cella.writing()` | the person this transaction reads for, from `cella.actor`, which the server sets from the session; and whether it is a write's, from `cella.writing`, which `write` sets for its transaction |
 | `cella.authority`, `cella.reading`, `cella.reach` | the registries of who reads: the one function saying whether a member holds a power on a day, a graft's; the powers that read a feat's rows, `(what, key, power, owner)`; a graft's functions opening a joined feat's rows to more readers, `(what, fn, owner)` |
 | `cella.may(power)` | whether the reader holds the power on the verdict date, as the authority says |
-| `cella.sees(what)`, `cella.reaches(what, key)` | whether the reader sees every row of `what`: a write's transaction, a role past row-level security, or a power that reads it; and whether they reach one row by its key: a power for that key, or a graft's function |
+| `cella.reads_all(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | whether the reader holds a power that reads every row of `what`; whether they see every row: a write's transaction, a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole), or such a power; and whether they reach one row by its key: a power for that key, or a graft's function |
 | `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its op's power; null for anyone else |
 
 ## Submit

@@ -62,19 +62,26 @@ BEGIN
 END
 $$;
 
+-- Whether the reader holds a power that reads every row of `what`.
+CREATE FUNCTION cella.reads_all(what text) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN cella.reader() IS NOT NULL AND EXISTS (
+  SELECT FROM cella.reading g WHERE g.what = reads_all.what AND g.key IS NULL AND cella.may(g.power)
+);
+
 -- Whether the reader sees every row of `what`: this is a write's
--- transaction, the session's own role reads past row-level security (a
--- superuser's tools and tests), or the reader holds a power that reads it.
--- It does not depend on the row, so a policy asks it once per query, as
--- `(SELECT cella.sees(what))`; a view that filters its rows by reader
--- asks it the same way.
+-- transaction, the role reading reads past row-level security (a
+-- superuser's tools and tests, or a function running as its owner to sum
+-- the whole), or the reader holds a power that reads it. The server reads
+-- as `cella_app` whatever it logs in as. It does not depend on the row,
+-- so a policy asks it once per query, as `(SELECT cella.sees(what))`; a
+-- view that filters its rows by reader asks it the same way. A function
+-- that runs as its owner to answer for the reader asks `reads_all`.
 CREATE FUNCTION cella.sees(what text) RETURNS boolean
 LANGUAGE sql STABLE
 RETURN cella.writing()
-  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r WHERE r.rolname = session_user)
-  OR (cella.reader() IS NOT NULL AND EXISTS (
-  SELECT FROM cella.reading g WHERE g.what = sees.what AND g.key IS NULL AND cella.may(g.power)
-));
+  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r WHERE r.rolname = current_user)
+  OR cella.reads_all(what);
 
 -- Whether the reader reaches one row of `what` beyond their own, by the
 -- key its feat passes: a power that reads rows of that key, or a graft's

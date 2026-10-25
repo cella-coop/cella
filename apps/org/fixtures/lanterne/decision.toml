@@ -1,11 +1,31 @@
 # Proposals and the signed votes on them. An outcome is never stored: it is
 # computed from the votes the notary counted before the deadline.
 
+# The statutes' two assemblies, beside the built-in consent, majority and
+# two thirds. The ordinary assembly decides by a majority of the votes cast
+# once a quarter of the associates take part; the extraordinary, which
+# amends the statutes, by two thirds of the votes cast once half take part.
+# These follow the CG Scop's model statutes for a SCOP SARL under loi
+# n° 78-763 of 19 July 1978; the articles were not checked on Légifrance,
+# which refuses the box.
+[[procedure]]
+id = "ordinary"
+label = "Ordinary assembly"
+rule = "majority"
+quorum = [1, 4]
+
+[[procedure]]
+id = "extraordinary"
+label = "Extraordinary assembly"
+rule = "majority"
+share = [2, 3]
+quorum = [1, 2]
+
 [[decision]]
 id = "d-2026-006"
 circle = "ag"
 title = "Approve the 2025 accounts and allocate the surplus"
-rule = "majority"
+procedure = "majority"
 proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
@@ -68,7 +88,7 @@ at = 2026-06-20
 id = "d-2026-007"
 circle = "ag"
 title = "Adopt the internal rules, version 3"
-rule = "consent"
+procedure = "consent"
 proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
@@ -127,7 +147,7 @@ at = 2026-06-20
 id = "d-2026-011"
 circle = "coordination"
 title = "Raise the day rate for 2027"
-rule = "consent"
+procedure = "consent"
 proposed = 2026-10-12
 deadline = 2026-11-09
 body = """
@@ -148,7 +168,7 @@ at = 2026-10-14
 id = "d-2026-012"
 circle = "ag"
 title = "Admit Inès Haddad as a member"
-rule = "consent"
+procedure = "consent"
 proposed = 2026-10-14
 deadline = 2026-10-31
 body = """

@@ -86,9 +86,25 @@ for (const c of candidacies) {
   ])
 }
 
+// The co-op's own procedures, beside the decision feat's built-in ones,
+// before the circles that decide by them.
+const procedures = read('decision').procedure ?? []
+for (const p of procedures) {
+  await db.query(
+    'INSERT INTO decision.procedure (id, label, rule, share_num, share_den, quorum_num, quorum_den) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+    [p.id, p.label, p.rule, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1],
+  )
+}
+
 const structure = read('circle')
 for (const c of structure.circle ?? []) {
-  await db.query('INSERT INTO circle.circle (id, name, parent, purpose) VALUES ($1, $2, $3, $4)', [c.id, c.name, c.parent ?? null, c.purpose ?? ''])
+  await db.query('INSERT INTO circle.circle (id, name, parent, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
+    c.id,
+    c.name,
+    c.parent ?? null,
+    c.purpose ?? '',
+    c.procedure ?? 'consent',
+  ])
 }
 for (const r of structure.role ?? []) {
   await db.query('INSERT INTO circle.role (id, circle, name, duty) VALUES ($1, $2, $3, $4)', [r.id, r.circle, r.name, r.duty ?? ''])
@@ -113,11 +129,14 @@ const decisions = read('decision').decision ?? []
 let votes = 0
 let moved = 0
 for (const d of decisions) {
-  await db.query(
-    `INSERT INTO decision.decision (id, circle, title, rule, proposed, deadline, body)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-    [d.id, d.circle, d.title, d.rule, day(d.proposed), day(d.deadline), d.body ?? ''],
+  const taken = await db.query(
+    `INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline, body)
+     SELECT $1, $2, $3, p.rule, p.id, $5, $6, $7 FROM decision.procedure p WHERE p.id = $4`,
+    [d.id, d.circle, d.title, d.procedure, day(d.proposed), day(d.deadline), d.body ?? ''],
   )
+  if (!taken.rowCount) {
+    throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)
+  }
   moved += await motions(db, d)
   for (const v of d.vote ?? []) {
     await db.query(

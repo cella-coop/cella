@@ -155,7 +155,7 @@ nothing else, and `transaction.corrects` refuses a second correction from the sa
 
 ## Reads
 
-Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the co-op's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the rules do.
+Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the co-op's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does, and its amount, `transaction.amount`, counts every line, read or not. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the rules do.
 
 ## Shell
 

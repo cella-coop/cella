@@ -21,3 +21,11 @@ CREATE POLICY rules ON transaction.line FOR SELECT TO cella_rules USING (true);
 
 CREATE POLICY writes ON transaction.entry FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY writes ON transaction.line FOR INSERT TO cella_app WITH CHECK (true);
+
+-- An entry's amount, what its debits add up to, whole for whoever reads
+-- the entry: a line the reader may not read still counts, so an entry on
+-- a capital account balances to the amount its bank line shows.
+CREATE FUNCTION transaction.amount(entry text) RETURNS bigint
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+RETURN (SELECT coalesce(sum(cella.cents(l.amount)), 0)::bigint FROM transaction.line l WHERE l.entry = amount.entry AND l.side = 'debit');

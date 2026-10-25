@@ -2,7 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Booked, Detail, Journaled } from '../models/transaction.ts'
 
 const listed = `e.id, to_char(e.date, 'YYYY-MM-DD') AS date, e.label, e.corrects, e.receipt::int AS receipt,
-  (SELECT coalesce(sum(cella.cents(l.amount)), 0)::bigint FROM transaction.line l WHERE l.entry = e.id AND l.side = 'debit') AS amount`
+  transaction.amount(e.id) AS amount`
 
 // The journal, the latest entry first.
 export async function journal(db: Db): Promise<Journaled[]> {

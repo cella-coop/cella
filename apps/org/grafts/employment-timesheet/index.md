@@ -45,6 +45,10 @@ worker's entries within their employment, one of no worker's left to the
 members, and the rules on both ops. Whose the actor is, the `people`
 scenario.
 
+## Reads
+
+`sheet` reads as its reader, each worker's months as their time does (`sql/002-reads.sql`).
+
 ## Shell
 
 Replaces the timesheets collection's `log` and `submit` with these, so

@@ -30,8 +30,9 @@ mentions its invoices print: `cella.scope_form` (with "à capital variable"
 where the capital varies), `cella.scope_capital` (the amount, for a fixed
 capital only), `cella.scope_siren`, `cella.scope_rcs` (the town of its
 registry), `cella.scope_vat` and `cella.scope_seat`, all set with `ALTER
-DATABASE … SET`. An invoice's PDF reads them when it is made, so a seat
-that moves changes the PDF of an invoice issued before the move
+DATABASE … SET`. An invoice keeps the mentions as they stand when it
+issues, so a seat that moves changes the invoices issued after the move
+and never the PDF of one issued before
 ([invoice](../../apps/org/feats/invoice/index.md#the-pdf)). `cella migrate --url` makes
 the roles `cella_app` and `cella_rules` and every schema; the server
 connects as `cella_app` or as a role that is a member of it.

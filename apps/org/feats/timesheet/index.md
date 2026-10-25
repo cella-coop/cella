@@ -78,6 +78,10 @@ a deletion is not built, so a mistake is corrected only in a later month.
 The app role may select and insert entries and update periods; the rules
 role may select.
 
+## Reads
+
+Who reads time is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own entries, months and sheets; whoever holds `approve-time`, `prepare-payroll` or `distribute-surplus` reads everyone's; no one signed in reads any. `timesheet.sheet` reads as its reader. A write's transaction reads every row.
+
 ## Shell
 
 The `timesheets` collection lists every entry in a table, the latest day

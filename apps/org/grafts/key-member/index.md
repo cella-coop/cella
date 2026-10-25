@@ -1,6 +1,6 @@
 +++
 title = "key-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A member's devices, from the first one their invitation carries. Declared
@@ -43,9 +43,11 @@ Replaces the members collection's New form and its `invite` write with
 the invitation carrying a first device: name, address, the device's
 label and its key. On a member's page, the first device until their
 admission enrols it, and every device enrolled under their address, as
-the key feat lists them.
+the key feat lists them; under Joining, whether they hold a device
+that signs, and the one their invitation carries until it is enrolled.
 
 ## Lanterne
 
-Inès's invitation carries her laptop, whose TEST-ONLY key the seed
+Inès's invitation carries her phone, whose TEST-ONLY key the seed
 derives from her address and its label; d-2026-012's close enrols it.
+Her laptop came with her hire (`key-worker`).

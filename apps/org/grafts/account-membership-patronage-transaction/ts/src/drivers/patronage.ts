@@ -46,23 +46,10 @@ export async function employed(db: Db, statement: string): Promise<Employed | nu
 // to the Code du travail; which figures the CG SCOP's annual return and the
 // révision coopérative ask for was not verified against their forms, and
 // the employees' hold on the capital not against the article that sets it.
+// They are the co-op's, which `federation` sums whole for every reader.
 export async function figures(db: Db, distribution: string): Promise<Figure[]> {
   const { rows } = await db.query<Record<string, string | null>>(
-    `SELECT a.year, to_char(a.distributed, 'YYYY-MM-DD') AS distributed, cella.cents(a.surplus) AS surplus,
-       patronage.share_of(a.id, 'legal') AS legal, patronage.share_of(a.id, 'development') AS development,
-       patronage.share_of(a.id, 'work') AS work, patronage.share_of(a.id, 'interest') AS interest,
-       (SELECT count(*) FROM patronage.statement s WHERE s.distribution = a.id) AS workers,
-       (SELECT count(*) FROM patronage.statement s JOIN membership.member m ON m.address = s.worker WHERE s.distribution = a.id AND m.status = 'active') AS associates_sharing,
-       (SELECT coalesce(sum(cella.cents(c.amount)), 0) FROM account_membership_patronage_transaction.credit c WHERE c.distribution = a.id) AS employed,
-       (SELECT coalesce(sum(c.shares), 0) FROM account_membership_patronage_transaction.credit c WHERE c.distribution = a.id) AS shares,
-       (SELECT to_char(max(c.until), 'YYYY-MM-DD') FROM account_membership_patronage_transaction.credit c WHERE c.distribution = a.id) AS until,
-       (SELECT count(*) FROM membership.member m WHERE m.status = 'active') AS associates,
-       (SELECT coalesce(sum(c.subscribed), 0) FROM account_membership.capital c WHERE c.status = 'active') AS capital,
-       (SELECT coalesce(sum(c.subscribed), 0) FROM account_membership.capital c
-        WHERE c.status = 'active' AND EXISTS (SELECT FROM patronage.statement s WHERE s.distribution = a.id AND s.worker = c.member)) AS employee_capital,
-       coalesce((SELECT -b.balance FROM account_transaction.balance b WHERE b.code = '1061'), 0) AS reserve,
-       patronage_transaction.highest() AS highest
-     FROM patronage.distribution a WHERE a.id = $1 AND a.distributed IS NOT NULL`,
+    'SELECT * FROM account_membership_patronage_transaction.federation($1)',
     [distribution],
   )
   const r = rows[0]

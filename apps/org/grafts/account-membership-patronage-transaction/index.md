@@ -51,7 +51,7 @@ refused.
 
 ## Reads
 
-A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)).
+A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). The year's return to the federation, `federation(distribution)` (`sql/003-return.sql`), runs as its owner: its counts and sums are the co-op's, whole for every reader, and name no one.
 
 ## Shell
 

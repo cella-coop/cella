@@ -29,3 +29,11 @@ Inès's months, though she is no member yet.
 
 Slice tests: none of its own; the rule is `circle-member`'s `over` and
 its tests, and the `governance` and `people` scenarios.
+
+## Shell
+
+Adds to the acting member's inbox each month submitted and not yet
+approved, of someone else, that they may approve today by the same
+reach as `approves`: holding `approve-time` over a circle its member
+sits in, or, for a worker who is no active member, holding it at all;
+linking to the worker's page, which approves it.

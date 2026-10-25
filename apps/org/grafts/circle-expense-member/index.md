@@ -1,6 +1,6 @@
 +++
 title = "circle-expense-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A mandate's budget, spent by the expenses its holder approves. A budget
@@ -27,6 +27,14 @@ A budget is spent per holder of the mandate: each lead has their own
 approvals by one member are judged one after the other. Budgets over
 other spending, such as a circle's purchases, come with the writes that
 spend them.
+
+## Shell
+
+Adds to the acting member's inbox each expense submitted by someone else
+that they may approve today, holding `approve-expense` within its limit
+for the expense's total, and each approved one they may reimburse,
+holding `reimburse-expense`. Whether an approval stays within their
+budget is `within`'s, judged when they approve.
 
 ## Lanterne
 

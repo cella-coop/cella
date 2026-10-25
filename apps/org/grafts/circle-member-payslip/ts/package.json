@@ -1,0 +1,12 @@
+{
+  "name": "@cella/org-graft-circle-member-payslip",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-member": "workspace:*"
+  }
+}

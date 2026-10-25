@@ -17,15 +17,17 @@ export type Tone = 'neutral' | 'positive' | 'negative'
 export const states = ['open', 'passed', 'rejected'] as const
 export type State = (typeof states)[number]
 
-// How the outcome reads: passing or not while open, passed or failed once
-// closed, by its procedure; short of its quorum, said so.
-export function outcome(r: Roll): { text: string; tone: Tone } {
+// How the outcome reads: passing or not while open, passed or rejected
+// once closed, by its procedure and short of its quorum if it is; or,
+// `short`, as the drawer has it, the verdict alone.
+export function outcome(r: Roll, short = false): { text: string; tone: Tone } {
   if (r.passes === null) {
     return { text: 'no stance counts', tone: 'neutral' }
   }
   const verb = r.closed ? (r.passes ? 'passed' : 'rejected') : r.passes ? 'passes' : 'does not pass'
-  const short = r.turnout.quorate ? '' : ', short of its quorum'
-  return { text: `${verb} by ${r.procedure.toLowerCase()}${short}`, tone: r.passes ? 'positive' : 'negative' }
+  const by = short ? '' : ` by ${r.procedure.toLowerCase()}`
+  const quorum = short || r.turnout.quorate ? '' : ', short of its quorum'
+  return { text: `${verb}${by}${quorum}`, tone: r.passes ? 'positive' : 'negative' }
 }
 
 // How many took part, of those counted, and the quorum: "7 of 10, quorum 1 in 4".

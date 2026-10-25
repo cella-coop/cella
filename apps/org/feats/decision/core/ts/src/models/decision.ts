@@ -24,10 +24,10 @@ export interface Procedure {
 
 const fraction = ([n, d]: [number, number]) => (n === d ? 'all' : `${n} in ${d}`)
 
-// A procedure's terms in words: "majority of 2 in 3 of the votes cast,
-// quorum 1 in 2".
+// A procedure's terms in words: "consent", "majority, quorum 1 in 4",
+// "2 in 3 of votes cast, quorum 1 in 2".
 export function terms(p: Procedure): string {
-  const rule = p.share ? `${p.rule} of ${fraction(p.share)} of the votes cast` : p.rule
+  const rule = p.share ? `${fraction(p.share)} of votes cast` : p.rule
   return p.quorum[0] ? `${rule}, quorum ${fraction(p.quorum)}` : rule
 }
 

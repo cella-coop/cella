@@ -82,8 +82,9 @@ test('Lanterne decides by consent, majority and two thirds, and by its statutes�
   ])
   // The New form offers each in words.
   const offered = (await procedures(app)).map((p) => `${p.label}: ${terms(p)}`)
-  assert.ok(offered.includes('Extraordinary assembly: majority of 2 in 3 of the votes cast, quorum 1 in 2'), offered.join('; '))
-  assert.ok(offered.includes('Two thirds: majority of 2 in 3 of the votes cast'))
+  assert.ok(offered.includes('Extraordinary assembly: 2 in 3 of votes cast, quorum 1 in 2'), offered.join('; '))
+  assert.ok(offered.includes('Two thirds: 2 in 3 of votes cast'))
+  assert.ok(offered.includes('Ordinary assembly: majority, quorum 1 in 4'))
   const refused = await shell.act('/decisions', 'propose', { circle: 'ag', procedure: 'acclamation', title: 'Cheer', deadline: '2026-10-31', body: '' }, camille)
   assert.match(reason(refused), /a decision is taken by a procedure of the co-op’s, not “acclamation”/)
 })

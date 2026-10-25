@@ -35,7 +35,7 @@ export const app: App = {
       page: {
         properties: (r: Roll) => [
           { label: 'State', value: r.state, kind: 'badge', tone: tones[r.state] },
-          { label: 'Outcome', value: outcome(r).text, kind: 'badge', tone: outcome(r).tone },
+          { label: 'Outcome', value: outcome(r, true).text, kind: 'badge', tone: outcome(r).tone },
           { label: 'On the roll', value: r.voters.length, kind: 'number' },
         ],
         blocks: [Outcome, { tab: 'stances', block: Electorate }],

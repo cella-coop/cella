@@ -22,8 +22,8 @@ const mix = (t: Terms) =>
     .join(', ')
 
 // The feat's client side: the chart of accounts, the periods of the books
-// and a period's close, each year's surplus with its split, the work
-// share's terms, and each worker's statement of their part.
+// and a period's close, each year's surplus with its split, the statutes'
+// terms, and each worker's statement of their part.
 export const app: App = {
   name: 'account',
   collections: {
@@ -111,19 +111,20 @@ export const app: App = {
       view: {
         group: 'finance',
         title: 'Terms',
-        caption: 'How the statutes divide each year’s work share among the workers',
+        caption: 'The statutes’ terms: how each year’s work share divides, and the capital’s clauses',
         icon: icons.SealCheck,
         columns: [
           { key: 'from', label: 'From', kind: 'title', role: 'title', value: (t: Terms) => String(t.from) },
           { key: 'basis', label: 'Divides', role: 'sub', value: (t: Terms) => `${bases[t.basis]}: ${mix(t)}` },
           { key: 'capital', label: 'In shares %', kind: 'number', role: 'hidden', value: (t: Terms) => t.capital },
+          { key: 'share', label: 'Share value', kind: 'money', role: 'hidden', value: (t: Terms) => t.share },
           { key: 'adopted', label: 'Adopted on', kind: 'date', role: 'hidden', value: (t: Terms) => t.adopted },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: adopted, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
         ],
       },
       page: {
         eyebrow: 'Terms',
-        title: (t: Terms) => `Work share terms from ${t.from}`,
+        title: (t: Terms) => `Terms from ${t.from}`,
         subtitle: (t: Terms) => (t.adopted ? `adopted on ${t.adopted}` : 'drafted: adopted once the members decide'),
         properties: (t: Terms) => [
           { label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' },
@@ -132,6 +133,15 @@ export const app: App = {
           { label: 'By time worked %', value: t.hours, kind: 'number' },
           { label: 'In equal parts %', value: t.equal, kind: 'number' },
           { label: 'Employed in shares %', value: t.capital, kind: 'number' },
+          ...(t.share === null
+            ? []
+            : [
+                { label: 'Share value', value: t.share, kind: 'money' as const },
+                { label: 'Fewest shares', value: t.minimum, kind: 'number' as const },
+                { label: 'Monthly instalments, at most', value: t.instalments, kind: 'number' as const },
+                { label: 'First repayment, months after an exit', value: t.delay, kind: 'number' as const },
+                { label: 'Yearly repayments', value: t.repayments, kind: 'number' as const },
+              ]),
           { label: 'Adopted on', value: t.adopted, kind: 'date' },
         ],
       },

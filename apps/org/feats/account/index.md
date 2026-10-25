@@ -6,7 +6,8 @@ updated = 2026-10-25
 The co-op's accounts and what its members own: the chart of accounts,
 members' capital accounts, reserves and funds, the periods the books are
 kept in, the allocations of each year's surplus, the statutes' terms for
-its work share and each worker's part of it. This is the
+its work share and its capital, and each worker's part of the work share.
+This is the
 co-op-specific layer that generic accounting software lacks. An account
 holds no balance of its own: its balance is the sum of the journal lines
 posted to it, which the `account-transaction` graft reads from the
@@ -20,14 +21,17 @@ posted to it, which the `account-transaction` graft reads from the
 | period | `month`, `closed?` | one per month of the fiscal year; open until closed, never reopened |
 | allocation | `id`, `year`, `surplus`, `basis`, `allocated?` | one per fiscal year's surplus; `basis` is how the work share divides, as its year's terms say: by `salary`, `hours`, `equal` or a `mix` |
 | allocation share | `kind`, `percent`, `amount` | `work`, `legal` (the legal reserve), `development` (the development fund) or `interest` (on capital); a share of nothing has no row |
-| terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `adopted?` | how the work share divides from a year on: the weights, in percent, by pay, by time worked and in equal parts, adding up to 100, and the percent of an associate's part that buys shares |
+| terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `share?`, `minimum?`, `instalments?`, `delay?`, `repayments?`, `adopted?` | the statutes' terms from a year on: how the work share divides, the weights, in percent, by pay, by time worked and in equal parts, adding up to 100, and the percent of an associate's part that buys shares; and the capital's clauses, stated whole or not at all: the value of a share, the fewest shares an associate subscribes, the most monthly instalments they pay them in, the months after an exit before the first repayment and the number of yearly repayments |
 | part | `allocation`, `worker`, `basis`, `quantity`, `amount` | a worker's part of an allocation's work share on one basis: what they were paid (cents), the minutes they worked, or one equal part, and the cents it gave them |
 
 An account's `kind` is its place in the books: `asset`, `liability`,
 `equity`, `income` or `expense`. Capital accounts, reserves and funds are
 equity accounts distinguished by their code: `1013` holds members' paid-up
-capital, one account under it per member (`101301`, …), `1061` the legal
-reserve, `1068` the development fund, an indivisible reserve. A capital
+capital, one account under it per member (`101301`, …), `1012` what they
+subscribed and have not paid, owed by them in `4562`, `1061` the legal
+reserve, `1068` the development fund, an indivisible reserve; `4567` is
+what the co-op owes associates who left (the PCG's accounts, Règlement
+ANC n° 2014-03, not verified on Légifrance). A capital
 account names its member by address, as text (`holder`); it has no key
 into `member`, and the `account-member` graft checks it.
 
@@ -40,16 +44,18 @@ with their own power and limit.
 
 | Thing | States |
 |---|---|
-| account | open → frozen (a departing member's capital, until it is repaid) |
+| account | open → frozen (a departing member's capital, from the exit on) |
 | period | open → closed |
 | allocation | drafted → allocated (once, citing the assembly's decision) |
 | terms | drafted → adopted (once, citing the members' decision) |
 
-A frozen account never thaws and takes no new draws. A closed period
+A frozen account never thaws and takes no new draws; what it held is owed
+the member in `4567` and repaid on the statutes' schedule. A closed period
 takes no new entries, and a correction to it is an entry in the first
 open one. An allocated split never changes, nor do its parts, made in the
 write that allocates; adopted terms never change, and later terms govern
-from their year.
+from their year; terms that state no capital clauses leave the earlier
+ones governing the capital.
 
 ## Writes
 
@@ -57,8 +63,11 @@ from their year.
 |---|---|---|
 | `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
 | `POST /api/account/surplus.allocate` | ordered, `decided` | the assembly's decision splits the surplus, once |
-| `POST /api/account/terms.adopt` | ordered, `decided` | the members' decision adopts the work share's terms, once |
+| `POST /api/account/terms.adopt` | ordered, `decided` | the members' decision adopts the statutes' terms, once |
 | `POST /api/account/period.close` | ordered | nothing posts into a closed period |
+| `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
+| `POST /api/account/capital.spread` | confluent, `self` | an associate spreads what they owe over monthly instalments from their pay |
+| `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
 
 - **draw** is bounded because it spends a right granted in advance, the
   member's draw limit, which the `account-member` graft holds. A draw
@@ -75,6 +84,17 @@ from their year.
 - **period.close** is ordered because it fixes, by receipt order, which
   entries made the period: an entry received after the close's receipt is
   refused for that period.
+- **capital.pay** is confluent because a payment in is a deposit: entries
+  commute, and what is left to pay is their sum against the
+  subscription. At rung 1 the rule refuses one beyond what is owed. It
+  posts, so its handler and rule are `account-member-transaction`'s.
+- **capital.spread** is the associate's own register, the latest
+  standing: no more instalments than the statutes allow. The instalments
+  are withheld when a pay run is paid, so its handler and rule are
+  `account-member-payslip-transaction`'s.
+- **capital.repay** is ordered because a repayment is paid once and after
+  the one before it, and not before the day it falls due. It posts, so
+  its handler and rule are `account-member-transaction`'s.
 
 ## Powers
 
@@ -87,9 +107,13 @@ the holder is whoever holds the role the mandate is granted to.
 | surplus.allocate | none: decided by the assembly | d-2026-006, for 2025 |
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
 | period.close | `close-period` | Julien, as finance |
+| capital.pay | `record-receipt` | Julien, as finance |
+| capital.spread | none: the associate's own | Inès, once admitted |
+| capital.repay | `repay-capital` | Julien, as finance |
 
-`002-powers.sql` registers period.close's power in `cella.power`, and the
-`circle-member` graft checks it.
+`002-powers.sql` registers period.close's power in `cella.power`, and
+`008-capital.sql` capital.pay's and capital.repay's; the `circle-member`
+graft checks them.
 
 ## Invariants
 
@@ -109,6 +133,10 @@ The account feat owns the rules about its own collection:
   to its portion of the work share, to the cent;
 - terms divide the whole work share, and are adopted once, never over a
   year already allocated;
+- terms state their capital clauses whole or not at all, and repay a
+  departing associate within five years of the exit (loi n° 47-1775, art.
+  18, the nominal value; the five years as Avise's guide to the SCOP gives
+  them, its article not verified);
 - a period closes only after the one before it, and once;
 - a frozen account stays frozen.
 
@@ -120,8 +148,10 @@ What it does not own:
   the reserve and the capital are balances of the journal;
 - that nothing posts into a closed period: `account-transaction`'s;
 - who holds a capital account, and that it freezes on exit:
-  `account-member`'s; what a member subscribes and draws:
-  `account-member-transaction`'s;
+  `account-member`'s; what a member subscribes, pays in and draws, and
+  their capital moved to `4567` and repaid on exit:
+  `account-member-transaction`'s; the instalments withheld from pay:
+  `account-member-payslip-transaction`'s;
 - each worker's part on a basis: `account-payslip`'s by pay and in equal
   parts, `account-timesheet`'s by time worked, each the graft that knows
   the basis;
@@ -135,8 +165,8 @@ Account knows no transactions, members, decisions, payslips or time. Its
 balances, its allocation's approval and postings, its capital accounts'
 holders and the parts of its work share arrive through grafts. The work
 share never divides by revenue: French law offers a SCOP pay, time worked
-and equal parts (Code du travail, art. L3324-5). Buyout schedules,
-revolving capital and dues are not built.
+and equal parts (Code du travail, art. L3324-5). A deduction for losses
+from a repayment, revolving capital and dues are not built.
 
 ## Schema
 
@@ -150,8 +180,11 @@ revolving capital and dues are not built.
   its work share and the day it was allocated, and its shares;
   `stays_allocated` and `share_fixed` keep an allocated split as it was.
   `account.share_of(allocation, kind)` reads a share's cents.
-- `account.terms`: the work share's terms, `stays_adopted` keeping adopted
-  ones as they were; `terms_for(year)` names the terms governing a year,
+- `account.terms`: the statutes' terms, `stays_adopted` keeping adopted
+  ones as they were; `terms_for(year)` names the terms governing a year's
+  work share and `capital_for(day)` those whose capital clauses govern a
+  day, `repayments(terms, exited)` the day each repayment of an exit falls
+  due,
   `basis_of(terms)` what they divide by, and `portion(allocation, basis)`
   the cents of the work share a basis divides, split by the terms'
   weights with `cella.allocate`.
@@ -190,8 +223,8 @@ L3243-4) and redacted after.
   terms, the allocation names their basis, and each basis's parts add up
   to its portion.
 - `account.adopts`, on `account:terms:adopt`: the write adopted the terms
-  on the verdict date, their weights add up to 100, and no year they
-  would govern is allocated.
+  on the verdict date, their weights add up to 100, no year they would
+  govern is allocated, and their clauses repay an exit within five years.
 
 ## Handlers
 
@@ -213,14 +246,17 @@ divide by; each basis's portion, adding up to the work share; parts that
 add up pass, one missing or a basis the terms do not name is refused;
 parts are made only in the write that allocates and never change; terms
 that divide less than the whole, or would govern an allocated year, are
-refused, and adopted terms never change.
+refused, and adopted terms never change; the capital's clauses govern
+from the latest adopted terms that state them, are stated whole, fall
+due a year apart after the delay, and repay within five years.
 
 ## Shell
 
 The `accounts` collection, the chart by code; `periods`, the latest month
 first, a period's page closing it; and `allocations`, each year's surplus
 in a table, an allocation's page showing its split under a Split tab;
-`terms`, the work share's terms by year, adopted or drafted; and
+`terms`, the statutes' terms by year, adopted or drafted, a term's page
+with its capital clauses; and
 `statements`, each worker's part of each year's work share, a statement's
 page its part basis by basis against each basis's portion and weight.
 Printed, a page drops the shell and reads as a document. Balances, the trial
@@ -232,11 +268,16 @@ balance and each account's ledger are `account-transaction`'s; allocating,
 - The chart is a part of the PCG: `512` the bank at Crédit Coopératif,
   its one cash account, `401` suppliers, `411` clients, `421` and `431`
   what pay owes, `455` members' current accounts, `706` services, `44571`
-  VAT collected, and a capital account per member under `1013`.
+  VAT collected, a capital account per member under `1013`, `1012` and
+  `4562` for capital called and not paid, and `4567` for what departed
+  associates are owed: Paul's 1 500 €, frozen in `101311` since he left.
 - July, August and September 2026 are closed; October to December are
   open. Julien closes each month in the first week of the next.
 - The statutes' terms, `st-2021`, carried over, divide the work share by
-  pay and employ half of each associate's part in shares.
+  pay and employ half of each associate's part in shares. A share is
+  worth 50 €; an associate subscribes at least 20 and pays them in at most
+  10 monthly instalments; one who leaves is repaid a year after the exit,
+  in three yearly repayments.
 - The 2025 surplus of 61 400 € awaits allocation: d-2026-006 approved its
   split in June, 27 630 € (45 %) to the members for their work, divided
   by pay, 9 210 € (15 %) to the legal reserve, which is under the

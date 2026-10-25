@@ -5,7 +5,8 @@
 // already allocated; `account.divides` takes parts that add up to each
 // portion and refuses those that miss it or a basis the terms do not
 // name; parts are made only in the write that allocates, and never
-// change. Run by `cella test slice account`.
+// change; the capital's clauses govern from the latest adopted terms that
+// state them, are stated whole, and repay within five years. Run by `cella test slice account`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -96,4 +97,30 @@ test('terms are adopted whole, never over a year already allocated, and never ch
   assert.equal(await rule('account.adopts', { terms: 't-2027' }), null)
   assert.equal(await rule('account.adopts', { terms: 't-1999' }), 'no terms t-1999')
   await assert.rejects(db.query(`UPDATE account.terms SET capital = 10 WHERE id = 't-2027'`), /t-2027 were adopted on 2026-10-24/)
+})
+
+test('the capital\'s clauses govern from the latest adopted terms that state them, and repay within five years', async () => {
+  assert.equal((await one<{ t: string | null }>(`SELECT account.capital_for('2026-10-24') AS t`)).t, null)
+  await db.query(
+    `INSERT INTO account.terms (id, "from", salary, share, minimum, instalments, delay, repayments) VALUES
+       ('t-2030', 2030, 100, cella.amount(5000), 20, 10, 12, 3), ('t-2032', 2032, 100, cella.amount(5000), 1, 12, 48, 3)`,
+  )
+  await db.query(`INSERT INTO account.terms (id, "from", salary) VALUES ('t-2031', 2031, 100)`
+  )
+  await assert.rejects(
+    db.query(`INSERT INTO account.terms (id, "from", salary, share) VALUES ('t-half', 2030, 100, cella.amount(5000))`),
+    /terms_capital/,
+  )
+  await db.query(`UPDATE account.terms SET adopted = cella.verdict_date() WHERE id IN ('t-2030', 't-2031', 't-2032')`)
+  assert.equal(await rule('account.adopts', { terms: 't-2030' }), null)
+  assert.equal(await rule('account.adopts', { terms: 't-2032' }), 't-2032 repay a departing associate 72 months after the exit: a SCOP repays within five years')
+  // t-2031 state no clauses: t-2030's still govern 2031
+  assert.equal((await one<{ t: string }>(`SELECT account.capital_for('2031-06-01') AS t`)).t, 't-2030')
+  assert.equal((await one<{ t: string }>(`SELECT account.capital_for('2033-01-01') AS t`)).t, 't-2032')
+  const due = (await db.query(`SELECT n, to_char(due, 'YYYY-MM-DD') AS due FROM account.repayments('t-2030', '2025-11-30')`)).rows
+  assert.deepEqual(due, [
+    { n: 1, due: '2026-11-30' },
+    { n: 2, due: '2027-11-30' },
+    { n: 3, due: '2028-11-30' },
+  ])
 })

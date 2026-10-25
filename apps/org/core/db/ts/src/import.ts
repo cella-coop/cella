@@ -9,41 +9,33 @@ export interface Line {
   done: Done
 }
 
-// A connection on which each write's transaction is a savepoint inside
-// one transaction, so a dry run's writes meet their rules and the notary
-// as they would, and are all undone at its end.
-const savepoints: Record<string, string> = { BEGIN: 'SAVEPOINT imported', COMMIT: 'RELEASE SAVEPOINT imported', ROLLBACK: 'ROLLBACK TO SAVEPOINT imported' }
-
-const nested = (db: Db): Db => ({
-  query: <R>(text: string, values?: unknown[]) => db.query<R>(savepoints[text.trim()] ?? text, values),
+// A connection on which each write's transaction is rolled back where it
+// would commit: a dry run's write meets its rules and the notary as it
+// would, and leaves nothing. The notary takes one receipt for a
+// transaction, so each write needs its own, and none sees another's.
+const undone = (db: Db): Db => ({
+  query: <R>(text: string, values?: unknown[]) => db.query<R>(text.trim() === 'COMMIT' ? 'ROLLBACK' : text, values),
 })
 
 // Runs an imported file's records as writes, in the file's order, as the
 // importing member: each settles, or is refused with the rule's reason,
-// alone. A dry run makes every write and undoes them all, so it says what
-// would be created and what refused.
+// alone. A dry run makes each write and undoes it, so it says what would
+// be created and what refused, each line judged on the co-op as it
+// stands; a settled line names no entry, since none stays.
 export async function importing(records: Imported[], deps: Deps, dry: boolean): Promise<Line[]> {
-  const db = dry ? nested(deps.db) : deps.db
+  const db = dry ? undone(deps.db) : deps.db
   const lines: Line[] = []
-  if (dry) {
-    await deps.db.query('BEGIN')
-  }
-  try {
-    for (const r of records) {
-      const line = { line: r.line, label: r.label }
-      if (!r.run) {
-        lines.push({ ...line, done: { op: r.op, state: 'failed', reason: r.refused ?? 'this line cannot be read', then: [] } })
-        continue
-      }
-      try {
-        lines.push({ ...line, done: done(r.op, await r.run({ ...deps, db })) })
-      } catch (e) {
-        lines.push({ ...line, done: { op: r.op, state: 'failed', reason: (e as Error).message, then: [] } })
-      }
+  for (const r of records) {
+    const line = { line: r.line, label: r.label }
+    if (!r.run) {
+      lines.push({ ...line, done: { op: r.op, state: 'failed', reason: r.refused ?? 'this line cannot be read', then: [] } })
+      continue
     }
-  } finally {
-    if (dry) {
-      await deps.db.query('ROLLBACK')
+    try {
+      const made = done(r.op, await r.run({ ...deps, db }))
+      lines.push({ ...line, done: dry ? { ...made, entry: undefined } : made })
+    } catch (e) {
+      lines.push({ ...line, done: { op: r.op, state: 'failed', reason: (e as Error).message, then: [] } })
     }
   }
   return lines
@@ -51,14 +43,14 @@ export async function importing(records: Imported[], deps: Deps, dry: boolean): 
 
 // A CSV file's records, each a row of its header's fields, by name, with
 // the line it starts on: quoted fields may hold the separator, quotes
-// doubled and line breaks; the separator is the header's comma, semicolon
-// or tab, whichever it holds most of, so spreadsheets set to French write
-// files it reads. A byte-order mark is dropped.
+// doubled and line breaks; the separator is the header's comma, semicolon,
+// tab or bar, whichever it holds most of, so spreadsheets set to French
+// and FEC files read alike. A byte-order mark is dropped.
 export function csv(text: string): { line: number; fields: Record<string, string> }[] {
-  const body = text.replace(/^﻿/, '')
+  const body = text.replace(/^\uFEFF/, '')
   const head = body.slice(0, body.indexOf('\n') === -1 ? body.length : body.indexOf('\n'))
   const count = (c: string) => head.split(c).length
-  const sep = [',', ';', '\t'].reduce((a, b) => (count(b) > count(a) ? b : a))
+  const sep = [',', ';', '\t', '|'].reduce((a, b) => (count(b) > count(a) ? b : a))
   const rows: { line: number; cells: string[] }[] = []
   let cells: string[] = []
   let cell = ''

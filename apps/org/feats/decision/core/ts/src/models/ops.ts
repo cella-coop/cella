@@ -8,4 +8,7 @@ export const ops = {
   // the notary fixes which votes made the deadline; closed by a member
   // seated in the decision's circle
   'decision:decision:close': ordered({ check: 'seat' }),
+  // a message on its deliberation: messages add up in any order, each the
+  // author's own; posted by a member seated in the decision's circle
+  'decision:message:post': confluent({ check: 'seat' }),
 } satisfies Ops

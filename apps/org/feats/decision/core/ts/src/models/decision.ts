@@ -1,3 +1,5 @@
+import type { Message } from './thread.ts'
+
 export type Stance = 'for' | 'against' | 'abstain' | 'consent' | 'object'
 
 export type Rule = 'consent' | 'majority'
@@ -59,6 +61,8 @@ export interface Detail extends Decision {
   terms: Procedure
   given: Given[]
   motions: Motioned[]
+  // Its deliberation, in the order received.
+  messages: Message[]
 }
 
 // An argument a motion of a kind takes, as the New form asks for it.

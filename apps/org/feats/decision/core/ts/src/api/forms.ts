@@ -1,6 +1,7 @@
 import type { Db, Form } from '@cella/org-db'
 import { kinds, procedures } from '../drivers/decision.ts'
 import type { Arg, Motion, Propose } from '../models/decision.ts'
+import { links, mentions, type Post } from '../models/thread.ts'
 
 // What the New form sends, read into a proposal: the decision, and at most
 // one motion, its kind's arguments in fields named `arg.<name>`, read as
@@ -52,4 +53,18 @@ export function args(form: Form, fields: Arg[]): Motion['args'] {
     }
   }
   return out
+}
+
+// A message as the acting member, perhaps answering another: its text,
+// and the handles it mentions and the documents it links, read from it.
+export function post(form: Form, decision: string, member: string): Post {
+  const body = form.get('body').trim()
+  if (!body) {
+    throw new Error('a message says something')
+  }
+  const reply = form.get('reply')
+  if (reply && !/^\d+$/.test(reply)) {
+    throw new Error(`a reply answers a message by its number, not “${reply}”`)
+  }
+  return { decision, member, reply: reply ? Number(reply) : null, body, mentions: mentions(body), links: links(body) }
 }

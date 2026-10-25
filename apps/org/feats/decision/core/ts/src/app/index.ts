@@ -2,6 +2,7 @@ import { icons, type App } from '@cella/org-ui'
 import { terms, type Decision, type Detail } from '../models/decision.ts'
 import Close from './blocks/Close.svelte'
 import Create from './blocks/Create.svelte'
+import Discussion from './blocks/Discussion.svelte'
 import Proposal from './blocks/Proposal.svelte'
 
 // The decision card, which the grafts that draw a decision elsewhere embed.
@@ -34,7 +35,7 @@ export const app: App = {
         subtitle: (d: Detail) => `${d.id} · by ${d.terms.label.toLowerCase()} in ${d.circle}`,
         properties: (d: Detail) => [
           { label: 'Procedure', value: d.terms.label },
-          { label: 'Terms', value: terms(d.terms) },
+          ...(terms(d.terms) === d.terms.label.toLowerCase() ? [] : [{ label: 'Terms', value: terms(d.terms) }]),
           { label: 'Circle', value: d.circle, href: `/circles/${d.circle}` },
           { label: 'Proposed', value: d.proposed, kind: 'date' },
           { label: 'Deadline', value: d.deadline, kind: 'date' },
@@ -43,13 +44,15 @@ export const app: App = {
         ],
         related: (d: Detail) => [{ label: d.circle, sub: 'circle', href: `/circles/${d.circle}` }],
         activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member.split('@')[0], text: `${g.stance}, receipt ${g.receipt}` })),
-        // The decision itself, and who stands where on it: the roll is the
-        // one view the overview does not already give.
+        // The decision itself, who stands where on it, and what its members
+        // say about it: the roll and the deliberation are the two views the
+        // overview does not already give.
         tabs: [
           { id: 'overview', label: 'Overview' },
           { id: 'stances', label: 'Stances' },
+          { id: 'discussion', label: 'Discussion' },
         ],
-        blocks: [Proposal],
+        blocks: [Proposal, { tab: 'discussion', block: Discussion }],
         actions: Close,
       },
     },

@@ -1,0 +1,17 @@
+{
+  "name": "@cella/org-graft-patronage-transaction",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-patronage": "workspace:*",
+    "@cella/org-transaction": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

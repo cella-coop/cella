@@ -8,9 +8,9 @@ import Balances from './blocks/Balance.svelte'
 const sum = (rows: Partial<Balance>[], f: (r: Partial<Balance>) => number | undefined) => rows.reduce((s, r) => s + (f(r) ?? 0), 0)
 
 // The graft's client side: each account's debits, credits and balance in
-// the chart, whether the trial balance agrees, an account's ledger, the
-// entry an allocation posted, and each span's income statement and balance
-// sheet against the span before it, in the PCG's presentation.
+// the chart, whether the trial balance agrees, an account's ledger, and
+// each span's income statement and balance sheet against the span before
+// it, in the PCG's presentation.
 export const app: App = {
   name: 'account-transaction',
   extends: {
@@ -39,12 +39,6 @@ export const app: App = {
           { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
         ],
         blocks: [Movements],
-      },
-    },
-    // The entry an allocation posted.
-    allocations: {
-      page: {
-        related: (p: { entry: string | null }) => (p.entry ? [{ label: p.entry, sub: 'posted the split', href: `/transactions/${p.entry}` }] : []),
       },
     },
     // Each span's result and total assets, and its two statements.

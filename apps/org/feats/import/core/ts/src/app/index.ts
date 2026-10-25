@@ -1,0 +1,47 @@
+import { icons, type App } from '@cella/org-ui'
+import type { Run } from '../models/run.ts'
+import Create from './blocks/Create.svelte'
+import Lines from './blocks/Lines.svelte'
+
+// The feat's client side: the imports made, a file imported or tried in a
+// dry run from the list, and each import's lines on its page.
+export const app: App = {
+  name: 'import',
+  collections: {
+    imports: {
+      view: {
+        group: 'platform',
+        title: 'Imports',
+        caption: 'Members, clients, the books, invoices, time, projects and tasks brought in from other tools',
+        icon: icons.FileArrowUp,
+        create: Create,
+        columns: [
+          { key: 'name', label: 'File', kind: 'title', role: 'title', value: (r: Run) => r.name },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (r: Run) => r.id },
+          { key: 'kind', label: 'Kind', kind: 'badge', role: 'meta', value: (r: Run) => r.kind },
+          { key: 'dry', label: 'Run', kind: 'badge', role: 'meta', value: (r: Run) => (r.dry ? 'dry run' : 'imported'), tone: (r: Run) => (r.dry ? 'neutral' : 'positive') },
+          { key: 'settled', label: 'Settled', kind: 'number', role: 'meta', value: (r: Run) => r.settled },
+          { key: 'refused', label: 'Refused', kind: 'number', role: 'meta', value: (r: Run) => r.refused, tone: (r: Run) => (r.refused ? 'negative' : 'neutral') },
+          { key: 'day', label: 'On', kind: 'date', role: 'hidden', value: (r: Run) => r.day },
+          { key: 'actor', label: 'By', kind: 'mono', role: 'hidden', value: (r: Run) => r.actor },
+        ],
+        empty: 'Nothing imported yet. Bring in a file from another tool with New, a dry run first.',
+      },
+      page: {
+        eyebrow: 'Import',
+        title: (r: Run) => r.name,
+        subtitle: (r: Run) => `${r.id}, ${r.kind}, ${r.dry ? 'a dry run' : 'imported'}`,
+        properties: (r: Run) => [
+          { label: 'Run', value: r.dry ? 'dry run, undone' : 'imported', kind: 'badge', tone: r.dry ? 'neutral' : 'positive' },
+          { label: 'Kind', value: r.kind },
+          { label: 'Settled', value: r.settled, kind: 'number' },
+          { label: 'Refused', value: r.refused, kind: 'number', tone: r.refused ? 'negative' : undefined },
+          { label: 'On', value: r.day, kind: 'date' },
+          { label: 'By', value: r.actor, kind: 'mono' },
+        ],
+        activity: (r: Run) => [{ at: r.day, text: r.dry ? 'tried in a dry run' : 'imported', who: r.actor }],
+        blocks: [Lines],
+      },
+    },
+  },
+}

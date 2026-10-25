@@ -1,6 +1,6 @@
 # Circles meeting, with their agendas in order: each item a title, who
 # presents it and its length in minutes. A held meeting was held on its
-# day. Who came is graft.meeting-member.toml's, the decisions an item
+# day. Who came is graft.meeting-membership.toml's, the decisions an item
 # tables graft.decision-meeting.toml's, and the minutes
 # graft.document-meeting.toml's. Coordination meets every Monday at ten,
 # at the studio and online; the assembly on a Saturday morning.

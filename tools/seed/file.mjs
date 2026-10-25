@@ -1,6 +1,6 @@
 // seed, files: loads a mock co-op's files into the file feat, each one's
 // bytes read from the fixture's files/ directory, and the grafts that
-// attach them (expense-file's receipts, file-member's and file-worker's
+// attach them (expense-file's receipts, file-membership's and employment-file's
 // records). The expenses, members and workers load first.
 
 import { readFileSync } from 'node:fs'
@@ -22,11 +22,11 @@ export async function files(db, read, day, dir) {
   for (const r of read('graft.expense-file').receipt ?? []) {
     await db.query('INSERT INTO expense_file.receipt (expense, file) VALUES ($1, $2)', [r.expense, r.file])
   }
-  for (const r of read('graft.file-member').record ?? []) {
-    await db.query('INSERT INTO file_member.record (member, file) VALUES ($1, $2)', [r.member, r.file])
+  for (const r of read('graft.file-membership').record ?? []) {
+    await db.query('INSERT INTO file_membership.record (member, file) VALUES ($1, $2)', [r.member, r.file])
   }
-  for (const r of read('graft.file-worker').record ?? []) {
-    await db.query('INSERT INTO file_worker.record (worker, file) VALUES ($1, $2)', [r.worker, r.file])
+  for (const r of read('graft.employment-file').record ?? []) {
+    await db.query('INSERT INTO employment_file.record (worker, file) VALUES ($1, $2)', [r.worker, r.file])
   }
   return `${kept.length} files`
 }

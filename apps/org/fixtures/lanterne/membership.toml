@@ -1,9 +1,8 @@
-# Each member: who they are and where their membership stands. Positions in
-# circles are the circle-member graft's; admission votes the decision-member's.
+# Each member: where their membership stands; who they are is person.toml's. Positions in
+# circles are the circle-membership graft's; admission votes the decision-membership's.
 
 [[member]]
 address = "camille@lanterne.example"
-name = "Camille Martin"
 role = "brand strategist"
 status = "active"
 since = 2021-03-01
@@ -11,7 +10,6 @@ shares = 40
 
 [[member]]
 address = "yusuf@lanterne.example"
-name = "Yusuf Demir"
 role = "lead developer"
 status = "active"
 since = 2021-03-01
@@ -19,7 +17,6 @@ shares = 40
 
 [[member]]
 address = "hugo@lanterne.example"
-name = "Hugo Lefèvre"
 role = "graphic designer"
 status = "active"
 since = 2021-03-01
@@ -27,7 +24,6 @@ shares = 40
 
 [[member]]
 address = "julien@lanterne.example"
-name = "Julien Petit"
 role = "administration and finance"
 status = "active"
 since = 2021-09-01
@@ -35,7 +31,6 @@ shares = 20
 
 [[member]]
 address = "lea@lanterne.example"
-name = "Léa Bernard"
 role = "UX and interface designer"
 status = "active"
 since = 2022-01-10
@@ -43,7 +38,6 @@ shares = 20
 
 [[member]]
 address = "thomas@lanterne.example"
-name = "Thomas Nguyen"
 role = "full-stack developer"
 status = "active"
 since = 2022-04-04
@@ -51,7 +45,6 @@ shares = 20
 
 [[member]]
 address = "sofia@lanterne.example"
-name = "Sofia Rossi"
 role = "illustrator and motion designer"
 status = "active"
 since = 2022-09-05
@@ -59,7 +52,6 @@ shares = 20
 
 [[member]]
 address = "malik@lanterne.example"
-name = "Malik Benali"
 role = "marketing strategist"
 status = "active"
 since = 2022-11-02
@@ -67,7 +59,6 @@ shares = 20
 
 [[member]]
 address = "amina@lanterne.example"
-name = "Amina Diallo"
 role = "backend developer"
 status = "active"
 since = 2023-06-12
@@ -75,7 +66,6 @@ shares = 20
 
 [[member]]
 address = "chloe@lanterne.example"
-name = "Chloé Moreau"
 role = "content and social media"
 status = "active"
 since = 2024-02-05
@@ -83,7 +73,6 @@ shares = 20
 
 [[member]]
 address = "paul@lanterne.example"
-name = "Paul Garnier"
 role = "art director, until 30 November 2025"
 status = "exited"
 since = 2021-03-01
@@ -92,8 +81,15 @@ shares = 30
 
 [[member]]
 address = "ines@lanterne.example"
-name = "Inès Haddad"
 role = "junior developer, employed since 2025-09-01"
 status = "invited"
 invited = 2026-09-30
 shares = 0
+
+# The first device each invitation carries, enrolled by the admission. The
+# seed derives its TEST-ONLY key from the invitee's address and the
+# device's label, as it does every fixture device's.
+
+[[invitation]]
+member = "ines@lanterne.example"
+label = "phone"

@@ -1,7 +1,7 @@
 # Lanterne's projects, one for each piece of work a client commissioned,
 # with its milestones as quoted and invoiced. Budgets are in cents, net of
 # VAT, as quoted. Which client each is for is the client-project graft's;
-# the shares of a budget, the member-project graft's.
+# the shares of a budget, the membership-project graft's.
 
 [[project]]
 id = "halles-shop"

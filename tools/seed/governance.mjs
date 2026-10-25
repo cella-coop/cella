@@ -1,6 +1,6 @@
 // seed, governance: what each decision decides, its motions, in the order
 // proposed, before any stance is given on it; and the first device each
-// invitation carries (key-member), whose TEST-ONLY key is derived from the
+// invitation carries (membership's), whose TEST-ONLY key is derived from the
 // invitee's address and the device's label, as every fixture device's is,
 // so the admission that enrols it is one the tests can sign after.
 
@@ -14,12 +14,12 @@ export async function motions(db, d) {
   return (d.motion ?? []).length
 }
 
-// The invitations' first devices, from graft.key-member.toml.
+// The invitations' first devices, from membership.toml's `[[invitation]]`.
 export async function invitations(db, read) {
-  const list = read('graft.key-member').invitation ?? []
+  const list = read('membership').invitation ?? []
   for (const i of list) {
     const { key } = await fixture(i.member, i.label)
-    await db.query(`INSERT INTO key_member.invitation (member, key, label) VALUES ($1, decode($2, 'hex'), $3)`, [i.member, key, i.label])
+    await db.query(`INSERT INTO membership.invitation (member, key, label) VALUES ($1, decode($2, 'hex'), $3)`, [i.member, key, i.label])
   }
   return list.length
 }

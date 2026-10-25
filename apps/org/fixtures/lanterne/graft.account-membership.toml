@@ -1,5 +1,5 @@
 # What each member may draw on their account, granted in advance, in
-# cents. The value of a share is member.toml's `share_value`; who holds
+# cents. The value of a share is the capital terms' `share` in account.toml; who holds
 # each capital account is account.toml's `holder`.
 
 [[allowance]]

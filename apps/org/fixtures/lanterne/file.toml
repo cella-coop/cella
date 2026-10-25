@@ -15,7 +15,7 @@ uploaded = 2024-06-14
 
 [[file]]
 id = "fi-0002"
-class = "member-profile"
+class = "profile"
 subject = "camille@lanterne.example"
 name = "bulletin-souscription-camille.pdf"
 type = "application/pdf"

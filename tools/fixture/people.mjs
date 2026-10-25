@@ -8,8 +8,8 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 const contracts = new Set(['permanent', 'fixed-term', 'apprenticeship'])
 
 export function people(read, fail) {
-  const workers = new Map((read('worker').worker ?? []).map((w) => [w.address, w]))
-  const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
+  const workers = new Map((read('employment').worker ?? []).map((w) => [w.address, w]))
+  const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
 
   for (const w of workers.values()) {
     if (!contracts.has(w.contract)) {
@@ -26,7 +26,7 @@ export function people(read, fail) {
     }
   }
 
-  for (const c of read('graft.member-worker').candidacy ?? []) {
+  for (const c of read('graft.employment-membership').candidacy ?? []) {
     const w = workers.get(c.worker)
     if (!w) {
       fail(`candidacy of ${c.worker}: no worker`)

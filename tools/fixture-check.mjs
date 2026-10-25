@@ -1,6 +1,7 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
 // every surplus distribution splits the whole surplus, every link a graft holds
-// resolves, every address is a member's, the books agree with the invoices,
+// resolves, every device and every membership and employment is a person's,
+// every vote and seat a member's, the books agree with the invoices,
 // and every document version is an outline of blocks the document model
 // takes, whose embeds name what exists and whose comments quote text one of
 // its blocks holds.
@@ -27,7 +28,7 @@ const check = (name) => {
   const fail = (msg) => errors.push(`${name}: ${msg}`)
   const ids = (list, key = 'id') => new Set((list ?? []).map((x) => x[key]))
 
-  const member = read('member')
+  const member = read('membership')
   const circle = read('circle')
   const decision = read('decision')
   const document = read('document')
@@ -36,7 +37,7 @@ const check = (name) => {
   const account = read('account')
   const patronage = read('patronage')
   const transaction = read('transaction')
-  const key = read('key')
+  const person = read('person')
 
   const addresses = ids(member.member, 'address')
   const known = (addr, where) => {
@@ -69,8 +70,16 @@ const check = (name) => {
     }
   }
 
-  for (const d of key.device ?? []) {
-    known(d.address, 'device')
+  const everyone = ids(person.person, 'address')
+  for (const p of [...(member.member ?? []), ...(read('employment').worker ?? [])]) {
+    if (!everyone.has(p.address)) {
+      fail(`${p.address}: no person holds their membership or employment`)
+    }
+  }
+  for (const d of person.device ?? []) {
+    if (!everyone.has(d.address)) {
+      fail(`device: ${d.address} is no person`)
+    }
   }
 
   const decisions = ids(decision.decision)

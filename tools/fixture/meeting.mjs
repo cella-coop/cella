@@ -14,11 +14,11 @@ export const meetingIds = (read) => new Set((read('meeting').meeting ?? []).map(
 export function meeting(read, fail) {
   const today = iso(read('scope').today)
   const circles = new Set((read('circle').circle ?? []).map((c) => c.id))
-  const active = new Set((read('member').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
+  const active = new Set((read('membership').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
   const decisions = new Map((read('decision').decision ?? []).map((d) => [d.id, d]))
   const documents = new Set((read('document').document ?? []).map((d) => d.id))
   const meetings = new Map((read('meeting').meeting ?? []).map((m) => [m.id, m]))
-  const positions = read('graft.circle-member').position ?? []
+  const positions = read('graft.circle-membership').position ?? []
   const seated = (circle, member, day) =>
     positions.some((p) => p.circle === circle && p.member === member && (!p.since || iso(p.since) <= day) && (!p.until || iso(p.until) > day))
   const keeps = (circle, member, day) =>
@@ -43,7 +43,7 @@ export function meeting(read, fail) {
     }
   }
 
-  for (const a of read('graft.meeting-member').attendance ?? []) {
+  for (const a of read('graft.meeting-membership').attendance ?? []) {
     const m = meetings.get(a.meeting)
     if (!m) {
       fail(`attendance: no meeting ${a.meeting}`)

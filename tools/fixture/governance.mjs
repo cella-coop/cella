@@ -8,7 +8,7 @@
 const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke'])
 
 export function governance(read, fail) {
-  const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
+  const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
   const circles = new Set((read('circle').circle ?? []).map((c) => c.id))
   for (const d of read('decision').decision ?? []) {
     for (const m of d.motion ?? []) {
@@ -29,7 +29,7 @@ export function governance(read, fail) {
     }
   }
   const carried = new Set()
-  for (const i of read('graft.key-member').invitation ?? []) {
+  for (const i of read('membership').invitation ?? []) {
     if (members.get(i.member)?.status !== 'invited') {
       fail(`invitation of ${i.member}: carries a device for no one invited`)
     }
@@ -40,7 +40,7 @@ export function governance(read, fail) {
   }
   for (const m of members.values()) {
     if (m.status === 'invited' && !carried.has(m.address)) {
-      fail(`member ${m.address}: invited, with no first device in graft.key-member.toml`)
+      fail(`member ${m.address}: invited, with no first device in membership.toml`)
     }
   }
 }

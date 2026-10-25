@@ -126,7 +126,7 @@ test('a column that may hold personal data is registered personal or commented n
   const declared = await check({
     member: table + `
       INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
-        ('member', 'member', 'name', 'member-profile', 'address', 'member'),
+        ('member', 'member', 'name', 'profile', 'address', 'member'),
         ('member', 'member', 'email', 'contact', 'address', 'member');
       COMMENT ON COLUMN member.member.address IS 'not personal: a pseudonym';`,
   })

@@ -1,8 +1,60 @@
+# Everyone Lanterne knows, by the address they sign with: its members and
+# its workers, each once, whatever they hold. Whether they are a member is
+# membership.toml's, whether they work here employment.toml's.
+
+[[person]]
+address = "camille@lanterne.example"
+name = "Camille Martin"
+
+[[person]]
+address = "yusuf@lanterne.example"
+name = "Yusuf Demir"
+
+[[person]]
+address = "hugo@lanterne.example"
+name = "Hugo Lefèvre"
+
+[[person]]
+address = "julien@lanterne.example"
+name = "Julien Petit"
+
+[[person]]
+address = "lea@lanterne.example"
+name = "Léa Bernard"
+
+[[person]]
+address = "thomas@lanterne.example"
+name = "Thomas Nguyen"
+
+[[person]]
+address = "sofia@lanterne.example"
+name = "Sofia Rossi"
+
+[[person]]
+address = "malik@lanterne.example"
+name = "Malik Benali"
+
+[[person]]
+address = "amina@lanterne.example"
+name = "Amina Diallo"
+
+[[person]]
+address = "chloe@lanterne.example"
+name = "Chloé Moreau"
+
+[[person]]
+address = "paul@lanterne.example"
+name = "Paul Garnier"
+
+[[person]]
+address = "ines@lanterne.example"
+name = "Inès Haddad"
+
 # Each worker's and member's devices. The seed enrols each with a TEST-ONLY
 # key derived from its address and label, which anyone can compute: fixture
 # keys never belong to a real member. Inès's laptop was enrolled with her
 # hire, so she signs her own time though she is no member yet; her
-# invitation carries her phone (graft.key-member.toml), which her
+# invitation carries her phone (membership.toml), which her
 # admission enrols.
 
 [[device]]

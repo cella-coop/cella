@@ -1,7 +1,0 @@
-# The first device each invitation carries, enrolled by the admission. The
-# seed derives its TEST-ONLY key from the invitee's address and the
-# device's label, as it does every fixture device's.
-
-[[invitation]]
-member = "ines@lanterne.example"
-label = "phone"

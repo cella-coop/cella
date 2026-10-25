@@ -12,7 +12,7 @@ import { weekdays } from '../seed/work.mjs'
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function work(read, fail) {
-  const addresses = new Set((read('member').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
+  const addresses = new Set((read('membership').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
   const clients = new Set((read('client').client ?? []).map((c) => c.id))
   const projects = new Map((read('project').project ?? []).map((p) => [p.id, p]))
   const tasks = new Map((read('task').task ?? []).map((t) => [t.id, t]))
@@ -25,7 +25,7 @@ export function work(read, fail) {
     }
   }
   // Time is a worker's, member or not, on days of their employment.
-  const workers = new Map((read('worker').worker ?? []).map((w) => [w.address, w]))
+  const workers = new Map((read('employment').worker ?? []).map((w) => [w.address, w]))
   const employed = (address, from, to, where) => {
     const w = workers.get(address)
     if (!w) {
@@ -72,7 +72,7 @@ export function work(read, fail) {
   }
 
   const shared = new Map()
-  for (const s of read('graft.member-project').share ?? []) {
+  for (const s of read('graft.membership-project').share ?? []) {
     has(projects, s.project, 'project', 'share')
     active(s.member, `share of ${s.project}`)
     shared.set(s.project, (shared.get(s.project) ?? 0) + s.amount)
@@ -92,7 +92,7 @@ export function work(read, fail) {
       fail(`task ${t.id}: completed before it was created`)
     }
   }
-  for (const a of read('graft.member-task').assignment ?? []) {
+  for (const a of read('graft.membership-task').assignment ?? []) {
     has(tasks, a.task, 'task', 'assignment')
     active(a.member, `assignment of ${a.task}`)
   }

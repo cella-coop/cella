@@ -1,7 +1,7 @@
 // seed, finance: loads a mock co-op's capital, the statutes' terms, surplus
 // distributions, pay and expenses into the account, patronage, payslip and
-// expense schemas and their grafts' (decision-patronage, account-member,
-// account-member-transaction's repayments, member-payslip,
+// expense schemas and their grafts' (decision-patronage, account-membership,
+// account-membership-transaction's repayments, employment-payslip,
 // payslip-transaction, expense-project). The chart, the
 // journal, the members and their time load first: a capital account names
 // its holder and its parent once every account is in; a pay run's payslips
@@ -13,8 +13,8 @@ export async function finance(db, read, day) {
   for (const a of (books.account ?? []).filter((a) => a.parent || a.holder)) {
     await db.query('UPDATE account.account SET parent = $2, holder = $3, frozen = $4 WHERE code = $1', [a.code, a.parent ?? null, a.holder ?? null, a.frozen ?? false])
   }
-  for (const a of read('graft.account-member').allowance ?? []) {
-    await db.query('INSERT INTO account_member.allowance (member, amount) VALUES ($1, cella.amount($2))', [a.member, a.amount])
+  for (const a of read('graft.account-membership').allowance ?? []) {
+    await db.query('INSERT INTO account_membership.allowance (member, amount) VALUES ($1, cella.amount($2))', [a.member, a.amount])
   }
 
   for (const t of books.terms ?? []) {
@@ -37,9 +37,9 @@ export async function finance(db, read, day) {
       await db.query('INSERT INTO patronage.share (distribution, kind, percent, amount) VALUES ($1, $2, $3, cella.amount($4))', [a.id, s.kind, s.percent, s.amount])
     }
   }
-  for (const r of read('graft.account-member-transaction').repayment ?? []) {
+  for (const r of read('graft.account-membership-transaction').repayment ?? []) {
     await db.query(
-      'INSERT INTO account_member_transaction.repayment (member, n, due, amount, entry, paid) VALUES ($1, $2, $3, cella.amount($4), $5, $6)',
+      'INSERT INTO account_membership_transaction.repayment (member, n, due, amount, entry, paid) VALUES ($1, $2, $3, cella.amount($4), $5, $6)',
       [r.member, r.n, day(r.due), r.amount, r.entry ?? null, day(r.paid)],
     )
   }

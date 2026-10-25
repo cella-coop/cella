@@ -13,14 +13,14 @@
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function finance(read, fail) {
-  const members = new Map((read('member').member ?? []).map((m) => [m.address, m]))
-  const workers = new Set((read('worker').worker ?? []).map((w) => w.address))
+  const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
+  const workers = new Set((read('employment').worker ?? []).map((w) => w.address))
   const books = read('account')
   const patronage = read('patronage')
   // The share's value and the capital clauses: the latest adopted terms
   const clauses = (books.terms ?? []).filter((t) => t.adopted).sort((x, y) => y.from - x.from)[0] ?? {}
   const value = clauses.share
-  const repayments = read('graft.account-member-transaction').repayment ?? []
+  const repayments = read('graft.account-membership-transaction').repayment ?? []
   const accounts = new Map((books.account ?? []).map((a) => [a.code, a]))
   const entries = new Map((read('transaction').entry ?? []).map((e) => [e.id, e]))
   const balance = (code) =>
@@ -67,7 +67,7 @@ export function finance(read, fail) {
   if (accounts.has('4567') && balance('4567') !== owed) {
     fail(`account 4567: the journal owes departed associates ${balance('4567')}, not the ${owed} their repayments leave to pay`)
   }
-  for (const a of read('graft.account-member').allowance ?? []) {
+  for (const a of read('graft.account-membership').allowance ?? []) {
     if (!members.has(a.member)) {
       fail(`allowance: ${a.member} is no member`)
     }

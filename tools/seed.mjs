@@ -1,6 +1,6 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
-// carried over from before the log: the scope's address, members, workers
-// and their candidacies, their devices, circles, roles and mandates,
+// carried over from before the log: the scope's address, people, their
+// memberships, employments and candidacies, their devices, circles, roles and mandates,
 // seats, decisions with their stances and what they decide, invitations'
 // first devices, documents with their versions, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
@@ -48,38 +48,45 @@ for (const [setting, value] of Object.entries(settings)) {
   }
 }
 
-const members = read('member').member ?? []
+// Everyone the co-op knows, then the memberships they hold.
+const people = read('person').person ?? []
+for (const p of people) {
+  await db.query('INSERT INTO person.person (address, name, email, phone) VALUES ($1, $2, $3, $4)', [p.address, p.name, p.email ?? null, p.phone ?? null])
+}
+const named = new Map(people.map((p) => [p.address, p.name]))
+const members = read('membership').member ?? []
 for (const m of members) {
   await db.query(
-    'INSERT INTO member.member (address, name, status, since, shares, invited, exited) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-    [m.address, m.name, m.status, day(m.since), m.shares, day(m.invited), day(m.exited)],
+    'INSERT INTO membership.member (address, status, since, shares, invited, exited) VALUES ($1, $2, $3, $4, $5, $6)',
+    [m.address, m.status, day(m.since), m.shares, day(m.invited), day(m.exited)],
   )
 }
 
 // A first device is enrolled by the seed, before the log, so it names no
 // device that enrolled it.
-const devices = read('key').device ?? []
+const devices = read('person').device ?? []
 for (const d of devices) {
   const { key } = await fixture(d.address, d.label)
   await db.query(
-    `INSERT INTO key.device (key, address, label, enrolled, revoked) VALUES (decode($1, 'hex'), $2, $3, $4, $5)`,
+    `INSERT INTO person.device (key, address, label, enrolled, revoked) VALUES (decode($1, 'hex'), $2, $3, $4, $5)`,
     [key, d.address, d.label, day(d.enrolled), day(d.revoked)],
   )
 }
 
 // Everyone the co-op employs, member or not, and their candidacies for
 // membership, before their time and their pay load. Each hire is recorded
-// on the day its contract starts.
-const workers = read('worker').worker ?? []
+// on the day its contract starts, the register of the staff copying the
+// person's name.
+const workers = read('employment').worker ?? []
 for (const w of workers) {
   await db.query(
-    'INSERT INTO worker.worker (address, name, job, contract, start, until, minutes, hired) VALUES ($1, $2, $3, $4, $5, $6, $7, $5)',
-    [w.address, w.name, w.job, w.contract, day(w.start), day(w.until), Math.round(w.hours * 60)],
+    'INSERT INTO employment.worker (address, name, job, contract, start, until, minutes, hired) VALUES ($1, $2, $3, $4, $5, $6, $7, $5)',
+    [w.address, named.get(w.address), w.job, w.contract, day(w.start), day(w.until), Math.round(w.hours * 60)],
   )
 }
-const candidacies = read('graft.member-worker').candidacy ?? []
+const candidacies = read('graft.employment-membership').candidacy ?? []
 for (const c of candidacies) {
-  await db.query('INSERT INTO member_worker.candidacy (worker, "from", "to", shares, opened) VALUES ($1, $2, $3, $4, $2)', [
+  await db.query('INSERT INTO employment_membership.candidacy (worker, "from", "to", shares, opened) VALUES ($1, $2, $3, $4, $2)', [
     c.worker,
     day(c.from),
     day(c.to),
@@ -118,10 +125,10 @@ for (const m of structure.mandate ?? []) {
   )
 }
 
-const positions = read('graft.circle-member').position ?? []
+const positions = read('graft.circle-membership').position ?? []
 for (const p of positions) {
   await db.query(
-    'INSERT INTO circle_member.position (circle, member, role, since, until) VALUES ($1, $2, $3, $4, $5)',
+    'INSERT INTO circle_membership.position (circle, member, role, since, until) VALUES ($1, $2, $3, $4, $5)',
     [p.circle, p.member, p.role ?? null, day(p.since), day(p.until)],
   )
 }
@@ -210,9 +217,9 @@ for (const a of adoptions) {
 }
 
 // Who read which binding version of the texts, once each version is in.
-const readings = read('graft.document-member').reading ?? []
+const readings = read('graft.document-membership').reading ?? []
 for (const r of readings) {
-  await db.query('INSERT INTO document_member.reading (version, member, read) VALUES ($1, $2, $3)', [r.version, r.member, day(r.read)])
+  await db.query('INSERT INTO document_membership.reading (version, member, read) VALUES ($1, $2, $3)', [r.version, r.member, day(r.read)])
 }
 
 const clients = read('client').client ?? []
@@ -306,7 +313,7 @@ const filed = await files(db, read, day, dir)
 await db.query('COMMIT')
 await db.end()
 console.log(
-  `seed: ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
+  `seed: ${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
     `${decisions.length} decisions, ${votes} stances, ` +
     `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed} into ${db.database}`,

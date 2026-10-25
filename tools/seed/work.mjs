@@ -1,8 +1,8 @@
 // seed, work: loads a mock co-op's projects with their milestones,
 // budgets and shares, its tasks, and its timesheets into the project,
 // task and timesheet schemas and their grafts' (client-project,
-// invoice-project, member-project, member-task, project-task,
-// member-timesheet, project-timesheet, and the margin thresholds of
+// invoice-project, membership-project, membership-task, project-task,
+// membership-timesheet, project-timesheet, and the margin thresholds of
 // expense-invoice-project-timesheet). Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
 // Members and clients load first; an archived project is archived after
@@ -43,10 +43,10 @@ export async function work(db, read, day) {
     await db.query('INSERT INTO invoice_project.charge (invoice, project) VALUES ($1, $2)', [c.invoice, c.project])
   }
 
-  const shares = read('graft.member-project').share ?? []
+  const shares = read('graft.membership-project').share ?? []
   for (const s of shares) {
     await db.query(
-      'INSERT INTO member_project.share (project, member, amount, granted) VALUES ($1, $2, cella.amount($3), $4)',
+      'INSERT INTO membership_project.share (project, member, amount, granted) VALUES ($1, $2, cella.amount($3), $4)',
       [s.project, s.member, s.amount, day(s.granted)],
     )
   }
@@ -63,8 +63,8 @@ export async function work(db, read, day) {
   if (last) {
     await db.query(`SELECT setval('task.number', $1)`, [last])
   }
-  for (const a of read('graft.member-task').assignment ?? []) {
-    await db.query('INSERT INTO member_task.assignment (task, member) VALUES ($1, $2)', [a.task, a.member])
+  for (const a of read('graft.membership-task').assignment ?? []) {
+    await db.query('INSERT INTO membership_task.assignment (task, member) VALUES ($1, $2)', [a.task, a.member])
   }
   for (const f of read('graft.project-task').filing ?? []) {
     await db.query('INSERT INTO project_task.filing (task, project, milestone) VALUES ($1, $2, $3)', [f.task, f.project, f.milestone ?? null])

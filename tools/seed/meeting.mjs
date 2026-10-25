@@ -1,6 +1,6 @@
 // seed, meetings: loads a mock co-op's meetings with their agendas into
 // the meeting schema, and its grafts' rows: how each circle meets
-// (circle-meeting), who came (meeting-member), the decisions agenda
+// (circle-meeting), who came (meeting-membership), the decisions agenda
 // items table (decision-meeting) and the minutes' documents
 // (document-meeting). Circles, members, decisions and documents load
 // first. A held meeting is loaded scheduled, its agenda and its marks put
@@ -35,11 +35,11 @@ export async function meetings(db, read, day) {
 
   const days = new Map(list.map((m) => [m.id, day(m.at)]))
   let marks = 0
-  for (const a of read('graft.meeting-member').attendance ?? []) {
+  for (const a of read('graft.meeting-membership').attendance ?? []) {
     for (const status of ['present', 'excused', 'absent']) {
       for (const member of a[status] ?? []) {
         await db.query(
-          'INSERT INTO meeting_member.attendance (meeting, member, status, marked, by) VALUES ($1, $2, $3, $4, $5)',
+          'INSERT INTO meeting_membership.attendance (meeting, member, status, marked, by) VALUES ($1, $2, $3, $4, $5)',
           [a.meeting, member, status, days.get(a.meeting), a.by ?? null],
         )
         marks++

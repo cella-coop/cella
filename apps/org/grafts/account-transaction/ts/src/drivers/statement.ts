@@ -67,13 +67,14 @@ export async function statements(db: Db, id: string): Promise<Statements | null>
   return { columns: [id, r.before], income: await compared(db, 'income', now, before), balance: await compared(db, 'balance', now, before) }
 }
 
-// Each span's result and its total assets, by span.
+// Each span's result and its total assets, by span, nought where its sheet
+// has no such figure.
+export const figured = `SELECT r.id,
+    coalesce((SELECT s.amount FROM account_transaction.statement('income', r.since, r.until) s WHERE s.id = 'result'), 0) AS result,
+    coalesce((SELECT s.amount FROM account_transaction.statement('balance', NULL, r.until) s WHERE s.id = 'assets-total'), 0) AS assets
+  FROM account.report r`
+
 export async function figures(db: Db): Promise<Record<string, Figures>> {
-  const { rows } = await db.query<{ id: string; result: string; assets: string }>(
-    `SELECT r.id,
-       (SELECT s.amount FROM account_transaction.statement('income', r.since, r.until) s WHERE s.id = 'result') AS result,
-       (SELECT s.amount FROM account_transaction.statement('balance', NULL, r.until) s WHERE s.id = 'assets-total') AS assets
-     FROM account.report r`,
-  )
+  const { rows } = await db.query<{ id: string; result: string; assets: string }>(figured)
   return Object.fromEntries(rows.map((r) => [r.id, { result: Number(r.result), assets: Number(r.assets) }]))
 }

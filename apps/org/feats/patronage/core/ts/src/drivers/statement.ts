@@ -1,9 +1,16 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Line, Sheet, Statement } from '../models/statement.ts'
 import { basis } from './terms.ts'
 
 const columns = `s.id, s.distribution, s.year, s.worker, s.amount::float8 AS amount, s.salary::float8 AS salary,
   s.hours::float8 AS hours, s.equal::float8 AS equal`
+
+// The statements as the collection lists them, the latest year first,
+// the largest part first.
+export const parts: Read = {
+  sql: `SELECT ${columns} FROM patronage.statement s`,
+  order: 'year DESC, amount DESC, worker',
+}
 
 // Each worker's part of each year's work share, the latest year first,
 // the largest part first.

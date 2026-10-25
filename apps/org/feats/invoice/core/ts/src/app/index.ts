@@ -33,7 +33,7 @@ export const app: App = {
           { key: 'due', label: 'Due', kind: 'date', role: 'meta', value: (i: Listed) => i.due },
           { key: 'total', label: 'Total', kind: 'money', role: 'meta', value: (i: Listed) => i.total },
           { key: 'owed', label: 'Owed', kind: 'money', role: 'hidden', value: (i: Listed) => i.owed },
-          { key: 'state', label: 'Standing', kind: 'badge', role: 'meta', value: standing, tone: (i: Listed) => tones[standing(i)] },
+          { key: 'state', label: 'Standing', kind: 'badge', role: 'meta', value: (i: Listed) => i.state, tone: (i: Listed) => tones[i.state] },
         ],
       },
       page: {

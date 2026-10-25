@@ -1,6 +1,6 @@
 import { action, type Slice } from '@cella/org-db'
 import { annul, issue, payment, send } from '../handlers/index.ts'
-import { invoice, invoices, offered, printed } from '../drivers/invoice.ts'
+import { invoice, invoices, listing, offered, printed } from '../drivers/invoice.ts'
 import * as forms from './forms.ts'
 import { pdf } from './pdf.ts'
 
@@ -13,7 +13,7 @@ export const slice: Slice = {
   name: 'invoice',
   collections: {
     invoices: {
-      list: invoices,
+      list: listing,
       about: offered,
       item: invoice,
       content: async (db, id) => {

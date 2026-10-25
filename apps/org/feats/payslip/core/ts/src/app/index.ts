@@ -18,7 +18,7 @@ export const app: App = {
         icon: icons.Money,
         create: Prepare,
         columns: [
-          { key: 'label', label: 'Payslip', kind: 'title', role: 'title', value: (p: Payslip) => `Payslip ${p.month}` },
+          { key: 'label', label: 'Payslip', kind: 'title', role: 'title', value: (p: Payslip & { label: string }) => p.label },
           { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (p: Payslip) => p.month },
           { key: 'member', label: 'Member', kind: 'mono', role: 'hidden', value: (p: Payslip) => p.member },
           { key: 'hours', label: 'Hours', kind: 'number', role: 'hidden', value: (p: Payslip) => p.hours },

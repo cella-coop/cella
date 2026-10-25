@@ -1,8 +1,14 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Booked, Detail, Journaled } from '../models/transaction.ts'
 
 const listed = `e.id, to_char(e.date, 'YYYY-MM-DD') AS date, e.label, e.corrects, e.receipt::int AS receipt,
   transaction.amount(e.id) AS amount`
+
+// The journal as the collection lists it, the latest entry first.
+export const listing: Read = {
+  sql: `SELECT ${listed} FROM transaction.entry e`,
+  order: 'id DESC',
+}
 
 // The journal, the latest entry first.
 export async function journal(db: Db): Promise<Journaled[]> {

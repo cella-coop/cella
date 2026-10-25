@@ -22,7 +22,7 @@ export const app: App = {
         columns: [
           { key: 'label', label: 'Expense', kind: 'title', role: 'title', value: (e: Expense) => e.label },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (e: Expense) => e.id },
-          { key: 'category', label: 'Category', kind: 'badge', role: 'hidden', value: category },
+          { key: 'category', label: 'Category', kind: 'badge', role: 'hidden', value: (e: Expense) => e.category },
           { key: 'day', label: 'Spent on', kind: 'date', role: 'meta', value: (e: Expense) => e.day },
           { key: 'total', label: 'Amount', kind: 'money', role: 'meta', value: (e: Expense) => e.total },
           { key: 'status', label: 'Status', kind: 'badge', role: 'meta', value: (e: Expense) => e.status, tone: (e: Expense) => tones[e.status] },

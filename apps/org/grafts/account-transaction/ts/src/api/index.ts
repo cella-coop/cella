@@ -4,7 +4,7 @@
 // tool's FEC.
 import type { Slice } from '@cella/org-db'
 import { agrees, balances, ledger } from '../drivers/balance.ts'
-import { figures, statements } from '../drivers/statement.ts'
+import { figured, statements } from '../drivers/statement.ts'
 import { fec } from './imports.ts'
 
 export { agrees, balances, ledger } from '../drivers/balance.ts'
@@ -16,6 +16,6 @@ export const slice: Slice = {
   imports: { fec },
   extends: {
     accounts: { list: balances, item: ledger, about: agrees },
-    reports: { list: figures, item: statements },
+    reports: { list: figured, item: statements },
   },
 }

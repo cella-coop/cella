@@ -1,5 +1,8 @@
 export type Basis = 'salary' | 'hours' | 'equal' | 'mix'
 
+// How each basis divides the work share, as the shell says it.
+export const divides: Record<Basis, string> = { salary: 'by pay', hours: 'by time worked', equal: 'in equal parts', mix: 'by a mix' }
+
 // The statutes' terms for each year's work share: the weights, in
 // percent, by which it divides among the workers by pay, by time worked
 // and in equal parts, which add up to 100, and the percent of an

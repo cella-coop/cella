@@ -1,18 +1,28 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Issuing, Lined, Listed, Printed, Received, Seller, Taxed } from '../models/invoice.ts'
 
-// An invoice is overdue when something is owed past its due date, by the
-// server's clock: a read, so no rule depends on it.
-const listed = `i.id, to_char(i.issued, 'YYYY-MM-DD') AS issued, to_char(i.due, 'YYYY-MM-DD') AS due, i.bill_to, i.label,
-  s.total::bigint AS total, s.paid::bigint AS paid, s.owed::bigint AS owed, s.credit::bigint AS credit, s.state,
-  (s.owed > 0 AND i.due < current_date) AS overdue,
+// An invoice is overdue when something is owed past its due date, the
+// scope's day (`cella.verdict_date()`): a read, so no rule depends on it.
+const overdue = `(s.owed > 0 AND i.due < cella.verdict_date())`
+const columns = (state: string) => `i.id, to_char(i.issued, 'YYYY-MM-DD') AS issued, to_char(i.due, 'YYYY-MM-DD') AS due, i.bill_to, i.label,
+  s.total::bigint AS total, s.paid::bigint AS paid, s.owed::bigint AS owed, s.credit::bigint AS credit, ${state} AS state,
+  ${overdue} AS overdue,
   to_char(i.sent, 'YYYY-MM-DD') AS sent, to_char(i.voided, 'YYYY-MM-DD') AS voided`
+const listed = columns('s.state')
 
 // Postgres sends bigints as text; amounts are read back as numbers.
 const cents = <T extends object>(row: T, keys: (keyof T)[]): T =>
   Object.fromEntries(Object.entries(row).map(([k, v]) => [k, keys.includes(k as keyof T) && v !== null ? Number(v) : v])) as T
 
 const money: (keyof Listed)[] = ['total', 'paid', 'owed', 'credit']
+
+// The invoices as the collection lists them, the latest first, each
+// standing as its badge shows it: overdue where it is.
+export const listing: Read = {
+  sql: `SELECT ${columns(`CASE WHEN ${overdue} THEN 'overdue' ELSE s.state END`)}, i.series, i.number
+        FROM invoice.invoice i JOIN invoice.standing s ON s.id = i.id`,
+  order: 'series DESC, number DESC',
+}
 
 // The latest first.
 export async function invoices(db: Db): Promise<Listed[]> {

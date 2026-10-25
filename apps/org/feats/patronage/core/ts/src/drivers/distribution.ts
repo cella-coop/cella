@@ -1,10 +1,19 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Distribution, Share } from '../models/distribution.ts'
 
 const columns = `d.id, d.year, cella.cents(d.surplus)::float8 AS surplus, d.basis,
   to_char(d.approved, 'YYYY-MM-DD') AS approved, to_char(d.distributed, 'YYYY-MM-DD') AS distributed,
   patronage.share_of(d.id, 'work')::float8 AS work, patronage.share_of(d.id, 'legal')::float8 AS legal,
   patronage.share_of(d.id, 'development')::float8 AS development, patronage.share_of(d.id, 'interest')::float8 AS interest`
+
+// The distributions as the collection lists them, the latest year first,
+// each drafted, approved or distributed as its badge shows it.
+export const years: Read = {
+  sql: `SELECT ${columns},
+          CASE WHEN d.distributed IS NOT NULL THEN 'distributed' WHEN d.approved IS NOT NULL THEN 'approved' ELSE 'draft' END AS state
+        FROM patronage.distribution d`,
+  order: 'year DESC',
+}
 
 // Each year's distribution and its split, the latest year first.
 export async function distributions(db: Db): Promise<Distribution[]> {

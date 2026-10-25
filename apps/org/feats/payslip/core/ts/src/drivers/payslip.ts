@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Payslip } from '../models/payslip.ts'
 
 const columns = `p.month || '~' || p.member AS id, p.month, p.member, (p.minutes / 60.0)::float8 AS hours,
@@ -9,6 +9,13 @@ const columns = `p.month || '~' || p.member AS id, p.month, p.member, (p.minutes
   to_char(r.paid, 'YYYY-MM-DD') AS paid`
 
 const from = 'FROM payslip.payslip p JOIN payslip.run r ON r.month = p.month'
+
+// The payslips as the collection lists them, the latest month first, each
+// with its title.
+export const listing: Read = {
+  sql: `SELECT ${columns}, 'Payslip ' || p.month AS label ${from}`,
+  order: 'month DESC, member',
+}
 
 // Every payslip, the latest month first.
 export async function payslips(db: Db): Promise<Payslip[]> {
@@ -27,7 +34,7 @@ export async function payslip(db: Db, id: string): Promise<Payslip | null> {
 // month with no run.
 export async function next(db: Db): Promise<{ month: string }> {
   const { rows } = await db.query<{ month: string }>(
-    `SELECT to_char(coalesce(max(payslip.after(month)), date_trunc('month', current_date)::date), 'YYYY-MM') AS month FROM payslip.run`,
+    `SELECT to_char(coalesce(max(payslip.after(month)), date_trunc('month', cella.verdict_date())::date), 'YYYY-MM') AS month FROM payslip.run`,
   )
   return { month: rows[0].month }
 }

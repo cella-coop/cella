@@ -1,10 +1,22 @@
-import type { Db } from '@cella/org-db'
-import type { Expense } from '../models/expense.ts'
+import { literal, type Db, type Read } from '@cella/org-db'
+import { categories, type Expense } from '../models/expense.ts'
 
-const columns = `e.id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, e.label, e.category,
+const fields = (category: string) => `e.id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, e.label, ${category} AS category,
   cella.cents(e.net)::float8 AS net, cella.cents(e.vat)::float8 AS vat, expense.total(e)::float8 AS total, e.receipt, e.status,
   to_char(e.submitted, 'YYYY-MM-DD') AS submitted, to_char(e.decided, 'YYYY-MM-DD') AS decided, e.decider,
   to_char(e.reimbursed, 'YYYY-MM-DD') AS reimbursed`
+const columns = fields('e.category')
+
+// A category as its badge shows it: its label, or its code where it has
+// none.
+const label = `CASE e.category ${categories.map((c) => `WHEN ${literal(c.code)} THEN ${literal(c.label)}`).join(' ')} ELSE e.category END`
+
+// The expenses as the collection lists them, the latest spent first, each
+// category by its label.
+export const listing: Read = {
+  sql: `SELECT ${fields(label)} FROM expense.expense e`,
+  order: 'day DESC, id DESC',
+}
 
 // Every expense, the latest spent first.
 export async function expenses(db: Db): Promise<Expense[]> {

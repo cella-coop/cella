@@ -11,16 +11,10 @@ export async function capital(db: Db, member: string): Promise<Capital | null> {
 }
 
 // Each member's subscribed capital, by address, for the members list.
-export async function subscribed(db: Db): Promise<Record<string, { capital: number }>> {
-  const { rows } = await db.query<{ member: string; subscribed: string }>('SELECT member, subscribed FROM account_membership.capital')
-  return Object.fromEntries(rows.map((r) => [r.member, { capital: Number(r.subscribed) }]))
-}
+export const subscribed = 'SELECT member AS id, subscribed AS capital FROM account_membership.capital'
 
 // Who holds each capital account, by its code, for the chart.
-export async function holders(db: Db): Promise<Record<string, { holder: string }>> {
-  const { rows } = await db.query<{ account: string; name: string }>('SELECT account, name FROM account_membership.capital WHERE account IS NOT NULL')
-  return Object.fromEntries(rows.map((r) => [r.account, { holder: r.name }]))
-}
+export const holders = 'SELECT account AS id, name AS holder FROM account_membership.capital WHERE account IS NOT NULL'
 
 // The statutes' capital clauses in force on the scope's day.
 export async function statutes(db: Db): Promise<Statutes | null> {

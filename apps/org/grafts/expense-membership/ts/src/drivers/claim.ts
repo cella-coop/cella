@@ -2,10 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Claim, Claimed } from '../models/claim.ts'
 
 // Each expense's member and decider, by name, by the expense's id.
-export async function claims(db: Db): Promise<Record<string, Claimed>> {
-  const { rows } = await db.query<Claimed & { expense: string }>('SELECT expense, name, decider_name FROM expense_membership.claim')
-  return Object.fromEntries(rows.map((r) => [r.expense, { name: r.name, decider_name: r.decider_name }]))
-}
+export const claims = 'SELECT expense AS id, name, decider_name FROM expense_membership.claim'
 
 export async function claim(db: Db, expense: string): Promise<Claimed | null> {
   const { rows } = await db.query<Claimed>('SELECT name, decider_name FROM expense_membership.claim WHERE expense = $1', [expense])

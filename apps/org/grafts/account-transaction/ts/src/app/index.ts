@@ -17,7 +17,7 @@ export const app: App = {
       // The journal's debits and credits over the chart agree when every
       // entry balanced: the whole journal's, which the server says, since
       // a reader may read only some accounts' lines.
-      status: (_rows: Partial<Balance>[], about: { agrees?: boolean } | null) =>
+      status: (about: { agrees?: boolean } | null) =>
         about?.agrees
           ? { label: 'trial balance agrees', tone: 'positive' }
           : { label: 'trial balance off', tone: 'negative' },

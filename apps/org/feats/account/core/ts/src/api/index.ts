@@ -3,9 +3,9 @@
 // shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { adopt, close } from '../handlers/index.ts'
-import { account, accounts, period, periods } from '../drivers/account.ts'
+import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
-import { report, reports } from '../drivers/report.ts'
+import { report, reports, spans } from '../drivers/report.ts'
 
 export { adopt, close, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
@@ -20,7 +20,7 @@ export const slice: Slice = {
   name: 'account',
   collections: {
     accounts: {
-      list: accounts,
+      list: chart,
       item: account,
       index: async (db) => (await accounts(db)).map((a) => ({ id: a.id, title: `${a.code} ${a.label}`, sub: a.kind })),
     },
@@ -39,7 +39,7 @@ export const slice: Slice = {
       },
     },
     reports: {
-      list: reports,
+      list: spans,
       item: report,
       index: async (db) => (await reports(db)).map((r) => ({ id: r.id, title: `${r.id} financial statements`, sub: r.kind })),
     },

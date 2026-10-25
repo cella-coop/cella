@@ -3,9 +3,9 @@
 // the shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { adopt, approve } from '../handlers/index.ts'
-import { distribution, distributions } from '../drivers/distribution.ts'
+import { distribution, distributions, years } from '../drivers/distribution.ts'
 import { basis, bases } from '../drivers/terms.ts'
-import { statement, statements } from '../drivers/statement.ts'
+import { parts, statement, statements } from '../drivers/statement.ts'
 
 export { adopt, approve, distributing } from '../handlers/index.ts'
 export { distribution, distributions } from '../drivers/distribution.ts'
@@ -20,7 +20,7 @@ export const slice: Slice = {
   name: 'patronage',
   collections: {
     distributions: {
-      list: distributions,
+      list: years,
       item: distribution,
       index: async (db) => (await distributions(db)).map((d) => ({ id: d.id, title: `${d.year} distribution`, sub: d.distributed ? 'distributed' : d.approved ? 'approved' : 'draft' })),
       actions: {
@@ -35,7 +35,7 @@ export const slice: Slice = {
       },
     },
     statements: {
-      list: statements,
+      list: parts,
       item: statement,
       index: async (db) => (await statements(db)).map((s) => ({ id: s.id, title: `${s.year} statement`, sub: s.worker })),
     },

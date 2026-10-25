@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Bill, Billed, Owing } from '../models/billing.ts'
+import type { Bill, Billed } from '../models/billing.ts'
 
 export async function billed(db: Db, invoice: string): Promise<Billed> {
   const linked = await db.query<{ id: string; name: string }>(
@@ -11,18 +11,10 @@ export async function billed(db: Db, invoice: string): Promise<Billed> {
 }
 
 // The client each invoice bills, by invoice.
-export async function clientOf(db: Db): Promise<Record<string, { client: string }>> {
-  const { rows } = await db.query<{ invoice: string; name: string }>(
-    'SELECT b.invoice, c.name FROM client_invoice.billing b JOIN client.client c ON c.id = b.client',
-  )
-  return Object.fromEntries(rows.map((r) => [r.invoice, { client: r.name }]))
-}
+export const clientOf = 'SELECT b.invoice AS id, c.name AS client FROM client_invoice.billing b JOIN client.client c ON c.id = b.client'
 
 // What each client owes and is owed back, by client.
-export async function standing(db: Db): Promise<Record<string, Owing>> {
-  const { rows } = await db.query<{ client: string; owed: string; credit: string }>('SELECT client, owed, credit FROM client_invoice.standing')
-  return Object.fromEntries(rows.map((r) => [r.client, { owed: Number(r.owed), credit: Number(r.credit) }]))
-}
+export const standing = 'SELECT client AS id, owed::bigint AS owed, credit::bigint AS credit FROM client_invoice.standing'
 
 // The invoices a client is billed by, latest first.
 export async function bills(db: Db, client: string): Promise<Bill[]> {

@@ -2,7 +2,7 @@
 // the write specs a graft composes, its reads, and its slice, which the
 // shell mounts.
 import type { Form, Slice } from '@cella/org-db'
-import { next, payslip, payslips } from '../drivers/payslip.ts'
+import { listing, next, payslip, payslips } from '../drivers/payslip.ts'
 import type { Run } from '../models/payslip.ts'
 
 export { approve, approving, generate, generating, pay, paying } from '../handlers/index.ts'
@@ -24,7 +24,7 @@ export const slice: Slice = {
   name: 'payslip',
   collections: {
     payslips: {
-      list: payslips,
+      list: listing,
       about: next,
       item: payslip,
       index: async (db) => (await payslips(db)).map((p) => ({ id: p.id, title: `Payslip ${p.month}`, sub: `${p.member}, ${p.state}` })),

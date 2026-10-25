@@ -1,9 +1,9 @@
 // The feat's public writes, POST /api/expense/<op> once the server exists,
 // the write specs and form readers a graft composes, its reads, and its
 // slice, which the shell mounts.
-import { action, type Slice } from '@cella/org-db'
+import { action, today, type Slice } from '@cella/org-db'
 import { capture, refuse, submit } from '../handlers/index.ts'
-import { expense, expenses } from '../drivers/expense.ts'
+import { expense, expenses, listing } from '../drivers/expense.ts'
 import * as forms from './forms.ts'
 
 export { approve, approving, capture, capturing, refuse, reimburse, reimbursing, submit } from '../handlers/index.ts'
@@ -17,8 +17,8 @@ export const slice: Slice = {
   name: 'expense',
   collections: {
     expenses: {
-      list: expenses,
-      about: async () => ({ today: new Date().toISOString().slice(0, 10) }),
+      list: listing,
+      about: async (db) => ({ today: await today(db) }),
       item: expense,
       index: async (db) => (await expenses(db)).map((e) => ({ id: e.id, title: e.label, sub: `${e.id}, ${e.status}` })),
       actions: {

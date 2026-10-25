@@ -4,6 +4,11 @@ import type { Terms } from '../models/terms.ts'
 import type { Report } from '../models/report.ts'
 import Close from './blocks/Close.svelte'
 
+// A row as its collection lists it: its state, and an account cash or
+// other, as their badges show them.
+type Listed<T> = T & { state: string }
+type Charted = Omit<Account, 'cash'> & { cash: 'cash' | 'other' }
+
 const open = (p: Period) => (p.closed ? 'closed' : 'open')
 const closed = (r: Report) => (r.closed ? 'closed' : 'open')
 const kinds: Record<Report['kind'], string> = { month: 'Month', quarter: 'Quarter', year: 'Year' }
@@ -24,7 +29,7 @@ export const app: App = {
           { key: 'code', label: 'Code', kind: 'mono', role: 'title', value: (a: Account) => a.code },
           { key: 'label', label: 'Account', role: 'sub', value: (a: Account) => a.label },
           { key: 'kind', label: 'Kind', kind: 'badge', role: 'hidden', value: (a: Account) => a.kind },
-          { key: 'cash', label: 'Cash', kind: 'badge', role: 'hidden', value: (a: Account) => (a.cash ? 'cash' : 'other') },
+          { key: 'cash', label: 'Cash', kind: 'badge', role: 'hidden', value: (a: Charted) => a.cash },
         ],
       },
       page: {
@@ -48,7 +53,7 @@ export const app: App = {
         columns: [
           { key: 'month', label: 'Month', kind: 'title', role: 'title', value: (p: Period) => p.month },
           { key: 'closed', label: 'Closed on', kind: 'date', role: 'meta', value: (p: Period) => p.closed },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: open, tone: (p: Period) => (p.closed ? 'neutral' : 'accent') },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (p: Listed<Period>) => p.state, tone: (p: Period) => (p.closed ? 'neutral' : 'accent') },
         ],
       },
       page: {
@@ -73,7 +78,7 @@ export const app: App = {
           { key: 'share', label: 'Share value', kind: 'money', role: 'sub', value: (t: Terms) => t.share },
           { key: 'minimum', label: 'Fewest shares', kind: 'number', role: 'hidden', value: (t: Terms) => t.minimum },
           { key: 'adopted', label: 'Adopted on', kind: 'date', role: 'hidden', value: (t: Terms) => t.adopted },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: adopted, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (t: Listed<Terms>) => t.state, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
         ],
       },
       page: {
@@ -103,7 +108,7 @@ export const app: App = {
           { key: 'kind', label: 'Kind', kind: 'badge', role: 'hidden', value: (r: Report) => r.kind },
           { key: 'since', label: 'From', kind: 'date', role: 'hidden', value: (r: Report) => r.since },
           { key: 'until', label: 'To', kind: 'date', role: 'hidden', value: (r: Report) => r.until },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: closed, tone: (r: Report) => (r.closed ? 'neutral' : 'accent') },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (r: Listed<Report>) => r.state, tone: (r: Report) => (r.closed ? 'neutral' : 'accent') },
         ],
         look: { layout: 'table' },
       },

@@ -1,22 +1,16 @@
 import { date, icons, type App, type Tone } from '@cella/org-ui'
 import { stage, type Detail, type Distribution } from '../models/distribution.ts'
-import type { Basis as By, Terms } from '../models/terms.ts'
+import { divides, type Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 
 const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'accent', approved: 'warning', distributed: 'positive' }
+// A row as its collection lists it: its state, and how terms divide, as
+// the list shows them.
+type Staged = Distribution & { state: ReturnType<typeof stage> }
+type Divided = Omit<Terms, 'basis'> & { basis: string; state: string }
 const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
-const bases: Record<By, string> = { salary: 'by pay', hours: 'by time worked', equal: 'in equal parts', mix: 'by a mix' }
-const mix = (t: Terms) =>
-  [
-    [t.salary, 'pay'],
-    [t.hours, 'time worked'],
-    [t.equal, 'equal parts'],
-  ]
-    .filter(([w]) => Number(w) > 0)
-    .map(([w, n]) => `${w} % ${n}`)
-    .join(', ')
 const standing = (d: Distribution) =>
   d.distributed
     ? `distributed on ${date(d.distributed)}`
@@ -44,7 +38,7 @@ export const app: App = {
           { key: 'development', label: 'Development fund', kind: 'money', role: 'hidden', value: (d: Distribution) => d.development },
           { key: 'interest', label: 'Interest', kind: 'money', role: 'hidden', value: (d: Distribution) => d.interest },
           { key: 'basis', label: 'Work share by', kind: 'badge', role: 'hidden', value: (d: Distribution) => d.basis },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: stage, tone: (d: Distribution) => tones[stage(d)] },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (d: Staged) => d.state, tone: (d: Staged) => tones[d.state] },
         ],
         look: { layout: 'table' },
       },
@@ -72,11 +66,11 @@ export const app: App = {
         icon: icons.SealCheck,
         columns: [
           { key: 'from', label: 'From', kind: 'title', role: 'title', value: (t: Terms) => String(t.from) },
-          { key: 'basis', label: 'Divides', role: 'sub', value: (t: Terms) => `${bases[t.basis]}: ${mix(t)}` },
+          { key: 'basis', label: 'Divides', role: 'sub', value: (t: Divided) => t.basis },
           { key: 'capital', label: 'In shares %', kind: 'number', role: 'hidden', value: (t: Terms) => t.capital },
           { key: 'interest', label: 'Interest at most %', kind: 'number', role: 'hidden', value: (t: Terms) => t.interest },
           { key: 'adopted', label: 'Adopted on', kind: 'date', role: 'hidden', value: (t: Terms) => t.adopted },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: adopted, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (t: Divided) => t.state, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
         ],
       },
       page: {
@@ -120,7 +114,7 @@ export const app: App = {
         properties: (s: Sheet) => [
           { label: 'Year', value: String(s.year) },
           { label: 'Part', value: s.amount, kind: 'money' },
-          { label: 'Terms', value: s.terms ? `${s.terms.id}, ${bases[s.terms.basis]}` : null, href: s.terms ? `/bases/${s.terms.id}` : undefined },
+          { label: 'Terms', value: s.terms ? `${s.terms.id}, ${divides[s.terms.basis]}` : null, href: s.terms ? `/bases/${s.terms.id}` : undefined },
           { label: 'Approved on', value: s.approved, kind: 'date' },
           { label: 'Distributed on', value: s.distributed, kind: 'date' },
         ],

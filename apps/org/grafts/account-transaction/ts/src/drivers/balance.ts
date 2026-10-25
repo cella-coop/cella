@@ -4,10 +4,7 @@ import type { Balance, Ledger, Movement } from '../models/balance.ts'
 const number = (b: Record<string, unknown>): Balance => ({ debit: Number(b.debit), credit: Number(b.credit), balance: Number(b.balance) })
 
 // The trial balance, by account code, from `account_transaction.balance`.
-export async function balances(db: Db): Promise<Record<string, Balance>> {
-  const { rows } = await db.query<{ code: string }>('SELECT code, debit, credit, balance FROM account_transaction.balance')
-  return Object.fromEntries(rows.map((r) => [r.code, number(r)]))
-}
+export const balances = 'SELECT code AS id, debit::bigint AS debit, credit::bigint AS credit, balance::bigint AS balance FROM account_transaction.balance'
 
 // Whether the whole journal's debits and credits agree, whatever the
 // reader reads of it.

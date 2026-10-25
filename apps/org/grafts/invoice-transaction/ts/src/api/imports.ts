@@ -1,4 +1,4 @@
-import { csv, type Imported, type Importer } from '@cella/org-db'
+import { csv, hundredths, type Imported, type Importer } from '@cella/org-db'
 import type { Line } from '@cella/org-invoice/models'
 import { issue } from '../handlers/post.ts'
 
@@ -11,11 +11,20 @@ const day = (typed: string) => {
 // Euros typed with a comma or a point, in cents.
 const cents = (typed: string) => Math.round(Number(typed.replace(/\s/g, '').replace(',', '.')) * 100)
 
+// A VAT rate typed in percent, in hundredths; NaN where it is not one.
+const percent = (typed: string) => {
+  try {
+    return hundredths(typed)
+  } catch {
+    return NaN
+  }
+}
+
 // Invoices to issue from a spreadsheet or another tool's drafts, a CSV
 // with a row for each line and the columns `client`, `description`,
-// `quantity`, `unit_price` in euros, `vat_rate` in percent, and if it has
-// them `invoice`, rows sharing it making one invoice, `label`, `due` and
-// `address`, the address billed.
+// `quantity`, `unit_price` in euros, `vat_rate` in percent (`5,5` or
+// `20`), and if it has them `invoice`, rows sharing it making one
+// invoice, `label`, `due` and `address`, the address billed.
 // Each invoice is issued now, as the importing member, numbered in the
 // co-op's series and posted, as one issued by hand is. Invoices issued
 // before cella are in the old books, and come in through the FEC as their
@@ -31,7 +40,7 @@ export const invoices: Importer = {
       const key = fields.invoice || `line ${line}`
       const g = groups.get(key) ?? { line, bill_to: fields.client ?? '', bill_address: fields.address || undefined, label: fields.label || fields.description || '', due: fields.due ? day(fields.due) : undefined, lines: [], unread: null }
       const price = cents(fields.unit_price ?? '')
-      const rate = Number((fields.vat_rate ?? '20').replace(',', '.'))
+      const rate = percent(fields.vat_rate ?? '20')
       if (!fields.description || !fields.quantity || !Number.isFinite(price) || price <= 0 || !Number.isFinite(rate)) {
         g.unread ??= `its line ${line} needs a description, a quantity, a unit price and a VAT rate`
       } else {

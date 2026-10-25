@@ -10,7 +10,7 @@ export const app: App = {
   extends: {
     expenses: {
       create: Capture,
-      columns: [{ key: 'receipts', label: 'Receipts', kind: 'number', role: 'hidden', value: (r: { receipts?: number }) => r.receipts ?? 0 }],
+      columns: [{ key: 'receipts', label: 'Receipts', kind: 'number', role: 'hidden', value: (r: { receipts: number }) => r.receipts }],
       page: { blocks: [Receipts] },
     },
   },

@@ -3,12 +3,8 @@ import type { Assigned, Doing } from '../models/assignment.ts'
 
 // Who does each task, by task: the assignee's name, which a board may
 // group by.
-export async function assignees(db: Db): Promise<Record<string, { assignee: string }>> {
-  const { rows } = await db.query<{ task: string; name: string }>(
-    'SELECT a.task, mp.name FROM membership_task.assignment a JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = a.member',
-  )
-  return Object.fromEntries(rows.map((r) => [r.task, { assignee: r.name }]))
-}
+export const assignees =
+  'SELECT a.task AS id, mp.name AS assignee FROM membership_task.assignment a JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = a.member'
 
 export async function assigned(db: Db, task: string): Promise<Assigned> {
   const { rows } = await db.query<{ address: string; name: string }>(

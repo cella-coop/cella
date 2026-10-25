@@ -2,12 +2,7 @@ import type { Db } from '@cella/org-db'
 import type { Charged, Invoiced } from '../models/charge.ts'
 
 // The project each invoice bills, by invoice.
-export async function projectOf(db: Db): Promise<Record<string, { project: string }>> {
-  const { rows } = await db.query<{ invoice: string; title: string }>(
-    'SELECT c.invoice, p.title FROM invoice_project.charge c JOIN project.project p ON p.id = c.project',
-  )
-  return Object.fromEntries(rows.map((r) => [r.invoice, { project: r.title }]))
-}
+export const projectOf = 'SELECT c.invoice AS id, p.title AS project FROM invoice_project.charge c JOIN project.project p ON p.id = c.project'
 
 export async function charged(db: Db, invoice: string): Promise<Charged> {
   const linked = await db.query<{ id: string; title: string }>(
@@ -18,11 +13,10 @@ export async function charged(db: Db, invoice: string): Promise<Charged> {
   return { project: linked.rows[0] ?? null, projects: all.rows }
 }
 
-// What each project invoiced, net of VAT and voids, by project.
-export async function invoicedBy(db: Db): Promise<Record<string, { invoiced: number }>> {
-  const { rows } = await db.query<{ project: string; net: string }>('SELECT project, net FROM invoice_project.invoiced')
-  return Object.fromEntries(rows.map((r) => [r.project, { invoiced: Number(r.net) }]))
-}
+// What each project invoiced, net of VAT and voids, by project, nothing
+// where it has no invoice.
+export const invoicedBy = `SELECT p.id, coalesce(i.net, 0) AS invoiced
+  FROM project.project p LEFT JOIN invoice_project.invoiced i ON i.project = p.id`
 
 // A project's invoices, the latest first.
 export async function invoiced(db: Db, project: string): Promise<Invoiced> {

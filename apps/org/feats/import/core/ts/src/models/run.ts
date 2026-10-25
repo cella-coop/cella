@@ -23,6 +23,11 @@ export interface Run {
   lines: Line[]
 }
 
+// An import as the collection lists it: its run as its badge shows it.
+export interface Listed extends Omit<Run, 'dry'> {
+  dry: 'dry run' | 'imported'
+}
+
 // A run to record, as the root's import makes it.
 export interface Recording {
   kind: string

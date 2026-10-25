@@ -1,9 +1,8 @@
 import type { App, Tone } from '@cella/org-ui'
-import type { Margin, Watch } from '../models/margin.ts'
+import type { Listed, Margin, Watch } from '../models/margin.ts'
 import Margins from './blocks/Margin.svelte'
 
-const tones: Record<Watch, Tone> = { 'on track': 'positive', 'budget spent': 'warning', 'over budget': 'negative', 'thin margin': 'warning' }
-const watched = (m: Partial<Margin>) => !!m.watch && m.watch !== 'on track'
+const tones: Record<Watch | 'archived', Tone> = { 'on track': 'positive', 'budget spent': 'warning', 'over budget': 'negative', 'thin margin': 'warning', archived: 'neutral' }
 
 // The graft's client side: each project's margin, its margin percent, its
 // budget burn, what its time cost and whether it is watched, as columns; the margins and the
@@ -15,23 +14,13 @@ export const app: App = {
   extends: {
     projects: {
       columns: [
-        { key: 'margin', label: 'Margin', kind: 'money', role: 'hidden', value: (r: Partial<Margin>) => r.margin ?? 0 },
-        { key: 'percent', label: 'Margin %', kind: 'number', role: 'hidden', value: (r: Partial<Margin>) => r.percent },
-        { key: 'burn', label: 'Burn %', kind: 'number', role: 'hidden', value: (r: Partial<Margin>) => r.burn },
-        { key: 'cost', label: 'Time cost', kind: 'money', role: 'hidden', value: (r: Partial<Margin>) => r.cost ?? 0 },
-        {
-          key: 'watch',
-          label: 'Watch',
-          kind: 'badge',
-          role: 'hidden',
-          value: (r: Partial<Margin>) => r.watch ?? 'archived',
-          tone: (r: Partial<Margin>) => (r.watch ? tones[r.watch] : 'neutral'),
-        },
+        { key: 'margin', label: 'Margin', kind: 'money', role: 'hidden', value: (r: Listed) => r.margin },
+        { key: 'percent', label: 'Margin %', kind: 'number', role: 'hidden', value: (r: Listed) => r.percent },
+        { key: 'burn', label: 'Burn %', kind: 'number', role: 'hidden', value: (r: Listed) => r.burn },
+        { key: 'cost', label: 'Time cost', kind: 'money', role: 'hidden', value: (r: Listed) => r.cost },
+        { key: 'watch', label: 'Watch', kind: 'badge', role: 'hidden', value: (r: Listed) => r.watch, tone: (r: Listed) => tones[r.watch] },
       ],
-      status: (rows: Partial<Margin>[]) => {
-        const n = rows.filter(watched).length
-        return n ? { label: `${n} to watch`, tone: 'warning' } : undefined
-      },
+      status: (about: { watched: number }) => (about.watched ? { label: `${about.watched} to watch`, tone: 'warning' } : undefined),
       dashboard: [
         { kind: 'kpi', title: 'Margin', measure: { op: 'sum', field: 'margin' } },
         { kind: 'kpi', title: 'Time cost', measure: { op: 'sum', field: 'cost' } },

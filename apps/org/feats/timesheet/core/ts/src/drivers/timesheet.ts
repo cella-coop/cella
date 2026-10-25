@@ -1,15 +1,21 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Entry, Sheet } from '../models/timesheet.ts'
 
-const columns = `e.id::text AS id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, s.month, (e.minutes / 60.0)::float8 AS hours,
+const hours = '(e.minutes / 60.0)::float8'
+
+const columns = `e.id::text AS id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, s.month, ${hours} AS hours,
   e.billable, e.note, s.state`
 
 const from = `FROM timesheet.entry e JOIN timesheet.sheet s ON s.member = e.member AND s.month = timesheet.month_of(e.day)`
 
-// Every entry, the latest day first.
-export async function entries(db: Db): Promise<Entry[]> {
-  const { rows } = await db.query<Entry>(`SELECT ${columns} ${from} ORDER BY e.day DESC, e.member, e.id`)
-  return rows
+// Every entry as the collection lists it, the latest day first: its kind
+// as its badge shows it, and its note or, without one, its hours.
+export const entries: Read = {
+  sql: `SELECT e.id::text AS id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, s.month, ${hours} AS hours,
+          CASE WHEN e.billable THEN 'billable' ELSE 'internal' END AS billable,
+          coalesce(nullif(e.note, ''), ${hours}::text || ' h') AS note, s.state, e.id AS n
+        ${from}`,
+  order: 'day DESC, member, n',
 }
 
 const sheetColumns = `member, month, hours::float8 AS hours, billable::float8 AS billable, entries,

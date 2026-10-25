@@ -1,5 +1,5 @@
 import { date, icons, type App, type Tone } from '@cella/org-ui'
-import type { Detail, Entry, State } from '../models/timesheet.ts'
+import type { Detail, Entry, Listed, State } from '../models/timesheet.ts'
 import Log from './blocks/Log.svelte'
 import Period from './blocks/Period.svelte'
 import Sheet from './blocks/Sheet.svelte'
@@ -21,12 +21,12 @@ export const app: App = {
         icon: icons.Clock,
         create: Log,
         columns: [
-          { key: 'note', label: 'Entry', kind: 'title', role: 'title', value: (e: Entry) => e.note || `${e.hours} h` },
-          { key: 'day', label: 'Day', kind: 'date', role: 'sub', value: (e: Entry) => e.day },
-          { key: 'hours', label: 'Hours', kind: 'number', role: 'meta', value: (e: Entry) => e.hours },
-          { key: 'billable', label: 'Kind', kind: 'badge', role: 'hidden', value: kind },
-          { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (e: Entry) => e.month },
-          { key: 'state', label: 'Timesheet', kind: 'badge', role: 'meta', value: (e: Entry) => e.state, tone: (e: Entry) => tones[e.state] },
+          { key: 'note', label: 'Entry', kind: 'title', role: 'title', value: (e: Listed) => e.note },
+          { key: 'day', label: 'Day', kind: 'date', role: 'sub', value: (e: Listed) => e.day },
+          { key: 'hours', label: 'Hours', kind: 'number', role: 'meta', value: (e: Listed) => e.hours },
+          { key: 'billable', label: 'Kind', kind: 'badge', role: 'hidden', value: (e: Listed) => e.billable },
+          { key: 'month', label: 'Month', kind: 'badge', role: 'hidden', value: (e: Listed) => e.month },
+          { key: 'state', label: 'Timesheet', kind: 'badge', role: 'meta', value: (e: Listed) => e.state, tone: (e: Listed) => tones[e.state] },
         ],
         look: { layout: 'table', lanes: { state: ['open', 'submitted', 'approved'] } },
         dashboard: [

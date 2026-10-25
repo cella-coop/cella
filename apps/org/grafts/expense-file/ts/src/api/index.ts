@@ -5,7 +5,7 @@ import { action, type Slice } from '@cella/org-db'
 import { forms as expense } from '@cella/org-expense/api'
 import { forms as file } from '@cella/org-file/api'
 import { attach, capture } from '../handlers/index.ts'
-import { counts, receipts } from '../drivers/receipt.ts'
+import { counts, receipted, receipts } from '../drivers/receipt.ts'
 
 export { attach, capture } from '../handlers/index.ts'
 export { counts, receipts } from '../drivers/receipt.ts'
@@ -14,7 +14,7 @@ export const slice: Slice = {
   name: 'expense-file',
   extends: {
     expenses: {
-      list: counts,
+      list: receipted,
       item: async (db, id) => ({ receipts: await receipts(db, id) }),
       actions: {
         capture: action(

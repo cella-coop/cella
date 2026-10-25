@@ -5,12 +5,7 @@ import type { Filed, Listed, Tasks } from '../models/filing.ts'
 export const place = (project: string, milestone?: number | null) => (milestone ? `${project}#${milestone}` : project)
 
 // Each task's project, by task, which a board may group by.
-export async function projectOf(db: Db): Promise<Record<string, { project: string }>> {
-  const { rows } = await db.query<{ task: string; title: string }>(
-    'SELECT f.task, p.title FROM project_task.filing f JOIN project.project p ON p.id = f.project',
-  )
-  return Object.fromEntries(rows.map((r) => [r.task, { project: r.title }]))
-}
+export const projectOf = 'SELECT f.task AS id, p.title AS project FROM project_task.filing f JOIN project.project p ON p.id = f.project'
 
 export async function filed(db: Db, task: string): Promise<Filed> {
   const { rows } = await db.query<{ project: string; title: string; milestone: number | null; phase: string | null }>(
@@ -54,8 +49,7 @@ export async function tasksOf(db: Db, project: string): Promise<Tasks> {
   }
 }
 
-// How many of each project's tasks are done, by project.
-export async function counts(db: Db): Promise<Record<string, { tasks: string }>> {
-  const { rows } = await db.query<{ project: string; tasks: number; done: number }>('SELECT project, tasks, done FROM project_task.count')
-  return Object.fromEntries(rows.map((r) => [r.project, { tasks: `${r.done} / ${r.tasks}` }]))
-}
+// How many of each project's tasks are done, by project, `0 / 0` where it
+// has none.
+export const counts = `SELECT p.id, coalesce(c.done, 0) || ' / ' || coalesce(c.tasks, 0) AS tasks
+  FROM project.project p LEFT JOIN project_task.count c ON c.project = p.id`

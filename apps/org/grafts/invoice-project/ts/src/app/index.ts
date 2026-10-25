@@ -17,7 +17,7 @@ export const app: App = {
       },
     },
     projects: {
-      columns: [{ key: 'invoiced', label: 'Invoiced', kind: 'money', role: 'hidden', value: (r: { invoiced?: number }) => r.invoiced ?? 0 }],
+      columns: [{ key: 'invoiced', label: 'Invoiced', kind: 'money', role: 'hidden', value: (r: { invoiced: number }) => r.invoiced }],
       page: {
         properties: (i: Invoiced) => [{ label: 'Invoiced', value: i.net, kind: 'money' }],
         blocks: [Invoices],

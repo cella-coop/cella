@@ -2,7 +2,7 @@
 // its reads, its import of clients from another tool, and its slice, which the shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { update } from '../handlers/index.ts'
-import { client, clients } from '../drivers/client.ts'
+import { client, clients, listing } from '../drivers/client.ts'
 import { clients as imported } from './imports.ts'
 
 export { add, archive, erase, update } from '../handlers/index.ts'
@@ -13,7 +13,7 @@ export const slice: Slice = {
   imports: { clients: imported },
   collections: {
     clients: {
-      list: clients,
+      list: listing,
       item: client,
       index: async (db) => (await clients(db)).map((c) => ({ id: c.id, title: c.name, sub: c.form ?? c.kind })),
       actions: {

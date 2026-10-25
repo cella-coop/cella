@@ -7,6 +7,10 @@ export async function counts(db: Db): Promise<Record<string, { receipts: number 
   return Object.fromEntries(rows.map((r) => [r.expense, { receipts: r.n }]))
 }
 
+// The same as the list reads it: every expense, none where it holds none.
+export const receipted = `SELECT e.id, count(r.file)::int AS receipts
+  FROM expense.expense e LEFT JOIN expense_file.receipt r ON r.expense = e.id GROUP BY e.id`
+
 // The receipts attached to an expense, the first attached first.
 export async function receipts(db: Db, expense: string): Promise<Receipt[]> {
   const { rows } = await db.query<Receipt>(

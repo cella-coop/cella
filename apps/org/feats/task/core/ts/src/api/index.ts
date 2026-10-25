@@ -3,7 +3,7 @@
 // slice, which the shell mounts.
 import { action, type Slice } from '@cella/org-db'
 import { complete, create, move } from '../handlers/index.ts'
-import { task, tasks } from '../drivers/task.ts'
+import { listing, task, tasks } from '../drivers/task.ts'
 import * as forms from './forms.ts'
 
 export { complete, create, creating, move } from '../handlers/index.ts'
@@ -14,7 +14,7 @@ export const slice: Slice = {
   name: 'task',
   collections: {
     tasks: {
-      list: tasks,
+      list: listing,
       item: task,
       index: async (db) => (await tasks(db)).map((t) => ({ id: t.id, title: t.title, sub: `${t.id}, ${t.status}` })),
       actions: {

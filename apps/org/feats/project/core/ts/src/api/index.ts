@@ -3,7 +3,7 @@
 // slice, which the shell mounts, with projects imported from a spreadsheet.
 import { action, type Slice } from '@cella/org-db'
 import { add, archive, budget, complete, create } from '../handlers/index.ts'
-import { item, offered, projects } from '../drivers/project.ts'
+import { item, listing, offered, projects } from '../drivers/project.ts'
 import * as forms from './forms.ts'
 import { projects as imported } from './imports.ts'
 
@@ -16,7 +16,7 @@ export const slice: Slice = {
   imports: { projects: imported },
   collections: {
     projects: {
-      list: projects,
+      list: listing,
       about: offered,
       item,
       index: async (db) => (await projects(db)).map((p) => ({ id: p.id, title: p.title, sub: p.circle ?? undefined })),

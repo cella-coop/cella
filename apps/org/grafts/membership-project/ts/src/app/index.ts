@@ -9,7 +9,7 @@ export const app: App = {
   name: 'membership-project',
   extends: {
     projects: {
-      columns: [{ key: 'shared', label: 'Shared', kind: 'money', role: 'hidden', value: (r: { shared?: number }) => r.shared ?? 0 }],
+      columns: [{ key: 'shared', label: 'Shared', kind: 'money', role: 'hidden', value: (r: { shared: number }) => r.shared }],
       page: {
         properties: (p: Pot) => [{ label: 'Shared', value: p.shared, kind: 'money' }],
         blocks: [Shares],

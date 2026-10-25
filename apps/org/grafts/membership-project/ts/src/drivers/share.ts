@@ -1,11 +1,9 @@
 import type { Db } from '@cella/org-db'
 import type { Granted, Held, Pot } from '../models/share.ts'
 
-// What each project has shared out, by project.
-export async function shared(db: Db): Promise<Record<string, { shared: number }>> {
-  const { rows } = await db.query<{ project: string; shared: string }>('SELECT project, shared FROM membership_project.pot')
-  return Object.fromEntries(rows.map((r) => [r.project, { shared: Number(r.shared) }]))
-}
+// What each project has shared out, by project, nothing where it has
+// shared none.
+export const shared = 'SELECT project AS id, shared FROM membership_project.pot'
 
 export async function pot(db: Db, project: string): Promise<Pot> {
   const { rows } = await db.query<{ budget: string | null; shared: string; remaining: string | null; archived: boolean }>(

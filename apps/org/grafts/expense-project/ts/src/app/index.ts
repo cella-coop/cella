@@ -9,7 +9,7 @@ export const app: App = {
   name: 'expense-project',
   extends: {
     expenses: {
-      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'hidden', value: (r: { project?: string }) => r.project ?? 'the co-op' }],
+      columns: [{ key: 'project', label: 'Project', kind: 'badge', role: 'hidden', value: (r: { project: string }) => r.project }],
       page: {
         related: (f: Filed) => (f.project ? [{ label: f.title ?? f.project, sub: 'billed on to', href: `/projects/${f.project}` }] : []),
         blocks: [Project],

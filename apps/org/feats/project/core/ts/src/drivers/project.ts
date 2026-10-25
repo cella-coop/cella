@@ -1,8 +1,16 @@
-import type { Db } from '@cella/org-db'
+import type { Db, Read } from '@cella/org-db'
 import type { Detail, Milestone, Offered, Project } from '../models/project.ts'
 
 const columns = `p.id, p.title, p.circle, to_char(p.started, 'YYYY-MM-DD') AS started, to_char(p.due, 'YYYY-MM-DD') AS due,
   cella.cents(p.budget) AS budget, g.milestones AS total, g.completed, g.next`
+
+// The projects not archived as the collection lists them, the latest
+// started first, each done once every milestone it has is complete.
+export const listing: Read = {
+  sql: `SELECT ${columns}, CASE WHEN g.milestones > 0 AND g.completed = g.milestones THEN 'done' ELSE 'active' END AS state
+        FROM project.project p JOIN project.progress g ON g.id = p.id WHERE p.archived IS NULL`,
+  order: 'started DESC, id',
+}
 
 type Row = Omit<Project, 'budget' | 'state'> & { budget: string | null }
 

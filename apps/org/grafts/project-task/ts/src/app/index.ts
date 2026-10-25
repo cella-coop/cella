@@ -22,7 +22,7 @@ export const app: App = {
       },
     },
     projects: {
-      columns: [{ key: 'tasks', label: 'Tasks done', role: 'hidden', value: (r: { tasks?: string }) => r.tasks ?? '0 / 0' }],
+      columns: [{ key: 'tasks', label: 'Tasks done', role: 'hidden', value: (r: { tasks: string }) => r.tasks }],
       page: {
         properties: (t: Listed) => [{ label: 'Tasks open', value: t.tasks.filter((x) => x.status !== 'done').length, kind: 'number' }],
         tabs: [{ id: 'tasks', label: 'Tasks' }],

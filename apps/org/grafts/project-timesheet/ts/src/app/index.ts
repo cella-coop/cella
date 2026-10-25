@@ -15,8 +15,8 @@ export const app: App = {
     },
     projects: {
       columns: [
-        { key: 'hours', label: 'Hours', kind: 'number', role: 'hidden', value: (r: Partial<Burn>) => r.hours ?? 0 },
-        { key: 'used', label: 'Spent', kind: 'money', role: 'hidden', value: (r: Partial<Burn>) => r.used ?? 0 },
+        { key: 'hours', label: 'Hours', kind: 'number', role: 'hidden', value: (r: Burn) => r.hours },
+        { key: 'used', label: 'Spent', kind: 'money', role: 'hidden', value: (r: Burn) => r.used },
       ],
       page: {
         properties: (t: Spent) => [

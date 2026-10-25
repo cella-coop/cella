@@ -20,3 +20,9 @@ export interface Margin {
   landing: number | null
   watch: Watch | null
 }
+
+// A project's margin as the projects list it: its watch as its badge
+// shows it, `archived` once it is.
+export interface Listed extends Omit<Margin, 'watch'> {
+  watch: Watch | 'archived'
+}

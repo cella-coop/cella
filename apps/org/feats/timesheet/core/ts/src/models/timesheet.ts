@@ -1,7 +1,7 @@
 export const states = ['open', 'submitted', 'approved'] as const
 export type State = (typeof states)[number]
 
-// An entry as the collection lists it, with where its period stands.
+// An entry, with where its period stands.
 export interface Entry {
   id: string
   member: string
@@ -12,6 +12,12 @@ export interface Entry {
   billable: boolean
   note: string
   state: State
+}
+
+// An entry as the collection lists it: its kind as its badge shows it,
+// and its note or, without one, its hours.
+export interface Listed extends Omit<Entry, 'billable'> {
+  billable: 'billable' | 'internal'
 }
 
 // A member's month: its hours and where it stands.

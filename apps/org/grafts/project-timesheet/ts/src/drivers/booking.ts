@@ -1,19 +1,13 @@
-import type { Db } from '@cella/org-db'
-import type { Burn, Time } from '../models/booking.ts'
+import { today, type Db } from '@cella/org-db'
+import type { Time } from '../models/booking.ts'
 
 // Each entry's project, by entry, which the dashboard groups hours by.
-export async function projectOf(db: Db): Promise<Record<string, { project: string }>> {
-  const { rows } = await db.query<{ entry: string; title: string }>(
-    'SELECT b.entry::text AS entry, p.title FROM project_timesheet.booking b JOIN project.project p ON p.id = b.project',
-  )
-  return Object.fromEntries(rows.map((r) => [r.entry, { project: r.title }]))
-}
+export const projectOf = 'SELECT b.entry::text AS id, p.title AS project FROM project_timesheet.booking b JOIN project.project p ON p.id = b.project'
 
-// What each project's time spent of its budget, by project.
-export async function burns(db: Db): Promise<Record<string, Burn>> {
-  const { rows } = await db.query<{ project: string; hours: string; spent: string }>('SELECT project, hours, spent FROM project_timesheet.burn')
-  return Object.fromEntries(rows.map((r) => [r.project, { hours: Number(r.hours), used: Number(r.spent) }]))
-}
+// What each project's time spent of its budget, by project, nothing where
+// it has no time.
+export const burns = `SELECT p.id, coalesce(b.hours, 0) AS hours, coalesce(b.spent, 0) AS used
+  FROM project.project p LEFT JOIN project_timesheet.burn b ON b.project = p.id`
 
 // A project's time, by member and its latest entries.
 export async function time(db: Db, project: string): Promise<Time> {
@@ -44,7 +38,7 @@ export async function time(db: Db, project: string): Promise<Time> {
     hourly: rate[0]?.hourly ? Number(rate[0].hourly) : null,
     members,
     entries,
-    today: new Date().toISOString().slice(0, 10),
+    today: await today(db),
     archived: rate[0]?.archived ?? true,
   }
 }

@@ -1,5 +1,5 @@
 import { icons, type App } from '@cella/org-ui'
-import type { Run } from '../models/run.ts'
+import type { Listed, Run } from '../models/run.ts'
 import Create from './blocks/Create.svelte'
 import Lines from './blocks/Lines.svelte'
 
@@ -16,14 +16,14 @@ export const app: App = {
         icon: icons.FileArrowUp,
         create: Create,
         columns: [
-          { key: 'name', label: 'File', kind: 'title', role: 'title', value: (r: Run) => r.name },
-          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (r: Run) => r.id },
-          { key: 'kind', label: 'Kind', kind: 'badge', role: 'meta', value: (r: Run) => r.kind },
-          { key: 'dry', label: 'Run', kind: 'badge', role: 'meta', value: (r: Run) => (r.dry ? 'dry run' : 'imported'), tone: (r: Run) => (r.dry ? 'neutral' : 'positive') },
-          { key: 'settled', label: 'Settled', kind: 'number', role: 'meta', value: (r: Run) => r.settled },
-          { key: 'refused', label: 'Refused', kind: 'number', role: 'meta', value: (r: Run) => r.refused, tone: (r: Run) => (r.refused ? 'negative' : 'neutral') },
-          { key: 'day', label: 'On', kind: 'date', role: 'hidden', value: (r: Run) => r.day },
-          { key: 'actor', label: 'By', kind: 'mono', role: 'hidden', value: (r: Run) => r.actor },
+          { key: 'name', label: 'File', kind: 'title', role: 'title', value: (r: Listed) => r.name },
+          { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (r: Listed) => r.id },
+          { key: 'kind', label: 'Kind', kind: 'badge', role: 'meta', value: (r: Listed) => r.kind },
+          { key: 'dry', label: 'Run', kind: 'badge', role: 'meta', value: (r: Listed) => r.dry, tone: (r: Listed) => (r.dry === 'dry run' ? 'neutral' : 'positive') },
+          { key: 'settled', label: 'Settled', kind: 'number', role: 'meta', value: (r: Listed) => r.settled },
+          { key: 'refused', label: 'Refused', kind: 'number', role: 'meta', value: (r: Listed) => r.refused, tone: (r: Listed) => (r.refused ? 'negative' : 'neutral') },
+          { key: 'day', label: 'On', kind: 'date', role: 'hidden', value: (r: Listed) => r.day },
+          { key: 'actor', label: 'By', kind: 'mono', role: 'hidden', value: (r: Listed) => r.actor },
         ],
         empty: 'Nothing imported yet. Bring in a file from another tool with New, a dry run first.',
       },

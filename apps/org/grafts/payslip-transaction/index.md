@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -29,7 +29,13 @@ the event; `lines(month, event)`.
 
 - `payslip_transaction.accrued`, on `payslip:run:approve`, and `.paid`, on
   `payslip:run:pay`: the run has a posting for the event, dated as above,
-  whose lines are exactly the event's.
+  whose entry posts every line of the event. A write posts one entry, so
+  what a graft above posts in the same write, such as an instalment of
+  capital withheld from an associate's pay
+  (`account-member-payslip-transaction`), is lines of that entry: they
+  balance among themselves and credit neither the bank nor an account the
+  event's own lines post to, and the graft that adds them checks they are
+  exactly its own.
 
 ## Handlers
 

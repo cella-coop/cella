@@ -11,7 +11,10 @@ part of the work share buys shares. Declared by `account`.
 
 `account_member` (`sql/`):
 
-- `account_member.terms`: the value of one share, as the statutes set it.
+- `account_member.value(day)`: the value of one share on a day, the
+  capital clause of the statutes' terms governing it in the account feat,
+  adopted by the members' decision; NULL before any adopted terms state it.
+  The graft keeps no share value of its own.
 - `account_member.allowance`: what each member may draw on their account,
   granted in advance; the right `account.draw` spends.
 - `account_member.held`, a trigger on `account.account`: a capital
@@ -21,9 +24,9 @@ part of the work share buys shares. Declared by `account`.
   transaction as the write that ended the membership, whichever it is.
   It reacts to the exit wherever it comes from, so it needs no event of
   the member feat's, and no window opens between the exit and the freeze.
-- `account_member.capital`: each member's shares at the share's value,
-  the account holding them (under `1013`), whether it is frozen, and
-  their draw limit.
+- `account_member.capital`: each member's shares at the share's value on
+  the verdict date, the account holding them (under `1013`), whether it
+  is frozen, and their draw limit.
 - `account_member.patronage`: each worker's part of a year's work share
   split as the year's terms say: an associate employed in the co-op (an
   active member whose capital account is not frozen) takes as many whole
@@ -39,7 +42,8 @@ select.
 
 ## Writes
 
-None of its own. Opening a member's account on admission posts, so it is
+None of its own. Opening a member's account on admission posts, and so
+does moving a departing one's capital to what is owed them, so both are
 `account-member-transaction`'s.
 
 ## Shell
@@ -55,5 +59,6 @@ restricted.
 
 ## Lanterne
 
-A share is 50 €. The ten members hold 260 shares, 13 000 €, each in their
-own account from `101301` to `101310`; each may draw up to 500 €.
+A share is 50 €, as `st-2021` say. The ten members hold 260 shares,
+13 000 €, each in their own account from `101301` to `101310`; each may
+draw up to 500 €. Paul's `101311` has been frozen since he left.

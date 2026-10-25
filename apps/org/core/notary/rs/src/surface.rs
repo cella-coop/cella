@@ -17,9 +17,10 @@
 //! | `cella.receipt()` | function | the transaction's receipt number |
 //! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
 //! | `cella.op()`, `cella.actor()`, `cella.device()` | functions | the write being judged, for rules |
-//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts |
-//! | `cella.notary_key()` | function | the scope's public key |
+//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it |
+//! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
+//! | `cella.signer` | table | every key the notary has signed with, by id, and the first entry each signed |
 //! | `cella.rule`, `cella.rule_text`, `cella.keyring`, `cella.power` | tables | the registries: rules per op, the keyring, the power each op needs |
 //! | `cella.retention`, `cella.personal` | tables | the retention classes and their clocks; the columns holding personal data, each feat's own |
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
@@ -27,6 +28,7 @@
 //! | `cella.opened(n)` | function | an entry's logged payload, its commitments opened from the vault |
 //! | `cella.redacting()` | function | whether the notary is redacting, for a feat's trigger that keeps a row fixed |
 //! | `cella.vault_sweep()` | function, a superuser's | restricted data erased once its clock runs out |
+//! | `cella.vault_rewrap()` | function, a superuser's | every vault key sealed under the current wrap key, those under the previous one moved |
 
 use crate::{notary, vault};
 use cella_rules::{Amount as Cents, Tally};
@@ -249,6 +251,9 @@ impl Aggregate<Share> for Share {
 // function that says whether a device is an actor's current key; and the
 // power each op needs, which a graft's rule reads. Only these functions
 // write the log and the receipts; migrations register; everyone reads.
+// The head row is made by the first write, not here, so a dump of the
+// head restores into a fresh install; every key the notary signed with is
+// kept in `cella.signer`, and each receipt and entry names its own.
 
 extension_sql!(
     r"
@@ -257,7 +262,11 @@ CREATE TABLE cella.head (
     n bigint NOT NULL,
     hash bytea NOT NULL
 );
-INSERT INTO cella.head VALUES (true, 0, '\x0000000000000000000000000000000000000000000000000000000000000000');
+CREATE TABLE cella.signer (
+    id integer PRIMARY KEY CHECK (id > 0),
+    public bytea NOT NULL UNIQUE CHECK (length(public) = 32),
+    since bigint NOT NULL UNIQUE CHECK (since > 0)
+);
 CREATE TABLE cella.receipt (
     n bigint PRIMARY KEY,
     op text NOT NULL,
@@ -270,7 +279,8 @@ CREATE TABLE cella.receipt (
     at text NOT NULL,
     hash bytea NOT NULL,
     sig bytea NOT NULL,
-    UNIQUE (device, nonce)
+    UNIQUE (device, nonce),
+    key integer NOT NULL REFERENCES cella.signer
 );
 CREATE TABLE cella.log (
     n bigint PRIMARY KEY,
@@ -283,7 +293,8 @@ CREATE TABLE cella.log (
     rules jsonb NOT NULL,
     prev bytea NOT NULL,
     hash bytea NOT NULL,
-    sig bytea NOT NULL
+    sig bytea NOT NULL,
+    key integer NOT NULL REFERENCES cella.signer
 );
 CREATE TABLE cella.rule (
     op text NOT NULL,
@@ -308,9 +319,10 @@ CREATE TABLE cella.power (
     owner text NOT NULL
 );
 CREATE SEQUENCE cella.receipt_seq;
-REVOKE ALL ON cella.head, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power, cella.receipt_seq FROM PUBLIC;
-GRANT SELECT ON cella.head, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power TO PUBLIC;
+REVOKE ALL ON cella.head, cella.signer, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power, cella.receipt_seq FROM PUBLIC;
+GRANT SELECT ON cella.head, cella.signer, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power TO PUBLIC;
 SELECT pg_catalog.pg_extension_config_dump('cella.head', '');
+SELECT pg_catalog.pg_extension_config_dump('cella.signer', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.log', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.receipt', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.rule', '');
@@ -379,13 +391,16 @@ fn device() -> Option<Vec<u8>> {
 }
 
 /// Recomputes the chain from the first entry and checks every signature
-/// against the scope's key, and that the head names the last entry.
+/// against the key in office at its entry, as `cella.signer` keeps it, and
+/// that the head names the last entry. The key file is not read: a log
+/// verifies after its key is rotated or lost.
 #[pg_extern(stable, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn verify_log() -> bool {
     notary::verify_log()
 }
 
+/// The public key of `cella.key_file`, which signs the next entry.
 #[pg_extern(stable, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn notary_key() -> Vec<u8> {
@@ -395,7 +410,8 @@ fn notary_key() -> Vec<u8> {
 // Personal data: the retention classes and their clocks, which columns
 // hold personal data and of whom, each feat registering its own; and the
 // vault, which only these functions write: each subject's keys per class
-// and year, sealed under a key derived from the scope's seed, the salts
+// and year, sealed under the wrap key derived from the vault's own key
+// file, never the notary's, the salts
 // and sealed values that open the log's commitments, the erasures asked
 // and the sweeps carried out. No role but the extension's owner reads the
 // keys or the secrets.
@@ -557,3 +573,21 @@ fn opened(n: i64) -> Option<JsonB> {
 fn vault_sweep() -> TableIterator<'static, (name!(subject, String), name!(class, String), name!(keys, i64), name!(redacted, bool))> {
     TableIterator::new(vault::sweep(&notary::iso(notary::verdict_date())))
 }
+
+/// Seals every vault key under the wrap key of `cella.vault_key_file`:
+/// each one that opens only under `cella.vault_key_previous` is opened with
+/// it and sealed again. Returns how many moved; then the previous file may
+/// be destroyed. A superuser's, run by `cella vault rewrap`.
+#[pg_extern(volatile, security_definer)]
+#[search_path(pg_catalog, pg_temp)]
+fn vault_rewrap() -> i64 {
+    vault::rewrap()
+}
+
+extension_sql!(
+    r"
+REVOKE EXECUTE ON FUNCTION cella.vault_rewrap() FROM PUBLIC;
+",
+    name = "vault_rewrap_owner",
+    requires = [vault_rewrap],
+);

@@ -7,7 +7,7 @@
 use crate::vault;
 use crate::{CLOCK, KEY_FILE, SCOPE};
 use cella_rules::hex::{hex, unhex};
-use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule};
+use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule, Signer};
 use cella_rules::sign::{self, Request};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
@@ -17,7 +17,7 @@ use std::cell::RefCell;
 
 thread_local! {
     static DATE: RefCell<Option<(i32, u8, u8)>> = const { RefCell::new(None) };
-    static KEY: RefCell<Option<(String, Key, [u8; 32])>> = const { RefCell::new(None) };
+    static KEY: RefCell<Option<(String, Key)>> = const { RefCell::new(None) };
     static RECEIPT: RefCell<Option<(i64, String)>> = const { RefCell::new(None) };
     static WRITE: RefCell<Option<Context>> = const { RefCell::new(None) };
 }
@@ -44,7 +44,7 @@ pub(crate) fn first<T: pgrx::datum::FromDatum + pgrx::datum::IntoDatum>(rows: pg
     spi(rows.first().get_one::<T>())
 }
 
-fn setting(guc: &pgrx::guc::GucSetting<Option<std::ffi::CString>>) -> Option<String> {
+pub(crate) fn setting(guc: &pgrx::guc::GucSetting<Option<std::ffi::CString>>) -> Option<String> {
     guc.get().and_then(|c| c.to_str().ok().map(str::to_string)).filter(|c| !c.is_empty())
 }
 
@@ -79,29 +79,21 @@ fn scope() -> String {
     setting(&SCOPE).unwrap_or_else(|| fail("cella.scope is not set: the scope's address, which every signature names"))
 }
 
-/// The scope's signing key and the key that seals the vault's keys, both
-/// from the seed in the key file.
-fn with_keys<T>(f: impl FnOnce(&Key, &[u8; 32]) -> T) -> T {
+/// The scope's signing key, from the seed in the key file. The vault's
+/// wrap key comes from a file of its own (`vault::wrap`).
+fn with_key<T>(f: impl FnOnce(&Key) -> T) -> T {
     let path = setting(&KEY_FILE).unwrap_or_else(|| fail("cella.key_file is not set"));
     KEY.with(|cell| {
-        let stale = cell.borrow().as_ref().is_none_or(|(p, _, _)| *p != path);
+        let stale = cell.borrow().as_ref().is_none_or(|(p, _)| *p != path);
         if stale {
             let seed = std::fs::read(&path).unwrap_or_else(|e| fail(format!("cella.key_file {path}: {e}")));
             let key = Key::from_seed(&seed).unwrap_or_else(|e| fail(format!("cella.key_file {path}: {e}")));
-            *cell.borrow_mut() = Some((path, key, cella_rules::vault::wrap_key(&seed)));
+            *cell.borrow_mut() = Some((path, key));
         }
         let held = cell.borrow();
-        let (_, key, wrap) = held.as_ref().expect("key loaded");
-        f(key, wrap)
+        let (_, key) = held.as_ref().expect("key loaded");
+        f(key)
     })
-}
-
-fn with_key<T>(f: impl FnOnce(&Key) -> T) -> T {
-    with_keys(|k, _| f(k))
-}
-
-pub(crate) fn wrap_key() -> [u8; 32] {
-    with_keys(|_, w| *w)
 }
 
 pub fn public_key() -> [u8; 32] {
@@ -135,6 +127,43 @@ fn forget_receipt() {
 
 pub fn receipt() -> i64 {
     taken().0
+}
+
+/// Locks the head row, made by the first write, and reads it: the last
+/// entry's number and hash. Every write, and every rewrap of the vault,
+/// holds it until it commits.
+pub(crate) fn lock_head(c: &mut SpiClient<'_>) -> (i64, [u8; 32]) {
+    spi(c.update("INSERT INTO cella.head VALUES (true, 0, $1) ON CONFLICT DO NOTHING", None, &[log::GENESIS.to_vec().into()]));
+    let head = spi(c.update("SELECT n, hash FROM cella.head FOR UPDATE", Some(1), &[]));
+    let (n, hash) = spi(head.first().get_two::<i64, Vec<u8>>());
+    let hash = hash.and_then(|h| h.try_into().ok()).unwrap_or_else(|| fail("cella: the head's hash is not 32 bytes"));
+    (n.unwrap_or_else(|| fail("cella: no head")), hash)
+}
+
+/// The id of the key file's key, which signs entry `n`: registered in
+/// `cella.signer` as in office from `n` the first time it signs. A key a
+/// later one replaced never signs again.
+fn signer(c: &mut SpiClient<'_>, n: i64) -> i32 {
+    let public = public_key().to_vec();
+    let known = spi(c.select(
+        "SELECT id, id = (SELECT max(id) FROM cella.signer) FROM cella.signer WHERE public = $1",
+        Some(1),
+        &[public.clone().into()],
+    ));
+    if !known.is_empty() {
+        let (id, current) = spi(known.first().get_two::<i32, bool>());
+        let id = id.unwrap_or_else(|| fail("cella: a signer has no id"));
+        if current != Some(true) {
+            fail(format!("cella.key_file holds signer {id}'s key, which a later key replaced: a retired key never signs again"));
+        }
+        return id;
+    }
+    let added = spi(c.update(
+        "INSERT INTO cella.signer (id, public, since) SELECT coalesce(max(id), 0) + 1, $1, $2 FROM cella.signer RETURNING id",
+        Some(1),
+        &[public.into(), n.into()],
+    ));
+    first::<i32>(added).unwrap_or_else(|| fail("cella: the key file's key was not registered"))
 }
 
 /// The write `submit` is judging, for the rules to read through
@@ -322,12 +351,8 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     }
     let date = iso(verdict_date());
     Spi::connect_mut(|c| {
-        let head = spi(c.update("SELECT n, hash FROM cella.head FOR UPDATE", Some(1), &[]));
-        let (n, prev) = spi(head.first().get_two::<i64, Vec<u8>>());
-        let n = n.unwrap_or_else(|| fail("cella: no head")) + 1;
-        let prev: [u8; 32] = prev
-            .and_then(|p| p.try_into().ok())
-            .unwrap_or_else(|| fail("cella: the head's hash is not 32 bytes"));
+        let (last, prev) = lock_head(c);
+        let n = last + 1;
         let after = |by: &str| format!("{op} refused by {by} after verdict {}", n - 1);
 
         let role = rules_role(c);
@@ -384,11 +409,12 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             payload: digest,
             time,
         };
+        let key = signer(c, n);
         let receipt_hash = receipt.hash();
         let receipt_sig = with_key(|k| k.sign(&receipt_hash));
         spi(c.update(
-            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)",
+            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
             None,
             &[
                 number.into(),
@@ -402,6 +428,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
                 receipt.time.clone().into(),
                 receipt_hash.to_vec().into(),
                 receipt_sig.to_vec().into(),
+                key.into(),
             ],
         ));
 
@@ -426,8 +453,8 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             .map(|r| json!({ "owner": r.owner, "function": r.function, "text": hex(&r.text) }))
             .collect();
         spi(c.update(
-            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, rules, prev, hash, sig)
-             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11)",
+            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, rules, prev, hash, sig, key)
+             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11, $12)",
             None,
             &[
                 n.into(),
@@ -441,6 +468,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
                 prev.to_vec().into(),
                 hash.to_vec().into(),
                 sig.to_vec().into(),
+                key.into(),
             ],
         ));
         spi(c.update("UPDATE cella.head SET n = $1, hash = $2", None, &[n.into(), hash.to_vec().into()]));
@@ -461,13 +489,33 @@ fn listed_rules(v: &Value) -> Option<Vec<Rule>> {
         .collect()
 }
 
+/// Every key the notary has signed with, in the order they took office.
+fn signers(c: &SpiClient<'_>) -> Vec<Signer> {
+    let rows = spi(c.select("SELECT id, public, since FROM cella.signer ORDER BY id", None, &[]));
+    rows.map(|row| {
+        let public = spi(row.get::<Vec<u8>>(2)).and_then(|p| p.try_into().ok());
+        let (Some(id), Some(public), Some(since)) = (spi(row.get::<i32>(1)), public, spi(row.get::<i64>(3))) else {
+            fail("cella: a signer is unreadable");
+        };
+        Signer { id, public, since }
+    })
+    .collect()
+}
+
 pub fn verify_log() -> bool {
     let scope = scope();
-    let mut chain = Chain::new(&public_key()).unwrap_or_else(|e| fail(format!("cella: {e}")));
     Spi::connect(|c| {
+        let mut chain = match Chain::new(&signers(c)) {
+            Ok(chain) => chain,
+            Err(e) => {
+                warning!("cella: the signers are out of order: {e}");
+                return false;
+            }
+        };
         let rows = spi(c.select(
             "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.rules, l.prev, l.hash, l.sig, l.receipt,
-                    r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form
+                    r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
+                    l.key, r.key
              FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
              ORDER BY l.n",
             None,
@@ -516,18 +564,24 @@ pub fn verify_log() -> bool {
                 receipt_hash,
                 rules,
             };
-            if let Err(b) = chain.check_receipt(&scope, &entry, &receipt, &receipt_hash, &bytes(20)) {
+            let (Some(key), Some(receipt_key)) = (spi(row.get::<i32>(22)), spi(row.get::<i32>(23))) else {
+                warning!("cella: log broken at {n}: no signer named");
+                return false;
+            };
+            if let Err(b) = chain.check_receipt(&scope, &entry, receipt_key, &receipt, &receipt_hash, &bytes(20)) {
                 warning!("cella: log broken at {}: {}", b.n, b.why);
                 return false;
             }
             let hash = bytes(8);
-            if let Err(b) = chain.check(&entry, &bytes(7), &hash, &bytes(9)) {
+            if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
                 warning!("cella: log broken at {}: {}", b.n, b.why);
                 return false;
             }
             last = hash;
         }
-        let head = spi(spi(c.select("SELECT n, hash FROM cella.head", Some(1), &[])).first().get_two::<i64, Vec<u8>>());
+        // No head row is a log no write has reached yet.
+        let head = spi(c.select("SELECT n, hash FROM cella.head", Some(1), &[]));
+        let head = if head.is_empty() { (Some(0), Some(log::GENESIS.to_vec())) } else { spi(head.first().get_two::<i64, Vec<u8>>()) };
         if head != (Some(chain.len()), Some(last)) {
             warning!("cella: the head does not name the log's last entry");
             return false;

@@ -16,6 +16,15 @@ mod vault;
 /// The scope's Ed25519 seed, 32 raw bytes in a file only the server reads.
 pub(crate) static KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
+/// The vault's own key, 32 random bytes in a file only the server reads,
+/// apart from the notary's seed: the wrap key sealing the vault's keys is
+/// derived from it.
+pub(crate) static VAULT_KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+
+/// The vault key file before a rotation, read only to open what is still
+/// sealed under it until `cella.vault_rewrap()` has moved it.
+pub(crate) static VAULT_KEY_PREVIOUS: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+
 /// A fixed verdict date, for fixtures and tests; unset, the notary reads
 /// its clock once per transaction.
 pub(crate) static CLOCK: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
@@ -31,6 +40,22 @@ pub extern "C-unwind" fn _PG_init() {
         c"The scope's Ed25519 seed file",
         c"32 raw bytes; set in postgresql.conf, readable only by the server",
         &KEY_FILE,
+        GucContext::Sighup,
+        GucFlags::SUPERUSER_ONLY,
+    );
+    GucRegistry::define_string_guc(
+        c"cella.vault_key_file",
+        c"The vault's key file, apart from the notary's",
+        c"32 random bytes; set in postgresql.conf, readable only by the server",
+        &VAULT_KEY_FILE,
+        GucContext::Sighup,
+        GucFlags::SUPERUSER_ONLY,
+    );
+    GucRegistry::define_string_guc(
+        c"cella.vault_key_previous",
+        c"The vault's key file before a rotation",
+        c"set in postgresql.conf until cella.vault_rewrap() has moved every key",
+        &VAULT_KEY_PREVIOUS,
         GucContext::Sighup,
         GucFlags::SUPERUSER_ONLY,
     );

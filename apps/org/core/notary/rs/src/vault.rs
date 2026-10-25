@@ -6,14 +6,65 @@
 //! rows of `cella.retention`, and which columns hold personal data, rows of
 //! `cella.personal`, which each feat registers.
 
-use crate::notary::{fail, first, refuse, spi, wrap_key};
+use crate::notary::{fail, first, lock_head, refuse, setting, spi};
+use crate::{VAULT_KEY_FILE, VAULT_KEY_PREVIOUS};
 use cella_rules::log::canonical;
 use cella_rules::vault::{self, Erase, Marked, NONCE, Personal};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
 use serde_json::{Value, json};
-use std::cell::Cell;
-use std::collections::BTreeSet;
+use std::cell::{Cell, RefCell};
+use std::collections::{BTreeMap, BTreeSet};
+
+thread_local! {
+    static WRAPS: RefCell<BTreeMap<String, [u8; 32]>> = const { RefCell::new(BTreeMap::new()) };
+}
+
+/// The wrap key derived from a vault key file, 32 random bytes kept apart
+/// from the notary's seed, read once per backend.
+fn wrap_of(guc: &str, path: String) -> [u8; 32] {
+    WRAPS.with(|cell| {
+        if let Some(w) = cell.borrow().get(&path) {
+            return *w;
+        }
+        let bytes = std::fs::read(&path).unwrap_or_else(|e| fail(format!("{guc} {path}: {e}")));
+        if bytes.len() != 32 {
+            fail(format!("{guc} {path}: a vault key is 32 bytes, got {}", bytes.len()));
+        }
+        let wrap = vault::wrap_key(&bytes);
+        cell.borrow_mut().insert(path, wrap);
+        wrap
+    })
+}
+
+/// The wrap key every vault key is sealed under, from `cella.vault_key_file`.
+fn wrap() -> [u8; 32] {
+    let path = setting(&VAULT_KEY_FILE)
+        .unwrap_or_else(|| fail("cella.vault_key_file is not set: the vault's own key, apart from the notary's"));
+    wrap_of("cella.vault_key_file", path)
+}
+
+/// The wrap key before a rotation, from `cella.vault_key_previous`, if set.
+fn previous() -> Option<[u8; 32]> {
+    setting(&VAULT_KEY_PREVIOUS).map(|path| wrap_of("cella.vault_key_previous", path))
+}
+
+/// A sealed vault key opened: under the current wrap key, else under the
+/// previous one while a rotation is under way; and whether it took the
+/// previous one.
+fn unwrap(subject: &str, class: &str, year: i32, sealed: &[u8]) -> ([u8; 32], bool) {
+    let aad = key_aad(subject, class, year);
+    let opened = vault::open(&wrap(), &aad, sealed)
+        .ok()
+        .map(|k| (k, false))
+        .or_else(|| previous().and_then(|w| vault::open(&w, &aad, sealed).ok()).map(|k| (k, true)));
+    let Some((plain, moved)) = opened else {
+        fail(format!(
+            "cella: the key of {subject}'s {class} from {year} opens under neither cella.vault_key_file nor cella.vault_key_previous"
+        ));
+    };
+    (plain.try_into().unwrap_or_else(|_| fail("cella: a vault key is 32 bytes")), moved)
+}
 
 /// N bytes from Postgres's strong random source.
 fn random<const N: usize>() -> [u8; N] {
@@ -47,16 +98,14 @@ fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: 
         let row = rows.first();
         let sealed = spi(row.get::<Vec<u8>>(1)).unwrap_or_default();
         let restricted = spi(row.get::<bool>(2)).unwrap_or(false);
-        let plain = vault::open(&wrap_key(), &key_aad(subject, class, year), &sealed)
-            .unwrap_or_else(|e| fail(format!("cella: the key of {subject}'s {class} from {year}: {e}")));
-        let key: [u8; 32] = plain.try_into().unwrap_or_else(|_| fail("cella: a vault key is 32 bytes"));
+        let (key, _) = unwrap(subject, class, year, &sealed);
         return Some((key, restricted));
     }
     if !make {
         return None;
     }
     let key = random::<32>();
-    let sealed = vault::seal(&wrap_key(), &random::<NONCE>(), &key_aad(subject, class, year), &key)
+    let sealed = vault::seal(&wrap(), &random::<NONCE>(), &key_aad(subject, class, year), &key)
         .unwrap_or_else(|e| fail(format!("cella: {e}")));
     spi(c.update(
         "INSERT INTO vault.key (subject, class, year, sealed) VALUES ($1, $2, $3, $4)",
@@ -309,5 +358,37 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
             out.push((subject, class, destroyed, full));
         }
         out
+    })
+}
+
+/// Seals every vault key under the current wrap key: each that opens only
+/// under the previous one is sealed again. Holds the head's lock, so no
+/// write makes a key meanwhile. Returns how many moved.
+pub fn rewrap() -> i64 {
+    Spi::connect_mut(|c| {
+        lock_head(c);
+        let rows = spi(c.select("SELECT subject, class, year, sealed FROM vault.key ORDER BY subject, class, year", None, &[]));
+        let keys: Vec<(String, String, i32, Vec<u8>)> = rows
+            .map(|row| {
+                let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
+                (text(1), text(2), spi(row.get::<i32>(3)).unwrap_or_default(), spi(row.get::<Vec<u8>>(4)).unwrap_or_default())
+            })
+            .collect();
+        let mut moved = 0;
+        for (subject, class, year, sealed) in keys {
+            let (key, old) = unwrap(&subject, &class, year, &sealed);
+            if !old {
+                continue;
+            }
+            let resealed = vault::seal(&wrap(), &random::<NONCE>(), &key_aad(&subject, &class, year), &key)
+                .unwrap_or_else(|e| fail(format!("cella: {e}")));
+            spi(c.update(
+                "UPDATE vault.key SET sealed = $4 WHERE subject = $1 AND class = $2 AND year = $3",
+                None,
+                &[subject.into(), class.into(), year.into(), resealed.into()],
+            ));
+            moved += 1;
+        }
+        moved
     })
 }

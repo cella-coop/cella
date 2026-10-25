@@ -80,8 +80,10 @@ and moves tasks and logs their own time.
   microsite is under way, Ondine's shop is archived. Thirty-three tasks on
   the board, each with a member of the circle that runs its project.
   Timesheets began on 1 September: seven hours a working day for everyone,
-  under a third billable at 80 € an hour. Four members hold shares of
-  project budgets. September is approved; October is open.
+  under a third billable at 80 € an hour; an hour costs the co-op
+  23,64 €. Four members hold shares of project budgets. September is
+  approved; October is open. A project is watched past a 90 % burn or
+  under a 20 % margin: Ferrand's packaging and Terres Vives's report are.
 - **Meetings (confluent, then ordered).** The annual assembly met on 20
   June, all ten members present, approved the 2025 accounts and the
   internal rules, and Julien, its secretary, wrote its minutes, which the

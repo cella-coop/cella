@@ -1,10 +1,16 @@
 # Which project each run of time in timesheet.toml is for; runs named in
-# none are the co-op's own time. And the hourly rate billable time spends
-# a budget at, in cents: the 560 € day rate over a seven-hour day.
+# none are the co-op's own time. The hourly rate billable time spends a
+# budget at, in cents: the 560 € day rate over a seven-hour day. And what
+# an hour costs the co-op: September's pay run, 36 400 € with the
+# employer's contributions, over the 1 540 hours logged in September.
 
 [[rate]]
 since = 2026-01-01
 hourly = 8000
+
+[[cost]]
+since = 2026-01-01
+hourly = 2364
 
 [[booking]]
 run = "yusuf-halles"

@@ -4,7 +4,8 @@
 // their project's budget; a done task, and only a done one, has its day; a
 // member logs a plausible day, ten hours at most, on working days; an
 // approved month was submitted, and approved by someone else; nothing is
-// booked to a project archived or dated before it started.
+// booked to a project archived or dated before it started; booked time
+// has a rate and a cost.
 
 import { weekdays } from '../seed/work.mjs'
 
@@ -132,6 +133,9 @@ export function work(read, fail) {
   const booked = read('graft.project-timesheet')
   if (runs.size && !(booked.rate ?? []).length) {
     fail('project-timesheet: no rate a budget is spent at')
+  }
+  if (runs.size && !(booked.cost ?? []).length) {
+    fail('project-timesheet: no cost an hour of time is costed at')
   }
   for (const b of booked.booking ?? []) {
     const r = runs.get(b.run)

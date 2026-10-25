@@ -2,7 +2,8 @@
 // budgets and shares, its tasks, and its timesheets into the project,
 // task and timesheet schemas and their grafts' (client-project,
 // invoice-project, member-project, member-task, project-task,
-// member-timesheet, project-timesheet). Invoices load first. A run of time in the fixture is logged as one entry
+// member-timesheet, project-timesheet, and the margin thresholds of
+// expense-invoice-project-timesheet). Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
 // Members and clients load first; an archived project is archived after
 // its milestones are in, and periods are submitted and approved after
@@ -72,6 +73,12 @@ export async function work(db, read, day) {
   const booked = read('graft.project-timesheet')
   for (const r of booked.rate ?? []) {
     await db.query('INSERT INTO project_timesheet.rate (since, hourly) VALUES ($1, cella.amount($2))', [day(r.since), r.hourly])
+  }
+  for (const c of booked.cost ?? []) {
+    await db.query('INSERT INTO project_timesheet.cost (since, hourly) VALUES ($1, cella.amount($2))', [day(c.since), c.hourly])
+  }
+  for (const t of read('graft.expense-invoice-project-timesheet').threshold ?? []) {
+    await db.query('INSERT INTO expense_invoice_project_timesheet.threshold (since, burn, margin) VALUES ($1, $2, $3)', [day(t.since), t.burn, t.margin])
   }
   const projectOf = new Map((booked.booking ?? []).map((b) => [b.run, b.project]))
   const time = read('timesheet')

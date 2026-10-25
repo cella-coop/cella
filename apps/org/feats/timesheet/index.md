@@ -1,12 +1,12 @@
 +++
 title = "Timesheet"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
-Time worked, by member and day, and each member's timesheet, a month of
-it, which they submit and someone else approves. Approved time is what
-patronage and payslips will count; at rung 1 it is counted against
-projects' budgets.
+Time worked, by worker and day, member or not, and each worker's
+timesheet, a month of it, which they submit and someone else approves.
+Approved time is what payslips hold and a work share by time divides,
+and it is counted against projects' budgets.
 
 ## Entities
 
@@ -46,9 +46,12 @@ SHARE` and the approval updates it, so Postgres serialises the two.
 Logging and submitting are also the member's own (`timesheet.logs`,
 `timesheet.submits`), and approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
-`circle-member` graft checks them. That a lead approves only their own
-circle's members needs a graft joining circle, member and timesheet,
-which is not built: any holder of `approve-time` approves anyone else's.
+`circle-member` graft checks them; that a lead approves only their own
+circle's members is `circle-member-timesheet`'s. A worker logs and
+submits their own time by their employment instead, member or not,
+through `timesheet-worker`'s writes of the same effect, which need no
+mandate: the shell logs through those, since a worker who is no member
+holds no seat and so no `log-time`.
 
 ## Invariants
 
@@ -77,19 +80,20 @@ role may select.
 ## Shell
 
 The `timesheets` collection lists every entry in a table, the latest day
-first, with its member and project from the grafts; its dashboard sums
+first, with its worker and project from the grafts; its dashboard sums
 the hours, the billable hours and those awaiting approval, by month and
-by kind, and by member and by project from the grafts. Its New form logs
-time as the acting member. An entry's page shows its member's month and,
-in its header, submits it while open or approves it once submitted; a
-member's page lists their months with the same writes
-(`member-timesheet`).
+by kind, and by worker and by project from the grafts. Its New form logs
+time as the acting worker, by their employment (`timesheet-worker`). An
+entry's page shows its worker's month and, in its header, submits it
+while open or approves it once submitted; a worker's page and a member's
+list their months with the same writes (`timesheet-worker`,
+`member-timesheet`).
 
 ## Lanterne
 
-Timesheets began on 1 September 2026. Every member logs seven hours a
+Timesheets began on 1 September 2026. Every worker logs seven hours a
 working day, the 35-hour week of the internal rules, under a third of it
 billable, in line with what the invoices bill at the 80 € hourly rate.
 September is submitted by everyone and approved: each lead approved their
-circle's members, Julien in finance the leads, and Camille as gérante
-Julien. October is open.
+circle's members, Julien in finance the leads and Inès, who is no member
+yet, and Camille as gérante Julien. October is open.

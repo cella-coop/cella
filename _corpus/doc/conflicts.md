@@ -62,7 +62,11 @@ decision. Lanterne's state is that of 24 October 2026.
 | `member-task:task.assign`, `project-task:task.file` | confluent | right: registers |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
-| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)) |
+| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
+| `worker.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
+| `member-worker:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
+| `timesheet-worker:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
+| `document-member:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
 | `meeting.hold`, `.cancel` | ordered | right: one of them stands, and the hold fixes the agenda and who came |
@@ -625,9 +629,35 @@ All three are ordered. The run waits for every month's approval, which
 is ordered and fixes the month's entries, so the time a run reads never
 changes after it.
 
-**Lanterne.** October's run is refused on 2 November until every member's
-October is approved; prepared then, approved by Camille, it accrues on
-31 October and Julien pays it from the bank.
+**Lanterne.** October's run is refused on 2 November until every
+worker's October is approved, Inès's with the members'; prepared then,
+approved by Camille, it accrues on 31 October and Julien pays it from
+the bank.
+
+## A worker's time and pay rest on their employment
+
+Owners: the `worker` feat for the contract; `timesheet-worker` and
+`payslip-worker` for the time and pay that rest on it; `member-worker`
+for the candidacy.
+
+| Pair | A first | B first | Both confluent |
+|---|---|---|---|
+| `hire` vs `hire`, one worker | the second refused | the first refused | two contracts for one person, neither the other's end |
+| `hire` vs `timesheet-worker:entry.log` by them | the log stands | refused: no worker | — |
+| `candidacy.open` vs `candidacy.open`, one worker | the second refused | as A | two probations, two pledges |
+| `candidacy.open` vs `member.admit` | the admission follows | refused: a member is no candidate | — |
+| `timesheet-worker:entry.log` vs `timesheet:period.approve` | as the feat's log | as the feat's log | as the feat's log |
+
+Every write is a fact, the hire and the candidacy once each, so all stay
+confluent: what can break is only a second of one, which the key
+refuses in either order. Ending a contract is not built; it will contend
+with the logs and payslips of the days after it, as approving a month
+does with its entries, and be ordered.
+
+**Lanterne.** Inès, hired in September 2025 and no member, logs her own
+time and is paid in October's run; Camille hires Bastien, an apprentice,
+and opens his candidacy, and opening one for Yusuf, a member, is
+refused.
 
 ## A meeting is held once
 

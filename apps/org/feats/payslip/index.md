@@ -1,13 +1,13 @@
 +++
 title = "Payslip"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
-Pay: each member's salary, and a pay run each month, one payslip per
-salaried member, prepared from the salaries and the members' approved
-time, approved, and paid from the bank. It is the document layer, not a
-payroll engine: contributions are flat rates until a payroll integration
-computes them line by line.
+Pay: each worker's salary, member or not, and a pay run each month, one
+payslip per salaried worker, prepared from the salaries and the
+workers' approved time, approved, and paid from the bank. It is the
+document layer, not a payroll engine: contributions are flat rates until
+a payroll integration computes them line by line.
 
 ## Entities
 
@@ -16,10 +16,11 @@ computes them line by line.
 | terms | `employee`, `employer`, `ratio` | the contributions' rates on gross pay, in percent, and the widest ratio between the highest and the lowest salary |
 | salary | `member`, `from`, `gross` | a monthly gross salary from a day on |
 | run | `month`, `generated`, `approved?`, `approver?`, `paid?` | one per month |
-| payslip | `month`, `member`, `minutes?`, `gross`, `employee`, `employer`, `net` | amounts in cents; net is gross less the employee's contributions; minutes are the member's approved month's |
+| payslip | `month`, `member`, `minutes?`, `gross`, `employee`, `employer`, `net` | amounts in cents; net is gross less the employee's contributions; minutes are the worker's approved month's |
 
-A salary and a payslip name their member by address, as text; that it is
-a member's is the `member-payslip` graft's.
+A salary and a payslip name their worker by address, as text, in a
+column still called `member`; that it is a worker's, employed in the
+payslip's month, is the `payslip-worker` graft's.
 
 ## Lifecycle
 
@@ -52,7 +53,7 @@ the interim `transaction.payroll` and its `run-payroll`.
 
 ## Invariants
 
-- a run's payslips are exactly what its salaried members are due:
+- a run's payslips are exactly what its salaried workers are due:
   `payslip.due(month)`, the salary in force on the month's first day and
   the contributions at the terms' rates, to the cent;
 - a run is approved, then paid, each once, and its payslips are fixed
@@ -106,5 +107,7 @@ Ten members are salaried, from 2 400 € to 3 000 € gross a month, 26 000 €
 in all; contributions are 22 % for the employee and 40 % for the
 employer. July to September's runs were carried over, paid on the 28th,
 September's with the members' approved hours. October's waits for the
-members' months to be approved. Inès, employed since September 2025 but
-not yet a member, is not paid through these runs.
+workers' months to be approved, Inès's with the members': employed since
+September 2025 and not yet a member, she was paid by the previous tool
+apart from the runs it carried over, and from October her 2 200 € is a
+run's, so October's run holds eleven payslips, 28 200 € gross.

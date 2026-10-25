@@ -61,6 +61,10 @@ updated = 2026-10-25
 | **SCOP** | société coopérative et participative: France's worker co-op, a SARL or SA whose workers hold the majority of capital and votes |
 | **SCIC** | société coopérative d'intérêt collectif: France's multi-stakeholder co-op, its members in colleges |
 | **gérant(e)** | the elected manager and legal representative of a SCOP SARL |
+| **worker** | someone the co-op employs, member or not, under a contract that runs from a first day to a last; their time and pay rest on their employment |
+| **candidate** | a worker serving a probation before the assembly may admit them, pledging the shares they will subscribe |
+| **probation** | the six months to a year a candidate works before the assembly votes on their admission; served in employment, kept with the candidacy |
+| **joining** | what membership asks of a new member, step by step: admitted, the texts read, the capital subscribed, a device enrolled, the circles joined |
 | **college** | a class of members in a multi-stakeholder co-op, with its own weight in votes |
 | **surplus** | what remains of a year's income after expenses; a co-op's profit |
 | **work share** | the part of the surplus paid to the workers for their work (participation) |

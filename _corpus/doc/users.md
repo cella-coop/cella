@@ -52,7 +52,8 @@ surplus split, then the assembly.
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
 | No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the co-op's thresholds |
 | Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
-| New members do not understand what they own | medium | the members' view: rules that read back as sentences |
+| New members do not understand what they own | medium | a member's page: what joining asks, step by step, each kept by the slice that knows it, and what they own and decide, read back as sentences from the statutes' terms, their seats and their mandates |
+| Workers who are not members, and the probation before admission | medium | `worker`: every worker's contract, member or not, so their time and pay rest on their employment; a candidacy's probation and pledge, and the admission proposed from it once the probation ends |
 
 ### People
 
@@ -85,8 +86,13 @@ What the first target needs that the org app does not do yet, by severity:
   balance sheet are drawn from the journal in the PCG's presentation by
   month, quarter and year, and each project's margin is live with its
   burn, its forecasts and a watch; the watch reaches no inbox yet.
-- **Medium:** workers who are not members, probation and onboarding; a
-  weekly time grid; buy-in and buyout formulas.
+- **Medium:** a weekly time grid; buy-in and buyout formulas. Workers
+  who are not members hold a contract, log their own time by it and are
+  paid in the runs; a candidate serves a probation, and the admission is
+  proposed from it once it ends; a new member's page lists what joining
+  asks and reads back what they own and decide. Ending or changing a
+  contract, setting a salary from the shell, and a worker who is no
+  member logging time against a project are not built.
 - **Across personas:** an inbox of what needs me, a co-op dashboard, file
   attachments, supermajority as a procedure.
 

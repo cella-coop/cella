@@ -1,19 +1,22 @@
 +++
 title = "member-timesheet"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
-Whose time an entry is: an active member's. The timesheet feat holds the
-member's address on each entry, as a decision holds a voter's; this graft
-checks it against the members and names them. Declared by `timesheet`.
+A member's time, as the members see it: none is a suspended or former
+member's, and a member's months are on their page. The timesheet feat
+holds the member's address on each entry, as a decision holds a voter's.
+Whose time an entry is otherwise, a worker's within their employment, is
+`timesheet-worker`'s. Declared by `timesheet`.
 
 ## Schema
 
 `member_timesheet` (`sql/`):
 
-- `member_timesheet.whose`, a trigger on `timesheet.entry`: an entry's
-  member is active (SQLSTATE `09000`); whether the actor may log at all is
-  the `log-time` power's.
+- `member_timesheet.whose`, a trigger on `timesheet.entry`: an entry is
+  no member's who is suspended or has left (SQLSTATE `09000`). Until
+  2026-10-25 it asked an active member, which kept a worker who is no
+  member from logging; `002-employment.sql` narrows it.
 - `member_timesheet.sheet`: each member's months with their name, and who
   approved each by name.
 
@@ -28,15 +31,14 @@ months, under the feat's labels, powers and rules.
 
 ## Invariants
 
-- an entry is an active member's time.
+- an entry is no suspended or former member's.
 
 ## Shell
 
-Adds to each entry its member's name, and to the timesheets' dashboard
-the hours by member; to a member's page their months, each with its
-hours, billable hours, state and approver, submitting an open one when
-the acting member is that member and approving a submitted one when
-someone else is.
+Adds to a member's page their months, each with its hours, billable
+hours, state and approver, submitting an open one when the acting member
+is that member, and active, and approving a submitted one when someone
+else is.
 
 ## Lanterne
 

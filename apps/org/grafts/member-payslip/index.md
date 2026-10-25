@@ -1,19 +1,15 @@
 +++
 title = "member-payslip"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
-Whose a salary and a payslip are: a member's, and a payslip an active
-one's. The payslip feat holds the address; this graft checks it and names
-them. Declared by `payslip`.
-
-## Schema
-
-`member_payslip` (`sql/`): `whose`, a trigger on `payslip.salary` and
-`payslip.payslip` (SQLSTATE `09000`); `slip`, each payslip with its
-member's name.
+A member's pay on their page. Declared by `payslip`. Whose a salary and a
+payslip are is `payslip-worker`'s: a worker's, member or not, employed in
+the payslip's month. This graft checked them against the members until
+2026-10-25, which kept a worker who is no member off the payroll; its
+`002-employment.sql` drops that check and the view that named payslips by
+member.
 
 ## Shell
 
-Adds the member's name to each payslip, and to a member's page their
-gross salary and their payslips.
+Adds to a member's page their gross salary and their payslips.

@@ -1,6 +1,6 @@
 +++
 title = "circle-member-timesheet"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Whose time a power reaches: a lead approves the time of their own
@@ -15,6 +15,8 @@ shell.
   approver holds the op's power (`approve-time`) over a circle the
   member sits in on the verdict date, through `circle_member.over`: a
   seat whose role has the mandate, in that circle or one it is within.
+  A worker who is no active member sits in no circle, so anyone holding
+  `approve-time` approves their time (`002-workers.sql`).
   `circle_member.empowered` checks the power itself, for every write; this
   narrows where it reaches.
 
@@ -22,7 +24,8 @@ shell.
 
 Yusuf, Web's lead, approves Thomas's month; Hugo, Brand's, is refused it;
 Camille, the gérante, seated in the assembly, approves anyone's, and so
-does Julien, seated there as treasurer, for the pay run.
+does Julien, seated there as treasurer, for the pay run. Julien approves
+Inès's months, though she is no member yet.
 
 Slice tests: none of its own; the rule is `circle-member`'s `over` and
-its tests, and the `governance` scenario.
+its tests, and the `governance` and `people` scenarios.

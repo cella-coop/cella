@@ -1,0 +1,5 @@
+name = "worker"
+group = "work"
+builtin = false
+rung = 1
+grafts = ["key-worker", "member-worker"]

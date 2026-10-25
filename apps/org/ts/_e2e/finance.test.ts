@@ -4,8 +4,8 @@
 // worker's approved time, Inès's though she is no member, approved and
 // paid; draws within a member's limit and refused
 // beyond it and once their capital is frozen; and the 2025 surplus
-// allocated by the assembly's decision with the legal split. The books
-// balance throughout. Run by `cella test e2e finance`.
+// approved by the assembly's decision and distributed with the legal
+// split. The books balance throughout. Run by `cella test e2e finance`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -17,7 +17,8 @@ import { approve as approveRun, pay } from '@cella/org-graft-payslip-transaction
 import { approve as approveTime } from '@cella/org-timesheet/api'
 import { submit as submitTime } from '@cella/org-graft-timesheet-worker/api'
 import { draw } from '@cella/org-graft-account-member-transaction/api'
-import { allocate } from '@cella/org-graft-account-transaction/api'
+import { approve as approveSplit } from '@cella/org-patronage/api'
+import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -194,13 +195,23 @@ test('Thomas draws 300 € within his 500 € limit; another 300 € is refused,
   await balanced()
 })
 
-test('the 2025 surplus is allocated by d-2026-006, and posts the legal split', async () => {
-  const wrong = await allocate({ allocation: 'al-2025', decision: 'd-2026-011' }, as(julien))
+test('the 2025 surplus is approved by d-2026-006, then distributed, and posts the legal split', async () => {
+  const early = await distribute({ distribution: '2025' }, as(julien))
+  assert.match(reason(early), /2025 is not approved by the assembly/)
+  const wrong = await approveSplit({ distribution: '2025', decision: 'd-2026-011' }, as(julien))
   assert.equal(wrong.state, 'refused')
-  assert.match(reason(wrong), /d-2026-011 does not approve al-2025|d-2026-011 is not closed/)
+  assert.match(reason(wrong), /d-2026-011 does not approve 2025|d-2026-011 is not closed/)
 
-  const done = await allocate({ allocation: 'al-2025', decision: 'd-2026-006' }, as(julien))
-  assert.equal(done.state, 'settled')
+  const approved = await approveSplit({ distribution: '2025', decision: 'd-2026-006' }, as(julien))
+  assert.equal(approved.state, 'settled', reason(approved))
+  const ruled = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
+  assert.deepEqual(
+    [...new Set(ruled.rules.map((r) => r.owner))].sort(),
+    ['account-patronage', 'circle-decision-member', 'decision-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
+  )
+
+  const done = await distribute({ distribution: '2025' }, as(julien))
+  assert.equal(done.state, 'settled', reason(done))
   const entry = done.state === 'settled' ? done.value.entry : ''
   // The split, then what the work share employs in shares, which the
   // patronage scenario follows.
@@ -218,13 +229,15 @@ test('the 2025 surplus is allocated by d-2026-006, and posts the legal split', a
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
   assert.deepEqual(
     [...new Set(logged.rules.map((r) => r.owner))].sort(),
-    ['account', 'account-decision', 'account-member-transaction', 'account-payslip', 'account-timesheet', 'account-transaction', 'circle-decision-member'],
+    ['account-member-patronage-transaction', 'circle-member', 'patronage', 'patronage-transaction'],
   )
 
-  const again = await allocate({ allocation: 'al-2025', decision: 'd-2026-006' }, as(julien))
-  assert.match(reason(again), /the 2025 surplus was allocated on 2026-11-02/)
+  const again = await distribute({ distribution: '2025' }, as(julien))
+  assert.match(reason(again), /the 2025 surplus was distributed on 2026-11-02/)
+  const twice = await approveSplit({ distribution: '2025', decision: 'd-2026-006' }, as(julien))
+  assert.match(reason(twice), /the 2025 surplus was distributed on 2026-11-02/)
 
-  const parts = await all<{ amount: string }>(`SELECT amount FROM account_payslip.work_share WHERE allocation = 'al-2025'`)
+  const parts = await all<{ amount: string }>(`SELECT amount FROM patronage_payslip.work_share WHERE distribution = '2025'`)
   assert.equal(parts.length, 10)
   assert.equal(parts.reduce((s, p) => s + Number(p.amount), 0), 27_630_00, 'the work share divides by salary to the cent')
   await balanced()

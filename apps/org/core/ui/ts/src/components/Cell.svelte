@@ -2,6 +2,7 @@
   import type { Kind, Tone } from '../models/view.ts'
   import { show } from '../models/format.ts'
   import Badge from './Badge.svelte'
+  import Person from './Person.svelte'
 
   let { value, kind = 'text', tone }: { value: unknown; kind?: Kind; tone?: Tone } = $props()
   const text = $derived(show(value, kind))
@@ -9,6 +10,8 @@
 
 {#if kind === 'badge' && text !== '—'}
   <Badge tone={tone ?? 'neutral'}>{text}</Badge>
+{:else if kind === 'person' && text !== '—'}
+  <Person address={text} />
 {:else}
   <span class="cell {kind}" class:empty={text === '—'} class:toned={tone} data-tone={tone}>{text}</span>
 {/if}

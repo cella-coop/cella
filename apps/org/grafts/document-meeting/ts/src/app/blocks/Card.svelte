@@ -9,7 +9,7 @@
 </script>
 
 <div class="card">
-  <div class="eyebrow">Meeting · {ref}</div>
+  <div class="kind">Meeting · {ref}</div>
   {#if m}
     <a class="title" href="/meetings/{m.id}">{m.title}</a>
     <div class="meta">

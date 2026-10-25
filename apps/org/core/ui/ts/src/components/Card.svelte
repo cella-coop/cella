@@ -3,17 +3,19 @@
 
   // A borderless card, raised on the panel: a drawer's Properties, Related,
   // Activity or View, or a block in the content. Same styling wherever it
-  // sits.
+  // sits: a title in sentence case with its count muted, never an
+  // eyebrow; its own padding insets what it holds.
   let { title, count, children }: { title: string; count?: number; children: Snippet } = $props()
 </script>
 
 <section class="card">
-  <h2 class="eyebrow">{title}{#if count !== undefined}<span class="count">{count}</span>{/if}</h2>
+  <h2 class="title">{title}{#if count !== undefined}<span class="count">{count}</span>{/if}</h2>
   {@render children()}
 </section>
 
 <style>
   .card {
+    --inset: 0;
     display: grid;
     gap: var(--space-2);
     padding: var(--space-3) var(--space-4) var(--space-4);
@@ -21,18 +23,18 @@
     border-radius: var(--radius-panel);
     min-width: 0;
   }
-  .eyebrow {
+  .title {
     font-family: var(--font-ui);
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
-    color: var(--text-subtle);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--text-muted);
     display: flex;
+    align-items: baseline;
     gap: var(--space-2);
   }
   .count {
     color: var(--text-subtle);
-    font-weight: 500;
+    font-weight: 400;
+    font-variant-numeric: tabular-nums;
   }
 </style>

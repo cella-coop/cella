@@ -72,15 +72,20 @@
   --accent-fill: oklch(0.55 var(--tone-accent));
   --accent-border: oklch(var(--shade-6) var(--tone-accent));
   --accent-text: oklch(var(--shade-8) var(--tone-accent));
-  --accent-soft: oklch(var(--shade-3) var(--tone-accent) / 55%);
+  --accent-soft: oklch(var(--shade-3) var(--tone-accent) / calc(0.4 + var(--theme) * 0.15));
   --on-accent: oklch(0.98 0.01 75);
+  /* A ring in the accent, soft in both themes: a state under way. */
+  --accent-ring: oklch(var(--shade-4) var(--tone-accent));
 
+  /* A state's soft tint, as a badge fills: 60% in light, 32% in dark,
+     where the shade under it is dark and a stronger tint saturates. */
+  --soft: calc(0.46 + var(--theme) * 0.14);
   --positive-text: oklch(var(--shade-8) var(--tone-positive));
-  --positive-soft: oklch(var(--shade-3) var(--tone-positive) / 60%);
+  --positive-soft: oklch(var(--shade-3) var(--tone-positive) / var(--soft));
   --negative-text: oklch(var(--shade-8) var(--tone-negative));
-  --negative-soft: oklch(var(--shade-3) var(--tone-negative) / 60%);
+  --negative-soft: oklch(var(--shade-3) var(--tone-negative) / var(--soft));
   --warning-text: oklch(var(--shade-8) var(--tone-warning));
-  --warning-soft: oklch(var(--shade-3) var(--tone-warning) / 60%);
+  --warning-soft: oklch(var(--shade-3) var(--tone-warning) / var(--soft));
   --neutral-text: var(--text-muted);
   --neutral-soft: var(--sunk);
 

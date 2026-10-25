@@ -104,7 +104,10 @@
     flex: 1;
     min-width: 0;
   }
-  .blocks :global(.text[data-empty]:focus)::before {
+  /* An empty block says how a block is added where the caret is in it,
+     and so does the last one, empty, wherever the caret is. */
+  .blocks :global(.text[data-empty]:focus)::before,
+  .blocks :global(.block[data-last] > .line .text[data-empty])::before {
     content: attr(data-placeholder);
     color: var(--text-subtle);
     position: absolute;
@@ -223,10 +226,8 @@
     background: var(--raised);
     border: 1px solid var(--line);
   }
-  .blocks :global(.card .eyebrow) {
-    font-size: var(--text-2xs);
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
+  .blocks :global(.card .kind) {
+    font-size: var(--text-xs);
     color: var(--text-muted);
   }
   .blocks :global(.card .title) {

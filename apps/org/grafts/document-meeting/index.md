@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 A meeting's minutes, written as a document in the block editor.

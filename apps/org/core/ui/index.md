@@ -26,8 +26,25 @@ of surfaces. Components read roles, never shades:
 - accent: `--accent-fill` (fixed lightness in both themes),
   `--accent-border`, `--accent-text`, `--accent-soft`, `--on-accent`;
 - type: Alegreya for display and headings, Alegreya Sans for everything
-  read or measured, self-hosted from Fontsource; eyebrow labels in small
-  capitals tracked `0.1em`;
+  read or measured, self-hosted from Fontsource. A section's title is
+  Alegreya in sentence case with its count muted beside it, a card's and
+  a table's columns' labels quiet sentence case; the one eyebrow, small
+  capitals tracked `0.1em`, is a stat tile's label. A section, and the
+  page's content outside one, sets one inline padding (`--inset`) that
+  its notes, forms, properties and figures share with its title and its
+  tables' first column, so a block never sits left of its heading; a
+  card's own padding is its inset;
+- states: a badge's tone is its state's class, alike in both themes:
+  neutral at rest (a draft, closed, voided), accent under way (open,
+  unpaid, submitted, approved and not yet paid), drawn as a ring with no
+  fill so it never reads as an alarm, positive settled, warning wanting
+  attention (overdue, suspended), negative refused or failed; the soft
+  fills are tints (`--soft`), lighter in dark, so a tone shows in its
+  text and never saturates;
+- locale: the app's, `locale` in `models/format.ts` (en-GB), writes
+  every day (16 Oct 2026) and is how a date field reads and types one
+  (16/10/2026), whatever the browser's language; amounts read as euros
+  the French way;
 - shape: 12px radius on floating things and panels, 6px on controls; soft
   shadows on floating things only (`--shadow-float`).
 
@@ -116,7 +133,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   signed as the acting member, its outcome shown as any write's and the
   rows read
   again, so a refused move leaves the card where it was. The view
-  bar's tabs are pills (`Pill`): All first, what a bare address shows,
+  bar's tabs are pills (`Pill`, the open one filled and set in a heavier weight): All first, what a bare address shows,
   then any preset the collection or an extension declares as a plain
   object (`views`), then the viewer's own. A preset earns its tab only
   by showing what the default layout and its filters do not already
@@ -155,14 +172,18 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
   statement: headings, lines and ruled-off totals with a figure per
   column, a line opening on its accounts, each linking to its ledger),
-  `Cell`, `Stats`, `Badge`, `Grid` (figures to type into, a row per
+  `Cell`, `Stats`, `Badge`, `Person` (a person wherever one appears:
+  their name, their address on hover; a column, property or event of the
+  `person` kind is an address drawn so, from the names of the people the
+  co-op knows, which the shell reads once for its pages), `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
   what is added, with the totals; the arrows move between open cells),
   `Button`, `Form` (a write, posting to a named form action, files and
   all, through `post`; `ready` false keeps its button disabled while
   there is nothing to post),
   `Field` (text, a number, a date, a time, an address, an email or a
-  file, which `accept` narrows to the media types it offers; a
+  file; a date is typed in the app's locale and posts as an ISO day, the
+  browser's own calendar a button beside it (`DateField`); which `accept` narrows to the media types it offers; a
   select with a `placeholder` offers it as a disabled first choice,
   never a blank), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
@@ -205,8 +226,9 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, and the dismissed outcome and the drawer's opening are state classes in `hooks/`
-(`CollectionState`, `CommandState`, `ShellState`), and the sign-in and
+the command menu, the dismissed outcome, the drawer's opening and the
+people's names, and what a date field holds typed, are state classes in
+`hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)
 describes. `useSection` hands a `Section`'s title down, so an empty

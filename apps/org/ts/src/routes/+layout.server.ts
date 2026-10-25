@@ -1,6 +1,6 @@
 import { counts } from '@cella/org-db'
 import { named } from '@cella/org-log/api'
-import { person } from '@cella/org-person/api'
+import { people, person } from '@cella/org-person/api'
 import { using } from '#lib/server/db.ts'
 import { dev } from '#lib/server/device.ts'
 import { source } from '#lib/server/slices.ts'
@@ -22,6 +22,9 @@ export const load: LayoutServerLoad = async ({ locals, cookies }) =>
     return {
       scope: { address: s.address ?? 'no scope', name: s.name ?? s.address ?? 'No scope', legal: s.legal },
       actor: someone && { address: someone.address, name: someone.name },
+      // Everyone the co-op knows, by address, so a person shows by name
+      // wherever a page names them.
+      people: someone ? Object.fromEntries((await people(db)).map((p) => [p.address, p.name])) : {},
       dev,
       counts: held,
       theme: locals.theme,

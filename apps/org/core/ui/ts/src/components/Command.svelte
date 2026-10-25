@@ -180,9 +180,7 @@
   }
   .kind {
     margin-inline-start: auto;
-    font-size: var(--text-2xs);
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
+    font-size: var(--text-xs);
     color: var(--text-subtle);
   }
   .none {

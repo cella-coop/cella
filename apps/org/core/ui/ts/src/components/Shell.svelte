@@ -32,6 +32,7 @@
     outcome,
     source,
     drawer,
+    people,
     children,
   }: {
     // The co-op the shell serves: its address, name and legal name.
@@ -43,10 +44,12 @@
     outcome: Done | null
     source: string
     drawer: boolean
+    // The names of the people the co-op knows, by address.
+    people: Record<string, string>
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer)
+  const state = useShell(() => outcome, () => drawer, () => people)
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {
@@ -272,15 +275,17 @@
   }
   .label,
   .group {
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
+    font-size: var(--text-xs);
+    font-weight: 500;
     color: var(--text-subtle);
     padding: var(--space-2) var(--space-2) var(--space-1);
   }
   .group {
     margin-top: var(--space-3);
+  }
+  /* A group is named by its key, in sentence case. */
+  .group::first-letter {
+    text-transform: uppercase;
   }
   .hint {
     font-size: var(--text-xs);

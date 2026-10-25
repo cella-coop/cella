@@ -24,6 +24,7 @@
     grid-template-columns: minmax(6rem, auto) 1fr;
     gap: var(--space-1) var(--space-3);
     margin: 0;
+    padding-inline: var(--inset, 0);
     font-size: var(--text-sm);
     align-items: baseline;
   }

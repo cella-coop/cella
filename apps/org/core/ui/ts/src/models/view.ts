@@ -10,7 +10,9 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // home and what waits on the acting member.
 export type Group = 'home' | 'governance' | 'work' | 'finance' | 'platform'
 
-export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge'
+// A `person` is an address, shown as the person's chip: their name, the
+// address on hover.
+export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge' | 'person'
 
 export type Tone = 'neutral' | 'accent' | 'positive' | 'negative' | 'warning'
 
@@ -43,6 +45,7 @@ export interface Link {
 export interface Event {
   at: string
   text: string
+  // Who did it, by address, shown as their chip.
   who?: string
 }
 

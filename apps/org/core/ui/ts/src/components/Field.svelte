@@ -1,4 +1,6 @@
 <script lang="ts">
+  import DateField from './DateField.svelte'
+
   let {
     label,
     name,
@@ -42,6 +44,8 @@
         <option value={o.value}>{o.label}</option>
       {/each}
     </select>
+  {:else if type === 'date'}
+    <DateField {id} {name} {required} bind:value />
   {:else if type === 'file'}
     <input {id} {name} type="file" {required} {accept} />
   {:else if rows}

@@ -73,10 +73,8 @@
   }
   th {
     text-align: start;
-    font-size: var(--text-2xs);
-    font-weight: 600;
-    letter-spacing: var(--eyebrow-tracking);
-    text-transform: uppercase;
+    font-size: var(--text-xs);
+    font-weight: 500;
     color: var(--text-subtle);
     padding: var(--space-1) var(--space-3);
     white-space: nowrap;

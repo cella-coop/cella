@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Event } from '../models/view.ts'
   import { date } from '../models/format.ts'
+  import Person from './Person.svelte'
 
   let { items }: { items: Event[] } = $props()
 </script>
@@ -9,7 +10,7 @@
   {#each items as e}
     <li>
       <span class="dot"></span>
-      <span class="text">{#if e.who}<b>{e.who}</b>{' '}{/if}{e.text}</span>
+      <span class="text">{#if e.who}<b><Person address={e.who} /></b>{' '}{/if}{e.text}</span>
       <time>{date(e.at)}</time>
     </li>
   {/each}

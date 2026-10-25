@@ -232,7 +232,9 @@
   .toggle :global(svg) {
     transform: scaleX(-1);
   }
+  /* What a block holds outside a section sits at a section's inset too. */
   .content {
+    --inset: var(--space-3);
     grid-column: 1;
     overflow-y: auto;
     padding: var(--space-4);

@@ -4,7 +4,8 @@
   import Icon from './Icon.svelte'
 
   // The one tab pill, a page's tabs and a collection's views alike: quiet
-  // with a hairline, tinted on hover, filled when it is the open one.
+  // with a hairline, tinted on hover; the open one filled and set in a
+  // heavier weight, so it shows where the fill is faint.
   let {
     href,
     on = false,
@@ -39,5 +40,6 @@
     background: var(--sunk);
     border-color: transparent;
     color: var(--text);
+    font-weight: 700;
   }
 </style>

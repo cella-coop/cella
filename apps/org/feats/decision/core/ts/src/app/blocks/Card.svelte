@@ -10,7 +10,7 @@
 </script>
 
 <div class="card">
-  <div class="eyebrow">Decision · {ref}</div>
+  <div class="kind">Decision · {ref}</div>
   {#if d}
     <a class="title" href="/decisions/{d.id}">{d.title}</a>
     <div class="meta">

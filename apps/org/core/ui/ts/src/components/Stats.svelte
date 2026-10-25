@@ -2,7 +2,9 @@
   import type { Prop } from '../models/view.ts'
   import Cell from './Cell.svelte'
 
-  // A row of figures over a collection or an item: totals, a status.
+  // A row of figures over a collection or an item: totals, a status. A
+  // tile's label is the one place an eyebrow stands, in small tracked
+  // capitals; in a section the row sits at the section's inset.
   let { items }: { items: Prop[] } = $props()
 </script>
 
@@ -21,6 +23,7 @@
     flex-wrap: wrap;
     gap: var(--space-2);
     margin: 0;
+    padding-inline: var(--inset, 0);
   }
   .stat {
     background: var(--raised);

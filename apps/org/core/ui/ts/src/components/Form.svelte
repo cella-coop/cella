@@ -74,6 +74,7 @@
   .form {
     display: grid;
     gap: var(--space-3);
+    padding-inline: var(--inset, 0);
   }
   .fields {
     display: grid;

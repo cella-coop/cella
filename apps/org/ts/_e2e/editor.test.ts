@@ -405,7 +405,7 @@ for (const [name, engine] of browsers()) {
 
       it('moves a chosen block with Alt-Shift-arrows', async () => {
         await fresher()
-        await line(2).locator('.embed .eyebrow').click()
+        await line(2).locator('.embed .kind').click()
         await a.keyboard.press('Alt+Shift+ArrowDown')
         const r = await rows()
         assert.equal(r[2].kind, 'heading')

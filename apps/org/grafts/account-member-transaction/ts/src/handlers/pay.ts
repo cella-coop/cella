@@ -1,0 +1,45 @@
+import type { Outcome } from '@cella/org-ops'
+import { write, type Deps } from '@cella/org-db'
+import type { ops } from '@cella/org-account/models'
+import { record } from '@cella/org-transaction/api'
+import type { Line } from '@cella/org-transaction/models'
+import type { Paid, Pay } from '../models/capital.ts'
+
+const op = 'account:capital:pay' satisfies keyof typeof ops
+
+// An associate pays in on their subscription from the bank: 512 debited
+// and 4562 credited, and what it pays moved from 1012 to their capital
+// account, on the verdict date. `account_member_transaction.pays`
+// decides: never more than they owe, and nothing else in the entry.
+export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Paid>> {
+  return write(deps, {
+    op,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ day: string; account: string | null }>(
+        `SELECT to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day,
+                (SELECT c.account FROM account_member_transaction.called c WHERE c.member = $1) AS account`,
+        [input.member],
+      )
+      const { day, account } = rows[0]
+      if (!account) {
+        return { member: input.member, amount: input.cents, entry: '' }
+      }
+      const lines = await tx.query<{ account: string; side: Line['side']; cents: string }>(
+        'SELECT account, side, cents FROM account_member_transaction.paying($1, $2)',
+        [account, input.cents],
+      )
+      const { entry } = await record(tx, {
+        date: day,
+        label: 'Capital paid in',
+        lines: lines.rows.map((l) => ({ account: l.account, side: l.side, cents: Number(l.cents) })),
+      })
+      await tx.query(
+        `INSERT INTO account_member_transaction.paid (entry, member, amount, via) VALUES ($1, $2, cella.amount($3), 'bank')`,
+        [entry, input.member, input.cents],
+      )
+      return { member: input.member, amount: input.cents, entry }
+    },
+    payload: (v) => ({ ...v }),
+  })
+}

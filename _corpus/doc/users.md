@@ -82,19 +82,26 @@ What the first target needs that the org app does not do yet, by severity:
   or in instalments withheld from pay, and a departing associate's capital
   repaid in yearly instalments within five years; a deduction for losses
   on repayment is not built.
-- **High:** deliberation on proposals. The income statement and the
-  balance sheet are drawn from the journal in the PCG's presentation by
-  month, quarter and year, and each project's margin is live with its
-  burn, its forecasts and a watch; the watch reaches no inbox yet.
-- **Medium:** a weekly time grid; buy-in and buyout formulas. Workers
+- **High:** the income statement and the balance sheet are drawn from
+  the journal in the PCG's presentation by month, quarter and year, and
+  each project's margin is live with its burn, its forecasts and a watch;
+  the watch reaches no inbox yet. A proposal is deliberated: its circle's
+  members post messages, replies, mentions of members and links to
+  documents while it is open; amending a proposal before stances open is
+  not built.
+- **Medium:** buy-in and buyout formulas. Time is entered a week at a
+  time, a project to a row and a day to a column, keyboard first. Workers
   who are not members hold a contract, log their own time by it and are
   paid in the runs; a candidate serves a probation, and the admission is
   proposed from it once it ends; a new member's page lists what joining
   asks and reads back what they own and decide. Ending or changing a
-  contract, setting a salary from the shell, and a worker who is no
-  member logging time against a project are not built.
-- **Across personas:** an inbox of what needs me, a co-op dashboard, file
-  attachments, supermajority as a procedure.
+  contract and setting a salary from the shell are not built; a worker
+  who is no member books time to a project by their employment.
+- **Across personas:** file attachments. Each member's inbox gathers
+  what waits on them, counted in the sidebar; the home is a dashboard of
+  widgets pinned from many collections; a decision is taken by a
+  procedure, consent, a majority, two thirds or the co-op's own share of
+  the votes cast, with a quorum, chosen per circle and per decision.
 
 ## The full profiles
 

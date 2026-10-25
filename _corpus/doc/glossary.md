@@ -17,6 +17,9 @@ updated = 2026-10-25
 | **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
 | **increment** | a chunk of build work; never a slice |
 | **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
+| **inbox** | what waits on the acting member, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |
+| **home** | the co-op's dashboard, widgets pinned from many collections |
+| **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
 | **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `ui` and the notary |
@@ -89,13 +92,18 @@ updated = 2026-10-25
 
 | Term | Meaning |
 |---|---|
-| **proposal** | a decision put to a circle, with its rule and deadline |
+| **proposal** | a decision put to a circle, by a procedure, with its deadline |
+| **procedure** | how a decision is taken: its rule, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a decision keeps the one it was proposed under |
+| **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |
 | **consent** | passes if no one objects at close; a member's latest stance counts |
 | **objection** | a stance under consent that blocks while it stands |
 | **stand aside** | disagreement recorded without blocking |
 | **consensus** | everyone actively agrees; stricter than consent |
 | **majority** | passes with more for than against among those voting; a supermajority raises the threshold |
-| **quorum** | the participation a decision needs to count; a meeting's, the share of its circle's seats present |
+| **votes cast** | the stances for and against; an abstention takes part but counts for neither |
+| **quorum** | the participation a decision needs to count, a share of those it counts giving a stance; a meeting's, the share of its circle's seats present |
+| **deliberation** | a decision's discussion: messages its circle's members post while it is open, each perhaps a reply |
+| **mention** | a member named in a message by `@` and their handle, which waits in their inbox until they answer |
 | **agenda** | a meeting's items in order, each tabling perhaps a decision; fixed once the meeting is held |
 | **minutes** | a meeting's record, a document, adopted by decision where its circle says so |
 | **roll** | who may vote on a decision |

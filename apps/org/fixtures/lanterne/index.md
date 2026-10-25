@@ -56,6 +56,13 @@ Camille hires, and opens a new hire's candidacy for membership.
 - **Rate card (confluent, then ordered).** The 2027 rate card has two
   versions. Malik has commented on the second and objected to d-2026-011,
   which would adopt it; the decision is open until 9 November.
+- **Procedures.** Circles decide by consent. Beside consent, majority
+  and two thirds, the statutes give the assembly two procedures: the
+  ordinary assembly, a majority of the votes cast once a quarter of the
+  associates take part, and the extraordinary, which amends the
+  statutes, two thirds of the votes cast once half take part
+  (`decision.toml`; loi n° 78-763, as the CG Scop's model statutes put
+  it, not checked on Légifrance).
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of

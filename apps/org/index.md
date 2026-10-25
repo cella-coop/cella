@@ -20,8 +20,12 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 
 ## The shell
 
-`cella serve` shows Lanterne from the dev database. Each feat's collection
-is a page in the sidebar: Members, Circles, Decisions, Documents and
+`cella serve` shows Lanterne from the dev database. The sidebar's head
+is Home, the co-op's dashboard of widgets pinned from its collections,
+the cash, what clients owe, the projects' margins, the decisions open
+and the meetings ahead until a viewer pins their own, and the Inbox,
+what waits on the acting member, its count beside it. Each feat's
+collection is a page in the sidebar: Members, Circles, Decisions, Documents and
 Meetings (governance); Clients, Projects, Tasks, Timesheets and Workers
 (work); Invoices, Accounts, Periods, Allocations, Transactions, Expenses
 and Payslips (finance); Devices and the Log (platform). Every collection
@@ -36,14 +40,16 @@ showing its outcome, Settled with its log entry or Refused with the
 rule's reason:
 
 - an invitation carrying the invitee's first device; a new decision, by
-  its circle's procedure, with what it decides: admitting, suspending or
+  its circle's procedure or another, consent, a majority, two thirds or
+  one of the co-op's own with its quorum, with what it decides: admitting, suspending or
   letting go a member, seating or unseating one, nesting a circle,
   granting or revoking a mandate, proposed from the New form or from a
   member's or a circle's page;
 - a stance on an open decision, and closing it, which in the same verdict
   admits and seats the members a passing decision admits and enrols the
   devices their invitations carried, then carries out what else it
-  decides;
+  decides; a message on an open decision's discussion, perhaps a reply,
+  mentioning members and linking documents;
 - an edit of a document's draft in the block editor, live: each member's
   edits go as Loro updates through the `edit` write and reach everyone
   with the document open as they settle; saving a version, which the
@@ -63,7 +69,8 @@ rule's reason:
   shares of its budget (bounded); a task, given to someone, filed under a
   project and moved across the board, a drop between columns being the
   move; time logged as the acting worker by their employment, member or
-  not, alone or as a member against a project, a month submitted by its
+  not, a week at a time in the grid behind the timesheets' New button,
+  booked to a project or the co-op's own, a month submitted by its
   worker and approved by someone else (ordered), which closes it to new
   entries;
 - a hire with the worker's first device, enrolled at once; a worker's

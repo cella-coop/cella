@@ -33,6 +33,10 @@ an associate's part buys whole shares, blocked until the first of June
 five years after the year, and the rest is paid; one whose capital is
 frozen, or who is no member, is paid it all.
 
+## Reads
+
+`split` reads as its reader, each worker's row as their part does (`sql/002-reads.sql`).
+
 ## Shell
 
 Adds to a statement its member by name, and to a person's page, under

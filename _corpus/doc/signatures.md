@@ -16,8 +16,8 @@ type is added here before it is signed anywhere.
 | Type | Signer | Tag | Binding | Checked by |
 |---|---|---|---|---|
 | write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
-| receipt | the scope's notary key, Ed25519 | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived | `cella.verify_log` |
-| log entry | the scope's notary key, Ed25519 | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
+| receipt | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived | `cella.verify_log` |
+| log entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
 | session opening | a member's device, Ed25519 | `cella org 2026-10 session`, the message's first line | the scope, the actor, the device's key and the server's single-use challenge | the shell's server, `opens` in `lib/server/session.ts`, before it keeps a session |
 
 ### A write
@@ -102,7 +102,7 @@ receipt's time orders nothing; receipt numbers order stances.
 
 | Key | Derived by | Tag | From |
 |---|---|---|---|
-| vault wrap key | BLAKE3 derive-key | `cella org 2026-10 vault key` | the scope's 32-byte seed, the key file; it seals each vault key |
+| vault wrap key | BLAKE3 derive-key | `cella org 2026-10 vault key` | the vault's own 32 random bytes, `cella.vault_key_file`, apart from the notary's seed; it seals each vault key |
 | vault key | 32 random bytes, Postgres's `pg_strong_random` | none | one per subject, retention class and year; seals that subject's values |
 
 Both seal with XChaCha20-Poly1305 under a random 24-byte nonce, bound

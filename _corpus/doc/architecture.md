@@ -257,8 +257,20 @@ TypeScript owns the schema, is dropped. The generator is not chosen.
 
 `tools/migrate.mjs` (`cella migrate`) walks the tree in that order and applies
 each `sql/` directory's `NNN-*.sql` files, one transaction each, recording
-every file and its hash in `migration.applied`. A file edited after it was
-applied is refused; a change is a new file.
+every file by its id and its hash in `migration.applied`. A migration's id
+is stable: its app, the feat or graft whose SQL it is, and its file name,
+`org:membership/003-seats.sql`, or `org:core/notary/001-cella.sql` for a
+core, so a feat that moves in the tree keeps its ids. Renaming a feat
+changes its ids and `cella migrate` maps no old id to a new one, so a feat
+a scope has applied is not renamed.
+
+Migrations are append-only. A file edited after it was applied is
+refused, and each app's `migrations.lock` keeps every migration's id and
+hash: `cella check` fails on a locked file edited or gone and on a file not
+locked, and `cella migrate --lock` locks the new ones. A change is a new
+file. The notary changes the same way: its upgrade script ships with the
+extension, and a migration appended to `core/notary/sql/` runs `ALTER
+EXTENSION cella UPDATE` ([the notary](../../apps/org/core/notary/index.md#build)).
 
 ### Tests
 

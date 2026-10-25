@@ -10,6 +10,8 @@ and signs each verdict into a log the members can audit.
   the log, keys, personal data.
 - [Ratchet](_corpus/doc/ratchet.md) — the rungs from a hosted pilot to zero
   trust.
+- [Operations](_corpus/doc/operations.md) — a scope's server, its two keys
+  and their rotation, backups and restore, upgrades.
 - [Users](_corpus/doc/users.md) — who cella is for, starting with
   professional-services worker co-ops.
 - [Glossary](_corpus/doc/glossary.md) — cella's terms and the co-op terms it

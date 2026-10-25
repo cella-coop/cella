@@ -29,6 +29,11 @@ only on the org app, `apps/org/`. Read
   them: `cella check feats` checks packages, imports, ops and every `sql/`
   file. A rule a tool cannot check says so in its doc.
 - **No foreign key crosses a feat.** The graft's schema holds the junction.
+- **Migrations are append-only.** A locked migration is never edited or
+  removed: a change is a new file, locked with `cella migrate --lock`, and
+  `cella check` refuses anything else. The notary changes by a new
+  version's upgrade script and a migration that updates the extension,
+  never by dropping it ([operations](_corpus/doc/operations.md#upgrades)).
 - **SQL is the source of truth for rules.** Never re-implement a rule in
   TypeScript; never call `now()` in a rule, read `cella.verdict_date()`.
 - **A rule lives at the lowest level that owns it**: a feat, a graft, or a

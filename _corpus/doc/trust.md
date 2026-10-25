@@ -227,7 +227,11 @@ makes no claim that the host cannot forge a vote.
 - Each scope has a server key and stable addresses (`ana@coop-a`), so
   federation adds to the design rather than changing it.
 - Signatures are Ed25519, on devices and at the root, where the notary
-  signs receipts and log entries with the scope's key. Org's `core/crypto`
+  signs receipts and log entries with the scope's key. Each names its
+  signer, the key in office at its entry, by its id in `cella.signer`,
+  which keeps every key the notary has signed with: the log verifies from
+  what it stores after its key file is rotated or lost, and a retired
+  key never signs again ([operations](operations.md#keys)). Org's `core/crypto`
   holds ML-DSA-44 behind the same signing seam, and hybrid X25519 +
   ML-KEM-768 encryption; no rung adopts post-quantum signing yet.
 - Every signed artifact names its binding (parent, sequence, audience or
@@ -295,8 +299,10 @@ erased until their legal clock runs out.
   digest in the receipt confirms no guess either.
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
-  scope's seed, so the database alone, without the key file, opens
-  nothing. Destroying a key makes every value it sealed unreadable.
+  vault's own key file, kept apart from the notary's seed, so the
+  database alone, without that file, opens nothing, and either key
+  rotates without the other ([operations](operations.md#keys)).
+  Destroying a key makes every value it sealed unreadable.
 - **The classes and their clocks**, `cella.retention`: `profile`
   and `contact`, erased when asked; `payroll`, kept five years (Code du
   travail, art. L3243-4, the employer's copy of each payslip);
@@ -355,6 +361,12 @@ What the build does not yet do, and what lifts each:
   signature up to a minute, holding a database connection, and goes with
   the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
   names the key, as `cella serve` does.
+- **A backup carries its keys.** `cella backup` writes the notary's and
+  the vault's key files beside the dump, owner-only but not encrypted, so
+  whoever holds a backup can open the vault and sign as the notary; a
+  host keeps backups as it keeps the keys
+  ([operations](operations.md#backups)). Sealing a backup to the scope's
+  guardians lifts this.
 - **`cella import` signs with the fixture devices too.** It imports as a
   member through their TEST-ONLY fixture key, as the dev server signs, so
   it imports into the mock co-ops alone; a member's own device signing the

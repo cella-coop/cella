@@ -2,6 +2,7 @@
   import type { Snippet } from 'svelte'
   import { fromAction } from 'svelte/attachments'
   import { enhance, type SubmitFunction } from '$app/forms'
+  import { page } from '$app/state'
   import { useForm } from '../hooks/useForm.ts'
   import Button from './Button.svelte'
 
@@ -46,9 +47,16 @@
     }
   }
   const enhanced = $derived(fromAction(enhance, () => submitting))
+
+  // The action keeps the page's address, as its open tab, so the page
+  // the write returns to is the one it was made from.
+  const target = $derived.by(() => {
+    const kept = [...page.url.searchParams].filter(([k]) => !k.startsWith('/'))
+    return `?/${action}${kept.length ? `&${new URLSearchParams(kept)}` : ''}`
+  })
 </script>
 
-<form method="post" action="?/{action}" class="form" class:inline {@attach enhanced}>
+<form method="post" action={target} class="form" class:inline {@attach enhanced}>
   {#if children}
     <div class="fields">{@render children()}</div>
   {/if}

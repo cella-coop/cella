@@ -1,5 +1,0 @@
-name = "worker"
-group = "work"
-builtin = false
-rung = 1
-grafts = ["decision-member-worker", "key-worker", "member-worker"]

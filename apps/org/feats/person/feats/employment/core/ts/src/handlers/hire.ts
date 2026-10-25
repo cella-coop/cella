@@ -24,7 +24,8 @@ export function hiring(input: Hire): Write<Hired> {
   }
   return {
     op: 'employment:worker:hire' satisfies Op,
-    request: input,
+    // The key as the payload restates it, so the member signs that.
+    request: { ...input, key },
     state: async (tx) => {
       const taken = await tx.query('SELECT FROM employment.worker WHERE address = $1', [input.worker])
       if (taken.rowCount) {

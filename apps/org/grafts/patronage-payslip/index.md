@@ -39,7 +39,7 @@ take; parts no longer what the year's pay gives are refused.
 
 ## Reads
 
-`work_share` shows each worker's share to the worker and to whoever holds `distribute-surplus`; the division behind it sees every salary, so each share it shows is the one the approval makes (`sql/002-reads.sql`).
+`work_share` shows each worker's share to the worker and to whoever holds `distribute-surplus`; `division` runs as its owner over every salary, so each share it shows is the one the approval makes, whoever reads it (`sql/002-reads.sql`).
 
 ## Shell
 

@@ -82,8 +82,11 @@ role may select.
 The `timesheets` collection lists every entry in a table, the latest day
 first, with its worker and project from the grafts; its dashboard sums
 the hours, the billable hours and those awaiting approval, by month and
-by kind, and by worker and by project from the grafts. Its New form logs
-time as the acting worker, by their employment (`timesheet-worker`). An
+by kind, and by worker and by project from the grafts. Its New form is the
+acting worker's week (`project-timesheet-worker`): a project to a row,
+the co-op's own time last, and a day to a column, each cell adding the
+hours typed into it by their employment, booked to the row's project;
+the feat's own one-entry form, with a note, is what that replaces. An
 entry's page shows its worker's month and, in its header, submits it
 while open or approves it once submitted; a worker's page and a member's
 list their months with the same writes (`timesheet-worker`,

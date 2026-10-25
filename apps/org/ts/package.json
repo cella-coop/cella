@@ -39,6 +39,7 @@
     "@cella/org-graft-account-timesheet": "workspace:*",
     "@cella/org-graft-account-transaction": "workspace:*",
     "@cella/org-graft-expense-member": "workspace:*",
+    "@cella/org-graft-expense-invoice-project-timesheet": "workspace:*",
     "@cella/org-graft-expense-project": "workspace:*",
     "@cella/org-graft-expense-transaction": "workspace:*",
     "@cella/org-graft-member-payslip": "workspace:*",

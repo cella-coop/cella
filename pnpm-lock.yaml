@@ -686,6 +686,18 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/grafts/expense-invoice-project-timesheet/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/grafts/expense-member/ts:
     dependencies:
       '@cella/org-db':
@@ -1066,6 +1078,9 @@ importers:
       '@cella/org-graft-document-meeting':
         specifier: workspace:*
         version: link:../grafts/document-meeting/ts
+      '@cella/org-graft-expense-invoice-project-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/expense-invoice-project-timesheet/ts
       '@cella/org-graft-expense-member':
         specifier: workspace:*
         version: link:../grafts/expense-member/ts

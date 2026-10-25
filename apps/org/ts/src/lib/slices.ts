@@ -29,6 +29,7 @@ import { app as memberTask } from '@cella/org-graft-member-task/app'
 import { app as memberTimesheet } from '@cella/org-graft-member-timesheet/app'
 import { app as projectTask } from '@cella/org-graft-project-task/app'
 import { app as projectTimesheet } from '@cella/org-graft-project-timesheet/app'
+import { app as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/app'
 import { app as expense } from '@cella/org-expense/app'
 import { app as payslip } from '@cella/org-payslip/app'
 import { app as accountDecision } from '@cella/org-graft-account-decision/app'
@@ -92,6 +93,7 @@ export const apps: App[] = [
   memberTimesheet,
   projectTask,
   projectTimesheet,
+  expenseInvoiceProjectTimesheet,
   invoiceTransaction,
   accountTransaction,
   accountDecision,

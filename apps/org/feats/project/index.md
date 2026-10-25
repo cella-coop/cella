@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -55,9 +55,10 @@ while a share is granted could leave the shares above it, which the
 ## What it does not know
 
 Project knows no clients, tasks, members or time. Whom a project is for is
-`client-project`'s; its tasks, `project-task`'s; its time and what it
-spent of the budget, `project-timesheet`'s; the shares of its budget,
-`member-project`'s. Quotes and invoicing by milestone are not built.
+`client-project`'s; its tasks, `project-task`'s; its time, what it spent
+of the budget and its spend at completion, `project-timesheet`'s; the
+shares of its budget, `member-project`'s; its margin and whether it is
+watched, `expense-invoice-project-timesheet`'s. Quotes and invoicing by milestone are not built.
 
 ## Schema
 
@@ -72,7 +73,7 @@ The `projects` collection opens as a gallery, each card naming its client,
 its milestones done of all, its budget and what its time spent of it (the
 root picks these fields, which come from three slices). A project's page
 has three tabs: Overview, with its summary, its milestones (completing
-one, adding the next), its budget and its shares; Tasks
+one, adding the next), its budget and its shares, and its margin; Tasks
 (`project-task`); and Time (`project-timesheet`). The two are tabs because
 each is a list long enough to crowd the overview. Archive is the header's
 write.

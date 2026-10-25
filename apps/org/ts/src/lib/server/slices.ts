@@ -29,6 +29,7 @@ import { slice as memberTask } from '@cella/org-graft-member-task/api'
 import { slice as memberTimesheet } from '@cella/org-graft-member-timesheet/api'
 import { slice as projectTask } from '@cella/org-graft-project-task/api'
 import { slice as projectTimesheet } from '@cella/org-graft-project-timesheet/api'
+import { slice as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/api'
 import { slice as expense } from '@cella/org-expense/api'
 import { slice as payslip } from '@cella/org-payslip/api'
 import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
@@ -89,6 +90,7 @@ export const slices: Slice[] = [
   memberTimesheet,
   projectTask,
   projectTimesheet,
+  expenseInvoiceProjectTimesheet,
   invoiceTransaction,
   accountTransaction,
   accountDecision,

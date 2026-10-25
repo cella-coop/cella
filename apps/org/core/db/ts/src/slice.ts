@@ -88,8 +88,9 @@ export type Stream = (o: {
 export interface Collection {
   list(db: Db, actor: string | null): Promise<{ id: string }[]>
   // What the collection's header says about it as a whole, such as
-  // whether the log verifies.
-  about?(db: Db): Promise<unknown>
+  // whether the log verifies, and what its New form offers, which may be
+  // the acting member's, as their week of time.
+  about?(db: Db, actor?: string | null): Promise<unknown>
   item?(db: Db, id: string): Promise<unknown | null>
   index?(db: Db): Promise<Entry[]>
   // Writes from the collection's page, such as a new item, and from an
@@ -109,8 +110,9 @@ export interface Extension {
   // know each kind, as what waits on the acting member: each its own id.
   rows?(db: Db, actor: string | null): Promise<{ id: string }[]>
   // What it adds to the collection's `about`, merged over the owner's,
-  // such as the circles a new decision may be put in.
-  about?(db: Db): Promise<object>
+  // such as the circles a new decision may be put in, or the acting
+  // member's week of time.
+  about?(db: Db, actor?: string | null): Promise<object>
   item?(db: Db, id: string, actor: string | null): Promise<unknown>
   actions?: Record<string, Action>
 }

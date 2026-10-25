@@ -83,9 +83,10 @@ export type Stream = (o: {
 }) => ReadableStream<Uint8Array>
 
 // A collection a feat owns: its rows, one item, the items the command menu
-// lists, and the writes its pages make.
+// lists, and the writes its pages make. Its rows may be the acting
+// member's, as what waits on them: `actor` is their address, or null.
 export interface Collection {
-  list(db: Db): Promise<{ id: string }[]>
+  list(db: Db, actor: string | null): Promise<{ id: string }[]>
   // What the collection's header says about it as a whole, such as
   // whether the log verifies.
   about?(db: Db): Promise<unknown>
@@ -104,6 +105,9 @@ export interface Collection {
 // address, or null.
 export interface Extension {
   list?(db: Db): Promise<Record<string, object>>
+  // Rows it adds to a collection that gathers them from the slices that
+  // know each kind, as what waits on the acting member: each its own id.
+  rows?(db: Db, actor: string | null): Promise<{ id: string }[]>
   // What it adds to the collection's `about`, merged over the owner's,
   // such as the circles a new decision may be put in.
   about?(db: Db): Promise<object>

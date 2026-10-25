@@ -90,12 +90,13 @@
     <Command {collections} {source} />
 
     {#each nav as g (g.group)}
-      <p class="group">{g.group}</p>
+      {#if g.group !== 'home'}<p class="group">{g.group}</p>{/if}
       <ul>
         {#each g.items as item (item.href)}
           <li>
             <a href={item.href} class:on={here(item.href)} aria-current={here(item.href) ? 'page' : undefined}>
               <Icon icon={item.icon} />{item.title}
+              {#if item.count}<span class="count" aria-label="{item.count} waiting">{item.count}</span>{/if}
             </a>
           </li>
         {/each}
@@ -318,6 +319,18 @@
     background: var(--hover);
     color: var(--text);
     font-weight: 500;
+  }
+  .count {
+    margin-inline-start: auto;
+    min-width: 1.4rem;
+    padding: 0 var(--space-1);
+    border-radius: 999px;
+    background: var(--accent-fill);
+    color: var(--on-accent);
+    font-size: var(--text-2xs);
+    font-weight: 600;
+    line-height: 1.4rem;
+    text-align: center;
   }
   @media (max-width: 700px) {
     .shell {

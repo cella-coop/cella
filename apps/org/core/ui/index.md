@@ -41,7 +41,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   shell serves (one today) with their legal names; its foot is the
   account menu, the acting member, whose menu holds Act as (dev only,
   with its warning) and the theme; between them the command menu and the
-  navigation, by group. The last write's outcome floats above.
+  navigation: its head unnamed, the co-op's Home and the Inbox, then by
+  group, a collection the view declares `counted` showing how many rows
+  it holds for the acting member. The last write's outcome floats above.
 - `Popover`: the one popover and menu, opened from its trigger in the
   top layer (native `popover`), so nothing clips it: Escape and a click
   outside close it and focus returns to the trigger; anchored by CSS
@@ -154,6 +156,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   a block chosen whole, where a dragged block lands). The document feat's
   components name its classes and draw nothing of their own.
 - `icons`: the Phosphor icons slices may name.
+
+A view whose rows are not its own items links each where its `href`
+says, as an inbox's ask links to where it is done.
 
 A `Column` places itself in the list view by `role`: the title, the line
 under it, the trailing meta, or the table alone.

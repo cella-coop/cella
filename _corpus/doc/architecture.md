@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Architecture
@@ -283,11 +283,13 @@ slice; it holds the routes and no feature of its own. Each slice exports
 two halves of one **slice**, matched by name:
 
 - from `./api`, its server side (`Slice` in `@cella/org-db`): the
-  collections it owns, each with its reads (`list`, `item`, `index` for
-  the command menu, `about` for the collection's header) and its writes as
-  form actions, each a handler over a form; what it adds to the
-  collections of the feats it joins (`extends`): fields on each row, data
-  on an item, what it adds to the collection's `about`, such as the
+  collections it owns, each with its reads (`list`, as the acting member
+  sees it, `item`, `index` for the command menu, `about` for the
+  collection's header) and its writes as form actions, each a handler
+  over a form; what it adds to the collections of the feats it joins
+  (`extends`): fields on each row, rows of its own in a collection that
+  gathers them from the slices that know each kind (`rows`), as the
+  member feat's inbox gathers what waits on a member, data on an item, what it adds to the collection's `about`, such as the
   circles a new decision may be put in, and writes; and reactions to
   other slices' settled writes (`on`), such as carrying out what a
   passing decision decides once its close settles.

@@ -6,7 +6,9 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // pages are configuration over the one collection component and the one
 // detail view; blocks are the components a detail view composes.
 
-export type Group = 'governance' | 'work' | 'finance' | 'platform'
+// `home` is the sidebar's head, above the groups and unnamed: the co-op's
+// home and what waits on the acting member.
+export type Group = 'home' | 'governance' | 'work' | 'finance' | 'platform'
 
 export type Kind = 'text' | 'title' | 'mono' | 'money' | 'date' | 'number' | 'badge'
 
@@ -128,6 +130,11 @@ export interface View<R = any> {
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean
+  // Where a row links when it is not an item of the collection's own, as
+  // what waits in the inbox links to where it is done.
+  href?: (row: R) => string | undefined
+  // The sidebar counts its rows for the acting member.
+  counted?: boolean
 }
 
 // A collection a feat owns: its view, and its items' page if it has one.
@@ -159,7 +166,7 @@ export interface Added<E = any> {
 }
 
 // The sidebar's navigation, by group.
-export type Nav = { group: string; items: { href: string; title: string; icon: Component<any> }[] }[]
+export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number }[] }[]
 
 // A member the dev server may act as.
 export interface Person {

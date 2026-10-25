@@ -38,6 +38,10 @@ None of its own. Opening a member's account on admission posts, and so
 does moving a departing one's capital to what is owed them, so both are
 `account-membership-transaction`'s.
 
+## Reads
+
+A member's draw limit reads as their capital account does: for the member and for capital's readers (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). `capital` lists each member the same way, filtering its rows by that test, so a page shows a colleague's capital to no one but them and those readers.
+
 ## Shell
 
 Adds each member's subscribed capital to the members list, and to their

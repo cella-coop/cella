@@ -198,16 +198,24 @@ test('the 2025 surplus is allocated by d-2026-006, and posts the legal split', a
   const done = await allocate({ allocation: 'al-2025', decision: 'd-2026-006' }, as(julien))
   assert.equal(done.state, 'settled')
   const entry = done.state === 'settled' ? done.value.entry : ''
-  assert.deepEqual((await lines(entry)).sort((a, b) => a.account.localeCompare(b.account)), [
+  // The split, then what the work share employs in shares, which the
+  // patronage scenario follows.
+  const posted = await lines(entry)
+  assert.deepEqual(posted.slice(0, 5).sort((a, b) => a.account.localeCompare(b.account)), [
     { account: '1061', side: 'credit', cents: '921000' },
     { account: '1068', side: 'credit', cents: '1535000' },
     { account: '120', side: 'debit', cents: '6140000' },
     { account: '424', side: 'credit', cents: '2763000' },
     { account: '457', side: 'credit', cents: '921000' },
   ])
+  assert.deepEqual(posted[5], { account: '424', side: 'debit', cents: posted.slice(6).reduce((s, l) => s + Number(l.cents), 0).toString() })
+  assert.ok(posted.slice(6).every((l) => l.account.startsWith('1013') && l.side === 'credit'))
   assert.equal(await balance('120'), 0)
   const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
-  assert.deepEqual([...new Set(logged.rules.map((r) => r.owner))].sort(), ['account', 'account-decision', 'account-transaction', 'circle-decision-member'])
+  assert.deepEqual(
+    [...new Set(logged.rules.map((r) => r.owner))].sort(),
+    ['account', 'account-decision', 'account-member-transaction', 'account-payslip', 'account-timesheet', 'account-transaction', 'circle-decision-member'],
+  )
 
   const again = await allocate({ allocation: 'al-2025', decision: 'd-2026-006' }, as(julien))
   assert.match(reason(again), /the 2025 surplus was allocated on 2026-11-02/)

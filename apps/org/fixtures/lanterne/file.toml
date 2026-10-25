@@ -1,0 +1,50 @@
+# The files Lanterne keeps, each read from files/ beside this one: the
+# statutes as adopted in 2024, of the co-op's own; Sofia's and Chloé's
+# receipts, attached to their October expenses; Inès's contract, filed by
+# Camille as manager when she was hired; and Camille's subscription form,
+# on her own file. A file's class is the retention class of the personal
+# data it holds, and its subject whose data it is.
+
+[[file]]
+id = "fi-0001"
+class = "none"
+name = "statuts-lanterne-2024.pdf"
+type = "application/pdf"
+uploader = "camille@lanterne.example"
+uploaded = 2024-06-14
+
+[[file]]
+id = "fi-0002"
+class = "member-profile"
+subject = "camille@lanterne.example"
+name = "bulletin-souscription-camille.pdf"
+type = "application/pdf"
+uploader = "camille@lanterne.example"
+uploaded = 2024-06-14
+
+[[file]]
+id = "fi-0003"
+class = "payroll"
+subject = "ines@lanterne.example"
+name = "contrat-ines-haddad.pdf"
+type = "application/pdf"
+uploader = "camille@lanterne.example"
+uploaded = 2025-08-25
+
+[[file]]
+id = "fi-0004"
+class = "expense-receipt"
+subject = "sofia@lanterne.example"
+name = "receipt-imprimerie-du-parc-1019.pdf"
+type = "application/pdf"
+uploader = "sofia@lanterne.example"
+uploaded = 2026-10-20
+
+[[file]]
+id = "fi-0005"
+class = "expense-receipt"
+subject = "chloe@lanterne.example"
+name = "boulangerie-1022.pdf"
+type = "application/pdf"
+uploader = "chloe@lanterne.example"
+uploaded = 2026-10-22

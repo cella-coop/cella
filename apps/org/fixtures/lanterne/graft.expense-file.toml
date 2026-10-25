@@ -1,0 +1,11 @@
+# The receipts attached to the October expenses: Sofia's print proofs and
+# Chloé's workshop coffee. Thomas's train and Léa's font licence have
+# none yet.
+
+[[receipt]]
+expense = "ex-0001"
+file = "fi-0004"
+
+[[receipt]]
+expense = "ex-0003"
+file = "fi-0005"

@@ -1,6 +1,6 @@
 +++
 title = "decision-member"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 What a decision decides of a membership: admitting someone invited,
@@ -27,6 +27,11 @@ and the rules role, `cella_rules`, may select it.
   asks to admit this member, with these shares.
 - `decision_member.ends`, on `member:member:suspend`, `:exit` and
   `:erase`: the cited decision asks this of this member.
+- `decision_member.mentions`, on `decision:message:post`: each handle a
+  message mentions names one member, by `decision_member.named`: the
+  member whose address it is, or for a handle with no `@` whose address
+  starts with it; a handle naming no one, or two, is refused.
+  `decision_member.mention` reads who each message mentions.
 - `decision_member.closes`, on `decision:decision:close`: every member a
   close admits, as its payload's `admitted` names them, is one the
   decision asks to admit, holding the shares it asks, and was admitted by
@@ -47,5 +52,7 @@ passing decision carries out, need the roll, so they are
 ## Shell
 
 Adds to a decision's page what it asks of members, whom it admits with
-their shares, whom it suspends or lets go, and to a member's page the
-decisions that ask something of them.
+their shares, whom it suspends or lets go, and the `member` embed: each
+author and mention in its discussion drawn by name, linking to the
+member's page; and to a member's page the decisions that ask something
+of them.

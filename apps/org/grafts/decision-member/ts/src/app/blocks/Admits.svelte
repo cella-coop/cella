@@ -1,10 +1,10 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
-  import { verbs, type Asked } from '../../models/admission.ts'
+  import { verbs, type Asked, type OnDecision } from '../../models/admission.ts'
 
   // What the decision asks of members: whom it admits, with the shares
   // each subscribes, whom it suspends or lets go.
-  let { data }: { data: Asked[]; id: string } = $props()
+  let { data }: { data: OnDecision; id: string } = $props()
 
   const columns: Column<Asked>[] = [
     { key: 'name', label: 'Member', kind: 'title', value: (a) => a.name ?? a.member },
@@ -14,8 +14,8 @@
   ]
 </script>
 
-{#if data.length}
-  <Section title="Members" count={data.length}>
-    <Table {columns} rows={data} href={(a: Asked) => `/members/${a.member}`} />
+{#if data.asked.length}
+  <Section title="Members" count={data.asked.length}>
+    <Table {columns} rows={data.asked} href={(a: Asked) => `/members/${a.member}`} />
   </Section>
 {/if}

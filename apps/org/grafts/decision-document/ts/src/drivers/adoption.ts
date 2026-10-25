@@ -50,5 +50,19 @@ export async function onDecision(db: Db, decision: string): Promise<OnDecision> 
       adopting.push({ ...a, name: rows[0].title, canonical: v.canonical, current: rows[0].current })
     }
   }
-  return { adopting, decisions: await summaries(db) }
+  return { adopting, decisions: await summaries(db), linked: await linked(db, decision) }
+}
+
+// The documents a decision's messages link, by the reference each gives:
+// a document's id or a version's.
+export async function linked(db: Db, decision: string): Promise<OnDecision['linked']> {
+  const { rows } = await db.query<{ ref: string; document: string; title: string }>(
+    `SELECT DISTINCT l.ref, d.id AS document, d.title
+     FROM decision.message m
+     CROSS JOIN LATERAL unnest(m.links) AS l(ref)
+     JOIN document.document d ON d.id = decision_document.linked(l.ref)
+     WHERE m.decision = $1`,
+    [decision],
+  )
+  return Object.fromEntries(rows.map((r) => [r.ref, { document: r.document, title: r.title }]))
 }

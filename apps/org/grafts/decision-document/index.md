@@ -1,6 +1,6 @@
 +++
 title = "decision-document"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 Adoption by decision: what content of which document a decision asks to
@@ -33,6 +33,10 @@ database gave it, and refuses a version that does not exist.
   a version saved later with other content is refused, one holding the
   same content is not.
 
+- `decision_document.links`, on `decision:message:post`: each link a
+  message gives names a document or one of its versions
+  (`decision_document.linked`).
+
 An adoption cites its decision: this graft declares
 `document:document:adopt` in `decision.cites`, and `circle-decision-member`,
 which counts the roll, attaches its rule that the decision closed and
@@ -50,6 +54,8 @@ decision's content, and the roll's outcome.
   with the document feat's `Reader` from the version's canonical form as
   the database computed it, with its version id, its hash and the version
   it would replace, or the day it was adopted.
+- In a decision's discussion, the `document` embed: each link drawn by
+  its document's title, linking to its page.
 - On a document's page, the decisions that adopt its versions, and the
   `decision` embed: a decision drawn inside the document as the decision
   feat's card (its title, circle, rule and whether it is open), and offered in the editor's

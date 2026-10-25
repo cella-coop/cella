@@ -24,10 +24,12 @@ export interface Adopting extends Asked {
   current: string | null
 }
 
-// The graft's data on a decision's page.
+// The graft's data on a decision's page, with the documents its
+// discussion links, by the reference each message gives.
 export interface OnDecision {
   adopting: Adopting[]
   decisions: Summary[]
+  linked: Record<string, { document: string; title: string }>
 }
 
 // The graft's data on a document's page: the decisions adopting it, and

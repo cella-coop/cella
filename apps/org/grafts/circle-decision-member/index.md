@@ -58,9 +58,10 @@ coordination's, counts its five.
 - `circle_decision_member.on_roll`, on `decision:decision:vote`: the
   member is on the decision's roll, and active: a suspended or exited
   member gives no stance.
-- `circle_decision_member.sits`, on `decision:decision:propose` and
-  `decision:decision:close`: the actor is an active member seated in the
-  decision's circle on the verdict date.
+- `circle_decision_member.sits`, on `decision:decision:propose`,
+  `decision:decision:close` and `decision:message:post`: the actor is an
+  active member seated in the decision's circle on the verdict date, so a
+  circle's members put, close and deliberate on its decisions.
 - `circle_decision_member.asks`, on `decision:decision:propose`: only the
   assembly admits, suspends and lets members go; a seat given or ended is
   the decision of the circle above it, or the assembly

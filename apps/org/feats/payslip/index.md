@@ -94,6 +94,10 @@ member's figures.
 member is due from the salary in force; a run prepared with exactly that;
 approved and paid once, its payslips fixed from its approval; the ratio.
 
+## Reads
+
+Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads all of them; no one signed in reads any. A write's transaction reads every row, as the rules do.
+
 ## Shell
 
 The `payslips` collection in Finance, a table with a dashboard of the

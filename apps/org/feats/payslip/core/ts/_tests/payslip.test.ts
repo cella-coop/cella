@@ -10,6 +10,15 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
+// Who reads, on the app's role as the server connects: the rows a query
+// returns read as `actor`, or as no one. A stub authority stands in for
+// circle-membership's, which says who holds a power.
+const app = new pg.Client({ user: 'cella_app' })
+const reading = async (actor: string | null, sql: string, values: unknown[] = []) => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor ?? ''])
+  return (await app.query(sql, values)).rows
+}
+
 const refused = async (run: () => Promise<unknown>, says: RegExp) => {
   await db.query('BEGIN')
   try {
@@ -39,6 +48,7 @@ before(async () => {
 })
 
 after(async () => {
+  await app.end()
   await db.end()
 })
 
@@ -102,4 +112,47 @@ test('the highest salary is at most the ratio times the lowest', async () => {
   assert.equal(await spread('2026-10'), null)
   // Outside a write there is no actor, so no approval is this write's.
   assert.equal(await rule('approves', { month: '2026-10' }), '2026-10\'s run was not approved by this write')
+})
+
+test('as the app role, a member reads their own salary, payslips and runs; a payroll power reads every one; no one signed in, none', async () => {
+  await app.connect()
+  await db.query(`CREATE SCHEMA mandate`)
+  await db.query(
+    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, day date) RETURNS boolean
+     LANGUAGE sql STABLE RETURN actor = 'julien@lanterne.example' AND power = 'approve-payroll'`,
+  )
+  await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
+  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, date)', 'test')`)
+  const chloe = 'chloe@lanterne.example'
+  const count = async (sql: string) => Number((await db.query(sql)).rows[0].n)
+  for (const table of ['salary', 'payslip']) {
+    const mine = await reading(chloe, `SELECT DISTINCT member FROM payslip.${table}`)
+    assert.deepEqual(mine, [{ member: chloe }], `Chloé reads her own ${table} alone`)
+    assert.equal((await reading('julien@lanterne.example', `SELECT member FROM payslip.${table}`)).length, await count(`SELECT count(*) AS n FROM payslip.${table}`))
+    assert.deepEqual(await reading(null, `SELECT member FROM payslip.${table}`), [])
+  }
+  const paid = await count(`SELECT count(DISTINCT month) AS n FROM payslip.payslip WHERE member = '${chloe}'`)
+  assert.equal((await reading(chloe, 'SELECT month FROM payslip.run')).length, paid, 'she reads the runs she is paid in')
+  assert.equal((await reading('julien@lanterne.example', 'SELECT month FROM payslip.run')).length, await count('SELECT count(*) AS n FROM payslip.run'))
+  assert.equal((await reading('amina@lanterne.example', 'SELECT month FROM payslip.run')).length, 1, 'Amina is paid in December alone')
+})
+
+test('a write\'s transaction reads every row, whoever writes, and the rules read every row', async () => {
+  await app.query('BEGIN')
+  try {
+    await app.query(`SELECT set_config('cella.actor', 'chloe@lanterne.example', true), set_config('cella.writing', 'on', true)`)
+    const all = Number((await db.query('SELECT count(*) AS n FROM payslip.payslip')).rows[0].n)
+    assert.equal((await app.query('SELECT member FROM payslip.payslip')).rows.length, all)
+  } finally {
+    await app.query('ROLLBACK')
+  }
+  const after = await app.query<{ w: string | null }>(`SELECT nullif(current_setting('cella.writing', true), '') AS w`)
+  assert.equal(after.rows[0].w, null, 'the write ends with its transaction')
+  await db.query('BEGIN')
+  try {
+    await db.query('SET LOCAL ROLE cella_rules')
+    assert.ok((await db.query('SELECT DISTINCT member FROM payslip.salary')).rows.length > 1)
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })

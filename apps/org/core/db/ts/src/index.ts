@@ -55,6 +55,9 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
   const proof = await deps.sign(w.op, request)
   await db.query('BEGIN')
   try {
+    // The transaction reads as the actor, and as a write's: its state
+    // change sees the whole state, as the rules do.
+    await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', 'on', true)`, [deps.actor])
     const value = await w.state(db, proof)
     // Deferred checks, such as an entry balancing, refuse before the
     // verdict rather than at commit, after it.

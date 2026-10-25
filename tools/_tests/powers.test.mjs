@@ -80,7 +80,45 @@ test('only a feat registers the keyring, and nothing else in cella is written', 
   const keyring = await check({ member: `INSERT INTO cella.keyring (fn, owner) VALUES ('member.verifies(text, bytea)', 'member');` })
   assert.deepEqual(keyring.errors, [])
   const log = await check({ member: `INSERT INTO cella.receipt (n) VALUES (1);` })
-  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its rules, its powers, its personal columns or the keyring/)
+  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its rules, its powers, its personal columns, the keyring or who reads/)
+})
+
+test('who reads a feat is registered by literal rows: its powers by the feat or a graft joining it, the authority and reaches by a graft', async () => {
+  const reading = (what, owner) => `INSERT INTO cella.reading (what, key, power, owner) VALUES ('${what}', NULL, 'issue-invoice', '${owner}');`
+  const own = await check({ invoice: reading('invoice', 'invoice'), 'invoice-member': reading('member', 'invoice-member') })
+  assert.deepEqual(own.errors, [])
+  const other = await check({ invoice: reading('member', 'invoice') })
+  assert.match(other.errors.join('\n'), /registers who reads member: a feat says who reads only invoice/)
+  const beside = await check({ 'circle-member': reading('invoice', 'circle-member') })
+  assert.match(beside.errors.join('\n'), /registers who reads invoice: a graft says who reads only circle, member/)
+  const queried = await check({ invoice: `INSERT INTO cella.reading (what, key, power, owner) SELECT 'invoice', NULL, 'issue-invoice', 'invoice';` })
+  assert.match(queried.errors.join('\n'), /registers cella.reading from a query: each is a literal row/)
+
+  const authority = `INSERT INTO cella.authority (fn, owner) VALUES ('circle_member.may(text, text, bigint, date)', 'circle-member');`
+  assert.deepEqual((await check({ 'circle-member': authority })).errors, [])
+  const byFeat = await check({ member: `INSERT INTO cella.authority (fn, owner) VALUES ('member.may(text, text, bigint, date)', 'member');` })
+  assert.match(byFeat.errors.join('\n'), /registers cella.authority: only a graft opens a feat's rows to more readers, not feat member/)
+
+  const reach = (what, owner) => `INSERT INTO cella.reach (what, fn, owner) VALUES ('${what}', 'invoice_member.reaches(text, text)', '${owner}');`
+  assert.deepEqual((await check({ 'invoice-member': reach('invoice', 'invoice-member') })).errors, [])
+  const notJoined = await check({ 'invoice-member': reach('circle', 'invoice-member') })
+  assert.match(notJoined.errors.join('\n'), /registers who reads circle: a graft says who reads only invoice, member/)
+  const reachByFeat = await check({ invoice: reach('invoice', 'invoice') })
+  assert.match(reachByFeat.errors.join('\n'), /registers cella.reach: only a graft opens/)
+})
+
+test('a slice keeps row-level policies and alters functions only in its own schema', async () => {
+  const own = await check({
+    invoice: `CREATE POLICY reads ON invoice.invoice FOR SELECT TO cella_app USING ((SELECT cella.sees('invoice')));
+      ALTER FUNCTION invoice.total(text) SECURITY DEFINER SET search_path = pg_catalog, pg_temp;`,
+  })
+  assert.deepEqual(own.errors, [])
+  const other = await check({ 'invoice-member': `CREATE POLICY reads ON invoice.invoice FOR SELECT TO cella_app USING (true);` })
+  assert.match(other.errors.join('\n'), /creates the policy reads on invoice.invoice: graft invoice-member creates and grants only in its own schema, invoice_member/)
+  const altered = await check({ 'invoice-member': `ALTER FUNCTION invoice.total(text) SECURITY DEFINER;` })
+  assert.match(altered.errors.join('\n'), /alters invoice.total: graft invoice-member creates and grants only in its own schema/)
+  const path = await check({ invoice: `ALTER FUNCTION invoice.total(text) SET search_path = invoice;` })
+  assert.match(path.errors.join('\n'), /invoice.total sets search_path beyond the catalog/)
 })
 
 test('a graft registers rules on ops of the feats it joins and of the lower-order grafts it builds on, and no others', async () => {

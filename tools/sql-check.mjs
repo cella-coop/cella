@@ -2,7 +2,7 @@
 // Postgres's own parser, and refuses any reference the tree does not allow.
 //
 //   SQL in            may reference
-//   a node's core     cella.*; the catalog
+//   a node's core     cella.*; the notary's vault; the catalog
 //   a feat            its own schema; those of the feats it nests in;
 //                     cella.*; the catalog
 //   a graft           its own schema; the schemas of the feats it joins and
@@ -17,7 +17,11 @@
 //     ops of its own feat, of the feats it joins or of the lower-order
 //     grafts it builds on (cella.rule); the power
 //     each of its own ops needs (cella.power), which feat-check compares
-//     with its ops.ts; and, a feat only, the keyring (cella.keyring);
+//     with its ops.ts; a feat only, the keyring (cella.keyring); the
+//     powers that read the rows of its own feat or of the feats it joins
+//     (cella.reading); and, a graft only, the authority that says who
+//     holds a power (cella.authority) and the functions that open the
+//     rows of the feats it joins to more readers (cella.reach);
 //   - never sets search_path but on a function, to the catalog;
 //   - never reads the clock or randomness, since rules read
 //     cella.verdict_date(), and has no DO block, which this check cannot
@@ -75,7 +79,7 @@ export function owners(repo, apps) {
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    return { own: null, allowed: new Set(['cella', ...catalog]), feats: [], ops: [] }
+    return { own: null, allowed: new Set(['cella', 'vault', ...catalog]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
     return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
@@ -168,7 +172,7 @@ function inspect(tree, o, s, known, fail, found) {
   }
 }
 
-const registries = new Set(['rule', 'power', 'keyring', 'personal'])
+const registries = new Set(['rule', 'power', 'keyring', 'personal', 'reading', 'reach', 'authority'])
 
 // A column whose name and type suggest personal data: a person's name,
 // contact details, address, bank details, birth, pay, notes or a
@@ -264,6 +268,20 @@ function statement(type, b, o, s, fail, owned, named, found) {
       }
       break
     }
+    case 'CreatePolicyStmt':
+      owned(b.table.schemaname, `creates the policy ${b.policy_name} on ${named(b.table)}`)
+      break
+    case 'AlterFunctionStmt': {
+      const f = strings(b.func?.objname)
+      owned(f.length > 1 ? f[0] : null, `alters ${f.join('.')}`)
+      for (const a of b.actions ?? []) {
+        const set = a.DefElem.defname === 'set' ? a.DefElem.arg.VariableSetStmt : null
+        if (set?.name === 'search_path' && (set.args ?? []).some((v) => !catalog.has(v.A_Const?.sval?.sval))) {
+          fail(`${f.join('.')} sets search_path beyond the catalog: only the catalog, and every name qualified`)
+        }
+      }
+      break
+    }
     case 'CompositeTypeStmt':
       owned(b.typevar.schemaname, `creates the type ${named(b.typevar)}`)
       break
@@ -306,9 +324,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'DeleteStmt':
       if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
         if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
-          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers, its personal columns or the keyring`)
+          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers, its personal columns, the keyring or who reads`)
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
           fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
+        } else if (['reach', 'authority'].includes(b.relation.relname) && o.kind !== 'graft') {
+          fail(`registers cella.${b.relation.relname}: only a graft opens a feat's rows to more readers, not ${o.kind} ${o.name}`)
         } else {
           registers(b, o, s, fail, found)
         }
@@ -342,6 +362,9 @@ function registers(b, o, s, fail, found) {
     if (what === 'power' && vals.op) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
     }
+    if ((what === 'reading' || what === 'reach') && !s.feats.includes(vals.what)) {
+      fail(`registers who reads ${vals.what}: a ${o.kind} says who reads only ${s.feats.join(', ')}`)
+    }
     if (what === 'personal') {
       if (vals.schema !== s.own) {
         fail(`registers ${vals.schema}.${vals.tab}.${vals.col} as personal: a ${o.kind} registers only its own schema's columns`)
@@ -351,6 +374,9 @@ function registers(b, o, s, fail, found) {
   }
   if (what === 'personal' && !b.selectStmt?.SelectStmt?.valuesLists) {
     fail('registers personal columns from a query: each is a literal row, so feat-check can see it')
+  }
+  if (['reading', 'reach', 'authority'].includes(what) && !b.selectStmt?.SelectStmt?.valuesLists) {
+    fail(`registers cella.${what} from a query: each is a literal row, so the check can see it`)
   }
   if (what === 'power' && !b.selectStmt?.SelectStmt?.valuesLists) {
     fail('registers powers from a query: a power is a literal row, so feat-check can compare it with ops.ts')

@@ -1,0 +1,134 @@
+-- Who reads: the person a connection reads for, and the row-level policies
+-- every personal or sensitive table keeps on what they may see. The server
+-- sets `cella.actor` from the session on each connection it hands out, and
+-- `write` sets it again, with `cella.writing`, for its own transaction.
+
+-- The person this transaction reads for, or null where no one is signed in.
+CREATE FUNCTION cella.reader() RETURNS text
+LANGUAGE sql STABLE
+RETURN nullif(current_setting('cella.actor', true), '');
+
+-- Whether this transaction is a write's. A write's state change sees the
+-- whole of the state it changes, whoever asked for it: the notary judges
+-- whether they may, and the state is the same whoever wrote it.
+CREATE FUNCTION cella.writing() RETURNS boolean
+LANGUAGE sql STABLE
+RETURN coalesce(current_setting('cella.writing', true), '') = 'on';
+
+-- The registries of who reads what, registered as literal rows: the one
+-- function that says whether a member holds a power on a day, `(actor,
+-- power, cents, day) → boolean`, a graft's; the powers that read a feat's
+-- rows, `key` narrowing one to the rows the feat passes it, such as a
+-- file's class; and the functions a graft registers to open a feat's rows
+-- it joins to more readers, `(key, reader) → boolean`.
+CREATE TABLE cella.authority (
+  one boolean PRIMARY KEY DEFAULT true CHECK (one),
+  fn regprocedure NOT NULL,
+  owner text NOT NULL
+);
+
+CREATE TABLE cella.reading (
+  what text NOT NULL,
+  key text,
+  power text NOT NULL,
+  owner text NOT NULL,
+  UNIQUE NULLS NOT DISTINCT (what, key, power)
+);
+
+CREATE TABLE cella.reach (
+  what text NOT NULL,
+  fn regprocedure NOT NULL,
+  owner text NOT NULL,
+  PRIMARY KEY (what, fn)
+);
+
+GRANT SELECT ON cella.authority, cella.reading, cella.reach TO PUBLIC;
+
+-- Whether the reader holds a power on the verdict date, as the authority
+-- says; no one does where none is registered.
+CREATE FUNCTION cella.may(power text) RETURNS boolean
+LANGUAGE plpgsql STABLE AS $$
+DECLARE
+  f regprocedure;
+  ok boolean;
+BEGIN
+  SELECT a.fn INTO f FROM cella.authority a;
+  IF f IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
+    RETURN false;
+  END IF;
+  EXECUTE format('SELECT %s($1, $2, NULL::bigint, $3)', f::oid::regproc)
+    INTO ok USING cella.reader(), may.power, cella.verdict_date();
+  RETURN coalesce(ok, false);
+END
+$$;
+
+-- Whether the reader sees every row of `what`: this is a write's
+-- transaction, the session's own role reads past row-level security (a
+-- superuser's tools and tests), or the reader holds a power that reads it.
+-- It does not depend on the row, so a policy asks it once per query, as
+-- `(SELECT cella.sees(what))`; a view that filters its rows by reader
+-- asks it the same way.
+CREATE FUNCTION cella.sees(what text) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN cella.writing()
+  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r WHERE r.rolname = session_user)
+  OR (cella.reader() IS NOT NULL AND EXISTS (
+  SELECT FROM cella.reading g WHERE g.what = sees.what AND g.key IS NULL AND cella.may(g.power)
+));
+
+-- Whether the reader reaches one row of `what` beyond their own, by the
+-- key its feat passes: a power that reads rows of that key, or a graft's
+-- function that opens the row to them.
+CREATE FUNCTION cella.reaches(what text, key text) RETURNS boolean
+LANGUAGE plpgsql STABLE AS $$
+DECLARE
+  f regprocedure;
+  ok boolean;
+BEGIN
+  IF cella.reader() IS NULL THEN
+    RETURN false;
+  END IF;
+  IF EXISTS (SELECT FROM cella.reading g WHERE g.what = reaches.what AND g.key = reaches.key AND cella.may(g.power)) THEN
+    RETURN true;
+  END IF;
+  FOR f IN SELECT x.fn FROM cella.reach x WHERE x.what = reaches.what ORDER BY x.owner LOOP
+    EXECUTE format('SELECT %s($1, $2)', f::oid::regproc) INTO ok USING reaches.key, cella.reader();
+    IF ok THEN
+      RETURN true;
+    END IF;
+  END LOOP;
+  RETURN false;
+END
+$$;
+
+-- The log's form, the payload with commitments in place of personal
+-- values, is the owner's: every other column stays everyone's.
+REVOKE SELECT ON cella.log FROM PUBLIC;
+GRANT SELECT (n, op, actor, date, payload, receipt, rules, prev, hash, sig) ON cella.log TO PUBLIC;
+
+-- An entry's payload, its commitments opened, for the reader who may read
+-- it: who wrote it, the person every commitment in it is about, or a holder
+-- of the power its op needs; null for anyone else. The app's only way to
+-- the vault.
+CREATE FUNCTION cella.disclosed(n bigint) RETURNS jsonb
+LANGUAGE plpgsql VOLATILE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  e record;
+BEGIN
+  SELECT l.op, l.actor, l.receipt INTO e FROM cella.log l WHERE l.n = disclosed.n;
+  IF NOT FOUND OR cella.reader() IS NULL THEN
+    RETURN NULL;
+  END IF;
+  IF e.actor = cella.reader()
+    OR NOT EXISTS (SELECT FROM vault.secret s WHERE s.receipt = e.receipt AND s.subject <> cella.reader())
+    OR cella.may((SELECT p.power FROM cella.power p WHERE p.op = e.op)) THEN
+    RETURN cella.opened(disclosed.n);
+  END IF;
+  RETURN NULL;
+END
+$$;
+
+REVOKE EXECUTE ON FUNCTION cella.opened(bigint) FROM cella_app;
+REVOKE EXECUTE ON FUNCTION cella.disclosed(bigint) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION cella.disclosed(bigint) TO cella_app;

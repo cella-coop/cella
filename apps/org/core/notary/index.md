@@ -26,10 +26,21 @@ The notary is the scope's office for every write, and a layer under every feat r
 | `cella.rule`, `cella.rule_text`, `cella.keyring`, `cella.power` | the registries: rules per op and their texts, the keyring, the power each op needs |
 | `cella.retention`, `cella.personal` | the retention classes, each with its clock in years, whether the law keeps it (restricted) and its basis; and the columns holding personal data, `(schema, tab, col, class, subject, owner)`, each registered by the feat or graft owning the table, `subject` naming the column that says whose it is. A trigger refuses a column that does not exist or that erasure could not redact: NOT NULL and neither text nor JSON |
 | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | the vault ([below](#the-vault)); only the owner reads it, but `vault.erased`, which everyone may read |
-| `cella.opened(n)` | entry `n`'s logged payload with its commitments opened: the value, `restricted` or `redacted`; the app's only |
+| `cella.opened(n)` | entry `n`'s logged payload with its commitments opened: the value, `restricted` or `redacted`; the owner's, which the app reaches through `cella.disclosed` |
 | `cella.vault_sweep()` | erases the restricted data whose clock has run out on the verdict date; a superuser's, run by `cella vault sweep` |
 | `cella.redacting()` | whether the notary is redacting right now: the one change a record that never changes takes, which a feat's trigger keeping a row fixed lets through; no role can set it |
 | `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
+
+The org core's SQL beside the extension (`sql/`) adds the app's role and
+the rules', and who reads ([below](#reads)):
+
+| SQL | What |
+|---|---|
+| `cella.reader()`, `cella.writing()` | the person this transaction reads for, from `cella.actor`, which the server sets from the session; and whether it is a write's, from `cella.writing`, which `write` sets for its transaction |
+| `cella.authority`, `cella.reading`, `cella.reach` | the registries of who reads: the one function saying whether a member holds a power on a day, a graft's; the powers that read a feat's rows, `(what, key, power, owner)`; a graft's functions opening a joined feat's rows to more readers, `(what, fn, owner)` |
+| `cella.may(power)` | whether the reader holds the power on the verdict date, as the authority says |
+| `cella.sees(what)`, `cella.reaches(what, key)` | whether the reader sees every row of `what`: a write's transaction, a role past row-level security, or a power that reads it; and whether they reach one row by its key: a power for that key, or a graft's function |
+| `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its op's power; null for anyone else |
 
 ## Submit
 
@@ -59,11 +70,22 @@ A payload marks an erasure as `{"$erase": {"subject": …, "classes": […]}}`, 
 
 `cella.power (op, power, amount, owner)` names the power each op needs and the payload field holding its amount in cents, registered by the op's feat; the extension holds no rule over it: the `circle-membership` graft attaches one to every op listed.
 
-The log tables and the registries are readable by everyone and writable by no role but the extension's owner and the migrations; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`. Only `cella_app` may execute `submit` and `receipt`.
+The log tables and the registries are readable by everyone, but the log's `form`, and writable by no role but the extension's owner and the migrations; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`. Only `cella_app` may execute `submit` and `receipt`.
+
+## Reads
+
+The app's role reads every table but where a feat keeps row-level
+security, and its policies ask the functions above
+([architecture](../../../../_corpus/doc/architecture.md#sql),
+[trust](../../../../_corpus/doc/trust.md#one-server)). `cella.log.form`
+is the owner's alone: every other column of the log stays everyone's,
+and the vault opens to the app only through `cella.disclosed(n)`.
+`may` and `reaches` call the functions their registries name, so each
+is a `STABLE` function of the shape it is registered for.
 
 ## The rules role
 
-Rules never run with the owner's rights. `submit` runs each rule as `cella_rules`, a role that cannot log in, is no superuser, bypasses no row security and owns nothing; each feat and graft grants it `USAGE` and `SELECT` on its own schema, and nothing more. `SET ROLE` is refused inside a security-definer function, so `submit` switches the way Postgres itself does for one: it sets the user id to `cella_rules` in a security-restricted operation around each rule call (`SetUserIdAndSecContext`) and restores it on return, on unwind and, through the transaction's abort, on any error. The keyring runs the same way. A rule therefore cannot write a table, take a receipt, call `submit`, read `cella.key_file` or the key file itself; `submit` refuses a rule declared `SECURITY DEFINER`, and the role is refused if it is a superuser or bypasses row security.
+Rules never run with the owner's rights. `submit` runs each rule as `cella_rules`, a role that cannot log in, is no superuser, bypasses no row security and owns nothing; each feat and graft grants it `USAGE` and `SELECT` on its own schema, and a table keeping row-level security gives it a policy reading every row, and nothing more. `SET ROLE` is refused inside a security-definer function, so `submit` switches the way Postgres itself does for one: it sets the user id to `cella_rules` in a security-restricted operation around each rule call (`SetUserIdAndSecContext`) and restores it on return, on unwind and, through the transaction's abort, on any error. The keyring runs the same way. A rule therefore cannot write a table, take a receipt, call `submit`, read `cella.key_file` or the key file itself; `submit` refuses a rule declared `SECURITY DEFINER`, and the role is refused if it is a superuser or bypasses row security.
 
 ## Settings
 

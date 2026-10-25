@@ -11,7 +11,43 @@ use std::ffi::CString;
 
 mod notary;
 mod surface;
+#[cfg(any(test, feature = "pg_test"))]
+mod tests;
 mod vault;
+
+/// pgrx's test harness, which `cella test notary` runs: the cluster loads
+/// the extension from `CELLA_NOTARY_TEST`, outside the read-only store, as
+/// the dev cluster does, and signs with the TEST-ONLY keys written there.
+#[cfg(test)]
+pub mod pg_test {
+    use std::path::PathBuf;
+
+    fn dir() -> PathBuf {
+        std::env::var_os("CELLA_NOTARY_TEST").map_or_else(|| panic!("CELLA_NOTARY_TEST is not set: run `cella test notary`"), PathBuf::from)
+    }
+
+    pub fn setup(_options: Vec<&str>) {
+        let dir = dir();
+        std::fs::create_dir_all(&dir).expect("the test directory");
+        std::fs::write(dir.join("notary.key"), crate::tests::NOTARY_SEED).expect("the notary's key file");
+        std::fs::write(dir.join("vault.key"), crate::tests::VAULT_KEY).expect("the vault's key file");
+    }
+
+    pub fn postgresql_conf_options() -> Vec<&'static str> {
+        let dir = dir();
+        let at = |name: &str| dir.join(name).display().to_string();
+        [
+            format!("extension_control_path = '$system:{}'", at("share")),
+            format!("dynamic_library_path = '$libdir:{}'", at("lib")),
+            "shared_preload_libraries = 'cella'".into(),
+            format!("cella.key_file = '{}'", at("notary.key")),
+            format!("cella.vault_key_file = '{}'", at("vault.key")),
+        ]
+        .into_iter()
+        .map(|s| &*Box::leak(s.into_boxed_str()))
+        .collect()
+    }
+}
 
 /// The scope's Ed25519 seed, 32 raw bytes in a file only the server reads.
 pub(crate) static KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);

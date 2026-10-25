@@ -349,6 +349,9 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     if let Err(e) = asked.verify(&s.sig) {
         refuse(format!("{e}: {op} by {actor} from device {}", &hex(&s.device)[..16]), at_ingress());
     }
+    if let Err(e) = sign::restates(&s.request, &payload.0) {
+        refuse(format!("{e}: {op} by {actor}"), at_ingress());
+    }
     let date = iso(verdict_date());
     Spi::connect_mut(|c| {
         let (last, prev) = lock_head(c);
@@ -413,8 +416,8 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         let receipt_hash = receipt.hash();
         let receipt_sig = with_key(|k| k.sign(&receipt_hash));
         spi(c.update(
-            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)",
+            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
             None,
             &[
                 number.into(),
@@ -429,6 +432,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
                 receipt_hash.to_vec().into(),
                 receipt_sig.to_vec().into(),
                 key.into(),
+                s.salt.clone().into(),
             ],
         ));
 
@@ -474,6 +478,23 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         spi(c.update("UPDATE cella.head SET n = $1, hash = $2", None, &[n.into(), hash.to_vec().into()]));
         n
     })
+}
+
+/// Whether `request` is what receipt `n`'s member signed: its digest,
+/// salted with the salt the receipt keeps, is the digest the member's
+/// signature names. `None` for no such receipt, or one taken before the
+/// notary kept salts.
+pub fn was_signed(n: i64, request: &Value) -> Option<bool> {
+    let (digest, salt) = Spi::connect(|c| {
+        let rows = spi(c.select("SELECT request, salt FROM cella.receipt WHERE n = $1", Some(1), &[n.into()]));
+        if rows.is_empty() {
+            return (None, None);
+        }
+        spi(rows.first().get_two::<Vec<u8>, String>())
+    });
+    let (digest, salt) = (digest?, salt?);
+    let asked = sign::request_digest(request, &salt).unwrap_or_else(|e| fail(format!("cella: receipt {n}'s salt: {e}")));
+    Some(asked[..] == digest[..])
 }
 
 fn listed_rules(v: &Value) -> Option<Vec<Rule>> {

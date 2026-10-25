@@ -15,9 +15,10 @@
 //! | `cella.share(member, stance, receipt, num, den)` | aggregate | `Tally::share` |
 //! | `cella.verdict_date()` | function | the transaction's verdict date |
 //! | `cella.receipt()` | function | the transaction's receipt number |
-//! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
+//! | `cella.submit(op, payload, actor, signed)` | function | checks the member's signature, that the payload restates the request where it carries the same field, the device and the nonce, runs the op's rules, signs the receipt and appends the verdict |
 //! | `cella.op()`, `cella.actor()`, `cella.device()` | functions | the write being judged, for rules |
 //! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it |
+//! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
 //! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
 //! | `cella.signer` | table | every key the notary has signed with, by id, and the first entry each signed |
@@ -253,7 +254,10 @@ impl Aggregate<Share> for Share {
 // write the log and the receipts; migrations register; everyone reads.
 // The head row is made by the first write, not here, so a dump of the
 // head restores into a fresh install; every key the notary signed with is
-// kept in `cella.signer`, and each receipt and entry names its own.
+// kept in `cella.signer`, and each receipt and entry names its own. A
+// receipt keeps the salt of the request its member signed, outside its
+// hash, which holds the salted digest already; the salt is the owner's, as
+// everyone else could confirm a guess of the request with it.
 
 extension_sql!(
     r"
@@ -280,7 +284,8 @@ CREATE TABLE cella.receipt (
     hash bytea NOT NULL,
     sig bytea NOT NULL,
     UNIQUE (device, nonce),
-    key integer NOT NULL REFERENCES cella.signer
+    key integer NOT NULL REFERENCES cella.signer,
+    salt text
 );
 CREATE TABLE cella.log (
     n bigint PRIMARY KEY,
@@ -320,7 +325,8 @@ CREATE TABLE cella.power (
 );
 CREATE SEQUENCE cella.receipt_seq;
 REVOKE ALL ON cella.head, cella.signer, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power, cella.receipt_seq FROM PUBLIC;
-GRANT SELECT ON cella.head, cella.signer, cella.log, cella.receipt, cella.rule, cella.rule_text, cella.keyring, cella.power TO PUBLIC;
+GRANT SELECT ON cella.head, cella.signer, cella.log, cella.rule, cella.rule_text, cella.keyring, cella.power TO PUBLIC;
+GRANT SELECT (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key) ON cella.receipt TO PUBLIC;
 SELECT pg_catalog.pg_extension_config_dump('cella.head', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.signer', '');
 SELECT pg_catalog.pg_extension_config_dump('cella.log', '');
@@ -352,11 +358,12 @@ fn receipt() -> i64 {
     notary::receipt()
 }
 
-/// Checks the member's signature on the request, that the device is the
+/// Checks the member's signature on the request, that the payload restates
+/// the request wherever it carries the same field, that the device is the
 /// actor's current key and that its nonce is new, then runs the op's rules,
-/// signs the receipt and appends a numbered, signed verdict naming it. Call
-/// it last in the handler's transaction. `signed` is `{request, device,
-/// nonce, sig}`, bytes in hex. A refusal raises SQLSTATE 09000 with its
+/// signs the receipt, keeping the request's salt, and appends a numbered,
+/// signed verdict naming it. Call it last in the handler's transaction.
+/// `signed` is `{request, device, salt, nonce, sig}`, bytes in hex. A refusal raises SQLSTATE 09000 with its
 /// reason, so the transaction rolls back and no number is used; the rows
 /// returned are therefore always settled.
 #[pg_extern(volatile, security_definer)]
@@ -399,6 +406,24 @@ fn device() -> Option<Vec<u8>> {
 fn verify_log() -> bool {
     notary::verify_log()
 }
+
+/// Whether `request` is what receipt `n`'s member signed: salted with the
+/// salt the receipt keeps, its digest is the one their signature names.
+/// NULL for no such receipt, or one taken before 0.3.0, which kept no
+/// salt. The owner's, since it would confirm a guess of a request.
+#[pg_extern(stable, security_definer)]
+#[search_path(pg_catalog, pg_temp)]
+fn signed(n: i64, request: JsonB) -> Option<bool> {
+    notary::was_signed(n, &request.0)
+}
+
+extension_sql!(
+    r"
+REVOKE EXECUTE ON FUNCTION cella.signed(bigint, jsonb) FROM PUBLIC;
+",
+    name = "signed_owner",
+    requires = [signed],
+);
 
 /// The public key of `cella.key_file`, which signs the next entry.
 #[pg_extern(stable, security_definer)]

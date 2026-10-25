@@ -99,8 +99,10 @@ label stays out.
   in (`entering`, the person's), records the contract on the verdict date
   with the register's copy of the name, and enrols the first device;
   submits `{ worker, job, contract, start, until, minutes, hired, key,
-  name }`, the name committed. A key that is not 32 bytes in hex, or one
-  enrolled already, is refused before it reaches the notary.
+  name }`, the name committed. The member signs the request with the key
+  in lower case, as the payload restates it. A key that is not 32 bytes
+  in hex, or one enrolled already, is refused before it reaches the
+  notary.
 
 ## Tests
 

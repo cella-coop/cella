@@ -60,8 +60,11 @@ sequenceDiagram
   the signature, then, under the log's head lock, that the device is a
   current key of the actor (the keyring, the `person` feat's) and that its
   nonce was never counted. A forged signature, a revoked or another
-  member's device, a reused nonce or a request swapped under a valid
-  signature is refused, and no verdict number is used.
+  member's device, a reused nonce, a request swapped under a valid
+  signature or a payload restating the request otherwise is refused, and
+  no verdict number is used. Each receipt keeps the request's salt for
+  the owner, so what a member signed can be checked against the payload
+  later.
 - **Only the extension's functions may write the log.** No client, script or
   psql session can append to it any other way. Each settled write has one
   receipt, numbered as it arrives, which the notary signs with the member's
@@ -331,6 +334,19 @@ erased until their legal clock runs out.
 ## Current limits
 
 What the build does not yet do, and what lifts each:
+
+- **The host can write state outside a verdict.** At rung 1 a state
+  change is bound to its verdict only by the handler calling
+  `cella.submit` in the same transaction. Nothing in the database
+  requires that it did: the app role holds write grants on the feats'
+  tables, and no trigger knows during the state phase which op is
+  writing. A handler's bug, an import or a `psql` session can change
+  state with no entry, and the log still verifies; a rule checks that a
+  write did what its payload names, never that it did nothing else. The
+  feats' triggers hold the invariants whoever writes; authorisation and
+  logging hold only for writes through `submit`. The operator's ruling
+  on enforcing the binding (review A2) lifts this, and until then the
+  pilot trusts its host for it, as the ratchet's first rung does.
 
 - **The host serves the signing code and says what to sign.** The browser
   signs the request the server asks it to, its own write's and each

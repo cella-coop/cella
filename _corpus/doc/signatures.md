@@ -16,7 +16,7 @@ type is added here before it is signed anywhere.
 | Type | Signer | Tag | Binding | Checked by |
 |---|---|---|---|---|
 | write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
-| receipt | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived | `cella.verify_log` |
+| receipt | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived; the request's salt sits beside it, outside the hash, which holds the digest it salts | `cella.verify_log` |
 | log entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
 | session opening | a member's device, Ed25519 | `cella org 2026-10 session`, the message's first line | the scope, the actor, the device's key and the server's single-use challenge | the shell's server, `opens` in `lib/server/session.ts`, before it keeps a session |
 
@@ -43,10 +43,20 @@ nonce <16 random bytes, 32 lowercase hex digits>
   canonical JSON has sorted keys, no whitespace and integers only; bytes
   travel as hex. It is hashed with a salt, 32 random bytes as hex that
   the device draws for each write and sends beside it, as
-  `{"request": …, "salt": …}`, and the notary keeps only the digest: the
+  `{"request": …, "salt": …}`. The notary keeps the digest in the
+  receipt for everyone and the salt beside it for the owner alone: the
   digest hides what the member typed, so no one holding the log can
-  confirm a guess of it. SHA-256 rather than BLAKE3, because browsers
-  sign with WebCrypto, which has SHA-256 and no BLAKE3.
+  confirm a guess of it, and the owner holding the salt can check later
+  whether a request is what the member signed (`cella.signed(n,
+  request)`). SHA-256 rather than BLAKE3, because browsers sign with
+  WebCrypto, which has SHA-256 and no BLAKE3.
+- **The payload restates the request** where it says the same thing:
+  `submit` refuses a payload holding a field of the request with a
+  value of the same JSON kind but another value, a personal value
+  compared by the value it marks, so the log cannot say a member asked
+  for what they did not sign. A value of another kind under the same
+  name, such as the id of the file stored for the file sent, is the
+  server's own.
 - **nonce** makes the signature count once: the notary refuses a write
   whose device and nonce a receipt already holds. A refused write rolls
   back, so its nonce is not spent.

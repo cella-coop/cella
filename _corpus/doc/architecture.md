@@ -465,9 +465,12 @@ check says is its owner's and its tests'. A write not yet decided as it
 should be, such as granting a mandate before a graft ties the decision
 to it, needs a power no mandate grants until then.
 
-Every critical rule is enforced twice: the handler checks the permission and
-the feat's row-level policies and triggers back it up. An ordered write is
-checked a third time by the notary, in a way anyone can replay from the log.
+Every critical invariant is enforced twice: the handler checks the
+permission and the feat's row-level policies and triggers back it up. An
+ordered write is checked a third time by the notary, in a way anyone can
+replay from the log. Authorisation and logging hold only for writes
+through `cella.submit`: at rung 1 nothing in the database refuses state
+written outside a verdict ([trust](trust.md#current-limits)).
 
 ## Feat flags
 

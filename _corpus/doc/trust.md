@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-10-24
+updated = 2026-10-25
 +++
 
 # Trust
@@ -108,8 +108,8 @@ sequenceDiagram
   omission. Money leaves a cash account only through writes with their
   own right and a rule that checks the entry is exactly what they say:
   `transaction.pay` and `expense.reimburse` within their power's limit,
-  `payslip:run.pay` under its power, and `account.draw` within the
-  member's own draw limit. A mandate's budget, a total over a month or a
+  `payslip:run.pay` and `account:capital.repay` under their power, and
+  `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
   year, is checked by the graft that sees what spends it:
   `circle-expense-member` sums an approver's approvals.
 - **Confluent writes are logged in signed batches** once devices queue

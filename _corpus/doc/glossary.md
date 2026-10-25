@@ -68,7 +68,9 @@ updated = 2026-10-25
 | **statement** | a worker's part of a year's work share, by basis, and what became of it: shares, blocked five years, and cash |
 | **indivisible reserves** | surplus kept by the co-op for good, never distributed |
 | **interest on capital** | the part of the surplus paid on members' capital shares, capped by law |
-| **capital account** | a member's equity in the co-op: subscribed shares and what is credited to them |
+| **capital account** | a member's equity in the co-op: the shares they paid in and what is credited to them |
+| **subscription** | the shares an associate takes on joining, at the share's value, called whole and paid in at once or in monthly instalments from their pay |
+| **repayment** | what a departed associate is paid back of their capital, at its nominal value, in yearly instalments the statutes set, within five years |
 | **patronage** | a member's contribution (hours, wages, revenue or trade) used to divide a surplus |
 | **buy-in / buyout** | capital a member subscribes on joining, and its repayment on leaving |
 | **revolving capital** | repaying the oldest retained patronage as new patronage is retained |

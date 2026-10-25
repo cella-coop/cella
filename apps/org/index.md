@@ -75,8 +75,12 @@ rule's reason:
   year's surplus allocated, citing the decision that approved its split,
   its work share divided among the workers as the year's terms say and
   half of each associate's part employed in shares, in the same write;
-  the work share's terms adopted, citing the decision that moved them.
-
+  the statutes' terms adopted, citing the decision that moved them;
+  money an associate pays in on their subscription, recorded from the
+  bank; their subscription spread over monthly instalments from their
+  pay, on their own page, each withheld when a run is paid; and a
+  departed associate's next repayment paid from the bank, once it falls
+  due.
 At rung 1 an ordered write settles or is refused at once, so Pending is
 never shown, though the shell handles it. How slices mount is in
 [architecture](../../_corpus/doc/architecture.md#the-shell).
@@ -104,8 +108,9 @@ never shown, though the shell handles it. How slices mount is in
 
 Seedling's co-op economics that rung 1 still leaves out: a work share
 divided by revenue, which French law does not offer a SCOP; paying out
-the work share's cash; paying in subscribed capital, buyout over years, revolving capital and dues in
-`account`; quotes with `project`.
+the work share's cash; a deduction for losses from a departed associate's
+repayment, revolving capital and dues in `account`; quotes with
+`project`.
 
 Rung 1's pilot runs one write of each kind end to end: edit a document
 (confluent), issue an invoice (bounded, numbered by the server until rung 2),
@@ -116,8 +121,9 @@ and admit a member by vote (ordered).
 | Graft | What it joins |
 |---|---|
 | `account-decision` | a surplus allocation and the decision that approved it; the work share's terms and the decision that adopts them |
-| `account-member` | who holds each capital account, the share's value, draw limits, the freeze on exit, and each worker's part of the work share split between shares and cash |
-| `account-member-transaction` | a member's subscription on admission, their draws and the shares the work share buys, posted; a year's return to the federation |
+| `account-member` | who holds each capital account, the share's value from the statutes' terms, draw limits, the freeze on exit, and each worker's part of the work share split between shares and cash |
+| `account-member-payslip-transaction` | a subscription paid in monthly instalments withheld from pay, posted in the run's payment |
+| `account-member-transaction` | a member's subscription called on admission and paid in, their draws, the shares the work share buys, and a departing associate's capital owed and repaid, posted; a year's return to the federation |
 | `account-payslip` | a surplus's work share divided by pay and in equal parts |
 | `account-timesheet` | a surplus's work share divided by time worked |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; a surplus's split posted, the legal reserve's floor |

@@ -29,10 +29,13 @@ decision. Lanterne's state is that of 24 October 2026.
 | `document.create`, `.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
 | `document.adopt` | ordered | right; **applied**: the comment now names the adopted version, not the draft |
-| `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-freezes-on-exit)) |
+| `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
 | `account.surplus.allocate` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
 | `account.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already allocated ([work share](#the-work-share-divides-as-the-years-terms-say)) |
 | `account.period.close` | ordered | right |
+| `account.capital.pay` | confluent | right: a deposit; payments commute, and at rung 1 none passes what is owed ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
+| `account.capital.spread` | confluent | right: the associate's own register, the latest standing |
+| `account.capital.repay` | ordered | right: each repayment once, in its turn and not before its day |
 | `transaction.post` | confluent | **applied**: one write replaces `credit` and `.debit`; an entry's balance is checked on the entry alone |
 | `transaction.pay` | confluent | right: entries commute; it is a write money leaves the bank through, under its own power, and a post touches no cash account; **applied**: `.payroll` is gone, pay runs post through `payslip` |
 | `expense.capture`, `.submit` | confluent | right: the member's own facts |
@@ -543,27 +546,44 @@ harmless and reads as such. **Rung 2**: milestones numbered under the
 project's lock collide when two devices add one offline; a milestone
 needs an id of its own, its number a position.
 
-## Capital freezes on exit
+## Capital is paid in and repaid by the statutes
 
 Owners: `account-member` for the freeze, a trigger on the member's
 status in the write that ends the membership, whichever it is;
-`account-member-transaction` for the draws and the subscription.
+`account-member-transaction` for the draws, the subscription, the
+payments in and, on exit, the move to what is owed and the repayments;
+`account-member-payslip-transaction` for the instalments withheld from
+pay; the `account` feat for the statutes' clauses.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `account.draw` vs `member.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
 | `account.draw` vs `account.draw`, one member | both, if the limit covers both | both, if it covers both | the limit is overdrawn |
 | `member.admit` vs `account.period.close` of its month | the subscription posts in the month | nothing is subscribed; the admission settles | an admission refused by the books |
+| `account.capital.pay` vs `account.capital.pay`, one member | both, if what is owed covers both | both, if it covers both | a subscription paid beyond what it cost |
+| `account.capital.pay` vs `member.exit` | the payment stands; the exit cancels the rest | refused: the exit cancelled what was owed | money taken on a cancelled subscription |
+| `payslip:run.pay` vs `account.capital.spread` | the instalment at the old plan | at the new one | none: the payment reads the plan that stands |
+| `account.capital.repay` vs `account.capital.repay`, one repayment | the second refused: it is paid | the first refused | a repayment paid twice |
+| `member.exit` vs `account.period.close` of its month | the capital moves to 4567 and is drawn up | nothing moves; the capital stays frozen | an exit refused by the books |
 
 The draw is bounded on the member's limit, a right granted in advance;
 the exit is ordered and freezes in its own transaction, so no draw
-settles between the exit and the freeze. A frozen account never thaws
-until it is repaid, which is not built. Subscribing never holds an
-admission back.
+settles between the exit and the freeze. A frozen account never thaws;
+what it held moves to 4567 in the same write and is repaid from there.
+Subscribing never holds an admission back, but for the statutes'
+minimum. A payment in is a deposit, so it is confluent; at rung 2 two
+offline payments could pass what is owed, which the server's rule
+refuses today and which then needs a late-write rule, as an invoice's
+overpayment has. A repayment is ordered: it is paid once, and after the
+one before it.
 
 **Lanterne.** Thomas draws 300 € of his 500 €; a second 300 € is refused,
 200 € being left. Had Sofia left, her account would freeze in the exit's
-own verdict, and her draw after it would be refused.
+own verdict, and her draw after it would be refused. Inès's 20 shares are
+called in the verdict that admits her, and she spreads them over ten
+instalments, the first withheld when November's run is paid. Paul, who
+left in November 2025, is owed 1 500 € in three yearly repayments; the
+first is refused on 29 November 2026 and paid on the 30th, once.
 
 ## An expense is decided once, within a budget
 
@@ -674,7 +694,7 @@ The matrix found writes no `ops.ts` declares:
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
 | erasing a person | ordered | the tombstone must be fixed in the log |
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
-| paying in subscribed capital, repaying a departed member's | confluent, ordered | money in and out of `4561` and a frozen account, which nothing posts |
+| a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them |
 | drafting the work share's terms, or an allocation | confluent | adoption and allocation act on drafts nothing writes but the seed |
 | paying out the work share's cash | confluent | what `424` still owes after the shares, which nothing pays |

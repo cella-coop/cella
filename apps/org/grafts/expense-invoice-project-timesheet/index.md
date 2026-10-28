@@ -1,6 +1,6 @@
 +++
 title = "expense-invoice-project-timesheet"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 A project's margin: what it invoiced less what its time cost the co-op
@@ -61,10 +61,14 @@ Adds to each project its margin, its margin percent, its burn, what its
 time cost and its watch, as columns of the table; to the projects' header
 how many are watched; to their dashboard the margin and the time cost
 summed, the projects to watch and the margin by watch; and to a project's
-overview its Margin: invoiced, time cost, expenses, margin and its
-percent, then its burn and the spend and margin at completion, with a
-line saying why it is watched; its margin and watch among its
-Properties.
+overview its Margin: first, when it is watched, a line naming the watch
+(budget spent, forecast over budget or thin margin) with its figures and
+what to do next; then invoiced, time cost, expenses, margin and its
+percent; then the budget spent and the spend and margin at completion;
+each row with a line giving the basis it is reckoned on, the cost rate
+for the margin and the billing rate and the pace so far for the budget,
+so a project over its budget that keeps a margin reads as one. Its
+margin and watch are among its Properties.
 
 ## Lanterne
 

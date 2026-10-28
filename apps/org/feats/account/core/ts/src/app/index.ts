@@ -3,6 +3,7 @@ import type { Account, Period } from '../models/account.ts'
 import type { Terms } from '../models/terms.ts'
 import type { Report } from '../models/report.ts'
 import Close from './blocks/Close.svelte'
+import Open from './blocks/Open.svelte'
 
 // A row as its collection lists it: its state, and an account cash or
 // other, as their badges show them.
@@ -50,6 +51,7 @@ export const app: App = {
         group: 'finance',
         title: 'Periods',
         icon: icons.Calendar,
+        create: Open,
         columns: [
           { key: 'month', label: 'Month', kind: 'title', role: 'title', value: (p: Period) => p.month },
           { key: 'closed', label: 'Closed on', kind: 'date', role: 'meta', value: (p: Period) => p.closed },

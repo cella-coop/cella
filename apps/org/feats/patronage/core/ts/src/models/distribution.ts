@@ -55,3 +55,19 @@ export interface Distributed extends Distribute {
   year: number
   surplus: number
 }
+
+// A year's split drafted for the assembly to approve: its surplus in
+// cents, and each share's percent of it in hundredths, which add up to
+// the whole. A share of nothing is left out.
+export interface Draft {
+  year: number
+  surplus: number
+  work: number
+  legal: number
+  development: number
+  interest: number
+}
+
+export interface Drafted extends Draft {
+  distribution: string
+}

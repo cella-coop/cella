@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -70,6 +70,7 @@ year.
 |---|---|---|
 | `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
 | `POST /api/account/terms.adopt` | ordered, `decided` | the members' decision adopts the statutes' capital clauses, once |
+| `POST /api/account/period.open` | ordered | the month after the latest opens, so entries dated in it post; the next month's opening follows it |
 | `POST /api/account/period.close` | ordered | nothing posts into a closed period |
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
 | `POST /api/account/capital.spread` | confluent, `self` | an associate spreads what they owe over monthly instalments from their pay |
@@ -83,6 +84,10 @@ year.
 - **terms.adopt** cites the decision that moved to adopt the terms
   (`account-decision`); it settles only if that decision closed and
   passed.
+- **period.open** is ordered because the months follow one another with
+  no gap: the month after the latest opens only once it is there, as a
+  period closes only after the one before it. Opening a month already
+  open changes nothing.
 - **period.close** is ordered because it fixes, by receipt order, which
   entries made the period: an entry received after the close's receipt is
   refused for that period.
@@ -108,14 +113,15 @@ the holder is whoever holds the role the mandate is granted to.
 | draw | none: the member's own, within their draw limit | every member, 500 € |
 
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
+| period.open | `close-period`: the power that keeps the periods | Julien, as finance |
 | period.close | `close-period` | Julien, as finance |
 | capital.pay | `record-receipt` | Julien, as finance |
 | capital.spread | none: the associate's own | Inès, once admitted |
 | capital.repay | `repay-capital` | Julien, as finance |
 
-`002-powers.sql` registers period.close's power in `cella.power`, and
-`006-terms.sql` capital.pay's and capital.repay's; the `circle-membership`
-graft checks them.
+`002-powers.sql` registers period.close's power in `cella.power`,
+`006-terms.sql` capital.pay's and capital.repay's, and `010-period.sql`
+period.open's; the `circle-membership` graft checks them.
 
 ## Invariants
 
@@ -127,6 +133,8 @@ The account feat owns the rules about its own collection:
   years of the exit (loi n° 47-1775, art. 18, the nominal value; the five
   years as Avise's guide to the SCOP gives them, its article not
   verified);
+- the periods follow one another with no gap, each month opening after
+  the latest or before the first;
 - a period closes only after the one before it, and once;
 - a frozen account stays frozen.
 
@@ -189,6 +197,8 @@ has left restricts it until `cella vault sweep` redacts it.
 
 ## Rules
 
+- `account.opens`, on `account:period:open`: the period exists and the
+  months follow one another with no gap.
 - `account.closes`, on `account:period:close`: the write closed the period
   on the verdict date, after the period ended, and after every period
   before it.
@@ -197,6 +207,9 @@ has left restricts it until `cella vault sweep` redacts it.
 
 ## Handlers
 
+- `open` (ordered): makes the period's row, or keeps it as it is;
+  `nextPeriod` names the month after the latest, which the New form
+  offers.
 - `close` (ordered): sets the period's `closed` to the verdict date. The
   update takes the period's row, which the graft's trigger reads `FOR
   SHARE`, so a concurrent post waits for the close or sees it.
@@ -215,6 +228,9 @@ account is placed by the longest prefix of its code on each sheet, every
 code of classes 1 to 7 has a place on the balance sheet, a total names
 only rubrics of its own sheet and a line its side, and the spans are each
 month, quarter and year of the books against the one before.
+`core/ts/_tests/periods.test.ts`: the first month opens alone and each
+next one after the latest, twice changing nothing; a month leaving a gap
+is refused. The e2e scenario `patronage` opens 2027's first month.
 
 ## Reads
 
@@ -223,7 +239,8 @@ A capital account, one with a holder, reads for its holder and for whoever holds
 ## Shell
 
 The `accounts` collection, the chart by code; `periods`, the latest month
-first, a period's page closing it; `terms`, the statutes' capital
+first, its New form opening the month after the latest, and a period's
+page closing it; `terms`, the statutes' capital
 clauses by year, adopted or drafted, titled Capital terms; and `reports`,
 the financial statements by span, the latest ending first, in a table, a
 span's page naming its days and the span it is compared with; its two

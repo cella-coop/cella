@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -56,10 +56,20 @@ distribution is approved.
 
 | Write | Label | Why |
 |---|---|---|
+| `POST /api/patronage/terms.draft` | confluent | finance drafts the terms for the members to adopt; drafted again, the latest stands until they are adopted |
 | `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' decision adopts the work share's terms, once |
+| `POST /api/patronage/distribution.draft` | confluent | finance drafts a year's split for the assembly to approve; drafted again, the latest stands until it is approved |
 | `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's decision approves the split, once, and fixes each worker's part |
 | `POST /api/patronage/distribution.distribute` | ordered | the approved split posted to the books and the shares it buys credited, once |
 
+- **terms.draft** and **distribution.draft** are registers: a draft is
+  `st-<year>` for terms, the year for a split, and drafting it again
+  replaces it, the latest standing, until it is adopted or approved, after
+  which it never changes. Terms divide the whole work share
+  (`patronage.drafts_terms`). A split's shares make the whole surplus,
+  split from it to the cent with `cella.allocate`, under the basis of the
+  adopted terms governing its year (`patronage.drafts`); the law's
+  floors are judged at its approval. Percents are sent in hundredths.
 - **terms.adopt** cites the decision that moved to adopt the terms
   (`decision-patronage`); it settles only if that decision closed and
   passed, and never over a year whose distribution is approved.
@@ -82,12 +92,13 @@ the holder is whoever holds the role the mandate is granted to.
 
 | Write | Power | Lanterne |
 |---|---|---|
+| terms.draft, distribution.draft | `distribute-surplus` | Julien, as finance |
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
 | distribution.approve | none: decided by the assembly | d-2026-006, for 2025 |
 | distribution.distribute | `distribute-surplus` | Julien, as finance |
 
-`002-powers.sql` registers distribute's power in `cella.power`; the
-`circle-membership` graft checks it.
+`002-powers.sql` registers distribute's power in `cella.power`, and
+`006-draft.sql` the drafts'; the `circle-membership` graft checks them.
 
 ## Invariants
 
@@ -130,9 +141,11 @@ What it does not own:
 
 Patronage knows no accounts, transactions, members, decisions, payslips
 or time. Its approval, its parts, its posting and its credits arrive
-through grafts. Paying the cash left owed in `424`, drafting terms or a
-distribution by a write, presence at the year's end and seniority (art.
-33, 3°), and a fiscal year other than the calendar year are not built.
+through grafts. Paying the cash left owed in `424`, presence at the
+year's end and seniority (art. 33, 3°), and a fiscal year other than the
+calendar year are not built. The surplus a draft divides is typed by
+finance, from the books the accountant keeps: the journal here does not
+yet hold every entry it is drawn from.
 Nor is the TMO: that the terms' rate is within art. 14's ceiling at each
 assembly that applies them is the members' to adopt, and an assembly
 whose ceiling falls under the terms' rate is not refused.
@@ -203,6 +216,12 @@ work share; parts that add up pass, one missing or a basis the terms do
 not name is refused; parts are made only in the write that approves and
 never change; terms that divide less than the whole, or would govern an
 approved year, are refused, and adopted terms never change.
+`core/ts/_tests/drafts.test.ts`: terms drafted as the request says and
+whole pass, adopted ones are refused; a split drafted under adopted
+terms whose shares make its surplus passes, a year with no terms,
+shares that miss 100 % and an approved split are refused. The e2e
+scenario `patronage` drafts terms and runs a second year, 2026, from
+its periods to its distribution with no fixture SQL.
 
 ## Reads
 
@@ -212,10 +231,11 @@ A worker's parts of a work share, and so their statement, read for the worker an
 
 The `distributions` collection, each year's surplus in a table, the
 latest first, a distribution's page showing its split under a Split tab
-and its state, draft, approved or distributed; `bases`, the patronage
-terms by year, adopted or drafted; and `statements`, each worker's part of
-each year's work share, a statement's page its part basis by basis
-against each basis's portion and weight. Approving and adopting are
+and its state, draft, approved or distributed, and its New form drafting
+a year's split; `bases`, the patronage terms by year, adopted or
+drafted, and its New form drafting terms; and `statements`, each
+worker's part of each year's work share, a statement's page its part
+basis by basis against each basis's portion and weight. Approving and adopting are
 `decision-patronage`'s forms over this feat's writes, distributing
 `patronage-transaction`'s. Printed, a page drops the shell and reads as a
 document.

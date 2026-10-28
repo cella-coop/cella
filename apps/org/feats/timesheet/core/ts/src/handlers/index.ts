@@ -1,1 +1,1 @@
-export { approve, log, logging, submit, submitting } from './timesheet.ts'
+export { approve, correct, correcting, log, logging, submit, submitting } from './timesheet.ts'

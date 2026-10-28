@@ -5,15 +5,20 @@
 // half of each part buys whole shares, blocked five years, and the rest
 // is owed in cash. The parts, the shares, the cash and the books
 // reconcile to the cent; each member reads their own statement, and
-// finance the year's return. Then the assembly decides new terms, a mix
-// of pay and time from 2027, and they are adopted citing that decision,
-// never one that does not move them nor over a year already approved.
+// finance the year's return. Then finance drafts new terms, a mix of pay
+// and time from 2027, the assembly decides them, and they are adopted
+// citing that decision, never one that does not move them nor over a year
+// already approved. Last, the second year runs with no fixture SQL:
+// finance opens 2027's first month and closes 2026's, drafts the 2026
+// split, the assembly moves to approve it, and it is approved and
+// distributed.
 // Run by `cella test e2e patronage`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { adopt, approve, statement, statements } from '@cella/org-patronage/api'
+import { adopt, approve, draft, draftTerms, statement, statements } from '@cella/org-patronage/api'
+import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { propose, vote } from '@cella/org-decision/api'
@@ -64,8 +69,6 @@ let before2025: Map<string, { shares: number; capital: number }>
 
 before(async () => {
   await su.connect()
-  // The host stages drafted terms around the notary, as only a superuser may.
-  await su.query('SET cella.unbound = on')
   await on('2026-10-24')
 })
 
@@ -195,9 +198,17 @@ test('the year\'s return to the federation reconciles with the split, the parts 
   assert.equal(f.employee_capital, 100)
 })
 
-test('the assembly decides terms mixing pay and time from 2027, and they are adopted citing that decision alone', async () => {
-  // Stands in for drafting terms, which has no write of its own yet.
-  await su.query(`INSERT INTO patronage.terms (id, "from", salary, hours, capital) VALUES ('st-2027', 2027, 60, 40, 50), ('st-2025', 2025, 50, 50, 50)`)
+test('finance drafts terms mixing pay and time from 2027, the assembly decides them, and they are adopted citing that decision alone', async () => {
+  const lead = await draftTerms({ from: 2027, salary: 60_00, hours: 40_00, equal: 0, capital: 50_00, interest: 3_50 }, as(hugo))
+  assert.match(reason(lead), /distribute-surplus/)
+  const short = await draftTerms({ from: 2027, salary: 60_00, hours: 30_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien))
+  assert.match(reason(short), /st-2027 divide 90.00 % of the work share, not 100 %/)
+  settled(await draftTerms({ from: 2027, salary: 50_00, hours: 50_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien)))
+  // Drafted again before the members adopt them, the latest draft stands.
+  const drafted = settled(await draftTerms({ from: 2027, salary: 60_00, hours: 40_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien)))
+  assert.equal(drafted.terms, 'st-2027')
+  assert.deepEqual(await one(`SELECT salary::float8 AS salary, hours::float8 AS hours, interest::float8 AS interest, adopted FROM patronage.terms WHERE id = 'st-2027'`), { salary: 60, hours: 40, interest: 3.5, adopted: null })
+  settled(await draftTerms({ from: 2025, salary: 50_00, hours: 50_00, equal: 0, capital: 50_00, interest: 0 }, as(julien)))
 
   const early = await adopt({ terms: 'st-2025', decision: 'd-2026-006' }, as(camille))
   assert.match(reason(early), /st-2025 would govern 2025, whose distribution is approved|d-2026-006 does not adopt st-2025/)
@@ -224,4 +235,71 @@ test('the assembly decides terms mixing pay and time from 2027, and they are ado
   assert.deepEqual(await one(`SELECT patronage.terms_for(2026) AS a, patronage.terms_for(2027) AS b, patronage.basis_of('st-2027') AS basis`), { a: 'st-2021', b: 'st-2027', basis: 'mix' })
   const again = await adopt({ terms: 'st-2027', decision }, as(camille))
   assert.match(reason(again), /st-2027 were adopted on 2026-11-16/)
+})
+
+test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 and drafts its split; the assembly moves to approve it; it is approved and distributed', async () => {
+  await on('2026-12-01')
+  const gap = await open({ month: '2027-02' }, as(julien))
+  assert.match(reason(gap), /2027-02 leaves a gap in the periods, which follow one another from 2026-07 to 2027-02/)
+  const lead = await open({ month: '2027-01' }, as(hugo))
+  assert.match(reason(lead), /close-period/)
+  settled(await open({ month: '2027-01' }, as(julien)))
+  settled(await open({ month: '2027-01' }, as(julien)))
+  assert.deepEqual(await all(`SELECT month FROM account.period WHERE month >= '2026-12' ORDER BY month`), [{ month: '2026-12' }, { month: '2027-01' }])
+
+  await on('2027-01-15')
+  for (const { month } of await all<{ month: string }>(`SELECT month FROM account.period WHERE month < '2027' AND closed IS NULL ORDER BY month`)) {
+    settled(await closePeriod({ month }, as(julien)))
+  }
+
+  const thin = await draft({ year: 2026, surplus: 50_000_00, work: 45_00, legal: 15_00, development: 39_00, interest: 50 }, as(julien))
+  assert.match(reason(thin), /2026's shares make 99.50 % of its surplus, not 100 %/)
+  const unknown = await draft({ year: 2026, surplus: 50_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(hugo))
+  assert.match(reason(unknown), /distribute-surplus/)
+  settled(await draft({ year: 2026, surplus: 40_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(julien)))
+  // Drafted again before the assembly approves it, the latest draft stands.
+  const drafted = settled(await draft({ year: 2026, surplus: 50_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(julien)))
+  assert.equal(drafted.distribution, '2026')
+  assert.deepEqual(
+    await all(`SELECT kind, cella.cents(amount)::int AS cents FROM patronage.share WHERE distribution = '2026' ORDER BY kind`),
+    [
+      { kind: 'development', cents: 19_750_00 },
+      { kind: 'interest', cents: 250_00 },
+      { kind: 'legal', cents: 7_500_00 },
+      { kind: 'work', cents: 22_500_00 },
+    ],
+  )
+  assert.deepEqual(await one(`SELECT basis, cella.cents(surplus)::int AS surplus FROM patronage.distribution WHERE id = '2026'`), { basis: 'salary', surplus: 50_000_00 })
+
+  const stray = await propose(
+    { circle: 'ag', title: 'Approve 2025 again', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2025' } }] },
+    as(camille),
+  )
+  assert.match(reason(stray), /no drafted distribution 2025 to approve/)
+  const proposed = settled(
+    await propose(
+      { circle: 'ag', title: 'Approve the 2026 distribution', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2026' } }] },
+      as(camille),
+    ),
+  )
+  const decision = proposed.decision
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
+    settled(await vote({ decision, member, stance: 'consent' }, as(member)))
+  }
+  await on('2027-01-29')
+  settled(await close({ decision }, as(camille)))
+  const old = await approve({ distribution: '2026', decision: 'd-2026-006' }, as(camille))
+  assert.match(reason(old), /d-2026-006 does not approve 2026/)
+  settled(await approve({ distribution: '2026', decision }, as(camille)))
+  const shared = await one<{ n: number; cents: number }>(
+    `SELECT count(*)::int AS n, sum(cella.cents(amount))::int AS cents FROM patronage.part WHERE distribution = '2026' AND basis = 'salary'`,
+  )
+  assert.equal(shared.cents, 22_500_00, 'the parts add up to the work share')
+  assert.ok(shared.n >= 10)
+  const redraft = await draft({ year: 2026, surplus: 60_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(julien))
+  assert.match(reason(redraft), /the 2026 surplus was approved on 2027-01-29/)
+
+  settled(await distribute({ distribution: '2026' }, as(julien)))
+  assert.deepEqual(await one(`SELECT to_char(distributed, 'YYYY-MM-DD') AS d FROM patronage.distribution WHERE id = '2026'`), { d: '2027-01-29' })
+  await balanced()
 })

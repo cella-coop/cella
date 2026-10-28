@@ -1,9 +1,9 @@
 // A worker's time, on a database holding the app's core, the timesheet and
 // worker feats and this graft: a worker's entry falls on a day of their
 // employment, while an entry of no worker's is the members' to judge; and
-// the rules on logging and submitting by one's employment, this graft's
-// and the timesheet feat's own. Whose the actor is, the e2e scenario
-// `people` holds. Run by `cella test slice employment-timesheet`.
+// the rules on logging, correcting and submitting by one's employment,
+// this graft's and the timesheet feat's own. Whose the actor is, the e2e
+// scenario `people` holds. Run by `cella test slice employment-timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -57,6 +57,8 @@ test('outside a write the rule judges no one a worker: who logs is the write\'s 
 test('the timesheet feat\'s own rules run on these ops too: the time is the actor\'s own', async () => {
   const rules = await all<{ op: string; fn: string }>(`SELECT op, fn::text AS fn FROM cella.rule WHERE op LIKE 'employment-timesheet:%' ORDER BY op, fn::text`)
   assert.deepEqual(rules, [
+    { op: 'employment-timesheet:entry:correct', fn: 'employment_timesheet.works(jsonb)' },
+    { op: 'employment-timesheet:entry:correct', fn: 'timesheet.corrects(jsonb)' },
     { op: 'employment-timesheet:entry:log', fn: 'employment_timesheet.works(jsonb)' },
     { op: 'employment-timesheet:entry:log', fn: 'timesheet.logs(jsonb)' },
     { op: 'employment-timesheet:period:submit', fn: 'employment_timesheet.works(jsonb)' },

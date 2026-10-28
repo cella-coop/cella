@@ -4,6 +4,8 @@ import { divides, type Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
+import Draft from './blocks/Draft.svelte'
+import DraftTerms from './blocks/DraftTerms.svelte'
 
 const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approved: 'accent', distributed: 'positive' }
 // A row as its collection lists it: its state, and how terms divide, as
@@ -30,6 +32,7 @@ export const app: App = {
         title: 'Distributions',
         caption: 'Each year’s surplus, split as the statutes and the law require',
         icon: icons.ChartPie,
+        create: Draft,
         columns: [
           { key: 'year', label: 'Year', kind: 'title', role: 'title', value: (d: Distribution) => String(d.year) },
           { key: 'surplus', label: 'Surplus', kind: 'money', role: 'meta', value: (d: Distribution) => d.surplus },
@@ -64,6 +67,7 @@ export const app: App = {
         title: 'Patronage terms',
         caption: 'The statutes’ terms for the work share: how it divides, what of it buys shares, and the most interest capital earns',
         icon: icons.SealCheck,
+        create: DraftTerms,
         columns: [
           { key: 'from', label: 'From', kind: 'title', role: 'title', value: (t: Terms) => String(t.from) },
           { key: 'basis', label: 'Divides', role: 'sub', value: (t: Divided) => t.basis },

@@ -8,7 +8,8 @@
 // Each member's inbox holds what waits on them, counted in the sidebar;
 // the home shows the co-op's figures from several collections; and Inès,
 // employed and no member, logs her week in the grid, booking hours to a
-// project where the log-time mandate refuses her. Run by
+// project where the log-time mandate refuses her, and corrects a cell she
+// typed too high from its entry's page. Run by
 // `cella test e2e participation`.
 
 import { after, before, test } from 'node:test'
@@ -298,4 +299,34 @@ test('Inès logs her week in the grid, booking hours to a project where the mand
     ['settled'],
   )
   assert.deepEqual(part.spent, ['cell._.2026-10-24'])
+})
+
+test('Inès corrects the hours she booked too high from the entry\'s page, and the project spends only what she worked', async () => {
+  const booked = await one<{ id: string }>(
+    `SELECT e.id::text AS id FROM timesheet.entry e JOIN project_timesheet.booking b ON b.entry = e.id
+     WHERE e.member = $1 AND e.day = '2026-10-22' AND b.project = 'ferrand-packaging'`,
+    [ines],
+  )
+  const burnt = async () => Number((await one<{ hours: string }>(`SELECT hours FROM project_timesheet.burn WHERE project = 'ferrand-packaging'`)).hours)
+  const before = await burnt()
+  // Someone else may not correct her time, though they log their own.
+  const other = await shell.act(`/timesheets/${booked.id}`, 'correct', { hours: '0' }, camille)
+  assert.equal(other.state, 'refused')
+  assert.match(reason(other), /may not correct ines@lanterne.example's time/)
+  const fixed = await shell.act(`/timesheets/${booked.id}`, 'correct', { hours: '0,5' }, ines)
+  assert.equal(fixed.state, 'settled', reason(fixed))
+  assert.equal(fixed.op, 'employment-timesheet:entry:correct')
+  assert.equal(await burnt(), before - 1.5)
+  // A correction only lowers: one to more than the entry holds leaves it.
+  const higher = await shell.act(`/timesheets/${booked.id}`, 'correct', { hours: '3' }, ines)
+  assert.equal(higher.state, 'settled', reason(higher))
+  const entry = await one<{ minutes: number }>('SELECT minutes FROM timesheet.entry WHERE id = $1', [booked.id])
+  assert.equal(entry.minutes, 30)
+  // The log keeps both: what she logged, and what she corrected it to.
+  const signed = await all<{ op: string }>(
+    `SELECT op FROM cella.log WHERE op IN ('employment-timesheet:entry:log', 'employment-timesheet:entry:correct') AND actor = $1 ORDER BY n`,
+    [ines],
+  )
+  assert.ok(signed.some((s) => s.op === 'employment-timesheet:entry:log'))
+  assert.equal(signed.filter((s) => s.op === 'employment-timesheet:entry:correct').length, 2)
 })

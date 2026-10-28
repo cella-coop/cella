@@ -3,7 +3,9 @@
 // and this graft: a motion to adopt drafted terms records the adoption it
 // asks for, and one naming no such terms is refused whatever wrote it;
 // adopting the terms cites a decision that moved to adopt them, and
-// approving a distribution the decision that approves it, never another.
+// approving a distribution the decision that approves it, never another;
+// a motion to approve a drafted distribution records that approval, the
+// latest decision moving to standing, and one naming no draft is refused.
 // That the decision passed is circle-decision-membership's, not migrated here.
 // Run by `cella test slice decision-patronage`.
 
@@ -56,4 +58,21 @@ test('both ops cite a decision, so the roll\'s rule attaches to them', async () 
     { op: 'patronage:distribution:approve', owner: 'decision-patronage' },
     { op: 'patronage:terms:adopt', owner: 'decision-patronage' },
   ])
+})
+
+test('a motion to approve a drafted distribution records the approval it asks for, the latest decision moving to standing', async () => {
+  await db.query(`INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ('2026', 2026, cella.amount(100000), 'salary')`)
+  await decide('d-3')
+  await decide('d-4')
+  const approving = async () => (await db.query(`SELECT decision FROM decision_patronage.approval WHERE distribution = '2026'`)).rows
+  await db.query(`INSERT INTO decision.motion (decision, n, kind, args) VALUES ('d-3', 1, 'distribution', '{"distribution": "2026"}')`)
+  assert.deepEqual(await approving(), [{ decision: 'd-3' }])
+  assert.equal(await rule('decision_patronage.asks_to_approve', { decision: 'd-3' }), null)
+  await db.query(`INSERT INTO decision.motion (decision, n, kind, args) VALUES ('d-4', 1, 'distribution', '{"distribution": "2026"}')`)
+  assert.deepEqual(await approving(), [{ decision: 'd-4' }])
+  assert.equal(await rule('decision_patronage.asks_to_approve', { decision: 'd-3' }), 'd-3 does not ask to approve 2026')
+  await assert.rejects(
+    db.query(`INSERT INTO decision.motion (decision, n, kind, args) VALUES ('d-4', 2, 'distribution', '{"distribution": "1999"}')`),
+    /no drafted distribution 1999 to approve/,
+  )
 })

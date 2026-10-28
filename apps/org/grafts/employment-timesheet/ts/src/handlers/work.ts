@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-ops'
 import { write, type Deps } from '@cella/org-db'
-import { logging, submitting } from '@cella/org-timesheet/api'
-import type { Log, Logged, Period, Submitted } from '@cella/org-timesheet/models'
+import { correcting, logging, submitting } from '@cella/org-timesheet/api'
+import type { Correct, Corrected, Log, Logged, Period, Submitted } from '@cella/org-timesheet/models'
 import type { ops } from '../models/ops.ts'
 
 type Op = keyof typeof ops
@@ -18,4 +18,10 @@ export async function log(input: Log, deps: Deps): Out<'employment-timesheet:ent
 // A worker submits their own month the same way.
 export async function submit(input: Period, deps: Deps): Out<'employment-timesheet:period:submit', Submitted> {
   return write(deps, { ...submitting(input), op: 'employment-timesheet:period:submit' satisfies Op })
+}
+
+// A worker corrects their own entry the same way, while employed on its
+// day.
+export async function correct(input: Correct, deps: Deps): Out<'employment-timesheet:entry:correct', Corrected> {
+  return write(deps, { ...correcting(input), op: 'employment-timesheet:entry:correct' satisfies Op })
 }

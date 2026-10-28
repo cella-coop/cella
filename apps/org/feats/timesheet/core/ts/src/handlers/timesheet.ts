@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-ops'
 import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
-import type { Approved, Log, Logged, Period, Submitted } from '../models/timesheet.ts'
+import type { Approved, Correct, Corrected, Log, Logged, Period, Submitted } from '../models/timesheet.ts'
 
 type Op = keyof typeof ops
 type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
@@ -27,6 +27,30 @@ export const logging = (input: Log): Write<Logged> => ({
 
 export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Logged> {
   return write(deps, logging(input))
+}
+
+// Corrects an entry by lowering its time to the minutes given, to none
+// where none was worked; a correction to more than it holds leaves it as
+// it is. The feat's trigger refuses one into an approved period and any
+// change but a lower time; `timesheet.corrects` that it is the actor's
+// own entry. A graft that corrects it under a write of its own, as
+// employment-timesheet does by the worker's employment, runs this.
+export const correcting = (input: Correct): Write<Corrected> => ({
+  op: 'timesheet:entry:correct' satisfies Op,
+  request: input,
+  state: async (tx) => {
+    const { rows } = await tx.query<{ member: string; day: string }>(
+      `UPDATE timesheet.entry SET minutes = least(minutes, $2) WHERE id::text = $1
+       RETURNING member, to_char(day, 'YYYY-MM-DD') AS day`,
+      [input.entry, input.minutes],
+    )
+    return { ...input, member: rows[0]?.member ?? null, day: rows[0]?.day ?? null }
+  },
+  payload: (v) => ({ ...v }),
+})
+
+export async function correct(input: Correct, deps: Deps): Out<'timesheet:entry:correct', Corrected> {
+  return write(deps, correcting(input))
 }
 
 // Submits a member's month on the verdict date; submitting again keeps

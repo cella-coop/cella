@@ -1,5 +1,5 @@
 import type { Db, Form } from '@cella/org-db'
-import type { Log, Period } from '../models/timesheet.ts'
+import type { Correct, Log, Period } from '../models/timesheet.ts'
 
 // What the shell's forms send, read into the handlers' inputs. Hours are
 // typed as a decimal, a comma or a point, and sent in whole minutes; time
@@ -31,4 +31,15 @@ export async function period(db: Db, entry: string | undefined): Promise<Period>
     throw new Error(`no entry ${entry}`)
   }
   return rows[0]
+}
+
+// A correction from an entry's page: the hours it comes down to, none
+// where the time was never worked.
+export function correct(form: Form, entry: string | undefined): Correct {
+  const typed = form.get('hours').trim()
+  const n = Number(typed.replace(',', '.'))
+  if (!entry || !typed || !Number.isFinite(n) || n < 0 || n > 24) {
+    throw new Error(`“${typed}” is not a number of hours in a day`)
+  }
+  return { entry, minutes: Math.round(n * 60) }
 }

@@ -6,6 +6,9 @@ export const ops = {
   'account:account:draw': bounded('limit', { check: 'self' }),
   // the members' decision adopts the statutes' capital clauses, once
   'account:terms:adopt': ordered({ decide: 'majority', check: 'decided' }),
+  // the month after the latest the books hold, so entries dated in it
+  // post; ordered against the next month's opening, which follows it
+  'account:period:open': ordered({ power: 'close-period' }),
   // nothing posts into a closed period
   'account:period:close': ordered({ power: 'close-period' }),
   // money an associate pays in on their subscription, a deposit: entries

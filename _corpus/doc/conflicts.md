@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 # Conflicts
@@ -34,6 +34,8 @@ decision. Lanterne's state is that of 24 October 2026.
 | `patronage.distribution.approve` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
 | `patronage.distribution.distribute` | ordered | right: the approved split posted once, under its own power ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
 | `patronage.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already approved ([work share](#the-work-share-divides-as-the-years-terms-say)) |
+| `patronage.terms.draft`, `patronage.distribution.draft` | confluent | right: registers, the latest draft standing until it is adopted or approved; a draft after that is refused ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `account.period.open` | ordered | right: the months follow one another, so a month opens after the one before it ([closed period](#nothing-posts-into-a-closed-period)) |
 | `account.period.close` | ordered | right |
 | `account.capital.pay` | confluent | right: a deposit; payments commute, and at rung 1 none passes what is owed ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
 | `account.capital.spread` | confluent | right: the associate's own register, the latest standing |
@@ -68,10 +70,11 @@ decision. Lanterne's state is that of 24 October 2026.
 | `client-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
+| `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
 | `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
 | `employment-membership:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
-| `employment-timesheet:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
+| `employment-timesheet:entry.log`, `:entry.correct`, `:period.submit` | confluent | right: the feat's log, correction and submit by the worker's employment, contending as those do |
 | `employment-project-timesheet:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
 | `document-membership:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
@@ -104,6 +107,12 @@ which entries made the period. That lets every post stay confluent or
 bounded while the close alone is ordered. At rung 1 the graft's trigger
 reads the period row `FOR SHARE` and the close updates it, so Postgres
 serialises a post against a concurrent close.
+
+`period.open` contends only with what follows it: a post dated in a
+month not yet open is refused, and posts once it opens; a month opens
+only after the one before it, so two openings received out of order
+refuse the later month, where both settling would leave the books a
+month they skip.
 
 **Rung 2.** A post made offline and dated in a period that closed before
 it arrived needs a late-write rule. The accountant's practice is the rule
@@ -380,6 +389,8 @@ year; the `decision-patronage` graft for the approval.
 | `distribution.approve` vs a post to `1061` or to capital | the floor was read before it | the floor reads it | the legal reserve's 15 % waived on a reserve or a capital that moved |
 | `distribution.distribute` vs `distribution.distribute` | the second refused | the first refused | the split posted twice |
 | `distribution.distribute` vs `distribution.approve` | refused: not approved | settles | a split posted before the assembly approved it |
+| `distribution.draft` vs `distribution.approve` | the approval splits the draft | the draft is refused: the split is approved | a split changed after the assembly approved it |
+| `distribution.draft` vs `distribution.draft`, one year | the later stands | the later stands | — |
 
 All ordered; right. **Applied**: the floors are those of loi n° 78-763
 du 19 juillet 1978, art. 33, read on Légifrance in its text in force since
@@ -540,12 +551,17 @@ Owner: the `timesheet` feat; the entries and the months are its own.
 | `submit` vs `approve` | the approval settles | refused: not submitted | approved without its member's say |
 | `approve` vs `approve` | the second refused | the first refused | approved twice, by two people |
 | `log` vs `log` | both stand | both stand | — |
+| `correct` vs `approve`, same month | the lower time is what was approved | the correction is refused | a month changes after it is approved, and paid or counted on it |
+| `correct` vs `correct`, one entry | the lower stands | the lower stands | — |
 
 `approve` works like `account.period.close`: it fixes, by receipt order,
 which entries made the month, so every log stays confluent while the
 approval alone is ordered. At rung 1 the entry's trigger reads the month
 `FOR SHARE` and the approval updates it. A day of more than 24 hours is
 two logs each fine alone, so it is not refused; it reads as an anomaly.
+A correction lowers an entry, to none where none was worked, and never
+raises it, so corrections need no order among themselves; time missed
+is an entry of its own. After the approval the month's entries stand.
 
 **Rung 2.** An entry logged offline for a month approved before it
 arrived needs a late-write rule, as a post into a closed period does: it
@@ -778,8 +794,8 @@ The matrix found writes no `ops.ts` declares:
 | erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `client.erase`, `membership.erase` and `.forget` |
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
-| opening a period | ordered | the fiscal year's months exist only as the seed made them |
-| drafting the work share's terms, or a distribution | confluent | adoption and approval act on drafts nothing writes but the seed |
+| opening a period | ordered | the fiscal year's months exist only as the seed made them; **applied**, now `account.period.open` |
+| drafting the work share's terms, or a distribution | confluent | adoption and approval act on drafts nothing writes but the seed; **applied**, now `patronage.terms.draft` and `.distribution.draft`, and a decision's motion moves to approve a draft |
 | paying out the work share's cash | confluent | what `424` still owes after the shares, which nothing pays |
 
 ## Recommended label changes

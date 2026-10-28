@@ -31,3 +31,19 @@ export interface Adopt {
 export interface Adopted extends Adopt {
   adopted: string
 }
+
+// Terms drafted for the members to adopt, from a year on: the weights, the
+// percent employed in shares and the highest rate of interest, each in
+// hundredths of a percent, as a signed request holds integers only.
+export interface DraftTerms {
+  from: number
+  salary: number
+  hours: number
+  equal: number
+  capital: number
+  interest: number
+}
+
+export interface DraftedTerms extends DraftTerms {
+  terms: string
+}

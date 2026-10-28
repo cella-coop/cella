@@ -26,8 +26,9 @@ const typed = (get: (name: string) => string, all: (name: string) => string[]): 
 // the grid's order, the acting worker's own time by their employment: to
 // a project, this graft's booking; the co-op's own time,
 // employment-timesheet's log. Billable is project time. The first refusal
-// stops the rest, the writes before it standing; the outcome shown is the
-// last write's, the others after it.
+// stops the rest, the writes before it standing, and names their cells as
+// spent, so the grid empties them and trying again adds only the rest;
+// the outcome shown is the last write's, the others after it.
 const entered: Action = {
   op: 'employment-project-timesheet:entry:book',
   run: async (form, deps) => {
@@ -36,6 +37,7 @@ const entered: Action = {
       throw new Error('type the hours into a day of a project, or of the co-op’s own time')
     }
     const outcomes: Done[] = []
+    const spent: string[] = []
     for (const c of cells) {
       const entry = { member: deps.actor, day: c.day, minutes: c.minutes, billable: c.project !== '' }
       const done = c.project
@@ -45,9 +47,11 @@ const entered: Action = {
       if (done.state !== 'settled') {
         break
       }
+      spent.push(cell(c.project, c.day))
     }
     const last = outcomes[outcomes.length - 1]
-    return { request: cells, done: { ...last, then: outcomes.slice(0, -1) } }
+    const stopped = last.state !== 'settled' && spent.length > 0
+    return { request: cells, done: { ...last, then: outcomes.slice(0, -1), ...(stopped ? { spent } : {}) } }
   },
 }
 

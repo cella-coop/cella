@@ -277,4 +277,25 @@ test('Inès logs her week in the grid, booking hours to a project where the mand
   )
   assert.equal(ahead.state, 'refused')
   assert.match(reason(ahead), /2026-10-26/)
+  assert.equal(ahead.spent, undefined)
+  // A week stopped part-way names the cells it wrote as spent, so the grid
+  // empties them and trying again adds only the rest, never them twice.
+  const part = await shell.act(
+    '/timesheets',
+    'week',
+    [
+      ['row', '_'],
+      ['day', '2026-10-24'],
+      ['day', '2026-10-26'],
+      ['cell._.2026-10-24', '0,5'],
+      ['cell._.2026-10-26', '1'],
+    ],
+    ines,
+  )
+  assert.equal(part.state, 'refused')
+  assert.deepEqual(
+    part.then.map((t) => t.state),
+    ['settled'],
+  )
+  assert.deepEqual(part.spent, ['cell._.2026-10-24'])
 })

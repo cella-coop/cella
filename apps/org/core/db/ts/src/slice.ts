@@ -17,6 +17,10 @@ export interface Done {
   receipt?: number
   reason?: string
   then: Done[]
+  // The form's fields already written by a write of several that stopped
+  // part-way, such as the cells of a week before its first refusal: the
+  // form empties them, so trying again sends only the rest.
+  spent?: string[]
 }
 
 // The handler's outcome, made plain for the page, and what the reactions

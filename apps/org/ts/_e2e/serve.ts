@@ -20,6 +20,7 @@ export interface Done {
   entry?: number
   reason?: string
   then: Done[]
+  spent?: string[]
 }
 
 // What the server asks a device to sign.

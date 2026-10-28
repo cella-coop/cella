@@ -1,6 +1,6 @@
 +++
 title = "employment-project-timesheet"
-updated = 2026-10-25
+updated = 2026-10-28
 +++
 
 A worker's time on projects by their employment, and the week they enter
@@ -34,7 +34,9 @@ takes the hours to add. Logging the week (`week`) makes one write for
 each cell typed into, in the grid's order: this graft's `book` for a
 project, billable, and `employment-timesheet`'s log for the co-op's own time,
 not billable; the first refusal stops the rest and is shown with the
-writes before it, which stand. Entries are permanent, so a cell only
+writes before it, which stand. Their cells come back as `spent`, and the
+form empties them, so logging the week again adds only what was refused
+and never a cell twice. Entries are permanent, so a cell only
 adds. This week or the one before; a note or an entry's kind other than
 the row's is not offered there.
 

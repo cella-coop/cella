@@ -63,10 +63,17 @@ export interface Embed<E = any> {
 // data on the item.
 export type Embeds = Record<string, { embed: Embed; data: unknown }>
 
+// Who looks at a page: the signed-in person, and the device their
+// session signs with.
+export interface Viewer {
+  actor: string
+  device: string
+}
+
 // A block: a component the detail view renders in its content, given the
-// item's data, or a graft's data on it, the item's id, and the embeds
-// the page's slices draw.
-export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds }>
+// item's data, or a graft's data on it, the item's id, the embeds the
+// page's slices draw, and who looks.
+export type Block<T = any> = Component<{ data: T; id: string; embeds?: Embeds; viewer?: Viewer | null }>
 
 // A block in a tab of the item's page: a bare block sits in the first.
 export type Placed<T = any> = Block<T> | { tab: string; block: Block<T> }

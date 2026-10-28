@@ -48,7 +48,7 @@
 
 {#snippet header()}
   {#each writes as w}
-    <w.block data={w.data} id={data.id} />
+    <w.block data={w.data} id={data.id} viewer={data.viewer} />
   {/each}
 {/snippet}
 
@@ -66,7 +66,7 @@
     actions={writes.length ? header : undefined}
   >
     {#each blocks as b}
-      <b.block data={b.data} id={data.id} {embeds} />
+      <b.block data={b.data} id={data.id} {embeds} viewer={data.viewer} />
     {/each}
   </Detail>
 {/if}

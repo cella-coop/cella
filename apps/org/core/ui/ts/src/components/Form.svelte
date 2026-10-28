@@ -33,6 +33,12 @@
 
   const form = useForm()
 
+  // The fields a refused write names as already written.
+  const spent = (data: Record<string, unknown> | undefined): string[] => {
+    const done = data?.done as { spent?: unknown } | undefined
+    return Array.isArray(done?.spent) ? done.spent.filter((n): n is string => typeof n === 'string') : []
+  }
+
   // One post at a time: a press while one is under way is dropped, since
   // each post signs a write of its own.
   async function onsubmit(e: SubmitEvent) {
@@ -46,6 +52,16 @@
       if (result.type === 'success') {
         if (reset) {
           el.reset()
+        }
+        await refreshAll()
+      } else if (result.type === 'failure' && spent(result.data).length) {
+        // A write of several that stopped part-way: what it wrote
+        // stands, so its fields are emptied and the page shows it.
+        for (const name of spent(result.data)) {
+          const field = el.elements.namedItem(name)
+          if (field instanceof HTMLInputElement) {
+            field.value = ''
+          }
         }
         await refreshAll()
       }

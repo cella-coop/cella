@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-10-25
+updated = 2026-10-28
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -180,7 +180,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   what is added, with the totals; the arrows move between open cells),
   `Button`, `Form` (a write, posting to a named form action, files and
   all, through `post`; `ready` false keeps its button disabled while
-  there is nothing to post),
+  there is nothing to post; the fields a refused write names as `spent`,
+  written before it stopped, are emptied),
   `Field` (text, a number, a date, a time, an address, an email or a
   file; a date is typed in the app's locale and posts as an ISO day, the
   browser's own calendar a button beside it (`DateField`); which `accept` narrows to the media types it offers; a
@@ -303,5 +304,7 @@ address), `repin` putting them back where the first of them stood.
 `Block` and `Embed` describe a slice's client side; an `Embed` is what a
 slice draws inside another's item (a decision inside a document), which a
 graft declares on the page it extends and the detail view hands every
-block as `embeds`; `Done` a write's outcome as
+block as `embeds`; `Viewer` who looks, the signed-in person and the
+device their session signs with, which the detail view hands every block
+as `viewer`, for what only the viewer may do on the page; `Done` a write's outcome as
 the page receives it. A slice's server side is `Slice` in `@cella/org-db`.

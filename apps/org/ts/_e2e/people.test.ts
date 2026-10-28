@@ -239,6 +239,31 @@ test('Bastien\'s probation ends, he is invited, and his admission is proposed fr
   assert.match(after, /moves to admit Bastien; it is open until 17 May 2027/)
 })
 
+test('Malik revokes his phone from his laptop on his own page; the device signing and anyone else\'s are not his to revoke', async () => {
+  const malik = 'malik@lanterne.example'
+  const laptop = await fixture(malik, 'laptop')
+  const phone = await fixture(malik, 'phone')
+  await shell.signIn(malik, laptop)
+  const own = await tab(malik, 'overview', malik)
+  assert.match(own, /laptop, this device/)
+  assert.match(own, /Revoke phone/)
+  assert.doesNotMatch(own, /Revoke laptop/)
+  assert.doesNotMatch(await tab(camille, 'overview', malik), /Revoke/, 'nothing to revoke on someone else\'s page')
+  const itself = await shell.act(`/people/${malik}`, 'revoke', { key: laptop.key }, malik)
+  assert.notEqual(itself.state, 'settled', 'a device never revokes itself')
+  const theirs = await shell.act(`/people/${camille}`, 'revoke', { key: (await fixture(camille, 'phone')).key }, malik)
+  assert.equal(theirs.state, 'refused')
+  const revoked = await shell.act(`/people/${malik}`, 'revoke', { key: phone.key }, malik)
+  assert.equal(revoked.state, 'settled', revoked.reason)
+  assert.deepEqual(
+    await all(`SELECT label, revoked IS NOT NULL AS revoked FROM person.device WHERE address = $1 ORDER BY label`, [malik]),
+    [{ label: 'laptop', revoked: false }, { label: 'phone', revoked: true }],
+  )
+  const after = await tab(malik, 'overview', malik)
+  assert.doesNotMatch(after, /Revoke/)
+  assert.match(after, /This is your only current device/)
+})
+
 test('the log the scenario wrote verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })

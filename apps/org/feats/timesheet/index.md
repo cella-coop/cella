@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-10-25
+updated = 2026-10-28
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -28,14 +28,16 @@ The note is the member's own words and stays out of the log.
 | Write | Label | Power | Why |
 |---|---|---|---|
 | `timesheet:entry:log` | confluent | `log-time` | entries add up in any order |
+| `timesheet:entry:correct` | confluent | `log-time` | lowers the member's own entry, to none where none was worked: two corrections leave the lower in any order |
 | `timesheet:period:submit` | confluent | `log-time` | a flag the member sets on their own month; submitting again keeps the first day |
 | `timesheet:period:approve` | ordered | `approve-time` | closes the month to new entries: it fixes which entries were approved |
 
-A log and an approval of its month do not commute: logged first, the
-entry is in what was approved; approved first, it is refused. Approval is
-therefore ordered, as closing a period of the books is, and every log
-stays confluent. At rung 1 the entry's trigger reads its period `FOR
-SHARE` and the approval updates it, so Postgres serialises the two.
+A log or a correction and an approval of its month do not commute:
+logged or corrected first, the entry is in what was approved as it then
+stands; approved first, it is refused. Approval is therefore ordered, as
+closing a period of the books is, and every log and correction stays
+confluent. At rung 1 the entry's triggers read its period `FOR SHARE` and
+the approval updates it, so Postgres serialises them.
 
 ## Powers
 
@@ -44,8 +46,9 @@ SHARE` and the approval updates it, so Postgres serialises the two.
 | `log-time` | every member, through the `member` role's mandate |
 | `approve-time` | the circle leads, finance and the gérante |
 
-Logging and submitting are also the member's own (`timesheet.logs`,
-`timesheet.submits`), and approving never is (`timesheet.approves`).
+Logging, correcting and submitting are also the member's own
+(`timesheet.logs`, `timesheet.corrects`, `timesheet.submits`), and
+approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
 `circle-membership` graft checks them; that a lead approves only their own
 circle's members is `circle-membership-timesheet`'s. A worker logs and
@@ -58,9 +61,12 @@ holds no seat and so no `log-time`.
 
 - an entry is the actor's own time, on a day that has come
   (`timesheet.logs`);
-- an entry is more than no time and at most a day;
-- no entry goes into an approved month (`timesheet.open_period`,
-  SQLSTATE `09000`);
+- an entry is logged as more than no time (`timesheet.some_time`) and
+  is at most a day;
+- an entry changes only by lowering its time, to none at the least, and
+  is the actor's own (`timesheet.lowers`, `timesheet.corrects`);
+- no entry goes into an approved month, nor is corrected in one
+  (`timesheet.open_period`, `timesheet.lowers`, SQLSTATE `09000`);
 - a month is submitted by its member and holds time (`timesheet.submits`);
 - a month is approved once it is over, only once submitted, by someone
   other than its member, and stays approved (`timesheet.approves`,
@@ -68,15 +74,19 @@ holds no seat and so no `log-time`.
 
 A day of more than 24 hours across entries is not refused, since two
 entries logged apart can each pass and together exceed it; the fixture
-check keeps Lanterne's days plausible. Entries are permanent: an edit or
-a deletion is not built, so a mistake is corrected only in a later month.
+check keeps Lanterne's days plausible. A mistake is corrected before
+the month is approved: an entry typed too high is lowered, to none where
+none was worked, and the log keeps what it was logged as and each
+correction; time missed is an entry of its own. Once the month is
+approved its entries stand, and correcting one then is not built.
 
 ## Schema
 
 `timesheet` (`core/sql/`): `timesheet.entry`, `timesheet.period` and
 `timesheet.sheet`, each month's hours, billable hours, entries and state.
-The app role may select and insert entries and update periods; the rules
-role may select.
+The app role may select and insert entries, update their minutes, and
+update periods; the rules role may select. A month's `entries` counts
+those with time in them.
 
 ## Reads
 
@@ -92,9 +102,10 @@ acting worker's week (`employment-project-timesheet`): a project to a row,
 the co-op's own time last, and a day to a column, each cell adding the
 hours typed into it by their employment, booked to the row's project;
 the feat's own one-entry form, with a note, is what that replaces. An
-entry's page shows its worker's month and, in its header, submits it
-while open or approves it once submitted; a person's page
-list their months with the same writes (`employment-timesheet`,
+entry's page shows its worker's month and, in its header, lets its
+member correct the entry's hours down while the month is not approved,
+and submits the month while open or approves it once submitted; a
+person's page lists their months with the same writes (`employment-timesheet`,
 `membership-timesheet`).
 
 ## Lanterne

@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-10-25
+updated = 2026-10-28
 +++
 
 # Conflicts
@@ -68,10 +68,11 @@ decision. Lanterne's state is that of 24 October 2026.
 | `client-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client |
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
+| `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
 | `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
 | `employment-membership:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
-| `employment-timesheet:entry.log`, `:period.submit` | confluent | right: the feat's log and submit by the worker's employment, contending as those do |
+| `employment-timesheet:entry.log`, `:entry.correct`, `:period.submit` | confluent | right: the feat's log, correction and submit by the worker's employment, contending as those do |
 | `employment-project-timesheet:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
 | `document-membership:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
@@ -540,12 +541,17 @@ Owner: the `timesheet` feat; the entries and the months are its own.
 | `submit` vs `approve` | the approval settles | refused: not submitted | approved without its member's say |
 | `approve` vs `approve` | the second refused | the first refused | approved twice, by two people |
 | `log` vs `log` | both stand | both stand | — |
+| `correct` vs `approve`, same month | the lower time is what was approved | the correction is refused | a month changes after it is approved, and paid or counted on it |
+| `correct` vs `correct`, one entry | the lower stands | the lower stands | — |
 
 `approve` works like `account.period.close`: it fixes, by receipt order,
 which entries made the month, so every log stays confluent while the
 approval alone is ordered. At rung 1 the entry's trigger reads the month
 `FOR SHARE` and the approval updates it. A day of more than 24 hours is
 two logs each fine alone, so it is not refused; it reads as an anomaly.
+A correction lowers an entry, to none where none was worked, and never
+raises it, so corrections need no order among themselves; time missed
+is an entry of its own. After the approval the month's entries stand.
 
 **Rung 2.** An entry logged offline for a month approved before it
 arrived needs a late-write rule, as a post into a closed period does: it

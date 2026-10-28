@@ -1,7 +1,8 @@
 // The timesheets alone, on a database holding only the app's core and
-// this feat: an entry makes its member's month, an approved month takes no
-// entry and stays approved, only a submitted month is approved, and the
-// rules refuse what is not the actor's own. Run by `cella test slice
+// this feat: an entry makes its member's month, is corrected only by
+// lowering its time, an approved month takes no entry nor correction and
+// stays approved, only a submitted month is approved, and the rules refuse
+// what is not the actor's own. Run by `cella test slice
 // timesheet`.
 
 import { after, before, test } from 'node:test'
@@ -65,11 +66,24 @@ test('an entry makes its member\'s month, open, and the sheet adds its hours up'
 })
 
 test('an entry is more than no time and at most a day', async () => {
-  for (const hours of [0, 24.5]) {
+  for (const [hours, says] of [[0, /an entry of no time is not logged/], [24.5, /entry_minutes_check/]] as const) {
     await db.query('BEGIN')
-    await assert.rejects(log('2026-10-14', hours), /entry_minutes_check/)
+    await assert.rejects(log('2026-10-14', hours), says)
     await db.query('ROLLBACK')
   }
+})
+
+test('an entry is corrected by lowering its time, to none, and the sheet reads what it says now', async () => {
+  const seven = `SELECT id FROM timesheet.entry WHERE member = '${lea}' AND day = '2026-10-13'`
+  await db.query(`UPDATE timesheet.entry SET minutes = 120 WHERE id = (${seven})`)
+  const sheet = async () =>
+    (await db.query(`SELECT hours::float8 AS hours, billable::float8 AS billable, entries FROM timesheet.sheet WHERE member = $1`, [lea])).rows[0]
+  assert.deepEqual(await sheet(), { hours: 9, billable: 5, entries: 3 })
+  await refused(() => db.query(`UPDATE timesheet.entry SET minutes = 180 WHERE id = (${seven})`), /is corrected only by lowering its time/)
+  await refused(() => db.query(`UPDATE timesheet.entry SET day = '2026-10-14' WHERE id = (${seven})`), /is corrected only by lowering its time/)
+  await refused(() => db.query(`UPDATE timesheet.entry SET billable = false WHERE id = (${seven})`), /is corrected only by lowering its time/)
+  await db.query(`UPDATE timesheet.entry SET minutes = 0 WHERE id = (${seven})`)
+  assert.deepEqual(await sheet(), { hours: 7, billable: 3, entries: 2 })
 })
 
 test('only a submitted month is approved', async () => {
@@ -90,11 +104,17 @@ test('an approved month takes no new entry, and stays approved', async () => {
     () => db.query(`UPDATE timesheet.period SET submitted = '2026-11-03' WHERE member = $1 AND month = '2026-10'`, [lea]),
     /was approved on 2026-11-02/,
   )
+  await refused(
+    () => db.query(`UPDATE timesheet.entry SET minutes = 60 WHERE member = $1 AND day = '2026-10-12'`, [lea]),
+    /lea@lanterne.example's 2026-10 was approved on 2026-11-02: its entries stand/,
+  )
   await log('2026-11-02', 7)
 })
 
 test('outside a write the rules judge no one\'s time their own', async () => {
   assert.match((await rule('logs', { member: lea, day: '2026-10-12' })) ?? '', /may not log time for lea@lanterne.example/)
+  assert.match((await rule('corrects', { entry: '1', minutes: 0 })) ?? '', /may not correct lea@lanterne.example's time/)
+  assert.equal(await rule('corrects', { entry: '0', minutes: 0 }), 'no entry 0')
   assert.match((await rule('submits', { member: lea, month: '2026-11' })) ?? '', /may not submit lea@lanterne.example's time/)
   assert.match((await rule('approves', { member: lea, month: '2026-10' })) ?? '', /was not approved by this write/)
   assert.equal(await rule('approves', { member: lea, month: '2025-01' }), 'no timesheet lea@lanterne.example 2025-01')

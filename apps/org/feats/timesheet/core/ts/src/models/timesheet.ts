@@ -55,6 +55,19 @@ export interface Logged {
   billable: boolean
 }
 
+// A correction names the entry and the whole minutes it comes down to:
+// none, where the time was never worked.
+export interface Correct {
+  entry: string
+  minutes: number
+}
+
+export interface Corrected extends Correct {
+  // Whose entry it is and its day; none where there is no such entry.
+  member: string | null
+  day: string | null
+}
+
 export interface Period {
   member: string
   month: string

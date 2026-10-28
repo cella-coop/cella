@@ -1,5 +1,6 @@
 +++
 title = "4. Small Civil Society"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/04-small-civil.md, carried verbatim"
 +++

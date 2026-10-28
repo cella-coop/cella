@@ -13,7 +13,7 @@
 //! remain for legacy Ed25519 material.
 //!
 //! corpus:article/architecture
-//! corpus:decision/26-08-15-post-quantum-by-default
+//! Rests on cella-old:change/26-08-15-post-quantum-by-default.
 
 #![warn(missing_docs)]
 

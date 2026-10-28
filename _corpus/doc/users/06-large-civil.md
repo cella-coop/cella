@@ -1,5 +1,6 @@
 +++
 title = "6. Large Civil Society"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/06-large-civil.md, carried verbatim"
 +++

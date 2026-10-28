@@ -1,5 +1,6 @@
 +++
 title = "7. Small Government"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/07-small-gov.md, carried verbatim"
 +++

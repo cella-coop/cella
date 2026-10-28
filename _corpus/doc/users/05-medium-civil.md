@@ -1,5 +1,6 @@
 +++
 title = "5. Medium Civil Society"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/05-medium-civil.md, carried verbatim"
 +++

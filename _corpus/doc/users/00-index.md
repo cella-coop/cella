@@ -1,5 +1,6 @@
 +++
 title = "Customer Profile: Member-Owned Organizations"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/00-index.md, carried verbatim"
 +++
@@ -58,4 +59,4 @@ Each segment includes: **Primary modules**, **Related** segments, **Pain points*
 
 9. [Large Government](09-large-gov.md) — Out of scope (specialized parliamentary systems)
 
-10. [Terminology Glossary](10-glossary.md) — Patronage, surplus, reserves, consensus, sortition, etc.
+10. [Terminology Glossary](../glossary.md) — Patronage, surplus, reserves, consensus, sortition, etc.

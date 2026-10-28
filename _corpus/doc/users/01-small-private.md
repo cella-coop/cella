@@ -1,5 +1,6 @@
 +++
 title = "1. Small Private Sector"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/01-small-private.md, carried verbatim"
 +++

@@ -1,5 +1,6 @@
 +++
 title = "9. Large Government"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/09-large-gov.md, carried verbatim"
 +++

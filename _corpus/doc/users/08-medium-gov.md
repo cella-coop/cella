@@ -1,5 +1,6 @@
 +++
 title = "8. Medium Government"
+type = "doc"
 updated = 2026-10-25
 source = "seedling specs/user/08-medium-gov.md, carried verbatim"
 +++

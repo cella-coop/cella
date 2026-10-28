@@ -21,7 +21,7 @@
 //!     `cella-runtime`, since subscriptions are a runtime concern)
 //!
 //! corpus:article/architecture
-//! corpus:decision/26-06-26-the-log-entry-is-the-claim
+//! Rests on cella-old:change/26-06-26-the-log-entry-is-the-claim.
 
 #![warn(missing_docs)]
 

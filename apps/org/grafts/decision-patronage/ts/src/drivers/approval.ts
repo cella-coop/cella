@@ -14,3 +14,12 @@ export async function approvals(db: Db, by: { distribution: string } | { decisio
   const { rows } = await db.query<Approval>(`SELECT ${columns} ${from} WHERE ${where} = $1 ORDER BY l.year DESC`, [value])
   return rows
 }
+
+// The drafted distributions a new decision may move to approve, as its
+// New form offers them.
+export async function drafts(db: Db): Promise<{ value: string; label: string }[]> {
+  const { rows } = await db.query<{ value: string; label: string }>(
+    `SELECT l.id AS value, l.year || ' distribution' AS label FROM patronage.distribution l WHERE l.approved IS NULL ORDER BY l.year`,
+  )
+  return rows
+}

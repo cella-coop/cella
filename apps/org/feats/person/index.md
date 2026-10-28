@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-10-25
+updated = 2026-10-28
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -205,9 +205,11 @@ children's: an invitation and a hire, each under its title. A person's
 page holds their address and devices, with the profile write on it; the
 children add their membership's and employment's properties and tabs
 (Joining, Own and decide), and the grafts joining them the rest. The
-`devices` collection lists every device, current ones first. Enrolling
-and revoking sign from the person's own device, which the dev shell does
-not hold, so neither is offered. The dev server signs as a person with a
+`devices` collection lists every device, current ones first. On a person's
+own page the device their session signs with is marked as this device,
+and each other current one has its revoke, signed from this one; with
+none, the page says it is their only device. Enrolling a later device
+from a current one is not offered yet. The dev server signs as a person with a
 device's TEST-ONLY fixture key only when it is the key enrolled under that
 label and not revoked.
 

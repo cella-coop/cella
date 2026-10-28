@@ -1,5 +1,5 @@
 import { action, type Slice } from '@cella/org-db'
-import { forget, profile } from '../handlers/index.ts'
+import { forget, profile, revoke } from '../handlers/index.ts'
 import { devices, listing as listed } from '../drivers/device.ts'
 import { listing, people, person } from '../drivers/person.ts'
 
@@ -8,8 +8,8 @@ import { listing, people, person } from '../drivers/person.ts'
 // profile writes there. Who comes in, by an invitation or a hire, is the
 // children's. The inbox, what waits on the acting person, is filled by
 // the slices that know each kind of ask; this feat keeps none of its own.
-// Every device, listed. Enrolling and revoking sign from a person's own
-// device, which the dev shell does not hold, so neither is offered here.
+// Every device, listed. A person revokes one of their devices from
+// another, on their own page; enrolling a later device is not offered yet.
 export const slice: Slice = {
   name: 'person',
   collections: {
@@ -23,6 +23,7 @@ export const slice: Slice = {
       actions: {
         profile: action('person:person:profile', (form, id) => ({ person: id ?? '', name: form.get('name') || undefined }), profile),
         forget: action('person:person:forget', (_, id) => ({ person: id ?? '' }), forget),
+        revoke: action('person:device:revoke', (form) => ({ key: form.get('key') }), revoke),
       },
     },
     inbox: {},

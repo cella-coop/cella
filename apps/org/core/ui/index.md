@@ -304,5 +304,7 @@ address), `repin` putting them back where the first of them stood.
 `Block` and `Embed` describe a slice's client side; an `Embed` is what a
 slice draws inside another's item (a decision inside a document), which a
 graft declares on the page it extends and the detail view hands every
-block as `embeds`; `Done` a write's outcome as
+block as `embeds`; `Viewer` who looks, the signed-in person and the
+device their session signs with, which the detail view hands every block
+as `viewer`, for what only the viewer may do on the page; `Done` a write's outcome as
 the page receives it. A slice's server side is `Slice` in `@cella/org-db`.

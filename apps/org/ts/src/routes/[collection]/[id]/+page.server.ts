@@ -19,7 +19,9 @@ export const load: PageServerLoad = async ({ params, locals }) => {
     const added = await Promise.all(
       m.extensions.filter((e) => e.extension.item).map(async (e) => [e.slice.name, await e.extension.item?.(db, params.id, locals.actor)] as const),
     )
-    return { name: params.collection, id: params.id, item: found, added: Object.fromEntries(added) }
+    // Who looks, for a block that offers what only the viewer may do.
+    const viewer = locals.session && { actor: locals.session.actor, device: locals.session.device }
+    return { name: params.collection, id: params.id, item: found, added: Object.fromEntries(added), viewer }
   })
 }
 

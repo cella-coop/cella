@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -132,8 +132,9 @@ arrives at rung 3.
   `voided`). The excess of a payment beyond the total is `credit`, owed
   to the client; on a voided invoice everything paid is.
 - `invoice.taxed`: each invoice's VAT by rate, the net of its lines at
-  the rate and the tax on it in cents, each line's tax rounded as `issue`
-  rounds it, so the rates add up to the invoice's `vat`.
+  the rate and the tax on it in cents, each line's tax rounded by
+  `cella.line_vat` as `issue` rounds it, so the rates add up to the
+  invoice's `vat`.
 
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net; another keeps an issued invoice and its lines unchanged,
@@ -159,10 +160,11 @@ Each handler is also a write spec (`issuing`, `paying`, `voiding`) that a
 graft composes with its own state into one write.
 
 - `issue` (bounded): spends the number and writes the invoice and its
-  lines in one statement, amounts and VAT computed in SQL from the lines;
-  each line's VAT rate comes in hundredths of a percent (550 for 5,5 %),
-  since a signed request holds integers only; the payload holds the number and amounts, never the name or address
-  billed.
+  lines in one statement, amounts and VAT computed in SQL from the lines
+  by the [VAT core library](../../core/vat/index.md)'s `priced`, as a
+  bill's are; each line's VAT rate comes in hundredths of a percent (550
+  for 5,5 %), since a signed request holds integers only; the payload
+  holds the number and amounts, never the name or address billed.
 - `send` (confluent): sets `sent` once; a voided invoice is left unsent.
 - `payment` (confluent): records the payment with a receipt; a reference
   already recorded for the invoice merges and returns `merged`.

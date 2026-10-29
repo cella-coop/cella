@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 # Architecture
@@ -45,8 +45,9 @@ A node is a directory with a `feat.toml`. It holds:
   core is its shared library layer: `ops` (labels, permissions, outcomes),
   `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
   (the `cella` Postgres extension over them), `db` (a write's transaction),
-  `sign` (a device's signature on a write), `ui` (the shell's tokens and
-  components) and later `auth`. A leaf feat's core is all of it.
+  `sign` (a device's signature on a write), `vat` (a document's lines,
+  their amounts and VAT, which invoices and bills share), `ui` (the
+  shell's tokens and components) and later `auth`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between the feats below it, at any depth, that no
   child of it holds all of ([grafts](#grafts)).

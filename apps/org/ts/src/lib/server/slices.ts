@@ -33,6 +33,7 @@ import { slice as projectTask } from '@cella/org-graft-project-task/api'
 import { slice as projectTimesheet } from '@cella/org-graft-project-timesheet/api'
 import { slice as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/api'
 import { slice as expense } from '@cella/org-expense/api'
+import { slice as bill } from '@cella/org-bill/api'
 import { slice as payslip } from '@cella/org-payslip/api'
 import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
 import { slice as accountMembership } from '@cella/org-graft-account-membership/api'
@@ -47,6 +48,7 @@ import { slice as patronageTransaction } from '@cella/org-graft-patronage-transa
 import { slice as expenseMembership } from '@cella/org-graft-expense-membership/api'
 import { slice as expenseProject } from '@cella/org-graft-expense-project/api'
 import { slice as expenseTransaction } from '@cella/org-graft-expense-transaction/api'
+import { slice as billTransaction } from '@cella/org-graft-bill-transaction/api'
 import { slice as payslipTimesheet } from '@cella/org-graft-payslip-timesheet/api'
 import { slice as payslipTransaction } from '@cella/org-graft-payslip-transaction/api'
 import { slice as meeting } from '@cella/org-meeting/api'
@@ -104,6 +106,7 @@ export const slices: Slice[] = [
   patronage,
   transaction,
   expense,
+  bill,
   payslip,
   log,
   circleMembership,
@@ -134,6 +137,7 @@ export const slices: Slice[] = [
   expenseMembership,
   expenseProject,
   expenseTransaction,
+  billTransaction,
   payslipTimesheet,
   payslipTransaction,
   circleMeeting,

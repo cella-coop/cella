@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -43,8 +43,9 @@ before issue, a distribution before its approval).
   order and never wait. The right to take money out of a
   share is `account.draw`'s, not this write's; it posts through
   `account-transaction`.
-- **pay** pays a supplier: one entry debiting `401` (fournisseurs) and
-  crediting `512` (the bank) by the amount paid. It commutes as any entry
+- **pay** pays a supplier with no bill behind it: one entry debiting
+  `401` (fournisseurs) and crediting `512` (the bank) by the amount paid;
+  a recorded bill is paid by the bill's own write. It commutes as any entry
   does; what it takes from the bank is capped by the payer's mandate.
 - **adjust** posts a correcting entry, naming the entry it corrects
   (`base: 'corrected'`): the notary refuses a second correction of the
@@ -88,7 +89,8 @@ What it does not own:
   `invoice-transaction` graft's;
 - the writes that take money out of the bank besides `pay`: a member's
   draw (`account-membership-transaction`), an expense reimbursed
-  (`expense-transaction`) and a pay run paid (`payslip-transaction`), each
+  (`expense-transaction`), a supplier's bill paid (`bill-transaction`)
+  and a pay run paid (`payslip-transaction`), each
   posting through `record` under its own right and rule.
 
 ## What it does not know
@@ -164,7 +166,7 @@ each with the sum of its debits; an entry's page lists its lines and the
 entries that correct it. `/journal` and its entries' old addresses
 redirect there. Posting
 from the shell is not offered: the pilot's entries come from invoices,
-through `invoice-transaction`.
+bills and expenses, through their grafts.
 
 ## Lanterne
 

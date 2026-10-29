@@ -33,6 +33,7 @@ import { app as projectTask } from '@cella/org-graft-project-task/app'
 import { app as projectTimesheet } from '@cella/org-graft-project-timesheet/app'
 import { app as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/app'
 import { app as expense } from '@cella/org-expense/app'
+import { app as bill } from '@cella/org-bill/app'
 import { app as payslip } from '@cella/org-payslip/app'
 import { app as accountDecision } from '@cella/org-graft-account-decision/app'
 import { app as accountMembership } from '@cella/org-graft-account-membership/app'
@@ -47,6 +48,7 @@ import { app as patronageTransaction } from '@cella/org-graft-patronage-transact
 import { app as expenseMembership } from '@cella/org-graft-expense-membership/app'
 import { app as expenseProject } from '@cella/org-graft-expense-project/app'
 import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/app'
+import { app as billTransaction } from '@cella/org-graft-bill-transaction/app'
 import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/app'
 import { app as meeting } from '@cella/org-meeting/app'
 import { app as circleMeeting } from '@cella/org-graft-circle-meeting/app'
@@ -95,6 +97,7 @@ export const apps: App[] = [
   patronage,
   transaction,
   expense,
+  bill,
   payslip,
   log,
   decisionEmploymentMembership,
@@ -127,6 +130,7 @@ export const apps: App[] = [
   expenseMembership,
   expenseProject,
   expenseTransaction,
+  billTransaction,
   payslipTransaction,
   circleMeeting,
   decisionMeeting,

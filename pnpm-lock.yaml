@@ -78,6 +78,12 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
+  apps/org/core/vat/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../db/ts
+
   apps/org/feats/account/core/ts:
     dependencies:
       '@cella/org-db':
@@ -89,6 +95,24 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/feats/bill/core/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../../core/ops/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../../core/ui/ts
+      '@cella/org-vat':
+        specifier: workspace:*
+        version: link:../../../../core/vat/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -230,6 +254,9 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
+      '@cella/org-vat':
+        specifier: workspace:*
+        version: link:../../../../core/vat/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -558,6 +585,27 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../../../feats/account/core/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-ops':
+        specifier: workspace:*
+        version: link:../../../core/ops/ts
+      '@cella/org-transaction':
+        specifier: workspace:*
+        version: link:../../../feats/transaction/core/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../../core/ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
+  apps/org/grafts/bill-transaction/ts:
+    dependencies:
+      '@cella/org-bill':
+        specifier: workspace:*
+        version: link:../../../feats/bill/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1392,6 +1440,9 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../feats/account/core/ts
+      '@cella/org-bill':
+        specifier: workspace:*
+        version: link:../feats/bill/core/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../feats/circle/core/ts
@@ -1437,6 +1488,9 @@ importers:
       '@cella/org-graft-account-transaction':
         specifier: workspace:*
         version: link:../grafts/account-transaction/ts
+      '@cella/org-graft-bill-transaction':
+        specifier: workspace:*
+        version: link:../grafts/bill-transaction/ts
       '@cella/org-graft-circle-decision':
         specifier: workspace:*
         version: link:../grafts/circle-decision/ts

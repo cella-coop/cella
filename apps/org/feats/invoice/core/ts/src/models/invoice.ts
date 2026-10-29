@@ -1,3 +1,9 @@
+import type { Line, Taxed } from '@cella/org-vat'
+
+// A line and the VAT by rate, as the VAT core library counts them for
+// invoices and bills alike.
+export type { Line, Taxed }
+
 export type Standing = 'unpaid' | 'partial' | 'paid' | 'overpaid' | 'voided'
 
 // An invoice as the feat lists it, amounts in cents, its standing read
@@ -55,17 +61,6 @@ export interface Detail extends Listed {
 export interface Issuing {
   series: { name: string; next: number }[]
   billed: string[]
-}
-
-export interface Line {
-  description: string
-  // A decimal, as text, so that 2.5 days stays exact.
-  quantity: string
-  // Cents.
-  unit_price: number
-  // A percentage in hundredths, so that a signed request holds an
-  // integer: 2000 for France's standard rate, 550 for 5,5 %.
-  vat_rate: number
 }
 
 export interface Issue {
@@ -140,13 +135,6 @@ export interface Seller {
   rcs: string | null
   vat: string | null
   seat: string | null
-}
-
-// The net of the lines at one VAT rate and the tax on it, in cents.
-export interface Taxed {
-  rate: string
-  base: number
-  tax: number
 }
 
 // What an invoice's PDF prints: the invoice as issued, its VAT by rate

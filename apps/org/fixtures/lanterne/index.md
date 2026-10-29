@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 # Lanterne
@@ -27,11 +27,13 @@ coordination, which meets weekly.
 
 Camille is the gérante, elected in June 2024 for four years, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
-keeps the books, issues invoices, pays suppliers up to 3 000 € a payment,
+keeps the books, issues invoices, records suppliers' bills and pays them
+up to 3 000 € a payment,
 prepares and pays the monthly pay run, which Camille approves, reimburses
 expenses up to 3 000 € and closes each month. Leads approve their
 members' expenses up to 1 000 € a month each, Camille up to 2 000 € an
-expense, and leads quote up to 15 000 €.
+expense and suppliers' bills up to 5 000 € a bill, and leads quote up to
+15 000 €.
 Leads and the gérante run projects and set their budgets, the leads up to
 15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
 those of their own circle's members; Julien, seated in the assembly as
@@ -95,7 +97,9 @@ Camille hires, and opens a new hire's candidacy for membership.
   each. Inès was paid apart from them by the previous tool; from October
   her 2 200 € is a run's, and October's waits for every worker's October
   to be approved, hers with the members'. Four October expenses are
-  claimed, three submitted.
+  claimed, three submitted. Two suppliers' bills are recorded and wait
+  for Camille's approval: Imprimerie du Parc's paper, 1 440 €, and
+  Atelier Lumen's October rent, 1 080 €.
 - **Work (confluent, bounded and ordered).** Eight projects, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's
@@ -155,7 +159,8 @@ of file the co-op might bring from the tools it leaves, with lines the
 rules refuse beside the ones they take ([the samples](import/index.md));
 nothing seeds them.
 
-Pay runs and expenses are `payslip.toml` and `expense.toml`;
+Pay runs, expenses and bills are `payslip.toml`, `expense.toml` and
+`bill.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its
 member's shares at the share's value the statutes give, or, once they
 left, nothing, their repayments adding up to it, due as the statutes

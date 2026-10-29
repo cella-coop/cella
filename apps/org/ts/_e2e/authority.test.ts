@@ -9,7 +9,8 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
 import { pay, post } from '@cella/org-transaction/api'
-import { close, vote } from '@cella/org-decision/api'
+import { close as closing, vote } from '@cella/org-decision/api'
+import { close } from '@cella/org-graft-circle-decision-membership/api'
 import { profile } from '@cella/org-person/api'
 import { enrol, revoke } from '@cella/org-person/api'
 import { add, update } from '@cella/org-client/api'
@@ -258,6 +259,10 @@ test('a closed decision\'s outcome stays fixed when a member is suspended after'
   const before = await head()
   const outsider = await close({ decision: 'd-2026-011' }, as(chloe))
   assert.match(reason(outsider), /chloe@lanterne\.example holds no seat in coordination, so may not close d-2026-011/)
+  assert.equal(await head(), before)
+  // The decision feat's close alone counts no roll, and is refused.
+  const uncounted = await closing({ decision: 'd-2026-011' }, as(camille))
+  assert.match(reason(uncounted), /d-2026-011's close did not count its roll/)
   assert.equal(await head(), before)
   const closed = await close({ decision: 'd-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')

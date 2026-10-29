@@ -27,10 +27,12 @@ here.
   It runs with its owner's rights, since nothing else writes the roll; the
   app role and the rules role, `cella_rules`, may select it.
 - `circle_decision_membership.counted`: who was counted, the members on a
-  decision's roll who were active (`membership.active`) on the day it closed, fixed by
-  `count_roll`, a trigger as the close writes the decision, in the close's
-  own transaction. A suspension or exit after the close cannot change the
-  outcome; the same trigger rights apply.
+  decision's roll who were active (`membership.active`) on the day it
+  closed, fixed by `circle_decision_membership.count(decision)`, which this
+  graft's `close` calls in the close's own write. A suspension or exit
+  after the close cannot change the outcome. `count` runs with its owner's
+  rights, since nothing else writes the table, and only the app role may
+  call it.
 - `circle_decision_membership.seating`: the seats decisions give and end: an
   admission's, in the decision's circle as `member`, and those the
   `seat` and `unseat` motions name, kinds this graft registers in
@@ -88,18 +90,21 @@ coordination's, counts its five.
   passing close admitted everyone the decision admits, each seated by
   `seats` as a seat of its own would be; a close that does not pass
   admits no one.
+- `circle_decision_membership.counts`, on `decision:decision:close`: those
+  counted are exactly the members of the roll active on the verdict date,
+  so a close that did not count its roll, as the decision feat's own
+  `close` alone does not, is refused.
 
 ## Handlers
 
 - `close` (ordered), replacing the decision feat's in the shell: the
-  decision feat's `closing`, then, when it passes on its roll, for each
-  member it admits the membership feat's `admitting` and circle-membership's
-  `seating`, all in one transaction under one verdict, which
-  membership's trigger follows by enrolling each one's first device.
+  decision feat's `closing`, then `count`, then, when it passes on its
+  roll, for each member it admits the membership feat's `admitting` and
+  circle-membership's `seating`, all in one transaction under one verdict.
   It submits the close with `admitted`, each member and their seat; the
-  rules of each slice judge it (`decision.closes`, `sits`, `settles`,
-  `decision_membership.closes`), and a refused seat, or an invitation that
-  carries no device, refuses the whole close.
+  rules of each slice judge it (`decision.closes`, `sits`, `counts`,
+  `settles`, `decision_membership.closes`), and a refused seat refuses the
+  whole close.
 - `carried(decision)`: on a settled close of a passing decision, carries
   out its other motions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its rules: a

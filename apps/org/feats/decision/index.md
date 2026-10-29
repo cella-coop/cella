@@ -1,6 +1,6 @@
 +++
 title = "Decision"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Proposals, votes and outcomes. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once.
@@ -48,7 +48,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch. A stance for another member, off the roll or on a closed decision returns `Refused`, as the rules and the trigger rule it; the handler throws for none of them.
 - `propose` (confluent): inserts the decision by the procedure it names, its rule the procedure's, numbered the year's next (`d-2026-013`) under a lock on the numbering, proposed on the verdict date, and its motions; the roll is fixed as it is inserted. Submits `{ decision, circle, procedure, deadline, motions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another; the form reads the handles it mentions and the documents it links from its text (`models/thread.ts`). Submits `{ decision, member, message, reply, mentions, links }`, without the text.
-- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-decision-membership` replaces it in the shell with a close that admits and seats in the same verdict.
+- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-decision-membership` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its rule `counts` refuses it.
 
 ## Grafts
 

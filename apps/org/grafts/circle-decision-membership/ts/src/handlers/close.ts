@@ -13,16 +13,16 @@ export interface Admitted {
   position: number
 }
 
-// Closes a decision and, when it passes on its roll, admits everyone it
-// admits and seats each in its circle as `member`, all in the close's one
-// transaction under one verdict: the decision feat's close, then for each
-// admission the membership feat's and circle-membership's state, which membership's
-// trigger follows by enrolling the invitation's device. The rules of each
-// slice judge it: the close's own, `decision_membership.closes` that each was
-// asked and admitted with its shares, `circle_decision_membership.settles`
-// that a passing close admitted and seated them all and a failing one no
-// one. A refused seat, or a device no invitation carried, refuses the
-// whole close.
+// Closes a decision, counts its roll and, when it passes on it, admits
+// everyone it admits and seats each in its circle as `member`, all in the
+// close's one transaction under one verdict: the decision feat's close,
+// then who is counted, the roll's members active that day, then for each
+// admission the membership feat's and circle-membership's state. The rules
+// of each slice judge it: the close's own, `counts` that the roll was
+// counted, `decision_membership.closes` that each was asked and admitted
+// with its shares, `circle_decision_membership.settles` that a passing
+// close admitted and seated them all and a failing one no one. A refused
+// seat refuses the whole close.
 export async function close(input: Close, deps: Deps): Promise<Settled<Closed & { admitted: Admitted[] }> | Refused> {
   const w = closing(input)
   return write(deps, {
@@ -30,6 +30,7 @@ export async function close(input: Close, deps: Deps): Promise<Settled<Closed & 
     request: w.request,
     state: async (tx, proof) => {
       const closed = await w.state(tx, proof)
+      await tx.query('SELECT circle_decision_membership.count($1)', [input.decision])
       const { rows } = await tx.query<{ member: string; shares: number; circle: string }>(
         `SELECT a.member, a.shares, d.circle
          FROM decision_membership.motion a JOIN decision.decision d ON d.id = a.decision

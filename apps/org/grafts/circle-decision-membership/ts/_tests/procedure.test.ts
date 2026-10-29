@@ -1,8 +1,9 @@
 // Whether a decision passes by its procedure, on a database holding the
 // app's core, the circle, decision and member feats and the grafts beneath
 // this one: two thirds of the votes cast, abstentions counting for neither;
-// a quorum of those counted, an abstention taking part; and who counts
-// while a decision is open, and at its close. Run by
+// a quorum of those counted, an abstention taking part; who counts while
+// a decision is open, and at its close; and `counts`, which refuses a
+// close that did not count its roll. Run by
 // `cella test slice circle-decision-membership`.
 
 import { after, before, test } from 'node:test'
@@ -26,6 +27,8 @@ const passes = async (decision: string) =>
   (await db.query<{ p: boolean | null }>('SELECT circle_decision_membership.passes($1) AS p', [decision])).rows[0].p
 const turnout = async (decision: string) =>
   (await db.query('SELECT counted, given, quorate FROM circle_decision_membership.turnout($1)', [decision])).rows[0]
+const counts = async (decision: string) =>
+  (await db.query<{ r: string | null }>('SELECT circle_decision_membership.counts($1) AS r', [{ decision }])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -90,6 +93,15 @@ test('a member suspended while it is open no longer counts, and the close fixes 
   assert.deepEqual(await turnout('d-2026-104'), { counted: 9, given: 2, quorate: false })
   assert.equal(await passes('d-2026-104'), false)
   await db.query(`UPDATE decision.decision SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['d-2026-104', ++receipt])
+  await db.query('SELECT circle_decision_membership.count($1)', ['d-2026-104'])
   await db.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [at('hugo')])
   assert.deepEqual(await turnout('d-2026-104'), { counted: 9, given: 2, quorate: false })
+})
+
+test('a close that did not count its roll is refused; counted, it is not', async () => {
+  await propose('d-2026-105', 'majority')
+  await db.query(`UPDATE decision.decision SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['d-2026-105', ++receipt])
+  assert.equal(await counts('d-2026-105'), "d-2026-105's close did not count its roll: those counted are its active members on the day it closes")
+  assert.equal((await db.query<{ n: number }>('SELECT circle_decision_membership.count($1) AS n', ['d-2026-105'])).rows[0].n, 10)
+  assert.equal(await counts('d-2026-105'), null)
 })

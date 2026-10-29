@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 # Trust
@@ -19,11 +19,14 @@ keep signed copies of what concerns them.
 | bounded | spends a right granted in advance; waits only when the right runs out | budget shares, invoice series, draws |
 | ordered | waits for the notary's verdict, and shows Pending until it comes | admissions, adoptions, voids, closing a period |
 
-Until rung 2 every write goes through the server. The label is in the type
-from the start, so that later rungs move confluent and bounded writes to the
-clients without a rewrite. On the server a confluent or bounded write still
-meets its feat's triggers and rules, so its outcome may be `Refused` as well
-as `Settled`; only an ordered write may also be `Pending`.
+Until rung 2 every write goes through the server, and nothing reads the
+label yet to run a write differently: `write`, `cella.begin` and
+`cella.submit` take the same synchronous path whatever a write's label. The
+label is in the type from the start, so that later rungs move confluent and
+bounded writes to the clients without a rewrite. On the server a confluent
+or bounded write still meets its feat's triggers and rules, so its outcome
+may be `Refused` as well as `Settled`; only an ordered write may also be
+`Pending`.
 
 ## One server
 
@@ -84,8 +87,10 @@ sequenceDiagram
   transactions. Entries are numbered from that locked head, so an aborted
   write leaves no gap. The log is hash-chained (BLAKE3) and signed
   (Ed25519) with a deterministic fold, so the state can always be rebuilt
-  from it and checked. A Merkle tree over the log (RFC 9162) gives
-  inclusion and consistency proofs.
+  from it and checked. A Merkle tree over the log (RFC 9162), giving
+  inclusion and consistency proofs, is not built: it arrives with
+  federation, when a scope must let another check its copy without
+  replaying the whole log.
 - **State changes only inside a write.** The handler opens its
   transaction with `cella.begin(op, actor, device)` before any state, and
   `submit` settles only the write begun, by the same op, actor and
@@ -196,10 +201,14 @@ enabled by decision.
 Composed rules are a declared subset of SQL: `SELECT`, joins over the
 scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
 primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
-rule is written as a `BEGIN ATOMIC` body and checked twice when it is
-adopted: its parse tree against the subset (libpg_query), and its resolved
-dependencies against Postgres's catalogue, which sees the casts and
-operators the parser cannot. A rule outside the subset is refused. A statement timeout bounds evaluation. The log records
+rule is written as a `BEGIN ATOMIC` body. At rung 1 the subset is a
+check-time boundary, not a runtime one: `cella check feats` parses each
+rule's SQL with libpg_query and refuses one outside the subset at commit
+time, before it ever runs; nothing checks it again once a decision adopts
+it. Resolving a rule's dependencies against Postgres's catalogue, which
+would see the casts and operators the parser cannot, is research only
+(`research/pgrx/`), not yet part of the check. A statement timeout bounds
+evaluation. The log records
 the text and version of every rule that decided a verdict.
 
 A rule runs as `cella_rules`, never with the extension owner's rights:

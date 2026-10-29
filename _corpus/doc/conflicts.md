@@ -14,7 +14,11 @@ right running out; otherwise it is ordered. Each invariant is owned at the
 lowest level that sees all of it ([architecture](architecture.md#rules)).
 
 This page recommends; the labels themselves change only in `ops.ts`, by
-decision. Lanterne's state is that of 24 October 2026.
+decision. At rung 1 nothing reads a label to run its write differently
+([trust](trust.md#three-kinds-of-write)): every write still takes the
+server's one synchronous path, and each verdict below comes from the
+feats' and grafts' own triggers and locks, not from the label. Lanterne's
+state is that of 24 October 2026.
 
 ## The verdicts
 

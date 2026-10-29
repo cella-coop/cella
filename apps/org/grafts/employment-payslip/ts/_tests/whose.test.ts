@@ -1,8 +1,8 @@
 // Whose pay is, on a database holding the app's core, the payslip and
-// worker feats and this graft: a salary is a worker's, member or not, and
-// a payslip one employed in its month, never before their hire nor after
-// they leave; each payslip names its worker. Run by `cella test slice
-// employment-payslip`.
+// worker feats and this graft: the rule on a run refuses a payslip of no
+// worker's, and one of a worker not employed in its month, never before
+// their hire nor after they leave, member or not; each payslip names its
+// worker. Run by `cella test slice employment-payslip`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,18 +12,22 @@ const db = new pg.Client()
 const ines = 'ines@lanterne.example'
 const paul = 'paul@lanterne.example'
 
-const refused = async (sql: string, values: unknown[], says: RegExp) => {
+const whose = async (month: string) =>
+  (await db.query<{ r: string | null }>('SELECT employment_payslip.whose($1) AS r', [{ month }])).rows[0].r
+const within = async (run: () => Promise<void>) => {
   await db.query('BEGIN')
   try {
-    await assert.rejects(db.query(sql, values), (e: Error & { code?: string }) => {
-      assert.equal(e.code, '09000', e.message)
-      assert.match(e.message, says)
-      return true
-    })
+    await run()
   } finally {
     await db.query('ROLLBACK')
   }
 }
+const slip = (month: string, member: string) =>
+  db.query(
+    `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net)
+     VALUES ($1, $2, cella.amount(220000), cella.amount(48400), cella.amount(88000), cella.amount(171600))`,
+    [month, member],
+  )
 
 before(async () => {
   await db.connect()
@@ -49,30 +53,36 @@ test('only the app\'s core, the two feats and this graft are migrated', async ()
   assert.deepEqual(rows, [])
 })
 
-test('a salary is a worker\'s, member or not', async () => {
-  await refused(`INSERT INTO payslip.salary (member, "from", gross) VALUES ('nobody@lanterne.example', '2026-10-01', cella.amount(200000))`, [], /nobody@lanterne.example is no worker: a salary is one's/)
-})
-
 test('a payslip is a worker\'s employed in its month, Inès\'s though she is no member', async () => {
-  await db.query(
-    `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net)
-     VALUES ('2026-10', $1, cella.amount(220000), cella.amount(48400), cella.amount(88000), cella.amount(171600))`,
-    [ines],
-  )
+  await slip('2026-10', ines)
+  assert.equal(await whose('2026-10'), null)
   const { rows } = await db.query(`SELECT month, member, name, job FROM employment_payslip.slip`)
   assert.deepEqual(rows, [{ month: '2026-10', member: ines, name: 'Inès Haddad', job: 'junior developer' }])
 })
 
+test('a run holding a payslip of no worker\'s is refused, as a salary of no worker\'s turns into one', async () => {
+  await within(async () => {
+    await slip('2026-10', 'nobody@lanterne.example')
+    assert.match((await whose('2026-10')) ?? '', /nobody@lanterne.example is no worker: a payslip is one's/)
+  })
+})
+
 test('a worker is paid for the month they leave, and none after', async () => {
-  await db.query('BEGIN')
-  try {
-    await db.query(`INSERT INTO payslip.payslip (month, member, gross, employee, employer, net) VALUES ('2025-11', $1, cella.amount(250000), cella.amount(55000), cella.amount(100000), cella.amount(195000))`, [paul])
-  } finally {
-    await db.query('ROLLBACK')
-  }
-  await refused(
-    `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net) VALUES ('2025-12', $1, cella.amount(250000), cella.amount(55000), cella.amount(100000), cella.amount(195000))`,
-    [paul],
-    /paul@lanterne.example is employed in no day of 2025-12/,
+  await within(async () => {
+    await slip('2025-11', paul)
+    assert.equal(await whose('2025-11'), null)
+  })
+  await within(async () => {
+    await slip('2025-12', paul)
+    assert.match((await whose('2025-12')) ?? '', /paul@lanterne.example is employed in no day of 2025-12/)
+  })
+})
+
+test('the rule runs on the run that makes the payslips, and no trigger of this graft\'s is left on the payslip feat\'s tables', async () => {
+  const rules = await db.query(`SELECT op FROM cella.rule WHERE fn = 'employment_payslip.whose(jsonb)'::regprocedure`)
+  assert.deepEqual(rules.rows, [{ op: 'payslip:run:generate' }])
+  const triggers = await db.query(
+    `SELECT tgname FROM pg_trigger WHERE tgrelid IN ('payslip.salary'::regclass, 'payslip.payslip'::regclass) AND tgname = 'worker'`,
   )
+  assert.deepEqual(triggers.rows, [])
 })

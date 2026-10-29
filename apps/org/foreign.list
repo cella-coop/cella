@@ -47,12 +47,7 @@ decision-patronage: trigger adopts_patronage_terms on decision.motion
 decision-patronage: 002-distribution.sql writes decision.kind
 decision-patronage: trigger approves_patronage_distribution on decision.motion
 employment: src/handlers/hire.ts writes person.device
-employment-payslip: trigger worker on payslip.salary
-employment-payslip: trigger worker on payslip.payslip
-employment-timesheet: trigger worker on timesheet.entry
-expense-membership: trigger whose on expense.expense
 membership: src/handlers/lifecycle.ts writes person.device
-membership-timesheet: trigger whose on timesheet.entry
 patronage-payslip: patronage_payslip.parts() writes patronage.part
 patronage-payslip: trigger parts_by_pay on patronage.distribution
 patronage-timesheet: patronage_timesheet.parts() writes patronage.part

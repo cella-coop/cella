@@ -1,6 +1,6 @@
 +++
 title = "employment-timesheet"
-updated = 2026-10-28
+updated = 2026-10-29
 +++
 
 Whose time is, and logging it by one's employment. A worker logs,
@@ -12,10 +12,11 @@ not a mandate a seat gives, is what entitles them to. Declared by
 
 `employment_timesheet` (`sql/`):
 
-- `employment_timesheet.whose`, a trigger on `timesheet.entry`: a worker's
-  entry falls on a day of their employment, never before their hire nor
-  after they leave (SQLSTATE `09000`). An entry of no worker's, a member
-  who is not employed, is membership-timesheet's to judge.
+- `employment_timesheet.whose`, a rule on `timesheet:entry:log`: a
+  worker's entry falls on a day of their employment, never before their
+  hire nor after they leave. An entry of no worker's, a member who is not
+  employed, is membership-timesheet's to judge. A log by one's employment
+  is `works`'s, below.
 - `employment_timesheet.sheet`: each worker's months by name, and who
   approved each.
 

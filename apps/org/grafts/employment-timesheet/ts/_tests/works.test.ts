@@ -15,6 +15,7 @@ const paul = 'paul@lanterne.example'
 
 const all = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
 const works = async (payload: object) => (await all<{ r: string | null }>('SELECT employment_timesheet.works($1) AS r', [payload]))[0].r
+const whose = async (payload: object) => (await all<{ r: string | null }>('SELECT employment_timesheet.whose($1) AS r', [payload]))[0].r
 
 before(async () => {
   await db.connect()
@@ -33,15 +34,13 @@ after(async () => {
 })
 
 test('a worker logs time on days of their employment, and none after they leave', async () => {
+  assert.equal(await whose({ member: ines, day: '2026-10-23' }), null)
+  assert.equal(await whose({ member: paul, day: '2025-11-28' }), null)
+  assert.match((await whose({ member: paul, day: '2025-12-01' })) ?? '', /paul@lanterne.example is not employed on 2025-12-01/)
+  // No worker's, a member's: not this graft's to judge.
+  assert.equal(await whose({ member: 'nadia@lanterne.example', day: '2026-10-23' }), null)
   await db.query(`INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, '2026-10-23', 420, false, 'Reviews')`, [ines])
   await db.query(`INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, '2025-11-28', 420, true, 'Packaging')`, [paul])
-  await db.query('BEGIN')
-  await assert.rejects(
-    db.query(`INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, '2025-12-01', 420, true, '')`, [paul]),
-    (e: Error & { code?: string }) => e.code === '09000' && /paul@lanterne.example is not employed on 2025-12-01/.test(e.message),
-  )
-  await db.query('ROLLBACK')
-  // No worker's, a member's: not this graft's to judge.
   await db.query(`INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ('nadia@lanterne.example', '2026-10-23', 60, false, '')`)
   const { rows } = await db.query(`SELECT name, month, hours::float8 AS hours FROM employment_timesheet.sheet ORDER BY name`)
   assert.deepEqual(rows, [
@@ -64,4 +63,10 @@ test('the timesheet feat\'s own rules run on these ops too: the time is the acto
     { op: 'employment-timesheet:period:submit', fn: 'employment_timesheet.works(jsonb)' },
     { op: 'employment-timesheet:period:submit', fn: 'timesheet.submits(jsonb)' },
   ])
+})
+
+test('a log by the log-time mandate meets the worker\'s days by a rule, and no trigger of this graft\'s is on the entries', async () => {
+  const rules = await all<{ op: string }>(`SELECT op FROM cella.rule WHERE fn = 'employment_timesheet.whose(jsonb)'::regprocedure`)
+  assert.deepEqual(rules, [{ op: 'timesheet:entry:log' }])
+  assert.deepEqual(await all(`SELECT tgname FROM pg_trigger WHERE tgrelid = 'timesheet.entry'::regclass AND tgname = 'worker'`), [])
 })

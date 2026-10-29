@@ -31,6 +31,16 @@ only on the org app, `apps/org/`. Read
   them: `cella check feats` checks packages, imports, ops and every `sql/`
   file. A rule a tool cannot check says so in its doc.
 - **No foreign key crosses a feat.** The graft's schema holds the junction.
+- **Writes stay home.** A feat's rows change only through its own code. A
+  graft writes only its own schema: it changes a feat by calling that
+  feat's published write from its handler, reacts through `on` and
+  refuses through a rule, and never inserts, updates, deletes or puts a
+  trigger on a feat's or a lower-order graft's table. A nested feat
+  writes its parent the same way. `cella check feats` refuses any such
+  write that `apps/org/foreign.list`, the shrinking list of exceptions
+  that predate the rule, does not name. Never add a line to that list:
+  move the write instead ([writes stay
+  home](_corpus/doc/architecture.md#writes-stay-home)).
 - **Migrations are append-only.** A locked migration is never edited or
   removed: a change is a new file, locked with `cella migrate --lock`, and
   `cella check` refuses anything else. The notary changes by a new

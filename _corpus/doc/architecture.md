@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 # Architecture
@@ -117,7 +117,10 @@ inside it, and that a feat's or graft's ops are named for it. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
 through `tools/powers.mjs` that the power each op's label names in
 `ops.ts` is the one its SQL registers in `cella.power`, and that an op
-with no power declares a check its SQL backs ([writes](#writes)).
+with no power declares a check its SQL backs ([writes](#writes)), and
+through `tools/writes.mjs` that no feat or graft writes a table it does
+not own beyond the app's listed exceptions ([writes stay
+home](#writes-stay-home)).
 `cella test tools` holds their negative tests.
 
 ## Grafts
@@ -172,6 +175,36 @@ higher one decides declares it through a feat they share: a graft that
 cites a decision lists its op in `decision.cites`, and the graft that
 counts the roll attaches its rule to every op listed, so neither reads the
 other.
+
+### Writes stay home
+
+A feat's rows change only through its own code: its handlers, and its
+SQL on its own tables. A graft reads the feats it joins and its
+lower-order grafts, and writes only its own schema. It changes a feat
+only by calling that feat's published write from its handler, inside
+the one `write`, as `invoice-transaction` calls `record()` from
+`@cella/org-transaction/api`. It reacts to a feat's settled write
+through its server slice's `on`, and it refuses a feat's write by a rule
+on the op in `cella.rule`, which the notary runs. It never uses a
+trigger on the feat's table for either. A nested feat changes its
+parent's rows the same way, through the parent's write. No SQL of a
+feat or a graft inserts, updates, deletes, merges or truncates a table
+outside its own schema, or makes a trigger on one; it writes `cella.*`
+only to register ([SQL](#sql)).
+
+`cella check feats` checks this. `tools/sql-check.mjs` collects every
+such write and trigger that the owner's migrations leave standing. A
+later file that drops the trigger, or drops or replaces the function,
+takes it away, and a slice may drop its own trigger on another's table.
+`tools/writes.mjs` scans each feat's and graft's TypeScript, its tests
+aside, for SQL that writes a table outside its schema. Both are held to
+the app's `foreign.list`, which lists the 52 exceptions that predate
+the rule (2026-10-29). The check refuses an exception the list does not
+name, and also a listed line whose write is gone, so the list only
+shrinks. Each exception moves to its owner by a new migration, a
+handler and its feat's published write. A write no tool can see, such as
+SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
+is left to review.
 
 ## Rules
 
@@ -228,7 +261,11 @@ keyring, or a graft only the authority that says who holds a power
 (`cella.reach`), each a literal row; sets
 `search_path` other than a function's to the catalog; reads the clock or
 randomness; or hides statements in a `DO` block. A row-level policy is
-created, and a function altered, only in the owner's own schema.
+created, and a function altered, only in the owner's own schema. It
+also refuses a write or a trigger on a table outside the owner's schema
+and `cella.*`, beyond the exceptions the app's `foreign.list` still
+names ([writes stay home](#writes-stay-home)). A slice may drop a
+trigger of its own on another's table.
 
 A table holding a person's pay, time, capital, personal files or a
 capital account's lines keeps row-level security for the app role: the

@@ -1,6 +1,6 @@
 import type { Outcome } from '@cella/org-ops'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
-import { entering } from '@cella/org-person/api'
+import { enrolling, entering } from '@cella/org-person/api'
 import type { ops } from '../models/ops.ts'
 import type { Accept, Accepted, End, Ended, Invite, Invited, Link } from '../models/member.ts'
 
@@ -111,14 +111,7 @@ export function accepting(input: Accept): Write<Accepted> {
       if ((await tx.query('SELECT FROM membership.invitation WHERE member = $1', [input.member])).rowCount) {
         throw new Error(`${input.member} has taken up their invitation already`)
       }
-      if ((await tx.query(`SELECT FROM person.device WHERE key = decode($1, 'hex')`, [key])).rowCount) {
-        throw new Error('this device is enrolled already')
-      }
-      await tx.query(`INSERT INTO person.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, $3, cella.verdict_date())`, [
-        key,
-        input.member,
-        label,
-      ])
+      await enrolling(tx, { key, address: input.member, label })
       const accepted = await tx.query<{ accepted: string }>(
         `INSERT INTO membership.invitation (member, key, label, accepted) VALUES ($1, decode($2, 'hex'), $3, cella.verdict_date())
          RETURNING to_char(accepted, 'YYYY-MM-DD') AS accepted`,

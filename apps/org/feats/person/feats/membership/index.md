@@ -103,7 +103,7 @@ Whether the cited decision asks it is the `decision-membership` graft's rule on 
   link }`. Someone never invited is refused before the notary.
 - `accept` (ordered): the invitee takes up their invitation with the
   link's secret and the public key their browser just made, and that
-  device signs the write. Enrols the device under their address on the
+  device signs the write. Enrols the device (`enrolling`, the person's) under their address on the
   verdict date, by no device, so the keyring finds it in this write's own
   state, and records the acceptance; submits `{ member, link, key,
   accepted }`. A secret no link of theirs is the digest of, an

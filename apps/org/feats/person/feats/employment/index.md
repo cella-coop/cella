@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -97,7 +97,8 @@ label stays out.
 
 - `hire` (confluent), and `hiring`, the same as a write: brings the person
   in (`entering`, the person's), records the contract on the verdict date
-  with the register's copy of the name, and enrols the first device;
+  with the register's copy of the name, and enrols the first device
+  (`enrolling`, the person's);
   submits `{ worker, job, contract, start, until, minutes, hired, key,
   name }`, the name committed. The member signs the request with the key
   in lower case, as the payload restates it. A key that is not 32 bytes

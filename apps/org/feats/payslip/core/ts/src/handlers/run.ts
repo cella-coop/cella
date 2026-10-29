@@ -42,6 +42,24 @@ export async function generate(input: Run, deps: Deps): Out<'payslip:run:generat
   return write(deps, generating(input))
 }
 
+// Sets the minutes each payslip of a month's run was worked, inside the
+// write that generates it, and returns their sum: what a graft that times
+// the run, as payslip-timesheet does from approved months, gives it. A
+// member the run holds no payslip of is passed over.
+export async function timing(tx: Db, month: string, minutes: { member: string; minutes: number }[]): Promise<number> {
+  const { rows } = await tx.query<{ minutes: string }>(
+    `WITH timed AS (
+       UPDATE payslip.payslip p SET minutes = t.minutes
+       FROM jsonb_to_recordset($2::jsonb) AS t(member text, minutes integer)
+       WHERE p.month = $1 AND p.member = t.member
+       RETURNING p.minutes
+     )
+     SELECT coalesce(sum(minutes), 0) AS minutes FROM timed`,
+    [month, JSON.stringify(minutes)],
+  )
+  return Number(rows[0].minutes)
+}
+
 // Approves a run on the verdict date, as the actor. The
 // payslip-transaction graft wraps it with the entry accruing its pay.
 export const approving = (input: Run, actor: string): Write<Ran> => ({

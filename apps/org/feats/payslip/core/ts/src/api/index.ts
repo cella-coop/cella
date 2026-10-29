@@ -5,7 +5,7 @@ import type { Form, Slice } from '@cella/org-db'
 import { listing, next, payslip, payslips } from '../drivers/payslip.ts'
 import type { Run } from '../models/payslip.ts'
 
-export { approve, approving, generate, generating, pay, paying } from '../handlers/index.ts'
+export { approve, approving, generate, generating, pay, paying, timing } from '../handlers/index.ts'
 export { next, payslip, payslips } from '../drivers/payslip.ts'
 
 // The run a form names, `YYYY-MM`, or the run of the payslip a page shows.

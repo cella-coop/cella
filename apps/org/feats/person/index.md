@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-10-28
+updated = 2026-10-29
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -178,6 +178,11 @@ employment's.
 - `entering`, no write of its own: what an invitation or a hire runs in
   its transaction to bring a person in, telling the child whether the
   person is new, so its payload commits to their name only then.
+- `enrolling`, no write of its own: what a hire or an invitation taken up
+  runs in its transaction to enrol the person's first device, on the
+  verdict date and by no device, refusing a key enrolled already. A
+  child changes the person's rows only through `entering` and
+  `enrolling`.
 
 Signing is the client's, `@cella/org-sign` in org's core.
 

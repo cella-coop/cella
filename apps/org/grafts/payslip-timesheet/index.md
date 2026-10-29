@@ -1,6 +1,6 @@
 +++
 title = "payslip-timesheet"
-updated = 2026-10-24
+updated = 2026-10-29
 +++
 
 A pay run from approved time: each payslip holds the minutes of its
@@ -24,7 +24,8 @@ the time a run reads never changes after.
 ## Handlers
 
 `generate` wraps the payslip feat's `generating`: the payslips, then each
-one's minutes, in one write.
+one's minutes, which it reads from the member's month and the payslip
+feat's `timing` sets, in one write.
 
 ## Tests
 

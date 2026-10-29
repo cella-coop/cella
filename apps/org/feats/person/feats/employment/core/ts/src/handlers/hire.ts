@@ -1,6 +1,6 @@
 import type { Outcome } from '@cella/org-ops'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
-import { entering } from '@cella/org-person/api'
+import { enrolling, entering } from '@cella/org-person/api'
 import type { ops } from '../models/ops.ts'
 import { contracts, type Hire, type Hired } from '../models/worker.ts'
 
@@ -31,20 +31,13 @@ export function hiring(input: Hire): Write<Hired> {
       if (taken.rowCount) {
         throw new Error(`${input.worker} is a worker's address already`)
       }
-      const held = await tx.query(`SELECT FROM person.device WHERE key = decode($1, 'hex')`, [key])
-      if (held.rowCount) {
-        throw new Error('this device key is enrolled already')
-      }
       await entering(tx, { address: input.worker, name: input.name })
       const { rows } = await tx.query<{ hired: string }>(
         `INSERT INTO employment.worker (address, name, job, contract, start, until, minutes, hired)
          VALUES ($1, $2, $3, $4, $5, $6, $7, cella.verdict_date()) RETURNING to_char(hired, 'YYYY-MM-DD') AS hired`,
         [input.worker, input.name, input.job, input.contract, input.start, input.until ?? null, input.minutes],
       )
-      await tx.query(
-        `INSERT INTO person.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, $3, cella.verdict_date())`,
-        [key, input.worker, input.label.trim()],
-      )
+      await enrolling(tx, { key, address: input.worker, label: input.label.trim() })
       return {
         worker: input.worker,
         job: input.job,

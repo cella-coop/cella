@@ -198,7 +198,7 @@ later file that drops the trigger, or drops or replaces the function,
 takes it away, and a slice may drop its own trigger on another's table.
 `tools/writes.mjs` scans each feat's and graft's TypeScript, its tests
 aside, for SQL that writes a table outside its schema. Both are held to
-the app's `foreign.list`, which lists the 52 exceptions that predate
+the app's `foreign.list`, which lists the exceptions that predate
 the rule (2026-10-29). The check refuses an exception the list does not
 name, and also a listed line whose write is gone, so the list only
 shrinks. Each exception moves to its owner by a new migration, a

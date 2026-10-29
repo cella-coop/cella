@@ -8,7 +8,6 @@
 # it goes.
 account-decision: 001-account-decision.sql writes decision.kind
 account-decision: 001-account-decision.sql writes decision.cites
-account-membership: trigger held on account.account
 account-membership: account_membership.freezes() writes account.account
 account-membership: trigger freezes on membership.member
 account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes transaction.line
@@ -27,7 +26,6 @@ account-membership-transaction: trigger withdraws on membership.member
 account-transaction: trigger posts on transaction.line
 circle-decision: 001-circle-decision.sql writes decision.kind
 circle-decision: 001-circle-decision.sql writes decision.cites
-circle-decision: trigger decides_by on circle.circle
 circle-decision-membership: trigger fix_roll on decision.decision
 circle-decision-membership: trigger attach on decision.cites
 circle-decision-membership: trigger count_roll on decision.decision

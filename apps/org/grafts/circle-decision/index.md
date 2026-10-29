@@ -1,6 +1,6 @@
 +++
 title = "circle-decision"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 The circles' place and powers, by decision: nesting a circle, granting a
@@ -34,8 +34,11 @@ the revoked mandate's role's circle; a role every working circle has
   `circle:mandate:grant` and `circle:mandate:revoke`: the cited decision
   asks exactly this, the grant's euros in cents.
 
-- `circle_decision.decides_by`, a trigger on a circle written: it decides
-  by a procedure the decision feat holds, raising SQLSTATE `09000`.
+No write sets a circle's procedure: the seed carries it in, and the
+fixture check holds it to a procedure the decision feat holds. A write
+that sets one will be judged by a rule of this graft's on its op, not by
+a trigger on the circle feat's table
+([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
 The three ops cite a decision: this graft lists them in `decision.cites`,
 and `circle-decision-membership`, which counts the roll, attaches its rule

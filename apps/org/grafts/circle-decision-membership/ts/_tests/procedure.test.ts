@@ -1,8 +1,8 @@
 // Whether a decision passes by its procedure, on a database holding the
 // app's core, the circle, decision and member feats and the grafts beneath
 // this one: two thirds of the votes cast, abstentions counting for neither;
-// a quorum of those counted, an abstention taking part; and a circle that
-// decides only by a procedure there is. Run by
+// a quorum of those counted, an abstention taking part; and who counts
+// while a decision is open, and at its close. Run by
 // `cella test slice circle-decision-membership`.
 
 import { after, before, test } from 'node:test'
@@ -92,17 +92,4 @@ test('a member suspended while it is open no longer counts, and the close fixes 
   await db.query(`UPDATE decision.decision SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['d-2026-104', ++receipt])
   await db.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [at('hugo')])
   assert.deepEqual(await turnout('d-2026-104'), { counted: 9, given: 2, quorate: false })
-})
-
-test('a circle decides only by a procedure there is', async () => {
-  await db.query('BEGIN')
-  try {
-    await assert.rejects(
-      db.query(`INSERT INTO circle.circle (id, name, parent, procedure) VALUES ('web', 'Web', 'ag', 'acclamation')`),
-      /web decides by acclamation, which is no procedure/,
-    )
-  } finally {
-    await db.query('ROLLBACK')
-  }
-  await db.query(`INSERT INTO circle.circle (id, name, parent, procedure) VALUES ('brand', 'Brand', 'ag', 'two-thirds')`)
 })

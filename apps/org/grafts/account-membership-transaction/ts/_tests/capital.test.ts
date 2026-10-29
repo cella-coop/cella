@@ -51,15 +51,6 @@ test('only the app\'s core, the feats it joins and its lower grafts are migrated
   assert.deepEqual(rows, [])
 })
 
-test('a capital account is held by a member', async () => {
-  await db.query('BEGIN')
-  await assert.rejects(
-    db.query(`INSERT INTO account.account (code, label, kind, parent, holder) VALUES ('101399', 'x', 'equity', '1013', 'nobody@x')`),
-    /101399 is held by nobody@x, who is no member/,
-  )
-  await db.query('ROLLBACK')
-})
-
 const lines = async (entry: string) =>
   (await db.query(`SELECT account, side, cella.cents(amount) AS cents FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).rows
 

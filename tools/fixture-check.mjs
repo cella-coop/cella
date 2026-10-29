@@ -58,6 +58,15 @@ const check = (name) => {
       has(circles, c.parent, 'circle', `circle ${c.id}`)
     }
   }
+  // A circle decides by a procedure the decision feat holds: one of the
+  // three its migration makes, or one of the co-op's own. No write sets a
+  // circle's procedure, so this check is what holds the seed's to it.
+  const procedures = new Set(['consent', 'majority', 'two-thirds', ...ids(decision.procedure)])
+  for (const c of circle.circle ?? []) {
+    if (!procedures.has(c.procedure ?? 'consent')) {
+      fail(`circle ${c.id}: decides by ${c.procedure}, which is no procedure`)
+    }
+  }
   for (const r of circle.role ?? []) {
     if (r.circle !== '*') {
       has(circles, r.circle, 'circle', `role ${r.id}`)

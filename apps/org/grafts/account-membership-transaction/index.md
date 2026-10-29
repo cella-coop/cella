@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -88,7 +88,7 @@ offline.
 ## Tests
 
 `ts/_tests/capital.test.ts` (`cella test slice account-membership-transaction`):
-a capital account is held by a member; an admission subscribes, opening
+an admission subscribes, opening
 the account and posting the shares; draws add up against the limit, and a
 draw not the actor's own is refused; an exit freezes
 the capital, for good, moves what it held to `4567` and draws up its

@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -18,8 +18,10 @@ member may draw, and the freeze when a member leaves. Declared by
   The graft keeps no share value of its own.
 - `account_membership.allowance`: what each member may draw on their account,
   granted in advance; the right `account.draw` spends.
-- `account_membership.held`, a trigger on `account.account`: a capital
-  account's holder is a member.
+- A capital account's holder is a member: the only write naming one is
+  `account-membership-transaction`'s subscription of a member admitted,
+  and the fixture check holds the seed's, so no trigger on the account
+  feat's table checks it.
 - `account_membership.freezes`, a trigger after a member's status changes:
   when it becomes `exited`, their capital accounts are frozen, in the same
   transaction as the write that ended the membership, whichever it is.

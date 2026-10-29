@@ -15,6 +15,7 @@
     "@cella/org-membership": "workspace:*",
     "@cella/org-person": "workspace:*",
     "@cella/org-graft-circle-membership": "workspace:*",
+    "@cella/org-graft-circle-decision": "workspace:*",
     "svelte": "5.57.2"
   }
 }

@@ -46,11 +46,14 @@ that it carried.
 
 ## Handlers
 
-- `put`: a motion about a circle, proposed through the decision feat's
-  `propose` to the circle that decides it, by its procedure: the one
-  above it, or for a nesting the deepest circle holding both its place
-  and the one it moves to, or the assembly for itself; titled with what it
-  decides. The writes that carry a passing decision out are
+- `putting`: the proposal a motion about a circle (`motion`, read from
+  its page's form) makes, to the circle that decides it, by its
+  procedure: the one above it, or for a nesting the deepest circle
+  holding both its place and the one it moves to, or the assembly for
+  itself; titled with what it decides. It writes nothing: the circle
+  page's `put` is `circle-decision-membership`'s, which proposes it and
+  fixes its roll in one write, as only the graft holding the roll can.
+  The writes that carry a passing decision out are
   `circle-decision-membership`'s reaction to its close.
 
 ## Shell
@@ -59,4 +62,5 @@ Adds to the decisions collection's `about` the circles a decision may be
 put in, with their procedures, which the decision feat's New form offers.
 On a circle's page, which circle decides about it, the open decisions
 about it, and Propose…: nesting it under another circle, granting a
-mandate to one of its roles, or revoking one, with a deadline and why.
+mandate to one of its roles, or revoking one, with a deadline and why,
+posted to the `put` circle-decision-membership serves.

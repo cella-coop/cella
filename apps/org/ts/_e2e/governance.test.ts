@@ -10,9 +10,10 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { propose, vote } from '@cella/org-decision/api'
-import { put as putCircle } from '@cella/org-graft-circle-decision/api'
-import { carried, close, put } from '@cella/org-graft-circle-decision-membership/api'
+import { propose as proposeAlone, vote } from '@cella/org-decision/api'
+import { putting } from '@cella/org-graft-circle-decision/api'
+import type { Motion } from '@cella/org-graft-circle-decision/models'
+import { carried, close, propose, put } from '@cella/org-graft-circle-decision-membership/api'
 import { grant } from '@cella/org-circle/api'
 import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
@@ -43,6 +44,8 @@ async function on(date: string) {
 
 const as = (actor: string): Deps =>
   actor === nadia ? { db: app, actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: app, actor, sign: sign(actor) }
+// What a circle's page proposes about it, put as the shell puts it.
+const putCircle = async (m: Motion, deps: Deps) => propose(await putting(m, deps.db), deps)
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -106,6 +109,12 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
     as(camille),
   )
   assert.match(reason(astray), /only the assembly decides to admit a member, not coordination/)
+  // The decision feat's proposal alone fixes no roll, and is refused.
+  const alone = await proposeAlone(
+    { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
+    as(malik),
+  )
+  assert.match(reason(alone), /'s proposal did not fix its roll: its roll is those seated in ag on the day it is proposed/)
 
   const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
   admission = proposed.decision

@@ -21,11 +21,13 @@ here.
 `circle_decision_membership` (`sql/`):
 
 - `circle_decision_membership.roll`: a decision and a member on its roll, by
-  id and address, with no foreign key into any feat.
-- `circle_decision_membership.fix_roll`, a trigger after a decision is
-  inserted: it fixes the roll from `circle_membership.seated(circle, proposed)`.
-  It runs with its owner's rights, since nothing else writes the roll; the
-  app role and the rules role, `cella_rules`, may select it.
+  id and address, with no foreign key into any feat, fixed by
+  `circle_decision_membership.fix(decision)` from
+  `circle_membership.seated(circle, proposed)`, which this graft's
+  `propose` calls in the proposal's own write. `fix` runs with its
+  owner's rights, since nothing else writes the roll, and only the app
+  role may call it; the app role and the rules role, `cella_rules`, may
+  select the roll.
 - `circle_decision_membership.counted`: who was counted, the members on a
   decision's roll who were active (`membership.active`) on the day it
   closed, fixed by `circle_decision_membership.count(decision)`, which this
@@ -99,9 +101,20 @@ coordination's, counts its five.
   counted are exactly the members of the roll active on the verdict date,
   so a close that did not count its roll, as the decision feat's own
   `close` alone does not, is refused.
+- `circle_decision_membership.fixed`, on `decision:decision:propose`: the
+  decision's roll is exactly the members seated in its circle on the day
+  it is proposed, so a proposal that did not fix its roll, as the
+  decision feat's own `propose` alone does not, is refused.
 
 ## Handlers
 
+- `propose` (confluent), replacing the decision feat's in the shell: the
+  decision feat's `proposing`, then `fix`, in one transaction under one
+  verdict; the rules of each slice judge it (`decision.proposes`, `sits`,
+  `asks`, `fixed`, and the rule of each motion's kind). Every proposal
+  goes through it: the New decision form, `put`, and on a circle's page
+  what circle-decision proposes about its place and powers, read by its
+  `motion` and made by its `putting`.
 - `close` (ordered), replacing the decision feat's in the shell: the
   decision feat's `closing`, then `count`, then, when it passes on its
   roll, for each member it admits the membership feat's `admitting` and
@@ -118,8 +131,8 @@ coordination's, counts its five.
   (circle feat), a seat given or ended (circle-membership). A refused one
   leaves the decision passed and that motion undone, as its outcome
   says. The slice runs it as its reaction to `decision:decision:close`.
-- `put`: what a member's or a circle's page proposes, through the
-  decision feat's `propose`, to the circle that decides it, by its
+- `put`: what a member's or a circle's page proposes, through this
+  graft's `propose`, to the circle that decides it, by its
   procedure, titled with what it decides: a membership to the assembly,
   a seat to the circle above its own. Admitting, suspending or ending a
   membership, and giving or ending a seat, elect or remove a person, so
@@ -156,4 +169,5 @@ On a person's page, Propose…: admitting someone invited, with their
 shares, suspending an active member or ending a membership, put to the
 assembly, and the open decisions about them. On a circle's page,
 Appoint…: seating a member in it, in one of its roles or as a plain
-member, or ending a seat held there, put to the circle above.
+member, or ending a seat held there, put to the circle above; and
+circle-decision's Propose…, whose write this graft serves.

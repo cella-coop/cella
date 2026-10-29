@@ -2,9 +2,9 @@
 // app's core, the circle, decision and member feats and the grafts beneath
 // this one: two thirds of the votes cast, abstentions counting for neither;
 // a quorum of those counted, an abstention taking part; who counts while
-// a decision is open, and at its close; and `counts`, which refuses a
-// close that did not count its roll; and a secret ballot's tally, sealed
-// to the app until its close. Run by
+// a decision is open, and at its close; `fixed`, which refuses a proposal
+// that did not fix its roll, and `counts`, a close that did not count it;
+// and a secret ballot's tally, sealed to the app until its close. Run by
 // `cella test slice circle-decision-membership`.
 
 import { after, before, test } from 'node:test'
@@ -16,12 +16,19 @@ const at = (name: string) => `${name}@lanterne.example`
 const ten = ['camille', 'yusuf', 'hugo', 'malik', 'julien', 'amina', 'thomas', 'lea', 'chloe', 'sofia']
 let receipt = 0
 
-const propose = (id: string, procedure: string) =>
+// A decision as the decision feat inserts it; `propose` also fixes its
+// roll, as this graft's proposal does.
+const insert = (id: string, procedure: string) =>
   db.query(
     `INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline)
      SELECT $1, 'ag', $1, p.rule, p.id, '2026-10-20', '2026-11-03' FROM decision.procedure p WHERE p.id = $2`,
     [id, procedure],
   )
+const fix = async (id: string) => (await db.query<{ n: number }>('SELECT circle_decision_membership.fix($1) AS n', [id])).rows[0].n
+const propose = async (id: string, procedure: string) => {
+  await insert(id, procedure)
+  await fix(id)
+}
 const vote = (decision: string, name: string, stance: string) =>
   db.query(`INSERT INTO decision.vote (receipt, decision, member, stance, at) VALUES ($1, $2, $3, $4, '2026-10-21')`, [++receipt, decision, at(name), stance])
 const passes = async (decision: string) =>
@@ -30,6 +37,8 @@ const turnout = async (decision: string) =>
   (await db.query('SELECT counted, given, quorate FROM circle_decision_membership.turnout($1)', [decision])).rows[0]
 const counts = async (decision: string) =>
   (await db.query<{ r: string | null }>('SELECT circle_decision_membership.counts($1) AS r', [{ decision }])).rows[0].r
+const fixed = async (decision: string) =>
+  (await db.query<{ r: string | null }>('SELECT circle_decision_membership.fixed($1) AS r', [{ decision }])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -107,11 +116,19 @@ test('a close that did not count its roll is refused; counted, it is not', async
   assert.equal(await counts('d-2026-105'), null)
 })
 
+test('a proposal that did not fix its roll is refused; fixed, it is not', async () => {
+  await insert('d-2026-107', 'majority')
+  assert.equal(await fixed('d-2026-107'), "d-2026-107's proposal did not fix its roll: its roll is those seated in ag on the day it is proposed")
+  assert.equal(await fix('d-2026-107'), 10)
+  assert.equal(await fixed('d-2026-107'), null)
+})
+
 test('a secret ballot\'s tally is sealed to the app until its close, and a redacted stance counts as none given', async () => {
   await db.query(
     `INSERT INTO decision.decision (id, circle, title, rule, procedure, ballot, proposed, deadline)
      VALUES ('d-2026-106', 'ag', 'd-2026-106', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
   )
+  await fix('d-2026-106')
   await vote('d-2026-106', 'camille', 'for')
   await vote('d-2026-106', 'yusuf', 'for')
   await vote('d-2026-106', 'hugo', 'against')

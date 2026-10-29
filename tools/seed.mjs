@@ -8,8 +8,9 @@
 // their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
 // log; a closed decision's cutoff is the number after its last stance.
-// Seats load before decisions, whose rolls are fixed from them; a closed
-// decision counts its roll as circle-decision-membership's close does; and
+// Seats load before decisions, whose rolls are fixed from them as
+// circle-decision-membership's proposal fixes them; a closed decision counts
+// its roll as circle-decision-membership's close does; and
 // periods close after the journal is in. Each device's key is the TEST-ONLY key
 // derived from its address and label (`@cella/org-sign`'s `fixture`), so
 // the tests sign with the keys enrolled here.
@@ -176,6 +177,7 @@ async function load() {
     if (!taken.rowCount) {
       throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)
     }
+    await db.query('SELECT circle_decision_membership.fix($1)', [d.id])
     moved += await motions(db, d)
     for (const v of d.vote ?? []) {
       await db.query(

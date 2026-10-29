@@ -585,6 +585,9 @@ importers:
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
+      '@cella/org-graft-circle-decision':
+        specifier: workspace:*
+        version: link:../../circle-decision/ts
       '@cella/org-graft-circle-membership':
         specifier: workspace:*
         version: link:../../circle-membership/ts

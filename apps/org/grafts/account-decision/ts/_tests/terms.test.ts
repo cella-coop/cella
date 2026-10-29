@@ -1,7 +1,7 @@
 // Capital terms adopted by decision, on a database holding the app's
 // core, the account and decision feats and this graft: a motion to adopt
-// drafted terms records the adoption it asks for, and one naming no such terms
-// is refused whatever wrote it; adopting the terms cites a decision that
+// drafted terms is the adoption it asks for, and a proposal moving to adopt
+// no such terms is refused; adopting the terms cites a decision that
 // moved to adopt them, never another. That the decision passed is
 // circle-decision-membership's, not migrated here. Run by `cella test slice
 // account-decision`.
@@ -29,11 +29,12 @@ after(async () => {
   await db.end()
 })
 
-test('a motion to adopt drafted terms records the adoption it asks for', async () => {
+test('a motion to adopt drafted terms is the adoption it asks for', async () => {
   await move('d-1', 1, 'st-2027')
   assert.deepEqual((await db.query(`SELECT terms, decision FROM account_decision.adoption`)).rows, [{ terms: 'st-2027', decision: 'd-1' }])
   assert.equal(await rule('account_decision.asks', { decision: 'd-1' }), null)
-  await assert.rejects(move('d-2', 1, 'st-1999'), /no terms st-1999 to adopt/)
+  await move('d-2', 1, 'st-1999')
+  assert.equal(await rule('account_decision.asks', { decision: 'd-2' }), 'no terms st-1999 to adopt')
 })
 
 test('adopting cites a decision that moved to adopt the terms, never another', async () => {

@@ -11,13 +11,10 @@ Declared by `patronage`.
 
 `decision_patronage` (`sql/`):
 
-- `decision_patronage.approval`: the distribution and the decision
-  approving it, each by id, with no foreign key into either feat. It is
-  recorded by `approves_patronage_distribution`, a trigger after a motion
-  of the `distribution` kind is made, which refuses a motion naming no
-  drafted distribution not yet approved, whatever wrote it; a draft moved
-  again, after a decision that failed, is approved by the latest decision
-  moving to.
+- `decision_patronage.approval`: each distribution and the decisions
+  moving to approve it, a view of the motions of the `distribution` kind.
+  A draft moved again, after a decision that failed, has both; approving
+  it cites the one that passed.
 - the `distribution` kind of motion, "Approve a year's distribution",
   registered in `decision.kind`, with the drafted distributions as its
   options (`distributions`).
@@ -25,23 +22,19 @@ Declared by `patronage`.
   registered in `decision.kind`, so a new decision's form offers it, with
   the drafted patronage terms as its options (`bases`).
 - `decision_patronage.adoption`: the terms and the decision moving to
-  adopt them, recorded by `adopts_patronage_terms`, a trigger after a
-  motion of the kind is made, which refuses a motion naming no drafted
-  terms, whatever wrote it.
+  adopt them, a view of the motions of the `patronage` kind.
 
-The app role may select and insert, and update the decision approving a
-distribution; the rules role may select.
+The motions are the decision feat's rows, so the graft reads them and
+keeps no copy. The app role and the rules role may select.
 
 ## Rules
 
 - `decision_patronage.approves`, on `patronage:distribution:approve`: the
-  cited decision is the one approving this distribution.
+  cited decision moved to approve this distribution.
 - `decision_patronage.asks`, on `decision:decision:propose`: each motion
-  to adopt patronage terms names drafted terms, and the decision asks to
-  adopt them.
+  to adopt patronage terms names drafted terms not yet adopted.
 - `decision_patronage.asks_to_approve`, on `decision:decision:propose`:
-  each motion to approve a distribution names a draft not yet approved,
-  and the decision is the one asking to approve it.
+  each motion to approve a distribution names a draft not yet approved.
 - `decision_patronage.adopts`, on `patronage:terms:adopt`: the cited
   decision moved to adopt these terms.
 - Both ops are listed in `decision.cites`, so `circle-decision-membership`'s
@@ -51,12 +44,12 @@ distribution; the rules role may select.
 ## Tests
 
 `ts/_tests/terms.test.ts` (`cella test slice decision-patronage`): a
-motion to adopt drafted terms records the adoption it asks for, and one
-naming no such terms is refused; adopting cites a decision that moved to
-adopt the terms, and approving the decision that approves the
-distribution, never another; a motion to approve a drafted distribution
-records that approval, the latest decision moving to standing, and one
-naming no draft is refused; both ops cite a decision.
+motion to adopt drafted terms is the adoption it asks for, and a proposal
+moving to adopt no such terms is refused; adopting cites a decision that
+moved to adopt the terms, and approving one that moved to approve the
+distribution, never another; a draft moved again is approved by either
+decision moving to, and a proposal moving to approve no draft is refused;
+both ops cite a decision.
 
 ## Shell
 
@@ -70,7 +63,7 @@ adopt and the drafted distributions it may move to approve.
 ## Lanterne
 
 d-2026-006, a majority of the assembly closed on 20 June 2026, approves
-the 2025 distribution, seeded as its motion's record; a later year's is
+the 2025 distribution by its motion; a later year's is
 moved by a decision of the `distribution` kind. The statutes' patronage
 terms, `st-2021`, were adopted with the statutes in 2021, before the
 books moved here, so no decision here adopts them.

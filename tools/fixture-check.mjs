@@ -150,14 +150,25 @@ const check = (name) => {
       has(roles, p.role, 'role', 'position')
     }
   }
+  // What a decision moves to adopt or approve names a version or a
+  // distribution, and an adoption made is one a decision moved to make
+  const moves = new Set()
+  for (const d of decision.decision ?? []) {
+    for (const m of d.motion ?? []) {
+      if (m.kind === 'adopt') {
+        has(versions, m.args?.version, 'version', `motion of ${d.id}`)
+        moves.add(`${d.id} ${m.args?.version}`)
+      } else if (m.kind === 'distribution') {
+        has(distributions, m.args?.distribution, 'distribution', `motion of ${d.id}`)
+      }
+    }
+  }
   for (const a of read('graft.decision-document').adoption ?? []) {
-    has(decisions, a.decision, 'decision', 'adoption')
     has(documents, a.document, 'document', 'adoption')
     has(versions, a.version, 'version', 'adoption')
-  }
-  for (const a of read('graft.decision-patronage').approval ?? []) {
-    has(distributions, a.distribution, 'distribution', 'approval')
-    has(decisions, a.decision, 'decision', 'approval')
+    if (!moves.has(`${a.decision} ${a.version}`)) {
+      fail(`adoption of ${a.version}: ${a.decision} has no motion to adopt it`)
+    }
   }
   for (const b of read('graft.client-invoice').billing ?? []) {
     has(new Set(invoices.keys()), b.invoice, 'invoice', 'billing')

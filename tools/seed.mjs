@@ -227,23 +227,15 @@ async function load() {
     )
   }
 
-  // What decisions ask to adopt, named by the hash the database gave the
-  // version, and the adoptions already made, each from the version adopted
-  // before it.
+  // The adoptions already made, each from the version adopted before it;
+  // what a decision asks to adopt is its motion.
   const adoptions = read('graft.decision-document').adoption ?? []
   for (const a of adoptions) {
     await db.query(
-      `INSERT INTO decision_document.adoption (decision, document, version, hash)
-       SELECT $1, $2, $3, hash FROM document.version WHERE id = $3 AND document = $2`,
-      [a.decision, a.document, a.version],
+      `INSERT INTO document.adoption (receipt, document, version, base, adopted)
+       VALUES (${receipt}, $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
+      [a.document, a.version, day(a.adopted)],
     )
-    if (a.adopted) {
-      await db.query(
-        `INSERT INTO document.adoption (receipt, document, version, base, adopted)
-         VALUES (${receipt}, $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
-        [a.document, a.version, day(a.adopted)],
-      )
-    }
   }
 
   // Who read which binding version of the texts, once each version is in.

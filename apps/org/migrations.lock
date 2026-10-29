@@ -1,6 +1,7 @@
 # Every migration of this app, by id and SHA-256: append-only. `cella migrate
 # --lock` adds the new ones; a locked line is never edited or removed.
 org:account-decision/001-account-decision.sql 2f6e91c9bf2ab1d09f9a5804bf127f750b0dabfcdfd24c304523a6008d7b6055
+org:account-decision/002-motion.sql dc74fe4307688d1fbfb751627146a8f7843c30707647b9ddfb783a23b534067a
 org:account-membership-patronage-transaction/001-account-membership-patronage-transaction.sql 314302dd689081eed31ea89aef523988fe875ad32483619cb441141ccd5200ac
 org:account-membership-patronage-transaction/002-reads.sql 59e007a0da6f6335570807ccdd03edc04370ddb9a0d0339bf5c7f9bce88569c9
 org:account-membership-patronage-transaction/003-return.sql 1487d6fd275991159665a64fcd5387e55d5b2dd36e0dee5c7412bd3c3c7522c1
@@ -75,6 +76,7 @@ org:core/notary/007-notarised.sql 7530d4b4886d1453f949b3318a4b4ff3bc5afbee3accc3
 org:decision-document/001-decision-document.sql f39999fc2782469b1424433e68ce8534b3dd81302356f55b7d566aa5ab10c2fe
 org:decision-document/002-adopt.sql 1467bb56b891dee59ecf4787ad29fe22cbc40b236a3f1d49c1a2ef852f92bb90
 org:decision-document/003-link.sql a2cd816758f6e8d59dc685785d77d9641f555f7293bdc57595e8fcb144aa13b9
+org:decision-document/004-motion.sql 2e5837ab815b36671abce0c3e03a0d93d4419ea7f79b28fc4f0dcf17bcda0fb0
 org:decision-employment-membership/001-decision-employment-membership.sql 70689043a10e95286fd346d96d7769e961296ef797a15131a347678c8a5717d0
 org:decision-meeting/001-decision-meeting.sql 367d9f604ac928b3d50a00415021e188f6e94469187cd665730595f0cf4f151a
 org:decision-membership/001-decision-membership.sql 2a41df334d13ee8fa1d7e0b4b5357071ead594698e72001446f8f8df8885d518
@@ -82,6 +84,7 @@ org:decision-membership/002-erase.sql d2f6541b839536929745db9776d782b677bd37c825
 org:decision-membership/003-mention.sql c074455f18a1e8a15027c61a8e139bc626e59337ee54ec5a74d1eade7f81a38f
 org:decision-patronage/001-decision-patronage.sql 386aba75fcaa7243ad15a0799d3b0596f478063729bca894edfbd2ff52b18f3c
 org:decision-patronage/002-distribution.sql c8495e3c547c978ff2f27f8a2cabed498514eb0aa201ac965b12fcec6e8be64b
+org:decision-patronage/003-motion.sql a699c83e3b189a008b9f8091b5f2d43f3d9e89523b4eaa61f3ba9c189eb7826a
 org:decision/001-decision.sql 3450b5fc7c01bf32aef5e1b7591d6f5913ce74f5872acd0a9273ae600489d3a7
 org:decision/002-rules-read.sql b8afb3057ec345a816c5aa46c8a69404b262259f1c43f3855a1eb8813be86247
 org:decision/003-cites.sql f92891031b7caabeeeea35e001cdccd04d5e118e33ccc68af4c990bf628db0d5

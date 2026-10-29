@@ -1,6 +1,6 @@
 +++
 title = "account-decision"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 The statutes' capital terms and the decision of the members that adopts
@@ -14,16 +14,15 @@ them. Declared by `account`.
   `decision.kind`, so a new decision's form offers it, with the drafted
   capital terms as its options.
 - `account_decision.adoption`: the terms and the decision moving to adopt
-  them, recorded by `adopts_terms`, a trigger after a motion of the kind
-  is made, which refuses a motion naming no drafted terms, whatever wrote
-  it.
+  them, a view of the motions of the kind. The motion is the decision
+  feat's row, so the graft reads it and keeps no copy.
 
-The app role may select and insert; the rules role may select.
+The app role and the rules role may select.
 
 ## Rules
 
 - `account_decision.asks`, on `decision:decision:propose`: each motion to
-  adopt terms names drafted terms, and the decision asks to adopt them.
+  adopt terms names drafted terms not yet adopted.
 - `account_decision.adopts`, on `account:terms:adopt`: the cited decision
   moved to adopt these terms.
 - The op is listed in `decision.cites`, so `circle-decision-membership`'s
@@ -33,8 +32,8 @@ The app role may select and insert; the rules role may select.
 ## Tests
 
 `ts/_tests/terms.test.ts` (`cella test slice account-decision`): a motion
-to adopt drafted terms records the adoption it asks for, and one naming
-no such terms is refused; adopting cites a decision that moved to adopt
+to adopt drafted terms is the adoption it asks for, and a proposal
+moving to adopt no such terms is refused; adopting cites a decision that moved to adopt
 the terms, never another; the op cites a decision.
 
 ## Shell

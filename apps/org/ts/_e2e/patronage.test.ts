@@ -275,7 +275,7 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
     { circle: 'ag', title: 'Approve 2025 again', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2025' } }] },
     as(camille),
   )
-  assert.match(reason(stray), /no drafted distribution 2025 to approve/)
+  assert.match(reason(stray), /2025 was approved on /)
   const proposed = settled(
     await propose(
       { circle: 'ag', title: 'Approve the 2026 distribution', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2026' } }] },

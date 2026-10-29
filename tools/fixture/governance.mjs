@@ -1,11 +1,12 @@
 // fixture check, governance: a mock co-op's decisions decide what can be
 // decided. A motion names a kind a graft registers, and its arguments
 // resolve: a member to admit is invited and subscribes shares, one to
-// suspend or let go is a member; a seat names a circle and a member. Every
+// suspend or let go is a member; a seat names a circle and a member; the links
+// check a version to adopt and a distribution to approve. Every
 // invited member has taken up their invitation, with the first device it
 // enrolled, without which their admission is refused, and only they have.
 
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke'])
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke', 'adopt', 'terms', 'patronage', 'distribution'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))

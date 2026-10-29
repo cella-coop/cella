@@ -1,6 +1,6 @@
 // seed, finance: loads a mock co-op's capital, the statutes' terms, surplus
 // distributions, pay and expenses into the account, patronage, payslip and
-// expense schemas and their grafts' (decision-patronage, account-membership,
+// expense schemas and their grafts' (account-membership,
 // account-membership-transaction's repayments, employment-payslip,
 // payslip-transaction, expense-project). The chart, the
 // journal, the members and their time load first: a capital account names
@@ -42,9 +42,6 @@ export async function finance(db, read, day) {
       'INSERT INTO account_membership_transaction.repayment (member, n, due, amount, entry, paid) VALUES ($1, $2, $3, cella.amount($4), $5, $6)',
       [r.member, r.n, day(r.due), r.amount, r.entry ?? null, day(r.paid)],
     )
-  }
-  for (const a of read('graft.decision-patronage').approval ?? []) {
-    await db.query('INSERT INTO decision_patronage.approval (distribution, decision) VALUES ($1, $2)', [a.distribution, a.decision])
   }
 
   const pay = read('payslip')

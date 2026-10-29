@@ -7,7 +7,6 @@
 # write is gone, so the list only shrinks; nothing is added to it. Empty,
 # it goes.
 account-decision: 001-account-decision.sql writes decision.kind
-account-decision: trigger adopts_terms on decision.motion
 account-decision: 001-account-decision.sql writes decision.cites
 account-membership: trigger held on account.account
 account-membership: account_membership.freezes() writes account.account
@@ -36,16 +35,13 @@ circle-decision-membership: 003-seats.sql writes decision.cites
 circle-decision-membership: 003-seats.sql writes decision.kind
 decision-document: 001-decision-document.sql writes decision.cites
 decision-document: 002-adopt.sql writes decision.kind
-decision-document: trigger adopts on decision.motion
 decision-membership: 001-decision-membership.sql writes decision.kind
 decision-membership: 001-decision-membership.sql writes decision.cites
 decision-membership: 002-erase.sql writes decision.kind
 decision-membership: 002-erase.sql writes decision.cites
 decision-patronage: 001-decision-patronage.sql writes decision.cites
 decision-patronage: 001-decision-patronage.sql writes decision.kind
-decision-patronage: trigger adopts_patronage_terms on decision.motion
 decision-patronage: 002-distribution.sql writes decision.kind
-decision-patronage: trigger approves_patronage_distribution on decision.motion
 patronage-payslip: patronage_payslip.parts() writes patronage.part
 patronage-payslip: trigger parts_by_pay on patronage.distribution
 patronage-timesheet: patronage_timesheet.parts() writes patronage.part

@@ -1,6 +1,6 @@
 +++
 title = "decision-document"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Adoption by decision: what content of which document a decision asks to
@@ -12,21 +12,20 @@ feat.
 `decision_document` (`sql/`): `decision_document.adoption`, a decision
 and the document it asks to adopt, by their ids, with the content it
 adopts named by its canonical hash (the BLAKE3 the database gave the
-version) and the version the proposer read it in; no foreign key into
-either feat. The app role may select and insert; the rules role,
-`cella_rules`, may select.
+version) and the version the proposer read it in: a view of the motions
+of the `adopt` kind, each joined to the version it names. The motion is
+the decision feat's row and a version never changes, so the graft reads
+both and keeps no copy. The app role and the rules role, `cella_rules`,
+may select.
 
 It registers the `adopt` kind with the decision feat (`sql/002-adopt.sql`):
 a motion naming a version, which the New form picks from the versions
-this graft adds to the decisions' `about`. A trigger on the motion
-records the adoption it asks, the version's document and its hash as the
-database gave it, and refuses a version that does not exist.
+this graft adds to the decisions' `about`.
 
 ## Rules
 
 - `decision_document.asks`, on `decision:decision:propose`: each motion
-  to adopt names a version, and the decision adopts that version's
-  document as it hashes.
+  to adopt names a version, and no two name versions of one document.
 - `decision_document.adopts`, on `document:document:adopt`: the cited
   decision asks to adopt this document, and the version adopted hashes as
   the decision names it. The members consented to content, not to a row:

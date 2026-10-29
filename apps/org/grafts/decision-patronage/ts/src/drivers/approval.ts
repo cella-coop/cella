@@ -11,7 +11,7 @@ const from = `FROM decision_patronage.approval a
 // approves.
 export async function approvals(db: Db, by: { distribution: string } | { decision: string }): Promise<Approval[]> {
   const [where, value] = 'distribution' in by ? ['a.distribution', by.distribution] : ['a.decision', by.decision]
-  const { rows } = await db.query<Approval>(`SELECT ${columns} ${from} WHERE ${where} = $1 ORDER BY l.year DESC`, [value])
+  const { rows } = await db.query<Approval>(`SELECT ${columns} ${from} WHERE ${where} = $1 ORDER BY l.year DESC, d.proposed DESC, d.id DESC`, [value])
   return rows
 }
 

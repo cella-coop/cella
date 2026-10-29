@@ -35,6 +35,11 @@ the members as their share of work (participation), 54,27 % to the
 indivisible reserves and 0,73 % as interest on capital, 448,22 € on its
 13 000 €, within the 3,5 % the statutes pay (loi 47-1775, art. 14).
 """
+# What it decides beyond its text: the 2025 distribution approved.
+[[decision.motion]]
+kind = "distribution"
+args = { distribution = "2025" }
+
 [[decision.vote]]
 member = "camille@lanterne.example"
 stance = "for"
@@ -94,6 +99,12 @@ proposed = 2026-06-01
 deadline = 2026-06-20
 closed = 2026-06-20
 body = "Version 3 adds remote work days and the solidarity rate for associations."
+# What it decides beyond its text: the internal rules adopted as version 3
+# holds them.
+[[decision.motion]]
+kind = "adopt"
+args = { version = "internal-rules@3" }
+
 [[decision.vote]]
 member = "camille@lanterne.example"
 stance = "consent"
@@ -155,6 +166,12 @@ body = """
 Raise the standard day rate from 520 € to 560 €, keep the solidarity rate
 at 380 €, and publish the rate card as drafted.
 """
+# What it decides beyond its text: the rate card adopted as version 2
+# holds it.
+[[decision.motion]]
+kind = "adopt"
+args = { version = "rate-card-2027@2" }
+
 [[decision.vote]]
 member = "camille@lanterne.example"
 stance = "consent"

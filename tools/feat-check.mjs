@@ -22,7 +22,9 @@
 // It also checks that grafts are named and declared, that a package's
 // relative imports stay inside it and its exports are its public surface,
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
-// ops are named for it, through sql-check.mjs every sql/ file's boundaries, and through
+// ops are named for it, through sql-check.mjs every sql/ file's boundaries,
+// through writes.mjs that no feat or graft writes a table it does not own
+// beyond the app's listed exceptions, and through
 // powers.mjs that the power each op's label names is the one its SQL
 // registers, and that an op with no power declares a check its SQL backs.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
@@ -34,6 +36,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared } from './sql-check.mjs'
 import { agree, covered, declared } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
+import { listed, ratchet, scanTs } from './writes.mjs'
 
 const args = process.argv.slice(2)
 const sql = !args.includes('--no-sql')
@@ -300,8 +303,22 @@ if (sql) {
       known.add(schemaName(g))
     }
   }
-  const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }
+  const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found))
+  // What a feat's or a graft's TypeScript writes outside its own schema,
+  // held with what its SQL does to the app's foreign.list.
+  for (const dir of byName.values()) {
+    const p = place(dir)
+    if (p?.kind === 'graft') {
+      found.foreign.push(...scanTs(repo, dir, p.name, schemaName(p.name)))
+    } else if (p?.kind === 'core' && parentOf(p.node)) {
+      found.foreign.push(...scanTs(repo, dir, basename(p.node), basename(p.node)))
+    }
+  }
+  for (const app of apps) {
+    const mine = found.foreign.filter((f) => f.path.startsWith(app + '/'))
+    errors.push(...ratchet(mine, listed(repo, app), app))
+  }
   // A feat's or graft's ops, not the app core's own types.
   const owned = [...byName.values()].filter((d) => {
     const p = place(d)

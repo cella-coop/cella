@@ -25,7 +25,11 @@
 //   - never sets search_path but on a function, to the catalog;
 //   - never reads the clock or randomness, since rules read
 //     cella.verdict_date(), and has no DO block, which this check cannot
-//     see into.
+//     see into;
+//   - writes and triggers on no table outside its own schema and cella.*:
+//     each such write or trigger its migrations leave standing is
+//     collected (`found.foreign`) and refused unless the app's
+//     foreign.list still names it (writes.mjs).
 // PL/pgSQL bodies are parsed statement by statement; LANGUAGE sql bodies,
 // atomic or quoted, are parsed whole.
 
@@ -294,6 +298,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'DropStmt':
       for (const obj of b.objects ?? []) {
         const parts = strings(obj.List?.items ?? obj.ObjectWithArgs?.objname ?? (obj.String ? [obj] : []))
+        // Its own trigger on another's table, which it drops to stop
+        // writing there.
+        if (b.removeType === 'OBJECT_TRIGGER' && s.triggers?.has(parts.join('.'))) {
+          continue
+        }
         owned(parts.length > 1 ? parts[0] : parts[0] ?? null, `drops ${parts.join('.')}`)
       }
       break
@@ -405,12 +414,18 @@ function plpgsql(lib, fn) {
 // Collects what the SQL registers as literal rows, for feat-check to
 // compare with each op's label: the powers in cella.power, the rules in
 // cella.rule, and the ops that cite a decision in decision.cites.
-export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }) {
+export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []
+  found.foreign ??= []
   for (const o of owners(repo, apps)) {
     const s = scope(o)
+    // What the owner's migrations leave writing or triggering on a table
+    // it does not own, by key, file by file: a later file's drop or
+    // replacement takes a trigger or a function away.
+    const foreign = new Map()
+    s.triggers = new Set()
     for (const file of readdirSync(join(repo, o.dir)).filter((f) => f.endsWith('.sql')).sort()) {
       const path = join(o.dir, file)
       const fail = (msg) => errors.push(`${path}: ${msg}`)
@@ -446,9 +461,76 @@ export async function checkSql(repo, apps, known, found = { powers: [], rules: [
       for (const body of bodies) {
         inspect(body, o, s, known, fail, found)
       }
+      if (o.kind !== 'core') {
+        foreignIn(lib, tree, bytes, file, path, o, s, foreign)
+      }
     }
+    found.foreign.push(...foreign.values())
   }
   return errors
+}
+
+// A table outside the owner's schema and the notary's: a feat's, a
+// lower-order graft's, a parent feat's.
+const foreignTable = (rv, s) => rv?.schemaname && rv.schemaname !== s.own && rv.schemaname !== 'cella'
+
+// The tables a statement tree writes, its data-modifying CTEs among them.
+function written(tree) {
+  const out = []
+  walk(tree, (key, n) => {
+    if (['InsertStmt', 'UpdateStmt', 'DeleteStmt', 'MergeStmt'].includes(key)) {
+      out.push(n.relation)
+    }
+    if (key === 'TruncateStmt') {
+      out.push(...(n.relations ?? []).map((r) => r.RangeVar))
+    }
+  })
+  return out
+}
+
+// One file's foreign writes and triggers, applied to what the owner's
+// earlier files left: a trigger on another's table, a function whose body
+// writes one, a statement the migration itself runs on one. Dropping the
+// trigger or the function, or replacing the function, takes its entries
+// away.
+function foreignIn(lib, tree, bytes, file, path, o, s, foreign) {
+  const add = (what) => foreign.set(what, { owner: o.name, what, path })
+  const drop = (prefix) => [...foreign.keys()].filter((k) => k.startsWith(prefix)).forEach((k) => foreign.delete(k))
+  const fnKey = (parts) => `${parts.join('.')}()`
+  for (const { stmt, stmt_location: at = 0, stmt_len: len = 0 } of tree.stmts ?? []) {
+    const [type, b] = Object.entries(stmt)[0]
+    if (type === 'CreateTrigStmt') {
+      if (foreignTable(b.relation, s)) {
+        s.triggers.add(`${b.relation.schemaname}.${b.relation.relname}.${b.trigname}`)
+        add(`trigger ${b.trigname} on ${b.relation.schemaname}.${b.relation.relname}`)
+      }
+    } else if (type === 'DropStmt' && b.removeType === 'OBJECT_TRIGGER') {
+      for (const obj of b.objects ?? []) {
+        const [schema, table, name] = strings(obj.List?.items)
+        foreign.delete(`trigger ${name} on ${schema}.${table}`)
+      }
+    } else if (type === 'DropStmt' && ['OBJECT_FUNCTION', 'OBJECT_PROCEDURE'].includes(b.removeType)) {
+      for (const obj of b.objects ?? []) {
+        drop(`${fnKey(strings(obj.ObjectWithArgs?.objname))} writes `)
+      }
+    } else if (type === 'CreateFunctionStmt') {
+      const name = fnKey(strings(b.funcname))
+      drop(`${name} writes `)
+      const opt = (k) => b.options?.find((x) => x.DefElem.defname === k)?.DefElem.arg
+      const lang = opt('language')?.String?.sval
+      const as = strings(opt('as')?.List?.items)[0]
+      const bodies = lang === 'sql' && as
+        ? [lib.parseSync(as)]
+        : lang === 'plpgsql' ? plpgsql(lib, bytes.subarray(at, len ? at + len : undefined).toString()) : []
+      for (const rv of bodies.flatMap(written).filter((rv) => foreignTable(rv, s))) {
+        add(`${name} writes ${rv.schemaname}.${rv.relname}`)
+      }
+    } else {
+      for (const rv of written(stmt).filter((rv) => foreignTable(rv, s))) {
+        add(`${file} writes ${rv.schemaname}.${rv.relname}`)
+      }
+    }
+  }
 }
 
 // Every sql/ directory sits beside a core package or in a graft, but an

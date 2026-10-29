@@ -1,0 +1,60 @@
+# The writes and triggers a feat or a graft still makes on a table it does
+# not own, one `<owner>: <what>` a line, each to move to its owner: a feat's
+# rows change only through its own code, and a graft writes only its own
+# schema, changing a feat by calling that feat's published write from its
+# handler (_corpus/doc/architecture.md#writes-stay-home). `cella check
+# feats` refuses a foreign write this list does not name, and a line whose
+# write is gone, so the list only shrinks; nothing is added to it. Empty,
+# it goes.
+account-decision: 001-account-decision.sql writes decision.kind
+account-decision: trigger adopts_terms on decision.motion
+account-decision: 001-account-decision.sql writes decision.cites
+account-membership: trigger held on account.account
+account-membership: account_membership.freezes() writes account.account
+account-membership: trigger freezes on membership.member
+account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes transaction.line
+account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes membership.member
+account-membership-patronage-transaction: trigger employs on patronage_transaction.distribution
+account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes transaction.line
+account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes account_membership_transaction.paid
+account-membership-payslip-transaction: trigger withholds on payslip_transaction.posting
+account-membership-transaction: trigger subscribes on membership.member
+account-membership-transaction: account_membership_transaction.subscribes() writes account.account
+account-membership-transaction: account_membership_transaction.subscribes() writes transaction.entry
+account-membership-transaction: account_membership_transaction.subscribes() writes transaction.line
+account-membership-transaction: account_membership_transaction.withdraws() writes transaction.entry
+account-membership-transaction: account_membership_transaction.withdraws() writes transaction.line
+account-membership-transaction: trigger withdraws on membership.member
+account-transaction: trigger posts on transaction.line
+circle-decision: 001-circle-decision.sql writes decision.kind
+circle-decision: 001-circle-decision.sql writes decision.cites
+circle-decision: trigger decides_by on circle.circle
+circle-decision-membership: trigger fix_roll on decision.decision
+circle-decision-membership: trigger attach on decision.cites
+circle-decision-membership: trigger count_roll on decision.decision
+circle-decision-membership: 003-seats.sql writes decision.cites
+circle-decision-membership: 003-seats.sql writes decision.kind
+decision-document: 001-decision-document.sql writes decision.cites
+decision-document: 002-adopt.sql writes decision.kind
+decision-document: trigger adopts on decision.motion
+decision-membership: 001-decision-membership.sql writes decision.kind
+decision-membership: 001-decision-membership.sql writes decision.cites
+decision-membership: 002-erase.sql writes decision.kind
+decision-membership: 002-erase.sql writes decision.cites
+decision-patronage: 001-decision-patronage.sql writes decision.cites
+decision-patronage: 001-decision-patronage.sql writes decision.kind
+decision-patronage: trigger adopts_patronage_terms on decision.motion
+decision-patronage: 002-distribution.sql writes decision.kind
+decision-patronage: trigger approves_patronage_distribution on decision.motion
+employment: src/handlers/hire.ts writes person.device
+employment-payslip: trigger worker on payslip.salary
+employment-payslip: trigger worker on payslip.payslip
+employment-timesheet: trigger worker on timesheet.entry
+expense-membership: trigger whose on expense.expense
+membership: src/handlers/lifecycle.ts writes person.device
+membership-timesheet: trigger whose on timesheet.entry
+patronage-payslip: patronage_payslip.parts() writes patronage.part
+patronage-payslip: trigger parts_by_pay on patronage.distribution
+patronage-timesheet: patronage_timesheet.parts() writes patronage.part
+patronage-timesheet: trigger parts_by_time on patronage.distribution
+payslip-timesheet: src/handlers/generate.ts writes payslip.payslip

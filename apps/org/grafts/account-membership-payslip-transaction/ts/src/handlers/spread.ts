@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { ops } from '@cella/org-account/models'
 import type { Spread, Spreading } from '../models/plan.ts'
 
@@ -31,6 +31,7 @@ export async function spread(input: Spread, deps: Deps): Promise<Outcome<(typeof
       }
       return { ...input, each: each ?? 0 }
     },
-    payload: (v) => ({ ...v }),
+    // Each instalment is what the member owes: the log keeps its commitment.
+    payload: (v) => ({ ...v, each: personal('account_membership_payslip_transaction.plan.each', v.member, v.each) }),
   })
 }

@@ -17,6 +17,9 @@ const ines = 'ines@lanterne.example'
 const hugo = 'hugo@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
+// What a payload holds of an amount: its commitment, so the rules read the
+// amount from the row the write made.
+const commitment = { $commit: '00'.repeat(32) }
 
 before(async () => {
   await db.connect()
@@ -85,7 +88,7 @@ test('a payment in moves what it pays from 1012 to her account; beyond what she 
       await db.query('INSERT INTO transaction.line (entry, n, account, side, amount) VALUES ($1, $2, $3, $4, cella.amount($5))', [entry, n + 1, account, side, c])
     }
     await db.query(`INSERT INTO account_membership_transaction.paid (entry, member, amount, via) VALUES ($1, $2, cella.amount($3), 'bank')`, [entry, ines, cents])
-    const r = (await one<{ r: string | null }>('SELECT account_membership_transaction.pays($1) AS r', [{ member: ines, amount: cents, entry }])).r
+    const r = (await one<{ r: string | null }>('SELECT account_membership_transaction.pays($1) AS r', [{ member: ines, amount: commitment, entry }])).r
     return { entry, r }
   }
   const paid = await paying(40000)
@@ -105,7 +108,7 @@ test('a payment in moves what it pays from 1012 to her account; beyond what she 
   const skewed = await paying(10000, [['512', 'debit', 10000], ['101302', 'credit', 10000]])
   assert.match(skewed.r ?? '', /is not a payment of 10000 cents on ines@lanterne.example's subscription/)
   await db.query('ROLLBACK')
-  const none = (await one<{ r: string }>('SELECT account_membership_transaction.pays($1) AS r', [{ member: hugo, amount: 100, entry: 'je-9999' }])).r
+  const none = (await one<{ r: string }>('SELECT account_membership_transaction.pays($1) AS r', [{ member: hugo, amount: commitment, entry: 'je-9999' }])).r
   assert.match(none, /hugo@lanterne.example has no subscription to pay/)
 })
 
@@ -128,7 +131,7 @@ test('draws add up against the limit, and the rule refuses one not the actor\'s 
   const beyond = await draw(30000)
   // Outside a write there is no actor, so the rule says first that it is
   // not the actor's own; the limit it reads is the view's.
-  const r = await one<{ r: string }>('SELECT account_membership_transaction.draws($1) AS r', [{ member: hugo, amount: 30000, entry: beyond }])
+  const r = await one<{ r: string }>('SELECT account_membership_transaction.draws($1) AS r', [{ member: hugo, amount: commitment, entry: beyond }])
   assert.match(r.r, /may draw only on their own account/)
   const left = await one<{ drawn: string; allowance: string }>('SELECT drawn, allowance FROM account_membership_transaction.drawn WHERE member = $1', [hugo])
   assert.ok(Number(left.drawn) > Number(left.allowance))

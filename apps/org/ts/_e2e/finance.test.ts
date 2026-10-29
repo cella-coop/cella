@@ -5,7 +5,8 @@
 // paid; draws within a member's limit and refused
 // beyond it and once their capital is frozen; and the 2025 surplus
 // approved by the assembly's decision and distributed with the legal
-// split. The books balance throughout. Run by `cella test e2e finance`.
+// split. The log commits to each payslip's figures, a draw's amount and
+// an entry's time. The books balance throughout. Run by `cella test e2e finance`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -15,7 +16,7 @@ import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-t
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay } from '@cella/org-graft-payslip-transaction/api'
 import { approve as approveTime } from '@cella/org-timesheet/api'
-import { submit as submitTime } from '@cella/org-graft-employment-timesheet/api'
+import { log as logTime, submit as submitTime } from '@cella/org-graft-employment-timesheet/api'
 import { draw } from '@cella/org-graft-account-membership-transaction/api'
 import { approve as approveSplit } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
@@ -195,6 +196,39 @@ test('Thomas draws 300 € within his 500 € limit; another 300 € is refused,
   const other = await draw({ member: thomas, cents: 10_00 }, as(julien))
   assert.match(reason(other), /julien@lanterne\.example may draw only on their own account/)
   await balanced()
+})
+
+test('the log commits to pay, time and capital: October\'s payslips, Thomas\'s draw and the time he logs open to their figures, his time to him alone', async () => {
+  const logged = (op: string) => one<{ n: number; form: Record<string, any> }>('SELECT n, form FROM cella.log WHERE op = $1 ORDER BY n DESC LIMIT 1', [op])
+  const opened = async (n: number) => (await one<{ o: Record<string, any> }>('SELECT cella.opened($1) AS o', [n])).o
+  const commitment = /^[0-9a-f]{64}$/
+
+  const run = await logged('payslip:run:generate')
+  assert.equal(run.form.figures.length, 11)
+  for (const slip of run.form.figures) {
+    for (const figure of ['gross', 'employee', 'employer', 'net']) assert.match(slip[figure].$commit, commitment)
+  }
+  assert.equal(run.form.gross, 28_200_00, 'the run\'s totals, figures of the books, stay as given')
+  const his = (await opened(run.n)).figures.find((f: { member: string }) => f.member === thomas)
+  assert.deepEqual(his, { member: thomas, gross: 250000, employee: 55000, employer: 100000, net: 195000 })
+
+  const drawn = await logged('account:account:draw')
+  assert.match(drawn.form.amount.$commit, commitment)
+  assert.equal((await opened(drawn.n)).amount, 300_00)
+
+  const time = await logTime({ member: thomas, day: '2026-11-02', minutes: 90, billable: true }, as(thomas))
+  assert.equal(time.state, 'settled', reason(time))
+  const entry = await logged('employment-timesheet:entry:log')
+  assert.match(entry.form.minutes.$commit, commitment)
+  const disclosed = async (actor: string) => {
+    await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+    const { rows } = await app.query<{ o: Record<string, any> | null }>('SELECT cella.disclosed($1) AS o', [entry.n])
+    await app.query(`SELECT set_config('cella.actor', '', false)`)
+    return rows[0].o
+  }
+  assert.equal((await disclosed(thomas))?.minutes, 90, 'Thomas reads his own time back')
+  assert.equal(await disclosed(sofia), null, 'Sofia reads none of it')
+  assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
 
 test('the 2025 surplus is approved by d-2026-006, then distributed, and posts the legal split', async () => {

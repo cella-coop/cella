@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-10-28
+updated = 2026-10-29
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -22,6 +22,13 @@ A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.
 The note is the member's own words and stays out of the log.
+An entry's minutes are personal data of class `payroll`, registered by
+the member's address (`006-salted.sql`): a log and a correction commit
+to them, and the vault keeps them, so the log's digest confirms no
+guess at a colleague's time. Erasing a member who has left restricts
+them; once their clock runs out `cella vault sweep` redacts them to
+NULL, the one change an approved month's entries take
+(`cella.redacting()`), and every sum passes them over.
 
 ## Writes
 

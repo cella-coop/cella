@@ -335,6 +335,19 @@ erased until their legal clock runs out.
   open ballot's are logged as given. A decision's procedure says which
   ballot it takes, and a proposal may name the other
   ([ballots](../../apps/org/feats/decision/index.md#ballots)).
+- **Pay, time and capital.** A time entry's minutes, as it is logged and
+  as it is corrected; each payslip's figures, in the payload of the run
+  that prepares them; and the amount of a capital payment in and of a
+  draw, and a spread's instalment, are logged as commitments,
+  their member the subject. So an entry's digest confirms no guess at a
+  colleague's pay, time or capital, and the vault opens the figure to
+  whoever `cella.disclosed` lets read it. A rule reads such a figure from
+  the row its write made, since the commitment is all the payload gives
+  it; that the two hold the same figure is the handler's to keep, and
+  the vault shows it to an audit. The books stay every member's: the
+  journal still shows a payment's amount on the bank's line, and the
+  register of members who holds how many shares
+  ([current limits](#current-limits)).
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
   vault's own key file, kept apart from the notary's seed, so the
@@ -399,13 +412,13 @@ What the build does not yet do, and what lifts each:
   rows shows the sum of those its reader reads, but for the statements,
   an entry's amount, the burn, the divisions and the return to the
   federation, which sum the whole.
-- **The log says who wrote what, and lets a guess be checked.** Every
-  member reads each entry's op, actor, date and receipt, and its
-  payload's digest, which is not salted: the journal's receipt names
-  who drew an amount, and a payload with no value marked personal, a
-  time entry's or a capital payment's, is confirmed by guessing it
-  against its digest. Marking pay, time and capital as personal in
-  their payloads, or the log read by role, lifts this.
+- **The log says who wrote what.** Every member reads each entry's op,
+  actor, date and receipt, and its payload's digest. Pay, time and
+  capital are committed to with a salt the vault keeps, so their digests
+  confirm no guess; a payload with no value marked personal, such as an
+  invoice's or a period's close, is confirmed by guessing it against its
+  digest, and the journal's receipt still names who drew an amount. The
+  log read by role lifts this.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute, holding a database connection, and goes with
   the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`

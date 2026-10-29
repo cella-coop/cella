@@ -1,6 +1,6 @@
 +++
 title = "circle-meeting-membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Who is expected at a meeting, whether it is quorate, and who may act on
@@ -24,7 +24,7 @@ of its own.
 ## Rules
 
 - `circle_meeting_membership.sits`, on `meeting:item:add`, `:move` and
-  `:remove`: the actor is an active member seated in the meeting's circle
+  `:remove`: the actor is an active member (`membership.active`) seated in the meeting's circle
   on the verdict date. It backs those ops' `seat` check.
 - `circle_meeting_membership.reaches`, on `meeting:meeting:schedule`,
   `:hold`, `:cancel` and `:minute` and on

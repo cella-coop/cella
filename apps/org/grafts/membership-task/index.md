@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -25,7 +25,8 @@ the rules role may select.
 
 ## Invariants
 
-- an assignment's task exists, and its assignee is an active member.
+- an assignment's task exists, and its assignee is an active member on the verdict date, as
+  `membership.active` says.
 
 A member who is suspended or exits keeps the tasks given to them until
 someone reassigns them; nothing reassigns them by itself.

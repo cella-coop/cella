@@ -1,6 +1,6 @@
 +++
 title = "circle-decision-membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 The electorate: who may vote on a decision, and whether it passes on
@@ -27,7 +27,7 @@ here.
   It runs with its owner's rights, since nothing else writes the roll; the
   app role and the rules role, `cella_rules`, may select it.
 - `circle_decision_membership.counted`: who was counted, the members on a
-  decision's roll who were active when it closed, fixed by
+  decision's roll who were active (`membership.active`) on the day it closed, fixed by
   `count_roll`, a trigger as the close writes the decision, in the close's
   own transaction. A suspension or exit after the close cannot change the
   outcome; the same trigger rights apply.
@@ -46,7 +46,8 @@ coordination's, counts its five.
 
 - `circle_decision_membership.electorate(decision)`: who counts on it, once
   it is closed the members counted at its close, while it is open the
-  members on its roll who are active now; `stances(decision)`, their
+  members on its roll who are active on the verdict date
+  (`membership.active`); `stances(decision)`, their
   stances received before its cutoff; and `turnout(decision)`, how many
   count, how many of them gave a stance, an abstention taking part, and
   whether that meets its procedure's quorum.

@@ -32,7 +32,7 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
   if (!found.rows[0]) {
     return null
   }
-  const members = await db.query<{ id: string; name: string }>(`SELECT m.address AS id, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE m.status = 'active' ORDER BY p.name`)
+  const members = await db.query<{ id: string; name: string }>(`SELECT m.address AS id, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`)
   const roles = await db.query<{ id: string; name: string }>(
     `SELECT r.id, r.name FROM circle.role r WHERE r.circle = $1 OR (r.circle = '*' AND NOT $2) ORDER BY r.name`,
     [circle, found.rows[0].root],

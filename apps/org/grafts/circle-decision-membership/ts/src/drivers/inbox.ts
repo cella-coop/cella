@@ -10,8 +10,7 @@ export const stances: Read = {
         FROM circle_decision_membership.roll r
         JOIN decision.decision d ON d.id = r.decision AND d.closed IS NULL
         JOIN decision.procedure p ON p.id = d.procedure
-        JOIN membership.member m ON m.address = r.member AND m.status = 'active'
-        WHERE r.member = cella.reader()
+        WHERE r.member = cella.reader() AND membership.active(r.member, cella.verdict_date())
           AND NOT EXISTS (SELECT FROM decision.vote v WHERE v.decision = d.id AND v.member = r.member)`,
   order: 'due, id',
 }

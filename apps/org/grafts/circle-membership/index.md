@@ -1,6 +1,6 @@
 +++
 title = "circle-membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Positions: which member holds which role in which circle. A position is
@@ -27,7 +27,8 @@ may insert a seat, through `position.add`, and end one, through
 
 Who may use a power needs seats and mandates, and so lives here, the
 lowest level that sees both: mandates are the `circle` feat's, seats this
-graft's, and whether a member is active the `membership` feat's.
+graft's, and whether a member is active on a day the `membership` feat's
+`membership.active(person, day)`.
 
 - `circle_membership.may(actor, power, cents, day)`: the actor is active and
   holds, on the day, a seat whose role has a mandate in force for the

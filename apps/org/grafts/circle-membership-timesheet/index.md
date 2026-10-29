@@ -1,6 +1,6 @@
 +++
 title = "circle-membership-timesheet"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Whose time a power reaches: a lead approves the time of their own
@@ -15,7 +15,7 @@ shell.
   approver holds the op's power (`approve-time`) over a circle the
   member sits in on the verdict date, through `circle_membership.over`: a
   seat whose role has the mandate, in that circle or one it is within.
-  A worker who is no active member sits in no circle, so anyone holding
+  A worker who is no active member on the verdict date (`membership.active`) sits in no circle, so anyone holding
   `approve-time` approves their time (`002-workers.sql`).
   `circle_membership.empowered` checks the power itself, for every write; this
   narrows where it reaches.

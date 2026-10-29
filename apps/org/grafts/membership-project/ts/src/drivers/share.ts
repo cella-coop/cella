@@ -18,7 +18,7 @@ export async function pot(db: Db, project: string): Promise<Pot> {
     [project],
   )
   const { rows: members } = await db.query<{ address: string; name: string }>(
-    `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE m.status = 'active' ORDER BY p.name`,
+    `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`,
   )
   const r = rows[0]
   const n = (x: string | null | undefined) => (x === null || x === undefined ? null : Number(x))

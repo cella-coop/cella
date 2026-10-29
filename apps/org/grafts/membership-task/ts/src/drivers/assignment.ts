@@ -12,7 +12,7 @@ export async function assigned(db: Db, task: string): Promise<Assigned> {
     [task],
   )
   const { rows: members } = await db.query<{ address: string; name: string }>(
-    `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE m.status = 'active' ORDER BY p.name`,
+    `SELECT m.address, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`,
   )
   return { assignee: rows[0] ?? null, members }
 }

@@ -13,7 +13,7 @@ export const approvals: Read = {
         FROM timesheet.period p
         WHERE p.submitted IS NOT NULL AND p.approved IS NULL AND p.member <> cella.reader()
           AND CASE
-            WHEN EXISTS (SELECT FROM membership.member m WHERE m.address = p.member AND m.status = 'active') THEN EXISTS (
+            WHEN membership.active(p.member, cella.verdict_date()) THEN EXISTS (
               SELECT FROM circle_membership.position s
               WHERE s.member = p.member
                 AND (s.since IS NULL OR s.since <= cella.verdict_date()) AND (s.until IS NULL OR s.until > cella.verdict_date())

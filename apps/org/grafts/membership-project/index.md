@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -44,7 +44,8 @@ granted from it, which is why setting a budget is ordered.
 
 ## Invariants
 
-- a share goes to an active member, from a live project with a budget;
+- a share goes to an active member (`membership.active` on the verdict
+  date), from a live project with a budget;
 - shares never exceed the budget (`membership_project.within`), and the
   budget never falls below them (`membership_project.covers`).
 

@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 Who came to a meeting. Declared by the `meeting` feat. Who was expected,
@@ -13,7 +13,7 @@ at a meeting, present, excused or absent, by their ids, the last mark
 winning, with the day and who made it. A trigger refuses a mark at a
 meeting no longer scheduled, since holding it fixes who came, reading the
 meeting `FOR SHARE` as the agenda's trigger does, and a mark of anyone
-who is not an active member. The app role may select, insert and update;
+who is not an active member on the verdict date (`membership.active`). The app role may select, insert and update;
 the rules role, `cella_rules`, may select.
 
 ## Writes

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 What of a worker's part of the work share buys shares: the split of each
@@ -13,7 +13,7 @@ the work share's terms read back on a person's page. Declared by
 `account_membership_patronage` (`sql/`):
 
 - `split`: each worker's part of a year's work share split as the year's
-  terms say: an associate employed in the co-op (an active member whose
+  terms say: an associate employed in the co-op (an active member on the verdict date, as `membership.active` says, whose
   capital account is not frozen) takes as many whole shares at the
   share's value (`account_membership.value`) as the terms' percent of their
   part buys, and the rest is paid; anyone else is paid it all (Code du

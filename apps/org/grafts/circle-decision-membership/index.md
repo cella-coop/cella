@@ -50,9 +50,14 @@ coordination's, counts its five.
   it is closed the members counted at its close, while it is open the
   members on its roll who are active on the verdict date
   (`membership.active`); `stances(decision)`, their
-  stances received before its cutoff; and `turnout(decision)`, how many
+  stances received before its cutoff, but a redacted one; and `turnout(decision)`, how many
   count, how many of them gave a stance, an abstention taking part, and
   whether that meets its procedure's quorum.
+- `circle_decision_membership.tally(decision)`: what every member reads of
+  a decision's count, whether it passes and its turnout, by `passes` and
+  `turnout`; on a secret ballot ([ballots](../../feats/decision/index.md#ballots))
+  sealed, every field null, until its close. It runs as its owner, since a
+  member reads no other's secret stance, and only the app role may call it.
 - `circle_decision_membership.passes(decision)`: whether a decision passes by
   its procedure over those stances: its quorum met, and then by its rule,
   `cella.consent`, or for a majority `cella.majority`, more for than
@@ -116,7 +121,9 @@ coordination's, counts its five.
 - `put`: what a member's or a circle's page proposes, through the
   decision feat's `propose`, to the circle that decides it, by its
   procedure, titled with what it decides: a membership to the assembly,
-  a seat to the circle above its own.
+  a seat to the circle above its own. Admitting, suspending or ending a
+  membership, and giving or ending a seat, elect or remove a person, so
+  `put` names a secret ballot for them; an erasure takes the procedure's.
 
 ## Shell
 
@@ -129,7 +136,11 @@ offers the rule's stances, starts at their latest and posts the decision
 feat's `vote` only for a change; closed, it shows the stance that
 counted; off the roll, it says so; and to the list, the
 turnout and each decision's state: open, passed or rejected, as `passes`
-reads the stances the close froze, in SQL. With it comes the board
+reads the stances the close froze, in SQL. The outcome, the turnout and
+the state are read through `tally`. On a secret ballot the roll lists who
+may vote and whom the close counted, never a stance; the outcome and the
+turnout read sealed until the close, on the page and in the list; and
+the acting member still sees and changes their own. With it comes the board
 decisions open as, grouped by state;
 dragging an open decision into Passed or Rejected is the close, posted
 as its button posts it, the database deciding which column it lands in,

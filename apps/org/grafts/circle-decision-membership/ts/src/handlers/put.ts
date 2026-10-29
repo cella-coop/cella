@@ -8,7 +8,10 @@ import type { Asking } from '../models/asking.ts'
 // decides it, by that circle's procedure: a membership to the assembly; a
 // seat to the circle above the one it is in, or to the assembly for its
 // own. The title says what is decided; the rules on the proposal check
-// the motion and that circle's say over it.
+// the motion and that circle's say over it. Admitting, suspending or
+// ending a membership, and giving or ending a seat, elect or remove a
+// person, so they go to a secret ballot, as co-ops commonly do; an
+// erasure goes by the procedure's.
 export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> | Refused> {
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
   const { rows } = await deps.db.query<{ decider: string; procedure: string; member: string | null; circle: string | null; role: string | null }>(
@@ -39,6 +42,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
       circle: found.decider,
       title: titles[input.kind],
       procedure: found.procedure,
+      ballot: input.kind === 'erase' ? undefined : 'secret',
       deadline: input.deadline,
       body: input.body,
       motions: [{ kind: input.kind, args: input.args }],

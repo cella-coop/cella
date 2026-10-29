@@ -4,6 +4,9 @@ export type Stance = 'for' | 'against' | 'abstain' | 'consent' | 'object'
 
 export type Rule = 'consent' | 'majority'
 
+// Whether every member reads each stance, or each its own alone.
+export type Ballot = 'open' | 'secret'
+
 // The stances each rule counts.
 export const stances: Record<Rule, Stance[]> = {
   consent: ['consent', 'object', 'abstain'],
@@ -13,22 +16,25 @@ export const stances: Record<Rule, Stance[]> = {
 // How a decision is taken: its rule; for a majority, the share of the
 // votes cast it needs, at least `[num, den]` of those for and against, or
 // none for more for than against; and its quorum, at least `[num, den]`
-// of those counted giving a stance.
+// of those counted giving a stance; and the ballot a decision under it
+// takes unless its proposal names the other.
 export interface Procedure {
   id: string
   label: string
   rule: Rule
   share: [number, number] | null
   quorum: [number, number]
+  ballot: Ballot
 }
 
 const fraction = ([n, d]: [number, number]) => (n === d ? 'all' : `${n} in ${d}`)
 
 // A procedure's terms in words: "consent", "majority, quorum 1 in 4",
-// "2 in 3 of votes cast, quorum 1 in 2".
+// "2 in 3 of votes cast, quorum 1 in 2", "majority, secret ballot".
 export function terms(p: Procedure): string {
   const rule = p.share ? `${fraction(p.share)} of votes cast` : p.rule
-  return p.quorum[0] ? `${rule}, quorum ${fraction(p.quorum)}` : rule
+  const quorum = p.quorum[0] ? `${rule}, quorum ${fraction(p.quorum)}` : rule
+  return p.ballot === 'secret' ? `${quorum}, secret ballot` : quorum
 }
 
 // A decision as the feat reads it. Its outcome is never stored: the
@@ -40,6 +46,7 @@ export interface Decision {
   rule: Rule
   // The procedure it was proposed under, whose rule is its own.
   procedure: string
+  ballot: Ballot
   proposed: string
   deadline: string
   closed: string | null
@@ -124,6 +131,8 @@ export interface Propose {
   circle: string
   title: string
   procedure: string
+  // Its ballot, where it is not its procedure's.
+  ballot?: Ballot
   deadline: string
   body: string
   motions: Motion[]
@@ -132,6 +141,7 @@ export interface Propose {
 export interface Proposed {
   decision: string
   proposed: string
+  ballot: Ballot
 }
 
 // What the New form offers: the kinds of motion, the procedures, and the

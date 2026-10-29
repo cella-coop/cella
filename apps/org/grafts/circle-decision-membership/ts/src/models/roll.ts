@@ -21,6 +21,9 @@ export type State = (typeof states)[number]
 // once closed, by its procedure and short of its quorum if it is; or,
 // `short`, as the drawer has it, the verdict alone.
 export function outcome(r: Roll, short = false): { text: string; tone: Tone } {
+  if (sealed(r)) {
+    return { text: 'sealed until the close', tone: 'neutral' }
+  }
   if (r.passes === null) {
     return { text: 'no stance counts', tone: 'neutral' }
   }
@@ -30,8 +33,15 @@ export function outcome(r: Roll, short = false): { text: string; tone: Tone } {
   return { text: `${verb}${by}${quorum}`, tone: r.passes ? 'positive' : 'negative' }
 }
 
-// How many took part, of those counted, and the quorum: "7 of 10, quorum 1 in 4".
+// Whether a secret ballot's tally is still sealed: it opens at the close.
+export const sealed = (r: Roll): boolean => r.secret && !r.closed
+
+// How many took part, of those counted, and the quorum: "7 of 10, quorum 1
+// in 4"; sealed on a secret ballot until its close.
 export function taking(r: Roll): string {
+  if (sealed(r)) {
+    return 'sealed until the close'
+  }
   const [n, d] = r.turnout.quorum
   return n ? `${r.turnout.given} of ${r.turnout.counted}, quorum ${n === d ? 'all' : `${n} in ${d}`}` : `${r.turnout.given} of ${r.turnout.counted}`
 }
@@ -44,8 +54,12 @@ export interface Roll {
   // The label of the procedure it is taken by.
   procedure: string
   // Those who count on it, how many of them gave a stance, and whether
-  // that meets its procedure's quorum, `[num, den]` of those counted.
-  turnout: { counted: number; given: number; quorate: boolean; quorum: [number, number] }
+  // that meets its procedure's quorum, `[num, den]` of those counted;
+  // null on a secret ballot until its close.
+  turnout: { counted: number | null; given: number | null; quorate: boolean | null; quorum: [number, number] }
+  // Whether it is taken by secret ballot: no stance but the acting
+  // member's is read, and the tally is sealed until the close.
+  secret: boolean
   closed: string | null
   passes: boolean | null
   state: State

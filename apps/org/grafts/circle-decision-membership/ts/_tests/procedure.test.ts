@@ -3,7 +3,8 @@
 // this one: two thirds of the votes cast, abstentions counting for neither;
 // a quorum of those counted, an abstention taking part; who counts while
 // a decision is open, and at its close; and `counts`, which refuses a
-// close that did not count its roll. Run by
+// close that did not count its roll; and a secret ballot's tally, sealed
+// to the app until its close. Run by
 // `cella test slice circle-decision-membership`.
 
 import { after, before, test } from 'node:test'
@@ -104,4 +105,33 @@ test('a close that did not count its roll is refused; counted, it is not', async
   assert.equal(await counts('d-2026-105'), "d-2026-105's close did not count its roll: those counted are its active members on the day it closes")
   assert.equal((await db.query<{ n: number }>('SELECT circle_decision_membership.count($1) AS n', ['d-2026-105'])).rows[0].n, 10)
   assert.equal(await counts('d-2026-105'), null)
+})
+
+test('a secret ballot\'s tally is sealed to the app until its close, and a redacted stance counts as none given', async () => {
+  await db.query(
+    `INSERT INTO decision.decision (id, circle, title, rule, procedure, ballot, proposed, deadline)
+     VALUES ('d-2026-106', 'ag', 'd-2026-106', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
+  )
+  await vote('d-2026-106', 'camille', 'for')
+  await vote('d-2026-106', 'yusuf', 'for')
+  await vote('d-2026-106', 'hugo', 'against')
+  // What the app reads of it, for camille.
+  const tally = async () => {
+    await db.query('BEGIN')
+    try {
+      await db.query('SET LOCAL ROLE cella_app')
+      await db.query(`SELECT set_config('cella.actor', $1, true)`, [at('camille')])
+      return (await db.query('SELECT passes, counted, given, quorate FROM circle_decision_membership.tally($1)', ['d-2026-106'])).rows[0]
+    } finally {
+      await db.query('ROLLBACK')
+    }
+  }
+  assert.deepEqual(await tally(), { passes: null, counted: null, given: null, quorate: null })
+  assert.equal(await passes('d-2026-106'), true)
+  await db.query(`UPDATE decision.decision SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['d-2026-106', ++receipt])
+  await db.query('SELECT circle_decision_membership.count($1)', ['d-2026-106'])
+  assert.deepEqual(await tally(), { passes: true, counted: 10, given: 3, quorate: true })
+  await db.query(`UPDATE decision.vote SET stance = 'redacted' WHERE decision = $1 AND member = $2`, ['d-2026-106', at('yusuf')])
+  assert.deepEqual(await turnout('d-2026-106'), { counted: 10, given: 2, quorate: true })
+  assert.equal(await passes('d-2026-106'), false)
 })

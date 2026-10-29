@@ -151,12 +151,15 @@ sequenceDiagram
   (`cella.reach`): `account-transaction` opens the lines on the co-op's
   own accounts to every member and a capital account's to its holder, and
   `circle-file-membership` a class of personal files to the powers over
-  what they record. No one signed in reads none of it. A write's
+  what they record. No one signed in reads none of it. A stance on a
+  secret ballot is read by its member alone, under no power; a
+  decision's tally, read by everyone, stays sealed until its close
+  ([ballots](../../apps/org/feats/decision/index.md#ballots)). A write's
   transaction reads the whole state, whoever asked for it (`cella.writing()`):
   the notary judges whether they may, and a write's state must not depend
   on who wrote it. The rules role reads everything. The statements,
   rubric by rubric, an entry's amount, a project's burn, a
-  distribution's divisions and the year's return to the federation sum
+  distribution's divisions, a decision's tally and the year's return to the federation sum
   the whole for every reader, as functions running as their owner; the
   figures behind them read as their rows do. The server acts as
   `cella_app` whatever role it logs in as, so an owner's or a
@@ -326,6 +329,12 @@ erased until their legal clock runs out.
   commitment, never the value ([signatures](signatures.md#digests)). The
   request the member signs is hashed with a fresh salt of its own, so its
   digest in the receipt confirms no guess either.
+- **A secret ballot's stances.** A stance on a secret ballot is logged
+  as a commitment, its member the subject, so the log says who gave a
+  stance and when, as every entry names its actor, and never which; an
+  open ballot's are logged as given. A decision's procedure says which
+  ballot it takes, and a proposal may name the other
+  ([ballots](../../apps/org/feats/decision/index.md#ballots)).
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
   vault's own key file, kept apart from the notary's seed, so the

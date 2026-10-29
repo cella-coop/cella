@@ -116,6 +116,24 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
   )
   assert.deepEqual(d, { circle: 'ag', title: 'Admit Nadia Benali as a member', roll: '10' })
   await consented(admission)
+
+  // Admitting a person goes to a secret ballot: the log keeps each stance's
+  // commitment and its actor, never the stance; a member reads their own
+  // stance alone, and the tally is sealed until the close.
+  assert.equal((await one<{ ballot: string }>('SELECT ballot FROM decision.decision WHERE id = $1', [admission])).ballot, 'secret')
+  const logged = await all<{ actor: string; stance: Record<string, unknown> }>(
+    `SELECT actor, form -> 'stance' AS stance FROM cella.log WHERE op = 'decision:decision:vote' AND form ->> 'decision' = $1`,
+    [admission],
+  )
+  assert.equal(logged.length, 10)
+  assert.ok(logged.every((l) => typeof l.stance === 'object' && '$commit' in l.stance), JSON.stringify(logged[0]))
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
+  const read = (await app.query<{ member: string }>('SELECT member FROM decision.vote WHERE decision = $1', [admission])).rows
+  assert.deepEqual(read, [{ member: camille }])
+  const tally = (await app.query('SELECT passes, counted, given, quorate FROM circle_decision_membership.tally($1)', [admission])).rows[0]
+  assert.deepEqual(tally, { passes: null, counted: null, given: null, quorate: null })
+  await app.query(`SELECT set_config('cella.actor', '', false)`)
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM decision.vote WHERE decision = $1', [admission])).n, '10')
 })
 
 test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
@@ -137,6 +155,11 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
   assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 20]])
   assert.equal(await head(), before + 1, 'one log entry')
   assert.equal(await status(nadia), 'active')
+  // Closed, the secret ballot's tally opens to every member.
+  assert.deepEqual(
+    (await app.query('SELECT passes, counted, given, quorate FROM circle_decision_membership.tally($1)', [admission])).rows[0],
+    { passes: true, counted: 10, given: 10, quorate: true },
+  )
   assert.deepEqual(
     await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_membership.position WHERE member = $1', [nadia]),
     { circle: 'ag', role: 'member', since: '2026-11-07' },

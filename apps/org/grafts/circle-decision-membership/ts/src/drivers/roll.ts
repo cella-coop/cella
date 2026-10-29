@@ -3,25 +3,26 @@ import { stances, type Stance } from '@cella/org-decision/models'
 import type { Roll, Voter } from '../models/roll.ts'
 
 // A decision's state, in SQL over `d`: open until its close, then passed
-// or rejected as `circle_decision_membership.passes` reads the stances the
+// or rejected as `circle_decision_membership.tally` reads the stances the
 // close froze.
 const state = `CASE WHEN d.closed IS NULL THEN 'open'
-                    WHEN circle_decision_membership.passes(d.id) THEN 'passed'
+                    WHEN (circle_decision_membership.tally(d.id)).passes THEN 'passed'
                     ELSE 'rejected' END`
 
-// A decision's roll, each member's latest stance before its cutoff,
-// whether it passes and its state, as the database computes them; and,
-// for the acting member, whether they are on the roll and their latest
-// stance by receipt, the one counted once the decision closed.
+// A decision's roll, each member's latest stance before its cutoff, none
+// on a secret ballot, whether it passes and its state, as the database
+// computes them, sealed on a secret ballot until its close; and, for the
+// acting member, whether they are on the roll and their latest stance by
+// receipt, the one counted once the decision closed.
 export async function roll(db: Db, decision: string, actor: string | null = null): Promise<Roll | null> {
   const found = await db.query<Omit<Roll, 'stances' | 'me' | 'voters'>>(
     `SELECT d.rule, p.label AS procedure, to_char(d.closed, 'YYYY-MM-DD') AS closed,
-            circle_decision_membership.passes(d.id) AS passes, ${state} AS state,
+            d.ballot = 'secret' AS secret, t.passes, ${state} AS state,
             json_build_object('counted', t.counted, 'given', t.given, 'quorate', t.quorate,
                               'quorum', json_build_array(p.quorum_num, p.quorum_den)) AS turnout
      FROM decision.decision d
      JOIN decision.procedure p ON p.id = d.procedure
-     CROSS JOIN LATERAL circle_decision_membership.turnout(d.id) t
+     CROSS JOIN LATERAL circle_decision_membership.tally(d.id) t
      WHERE d.id = $1`,
     [decision],
   )
@@ -38,6 +39,7 @@ export async function roll(db: Db, decision: string, actor: string | null = null
      LEFT JOIN LATERAL (
        SELECT stance, receipt FROM decision.vote x
        WHERE x.decision = r.decision AND x.member = r.member AND x.receipt < coalesce(d.cutoff, 9223372036854775807)
+         AND d.ballot = 'open'
        ORDER BY x.receipt DESC LIMIT 1
      ) v ON true
      WHERE r.decision = $1
@@ -65,11 +67,19 @@ export async function roll(db: Db, decision: string, actor: string | null = null
 }
 
 // Each decision's state, and how many on its roll have given a stance,
-// "4 of 10", by decision; none where it has no roll.
-export const turnout = `SELECT d.id, ${state} AS state, t.given || ' of ' || t.roll AS turnout
+// "4 of 10", by decision; none where it has no roll. A secret ballot's
+// reads "sealed" until its close, then how many of those counted took
+// part, from its tally.
+export const turnout = `SELECT d.id, ${state} AS state,
+    CASE WHEN d.ballot = 'open' THEN t.given || ' of ' || t.roll
+         WHEN d.closed IS NULL THEN 'sealed'
+         ELSE x.given || ' of ' || x.counted END AS turnout
   FROM decision.decision d
   LEFT JOIN (
     SELECT r.decision, count(*)::int AS roll,
            count(*) FILTER (WHERE EXISTS (SELECT FROM decision.vote v WHERE v.decision = r.decision AND v.member = r.member))::int AS given
     FROM circle_decision_membership.roll r GROUP BY r.decision
-  ) t ON t.decision = d.id`
+  ) t ON t.decision = d.id
+  LEFT JOIN LATERAL (
+    SELECT s.given, s.counted FROM circle_decision_membership.tally(d.id) s WHERE d.ballot = 'secret' AND d.closed IS NOT NULL
+  ) x ON true`

@@ -2,7 +2,7 @@ import type { Db, Read } from '@cella/org-db'
 import type { Decision, Detail, Given, Kind, Motioned, Procedure, Summary } from '../models/decision.ts'
 import type { Message } from '../models/thread.ts'
 
-const columns = `id, circle, title, rule, procedure, to_char(proposed, 'YYYY-MM-DD') AS proposed,
+const columns = `id, circle, title, rule, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
 
 // The decisions as the collection lists them, open first, then the
@@ -25,10 +25,12 @@ export async function decision(db: Db, id: string): Promise<Detail | null> {
   if (!found.rows[0]) {
     return null
   }
-  const terms = (await procedures(db)).find((p) => p.id === found.rows[0].procedure)
-  if (!terms) {
+  const procedure = (await procedures(db)).find((p) => p.id === found.rows[0].procedure)
+  if (!procedure) {
     throw new Error(`${id} is taken by ${found.rows[0].procedure}, which is no procedure`)
   }
+  // Its terms are its procedure's, by the ballot it was proposed under.
+  const terms = { ...procedure, ballot: found.rows[0].ballot }
   const given = await db.query<Given>(
     `SELECT receipt::text AS id, receipt::int AS receipt, member, stance, to_char(at, 'YYYY-MM-DD') AS at
      FROM decision.vote WHERE decision = $1 ORDER BY receipt DESC`,
@@ -53,9 +55,9 @@ export async function procedures(db: Db): Promise<Procedure[]> {
   const { rows } = await db.query<Procedure>(
     `SELECT id, label, rule,
             CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
-            json_build_array(quorum_num, quorum_den) AS quorum
+            json_build_array(quorum_num, quorum_den) AS quorum, ballot
      FROM decision.procedure
-     ORDER BY id NOT IN ('consent', 'majority', 'two-thirds'), label`,
+     ORDER BY id NOT IN ('consent', 'majority', 'two-thirds', 'election'), label`,
   )
   return rows
 }

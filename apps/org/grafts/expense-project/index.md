@@ -36,4 +36,4 @@ Thomas's train to Clairval's site, Chloé's coffee to Nuvola's retainer.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_project.rebills` to the analytics shell: which project each expense is rebilled to.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_project.rebills` to the analytics shell: which project each expense is rebilled to; and `expense_project.totals`, each project's expenses, approved and reimbursed or still pending, in cents.

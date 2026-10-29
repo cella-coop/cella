@@ -4,15 +4,16 @@ import { mounted, writes } from '#lib/server/slices.ts'
 import { perform } from '#lib/server/write.ts'
 import type { PageServerLoad } from './$types'
 
-// An item: its owner's data, and each extension's data on it, by slice.
-export const load: PageServerLoad = async ({ params, locals }) => {
+// An item: its owner's data, given the address, and each extension's data
+// on it, by slice.
+export const load: PageServerLoad = async ({ params, url, locals }) => {
   const m = mounted(params.collection)
   const item = m?.collection.item
   if (!m || !item) {
     error(404, `There is no collection ${params.collection} with pages`)
   }
   return using(locals.actor, async (db) => {
-    const found = await item(db, params.id)
+    const found = await item(db, params.id, url.searchParams)
     if (!found) {
       error(404, `${params.collection} has no ${params.id}`)
     }

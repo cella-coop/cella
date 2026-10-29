@@ -56,6 +56,9 @@ export interface Report {
   // How each view after the first meets one before it: pairs of fields
   // that are equal.
   join?: [string, string][]
+  // The views after the first that may meet no row, their fields then
+  // null: a project with no invoice still has a row.
+  outer?: string[]
   // What each row shows, grouped by when the report has measures.
   fields?: string[]
   measures?: Record<string, Measure>

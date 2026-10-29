@@ -138,7 +138,8 @@ export interface Collection {
   // whether the log verifies, and what its New form offers, which may be
   // the acting member's, as their week of time.
   about?(db: Db, actor?: string | null): Promise<unknown>
-  item?(db: Db, id: string): Promise<unknown | null>
+  // An item, given the page's address, as a report is given its span.
+  item?(db: Db, id: string, query?: URLSearchParams): Promise<unknown | null>
   index?(db: Db): Promise<Entry[]>
   // Writes from the collection's page, such as a new item, and from an
   // item's page.

@@ -29,8 +29,10 @@ limit, and draws the financial statements from the journal.
   rubric by rubric in its order, a line the sum of its accounts, a total
   what it adds less what it subtracts, expanded down to its lines, a
   heading none. The income statement is drawn over a span, the balance
-  sheet over every entry up to its last day. The sums are SQL's; the shell
-  only sets a span beside the one before it.
+  sheet over every entry up to its last day. The patronage feat reads a
+  year's result from it; the `report` feat draws the same sheets through
+  the analytics port, from the movements below, and equals it to the
+  cent.
 
 The app role and the rules role, `cella_rules`, may select the balance.
 
@@ -103,12 +105,8 @@ Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the whole trial balance agrees
 (`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
-account's ledger, every line posted to it, to its page; and to
-the account feat's `reports`, each span's result and total assets, and on
-a span's page two tabs, the income statement and the balance sheet
-(`Sheet`), each rubric with the span's figure and the span before's, a
-line nothing posted to in either left out, and a line opening on its
-accounts, each linking to its ledger.
+account's ledger, every line posted to it, to its page. The financial
+statements are the `report` feat's.
 
 ## Lanterne
 

@@ -456,7 +456,8 @@ two halves of one **slice**, matched by name:
 
 - from `./api`, its server side (`Slice` in `@cella/org-db`): the
   collections it owns, each with its reads (`list`, a SQL select of its
-  rows as the acting member sees them, `item`, `index` for the command
+  rows as the acting member sees them, `item`, given the page's address
+  as a report is given its span, `index` for the command
   menu, `about` for the collection's header) and its writes as form
   actions, each a handler over a form; what it adds to the collections
   of the feats it joins and of the feats they nest in, and a nested feat
@@ -495,7 +496,7 @@ to whom its rule or an extension's `allows` opens them; `/sign-in`,
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
 membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
 which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
-collections. A collection's owner is a feat,
+collections and from reports. A collection's owner is a feat,
 or the log, a core library. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,
 as membership and employment extend person's people; the root may join
@@ -600,7 +601,10 @@ transaction, repeatable read and read-only: it reads the log's head,
 which the port publishes as `analytics.head`, the catalog and the report
 on one snapshot, and stamps the result with that head. The org app's
 server makes the implementation at assembly from what `cella` hands it,
-and a feat calls the port it is handed.
+and a feat calls the port it is handed: the `report` feat's server side
+is made with it (`reporting(port)`), and the root hands the home's pins
+over a report to that feat's rows. Where `cella` hands no shell, a run
+fails with why and a report's page says so.
 
 In development `cella db start` starts the shell on the dev database at
 `CELLA_ANALYTICS_PORT` (54343) after the cluster, `cella db stop` stops

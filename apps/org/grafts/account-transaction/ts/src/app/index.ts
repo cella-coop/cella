@@ -1,15 +1,9 @@
 import type { App } from '@cella/org-ui'
 import type { Balance, Ledger } from '../models/balance.ts'
-import type { Figures } from '../models/statement.ts'
 import Movements from './blocks/Movements.svelte'
-import Income from './blocks/Income.svelte'
-import Balances from './blocks/Balance.svelte'
-
 
 // The graft's client side: each account's debits, credits and balance in
-// the chart, whether the trial balance agrees, an account's ledger, and
-// each span's income statement and balance sheet against the span before
-// it, in the PCG's presentation.
+// the chart, whether the trial balance agrees, and an account's ledger.
 export const app: App = {
   name: 'account-transaction',
   extends: {
@@ -39,30 +33,6 @@ export const app: App = {
           { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
         ],
         blocks: [Movements],
-      },
-    },
-    // Each span's result and total assets, and its two statements.
-    reports: {
-      columns: [
-        {
-          key: 'result',
-          label: 'Result',
-          kind: 'money',
-          role: 'meta',
-          value: (r: Partial<Figures>) => r.result ?? 0,
-          tone: (r: Partial<Figures>) => ((r.result ?? 0) < 0 ? 'negative' : 'neutral'),
-        },
-        { key: 'assets', label: 'Total assets', kind: 'money', role: 'hidden', value: (r: Partial<Figures>) => r.assets ?? 0 },
-      ],
-      page: {
-        tabs: [
-          { id: 'income', label: 'Income statement' },
-          { id: 'balance', label: 'Balance sheet' },
-        ],
-        blocks: [
-          { tab: 'income', block: Income },
-          { tab: 'balance', block: Balances },
-        ],
       },
     },
   },

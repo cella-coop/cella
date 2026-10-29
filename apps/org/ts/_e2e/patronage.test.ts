@@ -20,6 +20,8 @@ import pg from 'pg'
 import { adopt, approve, draft, draftTerms, statement, statements } from '@cella/org-patronage/api'
 import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
+import { federation } from '@cella/org-report/api'
+import { reading as analytics } from './port.ts'
 import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { vote } from '@cella/org-decision/api'
 import { close, propose } from '@cella/org-graft-circle-decision-membership/api'
@@ -196,6 +198,25 @@ test('the year\'s return to the federation reconciles with the split, the parts 
   assert.equal(f.until, '2031-06-01')
   assert.equal(f.reserve, 9_000_00 + 9_210_00, 'the legal reserve after the distribution')
   assert.equal(f.employee_capital, 100)
+})
+
+test('the report feat\'s federation figures, read through the analytics shell, are the return\'s, and its entry posts each share', async () => {
+  const f = Object.fromEntries((await figures(await reading(chloe), '2025')).map((x) => [x.id, Number(x.value) || x.value]))
+  const shell = await analytics(su, '54383', '2026-11-02')
+  try {
+    const { federation: r } = await federation(shell.analytics, 2025)
+    assert.ok(r)
+    assert.deepEqual([r.year, r.distributed, r.surplus], [2025, '2026-11-02', f.surplus])
+    assert.deepEqual(Object.fromEntries(r.shares.map((s) => [s.kind, s.amount])), { legal: f.legal, development: f.development, work: f.work, interest: f.interest })
+    assert.deepEqual([r.workers, r.associates, r.reserve], [f.workers, f.associates, f.reserve])
+    assert.deepEqual([r.credited.amount, r.credited.shares, r.credited.until], [f.employed, f.shares, f.until])
+    assert.equal(r.posted.reduce((s, x) => s + x.debit, 0), r.posted.reduce((s, x) => s + x.credit, 0), 'the entry balances')
+    assert.equal(r.posted.find((x) => x.code === '1061')?.credit, f.legal, 'the legal reserve takes the legal share')
+    assert.ok(!r.posted.some((x) => x.code.startsWith('1013') && x.code !== '1013'), 'a member\'s capital is summed into 1013')
+    assert.equal(r.posted.find((x) => x.code === '1013')?.credit, f.employed)
+  } finally {
+    shell.stop()
+  }
 })
 
 test('finance drafts terms mixing pay and time from 2027, the assembly decides them, and they are adopted citing that decision alone', async () => {

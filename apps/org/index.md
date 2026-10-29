@@ -25,14 +25,14 @@ scope: a co-op, a joint circle of co-ops, or a federation.
 ## The shell
 
 `cella serve` shows Lanterne from the dev database. The sidebar's head
-is Home, the co-op's dashboard of widgets pinned from its collections,
-the cash, what clients owe, the projects' margins, the decisions open
+is Home, the co-op's dashboard of widgets pinned from its collections
+and its reports, the cash, what clients owe, the projects' margins, the decisions open
 and the meetings ahead until a viewer pins their own, and the Inbox,
 what waits on the acting person, its count beside it. Each feat's
 collection is a page in the sidebar: People, Circles, Decisions, Documents
 and Meetings (governance); Clients, Projects, Tasks and Timesheets (work);
-Invoices, Accounts, Periods, Allocations, Terms, Statements, Financial
-statements, Transactions, Expenses and Payslips (finance);
+Invoices, Accounts, Periods, Allocations, Terms, Statements, Reports,
+Transactions, Expenses and Payslips (finance);
 Devices, Files, Imports and the Log (platform).
 Every collection is the same component, its drawer's View card holding the filter, the
 layout (list, table, gallery, board, calendar or dashboard) and its
@@ -127,7 +127,7 @@ employment, and the grafts that join a person's role name the child.
 | `circle` | governance | 1 | nested units, positions, roles and mandates |
 | `decision` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
-| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, and the financial statements by span |
+| `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, the statements' rubrics and the spans they are drawn for |
 | `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
@@ -137,6 +137,7 @@ employment, and the grafts that join a person's role name the child.
 | `timesheet` | work | 1 | time entries and members' months |
 | `expense` | finance | 1 | capture, approve within a budget, reimburse |
 | `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
+| `report` | finance | 1 | saved reports read through the analytics port: the financial statements, the project margins, the federation figures and a member's own |
 | `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled |
 | `file` | platform | 1 | the files the co-op keeps, named by their BLAKE3 |
 | `import` | platform | 1 | files brought in from other tools, and what each line came to |
@@ -189,7 +190,7 @@ and admit a member by vote (ordered).
 | `employment-project-timesheet` | a worker's time booked to a project by their employment, and the week they enter it in |
 | `employment-timesheet` | whose time an entry is, a worker's within their employment, and logging it by that employment |
 | `expense-file` | an expense's receipts, one carried by its claim |
-| `expense-invoice-project-timesheet` | a project's margin: invoiced less its time's cost and its expenses, its burn, its forecasts and whether it is watched |
+| `expense-invoice-project-timesheet` | retired: a project's margin is a report; its migrations stay, the second dropping what the first made |
 | `expense-membership` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |

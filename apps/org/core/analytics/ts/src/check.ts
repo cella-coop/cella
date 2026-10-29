@@ -98,6 +98,11 @@ export function check(report: Report, catalog: Catalog): string[] {
     }
   }
   const order = views.map(([as]) => as)
+  for (const as of report.outer ?? []) {
+    if (!order.slice(1).includes(as)) {
+      reasons.push(`outer ${as}: names no view of the report after the first`)
+    }
+  }
   for (const [i, as] of order.entries()) {
     const before = new Set(order.slice(0, i))
     const meets = (report.join ?? []).some(
@@ -260,7 +265,7 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
       const on = joins
         .filter(([a, b]) => (a.startsWith(`${as}.`) && before.has(b.split('.')[0])) || (b.startsWith(`${as}.`) && before.has(a.split('.')[0])))
         .map(([a, b]) => `${ref(a)} = ${ref(b)}`)
-      return `JOIN ${table(view)} AS ${quote(as)} ON ${on.join(' AND ')}`
+      return `${report.outer?.includes(as) ? 'LEFT JOIN' : 'JOIN'} ${table(view)} AS ${quote(as)} ON ${on.join(' AND ')}`
     })
     .join(' ')
   const fields = report.fields ?? []

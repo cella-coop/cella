@@ -23,3 +23,28 @@ FROM project_timesheet.rate r;
 CREATE VIEW project_timesheet.costs AS
 SELECT c.since, cella.cents(c.hourly) AS hourly
 FROM project_timesheet.cost c;
+
+-- Each project's burn on the scope's day, as `forecast` reads it: what its
+-- billable time spent at the billing rate and all its time cost at the
+-- cost rate, in cents; the share of its budget spent; how far through its
+-- span it is; and its spend at completion at the pace so far.
+CREATE VIEW project_timesheet.forecasts AS
+SELECT p.id AS project, cella.verdict_date() AS day, cella.cents(p.budget)::bigint AS budget,
+       coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0)::bigint AS spent,
+       coalesce(round(sum(t.hours * t.cost)), 0)::bigint AS cost,
+       CASE WHEN cella.cents(p.budget) > 0
+            THEN round(100.0 * coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0) / cella.cents(p.budget), 1) END AS burn,
+       project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()) AS elapsed,
+       CASE WHEN project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()) > 0
+            THEN round(coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0)
+                       / project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()))::bigint END AS forecast
+FROM project.project p
+JOIN project.progress g ON g.id = p.id
+LEFT JOIN (
+  SELECT b.project, e.minutes / 60.0 AS hours, e.billable, r.hourly, c.hourly AS cost
+  FROM project_timesheet.booking b
+  JOIN timesheet.entry e ON e.id = b.entry
+  LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.rate x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) r ON true
+  LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.cost x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) c ON true
+) t ON t.project = p.id
+GROUP BY p.id, g.milestones, g.completed;

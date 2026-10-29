@@ -1,5 +1,5 @@
 {
-  "name": "@cella/org-graft-expense-invoice-project-timesheet",
+  "name": "@cella/org-report",
   "private": true,
   "type": "module",
   "exports": {
@@ -8,7 +8,10 @@
     "./app": "./src/app/index.ts"
   },
   "dependencies": {
+    "@cella/org-analytics": "workspace:*",
     "@cella/org-db": "workspace:*",
+    "@cella/org-ops": "workspace:*",
+    "@cella/org-sign": "workspace:*",
     "@cella/org-ui": "workspace:*",
     "svelte": "5.57.2"
   }

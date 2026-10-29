@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-10-28
+updated = 2026-10-29
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -193,7 +193,11 @@ The theme is light, dark or the system's, a cookie the server writes into
   who and when over what it says, set in by its depth as a reply, its
   writes at its foot), `Mention` (a member or a document named inside a
   text, a quiet chip linking to it), `Icon`
-  (Phosphor, duotone), `Outcome`, `Command`.
+  (Phosphor, duotone), `Outcome` (the last write's outcome, floating
+  until dismissed: each write with its verdict and reason; a write of
+  several stopped part-way says that those it wrote first stand and only
+  the rest is left to send; and a post with no answer reads as unknown,
+  since it may have been written), `Command`.
 - `Floating`: what floats at a point rather than from a trigger, a menu at
   the caret or a toolbar over a selection: in the top layer, opened
   manually, kept in the viewport; a press on its buttons never takes the
@@ -219,7 +223,11 @@ action, and while the server answers with what to sign it signs it with
 the device this browser keeps for that scope, actor and device, and posts
 the proof back naming the run it answers ([trust](../../../../_corpus/doc/trust.md#keys-and-addresses)).
 It ends with the write's outcome, as SvelteKit's action result, which
-the caller applies. The devices are kept in IndexedDB by
+the caller applies. A post that gets no answer it can read, the
+connection dropped or a proxy answering in the server's place, throws,
+which the editor's sync reads as being offline; a `Form` shows it as an
+`unknown` outcome (`lost`), since the write may have been made, keeps
+what was typed and asks for a reload before it is sent again. The devices are kept in IndexedDB by
 `hooks/kept.svelte.ts` (`keep`, `kept`, `held`), each private key a
 CryptoKey the browser made, or derived for a fixture member, never
 exported.

@@ -2,15 +2,18 @@
   import CheckCircle from 'phosphor-svelte/lib/CheckCircle'
   import XCircle from 'phosphor-svelte/lib/XCircle'
   import HourglassMedium from 'phosphor-svelte/lib/HourglassMedium'
+  import Question from 'phosphor-svelte/lib/Question'
   import X from 'phosphor-svelte/lib/X'
-  import { said, type Outcome } from '../models/outcome.ts'
+  import { none, said, type Outcome } from '../models/outcome.ts'
   import Icon from './Icon.svelte'
 
   // A write's outcome, floating until dismissed: each write it made, its
-  // verdict and, if refused, the rule's reason.
+  // verdict and, if refused, the rule's reason; for a write of several
+  // stopped part-way, that those it wrote first stand and only the rest
+  // is left to send; and, when no answer came back, that it is unknown.
   let { outcome, ondismiss }: { outcome: Outcome; ondismiss: () => void } = $props()
 
-  const icons = { settled: CheckCircle, refused: XCircle, pending: HourglassMedium, failed: XCircle }
+  const icons = { settled: CheckCircle, refused: XCircle, pending: HourglassMedium, failed: XCircle, unknown: Question }
   const all = $derived([outcome, ...outcome.then])
 
   // Escape dismisses the outcome first, before a page's own Escape, such
@@ -28,18 +31,25 @@
 <svelte:window onkeydowncapture={onkeydown} />
 
 <div class="outcome" role="status" aria-live="polite" data-state={outcome.state}>
-  <ul>
-    {#each all as o, i}
-      <li class={o.state} class:then={i > 0}>
-        <Icon icon={icons[o.state]} />
-        <span class="what">
-          <code>{o.op}</code>
-          <b>{said(o)}</b>
-          {#if o.reason}<span class="reason">{o.reason}</span>{/if}
-        </span>
-      </li>
-    {/each}
-  </ul>
+  <div class="body">
+    <ul>
+      {#each all as o, i}
+        <li class={o.state} class:then={i > 0}>
+          <Icon icon={icons[o.state]} />
+          <span class="what">
+            {#if o.op !== none}<code>{o.op}</code>{/if}
+            <b>{said(o)}</b>
+            {#if o.reason}<span class="reason">{o.reason}</span>{/if}
+          </span>
+        </li>
+      {/each}
+    </ul>
+    {#if outcome.spent?.length}
+      <p class="part">
+        Stopped part-way: {outcome.spent.length === 1 ? 'the write before it settled and stands' : `the ${outcome.spent.length} writes before it settled and stand`}, cleared from the form. Send it again to write only the rest.
+      </p>
+    {/if}
+  </div>
   <button class="close" onclick={ondismiss} aria-label="Dismiss"><Icon icon={X} /></button>
 </div>
 
@@ -85,7 +95,8 @@
   .failed {
     color: var(--negative-text);
   }
-  .pending {
+  .pending,
+  .unknown {
     color: var(--warning-text);
   }
   .what {
@@ -100,6 +111,14 @@
     font-weight: 500;
   }
   .reason {
+    color: var(--text-muted);
+  }
+  .body {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .part {
+    margin: 0;
     color: var(--text-muted);
   }
   .close {

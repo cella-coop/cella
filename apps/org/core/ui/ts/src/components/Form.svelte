@@ -4,7 +4,7 @@
   import { refreshAll } from '$app/navigation'
   import { page } from '$app/state'
   import { useForm } from '../hooks/useForm.ts'
-  import { post } from '../post.ts'
+  import { lost, post, type Result } from '../post.ts'
   import Button from './Button.svelte'
 
   // A write: the fields post to the page's named action, files and all,
@@ -48,7 +48,9 @@
       return
     }
     try {
-      const result = await post(el.action, new FormData(el, e.submitter))
+      // A post with no answer may have written all the same: its outcome
+      // is unknown, and what was typed stays.
+      const result: Result = await post(el.action, new FormData(el, e.submitter)).catch(lost)
       if (result.type === 'success') {
         if (reset) {
           el.reset()

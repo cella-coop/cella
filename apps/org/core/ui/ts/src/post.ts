@@ -1,6 +1,7 @@
 import { parse } from 'devalue'
 import { signer, type Json } from '@cella/org-sign'
 import { held } from './hooks/kept.svelte.ts'
+import { none, type Outcome } from './models/outcome.ts'
 
 // An action's result as SvelteKit answers a form's post, which
 // `applyAction` takes.
@@ -22,12 +23,20 @@ interface Ask {
 const asked = (r: Result): Ask | null =>
   r.type === 'success' && r.data && typeof r.data === 'object' && 'sign' in r.data ? (r.data.sign as Ask) : null
 
-const failed = (status: number, reason: string): Result => ({
+const failed = (status: number, reason: string, state: Outcome['state'] = 'failed'): Result => ({
   type: 'failure',
   status,
   location: location.href,
-  data: { done: { op: 'none:none:none', state: 'failed', reason, then: [] } },
+  data: { done: { op: none, state, reason, then: [] } satisfies Outcome },
 })
+
+// What a form shows when its post got no answer it could read: the
+// connection dropped, or something on the way answered in the server's
+// place. The server may have written it all the same, so the outcome is
+// unknown. `post` itself throws then, which the editor's sync reads as
+// being offline.
+export const lost = () =>
+  failed(504, 'it may have been written all the same: reload the page to see what stands before sending it again', 'unknown')
 
 async function send(url: string, body: FormData): Promise<Result> {
   const res = await fetch(url, { method: 'POST', body, headers: { 'x-sveltekit-action': 'true', accept: 'application/json' } })

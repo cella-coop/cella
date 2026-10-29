@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -62,6 +62,11 @@ writes are listed in `decision.cites` by the `decision-membership` graft.
   someone who holds no current device, SQLSTATE `09000`, so no member is
   admitted unable to sign, and nothing it wrote stays; a worker invited to
   join signs with the device their hire enrolled.
+- `membership.active(person, day)`, whether the person held an active
+  membership that day: admitted on or before it, and not yet suspended
+  nor gone. It is what a graft asks of an active member, rather than
+  reading the status; the record keeps one day per move, so a day inside
+  a suspension since lifted reads as active.
 
 ## Personal data
 

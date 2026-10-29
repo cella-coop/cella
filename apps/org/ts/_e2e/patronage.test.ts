@@ -21,8 +21,8 @@ import { adopt, approve, draft, draftTerms, statement, statements } from '@cella
 import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
-import { propose, vote } from '@cella/org-decision/api'
-import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { vote } from '@cella/org-decision/api'
+import { close, propose } from '@cella/org-graft-circle-decision-membership/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 

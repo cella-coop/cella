@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps } from '@cella/org-db'
+import { write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Propose, Proposed } from '../models/decision.ts'
 
@@ -7,15 +7,16 @@ const op = 'decision:decision:propose' satisfies keyof typeof ops
 
 // Proposes a decision on the verdict date with the motions it decides,
 // numbered the year's next (`d-2026-013`) under a lock on the numbering,
-// so two proposals at once take two numbers. Its roll is fixed as it is
-// inserted, by circle-decision-membership; its rule is its procedure's, which
-// a foreign key keeps, and its ballot the one the proposal names or else
-// the procedure's; `decision.proposes` checks the
-// write made it, the graft registering each motion's kind checks the
-// motion, and the actor must sit in the circle. The title and the text
-// are the proposer's words and stay out of the log.
-export async function propose(input: Propose, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Proposed>> {
-  return write(deps, {
+// so two proposals at once take two numbers. Its rule is its procedure's,
+// which a foreign key keeps, and its ballot the one the proposal names or
+// else the procedure's; `decision.proposes` checks the write made it, the
+// graft registering each motion's kind checks the motion, and the actor
+// must sit in the circle. A graft that fixes more in the same write, as
+// circle-decision-membership fixes the roll, runs this state inside its
+// own. The title and the text are the proposer's words and stay out of
+// the log.
+export function proposing(input: Propose): Write<Proposed> {
+  return {
     op,
     request: input,
     state: async (tx) => {
@@ -41,5 +42,9 @@ export async function propose(input: Propose, deps: Deps): Promise<Outcome<(type
       return rows[0]
     },
     payload: (v) => ({ decision: v.decision, circle: input.circle, procedure: input.procedure, ballot: v.ballot, deadline: input.deadline, motions: input.motions }),
-  })
+  }
+}
+
+export async function propose(input: Propose, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Proposed>> {
+  return write(deps, proposing(input))
 }

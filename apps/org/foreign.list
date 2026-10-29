@@ -26,7 +26,6 @@ account-membership-transaction: trigger withdraws on membership.member
 account-transaction: trigger posts on transaction.line
 circle-decision: 001-circle-decision.sql writes decision.kind
 circle-decision: 001-circle-decision.sql writes decision.cites
-circle-decision-membership: trigger fix_roll on decision.decision
 circle-decision-membership: trigger attach on decision.cites
 circle-decision-membership: 003-seats.sql writes decision.cites
 circle-decision-membership: 003-seats.sql writes decision.kind

@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -105,3 +105,7 @@ a link that opens it.
 The statutes as adopted in 2024, Camille's subscription form on her own
 file, Inès's contract filed by Camille, and Sofia's and Chloé's receipts
 on their October expenses ([the fixture](../../fixtures/lanterne/index.md)).
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `file.classes` to the analytics shell: how many files each class keeps and their size. A file is personal data whole, so only these sums are shared.

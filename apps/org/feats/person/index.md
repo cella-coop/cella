@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -241,3 +241,7 @@ nothing of it is stored.
 - Hugo's old laptop was revoked on 12 May 2026: it signs nothing now.
 - Inès signs with the laptop her hire enrolled, and with the phone on
   which she took up her invitation on 1 October.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `person.people` to the analytics shell: each person by address, with their name, which erasure redacts. Contact details are not shared.

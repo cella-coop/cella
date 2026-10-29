@@ -244,3 +244,7 @@ not verified.
 - Every invoice carries its client's address. Lanterne prints as Lanterne
   SCOP SARL, a SCOP SARL à capital variable registered at RCS Bobigny,
   the registry for Montreuil; its SIREN and VAT number are placeholders.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is client-invoice's.

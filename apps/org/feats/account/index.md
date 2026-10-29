@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -264,3 +264,7 @@ terms, `account-decision`'s form over this feat's write.
   10 monthly instalments; one who leaves is repaid a year after the exit,
   in three yearly repayments.
 - Each member may draw up to 500 € on their account.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes the chart, its periods, the statements' rubrics and the capital terms to the analytics shell, as `account.chart`, `account.periods`, `account.rubrics` and `account.capital_terms`. A capital account is a member's, so the chart shows only the accounts no one holds; what the held ones sum to is account-transaction's.

@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -51,3 +51,7 @@ entries a payslip's run posted on its page.
 ## Lanterne
 
 `je-0009`, `je-0019` and `je-0031` are July to September's runs, carried.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `payslip_transaction.postings` to the analytics shell: which entry posted which month's payroll, and on what event.

@@ -1,6 +1,6 @@
 +++
 title = "circle-membership"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Positions: which member holds which role in which circle. A position is
@@ -110,3 +110,7 @@ in the assembly and in a working circle; and under Own and decide, what
 they decide read back as sentences: where they sit, how each of those
 circles decides, and what their mandates let them do, within what
 limit.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `circle_membership.positions` to the analytics shell: who holds which role in which circle, and when.

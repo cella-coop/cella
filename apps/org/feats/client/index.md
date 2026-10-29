@@ -1,6 +1,6 @@
 +++
 title = "Client"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The organisations and people the co-op works for: its CRM. Companies and
@@ -134,3 +134,7 @@ Margaux Roux, Les Halles' contact for the shop, a person:
 
 Associations pay the solidarity rate under the internal rules, so a
 client's form matters to the rate card.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `client.clients` to the analytics shell: each client, by kind and status. A client may be a person, whose name erasure redacts; their contact details are not shared.

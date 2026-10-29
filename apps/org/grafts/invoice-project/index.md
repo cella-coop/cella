@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -46,3 +46,7 @@ project's overview what it invoiced and its invoices.
 Each of the fifteen invoices names its project: the Halles shop's
 milestones 1 to 3 (36 000 € net), Nuvola's four monthly retainers, Vélo
 Solidaire's voided invoice and its reissue at the solidarity rate.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_project.charges` to the analytics shell: which project each invoice charges.

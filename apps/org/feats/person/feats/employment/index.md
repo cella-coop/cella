@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -129,3 +129,7 @@ founders hired on 1 March 2021, everyone else six months to a year
 before the assembly admitted them, Paul until he left on 30 November
 2025, and Inès, a junior developer hired on 1 September 2025, employed
 and not yet a member.
+
+## Analytics
+
+Its [analytical contract](../../../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `employment.workers` to the analytics shell: each worker's job, contract and days, by address; their name is the person feat's.

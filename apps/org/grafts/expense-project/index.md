@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -33,3 +33,7 @@ Expenses tab of what was spent for it.
 
 Sofia's print proofs are billed on to Maison Ferrand's packaging,
 Thomas's train to Clairval's site, Chloé's coffee to Nuvola's retainer.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_project.rebills` to the analytics shell: which project each expense is rebilled to.

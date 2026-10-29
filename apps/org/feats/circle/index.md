@@ -192,3 +192,7 @@ writes propose, and the close of a passing decision carries them out.
 | Circle lead | `schedule-meeting`, `keep-minutes` | — |
 | Gérante | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | — |
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `circle.circles`, `circle.roles` and `circle.mandates` to the analytics shell: the circles, their roles and the mandates each role holds, with their limits and budgets.

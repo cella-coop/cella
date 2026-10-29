@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -55,3 +55,7 @@ Twenty-seven of the thirty-three tasks are in a project, most under a
 milestone: the Halles shop's launch checklist under Launch, its training
 and handover under Care and handover. The co-op's own tasks, such as
 closing October's books, are in none.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `project_task.filings` to the analytics shell: which project, and which of its milestones, each task is filed under.

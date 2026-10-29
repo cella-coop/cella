@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -141,3 +141,7 @@ the header's writes.
   guest on 21 September; the 26 October one scheduled.
 - The general assembly of 31 October 2026, scheduled, its agenda Inès's
   admission, the 2027 rate card and the minutes of 20 June.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `meeting.meetings` and `meeting.items` to the analytics shell: each meeting, its circle and its days, and the items on its agenda with their time.

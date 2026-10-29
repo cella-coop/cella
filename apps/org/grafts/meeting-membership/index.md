@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Who came to a meeting. Declared by the `meeting` feat. Who was expected,
@@ -38,3 +38,7 @@ lists the meetings they were marked at.
 
 Slice tests: a mark as a register, fixed once held, only an active
 member's, and the self rule.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `meeting_membership.attendance_marked` to the analytics shell: who attended each meeting, as marked.

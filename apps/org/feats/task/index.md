@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -79,3 +79,7 @@ launch checklist and its care (Yusuf, Thomas, Amina, Léa), Ferrand's
 proofs and press check (Hugo), Terres Vives's microsite (Léa, Amina),
 Nuvola's newsletter and social calendar (Chloé, Malik), and Julien's
 October close.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `task.tasks` to the analytics shell: each task, its status, priority and days.

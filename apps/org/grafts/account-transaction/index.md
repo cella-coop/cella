@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -119,3 +119,7 @@ through pay. The statements: a loss of 22 860 € over the
 third quarter, which paid three months' wages against two quarters'
 invoices, and of 80 € over 2026 so far; a balance sheet of 97 080 €,
 with the 2025 result of 61 400 € still to distribute.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_transaction.movements` to the analytics shell: the journal by account and day, what every statement and the trial balance sum. Each line is resolved to its account; a member's capital account is summed into its parent's code, so no row is one member's.

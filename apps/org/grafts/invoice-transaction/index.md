@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -69,3 +69,7 @@ member, numbered in the co-op's series and posted.
 Invoices issued before cella are in the old books and come in through the
 FEC as entries, so nothing is posted twice
 ([import](../../feats/import/index.md)).
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_transaction.postings` to the analytics shell: which entry posted which invoice or payment, and on what event.

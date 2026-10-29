@@ -318,6 +318,59 @@ file. The notary changes the same way: its upgrade script ships with the
 extension, and a migration appended to `core/notary/sql/` runs `ALTER
 EXTENSION cella UPDATE` ([the notary](../../apps/org/core/notary/index.md#build)).
 
+### Analytical contracts
+
+Analytics read the scope apart from everything else: the analytics shell
+reads the slices' analytical views through a read-only role, and joins
+across slices there and only there. A rule that decides a write stays in
+its slice, through the notary; an analytical view only describes.
+
+Each slice that has something to share publishes it in its **analytical
+contract**, `sql/analytics.sql` beside its migrations: views in its own
+schema, each with the columns it agrees to share, and comments on them.
+A view reads what the slice's other SQL may read ([above](#sql)), its
+amounts in cents (`cella.cents`), and its columns are plain types any
+client reads. A slice that holds only rules or registries publishes
+none; a feat's contract shares its collection, and a graft's what it
+joins, such as `account_transaction.movements`, the journal by account
+and day, which every statement sums.
+
+A contract is no migration: `cella migrate` applies every contract after
+the migrations, whenever one ran or a contract changed. It drops the
+views published before, so a migration never meets one, applies each
+contract whole in tree order, grants `cella_analytics` SELECT on each
+view the contract made and USAGE on its schema, then reads every view as
+that role and fails the run on a view it cannot read or a column of a
+type that is not plain. The role is granted nothing else
+([trust](trust.md#the-analytics-role)).
+
+A view reads as its owner, so the role needs no grant on a table, and a
+view shares what its slice agrees to share and no more:
+
+- a column registered in `cella.personal` only where the view's column is
+  commented `personal: why`, or `not personal: why` where its rows hold
+  none, as `account.chart` shows only the accounts no one holds. Erasure
+  redacts the column in its table, so the view shows it redacted;
+- from a table under row-level security, or a view over one, only sums
+  over its rows, grouped by no column that says whose a row is (one its
+  policy compares with `cella.reader()` or opens by `cella.reaches()`)
+  unless that column is shown and declared; or the rows its policy opens
+  to everyone, kept by the view's own `col IS NULL`. So the payroll is
+  shared as each month's sums, and a capital account's lines are summed
+  into its parent's code.
+
+`cella check feats` enforces this: `tools/sql-check.mjs` refuses in a
+contract anything but views in the slice's own schema and comments on
+them, a `security_invoker` view, an undeclared personal column, a
+secured table's rows, a sum by whose a row is undeclared, and any grant
+to `cella_analytics` anywhere in the tree. What a column is carries
+through a slice's own views. A function a view calls runs as the role,
+not as the view's owner, so one that reads a table fails the role and
+one that asks who reads sees no one: a contract reads tables and plain
+views, never a `security_invoker` view or a function over them, and
+`cella migrate`'s read as the role, and the e2e scenario on Lanterne,
+catch what the SQL check cannot see.
+
 ### Tests
 
 SQL logic is tested in the database. pgTAP tests and Lanterne's
@@ -333,7 +386,9 @@ file anywhere else fails `cella test`:
   so a slice test cannot lean on a slice it does not own, and a package
   imports only what its manifest names. Its database is unbound
   (`cella.unbound`), since a slice test writes the rows it needs below
-  the notary.
+  the notary. A slice that publishes an analytical contract is migrated
+  so even with no test file, which applies its contract on its part alone
+  and reads each view as `cella_analytics`.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
   seeded with Lanterne, through the handlers.

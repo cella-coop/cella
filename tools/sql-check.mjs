@@ -30,6 +30,20 @@
 //     each such write or trigger its migrations leave standing is
 //     collected (`found.foreign`) and refused unless the app's
 //     foreign.list still names it (writes.mjs).
+//   - grants nothing to cella_analytics, which `cella migrate` grants
+//     only the views the slices publish.
+// A slice's analytical contract, its sql/analytics.sql, holds only views
+// in its own schema and comments on them. A view reads as its owner, never
+// security_invoker, so the role needs no grant on a table, and it shares:
+//   - a column registered in cella.personal only where the view's column
+//     is commented 'personal: why';
+//   - from a table under row-level security, or a view over one, only
+//     sums: the view aggregates at its top level and groups by no column
+//     a policy compares with cella.reader(), but where that column is
+//     shown and commented personal.
+// A view any slice makes over a secured table is secured in turn. What a
+// view reads through a function runs as the role, and is caught when
+// cella migrate reads each view as it, or by review.
 // PL/pgSQL bodies are parsed statement by statement; LANGUAGE sql bodies,
 // atomic or quoted, are parsed whole.
 
@@ -237,12 +251,22 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'CreateSeqStmt':
       owned(b.sequence.schemaname, `creates ${named(b.sequence)}`)
       break
-    case 'ViewStmt':
+    case 'ViewStmt': {
       owned(b.view.schemaname, `creates ${named(b.view)}`)
+      // A view over a table under row-level security hides it: it is
+      // secured in turn, for a contract that reads it.
+      if (read(b.query).some((t) => found.secured.has(t))) {
+        found.secured.add(named(b.view))
+      }
+      carry(b, found)
       break
+    }
     case 'IndexStmt':
     case 'AlterTableStmt':
       owned(b.relation.schemaname, `${type === 'IndexStmt' ? 'indexes' : 'alters'} ${named(b.relation)}`)
+      if (type === 'AlterTableStmt' && (b.cmds ?? []).some((c) => c.AlterTableCmd?.subtype === 'AT_EnableRowSecurity')) {
+        found.secured.add(named(b.relation))
+      }
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
         const added = (b.cmds ?? []).map((c) => c.AlterTableCmd).filter((c) => c?.subtype === 'AT_AddColumn').map((c) => c.def)
         columns(b.relation, added, found.at, found)
@@ -274,6 +298,15 @@ function statement(type, b, o, s, fail, owned, named, found) {
     }
     case 'CreatePolicyStmt':
       owned(b.table.schemaname, `creates the policy ${b.policy_name} on ${named(b.table)}`)
+      for (const col of readers(b.qual)) {
+        found.readers.add(`${named(b.table)}.${col}`)
+      }
+      // A row whose column is null is every reader's: `holder IS NULL OR …`.
+      walk(b.qual, (key, n) => {
+        if (key === 'NullTest' && n.nulltesttype === 'IS_NULL' && n.arg?.ColumnRef) {
+          found.open.add(`${named(b.table)}.${strings(n.arg.ColumnRef.fields).at(-1)}`)
+        }
+      })
       break
     case 'AlterFunctionStmt': {
       const f = strings(b.func?.objname)
@@ -307,6 +340,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
       }
       break
     case 'GrantStmt':
+      if ((b.grantees ?? []).some((g) => g.RoleSpec?.rolename === 'cella_analytics')) {
+        fail(`${b.is_grant ? 'grants' : 'revokes'} to cella_analytics: cella migrate grants it the views each slice's analytics.sql publishes, and nothing else`)
+      }
       for (const obj of b.objects ?? []) {
         const schema = obj.String?.sval ?? obj.RangeVar?.schemaname ?? strings(obj.ObjectWithArgs?.objname)[0] ?? null
         if (b.objtype === 'OBJECT_SCHEMA' || obj.RangeVar || obj.ObjectWithArgs) {
@@ -392,6 +428,197 @@ function registers(b, o, s, fail, found) {
   }
 }
 
+// A slice's analytical contract: views in its own schema, read as their
+// owner, and comments on them; personal columns shown only where
+// declared, and a secured table's rows only as sums.
+const CONTRACT = 'analytics.sql'
+const aggregates = new Set(['sum', 'count', 'avg', 'min', 'max', 'bool_and', 'bool_or', 'every', 'array_agg', 'string_agg', 'jsonb_agg', 'jsonb_object_agg'])
+
+// The tables and views a query reads, qualified, its subqueries' and CTEs'
+// among them.
+function read(query) {
+  const out = []
+  walk(query, (key, n) => {
+    if (key === 'RangeVar' && n.schemaname) {
+      out.push(`${n.schemaname}.${n.relname}`)
+    }
+  })
+  return out
+}
+
+// The columns a policy's test says whose a row is by: compared with
+// cella.reader(), or the key cella.reaches() opens a row by.
+function readers(qual) {
+  const out = []
+  walk(qual, (key, n) => {
+    if (key === 'FuncCall' && strings(n.funcname).join('.') === 'cella.reaches') {
+      const col = strings(n.args?.[1]?.ColumnRef?.fields).at(-1)
+      if (col) {
+        out.push(col)
+      }
+    }
+  })
+  const isReader = (n) => {
+    let hit = false
+    walk(n, (key, x) => {
+      if (key === 'FuncCall' && strings(x.funcname).join('.') === 'cella.reader') {
+        hit = true
+      }
+    })
+    return hit
+  }
+  walk(qual, (key, n) => {
+    if (key === 'A_Expr' && strings(n.name)[0] === '=') {
+      for (const [a, b] of [[n.lexpr, n.rexpr], [n.rexpr, n.lexpr]]) {
+        const col = strings(a?.ColumnRef?.fields).at(-1)
+        if (col && isReader(b)) {
+          out.push(col)
+        }
+      }
+    }
+  })
+  return out
+}
+
+// A view's shape: its name, its columns' names, the arms of its set
+// operation, and how a column reference resolves to the columns of the
+// tables it names, `schema.table.column`.
+function shape(v) {
+  const view = `${v.view.schemaname}.${v.view.relname}`
+  const tables = new Map()
+  walk(v.query, (key, n) => {
+    if (key === 'RangeVar' && n.schemaname) {
+      tables.set(n.alias?.aliasname ?? n.relname, `${n.schemaname}.${n.relname}`)
+    }
+  })
+  // Its table's column by alias, or any named table's.
+  const resolve = (ref) => {
+    const f = strings(ref.fields)
+    if (f.length >= 2) {
+      const t = tables.get(f.at(-2))
+      return t ? [`${t}.${f.at(-1)}`] : []
+    }
+    return f.length ? [...new Set(tables.values())].map((t) => `${t}.${f[0]}`) : []
+  }
+  const arms = (q) => (q?.op && q.op !== 'SETOP_NONE' ? [...arms(q.larg), ...arms(q.rarg)] : [q])
+  const selects = arms(v.query.SelectStmt)
+  const names = (v.aliases ?? []).map((a) => a.String?.sval)
+  selects[0].targetList?.forEach((t, i) => {
+    names[i] ??= t.ResTarget.name ?? strings(t.ResTarget.val?.ColumnRef?.fields).at(-1)
+  })
+  return { view, names, selects, resolve }
+}
+
+const aggregate = (x) => !x.over && (x.agg_star || aggregates.has(strings(x.funcname).at(-1)))
+
+// The columns an expression references, every one or only those outside
+// an aggregate, which a sum over the rows shows no single value of.
+function refs(n, shown = false) {
+  const out = []
+  const visit = (key, x) => {
+    if (key === 'ColumnRef') {
+      out.push(x)
+      return
+    }
+    if (shown && key === 'FuncCall' && aggregate(x)) {
+      return
+    }
+    if (Array.isArray(x)) {
+      x.forEach((y) => visit(key, y))
+    } else if (x && typeof x === 'object') {
+      for (const [k, y] of Object.entries(x)) {
+        visit(k, y)
+      }
+    }
+  }
+  visit(null, n)
+  return out
+}
+
+// What a view shows of a column that is personal or says whose a row is
+// carries over to its own column, for a contract that reads the view.
+function carry(v, found) {
+  const { view, names, selects, resolve } = shape(v)
+  for (const q of selects) {
+    q.targetList?.forEach((t, i) => {
+      const cols = refs(t.ResTarget.val, true).flatMap(resolve)
+      if (cols.some((c) => found.readers.has(c))) {
+        found.readers.add(`${view}.${names[i]}`)
+      }
+      if (cols.some((c) => found.personal.includes(c) || found.carried.has(c))) {
+        found.carried.add(`${view}.${names[i]}`)
+      }
+    })
+  }
+}
+
+function contract(tree, o, fail, found) {
+  if (o.kind === 'core') {
+    fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s')
+    return
+  }
+  // The view columns the contract declares, personal or not.
+  const declared = new Set()
+  for (const { stmt } of tree.stmts ?? []) {
+    const [type, b] = Object.entries(stmt)[0]
+    if (type === 'CommentStmt' && ['OBJECT_COLUMN', 'OBJECT_VIEW'].includes(b.objtype)) {
+      if (b.objtype === 'OBJECT_COLUMN' && /^(not )?personal: ./.test(b.comment ?? '')) {
+        declared.add(strings(b.object?.List?.items).join('.'))
+      }
+    } else if (type !== 'ViewStmt') {
+      fail(`holds ${type.replace(/Stmt$/, '')}: an analytical contract holds only views and comments on them`)
+    }
+  }
+  const personal = (c) => found.personal.includes(c) || found.carried.has(c)
+  for (const { stmt } of tree.stmts ?? []) {
+    const v = stmt.ViewStmt
+    if (!v) {
+      continue
+    }
+    const { view, names, selects, resolve } = shape(v)
+    if ((v.options ?? []).some((d) => d.DefElem?.defname === 'security_invoker')) {
+      fail(`${view} is security_invoker: a contract's view reads as its owner, so cella_analytics needs no grant on a table`)
+    }
+    for (const q of selects) {
+      q.targetList?.forEach((t, i) => {
+        const shown = refs(t.ResTarget.val, true).flatMap(resolve).filter(personal)
+        if (shown.length && !declared.has(`${view}.${names[i]}`)) {
+          fail(`${view}.${names[i]} shows ${shown[0]}, which is personal: comment the view's column 'personal: why' or 'not personal: why', or leave it out`)
+        }
+      })
+      const secured = read(q).filter((t) => found.secured.has(t))
+      if (!secured.length) {
+        continue
+      }
+      const sums = (q.groupClause ?? []).length > 0 ||
+        (q.targetList ?? []).some((t) => refs(t.ResTarget.val).length > refs(t.ResTarget.val, true).length || JSON.stringify(t).includes('"agg_star":true'))
+      // The rows a policy opens to every reader, kept by `col IS NULL` in
+      // the view's own test.
+      const kept = new Set()
+      const tests = q.whereClause?.BoolExpr?.boolop === 'AND_EXPR' ? q.whereClause.BoolExpr.args : [q.whereClause]
+      for (const t of tests) {
+        if (t?.NullTest?.nulltesttype === 'IS_NULL' && t.NullTest.arg?.ColumnRef) {
+          resolve(t.NullTest.arg.ColumnRef).filter((c) => found.open.has(c)).forEach((c) => kept.add(c.split('.').slice(0, 2).join('.')))
+        }
+      }
+      const shut = secured.filter((t) => !kept.has(t))
+      if (!sums && shut.length) {
+        fail(`${view} shows the rows of ${shut[0]}, which is under row-level security: a contract shows its rows only as sums, or those its policy opens to everyone`)
+      }
+      for (const g of q.groupClause ?? []) {
+        const whose = refs(g).flatMap(resolve).find((c) => found.readers.has(c))
+        if (!whose) {
+          continue
+        }
+        const i = (q.targetList ?? []).findIndex((t) => refs(t.ResTarget.val, true).flatMap(resolve).includes(whose))
+        if (i < 0 || !declared.has(`${view}.${names[i]}`)) {
+          fail(`${view} sums by ${whose}, which says whose a row is: show it as a column commented 'personal: why' or 'not personal: why', or sum over everyone`)
+        }
+      }
+    }
+  }
+}
+
 // PL/pgSQL keeps its statements as text: each is parsed in the mode it
 // was written in. `fn` is one CREATE FUNCTION statement's text.
 function plpgsql(lib, fn) {
@@ -419,6 +646,10 @@ export async function checkSql(repo, apps, known, found = { powers: [], rules: [
   await lib.loadModule?.()
   const errors = []
   found.foreign ??= []
+  found.secured ??= new Set()
+  found.readers ??= new Set()
+  found.open ??= new Set()
+  found.carried ??= new Set()
   for (const o of owners(repo, apps)) {
     const s = scope(o)
     // What the owner's migrations leave writing or triggering on a table
@@ -439,6 +670,9 @@ export async function checkSql(repo, apps, known, found = { powers: [], rules: [
       }
       found.at = path
       inspect(tree, o, s, known, fail, found)
+      if (file === CONTRACT) {
+        contract(tree, o, fail, found)
+      }
       // Locations are byte offsets.
       const bytes = Buffer.from(sql)
       const bodies = []

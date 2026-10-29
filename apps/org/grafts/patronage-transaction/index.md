@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -76,3 +76,7 @@ Approving 2025 finds 13 000 € of capital, so its terms' 3,5 % allows
 455 € of interest, and the split pays 448,22 €. Distributing it posts
 61 400 € out of `120`: 27 630 € to `424`, 9 210 € to the legal reserve,
 24 111,78 € to the development fund and 448,22 € to `457`.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `patronage_transaction.postings` to the analytics shell: which entry posted which distribution.

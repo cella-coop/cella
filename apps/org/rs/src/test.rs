@@ -91,6 +91,9 @@ enum Kind {
 
 /// Each slice's test files, slice by slice, each on a database migrated
 /// with the app's core and that slice's part of the tree alone, unseeded.
+/// A slice that publishes an analytical contract is migrated so even with
+/// no test file: the migration applies its contract on its part alone and
+/// reads each view as `cella_analytics`, or fails.
 fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     let mut found: Vec<(String, PathBuf)> = tests(repo)?
         .into_iter()
@@ -100,7 +103,9 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
         })
         .collect();
     found.sort();
-    let mut names: Vec<&str> = found.iter().map(|(s, _)| s.as_str()).collect();
+    let published = contracts(repo);
+    let mut names: Vec<&str> = found.iter().map(|(s, _)| s.as_str()).chain(published.iter().map(String::as_str)).collect();
+    names.sort_unstable();
     names.dedup();
     let chosen: Vec<&str> = names.iter().copied().filter(|n| only.is_none_or(|o| o == *n)).collect();
     if chosen.is_empty() {
@@ -112,6 +117,9 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     for slice in chosen {
         steps.run(&format!("db slice/{slice}"), &mut dev.renew(DB, Some(slice), None), quiet)?;
         let files: Vec<&PathBuf> = found.iter().filter(|(s, _)| s == slice).map(|(_, f)| f).collect();
+        if files.is_empty() {
+            continue;
+        }
         steps.run(&format!("slice {slice}"), &mut [node_test(&dev, steps, &files)], tap)?;
     }
     Ok(())
@@ -199,7 +207,40 @@ fn classify(rel: &Path) -> Option<Kind> {
     }
 }
 
+/// Every slice that publishes an analytical contract, by name: a feat's
+/// `core/sql/analytics.sql` or a graft's `sql/analytics.sql`.
+fn contracts(repo: &Repo) -> Vec<String> {
+    let mut files = Vec::new();
+    walk(&repo.root.join("apps"), &mut files, &|p| p.ends_with("sql/analytics.sql"));
+    let mut out: Vec<String> = files
+        .iter()
+        .filter_map(|f| contract(f.strip_prefix(&repo.root).unwrap_or(f)))
+        .collect();
+    out.sort();
+    out
+}
+
+/// The slice whose contract a file is, by where it sits.
+fn contract(rel: &Path) -> Option<String> {
+    let parts: Vec<&str> = rel
+        .components()
+        .filter_map(|c| match c {
+            Component::Normal(s) => s.to_str(),
+            _ => None,
+        })
+        .collect();
+    match parts.as_slice() {
+        [.., "feats", feat, "core", "sql", "analytics.sql"] => Some((*feat).to_owned()),
+        [.., "grafts", graft, "sql", "analytics.sql"] => Some((*graft).to_owned()),
+        _ => None,
+    }
+}
+
 fn find(dir: &Path, out: &mut Vec<PathBuf>) {
+    walk(dir, out, &|p| p.to_string_lossy().ends_with(".test.ts"));
+}
+
+fn walk(dir: &Path, out: &mut Vec<PathBuf>, keep: &dyn Fn(&Path) -> bool) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
@@ -209,8 +250,8 @@ fn find(dir: &Path, out: &mut Vec<PathBuf>) {
             continue;
         }
         if path.is_dir() {
-            find(&path, out);
-        } else if path.to_string_lossy().ends_with(".test.ts") {
+            walk(&path, out, keep);
+        } else if keep(&path) {
             out.push(path);
         }
     }
@@ -240,7 +281,7 @@ fn tap(out: &str) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
-    use super::{Kind, classify};
+    use super::{Kind, classify, contract};
     use std::path::Path;
 
     fn kind(p: &str) -> Option<String> {
@@ -256,6 +297,15 @@ mod tests {
         assert_eq!(kind("apps/org/grafts/circle-membership/ts/_tests/may.test.ts").as_deref(), Some("slice circle-membership"));
         assert_eq!(kind("apps/org/feats/a/feats/b/core/ts/_tests/x.test.ts").as_deref(), Some("slice b"));
         assert_eq!(kind("apps/org/ts/_e2e/admission.test.ts").as_deref(), Some("e2e"));
+    }
+
+    #[test]
+    fn a_contract_is_its_slices_by_where_it_sits() {
+        assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/analytics.sql")).as_deref(), Some("account"));
+        assert_eq!(contract(Path::new("apps/org/feats/person/feats/membership/core/sql/analytics.sql")).as_deref(), Some("membership"));
+        assert_eq!(contract(Path::new("apps/org/grafts/account-transaction/sql/analytics.sql")).as_deref(), Some("account-transaction"));
+        assert_eq!(contract(Path::new("apps/org/core/notary/sql/analytics.sql")), None);
+        assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/001-account.sql")), None);
     }
 
     #[test]

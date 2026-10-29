@@ -15,6 +15,15 @@
 //
 // `--locked` checks, with no database, that every app's migrations are
 // append-only against its `migrations.lock`; `--lock` adds the new ones.
+//
+// Then the analytical contracts: each slice's `sql/analytics.sql`, its
+// views, is no migration and is applied whole after them, in tree order,
+// whenever a migration ran or a contract changed. The views published
+// before are dropped first, so a migration never meets one, and each view
+// a contract makes is granted to `cella_analytics`, with USAGE on its
+// schema; the role reads nothing else. Each is then read as that role,
+// and a view it cannot read, or a column of a type that is not plain,
+// fails the run.
 
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
@@ -22,6 +31,19 @@ import { basename, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
 import { LOCK, formatLock, idOf, parseLock, unlocked } from './migrations.mjs'
+
+// A slice's analytical contract, beside its migrations, and the role that
+// reads the views it publishes.
+const CONTRACT = 'analytics.sql'
+const ROLE = 'cella_analytics'
+// The column types a contract shares: what any client reads, never the
+// notary's own types.
+const PLAIN = new Set(['bigint', 'integer', 'smallint', 'numeric', 'text', 'boolean', 'date', 'timestamp with time zone', 'jsonb', 'text[]'])
+// A contract's schema: its feat's name, or its graft's with underscores.
+const schemaOf = (file) => {
+  const parts = relative(repo, file).split('/')
+  return parts.at(-3) === 'core' ? parts.at(-4) : parts.at(-3).replaceAll('-', '_')
+}
 
 const repo = fileURLToPath(new URL('..', import.meta.url))
 const isDir = (p) => existsSync(p) && statSync(p).isDirectory()
@@ -90,6 +112,10 @@ const files = dirs
   .filter(isDir)
   .flatMap((dir) => sorted(dir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).map((f) => join(dir, f)))
 const hashOf = (sql) => createHash('sha256').update(sql).digest('hex')
+// Only a slice publishes one: a feat's core/sql/ or a graft's sql/.
+const contracts = dirs
+  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+)\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
+  .map((dir) => join(dir, CONTRACT))
 
 if (locking) {
   let errors = []
@@ -148,7 +174,27 @@ if (byPath.rowCount) {
   await db.query('COMMIT')
   console.log('migrate: the applied set moved from paths to ids')
 }
+await db.query('CREATE TABLE IF NOT EXISTS migration.contract (one boolean PRIMARY KEY DEFAULT true CHECK (one), hash text NOT NULL)')
 const applied = new Map((await db.query('SELECT id, hash FROM migration.applied')).rows.map((r) => [r.id, r.hash]))
+
+// What this run's contracts hash to, by id and text, and whether they are
+// to be published again: after any migration, or when one changed.
+const published = hashOf(contracts.map((f) => `${idOf(relative(repo, f))}\n${readFileSync(f, 'utf8')}`).join('\0'))
+const recorded = (await db.query('SELECT hash FROM migration.contract')).rows[0]?.hash
+const republish = files.some((f) => !applied.has(idOf(relative(repo, f)))) || recorded !== published
+// Every view granted to the role.
+const granted = async () => (await db.query(`
+  SELECT format('%I.%I', n.nspname, c.relname) AS view
+  FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE c.relkind = 'v' AND EXISTS (SELECT FROM aclexplode(c.relacl) a JOIN pg_roles r ON r.oid = a.grantee WHERE r.rolname = $1)
+  ORDER BY 1`, [ROLE])).rows.map((r) => r.view)
+if (republish) {
+  const old = await granted()
+  if (old.length) {
+    // A contract's view may read another's, so they go together.
+    await db.query(`DROP VIEW IF EXISTS ${old.join(', ')} CASCADE`)
+  }
+}
 
 let ran = 0
 for (const file of files) {
@@ -179,5 +225,63 @@ for (const file of files) {
   console.log(`migrate: ${path}`)
   ran++
 }
+if (republish) {
+  try {
+    await publish()
+  } catch (e) {
+    await db.query('ROLLBACK')
+    console.error(`migrate: ${e.message}`)
+    process.exit(1)
+  }
+}
 await db.end()
 console.log(`migrate: ${ran} applied, ${files.length - ran} already in ${db.database}${slice ? `, slice ${slice}` : ''}`)
+
+// Applies every contract in one transaction, grants each view it makes,
+// and reads each as the role, as the analytics shell will.
+async function publish() {
+  await db.query('BEGIN')
+  const made = async (schema) => (await db.query(`
+    SELECT format('%I.%I', n.nspname, c.relname) AS view
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE c.relkind = 'v' AND n.nspname = $1`, [schema])).rows.map((r) => r.view)
+  for (const file of contracts) {
+    const schema = schemaOf(file)
+    const had = new Set(await made(schema))
+    try {
+      await db.query(readFileSync(file, 'utf8'))
+    } catch (e) {
+      throw new Error(`${relative(repo, file)}: ${e.message}`)
+    }
+    const views = (await made(schema)).filter((v) => !had.has(v))
+    if (views.length) {
+      await db.query(`GRANT USAGE ON SCHEMA ${schema} TO ${ROLE}`)
+      await db.query(`GRANT SELECT ON ${views.join(', ')} TO ${ROLE}`)
+    }
+  }
+  const views = await granted()
+  await db.query(`SET LOCAL ROLE ${ROLE}`)
+  for (const view of views) {
+    try {
+      await db.query(`SELECT count(*) FROM (SELECT * FROM ${view}) v`)
+    } catch (e) {
+      throw new Error(`${view}: ${ROLE} cannot read it: ${e.message}`)
+    }
+  }
+  await db.query('RESET ROLE')
+  const typed = await db.query(`
+    SELECT format('%I.%I', n.nspname, c.relname) AS view, a.attname AS col, format_type(a.atttypid, NULL) AS type
+    FROM pg_attribute a JOIN pg_class c ON c.oid = a.attrelid JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE format('%I.%I', n.nspname, c.relname) = ANY($1) AND a.attnum > 0 AND NOT a.attisdropped
+    ORDER BY 1, a.attnum`, [views])
+  const odd = typed.rows.find((t) => !PLAIN.has(t.type))
+  if (odd) {
+    throw new Error(`${odd.view}.${odd.col} is ${odd.type}: a contract shares plain types (${[...PLAIN].join(', ')}); unwrap an amount with cella.cents`)
+  }
+  await db.query('DELETE FROM migration.contract')
+  await db.query('INSERT INTO migration.contract (hash) VALUES ($1)', [published])
+  await db.query('COMMIT')
+  if (contracts.length) {
+    console.log(`migrate: ${contracts.length} analytical contracts, ${views.length} views granted to ${ROLE}`)
+  }
+}

@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -99,3 +99,7 @@ Eight projects, one for each piece of work its clients commissioned:
 | Maison Ferrand, packaging | brand | 14 000 € | range concept and print-ready files done; print supervision open |
 | Fondation Terres Vives, annual report and microsite | brand | 18 000 € | report design done; microsite open |
 | Atelier Ondine, online shop | web | 9 500 € | delivered; archived on 1 September |
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `project.projects` and `project.milestones` to the analytics shell: each project with its circle, days and budget, and its milestones.

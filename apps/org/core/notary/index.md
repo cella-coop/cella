@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the rule primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-rules` (`core/rules/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -36,8 +36,8 @@ The notary is the scope's office for every write, and a layer under every feat r
 | `cella.redacting()` | whether the notary is redacting right now: the one change a record that never changes takes, which a feat's trigger keeping a row fixed lets through; no role can set it |
 | `cella.redact(subject, class)` | the owner's: sets a subject's registered columns of a class to `redacted` (text), `"redacted"` (JSON) or NULL |
 
-The org core's SQL beside the extension (`sql/`) adds the app's role and
-the rules', and who reads ([below](#reads)):
+The org core's SQL beside the extension (`sql/`) adds the app's role, the
+rules' and the analytics', and who reads ([below](#reads)):
 
 | SQL | What |
 |---|---|
@@ -46,6 +46,7 @@ the rules', and who reads ([below](#reads)):
 | `cella.may(power)` | whether the reader holds the power on the verdict date, as the authority says |
 | `cella.reads_all(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | whether the reader holds a power that reads every row of `what`; whether they see every row: a write's transaction, a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole), or such a power; and whether they reach one row by its key: a power for that key, or a graft's function |
 | `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its op's power; null for anyone else |
+| `cella_analytics` | the role the analytics shell reads as: it logs in, its transactions are read-only, and it is granted nothing here; `cella migrate` grants it the views the slices publish in their analytical contracts and nothing else ([trust](../../../../_corpus/doc/trust.md#the-analytics-role)) |
 
 ## Submit
 

@@ -1,6 +1,6 @@
 +++
 title = "client-invoice"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Who an invoice bills. An invoice without a link is unbilled, not invalid;
@@ -43,3 +43,7 @@ Adds to an invoice's page the client it bills, or that it is unbilled,
 with the form that links it (`link`); and to the clients what each owes,
 from `client_invoice.standing`, and to a client's page the invoices that
 bill it.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_invoice.billings` to the analytics shell: which client each invoice is billed to.

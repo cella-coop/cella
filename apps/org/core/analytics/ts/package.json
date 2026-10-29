@@ -1,0 +1,12 @@
+{
+  "name": "@cella/org-analytics",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./api": "./src/api/index.ts"
+  },
+  "dependencies": {
+    "@duckdb/node-api": "2.0.0-r.1"
+  }
+}

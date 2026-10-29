@@ -46,8 +46,9 @@ A node is a directory with a `feat.toml`. It holds:
   `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
   (the `cella` Postgres extension over them), `db` (a write's transaction),
   `sign` (a device's signature on a write), `vat` (a document's lines,
-  their amounts and VAT, which invoices and bills share), `ui` (the
-  shell's tokens and components) and later `auth`. A leaf feat's core is all of it.
+  their amounts and VAT, which invoices and bills share), `analytics`
+  (the port reports are read through), `ui` (the shell's tokens and
+  components) and later `auth`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between the feats below it, at any depth, that no
   child of it holds all of ([grafts](#grafts)).
@@ -333,7 +334,10 @@ amounts in cents (`cella.cents`), and its columns are plain types any
 client reads. A slice that holds only rules or registries publishes
 none; a feat's contract shares its collection, and a graft's what it
 joins, such as `account_transaction.movements`, the journal by account
-and day, which every statement sums.
+and day, which every statement sums. No core publishes one but the
+analytics port's, `analytics.head`, the log's head each run of the shell
+is stamped with ([the analytics shell](#the-analytics-shell)).
+
 
 A contract is no migration: `cella migrate` applies every contract after
 the migrations, whenever one ran or a contract changed. It drops the
@@ -362,8 +366,9 @@ view shares what its slice agrees to share and no more:
 `cella check feats` enforces this: `tools/sql-check.mjs` refuses in a
 contract anything but views in the slice's own schema and comments on
 them, a `security_invoker` view, an undeclared personal column, a
-secured table's rows, a sum by whose a row is undeclared, and any grant
-to `cella_analytics` anywhere in the tree. What a column is carries
+secured table's rows, a sum by whose a row is undeclared, a contract in
+a core but the port's, and any grant to `cella_analytics` anywhere in the
+tree. What a column is carries
 through a slice's own views. A function a view calls runs as the role,
 not as the view's owner, so one that reads a table fails the role and
 one that asks who reads sees no one: a contract reads tables and plain
@@ -553,6 +558,55 @@ scope's timezone ([the notary](../../apps/org/core/notary/index.md#settings)).
 The UI core, `@cella/org-ui`, holds the tokens and every component the
 slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's
 blocks style nothing themselves.
+
+## The analytics shell
+
+Analytics are read apart from everything else, by the **analytics
+shell**: a DuckDB 2.0 server per scope that reads the views the slices
+publish in their analytical contracts ([above](#analytical-contracts))
+and joins them. Every join across slices for a report happens there and
+only there; a rule that decides a write stays in its slice, through the
+notary, and the shell only describes.
+
+It is no third root and no package: a node's roots assemble packages
+into a binary or a shell, and the analytics shell assembles nothing. It
+is DuckDB itself, the flake's DuckDB 2.0 with the extensions it loads,
+run by the CLI beside the Postgres cluster as a process with its
+settings ([`cella analytics`](../../apps/org/rs/index.md#commands)). Its
+one piece of code is the port's implementation, which the org app's
+server holds through `core/analytics` ([the port](../../apps/org/core/analytics/index.md)).
+
+The server attaches the scope's database read-only, logging in as
+`cella_analytics` (`ATTACH … (TYPE postgres, READ_ONLY)`), with its
+filters and its columns pushed down to Postgres and its catalog checked
+for a migration's changes before it serves a cached one. It serves over
+quack, DuckDB's client-server protocol, on localhost, to whoever holds its
+token, `.data/analytics/<port>/token`, made owner-only on first start.
+Before it serves, it turns off every access outside: no file read or
+written, no other database attached, no extension loaded, and no setting
+changed after ([trust](trust.md#the-analytics-role)). DuckDB's remote
+pushdown, which ships a whole query to Postgres, is a `CONNECT` to
+Postgres and not an attach, so the shell does not use it: the joins
+stay in the shell.
+
+A feat or a page reads through **the port**, `core/analytics`: it hands
+the port a report, the views it reads, how they join, the fields, the
+filters, the groupings and the measures, never SQL. The port checks it
+against the catalog, the views the role reads and their columns, refuses
+every field, join or value the catalog does not allow, and compiles it
+to one statement. The shell's implementation runs it on a connection of
+its own in one transaction, which the attach opens as one Postgres
+transaction, repeatable read and read-only: it reads the log's head,
+which the port publishes as `analytics.head`, the catalog and the report
+on one snapshot, and stamps the result with that head. The org app's
+server makes the implementation at assembly from what `cella` hands it,
+and a feat calls the port it is handed.
+
+In development `cella db start` starts the shell on the dev database at
+`CELLA_ANALYTICS_PORT` (54343) after the cluster, `cella db stop` stops
+it first, and `cella serve` starts it when it is stopped. A host runs it
+as a unit of its own beside Postgres
+([operations](operations.md#the-analytics-shell)).
 
 ## Writes
 

@@ -32,6 +32,12 @@ pub enum Command {
         command: Db,
     },
 
+    /// The analytics shell: a read-only DuckDB server over the views the slices publish
+    Analytics {
+        #[command(subcommand)]
+        command: Analytics,
+    },
+
     /// The cella Postgres extension
     Ext {
         #[command(subcommand)]
@@ -185,6 +191,54 @@ pub enum Db {
     Psql {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum Analytics {
+    /// Start the shell on the dev database, or another, reading it as cella_analytics; waits until it answers
+    Start {
+        /// A database on the dev cluster other than the dev one
+        #[arg(long, conflicts_with = "url")]
+        db: Option<String>,
+
+        /// A database by URL, such as production's, that logs in as cella_analytics
+        #[arg(long, value_name = "URL")]
+        url: Option<String>,
+
+        /// The port it serves on, on localhost; CELLA_ANALYTICS_PORT or 54343
+        #[arg(long)]
+        port: Option<u16>,
+    },
+    /// Stop the shell
+    Stop {
+        /// The port it serves on
+        #[arg(long)]
+        port: Option<u16>,
+    },
+    /// Whether the shell runs, and where
+    Status {
+        /// The port it serves on
+        #[arg(long)]
+        port: Option<u16>,
+    },
+    /// Run SQL in the shell, read-only as cella_analytics, or with --report a report through the port
+    Query {
+        /// The SQL, over the attached scope: scope.<schema>.<view>
+        #[arg(required_unless_present = "report")]
+        sql: Option<String>,
+
+        /// A report definition in JSON, checked against the views the slices publish and run on one snapshot
+        #[arg(long, value_name = "FILE", conflicts_with = "sql")]
+        report: Option<PathBuf>,
+
+        /// Print JSON rows instead of a table
+        #[arg(long)]
+        json: bool,
+
+        /// The port it serves on
+        #[arg(long)]
+        port: Option<u16>,
     },
 }
 

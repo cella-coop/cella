@@ -6,7 +6,8 @@ updated = 2026-10-30
 # Operations
 
 What a host does to run a scope and keep it: the server's settings, its
-two keys and their rotation, backups and a restore, and upgrades. Every
+analytics shell, its two keys and their rotation, backups and a restore,
+and upgrades. Every
 task is a `cella` command ([the CLI](../../apps/org/rs/index.md)) or a
 Postgres one; the host's own configuration (its NixOS module, its timers)
 lives with the host, not here.
@@ -43,6 +44,51 @@ connects as `cella_app` or as a role that is a member of it. A host
 never sets `cella.unbound` on a scope's database or role: it lets a
 session write state outside a write, which the migrations alone do, for
 the file they run ([the notary](../../apps/org/core/notary/index.md#bound)).
+
+## The analytics shell
+
+A scope's reports are read by its analytics shell, a DuckDB 2.0 server
+beside Postgres on the same host
+([architecture](architecture.md#the-analytics-shell)). It logs in to the
+scope's database as `cella_analytics`, which `cella migrate` makes and
+grants the published views, so the host lets that role connect from
+localhost (`pg_hba.conf`) and the server's own user nothing more. `cella
+analytics start --url URL` runs it, the URL logging in as
+`cella_analytics`, and keeps its token in `.data/analytics/<port>/token`,
+readable by its user alone; the shell's server reads that file as
+`CELLA_ANALYTICS_TOKEN_FILE`, so both run as one user, or the token is
+copied to the server's with the same care as a key. It listens on
+localhost alone and is never exposed: the org app's server is its one
+client.
+
+A unit runs it with the server, started after Postgres and stopped
+before it. A sketch of one, for a NixOS host, with the flake's `cella`
+on its path; the shell backgrounds itself, so the unit forks:
+
+```nix
+systemd.services.cella-analytics = {
+  after = [ "postgresql.service" ];
+  requires = [ "postgresql.service" ];
+  before = [ "cella.service" ];
+  wantedBy = [ "multi-user.target" ];
+  path = [ cella ];
+  serviceConfig = {
+    Type = "forking";
+    User = "cella";
+    WorkingDirectory = "/var/lib/cella";
+    ExecStart = "${cella}/bin/cella analytics start --url postgresql://cella_analytics@localhost/scope";
+    ExecStop = "${cella}/bin/cella analytics stop";
+    PIDFile = "/var/lib/cella/.data/analytics/54343/pid";
+    Restart = "on-failure";
+  };
+};
+```
+
+The server's unit sets `CELLA_ANALYTICS=quack:localhost:54343`,
+`CELLA_ANALYTICS_TOKEN_FILE` and `CELLA_DUCKDB_EXTENSIONS` as `cella
+serve --prod` does. The shell holds no state of its own: a restart, or a
+migration that publishes the views again, loses nothing, and a backup
+leaves it out.
 
 ## Keys
 

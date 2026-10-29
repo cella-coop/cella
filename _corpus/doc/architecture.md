@@ -186,7 +186,9 @@ the one `write`, as `invoice-transaction` calls `record()` from
 `@cella/org-transaction/api`. It reacts to a feat's settled write
 through its server slice's `on`, and it refuses a feat's write by a rule
 on the op in `cella.rule`, which the notary runs. It never uses a
-trigger on the feat's table for either. A nested feat changes its
+trigger on the feat's table for either. What a graft would only copy
+from a feat's row it reads by a view in its own schema, as
+`decision_document.adoption` reads what each motion to adopt names. A nested feat changes its
 parent's rows the same way, through the parent's write. No SQL of a
 feat or a graft inserts, updates, deletes, merges or truncates a table
 outside its own schema, or makes a trigger on one; it writes `cella.*`

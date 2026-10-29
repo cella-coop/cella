@@ -53,6 +53,16 @@ it builds on `account-membership` and `account-transaction`. Declared by
 The app role may select and insert, set a subscription's cost and what
 is cancelled and a repayment's entry and day; the rules role may select.
 
+The amount of a payment in and of a draw is personal data of class
+`books`, registered by the member's address (`sql/004-salted.sql`):
+each write's payload commits to it, and the vault keeps it, so the
+log's digest confirms no guess at a colleague's capital. The journal
+still shows the amount on the bank's line, as every member reads the
+books. Once a former member's clock runs out `cella vault sweep` redacts
+it to NULL. A repayment's amount is logged as given: it falls due after
+its member has left, perhaps after their erasure, which refuses any
+later value of their class, and the exit drew it up from the books.
+
 ## Writes
 
 `account:account:draw` (bounded on the draw limit, `self`), served on a
@@ -72,10 +82,12 @@ of a departed member: the bank pays their next repayment, `4567` debited and
 - `account_membership_transaction.draws`, on `account:account:draw`: the draw
   is the actor's own, they are active, their capital account is not
   frozen, their draws with this one stay within their limit, and the
-  entry is exactly the draw.
+  entry is exactly the draw its row records.
 - `account_membership_transaction.pays`, on `account:capital:pay`: the member
   has a subscription, the payment with every other leaves nothing
-  overpaid, and the entry is exactly the payment in.
+  overpaid, and the entry is exactly the payment in its row records.
+  Each reads the amount from the row its write made, since the payload
+  commits to it.
 - `account_membership_transaction.repays`, on `account:capital:repay`: the
   repayment exists and this write paid it, it has fallen due, every one
   before it is paid, and the entry is exactly it, `4567` debited and

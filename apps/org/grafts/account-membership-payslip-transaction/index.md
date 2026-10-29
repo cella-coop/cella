@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-10-25
+updated = 2026-10-29
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -32,6 +32,12 @@ and on `payslip-transaction`, whose payment it adds lines to. Declared by
 
 The app role may select, insert and update a plan, and insert what is
 withheld; the rules role may select.
+
+The cents of each instalment are personal data of class `books`,
+registered by the member's address (`sql/003-salted.sql`): a spread's
+payload commits to them, and the vault keeps them, so the log's digest
+confirms no guess at what a colleague owes. Once a former member's
+clock runs out `cella vault sweep` redacts them to NULL.
 
 ## Writes
 

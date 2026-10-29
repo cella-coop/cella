@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { ops } from '@cella/org-account/models'
 import { record } from '@cella/org-transaction/api'
 import type { Line } from '@cella/org-transaction/models'
@@ -40,6 +40,7 @@ export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof ops)[
       )
       return { member: input.member, amount: input.cents, entry }
     },
-    payload: (v) => ({ ...v }),
+    // The amount is the member's capital: the log keeps its commitment.
+    payload: (v) => ({ ...v, amount: personal('account_membership_transaction.paid.amount', v.member, v.amount) }),
   })
 }

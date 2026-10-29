@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { ops } from '@cella/org-account/models'
 import { record } from '@cella/org-transaction/api'
 import type { Draw, Drawn } from '../models/draw.ts'
@@ -27,6 +27,7 @@ export async function draw(input: Draw, deps: Deps): Promise<Outcome<(typeof ops
       await tx.query('INSERT INTO account_membership_transaction.draw (entry, member, amount) VALUES ($1, $2, cella.amount($3))', [entry, input.member, input.cents])
       return { member: input.member, amount: input.cents, entry }
     },
-    payload: (v) => ({ ...v }),
+    // The amount is the member's capital: the log keeps its commitment.
+    payload: (v) => ({ ...v, amount: personal('account_membership_transaction.draw.amount', v.member, v.amount) }),
   })
 }

@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Db, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Ran, Run } from '../models/payslip.ts'
 
@@ -15,28 +15,50 @@ async function ran(tx: Db, month: string, day: string | undefined): Promise<Ran>
   return { month, day: day ?? '', payslips: Number(rows[0].payslips), gross: Number(rows[0].gross) }
 }
 
+// Each payslip's figures as the payload commits to them, its member the
+// subject, so the log keeps a salted digest of every member's pay.
+const columns = ['gross', 'employee', 'employer', 'net'] as const
+type Figures = Record<string, unknown>[]
+
+async function figures(tx: Db, month: string): Promise<Figures> {
+  const { rows } = await tx.query<Record<(typeof columns)[number] | 'member', string>>(
+    `SELECT member, cella.cents(gross) AS gross, cella.cents(employee) AS employee, cella.cents(employer) AS employer, cella.cents(net) AS net
+     FROM payslip.payslip WHERE month = $1 ORDER BY member`,
+    [month],
+  )
+  return rows.map((p) => ({
+    member: p.member,
+    ...Object.fromEntries(columns.map((c) => [c, personal(`payslip.payslip.${c}`, p.member, Number(p[c]))])),
+  }))
+}
+
 // Prepares a month's run on the verdict date: one payslip for each
-// salaried member, what `payslip.due` says they are due. The
+// salaried member, what `payslip.due` says they are due, each one's
+// figures committed to in the payload beside the run's totals. The
 // payslip-timesheet graft wraps it with the hours of their approved
 // months, which it requires.
-export const generating = (input: Run): Write<Ran> => ({
-  op: 'payslip:run:generate' satisfies Op,
-  request: input,
-  state: async (tx) => {
-    const { rows } = await tx.query<{ day: string }>(
-      `INSERT INTO payslip.run (month, generated) VALUES ($1, cella.verdict_date()) RETURNING to_char(generated, 'YYYY-MM-DD') AS day`,
-      [input.month],
-    )
-    await tx.query(
-      `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net)
-       SELECT $1, d.member, cella.amount(d.gross), cella.amount(d.employee), cella.amount(d.employer), cella.amount(d.net)
-       FROM payslip.due($1) d`,
-      [input.month],
-    )
-    return ran(tx, input.month, rows[0]?.day)
-  },
-  payload: (v) => ({ ...v }),
-})
+export const generating = (input: Run): Write<Ran> => {
+  let payslips: Figures = []
+  return {
+    op: 'payslip:run:generate' satisfies Op,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ day: string }>(
+        `INSERT INTO payslip.run (month, generated) VALUES ($1, cella.verdict_date()) RETURNING to_char(generated, 'YYYY-MM-DD') AS day`,
+        [input.month],
+      )
+      await tx.query(
+        `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net)
+         SELECT $1, d.member, cella.amount(d.gross), cella.amount(d.employee), cella.amount(d.employer), cella.amount(d.net)
+         FROM payslip.due($1) d`,
+        [input.month],
+      )
+      payslips = await figures(tx, input.month)
+      return ran(tx, input.month, rows[0]?.day)
+    },
+    payload: (v) => ({ ...v, figures: payslips }),
+  }
+}
 
 export async function generate(input: Run, deps: Deps): Out<'payslip:run:generate', Ran> {
   return write(deps, generating(input))

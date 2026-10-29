@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-ops'
-import { write, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { ops } from '../models/ops.ts'
 import type { Approved, Correct, Corrected, Log, Logged, Period, Submitted } from '../models/timesheet.ts'
 
@@ -21,8 +21,9 @@ export const logging = (input: Log): Write<Logged> => ({
     )
     return { entry: rows[0].id, member: input.member, day: input.day, minutes: input.minutes, billable: input.billable }
   },
-  // The note is the member's own words and stays out.
-  payload: (v) => ({ ...v }),
+  // The note is the member's own words and stays out; the minutes are
+  // personal, so the log keeps their commitment and the vault the minutes.
+  payload: (v) => ({ ...v, minutes: personal('timesheet.entry.minutes', v.member, v.minutes) }),
 })
 
 export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Logged> {
@@ -46,7 +47,9 @@ export const correcting = (input: Correct): Write<Corrected> => ({
     )
     return { ...input, member: rows[0]?.member ?? null, day: rows[0]?.day ?? null }
   },
-  payload: (v) => ({ ...v }),
+  // The minutes an entry is brought to are its member's, as logged; a
+  // correction of no entry names no one's.
+  payload: (v) => ({ ...v, minutes: v.member ? personal('timesheet.entry.minutes', v.member, v.minutes) : v.minutes }),
 })
 
 export async function correct(input: Correct, deps: Deps): Out<'timesheet:entry:correct', Corrected> {

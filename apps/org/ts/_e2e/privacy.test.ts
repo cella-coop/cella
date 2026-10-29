@@ -2,7 +2,7 @@
 // handlers: Camille erases Margaux Roux, Les Halles' contact, at her
 // request; Léa gives her email and phone, then erases them herself; Chloé
 // leaves, and the assembly erases her personal data by decision, her name
-// at once, her payslips, receipts and capital account's label restricted
+// at once, her payslips, time, receipts and capital account's label restricted
 // until their legal clocks run out and the sweep redacts them. The log
 // verifies throughout. Run by `cella test e2e privacy`.
 
@@ -140,6 +140,7 @@ test('the sweep redacts what the law kept once its clock runs out: payroll after
   assert.deepEqual(await all('SELECT subject, class, redacted FROM cella.vault_sweep()'), [{ subject: chloe, class: 'payroll', redacted: true }])
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.salary WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
+  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND minutes IS NOT NULL`, [chloe])).n), 0, 'her time too, in months long approved')
   await su.query(`SET cella.clock = '2037-01-01'`)
   const swept = await all<{ subject: string; class: string; keys: string; redacted: boolean }>('SELECT * FROM cella.vault_sweep() ORDER BY class')
   assert.deepEqual(swept.map((r) => [r.class, r.redacted]), [['books', true], ['expense-receipt', true]])

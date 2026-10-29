@@ -79,8 +79,9 @@ law keeps them five years (Code du travail, art. L3243-4). Erasing a
 member who has left restricts them; once their clock runs out `cella
 vault sweep` redacts them to NULL, so the figures are nullable, and
 `payslip.stays` lets an approved run's payslips take that one change
-(`cella.redacting()`). A run's payload holds its totals, never a
-member's figures.
+(`cella.redacting()`). A run's payload holds its totals; the write that
+generates it holds each payslip's figures too, by commitment, so the
+log keeps a salted digest of every member's pay, never the figures.
 
 ## Rules
 

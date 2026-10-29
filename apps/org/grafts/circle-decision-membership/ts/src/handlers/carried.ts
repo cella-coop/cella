@@ -47,11 +47,13 @@ const writes: Record<string, { op: Permission; run: (a: Args, decision: string, 
 // close has settled: each motion, in the order proposed, as its own
 // decided write, signed as the member who closed it and judged again by
 // its rules. A refused one leaves the decision passed and that motion
-// undone, as its outcome says; the others still go.
+// undone, as its outcome says; the others still go. It reads outside a
+// write, so whether the decision passed comes from its tally, which a
+// secret ballot opens at its close.
 export async function carried(decision: string, deps: Deps): Promise<Done[]> {
   const { rows } = await deps.db.query<{ kind: string; args: Args }>(
     `SELECT m.kind, m.args FROM decision.motion m JOIN decision.decision d ON d.id = m.decision
-     WHERE m.decision = $1 AND d.closed IS NOT NULL AND coalesce(circle_decision_membership.passes(d.id), false)
+     WHERE m.decision = $1 AND d.closed IS NOT NULL AND coalesce((circle_decision_membership.tally(d.id)).passes, false)
      ORDER BY m.n`,
     [decision],
   )

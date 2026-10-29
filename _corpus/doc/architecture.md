@@ -281,7 +281,9 @@ cella.reaches('<feat>', member))`. A view over such a table reads as its
 reader (`security_invoker`), unless what it shows is a sum every member
 reads, as the statements' rubrics and a project's burn are, or a share
 that needs the whole to divide, which filters its rows by the same test
-instead.
+instead. A stance on a secret ballot is the one row no power opens: its
+policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
+and a decision's tally sums it as its owner, sealed until the close.
 
 SQL is the source of truth for rules. TypeScript calls them and never
 re-implements one; the browser may preview a rule through the primitives

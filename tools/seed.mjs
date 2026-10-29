@@ -130,8 +130,8 @@ async function load() {
   const procedures = read('decision').procedure ?? []
   for (const p of procedures) {
     await db.query(
-      'INSERT INTO decision.procedure (id, label, rule, share_num, share_den, quorum_num, quorum_den) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [p.id, p.label, p.rule, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1],
+      'INSERT INTO decision.procedure (id, label, rule, share_num, share_den, quorum_num, quorum_den, ballot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [p.id, p.label, p.rule, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1, p.ballot ?? 'open'],
     )
   }
 

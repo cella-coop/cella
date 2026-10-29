@@ -81,10 +81,11 @@ after(async () => {
   await su.end()
 })
 
-test('Lanterne decides by consent, majority and two thirds, and by its statutes’ two assemblies', async () => {
+test('Lanterne decides by consent, majority, two thirds and election, and by its statutes’ two assemblies', async () => {
   const rows = await all(`SELECT id, rule, share_num, share_den, quorum_num, quorum_den FROM decision.procedure ORDER BY id`)
   assert.deepEqual(rows, [
     { id: 'consent', rule: 'consent', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
+    { id: 'election', rule: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
     { id: 'extraordinary', rule: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2 },
     { id: 'majority', rule: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
     { id: 'ordinary', rule: 'majority', share_num: null, share_den: null, quorum_num: 1, quorum_den: 4 },

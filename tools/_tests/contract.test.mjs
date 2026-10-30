@@ -2,7 +2,8 @@
 // only views in its own schema, read as their owner; it shows a personal
 // column only where it declares it, and a table under row-level security
 // only as sums over everyone, or as the rows its policy opens to every
-// reader; and nothing else grants the analytics role anything.
+// reader; nothing else grants the analytics role anything; and no core
+// publishes a contract but the analytics port, in its own schema.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -12,7 +13,8 @@ import { join } from 'node:path'
 import { checkSql } from '../sql-check.mjs'
 
 // Two feats, a person's and a ledger's, each with a migration, and a
-// contract for any slice named in `contracts`.
+// contract for any slice named in `contracts`. `extra` replaces a feat's
+// migration, and `extra.core` adds a core library's migration and contract.
 const migrations = {
   person: `CREATE SCHEMA person;
 CREATE TABLE person.person (address text PRIMARY KEY, name text, city text);
@@ -38,6 +40,12 @@ async function check(contracts, extra = {}) {
       if (contracts[feat]) {
         writeFileSync(join(dir, 'analytics.sql'), contracts[feat])
       }
+    }
+    for (const [lib, sql] of Object.entries(extra.core ?? {})) {
+      const dir = join(repo, 'apps/org/core', lib, 'sql')
+      mkdirSync(dir, { recursive: true })
+      writeFileSync(join(dir, '001.sql'), sql.migration)
+      writeFileSync(join(dir, 'analytics.sql'), sql.contract)
     }
     writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
     const known = new Set(['cella', 'person', 'ledger'])
@@ -112,4 +120,16 @@ COMMENT ON COLUMN ledger.each.member IS 'personal: a member''s own statement, wh
 test('nothing grants the analytics role anything but cella migrate', async () => {
   const granted = await check({}, { person: `${migrations.person}\nGRANT SELECT ON person.person TO cella_analytics;` })
   assert.match(granted, /001.sql: grants to cella_analytics: cella migrate grants it the views each slice's analytics.sql publishes/)
+})
+
+test('no core publishes a contract but the analytics port, in its own schema', async () => {
+  const head = `CREATE VIEW analytics.head AS SELECT h.n, encode(h.hash, 'hex') AS hash FROM cella.head h;`
+  const port = await check({}, { core: { analytics: { migration: 'CREATE SCHEMA analytics;', contract: head } } })
+  assert.equal(port, '')
+  const other = await check({}, { core: { vat: { migration: 'SELECT 1;', contract: 'CREATE VIEW cella.rates AS SELECT 1 AS one;' } } })
+  assert.match(other, /core\/vat\/sql\/analytics.sql: an analytical contract is a feat's or a graft's, never a core's but the analytics port's/)
+  const outside = await check({}, { core: { analytics: { migration: 'CREATE SCHEMA analytics;', contract: 'CREATE VIEW cella.log_view AS SELECT n FROM cella.log;' } } })
+  assert.match(outside, /log_view: the analytics port publishes only in its own schema, analytics/)
+  const reached = await check({}, { person: `${migrations.person}\nCREATE VIEW person.stamp AS SELECT n FROM analytics.head;` })
+  assert.match(reached, /analytics is outside/, 'a slice reads no head')
 })

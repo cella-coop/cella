@@ -23,7 +23,8 @@
 // a contract makes is granted to `cella_analytics`, with USAGE on its
 // schema; the role reads nothing else. Each is then read as that role,
 // and a view it cannot read, or a column of a type that is not plain,
-// fails the run.
+// fails the run. The analytics port, org's core library, publishes one too,
+// in its own schema: `analytics.head`, the log's head.
 
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
@@ -39,9 +40,13 @@ const ROLE = 'cella_analytics'
 // The column types a contract shares: what any client reads, never the
 // notary's own types.
 const PLAIN = new Set(['bigint', 'integer', 'smallint', 'numeric', 'text', 'boolean', 'date', 'timestamp with time zone', 'jsonb', 'text[]'])
-// A contract's schema: its feat's name, or its graft's with underscores.
+// A contract's schema: its feat's name, its graft's with underscores, or
+// the analytics port's own, `analytics`.
 const schemaOf = (file) => {
   const parts = relative(repo, file).split('/')
+  if (parts.at(-4) === 'core' && parts.at(-3) === 'analytics') {
+    return 'analytics'
+  }
   return parts.at(-3) === 'core' ? parts.at(-4) : parts.at(-3).replaceAll('-', '_')
 }
 
@@ -112,9 +117,10 @@ const files = dirs
   .filter(isDir)
   .flatMap((dir) => sorted(dir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).map((f) => join(dir, f)))
 const hashOf = (sql) => createHash('sha256').update(sql).digest('hex')
-// Only a slice publishes one: a feat's core/sql/ or a graft's sql/.
+// A slice publishes one, in a feat's core/sql/ or a graft's sql/, and so
+// does the analytics port, org's core library, for the log's head.
 const contracts = dirs
-  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+)\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
+  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/analytics)\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
   .map((dir) => join(dir, CONTRACT))
 
 if (locking) {

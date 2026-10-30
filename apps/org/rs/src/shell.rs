@@ -1,3 +1,4 @@
+use crate::analytics::{Shell, Target};
 use crate::data;
 use crate::db::Dev;
 use crate::key;
@@ -16,6 +17,10 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
     if url.is_none() {
         if !dev.running()? {
             dev.start(steps)?;
+        }
+        let shell = Shell::new(repo, None);
+        if !shell.running() {
+            shell.start(&Target::Dev(&dev.db))?;
         }
         let mut scope = dev.cmd("psql");
         scope.args(["-X", "-q", "-t", "-A", "-c", "SELECT current_setting('cella.scope', true)"]);
@@ -52,6 +57,7 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
         vite
     };
     server.env("CELLA_SESSION_KEY_FILE", &session);
+    Shell::new(repo, None).env(&mut server);
     if let Some(url) = url {
         server.env("DATABASE_URL", url);
     }

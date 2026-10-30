@@ -2,7 +2,8 @@
 // Postgres's own parser, and refuses any reference the tree does not allow.
 //
 //   SQL in            may reference
-//   a node's core     cella.*; the notary's vault; the catalog
+//   a node's core     cella.*; the notary's vault; the catalog; the
+//                     analytics port's own schema, analytics, in its SQL
 //   a feat            its own schema; those of the feats it nests in;
 //                     cella.*; the catalog
 //   a graft           its own schema; the schemas of the feats it joins and
@@ -44,6 +45,8 @@
 // A view any slice makes over a secured table is secured in turn. What a
 // view reads through a function runs as the role, and is caught when
 // cella migrate reads each view as it, or by review.
+// No core publishes a contract but the analytics port, org's core library
+// `analytics`, whose views stay in its schema: the log's head.
 // PL/pgSQL bodies are parsed statement by statement; LANGUAGE sql bodies,
 // atomic or quoted, are parsed whole.
 
@@ -97,7 +100,7 @@ export function owners(repo, apps) {
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    return { own: null, allowed: new Set(['cella', 'vault', ...catalog]), feats: [], ops: [] }
+    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(PORT.test(o.dir) ? ['analytics'] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
     return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
@@ -432,6 +435,10 @@ function registers(b, o, s, fail, found) {
 // owner, and comments on them; personal columns shown only where
 // declared, and a secured table's rows only as sums.
 const CONTRACT = 'analytics.sql'
+// The analytics port's own SQL, org's core library beside the slices: its
+// schema, `analytics`, and its contract, the log's head each run of the
+// shell is stamped with. No other core publishes a contract.
+const PORT = /(^|\/)core\/analytics\/sql$/
 const aggregates = new Set(['sum', 'count', 'avg', 'min', 'max', 'bool_and', 'bool_or', 'every', 'array_agg', 'string_agg', 'jsonb_agg', 'jsonb_object_agg'])
 
 // The tables and views a query reads, qualified, its subqueries' and CTEs'
@@ -554,8 +561,15 @@ function carry(v, found) {
 
 function contract(tree, o, fail, found) {
   if (o.kind === 'core') {
-    fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s')
-    return
+    if (!PORT.test(o.dir)) {
+      fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s')
+      return
+    }
+    for (const { stmt } of tree.stmts ?? []) {
+      if (stmt.ViewStmt && stmt.ViewStmt.view?.schemaname !== 'analytics') {
+        fail(`${stmt.ViewStmt.view?.relname}: the analytics port publishes only in its own schema, analytics`)
+      }
+    }
   }
   // The view columns the contract declares, personal or not.
   const declared = new Set()

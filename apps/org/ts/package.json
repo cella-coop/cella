@@ -6,6 +6,7 @@
     "#lib/*": "./src/lib/*"
   },
   "dependencies": {
+    "@cella/org-analytics": "workspace:*",
     "@cella/org-ops": "workspace:*",
     "@cella/org-db": "workspace:*",
     "@cella/org-sign": "workspace:*",
@@ -80,6 +81,7 @@
     "@cella/org-graft-file-membership": "workspace:*",
     "@cella/org-graft-expense-file": "workspace:*",
     "@cella/org-graft-circle-file-membership": "workspace:*",
+    "@duckdb/node-api": "2.0.0-r.1",
     "loro-crdt": "1.17.1",
     "pg": "8.23.1",
     "svelte": "5.57.2"

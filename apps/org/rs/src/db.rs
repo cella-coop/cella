@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::analytics::{Shell, Target};
 use crate::cli::Db;
 use crate::data;
 use crate::key;
@@ -152,8 +153,12 @@ impl<'a> Dev<'a> {
 pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
     let dev = Dev::new(repo);
     match command {
-        Db::Start => dev.start(steps),
+        Db::Start => {
+            dev.start(steps)?;
+            Shell::new(repo, None).start(&Target::Dev(&dev.db))
+        }
         Db::Stop => {
+            Shell::new(repo, None).stop()?;
             if !dev.running()? {
                 println!("stopped already");
                 return Ok(());

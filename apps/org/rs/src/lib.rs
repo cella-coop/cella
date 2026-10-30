@@ -3,6 +3,7 @@
 //! cargo-pgrx, the Postgres binaries, pnpm and the node tools in `tools/` —
 //! as subprocesses from the workspace root, one line per step.
 
+mod analytics;
 mod backup;
 mod check;
 pub mod cli;
@@ -25,6 +26,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Key { command: Key::Init { path, vault: true } } => key::vault(&path),
         Command::Check { part, no_sql } => check::run(&Repo::find()?, &steps, part, no_sql),
         Command::Db { command } => db::run(&Repo::find()?, &steps, command),
+        Command::Analytics { command } => analytics::run(&Repo::find()?, command),
         Command::Ext { command: Ext::Build } => db::ext_build(&Repo::find()?, &steps).map(|_| ()),
         Command::Migrate { url, lock: false } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
         Command::Migrate { lock: true, .. } => data::lock(&Repo::find()?, &steps),

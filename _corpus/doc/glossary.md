@@ -16,6 +16,8 @@ updated = 2026-10-30
 | **slice test** | a test of exactly one slice, in its package's `_tests/`, run by `cella test slice` on a database holding only that slice's part of the tree |
 | **e2e test** | a scenario across slices, in an app root's `_e2e/`, run by `cella test e2e` on a seeded mock co-op |
 | **analytical contract** | a slice's `sql/analytics.sql`: the views it agrees to share with the analytics shell, which reads them as `cella_analytics`, the role granted those views and nothing else |
+| **analytics shell** | the DuckDB 2.0 server per scope that attaches its database read-only as `cella_analytics`, serves it on localhost behind a token, and runs every report; `cella analytics` runs it |
+| **analytics port** | `core/analytics`: a report definition checked against the views the slices publish, and the shell's implementation of it, which runs each report on one snapshot stamped with the log's head |
 | **increment** | a chunk of build work; never a slice |
 | **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
 | **inbox** | what waits on the acting person, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |

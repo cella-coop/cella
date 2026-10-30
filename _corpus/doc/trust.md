@@ -390,8 +390,9 @@ slice's schema, and nothing else
 ([analytical contracts](architecture.md#analytical-contracts)); no
 migration may grant it more, and the SQL check refuses one that tries.
 It may not use `cella` or a slice's schema beyond those views, so it
-calls no write, opens no vault entry and reads no log. What every role
-reads, the notary's `vault.erased`, it reads too.
+calls no write, opens no vault entry and reads no log but its head,
+which the analytics port publishes as a view of its own. What every
+role reads, the notary's `vault.erased`, it reads too.
 
 A contract's view reads as its owner, so what the role sees is what the
 slice agreed to share, not what a member's policies would show them:
@@ -401,6 +402,26 @@ security only sums over everyone or the rows its policy opens to all.
 The role reads a declared personal column as it is, so whatever reads
 through the role decides whom it shows it to; the contracts share no
 figure that is one member's pay, time or capital.
+
+The analytics shell is the role's one client
+([architecture](architecture.md#the-analytics-shell)). It attaches the
+scope's database read-only as the role, so whatever reaches the shell
+reads what the role reads and writes nothing: a statement that would
+write is refused by the attach, then by the role's read-only
+transactions, then by its grants. It serves on localhost alone, to
+whoever holds its token, a secret file owner-only beside the cluster's
+data, and before it serves it shuts every door but the attach: it reads
+and writes no file, attaches no other database, loads no extension and
+locks its settings. So a token's holder runs SQL over the published
+views, and nothing else on the host.
+
+A page reads it only through the port, which takes a report, never SQL,
+checks every view, field, join and value against the catalog of what the
+role reads, and refuses a personal field the report does not declare
+([the port](../../apps/org/core/analytics/index.md#the-check)). Each run
+reads on one snapshot, its Postgres transaction repeatable read, and is
+stamped with the log's head it read: the port's `analytics.head`, the
+entry's number and hash, is the role's only reach into the notary.
 
 ## Current limits
 
@@ -446,6 +467,11 @@ What the build does not yet do, and what lifts each:
   signature up to a minute, holding a database connection, and goes with
   the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
   names the key, as `cella serve` does.
+- **The analytics shell knows no reader.** Its token opens every
+  published view, declared personal columns among them, to whoever holds
+  it; the org app's server holds it and decides whom a report's rows are
+  shown to. The port passing the reader through to the views, so a
+  member's statement reads only their own lines, lifts this.
 - **A backup carries its keys.** `cella backup` writes the notary's and
   the vault's key files beside the dump, owner-only but not encrypted, so
   whoever holds a backup can open the vault and sign as the notary; a

@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The co-op ERP, for member-governed organisations. One deployment serves one
@@ -10,13 +10,17 @@ scope: a co-op, a joint circle of co-ops, or a federation.
   permissions, outcomes), `crypto`, `log`, `keystore`, `rules` (the pure
   rule primitives), `notary` (the `cella` Postgres extension over them),
   `db` (a write's transaction and a slice's server side), `sign` (a
-  device's signature on a write) and `ui` (the shell's tokens and
-  components, [its doc](core/ui/index.md)).
+  device's signature on a write), `analytics` (the port reports are read
+  through, [its doc](core/analytics/index.md)) and `ui` (the shell's
+  tokens and components, [its doc](core/ui/index.md)).
 - `feats/` holds one domain each; none imports another.
 - `grafts/` joins feats, through their cores.
 - `rs/` is `cella`, the CLI that runs every development and production
   task ([its doc](rs/index.md)).
 - `ts/` is the shell, the SvelteKit 3 app that mounts every slice.
+- The analytics shell, a DuckDB 2.0 server that `cella analytics` runs
+  beside Postgres, reads the views the slices publish for every report
+  ([architecture](../../_corpus/doc/architecture.md#the-analytics-shell)).
 
 ## The shell
 

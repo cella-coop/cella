@@ -67,3 +67,9 @@ pub fn session(path: &Path) -> Result {
     }
     write(path, random().as_ref())
 }
+
+/// The analytics shell's token, 32 random bytes in hex, which the shell
+/// answers to and its clients send: made owner-only on first use, then kept.
+pub fn token(path: &Path) -> Result {
+    write(path, hex(random().as_ref()).as_bytes())
+}

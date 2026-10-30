@@ -152,6 +152,12 @@ text = "approve members' expenses"
 limit = 200000
 
 [[mandate]]
+role = "manager"
+power = "approve-bill"
+text = "approve suppliers' bills"
+limit = 500000
+
+[[mandate]]
 role = "finance"
 power = "issue-invoice"
 text = "issue invoices"
@@ -160,6 +166,11 @@ text = "issue invoices"
 role = "finance"
 power = "record-receipt"
 text = "record money received"
+
+[[mandate]]
+role = "finance"
+power = "record-bill"
+text = "record suppliers' bills"
 
 [[mandate]]
 role = "finance"

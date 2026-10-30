@@ -51,6 +51,8 @@ test('every main page renders on the seed', async () => {
     ['/documents/internal-rules', 'Règlement intérieur'],
     ['/invoices', 'F-2026-0055'],
     ['/invoices/F-2026-0044', 'Compagnie Mauve Horizon'],
+    ['/bills', 'Imprimerie du Parc'],
+    ['/bills/bi-0002', 'Studio rent, October'],
     ['/clients', 'Vélo Solidaire'],
     ['/accounts', 'Banque'],
     ['/accounts/512', 'Ledger'],

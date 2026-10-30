@@ -1,0 +1,37 @@
+# Suppliers' bills, recorded by Julien in October and not yet approved:
+# approving one charges it to the books, and the gérante approves up to
+# 5 000 € a bill. Unit prices in cents, VAT rates in percent.
+
+[[bill]]
+id = "bi-0001"
+supplier = "Imprimerie du Parc"
+reference = "FA-2026-1187"
+issued = 2026-10-16
+due = 2026-11-15
+label = "Paper stock for the autumn catalogues"
+category = "606"
+recorded = 2026-10-19
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Munken Pure 120 g, SRA3, a ream"
+quantity = "40"
+unit_price = 3000
+vat_rate = "20"
+
+[[bill]]
+id = "bi-0002"
+supplier = "Atelier Lumen"
+reference = "LOY-2026-10"
+issued = 2026-10-01
+due = 2026-10-31
+label = "Studio rent, October"
+category = "613"
+recorded = 2026-10-02
+recorder = "julien@lanterne.example"
+
+[[bill.line]]
+description = "Studio and storage, rue des Caillots, October"
+quantity = "1"
+unit_price = 90000
+vat_rate = "20"

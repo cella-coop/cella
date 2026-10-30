@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The co-op's structure and the authority that flows through it. A circle is
@@ -180,10 +180,11 @@ writes propose, and the close of a passing decision carries them out.
 | Gérante (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
 | Gérante | `approve-expense` | 2 000 € limit |
 | Gérante | `set-budget` | 50 000 € limit |
+| Gérante | `approve-bill` | 5 000 € limit |
 | Gérante | `approve-payroll`, `manage-project`, `approve-time` | — |
 | Treasurer (Julien, in `ag`) | `approve-time` | — |
 | Finance (Julien, in `operations`) | `pay-supplier`, `reimburse-expense` | 3 000 € limit |
-| Finance | `record-entry`, `issue-invoice`, `record-receipt`, `close-period`, `prepare-payroll`, `pay-payroll` | — |
+| Finance | `record-entry`, `issue-invoice`, `record-receipt`, `record-bill`, `close-period`, `prepare-payroll`, `pay-payroll` | — |
 | Circle lead (`*`) | `approve-expense` | 1 000 € budget, a month |
 | Circle lead | `send-quote` | 15 000 € limit |
 | Circle lead | `set-budget` | 15 000 € limit |

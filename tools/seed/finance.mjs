@@ -1,6 +1,6 @@
 // seed, finance: loads a mock co-op's capital, the statutes' terms, surplus
-// distributions, pay and expenses into the account, patronage, payslip and
-// expense schemas and their grafts' (account-membership,
+// distributions, pay, expenses and bills into the account, patronage, payslip,
+// expense and bill schemas and their grafts' (account-membership,
 // account-membership-transaction's repayments, employment-payslip,
 // payslip-transaction, expense-project). The chart, the
 // journal, the members and their time load first: a capital account names
@@ -83,5 +83,32 @@ export async function finance(db, read, day) {
   for (const r of read('graft.expense-project').rebill ?? []) {
     await db.query('INSERT INTO expense_project.rebill (expense, project) VALUES ($1, $2)', [r.expense, r.project])
   }
-  return `${(pay.run ?? []).length} pay runs, ${expenses.length} expenses`
+
+  // A bill's amounts are its lines', counted as the VAT core library counts
+  // them, by `cella.line_amount` and `cella.line_vat`.
+  const bills = read('bill').bill ?? []
+  for (const b of bills) {
+    await db.query(
+      `WITH lines AS (
+         SELECT x.n::integer AS n, x.description, x.quantity, x.unit_price, x.vat_rate,
+                cella.line_amount(x.quantity, x.unit_price) AS amount
+         FROM ROWS FROM (jsonb_to_recordset($10::jsonb) AS (description text, quantity numeric, unit_price bigint, vat_rate numeric))
+           WITH ORDINALITY AS x (description, quantity, unit_price, vat_rate, n)
+       ),
+       sums AS (SELECT sum(amount)::bigint AS net, sum(cella.line_vat(amount, vat_rate))::bigint AS vat FROM lines),
+       made AS (
+         INSERT INTO bill.bill (id, supplier, reference, issued, due, label, category, recorded, recorder, net, vat, total)
+         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, cella.amount(net), CASE WHEN vat > 0 THEN cella.amount(vat) END, cella.amount(net + vat)
+         FROM sums
+         RETURNING id
+       )
+       INSERT INTO bill.line (bill, n, description, quantity, unit_price, amount, vat_rate)
+       SELECT made.id, n, description, quantity, cella.amount(unit_price), cella.amount(amount), vat_rate FROM made, lines`,
+      [b.id, b.supplier, b.reference, day(b.issued), day(b.due), b.label, b.category, day(b.recorded), b.recorder, JSON.stringify(b.line ?? [])],
+    )
+  }
+  if (bills.length) {
+    await db.query(`SELECT setval('bill.number', $1)`, [Math.max(...bills.map((b) => Number(b.id.slice(3))))])
+  }
+  return `${(pay.run ?? []).length} pay runs, ${expenses.length} expenses, ${bills.length} bills`
 }

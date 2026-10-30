@@ -28,6 +28,35 @@ const measure = (w: Widget, where: Where[], fs: Field[]): Measure => ({
   ...(w.kind === 'chart' ? { by: { field: w.by, month: fs.find((f) => f.key === w.by)?.type === 'date' } } : {}),
 })
 
+// A widget over a report's rows, which the port read: the rows its
+// enumerations keep, counted, or a numeric field summed, averaged or at
+// its least or greatest, by an enumeration's value for a chart.
+export function tally(rows: Record<string, unknown>[], w: Widget, fs: Field[]): Result {
+  const field = (key: string) => fs.find((f) => f.key === key)
+  const kept = rows.filter((r) => (w.where ?? []).every((c) => !('is' in c) || c.is.includes(String(field(c.field)?.value(r) ?? ''))))
+  const measure = (group: Record<string, unknown>[]): number | null => {
+    if (w.measure.op === 'count') {
+      return group.length
+    }
+    const f = field(w.measure.field ?? '')
+    const xs = group.map((r) => f?.value(r)).filter((x): x is number => typeof x === 'number')
+    if (!xs.length) {
+      return null
+    }
+    const sum = xs.reduce((s, x) => s + x, 0)
+    return { sum, avg: Math.round(sum / xs.length), min: Math.min(...xs), max: Math.max(...xs) }[w.measure.op]
+  }
+  if (w.kind === 'kpi') {
+    return result(w, measure(kept), fs)
+  }
+  const groups = new Map<string, Record<string, unknown>[]>()
+  for (const r of kept) {
+    const label = String(field(w.by)?.value(r) ?? '')
+    groups.set(label, [...(groups.get(label) ?? []), r])
+  }
+  return result(w, [...groups].map(([label, g]) => ({ label, value: measure(g) ?? 0 })), fs)
+}
+
 // Each widget over the rows `where` keeps, in one statement.
 export async function run(db: Db, from: Source, ws: Widget[], where: Where[], fs: Field[]): Promise<Result[]> {
   const measured = await measures(

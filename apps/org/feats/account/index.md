@@ -241,10 +241,9 @@ A capital account, one with a holder, reads for its holder and for whoever holds
 The `accounts` collection, the chart by code; `periods`, the latest month
 first, its New form opening the month after the latest, and a period's
 page closing it; `terms`, the statutes' capital
-clauses by year, adopted or drafted, titled Capital terms; and `reports`,
-the financial statements by span, the latest ending first, in a table, a
-span's page naming its days and the span it is compared with; its two
-statements are `account-transaction`'s tabs.
+clauses by year, adopted or drafted, titled Capital terms. The financial
+statements are the `report` feat's, drawn in the rubrics and over the
+spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
 balance and each account's ledger are `account-transaction`'s; adopting
 terms, `account-decision`'s form over this feat's write.
@@ -267,4 +266,4 @@ terms, `account-decision`'s form over this feat's write.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes the chart, its periods, the statements' rubrics and the capital terms to the analytics shell, as `account.chart`, `account.periods`, `account.rubrics` and `account.capital_terms`. A capital account is a member's, so the chart shows only the accounts no one holds; what the held ones sum to is account-transaction's.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes the chart, its periods, the statements' rubrics and the capital terms to the analytics shell, as `account.chart`, `account.periods`, `account.rubrics` and `account.capital_terms`. A capital account is a member's, so the chart shows only the accounts no one holds; what the held ones sum to is account-transaction's. For the statements it publishes three more: `account.spans`, each span of the books with its days and the span before it; `account.placements`, the line each account no one holds is presented in on each sheet, by the longest prefix of its code as `rubric_of` places it; and `account.totals`, each total of a sheet expanded down to its lines, each line with the sign it is added with.

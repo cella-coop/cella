@@ -89,6 +89,7 @@ updated = 2026-10-30
 | **statement** | a worker's part of a year's work share, by basis, and what became of it once distributed: shares, blocked five years, and cash |
 | **financial statements** | the income statement (compte de résultat) over a month, a quarter or a year and the balance sheet (bilan) at its end, from the journal in the PCG's rubrics, beside the span before; a **statement** alone is a worker's |
 | **margin** | what a project invoiced less what its time cost the co-op and what was spent for it |
+| **report** | a saved report of the `report` feat, read through the analytics port: the financial statements, the project margins, the federation figures, or a member's own |
 | **burn** | the share of a project's budget its billable time has spent, at the rate card |
 | **indivisible reserves** | surplus kept by the co-op for good, never distributed |
 | **interest on capital** | the part of the surplus paid on members' capital shares, capped by law |

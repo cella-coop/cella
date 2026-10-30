@@ -5,15 +5,14 @@ import { action, type Slice } from '@cella/org-db'
 import { adopt, close, nextPeriod, open } from '../handlers/index.ts'
 import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
-import { report, reports, spans } from '../drivers/report.ts'
 
 export { adopt, close, nextPeriod, open, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
 export { term, terms } from '../drivers/terms.ts'
 export { report, reports } from '../drivers/report.ts'
 
-// The chart, the periods, the statutes' capital clauses and the spans the
-// financial statements are drawn for; opening the next period, and
+// The chart, the periods and the statutes' capital clauses; opening the
+// next period, and
 // closing one, which `account.closes` decides and after which nothing
 // posts into it, and adopting capital clauses, which cites the members'
 // decision.
@@ -41,11 +40,6 @@ export const slice: Slice = {
       actions: {
         adopt: action('account:terms:adopt', (form, id) => ({ terms: id ?? '', decision: form.get('decision') }), adopt),
       },
-    },
-    reports: {
-      list: spans,
-      item: report,
-      index: async (db) => (await reports(db)).map((r) => ({ id: r.id, title: `${r.id} financial statements`, sub: r.kind })),
     },
   },
 }

@@ -1,0 +1,8 @@
+# When the report feat watches a project: once its billable time has spent
+# 90 % of its budget, or once its margin keeps less than 20 % of what it
+# invoiced.
+
+[[threshold]]
+since = 2026-01-01
+burn = 90
+margin = 20

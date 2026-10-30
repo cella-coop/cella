@@ -69,13 +69,16 @@ test('the journal by account sums each account, a capital account into its paren
   ])
 })
 
+// The three sums are read in one statement, so on one snapshot: the
+// slice's other tests post to the same database while this one runs.
 test('the movements balance, and add up to the journal\'s months and to the balances, to the cent', async () => {
-  const { rows: [m] } = await analytics.query<{ debit: string; credit: string }>(`SELECT sum(debit)::text AS debit, sum(credit)::text AS credit FROM account_transaction.movements`)
-  assert.equal(m.debit, m.credit)
-  const { rows: [j] } = await analytics.query<{ debit: string; credit: string }>(`SELECT sum(debit)::text AS debit, sum(credit)::text AS credit FROM transaction.months`)
-  assert.deepEqual(j, m)
-  const { rows: [b] } = await db.query<{ debit: string; credit: string }>(`SELECT sum(debit)::text AS debit, sum(credit)::text AS credit FROM account_transaction.balance`)
-  assert.deepEqual(b, m)
+  const sums = (from: string) => `(SELECT json_build_object('debit', sum(debit)::text, 'credit', sum(credit)::text) FROM ${from})`
+  const { rows: [r] } = await db.query<Record<'m' | 'j' | 'b', { debit: string; credit: string }>>(
+    `SELECT ${sums('account_transaction.movements')} AS m, ${sums('transaction.months')} AS j, ${sums('account_transaction.balance')} AS b`,
+  )
+  assert.equal(r.m.debit, r.m.credit)
+  assert.deepEqual(r.j, r.m)
+  assert.deepEqual(r.b, r.m)
 })
 
 test('the chart shows the accounts no one holds, and the role reads no table beneath the views', async () => {

@@ -21,6 +21,9 @@ the log's head it read.
 - `join`, how each view after the first meets one before it: pairs of
   fields that are equal, `[['m.project', 'p.id']]`. A field is a view's
   name and a column, `p.title`.
+- `outer`, the views after the first that may meet no row, joined so
+  that a row of the views before them stays, their fields null: a
+  project that invoiced nothing.
 - `fields`, what each row shows, and groups by when the report has
   measures.
 - `measures`, each by a name of its own: `sum`, `avg`, `min`, `max` or
@@ -47,8 +50,8 @@ comments it `personal:`. A report is refused when it:
 
 - reads a view the catalog does not hold, such as a slice's own table,
   or a column its view does not share;
-- leaves a view after the first joined to none before it, joins a view
-  with itself, or joins fields of two kinds (a number, a text, a date, a
+- leaves a view after the first joined to none before it, names in
+  `outer` one that is not after the first, joins a view with itself, or joins fields of two kinds (a number, a text, a date, a
   flag), or on a document or a list, which are only shown;
 - sums or averages what is not a number, or takes the least or greatest
   of a flag, a document or a list;

@@ -49,4 +49,4 @@ Solidaire's voided invoice and its reissue at the solidarity rate.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_project.charges` to the analytics shell: which project each invoice charges.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_project.charges` to the analytics shell: which project each invoice charges; and `invoice_project.totals`, what each project invoiced, net of VAT and of its voided invoices.

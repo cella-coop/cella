@@ -58,7 +58,7 @@ Project knows no clients, tasks, members or time. Whom a project is for is
 `client-project`'s; its tasks, `project-task`'s; its time, what it spent
 of the budget and its spend at completion, `project-timesheet`'s; the
 shares of its budget, `membership-project`'s; its margin and whether it is
-watched, `expense-invoice-project-timesheet`'s. Quotes and invoicing by milestone are not built.
+watched, the `report` feat's project margins. Quotes and invoicing by milestone are not built.
 
 ## Schema
 
@@ -73,7 +73,7 @@ The `projects` collection opens as a gallery, each card naming its client,
 its milestones done of all, its budget and what its time spent of it (the
 root picks these fields, which come from three slices). A project's page
 has three tabs: Overview, with its summary, its milestones (completing
-one, adding the next), its budget and its shares, and its margin; Tasks
+one, adding the next), its budget and its shares; Tasks
 (`project-task`); and Time (`project-timesheet`). The two are tabs because
 each is a list long enough to crowd the overview. Archive is the header's
 write.

@@ -31,10 +31,10 @@ import { slice as membershipProject } from '@cella/org-graft-membership-project/
 import { slice as membershipTask } from '@cella/org-graft-membership-task/api'
 import { slice as projectTask } from '@cella/org-graft-project-task/api'
 import { slice as projectTimesheet } from '@cella/org-graft-project-timesheet/api'
-import { slice as expenseInvoiceProjectTimesheet } from '@cella/org-graft-expense-invoice-project-timesheet/api'
 import { slice as expense } from '@cella/org-expense/api'
 import { slice as bill } from '@cella/org-bill/api'
 import { slice as payslip } from '@cella/org-payslip/api'
+import { reporting } from '@cella/org-report/api'
 import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
 import { slice as accountMembership } from '@cella/org-graft-account-membership/api'
 import { slice as accountMembershipTransaction } from '@cella/org-graft-account-membership-transaction/api'
@@ -71,6 +71,7 @@ import { slice as fileMembership } from '@cella/org-graft-file-membership/api'
 import { slice as expenseFile } from '@cella/org-graft-expense-file/api'
 import { slice as circleFileMembership } from '@cella/org-graft-circle-file-membership/api'
 import { kinds, run } from './import.ts'
+import { port } from './analytics.ts'
 
 // The server sides the shell mounts: each feat's collections, each graft's
 // extensions of the feats it joins, and the root's own, which may join
@@ -108,6 +109,7 @@ export const slices: Slice[] = [
   expense,
   bill,
   payslip,
+  reporting(port),
   log,
   circleMembership,
   circleDecision,
@@ -121,7 +123,6 @@ export const slices: Slice[] = [
   membershipTask,
   projectTask,
   projectTimesheet,
-  expenseInvoiceProjectTimesheet,
   invoiceTransaction,
   accountTransaction,
   accountDecision,

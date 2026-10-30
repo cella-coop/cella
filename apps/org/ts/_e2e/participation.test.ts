@@ -24,6 +24,7 @@ import { submit } from '@cella/org-graft-employment-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
+import { reading as analytics } from './port.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
@@ -208,11 +209,16 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
   await on('2026-10-24')
 })
 
-test('the home shows the co-op’s figures from several collections, and a viewer pins their own', async () => {
-  const home = await read('/', camille)
+test('the home shows the co-op’s figures from several collections and its reports, and a viewer pins their own', async () => {
+  // The projects' margins are a report, read through the analytics shell.
+  const reports = await analytics(su, '54373', '2026-10-24')
+  await shell.start('2026-10-24', reports.env)
+  const home = await read('/', camille).finally(() => reports.stop())
   for (const title of ['Cash', 'Owed by clients', 'Overdue', 'Margin on projects', 'Open decisions', 'Meetings ahead', 'Invoiced by month', 'Projects by watch']) {
     assert.ok(home.includes(title), title)
   }
+  assert.match(home, /Margin on projects Project margins/)
+  assert.ok(!home.includes('analytics shell'), 'every pin was read')
   const open = (await one<{ n: number }>(`SELECT count(*)::int AS n FROM decision.decision WHERE closed IS NULL`)).n
   assert.match(home, new RegExp(`Open decisions Decisions ${open} `))
   const own = [

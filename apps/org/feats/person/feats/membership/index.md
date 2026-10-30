@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -191,3 +191,7 @@ is served in employment; leave and member categories are not built.
 Twelve memberships: ten active, Paul's exited on 30 November 2025, and
 Inès's invited on 30 September 2026, who took up her invitation on
 1 October on her phone, which it enrolled; d-2026-012's close admits her.
+
+## Analytics
+
+Its [analytical contract](../../../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `membership.members` to the analytics shell: each member's standing, shares and days, by address.

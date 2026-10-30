@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -69,3 +69,7 @@ one; to a person's page, the shares they hold.
 
 A share of 13 000 € from Ferrand's budget, 12 000 € of which is left, is
 refused.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_project.shares` to the analytics shell: the shares of each project's pot granted to members.

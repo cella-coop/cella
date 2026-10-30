@@ -181,3 +181,7 @@ bills and expenses, through their grafts.
   `je-0009`, `je-0019` and `je-0031` (`641` and `645` against `512`),
   which `payslip-transaction` links to their runs; October's run posts
   through the payslip feat.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `transaction.months` to the analytics shell: the transaction feat's analytical contract. A line on a member's capital account is theirs, and only the account-transaction graft knows which accounts are held, so the journal shows here only as sums over every line: each month's entries and what they moved.

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The work share employed in the associates' capital: when a year's
@@ -77,3 +77,7 @@ forms, nor the article setting the employees' 51 % of the capital.
 
 Distributing 2025 buys the ten members 270 shares, 13 500 €, blocked
 until 1 June 2031, and leaves 14 130 € to pay in cash.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_patronage_transaction.credits` to the analytics shell: what each distribution credited to the members' capital, summed over every member.

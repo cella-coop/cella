@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -129,3 +129,7 @@ The members' capital was carried over on 1 July. Inès subscribes her 20
 shares, 1 000 €, called when d-2026-012 admits her and paid from her pay.
 Paul left on 30 November 2025: his 1 500 € is owed him in `4567`, repaid
 500 € a year on 30 November 2026, 2027 and 2028.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_transaction.capital_months` to the analytics shell: what the members subscribed, paid in, drew and were repaid, summed over every member, by month of the entry that posted it.

@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -55,3 +55,7 @@ them, d-2026-006 and d-2026-007. The assembly adopts its minutes, and
 none adopts them yet: the 31 October assembly has them on its agenda.
 
 Slice tests: the junction's sides, and the rule.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `document_meeting.minuted` to the analytics shell: which document holds each meeting's minutes.

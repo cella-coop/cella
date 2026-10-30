@@ -1,6 +1,6 @@
 +++
 title = "decision-meeting"
-updated = 2026-10-24
+updated = 2026-10-30
 +++
 
 Decisions on an agenda: an item that tables a decision, and where the
@@ -45,3 +45,7 @@ the assembly of 31 October tables both. The assembly of 20 June tabled d-2026-00
 d-2026-007.
 
 Slice tests: the trigger's two sides.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `decision_meeting.tablings` to the analytics shell: which decision each meeting's agenda item tables.

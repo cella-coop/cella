@@ -1,6 +1,6 @@
 +++
 title = "client-project"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 Whom a project is for. A project without a link is the co-op's own, not
@@ -37,3 +37,7 @@ to a client's page, the projects it commissioned.
 Each of the eight projects is for the client its title names: the Halles
 shop for Les Halles Paysannes, the town website for Ville de Clairval,
 and so on.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_project.commissions` to the analytics shell: which client commissioned each project.

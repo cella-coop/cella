@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -42,3 +42,7 @@ not done.
 
 Each task goes to a member of the circle that runs its project, Julien's
 to the October close and the overdue Mauve invoice.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_task.assignments` to the analytics shell: who each task is assigned to.

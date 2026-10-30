@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -291,3 +291,7 @@ a decision's page.
 - Malik commented on version 2's retainer price, asking whether Nuvola's
   renewal in January keeps the current rate; he objects to d-2026-011,
   which would adopt version 2, by its hash, open until 9 November.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `document.documents` to the analytics shell: each document, how many versions it has, when it was last saved and adopted.

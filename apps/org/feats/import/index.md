@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -100,3 +100,7 @@ write, its outcome and its entry or reason. `cella import <kind> <file>
 
 None yet; [its samples](../../fixtures/lanterne/import/index.md) hold a
 file of each kind.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `import.runs` to the analytics shell: each run, its kind and day, and how many of its records settled and were refused.

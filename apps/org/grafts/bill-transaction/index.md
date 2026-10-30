@@ -45,3 +45,7 @@ it back.
 
 Replaces the bill feat's approve and pay with these, and adds a bill's
 postings, line by line, to its page.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `bill_transaction.postings` to the analytics shell: which entry posted which bill, and on what event.

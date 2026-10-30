@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-10-25
+updated = 2026-10-30
 +++
 
 What members spend for the co-op from their own pocket, to be paid back:
@@ -121,3 +121,7 @@ receipt; and an expense's page with its next write and its receipts.
 Four October expenses: Sofia's print proofs, 180 €, Chloé's workshop
 coffee and Léa's font licence, submitted; Thomas's train to Clairval, a
 draft.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `expense.expenses` to the analytics shell: each expense, whose it is, its category, figures and lifecycle. Its label and receipt are personal and are not shared.

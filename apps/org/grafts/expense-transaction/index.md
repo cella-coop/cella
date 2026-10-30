@@ -1,6 +1,6 @@
 +++
 title = "expense-transaction"
-updated = 2026-10-24
+updated = 2026-10-30
 +++
 
 An expense's approval and its reimbursement post balanced entries, in the
@@ -38,3 +38,7 @@ posting, then `cella.submit` once.
 
 Replaces the expense feat's approve and reimburse with these, and adds an
 expense's postings to its page.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_transaction.postings` to the analytics shell: which entry posted which expense, and on what event.

@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -253,3 +253,7 @@ document.
   the 455 € the terms allow. Approved citing it, ten parts make
   27 630,00 €; distributed, they buy 270 shares (13 500 €), blocked until
   1 June 2031, and leave 14 130 € owed in cash.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `patronage.distributions`, `patronage.shares`, `patronage.terms_adopted` and `patronage.parts` to the analytics shell: each distribution and its split, the terms adopted, and each distribution's parts summed by basis. A worker's part is theirs, so no row is one worker's.

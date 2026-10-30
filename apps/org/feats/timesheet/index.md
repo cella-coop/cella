@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -123,3 +123,7 @@ billable, in line with what the invoices bill at the 80 € hourly rate.
 September is submitted by everyone and approved: each lead approved their
 circle's members, Julien in finance the leads and Inès, who is no member
 yet, and Camille as gérante Julien. October is open.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `timesheet.months` to the analytics shell: each month's time in minutes, summed over every entry. An entry is its member's, so no row is one member's time.

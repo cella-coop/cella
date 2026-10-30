@@ -1,6 +1,6 @@
 +++
 title = "Decision"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 Proposals, votes and outcomes. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once.
@@ -96,3 +96,7 @@ it in documents, `decision-meeting` in a meeting's minutes.
 ## Domain
 
 Ported from seedling's `specs/feat/06-decisions.md` under this repo's labels and grafts: proposals with what they decide, stances and the close. Amendments, delegation, a second call without a quorum and closing early once everyone has spoken are not built.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `decision.decisions` and `decision.procedures` to the analytics shell: each decision, its procedure and its days. Stances are not shared: a secret ballot's roll is never shown, and an open one's is on the decision's page.

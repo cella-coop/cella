@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-10-29
+updated = 2026-10-30
 +++
 
 # Trust
@@ -378,6 +378,29 @@ erased until their legal clock runs out.
   processing personal data through blockchain technologies: erasure
   must remain possible, so the ledger holds no personal data, only what
   cannot be linked once its key is gone).
+
+## The analytics role
+
+Analytics read the scope through `cella_analytics`, a role apart from the
+app's and the rules': it logs in, every transaction it opens is
+read-only (`default_transaction_read_only`), it owns nothing and runs
+past no row-level security. `cella migrate` grants it SELECT on each
+view a slice publishes in its analytical contract, and USAGE on that
+slice's schema, and nothing else
+([analytical contracts](architecture.md#analytical-contracts)); no
+migration may grant it more, and the SQL check refuses one that tries.
+It may not use `cella` or a slice's schema beyond those views, so it
+calls no write, opens no vault entry and reads no log. What every role
+reads, the notary's `vault.erased`, it reads too.
+
+A contract's view reads as its owner, so what the role sees is what the
+slice agreed to share, not what a member's policies would show them:
+a personal column only where the view declares it, which erasure redacts
+in its table and so in the view, and from a table under row-level
+security only sums over everyone or the rows its policy opens to all.
+The role reads a declared personal column as it is, so whatever reads
+through the role decides whom it shows it to; the contracts share no
+figure that is one member's pay, time or capital.
 
 ## Current limits
 

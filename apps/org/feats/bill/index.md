@@ -145,3 +145,7 @@ approve when recorded, pay when approved.
 Two October bills, recorded by Julien and not yet approved: Imprimerie
 du Parc's paper stock, 1 200 € and 240 € of VAT, and Atelier Lumen's
 rent for October, 900 € and 180 €.
+
+## Analytics
+
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `bill.bills` and `bill.taxes` to the analytics shell: each supplier's bill with its figures and lifecycle, and its VAT by rate.

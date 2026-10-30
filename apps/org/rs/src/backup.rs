@@ -230,7 +230,11 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_rules') THEN
              CREATE ROLE cella_rules NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
            END IF;
-         END $$;",
+           IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_analytics') THEN
+             CREATE ROLE cella_analytics LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT NOCREATEDB NOCREATEROLE;
+           END IF;
+         END $$;
+         ALTER ROLE cella_analytics SET default_transaction_read_only = on;",
     );
     for (role, setting) in &manifest.settings {
         let (key, value) = setting.split_once('=').ok_or_else(|| Fail::new(format!("a setting without a value: {setting}")))?;

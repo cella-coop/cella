@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op ERP, for member-governed organisations. One deployment serves one
@@ -190,7 +190,7 @@ and admit a member by vote (ordered).
 | `employment-project-timesheet` | a worker's time booked to a project by their employment, and the week they enter it in |
 | `employment-timesheet` | whose time an entry is, a worker's within their employment, and logging it by that employment |
 | `expense-file` | an expense's receipts, one carried by its claim |
-| `expense-invoice-project-timesheet` | retired: a project's margin is a report; its migrations stay, the second dropping what the first made |
+| `expense-invoice-project-timesheet` | retired: a project's margin is a report; its migrations stay until launch, the second dropping what the first made |
 | `expense-membership` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |

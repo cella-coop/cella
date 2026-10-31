@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 # Architecture
@@ -308,14 +308,22 @@ is made. A migration's id is stable: its app, the feat or graft whose
 SQL it is, and its file name, `org:membership/003-seats.sql`, or
 `org:core/notary/001-cella.sql` for a core, so a feat that moves in the
 tree keeps its ids. Renaming a feat changes its ids and `cella migrate`
-maps no old id to a new one, so a feat a scope has applied is not
-renamed.
+maps no old id to a new one, so a rename rebuilds every database, and
+from launch a feat a scope has applied is not renamed.
 
-Migrations are append-only. A file edited after it was applied is
-refused, and each app's `migrations.lock` keeps every migration's id and
-hash: `cella check` fails on a locked file edited or gone and on a file not
-locked, and `cella migrate --lock` locks the new ones. A change is a new
-file. The notary changes the same way: its upgrade script ships with the
+Until launch, migrations are the prototype's to rewrite. No scope is
+live, so a change edits the file that makes what it changes, and every
+database is rebuilt: `cella migrate` refuses a database that applied a
+file since edited, or one the tree no longer has, before it runs any,
+saying to reset it, and `cella db reset` drops it, migrates it anew and
+seeds it from its fixture. There is no `migrations.lock` until then.
+
+At launch the migrations are squashed into one initial migration for
+each core, feat and graft, `001-<name>.sql`, and from then on they are
+append-only. Each app's `migrations.lock` keeps every migration's id and
+hash: `cella check` fails on a locked file edited or gone and on a file
+not locked, and `cella migrate --lock` locks the new ones. A change is a
+new file. The notary changes the same way: its upgrade script ships with the
 extension, and a migration appended to `core/notary/sql/` runs `ALTER
 EXTENSION cella UPDATE` ([the notary](../../apps/org/core/notary/index.md#build)).
 

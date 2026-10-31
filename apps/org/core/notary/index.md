@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the rule primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-rules` (`core/rules/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -119,7 +119,7 @@ The library is loaded through `shared_preload_libraries` so its settings exist b
 
 `cella ext build` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
 
-The extension's version is its own, `version` in `rs/Cargo.toml` (0.4.0), and changes with every change to its SQL. `rs/sql/` keeps each earlier version's install script, as pgrx generated it, and the upgrade script from it, `cella--<from>--<to>.sql`, written by hand; `cella ext build` stages them all beside the generated one, since pgrx stages only the upgrade scripts and a rehearsal installs an earlier version; an org migration appended to `sql/` then runs `ALTER EXTENSION cella UPDATE`, so a database keeps its log, its receipts and its vault through every change of the notary, never `DROP EXTENSION` ([operations](../../../../_corpus/doc/operations.md#upgrades)). A fresh install makes no head row, so a dump of the head restores into one.
+The extension's version is its own, `version` in `rs/Cargo.toml` (0.4.0), and changes with every change to its SQL. `rs/sql/` keeps each earlier version's install script, as pgrx generated it, and the upgrade script from it, `cella--<from>--<to>.sql`, written by hand; `cella ext build` stages them all beside the generated one, since pgrx stages only the upgrade scripts and an earlier version installs from its own; an org migration appended to `sql/` then runs `ALTER EXTENSION cella UPDATE`, so a database keeps its log, its receipts and its vault through every change of the notary, never `DROP EXTENSION` ([operations](../../../../_corpus/doc/operations.md#upgrades)). A fresh install makes no head row, so a dump of the head restores into one.
 
 `sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-rules-role.sql` creates `cella_rules` and keeps `submit` and `receipt` to the app; `sql/003-vault.sql` keeps `opened` to the app and the sweep to a superuser; `sql/005-signers.sql` updates a database made before 0.2.0 in place and makes the head row of a new one; `sql/006-salts.sql` updates one made before 0.3.0; `sql/007-notarised.sql` updates one made before 0.4.0, keeps `begin` to the app and registers every table a feat or a graft makes as a state table ([above](#bound)). The extension keeps `vault_rewrap` and `signed` to their owner itself.
 

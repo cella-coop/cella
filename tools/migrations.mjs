@@ -1,13 +1,9 @@
-// Migrations are append-only, by stable ids. A migration's id is its app,
-// the feat or graft whose SQL it is and its file name, `org:membership/
-// 003-seats.sql`, or for an app's core `org:core/notary/001-cella.sql`: it
-// holds while a feat moves in the tree, which changes its path. Each app's
-// `migrations.lock` keeps every migration's id and hash: a locked file is
-// never edited or removed, and a new one is locked by `cella migrate
-// --lock` before it lands, so what a database has applied is what the tree
-// still says.
-
-export const LOCK = 'migrations.lock'
+// Migrations go by stable ids. A migration's id is its app, the feat or
+// graft whose SQL it is and its file name, `org:membership/003-seats.sql`,
+// or for an app's core `org:core/notary/001-cella.sql`: it holds while a
+// feat moves in the tree, which changes its path. Until launch a migration
+// is rewritten in place and every database rebuilt, so a database that
+// applied a file since edited is refused, with the words to reset it.
 
 // The id of a migration by its path from the repository's root,
 // `apps/<app>/…/sql/<file>`.
@@ -20,43 +16,15 @@ export const idOf = (path) => {
   return `${app}:${[...owner, file].join('/')}`
 }
 
-// A lock's lines, `<id> <sha256>`, as a map; `#` lines are comments.
-export const parseLock = (text) =>
-  new Map(
-    text
-      .split('\n')
-      .filter((l) => l.trim() && !l.startsWith('#'))
-      .map((l) => l.trim().split(/\s+/)),
-  )
-
-export const formatLock = (lock) =>
-  [
-    '# Every migration of this app, by id and SHA-256: append-only. `cella migrate',
-    '# --lock` adds the new ones; a locked line is never edited or removed.',
-    ...[...lock].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)).map(([id, hash]) => `${id} ${hash}`),
-    '',
-  ].join('\n')
-
-// What breaks append-only, comparing a lock with the migrations on disk,
-// each `{ id, path, hash }`: a locked one edited or gone, one not locked.
-export const unlocked = (lock, files) => {
-  const errors = []
-  const seen = new Map()
-  for (const f of files) {
-    if (seen.has(f.id)) {
-      errors.push(`${f.path} and ${seen.get(f.id)} share the id ${f.id}`)
-    }
-    seen.set(f.id, f.path)
-    if (!lock.has(f.id)) {
-      errors.push(`${f.path} is not locked: run \`cella migrate --lock\``)
-    } else if (lock.get(f.id) !== f.hash) {
-      errors.push(`${f.path} changed after it was locked; migrations are append-only, so add a new one instead`)
-    }
-  }
-  for (const id of lock.keys()) {
-    if (!seen.has(id)) {
-      errors.push(`${id} is locked but gone; migrations are append-only`)
-    }
-  }
-  return errors
+// What a database applied that the tree has since edited, comparing what
+// it recorded, id to hash, with the migrations on disk, each `{ id, path,
+// hash }`: one refusal per file edited and, where `files` is the whole
+// tree, per file gone or renamed, each saying how to rebuild.
+const RESET = 'until launch a migration is rewritten in place and the database rebuilt: `cella db reset` (`--seed lanterne` to seed it), or drop the database and migrate it anew'
+export const edited = (applied, files, { whole = true } = {}) => {
+  const ids = new Set(files.map((f) => f.id))
+  return [
+    ...files.filter((f) => applied.has(f.id) && applied.get(f.id) !== f.hash).map((f) => `${f.path} (${f.id}) was edited after this database applied it; ${RESET}`),
+    ...(whole ? [...applied.keys()].filter((id) => !ids.has(id)).map((id) => `${id} was applied to this database and is gone from the tree; ${RESET}`) : []),
+  ]
 }

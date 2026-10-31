@@ -2,8 +2,10 @@
 // (core/sql/, then core/<lib>/sql/), then its feats, recursively, then its
 // grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
 // file. Applied files are recorded by their stable id (`migrations.mjs`)
-// with their hash in migration.applied; a file edited after it was
-// applied is refused, never re-run. A database that recorded them by path
+// with their hash in migration.applied. Until launch a migration is
+// rewritten in place and every database rebuilt, so a database that
+// applied a file since edited is refused before anything runs, with the
+// words to reset it, never re-run. A database that recorded them by path
 // is moved to ids on its first run. It connects to DATABASE_URL if set,
 // otherwise by the PG* variables.
 //
@@ -12,9 +14,6 @@
 // then a feat's own tree, or a graft's feats, its lower-order grafts at or
 // below its node and itself. A slice whose SQL reaches past what
 // it may read fails to migrate here.
-//
-// `--locked` checks, with no database, that every app's migrations are
-// append-only against its `migrations.lock`; `--lock` adds the new ones.
 //
 // Then the analytical contracts: each slice's `sql/analytics.sql`, its
 // views, is no migration and is applied whole after them, in tree order,
@@ -27,11 +26,11 @@
 // in its own schema: `analytics.head`, the log's head.
 
 import { createHash } from 'node:crypto'
-import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
-import { LOCK, formatLock, idOf, parseLock, unlocked } from './migrations.mjs'
+import { edited, idOf } from './migrations.mjs'
 
 // A slice's analytical contract, beside its migrations, and the role that
 // reads the views it publishes.
@@ -99,7 +98,6 @@ const part = (app, name) => {
 }
 
 const args = process.argv.slice(2)
-const locking = args.includes('--lock') ? 'lock' : args.includes('--locked') ? 'locked' : null
 const at = args.indexOf('--slice')
 const slice = at >= 0 ? args[at + 1] : null
 if (at >= 0 && !slice) {
@@ -123,43 +121,6 @@ const contracts = dirs
   .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/analytics)\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
   .map((dir) => join(dir, CONTRACT))
 
-if (locking) {
-  let errors = []
-  let added = 0
-  let count = 0
-  for (const app of apps) {
-    const lockPath = join(app, LOCK)
-    const lock = parseLock(existsSync(lockPath) ? readFileSync(lockPath, 'utf8') : '')
-    const mine = files
-      .filter((f) => f.startsWith(app + '/'))
-      .map((f) => ({ path: relative(repo, f), id: idOf(relative(repo, f)), hash: hashOf(readFileSync(f, 'utf8')) }))
-    count += mine.length
-    const found = unlocked(lock, mine)
-    if (locking === 'locked') {
-      errors = errors.concat(found)
-      continue
-    }
-    const fresh = mine.filter((f) => !lock.has(f.id))
-    errors = errors.concat(found.filter((e) => !/is not locked/.test(e)))
-    for (const f of fresh) {
-      lock.set(f.id, f.hash)
-      console.log(`migrate: locked ${f.id}`)
-    }
-    added += fresh.length
-    if (fresh.length && !errors.length) {
-      writeFileSync(lockPath, formatLock(lock))
-    }
-  }
-  for (const e of errors) {
-    console.error(`migrate: ${e}`)
-  }
-  if (errors.length) {
-    process.exit(1)
-  }
-  console.log(locking === 'lock' ? `migrate: ${added} locked, ${count - added} already` : `migrate: ${count} migrations locked, append-only`)
-  process.exit(0)
-}
-
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
 await db.query(`
@@ -182,6 +143,14 @@ if (byPath.rowCount) {
 }
 await db.query('CREATE TABLE IF NOT EXISTS migration.contract (one boolean PRIMARY KEY DEFAULT true CHECK (one), hash text NOT NULL)')
 const applied = new Map((await db.query('SELECT id, hash FROM migration.applied')).rows.map((r) => [r.id, r.hash]))
+const refused = edited(applied, files.map((f) => ({ path: relative(repo, f), id: idOf(relative(repo, f)), hash: hashOf(readFileSync(f, 'utf8')) })), { whole: !slice })
+if (refused.length) {
+  for (const e of refused) {
+    console.error(`migrate: ${e}`)
+  }
+  await db.end()
+  process.exit(1)
+}
 
 // What this run's contracts hash to, by id and text, and whether they are
 // to be published again: after any migration, or when one changed.
@@ -209,10 +178,6 @@ for (const file of files) {
   const sql = readFileSync(file, 'utf8')
   const hash = hashOf(sql)
   if (applied.has(id)) {
-    if (applied.get(id) !== hash) {
-      console.error(`migrate: ${path} (${id}) changed after it was applied; add a new migration instead`)
-      process.exit(1)
-    }
     continue
   }
   try {

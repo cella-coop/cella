@@ -1,10 +1,11 @@
-// Migrations are append-only by stable ids: an id names a migration by its
-// app, its feat or graft and its file, wherever the feat sits in the tree,
-// and the lock refuses an edited, removed or unlocked one.
+// Migrations go by stable ids: an id names a migration by its app, its feat
+// or graft and its file, wherever the feat sits in the tree. Until launch a
+// database that applied a file since edited is refused, with the words to
+// reset it, and so is one that applied a file the tree no longer has.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { formatLock, idOf, parseLock, unlocked } from '../migrations.mjs'
+import { edited, idOf } from '../migrations.mjs'
 
 test("a migration's id is its app, its owner and its file", () => {
   assert.equal(idOf('apps/org/core/sql/001-roles.sql'), 'org:core/001-roles.sql')
@@ -19,14 +20,21 @@ test('a feat that moves in the tree keeps its ids', () => {
   assert.equal(idOf('apps/org/feats/membership/core/sql/003-seats.sql'), idOf('apps/org/feats/person/feats/membership/core/sql/003-seats.sql'))
 })
 
-test('the lock refuses an edited, a removed and an unlocked migration', () => {
-  const lock = parseLock(formatLock(new Map([['org:a/001-a.sql', 'h1'], ['org:a/002-b.sql', 'h2']])))
-  assert.deepEqual([...lock.keys()], ['org:a/001-a.sql', 'org:a/002-b.sql'])
+test('a database that applied a file since edited is refused, with the words to reset it', () => {
+  const applied = new Map([['org:a/001-a.sql', 'h1'], ['org:a/002-b.sql', 'h2']])
   const file = (n, hash) => ({ id: `org:a/${n}`, path: `apps/org/feats/a/core/sql/${n}`, hash })
-  assert.deepEqual(unlocked(lock, [file('001-a.sql', 'h1'), file('002-b.sql', 'h2')]), [])
-  const errors = unlocked(lock, [file('001-a.sql', 'edited'), file('003-c.sql', 'h3')])
-  assert.equal(errors.length, 3)
-  assert.match(errors[0], /001-a.sql changed after it was locked/)
-  assert.match(errors[1], /003-c.sql is not locked/)
-  assert.match(errors[2], /org:a\/002-b.sql is locked but gone/)
+  assert.deepEqual(edited(applied, [file('001-a.sql', 'h1'), file('002-b.sql', 'h2'), file('003-c.sql', 'h3')]), [])
+  const errors = edited(applied, [file('001-a.sql', 'rewritten'), file('002-b.sql', 'h2'), file('003-c.sql', 'h3')])
+  assert.equal(errors.length, 1)
+  assert.match(errors[0], /001-a\.sql \(org:a\/001-a\.sql\) was edited after this database applied it/)
+  assert.match(errors[0], /`cella db reset`/)
+})
+
+test('a database that applied a file since gone or renamed is refused, unless only a slice is migrated', () => {
+  const applied = new Map([['org:a/001-a.sql', 'h1'], ['org:decision/001-decision.sql', 'h2']])
+  const files = [{ id: 'org:a/001-a.sql', path: 'apps/org/feats/a/core/sql/001-a.sql', hash: 'h1' }]
+  const errors = edited(applied, files)
+  assert.equal(errors.length, 1)
+  assert.match(errors[0], /org:decision\/001-decision\.sql was applied to this database and is gone from the tree/)
+  assert.deepEqual(edited(applied, files, { whole: false }), [])
 })

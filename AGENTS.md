@@ -41,11 +41,15 @@ only on the org app, `apps/org/`. Read
   that predate the rule, does not name. Never add a line to that list:
   move the write instead ([writes stay
   home](_corpus/doc/architecture.md#writes-stay-home)).
-- **Migrations are append-only.** A locked migration is never edited or
-  removed: a change is a new file, locked with `cella migrate --lock`, and
-  `cella check` refuses anything else. The notary changes by a new
-  version's upgrade script and a migration that updates the extension,
-  never by dropping it ([operations](_corpus/doc/operations.md#upgrades)).
+- **Until launch, migrations are rewritten in place.** No scope is live:
+  a change edits the migration that makes what it changes, and every
+  database is rebuilt with `cella db reset`; `cella migrate` refuses one
+  that applied a file since edited or gone. At launch they are squashed
+  into one initial migration each and become append-only, locked again
+  ([architecture](_corpus/doc/architecture.md#migrations)). The notary
+  changes by a new version's upgrade script and a migration that updates
+  the extension, never by dropping it
+  ([operations](_corpus/doc/operations.md#upgrades)).
 - **SQL is the source of truth for rules.** Never re-implement a rule in
   TypeScript; never call `now()` in a rule, read `cella.verdict_date()`.
 - **A rule lives at the lowest level that owns it**: a feat, a graft, or a

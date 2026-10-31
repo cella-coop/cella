@@ -25,15 +25,6 @@ pub fn migrate(repo: &Repo, steps: &Steps, url: Option<&str>) -> Result {
     steps.run("migrate", &mut [cmd], last_line)
 }
 
-/// Locks each new migration's hash in its app's `migrations.lock`; no
-/// database.
-pub fn lock(repo: &Repo, steps: &Steps) -> Result {
-    repo.install(steps)?;
-    let mut cmd = repo.node("migrate.mjs");
-    cmd.arg("--lock");
-    steps.run("lock", &mut [cmd], last_line)
-}
-
 /// Runs `cella.vault_rewrap()` as the cluster's superuser: every vault key
 /// sealed under the current vault key file, those still under the previous
 /// one moved; then the previous file may go.

@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 # Operations
@@ -171,9 +171,12 @@ next write under the same key.
 
 ## Upgrades
 
-Migrations are append-only by stable ids ([architecture](architecture.md#migrations)):
-`cella migrate` applies those a database has not, and refuses a file
-edited after it was applied. The notary changes the same way: its
+Until launch no scope is live, and a database is rebuilt, not upgraded:
+`cella db reset` drops it, migrates it anew and seeds it from its
+fixture ([architecture](architecture.md#migrations)). From launch,
+migrations are append-only by stable ids: `cella migrate` applies those
+a database has not, and refuses a file edited after it was applied. The
+notary changes the same way: its
 version is its own, each new version ships its upgrade script, and a
 migration runs `ALTER EXTENSION cella UPDATE`, so its log, receipts and
 vault stay where they are ([the notary](../../apps/org/core/notary/index.md#build)).
@@ -189,8 +192,9 @@ To upgrade a scope:
 5. `cella log verify --url …`, then start the server.
 
 Between steps 3 and 4 the library is newer than the extension's SQL, so
-nothing writes then. `cella test e2e upgrade` rehearses the path from
-0.1.0-alpha on a throwaway cluster: a database that version kept, its
-dump and the TEST-ONLY key that signed it, is migrated in place, its log
-verified under that key, its vault moved to a vault key of its own, and
-both keys rotated.
+nothing writes then. The path starts at launch, from the initial
+migrations. `cella test e2e upgrade`, which rehearsed it from
+0.1.0-alpha's dump, retires until then, and returns with the launch's
+dump as its baseline: migrated in place, its log verified under the
+TEST-ONLY key that signed it, its vault moved to a vault key of its own,
+and both keys rotated.

@@ -47,12 +47,8 @@ pub enum Command {
     /// Apply every feat's and graft's migrations, cascading down the tree
     Migrate {
         /// A database other than the dev cluster's, such as production's
-        #[arg(long, value_name = "URL", conflicts_with = "lock")]
+        #[arg(long, value_name = "URL")]
         url: Option<String>,
-
-        /// Lock each new migration's hash in its app's migrations.lock, which makes it append-only; no database
-        #[arg(long)]
-        lock: bool,
     },
 
     /// Back a database up into a new directory: its dump, the notary's and the vault's key files, and a manifest
@@ -165,8 +161,6 @@ pub enum Part {
     Shell,
     /// cargo check and clippy over the workspace
     Rust,
-    /// Every locked migration unchanged and every migration locked: migrations are append-only
-    Migrations,
 }
 
 #[derive(Subcommand)]

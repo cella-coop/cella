@@ -191,8 +191,8 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
 
 /// Packages the extension into .data/ext, returning that directory, with
 /// every script in the notary's `rs/sql/` beside the generated one: pgrx
-/// stages the upgrade scripts alone, and an earlier version's install
-/// script is what a rehearsal installs it at. The directory is emptied
+/// stages the upgrade scripts alone, and an earlier version installs from
+/// its own install script. The directory is emptied
 /// first, so nothing an earlier build staged stays.
 pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
     let dir = repo.data().join("ext");

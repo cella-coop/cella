@@ -103,12 +103,12 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
   const done = await close({ motion: 'm-2026-012' }, as(camille))
   assert.equal(done.state, 'settled')
   assert.equal(done.state === 'settled' && done.entry, 4)
-  const position = done.state === 'settled' ? done.value.admitted[0]?.position : 0
-  assert.deepEqual(done.state === 'settled' && done.value.admitted, [{ member: ines, shares: 20, position }])
+  const seat = done.state === 'settled' ? done.value.admitted[0]?.seat : 0
+  assert.deepEqual(done.state === 'settled' && done.value.admitted, [{ member: ines, shares: 20, seat }])
 
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
   const sits = await one<{ circle: string; role: string; since: string }>(
-    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.position WHERE member = $1`,
+    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.seat WHERE member = $1`,
     [ines],
   )
   assert.deepEqual(sits, { circle: 'ag', role: 'member', since: '2026-10-31' })

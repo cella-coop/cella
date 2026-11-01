@@ -1,6 +1,6 @@
 <script lang="ts">
   import { power, Section, Table, type Column } from '@cella/org-ui'
-  import type { Held, Seat } from '../../models/position.ts'
+  import type { Held, Seat } from '../../models/seat.ts'
 
   // Where a member sits, and the powers their seats give them: what
   // `circle_membership.may` checks a write against.

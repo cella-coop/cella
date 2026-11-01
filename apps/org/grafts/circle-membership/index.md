@@ -3,14 +3,14 @@ title = "circle-membership"
 updated = 2026-11-01
 +++
 
-Positions: which member holds which role in which circle. A position is
-the relationship, so the graft owns its writes.
+Seats: which member holds which role in which circle. A seat is the
+relationship, so the graft owns its actions.
 
 ## Schema
 
 `circle_membership` (`sql/`):
 
-- `circle_membership.position`: a seat, by circle id and member address, with
+- `circle_membership.seat`: a seat, by circle id and member address, with
   no foreign key into either feat; an optional `role`, and `since` and
   `until`. A seat with no `since` was held before the records began; an
   ended seat keeps its row with `until`, so who sat where on a past day
@@ -20,8 +20,8 @@ the relationship, so the graft owns its writes.
   motion's roll from it.
 
 The app role and the guards role, `cella_guards`, may select; the app role
-may insert a seat, through `position.add`, and end one, through
-`position.remove`. Lanterne's seats are seeded.
+may insert a seat, through `seat.add`, and end one, through
+`seat.remove`. Lanterne's seats are seeded.
 
 ## Guards
 
@@ -59,12 +59,12 @@ invitee, holds nothing.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/circle-membership/position.add` | ordered | who holds which role |
-| `POST /api/circle-membership/position.remove` | ordered | who holds which role |
+| `POST /api/circle-membership/seat.add` | ordered | who holds which role |
+| `POST /api/circle-membership/seat.remove` | ordered | who holds which role |
 
-- **position.add** and **position.remove** change who holds a role in a
+- **seat.add** and **seat.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
-  writes read positions through `circle_membership.may`, so they are ordered.
+  writes read seats through `circle_membership.may`, so they are ordered.
 - Both are decided (`check: 'decided'`): each cites the motion that
   gives or ends the seat. This graft does not join `motion`, so the
   guards that judge them are `circle-membership-motion`'s, a higher order:
@@ -88,8 +88,8 @@ and ends, as its reaction to the close.
 
 | Action | Check | Lanterne |
 |---|---|---|
-| position.add | decided: the motion it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
-| position.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
+| seat.add | decided: the motion it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
+| seat.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
 
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
 the actor is an active member seated in the circle on the verdict date.
@@ -113,4 +113,4 @@ limit.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `circle_membership.positions` to the analytics shell: who holds which role in which circle, and when.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `circle_membership.seats` to the analytics shell: who holds which role in which circle, and when.

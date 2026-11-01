@@ -7,7 +7,7 @@ The co-op's structure and the authority that flows through it. A circle is
 a self-governing unit, after sociocracy: the general assembly, a
 coordination circle, a working team. Circles nest in one tree whose root is
 the assembly. Each circle defines roles, and grants powers to them through
-mandates; who holds a role is a position, the `circle-membership` graft's
+mandates; who holds a role is a seat, the `circle-membership` graft's
 junction. Each circle also has a channel for its messages.
 
 ## Entities
@@ -22,7 +22,7 @@ junction. Each circle also has a channel for its messages.
 A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
 `cella.power`. A mandate grants one power to one role, with an optional
-limit, for a term. Who holds a role is a position, the `circle-membership`
+limit, for a term. Who holds a role is a seat, the `circle-membership`
 graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit. A power
@@ -64,7 +64,7 @@ only through a motion of that circle's members.
 |---|---|
 | circle | active → dissolved |
 | mandate | granted → revoked, or expired at `until` |
-| position | held → ended (the graft's) |
+| seat | held → ended (the graft's) |
 
 ## Actions
 
@@ -75,8 +75,8 @@ only through a motion of that circle's members.
 | `POST /api/circle/mandate.revoke` | ordered | authority, capped by a limit or a budget |
 | `POST /api/circle/message` | confluent | the circle's channel |
 
-Who holds which role is a position, the `circle-membership` graft's own
-write; see its [doc](../../grafts/circle-membership/index.md).
+Who holds which role is a seat, the `circle-membership` graft's own
+action; see its [doc](../../grafts/circle-membership/index.md).
 
 - **nest** sets a circle's parent. Two nestings that are each acyclic can
   together form a cycle, so the notary orders them already at rung 1:

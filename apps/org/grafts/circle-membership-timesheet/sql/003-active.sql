@@ -7,7 +7,7 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN membership.active(w.member, cella.verdict_date())
       AND NOT EXISTS (
-        SELECT FROM circle_membership.position s
+        SELECT FROM circle_membership.seat s
         WHERE s.member = w.member
           AND (s.since IS NULL OR s.since <= cella.verdict_date())
           AND (s.until IS NULL OR s.until > cella.verdict_date())

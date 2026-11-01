@@ -1,2 +1,2 @@
 export * from './actions.ts'
-export * from './position.ts'
+export * from './seat.ts'

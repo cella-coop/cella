@@ -1,6 +1,6 @@
 <script lang="ts">
   import { money, Prose, Section } from '@cella/org-ui'
-  import type { Held, Seat } from '../../models/position.ts'
+  import type { Held, Seat } from '../../models/seat.ts'
 
   // What a member decides, in plain words, read back from their seats and
   // the mandates those give: where they sit, how each of those circles

@@ -24,11 +24,11 @@ before(async () => {
   await db.query(`INSERT INTO circle.circle (id, name) VALUES ('ag', 'Assemblée générale')`)
   await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('coordination', 'Coordination', 'ag'), ('web', 'Web', 'coordination')`)
   for (const name of seated) {
-    await db.query(`INSERT INTO circle_membership.position (circle, member) VALUES ('coordination', $1)`, [at(name)])
+    await db.query(`INSERT INTO circle_membership.seat (circle, member) VALUES ('coordination', $1)`, [at(name)])
   }
   // Julien left coordination on 20 October: expected on the 19th, not the 26th.
-  await db.query(`UPDATE circle_membership.position SET until = '2026-10-20' WHERE member = $1`, [at('julien')])
-  await db.query(`INSERT INTO circle_membership.position (circle, member) VALUES ('web', $1)`, [at('thomas')])
+  await db.query(`UPDATE circle_membership.seat SET until = '2026-10-20' WHERE member = $1`, [at('julien')])
+  await db.query(`INSERT INTO circle_membership.seat (circle, member) VALUES ('web', $1)`, [at('thomas')])
   await db.query(`INSERT INTO circle_meeting.setting (circle, quorum) VALUES ('coordination', 60)`)
   await db.query(
     `INSERT INTO meeting.meeting (id, circle, title, at) VALUES

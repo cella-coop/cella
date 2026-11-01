@@ -37,7 +37,7 @@ BEGIN ATOMIC
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle
       WHEN g.kind = 'unseat' AND NOT EXISTS (
-        SELECT FROM circle_membership.position o
+        SELECT FROM circle_membership.seat o
         WHERE o.circle = g.circle AND o.member = g.member AND o.role IS NOT DISTINCT FROM g.role AND o.until IS NULL
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
       WHEN NOT circle_motion.decides(d.circle, g.circle)
@@ -69,10 +69,10 @@ BEGIN ATOMIC
       SELECT r FROM (
         SELECT CASE
           WHEN a.member IS NULL THEN d.id || ' passes, and its close does not admit ' || m.member
-          ELSE circle_membership_motion.seats(jsonb_build_object('position', a.position, 'motion', d.id))
+          ELSE circle_membership_motion.seats(jsonb_build_object('seat', a.seat, 'motion', d.id))
         END AS r
         FROM membership_motion.action m
-        LEFT JOIN jsonb_to_recordset(coalesce(payload -> 'admitted', '[]'::jsonb)) AS a(member text, position bigint)
+        LEFT JOIN jsonb_to_recordset(coalesce(payload -> 'admitted', '[]'::jsonb)) AS a(member text, seat bigint)
           ON a.member = m.member
         WHERE m.motion = d.id AND m.kind = 'admit'
       ) x

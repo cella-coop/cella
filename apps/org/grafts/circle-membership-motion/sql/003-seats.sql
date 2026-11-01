@@ -1,9 +1,9 @@
--- circle-membership:position:add and :remove cite a motion:
+-- circle-membership:seat:add and :remove cite a motion:
 -- circle-membership-motion's `carried` attaches to them through
 -- motion.cites, as to every op listed.
 INSERT INTO motion.cites (op, owner) VALUES
-  ('circle-membership:position:add', 'circle-membership-motion'),
-  ('circle-membership:position:remove', 'circle-membership-motion');
+  ('circle-membership:seat:add', 'circle-membership-motion'),
+  ('circle-membership:seat:remove', 'circle-membership-motion');
 
 -- What a motion may decide of seats, registered with the motion feat
 -- so its New form offers them: seating a member in a circle, in one of
@@ -25,16 +25,16 @@ FROM membership_motion.action a
 JOIN motion.motion d ON d.id = a.motion
 WHERE a.kind = 'admit';
 
--- circle-membership:position:add — the seat is one the cited motion gives,
+-- circle-membership:seat:add — the seat is one the cited motion gives,
 -- to an active member, from the verdict date, where they held no such
 -- seat before.
 CREATE FUNCTION circle_membership_motion.seats(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN s.id IS NULL THEN 'no position ' || coalesce(p.position::text, 'is named')
+    WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.seat::text, 'is named')
     WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
-      THEN 'position ' || s.id || ' was not added by this write'
+      THEN 'seat ' || s.id || ' was not added by this write'
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
     WHEN NOT EXISTS (
       SELECT FROM circle_membership_motion.seating g
@@ -43,38 +43,38 @@ BEGIN ATOMIC
     WHEN NOT EXISTS (SELECT FROM membership.member m WHERE m.address = s.member AND m.status = 'active')
       THEN s.member || ' is not an active member'
     WHEN EXISTS (
-      SELECT FROM circle_membership.position o
+      SELECT FROM circle_membership.seat o
       WHERE o.id <> s.id AND o.circle = s.circle AND o.member = s.member AND o.role IS NOT DISTINCT FROM s.role
         AND (o.until IS NULL OR o.until > cella.verdict_date())
     ) THEN s.member || ' already sits in ' || s.circle || coalesce(' as ' || s.role, '')
   END
-  FROM (SELECT (payload ->> 'position')::bigint AS position, payload ->> 'motion' AS motion) p
-  LEFT JOIN circle_membership.position s ON s.id = p.position
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'motion' AS motion) p
+  LEFT JOIN circle_membership.seat s ON s.id = p.seat
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
--- circle-membership:position:remove — the seat ended on the verdict date, and
+-- circle-membership:seat:remove — the seat ended on the verdict date, and
 -- the cited motion ends it.
 CREATE FUNCTION circle_membership_motion.unseats(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.member, 'of no one') || ' holds in ' || coalesce(p.circle, 'no circle')
-    WHEN s.until IS DISTINCT FROM cella.verdict_date() THEN 'position ' || s.id || ' was not ended by this write'
+    WHEN s.until IS DISTINCT FROM cella.verdict_date() THEN 'seat ' || s.id || ' was not ended by this write'
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
     WHEN NOT EXISTS (
       SELECT FROM circle_membership_motion.seating g
       WHERE g.motion = d.id AND g.kind = 'unseat' AND g.circle = s.circle AND g.member = s.member AND g.role IS NOT DISTINCT FROM s.role
     ) THEN d.id || ' does not end ' || s.member || '''s seat in ' || s.circle
   END
-  FROM (SELECT (payload ->> 'position')::bigint AS position, payload ->> 'circle' AS circle,
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'circle' AS circle,
                payload ->> 'member' AS member, payload ->> 'motion' AS motion) p
-  LEFT JOIN circle_membership.position s ON s.id = p.position
+  LEFT JOIN circle_membership.seat s ON s.id = p.seat
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
-  ('circle-membership:position:add', 'circle_membership_motion.seats(jsonb)', 'circle-membership-motion'),
-  ('circle-membership:position:remove', 'circle_membership_motion.unseats(jsonb)', 'circle-membership-motion');
+  ('circle-membership:seat:add', 'circle_membership_motion.seats(jsonb)', 'circle-membership-motion'),
+  ('circle-membership:seat:remove', 'circle_membership_motion.unseats(jsonb)', 'circle-membership-motion');
 
 GRANT SELECT ON circle_membership_motion.seating TO cella_app, cella_guards;

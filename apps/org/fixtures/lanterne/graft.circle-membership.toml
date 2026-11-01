@@ -1,145 +1,145 @@
 # Who sits where: every member is in the assembly, as a member, and in one
 # working circle; the leads and the manager also sit on coordination.
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "camille@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "yusuf@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "hugo@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "julien@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "lea@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "thomas@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "sofia@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "malik@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "amina@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "chloe@lanterne.example"
 role = "member"
 
-[[position]]
+[[seat]]
 circle = "brand"
 member = "camille@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "web"
 member = "yusuf@lanterne.example"
 role = "lead"
 
-[[position]]
+[[seat]]
 circle = "brand"
 member = "hugo@lanterne.example"
 role = "lead"
 
-[[position]]
+[[seat]]
 circle = "operations"
 member = "julien@lanterne.example"
 role = "lead"
 
-[[position]]
+[[seat]]
 circle = "web"
 member = "lea@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "web"
 member = "thomas@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "brand"
 member = "sofia@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "marketing"
 member = "malik@lanterne.example"
 role = "lead"
 
-[[position]]
+[[seat]]
 circle = "web"
 member = "amina@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "marketing"
 member = "chloe@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "camille@lanterne.example"
 role = "manager"
 since = 2024-06-20
 until = 2028-06-20
 
-[[position]]
+[[seat]]
 circle = "operations"
 member = "julien@lanterne.example"
 role = "finance"
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "julien@lanterne.example"
 role = "treasurer"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "camille@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "yusuf@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "hugo@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "malik@lanterne.example"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "julien@lanterne.example"
 
 # Each takes their circle's minutes, beside the seat they already hold.
 
-[[position]]
+[[seat]]
 circle = "ag"
 member = "julien@lanterne.example"
 role = "secretary"
 
-[[position]]
+[[seat]]
 circle = "coordination"
 member = "malik@lanterne.example"
 role = "secretary"

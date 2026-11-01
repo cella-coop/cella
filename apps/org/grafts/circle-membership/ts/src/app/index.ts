@@ -1,5 +1,5 @@
 import type { App } from '@cella/org-ui'
-import type { Held, Seat } from '../models/position.ts'
+import type { Held, Seat } from '../models/seat.ts'
 import Circles from './blocks/Circles.svelte'
 import Decides from './blocks/Decides.svelte'
 import Members from './blocks/Members.svelte'

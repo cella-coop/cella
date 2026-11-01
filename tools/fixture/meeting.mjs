@@ -18,11 +18,11 @@ export function meeting(read, fail) {
   const motions = new Map((read('motion').motion ?? []).map((d) => [d.id, d]))
   const documents = new Set((read('document').document ?? []).map((d) => d.id))
   const meetings = new Map((read('meeting').meeting ?? []).map((m) => [m.id, m]))
-  const positions = read('graft.circle-membership').position ?? []
+  const seats = read('graft.circle-membership').seat ?? []
   const seated = (circle, member, day) =>
-    positions.some((p) => p.circle === circle && p.member === member && (!p.since || iso(p.since) <= day) && (!p.until || iso(p.until) > day))
+    seats.some((p) => p.circle === circle && p.member === member && (!p.since || iso(p.since) <= day) && (!p.until || iso(p.until) > day))
   const keeps = (circle, member, day) =>
-    positions.some((p) => p.circle === circle && p.member === member && ['secretary', 'lead'].includes(p.role) && (!p.until || iso(p.until) > day))
+    seats.some((p) => p.circle === circle && p.member === member && ['secretary', 'lead'].includes(p.role) && (!p.until || iso(p.until) > day))
 
   for (const m of meetings.values()) {
     const where = `meeting ${m.id}`

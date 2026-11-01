@@ -152,11 +152,11 @@ const check = (name) => {
   const entries = new Map((transaction.entry ?? []).map((e) => [e.id, e]))
 
   // Each graft's links resolve on both sides
-  for (const p of read('graft.circle-member').position ?? []) {
-    has(circles, p.circle, 'circle', 'position')
-    known(p.member, 'position')
+  for (const p of read('graft.circle-membership').seat ?? []) {
+    has(circles, p.circle, 'circle', 'seat')
+    known(p.member, 'seat')
     if (p.role) {
-      has(roles, p.role, 'role', 'position')
+      has(roles, p.role, 'role', 'seat')
     }
   }
   // What a motion moves to adopt or approve names a version or a

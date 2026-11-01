@@ -154,7 +154,7 @@ gracefully: an invoice without a client is unbilled, not invalid. The graft
 adds the link.
 
 A graft may also own actions on the relationship it holds, such as who
-holds a position: its permission is `<graft>:<entity>:<verb>`, served as
+holds a seat: its permission is `<graft>:<entity>:<verb>`, served as
 `POST /api/<graft>/<verb>`, the same pattern as a feat's.
 
 ### Graft order

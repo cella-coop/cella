@@ -9,7 +9,7 @@ CREATE FUNCTION circle_membership.over(actor text, power text, about text, day d
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
-    SELECT FROM circle_membership.position a
+    SELECT FROM circle_membership.seat a
     JOIN circle.mandate md ON md.role = a.role
     WHERE a.member = over.actor
       AND md.power = over.power

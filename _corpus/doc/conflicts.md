@@ -27,7 +27,7 @@ state is that of 24 October 2026.
 | `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `person.revoke`, `person.recover` | ordered | right |
 | `circle.nest` | ordered | right, at rung 1 already; **applied**: decided, and refused when a nesting settled first makes it a cycle ([tree](#the-circles-form-a-tree)) |
-| `circle-membership:position.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
+| `circle-membership:seat.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
 | `circle.mandate.grant`, `.revoke` | ordered | right; **applied**: decided, by the circle above the role's |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |
@@ -202,7 +202,7 @@ void settled and posted the credit note `je-0026`.
 ## Who votes
 
 Owners: the `decision-membership` graft for membership (admitted, suspended,
-exited); the roll of a circle's decision needs positions too, which are the
+exited); the roll of a circle's decision needs seats too, which are the
 `circle-membership` graft's. The roll, and whether a decision passes on it, are
 the `circle-decision-membership` graft's, which the decision feat declares.
 
@@ -211,15 +211,15 @@ the `circle-decision-membership` graft's, which the decision feat declares.
 | `decision.vote` vs `decision.close` | the vote counts | the vote is too late | the outcome changes after it was announced |
 | `decision.vote` vs `membership.suspend` / `.exit` | the vote counts if suspension follows close | the vote is dropped | a suspended member's vote decides |
 | `decision.close` vs `membership.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
-| `decision.close` vs `circle-membership:position.add` / `.remove` | as admit | as admit | as admit |
+| `decision.close` vs `circle-membership:seat.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
 | `decision:message.post` vs `decision.close` | the message is part of the deliberation | the message is refused: the deliberation is over | — |
 
 **Applied.** The roll is fixed at the proposal: the members holding a
-position in the decision's circle on the day it was proposed, of whom
+seat in the decision's circle on the day it was proposed, of whom
 those active at the close count. It is closer to a ballot list and harder
 to game than a roll read at the close. The labels hold: votes confluent,
-close, admit, suspend, exit and positions ordered. The procedure, its
+close, admit, suspend, exit and seats ordered. The procedure, its
 share of the votes cast and its quorum, is fixed with the proposal too,
 and a procedure any decision names cannot change, so the close counts
 by the terms the members saw. Messages are confluent: the close orders
@@ -250,7 +250,7 @@ the roll.
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
 | `expense.approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | someone without authority spends |
-| spend vs `circle-membership:position.remove` | the spend stands | refused | as above |
+| spend vs `circle-membership:seat.remove` | the spend stands | refused | as above |
 | spend vs `membership.suspend` / `.exit` | the spend stands | refused | as above |
 | `expense.approve` vs `expense.approve`, one budget | both, if the budget covers both | both, if it covers both | the budget is overspent |
 
@@ -469,7 +469,7 @@ for the state each admission changes.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| close admitting M vs `circle-membership:position.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
+| close admitting M vs `circle-membership:seat.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
 | close admitting M vs the admission alone | — | — | an active member with no seat and no device, who cannot vote or sign |
 | `decision.propose` vs `decision.vote` on it | the motion is fixed before the stance | no motion is added after it | members consent to one thing and are counted for another |
 
@@ -495,7 +495,7 @@ Owners: the `circle-membership` graft for how far a power reaches
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `timesheet:period.approve` by a lead vs `circle-membership:position.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
+| `timesheet:period.approve` by a lead vs `circle-membership:seat.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
 | `project.budget` by a lead vs `circle.nest` of the project's circle away | set | refused: the circle is no longer within the lead's | a lead budgets another circle's project |
 
 A power held through a seat reaches the seat's circle and the circles
@@ -822,8 +822,8 @@ The matrix found writes no `actions.ts` declares:
 6. **Applied.** No other label changes. `circle.nest`'s comment now says
    it is ordered at rung 1 too, and `document.adopt`'s that the base is
    the adopted version, not the draft.
-7. **Applied, beyond this page's recommendations.** Positions move from
+7. **Applied, beyond this page's recommendations.** Seats move from
    `circle` to the `circle-membership` graft, which owns the relationship:
-   `circle-membership:position.add` and `.remove`, both ordered. A mandate's
+   `circle-membership:seat.add` and `.remove`, both ordered. A mandate's
    cap splits into `limit` (per write) and `budget` (cumulative, over
    `per`).

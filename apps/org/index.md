@@ -124,7 +124,7 @@ employment, and the grafts that join a person's role name the child.
 | `person` | governance | 1 | everyone the co-op knows, by the address they sign with, and their devices; its feats below |
 | `person/membership` | governance | 1 | a person's membership, invited to exited |
 | `person/employment` | work | 1 | a person's employment, member or not, and their contract |
-| `circle` | governance | 1 | nested units, positions, roles and mandates |
+| `circle` | governance | 1 | nested units, seats, roles and mandates |
 | `motion` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
 | `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, the statements' rubrics and the spans they are drawn for |
@@ -175,7 +175,7 @@ and admit a member by vote (ordered).
 | `circle-membership-payslip` | the pay runs waiting on a member to approve or pay them |
 | `circle-membership-project` | a lead runs their own circle's projects |
 | `circle-membership-timesheet` | a lead approves their own circle's time; the months waiting on a member's approval |
-| `circle-membership` | positions: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
+| `circle-membership` | seats: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `document-motion` | adoption of a document version by a motion |

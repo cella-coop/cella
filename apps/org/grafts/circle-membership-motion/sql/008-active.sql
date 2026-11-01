@@ -20,9 +20,9 @@ CREATE OR REPLACE FUNCTION circle_membership_motion.seats(payload jsonb) RETURNS
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN s.id IS NULL THEN 'no position ' || coalesce(p.position::text, 'is named')
+    WHEN s.id IS NULL THEN 'no seat ' || coalesce(p.seat::text, 'is named')
     WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
-      THEN 'position ' || s.id || ' was not added by this write'
+      THEN 'seat ' || s.id || ' was not added by this write'
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
     WHEN NOT EXISTS (
       SELECT FROM circle_membership_motion.seating g
@@ -31,13 +31,13 @@ BEGIN ATOMIC
     WHEN NOT membership.active(s.member, cella.verdict_date())
       THEN s.member || ' is not an active member'
     WHEN EXISTS (
-      SELECT FROM circle_membership.position o
+      SELECT FROM circle_membership.seat o
       WHERE o.id <> s.id AND o.circle = s.circle AND o.member = s.member AND o.role IS NOT DISTINCT FROM s.role
         AND (o.until IS NULL OR o.until > cella.verdict_date())
     ) THEN s.member || ' already sits in ' || s.circle || coalesce(' as ' || s.role, '')
   END
-  FROM (SELECT (payload ->> 'position')::bigint AS position, payload ->> 'motion' AS motion) p
-  LEFT JOIN circle_membership.position s ON s.id = p.position
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'motion' AS motion) p
+  LEFT JOIN circle_membership.seat s ON s.id = p.seat
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
@@ -73,7 +73,7 @@ BEGIN ATOMIC
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle
       WHEN g.kind = 'unseat' AND NOT EXISTS (
-        SELECT FROM circle_membership.position o
+        SELECT FROM circle_membership.seat o
         WHERE o.circle = g.circle AND o.member = g.member AND o.role IS NOT DISTINCT FROM g.role AND o.until IS NULL
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
       WHEN NOT circle_motion.decides(d.circle, g.circle)

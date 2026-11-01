@@ -3,6 +3,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { forms as motionForms } from '@cella/org-motion/api'
 import { about, putting } from '@cella/org-graft-circle-motion/api'
+import { apply } from '../handlers/apply.ts'
 import { carried } from '../handlers/carried.ts'
 import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
@@ -12,6 +13,7 @@ import { appointing, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/inbox.ts'
 import * as forms from './forms.ts'
 
+export { apply, type Applied } from '../handlers/apply.ts'
 export { carried } from '../handlers/carried.ts'
 export { close, type Admitted } from '../handlers/close.ts'
 export { propose } from '../handlers/propose.ts'
@@ -24,7 +26,8 @@ export { stances } from '../drivers/inbox.ts'
 // its proposal, replaced by one that fixes its roll in the same verdict,
 // and its close by one that admits and seats; and, once a close settles,
 // what else it decides, carried out. On a member's page, proposing their
-// admission, suspension or exclusion; on a circle's, a seat in it, or what
+// admission, suspension or exclusion, and on an employee's own, applying
+// to join; on a circle's, a seat in it, or what
 // circle-motion proposes about its place and powers.
 export const slice: Slice = {
   name: 'circle-membership-motion',
@@ -38,9 +41,10 @@ export const slice: Slice = {
       },
     },
     people: {
-      item: (db, member) => standing(db, member),
+      item: (db, member, actor) => standing(db, member, actor),
       actions: {
         propose: action('motion:motion:propose', (form, id) => forms.standing(form, id ?? ''), put),
+        apply: action('membership:member:apply', (form, id) => forms.applying(form, id ?? ''), apply),
       },
     },
     // The stances waiting on the acting member, in their inbox.

@@ -159,6 +159,7 @@ reaches the whole co-op, and is neither carved nor carved from.
 | member | `save-report` | saving a report of their own (`report:report:save`) |
 | employee | `log-time` | logging, correcting and submitting their own time, booked to a project or not (`timesheet:entry:log`, `:entry:correct`, `:period:submit`) |
 | employee | `claim-expense` | claiming an expense and submitting it, attaching its receipt and filing it on a project (`expense:expense:capture`, `:submit`, `expense-file:expense:attach`, `expense-project:expense:rebill`) |
+| employee | `apply-membership` | applying to join once employed a year, which puts their admission to the assembly in the same write, and opening their candidacy, which follows it (`membership:member:apply`, `employment-membership:candidacy:open`); held to their own application by the membership feat's guard, and to a year's employment by employment-membership's |
 
 ## Schema
 

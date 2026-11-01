@@ -107,6 +107,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `save-report` | right, protected | every member saves a report of their own | cella |
 | `log-time` | right, protected | every employee logs their own time | cella |
 | `claim-expense` | right, protected | every employee claims their expenses | cella |
+| `apply-membership` | right, protected | every employee employed a year applies to join, and the assembly must rule on it | loi n° 78-763, as the CG Scop's model statutes put it |
 | `work-share` | rule | at least 25 % of each year's surplus goes to all the employees as the work share | loi n° 78-763 art. 33 |
 | `reserves` | rule | at least 15 % of each year's surplus goes to the reserves | loi n° 78-763 art. 33 |
 
@@ -118,7 +119,14 @@ the membership feat's, so only a member withdraws. The right to erase
 is every person's too: the membership feat's guard holds it to one's
 own data, once one has left, and the notary keeps restricted what the
 law keeps (GDPR art. 17(3)(b) and (e);
-[personal data](trust.md#personal-data)). A rule's
+[personal data](trust.md#personal-data)). The right to apply is every
+employee's: the application is the applicant's own, by the membership
+feat's guard, made once they have worked a year, by the
+employment-membership graft's, and puts the motion to admit them to the
+assembly in the same write, by circle-membership-motion's, so the
+assembly must rule on it as it rules on any motion. The year is the
+guard's and not a value of the policy's: a co-op that rewords it changes
+no guard ([the membership feat](../../apps/org/feats/person/feats/membership/index.md)). A rule's
 values are named for no feat, so no guard reads them: they bind by the
 members' judgement, as the law's floors do until a feat reads them.
 

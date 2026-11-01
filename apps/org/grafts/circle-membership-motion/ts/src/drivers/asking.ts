@@ -4,11 +4,19 @@ import type { Appointing, Decider, Standing } from '../models/asking.ts'
 const decider = `json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure)`
 
 // A member's standing, the assembly that decides it, and the open
-// motions asking something of them.
-export async function standing(db: Db, member: string): Promise<Standing | null> {
-  const found = await db.query<{ status: Standing['status']; decider: Decider }>(
-    `SELECT m.status, ${decider} AS decider FROM membership.member m, circle.circle d WHERE m.address = $1 AND d.parent IS NULL`,
-    [member],
+// motions asking something of them; on one's own page, whether one has
+// applied, whether one is an employee, who may, and the deadline an
+// application's motion starts from, two
+// weeks on. Someone with no membership has a standing only on their own
+// page, where they may apply.
+export async function standing(db: Db, member: string, actor?: string | null): Promise<Standing | null> {
+  const own = actor === member
+  const found = await db.query<Omit<Standing, 'member' | 'open' | 'own'>>(
+    `SELECT m.status, to_char(m.applied, 'YYYY-MM-DD') AS applied, ${decider} AS decider,
+            person.holds($1, 'employee', cella.verdict_date()) AS employee, to_char(cella.verdict_date() + 14, 'YYYY-MM-DD') AS until
+     FROM circle.circle d LEFT JOIN membership.member m ON m.address = $1
+     WHERE d.parent IS NULL AND (m.address IS NOT NULL OR $2)`,
+    [member, own],
   )
   if (!found.rows[0]) {
     return null
@@ -19,7 +27,7 @@ export async function standing(db: Db, member: string): Promise<Standing | null>
      WHERE a.member = $1 AND d.closed IS NULL ORDER BY d.deadline`,
     [member],
   )
-  return { member, ...found.rows[0], open: open.rows }
+  return { member, ...found.rows[0], own, open: open.rows }
 }
 
 // Whom a motion may seat in a circle, anyone whose seat would count

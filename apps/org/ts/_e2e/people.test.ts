@@ -1,22 +1,22 @@
 // The people scenario, end to end on a seeded Lanterne, through the
 // handlers and the built shell: every worker has a contract, and Inès,
 // employed but no member, logs her own time by her employment where a
-// mandate would refuse her. Camille hires Bastien with his first device
-// and opens his candidacy. Inès's member page lists what joining asks of
-// her, the texts, the capital, a device and the circles, and reads back
-// what she would own and decide; she marks the internal rules and the
-// statutes read, and
+// mandate would refuse her. Camille hires Bastien with his first device,
+// and opens no candidacy for him: no one opens another's. Inès's member
+// page lists what joining asks of her, the texts, the capital, a device
+// and the circles, and reads back what she would own and decide; she
+// marks the internal rules and the statutes read, and
 // once m-2026-012 admits her every step but a working circle is done. In
 // November she submits her October and finance approves it, and Bastien
-// logs his first day. His probation ends, he is invited, and his
-// admission is proposed from the form his candidacy filled in. Run by
-// `cella test e2e people`.
+// logs his first day. Employed eight months, he is refused applying to
+// join; a year on, he applies by his right from his own page, which
+// opens his candidacy and puts the motion to admit him to the assembly.
+// Run by `cella test e2e people`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close, put } from '@cella/org-graft-circle-membership-motion/api'
-import { invite } from '@cella/org-membership/api'
+import { apply, close, put } from '@cella/org-graft-circle-membership-motion/api'
 import { open } from '@cella/org-graft-employment-membership/api'
 import { book } from '@cella/org-graft-project-timesheet/api'
 import { hire, hiring } from '@cella/org-employment/api'
@@ -122,7 +122,7 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
     `SELECT "right", array_agg(power ORDER BY power) AS powers FROM circle.mandate WHERE "right" IS NOT NULL AND revoked IS NULL GROUP BY "right" ORDER BY "right"`,
   )
   assert.deepEqual(rights, [
-    { right: 'employee', powers: ['claim-expense', 'log-time'] },
+    { right: 'employee', powers: ['apply-membership', 'claim-expense', 'log-time'] },
     { right: 'member', powers: ['draw-account', 'mark-attendance', 'save-report', 'spread-capital'] },
     { right: 'person', powers: ['accept-invitation', 'erase-own-data', 'file-record', 'keep-devices', 'keep-profile', 'mark-read', 'record-import', 'upload-file', 'withdraw-membership'] },
   ])
@@ -205,17 +205,6 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
   assert.match(reason(ahead), /bastien@lanterne\.example holds no mandate for log-time/)
 })
 
-test('Camille opens Bastien\'s candidacy, six months within his contract; none for a member, and none twice', async () => {
-  const forYusuf = await open({ worker: 'yusuf@lanterne.example', from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(camille))
-  assert.match(reason(forYusuf), /yusuf@lanterne\.example is active as a member: a candidate is not yet one/)
-  const byHugo = await open({ worker: bastien, from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(hugo))
-  assert.match(reason(byHugo), /holds no mandate for hire-worker/)
-  const opened = settled(await open({ worker: bastien, from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(camille)))
-  assert.equal(opened.opened, '2026-10-24')
-  await assert.rejects(open({ worker: bastien, from: '2026-11-02', to: '2027-04-30', shares: 20 }, as(camille)), /candidacy_pkey/)
-  assert.equal((await one<{ stage: string }>('SELECT stage FROM employment_membership.path WHERE address = $1', [bastien])).stage, 'candidate')
-})
-
 test('Inès\'s member page lists what joining asks of her and reads back what she would own and decide', async () => {
   const joining = await tab(ines, 'joining', ines)
   for (const says of [
@@ -287,24 +276,55 @@ test('in November Inès submits her October by her employment and Julien approve
   settled(await log({ member: bastien, day: '2026-11-02', minutes: 7 * 60, billable: false, note: 'First day' }, as(bastien)))
 })
 
-test('Bastien\'s probation ends, he is invited, and his admission is proposed from the form his candidacy filled in', async () => {
-  await on('2027-05-03')
-  settled(await invite({ address: bastien, name: 'Bastien Roux' }, as(thomas)))
+test('Bastien, employed eight months, is refused applying and opening his own candidacy, and no one opens one for him', async () => {
+  await on('2027-07-02')
+  const early = await apply({ member: bastien, shares: 20, deadline: '2027-07-16', body: '' }, as(bastien))
+  assert.match(reason(early), /bastien@lanterne\.example was hired on 2026-11-02: an employee applies to join after a year's employment, from 2027-11-02/)
+  const alone = await open({ worker: bastien, shares: 20 }, as(bastien))
+  assert.match(reason(alone), /bastien@lanterne\.example has not applied to join today: a candidacy opens on an application/)
+  // The employer opens no candidacy: Camille, who hires, holds the right
+  // to apply as an employee, for her own alone.
+  const byCamille = await open({ worker: bastien, shares: 20 }, as(camille))
+  assert.match(reason(byCamille), /camille@lanterne\.example may not open bastien@lanterne\.example's candidacy: only their own, on their application/)
+  await assert.rejects(apply({ member: thomas, shares: 20, deadline: '2027-07-16', body: '' }, as(thomas)), /thomas@lanterne\.example is or was a member, or has applied already/)
   const { text } = await shell.page(`/people/${bastien}?tab=joining`, camille)
-  assert.ok(text.includes('Propose the admission'), 'the proposal is offered')
-  assert.ok(text.includes('value="20"'), 'with the shares he pledged')
-  assert.ok(text.includes('value="2027-05-17"'), 'and a deadline two weeks on')
-  assert.ok(text.includes('Bastien Roux has worked with the co-op since 2 November 2026, and their probation as a candidate ended on 30 April 2027.'))
-  const proposed = await shell.act(`/people/${bastien}`, 'propose', {
-    kind: 'admit',
+  assert.ok(!text.includes('Apply to join'), 'the application is offered on his own page alone')
+  assert.equal((await one<{ stage: string }>('SELECT stage FROM employment_membership.path WHERE address = $1', [bastien])).stage, 'employee')
+})
+
+test('a year on, Bastien applies by his right: his candidacy opens, and the motion to admit him is put to the assembly, which must rule on it', async () => {
+  await on('2027-11-02')
+  const forHim = await apply({ member: bastien, shares: 20, deadline: '2027-11-16', body: '' }, as(thomas))
+  assert.match(reason(forHim), /thomas@lanterne\.example may not apply for bastien@lanterne\.example: only for themselves/)
+  const own = await shell.page(`/people/${bastien}`, bastien)
+  assert.ok(own.text.includes('Apply to join'), 'his own page offers the application')
+  assert.ok(own.text.includes('value="2027-11-16"'), 'its motion two weeks on')
+  const applied = await shell.act(`/people/${bastien}`, 'apply', {
     shares: '20',
-    deadline: '2027-05-17',
-    body: 'Bastien Roux has worked with the co-op since 2 November 2026.',
-  }, camille)
-  assert.deepEqual([proposed.op, proposed.state], ['motion:motion:propose', 'settled'])
-  const after = await tab(bastien, 'joining', camille)
-  assert.ok(!after.includes('Propose the admission'), 'no second proposal while it is open')
-  assert.match(after, /moves to admit Bastien; it is open until 17 May 2027/)
+    deadline: '2027-11-16',
+    body: 'I have worked with the co-op for a year and ask to join.',
+  }, bastien)
+  assert.deepEqual([applied.op, applied.state], ['membership:member:apply', 'settled'], applied.reason)
+  assert.deepEqual(applied.then.map((d) => [d.op, d.state]), [['employment-membership:candidacy:open', 'settled']])
+  assert.deepEqual(
+    await one(`SELECT to_char("from", 'YYYY-MM-DD') AS "from", to_char("to", 'YYYY-MM-DD') AS "to", shares, to_char(opened, 'YYYY-MM-DD') AS opened FROM employment_membership.candidacy WHERE worker = $1`, [bastien]),
+    { from: '2026-11-02', to: '2027-11-01', shares: 20, opened: '2027-11-02' },
+  )
+  const motion = await one<{ id: string; circle: string; title: string; ballot: string; deadline: string; shares: number }>(
+    `SELECT d.id, d.circle, d.title, d.ballot, to_char(d.deadline, 'YYYY-MM-DD') AS deadline, a.shares
+     FROM membership_motion.action a JOIN motion.motion d ON d.id = a.motion WHERE a.member = $1 AND a.kind = 'admit' AND d.closed IS NULL`,
+    [bastien],
+  )
+  assert.deepEqual({ ...motion, id: undefined }, { id: undefined, circle: 'ag', title: 'Admit Bastien Roux as a member', ballot: 'secret', deadline: '2027-11-16', shares: 20 })
+  const roll = await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion.id])
+  assert.ok(roll.length > 0 && !roll.some((r) => r.member === bastien), 'its roll is the assembly\'s seats, and not his')
+  const entry = await one<{ op: string; actor: string }>(`SELECT op, actor FROM cella.log WHERE n = $1`, [applied.entry])
+  assert.deepEqual(entry, { op: 'membership:member:apply', actor: bastien }, 'one write of his own, no motion proposed by anyone else')
+  assert.equal((await one<{ stage: string; applied: string }>(`SELECT stage, to_char(applied, 'YYYY-MM-DD') AS applied FROM employment_membership.path WHERE address = $1`, [bastien])).applied, '2027-11-02')
+  const after = await tab(bastien, 'joining', bastien)
+  assert.match(after, /moves to admit Bastien; it is open until 16 Nov 2027/)
+  assert.ok(!(await shell.page(`/people/${bastien}`, bastien)).text.includes('Apply to join'), 'no second application while it is open')
+  await assert.rejects(apply({ member: bastien, shares: 20, deadline: '2027-11-30', body: '' }, as(bastien)), /bastien@lanterne\.example is or was a member, or has applied already: one applies once/)
 })
 
 test('Malik revokes his phone from his laptop on his own page; the device signing and anyone else\'s are not his to revoke', async () => {

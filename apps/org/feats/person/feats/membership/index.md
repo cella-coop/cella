@@ -16,6 +16,7 @@ adds.
 | `POST /api/membership/invite` | confluent | a fact; two invitations do no harm |
 | `POST /api/membership/link` | confluent | a fact; two links do no harm, and the first taken up ends them all |
 | `POST /api/membership/accept` | ordered | enrols the invitee's first device, ordered against revoke as any enrolment |
+| `membership:member:apply` | confluent | an employee asks to join by their own right; a fact, once to a person, made by circle-membership-motion's `apply` with the motion that puts it to the assembly |
 | `POST /api/membership/admit` | ordered | changes who votes |
 | `POST /api/membership/suspend` | ordered | changes who votes |
 | `POST /api/membership/withdraw` | ordered | a member leaves by their own right; their capital's freeze and withdrawal follow it |
@@ -34,12 +35,13 @@ check.
 |---|---|---|
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
 | accept | `accept-invitation`, every person's right: the invitee, signed by the device it enrols | whoever holds the link |
+| apply | `apply-membership`, every employee's right: the application is the actor's own, and they have worked a year | each employee of a year, of their own application |
 | admit | `admit-member`, a collective mandate: the cited motion admits the member and carried | the assembly, by consent |
 | withdraw | `withdraw-membership`, every person's right: the membership is the actor's own, active or suspended until the write | each member, of their own membership |
 | suspend, exclude | `suspend-member`, `exclude-member`, collective mandates: the cited motion suspends or excludes the member, and carried | the assembly, by motion |
 | erase | `erase-own-data`, every person's right: the membership is the actor's own, and they have left | each former member, of their own data |
 
-`004-powers.sql` registers invite's, withdraw's and erase's powers in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
+`004-powers.sql` registers invite's, apply's, withdraw's and erase's powers in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
 are listed in `motion.cites`, with their powers, by the `membership-motion` graft.
 
 ## Schema
@@ -48,7 +50,7 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
 
 - `membership.member`, one row per address, with status (`invited`,
   `active`, `suspended`, `exited`), `since` (admitted) and shares, and the
-  days it was `invited`, `suspended` and `exited`. A trigger lets a status
+  days it was `invited`, `applied`, `suspended` and `exited`. A trigger lets a status
   move only along that lifecycle, raising SQLSTATE `09000` otherwise. The
   app role may select, insert and update; the guards role, `cella_guards`,
   may select.
@@ -87,6 +89,7 @@ label is the invitee's wording and stays out.
 
 - `membership.invites`, on `membership:member:invite`: the write invited the member, on the verdict date.
 - `membership.carries`, on `membership:member:invite`: the link its payload names, if any, is the member's, made by this write.
+- `membership.applies`, on `membership:member:apply`: the applicant is the actor, and the write left them invited, having applied on the verdict date; one who is a member, or was, does not apply. That they have worked a year is the `employment-membership` graft's guard on the same action, and that the write put the motion to admit them, `circle-membership-motion`'s.
 - `membership.links`, on `membership:member:link`: the member is invited and has not taken up their invitation, and the link was made by this write.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
@@ -104,6 +107,15 @@ Whether the cited motion of an admission, a suspension or an exclusion asks it i
   submits `{ member, invited, link? }`, and the name, committed, only
   when the person is new. A link that is not 32 bytes in hex is refused
   before it reaches the notary.
+- `applying`, the application as a write, which only
+  `circle-membership-motion`'s `apply` runs, in the transaction that puts
+  the motion to admit the applicant: invites the applicant on the
+  verdict date, holding nothing, or marks the invitation they hold
+  already, and records the day they applied; submits `{ member, applied
+  }`. One applies once: someone who is a member, or was, or has applied
+  already, is refused before the notary. The
+  feat has no `apply` of its own, since an application that puts no
+  motion is refused.
 - `link` (confluent): a new link for someone invited, as a lost one is
   replaced or an imported member first given one; submits `{ member,
   link }`. Someone never invited is refused before the notary.

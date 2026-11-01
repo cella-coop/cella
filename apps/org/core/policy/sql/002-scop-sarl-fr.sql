@@ -105,6 +105,9 @@ SELECT policy.offer('scop-sarl-fr', 'log-time', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'claim-expense', 'mandate',
   'Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts',
   NULL, 'extraordinary', NULL);
+SELECT policy.offer('scop-sarl-fr', 'apply-membership', 'mandate',
+  'Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on',
+  NULL, 'extraordinary', 'loi n° 78-763, as the CG Scop''s model statutes put it');
 SELECT policy.offer('scop-sarl-fr', 'work-share', 'rule',
   'At least {work_share: 25 % | more is stricter} of each year''s surplus goes to all the employees as the work share',
   'At least a quarter of the surplus goes to the workers.', NULL, 'loi n° 78-763 art. 33');

@@ -5,6 +5,9 @@ export const actions = {
   'membership:member:invite': confluent({ power: 'invite-member' }),
   // a fact; two links do no harm, and the first taken up ends them all
   'membership:member:link': confluent({ power: 'invite-member' }),
+  // a fact, once to a person; an employee asks to join by their own
+  // right, and the same write puts the motion to admit them
+  'membership:member:apply': confluent({ power: 'apply-membership' }),
   // enrols the invitee's first device: ordered against revoke, as an enrolment is
   'membership:member:accept': ordered({ power: 'accept-invitation' }),
   // changes who votes; the cited motion admits

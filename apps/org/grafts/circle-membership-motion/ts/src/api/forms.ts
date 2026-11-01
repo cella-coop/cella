@@ -1,5 +1,5 @@
 import type { Db, Form } from '@cella/org-db'
-import type { Asking } from '../models/asking.ts'
+import type { Applying, Asking } from '../models/asking.ts'
 
 const when = (form: Form) => {
   if (!form.get('deadline')) {
@@ -44,4 +44,14 @@ export async function appointing(form: Form, circle: string, db: Db): Promise<As
     return { kind, args: { circle, member: rows[0].member, ...(rows[0].role ? { role: rows[0].role } : {}) }, ...when(form) }
   }
   throw new Error('choose what to propose')
+}
+
+// An employee's application from their own page: the shares they pledge,
+// and the deadline and reasons of the motion it puts to the assembly.
+export function applying(form: Form, member: string): Applying {
+  const shares = Number(form.get('shares'))
+  if (!Number.isInteger(shares) || shares <= 0) {
+    throw new Error(`“${form.get('shares')}” is not a whole number of shares`)
+  }
+  return { member, shares, ...when(form) }
 }

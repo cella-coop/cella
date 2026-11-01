@@ -1,9 +1,11 @@
 // A worker's way to membership, on a database holding the app's core, the
 // member and worker feats and this graft: each person's stage, from an
-// employee to a candidate, invited, a member and gone; and
-// `employment_membership.opens`, that a candidacy is a worker's who is not yet a
-// member, its probation within their employment, opened once, on the
-// write's day. Run by `cella test slice employment-membership`.
+// employee to a candidate, invited, a member and gone; a candidacy, one
+// to a worker; and `employment_membership.serves`, that an employee
+// applies after a year's employment, while still employed. That the
+// candidacy is the worker's own, on their application, reads the actor,
+// which only a write has: the people scenario proves it. Run by `cella
+// test slice employment-membership`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -16,7 +18,15 @@ const bastien = 'bastien@lanterne.example'
 const nadia = 'nadia@lanterne.example'
 
 const all = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
-const opens = async (payload: object) => (await all<{ r: string | null }>('SELECT employment_membership.opens($1) AS r', [payload]))[0].r
+// `serves` on a day, as the clock reads it.
+const serves = async (member: string, day: string) => {
+  await db.query(`SELECT set_config('cella.clock', $1, false)`, [day])
+  try {
+    return (await all<{ r: string | null }>('SELECT employment_membership.serves($1) AS r', [{ member }]))[0].r
+  } finally {
+    await db.query(`SET cella.clock = '2026-10-24'`)
+  }
+}
 
 before(async () => {
   await db.connect()
@@ -58,41 +68,13 @@ test('each person\'s stage: an employee, invited after a probation, a member, an
   ])
 })
 
-test('a candidacy is a worker\'s who is not yet a member, within their employment, opened by the write on its day', async () => {
-  await db.query('BEGIN')
-  try {
-    await db.query(`INSERT INTO employment_membership.candidacy (worker, "from", "to", shares, opened) VALUES ($1, '2026-09-01', '2027-02-28', 20, '2026-10-24')`, [bastien])
-    const payload = { worker: bastien, from: '2026-09-01', to: '2027-02-28', shares: 20 }
-    assert.equal(await opens(payload), null)
-    assert.equal((await all<{ stage: string }>('SELECT stage FROM employment_membership.path WHERE address = $1', [bastien]))[0].stage, 'candidate')
-    assert.match((await opens({ ...payload, shares: 30 })) ?? '', /candidacy is not what the write names/)
-    assert.match((await opens({ ...payload, worker: ines })) ?? '', /ines@lanterne.example's candidacy was not opened by this write/)
-    assert.match((await opens({ ...payload, worker: thomas })) ?? '', /thomas@lanterne.example is active as a member: a candidate is not yet one/)
-    assert.match((await opens({ ...payload, worker: nadia })) ?? '', /nadia@lanterne.example is no worker: a candidate is one/)
-  } finally {
-    await db.query('ROLLBACK')
-  }
+test('an employee applies once they have worked a year, while still employed', async () => {
+  assert.equal(await serves(ines, '2026-10-24'), null)
+  assert.match((await serves(bastien, '2026-10-24')) ?? '', /bastien@lanterne.example was hired on 2026-09-01: an employee applies to join after a year's employment, from 2027-09-01/)
+  assert.match((await serves(bastien, '2027-08-31')) ?? '', /after a year's employment, from 2027-09-01/)
+  assert.match((await serves(bastien, '2027-09-01')) ?? '', /bastien@lanterne.example's contract ended on 2027-08-31/)
+  assert.match((await serves(nadia, '2026-10-24')) ?? '', /nadia@lanterne.example is no worker/)
 })
-
-test('a probation starts no earlier than the hire, and ends no later than the contract', async () => {
-  await db.query('BEGIN')
-  try {
-    await db.query(`INSERT INTO employment_membership.candidacy (worker, "from", "to", shares, opened) VALUES ($1, '2026-08-01', '2027-09-30', 20, '2026-10-24')`, [bastien])
-    const early = await opens({ worker: bastien, from: '2026-08-01', to: '2027-09-30', shares: 20 })
-    assert.match(early ?? '', /probation starts on 2026-08-01, before their hire on 2026-09-01/)
-  } finally {
-    await db.query('ROLLBACK')
-  }
-  await db.query('BEGIN')
-  try {
-    await db.query(`INSERT INTO employment_membership.candidacy (worker, "from", "to", shares, opened) VALUES ($1, '2026-09-01', '2027-09-30', 20, '2026-10-24')`, [bastien])
-    const late = await opens({ worker: bastien, from: '2026-09-01', to: '2027-09-30', shares: 20 })
-    assert.match(late ?? '', /probation ends on 2027-09-30, after their contract does on 2027-08-31/)
-  } finally {
-    await db.query('ROLLBACK')
-  }
-})
-
 test('a worker has one candidacy', async () => {
   await assert.rejects(
     db.query(`INSERT INTO employment_membership.candidacy (worker, "from", "to", shares, opened) VALUES ($1, '2025-09-01', '2026-02-28', 20, '2026-10-24')`, [ines]),

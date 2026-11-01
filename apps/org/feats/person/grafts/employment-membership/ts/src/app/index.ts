@@ -1,6 +1,5 @@
 import { date, type App, type Event, type Tone } from '@cella/org-ui'
 import type { Path, Stage } from '../models/path.ts'
-import Candidacy from './blocks/Candidacy.svelte'
 import PathBlock from './blocks/Path.svelte'
 
 const tones: Record<Stage, Tone> = { employee: 'neutral', candidate: 'accent', invited: 'accent', member: 'positive', gone: 'neutral' }
@@ -9,8 +8,9 @@ const tones: Record<Stage, Tone> = { employee: 'neutral', candidate: 'accent', i
 const events = (p: Path | null): Event[] => (p?.probation ? [{ at: p.probation, text: `candidate, on probation to ${date(p.probationEnd)}` }] : [])
 
 // The graft's client side: each person's stage on their way to membership,
-// a hidden column to filter by; on their page, the path they took, their
-// probation in the activity, and opening an employee's candidacy.
+// a hidden column to filter by; on their page, the path they took and
+// their probation in the activity. The application is
+// circle-membership-motion's.
 export const app: App = {
   name: 'employment-membership',
   extends: {
@@ -27,7 +27,6 @@ export const app: App = {
       ],
       page: {
         blocks: [PathBlock],
-        actions: Candidacy,
         activity: events,
       },
     },

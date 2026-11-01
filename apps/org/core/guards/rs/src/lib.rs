@@ -1,4 +1,4 @@
-//! Cella's rule primitives, pure and deterministic: no clock, no I/O, no
+//! Cella's guard primitives, pure and deterministic: no clock, no I/O, no
 //! floats, every sum overflow-checked. The `cella` Postgres extension wraps
 //! them as SQL; the same crate compiles to WASM for devices and auditors.
 

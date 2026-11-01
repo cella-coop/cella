@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -34,18 +34,18 @@ limit, and draws the financial statements from the journal.
   the analytics port, from the movements below, and equals it to the
   cent.
 
-The app role and the rules role, `cella_rules`, may select the balance.
+The app role and the guards role, `cella_guards`, may select the balance.
 
-## Rules
+## Guards
 
-The open-period rule is a trigger rather than a rule `submit` runs, since
+The open-period guard is a trigger rather than a guard `submit` runs, since
 it holds for every write that posts, whatever its op. At rung 2 a late
 post is re-dated into the first open period and flagged, instead of
 refused.
 
 An account the chart marks `cash` (the account feat's flag) holds the
 co-op's money, and money leaves one only through the writes with their own
-power or right and a rule that checks the entry is exactly what they say:
+power or right and a guard that checks the entry is exactly what they say:
 `transaction.pay`, a supplier payment; `account.draw`, a member's draw;
 `expense.reimburse`, an expense paid back; `payslip:run.pay`, a pay run.
 

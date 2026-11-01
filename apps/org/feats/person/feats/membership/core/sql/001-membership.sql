@@ -43,7 +43,7 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.address;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('membership:member:admit', 'membership.admitted(jsonb)', 'membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('membership:member:admit', 'membership.admitted(jsonb)', 'membership');
 
 GRANT USAGE ON SCHEMA membership TO cella_app;
 GRANT SELECT, INSERT, UPDATE ON membership.member TO cella_app;

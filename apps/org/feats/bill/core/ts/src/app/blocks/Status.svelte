@@ -3,7 +3,7 @@
   import type { Detail } from '../../models/bill.ts'
 
   // The bill's next write: someone other than its recorder approves it,
-  // within their mandate's limit; finance pays it once approved. The rules
+  // within their mandate's limit; finance pays it once approved. The guards
   // refuse anyone else.
   let { data }: { data: Detail; id: string } = $props()
 </script>

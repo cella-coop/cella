@@ -1,6 +1,6 @@
 +++
 title = "patronage-timesheet"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 How a surplus's work share divides among the workers by time worked,
@@ -22,7 +22,7 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 - `time_share`, a view: each worker's share by time worked of each
   distribution, as the division gives it.
 
-## Rules
+## Guards
 
 - `patronage_timesheet.divides`, on `patronage:distribution:approve`: the
   parts by time worked are exactly the division by the minutes approved
@@ -32,7 +32,7 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 
 `ts/_tests/division.test.ts` (`cella test slice patronage-timesheet`):
 the portion divides by the minutes of approved months in the year alone;
-approving makes the parts, which both rules take; parts no longer what
+approving makes the parts, which both guards take; parts no longer what
 the approved time gives are refused.
 
 ## Reads

@@ -10,7 +10,7 @@ type Event = 'charge' | 'payment'
 // Posts what an expense event puts in the books: the lines are
 // `expense_transaction.lines`, asked of the database, recorded through the
 // transaction feat and linked in `posting`. An expense the write did not
-// move posts nothing, and the feat's rule refuses it.
+// move posts nothing, and the feat's guard refuses it.
 async function posted(tx: Db, v: Acted, event: Event): Promise<string | null> {
   if (!v.day || !v.amount) {
     return null

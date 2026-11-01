@@ -74,10 +74,10 @@ CREATE FUNCTION payslip_transaction.paid(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 RETURN payslip_transaction.unposted(payload ->> 'month', 'payment');
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('payslip:run:approve', 'payslip_transaction.accrued(jsonb)', 'payslip-transaction'),
   ('payslip:run:pay', 'payslip_transaction.paid(jsonb)', 'payslip-transaction');
 
-GRANT USAGE ON SCHEMA payslip_transaction TO cella_app, cella_rules;
-GRANT SELECT ON payslip_transaction.posting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA payslip_transaction TO cella_app, cella_guards;
+GRANT SELECT ON payslip_transaction.posting TO cella_app, cella_guards;
 GRANT INSERT ON payslip_transaction.posting TO cella_app;

@@ -29,13 +29,13 @@ ALTER TABLE decision.vote
   ADD CONSTRAINT vote_stance_check CHECK (stance IN ('for', 'against', 'abstain', 'consent', 'object', 'redacted'));
 
 -- Who reads a stance: every member an open ballot's; a secret ballot's,
--- its member alone, under no power. A write's transaction and the rules
+-- its member alone, under no power. A write's transaction and the guards
 -- role read every stance.
 ALTER TABLE decision.vote ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY reads ON decision.vote FOR SELECT TO cella_app
   USING ((SELECT cella.writing()) OR member = cella.reader() OR NOT decision.secret(decision));
-CREATE POLICY rules ON decision.vote FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON decision.vote FOR SELECT TO cella_guards USING (true);
 CREATE POLICY writes ON decision.vote FOR INSERT TO cella_app WITH CHECK (true);
 
 -- decision:decision:propose — the decision's ballot is the one the
@@ -67,6 +67,6 @@ BEGIN ATOMIC
   ) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:propose', 'decision.balloted(jsonb)', 'decision'),
   ('decision:decision:vote', 'decision.seals(jsonb)', 'decision');

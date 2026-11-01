@@ -17,7 +17,7 @@ export const atomic: ReadonlySet<Kind> = new Set(['divider', 'embed'])
 // The props each type keeps; a change of type drops the rest. An embed
 // names what it shows, `embed` the kind of thing (a decision) and `ref`
 // which one; the slice that knows that kind draws it. The Rust canonical
-// form (`cella_rules::document`) holds the same table.
+// form (`cella_guards::document`) holds the same table.
 export const propsOf: Record<Kind, readonly string[]> = {
   paragraph: [],
   heading: ['level'],

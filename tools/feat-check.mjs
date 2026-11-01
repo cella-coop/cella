@@ -303,7 +303,7 @@ if (sql) {
       known.add(schemaName(g))
     }
   }
-  const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
+  const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found))
   // What a feat's or a graft's TypeScript writes outside its own schema,
   // held with what its SQL does to the app's foreign.list.

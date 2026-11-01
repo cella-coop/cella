@@ -111,7 +111,7 @@ $$;
 -- The log's form, the payload with commitments in place of personal
 -- values, is the owner's: every other column stays everyone's.
 REVOKE SELECT ON cella.log FROM PUBLIC;
-GRANT SELECT (n, op, actor, date, payload, receipt, rules, prev, hash, sig) ON cella.log TO PUBLIC;
+GRANT SELECT (n, op, actor, date, payload, receipt, guards, prev, hash, sig) ON cella.log TO PUBLIC;
 
 -- An entry's payload, its commitments opened, for the reader who may read
 -- it: who wrote it, the person every commitment in it is about, or a holder

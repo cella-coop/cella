@@ -75,7 +75,7 @@ BEGIN ATOMIC
   LEFT JOIN timesheet.entry e ON e.id::text = w.entry;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('timesheet:entry:correct', 'timesheet.corrects(jsonb)', 'timesheet');
 
 INSERT INTO cella.power (op, power, amount, owner) VALUES

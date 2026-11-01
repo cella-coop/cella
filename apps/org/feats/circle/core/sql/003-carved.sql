@@ -61,7 +61,7 @@ BEGIN ATOMIC
   SELECT circle.beyond(cella.verdict_date());
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:circle:nest', 'circle.carves(jsonb)', 'circle'),
   ('circle:mandate:grant', 'circle.carves(jsonb)', 'circle'),
   ('circle:mandate:revoke', 'circle.carves(jsonb)', 'circle');

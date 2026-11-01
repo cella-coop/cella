@@ -36,4 +36,4 @@ CREATE TRIGGER numbers BEFORE INSERT ON transaction.entry
 ALTER TABLE transaction.entry ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE transaction.entry_no;
 
-GRANT SELECT ON transaction.journal TO cella_app, cella_rules;
+GRANT SELECT ON transaction.journal TO cella_app, cella_guards;

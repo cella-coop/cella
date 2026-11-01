@@ -1,9 +1,9 @@
 +++
-title = "Rules"
-updated = 2026-10-25
+title = "Guards"
+updated = 2026-11-01
 +++
 
-The rule primitives, in a pure Rust crate (`cella-rules`): no pgrx, no clock, no I/O, no floats, every sum overflow-checked, `unsafe` forbidden. The `cella` extension (`core/notary/rs`) wraps them as SQL; the same crate compiles to WASM for devices and auditors.
+The guard primitives, in a pure Rust crate (`cella-guards`): no pgrx, no clock, no I/O, no floats, every sum overflow-checked, `unsafe` forbidden. The `cella` extension (`core/notary/rs`) wraps them as SQL; the same crate compiles to WASM for devices and auditors.
 
 - `Amount`, positive cents, and `Balance`, signed cents.
 - `Tally`, the fold over (member, stance, receipt): each member's stance with the highest receipt counts, so the fold is the same in any order. `consent` passes when someone consents and no one objects; `majority` when more are for than against; `share(num, den)` when someone is for and at least `num` in every `den` of those for and against are, as two thirds of the votes cast. A stance foreign to the rule is an error, not a vote.

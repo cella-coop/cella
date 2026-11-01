@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op's structure and the authority that flows through it. A circle is
@@ -23,7 +23,7 @@ A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
 `cella.power`. A mandate grants one power to one role, with an optional
 limit, for a term. Who holds a role is a position, the `circle-membership`
-graft's, so whether an actor may use a power is that graft's rule,
+graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit. A power
 every member holds is granted the same way, through a mandate on a role
@@ -41,8 +41,8 @@ are added and moved, a moved circle carrying its subtree; so
 `circle.within(part, whole)` asks whether one circle is within another
 without recursion. One circle only has no parent. Triggers refuse a
 nesting that makes a cycle and keep a mandate's grant fixed and a
-revocation standing, raising SQLSTATE `09000`. The app role and the rules
-role, `cella_rules`, may select; the app role may move a circle and grant
+revocation standing, raising SQLSTATE `09000`. The app role and the guards
+role, `cella_guards`, may select; the app role may move a circle and grant
 and revoke mandates.
 
 ## Authority
@@ -101,9 +101,9 @@ Nesting, granting and revoking are decided: they cite a decision, which
 the `circle-decision` graft checks asks this and was put to a circle that
 may decide it, and `circle-decision-membership` that it carried, and which
 `circle-decision-membership` carries out when it passes. A message's seat
-check is `circle_membership.sits`, the `circle-membership` graft's rule.
+check is `circle_membership.sits`, the `circle-membership` graft's guard.
 
-## Rules
+## Guards
 
 - `circle.nests`, on `circle:circle:nest`: the circle sits under the
   parent the payload names, and its path is its parent's as it stands.

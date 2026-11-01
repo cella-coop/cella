@@ -11,7 +11,7 @@ export async function summaries(db: Db): Promise<Summary[]> {
   return rows
 }
 
-// A meeting's minutes: the document, its draft as the database's rules
+// A meeting's minutes: the document, its draft as the database's guards
 // read it, how many versions it has, its latest and the one adopted.
 export async function onMeeting(db: Db, meeting: string): Promise<OnMeeting> {
   const { rows } = await db.query<{ document: string; title: string; versions: number; latest: string | null; adopted: string | null }>(

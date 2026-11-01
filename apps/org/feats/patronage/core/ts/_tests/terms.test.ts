@@ -13,7 +13,7 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
 
 // A distribution of a year's surplus, its work share half of it and the
@@ -60,15 +60,15 @@ test('each basis divides its weight of the work share, and the portions add up t
 })
 
 test('parts that add up to each portion pass; one missing, or a basis the terms do not name, is refused', async () => {
-  assert.equal(await rule('patronage.divides', { distribution: '2018' }), '2018\'s parts by salary make 0 cents, not its portion of 2500000')
+  assert.equal(await guard('patronage.divides', { distribution: '2018' }), '2018\'s parts by salary make 0 cents, not its portion of 2500000')
   await part('2018', 'a@x', 'salary', 300_000_00, 15_000_00)
   await part('2018', 'b@x', 'salary', 200_000_00, 10_000_00)
   await part('2018', 'a@x', 'hours', 90_000, 9_000_00)
   await part('2018', 'b@x', 'hours', 60_000, 6_000_00)
   await part('2018', 'a@x', 'equal', 1, 5_000_00)
-  assert.equal(await rule('patronage.divides', { distribution: '2018' }), '2018\'s parts by equal make 500000 cents, not its portion of 1000000')
+  assert.equal(await guard('patronage.divides', { distribution: '2018' }), '2018\'s parts by equal make 500000 cents, not its portion of 1000000')
   await part('2018', 'b@x', 'equal', 1, 5_000_00)
-  assert.equal(await rule('patronage.divides', { distribution: '2018' }), null)
+  assert.equal(await guard('patronage.divides', { distribution: '2018' }), null)
   assert.deepEqual(await one(`SELECT amount, salary, hours, equal FROM patronage.statement WHERE id = '2018:a@x'`), {
     amount: '2900000',
     salary: '1500000',
@@ -77,7 +77,7 @@ test('parts that add up to each portion pass; one missing, or a basis the terms 
   })
 
   await approved('2017', 2017, 10_000_00, 'salary')
-  assert.equal(await rule('patronage.divides', { distribution: '2017' }), '2017 divides its work share by salary, not by mix as t-2016 say')
+  assert.equal(await guard('patronage.divides', { distribution: '2017' }), '2017 divides its work share by salary, not by mix as t-2016 say')
 })
 
 test('parts are made in the write that approves, and never change', async () => {
@@ -89,11 +89,11 @@ test('parts are made in the write that approves, and never change', async () => 
 
 test('terms are adopted whole, never over a year already approved, and never change after', async () => {
   await db.query(`INSERT INTO patronage.terms (id, "from", salary, hours) VALUES ('t-2019', 2019, 60, 30), ('t-2018', 2018, 100, 0), ('t-2027', 2027, 70, 30)`)
-  assert.equal(await rule('patronage.adopts', { terms: 't-2027' }), 't-2027 were not adopted by this write')
+  assert.equal(await guard('patronage.adopts', { terms: 't-2027' }), 't-2027 were not adopted by this write')
   await db.query(`UPDATE patronage.terms SET adopted = cella.verdict_date() WHERE id IN ('t-2019', 't-2018', 't-2027')`)
-  assert.equal(await rule('patronage.adopts', { terms: 't-2019' }), 't-2019 divide 90.00 % of the work share, not 100 %')
-  assert.equal(await rule('patronage.adopts', { terms: 't-2018' }), 't-2018 would govern 2018, whose distribution is approved')
-  assert.equal(await rule('patronage.adopts', { terms: 't-2027' }), null)
-  assert.equal(await rule('patronage.adopts', { terms: 't-1999' }), 'no terms t-1999')
+  assert.equal(await guard('patronage.adopts', { terms: 't-2019' }), 't-2019 divide 90.00 % of the work share, not 100 %')
+  assert.equal(await guard('patronage.adopts', { terms: 't-2018' }), 't-2018 would govern 2018, whose distribution is approved')
+  assert.equal(await guard('patronage.adopts', { terms: 't-2027' }), null)
+  assert.equal(await guard('patronage.adopts', { terms: 't-1999' }), 'no terms t-1999')
   await assert.rejects(db.query(`UPDATE patronage.terms SET capital = 10 WHERE id = 't-2027'`), /t-2027 were adopted on 2026-10-24/)
 })

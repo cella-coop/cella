@@ -29,5 +29,5 @@ CROSS JOIN LATERAL (
   SELECT CASE WHEN x.associate AND v.value > 0 THEN floor(s.amount * t.capital / (100 * v.value))::integer ELSE 0 END AS shares
 ) k;
 
-GRANT USAGE ON SCHEMA account_membership_patronage TO cella_app, cella_rules;
-GRANT SELECT ON account_membership_patronage.split TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_membership_patronage TO cella_app, cella_guards;
+GRANT SELECT ON account_membership_patronage.split TO cella_app, cella_guards;

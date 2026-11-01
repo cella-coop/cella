@@ -76,7 +76,7 @@ BEGIN ATOMIC
   LEFT JOIN account.terms t ON t.id = x.terms;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('account:terms:adopt', 'account.adopts(jsonb)', 'account');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:terms:adopt', 'account.adopts(jsonb)', 'account');
 
 -- The powers the capital's money writes need: recording what an
 -- associate pays in is recording money received; repaying a departed
@@ -86,5 +86,5 @@ INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('account:capital:pay', 'record-receipt', NULL, 'account'),
   ('account:capital:repay', 'repay-capital', NULL, 'account');
 
-GRANT SELECT ON account.terms TO cella_app, cella_rules;
+GRANT SELECT ON account.terms TO cella_app, cella_guards;
 GRANT UPDATE (adopted) ON account.terms TO cella_app;

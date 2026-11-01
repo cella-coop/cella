@@ -53,7 +53,7 @@ async function check(sql) {
       mkdirSync(join(repo, dir), { recursive: true })
       writeFileSync(join(repo, dir, '001.sql'), text)
     }
-    const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [] }
+    const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [] }
     const known = new Set(['cella', 'circle', 'invoice', 'member', 'decision', 'circle_member', 'circle_invoice_member', 'decision_member', 'invoice_member'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     return { errors, powers: found.powers, found }
@@ -80,7 +80,7 @@ test('only a feat registers the keyring, and nothing else in cella is written', 
   const keyring = await check({ member: `INSERT INTO cella.keyring (fn, owner) VALUES ('member.verifies(text, bytea)', 'member');` })
   assert.deepEqual(keyring.errors, [])
   const log = await check({ member: `INSERT INTO cella.receipt (n) VALUES (1);` })
-  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its rules, its powers, its personal columns, the keyring or who reads/)
+  assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its guards, its powers, its personal columns, the keyring or who reads/)
 })
 
 test('who reads a feat is registered by literal rows: its powers by the feat or a graft joining it, the authority and reaches by a graft', async () => {
@@ -121,34 +121,34 @@ test('a slice keeps row-level policies and alters functions only in its own sche
   assert.match(path.errors.join('\n'), /invoice.total sets search_path beyond the catalog/)
 })
 
-test('a graft registers rules on ops of the feats it joins and of the lower-order grafts it builds on, and no others', async () => {
-  const rule = (op, owner) => `INSERT INTO cella.rule (op, fn, owner) VALUES ('${op}', 'cella.op()', '${owner}');`
+test('a graft registers guards on ops of the feats it joins and of the lower-order grafts it builds on, and no others', async () => {
+  const guard = (op, owner) => `INSERT INTO cella.guard (op, fn, owner) VALUES ('${op}', 'cella.op()', '${owner}');`
   const lower = await check({
     'circle-member': 'SELECT 1;',
-    'circle-invoice-member': rule('circle-member:position:add', 'circle-invoice-member') + rule('member:member:admit', 'circle-invoice-member'),
+    'circle-invoice-member': guard('circle-member:position:add', 'circle-invoice-member') + guard('member:member:admit', 'circle-invoice-member'),
   })
   assert.deepEqual(lower.errors, [])
-  const beside = await check({ 'circle-member': rule('invoice-member:link:add', 'circle-member') })
-  assert.match(beside.errors.join('\n'), /registers a rule on invoice-member:link:add, an op of invoice-member, which circle-member neither joins nor builds on/)
-  const higher = await check({ 'circle-member': rule('circle-invoice-member:roll:fix', 'circle-member') })
+  const beside = await check({ 'circle-member': guard('invoice-member:link:add', 'circle-member') })
+  assert.match(beside.errors.join('\n'), /registers a guard on invoice-member:link:add, an op of invoice-member, which circle-member neither joins nor builds on/)
+  const higher = await check({ 'circle-member': guard('circle-invoice-member:roll:fix', 'circle-member') })
   assert.match(higher.errors.join('\n'), /an op of circle-invoice-member, which circle-member neither joins nor builds on/)
 })
 
 test('an op with neither a power nor a check is refused: nothing is allowed by omission', () => {
-  const none = covered([op('invoice:invoice:send')], { rules: [], cites: [] })
+  const none = covered([op('invoice:invoice:send')], { guards: [], cites: [] })
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no write is allowed by omission/)
-  assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { rules: [], cites: [] }), [])
-  const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { rules: [], cites: [] })
+  assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
+  const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
   assert.match(odd[0], /declares the check anyone, which is none of self, roll, seat, decided/)
 })
 
-test('a declared check is backed by SQL: a rule on the op, or for decided a row in decision.cites', () => {
+test('a declared check is backed by SQL: a guard on the op, or for decided a row in decision.cites', () => {
   const self = op('member:member:profile', null, null, 'self')
   const decided = op('member:member:admit', null, null, 'decided')
-  assert.match(covered([self], { rules: [], cites: [] })[0], /member:member:profile checks self, but no SQL registers a rule on it in cella.rule/)
-  assert.match(covered([decided], { rules: [{ op: 'member:member:admit', owner: 'member' }], cites: [] })[0], /member:member:admit is decided, but no SQL lists it in decision.cites/)
+  assert.match(covered([self], { guards: [], cites: [] })[0], /member:member:profile checks self, but no SQL registers a guard on it in cella.guard/)
+  assert.match(covered([decided], { guards: [{ op: 'member:member:admit', owner: 'member' }], cites: [] })[0], /member:member:admit is decided, but no SQL lists it in decision.cites/)
   assert.deepEqual(covered([self, decided], {
-    rules: [{ op: 'member:member:profile', owner: 'member' }],
+    guards: [{ op: 'member:member:profile', owner: 'member' }],
     cites: [{ op: 'member:member:admit', owner: 'decision-member' }],
   }), [])
 })
@@ -175,12 +175,12 @@ test('a column that may hold personal data is registered personal or commented n
   assert.match(foreign.errors.join('\n'), /registers member.member.name as personal: a feat registers only its own schema's columns/)
 })
 
-test('the SQL check collects the literal rule and cites rows that back a check', async () => {
+test('the SQL check collects the literal guard and cites rows that back a check', async () => {
   const { errors, found } = await check({
-    member: `INSERT INTO cella.rule (op, fn, owner) VALUES ('member:member:profile', 'member.own(jsonb)', 'member');`,
+    member: `INSERT INTO cella.guard (op, fn, owner) VALUES ('member:member:profile', 'member.own(jsonb)', 'member');`,
     'decision-member': `INSERT INTO decision.cites (op, owner) VALUES ('member:member:admit', 'decision-member');`,
   })
   assert.deepEqual(errors, [])
-  assert.deepEqual(found.rules, [{ op: 'member:member:profile', owner: 'member' }])
+  assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
   assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'decision-member' }])
 })

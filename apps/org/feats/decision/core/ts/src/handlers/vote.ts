@@ -10,7 +10,7 @@ const op = 'decision:decision:vote'
 // secret ballot the stance is personal, so the log keeps its commitment
 // and the vault the stance. A stance on a closed decision is refused by
 // the feat's trigger; one for another member by `decision.own_stance`, and
-// one off the roll by the circle-decision-membership graft's rule, each as
+// one off the roll by the circle-decision-membership graft's guard, each as
 // Refused.
 export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Cast>> {
   let secret = false

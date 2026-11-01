@@ -82,4 +82,4 @@ export function cella(args: string[], env: Record<string, string> = {}): string 
 // The roles a scope's grants name, as its first migration makes them.
 export const roles = `
   CREATE ROLE cella_app LOGIN;
-  CREATE ROLE cella_rules NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;`
+  CREATE ROLE cella_guards NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;`

@@ -2,7 +2,7 @@
 // this feat: the four the feat draws itself are there, owned by no one; a
 // member saves a custom report under their own address on the verdict
 // date and saves it again; another's, a built-in one and one reading no
-// view are refused by the rule; the thresholds are published. What a
+// view are refused by the guard; the thresholds are published. What a
 // report reads through the port is the e2e scenario `reports`'s. Run by
 // `cella test slice report`.
 

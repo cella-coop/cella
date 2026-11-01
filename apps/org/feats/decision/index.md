@@ -1,6 +1,6 @@
 +++
 title = "Decision"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Proposals, votes and outcomes. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once.
@@ -14,7 +14,7 @@ Proposals, votes and outcomes. An outcome is computed from the signed votes, nev
 | `POST /api/decision/close` | ordered | the notary fixes which votes made the deadline |
 | `POST /api/decision/post` | confluent | a message on its deliberation; messages add up in any order |
 
-None needs a power; each declares the check that allows it. **propose**, **close** and **post** need a seat in the decision's circle (`check: 'seat'`), **vote** a place on its roll (`check: 'roll'`) and the stance being the actor's own. Seats and rolls are `circle-decision-membership`'s, which registers the rules: `circle_decision_membership.sits` on propose, close and post, `on_roll` on vote. Lanterne's assembly decisions are put and closed by any of its ten members; coordination's by its five.
+None needs a power; each declares the check that allows it. **propose**, **close** and **post** need a seat in the decision's circle (`check: 'seat'`), **vote** a place on its roll (`check: 'roll'`) and the stance being the actor's own. Seats and rolls are `circle-decision-membership`'s, which registers the guards: `circle_decision_membership.sits` on propose, close and post, `on_roll` on vote. Lanterne's assembly decisions are put and closed by any of its ten members; coordination's by its five.
 
 ## Schema
 
@@ -26,9 +26,9 @@ None needs a power; each declares the check that allows it. **propose**, **close
 
 - `decision.message`: a decision's deliberation, by receipt: its author's address, the message it answers (one of the same decision, received before it), its text, the handles it mentions (`@amina`, or a whole address) and the documents it links (`[[internal-rules]]`), as the text gives them, and the day. A closed decision takes no message (`open_for_messages`). The handles and links are resolved and checked by `decision-membership` and `decision-document`; the text is the author's words and stays out of the log.
 - `decision.kind`: the kinds of thing a decision can decide beyond its text, each registered by the graft that carries it out (`admit`, `suspend` and `exit` by `decision-membership`; `nest`, `grant` and `revoke` by `circle-decision`; `seat` and `unseat` by `circle-decision-membership`; `adopt` by `decision-document`), with the arguments its motions take as the New form asks for them: text, a number, or one of the choices a graft adds to the collection's `about` under the key the argument's `options` names. This feat knows no kind; it keeps the register, as it keeps `decision.cites`.
-- `decision.motion`: what a decision decides, numbered in the order proposed, a motion of a registered kind and its arguments as JSON. The kind's graft reads it and its rules check it.
+- `decision.motion`: what a decision decides, numbered in the order proposed, a motion of a registered kind and its arguments as JSON. The kind's graft reads it and its guards check it.
 
-Triggers keep a closed decision closed and refuse stances on it, and refuse a motion once a stance is given or the decision closed, so no one consents to one thing and is counted for another, raising SQLSTATE `09000`. The app role may select, insert and update decisions, select and insert votes as the policy on secret stances lets it, and select and insert motions; the rules role, `cella_rules`, may select them all.
+Triggers keep a closed decision closed and refuse stances on it, and refuse a motion once a stance is given or the decision closed, so no one consents to one thing and is counted for another, raising SQLSTATE `09000`. The app role may select, insert and update decisions, select and insert votes as the policy on secret stances lets it, and select and insert motions; the guards role, `cella_guards`, may select them all.
 
 Who may vote on a decision, its roll, is the `circle-decision-membership` graft's: the members seated in its circle when it was proposed.
 
@@ -37,25 +37,25 @@ Who may vote on a decision, its roll, is the `circle-decision-membership` graft'
 A decision is taken by open or secret ballot, fixed as it is proposed: its procedure's, unless the proposal names the other. The built-in procedures a motion is put by are open, and `circle-decision-membership`'s Propose… and Appoint… name a secret ballot for electing or removing a person, as co-ops commonly do; a co-op's own procedure says which its decisions take. `decision.secret(decision)` says whether one is secret.
 
 - **Open**: a stance is logged as given, and every member reads every stance.
-- **Secret**: the vote logs the stance as a salted commitment (`cella.personal` registers `decision.vote.stance`), and the vault keeps the stance under its member's key. The entry names its actor, as every entry does, so the log says that a member gave a stance and when, never which. In the read model, a row-level policy lets the app read a secret stance only as its own member's, or in a write's transaction; the rules role reads them all. How the roll and the tally show is `circle-decision-membership`'s: the tally sealed until the close, each member's stance never.
+- **Secret**: the vote logs the stance as a salted commitment (`cella.personal` registers `decision.vote.stance`), and the vault keeps the stance under its member's key. The entry names its actor, as every entry does, so the log says that a member gave a stance and when, never which. In the read model, a row-level policy lets the app read a secret stance only as its own member's, or in a write's transaction; the guards role reads them all. How the roll and the tally show is `circle-decision-membership`'s: the tally sealed until the close, each member's stance never.
 
-`decision.cites` lists the writes that cite a decision: each settles only once the decision its payload names has closed and passed. A graft that joins this feat to a write's feat declares the write's op there; the graft that counts the roll attaches its rule to every op listed. The app role and the rules role may select it.
+`decision.cites` lists the writes that cite a decision: each settles only once the decision its payload names has closed and passed. A graft that joins this feat to a write's feat declares the write's op there; the graft that counts the roll attaches its guard to every op listed. The app role and the guards role may select it.
 
-## Rules
+## Guards
 
-- `decision.proposes`, on `decision:decision:propose`: the write proposed the decision on the verdict date, open until a later deadline, with as many motions as its payload names. `decision.balloted`, on the same op: its ballot is the one the payload names. That each motion applies is the rule of the graft registering its kind; that the actor sits in the circle, `circle-decision-membership`'s.
+- `decision.proposes`, on `decision:decision:propose`: the write proposed the decision on the verdict date, open until a later deadline, with as many motions as its payload names. `decision.balloted`, on the same op: its ballot is the one the payload names. That each motion applies is the guard of the graft registering its kind; that the actor sits in the circle, `circle-decision-membership`'s.
 - `decision.closes`, on `decision:decision:close`: the write closed the decision on the verdict date, and not before its deadline. A decision closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
-- `decision.posts`, on `decision:message:post`: the message is the actor's own and names the decision, the message it answers, the mentions and the links its payload does. That each mention names one member is `decision-membership`'s rule, that each link names a document `decision-document`'s.
-- `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `decision.seals`, on the same op: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor is on the decision's roll is `circle-decision-membership`'s rule on the same op. A stance needs no power.
+- `decision.posts`, on `decision:message:post`: the message is the actor's own and names the decision, the message it answers, the mentions and the links its payload does. That each mention names one member is `decision-membership`'s guard, that each link names a document `decision-document`'s.
+- `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `decision.seals`, on the same op: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor is on the decision's roll is `circle-decision-membership`'s guard on the same op. A stance needs no power.
 
 The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the decision's procedure and its quorum, as the `circle-decision-membership` graft does.
 
 ## Handlers
 
-- `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed decision returns `Refused`, as the rules and the trigger rule it; the handler throws for none of them.
+- `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed decision returns `Refused`, as the guards and the trigger judge it; the handler throws for none of them.
 - `propose` (confluent): inserts the decision by the procedure it names, its rule the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`d-2026-013`) under a lock on the numbering, proposed on the verdict date, and its motions; circle-decision-membership's `propose` replaces it in the shell and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ decision, circle, procedure, ballot, deadline, motions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another; the form reads the handles it mentions and the documents it links from its text (`models/thread.ts`). Submits `{ decision, member, message, reply, mentions, links }`, without the text.
-- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-decision-membership` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its rule `counts` refuses it.
+- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-decision-membership` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
 
 ## Grafts
 

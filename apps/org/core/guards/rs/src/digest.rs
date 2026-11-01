@@ -23,6 +23,6 @@ mod tests {
 
     #[test]
     fn differs_from_the_log_digests() {
-        assert_ne!(digest(b"x"), crate::log::rule_digest("x"));
+        assert_ne!(digest(b"x"), crate::log::guard_digest("x"));
     }
 }

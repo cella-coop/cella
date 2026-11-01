@@ -53,6 +53,6 @@ test('a later adoption asks everyone to read the new version', async () => {
   }
 })
 
-test('outside a write the rule judges no reading anyone\'s own', async () => {
+test('outside a write the guard judges no reading anyone\'s own', async () => {
   assert.match((await reads({ member: ines, version: 'internal-rules@2' })) ?? '', /no one may mark only their own reading/)
 })

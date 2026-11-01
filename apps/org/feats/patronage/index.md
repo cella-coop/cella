@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -77,7 +77,7 @@ distribution is approved.
   split (`decision-patronage`); it settles only if that decision closed
   and passed, the year is over and its books closed (`account-patronage`).
   In the same write, the grafts that know each basis make the workers'
-  parts (`patronage-payslip`, `patronage-timesheet`), and their rules
+  parts (`patronage-payslip`, `patronage-timesheet`), and their guards
   check them.
 - **distribution.distribute** is ordered because the split is posted
   once, after its approval. Its handler is `patronage-transaction`'s,
@@ -102,7 +102,7 @@ the holder is whoever holds the role the mandate is granted to.
 
 ## Invariants
 
-The patronage feat owns the rules about its own collection:
+The patronage feat owns the guards about its own collection:
 
 - a distribution's shares add up to its surplus, to the cent, each its
   percent of it;
@@ -173,7 +173,7 @@ whose ceiling falls under the terms' rate is not refused.
 
 Triggers raise SQLSTATE `09000`. The app role may select, insert parts,
 set terms' `adopted` and a distribution's `approved` and `distributed`;
-the rules role, `cella_rules`, may select.
+the guards role, `cella_guards`, may select.
 
 ## Personal data
 
@@ -182,7 +182,7 @@ what it earned them: personal data of class `payroll`, registered by the
 worker (`003-personal.sql`), kept five years (Code du travail, art.
 L3243-4) and redacted after.
 
-## Rules
+## Guards
 
 - `patronage.splits`, on `patronage:distribution:approve`: the write
   approved the split on the verdict date, its year over; the shares add up

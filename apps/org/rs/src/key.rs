@@ -4,7 +4,7 @@ use std::io::{ErrorKind, Write};
 use std::os::unix::fs::OpenOptionsExt;
 use std::path::Path;
 
-use cella_rules::log::Key;
+use cella_guards::log::Key;
 use rand_core::{OsRng, RngCore};
 use zeroize::Zeroizing;
 

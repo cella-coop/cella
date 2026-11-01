@@ -1,5 +1,5 @@
 // The graft's reads and its slice, which the shell mounts: who is
-// expected at a meeting, who came and whether it is quorate. Its rules
+// expected at a meeting, who came and whether it is quorate. Its guards
 // are SQL: the agenda is its circle's members', a power over a meeting
 // reaches its circle, and the minutes' keeper records only those
 // expected. The meetings a member has yet to answer wait in their inbox.

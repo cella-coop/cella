@@ -46,7 +46,7 @@ const writes: Record<string, { op: Permission; run: (a: Args, decision: string, 
 // Carries out what a passing decision decides beyond admissions, once its
 // close has settled: each motion, in the order proposed, as its own
 // decided write, signed as the member who closed it and judged again by
-// its rules. A refused one leaves the decision passed and that motion
+// its guards. A refused one leaves the decision passed and that motion
 // undone, as its outcome says; the others still go. It reads outside a
 // write, so whether the decision passed comes from its tally, which a
 // secret ballot opens at its close.

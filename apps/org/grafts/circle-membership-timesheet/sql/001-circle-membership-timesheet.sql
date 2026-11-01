@@ -21,7 +21,7 @@ BEGIN ATOMIC
   ) w;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('timesheet:period:approve', 'circle_membership_timesheet.approves(jsonb)', 'circle-membership-timesheet');
 
-GRANT USAGE ON SCHEMA circle_membership_timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_membership_timesheet TO cella_app, cella_guards;

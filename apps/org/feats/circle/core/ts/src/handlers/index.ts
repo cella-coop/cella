@@ -8,7 +8,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 
 // Each write is decided: it cites the decision that asks it, which the
 // circle-decision graft checks asks this, and circle-decision-membership that
-// it carried. This feat's rules check the write did what its payload says.
+// it carried. This feat's guards check the write did what its payload says.
 
 // Nests a circle under another. The tree's trigger refuses a cycle in the
 // write's own view; `circle.nests` refuses one that a nesting settled

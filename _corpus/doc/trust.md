@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 # Trust
@@ -24,15 +24,18 @@ label yet to run a write differently: `write`, `cella.begin` and
 `cella.submit` take the same synchronous path whatever a write's label. The
 label is in the type from the start, so that later rungs move confluent and
 bounded writes to the clients without a rewrite. On the server a confluent
-or bounded write still meets its feat's triggers and rules, so its outcome
+or bounded write still meets its feat's triggers and guards, so its outcome
 may be `Refused` as well as `Settled`; only an ordered write may also be
 `Pending`.
 
 ## One server
 
-The notary lives inside Postgres as the `cella` extension, built with pgrx
-on the pure Rust rules crate (`apps/org/core/notary/rs` over
-`apps/org/core/rules/rs`). The pgrx
+The notary is software with no legal force: it runs the guards on every
+write and alone appends to the log, and a record holds because the co-op
+agreed to it, never because the notary signed it. It lives inside Postgres
+as the `cella` extension, built with pgrx
+on the pure Rust guards crate (`apps/org/core/notary/rs` over
+`apps/org/core/guards/rs`). The pgrx
 spike (`research/pgrx/`) showed it builds on NixOS against Postgres 18,
 holds one transaction from Node, and keeps a gapless signed log the app's
 role cannot write. Installing it needs a superuser, so a scope runs on a
@@ -50,7 +53,7 @@ sequenceDiagram
     A->>N: begin; select cella.begin(op, actor, device)
     A->>P: state change, which only a begun transaction may write
     A->>N: select cella.submit(op, payload, actor, signed request)
-    N->>N: signature, device and nonce checked; rules; receipt and verdict signed and appended
+    N->>N: signature, device and nonce checked; guards; receipt and verdict signed and appended
     N-->>A: verdict, or a refusal raised
     A->>P: commit if Settled, which only a settled write may; roll back if Refused
   end
@@ -60,7 +63,7 @@ sequenceDiagram
 - **The member signs every write on their device** (WebCrypto Ed25519):
   a domain-separated message naming the scope, the op, the actor, the
   device, the digest of the request and a single-use nonce
-  ([signatures](signatures.md)). `submit` checks it before any rule runs:
+  ([signatures](signatures.md)). `submit` checks it before any guard runs:
   the signature, then, under the log's head lock, that the device is a
   current key of the actor (the keyring, the `person` feat's) and that its
   nonce was never counted. A forged signature, a revoked or another
@@ -117,21 +120,21 @@ sequenceDiagram
   restart every connection in the scope, in about 0.2 s, and lose nothing
   committed.
 - **A scope's database is the unit** that moves, backs up and replays: state,
-  log, rules and the notary's key together. The notary is a layer under
+  log, guards and the notary's key together. The notary is a layer under
   every feat, not a feat, and has no writes of its own; moving it is moving
   the database to another host, which arrives at rung 6
   ([ratchet](ratchet.md#moving-a-notary)).
-- **Who may write is a rule like any other.** Each op that needs a power
+- **Who may write is checked by a guard like any other.** Each op that needs a power
   names it in `cella.power`, registered by its feat; the `circle-membership`
-  graft attaches a rule to every such op that the actor holds, on the
+  graft attaches a guard to every such op that the actor holds, on the
   verdict date, a seat whose role has a mandate granting the power, within
   its limit for the write's amount. A write with no power is the actor's
   own (a profile, a device), a member's of a roll or a circle (a stance,
   a proposal, a close) or decided (an admission, an adoption, a seat):
-  its label declares that check and a rule enforces it, and `cella check
+  its label declares that check and a guard enforces it, and `cella check
   feats` refuses an op that names neither, so nothing is allowed by
   omission. Money leaves a cash account only through writes with their
-  own right and a rule that checks the entry is exactly what they say:
+  own right and a guard that checks the entry is exactly what they say:
   `transaction.pay` and `expense.reimburse` within their power's limit,
   `payslip:run.pay` and `account:capital.repay` under their power, and
   `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
@@ -157,7 +160,7 @@ sequenceDiagram
   ([ballots](../../apps/org/feats/decision/index.md#ballots)). A write's
   transaction reads the whole state, whoever asked for it (`cella.writing()`):
   the notary judges whether they may, and a write's state must not depend
-  on who wrote it. The rules role reads everything. The statements,
+  on who wrote it. The guards role reads everything. The statements,
   rubric by rubric, an entry's amount, a project's burn, a
   distribution's divisions, a decision's tally and the year's return to the federation sum
   the whole for every reader, as functions running as their owner; the
@@ -168,69 +171,69 @@ sequenceDiagram
   every commitment in it is about, or to a holder of the power its op
   needs.
 - **Confluent writes are logged in signed batches** once devices queue
-  them offline (rung 2); until then each goes through the server's rules
+  them offline (rung 2); until then each goes through the server's guards
   on its own.
 
-## Rules
+## Guards
 
 The extension is cella core's semantics exposed as SQL, wrapping the Rust
-rules crate, which also compiles to WASM for browsers, devices and auditors:
+guards crate, which also compiles to WASM for browsers, devices and auditors:
 
 - types: `cella.amount`, positive cents; balances are signed and derived;
 - aggregates: `cella.consent`, `cella.majority`, …; an outcome is folded from
   the votes, never stored;
 - the write being judged: `cella.op()`, `cella.actor()`, `cella.device()`;
   whether the actor may use a power is not a primitive but the
-  `circle-membership` graft's composed rule, `circle_membership.may(actor, power,
+  `circle-membership` graft's composed guard, `circle_membership.may(actor, power,
   cents, day)`, since only that graft sees both mandates and seats;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;
 - time: `cella.verdict_date()`, never `now()`;
 - the notary: `cella.submit`, log verification, proofs.
 
-Rules come in four layers:
+Guards come in four layers:
 
 | Layer | Who changes it | Written as |
 |---|---|---|
 | Primitives | us, by release | Rust: the `cella.*` types, aggregates and functions |
-| Composed rules | power users and module developers, adopted by decision | `LANGUAGE sql` functions over the primitives, in the declared subset |
+| Composed guards | power users and module developers, adopted by decision | `LANGUAGE sql` functions over the primitives, in the declared subset |
 | Parameters | circles and the assembly | rows: mandates, limits, the procedure each circle uses |
 | Members' view | members | forms that read back as sentences |
 
 The law for each legal form is ours to write, as primitives and composed
-rules. A co-op's own rules live in custom feats, each with its own schema,
+guards. A co-op's own guards live in custom feats, each with its own schema,
 enabled by decision.
 
-Composed rules are a declared subset of SQL: `SELECT`, joins over the
+Composed guards are a declared subset of SQL: `SELECT`, joins over the
 scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
 primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
-rule is written as a `BEGIN ATOMIC` body. At rung 1 the subset is a
+guard is written as a `BEGIN ATOMIC` body. At rung 1 the subset is a
 check-time boundary, not a runtime one: `cella check feats` parses each
-rule's SQL with libpg_query and refuses one outside the subset at commit
+guard's SQL with libpg_query and refuses one outside the subset at commit
 time, before it ever runs; nothing checks it again once a decision adopts
-it. Resolving a rule's dependencies against Postgres's catalogue, which
+it. Resolving a guard's dependencies against Postgres's catalogue, which
 would see the casts and operators the parser cannot, is research only
 (`research/pgrx/`), not yet part of the check. A statement timeout bounds
 evaluation. The log records
-the text and version of every rule that decided a verdict.
+the text and version of every guard that decided a verdict.
 
-A rule runs as `cella_rules`, never with the extension owner's rights:
+A guard runs as `cella_guards`, never with the extension owner's rights:
 `submit` switches to that role in a security-restricted operation around
-each rule, as Postgres does for a security-definer function. The role
+each guard, as Postgres does for a security-definer function. The role
 reads only what each feat and graft grants it, its own schema, and can
 write nothing, take no receipt, call no `submit`, and read neither the key
-file nor its setting. A rule declared `SECURITY DEFINER` is refused.
+file nor its setting. A guard declared `SECURITY DEFINER` is refused.
 
-SQL is the source of truth for rules. The browser may preview a rule
+SQL is the source of truth for guards. The browser may preview a guard
 through the WASM primitives but never re-implements one in TypeScript.
 
 PGlite, Postgres compiled to WASM, cannot load a pgrx extension. On a device
-the primitives first run beside it, as WASM in JavaScript, and composed rules
+the primitives first run beside it, as WASM in JavaScript, and composed guards
 wait. To bring them onto devices, the same pure crate is compiled for
 PGlite's toolchain and wrapped in a thin C binding that registers the same
 `cella.*` surface; that binding is research for rung 7.
 
-Five catches keep local-first (rung 7) open, so that composed rules can run
+Five catches keep local-first (rung 7) open, so that composed guards can run
 without the server's Postgres on a later runtime:
 
 - the declared subset;
@@ -239,7 +242,7 @@ without the server's Postgres on a later runtime:
 - the extension's SQL surface declared in one place: a fixed list of types,
   functions, aggregates and operators, each a thin wrapper over the crate
   with no logic of its own, so a second binding only wraps the list;
-- each rule's text and version in the log;
+- each guard's text and version in the log;
 - a conformance suite, Lanterne's cases and their expected verdicts,
   runnable against any engine: Postgres, PGlite, or a future runtime.
 
@@ -303,7 +306,7 @@ the `loro` crate pinned to the browser's `loro-crdt`); the server never
 takes a hash from a client. The browser computes the same bytes to
 preview the hash while members edit, and the document feat's tests hold
 the two to the same bytes. An adoption's log entry commits to the hash,
-and `decision-document`'s rule refuses to adopt a version that hashes
+and `decision-document`'s guard refuses to adopt a version that hashes
 otherwise than the decision names.
 
 ## Personal data
@@ -341,7 +344,7 @@ erased until their legal clock runs out.
   draw, and a spread's instalment, are logged as commitments,
   their member the subject. So an entry's digest confirms no guess at a
   colleague's pay, time or capital, and the vault opens the figure to
-  whoever `cella.disclosed` lets read it. A rule reads such a figure from
+  whoever `cella.disclosed` lets read it. A guard reads such a figure from
   the row its write made, since the commitment is all the payload gives
   it; that the two hold the same figure is the handler's to keep, and
   the vault shows it to an audit. The books stay every member's: the
@@ -365,7 +368,7 @@ erased until their legal clock runs out.
   a member's record is kept in the file feat's part for its class, its
   name and bytes registered there; the log holds commitments to its name
   and its BLAKE3, never the bytes, and erasure empties them. Who may open
-  one is a rule, the file feat's and the grafts' that see a power over
+  one is a guard, the file feat's and the grafts' that see a power over
   what it records.
 - **Erasure** is a write: `membership:member:erase`, decided, for a former
   member's whole profile, the person's; `person:person:forget`, the
@@ -382,7 +385,7 @@ erased until their legal clock runs out.
 ## The analytics role
 
 Analytics read the scope through `cella_analytics`, a role apart from the
-app's and the rules': it logs in, every transaction it opens is
+app's and the guards': it logs in, every transaction it opens is
 read-only (`default_transaction_read_only`), it owns nothing and runs
 past no row-level security. `cella migrate` grants it SELECT on each
 view a slice publishes in its analytical contract, and USAGE on that
@@ -432,7 +435,7 @@ What the build does not yet do, and what lifts each:
   verdict against the app's role, a handler, an import and any session
   that does not unbind, but a superuser can set `cella.unbound`, drop the
   trigger or replicate around it, as a host can do anything to a database
-  it runs. Within a write, a rule checks that it did what its payload
+  it runs. Within a write, a guard checks that it did what its payload
   names, never that it did nothing else, so a handler's bug can change
   more under its verdict than its payload says. The feats' triggers hold
   the invariants whoever writes. Nothing at rung 1 lifts either: the
@@ -497,4 +500,4 @@ What the build does not yet do, and what lifts each:
 ## Open
 
 - Whether personal data enters the log only for ordered writes.
-- The late-write rules for offline writes (rung 2).
+- The late-write guards for offline writes (rung 2).

@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -48,7 +48,7 @@ writes are listed in `decision.cites` by the `decision-membership` graft.
   `active`, `suspended`, `exited`), `since` (admitted) and shares, and the
   days it was `invited`, `suspended` and `exited`. A trigger lets a status
   move only along that lifecycle, raising SQLSTATE `09000` otherwise. The
-  app role may select, insert and update; the rules role, `cella_rules`,
+  app role may select, insert and update; the guards role, `cella_guards`,
   may select.
 - `membership.link`, an invitation's links, each by its digest: the
   SHA-256 of a 32-byte secret the inviter's browser drew, which only the
@@ -78,7 +78,7 @@ person, and to its link's digest; an acceptance's, to the link and the key
 it enrolled, so the log says which device took the invitation up. The
 label is the invitee's wording and stays out.
 
-## Rules
+## Guards
 
 - `membership.invites`, on `membership:member:invite`: the write invited the member, on the verdict date.
 - `membership.carries`, on `membership:member:invite`: the link its payload names, if any, is the member's, made by this write.
@@ -88,7 +88,7 @@ label is the invitee's wording and stays out.
 - `membership.ends`, on `membership:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
 - `membership.erases`, on `membership:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited decision asks it is the `decision-membership` graft's rule on the same ops; whether it closed and passed on its roll, `circle-decision-membership`'s.
+Whether the cited decision asks it is the `decision-membership` graft's guard on the same ops; whether it closed and passed on its roll, `circle-decision-membership`'s.
 
 ## Handlers
 
@@ -109,7 +109,7 @@ Whether the cited decision asks it is the `decision-membership` graft's rule on 
   accepted }`. A secret no link of theirs is the digest of, an
   invitation taken up already or a device enrolled already is refused
   before the notary.
-- `admit` (ordered), and `admitting`, its state alone, which the close of the deciding decision runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the rules to refuse. Submits `{ member, shares, decision }`.
+- `admit` (ordered), and `admitting`, its state alone, which the close of the deciding decision runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, decision }`.
 - `suspend`, `exit` (ordered): set the status and its day; submit `{ member, decision }`. `circle-decision-membership` carries them out when the decision that asks them passes.
 - `erase` (ordered): submits `{ member, decision, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-decision-membership` carries it out when the decision that asks it passes.
 
@@ -119,7 +119,7 @@ An exit freezes the member's capital, which is the books', not this
 feat's. The exit sets `status` to `exited` and `exited` to the verdict
 date in its own transaction, and its payload names the member and the
 decision: a graft joining `membership` to the books (`account-membership`)
-attaches a trigger to that update, or a rule to `membership:member:exit`, and
+attaches a trigger to that update, or a guard to `membership:member:exit`, and
 so settles or is refused with the exit itself. A reaction to the settled
 op in a slice's `on` runs only for a write made from a page, not for one
 a close carries out, so the freeze belongs in SQL.
@@ -166,8 +166,8 @@ capital (`account-membership`). Own and decide reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
 from the statutes' terms (`account-membership`); and what they decide,
 from their seats and mandates (`circle-membership`). Each slice writes its
-sentences from its own rules and parameters, so the page says what the
-rules say. For a person who is no member, both say what joining would be.
+sentences from its own guards and parameters, so the page says what the
+guards say. For a person who is no member, both say what joining would be.
 
 In the inbox, the person's parent's, the membership adds their invitation
 while they are invited, to take up on their Joining tab.

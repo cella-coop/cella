@@ -43,7 +43,7 @@ A node is a directory with a `feat.toml`. It holds:
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
   core is its shared library layer: `ops` (labels, permissions, outcomes),
-  `crypto`, `log`, `keystore`, `rules` (the pure rule primitives), `notary`
+  `crypto`, `log`, `keystore`, `guards` (the pure guard primitives), `notary`
   (the `cella` Postgres extension over them), `db` (a write's transaction),
   `sign` (a device's signature on a write), `vat` (a document's lines,
   their amounts and VAT, which invoices and bills share), `analytics`
@@ -175,7 +175,7 @@ graft that joins all the feats involved. A decision's roll needs seats
 and so is everything that counts the roll. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
 cites a decision lists its op in `decision.cites`, and the graft that
-counts the roll attaches its rule to every op listed, so neither reads the
+counts the roll attaches its guard to every op listed, so neither reads the
 other.
 
 ### Writes stay home
@@ -186,8 +186,8 @@ lower-order grafts, and writes only its own schema. It changes a feat
 only by calling that feat's published write from its handler, inside
 the one `write`, as `invoice-transaction` calls `record()` from
 `@cella/org-transaction/api`. It reacts to a feat's settled write
-through its server slice's `on`, and it refuses a feat's write by a rule
-on the op in `cella.rule`, which the notary runs. It never uses a
+through its server slice's `on`, and it refuses a feat's write by a guard
+on the op in `cella.guard`, which the notary runs. It never uses a
 trigger on the feat's table for either. What a graft would only copy
 from a feat's row it reads by a view in its own schema, as
 `decision_document.adoption` reads what each motion to adopt names. A nested feat changes its
@@ -210,14 +210,14 @@ handler and its feat's published write. A write no tool can see, such as
 SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
 is left to review.
 
-## Rules
+## Guards
 
-A rule lives at the lowest level that owns it: in a feat if it concerns
+A guard lives at the lowest level that owns it: in a feat if it concerns
 only that feat's collection, in a graft if it concerns a relationship, and
 in a node's core only if it spans everything below that node.
 
 - A payment beyond an invoice's total leaves a credit owed to the client,
-  rather than being refused: the invoice feat's rule, since the payments
+  rather than being refused: the invoice feat's guard, since the payments
   are part of its collection.
 - Nothing posts into a closed period: the `account-transaction` graft's.
   The period is an account's and the entry a transaction's; neither feat
@@ -226,15 +226,15 @@ in a node's core only if it spans everything below that node.
   members approved it is the `decision-patronage` graft's, and that the
   year's books are closed `account-patronage`'s.
 
-A rule is SQL in its owner's schema (see [SQL](#sql)). The notary runs
-every rule that attaches to an ordered write, those of the feat and of the
-grafts it touches; it holds no rules of its own beyond the primitives. How
-rules are composed and adopted is in [trust](trust.md#rules).
+A guard is SQL in its owner's schema (see [SQL](#sql)). The notary runs
+every guard that attaches to an ordered write, those of the feat and of the
+grafts it touches; it holds no guards of its own beyond the primitives. How
+guards are composed and adopted is in [trust](trust.md#guards).
 
 ## SQL
 
 Each feat and each graft owns a Postgres schema and the SQL in it: tables,
-row-level policies, triggers and composed rules, which are plain
+row-level policies, triggers and composed guards, which are plain
 `LANGUAGE sql` functions over the `cella.*` primitives. The SQL sits in a
 `sql/` directory beside the core package: `feats/<feat>/core/sql/`,
 `grafts/<graft>/sql/`. A schema takes its owner's name; a graft's hyphens
@@ -256,7 +256,7 @@ parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
 holds a foreign key out of it; writes `cella.*` other than to register,
-under its own name, its rules on its own ops, those of the feats it
+under its own name, its guards on its own ops, those of the feats it
 joins and those of the lower-order grafts it builds on, the power each of
 its own ops needs as a literal row, the powers that read the rows of its
 own feat or of the feats it joins (`cella.reading`), a feat only the
@@ -275,7 +275,7 @@ A table holding a person's pay, time, capital, personal files or a
 capital account's lines keeps row-level security for the app role: the
 person reads their own rows; whoever holds a power its feat names in
 `cella.reading` reads them all; a graft that knows more opens a row
-further through `cella.reach`; a write's transaction and the rules role
+further through `cella.reach`; a write's transaction and the guards role
 read the whole. The pattern every policy takes, the power checks asked
 once per query:
 `USING ((SELECT cella.sees('<feat>')) OR member = cella.reader() OR
@@ -287,8 +287,8 @@ instead. A stance on a secret ballot is the one row no power opens: its
 policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
 and a decision's tally sums it as its owner, sealed until the close.
 
-SQL is the source of truth for rules. TypeScript calls them and never
-re-implements one; the browser may preview a rule through the primitives
+SQL is the source of truth for guards. TypeScript calls them and never
+re-implements one; the browser may preview a guard through the primitives
 compiled to WASM.
 
 ### Migrations
@@ -331,7 +331,7 @@ EXTENSION cella UPDATE` ([the notary](../../apps/org/core/notary/index.md#build)
 
 Analytics read the scope apart from everything else: the analytics shell
 reads the slices' analytical views through a read-only role, and joins
-across slices there and only there. A rule that decides a write stays in
+across slices there and only there. A guard that decides a write stays in
 its slice, through the notary; an analytical view only describes.
 
 Each slice that has something to share publishes it in its **analytical
@@ -339,7 +339,7 @@ contract**, `sql/analytics.sql` beside its migrations: views in its own
 schema, each with the columns it agrees to share, and comments on them.
 A view reads what the slice's other SQL may read ([above](#sql)), its
 amounts in cents (`cella.cents`), and its columns are plain types any
-client reads. A slice that holds only rules or registries publishes
+client reads. A slice that holds only guards or registries publishes
 none; a feat's contract shares its collection, and a graft's what it
 joins, such as `account_transaction.movements`, the journal by account
 and day, which every statement sums. No core publishes one but the
@@ -499,7 +499,7 @@ form actions of the collection's slices; `/search` for the command menu;
 events, which the collection's owner names (`streams`, such as a
 document's edits as they settle); `/[collection]/[id]/content`, an item's
 bytes, such as a file's, which the collection's owner serves (`content`)
-to whom its rule or an extension's `allows` opens them; `/sign-in`,
+to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
 membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
@@ -518,10 +518,10 @@ nests in, and two extensions replacing one write. An extension's write replaces 
 owner's of the same name: `invoice-transaction`'s issue, which posts the
 invoice in the same transaction, replaces the invoice feat's.
 
-The shell writes no SQL and re-implements no rule: it reads through each
+The shell writes no SQL and re-implements no guard: it reads through each
 slice's reads and writes through its handlers, which sign, submit and
 return Settled, Refused or Pending. Its pages show each outcome, with
-the rule's reason when refused. Every route but the sign-in, its session
+the guard's reason when refused. Every route but the sign-in, its session
 and an invitation's link needs a session, a person signed in on one of
 their current devices (`hooks.server.ts`, `lib/server/session.ts`): a
 page asked for without one goes to the sign-in, and anything else is
@@ -574,7 +574,7 @@ Analytics are read apart from everything else, by the **analytics
 shell**: a DuckDB 2.0 server per scope that reads the views the slices
 publish in their analytical contracts ([above](#analytical-contracts))
 and joins them. Every join across slices for a report happens there and
-only there; a rule that decides a write stays in its slice, through the
+only there; a guard that decides a write stays in its slice, through the
 notary, and the shell only describes.
 
 It is no third root and no package: a node's roots assemble packages
@@ -639,7 +639,7 @@ A label also names the power the write needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
-`circle-membership` graft's rule reads; the label mirrors it for the
+`circle-membership` graft's guard reads; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference. Every write
 is signed by a device of its actor and carries its request
 ([signatures](signatures.md)).
@@ -650,11 +650,11 @@ that allows it instead: `self`, the actor's own (a profile, a device);
 `seat`, a member seated in the circle it concerns (proposing or closing
 a decision, a circle's message); or `decided`, the decision it cites
 carried (an admission, an adoption, a seat):
-`confluent({ check: 'seat' })`. A check is backed by SQL: a rule
-registered on the op in `cella.rule`, or for `decided` a row in
-`decision.cites`, to which `circle-decision-membership` attaches its rule.
+`confluent({ check: 'seat' })`. A check is backed by SQL: a guard
+registered on the op in `cella.guard`, or for `decided` a row in
+`decision.cites`, to which `circle-decision-membership` attaches its guard.
 `cella check feats` refuses an op that names neither a power nor a
-check, and a check no literal row backs; that the rule does what the
+check, and a check no literal row backs; that the guard does what the
 check says is its owner's and its tests'. A write not yet decided as it
 should be, such as granting a mandate before a graft ties the decision
 to it, needs a power no mandate grants until then.

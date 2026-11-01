@@ -1,6 +1,6 @@
 +++
 title = "expense-file"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 The receipts on an expense: files of class `expense-receipt` about its
@@ -23,7 +23,7 @@ file attached once.
 Each stores the receipt about the acting member, and the log commits to
 its name and BLAKE3.
 
-## Rules
+## Guards
 
 - `expense_file.attaches`, on both: the receipt was uploaded by this write
   about the actor, of class `expense-receipt`, and is attached to their

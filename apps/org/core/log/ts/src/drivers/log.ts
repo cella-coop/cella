@@ -1,7 +1,7 @@
 import type { Db, Read } from '@cella/org-db'
 import type { Detail, Entry, Head } from '../models/log.ts'
 
-const entry = `l.n::text AS id, l.n::int AS n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD') AS date, l.rules,
+const entry = `l.n::text AS id, l.n::int AS n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD') AS date, l.guards,
   l.receipt::int AS receipt, r.at, encode(r.device, 'hex') AS device`
 
 // The scope every write signature names, as the database is set.
@@ -50,11 +50,11 @@ export async function detail(db: Db, n: string): Promise<Detail | null> {
     return null
   }
   const texts = await db.query<{ hash: string; body: string }>(
-    `SELECT encode(hash, 'hex') AS hash, body FROM cella.rule_text WHERE encode(hash, 'hex') = ANY($1)`,
-    [found.rules.map((r) => r.text)],
+    `SELECT encode(hash, 'hex') AS hash, body FROM cella.guard_text WHERE encode(hash, 'hex') = ANY($1)`,
+    [found.guards.map((r) => r.text)],
   )
   const bodies = new Map(texts.rows.map((t) => [t.hash, t.body]))
-  return { ...found, texts: found.rules.map((r) => ({ ...r, body: bodies.get(r.text) ?? null })) }
+  return { ...found, texts: found.guards.map((r) => ({ ...r, body: bodies.get(r.text) ?? null })) }
 }
 
 // Whether the whole log verifies, its head and the scope's key.

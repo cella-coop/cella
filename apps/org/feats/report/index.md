@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -125,7 +125,7 @@ report is saved, and saved again under its id by its owner.
 |---|---|---|
 | save | none: the member's own | every member |
 
-## Rules
+## Guards
 
 `report.saves(payload)`, registered on `report:report:save`: the report
 saved is the actor's, saved on the verdict date, a `custom` one with a
@@ -144,9 +144,9 @@ reasons and never saved, then upserts the actor's report.
 
 - `report.report`: the saved reports, the four built-in ones seeded.
 - `report.threshold`: the watch's thresholds by the day they apply from.
-- `report.saves(payload)`: the save's rule.
+- `report.saves(payload)`: the save's guard.
 
-The app role reads both tables and writes reports; the rules role reads
+The app role reads both tables and writes reports; the guards role reads
 them.
 
 ## Tests

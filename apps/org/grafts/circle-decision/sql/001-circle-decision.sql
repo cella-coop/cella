@@ -125,7 +125,7 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:propose', 'circle_decision.asks(jsonb)', 'circle-decision'),
   ('circle:circle:nest', 'circle_decision.nests(jsonb)', 'circle-decision'),
   ('circle:mandate:grant', 'circle_decision.grants(jsonb)', 'circle-decision'),
@@ -135,5 +135,5 @@ INSERT INTO decision.cites (op, owner) VALUES
   ('circle:mandate:grant', 'circle-decision'),
   ('circle:mandate:revoke', 'circle-decision');
 
-GRANT USAGE ON SCHEMA circle_decision TO cella_app, cella_rules;
-GRANT SELECT ON circle_decision.motion TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_decision TO cella_app, cella_guards;
+GRANT SELECT ON circle_decision.motion TO cella_app, cella_guards;

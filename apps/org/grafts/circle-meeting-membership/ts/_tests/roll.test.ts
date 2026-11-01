@@ -2,7 +2,7 @@
 // circle, meeting and member feats and the grafts beneath this one: the
 // roll is the circle's seats on the meeting's day, guests apart; the
 // quorum counts seated members present against the circle's share; the
-// minutes' keeper records only those expected; and the agenda's rule
+// minutes' keeper records only those expected; and the agenda's guard
 // wants a seat. Run by `cella test slice circle-meeting-membership`.
 
 import { after, before, test } from 'node:test'
@@ -13,7 +13,7 @@ const db = new pg.Client()
 const at = (name: string) => `${name}@lanterne.example`
 const seated = ['camille', 'yusuf', 'hugo', 'malik', 'julien']
 
-const rule = async (fn: string, payload: object) =>
+const guard = async (fn: string, payload: object) =>
   (await db.query<{ r: string | null }>(`SELECT circle_meeting_membership.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
@@ -75,20 +75,20 @@ test('the quorum counts seated members present against the circle\'s share, gues
 })
 
 test('the minutes\' keeper records only those expected; anyone else marks themselves', async () => {
-  assert.equal(await rule('records', { meeting: 'coordination-2026-10-26', member: at('hugo') }), null)
+  assert.equal(await guard('records', { meeting: 'coordination-2026-10-26', member: at('hugo') }), null)
   assert.equal(
-    await rule('records', { meeting: 'coordination-2026-10-26', member: at('thomas') }),
+    await guard('records', { meeting: 'coordination-2026-10-26', member: at('thomas') }),
     'thomas@lanterne.example holds no seat in coordination on 2026-10-26: only they may mark themselves, as a guest',
   )
   assert.equal(
-    await rule('records', { meeting: 'coordination-2026-10-26', member: at('julien') }),
+    await guard('records', { meeting: 'coordination-2026-10-26', member: at('julien') }),
     'julien@lanterne.example holds no seat in coordination on 2026-10-26: only they may mark themselves, as a guest',
     'his seat ended before the meeting',
   )
 })
 
 test('outside a write there is no actor: no seat for the agenda, no power over the meeting', async () => {
-  assert.equal(await rule('sits', { meeting: 'coordination-2026-10-26' }), 'an agenda is drawn up by a member of its circle, and this write has no actor')
-  assert.equal(await rule('sits', { meeting: 'nowhere' }), 'no meeting nowhere')
-  assert.equal(await rule('reaches', { meeting: 'nowhere' }), null, 'a meeting that does not exist is its feat\'s to refuse')
+  assert.equal(await guard('sits', { meeting: 'coordination-2026-10-26' }), 'an agenda is drawn up by a member of its circle, and this write has no actor')
+  assert.equal(await guard('sits', { meeting: 'nowhere' }), 'no meeting nowhere')
+  assert.equal(await guard('reaches', { meeting: 'nowhere' }), null, 'a meeting that does not exist is its feat\'s to refuse')
 })

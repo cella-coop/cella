@@ -28,9 +28,9 @@ BEGIN ATOMIC
   LEFT JOIN file_membership.record r ON r.member = x.member AND r.file = x.file;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('file-membership:member:attach', 'file_membership.files(jsonb)', 'file-membership');
 
-GRANT USAGE ON SCHEMA file_membership TO cella_app, cella_rules;
-GRANT SELECT ON file_membership.record TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA file_membership TO cella_app, cella_guards;
+GRANT SELECT ON file_membership.record TO cella_app, cella_guards;
 GRANT INSERT ON file_membership.record TO cella_app;

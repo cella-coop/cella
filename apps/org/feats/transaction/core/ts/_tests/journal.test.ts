@@ -118,11 +118,11 @@ test('a correction names its base, and a second from the same base is refused by
   const reverse: Line[] = rent.map((l) => ({ ...l, side: l.side === 'debit' ? 'credit' : 'debit' }))
   const first = await post(reverse, 'je-0001', 1)
   const second = await post(reverse, 'je-0001', 2)
-  const rule = async (entry: string | undefined, base: string | null) =>
+  const guard = async (entry: string | undefined, base: string | null) =>
     (await db.query<{ r: string | null }>('SELECT transaction.corrects($1) AS r', [{ entry, corrects: 'je-0001', base }])).rows[0].r
-  assert.equal(await rule(first.id, null), null)
-  assert.equal(await rule(second.id, null), `je-0001 moved: its correction is ${first.id}, not none`)
-  assert.equal(await rule(second.id, first.id ?? null), null)
+  assert.equal(await guard(first.id, null), null)
+  assert.equal(await guard(second.id, null), `je-0001 moved: its correction is ${first.id}, not none`)
+  assert.equal(await guard(second.id, first.id ?? null), null)
 })
 
 test('as the app role, whoever keeps the books reads every entry and line; a graft opens an account\'s lines further; no one else reads any', async () => {

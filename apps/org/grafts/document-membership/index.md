@@ -1,6 +1,6 @@
 +++
 title = "document-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 Who has read the co-op's texts: a member marks a document's binding
@@ -18,7 +18,7 @@ the `membership` feat.
   later adoption asks a new reading.
 
 The app role may select, insert and keep a reading's first day; the
-rules role may select.
+guards role may select.
 
 ## Writes
 
@@ -26,7 +26,7 @@ rules role may select.
 |---|---|---|---|
 | `document-membership:version:read` | confluent | `self` | a fact the member states of themselves; marking a version read again changes nothing |
 
-## Rules
+## Guards
 
 - `document_membership.reads`, on `document-membership:version:read`: the
   reading is the actor's own, of a version that exists, marked on the
@@ -36,7 +36,7 @@ rules role may select.
 
 `ts/_tests/reading.test.ts` (`cella test slice document-membership`): the
 texts each member is to read, a new adoption asking a new reading, and
-the rule outside a write.
+the guard outside a write.
 
 ## Shell
 

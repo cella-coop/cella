@@ -1,6 +1,6 @@
 +++
 title = "payslip-timesheet"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 A pay run from approved time: each payslip holds the minutes of its
@@ -12,7 +12,7 @@ month is approved. Declared by `payslip`.
 `payslip_timesheet` (`sql/`): `minutes(member, month)`, the minutes a
 member logged in a month.
 
-## Rules
+## Guards
 
 - `payslip_timesheet.timed`, on `payslip:run:generate`: every payslip's
   member had their month approved, and the payslip holds its minutes. A

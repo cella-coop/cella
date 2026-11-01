@@ -1,7 +1,7 @@
-//! The `cella` Postgres extension: the notary and the rule primitives as
+//! The `cella` Postgres extension: the notary and the guard primitives as
 //! SQL. Its whole SQL surface is declared in [`surface`], each item a thin
-//! wrapper over `cella-rules`; [`notary`] is the plumbing `submit` and
-//! `verify_log` need to reach the log through SPI. No rule lives here.
+//! wrapper over `cella-guards`; [`notary`] is the plumbing `submit` and
+//! `verify_log` need to reach the log through SPI. No guard lives here.
 
 use pgrx::guc::{GucContext, GucFlags, GucRegistry, GucSetting};
 use pgrx::prelude::*;

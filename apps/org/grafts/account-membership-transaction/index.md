@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -51,7 +51,7 @@ it builds on `account-membership` and `account-transaction`. Declared by
   draws against their limit.
 
 The app role may select and insert, set a subscription's cost and what
-is cancelled and a repayment's entry and day; the rules role may select.
+is cancelled and a repayment's entry and day; the guards role may select.
 
 The amount of a payment in and of a draw is personal data of class
 `books`, registered by the member's address (`sql/004-salted.sql`):
@@ -77,7 +77,7 @@ subscription, posted as `paying` gives it, and recorded as paid in.
 of a departed member: the bank pays their next repayment, `4567` debited and
 `512` credited, on the verdict date, and the repayment is paid.
 
-## Rules
+## Guards
 
 - `account_membership_transaction.draws`, on `account:account:draw`: the draw
   is the actor's own, they are active, their capital account is not
@@ -93,7 +93,7 @@ of a departed member: the bank pays their next repayment, `4567` debited and
   before it is paid, and the entry is exactly it, `4567` debited and
   `512` credited.
 
-At rung 1 the rule runs under the log's head lock, so two draws of one
+At rung 1 the guard runs under the log's head lock, so two draws of one
 member are judged one after the other. At rung 2 a device holds the limit
 offline.
 

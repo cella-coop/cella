@@ -1,7 +1,7 @@
 // The files alone, on a database holding only the app's core and this
 // feat: a file of the co-op's own uploaded through its write, named by the
 // BLAKE3 of its bytes, which the log commits to; a file never changes and
-// holds at most 10 MiB; who may open it by its own rule; what `file.stored`
+// holds at most 10 MiB; who may open it by its own guard; what `file.stored`
 // refuses; and a personal file's name and hash committed to, never logged.
 // Run by `cella test slice file`.
 

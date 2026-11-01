@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -25,7 +25,7 @@ event is `carried`.
 `payslip_transaction` (`sql/`): `posting`, the entry, the run's month and
 the event; `lines(month, event)`.
 
-## Rules
+## Guards
 
 - `payslip_transaction.accrued`, on `payslip:run:approve`, and `.paid`, on
   `payslip:run:pay`: the run has a posting for the event, dated as above,

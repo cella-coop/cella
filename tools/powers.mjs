@@ -1,5 +1,5 @@
 // powers: the power each write needs is registered in SQL, in cella.power,
-// which the rules read and which is the source of truth, and mirrored in
+// which the guards read and which is the source of truth, and mirrored in
 // the op's label in ops.ts, which the TypeScript reads. This keeps the two
 // equal: every power in one is in the other, with the same amount field.
 // And no write is allowed by omission: an op with no power declares the
@@ -57,17 +57,17 @@ export function agree(ops, registered) {
   return errors
 }
 
-// The checks a label may declare, and what backs each: a rule registered
-// on the op in cella.rule, or for `decided` a row in decision.cites, to
-// which the graft that counts a decision's roll attaches its rule.
+// The checks a label may declare, and what backs each: a guard registered
+// on the op in cella.guard, or for `decided` a row in decision.cites, to
+// which the graft that counts a decision's roll attaches its guard.
 const checks = new Set(['self', 'roll', 'seat', 'decided', 'first'])
 
 // Where an op is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
-// registers: `rules` in cella.rule and `cites` in decision.cites.
+// registers: `guards` in cella.guard and `cites` in decision.cites.
 export function covered(ops, found) {
   const errors = []
-  const ruled = new Set(found.rules.map((r) => r.op))
+  const judged = new Set(found.guards.map((r) => r.op))
   const cited = new Set(found.cites.map((c) => c.op))
   for (const o of ops.filter((o) => !o.power)) {
     if (!o.check) {
@@ -76,8 +76,8 @@ export function covered(ops, found) {
       errors.push(`${o.file}: ${o.op} declares the check ${o.check}, which is none of ${[...checks].join(', ')}`)
     } else if (o.check === 'decided' && !cited.has(o.op)) {
       errors.push(`${o.file}: ${o.op} is decided, but no SQL lists it in decision.cites`)
-    } else if (o.check !== 'decided' && !ruled.has(o.op)) {
-      errors.push(`${o.file}: ${o.op} checks ${o.check}, but no SQL registers a rule on it in cella.rule`)
+    } else if (o.check !== 'decided' && !judged.has(o.op)) {
+      errors.push(`${o.file}: ${o.op} checks ${o.check}, but no SQL registers a guard on it in cella.guard`)
     }
   }
   return errors

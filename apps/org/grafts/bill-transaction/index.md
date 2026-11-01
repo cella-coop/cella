@@ -1,6 +1,6 @@
 +++
 title = "bill-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A bill's approval and its payment post balanced entries, in the same
@@ -26,7 +26,7 @@ event, one of each per bill; `lines(bill, event)`, the lines an event
 posts, which the handlers ask the database for, so the postings are
 SQL's, never TypeScript's.
 
-## Rules
+## Guards
 
 - `bill_transaction.charged`, on `bill:bill:approve`, and `.paid`, on
   `bill:bill:pay`: the bill has a posting for the event, dated on it,
@@ -38,7 +38,7 @@ That the entry lands in an open period is `account-transaction`'s.
 
 `approve` and `pay` wrap the bill feat's specs: the bill's state, then
 the entry through the transaction feat's `record`, then the posting,
-then `cella.submit` once. A refusal by any rule or trigger rolls all of
+then `cella.submit` once. A refusal by any guard or trigger rolls all of
 it back.
 
 ## Shell

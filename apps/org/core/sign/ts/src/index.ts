@@ -1,9 +1,9 @@
 // A member's device signs every write it asks for. The signature covers a
 // domain-separated text naming the scope, the op, the actor, the device,
 // the request's digest and a single-use nonce, so it names its request and
-// counts once; the notary checks it in `cella.submit` before any rule runs.
+// counts once; the notary checks it in `cella.submit` before any guard runs.
 // Only WebCrypto is used, Ed25519 and SHA-256, so the same code signs in a
-// browser and in Node. The message format is `cella_rules::sign`'s.
+// browser and in Node. The message format is `cella_guards::sign`'s.
 
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json }
 

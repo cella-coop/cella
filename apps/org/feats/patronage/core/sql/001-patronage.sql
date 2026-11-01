@@ -208,7 +208,7 @@ GROUP BY p.distribution, d.year, p.worker;
 -- least 25 % (3°), and the interest on capital no more than the reserves'
 -- share (1° and 2°) nor the work share (4°). The legal reserve's 15 % (1°)
 -- holds until the reserve reaches the highest capital, which the books
--- know: it is patronage-transaction's rule; that every period of the year
+-- know: it is patronage-transaction's guard; that every period of the year
 -- is closed, account-patronage's.
 CREATE FUNCTION patronage.splits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -242,7 +242,7 @@ END;
 -- patronage:distribution:approve — the year has adopted terms, the
 -- distribution names their basis, and each basis's parts add up to its
 -- portion of the work share, to the cent. That each part is the worker's
--- due on its basis is the rule of the graft that divides it.
+-- due on its basis is the guard of the graft that divides it.
 CREATE FUNCTION patronage.divides(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -264,7 +264,7 @@ END;
 
 -- patronage:distribution:distribute — the write distributed an approved
 -- split on the verdict date. What it posts, and what it credits to the
--- associates' capital, are the rules of the grafts that post and credit.
+-- associates' capital, are the guards of the grafts that post and credit.
 CREATE FUNCTION patronage.distributes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -297,14 +297,14 @@ BEGIN ATOMIC
   LEFT JOIN patronage.terms t ON t.id = x.terms;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:approve', 'patronage.splits(jsonb)', 'patronage'),
   ('patronage:distribution:approve', 'patronage.divides(jsonb)', 'patronage'),
   ('patronage:distribution:distribute', 'patronage.distributes(jsonb)', 'patronage'),
   ('patronage:terms:adopt', 'patronage.adopts(jsonb)', 'patronage');
 
-GRANT USAGE ON SCHEMA patronage TO cella_app, cella_rules;
-GRANT SELECT ON patronage.terms, patronage.distribution, patronage.share, patronage.part, patronage.statement TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA patronage TO cella_app, cella_guards;
+GRANT SELECT ON patronage.terms, patronage.distribution, patronage.share, patronage.part, patronage.statement TO cella_app, cella_guards;
 GRANT INSERT ON patronage.part TO cella_app;
 GRANT UPDATE (adopted) ON patronage.terms TO cella_app;
 GRANT UPDATE (approved, distributed) ON patronage.distribution TO cella_app;

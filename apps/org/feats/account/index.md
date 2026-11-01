@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -79,7 +79,7 @@ year.
 - **draw** is bounded because it spends a right granted in advance, the
   member's draw limit, which the `account-membership` graft holds. A draw
   within it settles at once and, at rung 2, offline; beyond it, it is
-  refused. It posts, so its handler and its rule are the
+  refused. It posts, so its handler and its guard are the
   `account-membership-transaction` graft's.
 - **terms.adopt** cites the decision that moved to adopt the terms
   (`account-decision`); it settles only if that decision closed and
@@ -93,15 +93,15 @@ year.
   refused for that period.
 - **capital.pay** is confluent because a payment in is a deposit: entries
   commute, and what is left to pay is their sum against the
-  subscription. At rung 1 the rule refuses one beyond what is owed. It
-  posts, so its handler and rule are `account-membership-transaction`'s.
+  subscription. At rung 1 the guard refuses one beyond what is owed. It
+  posts, so its handler and guard are `account-membership-transaction`'s.
 - **capital.spread** is the associate's own register, the latest
   standing: no more instalments than the statutes allow. The instalments
-  are withheld when a pay run is paid, so its handler and rule are
+  are withheld when a pay run is paid, so its handler and guard are
   `account-membership-payslip-transaction`'s.
 - **capital.repay** is ordered because a repayment is paid once and after
   the one before it, and not before the day it falls due. It posts, so
-  its handler and rule are `account-membership-transaction`'s.
+  its handler and guard are `account-membership-transaction`'s.
 
 ## Powers
 
@@ -125,7 +125,7 @@ period.open's; the `circle-membership` graft checks them.
 
 ## Invariants
 
-The account feat owns the rules about its own collection:
+The account feat owns the guards about its own collection:
 
 - every account of classes 1 to 7 has a rubric on the balance sheet, and
   a total adds and subtracts only rubrics of its own sheet;
@@ -185,8 +185,8 @@ its balance, as a bank overdraft is among the debts.
 
 Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
 (a capital account opens on admission), set a period's `closed`, an
-account's `frozen` and terms' `adopted`; the rules role,
-`cella_rules`, may select.
+account's `frozen` and terms' `adopted`; the guards role,
+`cella_guards`, may select.
 
 ## Personal data
 
@@ -195,7 +195,7 @@ A capital account's label names its member: personal data of class
 keeps ten years (Code de commerce, art. L123-22). Erasing a member who
 has left restricts it until `cella vault sweep` redacts it.
 
-## Rules
+## Guards
 
 - `account.opens`, on `account:period:open`: the period exists and the
   months follow one another with no gap.

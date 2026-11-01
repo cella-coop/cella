@@ -1,7 +1,7 @@
 // The timesheets alone, on a database holding only the app's core and
 // this feat: an entry makes its member's month, is corrected only by
 // lowering its time, an approved month takes no entry nor correction and
-// stays approved, only a submitted month is approved, and the rules refuse
+// stays approved, only a submitted month is approved, and the guards refuse
 // what is not the actor's own. Run by `cella test slice
 // timesheet`.
 
@@ -37,7 +37,7 @@ const refused = async (run: () => Promise<unknown>, says: RegExp) => {
   }
 }
 
-const rule = async (fn: string, payload: object) =>
+const guard = async (fn: string, payload: object) =>
   (await db.query<{ r: string | null }>(`SELECT timesheet.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
@@ -111,13 +111,13 @@ test('an approved month takes no new entry, and stays approved', async () => {
   await log('2026-11-02', 7)
 })
 
-test('outside a write the rules judge no one\'s time their own', async () => {
-  assert.match((await rule('logs', { member: lea, day: '2026-10-12' })) ?? '', /may not log time for lea@lanterne.example/)
-  assert.match((await rule('corrects', { entry: '1', minutes: 0 })) ?? '', /may not correct lea@lanterne.example's time/)
-  assert.equal(await rule('corrects', { entry: '0', minutes: 0 }), 'no entry 0')
-  assert.match((await rule('submits', { member: lea, month: '2026-11' })) ?? '', /may not submit lea@lanterne.example's time/)
-  assert.match((await rule('approves', { member: lea, month: '2026-10' })) ?? '', /was not approved by this write/)
-  assert.equal(await rule('approves', { member: lea, month: '2025-01' }), 'no timesheet lea@lanterne.example 2025-01')
+test('outside a write the guards judge no one\'s time their own', async () => {
+  assert.match((await guard('logs', { member: lea, day: '2026-10-12' })) ?? '', /may not log time for lea@lanterne.example/)
+  assert.match((await guard('corrects', { entry: '1', minutes: 0 })) ?? '', /may not correct lea@lanterne.example's time/)
+  assert.equal(await guard('corrects', { entry: '0', minutes: 0 }), 'no entry 0')
+  assert.match((await guard('submits', { member: lea, month: '2026-11' })) ?? '', /may not submit lea@lanterne.example's time/)
+  assert.match((await guard('approves', { member: lea, month: '2026-10' })) ?? '', /was not approved by this write/)
+  assert.equal(await guard('approves', { member: lea, month: '2025-01' }), 'no timesheet lea@lanterne.example 2025-01')
 })
 
 test('as the app role, a member reads their own entries, months and sheets; whoever approves time, everyone\'s; no one signed in, none', async () => {

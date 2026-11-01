@@ -26,6 +26,6 @@ $$;
 CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON membership_task.assignment
   FOR EACH ROW EXECUTE FUNCTION membership_task.resolves();
 
-GRANT USAGE ON SCHEMA membership_task TO cella_app, cella_rules;
-GRANT SELECT ON membership_task.assignment TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA membership_task TO cella_app, cella_guards;
+GRANT SELECT ON membership_task.assignment TO cella_app, cella_guards;
 GRANT INSERT, UPDATE, DELETE ON membership_task.assignment TO cella_app;

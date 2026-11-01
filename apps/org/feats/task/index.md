@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -36,7 +36,7 @@ Each field is its own register: a move and a change of priority both
 stand, and two moves of one task resolve to the later receipt. A move
 sets any status short of done, and moving a done task back reopens it;
 done is a completion, which records its day and keeps the first one.
-Nothing a task write changes is read by an ordered write's rule, so none
+Nothing a task write changes is read by an ordered write's guard, so none
 waits. `002-powers.sql` registers the power in `cella.power`, and the
 `circle-membership` graft checks it.
 
@@ -57,7 +57,7 @@ active member, `membership-task`'s.
 ## Schema
 
 `task` (`core/sql/`): `task.task` and `task.number`, the sequence its ids
-take. The app role may select, insert and update; the rules role may
+take. The app role may select, insert and update; the guards role may
 select.
 
 ## Shell

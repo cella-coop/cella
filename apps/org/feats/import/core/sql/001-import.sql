@@ -40,9 +40,9 @@ BEGIN ATOMIC
   LEFT JOIN import.run r ON r.id = x.run;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('import:run:record', 'import.records(jsonb)', 'import');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('import:run:record', 'import.records(jsonb)', 'import');
 
-GRANT USAGE ON SCHEMA import TO cella_app, cella_rules;
-GRANT SELECT ON import.run TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA import TO cella_app, cella_guards;
+GRANT SELECT ON import.run TO cella_app, cella_guards;
 GRANT INSERT ON import.run TO cella_app;
 GRANT USAGE ON SEQUENCE import.number TO cella_app;

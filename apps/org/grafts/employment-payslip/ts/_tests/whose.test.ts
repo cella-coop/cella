@@ -1,5 +1,5 @@
 // Whose pay is, on a database holding the app's core, the payslip and
-// worker feats and this graft: the rule on a run refuses a payslip of no
+// worker feats and this graft: the guard on a run refuses a payslip of no
 // worker's, and one of a worker not employed in its month, never before
 // their hire nor after they leave, member or not; each payslip names its
 // worker. Run by `cella test slice employment-payslip`.
@@ -78,9 +78,9 @@ test('a worker is paid for the month they leave, and none after', async () => {
   })
 })
 
-test('the rule runs on the run that makes the payslips, and no trigger of this graft\'s is left on the payslip feat\'s tables', async () => {
-  const rules = await db.query(`SELECT op FROM cella.rule WHERE fn = 'employment_payslip.whose(jsonb)'::regprocedure`)
-  assert.deepEqual(rules.rows, [{ op: 'payslip:run:generate' }])
+test('the guard runs on the run that makes the payslips, and no trigger of this graft\'s is left on the payslip feat\'s tables', async () => {
+  const guards = await db.query(`SELECT op FROM cella.guard WHERE fn = 'employment_payslip.whose(jsonb)'::regprocedure`)
+  assert.deepEqual(guards.rows, [{ op: 'payslip:run:generate' }])
   const triggers = await db.query(
     `SELECT tgname FROM pg_trigger WHERE tgrelid IN ('payslip.salary'::regclass, 'payslip.payslip'::regclass) AND tgname = 'worker'`,
   )

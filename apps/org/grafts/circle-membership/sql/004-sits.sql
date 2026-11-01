@@ -11,7 +11,7 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'circle' AS circle) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('circle:circle:message', 'circle_membership.sits(jsonb)', 'circle-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('circle:circle:message', 'circle_membership.sits(jsonb)', 'circle-membership');
 
 -- A seat ends by `circle-membership:position:remove`, on the verdict date; it
 -- keeps its row, so who sat where reads back. Both writes are decided:

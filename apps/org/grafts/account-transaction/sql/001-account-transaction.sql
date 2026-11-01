@@ -44,5 +44,5 @@ FROM account.account a
 LEFT JOIN transaction.line l ON l.account = a.code
 GROUP BY a.code, a.label, a.kind;
 
-GRANT USAGE ON SCHEMA account_transaction TO cella_app, cella_rules;
-GRANT SELECT ON account_transaction.balance TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_transaction TO cella_app, cella_guards;
+GRANT SELECT ON account_transaction.balance TO cella_app, cella_guards;

@@ -31,10 +31,10 @@ BEGIN ATOMIC
   LEFT JOIN expense_file.receipt r ON r.expense = x.expense AND r.file = x.file;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('expense-file:expense:attach', 'expense_file.attaches(jsonb)', 'expense-file'),
   ('expense:expense:capture', 'expense_file.attaches(jsonb)', 'expense-file');
 
-GRANT USAGE ON SCHEMA expense_file TO cella_app, cella_rules;
-GRANT SELECT ON expense_file.receipt TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense_file TO cella_app, cella_guards;
+GRANT SELECT ON expense_file.receipt TO cella_app, cella_guards;
 GRANT INSERT ON expense_file.receipt TO cella_app;

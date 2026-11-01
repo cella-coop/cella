@@ -1,5 +1,5 @@
 -- Each circle's place in the tree: its ancestors from the assembly down,
--- itself last, kept by the triggers below, so a rule asks whether one
+-- itself last, kept by the triggers below, so a guard asks whether one
 -- circle is within another without recursion.
 ALTER TABLE circle.circle ADD COLUMN path text[];
 
@@ -124,7 +124,7 @@ BEGIN ATOMIC
   LEFT JOIN circle.mandate m ON m.id = p.mandate;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:circle:nest', 'circle.nests(jsonb)', 'circle'),
   ('circle:mandate:grant', 'circle.grants(jsonb)', 'circle'),
   ('circle:mandate:revoke', 'circle.revokes(jsonb)', 'circle');

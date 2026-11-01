@@ -49,9 +49,9 @@ BEGIN ATOMIC
   LEFT JOIN report.report r ON r.id = x.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('report:report:save', 'report.saves(jsonb)', 'report');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('report:report:save', 'report.saves(jsonb)', 'report');
 
-GRANT USAGE ON SCHEMA report TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA report TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON report.report TO cella_app;
 GRANT SELECT ON report.threshold TO cella_app;
-GRANT SELECT ON report.report, report.threshold TO cella_rules;
+GRANT SELECT ON report.report, report.threshold TO cella_guards;

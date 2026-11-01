@@ -19,7 +19,7 @@ export async function seating(tx: Db, input: Add): Promise<Added> {
   return { position: Number(rows[0].id), since: rows[0].since }
 }
 
-// The seat as a write of its own, ordered and decided: the rules on the
+// The seat as a write of its own, ordered and decided: the guards on the
 // op check that the decision it cites carried and that it gives this
 // seat.
 export async function add(input: Add, deps: Deps): Out<'circle-membership:position:add', Added> {

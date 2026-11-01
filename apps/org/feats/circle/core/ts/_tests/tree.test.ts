@@ -25,7 +25,7 @@ const refused = async (sql: string, says: RegExp) => {
 }
 
 const path = async (id: string) => (await db.query<{ path: string[] }>('SELECT path FROM circle.circle WHERE id = $1', [id])).rows[0].path
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT circle.${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT circle.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -66,14 +66,14 @@ test('a moved circle carries its subtree', async () => {
 })
 
 test('circle.nests refuses a nesting whose parent moved within the circle meanwhile', async () => {
-  assert.equal(await rule('nests', { circle: 'print', parent: 'brand' }), null)
-  assert.match((await rule('nests', { circle: 'print', parent: 'marketing' })) ?? '', /print was not nested under marketing by this write/)
+  assert.equal(await guard('nests', { circle: 'print', parent: 'brand' }), null)
+  assert.match((await guard('nests', { circle: 'print', parent: 'marketing' })) ?? '', /print was not nested under marketing by this write/)
   // As a concurrent nesting leaves it: brand under print committed, while
   // this write's view of brand's path was from before.
   await db.query('BEGIN')
   await db.query('ALTER TABLE circle.circle DISABLE TRIGGER placed')
   await db.query(`UPDATE circle.circle SET parent = 'print', path = '{ag,coordination,brand,print,brand}' WHERE id = 'brand'`)
-  assert.match((await rule('nests', { circle: 'print', parent: 'brand' })) ?? '', /brand is within print: nesting it there makes a cycle/)
+  assert.match((await guard('nests', { circle: 'print', parent: 'brand' })) ?? '', /brand is within print: nesting it there makes a cycle/)
   await db.query('ROLLBACK')
 })
 
@@ -84,7 +84,7 @@ test('a mandate keeps its grant, and a revoked one stays revoked', async () => {
   )
   await refused(`UPDATE circle.mandate SET revoked = NULL WHERE id = ${rows[0].id}`, /keeps its grant, and stays revoked/)
   await refused(`UPDATE circle.mandate SET power = 'commit' WHERE id = ${rows[0].id}`, /keeps its grant/)
-  assert.match((await rule('revokes', { mandate: Number(rows[0].id) })) ?? '', /was not revoked by this write/)
+  assert.match((await guard('revokes', { mandate: Number(rows[0].id) })) ?? '', /was not revoked by this write/)
 })
 
 test('a mandate is carved from what the circle above holds, and a moved subtree takes its new circles\' limits', async () => {

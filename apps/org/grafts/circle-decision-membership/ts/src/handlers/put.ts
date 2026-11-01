@@ -7,7 +7,7 @@ import type { Asking } from '../models/asking.ts'
 // Puts what a member's or a circle's page proposes to the circle that
 // decides it, by that circle's procedure: a membership to the assembly; a
 // seat to the circle above the one it is in, or to the assembly for its
-// own. The title says what is decided; the rules on the proposal check
+// own. The title says what is decided; the guards on the proposal check
 // the motion and that circle's say over it. Admitting, suspending or
 // ending a membership, and giving or ending a seat, elect or remove a
 // person, so they go to a secret ballot, as co-ops commonly do; an

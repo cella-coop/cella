@@ -10,7 +10,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 const kinds = ['work', 'legal', 'development', 'interest'] as const
 
 // Drafts the statutes' terms from a year on, `st-<year>`, or drafts them
-// again while they are not adopted; adopted terms never change. The rules
+// again while they are not adopted; adopted terms never change. The guards
 // decide: `patronage.drafts_terms` that they divide the whole work share.
 // The members adopt them by a decision that moves to.
 export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:terms:draft', DraftedTerms> {
@@ -35,7 +35,7 @@ export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:
 // Drafts a year's split, or drafts it again while it is not approved:
 // its surplus, the basis of the terms governing the year, and each share
 // at its percent, split from the surplus to the cent with
-// `cella.allocate`. The rules decide: `patronage.drafts` that the year has
+// `cella.allocate`. The guards decide: `patronage.drafts` that the year has
 // adopted terms and the shares make the whole surplus; the law's floors
 // are judged when the assembly approves it.
 export async function draft(input: Draft, deps: Deps): Out<'patronage:distribution:draft', Drafted> {

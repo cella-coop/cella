@@ -33,7 +33,7 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:erase', 'decision_membership.ends(jsonb)', 'decision-membership');
 INSERT INTO decision.cites (op, owner) VALUES
   ('membership:member:erase', 'decision-membership');

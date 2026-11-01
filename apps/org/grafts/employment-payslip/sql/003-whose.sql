@@ -1,6 +1,6 @@
--- Whose pay is, as a rule on the run that makes the payslips rather than
+-- Whose pay is, as a guard on the run that makes the payslips rather than
 -- triggers on the payslip feat's tables: a graft refuses a feat's write
--- by a rule on the op, which the notary runs.
+-- by a guard on the op, which the notary runs.
 DROP TRIGGER worker ON payslip.salary;
 DROP TRIGGER worker ON payslip.payslip;
 DROP FUNCTION employment_payslip.whose();
@@ -24,5 +24,5 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('payslip:run:generate', 'employment_payslip.whose(jsonb)', 'employment-payslip');

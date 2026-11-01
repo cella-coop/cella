@@ -31,7 +31,7 @@ CREATE TRIGGER stays BEFORE UPDATE ON person.device
   FOR EACH ROW EXECUTE FUNCTION person.stays();
 
 -- The keyring: whether a device is a current key of the actor. The notary
--- calls it for every write, before any rule, under the log's head lock, so
+-- calls it for every write, before any guard, under the log's head lock, so
 -- a revocation that settled first is seen.
 CREATE FUNCTION person.verifies(actor text, device bytea) RETURNS text
 LANGUAGE sql STABLE
@@ -78,10 +78,10 @@ BEGIN ATOMIC
   LEFT JOIN person.device d ON encode(d.key, 'hex') = p.key;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('person:device:enrol', 'person.enrols(jsonb)', 'person'),
   ('person:device:revoke', 'person.revokes(jsonb)', 'person');
 
 GRANT SELECT, INSERT, UPDATE ON person.device TO cella_app;
-GRANT SELECT ON person.device TO cella_rules;
+GRANT SELECT ON person.device TO cella_guards;
 COMMENT ON COLUMN person.device.address IS 'not personal: the holder''s pseudonymous address';

@@ -37,6 +37,6 @@ LEFT JOIN client_invoice.billing b ON b.client = c.id
 LEFT JOIN invoice.standing s ON s.id = b.invoice
 GROUP BY c.id, c.name;
 
-GRANT USAGE ON SCHEMA client_invoice TO cella_app, cella_rules;
-GRANT SELECT ON client_invoice.billing, client_invoice.standing TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA client_invoice TO cella_app, cella_guards;
+GRANT SELECT ON client_invoice.billing, client_invoice.standing TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON client_invoice.billing TO cella_app;

@@ -22,5 +22,5 @@ BEGIN ATOMIC
   ) c;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:approve', 'patronage_transaction.interest(jsonb)', 'patronage-transaction');

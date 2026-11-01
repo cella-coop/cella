@@ -1,7 +1,7 @@
 // The meetings alone, on a database holding only the app's core and this
 // feat: an agenda changes only while its meeting is scheduled, a meeting
 // held or cancelled stays so and a cancelled one has no minutes, and the
-// rules check that a hold or a cancel was the write's own and that no
+// guards check that a hold or a cancel was the write's own and that no
 // meeting is held before its day. Run by `cella test slice meeting`.
 
 import { after, before, test } from 'node:test'
@@ -23,7 +23,7 @@ const refused = async (sql: string, values: unknown[], says: RegExp) => {
   }
 }
 
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT meeting.${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT meeting.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -91,10 +91,10 @@ test('a meeting is scheduled until it is settled, and settled on a day', async (
   await db.query('ROLLBACK')
 })
 
-test('the rules refuse a hold or a cancel the write did not make, and a hold before the meeting\'s day', async () => {
-  assert.equal(await rule('holds', { meeting: 'nowhere' }), 'no meeting nowhere')
-  assert.match((await rule('holds', { meeting: 'ag-2026-10-31' })) ?? '', /ag-2026-10-31 was not held by this write/)
-  assert.match((await rule('cancels', { meeting: 'ag-2026-10-31' })) ?? '', /ag-2026-10-31 was not cancelled by this write/)
+test('the guards refuse a hold or a cancel the write did not make, and a hold before the meeting\'s day', async () => {
+  assert.equal(await guard('holds', { meeting: 'nowhere' }), 'no meeting nowhere')
+  assert.match((await guard('holds', { meeting: 'ag-2026-10-31' })) ?? '', /ag-2026-10-31 was not held by this write/)
+  assert.match((await guard('cancels', { meeting: 'ag-2026-10-31' })) ?? '', /ag-2026-10-31 was not cancelled by this write/)
   for (const [day, says] of [
     ['2026-10-24', 'ag-2026-10-31 meets on 2026-10-31: it is not held before'],
     ['2026-10-31', null],
@@ -102,7 +102,7 @@ test('the rules refuse a hold or a cancel the write did not make, and a hold bef
     await db.query(`SET cella.clock = '${day}'`)
     await db.query('BEGIN')
     await db.query(`UPDATE meeting.meeting SET status = 'held', settled = cella.verdict_date() WHERE id = 'ag-2026-10-31'`)
-    assert.equal(await rule('holds', { meeting: 'ag-2026-10-31' }), says, day)
+    assert.equal(await guard('holds', { meeting: 'ag-2026-10-31' }), says, day)
     await db.query('ROLLBACK')
   }
   await db.query('RESET cella.clock')

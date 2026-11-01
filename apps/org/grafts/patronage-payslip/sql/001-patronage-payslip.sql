@@ -84,7 +84,7 @@ BEGIN ATOMIC
   JOIN patronage.distribution d ON d.id = x.distribution;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('patronage:distribution:approve', 'patronage_payslip.divides(jsonb)', 'patronage-payslip');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'patronage_payslip.divides(jsonb)', 'patronage-payslip');
 
 -- Each worker's part of a distribution's work share by pay, as it divides
 -- now: before the approval, what it would give; once approved, its parts
@@ -95,5 +95,5 @@ FROM patronage.distribution d
 CROSS JOIN LATERAL patronage_payslip.division(d.id) v
 WHERE v.basis = 'salary';
 
-GRANT USAGE ON SCHEMA patronage_payslip TO cella_app, cella_rules;
-GRANT SELECT ON patronage_payslip.work_share TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA patronage_payslip TO cella_app, cella_guards;
+GRANT SELECT ON patronage_payslip.work_share TO cella_app, cella_guards;

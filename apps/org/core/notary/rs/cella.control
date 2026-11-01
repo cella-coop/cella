@@ -1,4 +1,4 @@
-comment = 'cella: the notary and the rule primitives'
+comment = 'cella: the notary and the guard primitives'
 default_version = '@CARGO_VERSION@'
 module_pathname = 'cella'
 relocatable = false

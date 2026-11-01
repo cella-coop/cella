@@ -1,6 +1,6 @@
 +++
 title = "circle-decision"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 The circles' place and powers, by decision: nesting a circle, granting a
@@ -19,7 +19,7 @@ them with the circle each is about: the circle nested, the role's circle,
 the revoked mandate's role's circle; a role every working circle has
 (`*`) is the assembly's.
 
-## Rules
+## Guards
 
 - `circle_decision.decides(decider, subject)`: a decision of `decider`
   may decide about `subject`: the assembly about every circle, any other
@@ -36,12 +36,12 @@ the revoked mandate's role's circle; a role every working circle has
 
 No write sets a circle's procedure: the seed carries it in, and the
 fixture check holds it to a procedure the decision feat holds. A write
-that sets one will be judged by a rule of this graft's on its op, not by
+that sets one will be judged by a guard of this graft's on its op, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
 The three ops cite a decision: this graft lists them in `decision.cites`,
-and `circle-decision-membership`, which counts the roll, attaches its rule
+and `circle-decision-membership`, which counts the roll, attaches its guard
 that it carried.
 
 ## Handlers

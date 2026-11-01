@@ -18,4 +18,4 @@ $$;
 CREATE TRIGGER whose BEFORE INSERT ON timesheet.entry
   FOR EACH ROW EXECUTE FUNCTION membership_timesheet.whose();
 
-GRANT USAGE ON SCHEMA membership_timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA membership_timesheet TO cella_app, cella_guards;

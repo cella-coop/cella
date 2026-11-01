@@ -1,5 +1,5 @@
--- Whose time an entry is, as a rule on its log rather than a trigger on
--- the timesheet feat's table: a graft refuses a feat's write by a rule on
+-- Whose time an entry is, as a guard on its log rather than a trigger on
+-- the timesheet feat's table: a graft refuses a feat's write by a guard on
 -- the op, which the notary runs.
 DROP TRIGGER worker ON timesheet.entry;
 DROP FUNCTION employment_timesheet.whose();
@@ -18,5 +18,5 @@ BEGIN ATOMIC
     AND NOT employment.employed(p.member, p.day);
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('timesheet:entry:log', 'employment_timesheet.whose(jsonb)', 'employment-timesheet');

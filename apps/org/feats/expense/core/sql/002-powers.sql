@@ -1,5 +1,5 @@
 -- The power each expense write needs beyond the member's own; the
--- circle-membership graft's rule checks that the actor holds it. Approving
+-- circle-membership graft's guard checks that the actor holds it. Approving
 -- needs approve-expense within the mandate's limit for the expense's
 -- amount, and within its budget for the month, which the
 -- circle-expense-membership graft checks; money leaves the bank only under

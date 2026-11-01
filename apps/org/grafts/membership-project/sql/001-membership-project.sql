@@ -71,9 +71,9 @@ BEGIN ATOMIC
   WHERE t.project = payload ->> 'project';
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('project:project:budget', 'membership_project.covers(jsonb)', 'membership-project');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('project:project:budget', 'membership_project.covers(jsonb)', 'membership-project');
 
-GRANT USAGE ON SCHEMA membership_project TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA membership_project TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON membership_project.share TO cella_app;
 GRANT SELECT ON membership_project.pot TO cella_app;
-GRANT SELECT ON membership_project.share, membership_project.pot TO cella_rules;
+GRANT SELECT ON membership_project.share, membership_project.pot TO cella_guards;

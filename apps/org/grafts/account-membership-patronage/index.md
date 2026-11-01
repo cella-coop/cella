@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 What of a worker's part of the work share buys shares: the split of each
@@ -21,10 +21,10 @@ the work share's terms read back on a person's page. Declared by
   day of the sixth month after the year, five years on (art. L3324-10).
   It reads today's members and the share's value on the verdict date;
   what a distribution employed when it posted is
-  `account-membership-patronage-transaction`'s record, whose rule checks it
+  `account-membership-patronage-transaction`'s record, whose guard checks it
   against this split.
 
-The app role and the rules role may select.
+The app role and the guards role may select.
 
 ## Tests
 

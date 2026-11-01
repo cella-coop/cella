@@ -29,5 +29,5 @@ SELECT p.month, p.member, wp.name, w.job
 FROM payslip.payslip p
 JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = p.member;
 
-GRANT USAGE ON SCHEMA employment_payslip TO cella_app, cella_rules;
-GRANT SELECT ON employment_payslip.slip TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment_payslip TO cella_app, cella_guards;
+GRANT SELECT ON employment_payslip.slip TO cella_app, cella_guards;

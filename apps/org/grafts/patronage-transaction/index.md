@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -23,10 +23,10 @@ Declared by `patronage`.
   a day, and `highest()`, the most it ever reached on a day the journal
   moved it.
 
-The app role may select and insert a distribution's entry; the rules
+The app role may select and insert a distribution's entry; the guards
 role may select.
 
-## Rules
+## Guards
 
 - `patronage_transaction.posted`, on `patronage:distribution:distribute`:
   the distribution posted one entry, dated the day it was distributed,

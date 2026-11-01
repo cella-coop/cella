@@ -17,7 +17,7 @@ CREATE TABLE task.task (
   CHECK ((status = 'done') = (completed IS NOT NULL))
 );
 
-GRANT USAGE ON SCHEMA task TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA task TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON task.task TO cella_app;
 GRANT USAGE ON SEQUENCE task.number TO cella_app;
-GRANT SELECT ON task.task TO cella_rules;
+GRANT SELECT ON task.task TO cella_guards;

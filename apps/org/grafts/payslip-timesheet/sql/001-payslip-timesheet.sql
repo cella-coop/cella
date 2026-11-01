@@ -40,6 +40,6 @@ BEGIN ATOMIC
   ) m ON true;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('payslip:run:generate', 'payslip_timesheet.timed(jsonb)', 'payslip-timesheet');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('payslip:run:generate', 'payslip_timesheet.timed(jsonb)', 'payslip-timesheet');
 
-GRANT USAGE ON SCHEMA payslip_timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA payslip_timesheet TO cella_app, cella_guards;

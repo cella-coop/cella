@@ -7,8 +7,8 @@ CREATE SCHEMA employment_project_timesheet;
 -- actor's own, on a day that has come (`timesheet.logs`), while they are
 -- employed (`employment_timesheet.works`); the booking by project-timesheet's
 -- trigger, a project that exists and is not archived.
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-project-timesheet:entry:book', 'timesheet.logs(jsonb)', 'employment-project-timesheet'),
   ('employment-project-timesheet:entry:book', 'employment_timesheet.works(jsonb)', 'employment-project-timesheet');
 
-GRANT USAGE ON SCHEMA employment_project_timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment_project_timesheet TO cella_app, cella_guards;

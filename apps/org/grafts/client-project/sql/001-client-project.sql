@@ -25,6 +25,6 @@ $$;
 CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON client_project.commission
   FOR EACH ROW EXECUTE FUNCTION client_project.resolves();
 
-GRANT USAGE ON SCHEMA client_project TO cella_app, cella_rules;
-GRANT SELECT ON client_project.commission TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA client_project TO cella_app, cella_guards;
+GRANT SELECT ON client_project.commission TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON client_project.commission TO cella_app;

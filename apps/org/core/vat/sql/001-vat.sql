@@ -15,4 +15,4 @@ CREATE FUNCTION cella.line_vat(amount bigint, rate numeric) RETURNS bigint
 LANGUAGE sql IMMUTABLE
 RETURN round(amount * rate / 100)::bigint;
 
-GRANT EXECUTE ON FUNCTION cella.line_amount(numeric, bigint), cella.line_vat(bigint, numeric) TO cella_app, cella_rules;
+GRANT EXECUTE ON FUNCTION cella.line_amount(numeric, bigint), cella.line_vat(bigint, numeric) TO cella_app, cella_guards;

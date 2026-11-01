@@ -85,8 +85,8 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
   }, as(julien))
   assert.equal(issued.state, 'settled')
   assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
 })
 
 test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no number', async () => {
@@ -192,8 +192,8 @@ test('a person edits their own profile, and no one else\'s', async () => {
 test('every active member edits clients and documents through the member role\'s mandates in the assembly', async () => {
   const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
   assert.equal(noted.state, 'settled')
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-membership'])
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership'])
   const remarked = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Agreed.' }, as(hugo))
   assert.equal(remarked.state, 'settled')
 })

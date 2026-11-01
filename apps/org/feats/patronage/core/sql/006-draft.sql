@@ -49,7 +49,7 @@ BEGIN ATOMIC
   LEFT JOIN patronage.distribution d ON d.year = x.year;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:terms:draft', 'patronage.drafts_terms(jsonb)', 'patronage'),
   ('patronage:distribution:draft', 'patronage.drafts(jsonb)', 'patronage');
 

@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -71,7 +71,7 @@ needs no power.
 
 ## Invariants
 
-The transaction feat owns the rules about entries alone:
+The transaction feat owns the guards about entries alone:
 
 - every entry balances: its debits equal its credits;
 - every amount is positive, in cents (`cella.amount`); a line is a debit
@@ -91,7 +91,7 @@ What it does not own:
   draw (`account-membership-transaction`), an expense reimbursed
   (`expense-transaction`), a supplier's bill paid (`bill-transaction`)
   and a pay run paid (`payslip-transaction`), each
-  posting through `record` under its own right and rule.
+  posting through `record` under its own right and guard.
 
 ## What it does not know
 
@@ -115,10 +115,10 @@ lines or more; the db library makes it immediate before the verdict, so an
 unbalanced entry is refused inside the write. Another trigger refuses any
 update or delete: the journal is permanent. A third numbers each entry
 (below). All raise SQLSTATE `09000`.
-The app role may select and insert; the rules role, `cella_rules`, may
+The app role may select and insert; the guards role, `cella_guards`, may
 select.
 
-## Rules
+## Guards
 
 - `transaction.corrects`, on `transaction:transaction:adjust`: the entry
   corrects the entry the payload names, and that entry's latest correction
@@ -157,7 +157,7 @@ nothing else, and `transaction.corrects` refuses a second correction from the sa
 
 ## Reads
 
-Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the co-op's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does, and its amount, `transaction.amount`, counts every line, read or not. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the rules do.
+Every entry and line reads for whoever holds `record-entry`, `carry-books` or `close-period` (`sql/007-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). A graft that knows whose an account is opens its lines further: `account-transaction` opens the co-op's own accounts' lines to every member and a capital account's to its holder. An entry reads wherever one of its lines does, and its amount, `transaction.amount`, counts every line, read or not. Alone, without that graft, only the books' keepers read the journal. A write's transaction reads it whole, as the guards do.
 
 ## Shell
 

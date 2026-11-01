@@ -27,7 +27,7 @@ BEGIN ATOMIC
   LEFT JOIN project.project p ON p.id = x.project;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('expense-project:expense:rebill', 'expense_project.files(jsonb)', 'expense-project');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('expense-project:expense:rebill', 'expense_project.files(jsonb)', 'expense-project');
 
 -- What each project's members spent for it, to bill on, by status.
 CREATE VIEW expense_project.spent AS
@@ -38,6 +38,6 @@ FROM expense_project.rebill r
 JOIN expense.expense e ON e.id = r.expense
 GROUP BY r.project;
 
-GRANT USAGE ON SCHEMA expense_project TO cella_app, cella_rules;
-GRANT SELECT ON expense_project.rebill, expense_project.spent TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense_project TO cella_app, cella_guards;
+GRANT SELECT ON expense_project.rebill, expense_project.spent TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON expense_project.rebill TO cella_app;

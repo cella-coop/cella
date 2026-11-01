@@ -67,10 +67,10 @@ CREATE FUNCTION expense_transaction.paid(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 RETURN expense_transaction.unposted(payload ->> 'expense', 'payment');
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('expense:expense:approve', 'expense_transaction.charged(jsonb)', 'expense-transaction'),
   ('expense:expense:reimburse', 'expense_transaction.paid(jsonb)', 'expense-transaction');
 
-GRANT USAGE ON SCHEMA expense_transaction TO cella_app, cella_rules;
-GRANT SELECT ON expense_transaction.posting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense_transaction TO cella_app, cella_guards;
+GRANT SELECT ON expense_transaction.posting TO cella_app, cella_guards;
 GRANT INSERT ON expense_transaction.posting TO cella_app;

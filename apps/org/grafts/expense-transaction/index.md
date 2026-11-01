@@ -1,6 +1,6 @@
 +++
 title = "expense-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 An expense's approval and its reimbursement post balanced entries, in the
@@ -22,7 +22,7 @@ For a French SCOP's chart:
 event, one of each per expense; `lines(expense, event)`, the lines an
 event posts, which the handlers ask the database for.
 
-## Rules
+## Guards
 
 - `expense_transaction.charged`, on `expense:expense:approve`, and
   `.paid`, on `expense:expense:reimburse`: the expense has a posting for

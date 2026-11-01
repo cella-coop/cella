@@ -63,14 +63,14 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
--- The rule attaches to every op that cites a decision: those the lower
+-- The guard attaches to every op that cites a decision: those the lower
 -- grafts declared before this one migrated, and any declared after.
-INSERT INTO cella.rule (op, fn, owner)
+INSERT INTO cella.guard (op, fn, owner)
 SELECT c.op, 'circle_decision_membership.carried(jsonb)'::regprocedure, 'circle-decision-membership' FROM decision.cites c;
 
 CREATE FUNCTION circle_decision_membership.attach() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO cella.rule (op, fn, owner)
+  INSERT INTO cella.guard (op, fn, owner)
   VALUES (NEW.op, 'circle_decision_membership.carried(jsonb)', 'circle-decision-membership');
   RETURN NULL;
 END
@@ -79,5 +79,5 @@ $$;
 CREATE TRIGGER attach AFTER INSERT ON decision.cites
   FOR EACH ROW EXECUTE FUNCTION circle_decision_membership.attach();
 
-GRANT USAGE ON SCHEMA circle_decision_membership TO cella_app, cella_rules;
-GRANT SELECT ON circle_decision_membership.roll TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_decision_membership TO cella_app, cella_guards;
+GRANT SELECT ON circle_decision_membership.roll TO cella_app, cella_guards;

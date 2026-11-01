@@ -55,5 +55,5 @@ CROSS JOIN account_membership.terms t
 LEFT JOIN account.account a ON a.holder = m.address AND a.parent = '1013'
 LEFT JOIN account_membership.allowance w ON w.member = m.address;
 
-GRANT USAGE ON SCHEMA account_membership TO cella_app, cella_rules;
-GRANT SELECT ON account_membership.terms, account_membership.allowance, account_membership.capital TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_membership TO cella_app, cella_guards;
+GRANT SELECT ON account_membership.terms, account_membership.allowance, account_membership.capital TO cella_app, cella_guards;

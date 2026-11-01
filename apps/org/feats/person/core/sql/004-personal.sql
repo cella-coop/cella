@@ -27,4 +27,4 @@ BEGIN ATOMIC
   ) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('person:person:forget', 'person.forgets(jsonb)', 'person');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('person:person:forget', 'person.forgets(jsonb)', 'person');

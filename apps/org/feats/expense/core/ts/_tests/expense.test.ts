@@ -1,6 +1,6 @@
 // The expenses alone, on a database holding only the app's core and this
 // feat: an expense moves only along its lifecycle, its figures never change
-// once submitted, and the rules refuse a write that did not do what it
+// once submitted, and the guards refuse a write that did not do what it
 // says. Run by `cella test slice expense`.
 
 import { after, before, test } from 'node:test'
@@ -23,7 +23,7 @@ const refused = async (run: () => Promise<unknown>, says: RegExp) => {
   }
 }
 
-const rule = async (fn: string, payload: object) =>
+const guard = async (fn: string, payload: object) =>
   (await db.query<{ r: string | null }>(`SELECT expense.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
@@ -63,10 +63,10 @@ test('an expense moves only along its lifecycle', async () => {
 test('a decision names the expense\'s whole amount, made on the verdict date', async () => {
   await db.query(`UPDATE expense.expense SET status = 'approved', decided = '2026-10-24', decider = 'hugo@lanterne.example' WHERE id = 'ex-0001'`)
   // Outside a write there is no actor, so no decision is this write's.
-  assert.equal(await rule('decides', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not approved by this write')
-  assert.equal(await rule('decides', { expense: 'ex-0099', amount: 1 }), 'no expense ex-0099')
-  assert.equal(await rule('reimburses', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not reimbursed by this write')
+  assert.equal(await guard('decides', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not approved by this write')
+  assert.equal(await guard('decides', { expense: 'ex-0099', amount: 1 }), 'no expense ex-0099')
+  assert.equal(await guard('reimburses', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not reimbursed by this write')
   await db.query(`UPDATE expense.expense SET status = 'reimbursed', reimbursed = '2026-10-24' WHERE id = 'ex-0001'`)
-  assert.equal(await rule('reimburses', { expense: 'ex-0001', amount: 18000 }), null)
-  assert.equal(await rule('reimburses', { expense: 'ex-0001', amount: 15000 }), 'ex-0001 comes to 18000 cents, not 15000')
+  assert.equal(await guard('reimburses', { expense: 'ex-0001', amount: 18000 }), null)
+  assert.equal(await guard('reimburses', { expense: 'ex-0001', amount: 15000 }), 'ex-0001 comes to 18000 cents, not 15000')
 })

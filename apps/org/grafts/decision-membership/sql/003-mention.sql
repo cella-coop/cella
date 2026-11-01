@@ -27,6 +27,6 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:message:post', 'decision_membership.mentions(jsonb)', 'decision-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:message:post', 'decision_membership.mentions(jsonb)', 'decision-membership');
 
-GRANT SELECT ON decision_membership.mention TO cella_app, cella_rules;
+GRANT SELECT ON decision_membership.mention TO cella_app, cella_guards;

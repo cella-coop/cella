@@ -7,8 +7,8 @@ The co-op ERP, for member-governed organisations. One deployment serves one
 scope: a co-op, a joint circle of co-ops, or a federation.
 
 - `core/` is what every feat inherits, one library each: `ops` (write labels,
-  permissions, outcomes), `crypto`, `log`, `keystore`, `rules` (the pure
-  rule primitives), `notary` (the `cella` Postgres extension over them),
+  permissions, outcomes), `crypto`, `log`, `keystore`, `guards` (the pure
+  guard primitives), `notary` (the `cella` Postgres extension over them),
   `db` (a write's transaction and a slice's server side), `sign` (a
   device's signature on a write), `analytics` (the port reports are read
   through, [its doc](core/analytics/index.md)) and `ui` (the shell's
@@ -42,7 +42,7 @@ Ctrl-K jumps to any collection or item.
 
 What it writes, as the member picked in the user menu (dev only), each
 showing its outcome, Settled with its log entry or Refused with the
-rule's reason:
+guard's reason:
 
 - an invitation carrying the invitee's first device; a new decision, by
   its circle's procedure or another, consent, a majority, two thirds or

@@ -11,7 +11,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 
 const db = new pg.Client()
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 const decide = (id: string) =>
   db.query(`INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline) VALUES ($1, 'ag', 'Terms', 'consent', 'consent', '2026-10-24', '2026-11-07')`, [id])
 const move = (decision: string, n: number, terms: string) =>
@@ -32,17 +32,17 @@ after(async () => {
 test('a motion to adopt drafted terms is the adoption it asks for', async () => {
   await move('d-1', 1, 'st-2027')
   assert.deepEqual((await db.query(`SELECT terms, decision FROM account_decision.adoption`)).rows, [{ terms: 'st-2027', decision: 'd-1' }])
-  assert.equal(await rule('account_decision.asks', { decision: 'd-1' }), null)
+  assert.equal(await guard('account_decision.asks', { decision: 'd-1' }), null)
   await move('d-2', 1, 'st-1999')
-  assert.equal(await rule('account_decision.asks', { decision: 'd-2' }), 'no terms st-1999 to adopt')
+  assert.equal(await guard('account_decision.asks', { decision: 'd-2' }), 'no terms st-1999 to adopt')
 })
 
 test('adopting cites a decision that moved to adopt the terms, never another', async () => {
-  assert.equal(await rule('account_decision.adopts', { terms: 'st-2027', decision: 'd-1' }), null)
-  assert.equal(await rule('account_decision.adopts', { terms: 'st-2027', decision: 'd-2' }), 'd-2 does not adopt st-2027')
-  assert.equal(await rule('account_decision.adopts', { terms: 'st-2027', decision: 'd-9' }), 'no decision d-9')
+  assert.equal(await guard('account_decision.adopts', { terms: 'st-2027', decision: 'd-1' }), null)
+  assert.equal(await guard('account_decision.adopts', { terms: 'st-2027', decision: 'd-2' }), 'd-2 does not adopt st-2027')
+  assert.equal(await guard('account_decision.adopts', { terms: 'st-2027', decision: 'd-9' }), 'no decision d-9')
 })
 
-test('the op cites a decision, so the roll\'s rule attaches to it', async () => {
+test('the op cites a decision, so the roll\'s guard attaches to it', async () => {
   assert.deepEqual((await db.query(`SELECT owner FROM decision.cites WHERE op = 'account:terms:adopt'`)).rows, [{ owner: 'account-decision' }])
 })

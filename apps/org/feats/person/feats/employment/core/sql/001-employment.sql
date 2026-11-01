@@ -61,9 +61,9 @@ BEGIN ATOMIC
   LEFT JOIN employment.worker w ON w.address = p.worker;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment:worker:hire', 'employment.hires(jsonb)', 'employment');
 
-GRANT USAGE ON SCHEMA employment TO cella_app, cella_rules;
-GRANT SELECT ON employment.worker TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment TO cella_app, cella_guards;
+GRANT SELECT ON employment.worker TO cella_app, cella_guards;
 GRANT INSERT ON employment.worker TO cella_app;

@@ -40,7 +40,7 @@ export const personal = (field: string, subject: string, value: unknown) => ({ $
 // of the classes named, or of every class, as it settles.
 export const erasure = (subject: string, classes?: string[]) => ({ $erase: classes ? { subject, classes } : { subject } })
 
-// SQLSTATE triggered_action_exception: a rule, a feat's trigger or the
+// SQLSTATE triggered_action_exception: a guard, a feat's trigger or the
 // notary's signature check refused.
 const REFUSED = '09000'
 
@@ -59,7 +59,7 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
   await db.query('BEGIN')
   try {
     // The transaction reads as the actor, and as a write's: its state
-    // change sees the whole state, as the rules do.
+    // change sees the whole state, as the guards do.
     await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', 'on', true)`, [deps.actor])
     await db.query(`SELECT cella.begin($1, $2, decode($3, 'hex'))`, [w.op, deps.actor, proof.device])
     const value = await w.state(db, proof)

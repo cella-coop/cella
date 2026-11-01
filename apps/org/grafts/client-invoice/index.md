@@ -1,6 +1,6 @@
 +++
 title = "client-invoice"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Who an invoice bills. An invoice without a link is unbilled, not invalid;
@@ -17,7 +17,7 @@ it still carries the name it bills as text.
   summed from `invoice.standing`. `credit` is what the co-op owes back:
   Vélo Solidaire's overpayment on F-2026-0051 shows here.
 
-The app role may select, insert and update; the rules role, `cella_rules`,
+The app role may select, insert and update; the guards role, `cella_guards`,
 may select.
 
 ## Writes

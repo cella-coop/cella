@@ -8,7 +8,7 @@ const op = 'report:report:save' satisfies keyof typeof ops
 
 // Saves the actor's custom report on the verdict date, or saves it again
 // over their own; a built-in report or another member's keeps its row,
-// which the rule refuses.
+// which the guard refuses.
 export const saving = (input: Save, actor: string): Write<Stored> => ({
   op,
   request: { id: input.id, title: input.title, caption: input.caption, definition: input.definition },

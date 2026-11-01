@@ -1,6 +1,6 @@
 +++
 title = "circle-decision-membership"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 The electorate: who may vote on a decision, and whether it passes on
@@ -26,7 +26,7 @@ here.
   `circle_membership.seated(circle, proposed)`, which this graft's
   `propose` calls in the proposal's own write. `fix` runs with its
   owner's rights, since nothing else writes the roll, and only the app
-  role may call it; the app role and the rules role, `cella_rules`, may
+  role may call it; the app role and the guards role, `cella_guards`, may
   select the roll.
 - `circle_decision_membership.counted`: who was counted, the members on a
   decision's roll who were active (`membership.active`) on the day it
@@ -46,7 +46,7 @@ Lanterne's d-2026-012 is the assembly's: its roll is the ten members seated
 in `ag`, and not Inès, whose admission it decides. d-2026-011,
 coordination's, counts its five.
 
-## Rules
+## Guards
 
 - `circle_decision_membership.electorate(decision)`: who counts on it, once
   it is closed the members counted at its close, while it is open the
@@ -82,7 +82,7 @@ coordination's, counts its five.
   that list; a graft that joins decision to a write's feat declares its op
   there (`decision-membership` for admission, suspension and exit,
   `circle-decision` for nesting and mandates, `decision-document` for
-  `document:document:adopt`), and this graft attaches the rule to every
+  `document:document:adopt`), and this graft attaches the guard to every
   op listed, then and later. A graft that cites a decision so never reads
   this one, and this one never names a feat it does not join. This graft
   lists `circle-membership:position:add` and `:remove` itself, a lower-order
@@ -91,7 +91,7 @@ coordination's, counts its five.
   seat is one the cited decision gives (`seating`), to an active member,
   from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited decision
-  ends it. A graft may register rules on the ops of the lower-order
+  ends it. A graft may register guards on the ops of the lower-order
   grafts it builds on, as on its feats'.
 - `circle_decision_membership.settles`, on `decision:decision:close`: a
   passing close admitted everyone the decision admits, each seated by
@@ -110,8 +110,8 @@ coordination's, counts its five.
 
 - `propose` (confluent), replacing the decision feat's in the shell: the
   decision feat's `proposing`, then `fix`, in one transaction under one
-  verdict; the rules of each slice judge it (`decision.proposes`, `sits`,
-  `asks`, `fixed`, and the rule of each motion's kind). Every proposal
+  verdict; the guards of each slice judge it (`decision.proposes`, `sits`,
+  `asks`, `fixed`, and the guard of each motion's kind). Every proposal
   goes through it: the New decision form, `put`, and on a circle's page
   what circle-decision proposes about its place and powers, read by its
   `motion` and made by its `putting`.
@@ -120,12 +120,12 @@ coordination's, counts its five.
   roll, for each member it admits the membership feat's `admitting` and
   circle-membership's `seating`, all in one transaction under one verdict.
   It submits the close with `admitted`, each member and their seat; the
-  rules of each slice judge it (`decision.closes`, `sits`, `counts`,
+  guards of each slice judge it (`decision.closes`, `sits`, `counts`,
   `settles`, `decision_membership.closes`), and a refused seat refuses the
   whole close.
 - `carried(decision)`: on a settled close of a passing decision, carries
   out its other motions in the order proposed, each its own decided write
-  signed as the member who closed it and judged again by its rules: a
+  signed as the member who closed it and judged again by its guards: a
   suspension, an exit or the erasure of a former member's personal data
   (membership feat), a nesting, a grant or a revocation
   (circle feat), a seat given or ended (circle-membership). A refused one

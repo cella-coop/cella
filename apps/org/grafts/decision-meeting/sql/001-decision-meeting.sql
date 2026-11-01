@@ -31,6 +31,6 @@ $$;
 CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON decision_meeting.tabled
   FOR EACH ROW EXECUTE FUNCTION decision_meeting.resolves();
 
-GRANT USAGE ON SCHEMA decision_meeting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA decision_meeting TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON decision_meeting.tabled TO cella_app;
-GRANT SELECT ON decision_meeting.tabled TO cella_rules;
+GRANT SELECT ON decision_meeting.tabled TO cella_guards;

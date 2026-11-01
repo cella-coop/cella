@@ -19,5 +19,5 @@ LEFT JOIN LATERAL (
 ) d ON true
 WHERE p.probation IS NOT NULL AND p.stage IN ('candidate', 'invited');
 
-GRANT USAGE ON SCHEMA decision_employment_membership TO cella_app, cella_rules;
-GRANT SELECT ON decision_employment_membership.admission TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA decision_employment_membership TO cella_app, cella_guards;
+GRANT SELECT ON decision_employment_membership.admission TO cella_app, cella_guards;

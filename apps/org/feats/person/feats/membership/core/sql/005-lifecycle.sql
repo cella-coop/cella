@@ -22,7 +22,7 @@ END;
 
 -- membership:member:suspend, membership:member:exit — the write left the member
 -- suspended, or exited, on the verdict date. That the cited decision asks
--- it is the decision-membership graft's rule on the same ops.
+-- it is the decision-membership graft's guard on the same ops.
 CREATE FUNCTION membership.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -39,7 +39,7 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.address;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:invite', 'membership.invites(jsonb)', 'membership'),
   ('membership:member:suspend', 'membership.ends(jsonb)', 'membership'),
   ('membership:member:exit', 'membership.ends(jsonb)', 'membership');

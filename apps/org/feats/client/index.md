@@ -1,6 +1,6 @@
 +++
 title = "Client"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The organisations and people the co-op works for: its CRM. Companies and
@@ -49,7 +49,7 @@ company and the invoices intact.
 Each field is its own register, so two members updating different fields
 of one client both keep their change, and two updating the same field
 resolve to the later receipt. Nothing a client write changes is read by an
-ordered write's rule, so none of them waits.
+ordered write's guard, so none of them waits.
 
 ## Powers
 
@@ -84,7 +84,7 @@ same company, are merged by hand.
 `client` (`core/sql/`): `client.client`, with the fields above, the
 address as JSON. A trigger refuses a parent that is not a company (SQLSTATE
 `09000`), and a check refuses a client its own parent. The app role may
-select, insert and update; the rules role, `cella_rules`, may select.
+select, insert and update; the guards role, `cella_guards`, may select.
 
 `client.erases`, on `client:client:erase`: the client is a person, and
 the write erased their contact data and nothing else.

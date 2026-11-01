@@ -209,12 +209,12 @@ BEGIN ATOMIC
   LEFT JOIN invoice.invoice i ON i.id = x.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('invoice:invoice:issue', 'invoice.numbered(jsonb)', 'invoice'),
   ('invoice:invoice:void', 'invoice.voids(jsonb)', 'invoice');
 
-GRANT USAGE ON SCHEMA invoice TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA invoice TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA invoice TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA invoice TO cella_app, cella_guards;
 GRANT INSERT ON invoice.invoice, invoice.line, invoice.payment TO cella_app;
 GRANT UPDATE (sent, voided, reason) ON invoice.invoice TO cella_app;
 GRANT UPDATE (next) ON invoice.series TO cella_app;

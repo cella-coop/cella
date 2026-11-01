@@ -1,6 +1,6 @@
 +++
 title = "patronage-payslip"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 How a surplus's work share divides among the workers by pay and in equal
@@ -24,7 +24,7 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 - `work_share`: each worker's part by pay as it divides now, which the
   distribution's page shows until it is approved.
 
-## Rules
+## Guards
 
 - `patronage_payslip.divides`, on `patronage:distribution:approve`: the
   parts by pay and in equal parts are exactly the division among those
@@ -34,7 +34,7 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 
 `ts/_tests/division.test.ts` (`cella test slice patronage-payslip`): a
 mix of pay and equal parts divides among those paid in the year, half a
-year's pay counting half; approving makes the parts, which both rules
+year's pay counting half; approving makes the parts, which both guards
 take; parts no longer what the year's pay gives are refused.
 
 ## Reads

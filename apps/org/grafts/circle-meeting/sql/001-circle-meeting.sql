@@ -36,7 +36,7 @@ BEGIN ATOMIC
   LEFT JOIN circle.circle c ON c.id = coalesce(m.circle, w.circle);
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('meeting:meeting:schedule', 'circle_meeting.meets(jsonb)', 'circle-meeting');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('meeting:meeting:schedule', 'circle_meeting.meets(jsonb)', 'circle-meeting');
 
-GRANT USAGE ON SCHEMA circle_meeting TO cella_app, cella_rules;
-GRANT SELECT ON circle_meeting.setting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_meeting TO cella_app, cella_guards;
+GRANT SELECT ON circle_meeting.setting TO cella_app, cella_guards;

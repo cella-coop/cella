@@ -13,6 +13,6 @@ INSERT INTO cella.reading (what, key, power, owner) VALUES
 ALTER TABLE account.account ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY reads ON account.account FOR SELECT TO cella_app USING (holder IS NULL OR (SELECT cella.sees('account')) OR holder = cella.reader() OR cella.reaches('account', holder));
-CREATE POLICY rules ON account.account FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON account.account FOR SELECT TO cella_guards USING (true);
 CREATE POLICY writes ON account.account FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY changes ON account.account FOR UPDATE TO cella_app USING (true);

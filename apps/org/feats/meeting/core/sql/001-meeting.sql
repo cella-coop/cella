@@ -108,11 +108,11 @@ BEGIN ATOMIC
   LEFT JOIN meeting.meeting m ON m.id = w.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('meeting:meeting:hold', 'meeting.holds(jsonb)', 'meeting'),
   ('meeting:meeting:cancel', 'meeting.cancels(jsonb)', 'meeting');
 
-GRANT USAGE ON SCHEMA meeting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA meeting TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON meeting.meeting TO cella_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON meeting.item TO cella_app;
-GRANT SELECT ON meeting.meeting, meeting.item TO cella_rules;
+GRANT SELECT ON meeting.meeting, meeting.item TO cella_guards;

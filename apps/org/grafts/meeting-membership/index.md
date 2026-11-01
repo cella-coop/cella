@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Who came to a meeting. Declared by the `meeting` feat. Who was expected,
@@ -14,7 +14,7 @@ winning, with the day and who made it. A trigger refuses a mark at a
 meeting no longer scheduled, since holding it fixes who came, reading the
 meeting `FOR SHARE` as the agenda's trigger does, and a mark of anyone
 who is not an active member on the verdict date (`membership.active`). The app role may select, insert and update;
-the rules role, `cella_rules`, may select.
+the guards role, `cella_guards`, may select.
 
 ## Writes
 
@@ -37,7 +37,7 @@ block; the collection carries how many were present; a person's page
 lists the meetings they were marked at.
 
 Slice tests: a mark as a register, fixed once held, only an active
-member's, and the self rule.
+member's, and the self guard.
 
 ## Analytics
 

@@ -37,7 +37,7 @@ day the notary dates every verdict by; UTC when unset), all set with
 issues, so a seat that moves changes the invoices issued after the move
 and never the PDF of one issued before
 ([invoice](../../apps/org/feats/invoice/index.md#the-pdf)). `cella migrate --url` makes
-the roles `cella_app`, `cella_rules` and `cella_analytics` and every
+the roles `cella_app`, `cella_guards` and `cella_analytics` and every
 schema, and grants the analytics role the views the slices' analytical
 contracts publish ([trust](trust.md#the-analytics-role)); the server
 connects as `cella_app` or as a role that is a member of it. A host

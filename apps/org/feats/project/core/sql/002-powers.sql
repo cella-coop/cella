@@ -1,4 +1,4 @@
--- The power each project write needs; the circle-membership graft's rule
+-- The power each project write needs; the circle-membership graft's guard
 -- checks that the actor holds it. Setting a budget names its amount, so a
 -- mandate's limit caps the pot a holder may set.
 INSERT INTO cella.power (op, power, amount, owner) VALUES

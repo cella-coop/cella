@@ -27,7 +27,7 @@ CREATE TRIGGER open_for_messages BEFORE INSERT ON decision.message
 
 -- decision:message:post — the message is the actor's own, and mentions and
 -- links what its payload names. That the actor sits in the decision's
--- circle is circle-decision-membership's rule on the same op; that each
+-- circle is circle-decision-membership's guard on the same op; that each
 -- mention is a member's and each link a document's, decision-membership's and
 -- decision-document's.
 CREATE FUNCTION decision.posts(payload jsonb) RETURNS text
@@ -49,7 +49,7 @@ BEGIN ATOMIC
   LEFT JOIN decision.message m ON m.receipt::text = p.message;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:message:post', 'decision.posts(jsonb)', 'decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:message:post', 'decision.posts(jsonb)', 'decision');
 
 GRANT SELECT, INSERT ON decision.message TO cella_app;
-GRANT SELECT ON decision.message TO cella_rules;
+GRANT SELECT ON decision.message TO cella_guards;

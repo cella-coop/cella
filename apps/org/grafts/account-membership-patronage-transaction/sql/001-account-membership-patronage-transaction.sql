@@ -103,9 +103,9 @@ BEGIN ATOMIC
   LEFT JOIN patronage_transaction.distribution t ON t.distribution = x.distribution;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:distribute', 'account_membership_patronage_transaction.credited(jsonb)', 'account-membership-patronage-transaction');
 
-GRANT USAGE ON SCHEMA account_membership_patronage_transaction TO cella_app, cella_rules;
-GRANT SELECT ON account_membership_patronage_transaction.credit TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_membership_patronage_transaction TO cella_app, cella_guards;
+GRANT SELECT ON account_membership_patronage_transaction.credit TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_patronage_transaction.credit TO cella_app;

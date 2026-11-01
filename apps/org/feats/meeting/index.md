@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -83,9 +83,9 @@ entities above. `meeting.stays_settled` keeps a settled meeting settled;
 its items and refuses one once it is held, so an edit and a concurrent
 hold are serialised, as a time entry and its month's approval are. The
 triggers raise SQLSTATE `09000`. The app role may select, insert and
-update, and delete items; the rules role, `cella_rules`, may select.
+update, and delete items; the guards role, `cella_guards`, may select.
 
-## Rules
+## Guards
 
 - `meeting.holds`, on `meeting:meeting:hold`: the write held the meeting
   on the verdict date, which is not before its day.
@@ -122,7 +122,7 @@ the header's writes.
 
 - Slice tests (`core/ts/_tests/`): a held meeting's agenda fixed, a
   scheduled one's moving, a settled meeting staying so, a cancelled one
-  without minutes, and the hold and cancel rules, no hold before the day.
+  without minutes, and the hold and cancel guards, no hold before the day.
 - `_e2e/meetings.test.ts`: Lanterne's meetings seeded; Camille schedules
   coordination, its members add and reorder its agenda and table the
   rate card, mark themselves, Malik records others and may not record

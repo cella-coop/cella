@@ -1,6 +1,6 @@
 +++
 title = "circle-meeting-membership"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Who is expected at a meeting, whether it is quorate, and who may act on
@@ -21,7 +21,7 @@ of its own.
   members present and how many must be, the circle's share of its seats
   rounded up. Guests count for nothing.
 
-## Rules
+## Guards
 
 - `circle_meeting_membership.sits`, on `meeting:item:add`, `:move` and
   `:remove`: the actor is an active member (`membership.active`) seated in the meeting's circle
@@ -36,7 +36,7 @@ of its own.
   other member marks themselves, as a guest.
 
 Quorum is a reading, not a refusal: a meeting held without it is held,
-and reads as inquorate; what it decides is the decisions' own rules.
+and reads as inquorate; what it decides is the decisions' own guards.
 
 ## Shell
 
@@ -53,5 +53,5 @@ record Thomas, who holds no seat there. Camille schedules coordination's
 meetings and the assembly's from the assembly; Yusuf, Web's lead,
 schedules Web's and no other's.
 
-Slice tests: the roll on a meeting's day, the quorum, the keeper's rule
-and the seat rule.
+Slice tests: the roll on a meeting's day, the quorum, the keeper's guard
+and the seat guard.

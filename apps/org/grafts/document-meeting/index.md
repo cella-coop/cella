@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -12,7 +12,7 @@ Declared by the `meeting` feat.
 the document its minutes are, by their ids, with no foreign key into
 either feat; one document a meeting, one meeting a document. A trigger
 refuses either side not existing. The app role may select and insert;
-the rules role, `cella_rules`, may select.
+the guards role, `cella_guards`, may select.
 
 ## Writes
 
@@ -25,7 +25,7 @@ for each item of the agenda, as the actor's edit. After that, the
 minutes are the document already kept. From then on they are written as
 any document is, live, by the `edit` write, and saved as versions.
 
-## Rules
+## Guards
 
 - `document_meeting.keeps`, on `meeting:meeting:minute`: a write naming
   a document names the meeting's own minutes.
@@ -54,7 +54,7 @@ version 1 saved on 22 June: the meeting's card, who was present, and the
 them, d-2026-006 and d-2026-007. The assembly adopts its minutes, and
 none adopts them yet: the 31 October assembly has them on its agenda.
 
-Slice tests: the junction's sides, and the rule.
+Slice tests: the junction's sides, and the guard.
 
 ## Analytics
 

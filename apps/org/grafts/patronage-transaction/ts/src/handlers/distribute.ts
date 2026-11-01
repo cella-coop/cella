@@ -8,7 +8,7 @@ import type { Line } from '@cella/org-transaction/models'
 // Distributes an approved split and posts it in one write: the patronage
 // feat's state, then the entry whose lines `patronage_transaction.lines`
 // gives, linked in `distribution`, after which the grafts above credit
-// the shares the work share buys as lines of the same entry. The rules
+// the shares the work share buys as lines of the same entry. The guards
 // decide: that the split was approved (`patronage.distributes`), the
 // entry (`posted`) and the credits (account-membership-patronage-transaction's).
 export async function distribute(input: Distribute, deps: Deps): Promise<Settled<Distributed & { entry: string }> | Refused> {

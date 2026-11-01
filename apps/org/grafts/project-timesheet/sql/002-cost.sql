@@ -59,4 +59,4 @@ BEGIN ATOMIC
   ) x;
 END;
 
-GRANT SELECT ON project_timesheet.cost TO cella_app, cella_rules;
+GRANT SELECT ON project_timesheet.cost TO cella_app, cella_guards;

@@ -6,7 +6,7 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 const op = 'account:terms:adopt' satisfies keyof typeof ops
 
 // Adopts drafted capital clauses on the verdict date, citing the members'
-// decision. The rules decide: `account.adopts` that they repay an exit
+// decision. The guards decide: `account.adopts` that they repay an exit
 // within five years, the account-decision graft's that the decision moved
 // to adopt them, and circle-decision-membership's that it passed. Adopted
 // terms never change.

@@ -68,7 +68,7 @@ BEGIN ATOMIC
   LEFT JOIN membership.invitation i ON i.member = p.member;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:link', 'membership.links(jsonb)', 'membership'),
   ('membership:member:accept', 'membership.accepts(jsonb)', 'membership');
 
@@ -96,4 +96,4 @@ CREATE TRIGGER signs AFTER UPDATE OF status ON membership.member
   EXECUTE FUNCTION membership.signs();
 
 GRANT SELECT, INSERT ON membership.link TO cella_app;
-GRANT SELECT ON membership.link TO cella_rules;
+GRANT SELECT ON membership.link TO cella_guards;

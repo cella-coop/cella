@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -64,7 +64,7 @@ shell are not built; the salary is the `payslip` feat's.
 `circle-membership` graft checks it. What a hire costs is the salary's,
 which the `payslip` feat holds, so the power has no limit.
 
-## Rules
+## Guards
 
 - `employment.hires`, on `employment:worker:hire`: the write recorded the
   hire on the verdict date, with the contract its payload names.
@@ -80,7 +80,7 @@ which the `payslip` feat holds, so the power has no limit.
 
 `employment` (`core/sql/`): `employment.worker`; `employment.employed`,
 `employment.employed_in`, `employment.hires` and `employment.carries`. The
-app role may select and insert; the rules role may select.
+app role may select and insert; the guards role may select.
 
 ## Personal data
 

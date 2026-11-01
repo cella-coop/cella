@@ -1,6 +1,6 @@
 [package]
-name = "cella-rules"
-description = "Cella's rule primitives: amounts, stance folds, allocation and the notary log's hashing and signing"
+name = "cella-guards"
+description = "Cella's guard primitives: amounts, stance folds, allocation and the notary log's hashing and signing"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

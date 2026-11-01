@@ -1,11 +1,11 @@
 import { icons, short, type App } from '@cella/org-ui'
 import type { Detail, Entry, Head } from '../models/log.ts'
-import Rules from './blocks/Rules.svelte'
+import Guards from './blocks/Guards.svelte'
 
-const owners = (e: Entry) => e.rules.map((r) => r.owner).join(', ')
+const owners = (e: Entry) => e.guards.map((r) => r.owner).join(', ')
 
 // The log's client side: its entries, newest first, whether the whole log
-// verifies, and each entry's receipt, signatures and deciding rules.
+// verifies, and each entry's receipt, signatures and deciding guards.
 export const app: App = {
   name: 'log',
   collections: {
@@ -28,7 +28,7 @@ export const app: App = {
           { key: 'n', label: 'Entry', kind: 'number', role: 'title', value: (e: Entry) => e.n },
           { key: 'op', label: 'Op', kind: 'mono', role: 'sub', value: (e: Entry) => e.op },
           { key: 'actor', label: 'Actor', role: 'sub', value: (e: Entry) => e.actor },
-          { key: 'rules', label: 'Decided by', role: 'hidden', value: owners },
+          { key: 'guards', label: 'Decided by', role: 'hidden', value: owners },
           { key: 'receipt', label: 'Receipt', kind: 'number', role: 'hidden', value: (e: Entry) => e.receipt },
           { key: 'date', label: 'Verdict date', kind: 'date', role: 'meta', value: (e: Entry) => e.date },
         ],
@@ -54,7 +54,7 @@ export const app: App = {
           ...(e.n > 1 ? [{ label: `Entry ${e.n - 1}`, sub: 'previous', href: `/log/${e.n - 1}` }] : []),
           { label: e.actor, sub: 'member', href: `/people/${e.actor}` },
         ],
-        blocks: [Rules],
+        blocks: [Guards],
       },
     },
   },

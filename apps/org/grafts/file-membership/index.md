@@ -1,6 +1,6 @@
 +++
 title = "file-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 A member's records on file, such as their signed subscription form: files
@@ -17,7 +17,7 @@ id, a file kept once.
 `file-membership:member:attach` (confluent, `self`): a member files a record
 of their own; the log commits to its name and BLAKE3.
 
-## Rules
+## Guards
 
 - `file_membership.files`, on the write: the record is the actor's own, they
   are invited or a member, and the file was uploaded by this write about

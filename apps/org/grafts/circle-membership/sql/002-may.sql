@@ -41,14 +41,14 @@ BEGIN ATOMIC
   ) w;
 END;
 
--- The rule attaches to every op with a power: those the feats registered
+-- The guard attaches to every op with a power: those the feats registered
 -- before this graft migrated, and any registered after.
-INSERT INTO cella.rule (op, fn, owner)
+INSERT INTO cella.guard (op, fn, owner)
 SELECT p.op, 'circle_membership.empowered(jsonb)'::regprocedure, 'circle-membership' FROM cella.power p;
 
 CREATE FUNCTION circle_membership.attach() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  INSERT INTO cella.rule (op, fn, owner)
+  INSERT INTO cella.guard (op, fn, owner)
   VALUES (NEW.op, 'circle_membership.empowered(jsonb)', 'circle-membership');
   RETURN NULL;
 END

@@ -8,7 +8,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 
 // Schedules a meeting of a circle. Its id is the circle and the day, with
 // a number after it for a second meeting that day. Whether the circle
-// exists, and whether the actor's power reaches it, are the grafts' rules
+// exists, and whether the actor's power reaches it, are the grafts' guards
 // on the op.
 export async function schedule(input: Schedule, deps: Deps): Out<'meeting:meeting:schedule', Scheduled> {
   return write(deps, {

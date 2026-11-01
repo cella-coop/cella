@@ -2,7 +2,7 @@ CREATE SCHEMA payslip;
 
 -- What the co-op pays: the rates of the contributions on gross pay, the
 -- employee's taken from it and the employer's on top of it, until an
--- integration computes them line by line; and the widest ratio its rules
+-- integration computes them line by line; and the widest ratio its guards
 -- allow between the highest and the lowest salary.
 CREATE TABLE payslip.terms (
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
@@ -184,13 +184,13 @@ BEGIN ATOMIC
   LEFT JOIN payslip.run r ON r.month = x.month;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('payslip:run:generate', 'payslip.generates(jsonb)', 'payslip'),
   ('payslip:run:approve', 'payslip.approves(jsonb)', 'payslip'),
   ('payslip:run:pay', 'payslip.pays(jsonb)', 'payslip');
 
-GRANT USAGE ON SCHEMA payslip TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA payslip TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA payslip TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA payslip TO cella_app, cella_guards;
 GRANT INSERT ON payslip.run, payslip.payslip TO cella_app;
 GRANT UPDATE (approved, approver, paid, generated) ON payslip.run TO cella_app;
 GRANT UPDATE (minutes) ON payslip.payslip TO cella_app;

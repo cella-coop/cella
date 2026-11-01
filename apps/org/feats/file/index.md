@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -64,14 +64,14 @@ holds a power over expenses, pay or members. The shell serves the bytes at
 `/files/<id>/content` only where one of them opens it, as an attachment
 unless it is a picture, a PDF or plain text, and sandboxed.
 
-## Rules
+## Guards
 
 - `file.fixed`, a trigger: a file never changes, but by the notary's
   redaction.
 - `file.stored(id, class, subject)`: why a file is not the one a write
   stored, uploaded by the actor on the verdict date, of the class and
   about the subject named, and holding its bytes; every attaching graft's
-  rule calls it.
+  guard calls it.
 - `file.uploads`, on `file:file:upload`: a file of the co-op's own,
   stored by this write.
 
@@ -79,7 +79,7 @@ unless it is a picture, a PDF or plain text, and sandboxed.
 
 `file` (`core/sql/`): `file.file`, partitioned by class, numbered from
 `file.number`; `file.largest()`, `file.opens`, `file.stored`. The app role
-may select and insert; the rules role may select.
+may select and insert; the guards role may select.
 
 ## Tests
 
@@ -91,7 +91,7 @@ personal file's name and hash are commitments in the log.
 
 ## Reads
 
-Who reads a file at all, its name, class and bytes, is `file.opens`'s rule made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): the co-op's own files, anyone; a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`circle-file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
+Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): the co-op's own files, anyone; a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`circle-file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
 
 ## Shell
 

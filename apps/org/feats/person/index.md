@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -126,13 +126,13 @@ omission.
 
 - `person.person`, one row per address, with the name and the optional
   email and phone. The app role may select, insert and update the name and
-  contact details; the rules role, `cella_rules`, may select.
+  contact details; the guards role, `cella_guards`, may select.
 - `person.device`, one row per device by its public key, with its address,
   label, the day it was enrolled, the device that signed its enrolment
   (none for a first device) and the day it was revoked. A trigger keeps a
   device's key, address and enrolment fixed and a revocation standing,
   raising SQLSTATE `09000`. The app role may select, insert and update;
-  the rules role may select.
+  the guards role may select.
 
 The children's SQL reads this schema, as a graft's reads the feats it
 joins: membership enrols the device an invitation's acceptance makes, and employment
@@ -148,7 +148,7 @@ marks it, so the log commits to it and the vault keeps it. The register of
 the staff keeps a copy of a worker's name, of class `payroll`, which is
 employment's.
 
-## Rules
+## Guards
 
 - `person.own_profile`, on `person:person:profile`: the profile is the
   actor's own (`cella.actor()`).
@@ -157,7 +157,7 @@ employment's.
 - `person.verifies(actor, device)`, the scope's keyring, registered in
   `cella.keyring`: the device is enrolled, under the actor's address, and
   not revoked. `cella.submit` calls it for every write, after checking the
-  signature and before any rule, under the log's head lock.
+  signature and before any guard, under the log's head lock.
 - `person.enrols`, on `person:device:enrol`: the address is the actor's,
   and the device was enrolled by this write, naming the signing device
   (`cella.device()`) as `enrolled_by`.

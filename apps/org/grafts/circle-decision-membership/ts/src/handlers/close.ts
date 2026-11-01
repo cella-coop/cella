@@ -17,7 +17,7 @@ export interface Admitted {
 // everyone it admits and seats each in its circle as `member`, all in the
 // close's one transaction under one verdict: the decision feat's close,
 // then who is counted, the roll's members active that day, then for each
-// admission the membership feat's and circle-membership's state. The rules
+// admission the membership feat's and circle-membership's state. The guards
 // of each slice judge it: the close's own, `counts` that the roll was
 // counted, `decision_membership.closes` that each was asked and admitted
 // with its shares, `circle_decision_membership.settles` that a passing

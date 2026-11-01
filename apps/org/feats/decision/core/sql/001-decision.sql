@@ -67,7 +67,7 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:close', 'decision.closes(jsonb)', 'decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:close', 'decision.closes(jsonb)', 'decision');
 
 GRANT USAGE ON SCHEMA decision TO cella_app;
 GRANT SELECT, INSERT, UPDATE ON decision.decision TO cella_app;

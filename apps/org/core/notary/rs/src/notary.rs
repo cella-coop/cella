@@ -1,14 +1,14 @@
 //! The plumbing behind `submit` and `verify_log`: the head lock, the
 //! registries, the key file, the receipts and the log rows, reached through
-//! SPI. Hashing, signing and every signature check are `cella_rules`'s;
+//! SPI. Hashing, signing and every signature check are `cella_guards`'s;
 //! whether a device is current is the keyring's, and whether a write may
-//! pass is its rules', both in SQL.
+//! pass is its guards', both in SQL.
 
 use crate::vault;
 use crate::{CLOCK, KEY_FILE, SCOPE, TIMEZONE, UNBOUND};
-use cella_rules::hex::{hex, unhex};
-use cella_rules::log::{self, Chain, Entry, Key, Receipt, Rule, Signer};
-use cella_rules::sign::{self, Request};
+use cella_guards::hex::{hex, unhex};
+use cella_guards::log::{self, Chain, Entry, Guard, Key, Receipt, Signer};
+use cella_guards::sign::{self, Request};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
 use pgrx::{JsonB, PgSubXactCallbackEvent, PgXactCallbackEvent, register_subxact_callback, register_xact_callback};
@@ -36,7 +36,7 @@ pub(crate) fn spi<T>(r: Result<T, pgrx::spi::Error>) -> T {
 }
 
 /// The first column of the first row, or `None` when there is no row: a
-/// rule whose query finds nothing accepts.
+/// guard whose query finds nothing accepts.
 pub(crate) fn first<T: pgrx::datum::FromDatum + pgrx::datum::IntoDatum>(rows: pgrx::spi::SpiTupleTable<'_>) -> Option<T> {
     if rows.is_empty() {
         return None;
@@ -169,7 +169,7 @@ fn signer(c: &mut SpiClient<'_>, n: i64) -> i32 {
     first::<i32>(added).unwrap_or_else(|| fail("cella: the key file's key was not registered"))
 }
 
-/// The write `submit` is judging, for the rules to read through
+/// The write `submit` is judging, for the guards to read through
 /// `cella.op()`, `cella.actor()` and `cella.device()`.
 #[derive(Clone)]
 struct Context {
@@ -323,13 +323,13 @@ struct Registered {
     body: String,
 }
 
-fn rules(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
+fn guards(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
     let rows = spi(c.select(
         "SELECT r.owner, r.fn::text, quote_ident(n.nspname) || '.' || quote_ident(p.proname),
                 pg_get_functiondef(r.fn), p.provolatile = 'v',
                 p.prorettype = 'text'::regtype AND p.proargtypes = '3802'::oidvector,
                 p.prosecdef
-         FROM cella.rule r
+         FROM cella.guard r
          JOIN pg_proc p ON p.oid = r.fn
          JOIN pg_namespace n ON n.oid = p.pronamespace
          WHERE r.op = $1
@@ -341,13 +341,13 @@ fn rules(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
         let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
         let function = text(2);
         if spi(row.get::<bool>(5)) != Some(false) {
-            fail(format!("cella: rule {function} is volatile; a rule is stable or immutable"));
+            fail(format!("cella: guard {function} is volatile; a guard is stable or immutable"));
         }
         if spi(row.get::<bool>(6)) != Some(true) {
-            fail(format!("cella: rule {function} must take (payload jsonb) and return text"));
+            fail(format!("cella: guard {function} must take (payload jsonb) and return text"));
         }
         if spi(row.get::<bool>(7)) != Some(false) {
-            fail(format!("cella: rule {function} is security definer; a rule runs as {RULES_ROLE}"));
+            fail(format!("cella: guard {function} is security definer; a guard runs as {GUARDS_ROLE}"));
         }
         Registered { owner: text(1), function, call: text(3), body: text(4) }
     })
@@ -356,7 +356,7 @@ fn rules(c: &SpiClient<'_>, op: &str) -> Vec<Registered> {
 
 /// The function that says whether a device is a current key of an actor:
 /// `(actor text, device bytea) → text`, NULL when it is and a reason when
-/// not. One feat registers it in `cella.keyring`; it runs as the rules do.
+/// not. One feat registers it in `cella.keyring`; it runs as the guards do.
 fn keyring(c: &SpiClient<'_>) -> String {
     let rows = spi(c.select(
         "SELECT k.fn::text, quote_ident(n.nspname) || '.' || quote_ident(p.proname), p.provolatile = 'v',
@@ -379,31 +379,31 @@ fn keyring(c: &SpiClient<'_>) -> String {
     spi(row.get::<String>(2)).unwrap_or_default()
 }
 
-/// The role every rule runs as: it may read the scope's schemas and
+/// The role every guard runs as: it may read the scope's schemas and
 /// nothing else, and owns nothing.
-const RULES_ROLE: &str = "cella_rules";
+const GUARDS_ROLE: &str = "cella_guards";
 
-fn rules_role(c: &SpiClient<'_>) -> pg_sys::Oid {
+fn guards_role(c: &SpiClient<'_>) -> pg_sys::Oid {
     let row = spi(c.select(
         "SELECT oid FROM pg_catalog.pg_roles WHERE rolname = $1 AND NOT rolsuper AND NOT rolbypassrls",
         Some(1),
-        &[RULES_ROLE.into()],
+        &[GUARDS_ROLE.into()],
     ));
     spi(row.first().get_one::<pg_sys::Oid>())
-        .unwrap_or_else(|| fail(format!("cella: no role {RULES_ROLE}, or it is a superuser or bypasses row security")))
+        .unwrap_or_else(|| fail(format!("cella: no role {GUARDS_ROLE}, or it is a superuser or bypasses row security")))
 }
 
-/// Runs a rule as the rules role, in a security-restricted operation, as
+/// Runs a guard as the guards role, in a security-restricted operation, as
 /// Postgres runs a security-definer function or a maintenance command:
 /// `submit` is a security-definer function, where `SET ROLE` is refused.
 /// The previous user is restored on return and on unwind; an abort
 /// restores it too.
-struct AsRules {
+struct AsGuards {
     user: pg_sys::Oid,
     context: i32,
 }
 
-impl AsRules {
+impl AsGuards {
     fn enter(role: pg_sys::Oid) -> Self {
         let mut user = pg_sys::InvalidOid;
         let mut context = 0;
@@ -418,7 +418,7 @@ impl AsRules {
     }
 }
 
-impl Drop for AsRules {
+impl Drop for AsGuards {
     fn drop(&mut self) {
         // SAFETY: restores what `enter` read.
         unsafe { pg_sys::SetUserIdAndSecContext(self.user, self.context) }
@@ -447,7 +447,7 @@ fn signed(v: &Value) -> Option<Signed> {
 }
 
 pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
-    let at_ingress = || format!("{op} refused at ingress, before any rule");
+    let at_ingress = || format!("{op} refused at ingress, before any guard");
     let Some(s) = signed(&envelope.0) else {
         refuse(format!("{op} is not signed: a write carries its request, device, salt, nonce and sig in hex"), at_ingress());
     };
@@ -475,14 +475,14 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         let n = last + 1;
         let after = |by: &str| format!("{op} refused by {by} after verdict {}", n - 1);
 
-        let role = rules_role(c);
+        let role = guards_role(c);
         let _during = During::enter(Context { op: op.into(), actor: actor.into(), device: s.device });
 
         // Under the head lock, so a revocation or a use of the same nonce
         // that committed first is seen.
         let current = keyring(c);
         let why = {
-            let _as = AsRules::enter(role);
+            let _as = AsGuards::enter(role);
             let rows = spi(c.select(&format!("SELECT {current}($1, $2)"), Some(1), &[actor.into(), s.device.to_vec().into()]));
             first::<String>(rows)
         };
@@ -500,16 +500,16 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
 
         // Personal values out of the payload, under the head's lock, so an
         // erasure that settled first is seen: what the log keeps, and what
-        // the rules judge, holds commitments in their place.
+        // the guards judge, holds commitments in their place.
         let (number, time) = taken();
         let form = vault::logged(c, &payload.0, number, &date);
         let digest = log::payload_digest(&form).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
 
-        let registered = rules(c, op);
+        let registered = guards(c, op);
         for r in &registered {
             let arg = JsonB(form.clone());
             let reason = {
-                let _as = AsRules::enter(role);
+                let _as = AsGuards::enter(role);
                 let rows = spi(c.select(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
                 first::<String>(rows)
             };
@@ -553,28 +553,28 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             ],
         ));
 
-        let rules: Vec<Rule> = registered
+        let guards: Vec<Guard> = registered
             .iter()
-            .map(|r| Rule { owner: r.owner.clone(), function: r.function.clone(), text: log::rule_digest(&r.body) })
+            .map(|r| Guard { owner: r.owner.clone(), function: r.function.clone(), text: log::guard_digest(&r.body) })
             .collect();
-        let entry = Entry { n, op: op.into(), actor: actor.into(), date: date.clone(), payload: digest, receipt: number, receipt_hash, rules };
+        let entry = Entry { n, op: op.into(), actor: actor.into(), date: date.clone(), payload: digest, receipt: number, receipt_hash, guards };
         let hash = log::hash(&prev, &entry).unwrap_or_else(|e| fail(format!("cella: {e}")));
         let sig = with_key(|k| k.sign(&hash));
 
-        for (r, rule) in registered.iter().zip(&entry.rules) {
+        for (r, guard) in registered.iter().zip(&entry.guards) {
             spi(c.update(
-                "INSERT INTO cella.rule_text (hash, fn, body) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+                "INSERT INTO cella.guard_text (hash, fn, body) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
                 None,
-                &[rule.text.to_vec().into(), r.function.clone().into(), r.body.clone().into()],
+                &[guard.text.to_vec().into(), r.function.clone().into(), r.body.clone().into()],
             ));
         }
         let listed: Vec<Value> = entry
-            .rules
+            .guards
             .iter()
             .map(|r| json!({ "owner": r.owner, "function": r.function, "text": hex(&r.text) }))
             .collect();
         spi(c.update(
-            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, rules, prev, hash, sig, key)
+            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, guards, prev, hash, sig, key)
              VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11, $12)",
             None,
             &[
@@ -615,11 +615,11 @@ pub fn was_signed(n: i64, request: &Value) -> Option<bool> {
     Some(asked[..] == digest[..])
 }
 
-fn listed_rules(v: &Value) -> Option<Vec<Rule>> {
+fn listed_guards(v: &Value) -> Option<Vec<Guard>> {
     v.as_array()?
         .iter()
         .map(|r| {
-            Some(Rule {
+            Some(Guard {
                 owner: r.get("owner")?.as_str()?.to_string(),
                 function: r.get("function")?.as_str()?.to_string(),
                 text: unhex(r.get("text")?.as_str()?)?.try_into().ok()?,
@@ -652,7 +652,7 @@ pub fn verify_log() -> bool {
             }
         };
         let rows = spi(c.select(
-            "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.rules, l.prev, l.hash, l.sig, l.receipt,
+            "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.guards, l.prev, l.hash, l.sig, l.receipt,
                     r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
                     l.key, r.key
              FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
@@ -665,7 +665,7 @@ pub fn verify_log() -> bool {
             let n = spi(row.get::<i64>(1)).unwrap_or_default();
             let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
             let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
-            let rules = spi(row.get::<JsonB>(6)).and_then(|j| listed_rules(&j.0));
+            let guards = spi(row.get::<JsonB>(6)).and_then(|j| listed_guards(&j.0));
             let receipt = (|| {
                 Some(Receipt {
                     n: spi(row.get::<i64>(10))?,
@@ -680,7 +680,7 @@ pub fn verify_log() -> bool {
                 })
             })();
             let receipt_hash: Option<[u8; 32]> = bytes(19).try_into().ok();
-            let (Some(payload), Some(rules), Some(receipt), Some(receipt_hash)) = (bytes(5).try_into().ok(), rules, receipt, receipt_hash)
+            let (Some(payload), Some(guards), Some(receipt), Some(receipt_hash)) = (bytes(5).try_into().ok(), guards, receipt, receipt_hash)
             else {
                 warning!("cella: log broken at {n}: unreadable entry, or no receipt");
                 return false;
@@ -701,7 +701,7 @@ pub fn verify_log() -> bool {
                 payload,
                 receipt: receipt.n,
                 receipt_hash,
-                rules,
+                guards,
             };
             let (Some(key), Some(receipt_key)) = (spi(row.get::<i32>(22)), spi(row.get::<i32>(23))) else {
                 warning!("cella: log broken at {n}: no signer named");

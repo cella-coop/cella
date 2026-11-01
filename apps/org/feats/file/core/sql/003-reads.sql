@@ -7,7 +7,7 @@ ALTER TABLE file.file ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY reads ON file.file FOR SELECT TO cella_app
   USING (class = 'none' OR (SELECT cella.sees('file')) OR cella.reader() IN (subject, uploader) OR cella.reaches('file', class));
-CREATE POLICY rules ON file.file FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON file.file FOR SELECT TO cella_guards USING (true);
 CREATE POLICY writes ON file.file FOR INSERT TO cella_app WITH CHECK (true);
 
 REVOKE SELECT ON file.shared, file.receipt, file.contract, file.record FROM cella_app;

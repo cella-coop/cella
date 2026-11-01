@@ -32,7 +32,7 @@ const refused = async (run: () => Promise<unknown>, says: RegExp) => {
   }
 }
 
-const rule = async (fn: string, payload: object) =>
+const guard = async (fn: string, payload: object) =>
   (await db.query<{ r: string | null }>(`SELECT payslip.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
@@ -69,13 +69,13 @@ test('each salaried member is due the salary in force on the month\'s first day,
 
 test('a run is prepared with exactly what its members are due', async () => {
   await db.query(`INSERT INTO payslip.run (month, generated) VALUES ('2026-10', '2026-11-02')`)
-  assert.equal(await rule('generates', { month: '2026-10' }), '2026-10\'s payslips are not what its salaried members are due')
+  assert.equal(await guard('generates', { month: '2026-10' }), '2026-10\'s payslips are not what its salaried members are due')
   await db.query(
     `INSERT INTO payslip.payslip (month, member, gross, employee, employer, net)
      SELECT '2026-10', member, cella.amount(gross), cella.amount(employee), cella.amount(employer), cella.amount(net) FROM payslip.due('2026-10')`,
   )
-  assert.equal(await rule('generates', { month: '2026-10' }), null)
-  assert.equal(await rule('generates', { month: '2026-09' }), '2026-09\'s run was not prepared by this write')
+  assert.equal(await guard('generates', { month: '2026-10' }), null)
+  assert.equal(await guard('generates', { month: '2026-09' }), '2026-09\'s run was not prepared by this write')
 })
 
 test('a payslip\'s net is its gross less the employee\'s contributions', async () => {
@@ -97,7 +97,7 @@ test('a run is paid only once approved; once approved its payslips never change,
   )
   await db.query(`UPDATE payslip.run SET paid = '2026-11-02' WHERE month = '2026-10'`)
   await refused(() => db.query(`UPDATE payslip.run SET paid = '2026-11-03' WHERE month = '2026-10'`), /the 2026-10 run was paid on 2026-11-02/)
-  assert.equal(await rule('pays', { month: '2026-10' }), null)
+  assert.equal(await guard('pays', { month: '2026-10' }), null)
 })
 
 test('the highest salary is at most the ratio times the lowest', async () => {
@@ -111,7 +111,7 @@ test('the highest salary is at most the ratio times the lowest', async () => {
   assert.equal(await spread('2026-12'), '2026-12\'s highest salary, 300000 cents, is more than 1.60 times its lowest, 150000 cents')
   assert.equal(await spread('2026-10'), null)
   // Outside a write there is no actor, so no approval is this write's.
-  assert.equal(await rule('approves', { month: '2026-10' }), '2026-10\'s run was not approved by this write')
+  assert.equal(await guard('approves', { month: '2026-10' }), '2026-10\'s run was not approved by this write')
 })
 
 test('as the app role, a member reads their own salary, payslips and runs; a payroll power reads every one; no one signed in, none', async () => {
@@ -137,7 +137,7 @@ test('as the app role, a member reads their own salary, payslips and runs; a pay
   assert.equal((await reading('amina@lanterne.example', 'SELECT month FROM payslip.run')).length, 1, 'Amina is paid in December alone')
 })
 
-test('a write\'s transaction reads every row, whoever writes, and the rules read every row', async () => {
+test('a write\'s transaction reads every row, whoever writes, and the guards read every row', async () => {
   await app.query('BEGIN')
   try {
     await app.query(`SELECT set_config('cella.actor', 'chloe@lanterne.example', true), set_config('cella.writing', 'on', true)`)
@@ -150,7 +150,7 @@ test('a write\'s transaction reads every row, whoever writes, and the rules read
   assert.equal(after.rows[0].w, null, 'the write ends with its transaction')
   await db.query('BEGIN')
   try {
-    await db.query('SET LOCAL ROLE cella_rules')
+    await db.query('SET LOCAL ROLE cella_guards')
     assert.ok((await db.query('SELECT DISTINCT member FROM payslip.salary')).rows.length > 1)
   } finally {
     await db.query('ROLLBACK')

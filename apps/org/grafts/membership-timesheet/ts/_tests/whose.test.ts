@@ -1,7 +1,7 @@
 // Whose time an entry is, as the members see it, on a database holding the
-// app's core, the timesheet and membership feats and this graft: the rule
+// app's core, the timesheet and membership feats and this graft: the guard
 // on a log refuses time of a member suspended or gone, and leaves anyone
-// else's to the timesheet feat's rules. Run by `cella test slice
+// else's to the timesheet feat's guards. Run by `cella test slice
 // membership-timesheet`.
 
 import { after, before, test } from 'node:test'
@@ -40,8 +40,8 @@ test('an active member, one invited and someone who is no member are not this gr
   assert.equal(await whose('nobody@x'), null)
 })
 
-test('the rule runs on the log, and no trigger of this graft\'s is on the entries', async () => {
-  const { rows } = await db.query(`SELECT op FROM cella.rule WHERE fn = 'membership_timesheet.whose(jsonb)'::regprocedure`)
+test('the guard runs on the log, and no trigger of this graft\'s is on the entries', async () => {
+  const { rows } = await db.query(`SELECT op FROM cella.guard WHERE fn = 'membership_timesheet.whose(jsonb)'::regprocedure`)
   assert.deepEqual(rows, [{ op: 'timesheet:entry:log' }])
   const triggers = await db.query(`SELECT tgname FROM pg_trigger WHERE tgrelid = 'timesheet.entry'::regclass AND tgname = 'whose'`)
   assert.deepEqual(triggers.rows, [])

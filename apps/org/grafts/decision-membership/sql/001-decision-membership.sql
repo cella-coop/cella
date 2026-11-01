@@ -11,7 +11,7 @@ INSERT INTO decision.kind (kind, label, fields, owner) VALUES
 -- The motions of those kinds, each with the member it names and, for an
 -- admission, the shares as a whole number or none. The decision is named
 -- by id and the member by address, with no foreign key into either feat;
--- the rules resolve them.
+-- the guards resolve them.
 CREATE VIEW decision_membership.motion AS
 SELECT m.decision, m.n, m.kind, m.args ->> 'member' AS member,
        CASE WHEN m.args ->> 'shares' ~ '^[0-9]{1,9}$' THEN (m.args ->> 'shares')::integer END AS shares
@@ -43,7 +43,7 @@ END;
 
 -- membership:member:admit — the cited decision asks to admit this member,
 -- with these shares. That it closed and passed on its roll is
--- circle-decision-membership's rule, which this graft cannot read: an
+-- circle-decision-membership's guard, which this graft cannot read: an
 -- admission cites a decision.
 CREATE FUNCTION decision_membership.admits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -78,7 +78,7 @@ END;
 -- decision:decision:close — every member the close admits, as its
 -- payload's `admitted` names them, is one the decision asks to admit, and
 -- the close left them admitted with the shares it asks (`membership.admitted`,
--- the membership feat's rule on a standalone admission, run here for each).
+-- the membership feat's guard on a standalone admission, run here for each).
 -- Whether the close admits everyone it must is circle-decision-membership's,
 -- which can tell whether it passed.
 CREATE FUNCTION decision_membership.closes(payload jsonb) RETURNS text
@@ -98,7 +98,7 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:propose', 'decision_membership.asks(jsonb)', 'decision-membership'),
   ('decision:decision:close', 'decision_membership.closes(jsonb)', 'decision-membership'),
   ('membership:member:admit', 'decision_membership.admits(jsonb)', 'decision-membership'),
@@ -109,5 +109,5 @@ INSERT INTO decision.cites (op, owner) VALUES
   ('membership:member:suspend', 'decision-membership'),
   ('membership:member:exit', 'decision-membership');
 
-GRANT USAGE ON SCHEMA decision_membership TO cella_app, cella_rules;
-GRANT SELECT ON decision_membership.motion TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA decision_membership TO cella_app, cella_guards;
+GRANT SELECT ON decision_membership.motion TO cella_app, cella_guards;

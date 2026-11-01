@@ -1,6 +1,6 @@
 +++
 title = "decision-patronage"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 A year's distribution and the decision of the assembly that approves its
@@ -25,9 +25,9 @@ Declared by `patronage`.
   adopt them, a view of the motions of the `patronage` kind.
 
 The motions are the decision feat's rows, so the graft reads them and
-keeps no copy. The app role and the rules role may select.
+keeps no copy. The app role and the guards role may select.
 
-## Rules
+## Guards
 
 - `decision_patronage.approves`, on `patronage:distribution:approve`: the
   cited decision moved to approve this distribution.

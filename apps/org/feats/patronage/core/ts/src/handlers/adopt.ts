@@ -6,7 +6,7 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 const op = 'patronage:terms:adopt' satisfies keyof typeof ops
 
 // Adopts drafted terms on the verdict date, citing the members' decision.
-// The rules decide: `patronage.adopts` that they divide the whole work
+// The guards decide: `patronage.adopts` that they divide the whole work
 // share and govern no year already approved, decision-patronage's that
 // the decision moved to adopt them, and circle-decision-membership's that it
 // passed. Adopted terms never change.

@@ -151,9 +151,9 @@ BEGIN ATOMIC
   ) latest ON true;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('document:document:adopt', 'document.adopts(jsonb)', 'document');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('document:document:adopt', 'document.adopts(jsonb)', 'document');
 
-GRANT USAGE ON SCHEMA document TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA document TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA document TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA document TO cella_app, cella_guards;
 GRANT INSERT ON document.update, document.version, document.comment, document.adoption TO cella_app;
 GRANT UPDATE (resolved) ON document.comment TO cella_app;

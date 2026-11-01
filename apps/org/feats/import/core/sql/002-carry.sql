@@ -8,4 +8,4 @@ BEGIN ATOMIC
   WHERE h.n > 0;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('import:state:carry', 'import.carries(jsonb)', 'import');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('import:state:carry', 'import.carries(jsonb)', 'import');

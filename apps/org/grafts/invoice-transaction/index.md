@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -32,24 +32,24 @@ posts nothing.
   the lines an event posts. The handlers ask the database for them, so the
   postings are SQL's, never TypeScript's.
 
-The app role may select and insert postings; the rules role,
-`cella_rules`, may select.
+The app role may select and insert postings; the guards role,
+`cella_guards`, may select.
 
-## Rules
+## Guards
 
 - `invoice_transaction.issued`, on `invoice:invoice:issue`, and
   `invoice_transaction.voided`, on `invoice:invoice:void`: the invoice has
   a posting for the event, dated on the issue or the void, whose lines are
   exactly the event's.
 
-Payments are confluent and carry no rule; that their entry lands in an
+Payments are confluent and carry no guard; that their entry lands in an
 open period is `account-transaction`'s trigger.
 
 ## Handlers
 
 `issue`, `payment` and `annul` (the void) wrap the invoice feat's write
 specs: the invoice's state, then the entry through the transaction feat's
-`record`, then the posting, then `cella.submit` once. A refusal by any rule
+`record`, then the posting, then `cella.submit` once. A refusal by any guard
 or trigger rolls all of it back; the void of a paid invoice leaves no
 credit note behind.
 

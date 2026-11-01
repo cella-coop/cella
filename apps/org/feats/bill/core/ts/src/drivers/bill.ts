@@ -2,7 +2,7 @@ import { literal, today, type Db, type Read } from '@cella/org-db'
 import { categories, type Detail, type Lined, type Listed, type Recording, type Taxed } from '../models/bill.ts'
 
 // A bill is overdue when it is not paid past its due date, the scope's
-// day (`cella.verdict_date()`): a read, so no rule depends on it.
+// day (`cella.verdict_date()`): a read, so no guard depends on it.
 const standing = `CASE WHEN b.status <> 'paid' AND b.due < cella.verdict_date() THEN 'overdue' ELSE b.status END`
 const fields = (category: string) => `b.id, b.supplier, b.reference, to_char(b.issued, 'YYYY-MM-DD') AS issued,
   to_char(b.due, 'YYYY-MM-DD') AS due, b.label, ${category} AS category,

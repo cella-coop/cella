@@ -55,10 +55,10 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'account_decision.asks(jsonb)', 'account-decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:propose', 'account_decision.asks(jsonb)', 'account-decision');
 
 -- account:terms:adopt — the cited decision moved to adopt these terms.
--- That it closed and passed on its roll is circle-decision-membership's rule,
+-- That it closed and passed on its roll is circle-decision-membership's guard,
 -- attached through decision.cites.
 CREATE FUNCTION account_decision.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -72,9 +72,9 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('account:terms:adopt', 'account_decision.adopts(jsonb)', 'account-decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:terms:adopt', 'account_decision.adopts(jsonb)', 'account-decision');
 INSERT INTO decision.cites (op, owner) VALUES ('account:terms:adopt', 'account-decision');
 
-GRANT USAGE ON SCHEMA account_decision TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_decision TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON account_decision.adoption TO cella_app;
-GRANT SELECT ON account_decision.adoption TO cella_rules;
+GRANT SELECT ON account_decision.adoption TO cella_guards;

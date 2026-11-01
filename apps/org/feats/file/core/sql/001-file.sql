@@ -56,7 +56,7 @@ $$;
 CREATE TRIGGER fixed BEFORE UPDATE ON file.file
   FOR EACH ROW EXECUTE FUNCTION file.fixed();
 
--- Whether a member may open a file's bytes by its own rule: the co-op's
+-- Whether a member may open a file's bytes by its own guard: the co-op's
 -- own files anyone may; a personal file, the person it concerns and who
 -- uploaded it. A graft that sees a power over what the file is attached
 -- to may open it to more.
@@ -88,15 +88,15 @@ END;
 
 -- file:file:upload — a file of the co-op's own, uploaded by the actor on
 -- the verdict date; a personal file comes in through the graft that
--- attaches it, under that graft's rule.
+-- attaches it, under that graft's guard.
 CREATE FUNCTION file.uploads(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 RETURN file.stored(payload ->> 'file', 'none', NULL);
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('file:file:upload', 'file.uploads(jsonb)', 'file');
 
-GRANT USAGE ON SCHEMA file TO cella_app, cella_rules;
-GRANT SELECT ON file.file, file.shared, file.receipt, file.contract, file.record TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA file TO cella_app, cella_guards;
+GRANT SELECT ON file.file, file.shared, file.receipt, file.contract, file.record TO cella_app, cella_guards;
 GRANT INSERT ON file.file TO cella_app;
 GRANT USAGE ON SEQUENCE file.number TO cella_app;

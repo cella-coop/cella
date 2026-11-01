@@ -28,7 +28,7 @@ BEGIN ATOMIC
   LEFT JOIN transaction.entry e ON e.id = x.entry;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('account-transaction:entry:carry', 'account_transaction.carries(jsonb)', 'account-transaction');
 
 INSERT INTO cella.power (op, power, amount, owner) VALUES

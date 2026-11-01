@@ -21,7 +21,7 @@ BEGIN ATOMIC
   ) s;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('account:period:open', 'account.opens(jsonb)', 'account');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:period:open', 'account.opens(jsonb)', 'account');
 
 -- Finance keeps the periods: the power that closes them opens them.
 INSERT INTO cella.power (op, power, amount, owner) VALUES

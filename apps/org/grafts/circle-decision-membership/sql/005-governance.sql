@@ -59,7 +59,7 @@ END;
 -- decision's circle as `member` (`seats`, as on a seat of its own); a
 -- close that does not pass admits no one. Its payload's `admitted` names
 -- each member and their seat. That each admission is one the decision
--- asks, with its shares, is decision-membership's rule on the close.
+-- asks, with its shares, is decision-membership's guard on the close.
 CREATE FUNCTION circle_decision_membership.settles(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -86,6 +86,6 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:propose', 'circle_decision_membership.asks(jsonb)', 'circle-decision-membership'),
   ('decision:decision:close', 'circle_decision_membership.settles(jsonb)', 'circle-decision-membership');

@@ -174,3 +174,18 @@ export interface Closed {
   closed: string
   cutoff: number
 }
+
+// Adopting the policy a passed motion carries as its action `n`.
+export interface Adopt {
+  motion: string
+  n: number
+}
+
+export interface Adopted {
+  policy: string
+  motion: string
+  n: number
+  applies: string
+  // The BLAKE3 of its wordings, in hex, which the log commits to.
+  hash: string
+}

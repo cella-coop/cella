@@ -47,7 +47,8 @@ A node is a directory with a `feat.toml`. It holds:
   (the `cella` Postgres extension over them), `db` (an action's transaction),
   `sign` (a device's signature on an action), `vat` (a document's lines,
   their amounts and VAT, which invoices and bills share), `analytics`
-  (the port reports are read through), `ui` (the shell's tokens and
+  (the port reports are read through), `policy` (the register of the
+  policies circles adopt by motion, [policies](#policies)), `ui` (the shell's tokens and
   components) and later `auth`. A leaf feat's core is all of it.
 - `feats/` — its child feats, the same shape.
 - `grafts/` — the joins between the feats below it, at any depth, that no
@@ -264,16 +265,17 @@ motion. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a node's core | `cella.*`; the notary's `vault.*`; the catalog |
-| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; the catalog |
-| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; the catalog |
+| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core library's own schema, named for it (`analytics`, `policy`) |
+| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; the policy register but its wording; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; the policy register but its wording; the catalog |
 
 A graft's schema holds the junction, with keys into each feat's tables; no
 foreign key crosses a feat. `feat-check` enforces these boundaries by
 parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
-holds a foreign key out of it; writes `cella.*` other than to register,
+holds a foreign key out of it; reads a policy's wording
+(`policy.wording`, [policies](#policies)); writes `cella.*` other than to register,
 under its own name, its guards on its own actions, those of the feats it
 joins and those of the lower-order grafts it builds on, the power each of
 its own actions needs as a literal row, the powers that read the rows of its
@@ -294,7 +296,7 @@ capital account's lines keeps row-level security for the app role: the
 person reads their own rows; whoever holds a power its feat names in
 `cella.reading` reads them all; a graft that knows more opens a row
 further through `cella.reach`; a write's transaction and the guards role
-read the whole. The pattern every policy takes, the power checks asked
+read the whole. The pattern every row-level policy takes, the power checks asked
 once per query:
 `USING ((SELECT cella.sees('<feat>')) OR member = cella.reader() OR
 cella.reaches('<feat>', member))`. A view over such a table reads as its
@@ -302,7 +304,7 @@ reader (`security_invoker`), unless what it shows is a sum every member
 reads, as the statements' rubrics and a project's burn are, or a share
 that needs the whole to divide, which filters its rows by the same test
 instead. A stance on a secret ballot is the one row no power opens: its
-policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
+row-level policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
 and a motion's tally sums it as its owner, sealed until the close.
 
 SQL is the source of truth for guards. TypeScript calls them and never
@@ -383,9 +385,10 @@ view shares what its slice agrees to share and no more:
   redacts the column in its table, so the view shows it redacted;
 - from a table under row-level security, or a view over one, only sums
   over its rows, grouped by no column that says whose a row is (one its
-  policy compares with `cella.reader()` or opens by `cella.reaches()`)
-  unless that column is shown and declared; or the rows its policy opens
-  to everyone, kept by the view's own `col IS NULL`. So the payroll is
+  row-level policy compares with `cella.reader()` or opens by
+  `cella.reaches()`) unless that column is shown and declared; or the
+  rows its row-level policy opens to everyone, kept by the view's own
+  `col IS NULL`. So the payroll is
   shared as each month's sums, and a capital account's lines are summed
   into its parent's code.
 
@@ -700,6 +703,63 @@ outside one, and a begun transaction commits only with its verdict, so
 authorisation and logging hold for every state change but a
 superuser's ([trust](trust.md#one-server)). `write` in `@cella/org-db`
 begins, writes and submits, and a handler writes through it alone.
+
+## Policies
+
+A **policy** is one binding sentence a circle adopted by motion. It is of
+one of three kinds: a **mandate**, who may do something; a **rule**, what
+else the co-op agreed; a **procedure**, how a circle decides. Its legal
+wording is the sentence that binds, each value in it marked once by a
+name, `{name: value}`:
+
+```text
+Associations and small co-ops pay the solidarity rate, {rate: 20 %} below the rate card
+```
+
+The value's type is how it is written: `3 000 €` an amount in cents,
+`20 %` a share, `2026-01-01` or `1 January 2026` a day, `10` a number; a
+value named `role` or `power`, or ending so, a role's or a power's id;
+anything else text. A policy may carry a friendly wording beside the
+legal one, in plain words, which never binds and marks no value, so a
+value exists once. A rule may mark none, and then binds by people's
+judgement alone.
+
+**The register** is org's core library `policy` (`core/policy`), with
+its schema `policy` ([its doc](../../apps/org/core/policy/index.md)). It
+keeps every policy: its circle and kind, its wordings, its values, the
+motion and the action of it that adopted it, by which it is named
+(`m-2026-013/1`), the day it applies from, the day it ends and the
+policy it replaces. It is a core's, as the notary is, so it knows no
+feat: a motion is named by its id, and no foreign key leaves the schema.
+Unlike the notary, it has rows written at run time, and one function
+writes them all, `policy.adopt`, which runs with its owner's rights and
+which only the app may call, inside the write of the action that adopts
+the policy; its tables are state tables, so the notary's trigger
+refuses a row outside a write. A slice's SQL may read the register's
+policies and values, never `policy.wording`, which `cella check feats`
+refuses and the guards role is granted nothing on.
+
+**Adoption** is an action a motion carries, `policy` in `motion.carries`,
+which the motion feat registers itself, since a policy is a sentence a
+circle adopts and only its circle's motion may adopt it: proposed with
+its kind and wordings, checked sound as the motion is proposed
+(`motion.asks`), and carried out once the motion passes as the motion
+feat's `motion:policy:adopt`, which cites the motion. The policy is its
+motion's circle's, applying from the day the action names or the verdict
+date, whichever is later. A policy replacing another of its circle and
+kind ends that one the day it applies.
+
+**Values bind where they are read.** The feat that reads a kind of
+policy copies its values into typed rows of its own as the policy is
+adopted, in the same verdict, so a guard reads a real column, never the
+sentence: a feat's write the adoption calls, through the graft joining
+that feat to `motion`. A guard never parses a wording, and reads the
+register only to know which policies are in force.
+
+A circle's page lists its policies in force, each as its legal wording
+reads, with the motion that adopted it and its days (`circle-motion`).
+A row-level policy, which says which rows a reader sees
+([SQL](#sql)), is always called that, and is never a policy.
 
 ## Feat flags
 

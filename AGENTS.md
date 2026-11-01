@@ -52,6 +52,13 @@ repository works only on the org app, `apps/org/`. Read
   ([operations](_corpus/doc/operations.md#upgrades)).
 - **SQL is the source of truth for guards.** Never re-implement a guard in
   TypeScript; never call `now()` in a guard, read `cella.verdict_date()`.
+- **A guard reads a policy's values from the reading feat's columns,
+  never parses its wording.** A policy is a sentence a circle adopted by
+  motion, its values marked in it once; the feat that reads a kind of
+  policy copies them into its own typed rows at adoption. `cella check
+  feats` refuses a slice's SQL that reads `policy.wording`
+  ([policies](_corpus/doc/architecture.md#policies)). Row-level policies
+  are always called that, and are not policies.
 - **A guard lives at the lowest level that owns it**: a feat, a graft, or a
   node's core only when it spans everything below.
 - **Personal data never enters the log.** Commit to it; keep it in the vault.

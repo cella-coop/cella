@@ -11,4 +11,7 @@ export const actions = {
   // a message on its deliberation: messages add up in any order, each the
   // author's own; posted by a member seated in the motion's circle
   'motion:message:post': confluent({ check: 'seat' }),
+  // a policy its circle adopts, a sentence that binds; the cited motion
+  // carries it
+  'motion:policy:adopt': ordered({ check: 'decided' }),
 } satisfies Actions

@@ -154,8 +154,8 @@ sequenceDiagram
   `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
   year, is checked by the graft that sees what spends it:
   `circle-expense-membership` sums an approver's approvals.
-- **Who may read is a policy in the database.** Every connection the
-  server hands out reads as the session's person: it sets `cella.actor`
+- **Who may read is a row-level policy in the database.** Every
+  connection the server hands out reads as the session's person: it sets `cella.actor`
   from the session before any query, and `write` sets it again for its
   transaction (`cella.reader()`). Each table holding a person's pay, time,
   capital, personal files or a capital account's lines keeps row-level
@@ -212,7 +212,7 @@ Guards come in four layers:
 |---|---|---|
 | Primitives | us, by release | Rust: the `cella.*` types, aggregates and functions |
 | Composed guards | power users and module developers, adopted by motion | `LANGUAGE sql` functions over the primitives, in the declared subset |
-| Parameters | circles and the assembly | rows: mandates, limits, the procedure each circle uses |
+| Parameters | circles and the assembly, by motion | policies, whose values guards read from the rows they are copied into: mandates, limits, the procedure each circle uses |
 | Members' view | members | forms that read back as sentences |
 
 The law for each legal form is ours to write, as primitives and composed
@@ -287,8 +287,8 @@ makes no claim that the host cannot forge a vote.
 - Every signed artifact names its binding (parent, sequence, audience or
   freshness), and each signed type is domain-separated; the register of
   signed types, their tags and bindings is [signatures](signatures.md).
-- Thresholds are signed policy in the log, never flags or unsigned config.
-  No one holds a group's key alone.
+- Thresholds are policies a motion adopted, signed in the log, never
+  flags or unsigned config. No one holds a group's key alone.
 - Lost keys are recovered from guardian shares.
 - **A person signs in with a device, and the browser signs every write.**
   The browser keeps each device's key in IndexedDB, made by WebCrypto and
@@ -323,6 +323,17 @@ preview the hash while members edit, and the document feat's tests hold
 the two to the same bytes. An adoption's log entry commits to the hash,
 and `document-motion`'s guard refuses to adopt a version that hashes
 otherwise than the motion names.
+
+A motion that adopts a policy names its sentence: the legal wording,
+which binds, each value marked once in it, and perhaps a friendly one
+beside it, which never binds ([policies](architecture.md#policies)). The
+register keeps both, and the BLAKE3 of the two as a JSON array
+(`policy.hash`); the adoption's log entry names the policy, and the
+motion feat's guard refuses a policy whose wordings hash otherwise than
+the motion carries them. The guards role reads a policy's values and
+never its wording: a guard reads the values the feat that reads a kind of
+policy copied into its own rows, so what binds is the sentence the
+members adopted, and what a guard checks is a column.
 
 ## Personal data
 
@@ -413,10 +424,10 @@ which the analytics port publishes as a view of its own. What every
 role reads, the notary's `vault.erased`, it reads too.
 
 A contract's view reads as its owner, so what the role sees is what the
-slice agreed to share, not what a member's policies would show them:
+slice agreed to share, not what the row-level policies would show a member:
 a personal column only where the view declares it, which erasure redacts
 in its table and so in the view, and from a table under row-level
-security only sums over everyone or the rows its policy opens to all.
+security only sums over everyone or the rows its row-level policy opens to all.
 The role reads a declared personal column as it is, so whatever reads
 through the role decides whom it shows it to; the contracts share no
 figure that is one member's pay, time or capital.
@@ -463,7 +474,7 @@ What the build does not yet do, and what lifts each:
   native client (rung 4) nothing stops a host serving code that signs
   something else with the keys it serves code to.
 - **The host sets the reader.** The app role may set `cella.actor` and
-  `cella.writing` itself, so the policies hold the server's own code to
+  `cella.writing` itself, so the row-level policies hold the server's own code to
   what each person may read, not a hostile host; the native client
   (rung 4) and the host's trust (A2) lift this.
 - **Some of what concerns a person is every member's.** The register of

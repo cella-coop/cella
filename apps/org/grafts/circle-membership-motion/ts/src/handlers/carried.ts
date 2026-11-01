@@ -3,6 +3,7 @@ import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { erase, exit, suspend } from '@cella/org-membership/api'
 import { grant, nest, revoke } from '@cella/org-circle/api'
 import { add, remove } from '@cella/org-graft-circle-membership/api'
+import { adopt } from '@cella/org-motion/api'
 
 type Args = Record<string, string | number | undefined>
 
@@ -11,7 +12,7 @@ const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
 
 // How each kind of action is carried out: the decided write it makes, citing
 // the motion. Admissions are not here: the close carries them itself.
-const writes: Record<string, { op: Permission; run: (a: Args, motion: string, deps: Deps) => Promise<Settled<unknown> | Pending | Refused> }> = {
+const writes: Record<string, { op: Permission; run: (a: Args, motion: string, deps: Deps, n: number) => Promise<Settled<unknown> | Pending | Refused> }> = {
   suspend: { op: 'membership:member:suspend', run: (a, motion, deps) => suspend({ member: String(a.member), motion }, deps) },
   exit: { op: 'membership:member:exit', run: (a, motion, deps) => exit({ member: String(a.member), motion }, deps) },
   erase: { op: 'membership:member:erase', run: (a, motion, deps) => erase({ member: String(a.member), motion }, deps) },
@@ -33,6 +34,7 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
       ),
   },
   revoke: { op: 'circle:mandate:revoke', run: (a, motion, deps) => revoke({ mandate: Number(a.mandate), motion }, deps) },
+  policy: { op: 'motion:policy:adopt', run: (_, motion, deps, n) => adopt({ motion, n }, deps) },
   seat: {
     op: 'circle-membership:seat:add',
     run: (a, motion, deps) => add({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),
@@ -51,8 +53,8 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
 // write, so whether the motion passed comes from its tally, which a
 // secret ballot opens at its close.
 export async function carried(motion: string, deps: Deps): Promise<Done[]> {
-  const { rows } = await deps.db.query<{ kind: string; args: Args }>(
-    `SELECT m.kind, m.args FROM motion.action m JOIN motion.motion d ON d.id = m.motion
+  const { rows } = await deps.db.query<{ n: number; kind: string; args: Args }>(
+    `SELECT m.n, m.kind, m.args FROM motion.action m JOIN motion.motion d ON d.id = m.motion
      WHERE m.motion = $1 AND d.closed IS NOT NULL AND coalesce((circle_membership_motion.tally(d.id)).passes, false)
      ORDER BY m.n`,
     [motion],
@@ -61,7 +63,7 @@ export async function carried(motion: string, deps: Deps): Promise<Done[]> {
   for (const m of rows) {
     const w = writes[m.kind]
     if (w) {
-      out.push(done(w.op, await w.run(m.args, motion, deps)))
+      out.push(done(w.op, await w.run(m.args, motion, deps, m.n)))
     }
   }
   return out

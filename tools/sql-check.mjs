@@ -2,14 +2,19 @@
 // Postgres's own parser, and refuses any reference the tree does not allow.
 //
 //   SQL in            may reference
-//   a node's core     cella.*; the notary's vault; the catalog; the
-//                     analytics port's own schema, analytics, in its SQL
+//   a node's core     cella.*; the notary's vault; the catalog; a core
+//                     library's own schema, named for it, in its SQL
+//                     (analytics, the port's; policy, the register's)
 //   a feat            its own schema; those of the feats it nests in;
-//                     cella.*; the catalog
+//                     cella.*; the policy register; the catalog
 //   a graft           its own schema; the schemas of the feats it joins and
 //                     of the feats they nest in; the schemas of the grafts
 //                     at or below its node that join a proper subset of its
-//                     feats; cella.*; the catalog
+//                     feats; cella.*; the policy register; the catalog
+//
+// A slice reads the policy register's policies and values, never their
+// wording, policy.wording: a guard reads a policy's values from its own
+// columns, copied there at adoption, and never parses the sentence.
 //
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
@@ -100,10 +105,11 @@ export function owners(repo, apps) {
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(PORT.test(o.dir) ? ['analytics'] : [])]), feats: [], ops: [] }
+    const lib = o.dir.match(/(?:^|\/)core\/([a-z]+)\/sql$/)?.[1]
+    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(lib ? [lib] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', ...catalog]), feats: [o.name], ops: [o.name] }
+    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', REGISTER, ...catalog]), feats: [o.name], ops: [o.name] }
   }
   const feats = o.name.split('-')
   const outer = feats.flatMap((f) => o.nests.get(f) ?? [])
@@ -111,8 +117,12 @@ function scope(o) {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', REGISTER, ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
 }
+
+// The policy register, org's core library `policy`, which every slice
+// reads: its policies and their values, never their wording.
+const REGISTER = 'policy'
 
 const walk = (node, visit, key = null) => {
   if (Array.isArray(node)) {
@@ -142,6 +152,9 @@ function inspect(tree, o, s, known, fail, found) {
   walk(tree, (key, n) => {
     if (n.relname !== undefined) {
       ref(n.schemaname, `reads ${named(n)}`)
+      if (n.schemaname === REGISTER && n.relname === 'wording' && o.kind !== 'core') {
+        fail(`reads ${named(n)}: a guard reads a policy's values from its own columns, never its wording`)
+      }
     }
     if (key === 'funcname' || key === 'objname') {
       return

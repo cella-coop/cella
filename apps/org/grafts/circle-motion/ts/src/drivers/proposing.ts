@@ -1,4 +1,5 @@
 import type { Db } from '@cella/org-db'
+import { inForce } from '@cella/org-policy'
 import type { Deciding, Proposing } from '../models/index.ts'
 
 // Every circle, in tree order, with the procedure its motions follow.
@@ -7,7 +8,8 @@ export async function deciding(db: Db): Promise<Deciding[]> {
   return rows
 }
 
-// What a circle's page offers to propose about it.
+// What a circle's page offers to propose about it, and the policies it
+// has adopted that are in force.
 export async function proposing(db: Db, circle: string): Promise<Proposing | null> {
   const found = await db.query<{ decider: Deciding }>(
     `SELECT json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure) AS decider
@@ -39,5 +41,5 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
      WHERE m.circle = $1 AND d.closed IS NULL ORDER BY d.deadline, m.motion`,
     [circle],
   )
-  return { circle, decider: found.rows[0].decider, under: under.rows, roles: roles.rows, mandates: mandates.rows, open: open.rows }
+  return { circle, decider: found.rows[0].decider, under: under.rows, roles: roles.rows, mandates: mandates.rows, open: open.rows, policies: await inForce(db, circle) }
 }

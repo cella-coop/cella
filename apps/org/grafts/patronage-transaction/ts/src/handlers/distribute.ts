@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import { distributing } from '@cella/org-patronage/api'
 import type { Distribute, Distributed } from '@cella/org-patronage/models'

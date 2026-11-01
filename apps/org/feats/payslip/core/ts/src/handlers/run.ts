@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Ran, Run } from '../models/payslip.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // The run's day of this write, how many payslips it holds and their gross.
 async function ran(tx: Db, month: string, day: string | undefined): Promise<Ran> {
@@ -40,7 +40,7 @@ async function figures(tx: Db, month: string): Promise<Figures> {
 export const generating = (input: Run): Write<Ran> => {
   let payslips: Figures = []
   return {
-    op: 'payslip:run:generate' satisfies Op,
+    op: 'payslip:run:generate' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ day: string }>(
@@ -85,7 +85,7 @@ export async function timing(tx: Db, month: string, minutes: { member: string; m
 // Approves a run on the verdict date, as the actor. The
 // payslip-transaction graft wraps it with the entry accruing its pay.
 export const approving = (input: Run, actor: string): Write<Ran> => ({
-  op: 'payslip:run:approve' satisfies Op,
+  op: 'payslip:run:approve' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ day: string }>(
@@ -105,7 +105,7 @@ export async function approve(input: Run, deps: Deps): Out<'payslip:run:approve'
 // Pays an approved run on the verdict date. The payslip-transaction graft
 // wraps it with the payment from the bank.
 export const paying = (input: Run): Write<Ran> => ({
-  op: 'payslip:run:pay' satisfies Op,
+  op: 'payslip:run:pay' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ day: string }>(

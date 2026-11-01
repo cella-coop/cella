@@ -1,13 +1,13 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { Assign, ops } from '../models/ops.ts'
+import type { Assign, actions } from '../models/actions.ts'
 
-const op = 'membership-task:task:assign' satisfies keyof typeof ops
+const op = 'membership-task:task:assign' satisfies keyof typeof actions
 
 // Gives a task to a member, or takes it from whoever had it when the
 // member is none. The graft's trigger refuses a task that does not exist
 // or an assignee who is not an active member.
-export async function assign(input: Assign, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Assign>> {
+export async function assign(input: Assign, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Assign>> {
   return write(deps, {
     op,
     request: input,

@@ -308,7 +308,7 @@ $f$;
         scope();
         Spi::run(
             "CREATE FUNCTION t.small(payload jsonb) RETURNS text LANGUAGE sql STABLE AS $f$
-               SELECT CASE WHEN (payload->>'cents')::bigint > 500 THEN cella.op() || ' is over 500 cents' END
+               SELECT CASE WHEN (payload->>'cents')::bigint > 500 THEN cella.action() || ' is over 500 cents' END
              $f$;
              INSERT INTO cella.guard (op, fn, owner) VALUES ('test:thing:make', 't.small(jsonb)', 't');",
         )

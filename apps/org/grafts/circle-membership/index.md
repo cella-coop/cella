@@ -34,9 +34,9 @@ graft's, and whether a member is active on a day the `membership` feat's
   holds, on the day, a seat whose role has a mandate in force for the
   power, not revoked, within its `limit` when the write carries an amount.
   A `budget` is not checked: it needs the spend over its period tracked.
-- `circle_membership.empowered`, on every op in `cella.power`: the actor may
-  use the op's power on the verdict date, for the amount the payload names
-  in the op's `amount` field. Each feat registers the power its ops need
+- `circle_membership.empowered`, on every action in `cella.power`: the actor may
+  use the action's power on the verdict date, for the amount the payload names
+  in the action's `amount` field. Each feat registers the power its actions need
   in `cella.power`, a core registry; this graft attaches its guard to every
   op listed, then and later, as `circle-decision-membership` attaches its own
   to `decision.cites`. A write with no power gets no such guard.
@@ -55,9 +55,9 @@ documents and does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet. A suspended member, or an
 invitee, holds nothing.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/circle-membership/position.add` | ordered | who holds which role |
 | `POST /api/circle-membership/position.remove` | ordered | who holds which role |
@@ -86,7 +86,7 @@ and ends, as its reaction to the close.
 
 ## Powers
 
-| Write | Check | Lanterne |
+| Action | Check | Lanterne |
 |---|---|---|
 | position.add | decided: the decision it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
 | position.remove | decided: the decision it cites ends this seat | the circle above, or the assembly |

@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps } from '@cella/org-db'
-import type { ops } from '@cella/org-account/models'
+import type { actions } from '@cella/org-account/models'
 import type { Spread, Spreading } from '../models/plan.ts'
 
-const op = 'account:capital:spread' satisfies keyof typeof ops
+const op = 'account:capital:spread' satisfies keyof typeof actions
 
 // An associate spreads what they owe on their subscription over monthly
 // instalments from their pay, each what is owed divided by them, rounded
@@ -11,7 +11,7 @@ const op = 'account:capital:spread' satisfies keyof typeof ops
 // plan. `account_membership_payslip_transaction.spreads` decides: their own,
 // something owed, and no more instalments than the statutes allow. Each
 // run's payment then withholds an instalment, in its own write.
-export async function spread(input: Spread, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Spreading>> {
+export async function spread(input: Spread, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Spreading>> {
   return write(deps, {
     op,
     request: input,

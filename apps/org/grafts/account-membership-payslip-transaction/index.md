@@ -39,7 +39,7 @@ payload commits to them, and the vault keeps them, so the log's digest
 confirms no guess at what a colleague owes. Once a former member's
 clock runs out `cella vault sweep` redacts them to NULL.
 
-## Writes
+## Actions
 
 `account:capital:spread` (confluent, `self`), served on a member's own page
 while they owe some: what they owe is spread over as many monthly

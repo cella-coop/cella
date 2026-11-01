@@ -20,9 +20,9 @@ does; nothing checks it against the circles. A project is **done** once it
 has milestones and every one is complete, and **active** otherwise; an
 archived project is hidden from lists, kept for the books and frozen.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `project:project:create` | confluent | `manage-project` | a fact; a taken id is refused, never overwritten |
 | `project:milestone:add` | confluent | `manage-project` | appended, numbered under the project's lock |
@@ -50,7 +50,7 @@ while a share is granted could leave the shares above it, which the
   completed (`project.stays_archived`, `project.live`, SQLSTATE `09000`);
 - a budget is set by the write that names it (`project.budgets`); that it
   covers the shares granted from it is `membership-project`'s guard on the
-  same op.
+  same action.
 
 ## What it does not know
 

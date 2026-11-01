@@ -14,7 +14,7 @@ either feat; one document a meeting, one meeting a document. A trigger
 refuses either side not existing. The app role may select and insert;
 the guards role, `cella_guards`, may select.
 
-## Writes
+## Actions
 
 Beginning the minutes is the meeting feat's `meeting:meeting:minute`,
 which this graft replaces on a meeting's page with a write that also,

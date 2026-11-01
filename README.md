@@ -26,7 +26,7 @@ verdict into a log the members can audit.
 
 This repository works only on the org app.
 
-- `apps/org/` — the cooperative workspace: its core (`ops`, `crypto`, `log`, `keystore`,
+- `apps/org/` — the cooperative workspace: its core (`actions`, `crypto`, `log`, `keystore`,
   `guards`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
   `cella` CLI, and `ts/`, which assembles the app.
 - `tools/` — the node tools `cella` runs: the feat and fixture checks,

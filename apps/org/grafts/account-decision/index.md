@@ -34,7 +34,7 @@ The app role and the guards role may select.
 `ts/_tests/terms.test.ts` (`cella test slice account-decision`): a motion
 to adopt drafted terms is the adoption it asks for, and a proposal
 moving to adopt no such terms is refused; adopting cites a decision that moved to adopt
-the terms, never another; the op cites a decision.
+the terms, never another; the action cites a decision.
 
 ## Shell
 

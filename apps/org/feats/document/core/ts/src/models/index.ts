@@ -1,4 +1,4 @@
-export * from './ops.ts'
+export * from './actions.ts'
 export * from './document.ts'
 export * from './blocks.ts'
 export * as edits from './edits.ts'

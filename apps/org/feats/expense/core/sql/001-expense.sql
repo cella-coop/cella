@@ -107,7 +107,7 @@ BEGIN ATOMIC
   END
   FROM (
     SELECT payload ->> 'expense' AS expense, (payload ->> 'amount')::bigint AS amount,
-           CASE cella.op() WHEN 'expense:expense:refuse' THEN 'refused' ELSE 'approved' END AS status
+           CASE cella.action() WHEN 'expense:expense:refuse' THEN 'refused' ELSE 'approved' END AS status
   ) x
   LEFT JOIN expense.expense e ON e.id = x.expense;
 END;

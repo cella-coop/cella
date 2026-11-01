@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Adopt, Adopted } from '../models/terms.ts'
 
-const op = 'patronage:terms:adopt' satisfies keyof typeof ops
+const op = 'patronage:terms:adopt' satisfies keyof typeof actions
 
 // Adopts drafted terms on the verdict date, citing the members' decision.
 // The guards decide: `patronage.adopts` that they divide the whole work
 // share and govern no year already approved, decision-patronage's that
 // the decision moved to adopt them, and circle-decision-membership's that it
 // passed. Adopted terms never change.
-export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Adopted>> {
+export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {
     op,
     request: input,

@@ -24,9 +24,9 @@ up per member, and together never exceed the budget. Declared by
 
 The app role may select and insert; the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `membership-project:project:share` | bounded on `budget` | `set-budget`, capped by its limit on `amount` | spends a right set in advance; waits only when what is left runs out |
 

@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import { createDoc } from '../models/blocks.ts'
 import { anchor } from '../models/anchor.ts'
 import type { Comment, Commented } from '../models/document.ts'
 
-const op = 'document:document:comment' satisfies keyof typeof ops
+const op = 'document:document:comment' satisfies keyof typeof actions
 
 // Comments on a version, on the text it quotes, anchored by Loro cursors
 // at the quote's ends when one block of the version holds it. Confluent;
 // `document.quotes` still refuses a quote the version does not hold.
-export async function comment(input: Comment, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Commented>> {
+export async function comment(input: Comment, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Commented>> {
   const { rows } = await deps.db.query<{ snapshot: Uint8Array }>('SELECT snapshot FROM document.version WHERE id = $1', [input.version])
   let where = null
   if (rows[0]) {

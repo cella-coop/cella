@@ -1,17 +1,17 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps } from '@cella/org-db'
-import type { ops } from '@cella/org-account/models'
+import type { actions } from '@cella/org-account/models'
 import { record } from '@cella/org-transaction/api'
 import type { Line } from '@cella/org-transaction/models'
 import type { Paid, Pay } from '../models/capital.ts'
 
-const op = 'account:capital:pay' satisfies keyof typeof ops
+const op = 'account:capital:pay' satisfies keyof typeof actions
 
 // An associate pays in on their subscription from the bank: 512 debited
 // and 4562 credited, and what it pays moved from 1012 to their capital
 // account, on the verdict date. `account_membership_transaction.pays`
 // decides: never more than they owe, and nothing else in the entry.
-export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Paid>> {
+export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Paid>> {
   return write(deps, {
     op,
     request: input,

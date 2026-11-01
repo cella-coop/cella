@@ -4,7 +4,7 @@ import { action, type Form, type Slice } from '@cella/org-db'
 import { forms } from '@cella/org-task/api'
 import { file, within } from '../handlers/file.ts'
 import { counts, filed, projectOf, tasksOf } from '../drivers/filing.ts'
-import type { File } from '../models/ops.ts'
+import type { File } from '../models/actions.ts'
 import { tasks as imported } from './imports.ts'
 
 export { file, within } from '../handlers/file.ts'

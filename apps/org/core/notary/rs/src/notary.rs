@@ -169,8 +169,8 @@ fn signer(c: &mut SpiClient<'_>, n: i64) -> i32 {
     first::<i32>(added).unwrap_or_else(|| fail("cella: the key file's key was not registered"))
 }
 
-/// The write `submit` is judging, for the guards to read through
-/// `cella.op()`, `cella.actor()` and `cella.device()`.
+/// The action `submit` is judging, for the guards to read through
+/// `cella.action()`, `cella.actor()` and `cella.device()`.
 #[derive(Clone)]
 struct Context {
     op: String,
@@ -304,7 +304,7 @@ fn context() -> Option<Context> {
     WRITE.with(|c| c.borrow().clone())
 }
 
-pub fn op() -> Option<String> {
+pub fn action() -> Option<String> {
     context().map(|c| c.op)
 }
 

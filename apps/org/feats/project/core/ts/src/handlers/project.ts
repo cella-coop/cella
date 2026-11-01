@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Add, Added, Archive, Archived, Budget, Complete, Completed, Create, Created } from '../models/project.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // A project's id from its title: lower case, unaccented, words joined by
 // hyphens.
@@ -22,7 +22,7 @@ export const slug = (title: string) =>
 export async function create(input: Create, deps: Deps): Out<'project:project:create', Created> {
   const id = input.id ?? slug(input.title)
   return write(deps, {
-    op: 'project:project:create' satisfies Op,
+    op: 'project:project:create' satisfies Action,
     request: input,
     state: async (tx) => {
       const taken = await tx.query('SELECT FROM project.project WHERE id = $1', [id])
@@ -45,7 +45,7 @@ export async function create(input: Create, deps: Deps): Out<'project:project:cr
 // so two added at once take two numbers.
 export async function add(input: Add, deps: Deps): Out<'project:milestone:add', Added> {
   return write(deps, {
-    op: 'project:milestone:add' satisfies Op,
+    op: 'project:milestone:add' satisfies Action,
     request: input,
     state: async (tx) => {
       const locked = await tx.query('SELECT FROM project.project WHERE id = $1 FOR UPDATE', [input.project])
@@ -68,7 +68,7 @@ export async function add(input: Add, deps: Deps): Out<'project:milestone:add', 
 // first day.
 export async function complete(input: Complete, deps: Deps): Out<'project:milestone:complete', Completed> {
   return write(deps, {
-    op: 'project:milestone:complete' satisfies Op,
+    op: 'project:milestone:complete' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ completed: string }>(
@@ -89,7 +89,7 @@ export async function complete(input: Complete, deps: Deps): Out<'project:milest
 // the membership-project graft's guard that it still covers the shares.
 export async function budget(input: Budget, deps: Deps): Out<'project:project:budget', Budget> {
   return write(deps, {
-    op: 'project:project:budget' satisfies Op,
+    op: 'project:project:budget' satisfies Action,
     request: input,
     state: async (tx) => {
       await tx.query('UPDATE project.project SET budget = cella.amount($2) WHERE id = $1', [input.project, input.amount])
@@ -103,7 +103,7 @@ export async function budget(input: Budget, deps: Deps): Out<'project:project:bu
 // the books, frozen.
 export async function archive(input: Archive, deps: Deps): Out<'project:project:archive', Archived> {
   return write(deps, {
-    op: 'project:project:archive' satisfies Op,
+    op: 'project:project:archive' satisfies Action,
     request: input,
     state: async (tx) => {
       await tx.query('UPDATE project.project SET archived = cella.verdict_date() WHERE id = $1 AND archived IS NULL', [input.project])

@@ -151,7 +151,7 @@ pub enum Command {
 
 #[derive(Clone, Copy, ValueEnum)]
 pub enum Part {
-    /// The feat tree's dependencies, imports, ops and SQL boundaries
+    /// The feat tree's dependencies, imports, actions and SQL boundaries
     Feats,
     /// The mock co-ops balance and their links resolve
     Fixtures,

@@ -28,10 +28,10 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN m.address IS NULL THEN 'no member ' || coalesce(p.address, 'is named')
-    WHEN split_part(cella.op(), ':', 3) = 'suspend'
+    WHEN split_part(cella.action(), ':', 3) = 'suspend'
       AND (m.status <> 'suspended' OR m.suspended IS DISTINCT FROM cella.verdict_date())
       THEN m.address || ' was not suspended by this write'
-    WHEN split_part(cella.op(), ':', 3) = 'exit'
+    WHEN split_part(cella.action(), ':', 3) = 'exit'
       AND (m.status <> 'exited' OR m.exited IS DISTINCT FROM cella.verdict_date())
       THEN m.address || ' did not exit by this write'
   END

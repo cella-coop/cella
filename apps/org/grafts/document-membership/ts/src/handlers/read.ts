@@ -1,14 +1,14 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Marked, Read } from '../models/reading.ts'
 
-const op = 'document-membership:version:read' satisfies keyof typeof ops
+const op = 'document-membership:version:read' satisfies keyof typeof actions
 
 // Marks a version read by the member, on the verdict date; marking it
 // again keeps the first day. `document_membership.reads` refuses anyone's but
 // the actor's own.
-export async function read(input: Read, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Marked>> {
+export async function read(input: Read, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Marked>> {
   return write(deps, {
     op,
     request: input,

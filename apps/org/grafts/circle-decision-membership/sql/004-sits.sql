@@ -8,7 +8,7 @@ BEGIN ATOMIC
     WHEN d.id IS NULL THEN 'no decision ' || coalesce(p.decision, 'is named')
     WHEN NOT EXISTS (SELECT FROM circle_membership.seated(d.circle, cella.verdict_date()) s WHERE s = cella.actor())
       OR NOT EXISTS (SELECT FROM membership.member m WHERE m.address = cella.actor() AND m.status = 'active')
-      THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.op(), ':', 3) || ' ' || d.id
+      THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.action(), ':', 3) || ' ' || d.id
   END
   FROM (SELECT payload ->> 'decision' AS decision) p
   LEFT JOIN decision.decision d ON d.id = p.decision;

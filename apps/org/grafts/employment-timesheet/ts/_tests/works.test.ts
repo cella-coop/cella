@@ -53,7 +53,7 @@ test('outside a write the guard judges no one a worker: who logs is the write\'s
   assert.match((await works({ member: ines, day: '2026-10-23' })) ?? '', /no one is no worker: a worker logs their time by their employment/)
 })
 
-test('the timesheet feat\'s own guards run on these ops too: the time is the actor\'s own', async () => {
+test('the timesheet feat\'s own guards run on these actions too: the time is the actor\'s own', async () => {
   const guards = await all<{ op: string; fn: string }>(`SELECT op, fn::text AS fn FROM cella.guard WHERE op LIKE 'employment-timesheet:%' ORDER BY op, fn::text`)
   assert.deepEqual(guards, [
     { op: 'employment-timesheet:entry:correct', fn: 'employment_timesheet.works(jsonb)' },

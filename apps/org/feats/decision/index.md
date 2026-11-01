@@ -5,9 +5,9 @@ updated = 2026-11-01
 
 Proposals, votes and outcomes. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/decision/propose` | confluent | a proposal is a fact |
 | `POST /api/decision/vote` | confluent | signed by the member; their latest vote counts |
@@ -39,14 +39,14 @@ A decision is taken by open or secret ballot, fixed as it is proposed: its proce
 - **Open**: a stance is logged as given, and every member reads every stance.
 - **Secret**: the vote logs the stance as a salted commitment (`cella.personal` registers `decision.vote.stance`), and the vault keeps the stance under its member's key. The entry names its actor, as every entry does, so the log says that a member gave a stance and when, never which. In the read model, a row-level policy lets the app read a secret stance only as its own member's, or in a write's transaction; the guards role reads them all. How the roll and the tally show is `circle-decision-membership`'s: the tally sealed until the close, each member's stance never.
 
-`decision.cites` lists the writes that cite a decision: each settles only once the decision its payload names has closed and passed. A graft that joins this feat to a write's feat declares the write's op there; the graft that counts the roll attaches its guard to every op listed. The app role and the guards role may select it.
+`decision.cites` lists the writes that cite a decision: each settles only once the decision its payload names has closed and passed. A graft that joins this feat to a write's feat declares the write's op there; the graft that counts the roll attaches its guard to every action listed. The app role and the guards role may select it.
 
 ## Guards
 
-- `decision.proposes`, on `decision:decision:propose`: the write proposed the decision on the verdict date, open until a later deadline, with as many motions as its payload names. `decision.balloted`, on the same op: its ballot is the one the payload names. That each motion applies is the guard of the graft registering its kind; that the actor sits in the circle, `circle-decision-membership`'s.
+- `decision.proposes`, on `decision:decision:propose`: the write proposed the decision on the verdict date, open until a later deadline, with as many motions as its payload names. `decision.balloted`, on the same action: its ballot is the one the payload names. That each motion applies is the guard of the graft registering its kind; that the actor sits in the circle, `circle-decision-membership`'s.
 - `decision.closes`, on `decision:decision:close`: the write closed the decision on the verdict date, and not before its deadline. A decision closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
 - `decision.posts`, on `decision:message:post`: the message is the actor's own and names the decision, the message it answers, the mentions and the links its payload does. That each mention names one member is `decision-membership`'s guard, that each link names a document `decision-document`'s.
-- `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `decision.seals`, on the same op: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor is on the decision's roll is `circle-decision-membership`'s guard on the same op. A stance needs no power.
+- `decision.own_stance`, on `decision:decision:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `decision.seals`, on the same action: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor is on the decision's roll is `circle-decision-membership`'s guard on the same action. A stance needs no power.
 
 The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the decision's procedure and its quorum, as the `circle-decision-membership` graft does.
 

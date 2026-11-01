@@ -113,15 +113,15 @@ what the port refuses it shows with every reason.
 A built-in report is made by the migration and never changes. A custom
 report is saved, and saved again under its id by its owner.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/report/save` | confluent | a member's own report; the last save wins |
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | save | none: the member's own | every member |
 

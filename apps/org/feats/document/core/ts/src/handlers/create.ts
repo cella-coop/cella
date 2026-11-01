@@ -1,12 +1,12 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import { createDoc } from '../models/blocks.ts'
 import { canonical } from '../models/canonical.ts'
 import { paste } from '../models/edits.ts'
 import type { Create, Created } from '../models/document.ts'
 
-const op = 'document:document:create' satisfies keyof typeof ops
+const op = 'document:document:create' satisfies keyof typeof actions
 
 // A document's id from its title: lower case, unaccented, words joined by
 // hyphens.
@@ -55,6 +55,6 @@ export const creating = (input: Create, author: string): Write<Created> => ({
   payload: (v) => ({ ...v }),
 })
 
-export async function create(input: Create, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Created>> {
+export async function create(input: Create, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Created>> {
   return write(deps, creating(input, deps.actor))
 }

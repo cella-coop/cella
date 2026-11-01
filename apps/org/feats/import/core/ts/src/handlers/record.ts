@@ -1,14 +1,14 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Recorded, Recording } from '../models/run.ts'
 
-const op = 'import:run:record' satisfies keyof typeof ops
+const op = 'import:run:record' satisfies keyof typeof actions
 
 // Records what an import, or a dry run of one, came to, as the importer
 // on the verdict date: a line settled or pending counts as settled, and
 // any other as refused.
-export async function record(input: Recording, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Recorded>> {
+export async function record(input: Recording, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Recorded>> {
   const settled = input.lines.filter((l) => l.state === 'settled' || l.state === 'pending').length
   const refused = input.lines.length - settled
   return write(deps, {

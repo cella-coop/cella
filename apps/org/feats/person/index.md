@@ -77,9 +77,9 @@ person's current keys. A person who has lost every device recovers from
 their guardians' shares, which enrols a new key under the same address;
 recovery is not built.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/person/profile` | confluent | a person's own fields |
 | `POST /api/person/forget` | ordered | erasure wins over every update |
@@ -109,7 +109,7 @@ worker who was never a member is not erased yet.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | profile | self: the person's own | everyone |
 | forget | self: the person's own contact details | everyone |

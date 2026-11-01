@@ -66,9 +66,9 @@ only through a decision of that circle's members.
 | mandate | granted → revoked, or expired at `until` |
 | position | held → ended (the graft's) |
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/circle/nest` | ordered | two nestings can form a cycle even online |
 | `POST /api/circle/mandate.grant` | ordered | authority, capped by a limit or a budget |
@@ -91,7 +91,7 @@ write; see its [doc](../../grafts/circle-membership/index.md).
 
 ## Powers
 
-| Write | Power or check | Lanterne |
+| Action | Power or check | Lanterne |
 |---|---|---|
 | nest | decided: the cited decision nests this circle there, and carried | the circle holding both places, or the assembly |
 | mandate.grant, mandate.revoke | decided: the cited decision grants or revokes this mandate, and carried | the circle above the role's, or the assembly |

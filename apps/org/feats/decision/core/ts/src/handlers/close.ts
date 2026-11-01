@@ -1,6 +1,6 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Close, Closed } from '../models/decision.ts'
 
 const op = 'decision:decision:close'
@@ -28,6 +28,6 @@ export function closing(input: Close): Write<Closed> {
   }
 }
 
-export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Closed>> {
+export async function close(input: Close, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Closed>> {
   return write(deps, closing(input))
 }

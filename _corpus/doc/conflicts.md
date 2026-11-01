@@ -5,7 +5,7 @@ updated = 2026-11-01
 
 # Conflicts
 
-Every write in org's `ops.ts` files, paired against the invariants and the
+Every action in org's `actions.ts` files, paired against the invariants and the
 other writes it can contend with, to test its label. The test for each pair
 is the same: run it in both orders, then ask what breaks if both writes
 were confluent. A write may be confluent only if every invariant it touches
@@ -13,16 +13,16 @@ holds in any order; it is bounded if the only thing that can break is a
 right running out; otherwise it is ordered. Each invariant is owned at the
 lowest level that sees all of it ([architecture](architecture.md#guards)).
 
-This page recommends; the labels themselves change only in `ops.ts`, by
+This page recommends; the labels themselves change only in `actions.ts`, by
 decision. At rung 1 nothing reads a label to run its write differently
-([trust](trust.md#three-kinds-of-write)): every write still takes the
+([trust](trust.md#three-kinds-of-action)): every write still takes the
 server's one synchronous path, and each verdict below comes from the
 feats' and grafts' own triggers and locks, not from the label. Lanterne's
 state is that of 24 October 2026.
 
 ## The verdicts
 
-| Write | Label | Verdict |
+| Action | Label | Verdict |
 |---|---|---|
 | `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `person.revoke`, `person.recover` | ordered | right |
@@ -243,8 +243,8 @@ Owner: the `circle-membership` graft, through `circle_membership.may(actor, powe
 cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
 and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
-names the power its ops need in `cella.power`, a core registry, and the
-graft attaches its guard to every op listed, as `decision.cites` does for
+names the power its actions need in `cella.power`, a core registry, and the
+graft attaches its guard to every action listed, as `decision.cites` does for
 the roll.
 
 | Pair | Spend first | Revoke first | Both confluent |
@@ -289,7 +289,7 @@ Owner: the `circle` feat.
 | `nest` vs `mandate.grant` in the moved circle | the grant is checked under the new parent | the grant may exceed what the new parent holds | a circle holds powers its parent does not |
 
 Ordered is right, and needed at rung 1 already: two concurrent server
-transactions can each see no cycle. The `ops.ts` comment ("two offline
+transactions can each see no cycle. The `actions.ts` comment ("two offline
 nestings") understated it; **applied**, it now says a cycle can form even
 online. **Applied**: each circle keeps its path from the assembly; the
 tree's trigger refuses a cycle the write itself sees, and `circle.nests`,
@@ -340,7 +340,7 @@ adoption is the `decision-document` graft's.
 | `adopt` @2 vs `adopt` @3, same base | @3 refused: base moved | @2 refused | the adopted text depends on arrival order |
 | `adopt` vs `decision.close` | adopt waits on the outcome | adopt settles if the outcome passed | adopted without consent |
 
-The labels are right. The `ops.ts` comment "refused if that moved on" read
+The labels are right. The `actions.ts` comment "refused if that moved on" read
 as if editing the draft refuses an adoption; it does not, and must not, or
 no living document could be adopted. What must not have moved is the
 adopted version (`base: 'adopted'`). **Applied**: the comment and the doc
@@ -771,7 +771,7 @@ nothing.
 
 ## Uncontested writes
 
-| Write | Why nothing contends |
+| Action | Why nothing contends |
 |---|---|
 | `circle.message`, `document.comment` | appended; no guard reads them |
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
@@ -787,7 +787,7 @@ nothing.
 
 ## Missing writes
 
-The matrix found writes no `ops.ts` declares:
+The matrix found writes no `actions.ts` declares:
 
 | Missing | Label it needs | Why |
 |---|---|---|

@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps } from '@cella/org-db'
-import type { ops } from '@cella/org-account/models'
+import type { actions } from '@cella/org-account/models'
 import { record } from '@cella/org-transaction/api'
 import type { Draw, Drawn } from '../models/draw.ts'
 
-const op = 'account:account:draw' satisfies keyof typeof ops
+const op = 'account:account:draw' satisfies keyof typeof actions
 
 // A member draws on their own account: the bank pays them, 455 debited
 // and 512 credited, on the verdict date, and the draw is theirs.
 // `account_membership_transaction.draws` decides: their own, active, not
 // frozen, within what is left of their draw limit, and nothing else.
-export async function draw(input: Draw, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Drawn>> {
+export async function draw(input: Draw, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Drawn>> {
   return write(deps, {
     op,
     request: input,

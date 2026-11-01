@@ -1,10 +1,10 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
 import { creating } from '@cella/org-task/api'
 import type { Create, Created } from '@cella/org-task/models'
-import type { File, ops } from '../models/ops.ts'
+import type { File, actions } from '../models/actions.ts'
 
-const op = 'project-task:task:file' satisfies keyof typeof ops
+const op = 'project-task:task:file' satisfies keyof typeof actions
 
 const filing = (tx: Db, f: File) =>
   tx.query(

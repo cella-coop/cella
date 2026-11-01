@@ -1,4 +1,4 @@
-// The feat check's power rules: what an op's label in ops.ts says it needs
+// The feat check's power rules: what an action's label in actions.ts says it needs
 // is what its feat registers in cella.power, and only the op's own feat
 // registers it.
 
@@ -10,15 +10,15 @@ import { join } from 'node:path'
 import { agree, covered } from '../powers.mjs'
 import { checkSql, undeclared } from '../sql-check.mjs'
 
-const file = 'apps/org/feats/invoice/core/ts/src/models/ops.ts'
+const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
 const op = (o, power = null, amount = null, check = null) => ({ op: o, power, amount, check, file })
 const row = (o, power, amount = null, owner = 'invoice') => ({ op: o, power, amount, owner })
 
-test('ops.ts and cella.power agree', () => {
+test('actions.ts and cella.power agree', () => {
   assert.deepEqual(agree([op('invoice:invoice:issue', 'issue-invoice'), op('invoice:invoice:send')], [row('invoice:invoice:issue', 'issue-invoice')]), [])
 })
 
-test('a power in ops.ts that no SQL registers is refused', () => {
+test('a power in actions.ts that no SQL registers is refused', () => {
   const [e] = agree([op('invoice:invoice:issue', 'issue-invoice')], [])
   assert.match(e, /invoice:invoice:issue needs issue-invoice, which no SQL registers in cella.power/)
 })
@@ -31,9 +31,9 @@ test('a power or amount that differs is refused', () => {
   )
 })
 
-test('a registered power that ops.ts does not name, or registered twice, is refused', () => {
+test('a registered power that actions.ts does not name, or registered twice, is refused', () => {
   assert.match(agree([op('invoice:invoice:send')], [row('invoice:invoice:send', 'issue-invoice')])[0], /which its label does not name/)
-  assert.match(agree([], [row('invoice:invoice:lost', 'issue-invoice')])[0], /which no ops.ts declares/)
+  assert.match(agree([], [row('invoice:invoice:lost', 'issue-invoice')])[0], /which no actions.ts declares/)
   const twice = agree([op('invoice:invoice:issue', 'issue-invoice')], [row('invoice:invoice:issue', 'issue-invoice'), row('invoice:invoice:issue', 'issue-invoice')])
   assert.match(twice[0], /registers a power on invoice:invoice:issue twice/)
 })
@@ -122,7 +122,7 @@ test('a slice keeps row-level policies and alters functions only in its own sche
 })
 
 test('a graft registers guards on ops of the feats it joins and of the lower-order grafts it builds on, and no others', async () => {
-  const guard = (op, owner) => `INSERT INTO cella.guard (op, fn, owner) VALUES ('${op}', 'cella.op()', '${owner}');`
+  const guard = (op, owner) => `INSERT INTO cella.guard (op, fn, owner) VALUES ('${op}', 'cella.action()', '${owner}');`
   const lower = await check({
     'circle-member': 'SELECT 1;',
     'circle-invoice-member': guard('circle-member:position:add', 'circle-invoice-member') + guard('member:member:admit', 'circle-invoice-member'),
@@ -136,7 +136,7 @@ test('a graft registers guards on ops of the feats it joins and of the lower-ord
 
 test('an op with neither a power nor a check is refused: nothing is allowed by omission', () => {
   const none = covered([op('invoice:invoice:send')], { guards: [], cites: [] })
-  assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no write is allowed by omission/)
+  assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
   assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
   const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
   assert.match(odd[0], /declares the check anyone, which is none of self, roll, seat, decided/)

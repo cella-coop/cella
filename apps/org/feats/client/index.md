@@ -37,9 +37,9 @@ A client is never deleted while an invoice names it; archiving hides it.
 A person's contact details are erased on request, which leaves the
 company and the invoices intact.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/client/add` | confluent | the last writer wins |
 | `POST /api/client/update` | confluent | the last writer wins |
@@ -53,7 +53,7 @@ ordered write's guard, so none of them waits.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | add, update | `edit-client` | every member, through the `member` role's mandate |
 | archive | `edit-client` | every member, through the `member` role's mandate |

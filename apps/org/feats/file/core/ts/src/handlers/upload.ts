@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import { largest, parts, type Store, type Stored } from '../models/file.ts'
 
-const op = 'file:file:upload' satisfies keyof typeof ops
+const op = 'file:file:upload' satisfies keyof typeof actions
 
 // What a member signs of a file: what it is, and its bytes in base64, so
 // that their signature covers the content itself.
@@ -55,6 +55,6 @@ export const uploading = (input: Store, actor: string): Write<Stored> => ({
   payload: (v) => committed(v, input.name),
 })
 
-export async function upload(input: Store, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Stored>> {
+export async function upload(input: Store, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Stored>> {
   return write(deps, uploading(input, deps.actor))
 }

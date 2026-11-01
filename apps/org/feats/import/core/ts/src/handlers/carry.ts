@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Carried } from '../models/run.ts'
 
-const op = 'import:state:carry' satisfies keyof typeof ops
+const op = 'import:state:carry' satisfies keyof typeof actions
 
 // The state a scope held before its log, carried in by `load` inside the
 // write's transaction, which answers how many rows of each kind it wrote;
@@ -17,7 +17,7 @@ export interface Carrying {
 // the carrier signs: `import.carries` lets it settle only as the log's
 // first entry, so the state before the log comes in once. The log keeps
 // how many rows of each kind came, never the rows.
-export async function carry(input: Carrying, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Carried>> {
+export async function carry(input: Carrying, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Carried>> {
   return write(deps, {
     op,
     request: { from: input.from },

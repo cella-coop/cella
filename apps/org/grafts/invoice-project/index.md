@@ -19,9 +19,9 @@ is not invalid; it still says what it bills in its label. Declared by
 
 The app role may select, insert and update; the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `invoice-project:invoice:link` | confluent | `issue-invoice` | the last writer wins; an invoice bills one project's work |
 

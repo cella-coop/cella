@@ -1,18 +1,18 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps, type Write } from '@cella/org-db'
 import { priced } from '@cella/org-vat'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Act, Acted, Incoming, Recorded } from '../models/bill.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Records a supplier's bill and its lines in one statement, as the actor
 // on the verdict date, its amounts computed in SQL from its lines by the
 // VAT core library's `priced`, as an invoice's are. The same supplier's
 // reference recorded again merges into the bill already recorded.
 export const recording = (input: Incoming, actor: string): Write<Recorded> => ({
-  op: 'bill:bill:record' satisfies Op,
+  op: 'bill:bill:record' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string; net: string; vat: string | null; total: string }>(
@@ -72,7 +72,7 @@ async function move(tx: Db, bill: string, set: string, actor?: string): Promise<
 // Approves a recorded bill as the actor. The bill-transaction graft wraps
 // it with the entry charging it; `bill.approves` refuses its recorder.
 export const approving = (input: Act, actor: string): Write<Acted> => ({
-  op: 'bill:bill:approve' satisfies Op,
+  op: 'bill:bill:approve' satisfies Action,
   request: input,
   state: (tx) => move(tx, input.bill, `status = 'approved', approved = cella.verdict_date(), approver = $2`, actor),
   payload: (v) => ({ ...v }),
@@ -85,7 +85,7 @@ export async function approve(input: Act, deps: Deps): Out<'bill:bill:approve', 
 // Pays an approved bill. The bill-transaction graft wraps it with the
 // payment from the bank.
 export const paying = (input: Act): Write<Acted> => ({
-  op: 'bill:bill:pay' satisfies Op,
+  op: 'bill:bill:pay' satisfies Action,
   request: input,
   state: (tx) => move(tx, input.bill, `status = 'paid', paid = cella.verdict_date()`),
   payload: (v) => ({ ...v }),

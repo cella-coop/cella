@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Db, type Deps, type Write } from '@cella/org-db'
 import { approving, paying } from '@cella/org-bill/api'
 import type { Act, Acted } from '@cella/org-bill/models'

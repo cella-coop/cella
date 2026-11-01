@@ -29,9 +29,9 @@ An entry is posted once and is then permanent. There are no drafts in the
 journal: a draft belongs to the feat that produces the entry (an invoice
 before issue, a distribution before its approval).
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/transaction/post` | confluent | an entry always has both sides |
 | `POST /api/transaction/pay` | confluent | a payment to a supplier is an entry like any other |
@@ -54,7 +54,7 @@ before issue, a distribution before its approval).
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | post | `record-entry`, with no limit | Julien, as finance |
 | pay | `pay-supplier`, within the mandate's limit for the amount paid | Julien, as finance, up to 3 000 € a payment |

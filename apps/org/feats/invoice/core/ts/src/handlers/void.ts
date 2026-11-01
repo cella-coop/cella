@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Void, Voided } from '../models/invoice.ts'
 
-const op = 'invoice:invoice:void' satisfies keyof typeof ops
+const op = 'invoice:invoice:void' satisfies keyof typeof actions
 
 // Voids the invoice on the verdict date. Ordered against its payments:
 // `invoice.voids` refuses it once any payment was received.
@@ -24,6 +24,6 @@ export const voiding = (input: Void): Write<Voided> => ({
 })
 
 // `void` is a keyword, so the handler is `annul`; the write is still void.
-export async function annul(input: Void, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Voided>> {
+export async function annul(input: Void, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Voided>> {
   return write(deps, voiding(input))
 }

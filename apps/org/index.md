@@ -6,8 +6,8 @@ updated = 2026-11-01
 The cooperative workspace, for member-governed organisations. One deployment
 serves one scope: a co-op, a joint circle of co-ops, or a federation.
 
-- `core/` is what every feat inherits, one library each: `ops` (write labels,
-  permissions, outcomes), `crypto`, `log`, `keystore`, `guards` (the pure
+- `core/` is what every feat inherits, one library each: `actions` (action
+  labels, permissions, outcomes), `crypto`, `log`, `keystore`, `guards` (the pure
   guard primitives), `notary` (the `cella` Postgres extension over them),
   `db` (a write's transaction and a slice's server side), `sign` (a
   device's signature on a write), `analytics` (the port reports are read

@@ -13,7 +13,7 @@ beneath it; it has no table of its own, and no shell.
 - `circle_membership_project.runs`, on `project:project:create`,
   `project:milestone:add`, `project:milestone:complete`,
   `project:project:budget`, `project:project:archive` and
-  `membership-project:project:share`: the actor holds the op's power
+  `membership-project:project:share`: the actor holds the action's power
   (`manage-project`, `set-budget`) over the project's circle, through
   `circle_membership.over`; a project of no circle is the whole co-op's, run
   from the assembly. A project the payload does not name, or that does

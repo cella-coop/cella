@@ -16,9 +16,9 @@ meeting `FOR SHARE` as the agenda's trigger does, and a mark of anyone
 who is not an active member on the verdict date (`membership.active`). The app role may select, insert and update;
 the guards role, `cella_guards`, may select.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/meeting-membership/attendance.mark` | confluent | a register per member, the last mark winning; fixed by the hold |
 | `POST /api/meeting-membership/attendance.record` | confluent | as mark |

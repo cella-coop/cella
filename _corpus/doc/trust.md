@@ -20,7 +20,11 @@ record leaves its scope only as the signed copy another scope keeps of
 what concerns it, and never with the personal data behind its
 commitments.
 
-## Three kinds of write
+## Three kinds of action
+
+Every change to the records is an action: an actor, a person today, signs
+an attempt, and the notary runs the guards on it before it takes effect.
+Each action declares one of three labels, which says how it contends:
 
 | Label | Path | Examples |
 |---|---|---|
@@ -28,19 +32,20 @@ commitments.
 | bounded | spends a right granted in advance; waits only when the right runs out | budget shares, invoice series, draws |
 | ordered | waits for the notary's verdict, and shows Pending until it comes | admissions, adoptions, voids, closing a period |
 
-Until rung 2 every write goes through the server, and nothing reads the
-label yet to run a write differently: `write`, `cella.begin` and
-`cella.submit` take the same synchronous path whatever a write's label. The
-label is in the type from the start, so that later rungs move confluent and
-bounded writes to the clients without a rewrite. On the server a confluent
-or bounded write still meets its feat's triggers and guards, so its outcome
-may be `Refused` as well as `Settled`; only an ordered write may also be
+Until rung 2 every action goes through the server, and nothing reads the
+label yet to run an action differently: `write`, `cella.begin` and
+`cella.submit` take the same synchronous path whatever an action's label.
+The label is in the type from the start, in the feat's
+`models/actions.ts`, so that later rungs move confluent and bounded
+actions to the clients without a rewrite. On the server a confluent or
+bounded action still meets its feat's triggers and guards, so its outcome
+may be `Refused` as well as `Settled`; only an ordered action may also be
 `Pending`.
 
 ## One server
 
 The notary is software with no legal force: it runs the guards on every
-write and alone appends to the log, and a record holds because the co-op
+action and alone appends to the log, and a record holds because the co-op
 agreed to it, never because the notary signed it. It lives inside Postgres
 as the `cella` extension, built with pgrx
 on the pure Rust guards crate (`apps/org/core/notary/rs` over
@@ -70,7 +75,7 @@ sequenceDiagram
 ```
 
 - **The member signs every write on their device** (WebCrypto Ed25519):
-  a domain-separated message naming the scope, the op, the actor, the
+  a domain-separated message naming the scope, the action, the actor, the
   device, the digest of the request and a single-use nonce
   ([signatures](signatures.md)). `submit` checks it before any guard runs:
   the signature, then, under the log's head lock, that the device is a
@@ -105,7 +110,7 @@ sequenceDiagram
   replaying the whole log.
 - **State changes only inside a write.** The handler opens its
   transaction with `cella.begin(op, actor, device)` before any state, and
-  `submit` settles only the write begun, by the same op, actor and
+  `submit` settles only the write begun, by the same action, actor and
   device. Every table a feat or a graft makes is registered in
   `cella.state` as it is made, and the notary's constraint trigger on it
   refuses (SQLSTATE `09000`) a row inserted, updated or deleted, or a
@@ -141,7 +146,7 @@ sequenceDiagram
   own (a profile, a device), a member's of a roll or a circle (a stance,
   a proposal, a close) or decided (an admission, an adoption, a seat):
   its label declares that check and a guard enforces it, and `cella check
-  feats` refuses an op that names neither, so nothing is allowed by
+  feats` refuses an action that names neither, so nothing is allowed by
   omission. Money leaves a cash account only through writes with their
   own right and a guard that checks the entry is exactly what they say:
   `transaction.pay` and `expense.reimburse` within their power's limit,
@@ -155,7 +160,7 @@ sequenceDiagram
   transaction (`cella.reader()`). Each table holding a person's pay, time,
   capital, personal files or a capital account's lines keeps row-level
   security for the app role. The person reads their own rows. A feat
-  names in `cella.reading` the powers that read all of them, as its ops
+  names in `cella.reading` the powers that read all of them, as its actions
   name theirs in `cella.power`, and the `circle-membership` graft, as
   `cella.authority`, says who holds a power on the verdict date: the
   payroll powers read pay, `approve-time` time, the books' and capital's
@@ -177,7 +182,7 @@ sequenceDiagram
   `cella_app` whatever role it logs in as, so an owner's or a
   superuser's login reads no further. The log's `form` is the owner's alone, and the vault opens only
   through `cella.disclosed(n)`: to the entry's writer, to the person
-  every commitment in it is about, or to a holder of the power its op
+  every commitment in it is about, or to a holder of the power its action
   needs.
 - **Confluent writes are logged in signed batches** once devices queue
   them offline (rung 2); until then each goes through the server's guards
@@ -191,7 +196,8 @@ guards crate, which also compiles to WASM for browsers, devices and auditors:
 - types: `cella.amount`, positive cents; balances are signed and derived;
 - aggregates: `cella.consent`, `cella.majority`, …; an outcome is folded from
   the votes, never stored;
-- the write being judged: `cella.op()`, `cella.actor()`, `cella.device()`;
+- the action being judged: `cella.action()`, its id, `cella.actor()` and
+  `cella.device()`;
   whether the actor may use a power is not a primitive but the
   `circle-membership` graft's composed guard, `circle_membership.may(actor, power,
   cents, day)`, since only that graft sees both mandates and seats;
@@ -291,7 +297,7 @@ makes no claim that the host cannot forge a vote.
   keeps the session in a cookie it MACs, and every route but the sign-in
   and an invitation's link needs one whose device is still current. A
   write from a page runs on the server while the browser signs: each
-  time a handler signs, the post is answered with what to sign, the op,
+  time a handler signs, the post is answered with what to sign, the action,
   the request made plain and the scope, actor and device, and the browser
   signs it with that device and posts the proof back to the run it
   answers, which only the session that started it may. The server holds

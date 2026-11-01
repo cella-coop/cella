@@ -1,8 +1,8 @@
 import type { Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Distribute, Distributed } from '../models/distribution.ts'
 
-const op = 'patronage:distribution:distribute' satisfies keyof typeof ops
+const op = 'patronage:distribution:distribute' satisfies keyof typeof actions
 
 // Distributes an approved split on the verdict date. The feat alone cannot
 // post it, so its only handler is the patronage-transaction graft's, which

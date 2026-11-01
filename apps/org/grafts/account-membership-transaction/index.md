@@ -63,7 +63,7 @@ it to NULL. A repayment's amount is logged as given: it falls due after
 its member has left, perhaps after their erasure, which refuses any
 later value of their class, and the exit drew it up from the books.
 
-## Writes
+## Actions
 
 `account:account:draw` (bounded on the draw limit, `self`), served on a
 person's page: the bank pays the member, `455` debited and `512` credited,

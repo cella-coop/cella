@@ -1,4 +1,4 @@
-import type { Permission, Refused, Settled } from '@cella/org-ops'
+import type { Permission, Refused, Settled } from '@cella/org-actions'
 import { plain, type Proof, type Signer } from '@cella/org-sign'
 
 export * from './slice.ts'

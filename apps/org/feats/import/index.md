@@ -54,14 +54,14 @@ write like any other, and on a log that holds an entry it is refused.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| run | `id`, `kind`, `name`, `actor`, `day`, `dry`, `settled`, `refused`, `lines` | `id` is `im-0001` and up; `lines` each a line's number, what it is, the op, its outcome, its entry or reason |
+| run | `id`, `kind`, `name`, `actor`, `day`, `dry`, `settled`, `refused`, `lines` | `id` is `im-0001` and up; `lines` each a line's number, what it is, the action, its outcome, its entry or reason |
 
 What a line is names a record by its id, its address or its title, never
 a person's name: a person among the clients is `a person, line 4`.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/import/record` | confluent, `self` | the record of an import is a fact, the importer's own |
 | `carry`, from `cella seed` | ordered, `first` | the state a scope held before its log comes in once, as the log's first entry |

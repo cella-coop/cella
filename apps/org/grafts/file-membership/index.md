@@ -12,7 +12,7 @@ by `file`.
 `file_membership` (`sql/`): `record`, a member and a file, each by address or
 id, a file kept once.
 
-## Writes
+## Actions
 
 `file-membership:member:attach` (confluent, `self`): a member files a record
 of their own; the log commits to its name and BLAKE3.

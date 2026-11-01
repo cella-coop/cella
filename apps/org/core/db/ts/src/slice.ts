@@ -1,4 +1,4 @@
-import type { Pending, Permission, Refused, Settled } from '@cella/org-ops'
+import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import type { Db, Deps } from './index.ts'
 import type { Read } from './read.ts'
 

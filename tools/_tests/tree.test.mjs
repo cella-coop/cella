@@ -16,8 +16,9 @@ const checker = new URL('../feat-check.mjs', import.meta.url).pathname
 // A throwaway tree: org with decision and person, person with membership
 // and employment; each package named by its slice, depending on `deps`.
 // `grafts` places each graft by the node it sits at and names what it
-// declares and depends on; `extra` adds feats.
-function tree({ grafts = {}, deps = {}, extra = [] }) {
+// declares and depends on; `extra` adds feats; `files` writes each file by
+// its path.
+function tree({ grafts = {}, deps = {}, extra = [], files = {} }) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-tree-'))
   const pkg = (dir, name, needs = []) => {
     mkdirSync(join(repo, dir), { recursive: true })
@@ -41,6 +42,10 @@ function tree({ grafts = {}, deps = {}, extra = [] }) {
   }
   for (const [g, x] of Object.entries(grafts)) {
     pkg(join(x.at, 'grafts', g, 'ts'), g, x.deps)
+  }
+  for (const [path, text] of Object.entries(files)) {
+    mkdirSync(join(repo, path, '..'), { recursive: true })
+    writeFileSync(join(repo, path), text)
   }
   try {
     const run = spawnSync(process.execPath, [checker, repo, '--no-sql'], { encoding: 'utf8' })
@@ -94,4 +99,23 @@ test('a graft reads no core of a feat it does not join, nor a graft above its no
 test('a feat\'s name is unique in its app, at any depth', () => {
   const errors = tree({ extra: [['apps/org/feats/decision/feats/membership', 'membership']] })
   assert.match(errors, /a feat's name is unique in its app/)
+})
+
+const src = 'apps/org/feats/decision/core/ts/src'
+const declaring = "import { confluent, type Actions } from '@cella/org-actions'\n\nexport const actions = {\n  'decision:decision:propose': confluent({ check: 'seat' }),\n} satisfies Actions\n"
+
+test('a feat declares its actions in its models/actions.ts', () => {
+  const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring, [`${src}/handlers/propose.ts`]: "import type { Outcome } from '@cella/org-actions'\n" } })
+  assert.doesNotMatch(errors, /action/)
+})
+
+test('an action declared outside models/actions.ts is refused, as is a models/ops.ts', () => {
+  const errors = tree({ files: { [`${src}/handlers/propose.ts`]: declaring, [`${src}/models/ops.ts`]: declaring } })
+  assert.match(errors, /handlers\/propose\.ts: declares an action outside .*models\/actions\.ts/)
+  assert.match(errors, /models\/ops\.ts: actions are declared in models\/actions\.ts/)
+})
+
+test('an action is its feat\'s own', () => {
+  const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring.replace('decision:decision', 'person:decision') } })
+  assert.match(errors, /person:decision:propose is not an action of decision/)
 })

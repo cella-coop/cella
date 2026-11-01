@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import { committed, request, storing } from '@cella/org-file/api'
 import type { Stored } from '@cella/org-file/models'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Attach, Attached } from '../models/record.ts'
 
-const op = 'file-membership:member:attach' satisfies keyof typeof ops
+const op = 'file-membership:member:attach' satisfies keyof typeof actions
 
 // Files a record for a member in one write: the file stored about them, of
 // class profile, and kept on their file. The log commits to its name and
 // BLAKE3; `file_membership.files` checks the rest.
-export async function attach(input: Attach, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Attached>> {
+export async function attach(input: Attach, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Attached>> {
   let stored: Stored | null = null
   return write(deps, {
     op,

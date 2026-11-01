@@ -58,7 +58,7 @@ BEGIN ATOMIC
       THEN coalesce(cella.actor(), 'no one') || ' holds ' || coalesce(w.power, 'no power') || ' over no circle that holds ' || m.id
   END
   FROM (
-    SELECT payload ->> 'meeting' AS meeting, (SELECT p.power FROM cella.power p WHERE p.op = cella.op()) AS power
+    SELECT payload ->> 'meeting' AS meeting, (SELECT p.power FROM cella.power p WHERE p.op = cella.action()) AS power
   ) w
   LEFT JOIN meeting.meeting m ON m.id = w.meeting;
 END;

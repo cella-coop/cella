@@ -1,17 +1,17 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Frontier, Save, Saved } from '../models/document.ts'
 import { merged, snapshot } from './loro.ts'
 
-const op = 'document:document:version' satisfies keyof typeof ops
+const op = 'document:document:version' satisfies keyof typeof actions
 
 // Saves a version: a snapshot of the document at the frontier the saver
 // read, or at the merged draft's, with the frontier and its version
 // vector. The database computes its canonical JSON and hash from the
 // snapshot. Confluent: two saves are two versions, numbered next in their
 // document under a lock.
-export async function version(input: Save, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Saved>> {
+export async function version(input: Save, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Saved>> {
   return write(deps, {
     op,
     request: input,

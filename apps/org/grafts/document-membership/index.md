@@ -20,9 +20,9 @@ the `membership` feat.
 The app role may select, insert and keep a reading's first day; the
 guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Check | Why |
+| Action | Label | Check | Why |
 |---|---|---|---|
 | `document-membership:version:read` | confluent | `self` | a fact the member states of themselves; marking a version read again changes nothing |
 

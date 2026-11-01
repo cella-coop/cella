@@ -10,14 +10,14 @@ repository works only on the org app, `apps/org/`. Read
 - **A feat imports no other feat.** What feats share goes through a graft
   in their parent's `grafts/`, declared by the feat that extends.
   `cella check feats` must pass; never route around it with a re-export.
-- **Every write has a label and a permission** in its feat's
-  `models/ops.ts`. A new write without one is incomplete.
+- **Every action has a label and a permission** in its feat's
+  `models/actions.ts`. A new action without one is incomplete.
 - **The notary is the only path that appends to the log.** It is a layer,
-  the `cella` extension in org's core, not a feat, and has no writes of its
+  the `cella` extension in org's core, not a feat, and has no actions of its
   own. Only the extension's functions write the log; a handler writes
   through `write`, which opens its transaction with `cella.begin` and calls
   `cella.submit` inside it, and never writes the log or settles an ordered
-  write itself. Every table a feat or a graft makes refuses a row written
+  action itself. Every table a feat or a graft makes refuses a row written
   outside such a transaction.
 - **Grafts compose upward.** A graft joining N feats may read, in code and
   in SQL, the feats it joins and the grafts of its node that join a proper

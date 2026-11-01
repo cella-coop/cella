@@ -27,9 +27,9 @@ payslip's month, is the `employment-payslip` graft's.
 A run is prepared, approved, then paid, each once; its payslips never
 change once it is approved.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/payslip/generate` | ordered | fixes a month's payslips from the salaries and the approved time; a month has one run |
 | `POST /api/payslip/approve` | ordered | makes the run final and posts it, once |
@@ -37,7 +37,7 @@ change once it is approved.
 
 Preparing needs the approved time, which is the `payslip-timesheet`
 graft's, and approving and paying post, which is `payslip-transaction`'s:
-their writes serve these ops over this feat's `generating`, `approving`
+their writes serve these actions over this feat's `generating`, `approving`
 and `paying` specs; `payslip-timesheet` sets each payslip's minutes
 through this feat's `timing`, inside the write that generates the run.
 Who a run waits on, the holders of `approve-payroll`
@@ -45,7 +45,7 @@ and then of `pay-payroll`, is `circle-membership-payslip`'s, in their inbox.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | generate | `prepare-payroll`, no limit | Julien, as finance |
 | approve | `approve-payroll`, no limit | Camille, as gérante |

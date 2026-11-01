@@ -36,11 +36,11 @@ the revoked mandate's role's circle; a role every working circle has
 
 No write sets a circle's procedure: the seed carries it in, and the
 fixture check holds it to a procedure the decision feat holds. A write
-that sets one will be judged by a guard of this graft's on its op, not by
+that sets one will be judged by a guard of this graft's on its action, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
-The three ops cite a decision: this graft lists them in `decision.cites`,
+The three actions cite a decision: this graft lists them in `decision.cites`,
 and `circle-decision-membership`, which counts the roll, attaches its guard
 that it carried.
 

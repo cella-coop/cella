@@ -1,6 +1,6 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Admit, Admitted } from '../models/member.ts'
 
 const op = 'membership:member:admit'
@@ -23,7 +23,7 @@ export async function admitting(tx: Db, input: Admit): Promise<Admitted> {
 // this op decide: `membership.admitted` that the write did so, the
 // decision-membership graft's that the cited decision admits, and
 // circle-decision-membership's that it closed and passed on its roll.
-export async function admit(input: Admit, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Admitted>> {
+export async function admit(input: Admit, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Admitted>> {
   const w: Write<Admitted> = {
     op,
     request: input,

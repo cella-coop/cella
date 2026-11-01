@@ -26,31 +26,36 @@ updated = 2026-11-01
 | **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui` and the notary |
+| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui` and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
 | **subsidiarity** | a guard lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
 | **address** | a person's stable name in a scope, `ana@coop-a`; keys rotate under it |
-| **device key** | an Ed25519 key on a person's device that signs their writes |
+| **device key** | an Ed25519 key on a person's device that signs their actions |
 | **guardian** | a person holding a share of another's recovery secret |
-| **label** | how a write contends: confluent, bounded or ordered; part of its type |
-| **confluent** | a write that merges in any order and never waits: an edit, a vote cast, a payment |
-| **bounded** | a write that spends a right granted in advance and waits only when the right runs out: a draw, an invoice number |
-| **ordered** | a write that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
-| **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers, a draw limit |
+| **label** | how an action contends: confluent, bounded or ordered; part of its type |
+| **confluent** | an action that merges in any order and never waits: an edit, a vote cast, a payment |
+| **bounded** | an action that spends a right granted in advance and waits only when the right runs out: a draw, an invoice number |
+| **ordered** | an action that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
+| **share** | a right granted in advance that bounded actions spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
-| **notary** | the scope's office every write passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
-| **guard** | a check the notary runs on a write before it takes effect: does the actor hold a mandate, does the write follow the rules, was the decision it cites taken properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
-| **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
-| **nonce** | the single-use random value in a write's signature, so the signature counts once |
+| **notary** | the scope's office every attempt passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
+| **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the decision it cites taken properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
+| **action** | one change to the records, voting and closing included: an actor signs an attempt, or a passed decision carries it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |
+| **attempt** | an action as signed and sent, before its guards rule on it |
+| **actor** | whoever signs: a person, an agent or a service, by their address; only people hold rights, and by default only people vote |
+| **agent** | an AI as an actor; named and not built: it holds only limited, termed mandates a decision can revoke, someone is answerable for it, and its seat brings no participant role unless a procedure says so |
+| **service** | automation as an actor, held as an agent is; named and not built |
+| **receipt** | the notary's signed, numbered acknowledgement that an attempt arrived, carrying its actor's signature on it; one per action; order comes from receipts, never from clocks |
+| **nonce** | the single-use random value in an action's signature, so the signature counts once |
 | **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any guard |
-| **verdict** | the notary's signed ruling on an ordered write, Settled or Refused, committed with its state change |
-| **log** | the scope's hash-chained, signed record of every accepted write, from which the state folds |
+| **verdict** | the notary's signed ruling on an ordered action, Settled or Refused, committed with its state change |
+| **log** | the scope's hash-chained, signed record of every accepted action, from which the state folds |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
-| **power** | the id of something a write needs, such as `issue-invoice`; each op's is registered in `cella.power` |
-| **mandate** | a grant of one power to one role, with an optional limit per write or budget per month or year, and a term |
+| **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
+| **mandate** | a grant of one power to one role, with an optional limit per action or budget per month or year, and a term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **position** | a member holding a seat, and perhaps a role, in a circle |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
@@ -58,12 +63,12 @@ updated = 2026-11-01
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |
 | **commitment** | what the log keeps of a personal value: the BLAKE3, under its own domain, of a fresh salt and the value, which opens only while the vault holds both |
 | **retention class** | how long the law keeps a kind of personal data: `profile`, a person's name and records, and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
-| **erasure** | an ordered write that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
+| **erasure** | an ordered action that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
 | **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
 | **file** | bytes the co-op keeps, named by their BLAKE3, which the database computes and the log commits to: its own papers, receipts, employment and member records; a personal file has a retention class and a subject |
 | **receipt (file)** | a file attached to an expense, of class `expense-receipt`; not the notary's receipt |
-| **import** | a file from another tool brought in through the normal signed writes, each record one write as the importing member, judged by the guards; recorded with what each line came to |
-| **dry run** | an import whose writes are each made and rolled back, saying what would be created and what refused |
+| **import** | a file from another tool brought in through the normal signed actions, each record one action as the importing member, judged by the guards; recorded with what each line came to |
+| **dry run** | an import whose actions are each made and rolled back, saying what would be created and what refused |
 | **FEC** | the fichier des écritures comptables every French accounting tool exports (LPF art. A47 A-1); its entries are carried over into the journal |
 | **carry** | posting an entry from the books of the co-op's last tool, which may open accounts and touch cash, under its own power |
 
@@ -75,7 +80,7 @@ updated = 2026-11-01
 | **SCOP** | société coopérative et participative: France's worker co-op, a SARL or SA whose workers hold the majority of capital and votes |
 | **SCIC** | société coopérative d'intérêt collectif: France's multi-stakeholder co-op, its members in colleges |
 | **gérant(e)** | the elected manager and legal representative of a SCOP SARL |
-| **person** | someone the co-op knows, by their address, with their name and devices, whatever they hold; a member if they hold a membership, a worker if they hold an employment, roles derived and never stored |
+| **person** | someone the co-op knows, by their address, with their name and devices, whatever they hold; the one kind of actor built; a member if they hold a membership, a worker if they hold an employment, roles derived and never stored |
 | **membership** | a person's belonging to the co-op, invited to exited, with the shares they hold; the feat nested in `person` that keeps it |
 | **employment** | a person's contract with the co-op, member or not; the feat nested in `person` that keeps it |
 | **worker** | a person who holds an employment, under a contract that runs from a first day to a last; their time and pay rest on their employment |

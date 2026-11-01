@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Act, Acted, Capture, Captured } from '../models/expense.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Captures a member's expense as a draft. `expense.captures` checks it is
 // the actor's own and spent on a day that has come; the expense-membership
 // graft's trigger that the actor is an active member.
 export const capturing = (input: Capture): Write<Captured> => ({
-  op: 'expense:expense:capture' satisfies Op,
+  op: 'expense:expense:capture' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string; total: string }>(
@@ -48,7 +48,7 @@ async function move(tx: Db, expense: string, set: string, actor?: string): Promi
 // Submits a draft for approval; `expense.submits` checks it is the actor's.
 export async function submit(input: Act, deps: Deps): Out<'expense:expense:submit', Acted> {
   return write(deps, {
-    op: 'expense:expense:submit' satisfies Op,
+    op: 'expense:expense:submit' satisfies Action,
     request: input,
     state: (tx) => move(tx, input.expense, `status = 'submitted', submitted = cella.verdict_date()`),
     payload: (v) => ({ ...v }),
@@ -59,7 +59,7 @@ export async function submit(input: Act, deps: Deps): Out<'expense:expense:submi
 // month. The expense-transaction graft wraps it with the entry charging
 // it, and the circle-expense-membership graft checks the budget.
 export const approving = (input: Act, actor: string): Write<Acted> => ({
-  op: 'expense:expense:approve' satisfies Op,
+  op: 'expense:expense:approve' satisfies Action,
   request: input,
   state: (tx) => move(tx, input.expense, `status = 'approved', decided = cella.verdict_date(), decider = $2`, actor),
   payload: (v) => ({ ...v }),
@@ -72,7 +72,7 @@ export async function approve(input: Act, deps: Deps): Out<'expense:expense:appr
 // Refuses a submitted expense; it posts nothing.
 export async function refuse(input: Act, deps: Deps): Out<'expense:expense:refuse', Acted> {
   return write(deps, {
-    op: 'expense:expense:refuse' satisfies Op,
+    op: 'expense:expense:refuse' satisfies Action,
     request: input,
     state: (tx) => move(tx, input.expense, `status = 'refused', decided = cella.verdict_date(), decider = $2`, deps.actor),
     payload: (v) => ({ ...v }),
@@ -82,7 +82,7 @@ export async function refuse(input: Act, deps: Deps): Out<'expense:expense:refus
 // Reimburses an approved expense. The expense-transaction graft wraps it
 // with the payment from the bank.
 export const reimbursing = (input: Act): Write<Acted> => ({
-  op: 'expense:expense:reimburse' satisfies Op,
+  op: 'expense:expense:reimburse' satisfies Action,
   request: input,
   state: (tx) => move(tx, input.expense, `status = 'reimbursed', reimbursed = cella.verdict_date()`),
   payload: (v) => ({ ...v }),

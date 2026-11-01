@@ -17,12 +17,12 @@ its meeting's agenda and a decision that does not exist. An item removed
 leaves its row, which the reads no longer find. The app role may select
 and insert; the guards role, `cella_guards`, may select.
 
-## Writes
+## Actions
 
 Tabling is the meeting feat's `meeting:item:add`, run with the link in
 one transaction under one verdict, as `project-timesheet` books time:
 the item is titled as the decision unless named, and the seat guard on
-the op judges who adds it. It is a write of its own name, `table`, on a
+the action judges who adds it. It is a write of its own name, `table`, on a
 meeting's page, beside the feat's `item`.
 
 ## Shell

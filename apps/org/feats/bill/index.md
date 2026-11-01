@@ -34,9 +34,9 @@ lines never change once recorded: a bill recorded wrong is the
 supplier's to correct with a credit note, which is not built. `overdue`
 is not a state: it is read from `due` on a bill not yet paid.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/bill/record` | confluent | a bill is a fact from a supplier; the same one recorded twice merges |
 | `POST /api/bill/approve` | ordered | decides the bill once, within the approver's limit |
@@ -55,7 +55,7 @@ over this feat's `approving` and `paying` specs.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | record | `record-bill` | Julien, as finance |
 | approve | `approve-bill`, within the mandate's limit for the bill's total | Camille, as gérante, up to 5 000 € a bill |

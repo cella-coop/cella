@@ -52,9 +52,9 @@ books and its shares in the associates' capital. Adopted terms never
 change, and later terms govern from their year, never over a year whose
 distribution is approved.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/patronage/terms.draft` | confluent | finance drafts the terms for the members to adopt; drafted again, the latest stands until they are adopted |
 | `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' decision adopts the work share's terms, once |
@@ -90,7 +90,7 @@ distribution is approved.
 No role is hard-coded. A write needs a power held through a mandate, and
 the holder is whoever holds the role the mandate is granted to.
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | terms.draft, distribution.draft | `distribute-surplus` | Julien, as finance |
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |

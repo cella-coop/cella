@@ -18,7 +18,7 @@ CREATE FUNCTION expense_file.attaches(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN x.file IS NULL AND cella.op() = 'expense:expense:capture' THEN NULL
+    WHEN x.file IS NULL AND cella.action() = 'expense:expense:capture' THEN NULL
     WHEN e.id IS NULL THEN 'no expense ' || coalesce(x.expense, 'is named')
     WHEN e.member IS DISTINCT FROM cella.actor()
       THEN coalesce(cella.actor(), 'no one') || ' may not attach a receipt to ' || e.member || '''s expense'

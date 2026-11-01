@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
 import { capturing } from '@cella/org-expense/api'
-import type { Captured, ops as claims } from '@cella/org-expense/models'
+import type { Captured, actions as claims } from '@cella/org-expense/models'
 import { committed, request, storing } from '@cella/org-file/api'
 import type { Stored } from '@cella/org-file/models'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Attach, Attached, Claim } from '../models/receipt.ts'
 
 // Stores a receipt about the acting member and attaches it to the expense.
@@ -34,10 +34,10 @@ export async function capture(input: Claim, deps: Deps): Promise<Outcome<(typeof
   })
 }
 
-const op = 'expense-file:expense:attach' satisfies keyof typeof ops
+const op = 'expense-file:expense:attach' satisfies keyof typeof actions
 
 // Attaches a receipt to an expense already claimed, its member's own.
-export async function attach(input: Attach, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Attached>> {
+export async function attach(input: Attach, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Attached>> {
   let stored: Stored | null = null
   return write(deps, {
     op,

@@ -1,10 +1,10 @@
 import { check, type Analytics } from '@cella/org-analytics'
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Save, Stored } from '../models/report.ts'
 
-const op = 'report:report:save' satisfies keyof typeof ops
+const op = 'report:report:save' satisfies keyof typeof actions
 
 // Saves the actor's custom report on the verdict date, or saves it again
 // over their own; a built-in report or another member's keeps its row,
@@ -27,7 +27,7 @@ export const saving = (input: Save, actor: string): Write<Stored> => ({
 
 // Saves a custom report once the port's catalog allows its definition: one
 // the port would refuse is refused with every reason, and never saved.
-export async function save(port: Analytics, input: Save, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Stored>> {
+export async function save(port: Analytics, input: Save, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Stored>> {
   const { chart, ...report } = input.definition
   const reasons = check(report, await port.catalog())
   const shown = [...(report.fields ?? []), ...Object.keys(report.measures ?? {})]

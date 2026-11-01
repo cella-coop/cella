@@ -16,7 +16,7 @@ layers inside each package and the write labels and feat rulings of
 
 ```mermaid
 flowchart BT
-  core["apps/org/core: ops, crypto, log, keystore, …"]
+  core["apps/org/core: actions, crypto, log, keystore, …"]
   person["feats/person/core"]
   membership["feats/person/feats/membership/core"]
   decision["feats/decision/core"]
@@ -42,10 +42,10 @@ A node is a directory with a `feat.toml`. It holds:
 
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
-  core is its shared library layer: `ops` (labels, permissions, outcomes),
-  `crypto`, `log`, `keystore`, `guards` (the pure guard primitives), `notary`
-  (the `cella` Postgres extension over them), `db` (a write's transaction),
-  `sign` (a device's signature on a write), `vat` (a document's lines,
+  core is its shared library layer: `actions` (labels, permissions,
+  outcomes), `crypto`, `log`, `keystore`, `guards` (the pure guard primitives), `notary`
+  (the `cella` Postgres extension over them), `db` (an action's transaction),
+  `sign` (a device's signature on an action), `vat` (a document's lines,
   their amounts and VAT, which invoices and bills share), `analytics`
   (the port reports are read through), `ui` (the shell's tokens and
   components) and later `auth`. A leaf feat's core is all of it.
@@ -115,11 +115,13 @@ checks that every graft is declared by a feat it joins, that its name is
 in order, that every feat it names is below its node and that no child of
 its node holds them all, that it joins no feat with one nested in it, that
 a feat's name is unique in its app, that a package's relative imports stay
-inside it, and that a feat's or graft's ops are named for it. Through
+inside it, and that a feat's or graft's actions are named for it and
+declared in its `models/actions.ts` alone. Through
 `tools/sql-check.mjs` it checks every `sql/` file (see [SQL](#sql)), and
-through `tools/powers.mjs` that the power each op's label names in
-`ops.ts` is the one its SQL registers in `cella.power`, and that an op
-with no power declares a check its SQL backs ([writes](#writes)), and
+through `tools/powers.mjs` that the power each action's label names in
+`actions.ts` is the one its SQL registers in `cella.power`, and that an
+action with no power declares a check its SQL backs
+([actions](#actions)), and
 through `tools/writes.mjs` that no feat or graft writes a table it does
 not own beyond the app's listed exceptions ([writes stay
 home](#writes-stay-home)).
@@ -151,9 +153,9 @@ No foreign key crosses a feat boundary. A feat handles an unlinked entity
 gracefully: an invoice without a client is unbilled, not invalid. The graft
 adds the link.
 
-A graft may also own writes on the relationship it holds, such as who
-holds a position: its permission is `<graft>:<entity>:<op>`, served as
-`POST /api/<graft>/<op>`, the same pattern as a feat's.
+A graft may also own actions on the relationship it holds, such as who
+holds a position: its permission is `<graft>:<entity>:<verb>`, served as
+`POST /api/<graft>/<verb>`, the same pattern as a feat's.
 
 ### Graft order
 
@@ -174,8 +176,8 @@ graft that joins all the feats involved. A decision's roll needs seats
 (circle and member) and the decision, so it is `circle-decision-membership`'s,
 and so is everything that counts the roll. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
-cites a decision lists its op in `decision.cites`, and the graft that
-counts the roll attaches its guard to every op listed, so neither reads the
+cites a decision lists its action in `decision.cites`, and the graft that
+counts the roll attaches its guard to every action listed, so neither reads the
 other.
 
 ### Writes stay home
@@ -186,8 +188,8 @@ lower-order grafts, and writes only its own schema. It changes a feat
 only by calling that feat's published write from its handler, inside
 the one `write`, as `invoice-transaction` calls `record()` from
 `@cella/org-transaction/api`. It reacts to a feat's settled write
-through its server slice's `on`, and it refuses a feat's write by a guard
-on the op in `cella.guard`, which the notary runs. It never uses a
+through its server slice's `on`, and it refuses a feat's action by a guard
+on it in `cella.guard`, which the notary runs. It never uses a
 trigger on the feat's table for either. What a graft would only copy
 from a feat's row it reads by a view in its own schema, as
 `decision_document.adoption` reads what each motion to adopt names. A nested feat changes its
@@ -256,9 +258,9 @@ parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
 holds a foreign key out of it; writes `cella.*` other than to register,
-under its own name, its guards on its own ops, those of the feats it
+under its own name, its guards on its own actions, those of the feats it
 joins and those of the lower-order grafts it builds on, the power each of
-its own ops needs as a literal row, the powers that read the rows of its
+its own actions needs as a literal row, the powers that read the rows of its
 own feat or of the feats it joins (`cella.reading`), a feat only the
 keyring, or a graft only the authority that says who holds a power
 (`cella.authority`) and what opens a joined feat's rows to more readers
@@ -413,7 +415,7 @@ for each slice and each scenario.
 
 Seedling's layers, innermost first; imports point inward only.
 
-- Server: `models` (types, schemas, invariants, `permissions`, `ops.ts`) →
+- Server: `models` (types, schemas, invariants, `permissions`, `actions.ts`) →
   `interfaces` (repository contracts) → `handlers` (`(input, deps) → Result`,
   jobs) → `drivers` (repositories over the feat's schema) → `api` (remotes,
   endpoints, events, subscriptions).
@@ -537,7 +539,7 @@ goes on to its next signature, a reaction's, or to its outcome
 ([trust](trust.md#keys-and-addresses)). The server holds no member's key,
 in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
-Until `POST /api/<feat>/<op>` is served, these form actions are the
+Until `POST /api/<feat>/<verb>` is served, these form actions are the
 writes' only HTTP path.
 
 ### Reading at scale
@@ -620,49 +622,61 @@ it first, and `cella serve` starts it when it is stopped. A host runs it
 as a unit of its own beside Postgres
 ([operations](operations.md#the-analytics-shell)).
 
-## Writes
+## Actions
 
-Every write is `POST /api/<feat>/<op>` and maps to one permission,
-`<feat>:<entity>:<op>`, declared in the feat's `models/ops.ts` with its label:
+Every change to the records is an action: one change, voting and closing
+included, that an actor signs as an attempt, or that a passed decision
+carries, and that passes the guards before it takes effect. Whoever signs
+is an actor, by their address (`cella.actor()`): a person, the one kind
+built. An agent, an AI, and a service, automation, are actors too, named
+and not built: each would hold only limited, termed mandates a decision
+can revoke, with someone answerable for it, and no participant role
+unless a procedure says so.
+
+Every action is `POST /api/<feat>/<verb>` and maps to one permission, its
+id `<feat>:<entity>:<verb>`, declared in the feat's `models/actions.ts`
+with its label:
 
 ```ts
-export const ops = {
+export const actions = {
   'membership:member:invite': confluent({ power: 'invite-member' }),
   'membership:member:admit': ordered({ decide: 'consent', check: 'decided' }),
-} satisfies Ops
+} satisfies Actions
 ```
 
-The label is part of the type: an ordered write returns `Pending` until its
+The label is part of the type: an ordered action returns `Pending` until its
 verdict. The labels and the path each takes are in [trust](trust.md).
 
-A label also names the power the write needs, and the payload field its
+A label also names the power the action needs, the developer's label for
+what it needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
 `circle-membership` graft's guard reads; the label mirrors it for the
-TypeScript, and `cella check feats` refuses any difference. Every write
-is signed by a device of its actor and carries its request
+TypeScript, and `cella check feats` refuses any difference, and any
+action declared outside a `models/actions.ts`. Every action is signed by
+a device of its actor and carries its request
 ([signatures](signatures.md)).
 
-No write is allowed by omission. An op with no power declares the check
+No action is allowed by omission. An action with no power declares the check
 that allows it instead: `self`, the actor's own (a profile, a device);
 `roll`, a member on the roll of the decision it names (a stance);
 `seat`, a member seated in the circle it concerns (proposing or closing
 a decision, a circle's message); or `decided`, the decision it cites
 carried (an admission, an adoption, a seat):
 `confluent({ check: 'seat' })`. A check is backed by SQL: a guard
-registered on the op in `cella.guard`, or for `decided` a row in
+registered on the action in `cella.guard`, or for `decided` a row in
 `decision.cites`, to which `circle-decision-membership` attaches its guard.
-`cella check feats` refuses an op that names neither a power nor a
+`cella check feats` refuses an action that names neither a power nor a
 check, and a check no literal row backs; that the guard does what the
-check says is its owner's and its tests'. A write not yet decided as it
-should be, such as granting a mandate before a graft ties the decision
+check says is its owner's and its tests'. An action not yet decided as
+it should be, such as granting a mandate before a graft ties the decision
 to it, needs a power no mandate grants until then.
 
 Every critical invariant is enforced twice: the handler checks the
 permission and the feat's row-level policies and triggers back it up. An
-ordered write is checked a third time by the notary, in a way anyone can
-replay from the log. A write's state lands only inside a transaction
+ordered action is checked a third time by the notary, in a way anyone can
+replay from the log. An action's state lands only inside a transaction
 that `cella.begin` opened and `cella.submit` settled: the notary's
 trigger on every table a feat or a graft makes refuses a row written
 outside one, and a begun transaction commits only with its verdict, so

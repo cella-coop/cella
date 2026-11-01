@@ -3,8 +3,8 @@ title = "Org"
 updated = 2026-11-01
 +++
 
-The co-op ERP, for member-governed organisations. One deployment serves one
-scope: a co-op, a joint circle of co-ops, or a federation.
+The cooperative workspace, for member-governed organisations. One deployment
+serves one scope: a co-op, a joint circle of co-ops, or a federation.
 
 - `core/` is what every feat inherits, one library each: `ops` (write labels,
   permissions, outcomes), `crypto`, `log`, `keystore`, `guards` (the pure

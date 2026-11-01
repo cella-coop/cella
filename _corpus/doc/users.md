@@ -1,6 +1,6 @@
 +++
 title = "Users"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 # Users
@@ -46,7 +46,7 @@ surplus split, then the assembly.
 
 | Pain | Severity | Cella's answer |
 |---|---|---|
-| Five to eight disconnected tools; the same data typed twice | critical | one ERP: books, invoices, decisions and members in one scope |
+| Five to eight disconnected tools; the same data typed twice | critical | one cooperative workspace: books, invoices, decisions and members in one scope |
 | Year-end surplus split in a spreadsheet, opaque to members | critical | `patronage`, a feat of its own: each year's distribution, its split checked against the law and approved by signed vote, the work share divided by the statutes' terms in that write, then distributed by finance into the books and the associates' capital; a statement for each worker and the year's return to the federation |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal; a subscription paid in at once or in instalments from pay, what is left to pay on 1012, and a departed associate's capital repaid on the statutes' schedule |
 | Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |

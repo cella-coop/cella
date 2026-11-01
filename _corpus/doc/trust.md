@@ -11,6 +11,15 @@ data has exactly one owning scope; anything shared gets a scope of its own.
 There is no consensus between servers and nothing to resolve: other scopes
 keep signed copies of what concerns them.
 
+Cella is single-tenant and federated, and both protect privacy. No server
+holds two scopes, so a co-op's records sit beside no other co-op's: no
+query, bug or operator of another scope reaches them through a shared
+database. Federation (rung 5 of [the ratchet](ratchet.md)) joins scopes by
+signed events between their servers, never by pooling their data: a
+record leaves its scope only as the signed copy another scope keeps of
+what concerns it, and never with the personal data behind its
+commitments.
+
 ## Three kinds of write
 
 | Label | Path | Examples |

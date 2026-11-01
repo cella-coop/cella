@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Lanterne
@@ -87,9 +87,12 @@ Camille hires, and opens a new hire's candidacy for membership.
   no seat, as `Every {right: employee} holds {power: claim-expense}, to
   claim their expenses and file their receipts`, and among the first,
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
-  log, correct and submit their own time`: every person keeps their
+  log, correct and submit their own time`, and the last of the founding
+  motion, `m-2021-001/76`, `Every {right: person} holds {power:
+  withdraw-membership}, to withdraw their own membership`: every person keeps their
   profile and devices, uploads files, takes up an invitation, files
-  their records, marks a text read and records an import; every member
+  their records, marks a text read and records an import, and a member
+  withdraws their own membership; every member
   draws on their account, spreads what they owe, marks their attendance
   and saves a report; every employee logs their own time and claims
   their expenses. So Inès, employed and no member, keeps her profile,
@@ -121,8 +124,8 @@ Camille hires, and opens a new hire's candidacy for membership.
   each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
   worded and protected as it reads. They are its six procedures, the
   participant's mandates (`/45`, `/46`), the assembly's collective
-  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`) and the
-  floors on the surplus (`/74`, `/75`): 33 policies. Its role mandates,
+  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`, `/76`) and the
+  floors on the surplus (`/74`, `/75`): 34 policies. Its role mandates,
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.

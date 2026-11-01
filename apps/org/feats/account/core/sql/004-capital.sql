@@ -35,3 +35,28 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('account:account:freeze', 'account.freezes(jsonb)', 'account');
+
+-- account:own:freeze, account:own:withdraw — the same freeze and
+-- withdrawal of capital as the member's own, once they withdrew by their
+-- right: the holder, or the member, the payload names is the actor. That
+-- they left is the grafts' guards'.
+CREATE FUNCTION account.owns(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN p.whose IS DISTINCT FROM cella.actor()
+      THEN cella.actor() || ' may not ' || split_part(cella.action(), ':', 3) || ' ' || coalesce(p.whose, 'no one') || '''s capital: only their own'
+  END
+  FROM (SELECT coalesce(payload ->> 'holder', payload ->> 'member') AS whose) p;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('account:own:freeze', 'account.freezes(jsonb)', 'account'),
+  ('account:own:freeze', 'account.owns(jsonb)', 'account'),
+  ('account:own:withdraw', 'account.owns(jsonb)', 'account');
+
+-- Each is the member's own right's, `withdraw-membership`, which the
+-- circle-membership graft's guard checks the actor holds.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('account:own:freeze', 'withdraw-membership', NULL, 'account'),
+  ('account:own:withdraw', 'withdraw-membership', NULL, 'account');

@@ -20,9 +20,9 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.address;
 END;
 
--- membership:member:suspend, membership:member:exit — the write left the member
--- suspended, or exited, on the verdict date. That the cited motion asks
--- it is the membership-motion graft's guard on the same ops.
+-- membership:member:suspend, membership:member:exclude — the write left
+-- the member suspended, or exited, on the verdict date. That the cited
+-- motion asks it is the membership-motion graft's guard on the same ops.
 CREATE FUNCTION membership.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -31,9 +31,27 @@ BEGIN ATOMIC
     WHEN split_part(cella.action(), ':', 3) = 'suspend'
       AND (m.status <> 'suspended' OR m.suspended IS DISTINCT FROM cella.verdict_date())
       THEN m.address || ' was not suspended by this write'
-    WHEN split_part(cella.action(), ':', 3) = 'exit'
+    WHEN split_part(cella.action(), ':', 3) = 'exclude'
       AND (m.status <> 'exited' OR m.exited IS DISTINCT FROM cella.verdict_date())
-      THEN m.address || ' did not exit by this write'
+      THEN m.address || ' was not excluded by this write'
+  END
+  FROM (SELECT payload ->> 'member' AS address) p
+  LEFT JOIN membership.member m ON m.address = p.address;
+END;
+
+-- membership:member:withdraw — a member leaves by their own right: the
+-- membership is the actor's own, and the write left it exited on the
+-- verdict date. The lifecycle (`membership.moves`) lets only an active or
+-- a suspended member exit, so no one withdraws who was not a member.
+CREATE FUNCTION membership.withdraws(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN p.address IS DISTINCT FROM cella.actor()
+      THEN cella.actor() || ' may not withdraw ' || coalesce(p.address, 'no one') || '''s membership: only their own'
+    WHEN m.address IS NULL THEN 'no member ' || p.address
+    WHEN m.status <> 'exited' OR m.exited IS DISTINCT FROM cella.verdict_date()
+      THEN m.address || ' did not withdraw by this write'
   END
   FROM (SELECT payload ->> 'member' AS address) p
   LEFT JOIN membership.member m ON m.address = p.address;
@@ -42,4 +60,5 @@ END;
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:invite', 'membership.invites(jsonb)', 'membership'),
   ('membership:member:suspend', 'membership.ends(jsonb)', 'membership'),
-  ('membership:member:exit', 'membership.ends(jsonb)', 'membership');
+  ('membership:member:exclude', 'membership.ends(jsonb)', 'membership'),
+  ('membership:member:withdraw', 'membership.withdraws(jsonb)', 'membership');

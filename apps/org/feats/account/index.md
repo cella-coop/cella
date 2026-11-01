@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -75,9 +75,11 @@ day their rule applies.
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
 | `POST /api/account/capital.spread` | confluent, `spread-capital`, every member's right | an associate spreads what they owe over monthly instalments from their pay |
 | `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
-| `POST /api/account/account.freeze` | ordered, `end-membership` by motion | a departed member's capital accounts frozen, citing the motion that ended the membership |
+| `POST /api/account/account.freeze` | ordered, `exclude-member` by motion | an excluded member's capital accounts frozen, citing the motion that excluded them |
+| `POST /api/account/own.freeze` | ordered, `withdraw-membership`, every person's right | a member who withdrew freezes their own capital accounts |
 | `POST /api/account/capital.subscribe` | ordered, `admit-member` by motion | a member admitted subscribes their shares: their capital account opened and the shares called, citing the motion that admitted them |
-| `POST /api/account/capital.withdraw` | ordered, `end-membership` by motion | a departed associate's capital moved to what is owed them and its repayments drawn up, citing the motion that ended the membership |
+| `POST /api/account/capital.withdraw` | ordered, `exclude-member` by motion | an excluded associate's capital moved to what is owed them and its repayments drawn up, citing the motion that excluded them |
+| `POST /api/account/own.withdraw` | ordered, `withdraw-membership`, every person's right | an associate who withdrew moves their own capital to what is owed them, its repayments drawn up |
 
 - **draw** is bounded because it spends a right granted in advance, the
   member's draw limit, which the `account-membership` graft holds. A draw
@@ -110,14 +112,20 @@ day their rule applies.
   the one before it, and not before the day it falls due. It posts, so
   its handler and guard are `account-membership-transaction`'s.
 - **account.freeze**, **capital.subscribe** and **capital.withdraw** are
-  what a passed motion carries once it admits or ends a membership, each
+  what a passed motion carries once it admits or excludes a member, each
   a write of its own signed by whoever closed it: they cite the motion
   (`account-motion` registers them by `motion.register_cite`), and
   settle only if it closed and passed. The freeze is this feat's own
   write, `account-membership` reacting to the exit with it; the
   subscription and the withdrawal post, so their handlers and guards are
   `account-membership-transaction`'s, reacting to the admission and the
-  exit.
+  exclusion.
+- **own.freeze** and **own.withdraw** are the same two writes as the
+  member's own, once they withdrew by their right: no motion decides a
+  withdrawal, so what follows it is signed by the member who withdrew
+  and needs the same right, `withdraw-membership`, the guard that the
+  accounts are theirs this feat's (`account.owns`). A power is a seat's
+  or a motion's, never both, so each is an action of its own.
 
 ## Powers
 
@@ -135,9 +143,10 @@ circle whose motion carries it, or every member, by a right
 | capital.pay | `record-receipt` | Julien, as finance |
 | capital.spread | `spread-capital`, every member's right: the associate's own | Inès, once admitted |
 | capital.repay | `repay-capital` | Julien, as finance |
-| account.freeze, capital.subscribe, capital.withdraw | `end-membership`, `admit-member`, `end-membership`, collective mandates: carried by the motion that admits or ends the membership | whoever closes the assembly's motion |
+| account.freeze, capital.subscribe, capital.withdraw | `exclude-member`, `admit-member`, `exclude-member`, collective mandates: carried by the motion that admits or excludes the member | whoever closes the assembly's motion |
+| own.freeze, own.withdraw | `withdraw-membership`, every person's right: the holder is the actor, who left | the member who withdrew, after their withdrawal |
 
-`002-powers.sql` registers period.close's, draw's and capital.spread's powers in `cella.power`,
+`002-powers.sql` registers period.close's, draw's and capital.spread's powers in `cella.power`, `004-capital.sql` own.freeze's and own.withdraw's,
 `006-terms.sql` capital.pay's and capital.repay's, and `010-period.sql`
 period.open's; the `circle-membership` graft checks them.
 
@@ -232,7 +241,11 @@ has left restricts it until `cella vault sweep` redacts it.
   as its values say, and their clauses repay an exit within five years.
 - `account.freezes`, on `account:account:freeze`: the accounts the
   payload names are exactly those the holder holds, each frozen. That
-  the holder left is `account-membership`'s guard.
+  the holder left is `account-membership`'s guard. It runs on
+  `account:own:freeze` too.
+- `account.owns`, on `account:own:freeze` and `account:own:withdraw`:
+  the holder, or the member, the payload names is the actor. That they
+  left is the grafts' guards'.
 
 ## Handlers
 
@@ -247,6 +260,8 @@ has left restricts it until `cella vault sweep` redacts it.
 - `freeze` (ordered), and `freezing`, the same as a write a graft
   composes: sets `frozen` on every account the holder holds that is not
   frozen yet, citing the motion; its payload names the accounts.
+  `freezeOwn` (ordered) is the same freeze as the holder's own,
+  `account:own:freeze`, citing no motion.
 - `holding`: the spec that opens, inside a write, a capital account for
   its holder under `1013`, the next code there, with the label the write
   gives it; `account-membership-transaction`'s subscription opens one so.

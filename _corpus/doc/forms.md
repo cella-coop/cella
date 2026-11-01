@@ -1,6 +1,6 @@
 +++
 title = "Legal forms"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Legal forms
@@ -85,7 +85,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `discuss` | mandate | every seat discusses its circle's motions | cella |
 | `admit-member` | mandate | the assembly admits members, by motion | loi n° 47-1775 art. 7 |
 | `suspend-member` | mandate | the assembly suspends a member, by motion | cella |
-| `end-membership` | mandate | the assembly ends a membership, by motion | loi n° 47-1775 art. 7; Code de commerce art. L231-6 |
+| `exclude-member` | mandate | the assembly excludes a member, by motion | loi n° 47-1775 art. 7; Code de commerce art. L231-6 |
 | `erase-member` | mandate | the assembly erases a former member's data, by motion | GDPR art. 17 |
 | `adopt-policy` | mandate, protected | the assembly adopts policies, the statutes' among them | Code de commerce art. L223-30 |
 | `end-policy` | mandate, protected | the assembly ends policies | Code de commerce art. L223-30 |
@@ -93,6 +93,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `adopt-document` | mandate | the assembly adopts a document's version | cella |
 | `nest-circle` | mandate | the assembly nests circles | cella |
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
+| `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |
 | `keep-devices` | right, protected | every person enrols and revokes their own devices | cella |
 | `upload-file` | right, protected | every person uploads a file | cella |
@@ -109,7 +110,11 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `work-share` | rule | at least 25 % of each year's surplus goes to all the employees as the work share | loi n° 78-763 art. 33 |
 | `reserves` | rule | at least 15 % of each year's surplus goes to the reserves | loi n° 78-763 art. 33 |
 
-Every protected default is protected by `extraordinary`. A rule's
+Every protected default is protected by `extraordinary`. The right to
+withdraw is worded on every person, `{right: person}`, since the
+withdrawal ends the membership on its own verdict date: the guard that
+the membership is the actor's own, active or suspended until then, is
+the membership feat's, so only a member withdraws. A rule's
 values are named for no feat, so no guard reads them: they bind by the
 members' judgement, as the law's floors do until a feat reads them.
 

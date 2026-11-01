@@ -444,7 +444,7 @@ mod tests {
         late.time = "2026-11-01T09:00:00.000000Z".into();
         assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
         let mut other = e.clone();
-        other.op = "membership:member:exit".into();
+        other.op = "membership:member:exclude".into();
         assert_eq!(chain.check_receipt("lanterne.example", &other, 1, &r, &r.hash(), &sig), broken("the receipt is another write's"));
         let forged = Key::from_seed(&[8; 32]).unwrap().sign(&r.hash());
         assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &forged), broken("receipt signature invalid"));

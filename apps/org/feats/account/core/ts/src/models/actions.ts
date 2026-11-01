@@ -24,9 +24,14 @@ export const actions = {
   // opened and the shares called; carried by the motion that admits
   'account:capital:subscribe': ordered({ power: 'admit-member' }),
   // a departed associate's capital moved to what is owed them and its
-  // repayments drawn up; carried by the motion that ends the membership
-  'account:capital:withdraw': ordered({ power: 'end-membership' }),
+  // repayments drawn up; carried by the motion that excludes them
+  'account:capital:withdraw': ordered({ power: 'exclude-member' }),
   // a departed member's capital accounts frozen for good; carried by the
-  // motion that ends the membership
-  'account:account:freeze': ordered({ power: 'end-membership' }),
+  // motion that excludes them
+  'account:account:freeze': ordered({ power: 'exclude-member' }),
+  // the same freeze as the member's own, once they withdrew by their right
+  'account:own:freeze': ordered({ power: 'withdraw-membership' }),
+  // the same withdrawal of capital as the associate's own, once they
+  // withdrew by their right
+  'account:own:withdraw': ordered({ power: 'withdraw-membership' }),
 } satisfies Actions

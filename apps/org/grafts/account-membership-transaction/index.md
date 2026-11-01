@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -71,22 +71,27 @@ appelé non versé) debited and `1012` (Capital souscrit, appelé, non
 versé) credited, as a SCOP's variable capital is called whole when it is
 subscribed; the account under `1013` holds what they pay in.
 
-`account:capital:withdraw` (ordered, `end-membership` by motion): a departed associate's
+`account:capital:withdraw` (ordered, `exclude-member` by motion), and
+`account:own:withdraw` (ordered, `withdraw-membership`, the associate's
+own right): a departed associate's
 capital. What their capital accounts hold moves to `4567` (Associés,
 capital à rembourser), what they had not paid of their subscription is
 cancelled, `1012` debited and `4562` credited, and their repayments are
 drawn up as the clauses governing the exit say, the capital divided
 evenly to the cent.
 
-Both cite the motion that admitted or ended the membership, registered
+The subscription and an excluded associate's withdrawal cite the motion
+that admitted or excluded them, registered
 by `account-motion` in `motion.cites`, so each settles only if that
-motion closed and passed.
+motion closed and passed; an associate who withdrew by their right
+withdraws their own capital, citing none.
 
 ## Reactions
 
 What follows an admission or an exit is a write of its own after it,
-signed by whoever signed that write, the member who closed the motion
-that carried it, citing the same motion, and judged by its own guards; a
+signed by whoever signed that write: the member who closed the motion
+that carried it, citing the same motion, or the member who withdrew, as
+their own; and judged by its own guards; a
 refused one leaves the admission or the exit settled and says why
 ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). No
 trigger on `membership.member` does it.
@@ -95,7 +100,9 @@ trigger on `membership.member` does it.
   the motion that admits included: `subscribe`. Where no adopted terms
   value a share on the verdict date, or the member holds none, nothing
   is subscribed and no write is made.
-- To `membership:member:exit`: `withdraw`. Where no terms govern the
+- To `membership:member:exclude`: `withdraw`; to
+  `membership:member:withdraw`: `withdrawOwn`, the same withdrawal as
+  `account:own:withdraw`. Where no terms govern the
   exit, or the associate holds nothing and owes nothing, nothing is
   drawn up and no write is made; their capital stays frozen where it is.
 
@@ -121,7 +128,8 @@ trigger on `membership.member` does it.
   shares at that value, on a capital account under `1013` they hold; and
   the entry is exactly it, `4562` debited and `1012` credited.
 - `account_membership_transaction.withdraws`, on
-  `account:capital:withdraw`: the member has left; this write made their
+  `account:capital:withdraw` and `account:own:withdraw`: the member has
+  left; this write made their
   one withdrawal; their capital accounts hold nothing after it; and its
   repayments add up to what the entry credits `4567`, as many as the
   terms governing the exit say. That nothing posts into a closed month is

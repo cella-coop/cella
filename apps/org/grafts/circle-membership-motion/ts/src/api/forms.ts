@@ -20,7 +20,7 @@ export function standing(form: Form, member: string): Asking {
     }
     return { kind, args: { member, shares }, ...when(form) }
   }
-  if (kind === 'suspend' || kind === 'exit' || kind === 'erase') {
+  if (kind === 'suspend' || kind === 'exclude' || kind === 'erase') {
     return { kind, args: { member }, ...when(form) }
   }
   throw new Error('choose what to propose')

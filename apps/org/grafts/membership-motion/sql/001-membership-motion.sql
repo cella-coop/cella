@@ -2,10 +2,10 @@ CREATE SCHEMA membership_motion;
 
 -- What a motion may decide of a member, registered with the motion
 -- feat so its New form offers them: admitting someone invited, with the
--- shares they subscribe; suspending a member; ending a membership.
+-- shares they subscribe; suspending a member; excluding a member.
 SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}, {"name": "shares", "label": "Shares", "type": "number"}]', 'membership:member:admit', 'membership-motion');
 SELECT motion.register_carries('suspend', 'Suspend a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:suspend', 'membership-motion');
-SELECT motion.register_carries('exit', 'End a membership', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:exit', 'membership-motion');
+SELECT motion.register_carries('exclude', 'Exclude a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:exclude', 'membership-motion');
 
 -- The actions of those kinds, each with the member it names and, for an
 -- admission, the shares as a whole number or none. The motion is named
@@ -15,11 +15,11 @@ CREATE VIEW membership_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args ->> 'member' AS member,
        CASE WHEN m.args ->> 'shares' ~ '^[0-9]{1,9}$' THEN (m.args ->> 'shares')::integer END AS shares
 FROM motion.action m
-WHERE m.kind IN ('admit', 'suspend', 'exit');
+WHERE m.kind IN ('admit', 'suspend', 'exclude');
 
 -- motion:motion:propose — each action of this graft's kinds names a
 -- member it can apply to: someone invited, with shares, to admit; an
--- active member to suspend; an active or suspended one to exit.
+-- active member to suspend; an active or suspended one to exclude.
 CREATE FUNCTION membership_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -30,7 +30,7 @@ BEGIN ATOMIC
       WHEN m.kind = 'admit' AND mm.status <> 'invited' THEN m.member || ' is ' || mm.status || ', not invited'
       WHEN m.kind = 'admit' AND coalesce(m.shares, 0) <= 0 THEN 'an admission subscribes a whole number of shares'
       WHEN m.kind = 'suspend' AND mm.status <> 'active' THEN m.member || ' is ' || mm.status || ', not active'
-      WHEN m.kind = 'exit' AND mm.status NOT IN ('active', 'suspended') THEN m.member || ' is ' || mm.status
+      WHEN m.kind = 'exclude' AND mm.status NOT IN ('active', 'suspended') THEN m.member || ' is ' || mm.status
     END AS r
     FROM membership_motion.action m
     LEFT JOIN membership.member mm ON mm.address = m.member
@@ -58,7 +58,7 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
--- membership:member:suspend, membership:member:exit — the cited motion asks
+-- membership:member:suspend, membership:member:exclude — the cited motion asks
 -- this of this member.
 CREATE FUNCTION membership_motion.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -102,10 +102,10 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:close', 'membership_motion.closes(jsonb)', 'membership-motion'),
   ('membership:member:admit', 'membership_motion.admits(jsonb)', 'membership-motion'),
   ('membership:member:suspend', 'membership_motion.ends(jsonb)', 'membership-motion'),
-  ('membership:member:exit', 'membership_motion.ends(jsonb)', 'membership-motion');
+  ('membership:member:exclude', 'membership_motion.ends(jsonb)', 'membership-motion');
 SELECT motion.register_cite('membership:member:admit', 'admit-member', 'membership-motion');
 SELECT motion.register_cite('membership:member:suspend', 'suspend-member', 'membership-motion');
-SELECT motion.register_cite('membership:member:exit', 'end-membership', 'membership-motion');
+SELECT motion.register_cite('membership:member:exclude', 'exclude-member', 'membership-motion');
 
 GRANT USAGE ON SCHEMA membership_motion TO cella_app, cella_guards;
 GRANT SELECT ON membership_motion.action TO cella_app, cella_guards;

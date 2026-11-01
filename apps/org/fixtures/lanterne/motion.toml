@@ -244,7 +244,7 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: susp
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-membership}, to end a membership, by motion", takes = "scop-sarl-fr:end-membership" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: exclude-member}, to exclude a member, by motion", takes = "scop-sarl-fr:exclude-member" }
 
 [[motion.action]]
 kind = "policy"
@@ -361,6 +361,14 @@ args = { kind = "rule", wording = "At least {work_share: 25 % | more is stricter
 [[motion.action]]
 kind = "policy"
 args = { kind = "rule", wording = "At least {reserve_share: 15 % | more is stricter} of each year's surplus goes to the reserves", friendly = "At least 15 % of the surplus is kept in reserve.", takes = "scop-sarl-fr:reserves" }
+
+# The right to withdraw, the last of the founding motion: a member leaves
+# by their own action, no motion's. It is worded on every person, since
+# the withdrawal ends the membership on its own verdict date; the
+# membership feat holds it to their own. Protected as every right is.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership", protected = "extraordinary", takes = "scop-sarl-fr:withdraw-membership" }
 
 [[motion]]
 id = "m-2026-006"

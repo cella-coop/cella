@@ -1,6 +1,6 @@
 import { action, type Slice } from '@cella/org-db'
 import { devices } from '@cella/org-person/api'
-import { invite, link } from '../handlers/index.ts'
+import { invite, link, withdraw } from '../handlers/index.ts'
 import { first, links, member, memberships } from '../drivers/member.ts'
 import { inbox } from '../drivers/inbox.ts'
 import { members as importing } from './imports.ts'
@@ -10,7 +10,8 @@ import { members as importing } from './imports.ts'
 // with its link as the people collection's New form, and on a person's
 // page their membership, whether they have taken up their invitation, and
 // a new link while they have not. Taking it up is the link's page's, in
-// the shell, through `accept`. Admission, suspension and exit are decided,
+// the shell, through `accept`. A member withdraws from their own page,
+// by their right. Admission, suspension and exclusion are decided,
 // carried out when their motion closes. In the inbox, the acting
 // person's invitation while they are invited; and members imported from
 // another tool's list, each invited, to be given a link from their page.
@@ -21,11 +22,12 @@ export const slice: Slice = {
   extends: {
     people: {
       list: memberships,
-      item: async (db, address) => ({
+      item: async (db, address, actor) => ({
         member: await member(db, address),
         first: await first(db, address),
         links: await links(db, address),
         devices: await devices(db, address),
+        own: actor === address,
       }),
       actions: {
         invite: action(
@@ -34,6 +36,7 @@ export const slice: Slice = {
           invite,
         ),
         link: action('membership:member:link', (form, id) => ({ member: id ?? '', link: form.get('link') }), link),
+        withdraw: action('membership:member:withdraw', (_form, id) => ({ member: id ?? '' }), withdraw),
       },
     },
     inbox: { rows: inbox },

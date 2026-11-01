@@ -5,7 +5,7 @@ import { record } from '@cella/org-transaction/api'
 import type { Line } from '@cella/org-transaction/models'
 import type { Withdraw, Withdrawn } from '../models/capital.ts'
 
-const op = 'account:capital:withdraw' satisfies keyof typeof actions
+type Op = 'account:capital:withdraw' | 'account:own:withdraw'
 
 // An associate who left has their capital withdrawn, on the verdict date:
 // what their capital accounts hold moves to 4567, owed them, what they
@@ -15,7 +15,7 @@ const op = 'account:capital:withdraw' satisfies keyof typeof actions
 // cent. `account_membership_transaction.withdraws` decides: they left,
 // once, and the entry and the repayments are exactly that;
 // account-transaction's guard, that the month is open.
-export function withdrawing(input: Withdraw): Write<Withdrawn> {
+export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'): Write<Withdrawn> {
   return {
     op,
     request: input,
@@ -67,25 +67,45 @@ export function withdrawing(input: Withdraw): Write<Withdrawn> {
       await tx.query('INSERT INTO account_membership_transaction.withdrawal (member, entry) VALUES ($1, $2)', [input.member, entry])
       return { member: input.member, owed, cancelled, repayments: drawn.rowCount ?? 0, entry }
     },
-    payload: (v) => ({ ...v, motion: input.motion }),
+    payload: (v) => ({ ...v, ...(input.motion ? { motion: input.motion } : {}) }),
   }
 }
 
-export async function withdraw(input: Withdraw, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Withdrawn>> {
+export async function withdraw(input: Withdraw, deps: Deps): Promise<Outcome<(typeof actions)['account:capital:withdraw'], Withdrawn>> {
   return write(deps, withdrawing(input))
 }
 
+// The same withdrawal as the associate's own, once they withdrew by their
+// right, citing no motion; that they are the actor is `account.owns`.
+export async function withdrawOwn(input: { member: string }, deps: Deps): Promise<Outcome<(typeof actions)['account:own:withdraw'], Withdrawn>> {
+  return write(deps, withdrawing({ member: input.member }, 'account:own:withdraw'))
+}
+
+// Whether the associate holds or owes capital to withdraw.
+async function holds(deps: Deps, member: string): Promise<boolean> {
+  const { rows } = await deps.db.query<{ any: boolean }>('SELECT account_membership_transaction.holds($1) AS any', [member])
+  return Boolean(rows[0]?.any)
+}
+
 // What follows an exit: the associate's capital withdrawn, a write of its
-// own signed by whoever signed the exit and citing the motion that ended
-// the membership. Where no terms govern the exit, or they hold and owe
-// nothing, nothing is drawn up and no write is made: their capital stays
-// frozen where it is.
+// own signed by whoever signed the exit, citing the motion that excluded
+// them, or as their own where they withdrew. Where no terms govern the
+// exit, or they hold and owe nothing, nothing is drawn up and no write is
+// made: their capital stays frozen where it is.
 export async function withdrawn(request: unknown, deps: Deps): Promise<Done[]> {
   const { member, motion } = request as { member: string; motion: string }
-  const { rows } = await deps.db.query<{ any: boolean }>('SELECT account_membership_transaction.holds($1) AS any', [member])
-  if (!rows[0]?.any) {
+  if (!(await holds(deps, member))) {
     return []
   }
   const input = { member, motion }
-  return [done(op, await withdraw(input, deps), [], input)]
+  return [done('account:capital:withdraw', await withdraw(input, deps), [], input)]
+}
+
+export async function withdrawnOwn(request: unknown, deps: Deps): Promise<Done[]> {
+  const { member } = request as { member: string }
+  if (!(await holds(deps, member))) {
+    return []
+  }
+  const input = { member }
+  return [done('account:own:withdraw', await withdrawOwn(input, deps), [], input)]
 }

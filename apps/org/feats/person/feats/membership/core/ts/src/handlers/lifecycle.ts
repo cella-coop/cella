@@ -2,7 +2,7 @@ import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
 import { enrolling, entering } from '@cella/org-person/api'
 import type { actions } from '../models/actions.ts'
-import type { Accept, Accepted, End, Ended, Invite, Invited, Link } from '../models/member.ts'
+import type { Accept, Accepted, End, Ended, Invite, Invited, Link, Withdraw } from '../models/member.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -128,14 +128,20 @@ export async function accept(input: Accept, deps: Deps): Out<'membership:member:
   return write(deps, accepting(input))
 }
 
-// A suspension or an exit, each citing the motion that asks it. The
-// status moves only along its lifecycle (`membership.moves`); `membership.ends`
-// checks the write moved it, the membership-motion graft's guard that the
-// cited motion asks it, circle-membership-motion's that it carried.
+// A suspension or an exclusion, each citing the motion that asks it, or a
+// withdrawal, the member's own, citing none. The status moves only along
+// its lifecycle (`membership.moves`); `membership.ends` checks the write
+// moved it, the membership-motion graft's guard that the cited motion
+// asks it, circle-membership-motion's that it carried; and
+// `membership.withdraws` that a withdrawal is the actor's own.
 // An exit is the hook the books hang on: once it settles, a graft joining
-// the books reacts to `membership:member:exit` with a write of its own,
-// citing the same motion, as the member's capital is frozen and withdrawn.
-function ending<O extends 'membership:member:suspend' | 'membership:member:exit'>(op: O, input: End): Write<Ended> {
+// the books reacts to `membership:member:exclude` with a write of its own,
+// citing the same motion, and to `membership:member:withdraw` with the
+// member's own, as the member's capital is frozen and withdrawn.
+function ending<O extends 'membership:member:suspend' | 'membership:member:exclude' | 'membership:member:withdraw'>(
+  op: O,
+  input: End | Withdraw,
+): Write<Ended> {
   // The status a write leaves, and the column dating it, are one name.
   const status = op === 'membership:member:suspend' ? 'suspended' : 'exited'
   return {
@@ -144,13 +150,19 @@ function ending<O extends 'membership:member:suspend' | 'membership:member:exit'
     state: async (tx) => {
       const { rows } = await tx.query<{ on: string }>(
         `UPDATE membership.member SET status = $2, ${status} = cella.verdict_date()
-         WHERE address = $1
+         WHERE address = $1 AND status <> $2
          RETURNING to_char(${status}, 'YYYY-MM-DD') AS on`,
         [input.member, status],
       )
+      // A member who left withdrawing again is refused before the notary
+      // rather than logged twice; a carried write moving no one is left to
+      // its guards, which refuse it and let the motion's next action go.
+      if (!rows[0] && op === 'membership:member:withdraw') {
+        throw new Error(`${input.member} is no member, or is ${status} already`)
+      }
       return { member: input.member, on: rows[0]?.on ?? '' }
     },
-    payload: (v) => ({ member: v.member, motion: input.motion }),
+    payload: (v) => ({ member: v.member, ...('motion' in input ? { motion: input.motion } : {}) }),
   }
 }
 
@@ -158,6 +170,10 @@ export async function suspend(input: End, deps: Deps): Out<'membership:member:su
   return write(deps, ending('membership:member:suspend', input))
 }
 
-export async function exit(input: End, deps: Deps): Out<'membership:member:exit', Ended> {
-  return write(deps, ending('membership:member:exit', input))
+export async function exclude(input: End, deps: Deps): Out<'membership:member:exclude', Ended> {
+  return write(deps, ending('membership:member:exclude', input))
+}
+
+export async function withdraw(input: Withdraw, deps: Deps): Out<'membership:member:withdraw', Ended> {
+  return write(deps, ending('membership:member:withdraw', { member: input.member }))
 }

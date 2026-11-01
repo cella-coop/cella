@@ -217,7 +217,7 @@ END;
 REVOKE EXECUTE ON FUNCTION account_membership_transaction.holds(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION account_membership_transaction.holds(text) TO cella_app;
 
--- account:capital:withdraw — an associate who left has their capital
+-- account:capital:withdraw, account:own:withdraw — an associate who left has their capital
 -- withdrawn, by the write that follows their exit: this write made their
 -- one withdrawal; their capital accounts hold nothing after it, what they
 -- held credited to 4567; what they had not paid is cancelled, 1012 debited
@@ -265,7 +265,8 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('account:capital:subscribe', 'account_membership_transaction.subscribes(jsonb)', 'account-membership-transaction'),
-  ('account:capital:withdraw', 'account_membership_transaction.withdraws(jsonb)', 'account-membership-transaction');
+  ('account:capital:withdraw', 'account_membership_transaction.withdraws(jsonb)', 'account-membership-transaction'),
+  ('account:own:withdraw', 'account_membership_transaction.withdraws(jsonb)', 'account-membership-transaction');
 
 GRANT SELECT ON account_membership_transaction.withdrawal TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_transaction.withdrawal TO cella_app;

@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -40,16 +40,20 @@ does moving a departing one's capital to what is owed them, so both are
 
 ## Reactions
 
-- To `membership:member:exit`: the account feat's `freeze`
+- To `membership:member:exclude`: the account feat's `freeze`
   (`account:account:freeze`), freezing every capital account the member
-  holds, a write of its own after the exit, signed by whoever signed the
-  exit, the member who closed the motion that ended the membership, and
+  holds, a write of its own after the exclusion, signed by whoever signed the
+  exclusion, the member who closed the motion that excluded them, and
   citing that motion. A member who holds no capital account is frozen
   nothing, and no write is made.
+- To `membership:member:withdraw`: the account feat's `freezeOwn`
+  (`account:own:freeze`), the same freeze as the member's own, signed by
+  the member who withdrew and citing no motion.
 
 ## Guards
 
-- `account_membership.freezes`, on `account:account:freeze`: the holder
+- `account_membership.freezes`, on `account:account:freeze` and
+  `account:own:freeze`: the holder
   is a member who has left, so no active member's capital is frozen.
 
 ## Tests

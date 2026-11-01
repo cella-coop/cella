@@ -1,6 +1,6 @@
 +++
 title = "circle-membership-motion"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The electorate: who may vote on a motion, and whether it passes on
@@ -103,7 +103,7 @@ she is on no roll of the assembly's.
   motion the payload cites is closed and passes. The motion feat keeps
   that list; a graft that joins motion to a write's feat registers its
   action there with its power by `motion.register_cite` (`membership-motion` for
-  admission, suspension and exit, `circle-motion` for nesting,
+  admission, suspension and exclusion, `circle-motion` for nesting,
   `document-motion` for `document:document:adopt`, and the
   motion feat itself for `motion:policy:adopt` and `:end`), and this
   graft registers the guard by `motion.register_cite_guard`, which
@@ -154,7 +154,7 @@ she is on no roll of the assembly's.
 - `carried(motion)`: on a settled close of a passing motion, carries
   out its other actions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its guards: a
-  suspension, an exit or the erasure of a former member's personal data
+  suspension, an exclusion or the erasure of a former member's personal data
   (membership feat), a nesting
   (circle feat), a seat given or ended (circle-membership), a policy
   adopted or ended, a mandate's with it (circle-motion's `adopt` and
@@ -203,7 +203,7 @@ their seat counting, that they have given no stance on, by its deadline, linking
 its Stances tab.
 
 On a person's page, Propose…: admitting someone invited, with their
-shares, suspending an active member or ending a membership, put to the
+shares, suspending an active member or excluding a member, put to the
 assembly, and the open motions about them. On a circle's page,
 Appoint…: seating a member in it, in one of its roles or as a plain
 member, or ending a seat held there, put to the circle above; and

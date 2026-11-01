@@ -13,11 +13,13 @@ const db = new pg.Client()
 const opens = async (month: string) => (await db.query<{ r: string | null }>('SELECT account.opens($1) AS r', [{ month }])).rows[0].r
 const open = (month: string) => db.query('INSERT INTO account.period (month) VALUES ($1) ON CONFLICT DO NOTHING', [month])
 
-// The slice's other tests share the database, so what this one writes is
-// rolled back after it.
+// The slice's other tests share the database, and run beside this one, so
+// what this one writes is rolled back after it, and the periods are locked
+// until then: report.test's months land before or after, never between.
 before(async () => {
   await db.connect()
   await db.query('BEGIN')
+  await db.query('LOCK TABLE account.period IN EXCLUSIVE MODE')
   await db.query('DELETE FROM account.period')
 })
 

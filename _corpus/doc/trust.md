@@ -135,9 +135,27 @@ sequenceDiagram
   migrations, which change the schema and its registries, and the slice
   tests, which test a slice's SQL below the notary, write with
   `cella.unbound`, which only a superuser may set; erasure's redactions
-  are the notary's own. The state a scope held before its log comes in
-  as a write too: the seed carries it in as the log's first entry
-  (`import:state:carry`), which settles on an empty log alone.
+  are the notary's own. What a co-op is when its log begins comes in as
+  a write too: the founding, below.
+- **The first entry founds the co-op.** One write, the founding
+  (`circle-membership-motion:scope:found`), settles on an empty log alone, so a scope is
+  founded once and a second founding is refused. It names the legal
+  form the co-op chose, one cella offers, and brings in its founders, as
+  persons with their devices and their memberships; the root circle,
+  with each founder seated in it; and the root's founding motion, which
+  its founders decided and which adopts the first policies, each taking
+  a default of that form and none of another's, among them the
+  procedure the root decides by. Its guards hold it, once its state is
+  written, to one root circle that decides by a procedure a policy in
+  force there makes, and to a signer who is a founder seated in the
+  root with a vote, enrolled by a device the founding brings. A
+  founding with no procedure for its root, or a signer with no vote
+  there, is refused, and leaves the log empty. A mock co-op's founding
+  also carries the state it held before its log, as Lanterne's seed
+  does; a real co-op's books come in after it, by the import of each
+  kind under the importer's mandates. Every later entry passes the
+  guards the founding's policies set: none is allowed because the
+  founding allowed it.
 - **Order comes from receipts, never from clocks.** A member's latest stance
   is the one with the highest receipt number, not the latest date.
 - **The scope's key** is read from a file only the database's superuser can
@@ -170,7 +188,8 @@ sequenceDiagram
   procedure gives the seats on its roll, in `motion.stance_power`:
   `circle-membership-motion`'s guard holds it to someone on the roll
   whose seat counts on the verdict date. The one write with no power is
-  the log's first entry: its label declares that check and a guard
+  the log's first entry, the founding, since no policy is adopted
+  before it: its label declares the check `first` and a guard
   enforces it, and `cella check feats` refuses an action that names
   neither, so nothing is allowed by omission. Money leaves a cash account only through writes with their
   own right and a guard that checks the entry is exactly what they say:

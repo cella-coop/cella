@@ -16,9 +16,11 @@ export const slice: Slice = {
       about: async (db) => ({
         kinds: await kinds(db),
         procedures: await procedures(db),
-        // The choices a policy's kind and what it replaces are offered from.
+        // The choices a policy's kind, what it replaces and the procedure
+        // that alone changes it are offered from.
         policyKinds,
         policies: (await register(db)).filter((p) => p.ends === null).map((p) => ({ value: p.id, label: `${p.id}: ${p.sentence}` })),
+        protections: (await procedures(db)).map((p) => ({ value: p.id, label: p.label })),
       }),
       item: motion,
       index: async (db) => (await motions(db)).map((d) => ({ id: d.id, title: d.title, sub: d.id })),

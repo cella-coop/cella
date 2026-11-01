@@ -117,8 +117,8 @@ test('a rule\'s ordered value says which way is stricter, and a value of no orde
 
 test('the register is written only through policy.adopt, which only the app may call, and no guard reads a wording', async () => {
   const { rows } = await db.query(`SELECT
-      has_function_privilege('cella_app', 'policy.adopt(text, text, text, text, text, integer, date, date, text)', 'EXECUTE') AS app_adopts,
-      has_function_privilege('cella_guards', 'policy.adopt(text, text, text, text, text, integer, date, date, text)', 'EXECUTE') AS guards_adopt,
+      has_function_privilege('cella_app', 'policy.adopt(text, text, text, text, text, integer, date, date, text, text)', 'EXECUTE') AS app_adopts,
+      has_function_privilege('cella_guards', 'policy.adopt(text, text, text, text, text, integer, date, date, text, text)', 'EXECUTE') AS guards_adopt,
       has_table_privilege('cella_app', 'policy.policy', 'INSERT') AS app_inserts,
       has_table_privilege('cella_app', 'policy.wording', 'SELECT') AS app_reads_wording,
       has_table_privilege('cella_guards', 'policy.wording', 'SELECT') AS guards_read_wording,

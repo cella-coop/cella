@@ -66,7 +66,7 @@ args = { kind = "mandate", wording = "The {role: member} role holds {power: edit
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time" }
+args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
@@ -230,7 +230,10 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 # approves the distribution and adopts documents, and with coordination
 # nests circles and seats members; coordination grants and revokes the
 # working circles' mandates and adopts their documents, the rate card
-# among them. The working circles hold none.
+# among them. The working circles hold none. Those that hand out
+# mandates, adopting and ending policies and giving and ending seats, are
+# protected: only a motion decided by the extraordinary assembly's
+# procedure, or a stricter one, replaces or ends them.
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: admit-member}, to admit members, by motion" }
@@ -249,11 +252,11 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: eras
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes' among them, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes' among them, by motion", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-policy}, to end policies, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-policy}, to end policies, by motion", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
@@ -269,15 +272,15 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: nest
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: adopt-policy}, to adopt policies, granting the working circles' mandates among them, by motion" }
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: adopt-policy}, to adopt policies, granting the working circles' mandates among them, by motion", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: end-policy}, to end policies, revoking the working circles' mandates among them, by motion" }
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: end-policy}, to end policies, revoking the working circles' mandates among them, by motion", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
@@ -289,7 +292,7 @@ args = { kind = "mandate", wording = "The {circle: coordination} circle holds {p
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: seat-member}, to give and end seats in the working circles, by motion" }
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: seat-member}, to give and end seats in the working circles, by motion", protected = "extraordinary" }
 
 # The rights: mandates people hold as such, with no seat, granted by the
 # assembly to the whole co-op. Every person keeps their profile and
@@ -297,53 +300,54 @@ args = { kind = "mandate", wording = "The {circle: coordination} circle holds {p
 # marks a text read and records an import; every member draws on their
 # account, spreads what they owe, marks their attendance and saves a
 # report; every employee logs their own time and claims their expenses.
+# Each is protected by the extraordinary assembly's procedure.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: file-record}, to file a record of their own" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: file-record}, to file a record of their own", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: record-import}, to record an import of their own" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: record-import}, to record an import of their own", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own", protected = "extraordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts" }
+args = { kind = "mandate", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts", protected = "extraordinary" }
 
 [[motion]]
 id = "m-2026-006"

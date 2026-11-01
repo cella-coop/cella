@@ -19,7 +19,11 @@ reads it.
   (`mandate`, `rule` or `procedure`), the BLAKE3 of its wordings
   (`policy.hash`), the day it was adopted, the day it applies from, the
   day it ends, if any, the policy it replaces, and the action that ended
-  it (`ended_by`, `m-2026-020/1`), if a motion did.
+  it (`ended_by`, `m-2026-020/1`), if a motion did; and, for a protected
+  policy, the procedure by which alone it is replaced or ended
+  (`protected`), by its name, as the motion feat names it, since the
+  register knows no feat. Which motion that lets change it is the motion
+  feat's guard ([protected policies](../../feats/motion/index.md#protected-policies)).
 - `policy.wording`: its legal wording, which binds, each value marked
   once as `{name: value}`, and its friendly wording, if any, which never
   binds and marks none.
@@ -51,8 +55,9 @@ Its functions:
   two as a JSON array.
 - `policy.in_force(circle, day)`: a circle's policies applying on a day.
 - `policy.adopt(circle, kind, legal, friendly, motion, n, applies, until,
-  replaces)`: a write, inside the write of the action that adopts the
-  policy. It refuses a wording flawed for its kind, a policy adopted already and a
+  replaces, protected)`: a write, inside the write of the action that
+  adopts the policy; `protected`, the procedure that alone changes it,
+  may be left out. It refuses a wording flawed for its kind, a policy adopted already and a
   replacement of a policy not in force in that circle and kind
   (SQLSTATE `09000`), keeps the policy, its wordings and its values, and
   ends the policy it replaces the day it applies.
@@ -80,7 +85,8 @@ it may only quote, by `policy.says`.
 - `sentences(db, ids)`: the legal wording of each policy named, as it
   reads, by its id, as the circle feat's page shows a mandate.
 - `inForce(db, circle)`: a circle's policies in force today, each with
-  its sentence as it reads, its wordings, its values and its days.
+  its sentence as it reads, its wordings, its values, its days and the
+  procedure that alone changes it, if any.
 - `inOrder(db, circle, day)`: a circle's policies in force on a day, in
   their order, each with its kind and its sentence as it reads: each
   where the first policy of its line reads, the policy it replaces, the

@@ -875,7 +875,8 @@ its schema `policy` ([its doc](../../apps/org/core/policy/index.md)). It
 keeps every policy: its circle and kind, its wordings, its values, the
 motion and the action of it that adopted it, by which it is named
 (`m-2026-013/1`), the day it applies from, the day it ends, the
-policy it replaces and the motion's action that ended it. It is a
+policy it replaces, the motion's action that ended it and the procedure
+by which alone it is changed, if it names one. It is a
 core's, as the notary is, so it knows no feat: a motion is named by its
 id, and no foreign key leaves the schema. Unlike the notary, it has rows
 written at run time, and two functions write them all, `policy.adopt`
@@ -899,6 +900,23 @@ date, whichever is later. A policy replacing another of its circle and
 kind ends that one the day it applies. **Ending** one is an action too,
 `end` in `motion.carries`, carried out as `motion:policy:end`: a motion
 of the policy's circle ends it on the verdict date.
+
+**A protected policy** names the procedure by which alone it is replaced
+or ended, its adoption's `protected` argument, which the register keeps
+by the procedure's name (`policy.policy.protected`). A motion that
+replaces or ends it is refused, as it is proposed and again as its action
+is carried out, unless it is decided by that procedure or a stricter one,
+and its refusal says which it needs. A procedure is at least as strict as
+another when every count that passes by it passes by the other too: the
+same method and roll, a quorum and a share no lower, and every veto the
+other gives (`motion.as_strict`,
+[protected policies](../../apps/org/feats/motion/index.md#protected-policies)).
+A policy naming a procedure looser than the one its own motion is decided
+by would protect it from nothing, and is refused; one stricter, or one
+neither stricter nor looser, protects it. Rights, and mandates that hand
+out mandates (granting, revoking and seating), start protected: Lanterne's
+founding motion adopts them protected by its extraordinary assembly's
+procedure.
 
 **Values bind where they are read.** The feat that reads a kind of
 policy copies its values into typed rows of its own as the policy is

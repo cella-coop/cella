@@ -24,6 +24,11 @@ CREATE TABLE policy.policy (
   replaces text UNIQUE REFERENCES policy.policy,
   -- The action that ended it, `m-2026-020/1`, if a motion did.
   ended_by text CHECK ((ended_by IS NULL) OR (ends IS NOT NULL)),
+  -- The procedure by which alone it is replaced or ended, by its name as
+  -- the motion feat names it, for a protected policy; the motion feat's
+  -- guards hold a motion that changes it to that procedure or a stricter
+  -- one.
+  protected text CHECK (protected ~ '^[a-z][a-z-]*$'),
   UNIQUE (motion, n),
   CHECK (id = motion || '/' || n)
 );
@@ -187,14 +192,15 @@ RETURN (SELECT policy.sentence(w.legal) FROM policy.wording w WHERE w.policy = s
 -- Adopts a policy, inside the write of the action that adopts it: its
 -- wordings, its values as its legal wording marks them, from the day it
 -- applies, perhaps until a day, perhaps replacing a policy of the same
--- circle and kind, which ends the day this one applies. A flawed
--- wording, or a replacement of a policy not in force there, is refused
+-- circle and kind, which ends the day this one applies, perhaps
+-- protected by the procedure that alone changes it. A flawed wording, or
+-- a replacement of a policy not in force there, is refused
 -- (SQLSTATE 09000). It runs with its owner's rights, since nothing else
 -- writes the register, and only the app may call it; the notary's
 -- trigger refuses its rows outside a write.
 CREATE FUNCTION policy.adopt(
   circle text, kind text, legal text, friendly text, motion text, n integer,
-  applies date, until date, replaces text
+  applies date, until date, replaces text, protected text DEFAULT NULL
 ) RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
@@ -217,9 +223,9 @@ BEGIN
     END IF;
     UPDATE policy.policy p SET ends = adopt.applies WHERE p.id = adopt.replaces;
   END IF;
-  INSERT INTO policy.policy (id, circle, kind, motion, n, hash, adopted, applies, ends, replaces)
+  INSERT INTO policy.policy (id, circle, kind, motion, n, hash, adopted, applies, ends, replaces, protected)
   VALUES (made, adopt.circle, adopt.kind, adopt.motion, adopt.n, policy.hash(adopt.legal, adopt.friendly),
-          cella.verdict_date(), adopt.applies, adopt.until, adopt.replaces);
+          cella.verdict_date(), adopt.applies, adopt.until, adopt.replaces, adopt.protected);
   INSERT INTO policy.wording (policy, legal, friendly) VALUES (made, adopt.legal, nullif(btrim(adopt.friendly), ''));
   INSERT INTO policy.value (policy, n, name, type, literal, value, stricter)
   SELECT made, m.n, m.name, t.type, m.literal, t.value, m.stricter
@@ -248,8 +254,8 @@ BEGIN
 END
 $$;
 
-REVOKE EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text) TO cella_app;
+REVOKE EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text) TO cella_app;
 REVOKE EXECUTE ON FUNCTION policy.end(text, text, integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION policy.end(text, text, integer) TO cella_app;
 

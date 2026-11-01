@@ -16,7 +16,7 @@ How a circle acts as a whole: motions, proposed, voted on and closed, each carry
 | `POST /api/motion/adopt` | ordered | a policy its motion carries binds from its verdict |
 | `POST /api/motion/end` | ordered | a policy its motion ends binds no longer from its verdict |
 
-**adopt** and **end** need the motion they cite to have passed and to carry the policy or its end, and its circle to hold a collective mandate for `adopt-policy` or `end-policy`, the powers this feat registers with them by `motion.register_cite`, to which `circle-membership-motion` attaches its guard `carried` and `circle-motion` its guard `mandated`. **propose** and **close** need the participant's power `propose`, and **post** its `discuss`, each held in the motion's circle: every circle has a participant role, which every seat in it holds there ([circle](../circle/index.md#the-participant-role)); this feat registers the two in `cella.power`. **vote** needs `vote`, the power a motion's procedure gives the seats on its roll and no mandate grants, which this feat registers in `motion.stance_power`, and the stance being the actor's own. Seats and rolls are `circle-membership-motion`'s, which registers the guards: `circle_membership_motion.sits` on propose, close and post, holding the power to the motion's circle, `on_roll` on vote. Lanterne's assembly motions are put and closed by any of its ten members, by the participant's mandates the founding motion grants; coordination's by its five.
+**adopt** and **end** need the motion they cite to have passed and to carry the policy or its end, a protected policy they replace or end to be changed by a motion decided by the procedure it names or a stricter one ([protected policies](#protected-policies)), and the motion's circle to hold a collective mandate for `adopt-policy` or `end-policy`, the powers this feat registers with them by `motion.register_cite`, to which `circle-membership-motion` attaches its guard `carried` and `circle-motion` its guard `mandated`. **propose** and **close** need the participant's power `propose`, and **post** its `discuss`, each held in the motion's circle: every circle has a participant role, which every seat in it holds there ([circle](../circle/index.md#the-participant-role)); this feat registers the two in `cella.power`. **vote** needs `vote`, the power a motion's procedure gives the seats on its roll and no mandate grants, which this feat registers in `motion.stance_power`, and the stance being the actor's own. Seats and rolls are `circle-membership-motion`'s, which registers the guards: `circle_membership_motion.sits` on propose, close and post, holding the power to the motion's circle, `on_roll` on vote. Lanterne's assembly motions are put and closed by any of its ten members, by the participant's mandates the founding motion grants; coordination's by its five.
 
 ## Schema
 
@@ -76,6 +76,45 @@ later, puts no motion.
 Lanterne's six procedures are policies of the assembly, adopted by its
 founding motion, `m-2021-001`, which the seed carries in.
 
+### Protected policies
+
+A policy may name the procedure by which alone it is replaced or ended,
+its adoption's `protected` argument, which the register keeps
+(`policy.policy.protected`,
+[policies](../../../../_corpus/doc/architecture.md#policies)). A motion
+that replaces or ends a protected policy is refused unless it is decided
+by that procedure or a stricter one, and the refusal names the procedure
+it needs (`motion.protection_flaw`): as it is proposed, by `motion.asks`,
+and again as its action is carried out, by `motion.adopts` and
+`motion.ends`.
+
+`motion.as_strict(a, b)` says whether procedure `a` is at least as strict
+as `b`, so that every count that passes by `a` passes by `b` too:
+
+- both decide by the same method; consent and a majority count
+  different stances, so neither is stricter than the other;
+- both call the same roll: every seat, or the seats in the same roles,
+  those that vote and those that may veto;
+- `a`'s quorum is no lower;
+- for a majority, `a` lets veto every role `b` does, and its share of
+  the votes cast is no lower: more for than against is stricter than
+  any share of a half or less, and looser than any of more than half.
+
+A procedure is as strict as itself; the ballot changes no count. A
+policy is protected by a procedure in force, built in or by a policy in
+force, and never by one looser than the procedure its own motion is
+decided by, which would protect it from nothing: a motion by the
+extraordinary assembly protecting a policy by the ordinary is refused. A
+procedure neither stricter nor looser, such as consent beside a
+majority, may protect it.
+
+Lanterne's founding motion adopts its rights, and the assembly's and
+coordination's collective mandates to adopt and end policies and to give
+and end seats, protected by the extraordinary assembly's procedure: an
+ordinary assembly's motion ending the members' right to draw on their
+account is refused, and the same motion put to the extraordinary
+assembly, and passed, ends it.
+
 ### Ballots
 
 A motion is decided by open or secret ballot, fixed as it is proposed: its procedure's, unless the proposal names the other. The built-in procedures a motion is put by are open, and `circle-membership-motion`'s Propose… and Appoint… name a secret ballot for electing or removing a person, as co-ops commonly do; a co-op's own procedure says which its motions take. `motion.secret(motion)` says whether one is secret.
@@ -91,10 +130,10 @@ A motion is decided by open or secret ballot, fixed as it is proposed: its proce
 - `motion.closes`, on `motion:motion:close`: the write closed the motion on the verdict date, and not before its deadline. A motion closes only at or after its deadline; closing early once every member has spoken needs to know who the members are, which is a graft's, and is not built.
 - `motion.posts`, on `motion:message:post`: the message is the actor's own and names the motion, the message it answers, the mentions and the links its payload does. That each mention names one member is `membership-motion`'s guard, that each link names a document `document-motion`'s.
 - `motion.own_stance`, on `motion:motion:vote`: the stance is the actor's own (`cella.actor()`); no member votes for another. `motion.seals`, on the same action: a stance on a secret ballot is logged by its commitment alone, one on an open ballot as given. That the actor holds `vote`, on the motion's roll with a seat that counts, is `circle-membership-motion`'s guard on the same action.
-- `motion.asks`, on `motion:motion:propose`: each policy the motion would end is one of its circle in force on the verdict date; each policy the motion would adopt is a mandate, a rule or a procedure, worded soundly for its kind (`policy.flaw`: each value marked once, with a value, and no stray brace, saying which way is stricter as `more is stricter` or `less is stricter` if at all, and only if it is an amount, a share, a day or a number; each such value of a rule saying it; a friendly wording marking none), its days written YYYY-MM-DD, applying no earlier than the motion's deadline and ending after it applies, and replacing, if it names one, a policy of the motion's circle and kind in force; and a procedure policy marks sound terms and names a procedure no policy has made, as `motion.procedure_flaw` reads them ([procedures](#procedures)).
+- `motion.asks`, on `motion:motion:propose`: each policy the motion would end or replace is one of its circle in force on the verdict date, and not protected from the motion (`motion.protection_flaw`, [protected policies](#protected-policies)); each policy the motion would adopt is a mandate, a rule or a procedure, worded soundly for its kind (`policy.flaw`: each value marked once, with a value, and no stray brace, saying which way is stricter as `more is stricter` or `less is stricter` if at all, and only if it is an amount, a share, a day or a number; each such value of a rule saying it; a friendly wording marking none), its days written YYYY-MM-DD, applying no earlier than the motion's deadline and ending after it applies, and replacing, if it names one, a policy of the motion's circle and kind in force; protected, if it names a procedure, by one in force no looser than the motion's own; and a procedure policy marks sound terms and names a procedure no policy has made, as `motion.procedure_flaw` reads them ([procedures](#procedures)).
 - `motion.decides_by`, on `motion:motion:propose`: the procedure the motion is put to is built in, or its policy is in force on the verdict date.
-- `motion.adopts`, on `motion:policy:adopt`: the policy the register keeps is the one the cited motion's action carries: named by that action, of the motion's circle and the action's kind, its wordings hashing as the action holds them (`policy.hash`; a guard reads no wording back), adopted on the verdict date and applying from the day the action names or the verdict date, whichever is later, until the day it names; the policy it replaces ends that day; the entry commits to its hash; and a procedure policy has made the procedure its values say, which names it in `motion.procedure`.
-- `motion.ends`, on `motion:policy:end`: the policy the cited motion's action names ended on the verdict date, by that action, and was the motion's circle's. That a mandate policy's mandate is copied or revoked with it is `circle-motion`'s guard on both actions.
+- `motion.adopts`, on `motion:policy:adopt`: the policy the register keeps is the one the cited motion's action carries: named by that action, of the motion's circle and the action's kind, its wordings hashing as the action holds them (`policy.hash`; a guard reads no wording back), adopted on the verdict date and applying from the day the action names or the verdict date, whichever is later, until the day it names; the policy it replaces ends that day and is not protected from the motion; it is protected as the action names (`protected`); the entry commits to its hash; and a procedure policy has made the procedure its values say, which names it in `motion.procedure`.
+- `motion.ends`, on `motion:policy:end`: the policy the cited motion's action names ended on the verdict date, by that action, was the motion's circle's, and is not protected from the motion. That a mandate policy's mandate is copied or revoked with it is `circle-motion`'s guard on both actions.
 
 The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the motion's procedure, its quorum and its vetoes, as the `circle-membership-motion` graft does.
 
@@ -104,7 +143,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 - `propose` (confluent): inserts the motion by the procedure it names, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`) under a lock on the numbering, proposed on the verdict date, and its actions; circle-membership-motion's `propose` replaces it in the shell and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, procedure, ballot, deadline, actions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another; the form reads the handles it mentions and the documents it links from its text (`models/thread.ts`). Submits `{ motion, member, message, reply, mentions, links }`, without the text.
 - `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-membership-motion` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
-- `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `circle-membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what `circle-motion`'s `adopt` extends with the circle feat's copy of a mandate.
+- `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, protected by the procedure the action names, if any, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `circle-membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what `circle-motion`'s `adopt` extends with the circle feat's copy of a mandate.
 - `end` (ordered), and `ending`, the same as a write a graft extends: ends the policy a passed motion's action `n` names on the verdict date, through the register's `policy.end` (`ending` in `@cella/org-policy`). Submits `{ policy, motion, n, ends }`. `circle-membership-motion` runs `circle-motion`'s `end`, which extends it, for each policy a passing motion ends.
 
 ## Grafts
@@ -118,7 +157,7 @@ the circle it is put in, from those `circle-motion` lists in the
 collection's `about`; the procedure, from those built in or whose policy is in force, its terms in words, a secret ballot among them, which follows
 the circle's until another is chosen; the deadline, the title and the text; and the
 actions it carries, each a kind from `motion.carries`, whose arguments the
-form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, and the policy it replaces, from those not ended (`policies`); End a policy asks for the policy it ends, from the same list. A motion's page shows its proposal and each action it
+form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), and the procedure that alone changes it, from those in force (`protections`); End a policy asks for the policy it ends, from the same list. A motion's page shows its proposal and each action it
 carries, its arguments by its kind's labels, a member by name, every stance given as its activity, on a secret ballot the reader's own alone, and closes it (`close`).
 Its roll, its outcome and the stance form are `circle-membership-motion`'s;
 the stance it posts is this feat's `vote`, for the acting member.

@@ -1,8 +1,10 @@
 # Cella
 
-An ERP for member-governed organisations: co-ops and partnerships. Each
-co-op has its own database and notary. Cella orders the writes that contend
-and signs each verdict into a log the members can audit.
+A cooperative workspace for member-governed organisations: co-ops and
+partnerships. It is single-tenant and federated: each co-op has its own
+server, database and notary, and other scopes keep only signed copies of
+what concerns them. Cella orders the writes that contend and signs each
+verdict into a log the members can audit.
 
 - [Architecture](_corpus/doc/architecture.md) — feats, their cores and grafts,
   and what may depend on what.
@@ -24,7 +26,7 @@ and signs each verdict into a log the members can audit.
 
 This repository works only on the org app.
 
-- `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`,
+- `apps/org/` — the cooperative workspace: its core (`ops`, `crypto`, `log`, `keystore`,
   `guards`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
   `cella` CLI, and `ts/`, which assembles the app.
 - `tools/` — the node tools `cella` runs: the feat and fixture checks,

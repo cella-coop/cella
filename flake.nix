@@ -1,5 +1,5 @@
 {
-  description = "Cella: an ERP for member-governed organisations";
+  description = "Cella: a cooperative workspace for member-governed organisations";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
 

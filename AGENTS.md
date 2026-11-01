@@ -1,7 +1,7 @@
 # Agents
 
-Cella is a co-op ERP built as a strict tree of feats. This repository works
-only on the org app, `apps/org/`. Read
+Cella is a cooperative workspace built as a strict tree of feats. This
+repository works only on the org app, `apps/org/`. Read
 [architecture](_corpus/doc/architecture.md) before you write, and
 [trust](_corpus/doc/trust.md) before you touch a write path.
 

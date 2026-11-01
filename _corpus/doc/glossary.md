@@ -9,7 +9,8 @@ updated = 2026-11-01
 
 | Term | Meaning |
 |---|---|
-| **app** | a root feat of the repository; `org` is the ERP |
+| **app** | a root feat of the repository; `org` is the cooperative workspace |
+| **cooperative workspace** | what cella is: the one place a member-governed organisation keeps its books, its work, its decisions and its members, on a server of its own (single-tenant) that federates with other scopes' servers by signed events; never called an ERP |
 | **feat** | a collection of things and the code that keeps it, named for the collection: `person`, `invoice`; imports no other feat; a feat may hold feats of its own, which inherit its core (**nested feat**) |
 | **graft** | a relationship between feats: its junction, model and handlers, named by the feats it joins in alphabetical order (`client-invoice`), at the lowest node that holds them all |
 | **slice** | a feat or a graft, either one |

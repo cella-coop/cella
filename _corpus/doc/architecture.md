@@ -792,9 +792,11 @@ vote for others at a higher level, are part of a procedure's
 configuration and not built
 ([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md)).
 
-No action is allowed by omission. An action with no power declares the check
-that allows it instead: `first`, the log's first entry, which carries
-in once the state a scope held before its log. A stance is no check: it
+No action is allowed by omission: every action declares the power it
+needs. The one that cannot is the log's first entry, which carries in
+once the state a scope held before its log, before any mandate is
+adopted: it declares the check `first` instead, backed by a guard
+registered on it in `cella.guard`. A stance is no check: it
 needs the power its procedure gives the seats on the roll, and `cella
 check feats` refuses `check: 'roll'`. What is the actor's own is no
 check: it needs the power their right grants, and `cella check feats`
@@ -802,17 +804,25 @@ refuses `check: 'self'`. Nor is a seat: what a seat allows is its roles' mandate
 participant's among them, and `cella check feats` refuses `check:
 'seat'`; nor is a passed motion, which allows what its circle's
 collective mandates grant, and `cella check feats` refuses `check:
-'decided'`. A check is backed by SQL, a guard registered on the action
-in `cella.guard`; a collective mandate's power by a row in
+'decided'`. A power is backed by SQL: an individual mandate's or a
+right's by a row in `cella.power`; a collective mandate's by a row in
 `motion.cites`, to which `motion.register_cite` attaches
 `circle-membership-motion`'s guard, that the motion passed on its roll,
 and `circle-motion`'s, that its circle holds the power; and the voting
 power by a row in `motion.stance_power`.
-`cella check feats` refuses an action that names neither a power nor a
-check, and a check no literal row backs; that the guard does what the
-check says is its owner's and its tests'. An action not yet decided as
-it should be, such as granting a mandate before a graft ties the motion
-to it, needs a power no mandate grants until then.
+
+`cella check feats` refuses, each with a negative test in
+`tools/_tests/powers.test.mjs`: an action that names neither a power
+nor `first`, or `first` with no guard on it; a power no SQL registers;
+a label and its SQL that name a different power or amount; and a power
+that no mandate, collective mandate or right grants among the policies
+a fixture's co-op adopts by its closed motions, Lanterne's, but `vote`,
+which a procedure gives. So every action someone can take is one a
+co-op can grant, and a fixture shows who holds it. That a guard does
+what its check or its power says is its owner's and its tests'. An
+action not yet built is not declared: recovering a key from guardian
+shares comes with the power it needs and the mandate that grants it
+([person](../../apps/org/feats/person/index.md#powers)).
 
 Every critical invariant is enforced twice: the handler checks the
 permission and the feat's row-level policies and triggers back it up. An

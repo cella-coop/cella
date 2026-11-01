@@ -1,6 +1,6 @@
 +++
 title = "Cella CLI"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 `cella` is the org app's Rust root (`apps/org/rs`, package `cella-cli`) and the repository's one entry point: every development and production task runs through it. It orchestrates the tools where their logic lives — cargo, cargo-pgrx, the Postgres binaries, pnpm and the node tools in `tools/` — as subprocesses from the workspace root, which it finds by walking up from the working directory, or else where the binary was built, so it runs the same from any directory. Each step prints one line, `ok` with its time and a summary, or `FAIL` followed by the tool's whole output; the exit code is the failing tool's. `-v` streams every tool's output instead. A missing tool fails with exit code 127 and says to run inside `nix develop`.
@@ -9,7 +9,7 @@ updated = 2026-11-01
 
 | Command | For | What |
 |---|---|---|
-| `cella check [--no-sql]` | development | what a commit must pass: the feat check (`tools/feat-check.mjs`, its SQL boundaries skipped with `--no-sql`), the fixture check, the type check of the server layers and tools (`tsc`), the shell check (`svelte-kit sync`, then `svelte-check --fail-on-warnings` over the shell and every slice's client layers), `cargo check` and clippy; no database |
+| `cella check [--no-sql]` | development | what a commit must pass: the feat check (`tools/feat-check.mjs`, its SQL boundaries skipped with `--no-sql`, and with them its reading of every action's power against the SQL that registers it and the mandates the fixtures adopt), the fixture check, the type check of the server layers and tools (`tsc`), the shell check (`svelte-kit sync`, then `svelte-check --fail-on-warnings` over the shell and every slice's client layers), `cargo check` and clippy; no database |
 | `cella check feats\|fixtures\|types\|shell\|rust` | development | one part alone |
 | `cella serve [--port PORT]` | development | the shell's dev server, Vite on `http://localhost:5173` by default, against the dev database: starts the cluster if it is stopped, and the analytics shell, applies any new migration, says if the database is unseeded, then runs until stopped. It sets `CELLA_DEV=1`, dev mode, whose sign-in page offers the fixture members: the browser derives the TEST-ONLY key of the one picked and signs with it, as with any device |
 | `cella serve --prod [--port PORT] [--url URL]` | production | the shell built (`cella build`) and run as a scope's server on `127.0.0.1:PORT`, outside dev mode, against the dev database or the one `--url` names, migrated first: members sign in with their own devices and sign every action in the browser, and the sign-in offers no one. The server acts as `cella_app` whatever `--url` logs in as, so the row-level policies hold for every read; the URL's role is a superuser or a member of `cella_app`. It expects TLS in front, setting `x-forwarded-proto` (`PROTOCOL_HEADER`), and takes files up to 10 MiB (`BODY_SIZE_LIMIT=11M`) |

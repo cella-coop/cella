@@ -1,13 +1,14 @@
-// powers: the power each action needs is registered in SQL, which the
-// guards read and which is the source of truth: in cella.power for a
-// power an individual mandate grants, held through a seat, or in
+// powers: every action declares the power it needs, registered in SQL,
+// which the guards read and which is the source of truth: in cella.power
+// for a power an individual mandate or a right grants, or in
 // motion.cites for one a collective mandate grants, used by a motion of
 // its circle, or in motion.stance_power for the one a procedure gives the
 // seats on a motion's roll. It is mirrored in the action's label in
 // actions.ts, which the TypeScript reads. This keeps the two equal: every power in one is
-// in the other, with the same amount field. And no action is allowed by
-// omission: one with no power declares the check that allows it, which
-// SQL must back.
+// in the other, with the same amount field. No action is allowed by
+// omission: the one with no power, the log's first entry, declares the
+// check `first`, which SQL must back. And every power is one a co-op can
+// grant: a mandate a fixture adopts names it.
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -138,4 +139,34 @@ export function covered(ops, found) {
     }
   }
   return errors
+}
+
+// The powers a fixture's co-op grants: every mandate among the policies
+// its closed motions adopt, as the seed adopts them, on a role, on a
+// circle or to the people a right names, by the power its sentence
+// marks, `{power: pay-supplier}`. `motions` is the fixture's motion.toml
+// `[[motion]]` list.
+export function mandates(motions, fixture) {
+  const out = []
+  for (const m of (motions ?? []).filter((m) => m.closed)) {
+    for (const a of (m.action ?? []).filter((a) => a.kind === 'policy' && a.args?.kind === 'mandate')) {
+      for (const [, power] of (a.args.wording ?? '').matchAll(/\{power:\s*([^}]*?)\s*\}/g)) {
+        out.push({ power, fixture, motion: m.id })
+      }
+    }
+  }
+  return out
+}
+
+// Where an action needs a power no co-op can be seen to grant: no
+// mandate, collective mandate or right among the fixtures' adopted
+// policies names it. A stance's power, listed in motion.stance_power, is
+// the procedure's to give the seats on a roll, and no mandate's.
+export function granted(ops, grants, stances = []) {
+  const given = new Set(stances.map((s) => s.op))
+  const powers = new Set(grants.map((g) => g.power))
+  const where = [...new Set(grants.map((g) => g.fixture))].join(', ') || 'no fixture'
+  return ops
+    .filter((o) => o.power && !given.has(o.op) && !powers.has(o.power))
+    .map((o) => `${o.file}: ${o.op} needs ${o.power}, which no mandate, collective mandate or right grants in ${where}: adopt one in a fixture's closed motion, or declare the action only once it is built`)
 }

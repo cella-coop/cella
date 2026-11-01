@@ -1,8 +1,8 @@
 // seed, meetings: loads a mock co-op's meetings with their agendas into
 // the meeting schema, and its grafts' rows: how each circle meets
-// (circle-meeting), who came (meeting-membership), the decisions agenda
-// items table (decision-meeting) and the minutes' documents
-// (document-meeting). Circles, members, decisions and documents load
+// (circle-meeting), who came (meeting-membership), the motions agenda
+// items table (meeting-motion) and the minutes' documents
+// (document-meeting). Circles, members, motions and documents load
 // first. A held meeting is loaded scheduled, its agenda and its marks put
 // in, then held on its own day, as the feat's triggers fix both once it
 // is.
@@ -47,12 +47,12 @@ export async function meetings(db, read, day) {
     }
   }
 
-  const tabled = read('graft.decision-meeting').tabled ?? []
+  const tabled = read('graft.meeting-motion').tabled ?? []
   for (const t of tabled) {
-    await db.query('INSERT INTO decision_meeting.tabled (item, meeting, decision) VALUES ($1, $2, $3)', [
+    await db.query('INSERT INTO meeting_motion.tabled (item, meeting, motion) VALUES ($1, $2, $3)', [
       items.get(t.meeting)?.[t.item - 1] ?? null,
       t.meeting,
-      t.decision,
+      t.motion,
     ])
   }
 
@@ -65,5 +65,5 @@ export async function meetings(db, read, day) {
     await db.query('UPDATE meeting.meeting SET status = $2, settled = $3 WHERE id = $1', [m.id, m.status, day(m.settled ?? m.at)])
   }
 
-  return `${list.length} meetings, ${marks} marks, ${tabled.length} decisions tabled, ${minutes.length} minutes`
+  return `${list.length} meetings, ${marks} marks, ${tabled.length} motions tabled, ${minutes.length} minutes`
 }

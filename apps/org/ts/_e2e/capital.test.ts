@@ -1,6 +1,6 @@
 // The capital scenario, end to end on a seeded Lanterne, through the
 // handlers: the statutes value a share at 50 € and set how it is paid in
-// and out. d-2026-012 admits Inès, and in that verdict her 20 shares are
+// and out. m-2026-012 admits Inès, and in that verdict her 20 shares are
 // called, 1 000 € owed on her subscription; she spreads it over the ten
 // monthly instalments the statutes allow, and November's run, once paid,
 // withholds the first from her pay in its own entry. Paul, who left in
@@ -12,7 +12,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { close } from '@cella/org-graft-circle-membership-motion/api'
 import { called, pay, repay } from '@cella/org-graft-account-membership-transaction/api'
 import { plan, spread, withheld } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
@@ -94,9 +94,9 @@ test('the statutes value a share at 50 €, and Paul, who left, is owed his 1 50
   await balanced()
 })
 
-test('d-2026-012 admits Inès, and in that verdict her 20 shares are called: 1 000 € owed on her subscription', async () => {
+test('m-2026-012 admits Inès, and in that verdict her 20 shares are called: 1 000 € owed on her subscription', async () => {
   await on('2026-10-31')
-  settled(await close({ decision: 'd-2026-012' }, as(camille)))
+  settled(await close({ motion: 'm-2026-012' }, as(camille)))
   const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.equal(s.account, '101312')
   assert.deepEqual(await lines(s.entry), [

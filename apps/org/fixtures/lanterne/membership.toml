@@ -1,5 +1,5 @@
 # Each member: where their membership stands; who they are is person.toml's. Positions in
-# circles are the circle-membership graft's; admission votes the decision-membership's.
+# circles are the circle-membership graft's; admission votes the membership-motion's.
 
 [[member]]
 address = "camille@lanterne.example"

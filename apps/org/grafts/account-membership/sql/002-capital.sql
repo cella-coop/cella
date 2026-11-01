@@ -1,5 +1,5 @@
 -- The value of one share is the statutes' capital clause, adopted by the
--- members' decision in the account feat's terms, and no longer a row of
+-- members' motion in the account feat's terms, and no longer a row of
 -- this graft's own: the cents of a share on a day, or NULL before any
 -- adopted terms give it one.
 CREATE FUNCTION account_membership.value(day date) RETURNS bigint

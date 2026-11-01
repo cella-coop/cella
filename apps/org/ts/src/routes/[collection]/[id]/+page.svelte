@@ -33,7 +33,7 @@
     ].filter((b) => b.tab === tab),
   )
   // What each slice draws inside the item's blocks, with its data on the
-  // item: a graft's decision inside a document.
+  // item: a graft's motion inside a document.
   const embeds: Embeds = $derived(
     Object.fromEntries([
       ...Object.entries(page?.embeds ?? {}).map(([k, embed]) => [k, { embed, data: data.item }]),

@@ -163,7 +163,7 @@ export interface Extension {
   // each its own id.
   rows?: Read
   // What it adds to the collection's `about`, merged over the owner's,
-  // such as the circles a new decision may be put in, or the acting
+  // such as the circles a new motion may be put in, or the acting
   // member's week of time.
   about?(db: Db, actor?: string | null): Promise<object>
   item?(db: Db, id: string, actor: string | null): Promise<unknown>
@@ -175,7 +175,7 @@ export interface Extension {
 
 // Runs after a settled write of the op, with its request: a slice's
 // subscription to another slice's event, such as admitting the members a
-// closed decision admits.
+// closed motion admits.
 export type Reaction = (request: unknown, deps: Deps) => Promise<Done[]>
 
 // One record of a file being imported, as a write: the line it was read

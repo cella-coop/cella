@@ -2,4 +2,4 @@ name = "membership"
 group = "governance"
 builtin = true
 rung = 1
-grafts = ["decision-membership", "document-membership"]
+grafts = ["membership-motion", "document-membership"]

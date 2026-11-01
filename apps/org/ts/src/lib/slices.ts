@@ -4,7 +4,7 @@ import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
 import { app as membership } from '@cella/org-membership/app'
 import { app as circle } from '@cella/org-circle/app'
-import { app as decision } from '@cella/org-decision/app'
+import { app as motion } from '@cella/org-motion/app'
 import { app as document } from '@cella/org-document/app'
 import { app as client } from '@cella/org-client/app'
 import { app as invoice } from '@cella/org-invoice/app'
@@ -18,10 +18,10 @@ import { app as employment } from '@cella/org-employment/app'
 import { app as file } from '@cella/org-file/app'
 import { app as imports } from '@cella/org-import/app'
 import { app as circleMembership } from '@cella/org-graft-circle-membership/app'
-import { app as circleDecision } from '@cella/org-graft-circle-decision/app'
-import { app as circleDecisionMembership } from '@cella/org-graft-circle-decision-membership/app'
-import { app as decisionMembership } from '@cella/org-graft-decision-membership/app'
-import { app as decisionDocument } from '@cella/org-graft-decision-document/app'
+import { app as circleMotion } from '@cella/org-graft-circle-motion/app'
+import { app as circleMembershipMotion } from '@cella/org-graft-circle-membership-motion/app'
+import { app as membershipMotion } from '@cella/org-graft-membership-motion/app'
+import { app as documentMotion } from '@cella/org-graft-document-motion/app'
 import { app as clientInvoice } from '@cella/org-graft-client-invoice/app'
 import { app as invoiceTransaction } from '@cella/org-graft-invoice-transaction/app'
 import { app as accountTransaction } from '@cella/org-graft-account-transaction/app'
@@ -35,13 +35,13 @@ import { app as expense } from '@cella/org-expense/app'
 import { app as bill } from '@cella/org-bill/app'
 import { app as payslip } from '@cella/org-payslip/app'
 import { app as report, pinnable as reported } from '@cella/org-report/app'
-import { app as accountDecision } from '@cella/org-graft-account-decision/app'
+import { app as accountMotion } from '@cella/org-graft-account-motion/app'
 import { app as accountMembership } from '@cella/org-graft-account-membership/app'
 import { app as accountMembershipTransaction } from '@cella/org-graft-account-membership-transaction/app'
 import { app as accountMembershipPayslipTransaction } from '@cella/org-graft-account-membership-payslip-transaction/app'
 import { app as accountMembershipPatronage } from '@cella/org-graft-account-membership-patronage/app'
 import { app as accountMembershipPatronageTransaction } from '@cella/org-graft-account-membership-patronage-transaction/app'
-import { app as decisionPatronage } from '@cella/org-graft-decision-patronage/app'
+import { app as motionPatronage } from '@cella/org-graft-motion-patronage/app'
 import { app as patronagePayslip } from '@cella/org-graft-patronage-payslip/app'
 import { app as patronageTimesheet } from '@cella/org-graft-patronage-timesheet/app'
 import { app as patronageTransaction } from '@cella/org-graft-patronage-transaction/app'
@@ -53,10 +53,10 @@ import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/
 import { app as meeting } from '@cella/org-meeting/app'
 import { app as circleMeeting } from '@cella/org-graft-circle-meeting/app'
 import { app as circleMeetingMembership } from '@cella/org-graft-circle-meeting-membership/app'
-import { app as decisionMeeting } from '@cella/org-graft-decision-meeting/app'
+import { app as meetingMotion } from '@cella/org-graft-meeting-motion/app'
 import { app as documentMeeting } from '@cella/org-graft-document-meeting/app'
 import { app as meetingMembership } from '@cella/org-graft-meeting-membership/app'
-import { app as decisionEmploymentMembership } from '@cella/org-graft-decision-employment-membership/app'
+import { app as employmentMembershipMotion } from '@cella/org-graft-employment-membership-motion/app'
 import { app as documentMembership } from '@cella/org-graft-document-membership/app'
 import { app as employmentMembership } from '@cella/org-graft-employment-membership/app'
 import { app as employmentPayslip } from '@cella/org-graft-employment-payslip/app'
@@ -82,7 +82,7 @@ export const apps: App[] = [
   person,
   membership,
   circle,
-  decision,
+  motion,
   document,
   meeting,
   client,
@@ -101,13 +101,13 @@ export const apps: App[] = [
   payslip,
   report,
   log,
-  decisionEmploymentMembership,
+  employmentMembershipMotion,
   documentMembership,
   circleMembership,
-  circleDecision,
-  circleDecisionMembership,
-  decisionMembership,
-  decisionDocument,
+  circleMotion,
+  circleMembershipMotion,
+  membershipMotion,
+  documentMotion,
   clientInvoice,
   clientProject,
   invoiceProject,
@@ -117,13 +117,13 @@ export const apps: App[] = [
   projectTimesheet,
   invoiceTransaction,
   accountTransaction,
-  accountDecision,
+  accountMotion,
   accountMembership,
   accountMembershipTransaction,
   accountMembershipPayslipTransaction,
   accountMembershipPatronageTransaction,
   accountMembershipPatronage,
-  decisionPatronage,
+  motionPatronage,
   patronageTransaction,
   patronagePayslip,
   patronageTimesheet,
@@ -133,7 +133,7 @@ export const apps: App[] = [
   billTransaction,
   payslipTransaction,
   circleMeeting,
-  decisionMeeting,
+  meetingMotion,
   documentMeeting,
   meetingMembership,
   circleMeetingMembership,
@@ -149,14 +149,14 @@ export const apps: App[] = [
 
 // The co-op's home until a viewer pins their own: what a managing
 // director looks at first, the cash, what clients owe, the projects'
-// margins, the decisions open and the meetings ahead. The root's, since
+// margins, the motions open and the meetings ahead. The root's, since
 // it runs over the fields of several slices no one slice joins.
 export const home: Pin[] = [
   { collection: 'accounts', kind: 'kpi', title: 'Cash', measure: { op: 'sum', field: 'balance' }, where: [{ field: 'cash', is: ['cash'] }] },
   { collection: 'invoices', kind: 'kpi', title: 'Owed by clients', measure: { op: 'sum', field: 'owed' } },
   { collection: 'invoices', kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
   { collection: 'reports/margins', kind: 'kpi', title: 'Margin on projects', measure: { op: 'sum', field: 'margin' } },
-  { collection: 'decisions', kind: 'kpi', title: 'Open decisions', measure: { op: 'count' }, where: [{ field: 'state', is: ['open'] }] },
+  { collection: 'motions', kind: 'kpi', title: 'Open motions', measure: { op: 'count' }, where: [{ field: 'state', is: ['open'] }] },
   { collection: 'meetings', kind: 'kpi', title: 'Meetings ahead', measure: { op: 'count' }, where: [{ field: 'status', is: ['scheduled'] }] },
   { collection: 'invoices', kind: 'chart', title: 'Invoiced by month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
   { collection: 'reports/margins', kind: 'chart', title: 'Projects by watch', measure: { op: 'count' }, by: 'watch' },

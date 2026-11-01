@@ -4,8 +4,8 @@
 COMMENT ON COLUMN membership.member.address IS 'not personal: the pseudonymous address every log entry names the member by';
 
 -- membership:member:erase — the write erased the personal data of a member
--- who has left, every class: the cited decision asks it, which is the
--- decision-membership graft's guard.
+-- who has left, every class: the cited motion asks it, which is the
+-- membership-motion graft's guard.
 CREATE FUNCTION membership.erases(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

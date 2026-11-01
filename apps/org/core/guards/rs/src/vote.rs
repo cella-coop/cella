@@ -134,7 +134,7 @@ mod tests {
         t
     }
 
-    // Lanterne's d-2026-012, in file order: Hugo objects, then consents.
+    // Lanterne's m-2026-012, in file order: Hugo objects, then consents.
     const D012: [(&str, &str); 9] = [
         ("yusuf", "consent"),
         ("amina", "consent"),

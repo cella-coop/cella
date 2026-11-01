@@ -53,7 +53,7 @@ test('the seed holds Lanterne\'s meetings: the June assembly, coordination every
     `SELECT (SELECT count(*) FROM meeting.meeting) AS meetings,
             (SELECT count(*) FROM meeting.meeting WHERE status = 'held') AS held,
             (SELECT count(*) FROM meeting_membership.attendance) AS marks,
-            (SELECT count(*) FROM decision_meeting.tabled) AS tabled,
+            (SELECT count(*) FROM meeting_motion.tabled) AS tabled,
             (SELECT count(*) FROM document_meeting.minutes) AS minutes`,
   )
   assert.deepEqual(counts, { meetings: '10', held: '8', marks: '46', tabled: '7', minutes: '1' })
@@ -69,12 +69,12 @@ test('the meeting pages render: a calendar of the month, an agenda with who came
     ['/meetings?at=2026-06-01', ['June 2026', 'Annual general assembly']],
     ['/meetings?span=week&at=2026-10-26', ['26 Oct – 1 Nov 2026', 'General assembly']],
     ['/meetings?view=list', ['Annual general assembly']],
-    ['/meetings/coordination-2026-10-19', ['The day rate: Malik', 'Decisions tabled', 'd-2026-012', 'Attendance', '5 of 5, 3 needed']],
+    ['/meetings/coordination-2026-10-19', ['The day rate: Malik', 'Motions tabled', 'm-2026-012', 'Attendance', '5 of 5, 3 needed']],
     ['/meetings/coordination-2026-09-21', ['Léa Bernard', 'guest']],
-    ['/meetings/ag-2026-06-20?tab=minutes', ['61 400 €', 'Meeting · ag-2026-06-20', 'Decision · d-2026-006', 'Approve the 2025 accounts', 'Write in the editor']],
+    ['/meetings/ag-2026-06-20?tab=minutes', ['61 400 €', 'Meeting · ag-2026-06-20', 'Motion · m-2026-006', 'Approve the 2025 accounts', 'Write in the editor']],
     ['/documents/minutes-ag-2026-06-20', ['Minutes, Annual general assembly', 'meeting, 20 Jun 2026']],
     ['/circles/coordination', ['Next meeting', 'Coordination']],
-    ['/decisions/d-2026-011', ['19 Oct 2026, held']],
+    ['/motions/m-2026-011', ['19 Oct 2026, held']],
   ]
   for (const [path, says] of pages) {
     const { status, text } = await shell.page(path, camille)
@@ -123,13 +123,13 @@ test('its members draw up the agenda, reorder it and table the rate card; Thomas
   const down = await shell.act(`/meetings/${meeting}`, 'move', { item: await item('Pipeline'), to: '2' }, hugo)
   assert.equal(down.state, 'settled', down.reason)
   assert.deepEqual(await agenda(), ['The assembly, the day after', 'Staffing for November', 'Pipeline'])
-  const tabled = await shell.act(`/meetings/${meeting}`, 'table', { decision: 'd-2026-011', title: '', presenter: 'Malik', minutes: '20' }, malik)
+  const tabled = await shell.act(`/meetings/${meeting}`, 'table', { motion: 'm-2026-011', title: '', presenter: 'Malik', minutes: '20' }, malik)
   assert.deepEqual([tabled.op, tabled.state], ['meeting:item:add', 'settled'], tabled.reason)
   assert.deepEqual(await agenda(), ['The assembly, the day after', 'Staffing for November', 'Pipeline', 'Raise the day rate for 2027'])
   const removed = await shell.act(`/meetings/${meeting}`, 'remove', { item: await item('Staffing for November') }, yusuf)
   assert.equal(removed.state, 'settled', removed.reason)
   const { text } = await shell.page(`/meetings/${meeting}`, malik)
-  assert.ok(text.includes('Raise the day rate for 2027') && text.includes('open until'), 'the page says where the tabled decision stands')
+  assert.ok(text.includes('Raise the day rate for 2027') && text.includes('open until'), 'the page says where the tabled motion stands')
 })
 
 test('members mark themselves; Malik, its secretary, records the others and may not record Thomas, who comes as a guest', async () => {

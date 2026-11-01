@@ -6,12 +6,12 @@ import type { Approve, Approved } from '../models/distribution.ts'
 const op = 'patronage:distribution:approve' satisfies keyof typeof actions
 
 // Approves a year's split on the verdict date, citing the assembly's
-// decision; in the same write the grafts that know each basis make the
+// motion; in the same write the grafts that know each basis make the
 // workers' parts. The guards decide: `patronage.splits` the split and the
 // law's floors, `patronage.divides` the parts against the terms, each
 // basis's graft its own parts, account-patronage's that the year is
-// closed, patronage-transaction's the legal reserve, decision-patronage's
-// that the decision approves this split, and circle-decision-membership's
+// closed, patronage-transaction's the legal reserve, motion-patronage's
+// that the motion approves this split, and circle-membership-motion's
 // that it passed.
 export async function approve(input: Approve, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Approved>> {
   return write(deps, {

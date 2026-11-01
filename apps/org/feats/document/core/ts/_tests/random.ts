@@ -36,7 +36,7 @@ export const rateCard: ops.Fragment[] = [
     runs: p('Day rates for ', { text: '2027', marks: { italic: true } }, '. Small co-ops pay the ', b('solidarity'), ' rate.'),
     children: [],
   },
-  { type: 'embed', embed: 'decision', ref: 'd-2026-011', runs: [], children: [] },
+  { type: 'embed', embed: 'motion', ref: 'm-2026-011', runs: [], children: [] },
   {
     type: 'bullet',
     runs: p(b('Day of work'), ' — per day'),
@@ -135,7 +135,7 @@ export function edit(doc: LoroDoc, r: R): void {
       return
     case 9: {
       const k = r.pick(kinds)
-      ops.retype(doc, r.pick(ids), k, { level: 1 + r.int(3), checked: r.next() < 0.5, language: r.pick(['toml', 'sql']), embed: 'decision', ref: r.pick(['d-2026-011', 'd-2026-007']) })
+      ops.retype(doc, r.pick(ids), k, { level: 1 + r.int(3), checked: r.next() < 0.5, language: r.pick(['toml', 'sql']), embed: 'motion', ref: r.pick(['m-2026-011', 'm-2026-007']) })
       return
     }
     default:

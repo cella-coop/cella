@@ -2,4 +2,4 @@ name = "patronage"
 group = "finance"
 builtin = false
 rung = 1
-grafts = ["account-membership-patronage", "account-membership-patronage-transaction", "account-patronage", "decision-patronage", "patronage-payslip", "patronage-timesheet", "patronage-transaction"]
+grafts = ["account-membership-patronage", "account-membership-patronage-transaction", "account-patronage", "motion-patronage", "patronage-payslip", "patronage-timesheet", "patronage-transaction"]

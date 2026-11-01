@@ -27,7 +27,7 @@ updated = 2026-11-01
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
 | **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui` and the notary |
-| **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
+| **custom feat** | a co-op's own feat with its own schema, enabled by motion: how cella is extended |
 | **subsidiarity** | a guard lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
 | **address** | a person's stable name in a scope, `ana@coop-a`; keys rotate under it |
@@ -40,11 +40,11 @@ updated = 2026-11-01
 | **share** | a right granted in advance that bounded actions spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
 | **notary** | the scope's office every attempt passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
-| **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the decision it cites taken properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
-| **action** | one change to the records, voting and closing included: an actor signs an attempt, or a passed decision carries it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |
+| **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the motion that carries it decided properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
+| **action** | one change to the records, voting and closing included: an actor signs an attempt, or a passed motion carries it, signed by whoever closed it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |
 | **attempt** | an action as signed and sent, before its guards rule on it |
 | **actor** | whoever signs: a person, an agent or a service, by their address; only people hold rights, and by default only people vote |
-| **agent** | an AI as an actor; named and not built: it holds only limited, termed mandates a decision can revoke, someone is answerable for it, and its seat brings no participant role unless a procedure says so |
+| **agent** | an AI as an actor; named and not built: it holds only limited, termed mandates a motion can revoke, someone is answerable for it, and its seat brings no participant role unless a procedure says so |
 | **service** | automation as an actor, held as an agent is; named and not built |
 | **receipt** | the notary's signed, numbered acknowledgement that an attempt arrived, carrying its actor's signature on it; one per action; order comes from receipts, never from clocks |
 | **nonce** | the single-use random value in an action's signature, so the signature counts once |
@@ -53,7 +53,7 @@ updated = 2026-11-01
 | **log** | the scope's hash-chained, signed record of every accepted action, from which the state folds |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
-| **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
+| **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
 | **mandate** | a grant of one power to one role, with an optional limit per action or budget per month or year, and a term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
@@ -114,8 +114,10 @@ updated = 2026-11-01
 
 | Term | Meaning |
 |---|---|
-| **proposal** | a decision put to a circle, by a procedure, with its deadline |
-| **procedure** | how a decision is taken: its rule, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a decision keeps the one it was proposed under |
+| **motion** | how a circle acts as a whole: put to it by a procedure and decided by it, carrying actions or none; the `motion` feat's |
+| **decision** | a passed motion, in plain speech; no row and no name in the code |
+| **proposal** | a motion put to a circle, by a procedure, with its deadline |
+| **procedure** | how a motion is decided: its method, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
 | **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |
 | **consent** | passes if no one objects at close; a member's latest stance counts |
 | **objection** | a stance under consent that blocks while it stands |
@@ -123,13 +125,13 @@ updated = 2026-11-01
 | **consensus** | everyone actively agrees; stricter than consent |
 | **majority** | passes with more for than against among those voting; a supermajority raises the threshold |
 | **votes cast** | the stances for and against; an abstention takes part but counts for neither |
-| **quorum** | the participation a decision needs to count, a share of those it counts giving a stance; a meeting's, the share of its circle's seats present |
-| **deliberation** | a decision's discussion: messages its circle's members post while it is open, each perhaps a reply |
+| **quorum** | the participation a motion needs to count, a share of those it counts giving a stance; a meeting's, the share of its circle's seats present |
+| **deliberation** | a motion's discussion: messages its circle's members post while it is open, each perhaps a reply |
 | **mention** | a member named in a message by `@` and their handle, which waits in their inbox until they answer |
-| **agenda** | a meeting's items in order, each tabling perhaps a decision; fixed once the meeting is held |
-| **minutes** | a meeting's record, a document, adopted by decision where its circle says so |
-| **roll** | who may vote on a decision |
+| **agenda** | a meeting's items in order, each tabling perhaps a motion; fixed once the meeting is held |
+| **minutes** | a meeting's record, a document, adopted by motion where its circle says so |
+| **roll** | who may vote on a motion |
 | **delegate** | a member chosen to vote for others at a higher level |
-| **adoption** | a decision making one version of a document binding |
-| **outcome** | the result of a decision, folded from its signed votes, never stored |
-| **open · passed · rejected** | a decision's state: open until its close, then passed or rejected by the outcome of the stances the close froze, read in SQL; "adopted" is a document version's, never a decision's |
+| **adoption** | a motion making one version of a document binding |
+| **outcome** | the result of a motion, folded from its signed votes, never stored |
+| **open · passed · rejected** | a motion's state: open until its close, then passed or rejected by the outcome of the stances the close froze, read in SQL; a passed motion is a decision; "adopted" is a document version's, never a motion's |

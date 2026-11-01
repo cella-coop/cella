@@ -56,7 +56,7 @@ is the calendar year.
 |---|---|
 | account | open → frozen (a departing member's capital, from the exit on) |
 | period | open → closed |
-| terms | drafted → adopted (once, citing the members' decision) |
+| terms | drafted → adopted (once, citing the members' motion) |
 
 A frozen account never thaws and takes no new draws; what it held is owed
 the member in `4567` and repaid on the statutes' schedule. A closed period
@@ -69,7 +69,7 @@ year.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
-| `POST /api/account/terms.adopt` | ordered, `decided` | the members' decision adopts the statutes' capital clauses, once |
+| `POST /api/account/terms.adopt` | ordered, `decided` | the members' motion adopts the statutes' capital clauses, once |
 | `POST /api/account/period.open` | ordered | the month after the latest opens, so entries dated in it post; the next month's opening follows it |
 | `POST /api/account/period.close` | ordered | nothing posts into a closed period |
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
@@ -81,8 +81,8 @@ year.
   within it settles at once and, at rung 2, offline; beyond it, it is
   refused. It posts, so its handler and its guard are the
   `account-membership-transaction` graft's.
-- **terms.adopt** cites the decision that moved to adopt the terms
-  (`account-decision`); it settles only if that decision closed and
+- **terms.adopt** cites the motion that moved to adopt the terms
+  (`account-motion`); it settles only if that motion closed and
   passed.
 - **period.open** is ordered because the months follow one another with
   no gap: the month after the latest opens only once it is there, as a
@@ -152,13 +152,13 @@ What it does not own:
 - what of a worker's part of the work share buys shares:
   `account-membership-patronage`'s, and the shares credited:
   `account-membership-patronage-transaction`'s;
-- that the members decided the terms: `account-decision`'s;
+- that the members decided the terms: `account-motion`'s;
 - the statements' figures, summed from the journal:
   `account-transaction`'s.
 
 ## What it does not know
 
-Account knows no transactions, members, decisions, distributions,
+Account knows no transactions, members, motions, distributions,
 payslips or time. Its balances and its capital accounts' holders arrive
 through grafts. A deduction for losses from a repayment, revolving
 capital and dues are not built, nor are a fiscal year other than the
@@ -246,7 +246,7 @@ statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
 balance and each account's ledger are `account-transaction`'s; adopting
-terms, `account-decision`'s form over this feat's write.
+terms, `account-motion`'s form over this feat's write.
 
 ## Lanterne
 

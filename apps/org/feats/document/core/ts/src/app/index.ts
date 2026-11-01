@@ -53,5 +53,5 @@ export const app: App = {
 }
 
 // A document read, not edited, from its canonical form: a version on the
-// page of the decision that adopts it.
+// page of the motion that adopts it.
 export { default as Reader } from '../components/Reader.svelte'

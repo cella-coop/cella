@@ -6,8 +6,8 @@ import type { Grant, Granted, Nest, Nested, Revoke, Revoked } from '../models/ci
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
-// Each write is decided: it cites the decision that asks it, which the
-// circle-decision graft checks asks this, and circle-decision-membership that
+// Each write is decided: it cites the motion that asks it, which the
+// circle-motion graft checks asks this, and circle-membership-motion that
 // it carried. This feat's guards check the write did what its payload says.
 
 // Nests a circle under another. The tree's trigger refuses a cycle in the
@@ -24,7 +24,7 @@ export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', N
       ])
       return { circle: input.circle, parent: input.parent, path: rows[0]?.path ?? [] }
     },
-    payload: (v) => ({ circle: v.circle, parent: v.parent, decision: input.decision }),
+    payload: (v) => ({ circle: v.circle, parent: v.parent, motion: input.motion }),
   })
 }
 
@@ -42,7 +42,7 @@ export async function grant(input: Grant, deps: Deps): Out<'circle:mandate:grant
       )
       return { mandate: Number(rows[0].id), role: input.role, power: input.power, from: rows[0].from }
     },
-    payload: (v) => ({ ...v, limit: input.limit ?? null, budget: input.budget ?? null, per: input.per ?? null, decision: input.decision }),
+    payload: (v) => ({ ...v, limit: input.limit ?? null, budget: input.budget ?? null, per: input.per ?? null, motion: input.motion }),
   })
 }
 
@@ -60,6 +60,6 @@ export async function revoke(input: Revoke, deps: Deps): Out<'circle:mandate:rev
       )
       return { mandate: input.mandate, revoked: rows[0]?.revoked ?? '' }
     },
-    payload: (v) => ({ mandate: v.mandate, decision: input.decision }),
+    payload: (v) => ({ mandate: v.mandate, motion: input.motion }),
   })
 }

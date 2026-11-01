@@ -33,11 +33,11 @@ export interface Detail extends Distribution {
 export const stage = (d: Pick<Distribution, 'approved' | 'distributed'>) =>
   d.distributed ? 'distributed' : d.approved ? 'approved' : 'draft'
 
-// The assembly's decision approving a year's split, which the decision it
+// The assembly's motion approving a year's split, which the motion it
 // cites must have passed.
 export interface Approve {
   distribution: string
-  decision: string
+  motion: string
 }
 
 export interface Approved extends Approve {

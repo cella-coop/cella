@@ -2,4 +2,4 @@ name = "account"
 group = "finance"
 builtin = false
 rung = 1
-grafts = ["account-decision", "account-membership", "account-membership-payslip-transaction", "account-membership-transaction"]
+grafts = ["account-motion", "account-membership", "account-membership-payslip-transaction", "account-membership-transaction"]

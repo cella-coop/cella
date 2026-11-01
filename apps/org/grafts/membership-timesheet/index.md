@@ -5,7 +5,7 @@ updated = 2026-11-01
 
 A member's time, as the members see it: none is a suspended or former
 member's. The timesheet feat holds the member's address on each entry,
-as a decision holds a voter's. Whose time an entry is otherwise, a
+as a motion holds a voter's. Whose time an entry is otherwise, a
 worker's within their employment, is `employment-timesheet`'s, and so are
 a person's months on their page: member or not, a person logs time by
 their employment, and one page shows it once. Declared by `timesheet`.

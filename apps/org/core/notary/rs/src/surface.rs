@@ -204,7 +204,7 @@ impl Aggregate<Majority> for Majority {
 }
 
 // A share of the votes cast, the fraction given with each row: the
-// procedure's, the same on every row of a decision. With no rows no one
+// procedure's, the same on every row of a motion. With no rows no one
 // is for, so the fold fails before the fraction is needed.
 #[derive(Clone, Default, Debug, Serialize, Deserialize, PostgresType)]
 pub struct Shares {

@@ -49,7 +49,7 @@ before issue, a distribution before its approval).
   does; what it takes from the bank is capped by the payer's mandate.
 - **adjust** posts a correcting entry, naming the entry it corrects
   (`base: 'corrected'`): the notary refuses a second correction of the
-  same entry. Whether a correction also needs the circle's decision is a
+  same entry. Whether a correction also needs the circle's motion is a
   circle setting, not part of the write's label.
 
 ## Powers

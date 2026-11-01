@@ -16,8 +16,8 @@ the relationship, so the graft owns its writes.
   ended seat keeps its row with `until`, so who sat where on a past day
   reads back.
 - `circle_membership.seated(circle, day)`: the members seated in a circle on a
-  day. The `circle-decision-membership` graft, a higher order, fixes a
-  decision's roll from it.
+  day. The `circle-membership-motion` graft, a higher order, fixes a
+  motion's roll from it.
 
 The app role and the guards role, `cella_guards`, may select; the app role
 may insert a seat, through `position.add`, and end one, through
@@ -38,8 +38,8 @@ graft's, and whether a member is active on a day the `membership` feat's
   use the action's power on the verdict date, for the amount the payload names
   in the action's `amount` field. Each feat registers the power its actions need
   in `cella.power`, a core registry; this graft attaches its guard to every
-  op listed, then and later, as `circle-decision-membership` attaches its own
-  to `decision.cites`. A write with no power gets no such guard.
+  op listed, then and later, as `circle-membership-motion` attaches its own
+  to `motion.cites`. A write with no power gets no such guard.
 - `circle_membership.over(actor, power, about, day)`: the actor holds the
   power through a seat in force in the circle `about` or one it is
   within: a power reaches down the tree from where it is held, never up
@@ -65,31 +65,31 @@ invitee, holds nothing.
 - **position.add** and **position.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
   writes read positions through `circle_membership.may`, so they are ordered.
-- Both are decided (`check: 'decided'`): each cites the decision that
-  gives or ends the seat. This graft does not join `decision`, so the
-  guards that judge them are `circle-decision-membership`'s, a higher order:
-  the cited decision carried, and it gives or ends this seat. An
-  admission gives one, the new member's in the decision's circle in its
-  `member` role; a `seat` or `unseat` motion names any other.
+- Both are decided (`check: 'decided'`): each cites the motion that
+  gives or ends the seat. This graft does not join `motion`, so the
+  guards that judge them are `circle-membership-motion`'s, a higher order:
+  the cited motion carried, and it gives or ends this seat. An
+  admission gives one, the new member's in the motion's circle in its
+  `member` role; a `seat` or `unseat` action names any other.
 
 ## Handlers
 
 - `add` (ordered), and `seating`, its state alone, which a passing
   close runs in its own transaction for each member it admits: inserts
   the seat from the verdict date and commits its id, circle, member, role
-  and the decision it cites.
+  and the motion it cites.
 - `remove` (ordered): ends the member's seat in the circle, in the role
   or as a plain member, on the verdict date, and commits the same.
 
-`circle-decision-membership` carries out the seats a passing decision gives
+`circle-membership-motion` carries out the seats a passing motion gives
 and ends, as its reaction to the close.
 
 ## Powers
 
 | Action | Check | Lanterne |
 |---|---|---|
-| position.add | decided: the decision it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
-| position.remove | decided: the decision it cites ends this seat | the circle above, or the assembly |
+| position.add | decided: the motion it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
+| position.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
 
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
 the actor is an active member seated in the circle on the verdict date.

@@ -31,10 +31,10 @@ test('a database that applied a file since edited is refused, with the words to 
 })
 
 test('a database that applied a file since gone or renamed is refused, unless only a slice is migrated', () => {
-  const applied = new Map([['org:a/001-a.sql', 'h1'], ['org:decision/001-decision.sql', 'h2']])
+  const applied = new Map([['org:a/001-a.sql', 'h1'], ['org:motion/001-motion.sql', 'h2']])
   const files = [{ id: 'org:a/001-a.sql', path: 'apps/org/feats/a/core/sql/001-a.sql', hash: 'h1' }]
   const errors = edited(applied, files)
   assert.equal(errors.length, 1)
-  assert.match(errors[0], /org:decision\/001-decision\.sql was applied to this database and is gone from the tree/)
+  assert.match(errors[0], /org:motion\/001-motion\.sql was applied to this database and is gone from the tree/)
   assert.deepEqual(edited(applied, files, { whole: false }), [])
 })

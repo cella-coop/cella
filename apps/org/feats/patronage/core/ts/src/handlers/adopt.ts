@@ -5,10 +5,10 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 
 const op = 'patronage:terms:adopt' satisfies keyof typeof actions
 
-// Adopts drafted terms on the verdict date, citing the members' decision.
+// Adopts drafted terms on the verdict date, citing the members' motion.
 // The guards decide: `patronage.adopts` that they divide the whole work
-// share and govern no year already approved, decision-patronage's that
-// the decision moved to adopt them, and circle-decision-membership's that it
+// share and govern no year already approved, motion-patronage's that
+// the motion moved to adopt them, and circle-membership-motion's that it
 // passed. Adopted terms never change.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {

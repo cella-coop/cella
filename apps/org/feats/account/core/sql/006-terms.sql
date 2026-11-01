@@ -1,4 +1,4 @@
--- The statutes' capital clauses, adopted once by the members' decision:
+-- The statutes' capital clauses, adopted once by the members' motion:
 -- the value of one share; the fewest shares an associate subscribes; the
 -- most monthly instalments they may pay a subscription in; and, for an
 -- associate who leaves, the months after the exit before their capital's
@@ -62,7 +62,7 @@ END;
 
 -- account:terms:adopt — the write adopted the terms on the verdict date,
 -- and their clauses repay a departing associate within five years of the
--- exit. That the members decided them is account-decision's.
+-- exit. That the members decided them is account-motion's.
 CREATE FUNCTION account.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

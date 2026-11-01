@@ -37,7 +37,7 @@ export async function schedule(input: Schedule, deps: Deps): Out<'meeting:meetin
 }
 
 // Adds an item at the end of the agenda. A graft that ties the item to
-// something of its own, as a decision it tables, runs this in its own
+// something of its own, as a motion it tables, runs this in its own
 // write.
 export const adding = (input: Add): Write<Added> => ({
   op: 'meeting:item:add' satisfies Action,

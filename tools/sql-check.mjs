@@ -220,10 +220,10 @@ export function undeclared(found) {
     .map((c) => `${c.path}: ${c.key} may hold personal data: register it in cella.personal, or comment it 'not personal: why'`)
 }
 
-// The decision feat's register of the ops that cite a decision, whose
-// rows mark an op as decided: the graft that counts a decision's roll
+// The motion feat's register of the ops that cite a motion, whose
+// rows mark an op as decided: the graft that counts a motion's roll
 // attaches its guard to every op listed.
-const cites = { schema: 'decision', table: 'cites' }
+const cites = { schema: 'motion', table: 'cites' }
 
 function citing(b, o, found) {
   const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
@@ -654,7 +654,7 @@ function plpgsql(lib, fn) {
 
 // Collects what the SQL registers as literal rows, for feat-check to
 // compare with each op's label: the powers in cella.power, the guards in
-// cella.guard, and the ops that cite a decision in decision.cites.
+// cella.guard, and the ops that cite a motion in motion.cites.
 export async function checkSql(repo, apps, known, found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()

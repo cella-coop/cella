@@ -4,7 +4,7 @@ import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
 import { slice as membership } from '@cella/org-membership/api'
 import { slice as circle } from '@cella/org-circle/api'
-import { slice as decision } from '@cella/org-decision/api'
+import { slice as motion } from '@cella/org-motion/api'
 import { slice as document } from '@cella/org-document/api'
 import { slice as client } from '@cella/org-client/api'
 import { slice as invoice } from '@cella/org-invoice/api'
@@ -18,10 +18,10 @@ import { slice as employment } from '@cella/org-employment/api'
 import { slice as file } from '@cella/org-file/api'
 import { slice as imports } from '@cella/org-import/api'
 import { slice as circleMembership } from '@cella/org-graft-circle-membership/api'
-import { slice as circleDecision } from '@cella/org-graft-circle-decision/api'
-import { slice as circleDecisionMembership } from '@cella/org-graft-circle-decision-membership/api'
-import { slice as decisionMembership } from '@cella/org-graft-decision-membership/api'
-import { slice as decisionDocument } from '@cella/org-graft-decision-document/api'
+import { slice as circleMotion } from '@cella/org-graft-circle-motion/api'
+import { slice as circleMembershipMotion } from '@cella/org-graft-circle-membership-motion/api'
+import { slice as membershipMotion } from '@cella/org-graft-membership-motion/api'
+import { slice as documentMotion } from '@cella/org-graft-document-motion/api'
 import { slice as clientInvoice } from '@cella/org-graft-client-invoice/api'
 import { slice as invoiceTransaction } from '@cella/org-graft-invoice-transaction/api'
 import { slice as accountTransaction } from '@cella/org-graft-account-transaction/api'
@@ -35,13 +35,13 @@ import { slice as expense } from '@cella/org-expense/api'
 import { slice as bill } from '@cella/org-bill/api'
 import { slice as payslip } from '@cella/org-payslip/api'
 import { reporting } from '@cella/org-report/api'
-import { slice as accountDecision } from '@cella/org-graft-account-decision/api'
+import { slice as accountMotion } from '@cella/org-graft-account-motion/api'
 import { slice as accountMembership } from '@cella/org-graft-account-membership/api'
 import { slice as accountMembershipTransaction } from '@cella/org-graft-account-membership-transaction/api'
 import { slice as accountMembershipPayslipTransaction } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { slice as accountMembershipPatronage } from '@cella/org-graft-account-membership-patronage/api'
 import { slice as accountMembershipPatronageTransaction } from '@cella/org-graft-account-membership-patronage-transaction/api'
-import { slice as decisionPatronage } from '@cella/org-graft-decision-patronage/api'
+import { slice as motionPatronage } from '@cella/org-graft-motion-patronage/api'
 import { slice as patronagePayslip } from '@cella/org-graft-patronage-payslip/api'
 import { slice as patronageTimesheet } from '@cella/org-graft-patronage-timesheet/api'
 import { slice as patronageTransaction } from '@cella/org-graft-patronage-transaction/api'
@@ -54,10 +54,10 @@ import { slice as payslipTransaction } from '@cella/org-graft-payslip-transactio
 import { slice as meeting } from '@cella/org-meeting/api'
 import { slice as circleMeeting } from '@cella/org-graft-circle-meeting/api'
 import { slice as circleMeetingMembership } from '@cella/org-graft-circle-meeting-membership/api'
-import { slice as decisionMeeting } from '@cella/org-graft-decision-meeting/api'
+import { slice as meetingMotion } from '@cella/org-graft-meeting-motion/api'
 import { slice as documentMeeting } from '@cella/org-graft-document-meeting/api'
 import { slice as meetingMembership } from '@cella/org-graft-meeting-membership/api'
-import { slice as decisionEmploymentMembership } from '@cella/org-graft-decision-employment-membership/api'
+import { slice as employmentMembershipMotion } from '@cella/org-graft-employment-membership-motion/api'
 import { slice as documentMembership } from '@cella/org-graft-document-membership/api'
 import { slice as employmentMembership } from '@cella/org-graft-employment-membership/api'
 import { slice as employmentPayslip } from '@cella/org-graft-employment-payslip/api'
@@ -92,7 +92,7 @@ export const slices: Slice[] = [
   person,
   membership,
   circle,
-  decision,
+  motion,
   document,
   meeting,
   client,
@@ -112,10 +112,10 @@ export const slices: Slice[] = [
   reporting(port),
   log,
   circleMembership,
-  circleDecision,
-  circleDecisionMembership,
-  decisionMembership,
-  decisionDocument,
+  circleMotion,
+  circleMembershipMotion,
+  membershipMotion,
+  documentMotion,
   clientInvoice,
   clientProject,
   invoiceProject,
@@ -125,13 +125,13 @@ export const slices: Slice[] = [
   projectTimesheet,
   invoiceTransaction,
   accountTransaction,
-  accountDecision,
+  accountMotion,
   accountMembership,
   accountMembershipTransaction,
   accountMembershipPayslipTransaction,
   accountMembershipPatronageTransaction,
   accountMembershipPatronage,
-  decisionPatronage,
+  motionPatronage,
   patronageTransaction,
   patronagePayslip,
   patronageTimesheet,
@@ -142,7 +142,7 @@ export const slices: Slice[] = [
   payslipTimesheet,
   payslipTransaction,
   circleMeeting,
-  decisionMeeting,
+  meetingMotion,
   documentMeeting,
   meetingMembership,
   circleMeetingMembership,
@@ -150,7 +150,7 @@ export const slices: Slice[] = [
   employmentPayslip,
   employmentTimesheet,
   documentMembership,
-  decisionEmploymentMembership,
+  employmentMembershipMotion,
   circleMembershipTimesheet,
   circleExpenseMembership,
   circleMembershipPayslip,

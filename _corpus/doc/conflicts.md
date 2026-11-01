@@ -347,7 +347,7 @@ adopted version (`base: 'adopted'`). **Applied**: the comment and the doc
 now say so.
 
 A decision names the content it adopts by its canonical hash
-([trust](trust.md#what-a-decision-adopts)), so a version saved later with
+([trust](trust.md#what-a-motion-adopts)), so a version saved later with
 other content cannot ride on its consent, and one saved at the same
 frontier, holding the same content, can.
 

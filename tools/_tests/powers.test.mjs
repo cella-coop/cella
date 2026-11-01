@@ -43,7 +43,7 @@ test('a registered power that actions.ts does not name, or registered twice, is 
 async function check(sql) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-sql-'))
   try {
-    for (const feat of ['circle', 'decision', 'invoice', 'member']) {
+    for (const feat of ['circle', 'motion', 'invoice', 'member']) {
       mkdirSync(join(repo, 'apps/org/feats', feat, 'core/sql'), { recursive: true })
       writeFileSync(join(repo, 'apps/org/feats', feat, 'feat.toml'), `name = "${feat}"\n`)
     }
@@ -54,7 +54,7 @@ async function check(sql) {
       writeFileSync(join(repo, dir, '001.sql'), text)
     }
     const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [] }
-    const known = new Set(['cella', 'circle', 'invoice', 'member', 'decision', 'circle_member', 'circle_invoice_member', 'decision_member', 'invoice_member'])
+    const known = new Set(['cella', 'circle', 'invoice', 'member', 'motion', 'circle_member', 'circle_invoice_member', 'member_motion', 'invoice_member'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     return { errors, powers: found.powers, found }
   } finally {
@@ -142,14 +142,14 @@ test('an op with neither a power nor a check is refused: nothing is allowed by o
   assert.match(odd[0], /declares the check anyone, which is none of self, roll, seat, decided/)
 })
 
-test('a declared check is backed by SQL: a guard on the op, or for decided a row in decision.cites', () => {
+test('a declared check is backed by SQL: a guard on the op, or for decided a row in motion.cites', () => {
   const self = op('member:member:profile', null, null, 'self')
   const decided = op('member:member:admit', null, null, 'decided')
   assert.match(covered([self], { guards: [], cites: [] })[0], /member:member:profile checks self, but no SQL registers a guard on it in cella.guard/)
-  assert.match(covered([decided], { guards: [{ op: 'member:member:admit', owner: 'member' }], cites: [] })[0], /member:member:admit is decided, but no SQL lists it in decision.cites/)
+  assert.match(covered([decided], { guards: [{ op: 'member:member:admit', owner: 'member' }], cites: [] })[0], /member:member:admit is decided, but no SQL lists it in motion.cites/)
   assert.deepEqual(covered([self, decided], {
     guards: [{ op: 'member:member:profile', owner: 'member' }],
-    cites: [{ op: 'member:member:admit', owner: 'decision-member' }],
+    cites: [{ op: 'member:member:admit', owner: 'member-motion' }],
   }), [])
 })
 
@@ -178,9 +178,9 @@ test('a column that may hold personal data is registered personal or commented n
 test('the SQL check collects the literal guard and cites rows that back a check', async () => {
   const { errors, found } = await check({
     member: `INSERT INTO cella.guard (op, fn, owner) VALUES ('member:member:profile', 'member.own(jsonb)', 'member');`,
-    'decision-member': `INSERT INTO decision.cites (op, owner) VALUES ('member:member:admit', 'decision-member');`,
+    'member-motion': `INSERT INTO motion.cites (op, owner) VALUES ('member:member:admit', 'member-motion');`,
   })
   assert.deepEqual(errors, [])
   assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
-  assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'decision-member' }])
+  assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'member-motion' }])
 })

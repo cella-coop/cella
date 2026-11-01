@@ -59,13 +59,13 @@ export function agree(ops, registered) {
 }
 
 // The checks a label may declare, and what backs each: a guard registered
-// on the action in cella.guard, or for `decided` a row in decision.cites, to
-// which the graft that counts a decision's roll attaches its guard.
+// on the action in cella.guard, or for `decided` a row in motion.cites, to
+// which the graft that counts a motion's roll attaches its guard.
 const checks = new Set(['self', 'roll', 'seat', 'decided', 'first'])
 
 // Where an action is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
-// registers: `guards` in cella.guard and `cites` in decision.cites.
+// registers: `guards` in cella.guard and `cites` in motion.cites.
 export function covered(ops, found) {
   const errors = []
   const judged = new Set(found.guards.map((r) => r.op))
@@ -76,7 +76,7 @@ export function covered(ops, found) {
     } else if (!checks.has(o.check)) {
       errors.push(`${o.file}: ${o.op} declares the check ${o.check}, which is none of ${[...checks].join(', ')}`)
     } else if (o.check === 'decided' && !cited.has(o.op)) {
-      errors.push(`${o.file}: ${o.op} is decided, but no SQL lists it in decision.cites`)
+      errors.push(`${o.file}: ${o.op} is decided, but no SQL lists it in motion.cites`)
     } else if (o.check !== 'decided' && !judged.has(o.op)) {
       errors.push(`${o.file}: ${o.op} checks ${o.check}, but no SQL registers a guard on it in cella.guard`)
     }

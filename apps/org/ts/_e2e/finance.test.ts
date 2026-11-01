@@ -4,7 +4,7 @@
 // worker's approved time, Inès's though she is no member, approved and
 // paid; draws within a member's limit and refused
 // beyond it and once their capital is frozen; and the 2025 surplus
-// approved by the assembly's decision and distributed with the legal
+// approved by the assembly's motion and distributed with the legal
 // split. The log commits to each payslip's figures, a draw's amount and
 // an entry's time. The books balance throughout. Run by `cella test e2e finance`.
 
@@ -231,19 +231,19 @@ test('the log commits to pay, time and capital: October\'s payslips, Thomas\'s d
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
 
-test('the 2025 surplus is approved by d-2026-006, then distributed, and posts the legal split', async () => {
+test('the 2025 surplus is approved by m-2026-006, then distributed, and posts the legal split', async () => {
   const early = await distribute({ distribution: '2025' }, as(julien))
   assert.match(reason(early), /2025 is not approved by the assembly/)
-  const wrong = await approveSplit({ distribution: '2025', decision: 'd-2026-011' }, as(julien))
+  const wrong = await approveSplit({ distribution: '2025', motion: 'm-2026-011' }, as(julien))
   assert.equal(wrong.state, 'refused')
-  assert.match(reason(wrong), /d-2026-011 does not approve 2025|d-2026-011 is not closed/)
+  assert.match(reason(wrong), /m-2026-011 does not approve 2025|m-2026-011 is not closed/)
 
-  const approved = await approveSplit({ distribution: '2025', decision: 'd-2026-006' }, as(julien))
+  const approved = await approveSplit({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.equal(approved.state, 'settled', reason(approved))
   const judged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
   assert.deepEqual(
     [...new Set(judged.guards.map((r) => r.owner))].sort(),
-    ['account-patronage', 'circle-decision-membership', 'decision-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
+    ['account-patronage', 'circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
   const done = await distribute({ distribution: '2025' }, as(julien))
@@ -270,7 +270,7 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
 
   const again = await distribute({ distribution: '2025' }, as(julien))
   assert.match(reason(again), /the 2025 surplus was distributed on 2026-11-02/)
-  const twice = await approveSplit({ distribution: '2025', decision: 'd-2026-006' }, as(julien))
+  const twice = await approveSplit({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.match(reason(twice), /the 2025 surplus was distributed on 2026-11-02/)
 
   const parts = await all<{ amount: string }>(`SELECT amount FROM patronage_payslip.work_share WHERE distribution = '2025'`)

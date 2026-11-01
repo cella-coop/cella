@@ -3,7 +3,7 @@
 // scope's day and one scheduled meets after it; every link a meeting graft
 // holds resolves; a mark is an active member's, recorded by the circle's
 // secretary or a lead only for those seated in the circle, any other
-// marking themselves as a guest; an item tables a decision proposed by the
+// marking themselves as a guest; an item tables a motion proposed by the
 // meeting's day; a circle's setting is a share between 1 and 100 %.
 
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
@@ -15,7 +15,7 @@ export function meeting(read, fail) {
   const today = iso(read('scope').today)
   const circles = new Set((read('circle').circle ?? []).map((c) => c.id))
   const active = new Set((read('membership').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
-  const decisions = new Map((read('decision').decision ?? []).map((d) => [d.id, d]))
+  const motions = new Map((read('motion').motion ?? []).map((d) => [d.id, d]))
   const documents = new Set((read('document').document ?? []).map((d) => d.id))
   const meetings = new Map((read('meeting').meeting ?? []).map((m) => [m.id, m]))
   const positions = read('graft.circle-membership').position ?? []
@@ -66,17 +66,17 @@ export function meeting(read, fail) {
     }
   }
 
-  for (const t of read('graft.decision-meeting').tabled ?? []) {
+  for (const t of read('graft.meeting-motion').tabled ?? []) {
     const m = meetings.get(t.meeting)
-    const d = decisions.get(t.decision)
+    const d = motions.get(t.motion)
     const where = `${t.meeting}, item ${t.item}`
     if (!m || !(t.item >= 1 && t.item <= (m.item ?? []).length)) {
       fail(`${where}: no such item on the agenda`)
     }
     if (!d) {
-      fail(`${where}: no decision ${t.decision}`)
+      fail(`${where}: no motion ${t.motion}`)
     } else if (m && iso(d.proposed) > iso(m.at)) {
-      fail(`${where}: tables ${t.decision}, proposed on ${iso(d.proposed)}, after the meeting`)
+      fail(`${where}: tables ${t.motion}, proposed on ${iso(d.proposed)}, after the meeting`)
     }
   }
 

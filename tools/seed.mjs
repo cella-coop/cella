@@ -2,15 +2,15 @@
 // carried over from before the log, in one write that settles as the log's
 // first entry (the import feat's `import:state:carry`): the scope's address, people, their
 // memberships, employments and candidacies, their devices, circles, roles and mandates,
-// seats, decisions with their stances and what they decide, invitations'
+// seats, motions with their stances and what they decide, invitations'
 // first devices, documents with their versions, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
 // their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
-// log; a closed decision's cutoff is the number after its last stance.
-// Seats load before decisions, whose rolls are fixed from them as
-// circle-decision-membership's proposal fixes them; a closed decision counts
-// its roll as circle-decision-membership's close does; and
+// log; a closed motion's cutoff is the number after its last stance.
+// Seats load before motions, whose rolls are fixed from them as
+// circle-membership-motion's proposal fixes them; a closed motion counts
+// its roll as circle-membership-motion's close does; and
 // periods close after the journal is in. Each device's key is the TEST-ONLY key
 // derived from its address and label (`@cella/org-sign`'s `fixture`), so
 // the tests sign with the keys enrolled here.
@@ -26,7 +26,7 @@ import { fixture, signer } from '../apps/org/core/sign/ts/src/index.ts'
 import { carry } from '../apps/org/feats/import/core/ts/src/api/index.ts'
 import { work } from './seed/work.mjs'
 import { finance } from './seed/finance.mjs'
-import { invitations, motions } from './seed/governance.mjs'
+import { invitations, actions } from './seed/governance.mjs'
 import { meetings } from './seed/meeting.mjs'
 import { files } from './seed/file.mjs'
 
@@ -126,13 +126,13 @@ async function load() {
     ])
   }
 
-  // The co-op's own procedures, beside the decision feat's built-in ones,
+  // The co-op's own procedures, beside the motion feat's built-in ones,
   // before the circles that decide by them.
-  const procedures = read('decision').procedure ?? []
+  const procedures = read('motion').procedure ?? []
   for (const p of procedures) {
     await db.query(
-      'INSERT INTO decision.procedure (id, label, rule, share_num, share_den, quorum_num, quorum_den, ballot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [p.id, p.label, p.rule, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1, p.ballot ?? 'open'],
+      'INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+      [p.id, p.label, p.method, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1, p.ballot ?? 'open'],
     )
   }
 
@@ -165,30 +165,30 @@ async function load() {
     )
   }
 
-  const decisions = read('decision').decision ?? []
+  const motions = read('motion').motion ?? []
   let votes = 0
   let moved = 0
-  for (const d of decisions) {
+  for (const d of motions) {
     const taken = await db.query(
-      `INSERT INTO decision.decision (id, circle, title, rule, procedure, proposed, deadline, body)
-       SELECT $1, $2, $3, p.rule, p.id, $5, $6, $7 FROM decision.procedure p WHERE p.id = $4`,
+      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline, body)
+       SELECT $1, $2, $3, p.method, p.id, $5, $6, $7 FROM motion.procedure p WHERE p.id = $4`,
       [d.id, d.circle, d.title, d.procedure, day(d.proposed), day(d.deadline), d.body ?? ''],
     )
     if (!taken.rowCount) {
       throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)
     }
-    await db.query('SELECT circle_decision_membership.fix($1)', [d.id])
-    moved += await motions(db, d)
+    await db.query('SELECT circle_membership_motion.fix($1)', [d.id])
+    moved += await actions(db, d)
     for (const v of d.vote ?? []) {
       await db.query(
-        `INSERT INTO decision.vote (receipt, decision, member, stance, at) VALUES (${receipt}, $1, $2, $3, $4)`,
+        `INSERT INTO motion.vote (receipt, motion, member, stance, at) VALUES (${receipt}, $1, $2, $3, $4)`,
         [d.id, v.member, v.stance, day(v.at)],
       )
       votes++
     }
     if (d.closed) {
-      await db.query(`UPDATE decision.decision SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
-      await db.query('SELECT circle_decision_membership.count($1)', [d.id])
+      await db.query(`UPDATE motion.motion SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
+      await db.query('SELECT circle_membership_motion.count($1)', [d.id])
     }
   }
 
@@ -232,8 +232,8 @@ async function load() {
   }
 
   // The adoptions already made, each from the version adopted before it;
-  // what a decision asks to adopt is its motion.
-  const adoptions = read('graft.decision-document').adoption ?? []
+  // what a motion asks to adopt is its action.
+  const adoptions = read('graft.document-motion').adoption ?? []
   for (const a of adoptions) {
     await db.query(
       `INSERT INTO document.adoption (receipt, document, version, base, adopted)
@@ -337,12 +337,12 @@ async function load() {
   const filed = await files(db, read, day, dir)
   said =
     `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
-    `${decisions.length} decisions, ${votes} stances, ` +
-    `${moved} motions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+    `${motions.length} motions, ${votes} stances, ` +
+    `${moved} actions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`
   return {
     people: people.length, members: members.length, workers: workers.length, devices: devices.length, seats: positions.length,
-    decisions: decisions.length, stances: votes, versions, clients: clients.length, entries: entries.length, invoices: invoices.length,
+    motions: motions.length, stances: votes, versions, clients: clients.length, entries: entries.length, invoices: invoices.length,
   }
 }
 const carried = await carry({ from: basename(dir), load }, deps)

@@ -30,16 +30,16 @@ any document is, live, by the `edit` write, and saved as versions.
 - `document_meeting.keeps`, on `meeting:meeting:minute`: a write naming
   a document names the meeting's own minutes.
 
-Minutes bind as written unless their circle adopts them by decision
+Minutes bind as written unless their circle adopts them by motion
 (`circle-meeting`'s setting); then they are adopted as any document is,
-by `decision-document`'s adoption of a version by its hash, cited by a
-decision of the circle. This graft adds nothing to adoption.
+by `document-motion`'s adoption of a version by its hash, cited by a
+motion of the circle. This graft adds nothing to adoption.
 
 ## Shell
 
 - A meeting's page has a Minutes tab: the minutes' draft read with the
   document feat's `Reader`, with the embeds the meeting's slices draw,
-  this graft's meeting card and `decision-meeting`'s decision; how many
+  this graft's meeting card and `meeting-motion`'s motion; how many
   versions they have and which is adopted; and a link to write them in
   the editor. Until they are begun, beginning them.
 - The `meeting` embed: a meeting drawn inside a document as a card, its
@@ -50,8 +50,8 @@ decision of the circle. This graft adds nothing to adoption.
 
 The minutes of the assembly of 20 June 2026, `minutes-ag-2026-06-20`,
 version 1 saved on 22 June: the meeting's card, who was present, and the
-2025 accounts and the internal rules each with the decision that decided
-them, d-2026-006 and d-2026-007. The assembly adopts its minutes, and
+2025 accounts and the internal rules each with the motion that decided
+them, m-2026-006 and m-2026-007. The assembly adopts its minutes, and
 none adopts them yet: the 31 October assembly has them on its agenda.
 
 Slice tests: the junction's sides, and the guard.

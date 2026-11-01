@@ -1,5 +1,5 @@
 // The patronage scenario, end to end on a seeded Lanterne, through the
-// handlers: the 2025 distribution is approved by d-2026-006, and in that
+// handlers: the 2025 distribution is approved by m-2026-006, and in that
 // one write its work share divides among the ten members by what each was
 // paid in 2025, as the statutes' terms say; once finance distributes it,
 // half of each part buys whole shares, blocked five years, and the rest
@@ -7,7 +7,7 @@
 // reconcile to the cent; each member reads their own statement, and
 // finance the year's return. Then finance drafts new terms, a mix of pay
 // and time from 2027, the assembly decides them, and they are adopted
-// citing that decision, never one that does not move them nor over a year
+// citing that motion, never one that does not move them nor over a year
 // already approved. Last, the second year runs with no fixture SQL:
 // finance opens 2027's first month and closes 2026's, drafts the 2026
 // split, the assembly moves to approve it, and it is approved and
@@ -23,8 +23,8 @@ import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import { federation } from '@cella/org-report/api'
 import { reading as analytics } from './port.ts'
 import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
-import { vote } from '@cella/org-decision/api'
-import { close, propose } from '@cella/org-graft-circle-decision-membership/api'
+import { vote } from '@cella/org-motion/api'
+import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -96,7 +96,7 @@ test('before the approval, no statement is drawn, and the work share would divid
 
 test('approving 2025 divides the work share by pay, to the cent, in the same write, and is not yet distributed', async () => {
   await on('2026-11-02')
-  const done = await approve({ distribution: '2025', decision: 'd-2026-006' }, as(camille))
+  const done = await approve({ distribution: '2025', motion: 'm-2026-006' }, as(camille))
   settled(done)
 
   parts = await all<Part>(
@@ -219,7 +219,7 @@ test('the report feat\'s federation figures, read through the analytics shell, a
   }
 })
 
-test('finance drafts terms mixing pay and time from 2027, the assembly decides them, and they are adopted citing that decision alone', async () => {
+test('finance drafts terms mixing pay and time from 2027, the assembly decides them, and they are adopted citing that motion alone', async () => {
   const lead = await draftTerms({ from: 2027, salary: 60_00, hours: 40_00, equal: 0, capital: 50_00, interest: 3_50 }, as(hugo))
   assert.match(reason(lead), /distribute-surplus/)
   const short = await draftTerms({ from: 2027, salary: 60_00, hours: 30_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien))
@@ -231,30 +231,30 @@ test('finance drafts terms mixing pay and time from 2027, the assembly decides t
   assert.deepEqual(await one(`SELECT salary::float8 AS salary, hours::float8 AS hours, interest::float8 AS interest, adopted FROM patronage.terms WHERE id = 'st-2027'`), { salary: 60, hours: 40, interest: 3.5, adopted: null })
   settled(await draftTerms({ from: 2025, salary: 50_00, hours: 50_00, equal: 0, capital: 50_00, interest: 0 }, as(julien)))
 
-  const early = await adopt({ terms: 'st-2025', decision: 'd-2026-006' }, as(camille))
-  assert.match(reason(early), /st-2025 would govern 2025, whose distribution is approved|d-2026-006 does not adopt st-2025/)
-  const astray = await adopt({ terms: 'st-2027', decision: 'd-2026-006' }, as(camille))
-  assert.match(reason(astray), /d-2026-006 does not adopt st-2027/)
+  const early = await adopt({ terms: 'st-2025', motion: 'm-2026-006' }, as(camille))
+  assert.match(reason(early), /st-2025 would govern 2025, whose distribution is approved|m-2026-006 does not adopt st-2025/)
+  const astray = await adopt({ terms: 'st-2027', motion: 'm-2026-006' }, as(camille))
+  assert.match(reason(astray), /m-2026-006 does not adopt st-2027/)
 
   const proposed = settled(
     await propose(
-      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', procedure: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'patronage', args: { terms: 'st-2027' } }] },
+      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', procedure: 'consent', deadline: '2026-11-16', body: '', actions: [{ kind: 'patronage', args: { terms: 'st-2027' } }] },
       as(camille),
     ),
   )
-  const decision = proposed.decision
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
-    settled(await vote({ decision, member, stance: 'consent' }, as(member)))
+  const motion = proposed.motion
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
-  const open = await adopt({ terms: 'st-2027', decision }, as(camille))
-  assert.match(reason(open), new RegExp(`${decision} is not closed`))
+  const open = await adopt({ terms: 'st-2027', motion }, as(camille))
+  assert.match(reason(open), new RegExp(`${motion} is not closed`))
 
   await on('2026-11-16')
-  settled(await close({ decision }, as(camille)))
-  const adopted = settled(await adopt({ terms: 'st-2027', decision }, as(camille)))
+  settled(await close({ motion }, as(camille)))
+  const adopted = settled(await adopt({ terms: 'st-2027', motion }, as(camille)))
   assert.equal(adopted.adopted, '2026-11-16')
   assert.deepEqual(await one(`SELECT patronage.terms_for(2026) AS a, patronage.terms_for(2027) AS b, patronage.basis_of('st-2027') AS basis`), { a: 'st-2021', b: 'st-2027', basis: 'mix' })
-  const again = await adopt({ terms: 'st-2027', decision }, as(camille))
+  const again = await adopt({ terms: 'st-2027', motion }, as(camille))
   assert.match(reason(again), /st-2027 were adopted on 2026-11-16/)
 })
 
@@ -293,25 +293,25 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
   assert.deepEqual(await one(`SELECT basis, cella.cents(surplus)::int AS surplus FROM patronage.distribution WHERE id = '2026'`), { basis: 'salary', surplus: 50_000_00 })
 
   const stray = await propose(
-    { circle: 'ag', title: 'Approve 2025 again', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2025' } }] },
+    { circle: 'ag', title: 'Approve 2025 again', procedure: 'consent', deadline: '2027-01-29', body: '', actions: [{ kind: 'distribution', args: { distribution: '2025' } }] },
     as(camille),
   )
   assert.match(reason(stray), /2025 was approved on /)
   const proposed = settled(
     await propose(
-      { circle: 'ag', title: 'Approve the 2026 distribution', procedure: 'consent', deadline: '2027-01-29', body: '', motions: [{ kind: 'distribution', args: { distribution: '2026' } }] },
+      { circle: 'ag', title: 'Approve the 2026 distribution', procedure: 'consent', deadline: '2027-01-29', body: '', actions: [{ kind: 'distribution', args: { distribution: '2026' } }] },
       as(camille),
     ),
   )
-  const decision = proposed.decision
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
-    settled(await vote({ decision, member, stance: 'consent' }, as(member)))
+  const motion = proposed.motion
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2027-01-29')
-  settled(await close({ decision }, as(camille)))
-  const old = await approve({ distribution: '2026', decision: 'd-2026-006' }, as(camille))
-  assert.match(reason(old), /d-2026-006 does not approve 2026/)
-  settled(await approve({ distribution: '2026', decision }, as(camille)))
+  settled(await close({ motion }, as(camille)))
+  const old = await approve({ distribution: '2026', motion: 'm-2026-006' }, as(camille))
+  assert.match(reason(old), /m-2026-006 does not approve 2026/)
+  settled(await approve({ distribution: '2026', motion }, as(camille)))
   const shared = await one<{ n: number; cents: number }>(
     `SELECT count(*)::int AS n, sum(cella.cents(amount))::int AS cents FROM patronage.part WHERE distribution = '2026' AND basis = 'salary'`,
   )

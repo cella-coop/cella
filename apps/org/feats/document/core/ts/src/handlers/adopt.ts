@@ -8,7 +8,7 @@ const op = 'document:document:adopt' satisfies keyof typeof actions
 // Makes a version binding, on the verdict date; the log commits to the
 // version's hash, the content adopted. The guards on this op decide:
 // `document.adopts`, that the version is the document's and its base is
-// still the adopted version; the grafts', that the cited decision asks
+// still the adopted version; the grafts', that the cited motion asks
 // for this content, closed and passed.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {
@@ -25,6 +25,6 @@ export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof a
       const r = rows[0]
       return { document: input.document, version: input.version, hash: r.hash ?? '', adopted: r.adopted, receipt: Number(r.receipt) }
     },
-    payload: (v) => ({ ...v, base: input.base, decision: input.decision }),
+    payload: (v) => ({ ...v, base: input.base, motion: input.motion }),
   })
 }

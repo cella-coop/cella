@@ -21,8 +21,8 @@ BEGIN ATOMIC
 END;
 
 -- membership:member:suspend, membership:member:exit — the write left the member
--- suspended, or exited, on the verdict date. That the cited decision asks
--- it is the decision-membership graft's guard on the same ops.
+-- suspended, or exited, on the verdict date. That the cited motion asks
+-- it is the membership-motion graft's guard on the same ops.
 CREATE FUNCTION membership.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

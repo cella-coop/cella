@@ -49,7 +49,7 @@ surplus split, then the assembly.
 | Five to eight disconnected tools; the same data typed twice | critical | one cooperative workspace: books, invoices, decisions and members in one scope |
 | Year-end surplus split in a spreadsheet, opaque to members | critical | `patronage`, a feat of its own: each year's distribution, its split checked against the law and approved by signed vote, the work share divided by the statutes' terms in that write, then distributed by finance into the books and the associates' capital; a statement for each worker and the year's return to the federation |
 | Capital accounts no accounting tool models | critical | capital as accounts, balances from the journal; a subscription paid in at once or in instalments from pay, what is left to pay on 1012, and a departed associate's capital repaid on the statutes' schedule |
-| Decisions scattered across email, chat and forms | high | `decision`, with outcomes folded from signed votes |
+| Decisions scattered across email, chat and forms | high | `motion`, with outcomes folded from signed votes |
 | No live view of margins; overruns found late | high | each project's margin, live: invoiced less its time's cost and its expenses, its budget burn and forecasts at completion, and the projects to watch past the co-op's thresholds |
 | Time tracking resented, yet patronage depends on it | medium | `timesheet`, entry by entry; a weekly grid is not built |
 | New members do not understand what they own | medium | a member's page among the people: what joining asks, step by step, each kept by the slice that knows it, and what they own and decide, read back as sentences from the statutes' terms, their seats and their mandates |
@@ -109,9 +109,9 @@ What the first target needs that the org app does not do yet, by severity:
   concerns, who uploaded it and whoever holds a power over what it
   records; files in documents are not built. Each member's inbox gathers
   what waits on them, counted in the sidebar; the home is a dashboard of
-  widgets pinned from many collections; a decision is taken by a
+  widgets pinned from many collections; a motion is decided by a
   procedure, consent, a majority, two thirds or the co-op's own share of
-  the votes cast, with a quorum, chosen per circle and per decision.
+  the votes cast, with a quorum, chosen per circle and per motion.
 
 ## The full profiles
 
@@ -129,16 +129,16 @@ government](users/09-large-gov.md).
 
 | Segment | Size | Takes first | Differs by |
 |---|---|---|---|
-| Professional partnerships (law, audit, medicine) | 2–50 partners | `account`, `decision` | profit formulas with many factors; votes weighted by equity |
+| Professional partnerships (law, audit, medicine) | 2–50 partners | `account`, `motion` | profit formulas with many factors; votes weighted by equity |
 | Producer and freelancer co-ops | 5–50 producers | `invoice`, `account` | patronage by volume traded; members are busy, governance light |
 | Freelancers | 1 | `invoice`, `client` | not member-governed; the on-ramp to forming a co-op |
-| Industrial worker co-ops | 50–250 | `account`, `decision` | shifts, safety, delegated governance |
-| Multi-stakeholder co-ops (SCIC) | 50–250 | `circle`, `decision` | colleges with weighted votes and their own patronage basis |
+| Industrial worker co-ops | 50–250 | `account`, `motion` | shifts, safety, delegated governance |
+| Multi-stakeholder co-ops (SCIC) | 50–250 | `circle`, `motion` | colleges with weighted votes and their own patronage basis |
 | Agricultural co-ops | 50–250 | `account`, `invoice` | pool pricing, seasons, revolving capital |
-| Consumer co-ops | 500+ | `member`, `decision` | mass membership, delegate assemblies |
-| Collectives, housing co-ops, mutual aid | 3–50 | `decision`, `document` | consensus, often no legal entity, shared property |
-| Parties, unions, professional bodies | 50–250 | `member`, `decision` | branches, delegates, dues, congresses |
+| Consumer co-ops | 500+ | `member`, `motion` | mass membership, delegate assemblies |
+| Collectives, housing co-ops, mutual aid | 3–50 | `motion`, `document` | consensus, often no legal entity, shared property |
+| Parties, unions, professional bodies | 50–250 | `member`, `motion` | branches, delegates, dues, congresses |
 | Federations and large associations | 250+ | `member`, `circle` | members are organisations; joint scopes at rung 5 |
-| Councils, citizen assemblies, participatory budgets | 5–250 | `decision`, `document` | public records, sortition, roll-call votes |
+| Councils, citizen assemblies, participatory budgets | 5–250 | `motion`, `document` | public records, sortition, roll-call votes |
 
 Large parliaments are out of scope.

@@ -2,9 +2,9 @@ CREATE SCHEMA circle_meeting;
 
 -- How a circle meets: the share of its seats that must be present for a
 -- meeting to be quorate, in percent, and whether its minutes are adopted
--- by decision before they bind. A circle with no row here needs half its
+-- by motion before they bind. A circle with no row here needs half its
 -- seats and keeps its minutes as written. Set by the seed until a
--- decision sets it.
+-- motion sets it.
 CREATE TABLE circle_meeting.setting (
   circle text PRIMARY KEY,
   quorum integer NOT NULL DEFAULT 50 CHECK (quorum BETWEEN 1 AND 100),

@@ -1,5 +1,5 @@
-// fixture check, governance: a mock co-op's decisions decide what can be
-// decided. A motion names a kind a graft registers, and its arguments
+// fixture check, governance: a mock co-op's motions decide what can be
+// decided. An action names a kind a graft registers, and its arguments
 // resolve: a member to admit is invited and subscribes shares, one to
 // suspend or let go is a member; a seat names a circle and a member; the links
 // check a version to adopt and a distribution to approve. Every
@@ -11,9 +11,9 @@ const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'gr
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
   const circles = new Set((read('circle').circle ?? []).map((c) => c.id))
-  for (const d of read('decision').decision ?? []) {
-    for (const m of d.motion ?? []) {
-      const where = `decision ${d.id}, motion ${m.kind}`
+  for (const d of read('motion').motion ?? []) {
+    for (const m of d.action ?? []) {
+      const where = `motion ${d.id}, action ${m.kind}`
       const a = m.args ?? {}
       if (!kinds.has(m.kind)) {
         fail(`${where}: no graft registers the kind ${m.kind}`)

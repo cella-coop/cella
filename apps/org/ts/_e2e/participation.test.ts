@@ -2,7 +2,7 @@
 // handlers and the built shell: Camille puts an amendment of the statutes
 // to the assembly by its extraordinary procedure, two thirds of the votes
 // cast once half take part, and it falls short of its quorum, then of its
-// share, though more are for than against. On d-2026-011 she asks Malik,
+// share, though more are for than against. On m-2026-011 she asks Malik,
 // by name, what would win his consent, linking the rate card; the mention
 // waits in his inbox until he answers, and the text stays out of the log.
 // Each member's inbox holds what waits on them, counted in the sidebar;
@@ -15,10 +15,10 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { procedures, vote } from '@cella/org-decision/api'
-import { terms } from '@cella/org-decision/models'
+import { procedures, vote } from '@cella/org-motion/api'
+import { terms } from '@cella/org-motion/models'
 import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
-import { close, propose } from '@cella/org-graft-circle-decision-membership/api'
+import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
 import { book } from '@cella/org-graft-project-timesheet/api'
 import { submit } from '@cella/org-graft-employment-timesheet/api'
 import type { Deps } from '@cella/org-db'
@@ -60,8 +60,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
-const turnout = async (d: string) => one('SELECT counted, given, quorate FROM circle_decision_membership.turnout($1)', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
+const turnout = async (d: string) => one('SELECT counted, given, quorate FROM circle_membership_motion.turnout($1)', [d])
 // A page as text, its tags gone.
 const read = async (path: string, actor?: string) => {
   const { status, text } = await shell.page(path, actor)
@@ -83,39 +83,39 @@ after(async () => {
 })
 
 test('Lanterne decides by consent, majority, two thirds and election, and by its statutes’ two assemblies', async () => {
-  const rows = await all(`SELECT id, rule, share_num, share_den, quorum_num, quorum_den FROM decision.procedure ORDER BY id`)
+  const rows = await all(`SELECT id, method, share_num, share_den, quorum_num, quorum_den FROM motion.procedure ORDER BY id`)
   assert.deepEqual(rows, [
-    { id: 'consent', rule: 'consent', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
-    { id: 'election', rule: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
-    { id: 'extraordinary', rule: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2 },
-    { id: 'majority', rule: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
-    { id: 'ordinary', rule: 'majority', share_num: null, share_den: null, quorum_num: 1, quorum_den: 4 },
-    { id: 'two-thirds', rule: 'majority', share_num: 2, share_den: 3, quorum_num: 0, quorum_den: 1 },
+    { id: 'consent', method: 'consent', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
+    { id: 'election', method: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
+    { id: 'extraordinary', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2 },
+    { id: 'majority', method: 'majority', share_num: null, share_den: null, quorum_num: 0, quorum_den: 1 },
+    { id: 'ordinary', method: 'majority', share_num: null, share_den: null, quorum_num: 1, quorum_den: 4 },
+    { id: 'two-thirds', method: 'majority', share_num: 2, share_den: 3, quorum_num: 0, quorum_den: 1 },
   ])
   // The New form offers each in words.
   const offered = (await procedures(app)).map((p) => `${p.label}: ${terms(p)}`)
   assert.ok(offered.includes('Extraordinary assembly: 2 in 3 of votes cast, quorum 1 in 2'), offered.join('; '))
   assert.ok(offered.includes('Two thirds: 2 in 3 of votes cast'))
   assert.ok(offered.includes('Ordinary assembly: majority, quorum 1 in 4'))
-  const refused = await shell.act('/decisions', 'propose', { circle: 'ag', procedure: 'acclamation', title: 'Cheer', deadline: '2026-10-31', body: '' }, camille)
-  assert.match(reason(refused), /a decision is taken by a procedure of the co-op’s, not “acclamation”/)
+  const refused = await shell.act('/motions', 'propose', { circle: 'ag', procedure: 'acclamation', title: 'Cheer', deadline: '2026-10-31', body: '' }, camille)
+  assert.match(reason(refused), /a motion is taken by a procedure of the co-op’s, not “acclamation”/)
 })
 
 test('an amendment by the extraordinary assembly: short of its quorum, then of its two thirds, though more are for', async () => {
   const proposed = settled(
     await propose(
-      { circle: 'ag', title: 'Amend the statutes: the work share paid in December', procedure: 'extraordinary', deadline: '2026-10-31', body: '', motions: [] },
+      { circle: 'ag', title: 'Amend the statutes: the work share paid in December', procedure: 'extraordinary', deadline: '2026-10-31', body: '', actions: [] },
       as(camille),
     ),
   )
-  const d = proposed.decision
-  assert.deepEqual(await one('SELECT rule, procedure FROM decision.decision WHERE id = $1', [d]), { rule: 'majority', procedure: 'extraordinary' })
+  const d = proposed.motion
+  assert.deepEqual(await one('SELECT method, procedure FROM motion.motion WHERE id = $1', [d]), { method: 'majority', procedure: 'extraordinary' })
   for (const member of assembly.slice(0, 4)) {
-    settled(await vote({ decision: d, member, stance: 'for' }, as(member)))
+    settled(await vote({ motion: d, member, stance: 'for' }, as(member)))
   }
   assert.deepEqual(await turnout(d), { counted: 10, given: 4, quorate: false })
   assert.equal(await passes(d), false)
-  assert.match(await read(`/decisions/${d}`, camille), /does not pass by extraordinary assembly, short of its quorum.*4 of 10, quorum 1 in 2/)
+  assert.match(await read(`/motions/${d}`, camille), /does not pass by extraordinary assembly, short of its quorum.*4 of 10, quorum 1 in 2/)
   for (const [member, stance] of [
     [assembly[4], 'for'],
     [assembly[5], 'for'],
@@ -123,26 +123,26 @@ test('an amendment by the extraordinary assembly: short of its quorum, then of i
     [assembly[7], 'against'],
     [assembly[8], 'against'],
   ] as const) {
-    settled(await vote({ decision: d, member, stance }, as(member)))
+    settled(await vote({ motion: d, member, stance }, as(member)))
   }
   // Six for and three against: at least two in three of the votes cast.
   assert.deepEqual(await turnout(d), { counted: 10, given: 9, quorate: true })
   assert.equal(await passes(d), true)
-  settled(await vote({ decision: d, member: assembly[9], stance: 'against' }, as(assembly[9])))
+  settled(await vote({ motion: d, member: assembly[9], stance: 'against' }, as(assembly[9])))
   assert.equal(await passes(d), false)
   await on('2026-10-31')
-  settled(await close({ decision: d }, as(camille)))
-  assert.match(await read(`/decisions/${d}`, camille), /rejected by extraordinary assembly/)
+  settled(await close({ motion: d }, as(camille)))
+  assert.match(await read(`/motions/${d}`, camille), /rejected by extraordinary assembly/)
   // The same stances carry a plain majority.
   assert.equal(
-    (await one<{ p: boolean }>(`SELECT cella.majority(v.member, v.stance, v.receipt) AS p FROM decision.vote v WHERE v.decision = $1`, [d])).p,
+    (await one<{ p: boolean }>(`SELECT cella.majority(v.member, v.stance, v.receipt) AS p FROM motion.vote v WHERE v.motion = $1`, [d])).p,
     true,
   )
   await on('2026-10-24')
 })
 
-test('deliberation on d-2026-011: Camille asks Malik, linking the rate card, and he answers', async () => {
-  const page = '/decisions/d-2026-011'
+test('deliberation on m-2026-011: Camille asks Malik, linking the rate card, and he answers', async () => {
+  const page = '/motions/m-2026-011'
   const asked = await shell.act(
     page,
     'post',
@@ -151,30 +151,30 @@ test('deliberation on d-2026-011: Camille asks Malik, linking the rate card, and
   )
   assert.equal(asked.state, 'settled', reason(asked))
   const message = await one<{ receipt: string; mentions: string[]; links: string[] }>(
-    `SELECT receipt::text, mentions, links FROM decision.message WHERE decision = 'd-2026-011'`,
+    `SELECT receipt::text, mentions, links FROM motion.message WHERE motion = 'm-2026-011'`,
   )
   assert.deepEqual([message.mentions, message.links], [['malik'], ['rate-card-2027@2']])
   // The text is Camille's words: the log commits to the mentions and the
   // links, not to what she said.
   const logged = await one<{ payload: Record<string, unknown> }>('SELECT cella.opened($1) AS payload', [asked.entry])
-  assert.deepEqual(Object.keys(logged.payload).sort(), ['decision', 'links', 'member', 'mentions', 'message', 'reply'])
+  assert.deepEqual(Object.keys(logged.payload).sort(), ['links', 'member', 'mentions', 'message', 'motion', 'reply'])
   assert.ok(!JSON.stringify(logged.payload).includes('solidarity'))
   const discussion = await read(`${page}?tab=discussion`, malik)
   assert.match(discussion, /Camille Martin .*Malik Benali what would it take for you to consent\? .*Rate card 2027/)
   assert.ok((await shell.page('/inbox', malik)).text.includes('Camille Martin mentioned you on Raise the day rate for 2027'))
   const answer = await shell.act(page, 'post', { body: 'If the rate card says when the solidarity rate applies. @camille?', reply: message.receipt }, malik)
   assert.equal(answer.state, 'settled', reason(answer))
-  assert.equal((await one<{ reply: string }>(`SELECT reply::text FROM decision.message WHERE member = $1`, [malik])).reply, message.receipt)
+  assert.equal((await one<{ reply: string }>(`SELECT reply::text FROM motion.message WHERE member = $1`, [malik])).reply, message.receipt)
   assert.ok(!(await shell.page('/inbox', malik)).text.includes('mentioned you on Raise the day rate'))
   assert.ok((await shell.page('/inbox', camille)).text.includes('Malik Benali mentioned you on Raise the day rate for 2027'))
 })
 
 test('a message names members and documents there are, is posted by the circle’s members, and not once it closes', async () => {
-  const post = (body: string, actor = camille, page = '/decisions/d-2026-011') => shell.act(page, 'post', { body, reply: '' }, actor)
+  const post = (body: string, actor = camille, page = '/motions/m-2026-011') => shell.act(page, 'post', { body, reply: '' }, actor)
   assert.match(reason(await post('Ask @nadia.')), /@nadia names no one member/)
   assert.match(reason(await post('See [[the-moon]].')), /\[\[the-moon\]\] names no document/)
-  assert.match(reason(await post('From the web circle.', thomas)), /thomas@lanterne.example holds no seat in coordination, so may not post d-2026-011/)
-  assert.match(reason(await post('Too late.', camille, '/decisions/d-2026-006')), /d-2026-006 is closed/)
+  assert.match(reason(await post('From the web circle.', thomas)), /thomas@lanterne.example holds no seat in coordination, so may not post m-2026-011/)
+  assert.match(reason(await post('Too late.', camille, '/motions/m-2026-006')), /m-2026-006 is closed/)
 })
 
 test('each member’s inbox holds what waits on them, counted in the sidebar', async () => {
@@ -190,7 +190,7 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
   }
   const count = (text: string) => Number(/aria-label="(\d+) waiting"/.exec(text)?.[1] ?? 0)
   const before = count(malik1)
-  settled(await vote({ decision: 'd-2026-012', member: malik, stance: 'consent' }, as(malik)))
+  settled(await vote({ motion: 'm-2026-012', member: malik, stance: 'consent' }, as(malik)))
   const malik2 = (await shell.page('/inbox', malik)).text
   assert.ok(!malik2.includes('Admit Inès Haddad as a member'))
   assert.equal(count(malik2), before - 1)
@@ -214,13 +214,13 @@ test('the home shows the co-op’s figures from several collections and its repo
   const reports = await analytics(su, '54373', '2026-10-24')
   await shell.start('2026-10-24', reports.env)
   const home = await read('/', camille).finally(() => reports.stop())
-  for (const title of ['Cash', 'Owed by clients', 'Overdue', 'Margin on projects', 'Open decisions', 'Meetings ahead', 'Invoiced by month', 'Projects by watch']) {
+  for (const title of ['Cash', 'Owed by clients', 'Overdue', 'Margin on projects', 'Open motions', 'Meetings ahead', 'Invoiced by month', 'Projects by watch']) {
     assert.ok(home.includes(title), title)
   }
   assert.match(home, /Margin on projects Project margins/)
   assert.ok(!home.includes('analytics shell'), 'every pin was read')
-  const open = (await one<{ n: number }>(`SELECT count(*)::int AS n FROM decision.decision WHERE closed IS NULL`)).n
-  assert.match(home, new RegExp(`Open decisions Decisions ${open} `))
+  const open = (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.motion WHERE closed IS NULL`)).n
+  assert.match(home, new RegExp(`Open motions Motions ${open} `))
   const own = [
     { collection: 'timesheets', kind: 'kpi', title: 'Hours logged', measure: { op: 'sum', field: 'hours' } },
     { collection: 'nowhere', kind: 'kpi', title: 'Lost', measure: { op: 'count' } },

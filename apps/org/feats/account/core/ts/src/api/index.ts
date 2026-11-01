@@ -15,7 +15,7 @@ export { report, reports } from '../drivers/report.ts'
 // next period, and
 // closing one, which `account.closes` decides and after which nothing
 // posts into it, and adopting capital clauses, which cites the members'
-// decision.
+// motion.
 export const slice: Slice = {
   name: 'account',
   collections: {
@@ -38,7 +38,7 @@ export const slice: Slice = {
       list: terms,
       item: term,
       actions: {
-        adopt: action('account:terms:adopt', (form, id) => ({ terms: id ?? '', decision: form.get('decision') }), adopt),
+        adopt: action('account:terms:adopt', (form, id) => ({ terms: id ?? '', motion: form.get('motion') }), adopt),
       },
     },
   },

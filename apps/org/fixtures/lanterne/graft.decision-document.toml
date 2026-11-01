@@ -1,9 +1,0 @@
-# The adoptions already made, each by the decision whose motion asked to
-# adopt that version (`decision.toml`). The internal rules were adopted
-# with d-2026-007; the rate card is still up with d-2026-011.
-
-[[adoption]]
-decision = "d-2026-007"
-document = "internal-rules"
-version = "internal-rules@3"
-adopted = 2026-06-20

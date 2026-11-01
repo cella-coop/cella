@@ -3,7 +3,7 @@ CREATE SCHEMA project;
 -- An initiative: what it is, the circle that runs it, when it started and
 -- is due, and its budget, the pot its shares and its time are spent
 -- against. A project with no budget has none set yet. `circle` names the
--- circle as text, as a decision does; an archived project is kept for the
+-- circle as text, as a motion does; an archived project is kept for the
 -- books and hidden from lists.
 CREATE TABLE project.project (
   id text PRIMARY KEY CHECK (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),

@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -122,7 +122,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   (`models/calendar.ts`). A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
-  (`on`) and span; circles and projects open as a gallery, decisions and
+  (`on`) and span; circles and projects open as a gallery, motions and
   tasks as a board, timesheets as a table, meetings as a calendar of
   months. A board move is
   a write only where a slice declares it (`shifts`: the field, the
@@ -165,7 +165,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
   bare one in the first, and an extension's blocks join the owner's
   tabs or add their own. A tab earns its place only as a genuinely
-  different view: decisions have Overview and Stances; documents and
+  different view: motions have Overview and Stances; documents and
   invoices have one. Esc goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
@@ -310,7 +310,7 @@ address), `repin` putting them back where the first of them stood.
 
 `App`, `Owned`, `Added`, `View`, `Page`, `Column`, `Prop`, `Link`, `Event`,
 `Block` and `Embed` describe a slice's client side; an `Embed` is what a
-slice draws inside another's item (a decision inside a document), which a
+slice draws inside another's item (a motion inside a document), which a
 graft declares on the page it extends and the detail view hands every
 block as `embeds`; `Viewer` who looks, the signed-in person and the
 device their session signs with, which the detail view hands every block

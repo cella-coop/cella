@@ -128,10 +128,10 @@ export async function accept(input: Accept, deps: Deps): Out<'membership:member:
   return write(deps, accepting(input))
 }
 
-// A suspension or an exit, each citing the decision that asks it. The
+// A suspension or an exit, each citing the motion that asks it. The
 // status moves only along its lifecycle (`membership.moves`); `membership.ends`
-// checks the write moved it, the decision-membership graft's guard that the
-// cited decision asks it, circle-decision-membership's that it carried.
+// checks the write moved it, the membership-motion graft's guard that the
+// cited motion asks it, circle-membership-motion's that it carried.
 // An exit is the hook the books hang on: it sets `status` to `exited` and
 // `exited` to the verdict date in its transaction, so a graft freezing
 // the member's capital attaches a trigger to that update, or a guard to
@@ -151,7 +151,7 @@ function ending<O extends 'membership:member:suspend' | 'membership:member:exit'
       )
       return { member: input.member, on: rows[0]?.on ?? '' }
     },
-    payload: (v) => ({ member: v.member, decision: input.decision }),
+    payload: (v) => ({ member: v.member, motion: input.motion }),
   }
 }
 

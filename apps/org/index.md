@@ -26,10 +26,10 @@ serves one scope: a co-op, a joint circle of co-ops, or a federation.
 
 `cella serve` shows Lanterne from the dev database. The sidebar's head
 is Home, the co-op's dashboard of widgets pinned from its collections
-and its reports, the cash, what clients owe, the projects' margins, the decisions open
+and its reports, the cash, what clients owe, the projects' margins, the motions open
 and the meetings ahead until a viewer pins their own, and the Inbox,
 what waits on the acting person, its count beside it. Each feat's
-collection is a page in the sidebar: People, Circles, Decisions, Documents
+collection is a page in the sidebar: People, Circles, Motions, Documents
 and Meetings (governance); Clients, Projects, Tasks and Timesheets (work);
 Invoices, Accounts, Periods, Allocations, Terms, Statements, Reports,
 Transactions, Expenses and Payslips (finance);
@@ -44,16 +44,16 @@ What it writes, as the member picked in the user menu (dev only), each
 showing its outcome, Settled with its log entry or Refused with the
 guard's reason:
 
-- an invitation carrying the invitee's first device; a new decision, by
+- an invitation carrying the invitee's first device; a new motion, by
   its circle's procedure or another, consent, a majority, two thirds or
   one of the co-op's own with its quorum, with what it decides: admitting, suspending or
   letting go a member, seating or unseating one, nesting a circle,
   granting or revoking a mandate, proposed from the New form or from a
   member's or a circle's page;
-- a stance on an open decision, and closing it, which in the same verdict
-  admits and seats the members a passing decision admits and enrols the
+- a stance on an open motion, and closing it, which in the same verdict
+  admits and seats the members a passing motion admits and enrols the
   devices their invitations carried, then carries out what else it
-  decides; a message on an open decision's discussion, perhaps a reply,
+  decides; a message on an open motion's discussion, perhaps a reply,
   mentioning members and linking documents;
 - an edit of a document's draft in the block editor, live: each member's
   edits go as Loro updates through the `edit` write and reach everyone
@@ -61,7 +61,7 @@ guard's reason:
   database names by its canonical hash; a comment; a new document;
 - a meeting of a circle, scheduled by a power that reaches it; its
   agenda drawn up by the circle's members, its items dragged into order,
-  a decision tabled; members marking themselves present, excused or
+  a motion tabled; members marking themselves present, excused or
   absent and the secretary recording those seated; held or cancelled
   (ordered), the hold fixing the agenda and who came; its minutes begun
   as a document opening on the meeting's card and agenda, then written
@@ -89,11 +89,11 @@ guard's reason:
 - a month's pay run prepared from every worker's approved time, member
   or not, approved and paid, each posted; a member's draw on their own
   account, within their limit; a year's distribution approved, citing the
-  decision that approved its split, its work share divided among the
+  motion that approved its split, its work share divided among the
   workers as the year's terms say in the same write, then distributed by
   finance, posted and half of each associate's part employed in shares;
   the statutes' patronage and capital terms adopted, each citing the
-  decision that moved them;
+  motion that moved them;
   money an associate pays in on their subscription, recorded from the
   bank; their subscription spread over monthly instalments from their
   pay, on their own page, each withheld when a run is paid; and a
@@ -125,7 +125,7 @@ employment, and the grafts that join a person's role name the child.
 | `person/membership` | governance | 1 | a person's membership, invited to exited |
 | `person/employment` | work | 1 | a person's employment, member or not, and their contract |
 | `circle` | governance | 1 | nested units, positions, roles and mandates |
-| `decision` | governance | 1 | proposals, votes, computed outcomes |
+| `motion` | governance | 1 | proposals, votes, computed outcomes |
 | `document` | governance | 1 | drafts, versions and adoption |
 | `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, the statements' rubrics and the spans they are drawn for |
 | `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
@@ -158,7 +158,7 @@ and admit a member by vote (ordered).
 
 | Graft | What it joins |
 |---|---|
-| `account-decision` | the capital terms and the decision that adopts them |
+| `account-motion` | the capital terms and the motion that adopts them |
 | `account-membership-patronage-transaction` | the shares the work share buys, credited to the associates' capital when a distribution posts; what each part became; a year's return to the federation |
 | `account-membership-patronage` | each worker's part of the work share split between shares and cash; whose a statement is; the work share's terms read back on a person's page |
 | `account-membership-payslip-transaction` | a subscription paid in monthly instalments withheld from pay, posted in the run's payment |
@@ -166,8 +166,8 @@ and admit a member by vote (ordered).
 | `account-membership` | who holds each capital account, the share's value from the statutes' terms, draw limits and the freeze on exit; the capital joining asks, and what a member owns, read back from the terms |
 | `account-patronage` | a year's split approved only once its books are closed |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; the income statement and the balance sheet; the books carried over from a FEC |
-| `circle-decision-membership` | a decision's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
-| `circle-decision` | nesting circles and granting and revoking mandates by decision |
+| `circle-membership-motion` | a motion's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
+| `circle-motion` | nesting circles and granting and revoking mandates by motion |
 | `circle-expense-membership` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
 | `circle-file-membership` | who opens a personal file by a power over what it records |
 | `circle-meeting-membership` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it |
@@ -178,11 +178,11 @@ and admit a member by vote (ordered).
 | `circle-membership` | positions: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
-| `decision-document` | adoption of a document version by a decision |
-| `decision-employment-membership` | a candidate's admission, proposed from their candidacy once their probation is over |
-| `decision-meeting` | the decisions a meeting's agenda tables, and where each stands |
-| `decision-membership` | admission, suspension and exit by a decision |
-| `decision-patronage` | a year's distribution and the decision that approves its split; the work share's terms and the decision that adopts them |
+| `document-motion` | adoption of a document version by a motion |
+| `employment-membership-motion` | a candidate's admission, proposed from their candidacy once their probation is over |
+| `meeting-motion` | the motions a meeting's agenda tables, and where each stands |
+| `membership-motion` | admission, suspension and exit by a motion |
+| `motion-patronage` | a year's distribution and the motion that approves its split; the work share's terms and the motion that adopts them |
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-membership` | who has read the co-op's adopted texts |
 | `employment-file` | a worker's employment records, filed by whoever hires |

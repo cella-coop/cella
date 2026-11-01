@@ -6,8 +6,8 @@
 # feats` refuses a foreign write this list does not name, and a line whose
 # write is gone, so the list only shrinks; nothing is added to it. Empty,
 # it goes.
-account-decision: 001-account-decision.sql writes decision.kind
-account-decision: 001-account-decision.sql writes decision.cites
+account-motion: 001-account-motion.sql writes motion.carries
+account-motion: 001-account-motion.sql writes motion.cites
 account-membership: account_membership.freezes() writes account.account
 account-membership: trigger freezes on membership.member
 account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes transaction.line
@@ -24,20 +24,20 @@ account-membership-transaction: account_membership_transaction.withdraws() write
 account-membership-transaction: account_membership_transaction.withdraws() writes transaction.line
 account-membership-transaction: trigger withdraws on membership.member
 account-transaction: trigger posts on transaction.line
-circle-decision: 001-circle-decision.sql writes decision.kind
-circle-decision: 001-circle-decision.sql writes decision.cites
-circle-decision-membership: trigger attach on decision.cites
-circle-decision-membership: 003-seats.sql writes decision.cites
-circle-decision-membership: 003-seats.sql writes decision.kind
-decision-document: 001-decision-document.sql writes decision.cites
-decision-document: 002-adopt.sql writes decision.kind
-decision-membership: 001-decision-membership.sql writes decision.kind
-decision-membership: 001-decision-membership.sql writes decision.cites
-decision-membership: 002-erase.sql writes decision.kind
-decision-membership: 002-erase.sql writes decision.cites
-decision-patronage: 001-decision-patronage.sql writes decision.cites
-decision-patronage: 001-decision-patronage.sql writes decision.kind
-decision-patronage: 002-distribution.sql writes decision.kind
+circle-motion: 001-circle-motion.sql writes motion.carries
+circle-motion: 001-circle-motion.sql writes motion.cites
+circle-membership-motion: trigger attach on motion.cites
+circle-membership-motion: 003-seats.sql writes motion.cites
+circle-membership-motion: 003-seats.sql writes motion.carries
+document-motion: 001-document-motion.sql writes motion.cites
+document-motion: 002-adopt.sql writes motion.carries
+membership-motion: 001-membership-motion.sql writes motion.carries
+membership-motion: 001-membership-motion.sql writes motion.cites
+membership-motion: 002-erase.sql writes motion.carries
+membership-motion: 002-erase.sql writes motion.cites
+motion-patronage: 001-motion-patronage.sql writes motion.cites
+motion-patronage: 001-motion-patronage.sql writes motion.carries
+motion-patronage: 002-distribution.sql writes motion.carries
 patronage-payslip: patronage_payslip.parts() writes patronage.part
 patronage-payslip: trigger parts_by_pay on patronage.distribution
 patronage-timesheet: patronage_timesheet.parts() writes patronage.part

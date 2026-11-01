@@ -1,19 +1,19 @@
 // The governance scenario, end to end on a seeded Lanterne, through the
 // handlers: Malik invites a friend by a link, which she takes up on her
 // laptop, enrolling it; the assembly admits her and the close seats her
-// in the same verdict, or refuses all of it; a suspension by decision stops a
+// in the same verdict, or refuses all of it; a suspension by motion stops a
 // member's writes; a nesting that would make a cycle is refused; a
-// mandate is granted by decision, and one beyond what the circle above
+// mandate is granted by motion, and one beyond what the circle above
 // holds is refused; and a lead approves the time of their own circle
 // alone, the treasurer everyone's. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { propose as proposeAlone, vote } from '@cella/org-decision/api'
-import { putting } from '@cella/org-graft-circle-decision/api'
-import type { Motion } from '@cella/org-graft-circle-decision/models'
-import { carried, close, propose, put } from '@cella/org-graft-circle-decision-membership/api'
+import { propose as proposeAlone, vote } from '@cella/org-motion/api'
+import { putting } from '@cella/org-graft-circle-motion/api'
+import type { Put } from '@cella/org-graft-circle-motion/models'
+import { carried, close, propose, put } from '@cella/org-graft-circle-membership-motion/api'
 import { grant } from '@cella/org-circle/api'
 import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
@@ -45,7 +45,7 @@ async function on(date: string) {
 const as = (actor: string): Deps =>
   actor === nadia ? { db: app, actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: app, actor, sign: sign(actor) }
 // What a circle's page proposes about it, put as the shell puts it.
-const putCircle = async (m: Motion, deps: Deps) => propose(await putting(m, deps.db), deps)
+const putCircle = async (m: Put, deps: Deps) => propose(await putting(m, deps.db), deps)
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -56,10 +56,10 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 const status = async (m: string) => (await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [m]))?.status
 
-// Every member on a decision's roll consents.
-async function consented(decision: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_decision_membership.roll WHERE decision = $1', [decision])) {
-    settled(await vote({ decision, member, stance: 'consent' }, as(member)))
+// Every member on a motion's roll consents.
+async function consented(motion: string) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 }
 
@@ -105,22 +105,22 @@ test('Malik invites Nadia with a link; she takes it up on her laptop, which sign
 
 test('only the assembly admits: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
   const astray = await propose(
-    { circle: 'coordination', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
+    { circle: 'coordination', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(camille),
   )
   assert.match(reason(astray), /only the assembly decides to admit a member, not coordination/)
-  // The decision feat's proposal alone fixes no roll, and is refused.
+  // The motion feat's proposal alone fixes no roll, and is refused.
   const alone = await proposeAlone(
-    { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', motions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
+    { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(malik),
   )
   assert.match(reason(alone), /'s proposal did not fix its roll: its roll is those seated in ag on the day it is proposed/)
 
   const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
-  admission = proposed.decision
-  assert.equal(admission, 'd-2026-013')
+  admission = proposed.motion
+  assert.equal(admission, 'm-2026-013')
   const d = await one<{ circle: string; title: string; roll: string }>(
-    `SELECT circle, title, (SELECT count(*) FROM circle_decision_membership.roll r WHERE r.decision = d.id) AS roll FROM decision.decision d WHERE id = $1`,
+    `SELECT circle, title, (SELECT count(*) FROM circle_membership_motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
     [admission],
   )
   assert.deepEqual(d, { circle: 'ag', title: 'Admit Nadia Benali as a member', roll: '10' })
@@ -129,44 +129,44 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
   // Admitting a person goes to a secret ballot: the log keeps each stance's
   // commitment and its actor, never the stance; a member reads their own
   // stance alone, and the tally is sealed until the close.
-  assert.equal((await one<{ ballot: string }>('SELECT ballot FROM decision.decision WHERE id = $1', [admission])).ballot, 'secret')
+  assert.equal((await one<{ ballot: string }>('SELECT ballot FROM motion.motion WHERE id = $1', [admission])).ballot, 'secret')
   const logged = await all<{ actor: string; stance: Record<string, unknown> }>(
-    `SELECT actor, form -> 'stance' AS stance FROM cella.log WHERE op = 'decision:decision:vote' AND form ->> 'decision' = $1`,
+    `SELECT actor, form -> 'stance' AS stance FROM cella.log WHERE op = 'motion:motion:vote' AND form ->> 'motion' = $1`,
     [admission],
   )
   assert.equal(logged.length, 10)
   assert.ok(logged.every((l) => typeof l.stance === 'object' && '$commit' in l.stance), JSON.stringify(logged[0]))
   await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
-  const read = (await app.query<{ member: string }>('SELECT member FROM decision.vote WHERE decision = $1', [admission])).rows
+  const read = (await app.query<{ member: string }>('SELECT member FROM motion.vote WHERE motion = $1', [admission])).rows
   assert.deepEqual(read, [{ member: camille }])
-  const tally = (await app.query('SELECT passes, counted, given, quorate FROM circle_decision_membership.tally($1)', [admission])).rows[0]
+  const tally = (await app.query('SELECT passes, counted, given, quorate FROM circle_membership_motion.tally($1)', [admission])).rows[0]
   assert.deepEqual(tally, { passes: null, counted: null, given: null, quorate: null })
   await app.query(`SELECT set_config('cella.actor', '', false)`)
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM decision.vote WHERE decision = $1', [admission])).n, '10')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM motion.vote WHERE motion = $1', [admission])).n, '10')
 })
 
 test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
   await on('2026-11-07')
   await su.query(`INSERT INTO circle_membership.position (circle, member, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
   const before = await head()
-  const refused = await close({ decision: admission }, as(camille))
+  const refused = await close({ motion: admission }, as(camille))
   assert.match(reason(refused), /nadia@lanterne\.example already sits in ag as member/)
   assert.equal(await head(), before)
   assert.equal(await status(nadia), 'invited')
-  assert.equal((await one<{ closed: string | null }>('SELECT closed FROM decision.decision WHERE id = $1', [admission])).closed, null)
+  assert.equal((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [admission])).closed, null)
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '1', 'her laptop, enrolled when she took up the invitation, is all she holds')
   await su.query(`DELETE FROM circle_membership.position WHERE member = $1`, [nadia])
 })
 
 test('the close admits Nadia and seats her in the assembly, in one verdict; she signs from the laptop she took up her invitation on', async () => {
   const before = await head()
-  const closed = settled(await close({ decision: admission }, as(camille)))
+  const closed = settled(await close({ motion: admission }, as(camille)))
   assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 20]])
   assert.equal(await head(), before + 1, 'one log entry')
   assert.equal(await status(nadia), 'active')
   // Closed, the secret ballot's tally opens to every member.
   assert.deepEqual(
-    (await app.query('SELECT passes, counted, given, quorate FROM circle_decision_membership.tally($1)', [admission])).rows[0],
+    (await app.query('SELECT passes, counted, given, quorate FROM circle_membership_motion.tally($1)', [admission])).rows[0],
     { passes: true, counted: 10, given: 10, quorate: true },
   )
   assert.deepEqual(
@@ -180,19 +180,19 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
   settled(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia)))
 })
 
-test('Chloé suspended by the assembly\'s decision: carried out after the close, her writes are refused', async () => {
+test('Chloé suspended by the assembly\'s motion: carried out after the close, her writes are refused', async () => {
   const proposed = settled(await put({ kind: 'suspend', args: { member: chloe }, deadline: '2026-11-14', body: '' }, as(camille)))
-  await consented(proposed.decision)
+  await consented(proposed.motion)
   await on('2026-11-14')
-  settled(await close({ decision: proposed.decision }, as(camille)))
-  const then = await carried(proposed.decision, as(camille))
+  settled(await close({ motion: proposed.motion }, as(camille)))
+  const then = await carried(proposed.motion, as(camille))
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['membership:member:suspend', 'settled']])
   assert.equal(await status(chloe), 'suspended')
 
   const logged = await log({ member: chloe, day: '2026-11-14', minutes: 60, billable: false }, as(chloe))
   assert.equal(logged.state, 'refused')
   const open = settled(await put({ kind: 'seat', args: { circle: 'marketing', member: nadia }, deadline: '2026-11-21', body: '' }, as(malik)))
-  const stance = await vote({ decision: open.decision, member: chloe, stance: 'object' }, as(chloe))
+  const stance = await vote({ motion: open.motion, member: chloe, stance: 'object' }, as(chloe))
   assert.match(reason(stance), /chloe@lanterne\.example is (not on the roll|not an active member)/)
 })
 
@@ -200,40 +200,40 @@ test('nesting Brand under Marketing settles; Marketing under Brand then makes a 
   await on('2026-11-14')
   const one_ = settled(await putCircle({ circle: 'brand', kind: 'nest', args: { parent: 'marketing' }, deadline: '2026-11-21', body: '' }, as(hugo)))
   const two = settled(await putCircle({ circle: 'marketing', kind: 'nest', args: { parent: 'brand' }, deadline: '2026-11-21', body: '' }, as(malik)))
-  for (const d of [one_.decision, two.decision]) {
-    assert.equal((await one<{ circle: string }>('SELECT circle FROM decision.decision WHERE id = $1', [d])).circle, 'coordination')
+  for (const d of [one_.motion, two.motion]) {
+    assert.equal((await one<{ circle: string }>('SELECT circle FROM motion.motion WHERE id = $1', [d])).circle, 'coordination')
     for (const m of coordination) {
-      settled(await vote({ decision: d, member: m, stance: 'consent' }, as(m)))
+      settled(await vote({ motion: d, member: m, stance: 'consent' }, as(m)))
     }
   }
   await on('2026-11-21')
-  settled(await close({ decision: one_.decision }, as(hugo)))
-  assert.deepEqual((await carried(one_.decision, as(hugo))).map((d) => [d.op, d.state]), [['circle:circle:nest', 'settled']])
+  settled(await close({ motion: one_.motion }, as(hugo)))
+  assert.deepEqual((await carried(one_.motion, as(hugo))).map((d) => [d.op, d.state]), [['circle:circle:nest', 'settled']])
   assert.deepEqual((await one<{ path: string[] }>(`SELECT path FROM circle.circle WHERE id = 'brand'`)).path, ['ag', 'coordination', 'marketing', 'brand'])
 
-  settled(await close({ decision: two.decision }, as(malik)))
-  const cycle = await carried(two.decision, as(malik))
+  settled(await close({ motion: two.motion }, as(malik)))
+  const cycle = await carried(two.motion, as(malik))
   assert.deepEqual(cycle.map((d) => [d.op, d.state]), [['circle:circle:nest', 'refused']])
   assert.match(cycle[0].reason ?? '', /brand is within marketing: nesting it there makes a cycle/)
   assert.equal((await one<{ parent: string }>(`SELECT parent FROM circle.circle WHERE id = 'marketing'`)).parent, 'coordination')
 })
 
-test('coordination grants the finance role send-quote by decision; a grant citing a decision that does not grant it is refused', async () => {
+test('coordination grants the finance role send-quote by motion; a grant citing a motion that does not grant it is refused', async () => {
   const proposed = settled(
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'send-quote', text: 'send a quote', limit: 5000 }, deadline: '2026-11-28', body: '' }, as(camille)),
   )
   for (const m of coordination) {
-    settled(await vote({ decision: proposed.decision, member: m, stance: 'consent' }, as(m)))
+    settled(await vote({ motion: proposed.motion, member: m, stance: 'consent' }, as(m)))
   }
   await on('2026-11-28')
-  settled(await close({ decision: proposed.decision }, as(camille)))
-  assert.deepEqual((await carried(proposed.decision, as(camille))).map((d) => [d.op, d.state]), [['circle:mandate:grant', 'settled']])
+  settled(await close({ motion: proposed.motion }, as(camille)))
+  assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['circle:mandate:grant', 'settled']])
   const granted = await one(
     `SELECT power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from" FROM circle.mandate WHERE role = 'finance' AND power = 'send-quote'`,
   )
   assert.deepEqual(granted, { power: 'send-quote', limit: 500000, from: '2026-11-28' })
 
-  const astray = await grant({ role: 'finance', power: 'sign-lease', text: 'sign leases', decision: proposed.decision }, as(camille))
+  const astray = await grant({ role: 'finance', power: 'sign-lease', text: 'sign leases', motion: proposed.motion }, as(camille))
   assert.match(reason(astray), /does not grant sign-lease to finance so capped/)
 })
 
@@ -258,11 +258,11 @@ test('a mandate beyond what the circle above holds is refused: finance may not a
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'approve-expense', text: 'approve expenses', limit: 3000 }, deadline: '2026-12-08', body: '' }, as(camille)),
   )
   for (const m of coordination) {
-    settled(await vote({ decision: proposed.decision, member: m, stance: 'consent' }, as(m)))
+    settled(await vote({ motion: proposed.motion, member: m, stance: 'consent' }, as(m)))
   }
   await on('2026-12-08')
-  settled(await close({ decision: proposed.decision }, as(camille)))
-  const out = await carried(proposed.decision, as(camille))
+  settled(await close({ motion: proposed.motion }, as(camille)))
+  const out = await carried(proposed.motion, as(camille))
   assert.deepEqual(out.map((d) => [d.op, d.state]), [['circle:mandate:grant', 'refused']])
   assert.match(out[0].reason ?? '', /grants approve-expense to finance beyond what ag holds of it/)
 })

@@ -60,12 +60,12 @@ export interface Held {
 }
 
 // A seat to add: a member in a circle, in a role or as a plain member, and
-// the decision that seats them, which the write cites.
+// the motion that seats them, which the write cites.
 export interface Add {
   circle: string
   member: string
   role: string | null
-  decision: string
+  motion: string
 }
 
 export interface Added {
@@ -73,7 +73,7 @@ export interface Added {
   since: string
 }
 
-// A seat to end, named as it was added, and the decision that ends it.
+// A seat to end, named as it was added, and the motion that ends it.
 export type Remove = Add
 
 export interface Removed {

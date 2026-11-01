@@ -52,19 +52,19 @@ Camille hires, and opens a new hire's candidacy for membership.
   time with the web circle, and has not yet marked the internal rules
   read, which every member has.
 - **Admission (ordered).** Inès, invited on 30 September, asks to join.
-  Seven members have consented to d-2026-012; Hugo objected, then
+  Seven members have consented to m-2026-012; Hugo objected, then
   consented two days later, and only his latest stance counts. The vote
   closes on 31 October; she took up her invitation on 1 October, on her
   phone.
 - **Rate card (confluent, then ordered).** The 2027 rate card has two
-  versions. Malik has commented on the second and objected to d-2026-011,
-  which would adopt it; the decision is open until 9 November.
+  versions. Malik has commented on the second and objected to m-2026-011,
+  which would adopt it; the motion is open until 9 November.
 - **Procedures.** Circles decide by consent. Beside consent, majority
   and two thirds, the statutes give the assembly two procedures: the
   ordinary assembly, a majority of the votes cast once a quarter of the
   associates take part, and the extraordinary, which amends the
   statutes, two thirds of the votes cast once half take part
-  (`decision.toml`; loi n° 78-763, as the CG Scop's model statutes put
+  (`motion.toml`; loi n° 78-763, as the CG Scop's model statutes put
   it, not checked on Légifrance).
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
@@ -74,14 +74,14 @@ Camille hires, and opens a new hire's candidacy for membership.
   are closed, October to December are open. The bank holds 39 296 € after
   October's rent and tools. Each member's capital, their shares at 50 €,
   is in an account of their own; each may draw up to 500 € on it. The
-  assembly approved the 2025 split of 61 400 € in June (d-2026-006), as
+  assembly approved the 2025 split of 61 400 € in June (m-2026-006), as
   loi 78-763, art. 33 allows: 27 630 € to the members for their work,
   divided by salary, 9 210 € to the legal reserve, 24 111,78 € to the
   development fund and 448,22 € as interest on capital, within the 3,5 %
   of the 13 000 € of capital the statutes pay at most (loi 47-1775, art.
   14, caps it at 5,36 % for the 2026 assembly); the result was
   carried over undistributed. The 2025 distribution (`patronage.toml`) is
-  a draft until its approval cites d-2026-006, which makes each worker's
+  a draft until its approval cites m-2026-006, which makes each worker's
   part; distributing it, posting it and crediting its shares, is Julien's
   to do as finance. The statutes' patronage terms divide the work share by
   pay and employ half of each member's part in shares, blocked five
@@ -147,12 +147,12 @@ Time is written as runs: one entry a working day from one day to another
 September and October; which project a run is for is
 `graft.project-timesheet.toml`'s.
 
-Meetings and their agendas are `meeting.toml`; who came, the decisions
+Meetings and their agendas are `meeting.toml`; who came, the motions
 items table, the minutes and each circle's quorum are its grafts' files;
 `tools/fixture/meeting.mjs` checks that a held meeting met by the
 scope's day and a scheduled one meets after it, that the secretary
 recorded only members seated in the circle, others marking themselves as
-guests, and that no item tables a decision before it was proposed.
+guests, and that no item tables a motion before it was proposed.
 
 Files are `file.toml`, each one's bytes in `files/` under its name, and
 what holds them its grafts' files. `import/` holds a sample of each kind

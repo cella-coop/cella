@@ -5,7 +5,7 @@
 // and opens his candidacy. Inès's member page lists what joining asks of
 // her, the texts, the capital, a device and the circles, and reads back
 // what she would own and decide; she marks the internal rules read, and
-// once d-2026-012 admits her every step but a working circle is done. In
+// once m-2026-012 admits her every step but a working circle is done. In
 // November she submits her October and finance approves it, and Bastien
 // logs his first day. His probation ends, he is invited, and his
 // admission is proposed from the form his candidacy filled in. Run by
@@ -14,7 +14,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { close } from '@cella/org-graft-circle-membership-motion/api'
 import { invite } from '@cella/org-membership/api'
 import { open } from '@cella/org-graft-employment-membership/api'
 import { log as work, submit } from '@cella/org-graft-employment-timesheet/api'
@@ -156,7 +156,7 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
   for (const says of [
     'Invited to join',
     'Admitted by the assembly',
-    'd-2026-012',
+    'm-2026-012',
     'Read Règlement intérieur',
     'Subscribe capital',
     'at least 20 shares of 50,00',
@@ -189,12 +189,12 @@ test('Inès marks the internal rules read, her own reading and no one else\'s', 
   assert.ok((await tab(ines, 'joining', ines)).includes('internal-rules@3, read 24 Oct 2026'))
 })
 
-test('once d-2026-012 admits her, every step of joining is done but a working circle, and her page reads back her shares, her seat and her powers', async () => {
+test('once m-2026-012 admits her, every step of joining is done but a working circle, and her page reads back her shares, her seat and her powers', async () => {
   await on('2026-10-31')
-  settled(await close({ decision: 'd-2026-012' }, as(camille)))
+  settled(await close({ motion: 'm-2026-012' }, as(camille)))
   const joining = await tab(ines, 'joining', ines)
   assert.equal(joining.match(/to do/g)?.length, 1, 'only a working circle is left to join')
-  assert.ok(joining.includes('a circle seats a member by its own decision'))
+  assert.ok(joining.includes('a circle seats a member by its own motion'))
   for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assemblée générale']) {
     assert.ok(joining.includes(says), `joining says ${says}`)
   }
@@ -233,7 +233,7 @@ test('Bastien\'s probation ends, he is invited, and his admission is proposed fr
     deadline: '2027-05-17',
     body: 'Bastien Roux has worked with the co-op since 2 November 2026.',
   }, camille)
-  assert.deepEqual([proposed.op, proposed.state], ['decision:decision:propose', 'settled'])
+  assert.deepEqual([proposed.op, proposed.state], ['motion:motion:propose', 'settled'])
   const after = await tab(bastien, 'joining', camille)
   assert.ok(!after.includes('Propose the admission'), 'no second proposal while it is open')
   assert.match(after, /moves to admit Bastien; it is open until 17 May 2027/)

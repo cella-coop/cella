@@ -12,7 +12,7 @@ CREATE SCHEMA patronage;
 -- what is employed so is blocked five years from the first day of the
 -- sixth month after the year (art. L3324-10). Terms govern from a fiscal
 -- year on, until later terms are adopted; they are drafted, then adopted
--- once, citing the members' decision.
+-- once, citing the members' motion.
 CREATE TABLE patronage.terms (
   id text PRIMARY KEY,
   "from" integer NOT NULL CHECK ("from" BETWEEN 1900 AND 9999),
@@ -280,7 +280,7 @@ END;
 -- patronage:terms:adopt — the write adopted the terms on the verdict date;
 -- their weights divide the whole work share; and no year they would
 -- govern has its distribution approved already. That the members decided
--- them is decision-patronage's.
+-- them is motion-patronage's.
 CREATE FUNCTION patronage.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

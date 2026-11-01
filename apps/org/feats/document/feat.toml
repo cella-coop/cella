@@ -2,4 +2,4 @@ name = "document"
 group = "governance"
 builtin = false
 rung = 1
-grafts = ["decision-document"]
+grafts = ["document-motion"]

@@ -1,0 +1,40 @@
+import type { Summary } from '@cella/org-motion/models'
+import type { Canon } from '@cella/org-document/models'
+
+// A document a motion asks to adopt, named by its canonical hash, the
+// version the proposer read it in, and the day it was adopted, once it
+// was.
+export interface Asked {
+  id: string
+  motion: string
+  title: string
+  document: string
+  version: string
+  hash: string
+  adopted: string | null
+}
+
+
+// What a motion asks to adopt, as its page shows it: the version in
+// full, as the database canonicalised it, and the version now adopted,
+// which it would replace.
+export interface Adopting extends Asked {
+  name: string
+  canonical: Canon
+  current: string | null
+}
+
+// The graft's data on a motion's page, with the documents its
+// discussion links, by the reference each message gives.
+export interface OnMotion {
+  adopting: Adopting[]
+  motions: Summary[]
+  linked: Record<string, { document: string; title: string }>
+}
+
+// The graft's data on a document's page: the motions adopting it, and
+// the motions it may embed.
+export interface OnDocument {
+  asked: Asked[]
+  motions: Summary[]
+}

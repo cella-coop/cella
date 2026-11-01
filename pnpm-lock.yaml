@@ -157,7 +157,7 @@ importers:
         specifier: workspace:*
         version: link:../../../../core/sign/ts
 
-  apps/org/feats/decision/core/ts:
+  apps/org/feats/motion/core/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -472,7 +472,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/account-decision/ts:
+  apps/org/grafts/account-motion/ts:
     dependencies:
       '@cella/org-account':
         specifier: workspace:*
@@ -483,9 +483,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -649,7 +649,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/circle-decision-membership/ts:
+  apps/org/grafts/circle-membership-motion/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -660,12 +660,12 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
-      '@cella/org-graft-circle-decision':
+        version: link:../../../feats/motion/core/ts
+      '@cella/org-graft-circle-motion':
         specifier: workspace:*
-        version: link:../../circle-decision/ts
+        version: link:../../circle-motion/ts
       '@cella/org-graft-circle-membership':
         specifier: workspace:*
         version: link:../../circle-membership/ts
@@ -682,7 +682,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/circle-decision/ts:
+  apps/org/grafts/circle-motion/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -693,9 +693,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -850,7 +850,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/decision-document/ts:
+  apps/org/grafts/document-motion/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -858,9 +858,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-document':
         specifier: workspace:*
         version: link:../../../feats/document/core/ts
@@ -871,20 +871,20 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/decision-employment-membership/ts:
+  apps/org/grafts/employment-membership-motion/ts:
     dependencies:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-employment':
         specifier: workspace:*
         version: link:../../../feats/person/feats/employment/core/ts
-      '@cella/org-graft-decision-membership':
+      '@cella/org-graft-membership-motion':
         specifier: workspace:*
-        version: link:../../decision-membership/ts
+        version: link:../../membership-motion/ts
       '@cella/org-graft-employment-membership':
         specifier: workspace:*
         version: link:../../../feats/person/grafts/employment-membership/ts
@@ -898,7 +898,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/decision-meeting/ts:
+  apps/org/grafts/meeting-motion/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -906,9 +906,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-meeting':
         specifier: workspace:*
         version: link:../../../feats/meeting/core/ts
@@ -919,7 +919,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/decision-membership/ts:
+  apps/org/grafts/membership-motion/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -927,9 +927,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
@@ -943,7 +943,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/decision-patronage/ts:
+  apps/org/grafts/motion-patronage/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -951,9 +951,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../../../feats/decision/core/ts
+        version: link:../../../feats/motion/core/ts
       '@cella/org-patronage':
         specifier: workspace:*
         version: link:../../../feats/patronage/core/ts
@@ -1473,9 +1473,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../core/db/ts
-      '@cella/org-decision':
+      '@cella/org-motion':
         specifier: workspace:*
-        version: link:../feats/decision/core/ts
+        version: link:../feats/motion/core/ts
       '@cella/org-document':
         specifier: workspace:*
         version: link:../feats/document/core/ts
@@ -1488,9 +1488,9 @@ importers:
       '@cella/org-file':
         specifier: workspace:*
         version: link:../feats/file/core/ts
-      '@cella/org-graft-account-decision':
+      '@cella/org-graft-account-motion':
         specifier: workspace:*
-        version: link:../grafts/account-decision/ts
+        version: link:../grafts/account-motion/ts
       '@cella/org-graft-account-membership':
         specifier: workspace:*
         version: link:../grafts/account-membership/ts
@@ -1512,12 +1512,12 @@ importers:
       '@cella/org-graft-bill-transaction':
         specifier: workspace:*
         version: link:../grafts/bill-transaction/ts
-      '@cella/org-graft-circle-decision':
+      '@cella/org-graft-circle-motion':
         specifier: workspace:*
-        version: link:../grafts/circle-decision/ts
-      '@cella/org-graft-circle-decision-membership':
+        version: link:../grafts/circle-motion/ts
+      '@cella/org-graft-circle-membership-motion':
         specifier: workspace:*
-        version: link:../grafts/circle-decision-membership/ts
+        version: link:../grafts/circle-membership-motion/ts
       '@cella/org-graft-circle-expense-membership':
         specifier: workspace:*
         version: link:../grafts/circle-expense-membership/ts
@@ -1545,21 +1545,21 @@ importers:
       '@cella/org-graft-client-project':
         specifier: workspace:*
         version: link:../grafts/client-project/ts
-      '@cella/org-graft-decision-document':
+      '@cella/org-graft-document-motion':
         specifier: workspace:*
-        version: link:../grafts/decision-document/ts
-      '@cella/org-graft-decision-employment-membership':
+        version: link:../grafts/document-motion/ts
+      '@cella/org-graft-employment-membership-motion':
         specifier: workspace:*
-        version: link:../grafts/decision-employment-membership/ts
-      '@cella/org-graft-decision-meeting':
+        version: link:../grafts/employment-membership-motion/ts
+      '@cella/org-graft-meeting-motion':
         specifier: workspace:*
-        version: link:../grafts/decision-meeting/ts
-      '@cella/org-graft-decision-membership':
+        version: link:../grafts/meeting-motion/ts
+      '@cella/org-graft-membership-motion':
         specifier: workspace:*
-        version: link:../grafts/decision-membership/ts
-      '@cella/org-graft-decision-patronage':
+        version: link:../grafts/membership-motion/ts
+      '@cella/org-graft-motion-patronage':
         specifier: workspace:*
-        version: link:../grafts/decision-patronage/ts
+        version: link:../grafts/motion-patronage/ts
       '@cella/org-graft-document-meeting':
         specifier: workspace:*
         version: link:../grafts/document-meeting/ts

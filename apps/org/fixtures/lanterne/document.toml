@@ -174,8 +174,8 @@ runs = [
 
 [[document.version.block]]
 type = "embed"
-embed = "decision"
-ref = "d-2026-011"
+embed = "motion"
+ref = "m-2026-011"
 
 [[document.version.block]]
 type = "heading"
@@ -261,7 +261,7 @@ text = "Nuvola renews in January at the current rate; do we hold it for existing
 
 # The minutes of the assembly of 20 June 2026, which Julien took and saved
 # two days later; they open on the meeting's card, as minutes begun from
-# a meeting's page do, and cite the decisions the assembly took.
+# a meeting's page do, and cite the motions the assembly took.
 [[document]]
 id = "minutes-ag-2026-06-20"
 title = "Minutes, Annual general assembly"
@@ -302,8 +302,8 @@ runs = [
 
 [[document.version.block]]
 type = "embed"
-embed = "decision"
-ref = "d-2026-006"
+embed = "motion"
+ref = "m-2026-006"
 
 [[document.version.block]]
 type = "heading"
@@ -315,8 +315,8 @@ text = "Camille presented version 3, which adds remote work days and the solidar
 
 [[document.version.block]]
 type = "embed"
-embed = "decision"
-ref = "d-2026-007"
+embed = "motion"
+ref = "m-2026-007"
 
 [[document.version.block]]
 type = "heading"

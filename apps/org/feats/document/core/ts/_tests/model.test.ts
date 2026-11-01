@@ -172,10 +172,10 @@ describe('the canonical form', () => {
 
   it('names an embed by its kind and ref, and holds no text for it', () => {
     const doc = createDoc(1)
-    const e = create(doc, undefined, 0, 'embed', { embed: 'decision', ref: 'd-2026-011' })
+    const e = create(doc, undefined, 0, 'embed', { embed: 'motion', ref: 'm-2026-011' })
     text(doc, e).insert(0, 'ignored')
     doc.commit()
-    assert.equal(jcs(canonical(doc)), '{"blocks":[{"embed":"decision","ref":"d-2026-011","type":"embed"}],"v":1}')
+    assert.equal(jcs(canonical(doc)), '{"blocks":[{"embed":"motion","ref":"m-2026-011","type":"embed"}],"v":1}')
   })
 
   it('refuses what has no canonical spelling', () => {

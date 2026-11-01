@@ -328,8 +328,8 @@ mod tests {
             receipt: n + 40,
             receipt_hash: [n.to_le_bytes()[0]; 32],
             guards: vec![Guard {
-                owner: "decision-membership".into(),
-                function: "decision_membership.admit(jsonb)".into(),
+                owner: "membership-motion".into(),
+                function: "membership_motion.admit(jsonb)".into(),
                 text: guard_digest("select 1"),
             }],
         }
@@ -419,7 +419,7 @@ mod tests {
 
         let notary = Key::from_seed(&[7; 32]).unwrap();
         let device = SigningKey::from_bytes(&[9; 32]);
-        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "decision": "d-2026-012"}), &"ab".repeat(32)).unwrap();
+        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "motion": "m-2026-012"}), &"ab".repeat(32)).unwrap();
         let mut r = Receipt {
             n: 41,
             op: "membership:member:admit".into(),

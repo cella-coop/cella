@@ -110,7 +110,7 @@ The receipt's time orders nothing; receipt numbers order stances.
 | personal commitment | BLAKE3 derive-key | `cella org 2026-10 personal commitment` | a fresh 32-byte salt, then the value's canonical JSON; kept in the logged payload as `{"$commit": hex}` |
 | guard text | BLAKE3 derive-key | `cella org 2026-10 rule text`, the tag it took before guards were named, so the digests the log holds keep verifying | a guard's definition, as `pg_get_functiondef` gives it |
 | invitation link | SHA-256 | none: it names a secret no other digest takes | the 32 random bytes an inviter's browser draws, which only the link holds; `membership.link` keeps the digest, and taking the invitation up shows the secret |
-| content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-decision-adopts)) |
+| content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-motion-adopts)) |
 
 ## Keys derived and sealed
 

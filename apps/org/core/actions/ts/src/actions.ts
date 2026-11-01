@@ -4,7 +4,7 @@
 
 export type Label = 'confluent' | 'bounded' | 'ordered'
 
-// The decision an ordered action waits on, whose outcome the notary folds
+// The motion an ordered action waits on, whose outcome the notary folds
 // from signed votes. Without one, the notary checks the action's guards alone.
 export type Decide = 'consent' | 'majority'
 
@@ -21,11 +21,11 @@ export interface Grant {
 }
 
 // Who may take an action that needs no power, each a guard registered on
-// the action in `cella.guard`, or for `decided` a row in `decision.cites`:
+// the action in `cella.guard`, or for `decided` a row in `motion.cites`:
 // - `self`: the actor's own, such as their profile or their devices;
-// - `roll`: a member on the roll of the decision the action names;
+// - `roll`: a member on the roll of the motion the action names;
 // - `seat`: a member seated in the circle the action concerns;
-// - `decided`: the decision the action cites closed and passed;
+// - `decided`: the motion the action cites closed and passed;
 // - `first`: the log's first entry, as the state a scope held before its
 //   log is carried in once.
 export type Check = 'self' | 'roll' | 'seat' | 'decided' | 'first'
@@ -63,7 +63,7 @@ export type Actions = Record<Permission, Action>
 // An ordered action is Pending until its verdict; the others never wait. Until
 // rung 2 every action still meets the server's guards and triggers, so any of
 // them may be Refused: an unbalanced entry, a comment quoting text its
-// version lacks, a stance on a closed decision.
+// version lacks, a stance on a closed motion.
 export type Outcome<O extends Action, T> = O extends Ordered
   ? Pending | Settled<T> | Refused
   : Settled<T> | Refused

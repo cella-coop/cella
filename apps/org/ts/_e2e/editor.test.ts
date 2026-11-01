@@ -40,7 +40,7 @@ const service = (name: string, unit: string, standard: string, solidarity: strin
 const card: Fragment[] = [
   { type: 'heading', level: 1, runs: p('Rate card 2027'), children: [] },
   { type: 'paragraph', runs: p('Day rates and project floors for ', { text: '2027', marks: { italic: true } }, '. Small co-ops pay the ', b('solidarity'), ' rate.'), children: [] },
-  { type: 'embed', embed: 'decision', ref: 'd-2026-011', runs: [], children: [] },
+  { type: 'embed', embed: 'motion', ref: 'm-2026-011', runs: [], children: [] },
   { type: 'heading', level: 2, runs: p('Services'), children: [] },
   service('Day of work', 'day', '560 €', '380 €'),
   service('Brand identity', 'project', 'from 6 500 €', 'from 3 300 €'),
@@ -291,17 +291,17 @@ for (const [name, launch] of browsers()) {
         assert.equal(await menu.count(), 0)
       })
 
-      it('embeds a decision from the slash menu, which the graft draws', async () => {
+      it('embeds a motion from the slash menu, which the graft draws', async () => {
         await fresher()
         await end(1)
         await a.keyboard.press('Enter')
-        await a.keyboard.type('/d-2026-007')
+        await a.keyboard.type('/m-2026-007')
         const menu = a.locator('[role=listbox][aria-label="Turn into"]')
         await menu.waitFor()
         await a.keyboard.press('Enter')
         const r = await rows()
         assert.equal(r[2].kind, 'embed')
-        assert.deepEqual(r[2].props, { embed: 'decision', ref: 'd-2026-007' })
+        assert.deepEqual(r[2].props, { embed: 'motion', ref: 'm-2026-007' })
         assert.match((await line(2).textContent()) ?? '', /Adopt the internal rules, version 3/)
         await converged()
       })
@@ -354,7 +354,7 @@ for (const [name, launch] of browsers()) {
         assert.equal(await editable(0).locator('a').getAttribute('href'), 'https://lanterne.example')
       })
 
-      it('steps onto the decision embed as a whole, and past it', async () => {
+      it('steps onto the motion embed as a whole, and past it', async () => {
         await fresher()
         await end(1)
         await a.keyboard.press('ArrowDown')
@@ -684,16 +684,16 @@ for (const [name, launch] of browsers()) {
     })
 
     describe('pages', () => {
-      it('shows the rate card, and the version a decision adopts', async () => {
+      it('shows the rate card, and the version a motion adopts', async () => {
         const page = await context.newPage()
         await page.goto(`${base}/documents/rate-card-2027`)
         await page.waitForSelector('[data-editor] [data-block]')
         await page.screenshot({ path: `${shots}/${name}-rate-card.png`, fullPage: true })
-        await page.goto(`${base}/decisions/d-2026-011`)
+        await page.goto(`${base}/motions/m-2026-011`)
         const text = (await page.locator('main, body').first().textContent()) ?? ''
         assert.match(text, /rate-card-2027@2/)
         assert.match(text, /Online shop/)
-        await page.screenshot({ path: `${shots}/${name}-decision.png`, fullPage: true })
+        await page.screenshot({ path: `${shots}/${name}-motion.png`, fullPage: true })
         await page.close()
       })
     })

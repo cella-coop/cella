@@ -11,7 +11,7 @@ import { members as importing } from './imports.ts'
 // page their membership, whether they have taken up their invitation, and
 // a new link while they have not. Taking it up is the link's page's, in
 // the shell, through `accept`. Admission, suspension and exit are decided,
-// carried out when their decision closes. In the inbox, the acting
+// carried out when their motion closes. In the inbox, the acting
 // person's invitation while they are invited; and members imported from
 // another tool's list, each invited, to be given a link from their page.
 export const slice: Slice = {

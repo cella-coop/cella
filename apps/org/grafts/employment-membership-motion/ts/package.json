@@ -1,0 +1,19 @@
+{
+  "name": "@cella/org-graft-employment-membership-motion",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-motion": "workspace:*",
+    "@cella/org-membership": "workspace:*",
+    "@cella/org-employment": "workspace:*",
+    "@cella/org-graft-membership-motion": "workspace:*",
+    "@cella/org-graft-employment-membership": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

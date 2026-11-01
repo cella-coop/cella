@@ -85,8 +85,8 @@ per project is not built.
 
 A distributed year, the latest unless the address names one (`year`), read
 through the port: its surplus and split, each share's percent and amount
-(`patronage.distributions`, `patronage.shares`); what its entry posted,
-account by account, a member's capital account summed into its parent's
+(`patronage.distributions`, `patronage.shares`); what its entry and the
+credits that follow it posted, account by account, a member's capital account summed into its parent's
 code (`account_membership_patronage_transaction.posted`); the capital it
 credited, how many members, how many shares and until when
 (`account_membership_patronage_transaction.credits`); its work share by

@@ -93,3 +93,13 @@ DROP TABLE motion_patronage.recorded_adoption;
 DROP TABLE motion_patronage.recorded_approval;
 
 GRANT SELECT ON motion_patronage.adoption, motion_patronage.approval TO cella_app, cella_guards;
+
+-- What follows an approval cites its motion: the distribution that posts
+-- the split, and each credit of the shares an associate's part buys.
+-- Each settles only once that motion moved to approve this distribution
+-- and, through motion.cites, closed and passed.
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('patronage:distribution:distribute', 'motion_patronage.approves(jsonb)', 'motion-patronage'),
+  ('patronage:part:employ', 'motion_patronage.approves(jsonb)', 'motion-patronage');
+SELECT motion.register_cite('patronage:distribution:distribute', 'motion-patronage');
+SELECT motion.register_cite('patronage:part:employ', 'motion-patronage');

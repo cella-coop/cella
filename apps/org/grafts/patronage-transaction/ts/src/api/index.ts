@@ -1,11 +1,12 @@
 // The graft's writes, reads and slice, which the shell mounts: a
-// distribution distributed and posted in one write, and the entry that
-// posted it, on the distribution's page.
+// distribution distributed and posted in one write, which follows its
+// approval, and the entry that posted it, on the distribution's page,
+// with the Distribute button where the posting that followed was refused.
 import { action, type Slice } from '@cella/org-db'
-import { distribute } from '../handlers/distribute.ts'
+import { distribute, distributed } from '../handlers/distribute.ts'
 import { posted } from '../drivers/posted.ts'
 
-export { distribute } from '../handlers/distribute.ts'
+export { distribute, distributed } from '../handlers/distribute.ts'
 export { posted } from '../drivers/posted.ts'
 export type { Posted } from '../models/posted.ts'
 
@@ -15,8 +16,11 @@ export const slice: Slice = {
     distributions: {
       item: posted,
       actions: {
-        distribute: action('patronage:distribution:distribute', (_, id) => ({ distribution: id ?? '' }), distribute),
+        distribute: action('patronage:distribution:distribute', (form, id) => ({ distribution: id ?? '', motion: form.get('motion') }), distribute),
       },
     },
+  },
+  on: {
+    'patronage:distribution:approve': distributed,
   },
 }

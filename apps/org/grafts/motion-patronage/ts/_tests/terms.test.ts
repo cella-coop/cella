@@ -55,11 +55,17 @@ test('approving cites the motion that approves the distribution, never another',
   assert.equal(await guard('motion_patronage.approves', { distribution: '2025', motion: 'm-9' }), 'no motion m-9')
 })
 
-test('both actions cite a motion, so the roll\'s guard attaches to them', async () => {
+test('the actions cite a motion, so the roll\'s guard attaches to them, and what follows an approval is judged by the motion that approved it', async () => {
   assert.deepEqual((await db.query(`SELECT op, owner FROM motion.cites WHERE owner = 'motion-patronage' ORDER BY op`)).rows, [
     { op: 'patronage:distribution:approve', owner: 'motion-patronage' },
+    { op: 'patronage:distribution:distribute', owner: 'motion-patronage' },
+    { op: 'patronage:part:employ', owner: 'motion-patronage' },
     { op: 'patronage:terms:adopt', owner: 'motion-patronage' },
   ])
+  assert.deepEqual(
+    (await db.query(`SELECT op FROM cella.guard WHERE fn::text = 'motion_patronage.approves(jsonb)' ORDER BY op`)).rows.map((r) => r.op),
+    ['patronage:distribution:approve', 'patronage:distribution:distribute', 'patronage:part:employ'],
+  )
 })
 
 test('a draft moved again is approved by a motion moving to, and a proposal naming no draft is refused', async () => {

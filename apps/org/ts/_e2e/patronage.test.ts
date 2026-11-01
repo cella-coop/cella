@@ -1,17 +1,20 @@
 // The patronage scenario, end to end on a seeded Lanterne, through the
-// handlers: the 2025 distribution is approved by m-2026-006, and in that
-// one write its work share divides among the ten members by what each was
-// paid in 2025, as the statutes' terms say; once finance distributes it,
-// half of each part buys whole shares, blocked five years, and the rest
-// is owed in cash. The parts, the shares, the cash and the books
-// reconcile to the cent; each member reads their own statement, and
-// finance the year's return. Then finance drafts new terms, a mix of pay
-// and time from 2027, the assembly decides them, and they are adopted
-// citing that motion, never one that does not move them nor over a year
-// already approved. Last, the second year runs with no fixture SQL:
-// finance opens 2027's first month and closes 2026's, drafts the 2026
-// split, the assembly moves to approve it, and it is approved and
-// distributed.
+// handlers and the reactions the shell runs: the 2025 distribution is
+// approved by m-2026-006, and in that one write its work share divides
+// among the ten members by what each was paid in 2025, as the statutes'
+// terms say; the distribution follows the approval, and the credit of
+// each associate's shares the distribution, each a write of its own
+// signed by Camille, who approved it: half of each part buys whole
+// shares, blocked five years, and the rest is owed in cash. The parts,
+// the shares, the cash and the books reconcile to the cent; each member
+// reads their own statement, and finance the year's return. Then finance
+// drafts new terms, a mix of pay and time from 2027, the assembly decides
+// them, and they are adopted citing that motion, never one that does not
+// move them nor over a year already approved. Last, the second year runs
+// with no fixture SQL: finance opens 2027's first month and closes
+// 2026's, drafts the 2026 split, the assembly moves to approve it, and
+// once it is approved its distribution and credits follow, signed by the
+// member who closed the motion and approved it.
 // Run by `cella test e2e patronage`.
 
 import { after, before, test } from 'node:test'
@@ -20,9 +23,10 @@ import pg from 'pg'
 import { adopt, approve, draft, draftTerms, statement, statements } from '@cella/org-patronage/api'
 import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
+import { react } from '../src/lib/server/slices.ts'
 import { federation } from '@cella/org-report/api'
 import { reading as analytics } from './port.ts'
-import { employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
+import { employ, employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
 import type { Deps } from '@cella/org-db'
@@ -68,6 +72,7 @@ const balanced = async () => {
 type Part = { worker: string; quantity: string; cents: string }
 let parts: Part[] = []
 let before2025: Map<string, { shares: number; capital: number }>
+let capital2025 = 0
 
 before(async () => {
   await su.connect()
@@ -119,13 +124,38 @@ test('approving 2025 divides the work share by pay, to the cent, in the same wri
   assert.equal(await balance('120'), -61_400_00, 'the result still waits in 120')
 })
 
-test('only finance distributes the approved split, once', async () => {
-  const lead = await distribute({ distribution: '2025' }, as(hugo))
-  assert.match(reason(lead), /distribute-surplus/)
-  const done = await distribute({ distribution: '2025' }, as(julien))
-  settled(done)
-  const again = await distribute({ distribution: '2025' }, as(julien))
+test('the distribution and the credits of shares follow the approval, each a write of its own signed by Camille, who approved it', async () => {
+  assert.deepEqual(await all(`SELECT tgname FROM pg_trigger WHERE tgname = 'employs'`), [], 'no trigger credits a distribution')
+  const then = await react('patronage:distribution:approve', { distribution: '2025', motion: 'm-2026-006' }, as(camille))
+  assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
+  const credits = then[0].then
+  assert.equal(credits.length, 10, 'one credit an associate')
+  for (const c of credits) {
+    assert.equal(`${c.op} ${c.state}`, 'patronage:part:employ settled', c.reason)
+  }
+  const logged = await all<{ op: string; actor: string; owners: string[] }>(
+    `SELECT op, actor, ARRAY(SELECT DISTINCT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners
+     FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n`,
+    [[then[0].entry, ...credits.map((c) => c.entry)]],
+  )
+  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
+  for (const l of logged.slice(1)) {
+    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'circle-membership-motion', 'motion-patronage', 'patronage'] })
+  }
+  const entry = (await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)).entry
+  assert.deepEqual((await all(`SELECT account FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).length, 5, 'the distribution\'s entry posts its split alone')
+})
+
+test('what follows the approval is done once, and nothing writes a credit or a member\'s shares outside a write', async () => {
+  const again = await distribute({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.match(reason(again), /the 2025 surplus was distributed on 2026-11-02/)
+  await assert.rejects(employ({ distribution: '2025', member: camille, motion: 'm-2026-006' }, as(camille)), /camille@lanterne.example was credited the shares of their part of 2025 already/)
+  for (const [db, sql] of [
+    [app, `INSERT INTO account_membership_patronage_transaction.credit (distribution, member, account, shares, amount, until, entry) VALUES ('1999', '${hugo}', '101301', 1, cella.amount(5000), '2031-06-01', 'je-x')`],
+    [su, `UPDATE membership.member SET shares = shares + 1 WHERE address = '${hugo}'`],
+  ] as const) {
+    await assert.rejects(db.query(sql), /is written outside a write/)
+  }
 })
 
 test('half of each part buys whole shares at 50 €, blocked until 1 June 2031; the rest is owed in cash', async () => {
@@ -143,7 +173,8 @@ test('half of each part buys whole shares at 50 €, blocked until 1 June 2031; 
     assert.equal(c?.until, '2031-06-01')
     capital += shares * share
   }
-  assert.equal(new Set(credits.map((c) => c.entry)).size, 1, 'one entry posts them')
+  assert.equal(new Set(credits.map((c) => c.entry)).size, 10, 'each credit posts an entry of its own')
+  capital2025 = capital
 
   const cash = 27_630_00 - capital
   assert.equal(await balance('424'), -cash, '424 still owes what is paid in cash')
@@ -320,7 +351,22 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
   const redraft = await draft({ year: 2026, surplus: 60_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(julien))
   assert.match(reason(redraft), /the 2026 surplus was approved on 2027-01-29/)
 
-  settled(await distribute({ distribution: '2026' }, as(julien)))
+  // Camille closed the motion and approved the split: the distribution
+  // and each credit of shares follow, each signed by her.
+  const then = await react('patronage:distribution:approve', { distribution: '2026', motion }, as(camille))
+  assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
+  assert.ok(then[0].then.length > 0)
+  for (const c of then[0].then) {
+    assert.equal(`${c.op} ${c.state}`, 'patronage:part:employ settled', c.reason)
+  }
+  const signed = await all<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n', [[then[0].entry, ...then[0].then.map((c) => c.entry)]])
+  assert.deepEqual(new Set(signed.map((s) => s.actor)), new Set([camille]))
+  assert.deepEqual(signed.map((s) => s.op), ['patronage:distribution:distribute', ...then[0].then.map(() => 'patronage:part:employ')])
   assert.deepEqual(await one(`SELECT to_char(distributed, 'YYYY-MM-DD') AS d FROM patronage.distribution WHERE id = '2026'`), { d: '2027-01-29' })
+  const credited = await one<{ n: number; cents: number }>(`SELECT count(*)::int AS n, sum(cella.cents(amount))::int AS cents FROM account_membership_patronage_transaction.credit WHERE distribution = '2026'`)
+  assert.equal(credited.n, then[0].then.length)
+  const split = await one<{ cents: number }>(`SELECT sum(capital)::int AS cents FROM account_membership_patronage.split WHERE distribution = '2026' AND shares > 0`)
+  assert.equal(credited.cents, split.cents, 'the credits are what the split employs in shares, to the cent')
+  assert.equal(await balance('424'), -(27_630_00 - capital2025 + 22_500_00 - credited.cents), '424 still owes the cash of both years')
   await balanced()
 })

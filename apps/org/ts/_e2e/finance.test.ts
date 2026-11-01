@@ -20,6 +20,7 @@ import { log as logTime, submit as submitTime } from '@cella/org-graft-employmen
 import { draw } from '@cella/org-graft-account-membership-transaction/api'
 import { approve as approveSplit } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
+import { react } from '../src/lib/server/slices.ts'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -232,7 +233,7 @@ test('the log commits to pay, time and capital: October\'s payslips, Thomas\'s d
 })
 
 test('the 2025 surplus is approved by m-2026-006, then distributed, and posts the legal split', async () => {
-  const early = await distribute({ distribution: '2025' }, as(julien))
+  const early = await distribute({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.match(reason(early), /2025 is not approved by the assembly/)
   const wrong = await approveSplit({ distribution: '2025', motion: 'm-2026-011' }, as(julien))
   assert.equal(wrong.state, 'refused')
@@ -246,29 +247,30 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
     ['account-patronage', 'circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
-  const done = await distribute({ distribution: '2025' }, as(julien))
-  assert.equal(done.state, 'settled', reason(done))
-  const entry = done.state === 'settled' ? done.value.entry : ''
-  // The split, then what the work share employs in shares, which the
-  // patronage scenario follows.
-  const posted = await lines(entry)
-  assert.deepEqual(posted.slice(0, 5).sort((a, b) => a.account.localeCompare(b.account)), [
+  // The distribution follows the approval as a write of its own, signed by
+  // Julien, who approved it, and the credits of shares follow it, which
+  // the patronage scenario reads.
+  const then = await react('patronage:distribution:approve', { distribution: '2025', motion: 'm-2026-006' }, as(julien))
+  assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
+  assert.deepEqual([...new Set(then[0].then.map((d) => `${d.op} ${d.state}`))], ['patronage:part:employ settled'])
+  const done = await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)
+  const posted = await lines(done.entry)
+  assert.deepEqual(posted.sort((a, b) => a.account.localeCompare(b.account)), [
     { account: '1061', side: 'credit', cents: '921000' },
     { account: '1068', side: 'credit', cents: '2411178' },
     { account: '120', side: 'debit', cents: '6140000' },
     { account: '424', side: 'credit', cents: '2763000' },
     { account: '457', side: 'credit', cents: '44822' },
-  ])
-  assert.deepEqual(posted[5], { account: '424', side: 'debit', cents: posted.slice(6).reduce((s, l) => s + Number(l.cents), 0).toString() })
-  assert.ok(posted.slice(6).every((l) => l.account.startsWith('1013') && l.side === 'credit'))
+  ], 'the distribution\'s entry posts its split alone')
   assert.equal(await balance('120'), 0)
-  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
+  const logged = await one<{ actor: string; guards: { owner: string }[] }>('SELECT actor, guards FROM cella.log WHERE n = $1', [then[0].entry])
+  assert.equal(logged.actor, julien)
   assert.deepEqual(
     [...new Set(logged.guards.map((r) => r.owner))].sort(),
-    ['account-membership-patronage-transaction', 'circle-membership', 'patronage', 'patronage-transaction'],
+    ['circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-transaction'],
   )
 
-  const again = await distribute({ distribution: '2025' }, as(julien))
+  const again = await distribute({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.match(reason(again), /the 2025 surplus was distributed on 2026-11-02/)
   const twice = await approveSplit({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
   assert.match(reason(twice), /the 2025 surplus was distributed on 2026-11-02/)

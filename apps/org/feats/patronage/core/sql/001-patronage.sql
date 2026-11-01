@@ -62,8 +62,9 @@ RETURN (
 -- the statutes split it, one share per kind: the work share, the legal
 -- reserve, the development fund and the interest on capital. A share of
 -- nothing has no row. The split is drafted, approved by the assembly once
--- its year is closed, and then distributed: posted to the books, and what
--- the work share employs in shares credited to the associates' capital.
+-- its year is closed, and then distributed: posted to the books, after
+-- which what each part employs in shares is credited to its associate's
+-- capital, by a write of its own.
 CREATE TABLE patronage.distribution (
   id text PRIMARY KEY,
   year integer NOT NULL UNIQUE CHECK (year BETWEEN 1900 AND 9999),
@@ -263,8 +264,8 @@ BEGIN ATOMIC
 END;
 
 -- patronage:distribution:distribute — the write distributed an approved
--- split on the verdict date. What it posts, and what it credits to the
--- associates' capital, are the guards of the grafts that post and credit.
+-- split on the verdict date. What it posts is the guard of the graft that
+-- posts.
 CREATE FUNCTION patronage.distributes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -274,6 +275,22 @@ BEGIN ATOMIC
     WHEN d.distributed IS DISTINCT FROM cella.verdict_date() THEN d.id || ' was not distributed by this write'
   END
   FROM (SELECT payload ->> 'distribution' AS distribution) x
+  LEFT JOIN patronage.distribution d ON d.id = x.distribution;
+END;
+
+-- patronage:part:employ — a part is employed in shares once its split is
+-- distributed, and the worker the payload names has a part in it. What
+-- it buys, and its credit, are the guards of the graft that credits.
+CREATE FUNCTION patronage.employs(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN d.id IS NULL THEN 'no distribution ' || coalesce(x.distribution, 'is named')
+    WHEN d.distributed IS NULL THEN d.id || ' is not distributed'
+    WHEN NOT EXISTS (SELECT FROM patronage.part p WHERE p.distribution = d.id AND p.worker = x.worker)
+      THEN coalesce(x.worker, 'no one') || ' has no part in ' || d.id
+  END
+  FROM (SELECT payload ->> 'distribution' AS distribution, payload ->> 'member' AS worker) x
   LEFT JOIN patronage.distribution d ON d.id = x.distribution;
 END;
 
@@ -301,6 +318,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:approve', 'patronage.splits(jsonb)', 'patronage'),
   ('patronage:distribution:approve', 'patronage.divides(jsonb)', 'patronage'),
   ('patronage:distribution:distribute', 'patronage.distributes(jsonb)', 'patronage'),
+  ('patronage:part:employ', 'patronage.employs(jsonb)', 'patronage'),
   ('patronage:terms:adopt', 'patronage.adopts(jsonb)', 'patronage');
 
 GRANT USAGE ON SCHEMA patronage TO cella_app, cella_guards;

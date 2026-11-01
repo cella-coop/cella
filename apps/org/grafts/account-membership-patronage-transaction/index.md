@@ -3,15 +3,16 @@ title = "account-membership-patronage-transaction"
 updated = 2026-11-01
 +++
 
-The work share employed in the associates' capital: when a year's
+The work share employed in the associates' capital: once a year's
 distribution posts, what each associate's part buys in shares is
-credited to their capital account, as lines of the distribution's own
-entry, and added to the shares they hold; what each worker's part
-became, their own statements, and the year's return to the federation.
-It joins four feats because crediting a share needs the capital account
-(account), the associate (member), the part (patronage) and the entry
-(transaction); it builds on `account-membership-patronage` for the split and
-`patronage-transaction` for the entry. Declared by `patronage`.
+credited to their capital account, by a write of its own, and added to
+the shares they hold; what each worker's part became, their own
+statements, and the year's return to the federation. It joins four
+feats because crediting a share needs the capital account (account), the
+associate (member), the part (patronage) and the entry (transaction); it
+builds on `account-membership-patronage` for the split and
+`patronage-transaction` for the distribution's entry. Declared by
+`patronage`.
 
 ## Schema
 
@@ -19,35 +20,63 @@ It joins four feats because crediting a share needs the capital account
 
 - `credit`: what each associate's part of a distribution's work share
   bought: the shares, their value, the capital account they credit, the
-  day they are blocked until and the entry.
-- `employs`, a trigger after a distribution's entry is linked, in the
-  write that distributes: what `account_membership_patronage.split` gives in
-  shares posts as lines of the distribution's own entry, since a write
-  posts one, `424` (the work share owed) debited by the whole and each
-  associate's capital account credited by theirs, and their shares are
-  added to what they hold. What `424` still owes is paid in cash, through
-  a write of its own, not built. `employing(distribution)` gives those
-  lines.
+  day they are blocked until and the entry that posted them, one per
+  associate and distribution.
+- `employable(distribution)`: the associates whose part of a distributed
+  split buys shares and who are not credited yet, in the order of their
+  capital accounts. It runs as its owner, since whoever approved the
+  split may read no colleague's part, and says no more than who.
+
+No trigger credits a distribution: what `424` owes in shares is paid
+out by the writes that follow it, and what it still owes after them is
+paid in cash, through a write of its own, not built.
 
 The app role may select and insert; the guards role may select.
 
+## Actions
+
+`patronage:part:employ` (ordered, `decided`), the patronage feat's, whose
+handler is this graft's `employ`: what an associate's part of a
+distributed split buys in shares, as `account_membership_patronage.split`
+gives it, posted on the verdict date through the journal's `record`,
+`424` (the work share owed) debited and their capital account under
+`1013` credited, recorded in `credit`, and added to the shares they hold
+by the membership feat's `crediting`. Its payload names the
+distribution, the member, the entry and the motion; the guard reads the
+shares and their value from the row the write made. It cites the motion
+that approved the split, which `motion-patronage` checks.
+
+## Reactions
+
+- To `patronage:distribution:distribute`: `employ`, once for each
+  associate `employable` names, in turn, each a write of its own after
+  the distribution, signed by whoever signed it, the member who approved
+  the split, and citing the same motion. A refused one leaves the
+  distribution and every credit before it settled, and says why; what
+  it would have bought stays owed in `424`. Where no associate's part
+  buys a share, no write is made.
+
 ## Guards
 
-- `account_membership_patronage_transaction.credited`, on
-  `patronage:distribution:distribute`: what the distribution employed in
-  shares is exactly what the terms give each associate, blocked until the
-  day the law sets, and the distribution's entry posts exactly its split
-  and those shares, `424`'s debit and the capital accounts' credits, and
-  no other line, so it touches no cash account.
+- `account_membership_patronage_transaction.employs`, on
+  `patronage:part:employ`: the member's part of the distribution buys
+  shares, as the split gives on the verdict date; this write made their
+  one credit, of exactly those shares at that value, blocked until the
+  day the law sets, on a capital account under `1013` they hold, not
+  frozen; and its entry posts exactly `424` debited and that account
+  credited by it, and no other line, so it touches no cash account. That
+  the shares were added to what the member holds is not checked: the
+  membership feat keeps no history of a member's shares to read it from.
 
 ## Tests
 
 `ts/_tests/credit.test.ts` (`cella test slice
-account-membership-patronage-transaction`): distributing employs half of an
-associate's part in whole shares, as lines of the distribution's entry,
-adds them to what they hold, and pays a worker who is no associate all of
-theirs; an entry posting anything beside the split and the shares is
-refused.
+account-membership-patronage-transaction`): no trigger credits a
+distribution, so its entry posts the split alone; `employ` credits half
+of an associate's part in whole shares, in an entry of its own, adds
+them to what they hold, and names no worker who is no associate, who is
+owed all of theirs; a credit posting anything beside `424` and the
+capital account, or a second one for the same part, is refused.
 
 ## Reads
 
@@ -75,9 +104,10 @@ forms, nor the article setting the employees' 51 % of the capital.
 
 ## Lanterne
 
-Distributing 2025 buys the ten members 270 shares, 13 500 €, blocked
-until 1 June 2031, and leaves 14 130 € to pay in cash.
+The ten credits that follow the 2025 distribution, each signed by
+Camille, who approved it, buy the ten members 270 shares, 13 500 €,
+blocked until 1 June 2031, and leave 14 130 € to pay in cash.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_patronage_transaction.credits` to the analytics shell: what each distribution credited to the members' capital, summed over every member, and the last day its shares are blocked until; and `account_membership_patronage_transaction.posted`, what each distribution's entry posted, account by account, a member's capital account summed into its parent's code, which the `report` feat's federation figures read.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_patronage_transaction.credits` to the analytics shell: what each distribution credited to the members' capital, summed over every member, and the last day its shares are blocked until; and `account_membership_patronage_transaction.posted`, what each distribution's entry and the credits that follow it posted, account by account, a member's capital account summed into its parent's code, which the `report` feat's federation figures read.

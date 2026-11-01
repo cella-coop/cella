@@ -13,7 +13,10 @@ export const actions = {
   // the assembly's motion approves a year's split, once its year is
   // closed, and its parts are made in that write
   'patronage:distribution:approve': ordered({ decide: 'majority', check: 'decided' }),
-  // the approved split posted to the books and the shares it buys
-  // credited, once
-  'patronage:distribution:distribute': ordered({ power: 'distribute-surplus' }),
+  // the approved split posted to the books, once; it follows the approval,
+  // citing its motion
+  'patronage:distribution:distribute': ordered({ check: 'decided' }),
+  // what an associate's part buys in shares credited to their capital,
+  // once; it follows the distribution, citing the motion that approved it
+  'patronage:part:employ': ordered({ check: 'decided' }),
 } satisfies Actions

@@ -44,10 +44,11 @@ export interface Approved extends Approve {
   approved: string
 }
 
-// Distributing an approved split: posting it, and crediting the shares it
-// buys.
+// Distributing an approved split: posting it, citing the motion that
+// approved it, which the distribution follows.
 export interface Distribute {
   distribution: string
+  motion: string
 }
 
 export interface Distributed extends Distribute {

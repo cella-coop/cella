@@ -36,7 +36,8 @@ state is that of 24 October 2026.
 | `account.draw` | bounded | right; **applied**: a member's own, on the draw limit granted them ([capital](#capital-is-paid-in-and-repaid-by-the-statutes)) |
 | `account.terms.adopt` | ordered | right: decided, citing the members' decision; the capital's clauses |
 | `patronage.distribution.approve` | ordered | right; **applied**: decided, citing the assembly's decision ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
-| `patronage.distribution.distribute` | ordered | right: the approved split posted once, under its own power ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `patronage.distribution.distribute` | ordered | right: the approved split posted once, decided, following the approval and citing its motion ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
+| `patronage.part.employ` | ordered | right: an associate's part employed in shares once, decided, following the distribution and citing its motion ([work share](#the-work-share-divides-as-the-years-terms-say)) |
 | `patronage.terms.adopt` | ordered | right: decided, citing the members' decision; never over a year already approved ([work share](#the-work-share-divides-as-the-years-terms-say)) |
 | `patronage.terms.draft`, `patronage.distribution.draft` | confluent | right: registers, the latest draft standing until it is adopted or approved; a draft after that is refused ([surplus](#a-surplus-is-split-once-and-as-the-law-requires)) |
 | `account.period.open` | ordered | right: the months follow one another, so a month opens after the one before it ([closed period](#nothing-posts-into-a-closed-period)) |
@@ -408,7 +409,7 @@ refuse.
 **Lanterne.** d-2026-006 approved the 2025 split in June: 45 % work,
 15 % legal reserve, 25 % development fund, 15 % interest. Its result was
 carried over undistributed: approving the distribution cites the
-decision, and distributing it is finance's.
+decision, and its posting follows the approval as a write of its own.
 
 ## The work share divides as the year's terms say
 
@@ -423,22 +424,23 @@ pay and in equal parts, `patronage-timesheet` by time worked;
 |---|---|---|---|
 | `distribution.approve` vs `terms.adopt` over its year | the adoption refused: the year is approved | the approval divides by the new terms | a split made by terms adopted after it |
 | `distribution.approve` vs a salary or `timesheet:period.approve` in its year | the parts were fixed by the approval | the parts read it | parts that no longer add up to what was paid or worked |
-| `distribution.distribute` vs `membership.exit` | the shares are credited, then frozen with the rest | all of the part is paid in cash | shares issued to someone who has left |
+| `part.employ` vs `membership.exit` | the shares are credited, then frozen with the rest | no share is credited, and all of the part is owed in cash | shares issued to someone who has left |
+| `part.employ` vs `part.employ`, one associate | the second refused: credited | the first refused | shares bought twice with one part |
 | `terms.adopt` vs `terms.adopt`, one year | the later adopted governs | the later adopted governs | two terms for one year |
 
 All ordered; right. **Applied**: the parts are made by triggers in the
 write that approves, from the terms, the salaries and the approved time
 as they stand at its verdict, and never change after; each basis's guard
 checks its parts against what it gives, and `patronage.divides` that
-each portion adds up. The shares are credited in the write that
-distributes, from the members as they stand at its verdict. The work
+each portion adds up. The shares are credited by the writes that follow
+the distribution, one an associate, from the members as they stand at each one's verdict. The work
 share divides by pay, time worked, equal parts or a mix (Code du travail,
 art. L3324-5; BOI-BIC-PTP-10-30, § 170 and 280), among every employee,
 associate or not (loi n° 78-763, art. 33, 3°); shares bought with it are
 reserved to the associates employed (art. R3323-11) and blocked five
 years from the first day of the sixth month after the year (art.
-L3324-10). A write posts one entry, so the shares are lines of the
-distribution's.
+L3324-10). Each credit posts an entry of its own, `424` debited and the
+associate's capital account credited.
 
 **Lanterne.** The statutes' patronage terms, `st-2021`, divide the work share by
 pay and employ half of each associate's part in shares at 50 €.

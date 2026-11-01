@@ -41,54 +41,6 @@ LEFT JOIN (
 ) p ON p.member = s.member
 WHERE s.amount IS NOT NULL;
 
--- A member admitted subscribes their shares, in the write that admits
--- them, whichever it is: their capital account opens under 1013, next in
--- the chart, and their shares at the share's value are called, 4562
--- debited and 1012 credited, on the verdict date; the account under 1013
--- holds what they pay in. The statutes' minimum refuses a smaller
--- subscription. The books never hold an admission back otherwise: where
--- no adopted terms value a share, or the verdict date's period is not
--- open, the admission settles and nothing is subscribed.
-CREATE OR REPLACE FUNCTION account_membership_transaction.subscribes() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE
-  terms text;
-  code text;
-  cents bigint;
-  fewest integer;
-  entry text;
-BEGIN
-  IF NOT (OLD.status = 'invited' AND NEW.status = 'active') OR NEW.shares = 0 THEN
-    RETURN NULL;
-  END IF;
-  terms := account.capital_for(cella.verdict_date());
-  SELECT NEW.shares * cella.cents(t.share), t.minimum INTO cents, fewest FROM account.terms t WHERE t.id = terms;
-  IF cents IS NULL OR NOT EXISTS (
-    SELECT FROM account.period p WHERE p.month = to_char(cella.verdict_date(), 'YYYY-MM') AND p.closed IS NULL
-  ) OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '1013')
-    OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '1012')
-    OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '4562') THEN
-    RETURN NULL;
-  END IF;
-  IF NEW.shares < fewest THEN
-    RAISE EXCEPTION '% subscribes % shares: % ask at least %', NEW.address, NEW.shares, terms, fewest
-      USING ERRCODE = 'triggered_action_exception';
-  END IF;
-  SELECT '1013' || lpad((coalesce(max(substr(a.code, 5)::integer), 0) + 1)::text, 2, '0') INTO code
-  FROM account.account a WHERE a.parent = '1013' AND a.code ~ '^1013[0-9]{2}$';
-  INSERT INTO account.account (code, label, kind, parent, holder)
-  VALUES (code, 'Capital — ' || (SELECT p.name FROM person.person p WHERE p.address = NEW.address), 'equity', '1013', NEW.address);
-  INSERT INTO transaction.entry (date, label, receipt)
-  VALUES (cella.verdict_date(), 'Capital subscribed and called, ' || code, cella.receipt())
-  RETURNING id INTO entry;
-  INSERT INTO transaction.line (entry, n, account, side, amount) VALUES
-    (entry, 1, '4562', 'debit', cella.amount(cents)),
-    (entry, 2, '1012', 'credit', cella.amount(cents));
-  INSERT INTO account_membership_transaction.subscription (member, account, shares, entry, amount)
-  VALUES (NEW.address, code, NEW.shares, entry, cella.amount(cents));
-  RETURN NULL;
-END
-$$;
-
 -- The lines a payment in posts: the money received against 4562, and
 -- what it pays moved from 1012 to the associate's capital account.
 CREATE FUNCTION account_membership_transaction.paying(capital text, paid bigint)
@@ -155,69 +107,6 @@ $$;
 CREATE TRIGGER stays_repaid BEFORE UPDATE OR DELETE ON account_membership_transaction.repayment
   FOR EACH ROW EXECUTE FUNCTION account_membership_transaction.stays_repaid();
 
--- An associate who leaves, in the write that ends their membership,
--- whichever it is: what their capital accounts hold moves to 4567, owed
--- them, what they had not paid of their subscription is cancelled, 1012
--- debited and 4562 credited, and their repayments are drawn up as the
--- statutes' clauses governing the exit say, the capital divided evenly
--- among them to the cent. As with a subscription, the books never hold
--- an exit back: with no clauses, no open period or no 4567, the capital
--- stays frozen where it is and nothing is drawn up.
-CREATE FUNCTION account_membership_transaction.withdraws() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE
-  terms text;
-  held bigint;
-  owed bigint;
-  entry text;
-BEGIN
-  IF NOT (NEW.status = 'exited' AND OLD.status <> 'exited') THEN
-    RETURN NULL;
-  END IF;
-  terms := account.capital_for(cella.verdict_date());
-  SELECT coalesce(sum(CASE l.side WHEN 'credit' THEN cella.cents(l.amount) ELSE -cella.cents(l.amount) END), 0)
-  INTO held
-  FROM transaction.line l JOIN account.account a ON a.code = l.account
-  WHERE a.holder = NEW.address AND a.parent = '1013';
-  SELECT greatest(c.unpaid, 0) INTO owed FROM account_membership_transaction.called c WHERE c.member = NEW.address;
-  owed := coalesce(owed, 0);
-  IF terms IS NULL OR (held <= 0 AND owed = 0) OR NOT EXISTS (
-    SELECT FROM account.period p WHERE p.month = to_char(cella.verdict_date(), 'YYYY-MM') AND p.closed IS NULL
-  ) OR NOT EXISTS (SELECT FROM account.account a WHERE a.code = '4567') THEN
-    RETURN NULL;
-  END IF;
-  INSERT INTO transaction.entry (date, label, receipt)
-  VALUES (cella.verdict_date(), 'Capital to repay, ' || NEW.address, cella.receipt())
-  RETURNING id INTO entry;
-  INSERT INTO transaction.line (entry, n, account, side, amount)
-  SELECT entry, row_number() OVER (ORDER BY y.n), y.account, y.side, cella.amount(y.cents)
-  FROM (
-    SELECT 1 AS n, a.code AS account, 'debit' AS side, b.cents
-    FROM account.account a
-    JOIN LATERAL (
-      SELECT coalesce(sum(CASE l.side WHEN 'credit' THEN cella.cents(l.amount) ELSE -cella.cents(l.amount) END), 0)::bigint AS cents
-      FROM transaction.line l WHERE l.account = a.code
-    ) b ON b.cents > 0
-    WHERE a.holder = NEW.address AND a.parent = '1013' AND held > 0
-    UNION ALL SELECT 2, '4567', 'credit', held WHERE held > 0
-    UNION ALL SELECT 3, '1012', 'debit', owed WHERE owed > 0
-    UNION ALL SELECT 4, '4562', 'credit', owed WHERE owed > 0
-  ) y;
-  IF owed > 0 THEN
-    UPDATE account_membership_transaction.subscription SET cancelled = cella.amount(owed) WHERE member = NEW.address;
-  END IF;
-  IF held > 0 THEN
-    INSERT INTO account_membership_transaction.repayment (member, n, due, amount)
-    SELECT NEW.address, r.n, r.due, cella.amount((cella.allocate(cella.amount(held), array_fill(1::bigint, ARRAY[t.repayments])))[r.n])
-    FROM account.repayments(terms, cella.verdict_date()) r
-    CROSS JOIN account.terms t WHERE t.id = terms;
-  END IF;
-  RETURN NULL;
-END
-$$;
-
-CREATE TRIGGER withdraws AFTER UPDATE OF status ON membership.member
-  FOR EACH ROW EXECUTE FUNCTION account_membership_transaction.withdraws();
-
 -- account:capital:repay — a departed associate's repayment, paid by this
 -- write once it has fallen due and after every one before it, and the
 -- entry is exactly it: 4567 debited and the bank, 512, credited.
@@ -259,5 +148,123 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 GRANT SELECT ON account_membership_transaction.paid, account_membership_transaction.called,
   account_membership_transaction.repayment, account_membership_transaction.owed TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_transaction.paid, account_membership_transaction.repayment TO cella_app;
-GRANT UPDATE (amount, cancelled) ON account_membership_transaction.subscription TO cella_app;
+GRANT UPDATE (cancelled) ON account_membership_transaction.subscription TO cella_app;
 GRANT UPDATE (entry, paid) ON account_membership_transaction.repayment TO cella_app;
+
+-- account:capital:subscribe — a member admitted subscribes their shares,
+-- by the write that follows their admission: they are active and hold at
+-- least the shares the terms governing the verdict date ask, which value
+-- a share; this write made their one subscription, of exactly their
+-- shares at that value, on a capital account under 1013 they hold; and the
+-- entry is exactly it, 4562 debited and 1012 credited. That the month is
+-- open is account-transaction's guard on every line.
+CREATE FUNCTION account_membership_transaction.subscribes(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN m.address IS NULL THEN coalesce(x.member, 'no one') || ' is no member'
+    WHEN m.status <> 'active' THEN m.address || ' is ' || m.status || ': only a member admitted subscribes'
+    WHEN m.shares = 0 THEN m.address || ' holds no shares to subscribe'
+    WHEN t.id IS NULL THEN 'no adopted terms value a share on ' || cella.verdict_date()
+    WHEN m.shares < t.minimum THEN m.address || ' subscribes ' || m.shares || ' shares: ' || t.id || ' ask at least ' || t.minimum
+    WHEN s.member IS NULL OR s.entry IS DISTINCT FROM x.entry OR s.account IS DISTINCT FROM x.account
+      THEN coalesce(x.entry, 'the entry') || ' is not ' || m.address || '''s subscription'
+    WHEN s.shares <> m.shares OR cella.cents(s.amount) IS DISTINCT FROM m.shares * cella.cents(t.share)
+      THEN m.address || '''s subscription is not their ' || m.shares || ' shares at ' || cella.cents(t.share) || ' cents each'
+    WHEN NOT EXISTS (SELECT FROM account.account a WHERE a.code = s.account AND a.holder = m.address AND a.parent = '1013')
+      THEN s.account || ' is no capital account of ' || m.address || '''s under 1013'
+    WHEN (
+      SELECT count(*) <> 2 OR count(DISTINCT l.account) <> 2 OR bool_or(cella.cents(l.amount) <> cella.cents(s.amount))
+        OR count(*) FILTER (WHERE (l.account = '4562' AND l.side = 'debit') OR (l.account = '1012' AND l.side = 'credit')) <> 2
+      FROM transaction.line l WHERE l.entry = x.entry
+    ) THEN x.entry || ' is not a subscription of ' || cella.cents(s.amount) || ' cents: 4562 debited and 1012 credited by it, nothing else'
+  END
+  FROM (SELECT payload ->> 'member' AS member, payload ->> 'entry' AS entry, payload ->> 'account' AS account) x
+  LEFT JOIN membership.member m ON m.address = x.member
+  LEFT JOIN account.terms t ON t.id = account.capital_for(cella.verdict_date())
+  LEFT JOIN account_membership_transaction.subscription s ON s.member = x.member;
+END;
+
+-- What an associate who leaves withdrew, once: the entry that moved their
+-- capital to 4567 and cancelled what they had not paid.
+CREATE TABLE account_membership_transaction.withdrawal (
+  member text PRIMARY KEY,
+  entry text NOT NULL UNIQUE
+);
+
+-- Whether the withdrawal that follows a member's exit has anything to do:
+-- terms govern the verdict date, nothing is drawn up for them yet, and
+-- their capital accounts hold something or they owe some of their
+-- subscription. It runs as its owner, since whoever closed the motion may
+-- read no colleague's capital, and says no more than whether.
+CREATE FUNCTION account_membership_transaction.holds(member text) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT account.capital_for(cella.verdict_date()) IS NOT NULL
+    AND NOT EXISTS (SELECT FROM account_membership_transaction.withdrawal w WHERE w.member = holds.member)
+    AND NOT EXISTS (SELECT FROM account_membership_transaction.repayment r WHERE r.member = holds.member)
+    AND (
+      EXISTS (SELECT FROM account_membership_transaction.called c WHERE c.member = holds.member AND c.unpaid > 0)
+      OR coalesce((
+        SELECT sum(CASE l.side WHEN 'credit' THEN cella.cents(l.amount) ELSE -cella.cents(l.amount) END)
+        FROM transaction.line l JOIN account.account a ON a.code = l.account
+        WHERE a.holder = holds.member AND a.parent = '1013'
+      ), 0) > 0
+    );
+END;
+
+REVOKE EXECUTE ON FUNCTION account_membership_transaction.holds(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION account_membership_transaction.holds(text) TO cella_app;
+
+-- account:capital:withdraw — an associate who left has their capital
+-- withdrawn, by the write that follows their exit: this write made their
+-- one withdrawal; their capital accounts hold nothing after it, what they
+-- held credited to 4567; what they had not paid is cancelled, 1012 debited
+-- and 4562 credited by what the subscription records cancelled; the entry
+-- posts nothing else; and its repayments add up to what it credits 4567,
+-- as many as the terms governing the exit say.
+CREATE FUNCTION account_membership_transaction.withdraws(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN m.address IS NULL THEN coalesce(x.member, 'no one') || ' is no member'
+    WHEN m.status <> 'exited' THEN m.address || ' is ' || m.status || ': only the capital of a member who left is withdrawn'
+    WHEN t.id IS NULL THEN 'no terms govern an exit on ' || cella.verdict_date()
+    WHEN w.member IS NULL OR w.entry IS DISTINCT FROM x.entry THEN coalesce(x.entry, 'the entry') || ' is not ' || m.address || '''s withdrawal'
+    WHEN EXISTS (
+      SELECT FROM account.account a WHERE a.holder = m.address AND a.parent = '1013' AND coalesce((
+        SELECT sum(CASE l.side WHEN 'credit' THEN cella.cents(l.amount) ELSE -cella.cents(l.amount) END) FROM transaction.line l WHERE l.account = a.code
+      ), 0) <> 0
+    ) THEN m.address || '''s capital accounts still hold capital after ' || x.entry
+    WHEN EXISTS (SELECT FROM account_membership_transaction.called c WHERE c.member = m.address AND c.unpaid <> 0)
+      THEN 'what ' || m.address || ' had not paid of their subscription is not cancelled'
+    WHEN e.other OR e.cancelled IS DISTINCT FROM coalesce(cella.cents(s.cancelled), 0) OR e.uncalled IS DISTINCT FROM e.cancelled
+      THEN x.entry || ' is not ' || m.address || '''s withdrawal: their capital accounts debited and 4567 credited, 1012 debited and 4562 credited by what is cancelled, nothing else'
+    WHEN e.owed > 0 AND (
+      (SELECT count(*) FROM account_membership_transaction.repayment r WHERE r.member = m.address) <> t.repayments
+      OR (SELECT sum(cella.cents(r.amount)) FROM account_membership_transaction.repayment r WHERE r.member = m.address) <> e.owed
+    ) THEN 'the repayments drawn up for ' || m.address || ' are not the ' || t.repayments || ' adding up to the ' || e.owed || ' cents ' || x.entry || ' owes them'
+  END
+  FROM (SELECT payload ->> 'member' AS member, payload ->> 'entry' AS entry) x
+  LEFT JOIN membership.member m ON m.address = x.member
+  LEFT JOIN account.terms t ON t.id = account.capital_for(cella.verdict_date())
+  LEFT JOIN account_membership_transaction.withdrawal w ON w.member = x.member
+  LEFT JOIN account_membership_transaction.subscription s ON s.member = x.member
+  CROSS JOIN LATERAL (
+    SELECT coalesce(sum(cella.cents(l.amount)) FILTER (WHERE l.account = '4567' AND l.side = 'credit'), 0) AS owed,
+           coalesce(sum(cella.cents(l.amount)) FILTER (WHERE l.account = '1012' AND l.side = 'debit'), 0) AS cancelled,
+           coalesce(sum(cella.cents(l.amount)) FILTER (WHERE l.account = '4562' AND l.side = 'credit'), 0) AS uncalled,
+           coalesce(bool_or(NOT (
+             (l.account = '4567' AND l.side = 'credit') OR (l.account = '1012' AND l.side = 'debit') OR (l.account = '4562' AND l.side = 'credit')
+             OR (l.side = 'debit' AND EXISTS (SELECT FROM account.account a WHERE a.code = l.account AND a.holder = x.member AND a.parent = '1013'))
+           )), false) AS other
+    FROM transaction.line l WHERE l.entry = x.entry
+  ) e;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('account:capital:subscribe', 'account_membership_transaction.subscribes(jsonb)', 'account-membership-transaction'),
+  ('account:capital:withdraw', 'account_membership_transaction.withdraws(jsonb)', 'account-membership-transaction');
+
+GRANT SELECT ON account_membership_transaction.withdrawal TO cella_app, cella_guards;
+GRANT INSERT ON account_membership_transaction.withdrawal TO cella_app;

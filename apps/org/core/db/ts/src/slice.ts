@@ -17,6 +17,9 @@ export interface Done {
   receipt?: number
   reason?: string
   then: Done[]
+  // What a write a reaction made asked, which the reactions to its op
+  // read, so they follow it as they follow a write made from a page.
+  request?: unknown
   // The form's fields already written by a write of several that stopped
   // part-way, such as the cells of a week before its first refusal: the
   // form empties them, so trying again sends only the rest.
@@ -24,11 +27,12 @@ export interface Done {
 }
 
 // The handler's outcome, made plain for the page, and what the reactions
-// to it did; `request` is what a reaction to the op reads.
-export function done(op: Permission, outcome: Settled<unknown> | Pending | Refused, then: Done[] = []): Done {
+// to it did; `request` is what a reaction to the op reads, kept on a
+// settled write a reaction made, so the reactions to it follow.
+export function done(op: Permission, outcome: Settled<unknown> | Pending | Refused, then: Done[] = [], request?: unknown): Done {
   switch (outcome.state) {
     case 'settled':
-      return { op, state: 'settled', entry: outcome.entry, then }
+      return { op, state: 'settled', entry: outcome.entry, then, ...(request === undefined ? {} : { request }) }
     case 'pending':
       return { op, state: 'pending', receipt: outcome.receipt, then }
     case 'refused':

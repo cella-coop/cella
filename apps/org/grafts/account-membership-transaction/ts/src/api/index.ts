@@ -1,20 +1,23 @@
 // The graft's writes, reads and slice, which the shell mounts: a member's
 // draws and their capital in the books, on their page, and drawing from
 // there; their subscription paid in, from the bank or their pay, and,
-// once they left, their capital repaid, recording each from there.
-// Subscribing on admission and moving a departing associate's capital to
-// what is owed them on exit are this graft's triggers, in the writes that
-// admit and end a membership.
+// once they left, their capital repaid, recording each from there. What
+// follows an admission, the subscription, and an exit, the withdrawal,
+// are this graft's reactions, each a write of its own after it.
 import { action, cents, type Db, type Form, type Slice } from '@cella/org-db'
 import { draw } from '../handlers/draw.ts'
 import { pay } from '../handlers/pay.ts'
 import { repay } from '../handlers/repay.ts'
+import { subscribed } from '../handlers/subscribe.ts'
+import { withdrawn } from '../handlers/withdraw.ts'
 import { account } from '../drivers/draw.ts'
 import { called } from '../drivers/capital.ts'
 
 export { draw } from '../handlers/draw.ts'
 export { pay } from '../handlers/pay.ts'
 export { repay } from '../handlers/repay.ts'
+export { subscribe, subscribed, subscribing } from '../handlers/subscribe.ts'
+export { withdraw, withdrawing, withdrawn } from '../handlers/withdraw.ts'
 export { account } from '../drivers/draw.ts'
 export { called } from '../drivers/capital.ts'
 export type { Called, Payment, Repayment } from '../models/capital.ts'
@@ -55,6 +58,9 @@ export const slice: Slice = {
         repay: action('account:capital:repay', async (_form: Form, id, deps) => ({ member: theirs(id), n: await next(deps.db, theirs(id)) }), repay),
       },
     },
-
+  },
+  on: {
+    'membership:member:admit': subscribed,
+    'membership:member:exit': withdrawn,
   },
 }

@@ -9,7 +9,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import * as drag from '@cella/org-ui/models'
 import { b64, createDoc, order, text as text_ } from '@cella/org-document/models'
-import { Shell } from './serve.ts'
+import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
@@ -283,11 +283,19 @@ test('Hugo objects to admitting Inès, then consents; closing early is refused',
   assert.match(early.reason ?? '', /open until 2026-10-31/)
 })
 
-test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'s own verdict; she signs with the phone she took up her invitation on', async () => {
+test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'s own verdict, and her subscription follows it; she signs with the phone she took up her invitation on', async () => {
   await start('2026-10-31')
   const closed = await act('/motions/m-2026-012', 'close', {}, camille)
   assert.equal(closed.state, 'settled')
-  assert.deepEqual(closed.then, [], 'nothing follows: the admission is the close')
+  const outline = (ds: Done[]): unknown[] => ds.map((d) => [d.op, d.state, outline(d.then)])
+  assert.deepEqual(
+    outline(closed.then),
+    [['membership:member:admit', 'settled', [['account:capital:subscribe', 'settled', []]]]],
+    'the admission is the close, and the subscription a write of its own after it',
+  )
+  assert.ok(!JSON.stringify(closed).includes('"request"'), 'what a reaction asked stays on the server')
+  const subscribed = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [closed.then[0].then[0].entry])
+  assert.deepEqual(subscribed, { op: 'account:capital:subscribe', actor: camille })
   const { text } = await page(`/people/${ines}`)
   assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('phone'))
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))

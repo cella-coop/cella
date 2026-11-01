@@ -57,3 +57,35 @@ export interface Called {
   payments: Payment[]
   repayments: Repayment[]
 }
+
+// A member admitted subscribing their shares, citing the motion that
+// admitted them.
+export interface Subscribe {
+  member: string
+  motion: string
+}
+
+export interface Subscribed {
+  member: string
+  account: string
+  shares: number
+  amount: number
+  entry: string
+}
+
+// A departed associate's capital withdrawn, citing the motion that ended
+// their membership.
+export interface Withdraw {
+  member: string
+  motion: string
+}
+
+// What a withdrawal moved to 4567, what it cancelled of the subscription,
+// in cents, and the repayments it drew up.
+export interface Withdrawn {
+  member: string
+  owed: number
+  cancelled: number
+  repayments: number
+  entry: string
+}

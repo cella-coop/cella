@@ -20,4 +20,13 @@ export const actions = {
   // a departed associate's capital repaid, instalment by instalment, each
   // once and in its turn
   'account:capital:repay': ordered({ power: 'repay-capital' }),
+  // a member admitted subscribes their shares, their capital account
+  // opened and the shares called; carried by the motion that admits
+  'account:capital:subscribe': ordered({ check: 'decided' }),
+  // a departed associate's capital moved to what is owed them and its
+  // repayments drawn up; carried by the motion that ends the membership
+  'account:capital:withdraw': ordered({ check: 'decided' }),
+  // a departed member's capital accounts frozen for good; carried by the
+  // motion that ends the membership
+  'account:account:freeze': ordered({ check: 'decided' }),
 } satisfies Actions

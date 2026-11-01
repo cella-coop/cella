@@ -49,9 +49,12 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
 // close has settled: each action, in the order proposed, as its own
 // decided write, signed as the member who closed it and judged again by
 // its guards. A refused one leaves the motion passed and that action
-// undone, as its outcome says; the others still go. It reads outside a
-// write, so whether the motion passed comes from its tally, which a
-// secret ballot opens at its close.
+// undone, as its outcome says; the others still go. Before them it
+// reports each admission the close made, settled in the close's entry,
+// with the request an admission of its own carries, so what reacts to an
+// admission follows it, as each carried write's reactions follow it. It
+// reads outside a write, so whether the motion passed comes from its
+// tally, which a secret ballot opens at its close.
 export async function carried(motion: string, deps: Deps): Promise<Done[]> {
   const { rows } = await deps.db.query<{ n: number; kind: string; args: Args }>(
     `SELECT m.n, m.kind, m.args FROM motion.action m JOIN motion.motion d ON d.id = m.motion
@@ -61,9 +64,14 @@ export async function carried(motion: string, deps: Deps): Promise<Done[]> {
   )
   const out: Done[] = []
   for (const m of rows) {
+    if (m.kind === 'admit') {
+      out.push({ op: 'membership:member:admit', state: 'settled', then: [], request: { member: String(m.args.member), shares: Number(m.args.shares), motion } })
+      continue
+    }
     const w = writes[m.kind]
     if (w) {
-      out.push(done(w.op, await w.run(m.args, motion, deps, m.n)))
+      const input = { ...m.args, motion }
+      out.push(done(w.op, await w.run(m.args, motion, deps, m.n), [], input))
     }
   }
   return out

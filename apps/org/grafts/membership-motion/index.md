@@ -47,7 +47,12 @@ is that three-way graft's; this one never reads it.
 
 None of its own: a close that admits, and the suspensions and exits a
 passing motion carries out, need the roll, so they are
-`circle-membership-motion`'s.
+`circle-membership-motion`'s. What follows each in the books, the member's capital
+subscribed, frozen and withdrawn, is the reaction of the grafts joining
+`membership` to the books (`account-membership`,
+`account-membership-transaction`), each a write of its own after the
+admission or the exit, citing the same motion; this graft never reads
+it.
 
 ## Shell
 

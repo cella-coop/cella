@@ -6,7 +6,7 @@ import { adopt, close, nextPeriod, open } from '../handlers/index.ts'
 import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
 
-export { adopt, close, nextPeriod, open, opening } from '../handlers/index.ts'
+export { adopt, close, freeze, freezing, holding, nextPeriod, open, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
 export { term, terms } from '../drivers/terms.ts'
 export { report, reports } from '../drivers/report.ts'

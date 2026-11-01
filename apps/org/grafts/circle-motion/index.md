@@ -63,4 +63,8 @@ put in, with their procedures, which the motion feat's New form offers.
 On a circle's page, which circle decides about it, the open motions
 about it, and Propose…: nesting it under another circle, granting a
 mandate to one of its roles, or revoking one, with a deadline and why,
-posted to the `put` circle-membership-motion serves.
+posted to the `put` circle-membership-motion serves; and its Policies,
+the policies it adopted that are in force, each as its legal wording
+reads (`policy.sentence`), its kind, the motion that adopted it, linked,
+and the days it applies from and until, read from the register in
+org's core (`inForce` in `@cella/org-policy`).

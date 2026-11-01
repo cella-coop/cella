@@ -26,7 +26,7 @@ updated = 2026-11-01
 | **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui` and the notary |
+| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui`, the policy register and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by motion: how cella is extended |
 | **subsidiarity** | a guard lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
@@ -55,7 +55,7 @@ updated = 2026-11-01
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
-| **mandate** | a grant of one power to one role, with an optional limit per action or budget per month or year, and a term |
+| **mandate** | a kind of policy: a grant of one power to one role, with an optional limit per action or budget per month or year, and a term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **seat** | a member's place in a circle, perhaps with a role: the `circle-membership` graft's |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
@@ -117,7 +117,11 @@ updated = 2026-11-01
 | **motion** | how a circle acts as a whole: put to it by a procedure and decided by it, carrying actions or none; the `motion` feat's |
 | **decision** | a passed motion, in plain speech; no row and no name in the code |
 | **proposal** | a motion put to a circle, by a procedure, with its deadline |
-| **procedure** | how a motion is decided: its method, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
+| **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
+| **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
+| **rule** | a kind of policy: what else the co-op agreed, such as its capital terms or the solidarity rate; a rule with no value binds by people's judgement alone |
+| **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt`, inside the write of a motion's action |
+| **row-level policy** | a Postgres policy on a table, saying which rows a reader sees; always called so, and never a policy |
 | **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |
 | **consent** | passes if no one objects at close; a member's latest stance counts |
 | **objection** | a stance under consent that blocks while it stands |
@@ -132,6 +136,6 @@ updated = 2026-11-01
 | **minutes** | a meeting's record, a document, adopted by motion where its circle says so |
 | **roll** | who may vote on a motion |
 | **delegate** | a member chosen to vote for others at a higher level |
-| **adoption** | a motion making one version of a document binding |
+| **adoption** | a motion making one version of a document binding, or a policy |
 | **outcome** | the result of a motion, folded from its signed votes, never stored |
 | **open · passed · rejected** | a motion's state: open until its close, then passed or rejected by the outcome of the stances the close froze, read in SQL; a passed motion is a decision; "adopted" is a document version's, never a motion's |

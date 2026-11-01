@@ -82,7 +82,8 @@ coordination's, counts its five.
   that list; a graft that joins motion to a write's feat registers its
   action there by `motion.register_cite` (`membership-motion` for
   admission, suspension and exit, `circle-motion` for nesting and
-  mandates, `document-motion` for `document:document:adopt`), and this
+  mandates, `document-motion` for `document:document:adopt`, and the
+  motion feat itself for `motion:policy:adopt`), and this
   graft registers the guard by `motion.register_cite_guard`, which
   attaches it to every action listed, then and later: the motion feat's
   register functions attach it, and this graft puts no trigger on
@@ -131,7 +132,8 @@ coordination's, counts its five.
   signed as the member who closed it and judged again by its guards: a
   suspension, an exit or the erasure of a former member's personal data
   (membership feat), a nesting, a grant or a revocation
-  (circle feat), a seat given or ended (circle-membership). A refused one
+  (circle feat), a seat given or ended (circle-membership), a policy
+  adopted (the motion feat's `adopt`). A refused one
   leaves the motion passed and that action undone, as its outcome
   says. The slice runs it as its reaction to `motion:motion:close`.
 - `put`: what a member's or a circle's page proposes, through this

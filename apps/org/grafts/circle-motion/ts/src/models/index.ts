@@ -1,3 +1,5 @@
+import type { Policy } from '@cella/org-policy'
+
 // The kinds of action this graft carries: a circle nested, a power
 // granted to a role, a mandate revoked.
 export type Kind = 'nest' | 'grant' | 'revoke'
@@ -17,7 +19,8 @@ export interface Deciding {
 
 // What a circle's page offers to propose: where each kind of motion
 // goes, the circles it may be nested under, its roles and the mandates in
-// force on them; and the open motions about it.
+// force on them; the open motions about it; and the policies it adopted
+// that are in force, each with its motion and its days.
 export interface Proposing {
   circle: string
   // The circle that decides about this one: its parent, or the assembly
@@ -27,6 +30,7 @@ export interface Proposing {
   roles: { id: string; name: string }[]
   mandates: { id: string; label: string }[]
   open: { motion: string; title: string; kind: Kind; deadline: string }[]
+  policies: Policy[]
 }
 
 // A motion about a circle, carrying one action of this graft's kinds, put

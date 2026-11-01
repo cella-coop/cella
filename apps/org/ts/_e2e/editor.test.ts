@@ -84,7 +84,7 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, engine] of browsers()) {
+for (const [name, launch] of browsers()) {
   describe(name, () => {
     let browser: Browser
     let context: BrowserContext
@@ -208,7 +208,7 @@ for (const [name, engine] of browsers()) {
     }
 
     before(async () => {
-      browser = await engine.launch()
+      browser = await launch()
       context = await browser.newContext({ viewport: { width: 1280, height: 900 }, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
       await signIn(context, base, camille)
     })

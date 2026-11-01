@@ -6,14 +6,34 @@
 // `BROWSERS` (comma-separated) narrows the browsers run.
 
 import { spawn, type ChildProcess } from 'node:child_process'
+import { mkdtempSync, rmSync } from 'node:fs'
 import { createServer } from 'node:net'
-import { chromium, firefox, webkit, type BrowserContext, type BrowserType } from 'playwright-core'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import { chromium, firefox, webkit, type Browser, type BrowserContext } from 'playwright-core'
 
 const entry = new URL('../build/index.js', import.meta.url).pathname
 
-export const engines: Record<string, BrowserType> = { chromium, firefox, webkit }
+// Firefox makes its profile root under the home and sandboxes its content
+// processes with chroot, and a turn on the box has a read-only home and a
+// syscall filter that refuses chroot. So it gets a home of its own under
+// the temporary directory, dropped when it closes, and no content sandbox,
+// as Playwright runs Chromium without its own.
+async function firefoxLaunch(): Promise<Browser> {
+  const home = mkdtempSync(join(tmpdir(), 'cella-firefox-'))
+  const browser = await firefox.launch({ env: { ...process.env, HOME: home, MOZ_DISABLE_CONTENT_SANDBOX: '1' } })
+  browser.once('disconnected', () => rmSync(home, { recursive: true, force: true }))
+  return browser
+}
 
-export function browsers(): [string, BrowserType][] {
+const engines: Record<string, () => Promise<Browser>> = {
+  chromium: () => chromium.launch(),
+  firefox: firefoxLaunch,
+  webkit: () => webkit.launch(),
+}
+
+// The browsers run, each by its name and how it launches.
+export function browsers(): [string, () => Promise<Browser>][] {
   if (!process.env.PLAYWRIGHT_BROWSERS_PATH) {
     throw new Error('PLAYWRIGHT_BROWSERS_PATH is not set: run the scenarios through `cella test`, inside `nix develop`')
   }

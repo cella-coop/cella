@@ -35,7 +35,7 @@ after(async () => {
   await su.end()
 })
 
-for (const [name, engine] of browsers()) {
+for (const [name, launch] of browsers()) {
   describe(name, () => {
     const sam = `sam-${name}@lanterne.example`
     const secret = random()
@@ -47,7 +47,7 @@ for (const [name, engine] of browsers()) {
     })
 
     it('Sam takes it up in the browser, which makes, keeps and signs with a key it cannot export', async () => {
-      const browser = await engine.launch()
+      const browser = await launch()
       try {
         const context = await browser.newContext({ extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
         const page = await context.newPage()

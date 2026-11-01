@@ -70,7 +70,7 @@ test('Lanterne\'s mandates are policies of the assembly, adopted by its founding
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE r.kind = 'mandate' AND r.circle = 'ag' AND r.motion = 'm-2021-001')::int AS adopted
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy`,
     ),
-    { mandates: 36, adopted: 36 },
+    { mandates: 38, adopted: 38 },
   )
   assert.deepEqual(
     await one(

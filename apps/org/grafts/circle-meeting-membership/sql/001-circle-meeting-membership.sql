@@ -28,8 +28,9 @@ LEFT JOIN circle_meeting.setting s ON s.circle = m.circle
 GROUP BY m.id, s.quorum;
 
 -- meeting:item:add, :move, :remove — the actor is an active member
--- seated in the meeting's circle on the verdict date: the agenda is its
--- members'.
+-- seated in the meeting's circle on the verdict date: the participant's
+-- `discuss`, which circle_membership.may finds on any seat, is held in
+-- the meeting's circle.
 CREATE FUNCTION circle_meeting_membership.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

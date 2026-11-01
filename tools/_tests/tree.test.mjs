@@ -102,7 +102,7 @@ test('a feat\'s name is unique in its app, at any depth', () => {
 })
 
 const src = 'apps/org/feats/motion/core/ts/src'
-const declaring = "import { confluent, type Actions } from '@cella/org-actions'\n\nexport const actions = {\n  'motion:motion:propose': confluent({ check: 'seat' }),\n} satisfies Actions\n"
+const declaring = "import { confluent, type Actions } from '@cella/org-actions'\n\nexport const actions = {\n  'motion:motion:propose': confluent({ power: 'propose' }),\n} satisfies Actions\n"
 
 test('a feat declares its actions in its models/actions.ts', () => {
   const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring, [`${src}/handlers/propose.ts`]: "import type { Outcome } from '@cella/org-actions'\n" } })

@@ -120,7 +120,7 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
 
   const entry = await one<{ op: string; guards: { owner: string }[] }>('SELECT op, guards FROM cella.log WHERE n = 4')
   assert.equal(entry.op, 'motion:motion:close')
-  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-membership-motion', 'membership-motion', 'motion'])
+  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-membership', 'circle-membership-motion', 'membership-motion', 'motion'])
 
   const late = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')

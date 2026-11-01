@@ -8,5 +8,5 @@ export const actions = {
   // at rung 1; the cited motion nests the circle
   'circle:circle:nest': ordered({ check: 'decided' }),
   // the circle's channel, for those seated in it
-  'circle:circle:message': confluent({ check: 'seat' }),
+  'circle:circle:message': confluent({ power: 'discuss' }),
 } satisfies Actions

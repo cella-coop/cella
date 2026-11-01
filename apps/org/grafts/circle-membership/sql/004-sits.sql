@@ -1,5 +1,6 @@
 -- circle:circle:message — the actor is an active member seated in the
--- circle on the verdict date: a circle's channel is its members'.
+-- circle on the verdict date: the participant's `discuss`, which `may`
+-- finds on any seat, is held in the circle the message is posted to.
 CREATE FUNCTION circle_membership.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

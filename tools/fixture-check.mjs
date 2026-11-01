@@ -52,7 +52,8 @@ const check = (name) => {
   }
 
   const circles = ids(circle.circle)
-  const roles = ids(circle.role)
+  // The participant role is built in: the circle feat's migration makes it.
+  const roles = new Set([...ids(circle.role), 'participant'])
   for (const c of circle.circle ?? []) {
     if (c.parent) {
       has(circles, c.parent, 'circle', `circle ${c.id}`)

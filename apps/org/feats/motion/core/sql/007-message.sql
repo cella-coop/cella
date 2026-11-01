@@ -53,3 +53,12 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:message:post', 'motion.p
 
 GRANT SELECT, INSERT ON motion.message TO cella_app;
 GRANT SELECT ON motion.message TO cella_guards;
+
+-- What a motion's writes need, the participant's mandates in the motion's
+-- circle: `propose` to propose one and close it, `discuss` to post on its
+-- deliberation. circle-membership checks the actor holds the power,
+-- circle-membership-motion that they hold it in the motion's circle.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('motion:motion:propose', 'propose', NULL, 'motion'),
+  ('motion:motion:close', 'propose', NULL, 'motion'),
+  ('motion:message:post', 'discuss', NULL, 'motion');

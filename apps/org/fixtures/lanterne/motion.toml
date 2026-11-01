@@ -212,6 +212,17 @@ args = { kind = "rule", wording = "A share is worth {account_share: 50 € | mor
 kind = "policy"
 args = { kind = "rule", wording = "The work share is divided among the workers {patronage_salary: 100 % | more is stricter} in proportion to pay, {patronage_hours: 0 % | more is stricter} to time worked and {patronage_equal: 0 % | more is stricter} in equal parts. {patronage_capital: 50 % | more is stricter} of each associate's part is employed in shares of the capital, and the capital earns interest of at most {patronage_interest: 3.5 % | less is stricter} a year", friendly = "The work share follows pay; half of an associate's part buys shares." }
 
+# The participant's mandates: every seat holds its circle's participant
+# role there, so whoever sits in a circle proposes and discusses its
+# motions, writes in its channel and draws up its meetings' agendas.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: propose}, to propose a motion of the circle and close it" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: discuss}, to discuss the circle's motions, write in its channel and draw up its meetings' agendas" }
+
 [[motion]]
 id = "m-2026-006"
 circle = "ag"

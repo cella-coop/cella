@@ -24,11 +24,12 @@ export interface Grant {
 // the action in `cella.guard`, or for `decided` a row in `motion.cites`:
 // - `self`: the actor's own, such as their profile or their devices;
 // - `roll`: a member on the roll of the motion the action names;
-// - `seat`: a member seated in the circle the action concerns;
 // - `decided`: the motion the action cites closed and passed;
 // - `first`: the log's first entry, as the state a scope held before its
 //   log is carried in once.
-export type Check = 'self' | 'roll' | 'seat' | 'decided' | 'first'
+// A seat is no check: what it allows is its roles' mandates, its circle's
+// participant role among them.
+export type Check = 'self' | 'roll' | 'decided' | 'first'
 
 export interface Confluent extends Grant {
   label: 'confluent'

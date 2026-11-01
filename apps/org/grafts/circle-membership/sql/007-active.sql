@@ -1,12 +1,15 @@
 -- A power is held, and a circle's channel kept, by an active member as
 -- membership says one is on the day (`membership.active`), not by a copy
 -- of its status: so a power asked of a past day reads who was active then.
+-- Every seat holds its circle's participant role beside its own, so the
+-- participant's mandates are found on any seat; the guard that knows the
+-- circle a write concerns holds them to a seat there (`sits`).
 CREATE OR REPLACE FUNCTION circle_membership.may(actor text, power text, cents bigint, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
     SELECT FROM circle_membership.seat p
-    JOIN circle.mandate m ON m.role = p.role
+    JOIN circle.mandate m ON m.role = p.role OR m.role = 'participant'
     WHERE p.member = may.actor
       AND membership.active(p.member, may.day)
       AND m.power = may.power

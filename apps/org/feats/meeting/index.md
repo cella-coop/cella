@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -54,12 +54,13 @@ document, `document-meeting`'s.
 | Action | Power or check | Lanterne |
 |---|---|---|
 | schedule, cancel | `schedule-meeting` | a circle's lead, the gérante for any circle |
-| item.add, .move, .remove | seat: an active member seated in the meeting's circle | the circle's members |
+| item.add, .move, .remove | `discuss`, held in the meeting's circle | the circle's participants |
 | hold, minute | `keep-minutes` | a circle's secretary or its lead |
 
 `002-powers.sql` registers the powers; `circle-membership` checks the actor
 holds them and `circle-meeting-membership` that they reach the meeting's
-circle, and backs the seat check (`circle_meeting_membership.sits`).
+circle; the agenda's writes need the participant's `discuss`, which
+`circle_meeting_membership.sits` holds to a seat in the meeting's circle.
 
 ## Invariants
 

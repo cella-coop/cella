@@ -139,7 +139,7 @@ test('an op with neither a power nor a check is refused: nothing is allowed by o
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
   assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
   const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
-  assert.match(odd[0], /declares the check anyone, which is none of self, roll, seat, decided/)
+  assert.match(odd[0], /declares the check anyone, which is none of self, roll, decided, first/)
 })
 
 test('a declared check is backed by SQL: a guard on the op, or for decided a row in motion.cites', () => {
@@ -183,4 +183,12 @@ test('the SQL check collects the literal guard and cites rows that back a check'
   assert.deepEqual(errors, [])
   assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
   assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'member-motion' }])
+})
+
+test('a seat is no check: an action a seat allows names the participant\'s power, and check seat is refused', () => {
+  const seat = covered([op('motion:motion:propose', null, null, 'seat')], { guards: [{ op: 'motion:motion:propose', owner: 'circle-membership-motion' }], cites: [] })
+  assert.match(seat[0], /motion:motion:propose checks seat, which is no check: .* name the power, as propose or discuss/)
+  const both = covered([op('motion:motion:propose', 'propose', null, 'seat')], { guards: [], cites: [] })
+  assert.match(both[0], /motion:motion:propose checks seat, which is no check/)
+  assert.deepEqual(covered([op('motion:motion:propose', 'propose')], { guards: [], cites: [] }), [])
 })

@@ -31,7 +31,8 @@ graft's, and whether a member is active on a day the `membership` feat's
 `membership.active(person, day)`.
 
 - `circle_membership.may(actor, power, cents, day)`: the actor is active and
-  holds, on the day, a seat whose role has a mandate in force for the
+  holds, on the day, a seat whose role, or the participant role every
+  seat holds, has a mandate in force for the
   power, not revoked by the day, within its `limit` when the write
   carries an amount.
   A `budget` is not checked: it needs the spend over its period tracked.
@@ -93,7 +94,8 @@ and ends, as its reaction to the close.
 | seat.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
 
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
-the actor is an active member seated in the circle on the verdict date.
+the actor is an active member seated in the circle on the verdict date,
+where the participant's `discuss` is held.
 
 ## Reads
 

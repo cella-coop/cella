@@ -71,7 +71,15 @@ Camille hires, and opens a new hire's candidacy for membership.
   the statutes by m-2021-001: its sentence marks the role, the power and
   the cap, as `The {role: finance} role holds {power: pay-supplier}, to
   pay suppliers, up to {limit: 3 000 €} a write`, and its values are
-  copied into `circle.mandate` as it is adopted (`motion.toml`).
+  copied into `circle.mandate` as it is adopted (`motion.toml`). The
+  collective mandates follow them, `m-2021-001/47` to `/61`, each on a
+  circle, as `The {circle: ag} circle holds {power: admit-member}, to
+  admit members, by motion`: the assembly's to admit, suspend and
+  exclude members, erase a former member's data, adopt and end
+  policies, approve the distribution, adopt documents, nest circles and
+  seat members; coordination's to adopt and end policies, adopt
+  documents, nest circles and seat members. No working circle holds
+  one, so a motion of Web carries no action.
 - **Rules.** The statutes' capital terms and the work share's terms are
   rules of the assembly adopted by m-2021-001, their values named for the
   feat that reads them and copied into its terms as each is adopted:

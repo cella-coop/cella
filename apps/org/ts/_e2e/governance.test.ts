@@ -102,12 +102,12 @@ test('Malik invites Nadia with a link; she takes it up on her laptop, which sign
   assert.match(reason(spent), /has taken up their invitation/, 'no new link once one is taken up')
 })
 
-test('only the assembly admits: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
+test('only the assembly admits, the one circle holding the collective admit-member: coordination may not; Malik proposes Nadia\'s admission to the assembly', async () => {
   const astray = await propose(
     { circle: 'coordination', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(camille),
   )
-  assert.match(reason(astray), /only the assembly decides to admit a member, not coordination/)
+  assert.match(reason(astray), /coordination holds no collective mandate for admit-member, so its motion may not admit a member/)
   // The motion feat's proposal alone fixes no roll, and is refused.
   const alone = await proposeAlone(
     { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },

@@ -223,6 +223,74 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 kind = "policy"
 args = { kind = "mandate", wording = "The {role: participant} role holds {power: discuss}, to discuss the circle's motions, write in its channel and draw up its meetings' agendas" }
 
+# The collective mandates: each circle that carries an action by motion
+# holds the power for it on itself, used only by a motion of that circle.
+# The assembly admits, suspends and excludes members, erases a former
+# member's data, adopts and ends policies, the statutes' among them,
+# approves the distribution and adopts documents, and with coordination
+# nests circles and seats members; coordination grants and revokes the
+# working circles' mandates and adopts their documents, the rate card
+# among them. The working circles hold none.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: admit-member}, to admit members, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: suspend-member}, to suspend a member, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-membership}, to end a membership, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: erase-member}, to erase a former member's personal data, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes' among them, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-policy}, to end policies, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: approve-distribution}, to approve a year's distribution, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-document}, to adopt a document's version, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: nest-circle}, to nest circles, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: adopt-policy}, to adopt policies, granting the working circles' mandates among them, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: end-policy}, to end policies, revoking the working circles' mandates among them, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: adopt-document}, to adopt a document's version, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: nest-circle}, to nest the working circles, by motion" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: seat-member}, to give and end seats in the working circles, by motion" }
+
 [[motion]]
 id = "m-2026-006"
 circle = "ag"

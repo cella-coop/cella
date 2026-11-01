@@ -18,14 +18,17 @@ CREATE TABLE circle.role (
   duty text NOT NULL DEFAULT ''
 );
 
--- A grant of one power to one role, for a term: the values of the mandate
--- policy that grants it, copied as it is adopted (`circle.mandate_from`).
--- `limit` caps a single write, `budget` a total over `per`; never both.
--- `from` and `until` are the days its policy applies; `revoked`, the day
--- its policy ended, from which it grants nothing.
+-- A grant of one power to one role, an individual mandate, or to one
+-- circle as a whole, a collective mandate its motions use, for a term:
+-- the values of the mandate policy that grants it, copied as it is
+-- adopted (`circle.mandate_from`). `limit` caps a single write, `budget`
+-- a total over `per`; never both. `from` and `until` are the days its
+-- policy applies; `revoked`, the day its policy ended, from which it
+-- grants nothing.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  role text NOT NULL REFERENCES circle.role,
+  role text REFERENCES circle.role,
+  circle text REFERENCES circle.circle,
   power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
   policy text NOT NULL UNIQUE,
   "limit" cella.amount,
@@ -34,12 +37,14 @@ CREATE TABLE circle.mandate (
   "from" date NOT NULL,
   until date,
   revoked date,
+  CHECK ((role IS NULL) <> (circle IS NULL)),
   CHECK ("limit" IS NULL OR budget IS NULL),
   CHECK ((budget IS NULL) = (per IS NULL)),
   CHECK (until IS NULL OR "from" < until)
 );
 
 CREATE INDEX ON circle.mandate (role);
+CREATE INDEX ON circle.mandate (circle);
 CREATE INDEX ON circle.mandate (power);
 
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;

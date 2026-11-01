@@ -54,8 +54,10 @@ updated = 2026-11-02
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
-| **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
-| **mandate** | a kind of policy: a grant of one power to one role, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
+| **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, or for an action a motion carries in `motion.cites`, and a mandate names the power it grants |
+| **mandate** | a kind of policy: a grant of one power to one role or to one circle, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
+| **individual mandate** | a mandate on a role (`{role: finance}`), used by whoever holds a seat with that role |
+| **collective mandate** | a mandate on a circle as a whole (`{circle: ag}`), used only by a motion of that circle: an action a passed motion carries takes effect only where the motion's circle holds one for the action's power; carved from what the circle above holds, as an individual mandate is |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **participant** | the role every circle has, built in, which every seat in it holds there; its mandates cover proposing and discussing, the powers `propose` and `discuss` |
 | **seat** | a member's place in a circle, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's |

@@ -1,5 +1,6 @@
 // The feat check's power rules: what an action's label in actions.ts says it needs
-// is what its feat registers in cella.power, and only the op's own feat
+// is what its feat registers in cella.power, or for an action a motion
+// carries what motion.cites lists it with, and only the op's own feat
 // registers it.
 
 import { test } from 'node:test'
@@ -139,18 +140,34 @@ test('an op with neither a power nor a check is refused: nothing is allowed by o
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
   assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
   const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
-  assert.match(odd[0], /declares the check anyone, which is none of self, roll, decided, first/)
+  assert.match(odd[0], /declares the check anyone, which is none of self, roll, first/)
 })
 
-test('a declared check is backed by SQL: a guard on the op, or for decided a row in motion.cites', () => {
+test('a declared check is backed by SQL: a guard on the op', () => {
   const self = op('member:member:profile', null, null, 'self')
-  const decided = op('member:member:admit', null, null, 'decided')
   assert.match(covered([self], { guards: [], cites: [] })[0], /member:member:profile checks self, but no SQL registers a guard on it in cella.guard/)
-  assert.match(covered([decided], { guards: [{ op: 'member:member:admit', owner: 'member' }], cites: [] })[0], /member:member:admit is decided, but no SQL lists it in motion.cites/)
-  assert.deepEqual(covered([self, decided], {
-    guards: [{ op: 'member:member:profile', owner: 'member' }],
-    cites: [{ op: 'member:member:admit', owner: 'member-motion' }],
-  }), [])
+  assert.deepEqual(covered([self], { guards: [{ op: 'member:member:profile', owner: 'member' }], cites: [] }), [])
+})
+
+test('a passed motion is no check: check decided is refused, with a power or without one, even listed in motion.cites', () => {
+  const decided = op('member:member:admit', null, null, 'decided')
+  const cites = [{ op: 'member:member:admit', power: 'admit-member', owner: 'member-motion' }]
+  assert.match(covered([decided], { guards: [{ op: 'member:member:admit', owner: 'member' }], cites })[0], /member:member:admit checks decided, which is no check: .* name the power and list it in motion.cites, as admit-member/)
+  const both = covered([op('member:member:admit', 'admit-member', null, 'decided')], { guards: [], cites })
+  assert.match(both[0], /member:member:admit checks decided, which is no check/)
+  assert.deepEqual(covered([op('member:member:admit', 'admit-member')], { guards: [], cites }), [])
+})
+
+test('an action a motion carries names the power motion.cites lists it with, a collective mandate\'s, and is in no cella.power', () => {
+  const admit = op('member:member:admit', 'admit-member')
+  const cite = (power, owner = 'member-motion') => ({ op: 'member:member:admit', power, owner })
+  assert.deepEqual(agree([admit], [], [cite('admit-member')]), [])
+  assert.match(agree([admit], [], [cite('suspend-member')])[0], /member:member:admit needs admit-member, but motion.cites lists it with suspend-member/)
+  assert.match(agree([op('member:member:admit', 'admit-member', 'amount')], [], [cite('admit-member')])[0], /a collective mandate's, which caps no amount/)
+  assert.match(agree([op('member:member:admit')], [], [cite('admit-member')])[0], /member:member:admit needs admit-member in motion.cites, which its label does not name/)
+  assert.match(agree([], [], [cite('admit-member')])[0], /lists member:member:admit in motion.cites, which no actions.ts declares/)
+  assert.match(agree([admit], [row('member:member:admit', 'admit-member')], [cite('admit-member')])[0], /registered in cella.power and listed in motion.cites: a power is a seat's or a motion's, never both/)
+  assert.match(agree([admit], [], [])[0], /needs admit-member, which no SQL registers in cella.power or motion.cites/)
 })
 
 test('a column that may hold personal data is registered personal or commented not personal, in its own schema', async () => {
@@ -175,14 +192,14 @@ test('a column that may hold personal data is registered personal or commented n
   assert.match(foreign.errors.join('\n'), /registers member.member.name as personal: a feat registers only its own schema's columns/)
 })
 
-test('the SQL check collects the literal guard and cites rows that back a check', async () => {
+test('the SQL check collects the literal guard and cites rows, each cite with its power', async () => {
   const { errors, found } = await check({
     member: `INSERT INTO cella.guard (op, fn, owner) VALUES ('member:member:profile', 'member.own(jsonb)', 'member');`,
-    'member-motion': `INSERT INTO motion.cites (op, owner) VALUES ('member:member:admit', 'member-motion');`,
+    'member-motion': `INSERT INTO motion.cites (op, power, owner) VALUES ('member:member:admit', 'admit-member', 'member-motion');`,
   })
   assert.deepEqual(errors, [])
   assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
-  assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'member-motion' }])
+  assert.deepEqual(found.cites, [{ op: 'member:member:admit', power: 'admit-member', owner: 'member-motion' }])
 })
 
 test('a seat is no check: an action a seat allows names the participant\'s power, and check seat is refused', () => {

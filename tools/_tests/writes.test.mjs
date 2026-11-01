@@ -141,13 +141,13 @@ test('a foreign write the list does not name is refused, and so is a listed one 
 
 test('a graft registers with the motion feat through its register functions, and an insert into the register is a foreign write', async () => {
   const { errors, found } = await check({
-    'member-motion': [`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'member-motion');
-SELECT motion.register_cite('member:member:admit', 'member-motion');
+    'member-motion': [`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'member:member:admit', 'member-motion');
+SELECT motion.register_cite('member:member:admit', 'admit-member', 'member-motion');
 SELECT motion.register_cite_guard('member_motion.carried(jsonb)', 'member-motion');`],
   })
   assert.deepEqual(errors, [])
   assert.deepEqual(found.foreign, [])
-  assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'member-motion' }])
+  assert.deepEqual(found.cites, [{ op: 'member:member:admit', power: 'admit-member', owner: 'member-motion' }])
 
   const inserted = await foreign({
     'member-motion': [`INSERT INTO motion.carries (kind, label, fields, owner) VALUES ('admit', 'Admit a member', '[]', 'member-motion');
@@ -161,8 +161,8 @@ INSERT INTO motion.cites (op, owner) VALUES ('member:member:admit', 'member-moti
 
 test('a register call under another\'s name, or with an argument the check cannot read, is refused', async () => {
   const { errors } = await check({
-    'member-motion': [`SELECT motion.register_cite('member:member:admit', 'invoice-member');
-SELECT motion.register_cite(lower('member:member:exit'), 'member-motion');`],
+    'member-motion': [`SELECT motion.register_cite('member:member:admit', 'admit-member', 'invoice-member');
+SELECT motion.register_cite(lower('member:member:exit'), 'end-membership', 'member-motion');`],
   })
   assert.deepEqual(errors, [
     'apps/org/grafts/member-motion/sql/001.sql: registers by motion.register_cite as invoice-member, not as itself, member-motion',

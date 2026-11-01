@@ -237,8 +237,9 @@ export function undeclared(found) {
 }
 
 // The motion feat's register of the ops that cite a motion, whose
-// rows mark an op as decided: the graft that counts a motion's roll
-// attaches its guard to every op listed.
+// rows mark an op as carried by a motion, with the power a collective
+// mandate of its circle grants it: the grafts that judge a cited write
+// attach their guards to every op listed.
 const cites = { schema: 'motion', table: 'cites' }
 
 function citing(b, o, found) {
@@ -246,7 +247,7 @@ function citing(b, o, found) {
   for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
     const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], v.A_Const?.sval?.sval]))
     if (vals.op) {
-      found.cites.push({ op: vals.op, owner: o.name })
+      found.cites.push({ op: vals.op, power: vals.power ?? null, owner: o.name })
     }
   }
 }
@@ -255,8 +256,8 @@ function citing(b, o, found) {
 // a graft registers what it brings by calling them, never by inserting
 // the row (architecture.md, "Writes stay home"). Each call's arguments are
 // literals, the last its caller's own name, so the check reads the action
-// a call lists in motion.cites as it reads a literal row.
-const registerFns = { 'motion.register_carries': 4, 'motion.register_cite': 2, 'motion.register_cite_guard': 2 }
+// a call lists in motion.cites, and its power, as it reads a literal row.
+const registerFns = { 'motion.register_carries': 5, 'motion.register_cite': 3, 'motion.register_cite_guard': 2 }
 
 function registersBy(call, o, fail, found) {
   const f = strings(call.funcname).join('.')
@@ -272,7 +273,7 @@ function registersBy(call, o, fail, found) {
     fail(`registers by ${f} as ${args.at(-1)}, not as itself, ${o.name}`)
   }
   if (f === 'motion.register_cite') {
-    found.cites.push({ op: args[0], owner: o.name })
+    found.cites.push({ op: args[0], power: args[1], owner: o.name })
   }
 }
 

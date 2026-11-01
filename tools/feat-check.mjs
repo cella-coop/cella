@@ -344,7 +344,7 @@ if (sql) {
     return p && !(p.kind === 'core' && !parentOf(p.node))
   })
   const ops = await declared(repo, owned)
-  errors.push(...agree(ops, found.powers), ...covered(ops, found))
+  errors.push(...agree(ops, found.powers, found.cites), ...covered(ops, found))
 }
 
 if (errors.length) {

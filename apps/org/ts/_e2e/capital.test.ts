@@ -134,7 +134,7 @@ test('m-2026-012 admits Inès, and the subscription it carries, signed by Camill
   )
   const logged = await one<{ op: string; actor: string; guards: { owner: string }[] }>('SELECT op, actor, guards FROM cella.log WHERE n = $1', [then[0].then[0].entry])
   assert.deepEqual({ op: logged.op, actor: logged.actor }, { op: 'account:capital:subscribe', actor: camille })
-  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'circle-membership-motion'])
+  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'circle-membership-motion', 'circle-motion'])
   const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.equal(s.account, '101312')
   assert.deepEqual(await lines(s.entry), [
@@ -346,7 +346,7 @@ test('the statutes are generated anew with the new terms where the founding ones
   doc.import(new Uint8Array(v.snapshot))
   assert.equal(hash(doc), v.hash, 'anyone holding the version computes its hash')
   const guards = await one<{ owners: string[] }>(`SELECT array(SELECT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners FROM cella.log WHERE n = $1`, [generatedAt])
-  assert.deepEqual(guards.owners, ['circle-membership-motion', 'document', 'document'])
+  assert.deepEqual(guards.owners, ['circle-membership-motion', 'circle-motion', 'document', 'document'])
 
   const earlier = await one<{ hash: string; again: string }>(
     `SELECT encode(hash, 'hex') AS hash, encode(cella.document_hash(snapshot), 'hex') AS again FROM document.version WHERE id = 'statutes@2'`,

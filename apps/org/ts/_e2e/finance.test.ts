@@ -244,7 +244,7 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
   const judged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
   assert.deepEqual(
     [...new Set(judged.guards.map((r) => r.owner))].sort(),
-    ['account-patronage', 'circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
+    ['account-patronage', 'circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
   // The distribution follows the approval as a write of its own, signed by
@@ -267,7 +267,7 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
   assert.equal(logged.actor, julien)
   assert.deepEqual(
     [...new Set(logged.guards.map((r) => r.owner))].sort(),
-    ['circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-transaction'],
+    ['circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage', 'patronage-transaction'],
   )
 
   const again = await distribute({ distribution: '2025', motion: 'm-2026-006' }, as(julien))

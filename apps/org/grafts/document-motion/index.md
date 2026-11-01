@@ -37,17 +37,18 @@ this graft adds to the motions' `about`.
   (`document_motion.linked`).
 
 An adoption cites its motion: this graft registers
-`document:document:adopt` by `motion.register_cite`, and `circle-membership-motion`,
+`document:document:adopt` by `motion.register_cite`, with its power, `adopt-document`, a collective mandate of the motion's circle, and `circle-membership-motion`,
 which counts the roll, attaches its guard that the motion closed and
 passed. This graft joins two feats and so cannot read the roll, a
 three-way graft's; it never needs to. That the version is the document's
 and its base has not moved is the document feat's guard (`base: 'adopted'`).
 
-Adopting rate-card-2027@2 under m-2026-011 so passes three guards, each at
+Adopting rate-card-2027@2 under m-2026-011 so passes four guards, each at
 the lowest level that sees what it checks: the document's base, the
-motion's content, and the roll's outcome.
+motion's content, the roll's outcome, and coordination's collective
+`adopt-document`.
 
-It registers `document:document:generate` by `motion.register_cite` too
+It registers `document:document:generate` by `motion.register_cite` too, with `adopt-policy`, since the statutes are generated as their policies are adopted
 (`sql/005-generate.sql`), so `circle-membership-motion`'s guard holds the
 statutes' generation to a motion that closed and passed; that the motion
 adopted or ended a policy of the document's circle that day, and that

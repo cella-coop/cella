@@ -3,9 +3,9 @@ CREATE SCHEMA membership_motion;
 -- What a motion may decide of a member, registered with the motion
 -- feat so its New form offers them: admitting someone invited, with the
 -- shares they subscribe; suspending a member; ending a membership.
-SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}, {"name": "shares", "label": "Shares", "type": "number"}]', 'membership-motion');
-SELECT motion.register_carries('suspend', 'Suspend a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership-motion');
-SELECT motion.register_carries('exit', 'End a membership', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership-motion');
+SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}, {"name": "shares", "label": "Shares", "type": "number"}]', 'membership:member:admit', 'membership-motion');
+SELECT motion.register_carries('suspend', 'Suspend a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:suspend', 'membership-motion');
+SELECT motion.register_carries('exit', 'End a membership', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:exit', 'membership-motion');
 
 -- The actions of those kinds, each with the member it names and, for an
 -- admission, the shares as a whole number or none. The motion is named
@@ -103,9 +103,9 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:admit', 'membership_motion.admits(jsonb)', 'membership-motion'),
   ('membership:member:suspend', 'membership_motion.ends(jsonb)', 'membership-motion'),
   ('membership:member:exit', 'membership_motion.ends(jsonb)', 'membership-motion');
-SELECT motion.register_cite('membership:member:admit', 'membership-motion');
-SELECT motion.register_cite('membership:member:suspend', 'membership-motion');
-SELECT motion.register_cite('membership:member:exit', 'membership-motion');
+SELECT motion.register_cite('membership:member:admit', 'admit-member', 'membership-motion');
+SELECT motion.register_cite('membership:member:suspend', 'suspend-member', 'membership-motion');
+SELECT motion.register_cite('membership:member:exit', 'end-membership', 'membership-motion');
 
 GRANT USAGE ON SCHEMA membership_motion TO cella_app, cella_guards;
 GRANT SELECT ON membership_motion.action TO cella_app, cella_guards;

@@ -1,14 +1,14 @@
 -- circle-membership:seat:add and :remove cite a motion: the motion feat
 -- attaches circle-membership-motion's `carried` to them as it registers
 -- them, as to every action listed.
-SELECT motion.register_cite('circle-membership:seat:add', 'circle-membership-motion');
-SELECT motion.register_cite('circle-membership:seat:remove', 'circle-membership-motion');
+SELECT motion.register_cite('circle-membership:seat:add', 'seat-member', 'circle-membership-motion');
+SELECT motion.register_cite('circle-membership:seat:remove', 'seat-member', 'circle-membership-motion');
 
 -- What a motion may decide of seats, registered with the motion feat
 -- so its New form offers them: seating a member in a circle, in one of
 -- its roles or as a plain member, and ending such a seat.
-SELECT motion.register_carries('seat', 'Seat a member', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle-membership-motion');
-SELECT motion.register_carries('unseat', 'End a seat', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle-membership-motion');
+SELECT motion.register_carries('seat', 'Seat a member', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle-membership:seat:add', 'circle-membership-motion');
+SELECT motion.register_carries('unseat', 'End a seat', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle-membership:seat:remove', 'circle-membership-motion');
 
 -- The seats motions give and end: an admission seats the member in the
 -- motion's circle as `member`; a `seat` or `unseat` action names its

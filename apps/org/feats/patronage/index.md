@@ -58,11 +58,11 @@ distribution is approved.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/patronage/terms.adopt` | ordered, `decided` | the work share rule a passed motion adopted copied into its terms, once |
+| `POST /api/patronage/terms.adopt` | ordered, `adopt-policy` by motion | the work share rule a passed motion adopted copied into its terms, once |
 | `POST /api/patronage/distribution.draft` | confluent | finance drafts a year's split for the assembly to approve; drafted again, the latest stands until it is approved |
-| `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's motion approves the split, once, and fixes each worker's part |
-| `POST /api/patronage/distribution.distribute` | ordered, `decided` | the approved split posted to the books, once, following the approval and citing its motion |
-| `POST /api/patronage/part.employ` | ordered, `decided` | what an associate's part buys in shares credited to their capital, once, following the distribution and citing its motion |
+| `POST /api/patronage/distribution.approve` | ordered, `approve-distribution` by motion | the assembly's motion approves the split, once, and fixes each worker's part |
+| `POST /api/patronage/distribution.distribute` | ordered, `approve-distribution` by motion | the approved split posted to the books, once, following the approval and citing its motion |
+| `POST /api/patronage/part.employ` | ordered, `approve-distribution` by motion | what an associate's part buys in shares credited to their capital, once, following the distribution and citing its motion |
 
 - **distribution.draft** is a register: a draft is the year, and drafting
   it again replaces it, the latest standing, until it is approved, after

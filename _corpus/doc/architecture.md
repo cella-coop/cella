@@ -227,17 +227,19 @@ A feat that keeps a register its extenders fill owns it the same way.
 The extenders register through a function the feat publishes, and that
 function, the feat's own code, writes the row: a graft's migration calls
 it and never inserts the row itself. `membership-motion` registers
-`admit`, an action a motion can carry, by `motion.register_carries`, and
-its admission's action, which cites the motion that passed, by
-`motion.register_cite`. The register is how the feat finds what its
-extenders bring, and it knows none of them by name. The graft that
-counts the roll covers every action listed with its guard:
-`circle-membership-motion` registers it by `motion.register_cite_guard`,
-which attaches it to every action listed so far, and
-`motion.register_cite` attaches each guard so registered to the action
-it lists, whichever migrated first, so no graft puts a trigger on the
-register. `cella check feats` reads each call's literal action as it
-reads a literal row.
+`admit`, an action a motion can carry, with the action that carries it
+out, by `motion.register_carries`, and its admission's action, which
+cites the motion that passed, with the power its collective mandate
+grants, by `motion.register_cite`. The register is how the feat finds
+what its extenders bring, and it knows none of them by name. A guard
+that covers every action listed is registered by
+`motion.register_cite_guard`, which attaches it to every action listed
+so far, and `motion.register_cite` attaches each guard so registered to
+the action it lists, whichever migrated first, so no graft puts a
+trigger on the register: `circle-membership-motion`'s, that the motion
+passed on its roll, and `circle-motion`'s, that the motion's circle
+holds a collective mandate for the action's power. `cella check feats`
+reads each call's literal action and power as it reads a literal row.
 
 `cella check feats` checks this. `tools/sql-check.mjs` collects every
 such write and trigger that the owner's migrations leave standing. A
@@ -683,7 +685,7 @@ with its label:
 ```ts
 export const actions = {
   'membership:member:invite': confluent({ power: 'invite-member' }),
-  'membership:member:admit': ordered({ decide: 'consent', check: 'decided' }),
+  'membership:member:admit': ordered({ decide: 'consent', power: 'admit-member' }),
 } satisfies Actions
 ```
 
@@ -695,7 +697,8 @@ what it needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
-`circle-membership` graft's guard reads; the label mirrors it for the
+`circle-membership` graft's guard reads, or for an action a motion
+carries the row in `motion.cites`; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference, and any
 action declared outside a `models/actions.ts`. Every action is signed by
 a device of its actor and carries its request
@@ -714,17 +717,33 @@ and the guard of the graft that knows which circle the action concerns
 narrows them to a seat in that circle
 ([circle](../../apps/org/feats/circle/index.md#the-participant-role)).
 
+**A mandate is individual or collective.** An individual mandate is on
+a role, and whoever holds a seat with that role uses it. A collective
+mandate is on a circle as a whole, and is used only by a motion of that
+circle: an action a passed motion carries (an admission, an adoption, a
+seat, a nesting) needs the power its collective mandate grants, which
+the action's graft registers with it in `motion.cites` by
+`motion.register_cite` rather than in `cella.power`, so no seat's
+mandate allows it. `circle-motion` checks it twice: when the motion is
+proposed, that its circle holds a collective mandate for the power of
+every action it carries (`motion.carries` names the action that carries
+out each kind), and on the verdict date of each write citing the motion,
+that it still does; an admission, which settles inside the close, is
+checked at the proposal alone. Both kinds are carved from what the circle above
+holds ([circle](../../apps/org/feats/circle/index.md#authority)).
+
 No action is allowed by omission. An action with no power declares the check
 that allows it instead: `self`, the actor's own (a profile, a device);
-`roll`, a member on the roll of the motion it names (a stance);
-or `decided`, the motion it cites
-passed and carried (an admission, an adoption, a seat):
-`ordered({ check: 'decided' })`. A seat is no check: what a seat allows
-is its roles' mandates, the participant's among them, and `cella check
-feats` refuses `check: 'seat'`. A check is backed by SQL: a guard
-registered on the action in `cella.guard`, or for `decided` a row in
-`motion.cites`, registered by `motion.register_cite`, which attaches
-`circle-membership-motion`'s guard to it.
+or `roll`, a member on the roll of the motion it names (a stance). A
+seat is no check: what a seat allows is its roles' mandates, the
+participant's among them, and `cella check feats` refuses `check:
+'seat'`; nor is a passed motion, which allows what its circle's
+collective mandates grant, and `cella check feats` refuses `check:
+'decided'`. A check is backed by SQL, a guard registered on the action
+in `cella.guard`, and a collective mandate's power by a row in
+`motion.cites`, to which `motion.register_cite` attaches
+`circle-membership-motion`'s guard, that the motion passed on its roll,
+and `circle-motion`'s, that its circle holds the power.
 `cella check feats` refuses an action that names neither a power nor a
 check, and a check no literal row backs; that the guard does what the
 check says is its owner's and its tests'. An action not yet decided as
@@ -818,9 +837,10 @@ method, share, quorum and ballot are copied by the motion feat into
 ([procedures](../../apps/org/feats/motion/index.md#procedures)); the
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
-scope's root does. A mandate policy's role, power and limit or budget
-are copied by the circle feat into `circle.mandate`, which
-`circle_membership.may` reads, through `circle-motion`, whose adoption
+scope's root does. A mandate policy's role or circle, power and limit
+or budget are copied by the circle feat into `circle.mandate`, which
+`circle_membership.may` reads for a role's and `circle-motion` for a
+circle's, through `circle-motion`, whose adoption
 and ending of a policy are the motion feat's with the circle feat's copy
 in the same write
 ([mandates](../../apps/org/feats/circle/index.md#mandates)).

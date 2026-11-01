@@ -1,7 +1,7 @@
 -- What a motion may decide of documents, registered with the motion
 -- feat so its New form offers it: adopting a version, picked from the
 -- versions this graft adds to the form (`options`).
-SELECT motion.register_carries('adopt', 'Adopt a document version', '[{"name": "version", "label": "Version", "type": "text", "options": "versions"}]', 'document-motion');
+SELECT motion.register_carries('adopt', 'Adopt a document version', '[{"name": "version", "label": "Version", "type": "text", "options": "versions"}]', 'document:document:adopt', 'document-motion');
 
 -- An action to adopt a version asks to adopt its document's content as
 -- that version holds it: the adoption names the content by the hash the

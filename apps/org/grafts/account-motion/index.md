@@ -14,12 +14,15 @@ which this graft reads.
 
 - The op `account:terms:adopt` is registered by `motion.register_cite`, so
   `circle-membership-motion`'s `carried` attaches to it: the motion closed
-  and passed on its roll. Its label declares `check: 'decided'`.
+  and passed on its roll, and `circle-motion`'s `mandated`, that its
+  circle holds `adopt-policy`, the power it registers with it.
 - It registers by `motion.register_cite` the actions a passed motion
   carries into the books once it admits or ends a membership,
   `account:account:freeze`, `account:capital:subscribe` and
-  `account:capital:withdraw`, so each settles only once the motion it
-  cites closed and passed. Whether that motion admitted or ended the
+  `account:capital:withdraw`, with the powers their motion's own action
+  needs, `end-membership`, `admit-member` and `end-membership`, so each
+  settles only once the motion it cites closed and passed, and its
+  circle holds the power. Whether that motion admitted or ended the
   member it names is not checked: no graft joins account, membership and
   motion; the guards of `account-membership` and
   `account-membership-transaction` check that the member was admitted or

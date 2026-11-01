@@ -38,7 +38,7 @@ here.
 - `circle_membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat).
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle-membership:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -75,22 +75,25 @@ coordination's, counts its five.
   which `circle_membership.may` finds on any seat, are held in the
   motion's circle: a circle's participants put, close and deliberate on
   its motions.
-- `circle_membership_motion.asks`, on `motion:motion:propose`: only the
-  assembly admits, suspends and lets members go; a seat given or ended is
-  the motion of the circle above it, or the assembly
+- `circle_membership_motion.asks`, on `motion:motion:propose`: a seat
+  given or ended is the motion of the circle above it, or the assembly
   (`circle_motion.decides`), and names an active member for a role of
-  that circle, or a seat held.
+  that circle, or a seat held. Which circle admits, suspends and lets
+  members go is no rule of this graft's: it is the one holding the
+  collective mandate for it, `circle-motion`'s guard `empowers`, and in
+  Lanterne that is the assembly alone.
 - `circle_membership_motion.carried`, on every action in `motion.cites`: the
   motion the payload cites is closed and passes. The motion feat keeps
   that list; a graft that joins motion to a write's feat registers its
-  action there by `motion.register_cite` (`membership-motion` for
+  action there with its power by `motion.register_cite` (`membership-motion` for
   admission, suspension and exit, `circle-motion` for nesting,
   `document-motion` for `document:document:adopt`, and the
   motion feat itself for `motion:policy:adopt` and `:end`), and this
   graft registers the guard by `motion.register_cite_guard`, which
   attaches it to every action listed, then and later: the motion feat's
   register functions attach it, and this graft puts no trigger on
-  `motion.cites`. A graft that cites a motion so never reads
+  `motion.cites`; `circle-motion` covers the same list with `mandated`,
+  that the motion's circle holds the power. A graft that cites a motion so never reads
   this one, and this one never names a feat it does not join. This graft
   registers `circle-membership:seat:add` and `:remove` itself, a
   lower-order graft's actions.

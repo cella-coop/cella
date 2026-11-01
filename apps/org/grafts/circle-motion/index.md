@@ -16,9 +16,9 @@ feat's `motion.action`, of the kind this graft registers by
 `motion.register_carries`, `nest` (`circle`, `parent`), and of the
 motion feat's own, `policy` and `end`. `circle_motion.action` reads
 them with the circle each is about: the circle nested; for a mandate
-policy, the circle of the role it marks; for an end, the circle of the
-role of the ended policy's mandate. A role every working circle has
-(`*`) is the assembly's.
+policy, the circle of the role it marks, or the circle it marks for a
+collective mandate; for an end, the circle of the ended policy's
+mandate. A role every working circle has (`*`) is the assembly's.
 
 ## Guards
 
@@ -28,11 +28,26 @@ role of the ended policy's mandate. A role every working circle has
   place or powers; the one above it does.
 - `circle_motion.asks`, on `motion:motion:propose`: each nesting names
   its circle and its place, each mandate policy marks sound values
-  (`circle.mandate_flaw`: a role, a power in lower case, a cap by limit
-  or by budget per month or year, never both, and nothing else), and the
-  motion's circle may decide it: about the circle nested and about the
-  place it moves to, about the role's circle, and about the circle of
-  the mandate it ends.
+  (`circle.mandate_flaw`: a role or a circle, a power in lower case, a
+  cap by limit or by budget per month or year, never both, and nothing
+  else), and the motion's circle may decide it: about the circle nested
+  and about the place it moves to, about the role's circle or the
+  circle a collective mandate is on, and about the circle of the
+  mandate it ends.
+- `circle_motion.empowers`, on `motion:motion:propose`: the motion's
+  circle holds, on the verdict date, a collective mandate
+  (`circle.holds`) for the power of every action the motion carries:
+  the power `motion.cites` lists for the action that carries out its
+  kind (`motion.carries.op`). A motion of Web admitting a member is
+  refused at its proposal, since Web holds no `admit-member`.
+- `circle_motion.mandated`, on every action in `motion.cites`: the cited
+  motion's circle holds, on the verdict date, a collective mandate for
+  the power `motion.cites` lists for the action, so a mandate revoked
+  between the proposal and the close carries nothing. This graft
+  registers it by `motion.register_cite_guard`, beside
+  `circle-membership-motion`'s `carried`. An admission settles inside
+  the close, under the close's guards, so `empowers` checks it at the
+  proposal alone.
 - `circle_motion.nests`, on `circle:circle:nest`: the cited motion
   nests exactly this circle there.
 - On `motion:policy:adopt` and `motion:policy:end`, the circle feat's
@@ -49,10 +64,11 @@ that sets one will be judged by a guard of this graft's on its action, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
-The nesting cites a motion: this graft registers it by `motion.register_cite`,
-and `circle-membership-motion`, which counts the roll, attaches its guard
-that it carried; the motion feat registers its adoption and ending of a
-policy so itself.
+The nesting cites a motion: this graft registers it by `motion.register_cite`
+with its power, `nest-circle`, and the kind `nest` with the action that
+carries it out, and `circle-membership-motion`, which counts the roll,
+attaches its guard that it carried; the motion feat registers its
+adoption and ending of a policy so itself.
 
 ## Handlers
 

@@ -27,7 +27,7 @@ const proposes = async (payload: object) => (await db.query<{ r: string | null }
 
 before(async () => {
   await db.connect()
-  await db.query(`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'test')`)
+  await db.query(`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'test:member:admit', 'test')`)
   await db.query(
     `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
        ('m-2026-012', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
@@ -45,20 +45,20 @@ test('only the app\'s core and this feat are migrated, and no kind is registered
   assert.deepEqual((await db.query('SELECT kind FROM motion.carries ORDER BY kind')).rows, [{ kind: 'admit' }, { kind: 'end' }, { kind: 'policy' }])
 })
 
-test('a kind registers through register_carries; a cite through register_cite, and a guard through register_cite_guard covers those listed before it and after', async () => {
-  assert.deepEqual((await db.query(`SELECT kind, label, fields, owner FROM motion.carries WHERE owner = 'test'`)).rows, [
-    { kind: 'admit', label: 'Admit a member', fields: [{ name: 'member', label: 'Address', type: 'text' }], owner: 'test' },
+test('a kind registers through register_carries with the action carrying it out; a cite through register_cite with its power, and a guard through register_cite_guard covers those listed before it and after', async () => {
+  assert.deepEqual((await db.query(`SELECT kind, label, fields, op, owner FROM motion.carries WHERE owner = 'test'`)).rows, [
+    { kind: 'admit', label: 'Admit a member', fields: [{ name: 'member', label: 'Address', type: 'text' }], op: 'test:member:admit', owner: 'test' },
   ])
   await db.query('BEGIN')
   try {
-    await db.query(`SELECT motion.register_cite('test:thing:adopt', 'test')`)
+    await db.query(`SELECT motion.register_cite('test:thing:adopt', 'adopt-thing', 'test')`)
     await db.query(`SELECT motion.register_cite_guard('motion.proposes(jsonb)', 'test')`)
-    await db.query(`SELECT motion.register_cite('test:thing:approve', 'test')`)
-    assert.deepEqual((await db.query('SELECT op, owner FROM motion.cites ORDER BY op')).rows, [
-      { op: 'motion:policy:adopt', owner: 'motion' },
-      { op: 'motion:policy:end', owner: 'motion' },
-      { op: 'test:thing:adopt', owner: 'test' },
-      { op: 'test:thing:approve', owner: 'test' },
+    await db.query(`SELECT motion.register_cite('test:thing:approve', 'approve-thing', 'test')`)
+    assert.deepEqual((await db.query('SELECT op, power, owner FROM motion.cites ORDER BY op')).rows, [
+      { op: 'motion:policy:adopt', power: 'adopt-policy', owner: 'motion' },
+      { op: 'motion:policy:end', power: 'end-policy', owner: 'motion' },
+      { op: 'test:thing:adopt', power: 'adopt-thing', owner: 'test' },
+      { op: 'test:thing:approve', power: 'approve-thing', owner: 'test' },
     ])
     const { rows } = await db.query(`SELECT op FROM cella.guard WHERE fn = 'motion.proposes(jsonb)'::regprocedure AND op LIKE 'test:%' ORDER BY op`)
     assert.deepEqual(rows, [{ op: 'test:thing:adopt' }, { op: 'test:thing:approve' }])
@@ -69,7 +69,7 @@ test('a kind registers through register_carries; a cite through register_cite, a
 
 test('the register functions are a migration\'s, not the app\'s', async () => {
   const { rows } = await db.query(`SELECT has_function_privilege('cella_app', f, 'EXECUTE') AS may FROM unnest(ARRAY[
-    'motion.register_carries(text, text, jsonb, text)', 'motion.register_cite(text, text)', 'motion.register_cite_guard(regprocedure, text)']::regprocedure[]) f`)
+    'motion.register_carries(text, text, jsonb, text, text)', 'motion.register_cite(text, text, text)', 'motion.register_cite_guard(regprocedure, text)']::regprocedure[]) f`)
   assert.deepEqual(rows, [{ may: false }, { may: false }, { may: false }])
 })
 

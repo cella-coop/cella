@@ -23,7 +23,7 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'motion_patronage.approves(jsonb)', 'motion-patronage');
-SELECT motion.register_cite('patronage:distribution:approve', 'motion-patronage');
+SELECT motion.register_cite('patronage:distribution:approve', 'approve-distribution', 'motion-patronage');
 
 -- motion:motion:propose — each rule the motion would adopt that marks a
 -- value of the patronage feat's is sound terms for the work share
@@ -76,7 +76,7 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:terms:adopt', 'motion_patronage.adopts(jsonb)', 'motion-patronage');
-SELECT motion.register_cite('patronage:terms:adopt', 'motion-patronage');
+SELECT motion.register_cite('patronage:terms:adopt', 'adopt-policy', 'motion-patronage');
 
 GRANT USAGE ON SCHEMA motion_patronage TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON motion_patronage.approval TO cella_app;

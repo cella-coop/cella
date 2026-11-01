@@ -69,15 +69,15 @@ day their rule applies.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
-| `POST /api/account/terms.adopt` | ordered, `decided` | the capital rule a passed motion adopted copied into its terms, once |
+| `POST /api/account/terms.adopt` | ordered, `adopt-policy` by motion | the capital rule a passed motion adopted copied into its terms, once |
 | `POST /api/account/period.open` | ordered | the month after the latest opens, so entries dated in it post; the next month's opening follows it |
 | `POST /api/account/period.close` | ordered | nothing posts into a closed period |
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
 | `POST /api/account/capital.spread` | confluent, `self` | an associate spreads what they owe over monthly instalments from their pay |
 | `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
-| `POST /api/account/account.freeze` | ordered, `decided` | a departed member's capital accounts frozen, citing the motion that ended the membership |
-| `POST /api/account/capital.subscribe` | ordered, `decided` | a member admitted subscribes their shares: their capital account opened and the shares called, citing the motion that admitted them |
-| `POST /api/account/capital.withdraw` | ordered, `decided` | a departed associate's capital moved to what is owed them and its repayments drawn up, citing the motion that ended the membership |
+| `POST /api/account/account.freeze` | ordered, `end-membership` by motion | a departed member's capital accounts frozen, citing the motion that ended the membership |
+| `POST /api/account/capital.subscribe` | ordered, `admit-member` by motion | a member admitted subscribes their shares: their capital account opened and the shares called, citing the motion that admitted them |
+| `POST /api/account/capital.withdraw` | ordered, `end-membership` by motion | a departed associate's capital moved to what is owed them and its repayments drawn up, citing the motion that ended the membership |
 
 - **draw** is bounded because it spends a right granted in advance, the
   member's draw limit, which the `account-membership` graft holds. A draw

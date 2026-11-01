@@ -142,9 +142,9 @@ test('the distribution and the credits of shares follow the approval, each a wri
      FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n`,
     [[then[0].entry, ...credits.map((c) => c.entry)]],
   )
-  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['circle-membership-motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
+  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
   for (const l of logged.slice(1)) {
-    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'circle-membership-motion', 'motion-patronage', 'patronage'] })
+    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage'] })
   }
   const entry = (await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)).entry
   assert.deepEqual((await all(`SELECT account FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).length, 5, 'the distribution\'s entry posts its split alone')

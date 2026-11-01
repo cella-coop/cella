@@ -6,21 +6,12 @@
 # feats` refuses a foreign write this list does not name, and a line whose
 # write is gone, so the list only shrinks; nothing is added to it. Empty,
 # it goes.
-account-membership: account_membership.freezes() writes account.account
-account-membership: trigger freezes on membership.member
 account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes transaction.line
 account-membership-patronage-transaction: account_membership_patronage_transaction.employs() writes membership.member
 account-membership-patronage-transaction: trigger employs on patronage_transaction.distribution
 account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes transaction.line
 account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes account_membership_transaction.paid
 account-membership-payslip-transaction: trigger withholds on payslip_transaction.posting
-account-membership-transaction: trigger subscribes on membership.member
-account-membership-transaction: account_membership_transaction.subscribes() writes account.account
-account-membership-transaction: account_membership_transaction.subscribes() writes transaction.entry
-account-membership-transaction: account_membership_transaction.subscribes() writes transaction.line
-account-membership-transaction: account_membership_transaction.withdraws() writes transaction.entry
-account-membership-transaction: account_membership_transaction.withdraws() writes transaction.line
-account-membership-transaction: trigger withdraws on membership.member
 account-transaction: trigger posts on transaction.line
 patronage-payslip: patronage_payslip.parts() writes patronage.part
 patronage-payslip: trigger parts_by_pay on patronage.distribution

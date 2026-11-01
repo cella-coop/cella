@@ -199,6 +199,23 @@ feat or a graft inserts, updates, deletes, merges or truncates a table
 outside its own schema, or makes a trigger on one; it writes `cella.*`
 only to register ([SQL](#sql)).
 
+What follows a passed motion is its carried actions, never a trigger.
+Each is its owner's published action, a write of its own after the
+close, signed by whoever closed the motion, citing it, and judged by its
+own guards: `circle-membership-motion` carries out a suspension or an
+exit through the membership feat's, and the graft that knows what
+follows an admission or an exit reacts to it through `on`.
+`account-membership` freezes a departed member's capital accounts
+through the account feat's `freeze`; `account-membership-transaction`
+subscribes a member admitted, their account opened by the account
+feat's `holding` and their shares called through `record()`, and
+withdraws a departed associate's capital. The shell runs the reactions
+to each write a reaction makes, so a close carries an exit and the exit
+its freeze and withdrawal, each settled before the next. A write is one
+transaction with one verdict, so a carried action refused leaves the
+close and every action before it settled, and says why
+([trust](trust.md#three-kinds-of-action)).
+
 A feat that keeps a register its extenders fill owns it the same way.
 The extenders register through a function the feat publishes, and that
 function, the feat's own code, writes the row: a graft's migration calls

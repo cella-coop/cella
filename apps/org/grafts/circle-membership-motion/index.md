@@ -136,6 +136,11 @@ coordination's, counts its five.
   adopted (the motion feat's `adopt`). A refused one
   leaves the motion passed and that action undone, as its outcome
   says. The slice runs it as its reaction to `motion:motion:close`.
+  Before them it reports each admission the close made, as settled in
+  the close's entry with the request an admission of its own would
+  carry, so the writes that react to an admission, the subscription,
+  follow it as they follow one; the shell runs the reactions to each
+  write it reports.
 - `put`: what a member's or a circle's page proposes, through this
   graft's `propose`, to the circle that decides it, by its
   procedure, titled with what it decides: a membership to the assembly,

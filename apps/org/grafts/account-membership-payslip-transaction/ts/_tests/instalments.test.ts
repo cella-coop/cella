@@ -47,6 +47,21 @@ before(async () => {
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Inès Haddad') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, shares) VALUES ($1, 'invited', 0)`, [ines])
   await db.query(`INSERT INTO person.device (key, address, label, enrolled) VALUES (decode(repeat('ab', 32), 'hex'), $1, 'laptop', '2025-09-01')`, [ines])
   await db.query(`UPDATE membership.member SET status = 'active', since = '2026-11-30', shares = 20 WHERE address = $1`, [ines])
+  // Stands in for the subscription that follows her admission,
+  // account-membership-transaction's write: her account opened and her
+  // 20 shares called.
+  await db.query(`INSERT INTO account.account (code, label, kind, parent, holder) VALUES ('101301', 'Capital — Inès', 'equity', '1013', $1)`, [ines])
+  await db.query('BEGIN')
+  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES (cella.verdict_date(), 'Capital subscribed and called, 101301') RETURNING id`)
+  await db.query(
+    `INSERT INTO transaction.line (entry, n, account, side, amount) VALUES ($1, 1, '4562', 'debit', cella.amount(100000)), ($1, 2, '1012', 'credit', cella.amount(100000))`,
+    [rows[0].id],
+  )
+  await db.query(
+    `INSERT INTO account_membership_transaction.subscription (member, account, shares, entry, amount) VALUES ($1, '101301', 20, $2, cella.amount(100000))`,
+    [ines, rows[0].id],
+  )
+  await db.query('COMMIT')
   await db.query(`INSERT INTO payslip.terms (employee, employer, ratio) VALUES (22, 40, 1.6)`)
   await db.query(`INSERT INTO payslip.salary (member, "from", gross) VALUES ($1, '2026-11-01', cella.amount(220000))`, [ines])
 })

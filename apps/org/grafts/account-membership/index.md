@@ -22,23 +22,43 @@ member may draw, and the freeze when a member leaves. Declared by
   `account-membership-transaction`'s subscription of a member admitted,
   and the fixture check holds the seed's, so no trigger on the account
   feat's table checks it.
-- `account_membership.freezes`, a trigger after a member's status changes:
-  when it becomes `exited`, their capital accounts are frozen, in the same
-  transaction as the write that ended the membership, whichever it is.
-  It reacts to the exit wherever it comes from, so it needs no event of
-  the membership feat's, and no window opens between the exit and the freeze.
 - `account_membership.capital`: each member's shares at the share's value on
   the verdict date, the account holding them (under `1013`), whether it
   is frozen, and their draw limit.
+- `account_membership.unfrozen(member)`: whether the member holds a
+  capital account not yet frozen, run as its owner, since whoever closed
+  the motion may read no colleague's capital; the reaction to an exit
+  freezes only when it does.
 
-Triggers raise SQLSTATE `09000`. The app role and the guards role may
-select.
+The app role and the guards role may select.
 
 ## Actions
 
 None of its own. Opening a member's account on admission posts, and so
 does moving a departing one's capital to what is owed them, so both are
 `account-membership-transaction`'s.
+
+## Reactions
+
+- To `membership:member:exit`: the account feat's `freeze`
+  (`account:account:freeze`), freezing every capital account the member
+  holds, a write of its own after the exit, signed by whoever signed the
+  exit, the member who closed the motion that ended the membership, and
+  citing that motion. A member who holds no capital account is frozen
+  nothing, and no write is made.
+
+## Guards
+
+- `account_membership.freezes`, on `account:account:freeze`: the holder
+  is a member who has left, so no active member's capital is frozen.
+
+## Tests
+
+`ts/_tests/freeze.test.ts` (`cella test slice account-membership`): the
+freeze settles for a member who left, every account they hold frozen
+and no other, and is refused for an active member; no trigger on
+`membership.member` freezes an account, so an exit alone leaves it
+open until the freeze.
 
 ## Reads
 

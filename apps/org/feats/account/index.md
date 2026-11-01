@@ -75,6 +75,9 @@ year.
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
 | `POST /api/account/capital.spread` | confluent, `self` | an associate spreads what they owe over monthly instalments from their pay |
 | `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
+| `POST /api/account/account.freeze` | ordered, `decided` | a departed member's capital accounts frozen, citing the motion that ended the membership |
+| `POST /api/account/capital.subscribe` | ordered, `decided` | a member admitted subscribes their shares: their capital account opened and the shares called, citing the motion that admitted them |
+| `POST /api/account/capital.withdraw` | ordered, `decided` | a departed associate's capital moved to what is owed them and its repayments drawn up, citing the motion that ended the membership |
 
 - **draw** is bounded because it spends a right granted in advance, the
   member's draw limit, which the `account-membership` graft holds. A draw
@@ -102,6 +105,15 @@ year.
 - **capital.repay** is ordered because a repayment is paid once and after
   the one before it, and not before the day it falls due. It posts, so
   its handler and guard are `account-membership-transaction`'s.
+- **account.freeze**, **capital.subscribe** and **capital.withdraw** are
+  what a passed motion carries once it admits or ends a membership, each
+  a write of its own signed by whoever closed it: they cite the motion
+  (`account-motion` registers them by `motion.register_cite`), and
+  settle only if it closed and passed. The freeze is this feat's own
+  write, `account-membership` reacting to the exit with it; the
+  subscription and the withdrawal post, so their handlers and guards are
+  `account-membership-transaction`'s, reacting to the admission and the
+  exit.
 
 ## Powers
 
@@ -118,6 +130,7 @@ the holder is whoever holds the role the mandate is granted to.
 | capital.pay | `record-receipt` | Julien, as finance |
 | capital.spread | none: the associate's own | Inès, once admitted |
 | capital.repay | `repay-capital` | Julien, as finance |
+| account.freeze, capital.subscribe, capital.withdraw | none: carried by the motion that admits or ends the membership | whoever closes the assembly's motion |
 
 `002-powers.sql` registers period.close's power in `cella.power`,
 `006-terms.sql` capital.pay's and capital.repay's, and `010-period.sql`
@@ -144,8 +157,8 @@ What it does not own:
   feat's, and that a year is closed before its split is approved,
   `account-patronage`'s;
 - that nothing posts into a closed period: `account-transaction`'s;
-- who holds a capital account, and that it freezes on exit:
-  `account-membership`'s; what a member subscribes, pays in and draws, and
+- who holds a capital account, and freezing it on exit:
+  `account-membership`'s, through this feat's `freeze`; what a member subscribes, pays in and draws, and
   their capital moved to `4567` and repaid on exit:
   `account-membership-transaction`'s; the instalments withheld from pay:
   `account-membership-payslip-transaction`'s;
@@ -184,7 +197,7 @@ its balance, as a bank overdraft is among the debts.
   of this kind.
 
 Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
-(a capital account opens on admission), set a period's `closed`, an
+(a capital account opens on a subscription, by `holding`), set a period's `closed`, an
 account's `frozen` and terms' `adopted`; the guards role,
 `cella_guards`, may select.
 
@@ -204,6 +217,9 @@ has left restricts it until `cella vault sweep` redacts it.
   before it.
 - `account.adopts`, on `account:terms:adopt`: the write adopted the terms
   on the verdict date, and their clauses repay an exit within five years.
+- `account.freezes`, on `account:account:freeze`: the accounts the
+  payload names are exactly those the holder holds, each frozen. That
+  the holder left is `account-membership`'s guard.
 
 ## Handlers
 
@@ -214,6 +230,12 @@ has left restricts it until `cella vault sweep` redacts it.
   update takes the period's row, which the graft's trigger reads `FOR
   SHARE`, so a concurrent post waits for the close or sees it.
 - `adopt` (ordered): sets the terms' `adopted` to the verdict date.
+- `freeze` (ordered), and `freezing`, the same as a write a graft
+  composes: sets `frozen` on every account the holder holds that is not
+  frozen yet, citing the motion; its payload names the accounts.
+- `holding`: the spec that opens, inside a write, a capital account for
+  its holder under `1013`, the next code there, with the label the write
+  gives it; `account-membership-transaction`'s subscription opens one so.
 - `opening`: the spec that opens, inside a write, the accounts the chart
   lacks, each of its code's kind and under the longest code that begins
   its own; `account-transaction` carries an entry over with it.

@@ -3,7 +3,7 @@ import type { Done, Form, Upload } from '@cella/org-db'
 import { scope } from '@cella/org-log/api'
 import { using } from './db.ts'
 import { answered, proof, relay, type Ask } from './relay.ts'
-import { action, reactions } from './slices.ts'
+import { action, react } from './slices.ts'
 
 // A form's fields as text, and the files it carries read whole; a file
 // input left empty carries no file.
@@ -75,9 +75,7 @@ export async function perform(event: RequestEvent, collection: string, name: str
         }
         const { done, request } = result
         if (done.state === 'settled') {
-          for (const react of reactions(write.op)) {
-            done.then.push(...(await react(request, deps)))
-          }
+          done.then.push(...(await react(write.op, request, deps)))
         }
         return done.state === 'refused' ? fail(422, { done }) : { done }
       }),

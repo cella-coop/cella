@@ -3,7 +3,7 @@
 // them, charged and reimbursed; October's pay run prepared from every
 // worker's approved time, Inès's though she is no member, approved and
 // paid; draws within a member's limit and refused
-// beyond it and once their capital is frozen; and the 2025 surplus
+// beyond it and once they left; and the 2025 surplus
 // approved by the assembly's motion and distributed with the legal
 // split. The log commits to each payslip's figures, a draw's amount and
 // an entry's time. The books balance throughout. Run by `cella test e2e finance`.
@@ -279,11 +279,12 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
   await balanced()
 })
 
-test('a member who leaves has their capital frozen, and draws nothing more', async () => {
-  // Stands in for the exit write, whichever makes it: freezing is a
-  // trigger on the member's status, in that write's transaction.
+test('a member who leaves draws nothing more, even before the freeze that follows the exit', async () => {
+  // Stands in for the exit write. The freeze follows it as a write of its
+  // own, account-membership's reaction, which the capital scenario runs;
+  // until then a draw is refused all the same, as only a member draws.
   await su.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [sofia])
-  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE holder = $1`, [sofia])).frozen, true)
+  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE holder = $1`, [sofia])).frozen, false)
   const late = await draw({ member: sofia, cents: 10_00 }, as(sofia))
-  assert.equal(late.state, 'refused')
+  assert.match(reason(late), /sofia@lanterne.example is exited: only an active member draws/)
 })

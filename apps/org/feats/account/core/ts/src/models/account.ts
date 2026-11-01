@@ -26,3 +26,24 @@ export interface Open {
   code: string
   label: string
 }
+
+// A capital account to open for its holder, by address, under `parent`,
+// with the label the write gives it.
+export interface Hold {
+  holder: string
+  parent: string
+  label: string
+}
+
+// The capital accounts of a holder to freeze, citing the motion that
+// ended their membership.
+export interface Freeze {
+  holder: string
+  motion: string
+}
+
+// The accounts a freeze froze.
+export interface Frozen {
+  holder: string
+  accounts: string[]
+}

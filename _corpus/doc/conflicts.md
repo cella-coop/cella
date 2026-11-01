@@ -98,9 +98,10 @@ entry contends with `account.period.close`: `transaction.post`, `.pay`
 and `.adjust` directly; `invoice.issue`, `.payment` and `.void` through
 `invoice-transaction`; `account.draw` and `patronage.distribution.distribute`,
 `expense.approve` and `.reimburse`, `payslip:run.approve` and `.pay`
-through their grafts; and `membership.admit`, whose subscription posts. An
-admission never waits on the books: where the day's period is not open,
-it subscribes nothing.
+through their grafts; and `account.capital.subscribe` and `.withdraw`,
+which follow an admission and an exit. An admission never waits on the
+books: where the day's period is not open, it settles, and the
+subscription that follows it is refused, saying so.
 
 | Pair | Post first | Close first | Both confluent |
 |---|---|---|---|
@@ -451,7 +452,7 @@ deciding vote.
 |---|---|---|---|
 | `membership.admit` vs `membership.invite` | refused: not invited | admitted | admitted without an invitation |
 | `membership.exit` vs `account.draw` | the draw is refused | the draw stands | an exited member spends |
-| `membership.exit` vs the capital account | — | — | a graft joining membership and the books freezes it in the exit's transaction, on the exit's update of the status |
+| `membership.exit` vs the capital account | — | — | the freeze follows the exit as a write of its own, and a draw between them is refused, the member no longer active |
 | `membership.accept` vs `membership.accept`, one invitation | the second refused: taken up | the first refused | one invitation enrols two first devices |
 | `membership.accept` vs `membership.admit` | admitted, signing with the device | refused: no device signs for them | a member admitted unable to sign |
 | `membership.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
@@ -606,19 +607,20 @@ pay; the `account` feat for the statutes' clauses.
 |---|---|---|---|
 | `account.draw` vs `membership.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
 | `account.draw` vs `account.draw`, one member | both, if the limit covers both | both, if it covers both | the limit is overdrawn |
-| `membership.admit` vs `account.period.close` of its month | the subscription posts in the month | nothing is subscribed; the admission settles | an admission refused by the books |
+| `membership.admit` vs `account.period.close` of its month | the subscription posts in the month | the admission settles; the subscription is refused, the month closed | an admission refused by the books |
 | `account.capital.pay` vs `account.capital.pay`, one member | both, if what is owed covers both | both, if it covers both | a subscription paid beyond what it cost |
 | `account.capital.pay` vs `membership.exit` | the payment stands; the exit cancels the rest | refused: the exit cancelled what was owed | money taken on a cancelled subscription |
 | `payslip:run.pay` vs `account.capital.spread` | the instalment at the old plan | at the new one | none: the payment reads the plan that stands |
 | `account.capital.repay` vs `account.capital.repay`, one repayment | the second refused: it is paid | the first refused | a repayment paid twice |
-| `membership.exit` vs `account.period.close` of its month | the capital moves to 4567 and is drawn up | nothing moves; the capital stays frozen | an exit refused by the books |
+| `membership.exit` vs `account.period.close` of its month | the capital moves to 4567 and is drawn up | the exit settles; the withdrawal is refused and the capital stays frozen | an exit refused by the books |
 
 The draw is bounded on the member's limit, a right granted in advance;
-the exit is ordered and freezes in its own transaction, so no draw
-settles between the exit and the freeze. A frozen account never thaws;
-what it held moves to 4567 in the same write and is repaid from there.
-Subscribing never holds an admission back, but for the statutes'
-minimum. A payment in is a deposit, so it is confluent; at rung 2 two
+the exit is ordered and a draw needs an active member, so no draw
+settles between the exit and the freeze that follows it. A frozen
+account never thaws; what it held moves to 4567 by the withdrawal that
+follows the exit and is repaid from there. Subscribing never holds an
+admission back: a subscription under the statutes' minimum, or into a
+closed month, is refused after the admission settles, saying why. A payment in is a deposit, so it is confluent; at rung 2 two
 offline payments could pass what is owed, which the server's guard
 refuses today and which then needs a late-write guard, as an invoice's
 overpayment has. A repayment is ordered: it is paid once, and after the

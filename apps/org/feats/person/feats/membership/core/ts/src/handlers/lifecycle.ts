@@ -132,10 +132,9 @@ export async function accept(input: Accept, deps: Deps): Out<'membership:member:
 // status moves only along its lifecycle (`membership.moves`); `membership.ends`
 // checks the write moved it, the membership-motion graft's guard that the
 // cited motion asks it, circle-membership-motion's that it carried.
-// An exit is the hook the books hang on: it sets `status` to `exited` and
-// `exited` to the verdict date in its transaction, so a graft freezing
-// the member's capital attaches a trigger to that update, or a guard to
-// `membership:member:exit`, and settles or is refused with it.
+// An exit is the hook the books hang on: once it settles, a graft joining
+// the books reacts to `membership:member:exit` with a write of its own,
+// citing the same motion, as the member's capital is frozen and withdrawn.
 function ending<O extends 'membership:member:suspend' | 'membership:member:exit'>(op: O, input: End): Write<Ended> {
   // The status a write leaves, and the column dating it, are one name.
   const status = op === 'membership:member:suspend' ? 'suspended' : 'exited'

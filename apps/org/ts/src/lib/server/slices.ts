@@ -1,4 +1,4 @@
-import type { Action, Collection, Extension, Reaction, Slice, Source } from '@cella/org-db'
+import type { Action, Collection, Deps, Done, Extension, Reaction, Slice, Source } from '@cella/org-db'
 import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
@@ -231,6 +231,26 @@ export const writes = [
 
 // The reactions to a settled op, from every slice.
 export const reactions = (op: Permission): Reaction[] => slices.flatMap((s) => s.on?.[op] ?? [])
+
+// The reactions to a settled op, and to each settled write they make in
+// turn, as a close carries an exit and the exit its freeze: each write a
+// reaction makes that carries its request has the reactions to its own op
+// run after it. The request is the server's to read and is not sent back
+// with the outcome. Five deep at most, so no cycle of reactions runs on.
+export async function react(op: Permission, request: unknown, deps: Deps, depth = 0): Promise<Done[]> {
+  const out: Done[] = []
+  for (const reaction of reactions(op)) {
+    out.push(...(await reaction(request, deps)))
+  }
+  for (const d of out) {
+    const asked = d.request
+    delete d.request
+    if (d.state === 'settled' && asked !== undefined && depth < 5) {
+      d.then.push(...(await react(d.op, asked, deps, depth + 1)))
+    }
+  }
+  return out
+}
 
 // What a collection's rows are read from: its owner's select, then those
 // of the extensions that add rows of their own, and each extension's

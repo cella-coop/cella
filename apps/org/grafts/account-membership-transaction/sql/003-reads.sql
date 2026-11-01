@@ -5,22 +5,26 @@ ALTER TABLE account_membership_transaction.subscription ENABLE ROW LEVEL SECURIT
 ALTER TABLE account_membership_transaction.draw ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_membership_transaction.paid ENABLE ROW LEVEL SECURITY;
 ALTER TABLE account_membership_transaction.repayment ENABLE ROW LEVEL SECURITY;
+ALTER TABLE account_membership_transaction.withdrawal ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY reads ON account_membership_transaction.subscription FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY reads ON account_membership_transaction.draw FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY reads ON account_membership_transaction.paid FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY reads ON account_membership_transaction.repayment FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
+CREATE POLICY reads ON account_membership_transaction.withdrawal FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 
 CREATE POLICY guards ON account_membership_transaction.subscription FOR SELECT TO cella_guards USING (true);
 CREATE POLICY guards ON account_membership_transaction.draw FOR SELECT TO cella_guards USING (true);
 CREATE POLICY guards ON account_membership_transaction.paid FOR SELECT TO cella_guards USING (true);
 CREATE POLICY guards ON account_membership_transaction.repayment FOR SELECT TO cella_guards USING (true);
+CREATE POLICY guards ON account_membership_transaction.withdrawal FOR SELECT TO cella_guards USING (true);
 
 CREATE POLICY writes ON account_membership_transaction.subscription FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY changes ON account_membership_transaction.subscription FOR UPDATE TO cella_app USING (true);
 CREATE POLICY writes ON account_membership_transaction.draw FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY writes ON account_membership_transaction.paid FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY writes ON account_membership_transaction.repayment FOR INSERT TO cella_app WITH CHECK (true);
+CREATE POLICY writes ON account_membership_transaction.withdrawal FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY changes ON account_membership_transaction.repayment FOR UPDATE TO cella_app USING (true);
 
 ALTER VIEW account_membership_transaction.drawn SET (security_invoker = true);

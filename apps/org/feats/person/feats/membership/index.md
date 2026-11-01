@@ -18,7 +18,7 @@ adds.
 | `POST /api/membership/accept` | ordered | enrols the invitee's first device, ordered against revoke as any enrolment |
 | `POST /api/membership/admit` | ordered | changes who votes |
 | `POST /api/membership/suspend` | ordered | changes who votes |
-| `POST /api/membership/exit` | ordered | freezes the capital account |
+| `POST /api/membership/exit` | ordered | ends a membership; its capital's freeze and withdrawal follow it |
 | `POST /api/membership/erase` | ordered | erasure wins over every update |
 
 A person's own name and contact details are the person's writes
@@ -115,14 +115,17 @@ Whether the cited motion asks it is the `membership-motion` graft's guard on the
 
 ### The exit's hook
 
-An exit freezes the member's capital, which is the books', not this
-feat's. The exit sets `status` to `exited` and `exited` to the verdict
-date in its own transaction, and its payload names the member and the
-motion: a graft joining `membership` to the books (`account-membership`)
-attaches a trigger to that update, or a guard to `membership:member:exit`, and
-so settles or is refused with the exit itself. A reaction to the settled
-op in a slice's `on` runs only for a write made from a page, not for one
-a close carries out, so the freeze belongs in SQL.
+An exit, and an admission, change the member's capital, which is the
+books', not this feat's. Each sets the status and its day in its own
+transaction, and its request names the member and the motion, the
+shares too for an admission: a graft joining `membership` to the books
+reacts to the settled op in its slice's `on` with a write of its own,
+citing the same motion, as `account-membership` freezes the member's
+capital accounts and `account-membership-transaction` subscribes and
+withdraws their capital. The shell runs the reactions to the writes a
+close carries out as to one made from a page, and the close reports each
+admission it made, so they follow it too. No trigger on `member` does
+it.
 
 ## Grafts
 

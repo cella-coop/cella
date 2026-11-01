@@ -28,20 +28,21 @@ $$;
 CREATE TRIGGER held BEFORE INSERT OR UPDATE OF holder ON account.account
   FOR EACH ROW EXECUTE FUNCTION account_membership.held();
 
--- A member who leaves has their capital frozen until it is repaid, in the
--- write that ends their membership, whichever it is: what they hold takes
--- no draw from then on.
-CREATE FUNCTION account_membership.freezes() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF NEW.status = 'exited' AND OLD.status <> 'exited' THEN
-    UPDATE account.account SET frozen = true WHERE holder = NEW.address AND NOT frozen;
-  END IF;
-  RETURN NULL;
-END
-$$;
+-- account:account:freeze — a member who leaves has their capital frozen
+-- until it is repaid, by the freeze that follows their exit: the holder is
+-- a member who has left, so no active member's capital is frozen.
+CREATE FUNCTION account_membership.freezes(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN m.address IS NULL THEN coalesce(p.holder, 'no one') || ' is no member'
+    WHEN m.status <> 'exited' THEN m.address || ' is ' || m.status || ': only the capital of a member who left is frozen'
+  END
+  FROM (SELECT payload ->> 'holder' AS holder) p
+  LEFT JOIN membership.member m ON m.address = p.holder;
+END;
 
-CREATE TRIGGER freezes AFTER UPDATE OF status ON membership.member
-  FOR EACH ROW EXECUTE FUNCTION account_membership.freezes();
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:account:freeze', 'account_membership.freezes(jsonb)', 'account-membership');
 
 -- Each member's capital: their shares at the share's value, the account
 -- that holds it, whether it is frozen, and what they may draw.
@@ -57,3 +58,16 @@ LEFT JOIN account_membership.allowance w ON w.member = m.address;
 
 GRANT USAGE ON SCHEMA account_membership TO cella_app, cella_guards;
 GRANT SELECT ON account_membership.terms, account_membership.allowance, account_membership.capital TO cella_app, cella_guards;
+
+-- Whether a member holds a capital account not yet frozen, so the freeze
+-- that follows their exit has something to freeze. It runs as its owner,
+-- since whoever closed the motion may read no colleague's capital, and
+-- says no more than whether there is one.
+CREATE FUNCTION account_membership.unfrozen(member text) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT EXISTS (SELECT FROM account.account a WHERE a.holder = unfrozen.member AND NOT a.frozen);
+END;
+
+REVOKE EXECUTE ON FUNCTION account_membership.unfrozen(text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION account_membership.unfrozen(text) TO cella_app;

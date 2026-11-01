@@ -1,16 +1,21 @@
 // Capital on a database holding the app's core, the account, member and
-// transaction feats, account-membership, account-transaction and this graft: a
-// member admitted subscribes their shares, their account opened and the
-// shares called in the same write, never fewer than the statutes ask; a
-// payment in moves what it pays to their account, never beyond what they
-// owe; a draw is refused once frozen or beyond the limit; and one who
-// leaves has their capital frozen, moved to what is owed them and their
-// repayments drawn up, each paid once, in its turn and not before its
-// day. Run by `cella test slice account-membership-transaction`.
+// transaction feats, account-membership, account-transaction and this graft: no
+// trigger subscribes an admission or withdraws an exit; a member admitted
+// subscribes their shares by the write that follows, their account opened
+// and the shares called, never fewer than the statutes ask nor into a
+// closed month; a payment in moves what it pays to their account, never
+// beyond what they owe; a draw is refused beyond the limit; and one who
+// leaves has their capital withdrawn by the write that follows the exit,
+// moved to what is owed them and their repayments drawn up, once, each
+// paid once, in its turn and not before its day. Run by `cella test slice
+// account-membership-transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import type { Write } from '@cella/org-db'
+import { freezing } from '@cella/org-account/api'
+import { subscribing, withdrawing } from '@cella/org-graft-account-membership-transaction/api'
 
 const db = new pg.Client()
 const ines = 'ines@lanterne.example'
@@ -20,6 +25,15 @@ const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sq
 // What a payload holds of an amount: its commitment, so the guards read the
 // amount from the row the write made.
 const commitment = { $commit: '00'.repeat(32) }
+// A write's state, then its guard on the payload it submits, as the
+// notary would judge it, in one transaction left open for the test.
+// The slice's tests write below the notary, so no device signs.
+async function judged<T>(w: Write<T>, guard: string) {
+  await db.query('BEGIN')
+  const value = await w.state(db, {} as never)
+  const { r } = await one<{ r: string | null }>(`SELECT ${guard}($1) AS r`, [w.payload(value)])
+  return { value, r }
+}
 
 before(async () => {
   await db.connect()
@@ -57,25 +71,41 @@ test('only the app\'s core, the feats it joins and its lower grafts are migrated
 const lines = async (entry: string) =>
   (await db.query(`SELECT account, side, cella.cents(amount) AS cents FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).rows
 
-test('the statutes ask at least 20 shares: a smaller subscription is refused with the admission', async () => {
+test('no trigger subscribes an admission: admitted alone, Inès holds no account and owes nothing', async () => {
   await db.query('BEGIN')
-  await assert.rejects(
-    db.query(`UPDATE membership.member SET status = 'active', since = '2026-10-31', shares = 10 WHERE address = $1`, [ines]),
-    /ines@lanterne.example subscribes 10 shares: t-2021 ask at least 20/,
-  )
+  await db.query(`UPDATE membership.member SET status = 'active', since = '2026-10-31', shares = 20 WHERE address = $1`, [ines])
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM account_membership_transaction.subscription')).n, '0')
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM account.account WHERE holder = $1`, [ines])).n, '0')
   await db.query('ROLLBACK')
 })
 
-test('admitted, Inès subscribes her 20 shares: her account opens and 1 000 € is called, 4562 debited and 1012 credited', async () => {
+test('the statutes ask at least 20 shares, and nothing posts into a closed month: either subscription is refused', async () => {
   await db.query('BEGIN')
+  await db.query(`UPDATE membership.member SET status = 'active', since = '2026-10-31', shares = 10 WHERE address = $1`, [ines])
+  await db.query('SAVEPOINT admitted')
+  const fewer = await judged(subscribing({ member: ines, motion: 'm-2026-012' }), 'account_membership_transaction.subscribes')
+  assert.match(fewer.r ?? '', /ines@lanterne.example subscribes 10 shares: t-2021 ask at least 20/)
+  await db.query('ROLLBACK TO SAVEPOINT admitted')
+  await db.query(`UPDATE account.period SET closed = '2026-10-31' WHERE month = '2026-10'`)
+  await assert.rejects(subscribing({ member: ines, motion: 'm-2026-012' }).state(db, {} as never), /2026-10 is closed: je-0001 cannot post into it/)
+  await db.query('ROLLBACK')
+})
+
+test('admitted, Inès subscribes her 20 shares by the write that follows: her account opens and 1 000 € is called, 4562 debited and 1012 credited', async () => {
   await db.query(`UPDATE membership.member SET status = 'active', since = '2026-10-31', shares = 20 WHERE address = $1`, [ines])
+  const w = subscribing({ member: ines, motion: 'm-2026-012' })
+  const { value, r } = await judged(w, 'account_membership_transaction.subscribes')
+  assert.equal(r, null)
   await db.query('COMMIT')
+  assert.deepEqual({ ...w.payload(value) }, { member: ines, account: '101302', shares: 20, amount: 100000, entry: 'je-0001', motion: 'm-2026-012' })
   const s = await one<{ account: string; shares: number; entry: string }>('SELECT account, shares, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.deepEqual(s, { account: '101302', shares: 20, entry: 'je-0001' })
   assert.deepEqual(await lines('je-0001'), [{ account: '4562', side: 'debit', cents: '100000' }, { account: '1012', side: 'credit', cents: '100000' }])
   const c = await one('SELECT subscribed, account, frozen FROM account_membership.capital WHERE member = $1', [ines])
   assert.deepEqual(c, { subscribed: '100000', account: '101302', frozen: false })
   assert.deepEqual(await one('SELECT amount, paid, unpaid FROM account_membership_transaction.called WHERE member = $1', [ines]), { amount: '100000', paid: '0', unpaid: '100000' })
+  const again = await one<{ r: string }>('SELECT account_membership_transaction.subscribes($1) AS r', [{ member: ines, account: '101303', entry: 'je-0002' }])
+  assert.match(again.r, /je-0002 is not ines@lanterne.example's subscription/)
 })
 
 test('a payment in moves what it pays from 1012 to her account; beyond what she owes, or not exactly the payment, it is refused', async () => {
@@ -150,26 +180,40 @@ test('Hugo\'s capital account holds 600 €, twelve shares a past year\'s work s
   await db.query('COMMIT')
   assert.deepEqual(await lines(rows[0].id), [{ account: '424', side: 'debit', cents: '60000' }, { account: '101301', side: 'credit', cents: '60000' }])
 })
-test('a member who leaves has their capital frozen for good, moved to 4567, and repaid as the statutes say', async () => {
+test('a member who leaves has their capital withdrawn by the write that follows: moved to 4567, and repaid as the statutes say', async () => {
   await db.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [hugo])
-  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101301'`)).frozen, true)
+  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101301'`)).frozen, false, 'no trigger freezes an exit')
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM transaction.line WHERE account = '4567'`)).n, '0', 'nor withdraws it')
+  await db.query('BEGIN')
+  assert.deepEqual(await freezing(db, hugo), ['101301'])
+  await db.query('COMMIT')
   await db.query('BEGIN')
   await assert.rejects(db.query(`UPDATE account.account SET frozen = false WHERE code = '101301'`), /101301 is frozen until it is repaid/)
   await db.query('ROLLBACK')
-  const exit = await one<{ entry: string }>(`SELECT entry FROM transaction.line WHERE account = '4567'`)
-  assert.deepEqual(await lines(exit.entry), [{ account: '101301', side: 'debit', cents: '60000' }, { account: '4567', side: 'credit', cents: '60000' }])
+  const { value, r } = await judged(withdrawing({ member: hugo, motion: 'm-2026-013' }), 'account_membership_transaction.withdraws')
+  assert.equal(r, null)
+  await db.query('COMMIT')
+  assert.deepEqual({ owed: value.owed, cancelled: value.cancelled, repayments: value.repayments }, { owed: 60000, cancelled: 0, repayments: 3 })
+  assert.deepEqual(await lines(value.entry), [{ account: '101301', side: 'debit', cents: '60000' }, { account: '4567', side: 'credit', cents: '60000' }])
   const drawn = (await db.query(`SELECT n, to_char(due, 'YYYY-MM-DD') AS due, cella.cents(amount) AS cents FROM account_membership_transaction.repayment WHERE member = $1 ORDER BY n`, [hugo])).rows
   assert.deepEqual(drawn, [
     { n: 1, due: '2027-10-31', cents: '20000' },
     { n: 2, due: '2028-10-31', cents: '20000' },
     { n: 3, due: '2029-10-31', cents: '20000' },
   ])
+  const again = await one<{ r: string }>('SELECT account_membership_transaction.withdraws($1) AS r', [{ member: hugo, entry: 'je-9999' }])
+  assert.match(again.r, /je-9999 is not hugo@lanterne.example's withdrawal/)
+  assert.equal((await one<{ holds: boolean }>('SELECT account_membership_transaction.holds($1) AS holds', [hugo])).holds, false, 'nothing is left to withdraw')
 })
 
-test('one who leaves owing has the rest of their subscription cancelled', async () => {
+test('one who leaves owing has the rest of their subscription cancelled; one still a member withdraws nothing', async () => {
+  const active = await one<{ r: string }>('SELECT account_membership_transaction.withdraws($1) AS r', [{ member: ines, entry: 'je-9999' }])
+  assert.match(active.r, /ines@lanterne.example is active: only the capital of a member who left is withdrawn/)
   await db.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [ines])
-  const exit = await one<{ entry: string }>(`SELECT entry FROM transaction.line WHERE account = '4562' AND side = 'credit' AND cella.cents(amount) = 60000`)
-  assert.deepEqual(await lines(exit.entry), [
+  const { value, r } = await judged(withdrawing({ member: ines, motion: 'm-2026-014' }), 'account_membership_transaction.withdraws')
+  assert.equal(r, null)
+  await db.query('COMMIT')
+  assert.deepEqual(await lines(value.entry), [
     { account: '101302', side: 'debit', cents: '40000' },
     { account: '4567', side: 'credit', cents: '40000' },
     { account: '1012', side: 'debit', cents: '60000' },

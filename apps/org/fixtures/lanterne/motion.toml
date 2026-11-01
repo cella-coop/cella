@@ -1,25 +1,52 @@
 # Proposals and the signed votes on them. An outcome is never stored: it is
 # computed from the votes the notary counted before the deadline.
 
-# The statutes' two assemblies, beside the built-in consent, majority and
-# two thirds. The ordinary assembly decides by a majority of the votes cast
-# once a quarter of the associates take part; the extraordinary, which
-# amends the statutes, by two thirds of the votes cast once half take part.
-# These follow the CG Scop's model statutes for a SCOP SARL under loi
-# n° 78-763 of 19 July 1978; the articles were not checked on Légifrance,
-# which refuses the box.
-[[procedure]]
-id = "ordinary"
-label = "Ordinary assembly"
-method = "majority"
-quorum = [1, 4]
+# The founding assembly, on 1 March 2021, adopted the statutes, and with
+# them how the co-op decides: each procedure a policy of the assembly,
+# its terms the values its sentence marks. Beside consent, majority, two
+# thirds and election, which every scope starts with, the statutes give
+# the assembly two procedures: the ordinary assembly decides by a
+# majority of the votes cast once a quarter of the associates take part;
+# the extraordinary, which amends the statutes, by two thirds of the
+# votes cast once half take part. These follow the CG Scop's model
+# statutes for a SCOP SARL under loi n° 78-763 of 19 July 1978; the
+# articles were not checked on Légifrance, which refuses the box.
+[[motion]]
+id = "m-2021-001"
+circle = "ag"
+title = "Found Lanterne and adopt its statutes"
+procedure = "consent"
+proposed = 2021-02-15
+deadline = 2021-03-01
+closed = 2021-03-01
+body = """
+The founders adopt the statutes of Lanterne SCOP SARL à capital variable,
+and with them how its circles decide.
+"""
 
-[[procedure]]
-id = "extraordinary"
-label = "Extraordinary assembly"
-method = "majority"
-share = [2, 3]
-quorum = [1, 2]
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By {procedure: consent}, a motion is decided by {method: consent}, with a quorum of {quorum: none}: it passes if no member on its roll objects at its close", friendly = "A motion passes if no one objects." }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By {procedure: majority}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: none}: it passes with more for than against", friendly = "A motion passes with more for than against." }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By {procedure: two-thirds}, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: none}" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By {procedure: election}, a person is elected or removed by a {method: majority} of the votes cast, with a quorum of {quorum: none}, by {ballot: secret} ballot" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By the {label: ordinary assembly}'s procedure, {procedure: ordinary}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: 1/4} of the associates on its roll" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "procedure", wording = "By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, which amends the statutes, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: 1/2} of the associates on its roll" }
 
 [[motion]]
 id = "m-2026-006"

@@ -1,12 +1,15 @@
 // fixture check, governance: a mock co-op's motions decide what can be
 // decided. An action names a kind a graft registers, and its arguments
-// resolve: a member to admit is invited and subscribes shares, one to
-// suspend or let go is a member; a seat names a circle and a member; the links
-// check a version to adopt and a distribution to approve. Every
+// resolve: a policy has a kind and its wording; a member to admit is
+// invited and subscribes shares, one to suspend or let go is a member; a
+// seat names a circle and a member; the links check a version to adopt
+// and a distribution to approve. Every
 // invited member has taken up their invitation, with the first device it
 // enrolled, without which their admission is refused, and only they have.
 
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke', 'adopt', 'terms', 'patronage', 'distribution'])
+// The kinds the grafts register, and `policy`, which the motion feat
+// registers itself.
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke', 'adopt', 'terms', 'patronage', 'distribution', 'policy'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
@@ -23,6 +26,9 @@ export function governance(read, fail) {
       }
       if (m.kind === 'admit' && (members.get(a.member)?.status !== 'invited' || !(a.shares > 0))) {
         fail(`${where}: admits someone invited, with shares`)
+      }
+      if (m.kind === 'policy' && (!['mandate', 'rule', 'procedure'].includes(a.kind) || !a.wording)) {
+        fail(`${where}: a policy is a mandate, a rule or a procedure, with its wording`)
       }
       if (['seat', 'unseat', 'nest'].includes(m.kind) && !circles.has(a.circle)) {
         fail(`${where}: no circle ${a.circle}`)

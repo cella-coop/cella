@@ -90,7 +90,7 @@ test('the assembly proposes the solidarity rate as a rule, and every member cons
 test('an adoption before the motion has passed is refused', async () => {
   const early = await adopt({ motion, n: 1 }, as(malik))
   assert.match(reason(early), new RegExp(`${motion} is not closed`))
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM policy.policy')).n, '0')
+  assert.equal((await one<{ n: string }>("SELECT count(*) AS n FROM policy.policy WHERE kind = 'rule'")).n, '0')
 })
 
 test('the close carries it: the register keeps the policy with its motion, the day it applies and its value once', async () => {
@@ -101,7 +101,7 @@ test('the close carries it: the register keeps the policy with its motion, the d
 
   const id = `${motion}/1`
   assert.deepEqual(
-    await one(`SELECT id, circle, kind, motion, to_char(applies, 'YYYY-MM-DD') AS applies, ends, replaces FROM policy.policy`),
+    await one(`SELECT id, circle, kind, motion, to_char(applies, 'YYYY-MM-DD') AS applies, ends, replaces FROM policy.policy WHERE kind = 'rule'`),
     { id, circle: 'ag', kind: 'rule', motion, applies: '2026-11-21', ends: null, replaces: null },
   )
   assert.deepEqual(await all('SELECT name, type, literal, value FROM policy.value WHERE policy = $1', [id]), [
@@ -125,7 +125,7 @@ test('carried again, the adoption is refused: a policy is adopted once', async (
 test('the assembly\'s page lists the policy in force, as it reads, with its motion and its days', async () => {
   const page = await proposing(app, 'ag')
   assert.deepEqual(
-    page?.policies.map((p) => ({ id: p.id, sentence: p.sentence, motion: p.motion, applies: p.applies, ends: p.ends, values: p.values })),
+    page?.policies.filter((p) => p.kind === 'rule').map((p) => ({ id: p.id, sentence: p.sentence, motion: p.motion, applies: p.applies, ends: p.ends, values: p.values })),
     [
       {
         id: `${motion}/1`,

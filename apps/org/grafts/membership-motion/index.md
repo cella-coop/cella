@@ -10,8 +10,8 @@ personal data. Declared by the `membership` feat.
 ## Schema
 
 `membership_motion` (`sql/`) holds no table: the actions are the motion
-feat's `motion.action`, of the kinds this graft registers in
-`motion.carries`: `admit` (`member`, `shares`), `suspend`, `exit` and
+feat's `motion.action`, of the kinds this graft registers by
+`motion.register_carries`: `admit` (`member`, `shares`), `suspend`, `exit` and
 `erase` (`member`). `membership_motion.action` reads them with the member each
 names and, for an admission, the shares as a whole number. The app role
 and the guards role, `cella_guards`, may select it.
@@ -37,8 +37,8 @@ and the guards role, `cella_guards`, may select it.
   motion asks to admit, holding the shares it asks, and was admitted by
   the close (`membership.admitted`, the membership feat's guard, run for each).
 
-The admission, suspension and exit cite their motion: this graft lists
-them in `motion.cites`, and `circle-membership-motion`, which counts the
+The admission, suspension and exit cite their motion: this graft registers
+them by `motion.register_cite`, and `circle-membership-motion`, which counts the
 roll, attaches its guard that it closed and passed. Whether a close
 admits everyone it must, and seats them, needs the roll and seats, so it
 is that three-way graft's; this one never reads it.

@@ -152,3 +152,28 @@ test('a secret ballot\'s tally is sealed to the app until its close, and a redac
   assert.deepEqual(await turnout('m-2026-106'), { counted: 10, given: 2, quorate: true })
   assert.equal(await passes('m-2026-106'), false)
 })
+
+test('the guard covers every action that cites a motion, registered before this graft migrated or after, and refuses one until its motion passed', async () => {
+  const carried = `'circle_membership_motion.carried(jsonb)'::regprocedure`
+  const uncovered = await db.query(`SELECT c.op FROM motion.cites c WHERE NOT EXISTS (SELECT FROM cella.guard g WHERE g.op = c.op AND g.fn = ${carried})`)
+  assert.deepEqual(uncovered.rows, [])
+  assert.ok((await db.query('SELECT op FROM motion.cites')).rows.length >= 2)
+  assert.deepEqual((await db.query('SELECT fn::text AS fn, owner FROM motion.cite_guard')).rows, [
+    { fn: 'circle_membership_motion.carried(jsonb)', owner: 'circle-membership-motion' },
+  ])
+
+  await db.query(`SELECT motion.register_cite('later:thing:do', 'later')`)
+  assert.deepEqual((await db.query(`SELECT owner FROM cella.guard WHERE op = 'later:thing:do' AND fn = ${carried}`)).rows, [
+    { owner: 'circle-membership-motion' },
+  ])
+  const judge = async (motion: string) =>
+    (await db.query<{ r: string | null }>('SELECT circle_membership_motion.carried($1) AS r', [{ motion }])).rows[0].r
+  await propose('m-2026-108', 'majority')
+  assert.equal(await judge('m-2026-108'), 'm-2026-108 is not closed')
+  for (const name of ten) {
+    await vote('m-2026-108', name, 'for')
+  }
+  await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-108', ++receipt])
+  await db.query('SELECT circle_membership_motion.count($1)', ['m-2026-108'])
+  assert.equal(await judge('m-2026-108'), null)
+})

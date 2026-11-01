@@ -1,8 +1,7 @@
 -- Erasing the personal data of a member who has left, decided by the
 -- assembly as an exit is: the motion asks it, and its close carries it
 -- out.
-INSERT INTO motion.carries (kind, label, fields, owner) VALUES
-  ('erase', 'Erase a former member''s personal data', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership-motion');
+SELECT motion.register_carries('erase', 'Erase a former member''s personal data', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership-motion');
 
 CREATE OR REPLACE VIEW membership_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args ->> 'member' AS member,
@@ -35,5 +34,4 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:erase', 'membership_motion.ends(jsonb)', 'membership-motion');
-INSERT INTO motion.cites (op, owner) VALUES
-  ('membership:member:erase', 'membership-motion');
+SELECT motion.register_cite('membership:member:erase', 'membership-motion');

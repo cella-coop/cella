@@ -37,8 +37,8 @@ here.
   call it.
 - `circle_membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
-  `seat` and `unseat` actions name, kinds this graft registers in
-  `motion.carries` (`circle`, `member`, `role`, none for a plain seat).
+  `seat` and `unseat` actions name, kinds this graft registers by
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat).
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -79,14 +79,17 @@ coordination's, counts its five.
   that circle, or a seat held.
 - `circle_membership_motion.carried`, on every action in `motion.cites`: the
   motion the payload cites is closed and passes. The motion feat keeps
-  that list; a graft that joins motion to a write's feat declares its action
-  there (`membership-motion` for admission, suspension and exit,
-  `circle-motion` for nesting and mandates, `document-motion` for
-  `document:document:adopt`), and this graft attaches the guard to every
-  op listed, then and later. A graft that cites a motion so never reads
+  that list; a graft that joins motion to a write's feat registers its
+  action there by `motion.register_cite` (`membership-motion` for
+  admission, suspension and exit, `circle-motion` for nesting and
+  mandates, `document-motion` for `document:document:adopt`), and this
+  graft registers the guard by `motion.register_cite_guard`, which
+  attaches it to every action listed, then and later: the motion feat's
+  register functions attach it, and this graft puts no trigger on
+  `motion.cites`. A graft that cites a motion so never reads
   this one, and this one never names a feat it does not join. This graft
-  lists `circle-membership:seat:add` and `:remove` itself, a lower-order
-  graft's ops.
+  registers `circle-membership:seat:add` and `:remove` itself, a
+  lower-order graft's actions.
 - `circle_membership_motion.seats`, on `circle-membership:seat:add`: the
   seat is one the cited motion gives (`seating`), to an active member,
   from the verdict date, where they held no such seat. `unseats`, on

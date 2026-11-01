@@ -198,6 +198,22 @@ feat or a graft inserts, updates, deletes, merges or truncates a table
 outside its own schema, or makes a trigger on one; it writes `cella.*`
 only to register ([SQL](#sql)).
 
+A feat that keeps a register its extenders fill owns it the same way.
+The extenders register through a function the feat publishes, and that
+function, the feat's own code, writes the row: a graft's migration calls
+it and never inserts the row itself. `membership-motion` registers
+`admit`, an action a motion can carry, by `motion.register_carries`, and
+its admission's action, which cites the motion that passed, by
+`motion.register_cite`. The register is how the feat finds what its
+extenders bring, and it knows none of them by name. The graft that
+counts the roll covers every action listed with its guard:
+`circle-membership-motion` registers it by `motion.register_cite_guard`,
+which attaches it to every action listed so far, and
+`motion.register_cite` attaches each guard so registered to the action
+it lists, whichever migrated first, so no graft puts a trigger on the
+register. `cella check feats` reads each call's literal action as it
+reads a literal row.
+
 `cella check feats` checks this. `tools/sql-check.mjs` collects every
 such write and trigger that the owner's migrations leave standing. A
 later file that drops the trigger, or drops or replaces the function,
@@ -207,8 +223,8 @@ aside, for SQL that writes a table outside its schema. Both are held to
 the app's `foreign.list`, which lists the exceptions that predate
 the rule (2026-10-29). The check refuses an exception the list does not
 name, and also a listed line whose write is gone, so the list only
-shrinks. Each exception moves to its owner by a new migration, a
-handler and its feat's published write. A write no tool can see, such as
+shrinks. Each exception moves to its owner by its migration, rewritten
+in place, a handler and its feat's published write. A write no tool can see, such as
 SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
 is left to review.
 
@@ -666,7 +682,8 @@ a motion, a circle's message); or `decided`, the motion it cites
 passed and carried (an admission, an adoption, a seat):
 `confluent({ check: 'seat' })`. A check is backed by SQL: a guard
 registered on the action in `cella.guard`, or for `decided` a row in
-`motion.cites`, to which `circle-membership-motion` attaches its guard.
+`motion.cites`, registered by `motion.register_cite`, which attaches
+`circle-membership-motion`'s guard to it.
 `cella check feats` refuses an action that names neither a power nor a
 check, and a check no literal row backs; that the guard does what the
 check says is its owner's and its tests'. An action not yet decided as

@@ -11,8 +11,8 @@ sits where needs members as well, so seats by motion are
 ## Schema
 
 `circle_motion` (`sql/`) holds no table: the actions are the motion
-feat's `motion.action`, of the kinds this graft registers in
-`motion.carries`, `nest` (`circle`, `parent`), `grant` (`role`, `power`,
+feat's `motion.action`, of the kinds this graft registers by
+`motion.register_carries`, `nest` (`circle`, `parent`), `grant` (`role`, `power`,
 `text`, and a `limit` per write or a `budget` with its `per`, in euros as
 the form asks) and `revoke` (`mandate`). `circle_motion.action` reads
 them with the circle each is about: the circle nested, the role's circle,
@@ -40,7 +40,7 @@ that sets one will be judged by a guard of this graft's on its action, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
-The three actions cite a motion: this graft lists them in `motion.cites`,
+The three actions cite a motion: this graft registers them by `motion.register_cite`,
 and `circle-membership-motion`, which counts the roll, attaches its guard
 that it carried.
 

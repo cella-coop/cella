@@ -176,6 +176,9 @@ function inspect(tree, o, s, known, fail, found) {
         fail(`calls ${f.join('.')}(): guards read cella.verdict_date(), never the clock or randomness`)
       }
     }
+    if (n.FuncCall) {
+      registersBy(n.FuncCall, o, fail, found)
+    }
     if (n.SQLValueFunction && o.kind !== 'core') {
       fail(`reads ${n.SQLValueFunction.op.replace('SVFOP_', '').toLowerCase()}: guards read cella.verdict_date(), never the clock`)
     }
@@ -232,6 +235,31 @@ function citing(b, o, found) {
     if (vals.op) {
       found.cites.push({ op: vals.op, owner: o.name })
     }
+  }
+}
+
+// The motion feat's register functions, by how many arguments each takes:
+// a graft registers what it brings by calling them, never by inserting
+// the row (architecture.md, "Writes stay home"). Each call's arguments are
+// literals, the last its caller's own name, so the check reads the action
+// a call lists in motion.cites as it reads a literal row.
+const registerFns = { 'motion.register_carries': 4, 'motion.register_cite': 2, 'motion.register_cite_guard': 2 }
+
+function registersBy(call, o, fail, found) {
+  const f = strings(call.funcname).join('.')
+  if (!registerFns[f]) {
+    return
+  }
+  const args = (call.args ?? []).map((a) => a.A_Const?.sval?.sval)
+  if (args.length !== registerFns[f] || args.includes(undefined)) {
+    fail(`calls ${f} with an argument that is no literal string, which the check cannot see`)
+    return
+  }
+  if (args.at(-1) !== o.name) {
+    fail(`registers by ${f} as ${args.at(-1)}, not as itself, ${o.name}`)
+  }
+  if (f === 'motion.register_cite') {
+    found.cites.push({ op: args[0], owner: o.name })
   }
 }
 

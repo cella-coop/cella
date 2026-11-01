@@ -4,10 +4,9 @@ CREATE SCHEMA circle_motion;
 -- feat so its New form offers them: nesting a circle under another,
 -- granting a power to a role, revoking a mandate. Amounts are in euros,
 -- as the form asks for them; the writes carry them in cents.
-INSERT INTO motion.carries (kind, label, fields, owner) VALUES
-  ('nest', 'Nest a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "parent", "label": "Under", "type": "text"}]', 'circle-motion'),
-  ('grant', 'Grant a mandate', '[{"name": "role", "label": "Role", "type": "text"}, {"name": "power", "label": "Power", "type": "text"}, {"name": "text", "label": "Grants", "type": "text"}, {"name": "limit", "label": "Limit per write, €", "type": "number", "optional": true}, {"name": "budget", "label": "Budget, €", "type": "number", "optional": true}, {"name": "per", "label": "Budget per (month or year)", "type": "text", "optional": true}]', 'circle-motion'),
-  ('revoke', 'Revoke a mandate', '[{"name": "mandate", "label": "Mandate", "type": "number"}]', 'circle-motion');
+SELECT motion.register_carries('nest', 'Nest a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "parent", "label": "Under", "type": "text"}]', 'circle-motion');
+SELECT motion.register_carries('grant', 'Grant a mandate', '[{"name": "role", "label": "Role", "type": "text"}, {"name": "power", "label": "Power", "type": "text"}, {"name": "text", "label": "Grants", "type": "text"}, {"name": "limit", "label": "Limit per write, €", "type": "number", "optional": true}, {"name": "budget", "label": "Budget, €", "type": "number", "optional": true}, {"name": "per", "label": "Budget per (month or year)", "type": "text", "optional": true}]', 'circle-motion');
+SELECT motion.register_carries('revoke', 'Revoke a mandate', '[{"name": "mandate", "label": "Mandate", "type": "number"}]', 'circle-motion');
 
 -- Which circle an action is about: the circle nested, the role's circle,
 -- the revoked mandate's role's circle. A role every working circle has
@@ -130,10 +129,9 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:circle:nest', 'circle_motion.nests(jsonb)', 'circle-motion'),
   ('circle:mandate:grant', 'circle_motion.grants(jsonb)', 'circle-motion'),
   ('circle:mandate:revoke', 'circle_motion.revokes(jsonb)', 'circle-motion');
-INSERT INTO motion.cites (op, owner) VALUES
-  ('circle:circle:nest', 'circle-motion'),
-  ('circle:mandate:grant', 'circle-motion'),
-  ('circle:mandate:revoke', 'circle-motion');
+SELECT motion.register_cite('circle:circle:nest', 'circle-motion');
+SELECT motion.register_cite('circle:mandate:grant', 'circle-motion');
+SELECT motion.register_cite('circle:mandate:revoke', 'circle-motion');
 
 GRANT USAGE ON SCHEMA circle_motion TO cella_app, cella_guards;
 GRANT SELECT ON circle_motion.action TO cella_app, cella_guards;

@@ -23,13 +23,12 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'motion_patronage.approves(jsonb)', 'motion-patronage');
-INSERT INTO motion.cites (op, owner) VALUES ('patronage:distribution:approve', 'motion-patronage');
+SELECT motion.register_cite('patronage:distribution:approve', 'motion-patronage');
 
 -- What a motion may decide of the work share's terms, registered with
 -- the motion feat so its New form offers it: adopting drafted terms,
 -- picked from those this graft adds to the form (`options`).
-INSERT INTO motion.carries (kind, label, fields, owner) VALUES
-  ('patronage', 'Adopt the work share''s terms', '[{"name": "terms", "label": "Terms", "type": "text", "options": "bases"}]', 'motion-patronage');
+SELECT motion.register_carries('patronage', 'Adopt the work share''s terms', '[{"name": "terms", "label": "Terms", "type": "text", "options": "bases"}]', 'motion-patronage');
 
 -- The motion of the members that adopts terms, as its action names
 -- them. Both sides are referenced by id, with no foreign key into either
@@ -98,7 +97,7 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:terms:adopt', 'motion_patronage.adopts(jsonb)', 'motion-patronage');
-INSERT INTO motion.cites (op, owner) VALUES ('patronage:terms:adopt', 'motion-patronage');
+SELECT motion.register_cite('patronage:terms:adopt', 'motion-patronage');
 
 GRANT USAGE ON SCHEMA motion_patronage TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON motion_patronage.approval, motion_patronage.adoption TO cella_app;

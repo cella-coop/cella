@@ -36,8 +36,8 @@ this graft adds to the motions' `about`.
   message gives names a document or one of its versions
   (`document_motion.linked`).
 
-An adoption cites its motion: this graft declares
-`document:document:adopt` in `motion.cites`, and `circle-membership-motion`,
+An adoption cites its motion: this graft registers
+`document:document:adopt` by `motion.register_cite`, and `circle-membership-motion`,
 which counts the roll, attaches its guard that the motion closed and
 passed. This graft joins two feats and so cannot read the roll, a
 three-way graft's; it never needs to. That the version is the document's

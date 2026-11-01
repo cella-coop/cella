@@ -1,6 +1,6 @@
 // A worker's week, on a database holding the app's core, the project,
-// timesheet and employment feats, the person core and the grafts beneath this one: the guards
-// that judge booking by employment, and the week the grid enters, its
+// timesheet and employment feats, the person core and the grafts beneath
+// this one: no action of its own, and the week the grid enters, its
 // days open once come while employed, its projects those booked to lately
 // first, and what each cell holds. That the actor books their own time is
 // the e2e scenario `participation`'s. Run by
@@ -45,9 +45,9 @@ after(async () => {
   await db.end()
 })
 
-test('booking by employment is judged as a worker’s log: their own time, while employed', async () => {
-  const { rows } = await db.query(`SELECT fn::text AS fn FROM cella.guard WHERE op = 'employment-project-timesheet:entry:book' ORDER BY fn::text`)
-  assert.deepEqual(rows, [{ fn: 'employment_timesheet.works(jsonb)' }, { fn: 'timesheet.logs(jsonb)' }])
+test('the week has no action of its own: each cell is the timesheet feat’s log, booked or not', async () => {
+  const { rows } = await db.query(`SELECT op FROM cella.guard WHERE owner = 'employment-project-timesheet' UNION ALL SELECT op FROM cella.power WHERE owner = 'employment-project-timesheet'`)
+  assert.deepEqual(rows, [])
 })
 
 test('a week runs from its Monday', () => {

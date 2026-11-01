@@ -16,7 +16,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
   const { rows } = await deps.db.query<{ decider: string; procedure: string; member: string | null; circle: string | null; role: string | null }>(
     `SELECT d.id AS decider, d.procedure,
-            (SELECT mp.name FROM membership.member m JOIN person.person mp ON mp.address = m.address WHERE m.address = $2) AS member,
+            (SELECT mp.name FROM person.person mp WHERE mp.address = $2) AS member,
             (SELECT c.name FROM circle.circle c WHERE c.id = $1) AS circle,
             (SELECT r.name FROM circle.role r WHERE r.id = $3) AS role
      FROM circle.circle d

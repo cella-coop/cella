@@ -3,25 +3,21 @@ title = "employment-project-timesheet"
 updated = 2026-11-02
 +++
 
-A worker's time on projects by their employment, and the week they enter
-it in. Booking time to a project is `project-timesheet`'s, but its write
-is the timesheet feat's log, which needs the log-time mandate that only
-a seat, and so a membership, gives; logging by employment, member or not,
-is `employment-timesheet`'s. This graft joins the three feats and builds on
+A worker's week of time on projects, and the time they import, by their
+employment. Booking time to a project is `project-timesheet`'s, its write
+the timesheet feat's log, which needs `log-time`, every employee's
+right, member or not; this graft builds the week a worker enters it in,
+over the days they are employed. It joins the three feats and builds on
 both. Declared by `timesheet`.
 
 ## Actions
 
-| Action | Label | Power | Why |
-|---|---|---|---|
-| `employment-project-timesheet:entry:book` | confluent | `log-own-time`, every employee's right | entries add up in any order; the worker's own, while employed |
-
-`book` is `project-timesheet`'s booking (`booking`) over the timesheet
-feat's entry, under this graft's op: one transaction, one verdict. The
-guards are those of employment-timesheet's log, `timesheet.logs` and
-`employment_timesheet.works`, registered on this action by `sql/`; the booking's
-trigger, `project_timesheet.resolves`, wants a project that exists and is
-not archived.
+None of its own: each cell of the week is `project-timesheet`'s `book`
+for a project, or the timesheet feat's `log` for the co-op's own time,
+both under `timesheet:entry:log`, and judged by its guards:
+`timesheet.logs`, `employment_timesheet.whose` and
+`membership_timesheet.whose`, and the booking's trigger,
+`project_timesheet.resolves`, a project that exists and is not archived.
 
 ## Shell
 
@@ -31,12 +27,12 @@ archived, those they booked to in the four weeks before first, and the
 co-op's own time last; a column for each day from Monday, open once it
 has come while they are employed. Each cell shows what is logged and
 takes the hours to add. Logging the week (`week`) makes one write for
-each cell typed into, in the grid's order: this graft's `book` for a
-project, billable, and `employment-timesheet`'s log for the co-op's own time,
-not billable; the first refusal stops the rest and is shown with the
-writes before it, which stand. Their cells come back as `spent`, and the
-form empties them, so logging the week again adds only what was refused
-and never a cell twice. Entries are permanent, so a cell only
+each cell typed into, in the grid's order: `project-timesheet`'s `book`
+for a project, billable, and the timesheet feat's log for the co-op's own
+time, not billable; the first refusal stops the rest and is shown with
+the writes before it, which stand. Their cells come back as `spent`, and
+the form empties them, so logging the week again adds only what was
+refused and never a cell twice. Entries are permanent, so a cell only
 adds. This week or the one before; a note or an entry's kind other than
 the row's is not offered there.
 
@@ -45,13 +41,12 @@ the row's is not offered there.
 Time from Toggl Track's detailed report and Harvest's detailed time
 report: the importers `toggl` and `harvest`, each stretch booked to the
 project the co-op holds under its title, or logged as the co-op's own
-time, as its worker's by their employment. A worker is matched by the
-address Toggl gives, or by name, which Harvest gives instead; a stretch of
-anyone but the importing member is refused, so each worker imports their
-own export ([import](../../feats/import/index.md)).
+time, as its worker's. A worker is matched by the address Toggl gives,
+or by name, which Harvest gives instead; a stretch of anyone but the
+importing member is refused, so each worker imports their own export
+([import](../../feats/import/index.md)).
 
 ## Lanterne
 
-Inès, employed and no member, books her hours to Maison Ferrand's
-packaging from the grid, where project-timesheet's booking refuses her:
-she holds no seat, so no log-time mandate.
+Inès, employed, no member and seated in Web, books her hours to a Web
+project from the grid by her right, as every worker does.

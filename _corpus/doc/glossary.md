@@ -61,7 +61,7 @@ updated = 2026-11-02
 | **right** | a mandate people hold as such (`{right: member}`), with no seat: every person, every member or every employee, as person's core says who is one on a day; never an agent or a service. A right is the assembly's to grant, reaches the whole co-op, and is neither carved nor carved from. By their rights a person keeps their profile and devices, uploads a file, takes up an invitation, files a record of their own, marks a text read and records an import; a member draws on their account, spreads what they owe, marks their attendance and saves a report; an employee logs their own time and claims their expenses. A right lets each act on what is their own and opens no one else's rows |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **participant** | the role every circle has, built in, which every seat in it holds there; its mandates cover proposing and discussing, the powers `propose` and `discuss` |
-| **seat** | a member's place in a circle, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's |
+| **seat** | a person's place in a circle, member or not, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's. Only the assembly's seats ask an active membership; a worker who is no member sits in their working circle and holds its mandates there |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
 | **rung** | a step of the ratchet, from the hosted pilot to zero trust |
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |

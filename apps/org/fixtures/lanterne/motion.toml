@@ -66,7 +66,7 @@ args = { kind = "mandate", wording = "The {role: member} role holds {power: edit
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: member} role holds {power: log-time}, to log and submit one's own time" }
+args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time" }
 
 [[motion.action]]
 kind = "policy"
@@ -340,10 +340,6 @@ args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-a
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own" }
-
-[[motion.action]]
-kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-own-time}, to log, correct and submit their own time" }
 
 [[motion.action]]
 kind = "policy"

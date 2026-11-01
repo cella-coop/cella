@@ -133,9 +133,9 @@ by the function each kind of person registers there: `person` the
 people the co-op knows, `membership` its active members, `employment`
 those employed. `circle-membership`'s guard on every op with a power
 takes a right's mandate, `circle_membership.entitled`, beside those on
-the actor's seats, so Inès, employed and seated nowhere, holds an
-employee's rights, and Paul, gone since 30 November 2025, a person's
-alone.
+the actor's seats, so Inès, employed and no member, holds an employee's
+rights beside the mandates of her seat in Web, and Paul, gone since 30
+November 2025, a person's alone.
 
 A right lets each act on what is their own: the feat's guard that the
 record is theirs stays, and a right is never the authority a read asks
@@ -156,7 +156,7 @@ reaches the whole co-op, and is neither carved nor carved from.
 | member | `spread-capital` | spreading what they owe over their pay (`account:capital:spread`) |
 | member | `mark-attendance` | marking their attendance at a meeting (`meeting-membership:attendance:mark`) |
 | member | `save-report` | saving a report of their own (`report:report:save`) |
-| employee | `log-own-time` | logging, correcting and submitting their own time, and booking it to a project (`employment-timesheet:entry:log`, `:entry:correct`, `:period:submit`, `employment-project-timesheet:entry:book`) |
+| employee | `log-time` | logging, correcting and submitting their own time, booked to a project or not (`timesheet:entry:log`, `:entry:correct`, `:period:submit`) |
 | employee | `claim-expense` | claiming an expense and submitting it, attaching its receipt and filing it on a project (`expense:expense:capture`, `:submit`, `expense-file:expense:attach`, `expense-project:expense:rebill`) |
 
 ## Schema
@@ -331,7 +331,7 @@ close of a passing motion carries them out.
 
 | Role | Power | Cap |
 |---|---|---|
-| Member (every member, in `ag`) | `edit-client`, `edit-document`, `edit-task`, `log-time`, `invite-member` | — |
+| Member (every member, in `ag`) | `edit-client`, `edit-document`, `edit-task`, `invite-member` | — |
 | Gérante (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
 | Gérante | `approve-expense` | 2 000 € limit |
 | Gérante | `set-budget` | 50 000 € limit |
@@ -358,7 +358,7 @@ close of a passing motion carries them out.
 |---|---|
 | Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import` |
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
-| Every employee | `log-own-time`, `claim-expense` |
+| Every employee | `log-time`, `claim-expense` |
 
 Each is a mandate policy of the assembly, adopted with the statutes by
 the founding motion, m-2021-001, on 1 March 2021, and in force since.

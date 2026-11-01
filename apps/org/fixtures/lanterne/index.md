@@ -49,9 +49,11 @@ Camille hires, and opens a new hire's candidacy for membership.
   developer hired on 1 September 2025, employed and no member. Everyone
   hired after the founding served a probation of six months to a year as
   a candidate before the assembly admitted them; Inès's ended on 31
-  August 2026. She signs from the laptop her hire enrolled, logs her own
-  time with the web circle, and has not yet marked the internal rules
-  read, which every member has.
+  August 2026. She sits in Web since her hire, a seat any person may
+  hold, member or not, though only the assembly's asks a membership.
+  She signs from the laptop her hire enrolled, logs her own time with
+  the web circle, and has not yet marked the internal rules read, which
+  every member has.
 - **Admission (ordered).** Inès, invited on 30 September, asks to join.
   Seven members have consented to m-2026-012; Hugo objected, then
   consented two days later, and only his latest stance counts. The vote
@@ -81,15 +83,18 @@ Camille hires, and opens a new hire's candidacy for membership.
   seat members; coordination's to adopt and end policies, adopt
   documents, nest circles and seat members. No working circle holds
   one, so a motion of Web carries no action. The rights follow,
-  `m-2021-001/62` to `/74`, each on the people who hold it as such, with
-  no seat, as `Every {right: employee} holds {power: log-own-time}, to
+  `m-2021-001/62` to `/73`, each on the people who hold it as such, with
+  no seat, as `Every {right: employee} holds {power: claim-expense}, to
+  claim their expenses and file their receipts`, and among the first,
+  `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
   log, correct and submit their own time`: every person keeps their
   profile and devices, uploads files, takes up an invitation, files
   their records, marks a text read and records an import; every member
   draws on their account, spreads what they owe, marks their attendance
   and saves a report; every employee logs their own time and claims
-  their expenses. So Inès, employed and seated nowhere, keeps her
-  profile, logs her time and claims an expense by her rights, and Paul,
+  their expenses. So Inès, employed and no member, keeps her profile,
+  logs her time and claims an expense by her rights, beside the
+  mandates her seat in Web gives her there, and Paul,
   gone since 30 November 2025, holds a person's alone.
 - **Rules.** The statutes' capital terms and the work share's terms are
   rules of the assembly adopted by m-2021-001, their values named for the

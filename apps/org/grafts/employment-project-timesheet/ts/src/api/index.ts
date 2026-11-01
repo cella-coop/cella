@@ -1,14 +1,12 @@
-// The graft's writes, POST /api/employment-project-timesheet/<op> once the
-// server exists, its reads, and its slice, which the shell mounts.
+// The graft's reads, its week entered as the timesheet feat's writes, and
+// its slice, which the shell mounts.
 import { done as made, type Action, type Done, type Slice } from '@cella/org-db'
-import { forms } from '@cella/org-timesheet/api'
-import { log } from '@cella/org-graft-employment-timesheet/api'
-import { book } from '../handlers/book.ts'
+import { forms, log } from '@cella/org-timesheet/api'
+import { book } from '@cella/org-graft-project-timesheet/api'
 import { weeks } from '../drivers/week.ts'
 import { cell, type Cell } from '../models/week.ts'
 import { harvest, toggl } from './imports.ts'
 
-export { book } from '../handlers/book.ts'
 export { week, weeks, monday } from '../drivers/week.ts'
 
 // The cells the grid sends: its rows and days, and the hours typed into
@@ -23,14 +21,15 @@ const typed = (get: (name: string) => string, all: (name: string) => string[]): 
   )
 
 // A week entered in the grid: each cell typed into, one write each, in
-// the grid's order, the acting worker's own time by their employment: to
-// a project, this graft's booking; the co-op's own time,
-// employment-timesheet's log. Billable is project time. The first refusal
-// stops the rest, the writes before it standing, and names their cells as
-// spent, so the grid empties them and trying again adds only the rest;
-// the outcome shown is the last write's, the others after it.
+// the grid's order, the acting worker's own time: to a project,
+// project-timesheet's booking; the co-op's own time, the timesheet feat's
+// log. Both are `timesheet:entry:log`, by every employee's right.
+// Billable is project time. The first refusal stops the rest, the writes
+// before it standing, and names their cells as spent, so the grid empties
+// them and trying again adds only the rest; the outcome shown is the last
+// write's, the others after it.
 const entered: Action = {
-  op: 'employment-project-timesheet:entry:book',
+  op: 'timesheet:entry:log',
   run: async (form, deps) => {
     const cells = typed(form.get, form.all)
     if (!cells.length) {
@@ -40,9 +39,7 @@ const entered: Action = {
     const spent: string[] = []
     for (const c of cells) {
       const entry = { member: deps.actor, day: c.day, minutes: c.minutes, billable: c.project !== '' }
-      const done = c.project
-        ? made('employment-project-timesheet:entry:book', await book({ ...entry, project: c.project }, deps))
-        : made('employment-timesheet:entry:log', await log(entry, deps))
+      const done = made('timesheet:entry:log', c.project ? await book({ ...entry, project: c.project }, deps) : await log(entry, deps))
       outcomes.push(done)
       if (done.state !== 'settled') {
         break

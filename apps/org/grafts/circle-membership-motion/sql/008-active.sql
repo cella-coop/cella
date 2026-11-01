@@ -1,15 +1,16 @@
 -- Who is an active member is membership's to say, on a day
--- (`membership.active`): who puts, closes and deliberates on a motion,
--- who is seated by one, who gives a stance, who counts while it is open
--- and who is counted at its close read it on the verdict date, not a copy
--- of the member's status.
+-- (`membership.active`): who gives a stance, who counts while a motion is
+-- open and who is counted at its close read it on the verdict date, not a
+-- copy of the member's status. Who puts, closes and deliberates on a
+-- motion, and who is seated by one, is whoever holds, or may hold, a seat
+-- that counts in its circle (`circle_membership.counts`): any person, and
+-- in the assembly an active member.
 CREATE OR REPLACE FUNCTION circle_membership_motion.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is named')
-    WHEN NOT EXISTS (SELECT FROM circle_membership.seated(d.circle, cella.verdict_date()) s WHERE s = cella.actor())
-      OR NOT membership.active(cella.actor(), cella.verdict_date())
+    WHEN NOT circle_membership.sits_in(cella.actor(), d.circle, cella.verdict_date())
       THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.action(), ':', 3) || ' ' || d.id
   END
   FROM (SELECT payload ->> 'motion' AS motion) p
@@ -28,8 +29,9 @@ BEGIN ATOMIC
       SELECT FROM circle_membership_motion.seating g
       WHERE g.motion = d.id AND g.kind = 'seat' AND g.circle = s.circle AND g.member = s.member AND g.role IS NOT DISTINCT FROM s.role
     ) THEN d.id || ' does not seat ' || s.member || ' in ' || s.circle || coalesce(' as ' || s.role, '')
-    WHEN NOT membership.active(s.member, cella.verdict_date())
-      THEN s.member || ' is not an active member'
+    WHEN NOT circle_membership.counts(s.member, s.circle, cella.verdict_date())
+      THEN s.member || ' may not sit in ' || s.circle || ': '
+        || CASE WHEN c.parent IS NULL THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
     WHEN EXISTS (
       SELECT FROM circle_membership.seat o
       WHERE o.id <> s.id AND o.circle = s.circle AND o.member = s.member AND o.role IS NOT DISTINCT FROM s.role
@@ -38,6 +40,7 @@ BEGIN ATOMIC
   END
   FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'motion' AS motion) p
   LEFT JOIN circle_membership.seat s ON s.id = p.seat
+  LEFT JOIN circle.circle c ON c.id = s.circle
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
@@ -59,9 +62,10 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
-      WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = g.circle) THEN 'no circle ' || coalesce(g.circle, 'is named')
-      WHEN g.kind = 'seat' AND NOT membership.active(g.member, cella.verdict_date())
-        THEN coalesce(g.member, 'no one') || ' is not an active member'
+      WHEN c.id IS NULL THEN 'no circle ' || coalesce(g.circle, 'is named')
+      WHEN g.kind = 'seat' AND NOT circle_membership.counts(g.member, g.circle, cella.verdict_date())
+        THEN coalesce(g.member, 'no one') || ' may not sit in ' || g.circle || ': '
+          || CASE WHEN c.parent IS NULL THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
       WHEN g.kind = 'seat' AND g.role IS NOT NULL
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle
@@ -78,6 +82,7 @@ BEGIN ATOMIC
       WHERE m.motion = payload ->> 'motion' AND m.kind IN ('seat', 'unseat')
     ) g
     JOIN motion.motion d ON d.id = g.motion
+    LEFT JOIN circle.circle c ON c.id = g.circle
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;

@@ -108,7 +108,7 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
 
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
   const sits = await one<{ circle: string; role: string; since: string }>(
-    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.seat WHERE member = $1`,
+    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.seat WHERE member = $1 AND circle = 'ag'`,
     [ines],
   )
   assert.deepEqual(sits, { circle: 'ag', role: 'member', since: '2026-10-31' })

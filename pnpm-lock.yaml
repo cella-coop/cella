@@ -1006,18 +1006,12 @@ importers:
 
   apps/org/grafts/employment-project-timesheet/ts:
     dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-employment':
         specifier: workspace:*
         version: link:../../../feats/person/feats/employment/core/ts
-      '@cella/org-graft-employment-timesheet':
-        specifier: workspace:*
-        version: link:../../employment-timesheet/ts
       '@cella/org-graft-project-timesheet':
         specifier: workspace:*
         version: link:../../project-timesheet/ts
@@ -1036,9 +1030,6 @@ importers:
 
   apps/org/grafts/employment-timesheet/ts:
     dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts

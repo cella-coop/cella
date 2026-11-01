@@ -15,8 +15,7 @@ import { capture, submit as claim } from '@cella/org-expense/api'
 import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay } from '@cella/org-graft-payslip-transaction/api'
-import { approve as approveTime } from '@cella/org-timesheet/api'
-import { log as logTime, submit as submitTime } from '@cella/org-graft-employment-timesheet/api'
+import { approve as approveTime, log as logTime, submit as submitTime } from '@cella/org-timesheet/api'
 import { draw } from '@cella/org-graft-account-membership-transaction/api'
 import { approve as approveSplit } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
@@ -219,7 +218,7 @@ test('the log commits to pay, time and capital: October\'s payslips, Thomas\'s d
 
   const time = await logTime({ member: thomas, day: '2026-11-02', minutes: 90, billable: true }, as(thomas))
   assert.equal(time.state, 'settled', reason(time))
-  const entry = await logged('employment-timesheet:entry:log')
+  const entry = await logged('timesheet:entry:log')
   assert.match(entry.form.minutes.$commit, commitment)
   const disclosed = async (actor: string) => {
     await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor])

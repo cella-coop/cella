@@ -24,8 +24,8 @@ of its own.
 ## Guards
 
 - `circle_meeting_membership.sits`, on `meeting:item:add`, `:move` and
-  `:remove`: the actor is an active member (`membership.active`) seated in the meeting's circle
-  on the verdict date: the participant's `discuss`, which
+  `:remove`: the actor holds a seat that counts in the meeting's circle
+  on the verdict date (`circle_membership.sits_in`): the participant's `discuss`, which
   `circle_membership.may` finds on any seat, is held there.
 - `circle_meeting_membership.reaches`, on `meeting:meeting:schedule`,
   `:hold`, `:cancel` and `:minute` and on

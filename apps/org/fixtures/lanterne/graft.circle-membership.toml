@@ -91,6 +91,13 @@ role = "lead"
 circle = "web"
 member = "amina@lanterne.example"
 
+# Inès, employed and no member yet, sits in Web since her hire: any
+# person may hold a seat, and only the assembly's asks a membership.
+[[seat]]
+circle = "web"
+member = "ines@lanterne.example"
+since = 2025-09-01
+
 [[seat]]
 circle = "marketing"
 member = "chloe@lanterne.example"

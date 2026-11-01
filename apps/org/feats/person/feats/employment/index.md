@@ -24,8 +24,8 @@ hire a membership; folded into `payslip`, a worker paid outside the runs,
 or not yet paid, would not exist. So the feat holds the employment beside
 the membership, both under the person, and grafts join it to what
 employment governs: `employment-payslip` (whose pay is),
-`employment-timesheet` (whose time is, and logging it by one's
-employment), `employment-project-timesheet` (a worker's week of time),
+`employment-timesheet` (whose time is, within one's employment),
+`employment-project-timesheet` (a worker's week of time),
 `employment-file` (their employment records), `employment-membership` (the
 candidacy and the path to membership) and `employment-membership-motion`
 (the admission once the probation is over).

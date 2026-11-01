@@ -5,18 +5,37 @@
 DROP TRIGGER fix_roll ON motion.motion;
 DROP FUNCTION circle_membership_motion.fix_roll();
 
--- Fixes a motion's roll as it is proposed: the members seated in its
--- circle on the day it is proposed, from circle-membership's seats, a
--- lower order than this graft; returns how many. It runs with its
--- owner's rights, since nothing else writes the table.
+-- Who a motion's procedure calls to its roll: the people seated in its
+-- circle on the day it is proposed, in circle-membership's seats, a lower
+-- order than this graft; every seat, or where the procedure names the
+-- roles that vote the seats in them (`participant` is every seat), and
+-- the seats in a role that may veto, each so marked. Only the motion's
+-- own circle's seats are read, so a seat above carries no vote below;
+-- seats are people's, so no agent and no service is ever called.
+CREATE FUNCTION circle_membership_motion.called(ref text) RETURNS TABLE (member text, veto boolean)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT s.member, coalesce(bool_or(s.role = ANY (p.veto)), false)
+  FROM motion.motion d
+  JOIN motion.procedure p ON p.id = d.procedure
+  JOIN circle_membership.seat s ON s.circle = d.circle
+    AND (s.since IS NULL OR s.since <= d.proposed)
+    AND (s.until IS NULL OR s.until > d.proposed)
+  WHERE d.id = ref
+    AND (p.voters IS NULL OR 'participant' = ANY (p.voters) OR s.role = ANY (p.voters) OR s.role = ANY (p.veto))
+  GROUP BY s.member;
+END;
+
+-- Fixes a motion's roll as it is proposed: those its procedure calls;
+-- returns how many. It runs with its owner's rights, since nothing else
+-- writes the table.
 CREATE FUNCTION circle_membership_motion.fix(ref text) RETURNS integer
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
   n integer;
 BEGIN
-  INSERT INTO circle_membership_motion.roll (motion, member)
-  SELECT d.id, s FROM motion.motion d CROSS JOIN LATERAL circle_membership.seated(d.circle, d.proposed) s
-  WHERE d.id = ref;
+  INSERT INTO circle_membership_motion.roll (motion, member, veto)
+  SELECT ref, c.member, c.veto FROM circle_membership_motion.called(ref) c;
   GET DIAGNOSTICS n = ROW_COUNT;
   RETURN n;
 END
@@ -25,21 +44,22 @@ $$;
 REVOKE EXECUTE ON FUNCTION circle_membership_motion.fix(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION circle_membership_motion.fix(text) TO cella_app;
 
--- motion:motion:propose — the motion's roll is exactly the members
--- seated in its circle on the day it is proposed: the proposal fixed it.
+-- motion:motion:propose — the motion's roll is exactly those its
+-- procedure calls on the day it is proposed, each who may veto marked
+-- so: the proposal fixed it.
 CREATE FUNCTION circle_membership_motion.fixed(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN EXISTS (
-      (SELECT s FROM circle_membership.seated(d.circle, d.proposed) s)
+      (SELECT c.member, c.veto FROM circle_membership_motion.called(d.id) c)
       EXCEPT
-      (SELECT r.member FROM circle_membership_motion.roll r WHERE r.motion = d.id)
+      (SELECT r.member, r.veto FROM circle_membership_motion.roll r WHERE r.motion = d.id)
     ) OR EXISTS (
-      (SELECT r.member FROM circle_membership_motion.roll r WHERE r.motion = d.id)
+      (SELECT r.member, r.veto FROM circle_membership_motion.roll r WHERE r.motion = d.id)
       EXCEPT
-      (SELECT s FROM circle_membership.seated(d.circle, d.proposed) s)
-    ) THEN d.id || '''s proposal did not fix its roll: its roll is those seated in ' || d.circle || ' on the day it is proposed'
+      (SELECT c.member, c.veto FROM circle_membership_motion.called(d.id) c)
+    ) THEN d.id || '''s proposal did not fix its roll: its roll is those its procedure calls in ' || d.circle || ' on the day it is proposed'
   END
   FROM (SELECT payload ->> 'motion' AS motion) p
   JOIN motion.motion d ON d.id = p.motion;

@@ -113,7 +113,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
     { circle: 'ag', title: 'Admit Nadia', procedure: 'consent', deadline: '2026-11-07', body: '', actions: [{ kind: 'admit', args: { member: nadia, shares: 20 } }] },
     as(malik),
   )
-  assert.match(reason(alone), /'s proposal did not fix its roll: its roll is those seated in ag on the day it is proposed/)
+  assert.match(reason(alone), /'s proposal did not fix its roll: its roll is those its procedure calls in ag on the day it is proposed/)
 
   const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
   admission = proposed.motion

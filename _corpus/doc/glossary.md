@@ -121,7 +121,7 @@ updated = 2026-11-02
 | **motion** | how a circle acts as a whole: put to it by a procedure and decided by it, carrying actions or none; the `motion` feat's |
 | **decision** | a passed motion, in plain speech; no row and no name in the code |
 | **proposal** | a motion put to a circle, by a procedure, with its deadline |
-| **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, its quorum and its ballot, each a value of its sentence (`{quorum: 1/2}`) copied into `motion.procedure` as it is adopted, by which a motion is counted; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
+| **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, its quorum, its ballot, and perhaps the roles that vote and those that may veto, each a value of its sentence (`{quorum: 1/2}`) copied into `motion.procedure` as it is adopted, by which a motion is counted; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
 | **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
 | **rule** | a kind of policy: what else the co-op agreed, such as its capital terms, the work share's terms or the solidarity rate; each ordered value declares which way is stricter (`\| more is stricter`, `\| less is stricter`); a value named for a feat (`account_minimum`) is that feat's to read; a rule with no value binds by people's judgement alone |
 | **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt` and `policy.end`, inside the write of a motion's action |
@@ -140,8 +140,9 @@ updated = 2026-11-02
 | **mention** | a member named in a message by `@` and their handle, which waits in their inbox until they answer |
 | **agenda** | a meeting's items in order, each tabling perhaps a motion; fixed once the meeting is held |
 | **minutes** | a meeting's record, a document, adopted by motion where its circle says so |
-| **roll** | who may vote on a motion |
-| **delegate** | a member chosen to vote for others at a higher level |
+| **roll** | who may vote on a motion, as its procedure says: by default the people seated in its circle on the day it was proposed, never an agent or a service; a procedure may name the roles whose seats vote (`{voters: lead}`). A seat above carries no vote below. A stance needs `vote`, the power the procedure gives the seats on the roll, while the seat counts |
+| **veto** | a stance against, or an objection, by someone on the roll in a role the motion's procedure lets veto (`{veto: lead}`): the motion does not pass, whatever the count |
+| **delegate** | a person chosen to vote for others at a higher level; part of a procedure's configuration, and not built |
 | **adoption** | a motion making one version of a document binding, or a policy |
 | **outcome** | the result of a motion, folded from its signed votes, never stored |
 | **open · passed · rejected** | a motion's state: open until its close, then passed or rejected by the outcome of the stances the close froze, read in SQL; a passed motion is a decision; "adopted" is a document version's, never a motion's |

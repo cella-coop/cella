@@ -166,10 +166,13 @@ sequenceDiagram
   collective mandate: `circle-motion` attaches a guard to every such op
   that the cited motion's circle holds, on the verdict date, a mandate
   on the circle itself granting the power, as it checked when the
-  motion was proposed. A write with no power is a member's of a roll (a
-  stance): its label declares that check and a guard enforces it, and `cella check
-  feats` refuses an action that names neither, so nothing is allowed by
-  omission. Money leaves a cash account only through writes with their
+  motion was proposed. A stance needs `vote`, the power a motion's
+  procedure gives the seats on its roll, in `motion.stance_power`:
+  `circle-membership-motion`'s guard holds it to someone on the roll
+  whose seat counts on the verdict date. The one write with no power is
+  the log's first entry: its label declares that check and a guard
+  enforces it, and `cella check feats` refuses an action that names
+  neither, so nothing is allowed by omission. Money leaves a cash account only through writes with their
   own right and a guard that checks the entry is exactly what they say:
   `transaction.pay` and `expense.reimburse` within their power's limit,
   `payslip:run.pay` and `account:capital.repay` under their power, and

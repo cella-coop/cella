@@ -26,25 +26,35 @@ RETURN CASE
   WHEN translate(literal, E'   ', '') ~ '^[0-9]{1,3}%$' THEN ARRAY[rtrim(translate(literal, E'   ', ''), '%')::integer, 100]
 END;
 
+-- A list of roles as a procedure policy writes it, by id, separated by
+-- commas or `and` (`lead, secretary`), in order; none where none is
+-- written.
+CREATE FUNCTION motion.roles(literal text) RETURNS text[]
+LANGUAGE sql IMMUTABLE
+RETURN CASE WHEN literal IS NOT NULL THEN
+  ARRAY(SELECT DISTINCT btrim(r) FROM regexp_split_to_table(literal, '\s*,\s*|\s+and\s+') r WHERE btrim(r) <> '' ORDER BY 1)
+END;
+
 -- A procedure's terms from the values its policy marks, by name as
 -- written (`{"procedure": "two-thirds", "method": "majority", "share":
 -- "2/3", "quorum": "none"}`), and what is wrong with them, or null: it
 -- names itself, decides by consent or majority, marks its quorum, a share
--- only for a majority, a ballot open or secret, and no other value. Its
+-- only for a majority, a ballot open or secret, perhaps the roles that
+-- vote and those that may veto, each a role's id, and no other value. Its
 -- label, unless it marks one, is its name in words.
 CREATE FUNCTION motion.terms(marked jsonb) RETURNS TABLE (
   id text, label text, method text, share_num integer, share_den integer,
-  quorum_num integer, quorum_den integer, ballot text, flaw text
+  quorum_num integer, quorum_den integer, ballot text, voters text[], veto text[], flaw text
 )
 LANGUAGE sql IMMUTABLE
 BEGIN ATOMIC
-  SELECT v.id, upper(left(v.label, 1)) || substr(v.label, 2), v.method, f.s[1], f.s[2], f.q[1], f.q[2], coalesce(v.ballot, 'open'),
+  SELECT v.id, upper(left(v.label, 1)) || substr(v.label, 2), v.method, f.s[1], f.s[2], f.q[1], f.q[2], coalesce(v.ballot, 'open'), f.voters, coalesce(f.veto, '{}'),
     CASE
       WHEN (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
-            WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot') ORDER BY k LIMIT 1) IS NOT NULL
-        THEN 'a procedure marks its procedure, label, method, share, quorum and ballot, not '
+            WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto') ORDER BY k LIMIT 1) IS NOT NULL
+        THEN 'a procedure marks its procedure, label, method, share, quorum, ballot, voters and veto, not '
           || (SELECT k FROM jsonb_object_keys(marked) k
-              WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot') ORDER BY k LIMIT 1)
+              WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto') ORDER BY k LIMIT 1)
       WHEN v.id IS NULL THEN 'a procedure policy names its procedure, as {procedure: ordinary}'
       WHEN v.id !~ '^[a-z][a-z-]*$' THEN v.id || ' is no procedure''s name: lower-case letters and dashes'
       WHEN v.method IS NULL OR v.method NOT IN ('consent', 'majority')
@@ -56,12 +66,17 @@ BEGIN ATOMIC
       WHEN v.share IS NOT NULL AND (f.s IS NULL OR f.s[2] = 0 OR f.s[1] = 0 OR f.s[1] > f.s[2])
         THEN 'a share is more than none of the votes cast and at most all, as 2/3 or 60 %, not ' || v.share
       WHEN v.ballot IS NOT NULL AND v.ballot NOT IN ('open', 'secret') THEN 'a ballot is open or secret, not ' || v.ballot
+      WHEN v.voters IS NOT NULL AND (cardinality(f.voters) = 0 OR EXISTS (SELECT FROM unnest(f.voters) x WHERE x !~ '^[a-z][a-z0-9-]*$'))
+        THEN 'a procedure names the roles that vote by id, as {voters: lead, secretary}, not ' || v.voters
+      WHEN v.veto IS NOT NULL AND (cardinality(f.veto) = 0 OR EXISTS (SELECT FROM unnest(f.veto) x WHERE x !~ '^[a-z][a-z0-9-]*$'))
+        THEN 'a procedure names the roles that may veto by id, as {veto: lead}, not ' || v.veto
     END
   FROM (
     SELECT marked ->> 'procedure' AS id, coalesce(marked ->> 'label', replace(marked ->> 'procedure', '-', ' ')) AS label,
-           marked ->> 'method' AS method, marked ->> 'share' AS share, marked ->> 'quorum' AS quorum, marked ->> 'ballot' AS ballot
+           marked ->> 'method' AS method, marked ->> 'share' AS share, marked ->> 'quorum' AS quorum, marked ->> 'ballot' AS ballot,
+           marked ->> 'voters' AS voters, marked ->> 'veto' AS veto
   ) v,
-  LATERAL (SELECT motion.fraction(v.share) AS s, motion.fraction(v.quorum) AS q) f;
+  LATERAL (SELECT motion.fraction(v.share) AS s, motion.fraction(v.quorum) AS q, motion.roles(v.voters) AS voters, motion.roles(v.veto) AS veto) f;
 END;
 
 -- The values a legal wording marks, by name as written.
@@ -84,8 +99,8 @@ BEGIN ATOMIC
     SELECT o.id || ' is a procedure already, and its terms are fixed: a procedure on new terms takes a new name'
     FROM motion.procedure o
     WHERE o.id = t.id AND (o.policy IS NOT NULL
-      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot)
-         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot))
+      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto)
+         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto))
   ))
   FROM motion.terms(marked) t;
 END;
@@ -111,8 +126,8 @@ BEGIN
   END IF;
   UPDATE motion.procedure o SET policy = ref WHERE o.id = t.id AND o.policy IS NULL;
   IF NOT FOUND THEN
-    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, policy)
-    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, ref);
+    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, voters, veto, policy)
+    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, ref);
   END IF;
   RETURN t.id;
 END
@@ -211,8 +226,8 @@ BEGIN ATOMIC
     WHEN r.kind = 'procedure' AND NOT EXISTS (
       SELECT FROM motion.procedure o, motion.terms(motion.marked_by(r.id)) t
       WHERE o.policy = r.id AND o.id = t.id
-        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot)
-          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot)
+        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto)
+          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto)
     ) THEN r.id || ' makes no procedure on the terms it marks'
   END
   FROM (SELECT payload ->> 'motion' AS motion, (payload ->> 'n')::integer AS n, payload ->> 'policy' AS policy, payload ->> 'hash' AS hash) p

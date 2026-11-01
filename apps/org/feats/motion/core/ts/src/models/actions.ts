@@ -3,8 +3,9 @@ import { confluent, ordered, type Actions } from '@cella/org-actions'
 export const actions = {
   // a proposal is a fact; put by a participant of the motion's circle
   'motion:motion:propose': confluent({ power: 'propose' }),
-  // signed by the member; their latest vote counts, if they are on the roll
-  'motion:motion:vote': confluent({ check: 'roll' }),
+  // signed by its giver; their latest stance counts. Needs the power the
+  // motion's procedure gives the seats on its roll
+  'motion:motion:vote': confluent({ power: 'vote' }),
   // the notary fixes which votes made the deadline; closed by a
   // participant of the motion's circle
   'motion:motion:close': ordered({ power: 'propose' }),

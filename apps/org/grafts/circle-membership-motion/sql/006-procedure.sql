@@ -45,7 +45,9 @@ END;
 -- Whether a motion passes by its procedure, over the stances that count:
 -- its quorum met, and then by its method, `cella.consent`, or for a majority
 -- `cella.majority`, more for than against, or `cella.share`, the share of
--- the votes cast the procedure needs, as two thirds.
+-- the votes cast the procedure needs, as two thirds; and no veto, no one
+-- on its roll who may veto it giving, as their latest stance that counts,
+-- one against or an objection.
 CREATE OR REPLACE FUNCTION circle_membership_motion.passes(ref text) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -61,6 +63,12 @@ BEGIN ATOMIC
       FROM circle_membership_motion.stances(d.id) s
     )
   END
+  AND NOT EXISTS (
+    SELECT FROM circle_membership_motion.stances(d.id) s
+    JOIN circle_membership_motion.roll r ON r.motion = d.id AND r.member = s.member AND r.veto
+    WHERE s.stance IN ('against', 'object')
+      AND s.receipt = (SELECT max(x.receipt) FROM circle_membership_motion.stances(d.id) x WHERE x.member = s.member)
+  )
   FROM motion.motion d
   JOIN motion.procedure p ON p.id = d.procedure
   WHERE d.id = ref;

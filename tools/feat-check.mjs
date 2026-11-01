@@ -322,7 +322,7 @@ if (sql) {
       known.add(schemaName(g))
     }
   }
-  const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
+  const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found))
   // What a feat's or a graft's TypeScript writes outside its own schema,
   // held with what its SQL does to the app's foreign.list.
@@ -344,7 +344,7 @@ if (sql) {
     return p && !(p.kind === 'core' && !parentOf(p.node))
   })
   const ops = await declared(repo, owned)
-  errors.push(...agree(ops, found.powers, found.cites), ...covered(ops, found))
+  errors.push(...agree(ops, found.powers, found.cites, found.stances), ...covered(ops, found))
 }
 
 if (errors.length) {

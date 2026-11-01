@@ -35,7 +35,7 @@ export async function roll(db: Db, motion: string, actor: string | null = null):
             EXISTS (SELECT FROM circle_membership_motion.counted c WHERE c.motion = r.motion AND c.member = r.member) AS counted
      FROM circle_membership_motion.roll r
      JOIN motion.motion d ON d.id = r.motion
-     LEFT JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = r.member
+     LEFT JOIN person.person mp ON mp.address = r.member
      LEFT JOIN LATERAL (
        SELECT stance, receipt FROM motion.vote x
        WHERE x.motion = r.motion AND x.member = r.member AND x.receipt < coalesce(d.cutoff, 9223372036854775807)

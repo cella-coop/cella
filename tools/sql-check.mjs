@@ -242,12 +242,16 @@ export function undeclared(found) {
 // attach their guards to every op listed.
 const cites = { schema: 'motion', table: 'cites' }
 
-function citing(b, o, found) {
+// The motion feat's register of the power a stance needs, which a
+// motion's procedure gives the seats on its roll, and no mandate.
+const stancePower = { schema: 'motion', table: 'stance_power' }
+
+function citing(b, o, found, into = found.cites) {
   const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
   for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
     const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], v.A_Const?.sval?.sval]))
     if (vals.op) {
-      found.cites.push({ op: vals.op, power: vals.power ?? null, owner: o.name })
+      into.push({ op: vals.op, power: vals.power ?? null, owner: o.name })
     }
   }
 }
@@ -408,6 +412,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'InsertStmt':
       if (b.relation.schemaname === cites.schema && b.relation.relname === cites.table) {
         citing(b, o, found)
+      }
+      if (b.relation.schemaname === stancePower.schema && b.relation.relname === stancePower.table) {
+        citing(b, o, found, (found.stances ??= []))
       }
     // falls through
     case 'UpdateStmt':
@@ -696,8 +703,9 @@ function plpgsql(lib, fn) {
 
 // Collects what the SQL registers as literal rows, for feat-check to
 // compare with each op's label: the powers in cella.power, the guards in
-// cella.guard, and the ops that cite a motion in motion.cites.
-export async function checkSql(repo, apps, known, found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
+// cella.guard, the ops that cite a motion in motion.cites, and the power a
+// stance needs in motion.stance_power.
+export async function checkSql(repo, apps, known, found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []

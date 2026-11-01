@@ -16,7 +16,9 @@ export type Decide = 'consent' | 'majority'
 // source of truth.
 // Or a collective mandate grants it, for an action a passed motion
 // carries: the motion's circle holds it, and the graft that cites the
-// motion registers the same in `motion.cites` instead. `cella check
+// motion registers the same in `motion.cites` instead. Or, for a stance,
+// a motion's procedure gives it to the seats on its roll, and the motion
+// feat registers it in `motion.stance_power`. `cella check
 // feats` keeps the label and the SQL equal. An action with no power
 // declares the check that allows it instead, and nothing is allowed by
 // omission.
@@ -26,17 +28,16 @@ export interface Grant {
   check?: Check
 }
 
-// Who may take an action that needs no power, each a guard registered on
-// the action in `cella.guard`:
-// - `roll`: a member on the roll of the motion the action names;
-// - `first`: the log's first entry, as the state a scope held before its
-//   log is carried in once.
-// What is the actor's own is no check: it needs the power their right
-// grants, and the feat's guard that it is theirs. A seat is no check:
-// what it allows is its roles' mandates, its circle's participant role
-// among them. Nor is a passed motion: what it carries needs the power its
-// circle's collective mandate grants.
-export type Check = 'roll' | 'first'
+// Who may take an action that needs no power, a guard registered on the
+// action in `cella.guard`: `first`, the log's first entry, as the state a
+// scope held before its log is carried in once.
+// A stance is no check: it needs the power its procedure gives the seats
+// on the roll. What is the actor's own is no check: it needs the power
+// their right grants, and the feat's guard that it is theirs. A seat is
+// no check: what it allows is its roles' mandates, its circle's
+// participant role among them. Nor is a passed motion: what it carries
+// needs the power its circle's collective mandate grants.
+export type Check = 'first'
 
 export interface Confluent extends Grant {
   label: 'confluent'

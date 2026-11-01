@@ -6,7 +6,7 @@ export const actions = {
   // a fact; two links do no harm, and the first taken up ends them all
   'membership:member:link': confluent({ power: 'invite-member' }),
   // enrols the invitee's first device: ordered against revoke, as an enrolment is
-  'membership:member:accept': ordered({ check: 'self' }),
+  'membership:member:accept': ordered({ power: 'accept-invitation' }),
   // changes who votes; the cited motion admits
   'membership:member:admit': ordered({ decide: 'consent', power: 'admit-member' }),
   // changes who votes; the cited motion suspends

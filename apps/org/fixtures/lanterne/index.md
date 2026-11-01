@@ -38,7 +38,8 @@ Leads and the gérante run projects and set their budgets, the leads up to
 15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
 those of their own circle's members; Julien, seated in the assembly as
 treasurer, approves everyone's, as Camille does. Every member creates
-and moves tasks; every worker logs their own time, by their employment.
+and moves tasks; every worker logs their own time and claims their
+expenses, by an employee's rights.
 Camille hires, and opens a new hire's candidacy for membership.
 
 ## Where things stand on 24 October 2026
@@ -79,7 +80,17 @@ Camille hires, and opens a new hire's candidacy for membership.
   policies, approve the distribution, adopt documents, nest circles and
   seat members; coordination's to adopt and end policies, adopt
   documents, nest circles and seat members. No working circle holds
-  one, so a motion of Web carries no action.
+  one, so a motion of Web carries no action. The rights follow,
+  `m-2021-001/62` to `/74`, each on the people who hold it as such, with
+  no seat, as `Every {right: employee} holds {power: log-own-time}, to
+  log, correct and submit their own time`: every person keeps their
+  profile and devices, uploads files, takes up an invitation, files
+  their records, marks a text read and records an import; every member
+  draws on their account, spreads what they owe, marks their attendance
+  and saves a report; every employee logs their own time and claims
+  their expenses. So Inès, employed and seated nowhere, keeps her
+  profile, logs her time and claims an expense by her rights, and Paul,
+  gone since 30 November 2025, holds a person's alone.
 - **Rules.** The statutes' capital terms and the work share's terms are
   rules of the assembly adopted by m-2021-001, their values named for the
   feat that reads them and copied into its terms as each is adopted:

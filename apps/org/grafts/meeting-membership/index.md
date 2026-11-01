@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Who came to a meeting. Declared by the `meeting` feat. Who was expected,
@@ -23,8 +23,8 @@ the guards role, `cella_guards`, may select.
 | `POST /api/meeting-membership/attendance.mark` | confluent | a register per member, the last mark winning; fixed by the hold |
 | `POST /api/meeting-membership/attendance.record` | confluent | as mark |
 
-- **mark** is a member's own: `check: 'self'`, backed by
-  `meeting_membership.marks`. A member not seated in the meeting's circle may
+- **mark** is a member's own: `mark-attendance`, every member's right, and
+  `meeting_membership.marks` that it is theirs. A member not seated in the meeting's circle may
   mark themselves, and comes as a guest, counted in no quorum.
 - **record** is the minutes' keeper's, for anyone expected: it needs
   `keep-minutes`, which `circle-meeting-membership` checks reaches the

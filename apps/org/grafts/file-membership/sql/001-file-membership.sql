@@ -31,6 +31,11 @@ END;
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('file-membership:member:attach', 'file_membership.files(jsonb)', 'file-membership');
 
+-- Filing a record of one's own is every person's right, the invitee's
+-- as a member's; file_membership.files checks it is theirs.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('file-membership:member:attach', 'file-record', NULL, 'file-membership');
+
 GRANT USAGE ON SCHEMA file_membership TO cella_app, cella_guards;
 GRANT SELECT ON file_membership.record TO cella_app, cella_guards;
 GRANT INSERT ON file_membership.record TO cella_app;

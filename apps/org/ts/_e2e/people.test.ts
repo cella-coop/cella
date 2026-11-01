@@ -20,9 +20,11 @@ import { invite } from '@cella/org-membership/api'
 import { open } from '@cella/org-graft-employment-membership/api'
 import { log as work, submit } from '@cella/org-graft-employment-timesheet/api'
 import { hire, hiring } from '@cella/org-employment/api'
+import { capture, submit as claim } from '@cella/org-expense/api'
+import { enrol, profile } from '@cella/org-person/api'
 import { approve, log } from '@cella/org-timesheet/api'
 import { write, type Deps } from '@cella/org-db'
-import { fixture, signer } from '@cella/org-sign'
+import { fixture, generate, signer } from '@cella/org-sign'
 import { scope, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 
@@ -104,6 +106,59 @@ test('Inès logs her own time by her employment, where the log-time mandate refu
   assert.ok(shown.text.includes('Timesheets') && shown.text.includes('2026-10'), 'her page lists her months')
 })
 
+test('Inès, employed and no member, keeps her profile and devices, logs her time and claims an expense by her rights; Paul, gone, holds an employee\'s no longer', async () => {
+  // The founding motion grants every person, member and employee their
+  // rights, each a mandate of the assembly with no seat.
+  const rights = await all<{ right: string; powers: string[] }>(
+    `SELECT "right", array_agg(power ORDER BY power) AS powers FROM circle.mandate WHERE "right" IS NOT NULL AND revoked IS NULL GROUP BY "right" ORDER BY "right"`,
+  )
+  assert.deepEqual(rights, [
+    { right: 'employee', powers: ['claim-expense', 'log-own-time'] },
+    { right: 'member', powers: ['draw-account', 'mark-attendance', 'save-report', 'spread-capital'] },
+    { right: 'person', powers: ['accept-invitation', 'file-record', 'keep-devices', 'keep-profile', 'mark-read', 'record-import', 'upload-file'] },
+  ])
+  assert.equal((await one<{ n: number }>('SELECT count(*)::int AS n FROM circle_membership.seat WHERE member = $1', [ines])).n, 0, 'Inès holds no seat')
+  const by = async (entry: number) => (await one<{ op: string; owners: string[] }>(
+    `SELECT op, array(SELECT DISTINCT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners FROM cella.log WHERE n = $1`,
+    [entry],
+  ))
+  const profiled = settled(await profile({ person: ines, phone: '+33 6 00 00 00 12' }, as(ines)))
+  assert.equal(profiled.person, ines)
+  const tablet = await generate(ines)
+  const enrolled = await enrol({ address: ines, label: 'tablet', key: tablet.key }, as(ines))
+  assert.equal(enrolled.state, 'settled', reason(enrolled))
+  const logged = await work({ member: ines, day: '2026-10-23', minutes: 90, billable: false, note: 'Code review' }, as(ines))
+  assert.equal(logged.state, 'settled', reason(logged))
+  const claimed = settled(await capture({ member: ines, day: '2026-10-23', label: 'Train to Clairval', category: '6251', net: 42_00, vat: null, receipt: null }, as(ines)))
+  const submitted = await claim({ expense: claimed.expense }, as(ines))
+  assert.equal(submitted.state, 'settled', reason(submitted))
+  for (const [out, op] of [[enrolled, 'person:device:enrol'], [logged, 'employment-timesheet:entry:log'], [submitted, 'expense:expense:submit']] as const) {
+    const entry = await by((out as { entry: number }).entry)
+    assert.equal(entry.op, op)
+    assert.ok(entry.owners.includes('circle-membership'), `${op} is judged by the rights' guard`)
+  }
+  // A member's right is not hers until she is admitted.
+  assert.equal((await one<{ may: boolean }>(`SELECT circle_membership.entitled($1, 'draw-account', NULL, '2026-10-24') AS may`, [ines])).may, false)
+  // Paul left on 30 November 2025: he is still a person, but no longer an
+  // employee, so the laptop he kept logs no time of his.
+  const paul = 'paul@lanterne.example'
+  const laptop = await fixture(paul, 'laptop')
+  await su.query('SET cella.unbound = on')
+  await su.query(`INSERT INTO person.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2021-03-01')`, [laptop.key, paul])
+  await su.query('SET cella.unbound = off')
+  const asPaul = { db: app, actor: paul, sign: signer(scope, paul, laptop) }
+  const late = await work({ member: paul, day: '2025-11-28', minutes: 60, billable: false }, asPaul)
+  assert.equal(late.state, 'refused')
+  assert.match(reason(late), /paul@lanterne\.example holds no mandate for log-own-time/)
+  const held = await all<{ day: string; may: boolean }>(
+    `SELECT d::text AS day, circle_membership.entitled($1, 'log-own-time', NULL, d) AS may FROM unnest(ARRAY['2025-11-28', '2025-12-01']::date[]) d ORDER BY d`,
+    [paul],
+  )
+  assert.deepEqual(held, [{ day: '2025-11-28', may: true }, { day: '2025-12-01', may: false }])
+  const kept = await profile({ person: paul, email: 'paul@garnier.example' }, asPaul)
+  assert.equal(kept.state, 'settled', reason(kept))
+})
+
 test('a hire needs the manager\'s power and carries a first device; Camille hires Bastien, who signs from his first day', async () => {
   const laptop = await fixture(bastien, 'laptop')
   const contract = {
@@ -138,7 +193,8 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
     enrolled: '2026-10-24',
   })
   const ahead = await work({ member: bastien, day: '2026-10-24', minutes: 60, billable: false }, as(bastien))
-  assert.match(reason(ahead), /bastien@lanterne\.example is not employed on 2026-10-24/)
+  // An employee's right is held from the first day of the contract.
+  assert.match(reason(ahead), /bastien@lanterne\.example holds no mandate for log-own-time/)
 })
 
 test('Camille opens Bastien\'s candidacy, six months within his contract; none for a member, and none twice', async () => {

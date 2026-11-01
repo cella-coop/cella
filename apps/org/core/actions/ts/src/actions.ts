@@ -10,8 +10,10 @@ export type Decide = 'consent' | 'majority'
 
 // The power an action needs and the payload field holding its amount in
 // cents when the mandate's limit caps it. An individual mandate grants
-// it: the actor holds it through a seat on the verdict date, and the
-// owning feat registers the same in `cella.power`, the source of truth.
+// it, or a right: the actor holds it through a seat on the verdict date,
+// or as one of the people a right names, every person, member or
+// employee, and the owning feat registers the same in `cella.power`, the
+// source of truth.
 // Or a collective mandate grants it, for an action a passed motion
 // carries: the motion's circle holds it, and the graft that cites the
 // motion registers the same in `motion.cites` instead. `cella check
@@ -26,14 +28,15 @@ export interface Grant {
 
 // Who may take an action that needs no power, each a guard registered on
 // the action in `cella.guard`:
-// - `self`: the actor's own, such as their profile or their devices;
 // - `roll`: a member on the roll of the motion the action names;
 // - `first`: the log's first entry, as the state a scope held before its
 //   log is carried in once.
-// A seat is no check: what it allows is its roles' mandates, its circle's
-// participant role among them. Nor is a passed motion: what it carries
-// needs the power its circle's collective mandate grants.
-export type Check = 'self' | 'roll' | 'first'
+// What is the actor's own is no check: it needs the power their right
+// grants, and the feat's guard that it is theirs. A seat is no check:
+// what it allows is its roles' mandates, its circle's participant role
+// among them. Nor is a passed motion: what it carries needs the power its
+// circle's collective mandate grants.
+export type Check = 'roll' | 'first'
 
 export interface Confluent extends Grant {
   label: 'confluent'

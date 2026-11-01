@@ -51,6 +51,11 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('report:report:save', 'report.saves(jsonb)', 'report');
 
+-- Saving a report is every member's right; report.saves checks it is
+-- their own.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('report:report:save', 'save-report', NULL, 'report');
+
 GRANT USAGE ON SCHEMA report TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON report.report TO cella_app;
 GRANT SELECT ON report.threshold TO cella_app;

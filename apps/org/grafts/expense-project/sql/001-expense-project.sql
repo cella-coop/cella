@@ -29,6 +29,11 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('expense-project:expense:rebill', 'expense_project.files(jsonb)', 'expense-project');
 
+-- Filing one's expense on a project is every employee's right, as
+-- claiming it is; expense_project.files checks it is their own.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('expense-project:expense:rebill', 'claim-expense', NULL, 'expense-project');
+
 -- What each project's members spent for it, to bill on, by status.
 CREATE VIEW expense_project.spent AS
 SELECT r.project, count(*)::integer AS expenses,

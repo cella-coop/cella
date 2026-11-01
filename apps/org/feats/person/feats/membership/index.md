@@ -32,12 +32,12 @@ check.
 | Action | Power or check | Lanterne |
 |---|---|---|
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
-| accept | self: the invitee, signed by the device it enrols | whoever holds the link |
+| accept | `accept-invitation`, every person's right: the invitee, signed by the device it enrols | whoever holds the link |
 | admit | `admit-member`, a collective mandate: the cited motion admits the member and carried | the assembly, by consent |
 | suspend, exit | `suspend-member`, `end-membership`, collective mandates: the cited motion suspends the member, or ends their membership, and carried | the assembly, by motion |
 | erase | `erase-member`, a collective mandate: the cited motion erases a member who has left, and carried | the assembly, by motion |
 
-`004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's; the writes a motion carries
+`004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
 are listed in `motion.cites`, with their powers, by the `membership-motion` graft.
 
 ## Schema
@@ -66,7 +66,10 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
   membership that day: admitted on or before it, and not yet suspended
   nor gone. It is what a graft asks of an active member, rather than
   reading the status; the record keeps one day per move, so a day inside
-  a suspension since lifted reads as active.
+  a suspension since lifted reads as active. It is who holds every
+  member's right: `009-active.sql` registers it with person's core as
+  `member`, by `person.register_right`
+  ([rights](../../../circle/index.md#rights)).
 
 ## Personal data
 

@@ -140,13 +140,21 @@ test('an op with neither a power nor a check is refused: nothing is allowed by o
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
   assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
   const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
-  assert.match(odd[0], /declares the check anyone, which is none of self, roll, first/)
+  assert.match(odd[0], /declares the check anyone, which is none of roll, first/)
 })
 
 test('a declared check is backed by SQL: a guard on the op', () => {
-  const self = op('member:member:profile', null, null, 'self')
-  assert.match(covered([self], { guards: [], cites: [] })[0], /member:member:profile checks self, but no SQL registers a guard on it in cella.guard/)
-  assert.deepEqual(covered([self], { guards: [{ op: 'member:member:profile', owner: 'member' }], cites: [] }), [])
+  const roll = op('motion:motion:vote', null, null, 'roll')
+  assert.match(covered([roll], { guards: [], cites: [] })[0], /motion:motion:vote checks roll, but no SQL registers a guard on it in cella.guard/)
+  assert.deepEqual(covered([roll], { guards: [{ op: 'motion:motion:vote', owner: 'circle-membership-motion' }], cites: [] }), [])
+})
+
+test('what is the actor\'s own is no check: an action of theirs names the power their right grants, and check self is refused', () => {
+  const self = covered([op('member:member:profile', null, null, 'self')], { guards: [{ op: 'member:member:profile', owner: 'member' }], cites: [] })
+  assert.match(self[0], /member:member:profile checks self, which is no check: .* so name the power, as keep-profile or log-own-time/)
+  const both = covered([op('member:member:profile', 'keep-profile', null, 'self')], { guards: [], cites: [] })
+  assert.match(both[0], /member:member:profile checks self, which is no check/)
+  assert.deepEqual(covered([op('member:member:profile', 'keep-profile')], { guards: [], cites: [] }), [])
 })
 
 test('a passed motion is no check: check decided is refused, with a power or without one, even listed in motion.cites', () => {

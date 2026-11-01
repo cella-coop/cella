@@ -67,3 +67,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 GRANT USAGE ON SCHEMA employment TO cella_app, cella_guards;
 GRANT SELECT ON employment.worker TO cella_app, cella_guards;
 GRANT INSERT ON employment.worker TO cella_app;
+
+-- Every employee's right is held by those employed on the day, as
+-- person's core asks of each right.
+SELECT person.register_right('employee', 'employment.employed(text, date)', 'employment');

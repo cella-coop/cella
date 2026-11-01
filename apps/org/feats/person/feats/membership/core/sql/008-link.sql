@@ -72,8 +72,11 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:link', 'membership.links(jsonb)', 'membership'),
   ('membership:member:accept', 'membership.accepts(jsonb)', 'membership');
 
+-- Taking up an invitation is every person's right, the invitee being one
+-- from their invitation; membership.accepts checks it is their own.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
-  ('membership:member:link', 'invite-member', NULL, 'membership');
+  ('membership:member:link', 'invite-member', NULL, 'membership'),
+  ('membership:member:accept', 'accept-invitation', NULL, 'membership');
 
 -- An admission no longer enrols a device: the acceptance did. It is
 -- refused for someone who holds no current device, invited or a worker,

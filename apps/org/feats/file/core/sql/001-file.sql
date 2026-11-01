@@ -96,6 +96,11 @@ RETURN file.stored(payload ->> 'file', 'none', NULL);
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('file:file:upload', 'file.uploads(jsonb)', 'file');
 
+-- Uploading a file is every person's right; file.uploads checks it is
+-- theirs, uploaded by this write.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('file:file:upload', 'upload-file', NULL, 'file');
+
 GRANT USAGE ON SCHEMA file TO cella_app, cella_guards;
 GRANT SELECT ON file.file, file.shared, file.receipt, file.contract, file.record TO cella_app, cella_guards;
 GRANT INSERT ON file.file TO cella_app;

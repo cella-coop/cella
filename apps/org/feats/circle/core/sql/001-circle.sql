@@ -18,8 +18,9 @@ CREATE TABLE circle.role (
   duty text NOT NULL DEFAULT ''
 );
 
--- A grant of one power to one role, an individual mandate, or to one
--- circle as a whole, a collective mandate its motions use, for a term:
+-- A grant of one power to one role, an individual mandate, to one
+-- circle as a whole, a collective mandate its motions use, or to the
+-- people who hold a right, every person, member or employee, for a term:
 -- the values of the mandate policy that grants it, copied as it is
 -- adopted (`circle.mandate_from`). `limit` caps a single write, `budget`
 -- a total over `per`; never both. `from` and `until` are the days its
@@ -29,6 +30,7 @@ CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   role text REFERENCES circle.role,
   circle text REFERENCES circle.circle,
+  "right" text CHECK ("right" IN ('person', 'member', 'employee')),
   power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
   policy text NOT NULL UNIQUE,
   "limit" cella.amount,
@@ -37,7 +39,7 @@ CREATE TABLE circle.mandate (
   "from" date NOT NULL,
   until date,
   revoked date,
-  CHECK ((role IS NULL) <> (circle IS NULL)),
+  CHECK (num_nonnulls(role, circle, "right") = 1),
   CHECK ("limit" IS NULL OR budget IS NULL),
   CHECK ((budget IS NULL) = (per IS NULL)),
   CHECK (until IS NULL OR "from" < until)

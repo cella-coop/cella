@@ -51,7 +51,7 @@ later value of their class, and the exit drew it up from the books.
 
 ## Actions
 
-`account:account:draw` (bounded on the draw limit, `self`), served on a
+`account:account:draw` (bounded on the draw limit, `draw-account`, every member's right), served on a
 person's page: the bank pays the member, `455` debited and `512` credited,
 on the verdict date, and the draw is recorded as theirs.
 

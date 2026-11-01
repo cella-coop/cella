@@ -16,7 +16,7 @@ junction. Each circle also has a channel for its messages.
 |---|---|---|
 | circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
 | role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has; `participant`, built in, is every circle's, the assembly's too |
-| mandate | `id`, `role?`, `circle?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its holder is a `role`, an individual mandate, or a `circle`, a collective one, never both; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
+| mandate | `id`, `role?`, `circle?`, `right?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its holder is a `role`, an individual mandate, a `circle`, a collective one, or a `right`, the people who hold it as such, `person`, `member` or `employee`, only one; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
 A **power** is the id of something a write needs, such as `issue-invoice`
@@ -26,24 +26,28 @@ limit, for a term. Who holds a role is a seat, the `circle-membership`
 graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit, the
-circle's participant role among them. A power
-every member holds is granted the same way, through a mandate on a role
-every member is seated in, such as a `member` role in the assembly:
-nothing is allowed by omission. A mandate on a circle itself, a
-collective mandate, is no seat's: it is used only by a motion of that
-circle ([collective mandates](#collective-mandates)).
+circle's participant role among them. A power every member holds in a
+circle is granted the same way, through a mandate on a role every member
+is seated in, such as a `member` role in the assembly: nothing is
+allowed by omission. A mandate on a circle itself, a collective mandate,
+is no seat's: it is used only by a motion of that circle ([collective
+mandates](#collective-mandates)). Nor is a right, which people hold as
+such, every person, member or employee, to act on what is their own
+([rights](#rights)).
 
 ## Mandates
 
 A mandate is a policy, a sentence a circle adopted by motion
 ([policies](../../../../_corpus/doc/architecture.md#policies)), its
-values marked in it: the role it grants to, or the circle, the power,
-and perhaps a limit per write or a budget over a month or a year.
+values marked in it: the role it grants to, the circle, or the right,
+the power, and perhaps a limit per write or a budget over a month or a
+year.
 
 ```text
 The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write
 The {role: lead} role holds {power: approve-expense}, to approve what the circle's members spend, within {budget: 1 000 €} a {per: month}
 The {circle: ag} circle holds {power: admit-member}, to admit members, by motion
+Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts
 ```
 
 Its term is its policy's days: it applies from the day its motion names
@@ -57,8 +61,9 @@ other's mandate the day it applies. The copy is this feat's, by
 read the register's values and never its wording; the write that calls
 them is `circle-motion`'s, which joins this feat to the motion feat's
 adoption and ending of a policy. What a mandate's values may be is this
-feat's too, `circle.mandate_flaw(marked)`: a role it has or a circle it
-has, never both, a power named in lower case, at most a limit or a
+feat's too, `circle.mandate_flaw(marked)`: one of a role it has, a
+circle it has or a right, `person`, `member` or `employee`, a power
+named in lower case, at most a limit or a
 budget, an amount, a budget with its `per`, and no other value.
 
 ## Collective mandates
@@ -118,6 +123,42 @@ action concerns (`circle_membership.sits`, `circle_membership_motion.sits`,
 agent's or a service's seat would bring no participant role unless a
 procedure says so: named, not built.
 
+## Rights
+
+A right is a mandate people hold as such, with no seat: on every person
+(`{right: person}`), every member (`{right: member}`) or every employee
+(`{right: employee}`), never an agent or a service. Who is one of them
+on a day is person's core's to say, `person.holds(actor, right, day)`,
+by the function each kind of person registers there: `person` the
+people the co-op knows, `membership` its active members, `employment`
+those employed. `circle-membership`'s guard on every op with a power
+takes a right's mandate, `circle_membership.entitled`, beside those on
+the actor's seats, so Inès, employed and seated nowhere, holds an
+employee's rights, and Paul, gone since 30 November 2025, a person's
+alone.
+
+A right lets each act on what is their own: the feat's guard that the
+record is theirs stays, and a right is never the authority a read asks
+(`circle_membership.may`), so it opens no one else's rows. A right is a
+mandate like any other, a policy, and is the assembly's to grant: it
+reaches the whole co-op, and is neither carved nor carved from.
+
+| Right | Power | Actions |
+|---|---|---|
+| person | `keep-profile` | their profile (`person:person:profile`) and erasing their contact details (`person:person:forget`) |
+| person | `keep-devices` | enrolling and revoking their devices (`person:device:enrol`, `:revoke`) |
+| person | `upload-file` | uploading a file of the co-op's (`file:file:upload`) |
+| person | `accept-invitation` | taking up their invitation (`membership:member:accept`) |
+| person | `file-record` | filing a record of their own (`file-membership:member:attach`) |
+| person | `mark-read` | marking a text the co-op adopted read (`document-membership:version:read`) |
+| person | `record-import` | recording an import of their own (`import:run:record`) |
+| member | `draw-account` | drawing on their account within its draw limit (`account:account:draw`) |
+| member | `spread-capital` | spreading what they owe over their pay (`account:capital:spread`) |
+| member | `mark-attendance` | marking their attendance at a meeting (`meeting-membership:attendance:mark`) |
+| member | `save-report` | saving a report of their own (`report:report:save`) |
+| employee | `log-own-time` | logging, correcting and submitting their own time, and booking it to a project (`employment-timesheet:entry:log`, `:entry:correct`, `:period:submit`, `employment-project-timesheet:entry:book`) |
+| employee | `claim-expense` | claiming an expense and submitting it, attaching its receipt and filing it on a project (`expense:expense:capture`, `:submit`, `expense-file:expense:attach`, `expense-project:expense:rebill`) |
+
 ## Schema
 
 `circle` (`core/sql/`): `circle.circle`, `circle.role` and
@@ -147,8 +188,8 @@ collective mandate the circle it is on, so the two kinds are carved
 alike and each is carved from both. Its cap never exceeds theirs: one
 of them is uncapped, or limits a write by at least its limit, or
 budgets the same period by at least its budget. A role every working
-circle has (`*`) is the assembly's to grant, and is neither carved nor
-carved from. Nesting therefore matters: moving a circle changes what
+circle has (`*`) and a right are the assembly's to grant, and are
+neither carved nor carved from. Nesting therefore matters: moving a circle changes what
 its mandates are carved from. A power exercised "by motion" is a
 collective mandate, held by a circle and used only through a motion of
 that circle.
@@ -312,6 +353,12 @@ close of a passing motion carries them out.
 |---|---|
 | Assemblée générale | `admit-member`, `suspend-member`, `end-membership`, `erase-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `nest-circle`, `seat-member` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `nest-circle`, `seat-member` |
+
+| Right | Power |
+|---|---|
+| Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import` |
+| Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
+| Every employee | `log-own-time`, `claim-expense` |
 
 Each is a mandate policy of the assembly, adopted with the statutes by
 the founding motion, m-2021-001, on 1 March 2021, and in force since.

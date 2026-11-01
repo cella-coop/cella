@@ -1,10 +1,10 @@
 import { bounded, confluent, ordered, type Actions } from '@cella/org-actions'
 
 export const actions = {
-  // a member's own claim, a fact; two claims do no harm
-  'expense:expense:capture': confluent({ check: 'self' }),
-  // the member's own, and idempotent
-  'expense:expense:submit': confluent({ check: 'self' }),
+  // an employee's own claim, by their right; a fact, two claims do no harm
+  'expense:expense:capture': confluent({ power: 'claim-expense' }),
+  // the employee's own, by their right, and idempotent
+  'expense:expense:submit': confluent({ power: 'claim-expense' }),
   // spends the approver's budget for the month, a right granted in advance
   // by their mandate; beyond it, refused
   'expense:expense:approve': bounded('budget', { power: 'approve-expense', amount: 'amount' }),

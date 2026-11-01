@@ -1,6 +1,6 @@
 +++
 title = "employment-timesheet"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Whose time is, and logging it by one's employment. A worker logs,
@@ -22,16 +22,17 @@ not a mandate a seat gives, is what entitles them to. Declared by
 
 ## Actions
 
-| Action | Label | Check | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
-| `employment-timesheet:entry:log` | confluent | `self` | the timesheet feat's log by the worker's employment: entries add up in any order |
-| `employment-timesheet:entry:correct` | confluent | `self` | the timesheet feat's correction the same way: it lowers the worker's own entry, and two leave the lower |
-| `employment-timesheet:period:submit` | confluent | `self` | the timesheet feat's submit the same way: a flag the worker sets on their own month |
+| `employment-timesheet:entry:log` | confluent | `log-own-time`, every employee's right | the timesheet feat's log by the worker's employment: entries add up in any order |
+| `employment-timesheet:entry:correct` | confluent | `log-own-time`, every employee's right | the timesheet feat's correction the same way: it lowers the worker's own entry, and two leave the lower |
+| `employment-timesheet:period:submit` | confluent | `log-own-time`, every employee's right | the timesheet feat's submit the same way: a flag the worker sets on their own month |
 
 Each runs the timesheet feat's `logging`, `correcting` or `submitting`
-under this graft's op, which needs no power: the feat's own writes need
-`log-time`, which only a seat's mandate grants, and a worker who is no
-member sits nowhere. Approving stays the feat's, under `approve-time`.
+under this graft's op, which needs `log-own-time`, every employee's
+right, held with no seat from the first day of their contract to its
+last: the feat's own writes need `log-time`, which only a seat's mandate
+grants, and a worker who is no member sits nowhere. Approving stays the feat's, under `approve-time`.
 
 ## Guards
 

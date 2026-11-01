@@ -39,6 +39,12 @@ END;
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('document-membership:version:read', 'document_membership.reads(jsonb)', 'document-membership');
 
+-- Marking a text read is every person's right, so an invitee reads what
+-- joining asks before their admission; document_membership.reads checks
+-- the reading is their own.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('document-membership:version:read', 'mark-read', NULL, 'document-membership');
+
 GRANT USAGE ON SCHEMA document_membership TO cella_app, cella_guards;
 GRANT SELECT ON document_membership.reading, document_membership.texts TO cella_app, cella_guards;
 GRANT INSERT, UPDATE (read) ON document_membership.reading TO cella_app;

@@ -86,24 +86,30 @@ export function agree(ops, registered, cites = []) {
 
 // The checks a label may declare, each backed by a guard registered on the
 // action in cella.guard.
-const checks = new Set(['self', 'roll', 'first'])
+const checks = new Set(['roll', 'first'])
 
 // Where an action is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
-// registers: `guards` in cella.guard. A seat is no check, with a power or
-// without one: what a seat allows is its roles' mandates, its circle's
-// participant role among them. Nor is a passed motion, `decided`: what it
-// carries needs the power its circle's collective mandate grants.
+// registers: `guards` in cella.guard. What is the actor's own, `self`, is
+// no check, with a power or without one: it needs the power their right
+// grants, every person's, member's or employee's. Nor is a seat: what a
+// seat allows is its roles' mandates, its circle's participant role among
+// them. Nor is a passed motion, `decided`: what it carries needs the power
+// its circle's collective mandate grants.
 export function covered(ops, found) {
   const errors = []
   const judged = new Set(found.guards.map((r) => r.op))
+  const none = new Set(['self', 'seat', 'decided'])
+  for (const o of ops.filter((o) => o.check === 'self')) {
+    errors.push(`${o.file}: ${o.op} checks self, which is no check: what is the actor's own needs the power their right grants, every person's, member's or employee's, so name the power, as keep-profile or log-own-time`)
+  }
   for (const o of ops.filter((o) => o.check === 'seat')) {
     errors.push(`${o.file}: ${o.op} checks seat, which is no check: a seat allows what its roles' mandates grant, the participant's among them, so name the power, as propose or discuss`)
   }
   for (const o of ops.filter((o) => o.check === 'decided')) {
     errors.push(`${o.file}: ${o.op} checks decided, which is no check: a passed motion carries what its circle's collective mandate grants, so name the power and list it in motion.cites, as admit-member`)
   }
-  for (const o of ops.filter((o) => !o.power && o.check !== 'seat' && o.check !== 'decided')) {
+  for (const o of ops.filter((o) => !o.power && !none.has(o.check))) {
     if (!o.check) {
       errors.push(`${o.file}: ${o.op} names neither a power nor a check: no action is allowed by omission`)
     } else if (!checks.has(o.check)) {

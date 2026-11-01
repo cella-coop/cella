@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -41,7 +41,7 @@ clock runs out `cella vault sweep` redacts them to NULL.
 
 ## Actions
 
-`account:capital:spread` (confluent, `self`), served on a member's own page
+`account:capital:spread` (confluent, `spread-capital`, every member's right), served on a member's own page
 while they owe some: what they owe is spread over as many monthly
 instalments as they choose, each rounded up to the cent, from the verdict
 date on.

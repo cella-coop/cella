@@ -16,3 +16,7 @@ RETURN EXISTS (
       ELSE false
     END
 );
+
+-- Every member's right is held by the active members, as person's core
+-- asks of each right.
+SELECT person.register_right('member', 'membership.active(text, date)', 'membership');

@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -117,13 +117,13 @@ report is saved, and saved again under its id by its owner.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/report/save` | confluent | a member's own report; the last save wins |
+| `POST /api/report/save` | confluent, `save-report` | a member's own report, by their right; the last save wins |
 
 ## Powers
 
 | Action | Power | Lanterne |
 |---|---|---|
-| save | none: the member's own | every member |
+| save | `save-report`, every member's right: their own | every member |
 
 ## Guards
 

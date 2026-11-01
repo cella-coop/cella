@@ -42,6 +42,11 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('import:run:record', 'import.records(jsonb)', 'import');
 
+-- Recording an import is every person's right, since each worker imports
+-- their own time; import.records checks the run is theirs.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('import:run:record', 'record-import', NULL, 'import');
+
 GRANT USAGE ON SCHEMA import TO cella_app, cella_guards;
 GRANT SELECT ON import.run TO cella_app, cella_guards;
 GRANT INSERT ON import.run TO cella_app;

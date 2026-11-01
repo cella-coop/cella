@@ -3,8 +3,7 @@ CREATE SCHEMA account_motion;
 -- What a motion may decide of the statutes' capital clauses, registered
 -- with the motion feat so its New form offers it: adopting drafted
 -- terms, picked from those this graft adds to the form (`options`).
-INSERT INTO motion.carries (kind, label, fields, owner) VALUES
-  ('terms', 'Adopt the capital''s terms', '[{"name": "terms", "label": "Terms", "type": "text", "options": "terms"}]', 'account-motion');
+SELECT motion.register_carries('terms', 'Adopt the capital''s terms', '[{"name": "terms", "label": "Terms", "type": "text", "options": "terms"}]', 'account-motion');
 
 -- The motion of the members that adopts terms, as its action names
 -- them. Both sides are referenced by id, with no foreign key into either
@@ -73,7 +72,7 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('account:terms:adopt', 'account_motion.adopts(jsonb)', 'account-motion');
-INSERT INTO motion.cites (op, owner) VALUES ('account:terms:adopt', 'account-motion');
+SELECT motion.register_cite('account:terms:adopt', 'account-motion');
 
 GRANT USAGE ON SCHEMA account_motion TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON account_motion.adoption TO cella_app;

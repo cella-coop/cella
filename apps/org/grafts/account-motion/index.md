@@ -10,8 +10,8 @@ them. Declared by `account`.
 
 `account_motion` (`sql/`):
 
-- the `terms` kind of action, "Adopt the capital's terms", registered in
-  `motion.carries`, so a new motion's form offers it, with the drafted
+- the `terms` kind of action, "Adopt the capital's terms", registered by
+  `motion.register_carries`, so a new motion's form offers it, with the drafted
   capital terms as its options.
 - `account_motion.adoption`: the terms and the motion moving to adopt
   them, a view of the actions of the kind. The action is the motion
@@ -25,7 +25,7 @@ The app role and the guards role may select.
   adopt terms names drafted terms not yet adopted.
 - `account_motion.adopts`, on `account:terms:adopt`: the cited motion
   moved to adopt these terms.
-- The op is listed in `motion.cites`, so `circle-membership-motion`'s
+- The op is registered by `motion.register_cite`, so `circle-membership-motion`'s
   `carried` attaches to it: the motion closed and passed on its roll.
   Its label declares `check: 'decided'`.
 

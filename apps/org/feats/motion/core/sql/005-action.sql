@@ -3,13 +3,25 @@
 -- nesting a circle. `fields` names the arguments an action of the kind
 -- takes, as the New form asks for them: [{ name, label, type, optional }],
 -- type `text` or `number`. This feat knows no kind; it keeps the register, as
--- it keeps `motion.cites`.
+-- it keeps `motion.cites`, and motion.register_carries alone writes it.
 CREATE TABLE motion.carries (
   kind text PRIMARY KEY CHECK (kind ~ '^[a-z][a-z-]*$'),
   label text NOT NULL,
   fields jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(fields) = 'array'),
   owner text NOT NULL
 );
+
+-- Registers a kind of action a motion can carry, with the arguments its
+-- New form asks for. A graft's migration calls it, and never inserts into
+-- motion.carries itself.
+CREATE FUNCTION motion.register_carries(action text, label text, fields jsonb, owner text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO motion.carries (kind, label, fields, owner)
+  VALUES (register_carries.action, register_carries.label, register_carries.fields, register_carries.owner);
+END;
+
+REVOKE EXECUTE ON FUNCTION motion.register_carries(text, text, jsonb, text) FROM PUBLIC;
 
 -- What a motion decides, in the order proposed: an action of a
 -- registered kind and its arguments, which the kind's graft reads and its

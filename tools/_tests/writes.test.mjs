@@ -13,8 +13,9 @@ import { checkSql } from '../sql-check.mjs'
 import { ratchet, scanTs } from '../writes.mjs'
 
 // A throwaway tree with three feats and the SQL files given for each
-// owner, a graft by its hyphenated name; each file is `NNN.sql`.
-async function foreign(sql) {
+// owner, a graft by its hyphenated name; each file is `NNN.sql`. Answers
+// the check's errors and what it found.
+async function check(sql) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-writes-'))
   try {
     for (const feat of ['motion', 'invoice', 'member']) {
@@ -30,11 +31,17 @@ async function foreign(sql) {
     const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
     const known = new Set(['cella', 'motion', 'invoice', 'member', 'invoice_member', 'member_motion'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
-    assert.deepEqual(errors, [])
-    return found.foreign.map((f) => `${f.owner}: ${f.what}`)
+    return { errors, found }
   } finally {
     rmSync(repo, { recursive: true, force: true })
   }
+}
+
+// The foreign writes a tree's SQL leaves standing, its check otherwise clean.
+async function foreign(sql) {
+  const { errors, found } = await check(sql)
+  assert.deepEqual(errors, [])
+  return found.foreign.map((f) => `${f.owner}: ${f.what}`)
 }
 
 const table = 'CREATE TABLE invoice_member.link (invoice uuid, member text);'
@@ -129,5 +136,36 @@ test('a foreign write the list does not name is refused, and so is a listed one 
   assert.match(ratchet(found, [], 'apps/org')[0], /^apps\/org\/grafts\/invoice-member\/sql\/001.sql: invoice-member trigger whose on invoice.invoice, a table it does not own: a slice writes only its own schema/)
   assert.deepEqual(ratchet([], ['invoice-member: trigger whose on invoice.invoice'], 'apps/org'), [
     'apps/org/foreign.list: invoice-member: trigger whose on invoice.invoice is gone: strike it from the list',
+  ])
+})
+
+test('a graft registers with the motion feat through its register functions, and an insert into the register is a foreign write', async () => {
+  const { errors, found } = await check({
+    'member-motion': [`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'member-motion');
+SELECT motion.register_cite('member:member:admit', 'member-motion');
+SELECT motion.register_cite_guard('member_motion.carried(jsonb)', 'member-motion');`],
+  })
+  assert.deepEqual(errors, [])
+  assert.deepEqual(found.foreign, [])
+  assert.deepEqual(found.cites, [{ op: 'member:member:admit', owner: 'member-motion' }])
+
+  const inserted = await foreign({
+    'member-motion': [`INSERT INTO motion.carries (kind, label, fields, owner) VALUES ('admit', 'Admit a member', '[]', 'member-motion');
+INSERT INTO motion.cites (op, owner) VALUES ('member:member:admit', 'member-motion');`],
+  })
+  assert.deepEqual(inserted, ['member-motion: 001.sql writes motion.carries', 'member-motion: 001.sql writes motion.cites'])
+  const refused = ratchet(inserted.map((what) => ({ owner: 'member-motion', what: what.split(': ')[1], path: 'apps/org/grafts/member-motion/sql/001.sql' })), [], 'apps/org')
+  assert.equal(refused.length, 2)
+  assert.match(refused[0], /member-motion 001.sql writes motion.carries, a table it does not own/)
+})
+
+test('a register call under another\'s name, or with an argument the check cannot read, is refused', async () => {
+  const { errors } = await check({
+    'member-motion': [`SELECT motion.register_cite('member:member:admit', 'invoice-member');
+SELECT motion.register_cite(lower('member:member:exit'), 'member-motion');`],
+  })
+  assert.deepEqual(errors, [
+    'apps/org/grafts/member-motion/sql/001.sql: registers by motion.register_cite as invoice-member, not as itself, member-motion',
+    'apps/org/grafts/member-motion/sql/001.sql: calls motion.register_cite with an argument that is no literal string, which the check cannot see',
   ])
 })

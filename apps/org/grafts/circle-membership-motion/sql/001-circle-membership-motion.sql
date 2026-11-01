@@ -63,21 +63,10 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
--- The guard attaches to every op that cites a motion: those the lower
--- grafts declared before this one migrated, and any declared after.
-INSERT INTO cella.guard (op, fn, owner)
-SELECT c.op, 'circle_membership_motion.carried(jsonb)'::regprocedure, 'circle-membership-motion' FROM motion.cites c;
-
-CREATE FUNCTION circle_membership_motion.attach() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  INSERT INTO cella.guard (op, fn, owner)
-  VALUES (NEW.op, 'circle_membership_motion.carried(jsonb)', 'circle-membership-motion');
-  RETURN NULL;
-END
-$$;
-
-CREATE TRIGGER attach AFTER INSERT ON motion.cites
-  FOR EACH ROW EXECUTE FUNCTION circle_membership_motion.attach();
+-- The guard covers every action that cites a motion: the motion feat
+-- attaches it to those the grafts registered before this one migrated,
+-- and to any they register after.
+SELECT motion.register_cite_guard('circle_membership_motion.carried(jsonb)', 'circle-membership-motion');
 
 GRANT USAGE ON SCHEMA circle_membership_motion TO cella_app, cella_guards;
 GRANT SELECT ON circle_membership_motion.roll TO cella_app, cella_guards;

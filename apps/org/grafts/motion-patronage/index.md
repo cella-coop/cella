@@ -16,10 +16,10 @@ Declared by `patronage`.
   A draft moved again, after a motion that failed, has both; approving
   it cites the one that passed.
 - the `distribution` kind of action, "Approve a year's distribution",
-  registered in `motion.carries`, with the drafted distributions as its
+  registered by `motion.register_carries`, with the drafted distributions as its
   options (`distributions`).
 - the `patronage` kind of action, "Adopt the work share's terms",
-  registered in `motion.carries`, so a new motion's form offers it, with
+  registered by `motion.register_carries`, so a new motion's form offers it, with
   the drafted patronage terms as its options (`bases`).
 - `motion_patronage.adoption`: the terms and the motion moving to
   adopt them, a view of the actions of the `patronage` kind.
@@ -37,7 +37,7 @@ keeps no copy. The app role and the guards role may select.
   each action to approve a distribution names a draft not yet approved.
 - `motion_patronage.adopts`, on `patronage:terms:adopt`: the cited
   motion moved to adopt these terms.
-- Both actions are listed in `motion.cites`, so `circle-membership-motion`'s
+- Both actions are registered by `motion.register_cite`, so `circle-membership-motion`'s
   `carried` attaches to them: the motion closed and passed on its roll.
   Their labels declare `check: 'decided'`.
 

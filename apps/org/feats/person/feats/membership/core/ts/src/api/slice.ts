@@ -1,6 +1,6 @@
 import { action, type Slice } from '@cella/org-db'
 import { devices } from '@cella/org-person/api'
-import { invite, link, withdraw } from '../handlers/index.ts'
+import { erase, invite, link, withdraw } from '../handlers/index.ts'
 import { first, links, member, memberships } from '../drivers/member.ts'
 import { inbox } from '../drivers/inbox.ts'
 import { members as importing } from './imports.ts'
@@ -11,6 +11,7 @@ import { members as importing } from './imports.ts'
 // page their membership, whether they have taken up their invitation, and
 // a new link while they have not. Taking it up is the link's page's, in
 // the shell, through `accept`. A member withdraws from their own page,
+// and once they have left erases their data there,
 // by their right. Admission, suspension and exclusion are decided,
 // carried out when their motion closes. In the inbox, the acting
 // person's invitation while they are invited; and members imported from
@@ -37,6 +38,7 @@ export const slice: Slice = {
         ),
         link: action('membership:member:link', (form, id) => ({ member: id ?? '', link: form.get('link') }), link),
         withdraw: action('membership:member:withdraw', (_form, id) => ({ member: id ?? '' }), withdraw),
+        erase: action('membership:member:erase', (_form, id) => ({ member: id ?? '' }), erase),
       },
     },
     inbox: { rows: inbox },

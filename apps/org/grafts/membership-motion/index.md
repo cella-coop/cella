@@ -4,15 +4,15 @@ updated = 2026-11-03
 +++
 
 What a motion decides of a membership: admitting someone invited,
-suspending a member, excluding a member, erasing a former member's
-personal data. Declared by the `membership` feat.
+suspending a member, excluding a member. Declared by the `membership`
+feat.
 
 ## Schema
 
 `membership_motion` (`sql/`) holds no table: the actions are the motion
 feat's `motion.action`, of the kinds this graft registers by
-`motion.register_carries`, each with the action that carries it out: `admit` (`member`, `shares`), `suspend`, `exclude` and
-`erase` (`member`). `membership_motion.action` reads them with the member each
+`motion.register_carries`, each with the action that carries it out: `admit` (`member`, `shares`), `suspend` and `exclude`
+(`member`). `membership_motion.action` reads them with the member each
 names and, for an admission, the shares as a whole number. The app role
 and the guards role, `cella_guards`, may select it.
 
@@ -21,13 +21,13 @@ and the guards role, `cella_guards`, may select it.
 - `membership_motion.asks`, on `motion:motion:propose`: each action of
   these kinds names a member it can apply to: someone invited, with
   shares, to admit; an active member to suspend; an active or suspended
-  one to exclude; a member who has left to erase. Which circle decides it is
+  one to exclude. Which circle decides it is
   the one holding the collective mandate for it, `circle-motion`'s
   guard `empowers`.
 - `membership_motion.admits`, on `membership:member:admit`: the cited motion
   asks to admit this member, with these shares.
-- `membership_motion.ends`, on `membership:member:suspend`, `:exclude` and
-  `:erase`: the cited motion asks this of this member.
+- `membership_motion.ends`, on `membership:member:suspend` and `:exclude`:
+  the cited motion asks this of this member.
 - `membership_motion.mentions`, on `motion:message:post`: each handle a
   message mentions names one member, by `membership_motion.named`: the
   member whose address it is, or for a handle with no `@` whose address
@@ -40,12 +40,13 @@ and the guards role, `cella_guards`, may select it.
 
 The admission, suspension and exclusion cite their motion: this graft registers
 them by `motion.register_cite`, with their powers, `admit-member`,
-`suspend-member`, `exclude-member` and for the erasure `erase-member`,
+`suspend-member` and `exclude-member`,
 and `circle-membership-motion`, which counts the
 roll, attaches its guard that it closed and passed. Whether a close
 admits everyone it must, and seats them, needs the roll and seats, so it
 is that three-way graft's; this one never reads it. A member's
-withdrawal is their own right, no motion's, so it is none of this
+withdrawal, and their erasure once they have left, are their own rights,
+no motion's, so neither is this
 graft's ([membership](../../feats/person/feats/membership/index.md)).
 
 ## Handlers

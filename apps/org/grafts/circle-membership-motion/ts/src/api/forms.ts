@@ -9,8 +9,7 @@ const when = (form: Form) => {
 }
 
 // A proposal from a member's page: to admit them with their shares, to
-// suspend them, to end their membership or, once they have left, to erase
-// their personal data.
+// suspend them or to exclude them.
 export function standing(form: Form, member: string): Asking {
   const kind = form.get('kind')
   if (kind === 'admit') {
@@ -20,7 +19,7 @@ export function standing(form: Form, member: string): Asking {
     }
     return { kind, args: { member, shares }, ...when(form) }
   }
-  if (kind === 'suspend' || kind === 'exclude' || kind === 'erase') {
+  if (kind === 'suspend' || kind === 'exclude') {
     return { kind, args: { member }, ...when(form) }
   }
   throw new Error('choose what to propose')

@@ -89,11 +89,10 @@ export interface Ended {
   on: string
 }
 
-// An erasure of a member's personal data: all of it, by the motion
-// that asks it, once they have left.
+// An erasure of one's own personal data: all of it, once one has left.
+// It cites no motion.
 export interface Erase {
   member: string
-  motion: string
 }
 
 // The first device an invitation enrolled when it was taken up.
@@ -112,6 +111,7 @@ export interface Membership {
   first: First | null
   links: number
   devices: Device[]
-  // Whether the page is the reader's own, where they may withdraw.
+  // Whether the page is the reader's own, where they may withdraw, and
+  // once they have left erase their data.
   own: boolean
 }

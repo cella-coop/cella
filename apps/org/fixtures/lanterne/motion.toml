@@ -225,9 +225,9 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 
 # The collective mandates: each circle that carries an action by motion
 # holds the power for it on itself, used only by a motion of that circle.
-# The assembly admits, suspends and excludes members, erases a former
-# member's data, adopts and ends policies, the statutes' among them,
-# approves the distribution and adopts documents, and with coordination
+# The assembly admits, suspends and excludes members, adopts and ends
+# policies, the statutes' among them, approves the distribution and
+# adopts documents, and with coordination
 # nests circles and seats members; coordination grants and revokes the
 # working circles' mandates and adopts their documents, the rate card
 # among them. The working circles hold none. Those that hand out
@@ -246,9 +246,12 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: susp
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: exclude-member}, to exclude a member, by motion", takes = "scop-sarl-fr:exclude-member" }
 
+# Among them, a right: one who has left erases their own personal data
+# by their own action, no motion's, within the holds the law keeps.
+# Protected as every right is.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: erase-member}, to erase a former member's personal data, by motion", takes = "scop-sarl-fr:erase-member" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: erase-own-data}, to erase their own personal data once they have left", protected = "extraordinary", takes = "scop-sarl-fr:erase-own-data" }
 
 [[motion.action]]
 kind = "policy"

@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -104,9 +104,10 @@ recovery is not built.
   not declared: `POST /api/person/recover` comes with the guardians, and
   with the power it needs and the mandate that grants it.
 
-Erasing all of a person's personal data, once they have left, is decided
-by the assembly as a membership's write (`membership:member:erase`); a
-worker who was never a member is not erased yet.
+Erasing all of one's own personal data, once one has left the co-op, is
+every person's right, `erase-own-data`, taken as a membership's write
+(`membership:member:erase`); no one erases another, and no motion decides
+it. A worker who was never a member is not erased yet.
 
 ## Powers
 

@@ -124,7 +124,7 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   assert.deepEqual(rights, [
     { right: 'employee', powers: ['claim-expense', 'log-time'] },
     { right: 'member', powers: ['draw-account', 'mark-attendance', 'save-report', 'spread-capital'] },
-    { right: 'person', powers: ['accept-invitation', 'file-record', 'keep-devices', 'keep-profile', 'mark-read', 'record-import', 'upload-file', 'withdraw-membership'] },
+    { right: 'person', powers: ['accept-invitation', 'erase-own-data', 'file-record', 'keep-devices', 'keep-profile', 'mark-read', 'record-import', 'upload-file', 'withdraw-membership'] },
   ])
   const by = async (entry: number) => (await one<{ op: string; owners: string[] }>(
     `SELECT op, array(SELECT DISTINCT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners FROM cella.log WHERE n = $1`,

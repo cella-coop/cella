@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Trust
@@ -432,11 +432,18 @@ erased until their legal clock runs out.
   and its BLAKE3, never the bytes, and erasure empties them. Who may open
   one is a guard, the file feat's and the grafts' that see a power over
   what it records.
-- **Erasure** is a write: `membership:member:erase`, carried by the
-  assembly's motion under its collective `erase-member`, for a former
-  member's whole profile, the person's; `person:person:forget`, the
+- **Erasure** is a write: `membership:member:erase`, a former member's
+  own, by every person's right `erase-own-data`, for all their personal
+  data, the person's profile with it; `person:person:forget`, the
   person's own, for their optional contact fields; `client:client:erase`, under the
-  `erase-personal-data` power, for a person among the clients. Each
+  `erase-personal-data` power, for a person among the clients. No one
+  erases another member, and no motion decides it: erasure is the
+  person's right (GDPR art. 17), within the holds the law keeps, art.
+  17(3)(b), a legal obligation, and (e), legal claims. So a member who
+  has not left is not erased, since the co-op keeps its register of
+  members, and their payroll, receipts and books are restricted, not
+  erased. That reading of the law waits on a lawyer, as every default's
+  does ([legal forms](forms.md)). Each
   erases the subject's erasable classes at once, keys, salts and values,
   and redacts their columns in the read models; the restricted classes
   stay until `cella vault sweep` finds their clock out. A tombstone

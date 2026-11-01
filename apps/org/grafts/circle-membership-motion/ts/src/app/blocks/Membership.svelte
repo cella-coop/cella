@@ -5,9 +5,10 @@
 
   // Proposing what becomes of a membership, as it stands: admitting
   // someone invited, with the shares they subscribe; suspending an active
-  // member; excluding a member; erasing a former member's personal
-  // data. The assembly decides, by its procedure; the close carries it
-  // out. A member's withdrawal is their own, on their page, no motion's.
+  // member; excluding a member. The assembly decides, by its procedure;
+  // the close carries it out. A member's withdrawal, and the erasure of
+  // their data once they have left, are their own, on their page, no
+  // motion's.
   let { data }: { data: Standing | null; id: string } = $props()
 
   const offered = $derived(
@@ -15,7 +16,6 @@
     : data.status === 'invited' ? [{ value: 'admit', label: 'Admit as a member' }]
     : data.status === 'active' ? [{ value: 'suspend', label: 'Suspend' }, { value: 'exclude', label: 'Exclude' }]
     : data.status === 'suspended' ? [{ value: 'exclude', label: 'Exclude' }]
-    : data.status === 'exited' ? [{ value: 'erase', label: 'Erase their personal data' }]
     : [],
   )
   const state = useAsking(() => offered[0]?.value ?? '')

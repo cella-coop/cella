@@ -15,6 +15,6 @@ export const actions = {
   'membership:member:withdraw': ordered({ power: 'withdraw-membership' }),
   // freezes the capital account; the cited motion excludes the member
   'membership:member:exclude': ordered({ power: 'exclude-member' }),
-  // erasure wins over every update; the cited motion erases a member who has left
-  'membership:member:erase': ordered({ power: 'erase-member' }),
+  // erasure wins over every update; one who has left erases their own data
+  'membership:member:erase': ordered({ power: 'erase-own-data' }),
 } satisfies Actions

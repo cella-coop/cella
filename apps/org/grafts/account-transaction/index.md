@@ -39,7 +39,7 @@ The app role and the guards role, `cella_guards`, may select the balance.
 ## Guards
 
 The open-period guard is a trigger rather than a guard `submit` runs, since
-it holds for every write that posts, whatever its op. At rung 2 a late
+it holds for every write that posts, whatever its action. At rung 2 a late
 post is re-dated into the first open period and flagged, instead of
 refused.
 

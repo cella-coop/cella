@@ -19,7 +19,7 @@ BEGIN ATOMIC
       || coalesce(', ' || pr.circle || '''s', '')
   END
   FROM (
-    SELECT payload ->> 'project' AS project, (SELECT p.power FROM cella.power p WHERE p.op = cella.op()) AS power
+    SELECT payload ->> 'project' AS project, (SELECT p.power FROM cella.power p WHERE p.op = cella.action()) AS power
   ) w
   LEFT JOIN project.project pr ON pr.id = w.project;
 END;

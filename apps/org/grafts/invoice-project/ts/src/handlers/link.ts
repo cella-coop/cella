@@ -1,12 +1,12 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { Link, ops } from '../models/ops.ts'
+import type { Link, actions } from '../models/actions.ts'
 
-const op = 'invoice-project:invoice:link' satisfies keyof typeof ops
+const op = 'invoice-project:invoice:link' satisfies keyof typeof actions
 
 // Names the project an invoice bills; naming another moves it. The
 // graft's trigger refuses an invoice or a project that does not exist.
-export async function link(input: Link, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Link>> {
+export async function link(input: Link, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Link>> {
   return write(deps, {
     op,
     request: input,

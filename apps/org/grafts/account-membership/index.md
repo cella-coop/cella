@@ -34,7 +34,7 @@ member may draw, and the freeze when a member leaves. Declared by
 Triggers raise SQLSTATE `09000`. The app role and the guards role may
 select.
 
-## Writes
+## Actions
 
 None of its own. Opening a member's account on admission posts, and so
 does moving a departing one's capital to what is owed them, so both are

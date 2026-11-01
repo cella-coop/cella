@@ -35,9 +35,9 @@ from the payments, the total and `due`. A draft has no
 number; issuing gives it the next one and freezes it. A voided invoice
 keeps its number, and the void posts a credit note.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/invoice/issue` | bounded | numbered in a series; the server's own until rung 2 gives devices theirs |
 | `POST /api/invoice/send` | confluent | to a client, or to a peer co-op |
@@ -60,7 +60,7 @@ keeps its number, and the void posts a credit note.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | issue | `issue-invoice` | Julien, as finance |
 | send | `issue-invoice` | Julien |

@@ -36,9 +36,9 @@ The table is split by class into four parts, `file.shared` (`none`),
 and bytes in `cella.personal` under its own class and erasure finds them
 by it. Redacting the bytes empties the hash generated from them.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/file/upload` | confluent, `self` | a file of the co-op's own is a fact, the uploader's; two commute |
 

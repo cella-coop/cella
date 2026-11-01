@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Approved, Correct, Corrected, Log, Logged, Period, Submitted } from '../models/timesheet.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Logs an entry. The feat's trigger makes the member's period if it is
 // the month's first and refuses one into an approved period;
@@ -12,7 +12,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 // come. A graft that files the entry under something of its own, as a
 // project, runs this in its own write.
 export const logging = (input: Log): Write<Logged> => ({
-  op: 'timesheet:entry:log' satisfies Op,
+  op: 'timesheet:entry:log' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string }>(
@@ -37,7 +37,7 @@ export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Lo
 // own entry. A graft that corrects it under a write of its own, as
 // employment-timesheet does by the worker's employment, runs this.
 export const correcting = (input: Correct): Write<Corrected> => ({
-  op: 'timesheet:entry:correct' satisfies Op,
+  op: 'timesheet:entry:correct' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ member: string; day: string }>(
@@ -61,7 +61,7 @@ export async function correct(input: Correct, deps: Deps): Out<'timesheet:entry:
 // time in it. A graft that submits it under a write of its own, as
 // employment-timesheet does by the worker's employment, runs this.
 export const submitting = (input: Period): Write<Submitted> => ({
-  op: 'timesheet:period:submit' satisfies Op,
+  op: 'timesheet:period:submit' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ submitted: string }>(
@@ -85,7 +85,7 @@ export async function submit(input: Period, deps: Deps): Out<'timesheet:period:s
 // was submitted, its month is over and the approver is not its member.
 export async function approve(input: Period, deps: Deps): Out<'timesheet:period:approve', Approved> {
   return write(deps, {
-    op: 'timesheet:period:approve' satisfies Op,
+    op: 'timesheet:period:approve' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ approved: string }>(

@@ -24,9 +24,9 @@ document, `document-meeting`'s.
 | meeting | scheduled → held, or cancelled; its minutes begun on `minuted` |
 | item | on the agenda while the meeting is scheduled; fixed once it is held |
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/meeting/schedule` | confluent | a fact; a second meeting of a circle on one day is numbered |
 | `POST /api/meeting/item.add`, `.move`, `.remove` | confluent | an item's place is its own register; fixed by the hold |
@@ -51,7 +51,7 @@ document, `document-meeting`'s.
 
 ## Powers
 
-| Write | Power or check | Lanterne |
+| Action | Power or check | Lanterne |
 |---|---|---|
 | schedule, cancel | `schedule-meeting` | a circle's lead, the gérante for any circle |
 | item.add, .move, .remove | seat: an active member seated in the meeting's circle | the circle's members |

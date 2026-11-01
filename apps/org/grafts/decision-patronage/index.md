@@ -37,7 +37,7 @@ keeps no copy. The app role and the guards role may select.
   each motion to approve a distribution names a draft not yet approved.
 - `decision_patronage.adopts`, on `patronage:terms:adopt`: the cited
   decision moved to adopt these terms.
-- Both ops are listed in `decision.cites`, so `circle-decision-membership`'s
+- Both actions are listed in `decision.cites`, so `circle-decision-membership`'s
   `carried` attaches to them: the decision closed and passed on its roll.
   Their labels declare `check: 'decided'`.
 
@@ -49,7 +49,7 @@ moving to adopt no such terms is refused; adopting cites a decision that
 moved to adopt the terms, and approving one that moved to approve the
 distribution, never another; a draft moved again is approved by either
 decision moving to, and a proposal moving to approve no draft is refused;
-both ops cite a decision.
+both actions cite a decision.
 
 ## Shell
 

@@ -10,7 +10,7 @@ Copied from cella@2398d87 `distros/core/runtime/rust/log`, where its history liv
 ## Reading the log
 
 `ts/` (`@cella/org-log`) reads the notary's log as the shell shows it: its
-entries, newest first, each with its op, actor, verdict date, receipt and
+entries, newest first, each with its action, actor, verdict date, receipt and
 deciding guards' owners; an entry with its receipt, hashes and signatures
 and each guard's text from `cella.guard_text`; whether `cella.verify_log()`
 passes, which the collection's header shows as its status, and the head

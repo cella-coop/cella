@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Propose, Proposed } from '../models/decision.ts'
 
-const op = 'decision:decision:propose' satisfies keyof typeof ops
+const op = 'decision:decision:propose' satisfies keyof typeof actions
 
 // Proposes a decision on the verdict date with the motions it decides,
 // numbered the year's next (`d-2026-013`) under a lock on the numbering,
@@ -45,6 +45,6 @@ export function proposing(input: Propose): Write<Proposed> {
   }
 }
 
-export async function propose(input: Propose, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Proposed>> {
+export async function propose(input: Propose, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Proposed>> {
   return write(deps, proposing(input))
 }

@@ -55,7 +55,7 @@ test('approving cites the decision that approves the distribution, never another
   assert.equal(await guard('decision_patronage.approves', { distribution: '2025', decision: 'd-9' }), 'no decision d-9')
 })
 
-test('both ops cite a decision, so the roll\'s guard attaches to them', async () => {
+test('both actions cite a decision, so the roll\'s guard attaches to them', async () => {
   assert.deepEqual((await db.query(`SELECT op, owner FROM decision.cites WHERE owner = 'decision-patronage' ORDER BY op`)).rows, [
     { op: 'patronage:distribution:approve', owner: 'decision-patronage' },
     { op: 'patronage:terms:adopt', owner: 'decision-patronage' },

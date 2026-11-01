@@ -14,9 +14,9 @@ a task that does not exist or an assignee who is not an active member
 (SQLSTATE `09000`). The app role may select, insert, update and delete;
 the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `membership-task:task:assign` | confluent | `edit-task` | the assignee is a register: the last writer wins; none unassigns |
 

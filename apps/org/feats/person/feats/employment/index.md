@@ -43,9 +43,9 @@ day the hire was recorded, which may come before the contract starts.
 `name` is the register of the staff's copy of the person's name at their
 hire, which the register keeps after the person's own may be erased.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `POST /api/employment/hire` | confluent | `hire-worker` | a fact; two hires of one worker cannot both stand, whichever comes first, and hires of two commute |
 
@@ -56,7 +56,7 @@ shell are not built; the salary is the `payslip` feat's.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | hire | `hire-worker`, no limit | Camille, as gérante |
 

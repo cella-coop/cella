@@ -1,15 +1,15 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Open, Opened } from '../models/path.ts'
 
-const op = 'employment-membership:candidacy:open' satisfies keyof typeof ops
+const op = 'employment-membership:candidacy:open' satisfies keyof typeof actions
 
 // Opens a worker's candidacy on the verdict date: the probation they serve
 // before the assembly may admit them, and the shares they will subscribe.
 // `employment_membership.opens` refuses one for a member, one outside their
 // employment, or a second.
-export async function open(input: Open, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Opened>> {
+export async function open(input: Open, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Opened>> {
   return write(deps, {
     op,
     request: input,

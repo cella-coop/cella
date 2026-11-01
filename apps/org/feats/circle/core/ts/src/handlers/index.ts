@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Grant, Granted, Nest, Nested, Revoke, Revoked } from '../models/circle.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Each write is decided: it cites the decision that asks it, which the
 // circle-decision graft checks asks this, and circle-decision-membership that
@@ -15,7 +15,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 // first made, which the trigger could not see.
 export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', Nested> {
   return write(deps, {
-    op: 'circle:circle:nest' satisfies Op,
+    op: 'circle:circle:nest' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ path: string[] }>('UPDATE circle.circle SET parent = $2 WHERE id = $1 RETURNING path', [
@@ -31,7 +31,7 @@ export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', N
 // Grants a power to a role from the verdict date.
 export async function grant(input: Grant, deps: Deps): Out<'circle:mandate:grant', Granted> {
   return write(deps, {
-    op: 'circle:mandate:grant' satisfies Op,
+    op: 'circle:mandate:grant' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ id: string; from: string }>(
@@ -50,7 +50,7 @@ export async function grant(input: Grant, deps: Deps): Out<'circle:mandate:grant
 // refused, a share granted before it runs out on its own.
 export async function revoke(input: Revoke, deps: Deps): Out<'circle:mandate:revoke', Revoked> {
   return write(deps, {
-    op: 'circle:mandate:revoke' satisfies Op,
+    op: 'circle:mandate:revoke' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ revoked: string }>(

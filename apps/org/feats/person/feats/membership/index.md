@@ -9,9 +9,9 @@ Membership records who belongs; it decides nothing. It is nested in
 devices, is the person's, and the membership holds only what belonging
 adds.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/membership/invite` | confluent | a fact; two invitations do no harm |
 | `POST /api/membership/link` | confluent | a fact; two links do no harm, and the first taken up ends them all |
@@ -29,7 +29,7 @@ A person's own name and contact details are the person's writes
 Nothing is allowed by omission: each write needs a power or declares its
 check.
 
-| Write | Power or check | Lanterne |
+| Action | Power or check | Lanterne |
 |---|---|---|
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
 | accept | self: the invitee, signed by the device it enrols | whoever holds the link |
@@ -88,7 +88,7 @@ label is the invitee's wording and stays out.
 - `membership.ends`, on `membership:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
 - `membership.erases`, on `membership:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited decision asks it is the `decision-membership` graft's guard on the same ops; whether it closed and passed on its roll, `circle-decision-membership`'s.
+Whether the cited decision asks it is the `decision-membership` graft's guard on the same actions; whether it closed and passed on its roll, `circle-decision-membership`'s.
 
 ## Handlers
 

@@ -17,7 +17,7 @@
 //! | `cella.receipt()` | function | the transaction's receipt number |
 //! | `cella.begin(op, actor, device)` | function | opens a write: the transaction may write the registered state tables and commits only with its verdict |
 //! | `cella.submit(op, payload, actor, signed)` | function | checks the write was begun, the member's signature, that the payload restates the request where it carries the same field, the device and the nonce, runs the op's guards, signs the receipt and appends the verdict |
-//! | `cella.op()`, `cella.actor()`, `cella.device()` | functions | the write being judged, for guards |
+//! | `cella.action()`, `cella.actor()`, `cella.device()` | functions | the action being judged, for guards |
 //! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it |
 //! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
 //! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
@@ -438,10 +438,10 @@ SELECT pg_catalog.pg_extension_config_dump('cella.state', '');
     requires = ["notary_tables", notarised],
 );
 
-/// The op of the write `submit` is judging; NULL outside it.
+/// The id of the action `submit` is judging; NULL outside it.
 #[pg_extern(stable)]
-fn op() -> Option<String> {
-    notary::op()
+fn action() -> Option<String> {
+    notary::action()
 }
 
 /// The member the write being judged is for; NULL outside `submit`.

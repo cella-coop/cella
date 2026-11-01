@@ -13,9 +13,9 @@ client it is for, by id, with no foreign key into either feat. A trigger
 refuses a project or a client that does not exist (SQLSTATE `09000`). The
 app role may select, insert and update; the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `client-project:project:link` | confluent | `manage-project` | the last writer wins; a project is for one client |
 

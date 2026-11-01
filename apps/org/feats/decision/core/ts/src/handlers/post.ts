@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Post, Posted } from '../models/thread.ts'
 
-const op = 'decision:message:post' satisfies keyof typeof ops
+const op = 'decision:message:post' satisfies keyof typeof actions
 
 // A message on a decision's deliberation, received now, as the acting
 // member, perhaps answering another. A closed decision takes none, by the
@@ -11,7 +11,7 @@ const op = 'decision:message:post' satisfies keyof typeof ops
 // what its payload does, and the grafts that each mention is a member and
 // each link a document, and that the actor sits in the decision's circle.
 // The text is the author's words and stays out of the log.
-export async function post(input: Post, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Posted>> {
+export async function post(input: Post, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Posted>> {
   return write(deps, {
     op,
     request: input,

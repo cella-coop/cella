@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Refused, Settled } from '@cella/org-actions'
 import type { Deps } from '@cella/org-db'
 import { propose } from './propose.ts'
 import type { Proposed } from '@cella/org-decision/models'

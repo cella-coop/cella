@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { erasure, personal, write, type Db, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Add, Archive, Changed, Erase, Fields, Update } from '../models/client.ts'
 
-type Op = keyof typeof ops
+type Action = keyof typeof actions
 
 // The columns a write may set, in a fixed order; nothing else reaches SQL.
 const columns = ['kind', 'name', 'form', 'email', 'phone', 'address', 'parent', 'tags', 'note', 'status'] as const
@@ -41,10 +41,10 @@ const changed = (fields: Fields) => (v: Changed) => ({
   ),
 })
 
-export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)['client:client:add'], Changed>> {
+export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof actions)['client:client:add'], Changed>> {
   const { id, ...fields } = input
   return write(deps, {
-    op: 'client:client:add' satisfies Op,
+    op: 'client:client:add' satisfies Action,
     request: input,
     state: async (tx) => {
       await tx.query('INSERT INTO client.client (id, name) VALUES ($1, $2)', [input.id, input.name])
@@ -54,9 +54,9 @@ export async function add(input: Add, deps: Deps): Promise<Outcome<(typeof ops)[
   })
 }
 
-export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof ops)['client:client:update'], Changed>> {
+export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof actions)['client:client:update'], Changed>> {
   return write(deps, {
-    op: 'client:client:update' satisfies Op,
+    op: 'client:client:update' satisfies Action,
     request: input,
     state: (tx) => set(tx, input.id, input.fields),
     payload: changed(input.fields),
@@ -65,10 +65,10 @@ export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof
 
 // Hides the client from lists; it stays for the books, and the invoices
 // that name it are untouched.
-export async function archive(input: Archive, deps: Deps): Promise<Outcome<(typeof ops)['client:client:archive'], Changed>> {
+export async function archive(input: Archive, deps: Deps): Promise<Outcome<(typeof actions)['client:client:archive'], Changed>> {
   const fields: Fields = { status: 'archived' }
   return write(deps, {
-    op: 'client:client:archive' satisfies Op,
+    op: 'client:client:archive' satisfies Action,
     request: input,
     state: (tx) => set(tx, input.id, fields),
     payload: changed(fields),
@@ -78,9 +78,9 @@ export async function archive(input: Archive, deps: Deps): Promise<Outcome<(type
 // Erases a person's contact data and archives them: the notary deletes it
 // from the vault and redacts it here as the write settles, and refuses any
 // later value for them. `client.erases` refuses a company.
-export async function erase(input: Erase, deps: Deps): Promise<Outcome<(typeof ops)['client:client:erase'], Changed>> {
+export async function erase(input: Erase, deps: Deps): Promise<Outcome<(typeof actions)['client:client:erase'], Changed>> {
   return write(deps, {
-    op: 'client:client:erase' satisfies Op,
+    op: 'client:client:erase' satisfies Action,
     request: input,
     state: (tx) => set(tx, input.id, { status: 'archived' }),
     payload: (v) => ({ client: v.client, erasure: erasure(v.client, ['contact']) }),

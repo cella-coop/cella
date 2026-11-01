@@ -1,11 +1,11 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Draft, Drafted } from '../models/distribution.ts'
 import type { DraftTerms, DraftedTerms } from '../models/terms.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 const kinds = ['work', 'legal', 'development', 'interest'] as const
 
@@ -15,7 +15,7 @@ const kinds = ['work', 'legal', 'development', 'interest'] as const
 // The members adopt them by a decision that moves to.
 export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:terms:draft', DraftedTerms> {
   return write(deps, {
-    op: 'patronage:terms:draft' satisfies Op,
+    op: 'patronage:terms:draft' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ id: string }>(
@@ -40,7 +40,7 @@ export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:
 // are judged when the assembly approves it.
 export async function draft(input: Draft, deps: Deps): Out<'patronage:distribution:draft', Drafted> {
   return write(deps, {
-    op: 'patronage:distribution:draft' satisfies Op,
+    op: 'patronage:distribution:draft' satisfies Action,
     request: input,
     state: async (tx) => {
       // A year with no adopted terms takes `mix` as a placeholder, which

@@ -25,9 +25,9 @@ draft → submitted → approved → reimbursed, or submitted → refused. Any
 other move is refused, whatever writes it, and a submitted expense's
 figures never change.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/expense/capture` | confluent, `self` | a claim is a fact, the member's own |
 | `POST /api/expense/submit` | confluent, `self` | the member's own, once |
@@ -41,7 +41,7 @@ this feat's `approving` and `reimbursing` specs.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | capture, submit | none: the member's own | every member |
 | approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as gérante, up to 2 000 € an expense |

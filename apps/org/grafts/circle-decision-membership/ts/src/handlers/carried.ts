@@ -1,5 +1,5 @@
 import { done, type Deps, type Done } from '@cella/org-db'
-import type { Pending, Permission, Refused, Settled } from '@cella/org-ops'
+import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { erase, exit, suspend } from '@cella/org-membership/api'
 import { grant, nest, revoke } from '@cella/org-circle/api'
 import { add, remove } from '@cella/org-graft-circle-membership/api'

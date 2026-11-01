@@ -12,7 +12,7 @@ L123-22). Declared by `file`.
 `expense_file` (`sql/`): `receipt`, an expense and a file, each by id, a
 file attached once.
 
-## Writes
+## Actions
 
 - `expense:expense:capture`, the expense feat's claim, replaced by one
   carrying its receipt: the claim, then the receipt stored and attached,

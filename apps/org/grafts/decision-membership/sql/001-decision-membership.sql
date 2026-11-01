@@ -68,8 +68,8 @@ BEGIN ATOMIC
     WHEN d.id IS NULL THEN 'no decision ' || coalesce(p.decision, 'is cited')
     WHEN NOT EXISTS (
       SELECT FROM decision_membership.motion m
-      WHERE m.decision = d.id AND m.kind = split_part(cella.op(), ':', 3) AND m.member = p.member
-    ) THEN d.id || ' does not ' || split_part(cella.op(), ':', 3) || ' ' || coalesce(p.member, 'anyone')
+      WHERE m.decision = d.id AND m.kind = split_part(cella.action(), ':', 3) AND m.member = p.member
+    ) THEN d.id || ' does not ' || split_part(cella.action(), ':', 3) || ' ' || coalesce(p.member, 'anyone')
   END
   FROM (SELECT payload ->> 'decision' AS decision, payload ->> 'member' AS member) p
   LEFT JOIN decision.decision d ON d.id = p.decision;

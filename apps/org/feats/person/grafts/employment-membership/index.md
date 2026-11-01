@@ -25,9 +25,9 @@ member vote and a capital subscription ([users](../../../../../../_corpus/doc/us
 The app role may select and insert candidacies; the guards role may
 select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `employment-membership:candidacy:open` | confluent | `hire-worker` | a fact, once to a worker: two openings of one candidacy cannot both stand, whichever comes first |
 

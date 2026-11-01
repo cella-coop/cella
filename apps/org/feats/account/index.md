@@ -64,9 +64,9 @@ takes no new entries, and a correction to it is an entry in the first
 open one. Adopted terms never change, and later terms govern from their
 year.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
 | `POST /api/account/terms.adopt` | ordered, `decided` | the members' decision adopts the statutes' capital clauses, once |
@@ -108,7 +108,7 @@ year.
 No role is hard-coded. A write needs a power held through a mandate, and
 the holder is whoever holds the role the mandate is granted to.
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | draw | none: the member's own, within their draw limit | every member, 500 € |
 

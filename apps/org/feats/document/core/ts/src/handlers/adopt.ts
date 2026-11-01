@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Adopt, Adopted } from '../models/document.ts'
 
-const op = 'document:document:adopt' satisfies keyof typeof ops
+const op = 'document:document:adopt' satisfies keyof typeof actions
 
 // Makes a version binding, on the verdict date; the log commits to the
 // version's hash, the content adopted. The guards on this op decide:
 // `document.adopts`, that the version is the document's and its base is
 // still the adopted version; the grafts', that the cited decision asks
 // for this content, closed and passed.
-export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Adopted>> {
+export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {
     op,
     request: input,

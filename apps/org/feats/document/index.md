@@ -83,9 +83,9 @@ hold the two to the same bytes on 300 random documents.
 Editing never stops: a document with an adopted version keeps a live
 draft, and the next adoption names a later version.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/document/create` | confluent | a fact; a taken id is refused |
 | `POST /api/document/edit` | confluent | Loro merges them |
@@ -115,7 +115,7 @@ draft, and the next adoption names a later version.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | create, edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
 | adopt | decided: the cited decision asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |

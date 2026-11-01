@@ -1,9 +1,9 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { OpenPeriod, PeriodOpened } from '../models/period.ts'
 
-const op = 'account:period:open' satisfies keyof typeof ops
+const op = 'account:period:open' satisfies keyof typeof actions
 
 // The month the books open next: the one after the latest they hold, or
 // the verdict date's where they hold none.
@@ -18,7 +18,7 @@ export async function nextPeriod(db: Db): Promise<OpenPeriod> {
 // Opens a period, so entries dated in it post; opening one already open
 // changes nothing. Whether it may open, after the latest and with no gap,
 // is `account.opens`'s.
-export async function open(input: OpenPeriod, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], PeriodOpened>> {
+export async function open(input: OpenPeriod, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], PeriodOpened>> {
   return write(deps, {
     op,
     request: input,

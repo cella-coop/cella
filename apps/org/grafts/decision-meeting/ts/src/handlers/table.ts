@@ -1,4 +1,4 @@
-import type { Refused, Settled } from '@cella/org-ops'
+import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import { adding } from '@cella/org-meeting/api'
 import type { Put, Table } from '../models/tabled.ts'

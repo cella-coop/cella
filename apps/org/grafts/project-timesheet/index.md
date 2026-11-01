@@ -37,9 +37,9 @@ to no project is the co-op's own time, not invalid. Declared by
 
 The app role may select and insert bookings; the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `timesheet:entry:log`, on a project's page | confluent | `log-time` | the timesheet feat's log and the booking, in one transaction under its verdict |
 

@@ -12,7 +12,7 @@ expense under no project is the co-op's own. Declared by `expense`.
 id; `spent`, what each project's members spent for it, approved and
 pending.
 
-## Writes
+## Actions
 
 `expense-project:expense:rebill` (confluent, `self`): files an expense
 under a project, replacing any it was under; the last filing wins.

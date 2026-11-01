@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "@cella/org-db": "workspace:*",
-    "@cella/org-ops": "workspace:*",
+    "@cella/org-actions": "workspace:*",
     "@cella/org-ui": "workspace:*",
     "@cella/org-bill": "workspace:*",
     "@cella/org-transaction": "workspace:*",

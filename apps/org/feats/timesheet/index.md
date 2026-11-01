@@ -30,9 +30,9 @@ them; once their clock runs out `cella vault sweep` redacts them to
 NULL, the one change an approved month's entries take
 (`cella.redacting()`), and every sum passes them over.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `timesheet:entry:log` | confluent | `log-time` | entries add up in any order |
 | `timesheet:entry:correct` | confluent | `log-time` | lowers the member's own entry, to none where none was worked: two corrections leave the lower in any order |

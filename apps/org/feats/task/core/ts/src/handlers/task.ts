@@ -1,16 +1,16 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Complete, Create, Created, Move, Moved } from '../models/task.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Creates a task on the verdict date, numbered by the server. A graft
 // that files a new task under something of its own, as a project, runs
 // this in its own write.
 export const creating = (input: Create): Write<Created> => ({
-  op: 'task:task:create' satisfies Op,
+  op: 'task:task:create' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string; created: string }>(
@@ -33,7 +33,7 @@ export async function create(input: Create, deps: Deps): Out<'task:task:create',
 // reopens it.
 export async function move(input: Move, deps: Deps): Out<'task:task:move', Moved> {
   return write(deps, {
-    op: 'task:task:move' satisfies Op,
+    op: 'task:task:move' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rowCount } = await tx.query('UPDATE task.task SET status = $2, completed = NULL WHERE id = $1', [input.task, input.status])
@@ -50,7 +50,7 @@ export async function move(input: Move, deps: Deps): Out<'task:task:move', Moved
 // its first day.
 export async function complete(input: Complete, deps: Deps): Out<'task:task:complete', Moved> {
   return write(deps, {
-    op: 'task:task:complete' satisfies Op,
+    op: 'task:task:complete' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ completed: string }>(

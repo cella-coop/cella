@@ -12,7 +12,7 @@ travail, art. L3243-4), member or not. Declared by `file`.
 `employment_file` (`sql/`): `record`, a worker and a file, each by address or
 id, a file kept once.
 
-## Writes
+## Actions
 
 `employment-file:worker:attach` (confluent, `hire-worker`): whoever hires
 files a worker's record; the log commits to its name and BLAKE3.

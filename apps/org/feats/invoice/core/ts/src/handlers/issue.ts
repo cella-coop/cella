@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
 import { priced } from '@cella/org-vat'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Issue, Issued } from '../models/invoice.ts'
 
-const op = 'invoice:invoice:issue' satisfies keyof typeof ops
+const op = 'invoice:invoice:issue' satisfies keyof typeof actions
 
 // Spends the series' next number (`invoice.spend`) and issues the invoice
 // on the verdict date, its amounts computed in SQL from its lines by the
@@ -56,6 +56,6 @@ export const issuing = (input: Issue): Write<Issued> => ({
 
 // Bounded on the series: at rung 1 the server's right never runs out, so it
 // settles at once unless the number would leave a gap or be reused.
-export async function issue(input: Issue, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Issued>> {
+export async function issue(input: Issue, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Issued>> {
   return write(deps, issuing(input))
 }

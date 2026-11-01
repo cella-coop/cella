@@ -1,31 +1,32 @@
-// powers: the power each write needs is registered in SQL, in cella.power,
+// powers: the power each action needs is registered in SQL, in cella.power,
 // which the guards read and which is the source of truth, and mirrored in
-// the op's label in ops.ts, which the TypeScript reads. This keeps the two
+// the action's label in actions.ts, which the TypeScript reads. This keeps the two
 // equal: every power in one is in the other, with the same amount field.
-// And no write is allowed by omission: an op with no power declares the
+// And no action is allowed by omission: one with no power declares the
 // check that allows it, which SQL must back.
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
-// What each ops.ts declares, imported as the TypeScript reads it.
+// What each actions.ts declares, imported as the TypeScript reads it.
 export async function declared(repo, dirs) {
   const out = []
   for (const dir of dirs) {
-    const file = join(repo, dir, 'src', 'models', 'ops.ts')
+    const file = join(repo, dir, 'src', 'models', 'actions.ts')
     if (!existsSync(file)) {
       continue
     }
-    const { ops } = await import(pathToFileURL(file).href)
-    for (const [op, label] of Object.entries(ops ?? {})) {
-      out.push({ op, power: label.power ?? null, amount: label.amount ?? null, check: label.check ?? null, file: join(dir, 'src', 'models', 'ops.ts') })
+    const { actions } = await import(pathToFileURL(file).href)
+    for (const [op, label] of Object.entries(actions ?? {})) {
+      out.push({ op, power: label.power ?? null, amount: label.amount ?? null, check: label.check ?? null, file: join(dir, 'src', 'models', 'actions.ts') })
     }
   }
   return out
 }
 
-// Where ops.ts and cella.power disagree. `ops` lists every declared op,
+// Where actions.ts and cella.power disagree. `ops` lists every declared
+// action by its id, `op`,
 // with or without a power; `registered`, the rows of cella.power.
 export function agree(ops, registered) {
   const errors = []
@@ -49,7 +50,7 @@ export function agree(ops, registered) {
   for (const r of registered) {
     const o = known.get(r.op)
     if (!o) {
-      errors.push(`${r.owner}: registers a power on ${r.op}, which no ops.ts declares`)
+      errors.push(`${r.owner}: registers a power on ${r.op}, which no actions.ts declares`)
     } else if (!o.power) {
       errors.push(`${o.file}: ${r.op} needs ${say(r)} in cella.power, which its label does not name`)
     }
@@ -58,11 +59,11 @@ export function agree(ops, registered) {
 }
 
 // The checks a label may declare, and what backs each: a guard registered
-// on the op in cella.guard, or for `decided` a row in decision.cites, to
+// on the action in cella.guard, or for `decided` a row in decision.cites, to
 // which the graft that counts a decision's roll attaches its guard.
 const checks = new Set(['self', 'roll', 'seat', 'decided', 'first'])
 
-// Where an op is allowed by omission: it names no power, and declares no
+// Where an action is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
 // registers: `guards` in cella.guard and `cites` in decision.cites.
 export function covered(ops, found) {
@@ -71,7 +72,7 @@ export function covered(ops, found) {
   const cited = new Set(found.cites.map((c) => c.op))
   for (const o of ops.filter((o) => !o.power)) {
     if (!o.check) {
-      errors.push(`${o.file}: ${o.op} names neither a power nor a check: no write is allowed by omission`)
+      errors.push(`${o.file}: ${o.op} names neither a power nor a check: no action is allowed by omission`)
     } else if (!checks.has(o.check)) {
       errors.push(`${o.file}: ${o.op} declares the check ${o.check}, which is none of ${[...checks].join(', ')}`)
     } else if (o.check === 'decided' && !cited.has(o.op)) {

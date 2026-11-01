@@ -18,9 +18,9 @@ project stands alone, which is not invalid. Declared by `task`.
 
 The app role may select, insert and update; the guards role may select.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `project-task:task:file` | confluent | `edit-task` | the filing is a register: the last writer wins; a task is in one project |
 | `task:task:create`, on a project's page | confluent | `edit-task` | the task feat's creation and the filing, in one transaction under its verdict |

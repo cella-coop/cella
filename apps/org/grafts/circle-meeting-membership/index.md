@@ -25,10 +25,10 @@ of its own.
 
 - `circle_meeting_membership.sits`, on `meeting:item:add`, `:move` and
   `:remove`: the actor is an active member (`membership.active`) seated in the meeting's circle
-  on the verdict date. It backs those ops' `seat` check.
+  on the verdict date. It backs those actions' `seat` check.
 - `circle_meeting_membership.reaches`, on `meeting:meeting:schedule`,
   `:hold`, `:cancel` and `:minute` and on
-  `meeting-membership:attendance:record`: the actor holds the op's power over
+  `meeting-membership:attendance:record`: the actor holds the action's power over
   the meeting's circle (`circle_membership.over`): a lead's reaches their own
   circle, the gérante's, held in the assembly, every circle.
 - `circle_meeting_membership.records`, on `meeting-membership:attendance:record`:

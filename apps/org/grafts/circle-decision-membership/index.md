@@ -77,9 +77,9 @@ coordination's, counts its five.
   the decision of the circle above it, or the assembly
   (`circle_decision.decides`), and names an active member for a role of
   that circle, or a seat held.
-- `circle_decision_membership.carried`, on every op in `decision.cites`: the
+- `circle_decision_membership.carried`, on every action in `decision.cites`: the
   decision the payload cites is closed and passes. The decision feat keeps
-  that list; a graft that joins decision to a write's feat declares its op
+  that list; a graft that joins decision to a write's feat declares its action
   there (`decision-membership` for admission, suspension and exit,
   `circle-decision` for nesting and mandates, `decision-document` for
   `document:document:adopt`), and this graft attaches the guard to every
@@ -91,7 +91,7 @@ coordination's, counts its five.
   seat is one the cited decision gives (`seating`), to an active member,
   from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited decision
-  ends it. A graft may register guards on the ops of the lower-order
+  ends it. A graft may register guards on the actions of the lower-order
   grafts it builds on, as on its feats'.
 - `circle_decision_membership.settles`, on `decision:decision:close`: a
   passing close admitted everyone the decision admits, each seated by

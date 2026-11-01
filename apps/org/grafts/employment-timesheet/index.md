@@ -20,9 +20,9 @@ not a mandate a seat gives, is what entitles them to. Declared by
 - `employment_timesheet.sheet`: each worker's months by name, and who
   approved each.
 
-## Writes
+## Actions
 
-| Write | Label | Check | Why |
+| Action | Label | Check | Why |
 |---|---|---|---|
 | `employment-timesheet:entry:log` | confluent | `self` | the timesheet feat's log by the worker's employment: entries add up in any order |
 | `employment-timesheet:entry:correct` | confluent | `self` | the timesheet feat's correction the same way: it lowers the worker's own entry, and two leave the lower |
@@ -35,7 +35,7 @@ member sits nowhere. Approving stays the feat's, under `approve-time`.
 
 ## Guards
 
-- `employment_timesheet.works`, on every op: the actor is a worker
+- `employment_timesheet.works`, on every action: the actor is a worker
   employed on the entry's day, or on a day of the month.
 - `timesheet.logs`, `timesheet.corrects` and `timesheet.submits`, the
   feat's own guards, run on them too: the time is the actor's own, on a

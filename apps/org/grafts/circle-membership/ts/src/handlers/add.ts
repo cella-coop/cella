@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Add, Added, Remove, Removed } from '../models/position.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Seats a member in a circle from the verdict date. A graft that seats as
 // part of another write, as the close of a decision that admits, runs this
@@ -24,7 +24,7 @@ export async function seating(tx: Db, input: Add): Promise<Added> {
 // seat.
 export async function add(input: Add, deps: Deps): Out<'circle-membership:position:add', Added> {
   return write(deps, {
-    op: 'circle-membership:position:add' satisfies Op,
+    op: 'circle-membership:position:add' satisfies Action,
     request: input,
     state: (tx) => seating(tx, input),
     payload: (v) => ({ position: v.position, circle: input.circle, member: input.member, role: input.role, decision: input.decision }),
@@ -35,7 +35,7 @@ export async function add(input: Add, deps: Deps): Out<'circle-membership:positi
 // verdict date, citing the decision that ends it.
 export async function remove(input: Remove, deps: Deps): Out<'circle-membership:position:remove', Removed> {
   return write(deps, {
-    op: 'circle-membership:position:remove' satisfies Op,
+    op: 'circle-membership:position:remove' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ id: string; until: string }>(

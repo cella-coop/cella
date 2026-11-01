@@ -10,16 +10,16 @@ a seat, and so a membership, gives; logging by employment, member or not,
 is `employment-timesheet`'s. This graft joins the three feats and builds on
 both. Declared by `timesheet`.
 
-## Writes
+## Actions
 
-| Write | Label | Check | Why |
+| Action | Label | Check | Why |
 |---|---|---|---|
 | `employment-project-timesheet:entry:book` | confluent | `self` | entries add up in any order; the worker's own, while employed |
 
 `book` is `project-timesheet`'s booking (`booking`) over the timesheet
 feat's entry, under this graft's op: one transaction, one verdict. The
 guards are those of employment-timesheet's log, `timesheet.logs` and
-`employment_timesheet.works`, registered on this op by `sql/`; the booking's
+`employment_timesheet.works`, registered on this action by `sql/`; the booking's
 trigger, `project_timesheet.resolves`, wants a project that exists and is
 not archived.
 

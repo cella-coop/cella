@@ -37,7 +37,7 @@ BEGIN ATOMIC
   FROM (
     SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents
     FROM cella.power p
-    WHERE p.op = cella.op()
+    WHERE p.op = cella.action()
   ) w;
 END;
 

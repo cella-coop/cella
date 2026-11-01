@@ -24,9 +24,9 @@ Priorities are `urgent`, `high`, `normal` and `low`. Seedling's
 `cancelled` and subtasks are left out: a task no one will do goes back to
 the backlog, and subtasks wait for a need.
 
-## Writes
+## Actions
 
-| Write | Label | Power | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
 | `task:task:create` | confluent | `edit-task` | a fact; numbered by the server until rung 2 gives devices ids of their own |
 | `task:task:move` | confluent | `edit-task` | the status is a register: the last writer wins |

@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
 import { enrolling, entering } from '@cella/org-person/api'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import { contracts, type Hire, type Hired } from '../models/worker.ts'
 
-type Op = keyof typeof ops
+type Action = keyof typeof actions
 
 // The hire: the worker and their contract, recorded on the verdict date,
 // with their first device, enrolled by no device, so they sign their own
@@ -23,7 +23,7 @@ export function hiring(input: Hire): Write<Hired> {
     throw new Error('a device key is 32 bytes in hex, as the worker’s device shows it')
   }
   return {
-    op: 'employment:worker:hire' satisfies Op,
+    op: 'employment:worker:hire' satisfies Action,
     // The key as the payload restates it, so the member signs that.
     request: { ...input, key },
     state: async (tx) => {
@@ -53,6 +53,6 @@ export function hiring(input: Hire): Write<Hired> {
   }
 }
 
-export async function hire(input: Hire, deps: Deps): Promise<Outcome<(typeof ops)['employment:worker:hire'], Hired>> {
+export async function hire(input: Hire, deps: Deps): Promise<Outcome<(typeof actions)['employment:worker:hire'], Hired>> {
   return write(deps, hiring(input))
 }

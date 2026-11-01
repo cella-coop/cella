@@ -1,11 +1,11 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
 import { enrolling, entering } from '@cella/org-person/api'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Accept, Accepted, End, Ended, Invite, Invited, Link } from '../models/member.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // The invitation: a person invited on the verdict date, holding nothing,
 // and the link it is taken up by, if it comes with one. Someone the co-op
@@ -21,7 +21,7 @@ export function inviting(input: Invite): Write<Invited> {
   // to their name.
   let fresh = false
   return {
-    op: 'membership:member:invite' satisfies Op,
+    op: 'membership:member:invite' satisfies Action,
     request: input,
     state: async (tx) => {
       const taken = await tx.query('SELECT FROM membership.member WHERE address = $1', [input.address])
@@ -67,7 +67,7 @@ async function linked(tx: Db, member: string, link: string) {
 export function linking(input: Link): Write<Link> {
   const link = digest(input.link)
   return {
-    op: 'membership:member:link' satisfies Op,
+    op: 'membership:member:link' satisfies Action,
     request: input,
     state: async (tx) => {
       if (!(await tx.query('SELECT FROM membership.member WHERE address = $1', [input.member])).rowCount) {
@@ -98,7 +98,7 @@ export function accepting(input: Accept): Write<Accepted> {
   }
   const label = input.label.trim() || 'first device'
   return {
-    op: 'membership:member:accept' satisfies Op,
+    op: 'membership:member:accept' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ link: string }>(

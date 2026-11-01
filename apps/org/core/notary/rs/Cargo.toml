@@ -1,7 +1,7 @@
 [package]
 name = "cella"
 description = "The cella Postgres extension: the notary and the guard primitives as SQL, thin wrappers over cella-guards"
-version = "0.5.0"
+version = "0.6.0"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true

@@ -1,10 +1,10 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Add, Added, Minute, Minuted, Move, Moved, Remove, Removed, Schedule, Scheduled, Settle, Settled } from '../models/meeting.ts'
 
-type Op = keyof typeof ops
-type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
+type Action = keyof typeof actions
+type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Schedules a meeting of a circle. Its id is the circle and the day, with
 // a number after it for a second meeting that day. Whether the circle
@@ -12,7 +12,7 @@ type Out<O extends Op, T> = Promise<Outcome<(typeof ops)[O], T>>
 // on the op.
 export async function schedule(input: Schedule, deps: Deps): Out<'meeting:meeting:schedule', Scheduled> {
   return write(deps, {
-    op: 'meeting:meeting:schedule' satisfies Op,
+    op: 'meeting:meeting:schedule' satisfies Action,
     request: input,
     state: async (tx) => {
       if (!/^\d{4}-\d{2}-\d{2}$/.test(input.day) || !/^\d{2}:\d{2}$/.test(input.time)) {
@@ -40,7 +40,7 @@ export async function schedule(input: Schedule, deps: Deps): Out<'meeting:meetin
 // something of its own, as a decision it tables, runs this in its own
 // write.
 export const adding = (input: Add): Write<Added> => ({
-  op: 'meeting:item:add' satisfies Op,
+  op: 'meeting:item:add' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ id: string }>(
@@ -62,7 +62,7 @@ export async function add(input: Add, deps: Deps): Out<'meeting:item:add', Added
 // midpoint of its new neighbours', so only its own row changes.
 export async function move(input: Move, deps: Deps): Out<'meeting:item:move', Moved> {
   return write(deps, {
-    op: 'meeting:item:move' satisfies Op,
+    op: 'meeting:item:move' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rows: others } = await tx.query<{ pos: number }>(
@@ -85,7 +85,7 @@ export async function move(input: Move, deps: Deps): Out<'meeting:item:move', Mo
 
 export async function remove(input: Remove, deps: Deps): Out<'meeting:item:remove', Removed> {
   return write(deps, {
-    op: 'meeting:item:remove' satisfies Op,
+    op: 'meeting:item:remove' satisfies Action,
     request: input,
     state: async (tx) => {
       const { rowCount } = await tx.query('DELETE FROM meeting.item WHERE meeting = $1 AND id = $2', [input.meeting, input.item])
@@ -101,7 +101,7 @@ export async function remove(input: Remove, deps: Deps): Out<'meeting:item:remov
 // Holds or cancels a scheduled meeting on the verdict date. Ordered: the
 // first to settle stands, and the feat's trigger refuses the second.
 function settle(op: 'meeting:meeting:hold' | 'meeting:meeting:cancel', status: 'held' | 'cancelled') {
-  return (input: Settle, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Settled>> =>
+  return (input: Settle, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Settled>> =>
     write(deps, {
       op,
       request: input,
@@ -127,7 +127,7 @@ export const cancel = settle('meeting:meeting:cancel', 'cancelled')
 // stands. A graft that keeps the minutes somewhere, as a document, runs
 // this in its own write.
 export const minuting = (input: Minute): Write<Minuted> => ({
-  op: 'meeting:meeting:minute' satisfies Op,
+  op: 'meeting:meeting:minute' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ minuted: string }>(

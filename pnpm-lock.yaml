@@ -30,6 +30,8 @@ importers:
         specifier: ^1.9.1
         version: 1.9.1
 
+  apps/org/core/actions/ts: {}
+
   apps/org/core/analytics/ts:
     dependencies:
       '@duckdb/node-api':
@@ -38,9 +40,9 @@ importers:
 
   apps/org/core/db/ts:
     dependencies:
-      '@cella/org-ops':
+      '@cella/org-actions':
         specifier: workspace:*
-        version: link:../../ops/ts
+        version: link:../../actions/ts
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../../sign/ts
@@ -56,8 +58,6 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
-
-  apps/org/core/ops/ts: {}
 
   apps/org/core/pdf/ts: {}
 
@@ -92,12 +92,12 @@ importers:
 
   apps/org/feats/account/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -107,12 +107,12 @@ importers:
 
   apps/org/feats/bill/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -125,12 +125,12 @@ importers:
 
   apps/org/feats/circle/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -140,12 +140,12 @@ importers:
 
   apps/org/feats/client/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -159,12 +159,12 @@ importers:
 
   apps/org/feats/decision/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -174,12 +174,12 @@ importers:
 
   apps/org/feats/document/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -195,12 +195,12 @@ importers:
 
   apps/org/feats/expense/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -210,12 +210,12 @@ importers:
 
   apps/org/feats/file/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -229,12 +229,12 @@ importers:
 
   apps/org/feats/import/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -248,12 +248,12 @@ importers:
 
   apps/org/feats/invoice/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-pdf':
         specifier: workspace:*
         version: link:../../../../core/pdf/ts
@@ -273,12 +273,12 @@ importers:
 
   apps/org/feats/meeting/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -288,12 +288,12 @@ importers:
 
   apps/org/feats/patronage/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -303,12 +303,12 @@ importers:
 
   apps/org/feats/payslip/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -318,12 +318,12 @@ importers:
 
   apps/org/feats/person/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -333,12 +333,12 @@ importers:
 
   apps/org/feats/person/feats/employment/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../../../core/ops/ts
       '@cella/org-person':
         specifier: workspace:*
         version: link:../../../../core/ts
@@ -351,12 +351,12 @@ importers:
 
   apps/org/feats/person/feats/membership/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../../../core/ops/ts
       '@cella/org-person':
         specifier: workspace:*
         version: link:../../../../core/ts
@@ -372,6 +372,9 @@ importers:
 
   apps/org/feats/person/grafts/employment-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../../core/db/ts
@@ -381,9 +384,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../../core/ui/ts
@@ -393,12 +393,12 @@ importers:
 
   apps/org/feats/project/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -408,15 +408,15 @@ importers:
 
   apps/org/feats/report/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-analytics':
         specifier: workspace:*
         version: link:../../../../core/analytics/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../../../../core/sign/ts
@@ -429,12 +429,12 @@ importers:
 
   apps/org/feats/task/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -444,12 +444,12 @@ importers:
 
   apps/org/feats/timesheet/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -459,12 +459,12 @@ importers:
 
   apps/org/feats/transaction/core/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -477,15 +477,15 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../../../feats/account/core/ts
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -543,15 +543,15 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../../../feats/account/core/ts
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-payslip':
         specifier: workspace:*
         version: link:../../../feats/payslip/core/ts
@@ -570,15 +570,15 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../../../feats/account/core/ts
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
@@ -612,12 +612,12 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../../../feats/account/core/ts
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
@@ -630,15 +630,15 @@ importers:
 
   apps/org/grafts/bill-transaction/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-bill':
         specifier: workspace:*
         version: link:../../../feats/bill/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
@@ -651,6 +651,9 @@ importers:
 
   apps/org/grafts/circle-decision-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../feats/circle/core/ts
@@ -669,9 +672,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-person':
         specifier: workspace:*
         version: link:../../../feats/person/core/ts
@@ -684,6 +684,9 @@ importers:
 
   apps/org/grafts/circle-decision/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../feats/circle/core/ts
@@ -693,9 +696,6 @@ importers:
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -789,6 +789,9 @@ importers:
 
   apps/org/grafts/circle-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../../../feats/circle/core/ts
@@ -798,9 +801,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -810,6 +810,9 @@ importers:
 
   apps/org/grafts/client-invoice/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-client':
         specifier: workspace:*
         version: link:../../../feats/client/core/ts
@@ -819,9 +822,6 @@ importers:
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -831,15 +831,15 @@ importers:
 
   apps/org/grafts/client-project/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-client':
         specifier: workspace:*
         version: link:../../../feats/client/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -852,6 +852,9 @@ importers:
 
   apps/org/grafts/decision-document/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -861,9 +864,6 @@ importers:
       '@cella/org-document':
         specifier: workspace:*
         version: link:../../../feats/document/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -900,6 +900,9 @@ importers:
 
   apps/org/grafts/decision-meeting/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -909,9 +912,6 @@ importers:
       '@cella/org-meeting':
         specifier: workspace:*
         version: link:../../../feats/meeting/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -921,6 +921,9 @@ importers:
 
   apps/org/grafts/decision-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -930,9 +933,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-person':
         specifier: workspace:*
         version: link:../../../feats/person/core/ts
@@ -945,15 +945,15 @@ importers:
 
   apps/org/grafts/decision-patronage/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-decision':
         specifier: workspace:*
         version: link:../../../feats/decision/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-patronage':
         specifier: workspace:*
         version: link:../../../feats/patronage/core/ts
@@ -966,6 +966,9 @@ importers:
 
   apps/org/grafts/document-meeting/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -975,9 +978,6 @@ importers:
       '@cella/org-meeting':
         specifier: workspace:*
         version: link:../../../feats/meeting/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -987,6 +987,9 @@ importers:
 
   apps/org/grafts/document-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -996,9 +999,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1008,6 +1008,9 @@ importers:
 
   apps/org/grafts/employment-file/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1017,9 +1020,6 @@ importers:
       '@cella/org-file':
         specifier: workspace:*
         version: link:../../../feats/file/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1051,6 +1051,9 @@ importers:
 
   apps/org/grafts/employment-project-timesheet/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1063,9 +1066,6 @@ importers:
       '@cella/org-graft-project-timesheet':
         specifier: workspace:*
         version: link:../../project-timesheet/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1081,15 +1081,15 @@ importers:
 
   apps/org/grafts/employment-timesheet/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-employment':
         specifier: workspace:*
         version: link:../../../feats/person/feats/employment/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-timesheet':
         specifier: workspace:*
         version: link:../../../feats/timesheet/core/ts
@@ -1102,6 +1102,9 @@ importers:
 
   apps/org/grafts/expense-file/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1111,9 +1114,6 @@ importers:
       '@cella/org-file':
         specifier: workspace:*
         version: link:../../../feats/file/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1145,15 +1145,15 @@ importers:
 
   apps/org/grafts/expense-project/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-expense':
         specifier: workspace:*
         version: link:../../../feats/expense/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1166,15 +1166,15 @@ importers:
 
   apps/org/grafts/expense-transaction/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-expense':
         specifier: workspace:*
         version: link:../../../feats/expense/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
@@ -1187,6 +1187,9 @@ importers:
 
   apps/org/grafts/file-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1196,9 +1199,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1212,15 +1212,15 @@ importers:
 
   apps/org/grafts/invoice-project/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1233,15 +1233,15 @@ importers:
 
   apps/org/grafts/invoice-transaction/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-invoice':
         specifier: workspace:*
         version: link:../../../feats/invoice/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-transaction':
         specifier: workspace:*
         version: link:../../../feats/transaction/core/ts
@@ -1254,6 +1254,9 @@ importers:
 
   apps/org/grafts/meeting-membership/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1263,9 +1266,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1275,15 +1275,15 @@ importers:
 
   apps/org/grafts/membership-project/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1296,15 +1296,15 @@ importers:
 
   apps/org/grafts/membership-task/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-task':
         specifier: workspace:*
         version: link:../../../feats/task/core/ts
@@ -1353,12 +1353,12 @@ importers:
 
   apps/org/grafts/patronage-transaction/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-patronage':
         specifier: workspace:*
         version: link:../../../feats/patronage/core/ts
@@ -1374,12 +1374,12 @@ importers:
 
   apps/org/grafts/payslip-timesheet/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-payslip':
         specifier: workspace:*
         version: link:../../../feats/payslip/core/ts
@@ -1389,12 +1389,12 @@ importers:
 
   apps/org/grafts/payslip-transaction/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-payslip':
         specifier: workspace:*
         version: link:../../../feats/payslip/core/ts
@@ -1410,12 +1410,12 @@ importers:
 
   apps/org/grafts/project-task/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1431,12 +1431,12 @@ importers:
 
   apps/org/grafts/project-timesheet/ts:
     dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../../core/actions/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../../../core/ops/ts
       '@cella/org-project':
         specifier: workspace:*
         version: link:../../../feats/project/core/ts
@@ -1455,6 +1455,9 @@ importers:
       '@cella/org-account':
         specifier: workspace:*
         version: link:../feats/account/core/ts
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../core/actions/ts
       '@cella/org-analytics':
         specifier: workspace:*
         version: link:../core/analytics/ts
@@ -1644,9 +1647,6 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../feats/person/feats/membership/core/ts
-      '@cella/org-ops':
-        specifier: workspace:*
-        version: link:../core/ops/ts
       '@cella/org-patronage':
         specifier: workspace:*
         version: link:../feats/patronage/core/ts

@@ -1,6 +1,6 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Cast, Vote } from '../models/decision.ts'
 
 const op = 'decision:decision:vote'
@@ -12,7 +12,7 @@ const op = 'decision:decision:vote'
 // the feat's trigger; one for another member by `decision.own_stance`, and
 // one off the roll by the circle-decision-membership graft's guard, each as
 // Refused.
-export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Cast>> {
+export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Cast>> {
   let secret = false
   return write(deps, {
     op,

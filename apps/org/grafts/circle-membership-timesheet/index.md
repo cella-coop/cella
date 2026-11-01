@@ -12,7 +12,7 @@ shell.
 ## Guards
 
 - `circle_membership_timesheet.approves`, on `timesheet:period:approve`: the
-  approver holds the op's power (`approve-time`) over a circle the
+  approver holds the action's power (`approve-time`) over a circle the
   member sits in on the verdict date, through `circle_membership.over`: a
   seat whose role has the mandate, in that circle or one it is within.
   A worker who is no active member on the verdict date (`membership.active`) sits in no circle, so anyone holding

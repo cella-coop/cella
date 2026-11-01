@@ -1,5 +1,5 @@
 import type { Action, Collection, Extension, Reaction, Slice, Source } from '@cella/org-db'
-import type { Permission } from '@cella/org-ops'
+import type { Permission } from '@cella/org-actions'
 import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
 import { slice as membership } from '@cella/org-membership/api'

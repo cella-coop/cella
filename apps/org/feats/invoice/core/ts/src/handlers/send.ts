@@ -1,13 +1,13 @@
-import type { Outcome } from '@cella/org-ops'
+import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
-import type { ops } from '../models/ops.ts'
+import type { actions } from '../models/actions.ts'
 import type { Send, Sent } from '../models/invoice.ts'
 
-const op = 'invoice:invoice:send' satisfies keyof typeof ops
+const op = 'invoice:invoice:send' satisfies keyof typeof actions
 
 // Marks the invoice sent on the verdict date. Sending twice keeps the first
 // date; a voided invoice is not sent, and the send does nothing.
-export async function send(input: Send, deps: Deps): Promise<Outcome<(typeof ops)[typeof op], Sent>> {
+export async function send(input: Send, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Sent>> {
   return write(deps, {
     op,
     request: input,

@@ -20,9 +20,9 @@ it still carries the name it bills as text.
 The app role may select, insert and update; the guards role, `cella_guards`,
 may select.
 
-## Writes
+## Actions
 
-| Write | Label | Why |
+| Action | Label | Why |
 |---|---|---|
 | `POST /api/client-invoice/link` | confluent | the last writer wins; an invoice bills one client |
 
@@ -30,7 +30,7 @@ may select.
 
 ## Powers
 
-| Write | Power | Lanterne |
+| Action | Power | Lanterne |
 |---|---|---|
 | link | `issue-invoice`: linking an invoice to whom it bills is invoicing | Julien, as finance |
 

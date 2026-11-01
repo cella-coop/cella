@@ -22,11 +22,13 @@
 // It also checks that grafts are named and declared, that a package's
 // relative imports stay inside it and its exports are its public surface,
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
-// ops are named for it, through sql-check.mjs every sql/ file's boundaries,
+// actions are named for it and declared only in its models/actions.ts,
+// through sql-check.mjs every sql/ file's boundaries,
 // through writes.mjs that no feat or graft writes a table it does not own
 // beyond the app's listed exceptions, and through
-// powers.mjs that the power each op's label names is the one its SQL
-// registers, and that an op with no power declares a check its SQL backs.
+// powers.mjs that the power each action's label names is the one its SQL
+// registers, and that an action with no power declares a check its SQL
+// backs.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -279,17 +281,34 @@ for (const dir of byName.values()) {
   }
 }
 
-// A feat's or graft's ops are its own: `<feat>:<entity>:<op>`.
+// A feat's or graft's actions are declared in its `models/actions.ts` and
+// nowhere else: no other file imports a label or the `Actions` type, and
+// no `models/ops.ts` is left. Each action is its own,
+// `<feat>:<entity>:<verb>`.
+const labels = /import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]@cella\/org-actions['"]/g
+const declares = (text) =>
+  [...text.matchAll(labels)].some(([, names]) =>
+    names.split(',').some((n) => ['confluent', 'bounded', 'ordered', 'Actions'].includes(n.replace(/^\s*type\s+/, '').trim())))
 for (const dir of byName.values()) {
   const p = place(dir)
-  const ops = join(repo, dir, 'src', 'models', 'ops.ts')
-  if (!p || !existsSync(ops) || (p.kind === 'core' && !parentOf(p.node))) {
+  if (!p || (p.kind === 'core' && !parentOf(p.node))) {
+    continue
+  }
+  const own = join(dir, 'src', 'models', 'actions.ts')
+  for (const file of sources(dir).filter((f) => f !== own)) {
+    if (file === join(dir, 'src', 'models', 'ops.ts')) {
+      fail(`${file}: actions are declared in models/actions.ts`)
+    } else if (declares(readFileSync(join(repo, file), 'utf8'))) {
+      fail(`${file}: declares an action outside ${own}`)
+    }
+  }
+  if (!existsSync(join(repo, own))) {
     continue
   }
   const name = p.kind === 'graft' ? p.name : basename(p.node)
-  for (const [, op] of readFileSync(ops, 'utf8').matchAll(/^\s*'([^']+)':/gm)) {
-    if (op.split(':').length !== 3 || op.split(':')[0] !== name) {
-      fail(`${dir}/src/models/ops.ts: ${op} is not a permission of ${name}, <${name}>:<entity>:<op>`)
+  for (const [, action] of readFileSync(join(repo, own), 'utf8').matchAll(/^\s*'([^']+)':/gm)) {
+    if (action.split(':').length !== 3 || action.split(':')[0] !== name) {
+      fail(`${own}: ${action} is not an action of ${name}, <${name}>:<entity>:<verb>`)
     }
   }
 }

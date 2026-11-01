@@ -18,7 +18,7 @@
 //     ops of its own feat, of the feats it joins or of the lower-order
 //     grafts it builds on (cella.guard); the power
 //     each of its own ops needs (cella.power), which feat-check compares
-//     with its ops.ts; a feat only, the keyring (cella.keyring); the
+//     with its actions.ts; a feat only, the keyring (cella.keyring); the
 //     powers that read the rows of its own feat or of the feats it joins
 //     (cella.reading); and, a graft only, the authority that says who
 //     holds a power (cella.authority) and the functions that open the
@@ -387,7 +387,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
 
 // A registration under its owner's name: a guard on an op of a feat it may
 // see; a power only on an op of its own. Literal power rows are collected
-// for feat-check to compare with ops.ts.
+// for feat-check to compare with actions.ts.
 function registers(b, o, s, fail, found) {
   const what = b.relation.relname
   const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
@@ -427,7 +427,7 @@ function registers(b, o, s, fail, found) {
     fail(`registers cella.${what} from a query: each is a literal row, so the check can see it`)
   }
   if (what === 'power' && !b.selectStmt?.SelectStmt?.valuesLists) {
-    fail('registers powers from a query: a power is a literal row, so feat-check can compare it with ops.ts')
+    fail('registers powers from a query: a power is a literal row, so feat-check can compare it with actions.ts')
   }
 }
 

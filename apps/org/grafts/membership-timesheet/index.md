@@ -15,7 +15,7 @@ their employment, and one page shows it once. Declared by `timesheet`.
 `membership_timesheet` (`sql/`): `membership_timesheet.whose`, a guard on
 `timesheet:entry:log`: the entry is no member's who is suspended or has
 left. A worker logs by their employment, member or not, through
-`employment-timesheet`'s own ops, which this graft does not judge; Inès,
+`employment-timesheet`'s own actions, which this graft does not judge; Inès,
 no member before her admission, logs hers so. The graft holds no table,
 no view and no write of its own, and has no client or server package.
 

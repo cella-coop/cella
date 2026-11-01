@@ -1,4 +1,4 @@
-// seed, governance: what each decision decides, its motions, in the order
+// seed, governance: what each motion decides, its actions, in the order
 // proposed, before any stance is given on it; and each invitation taken up
 // (membership's), with the first device it enrolled, whose TEST-ONLY key is
 // derived from the invitee's address and the device's label, as every
@@ -6,12 +6,12 @@
 
 import { fixture } from '../../apps/org/core/sign/ts/src/index.ts'
 
-// A decision's motions, from decision.toml's `[[decision.motion]]`.
-export async function motions(db, d) {
-  for (const [i, m] of (d.motion ?? []).entries()) {
-    await db.query('INSERT INTO decision.motion (decision, n, kind, args) VALUES ($1, $2, $3, $4)', [d.id, i + 1, m.kind, m.args ?? {}])
+// A motion's actions, from motion.toml's `[[motion.action]]`.
+export async function actions(db, d) {
+  for (const [i, m] of (d.action ?? []).entries()) {
+    await db.query('INSERT INTO motion.action (motion, n, kind, args) VALUES ($1, $2, $3, $4)', [d.id, i + 1, m.kind, m.args ?? {}])
   }
-  return (d.motion ?? []).length
+  return (d.action ?? []).length
 }
 
 // The invitations taken up, from membership.toml's `[[invitation]]`: each

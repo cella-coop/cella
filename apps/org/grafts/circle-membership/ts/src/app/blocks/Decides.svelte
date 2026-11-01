@@ -25,7 +25,7 @@
   ])
   const text = $derived(
     !now.length
-      ? `${who} sits in no circle yet, so decides nothing and holds no power. The assembly seats a member when it admits them; a working circle, by its own decision.`
+      ? `${who} sits in no circle yet, so decides nothing and holds no power. The assembly seats a member when it admits them; a working circle, by its own motion.`
       : [
           `${who} sits in ${and(now.map((s, i) => `${i ? 'in ' : ''}${s.circleName}${s.roleName ? ` as ${s.roleName}` : ''}`))}.`,
           ...ways.map((w) => `${and(w.names)} ${w.names.length > 1 ? 'decide' : 'decides'} ${procedures[w.p]}.`),

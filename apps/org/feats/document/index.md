@@ -4,11 +4,11 @@ updated = 2026-11-01
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
-minutes, written together and adopted by decision. A document is a Loro
+minutes, written together and adopted by motion. A document is a Loro
 tree of blocks that members edit at once; a version is a named, immutable
 point in its history, named by the hash of its canonical form; adoption
-makes one version the document's binding text. The decision that adopts
-it is the `decision-document` graft's.
+makes one version the document's binding text. The motion that adopts
+it is the `document-motion` graft's.
 
 ## Entities
 
@@ -47,9 +47,9 @@ one undo step and one update.
 
 An embed shows a thing of another slice inside the document: the
 document holds only its kind and ref, and the slice that knows the kind
-draws it, through the page's `embeds` (a decision is
-`decision-document`'s, a meeting `document-meeting`'s). This feat knows
-no decisions and no meetings.
+draws it, through the page's `embeds` (a motion is
+`document-motion`'s, a meeting `document-meeting`'s). This feat knows
+no motions and no meetings.
 
 ## The canonical form
 
@@ -61,7 +61,7 @@ props its type keeps, its text as `runs` (each a `text` with its sorted
 left out, equal neighbouring runs joined. Numbers are safe integers;
 anything else, an unknown type, or bytes that are not a whole Loro
 document, has no canonical form. See
-[trust](../../../../_corpus/doc/trust.md#what-a-decision-adopts).
+[trust](../../../../_corpus/doc/trust.md#what-a-motion-adopts).
 
 The database computes it: a version keeps a Loro snapshot, and its
 `canonical`, `hash` and `plain` columns are generated from it by the
@@ -118,7 +118,7 @@ draft, and the next adoption names a later version.
 | Action | Power | Lanterne |
 |---|---|---|
 | create, edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
-| adopt | decided: the cited decision asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
+| adopt | decided: the cited motion asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
 
 `002-powers.sql` and `003-create.sql` register `edit-document` in `cella.power`, and the
 `circle-membership` graft checks it as any other: every member holds it
@@ -135,11 +135,11 @@ The document feat owns:
 - the adopted version only moves forward, from the base the adoption
   names; two adoptions from the same base cannot both settle.
 
-What it does not own: that the cited decision asks for this content (the
-`decision-document` graft's), that it closed and passed on its roll
-(`circle-decision-membership`'s, attached through `decision.cites`), and which
+What it does not own: that the cited motion asks for this content (the
+`document-motion` graft's), that it closed and passed on its roll
+(`circle-membership-motion`'s, attached through `motion.cites`), and which
 circle a document belongs to (a later `circle-document` graft's; today the
-adopting decision names its circle).
+adopting motion names its circle).
 
 ## Schema
 
@@ -192,7 +192,7 @@ adoptions; the guards role, `cella_guards`, may select.
   adds the comment; refused at rung 1 if the quote is not in the version.
 - `adopt` (ordered, `base: 'adopted'`): records the adoption with a receipt
   on the verdict date and submits `{ document, version, hash, base,
-  decision, receipt }`; the cited decision is an id this feat does not
+  motion, receipt }`; the cited motion is an id this feat does not
   resolve.
 - `draft(db, document)`: the merged draft's canonical form, for reading.
 
@@ -255,7 +255,7 @@ Blocks reorder by their grips with the UI core's `sortable`, by pointer
 or keyboard; comments' quotes are highlighted in the draft where their
 cursors still find them. The look is the UI core's `Blocks`; nothing here
 styles itself. `Reader` draws a canonical form read-only, for a version on
-a decision's page.
+a motion's page.
 
 ## Tests
 
@@ -265,7 +265,7 @@ a decision's page.
   database's, byte for byte on 300 random documents, refusing the same
   ones, with a version's generated columns and immutability.
 - `_e2e/document.test.ts`: concurrent edits, versions named by hash,
-  comments by cursor, adoption by hash under d-2026-011.
+  comments by cursor, adoption by hash under m-2026-011.
 - `_e2e/editor.test.ts`: the editor in Chromium, Firefox and WebKit
   (nixpkgs' Playwright browsers), two tabs syncing through the shell:
   typing, Enter and Backspace across blocks, shortcuts, the slash menu and
@@ -282,14 +282,14 @@ a decision's page.
 ## Lanterne
 
 - The internal rules, version 3, were adopted on 20 June 2026 by
-  d-2026-007: remote days, the pay ratio of 1.6, the solidarity rate and
+  m-2026-007: remote days, the pay ratio of 1.6, the solidarity rate and
   the clients Lanterne refuses.
 - The 2027 rate card has two versions. Version 2 (20 October) embeds
-  d-2026-011, adds online shops and raises brand identity to 6 500 €. The
+  m-2026-011, adds online shops and raises brand identity to 6 500 €. The
   seed carries each version over as one Loro update from one peer,
   patching the outline onto the one before.
 - Malik commented on version 2's retainer price, asking whether Nuvola's
-  renewal in January keeps the current rate; he objects to d-2026-011,
+  renewal in January keeps the current rate; he objects to m-2026-011,
   which would adopt version 2, by its hash, open until 9 November.
 
 ## Analytics

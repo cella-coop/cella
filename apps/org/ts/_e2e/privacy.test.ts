@@ -1,7 +1,7 @@
 // The privacy scenario, end to end on a seeded Lanterne, through the
 // handlers: Camille erases Margaux Roux, Les Halles' contact, at her
 // request; Léa gives her email and phone, then erases them herself; Chloé
-// leaves, and the assembly erases her personal data by decision, her name
+// leaves, and the assembly erases her personal data by motion, her name
 // at once, her payslips, time, receipts and capital account's label restricted
 // until their legal clocks run out and the sweep redacts them. The log
 // verifies throughout. Run by `cella test e2e privacy`.
@@ -9,8 +9,8 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { vote } from '@cella/org-decision/api'
-import { carried, close, put } from '@cella/org-graft-circle-decision-membership/api'
+import { vote } from '@cella/org-motion/api'
+import { carried, close, put } from '@cella/org-graft-circle-membership-motion/api'
 import { erase as eraseClient, update } from '@cella/org-client/api'
 import { capture } from '@cella/org-expense/api'
 import { forget, profile } from '@cella/org-person/api'
@@ -46,22 +46,22 @@ const opened = async (n: number) => (await one<{ o: Record<string, any> }>('SELE
 const erased = async (subject: string) =>
   Object.fromEntries((await all<{ class: string; restricted: boolean }>('SELECT class, restricted FROM vault.erased WHERE subject = $1 ORDER BY class', [subject])).map((r) => [r.class, r.restricted]))
 
-// A decision about Chloé, put to the assembly: every active member on its
+// A motion about Chloé, put to the assembly: every active member on its
 // roll consents, it closes and its close carries it out.
 async function decided(kind: 'exit' | 'erase', from: string, until: string) {
   await on(from)
-  const proposed = settled(await put({ kind, args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { decision: string }
+  const proposed = settled(await put({ kind, args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { motion: string }
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_decision_membership.roll r JOIN membership.member m ON m.address = r.member
-     WHERE r.decision = $1 AND m.status = 'active'`,
-    [proposed.decision],
+    `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member
+     WHERE r.motion = $1 AND m.status = 'active'`,
+    [proposed.motion],
   )
   for (const { member } of roll) {
-    settled(await vote({ decision: proposed.decision, member, stance: 'consent' }, as(member)))
+    settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on(until)
-  settled(await close({ decision: proposed.decision }, as(camille)))
-  return carried(proposed.decision, as(camille))
+  settled(await close({ motion: proposed.motion }, as(camille)))
+  return carried(proposed.motion, as(camille))
 }
 
 before(async () => {
@@ -103,14 +103,14 @@ test('Léa gives her email and phone, which the log commits to and the vault ope
   assert.equal(await verifies(), true)
 })
 
-test('an active member\'s personal data is not erased: the decision is refused at its proposal', async () => {
+test('an active member\'s personal data is not erased: the motion is refused at its proposal', async () => {
   const out = await put({ kind: 'erase', args: { member: chloe }, deadline: '2026-11-07', body: '' }, as(camille))
   assert.match(reason(out), /chloe@lanterne\.example is active: only a member who has left is erased/)
 })
 
 let receipt = 0
 
-test('Chloé claims a receipt, which the log commits to, and leaves by the assembly\'s decision', async () => {
+test('Chloé claims a receipt, which the log commits to, and leaves by the assembly\'s motion', async () => {
   const claimed = settled(
     await capture({ member: chloe, day: '2026-10-23', label: 'Taxi to the Mauve première', category: '6251', net: 3200, vat: null, receipt: 'TAXI CLAIRVAL 23/10 32,00 EUR' }, as(chloe)),
   )

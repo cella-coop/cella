@@ -1,9 +1,9 @@
 // The document scenario, end to end on a seeded Lanterne: the 2027 rate card
-// is edited together and adopted by d-2026-011. Edits are Loro updates to a
+// is edited together and adopted by m-2026-011. Edits are Loro updates to a
 // tree of blocks that merge in any order; a version is a snapshot at a
-// frontier, which the database canonicalises and hashes; a decision names
+// frontier, which the database canonicalises and hashes; a motion names
 // the content it adopts by that hash, and adoption is ordered on its base
-// and waits for the decision to close and pass on its roll. Run by `cella
+// and waits for the motion to close and pass on its roll. Run by `cella
 // test` on a fresh database.
 
 import { after, before, test } from 'node:test'
@@ -11,9 +11,9 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { adopt, comment, draft, edit, version } from '@cella/org-document/api'
 import { canonical, createDoc, edits, hash, jcs, order, text, type Frontier } from '@cella/org-document/models'
-import { vote } from '@cella/org-decision/api'
-import { close, propose } from '@cella/org-graft-circle-decision-membership/api'
-import { slice } from '@cella/org-graft-decision-document/api'
+import { vote } from '@cella/org-motion/api'
+import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { slice } from '@cella/org-graft-document-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -36,9 +36,9 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
 const adopted = async (d: string) => (await one<{ version: string } | undefined>('SELECT version FROM document.adopted WHERE document = $1', [d]))?.version
-const decisions = (db: pg.Client) => slice.extends?.decisions.about?.(db) ?? Promise.resolve({})
+const motions = (db: pg.Client) => slice.extends?.motions.about?.(db) ?? Promise.resolve({})
 const hashOf = async (v: string) => (await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document.version WHERE id = $1`, [v])).hash
 
 // The card's updates as a member's device holds them after syncing.
@@ -77,8 +77,8 @@ test('the seed carries the documents over: internal-rules@3 is adopted, the card
   const now = await draft(app, card)
   assert.equal(jcs(now), v2.canonical)
   assert.equal(hash(await synced(9n)), v2.hash, 'the browser previews the hash the database gave')
-  const asked = await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM decision_document.adoption WHERE decision = 'd-2026-011'`)
-  assert.equal(asked.hash, v2.hash, 'd-2026-011 names the content of @2')
+  const asked = await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document_motion.adoption WHERE motion = 'm-2026-011'`)
+  assert.equal(asked.hash, v2.hash, 'm-2026-011 names the content of @2')
   const remark = await one<{ author: string; quote: string; anchor: { block: string } | null }>(`SELECT author, quote, anchor FROM document.comment WHERE version = 'rate-card-2027@2'`)
   assert.equal(remark.author, malik)
   assert.equal(remark.quote, 'from 4 800 €')
@@ -172,43 +172,43 @@ test('a comment quotes its version, anchored by cursors; a quote the version lac
   assert.equal(await head(), before)
 })
 
-test('adopting rate-card-2027@2 under d-2026-011 is refused while Malik objects and the decision fails', async () => {
-  assert.equal(await passes('d-2026-011'), false)
+test('adopting rate-card-2027@2 under m-2026-011 is refused while Malik objects and the motion fails', async () => {
+  assert.equal(await passes('m-2026-011'), false)
   const before = await head()
-  const early = await adopt({ document: card, version: 'rate-card-2027@2', base: null, decision: 'd-2026-011' }, as(camille))
+  const early = await adopt({ document: card, version: 'rate-card-2027@2', base: null, motion: 'm-2026-011' }, as(camille))
   assert.equal(early.state, 'refused')
-  assert.match(reason(early), /d-2026-011 is not closed/)
+  assert.match(reason(early), /m-2026-011 is not closed/)
   assert.equal(early.state === 'refused' && early.verdict, before)
   assert.equal(await head(), before)
   assert.equal(await adopted(card), undefined)
 })
 
-test('once Malik consents and d-2026-011 closes, only content hashing as it names is adopted', async () => {
-  const consents = await vote({ decision: 'd-2026-011', member: malik, stance: 'consent' }, as(malik))
+test('once Malik consents and m-2026-011 closes, only content hashing as it names is adopted', async () => {
+  const consents = await vote({ motion: 'm-2026-011', member: malik, stance: 'consent' }, as(malik))
   assert.equal(consents.state, 'settled')
-  assert.equal(await passes('d-2026-011'), true)
+  assert.equal(await passes('m-2026-011'), true)
 
   await on('2026-11-09')
-  const closed = await close({ decision: 'd-2026-011' }, as(camille))
+  const closed = await close({ motion: 'm-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')
 
   const v2 = await hashOf('rate-card-2027@2')
-  const wrong = await adopt({ document: card, version: 'rate-card-2027@3', base: null, decision: 'd-2026-011' }, as(camille))
-  assert.match(reason(wrong), new RegExp(`d-2026-011 adopts rate-card-2027 as ${v2.slice(0, 12)}, not rate-card-2027@3`))
+  const wrong = await adopt({ document: card, version: 'rate-card-2027@3', base: null, motion: 'm-2026-011' }, as(camille))
+  assert.match(reason(wrong), new RegExp(`m-2026-011 adopts rate-card-2027 as ${v2.slice(0, 12)}, not rate-card-2027@3`))
 
   // @4 was saved at @2's frontier: the same content, the same hash, so the
-  // decision's consent covers it; the base guard still names the first.
-  const done = await adopt({ document: card, version: 'rate-card-2027@2', base: null, decision: 'd-2026-011' }, as(camille))
+  // motion's consent covers it; the base guard still names the first.
+  const done = await adopt({ document: card, version: 'rate-card-2027@2', base: null, motion: 'm-2026-011' }, as(camille))
   assert.equal(done.state, 'settled')
   assert.deepEqual(done.value, { document: card, version: 'rate-card-2027@2', hash: v2, adopted: '2026-11-09', receipt: done.value.receipt })
   assert.equal(await adopted(card), 'rate-card-2027@2')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-decision-membership', 'decision-document', 'document'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership-motion', 'document', 'document-motion'])
 })
 
 test('a second adoption naming a stale base is refused, and uses no verdict number', async () => {
   const before = await head()
-  const stale = await adopt({ document: card, version: 'rate-card-2027@4', base: null, decision: 'd-2026-011' }, as(malik))
+  const stale = await adopt({ document: card, version: 'rate-card-2027@4', base: null, motion: 'm-2026-011' }, as(malik))
   assert.equal(stale.state, 'refused')
   assert.match(reason(stale), /rate-card-2027 moved: its adopted version is rate-card-2027@2, not none/)
   assert.equal(stale.state === 'refused' && stale.verdict, before)
@@ -216,42 +216,42 @@ test('a second adoption naming a stale base is refused, and uses no verdict numb
   assert.equal(Number((await one<{ count: string }>(`SELECT count(*) FROM document.adoption WHERE document = $1`, [card])).count), 1)
 })
 
-test('a new decision proposes adopting a version picked from the versions; one that does not exist is refused', async () => {
-  const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
+test('a new motion proposes adopting a version picked from the versions; one that does not exist is refused', async () => {
+  const offered = (await motions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === 'internal-rules@3' && /, version 3$/.test(v.label)))
-  const motion = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, procedure: 'consent', deadline: '2026-12-31', body: '', motions: [{ kind: 'adopt', args: { version } }] })
-  const out = await propose(motion('internal-rules@3'), as(camille))
+  const action = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, procedure: 'consent', deadline: '2026-12-31', body: '', actions: [{ kind: 'adopt', args: { version } }] })
+  const out = await propose(action('internal-rules@3'), as(camille))
   assert.equal(out.state, 'settled', reason(out))
-  const id = (out as { value: { decision: string } }).value.decision
+  const id = (out as { value: { motion: string } }).value.motion
   assert.deepEqual(
-    await one(`SELECT document, version, encode(hash, 'hex') AS hash FROM decision_document.adoption WHERE decision = $1`, [id]),
+    await one(`SELECT document, version, encode(hash, 'hex') AS hash FROM document_motion.adoption WHERE motion = $1`, [id]),
     { document: 'internal-rules', version: 'internal-rules@3', hash: await hashOf('internal-rules@3') },
   )
   const before = await head()
-  assert.match(reason(await propose(motion('internal-rules@9'), as(camille))), /no version internal-rules@9/)
+  assert.match(reason(await propose(action('internal-rules@9'), as(camille))), /no version internal-rules@9/)
   assert.equal(await head(), before)
 })
 
 test('minutes are adopted as any document is: the assembly adopts its June minutes, picked from the versions', async () => {
   const minutes = 'minutes-ag-2026-06-20'
-  const offered = (await decisions(app)) as { versions: { value: string; label: string }[] }
+  const offered = (await motions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === `${minutes}@1`))
   const proposed = await propose(
-    { circle: 'ag', title: 'Adopt the minutes of 20 June', procedure: 'consent', deadline: '2026-11-16', body: '', motions: [{ kind: 'adopt', args: { version: `${minutes}@1` } }] },
+    { circle: 'ag', title: 'Adopt the minutes of 20 June', procedure: 'consent', deadline: '2026-11-16', body: '', actions: [{ kind: 'adopt', args: { version: `${minutes}@1` } }] },
     as(camille),
   )
   assert.equal(proposed.state, 'settled', reason(proposed))
-  const decision = (proposed as { value: { decision: string } }).value.decision
+  const motion = (proposed as { value: { motion: string } }).value.motion
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_decision_membership.roll r JOIN membership.member m ON m.address = r.member WHERE r.decision = $1 AND m.status = 'active'`,
-    [decision],
+    `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
+    [motion],
   )
   for (const { member } of roll) {
-    assert.equal((await vote({ decision, member, stance: 'consent' }, as(member))).state, 'settled')
+    assert.equal((await vote({ motion, member, stance: 'consent' }, as(member))).state, 'settled')
   }
   await on('2026-11-16')
-  assert.equal((await close({ decision }, as(camille))).state, 'settled')
-  const done = await adopt({ document: minutes, version: `${minutes}@1`, base: null, decision }, as(camille))
+  assert.equal((await close({ motion }, as(camille))).state, 'settled')
+  const done = await adopt({ document: minutes, version: `${minutes}@1`, base: null, motion }, as(camille))
   assert.equal(done.state, 'settled', reason(done))
   assert.equal(await adopted(minutes), `${minutes}@1`)
 })

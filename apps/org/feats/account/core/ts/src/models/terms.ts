@@ -14,11 +14,11 @@ export interface Terms {
   adopted: string | null
 }
 
-// The members' decision adopting drafted terms, which the decision it
+// The members' motion adopting drafted terms, which the motion it
 // cites must have passed.
 export interface Adopt {
   terms: string
-  decision: string
+  motion: string
 }
 
 export interface Adopted extends Adopt {

@@ -43,7 +43,7 @@ fiscal year is the calendar year.
 
 | Thing | States |
 |---|---|
-| terms | drafted → adopted (once, citing the members' decision) |
+| terms | drafted → adopted (once, citing the members' motion) |
 | distribution | draft → approved (by the assembly, once its year is closed) → distributed (posted, once) |
 
 An approved split never changes, nor do its parts, made in the write that
@@ -57,9 +57,9 @@ distribution is approved.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/patronage/terms.draft` | confluent | finance drafts the terms for the members to adopt; drafted again, the latest stands until they are adopted |
-| `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' decision adopts the work share's terms, once |
+| `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' motion adopts the work share's terms, once |
 | `POST /api/patronage/distribution.draft` | confluent | finance drafts a year's split for the assembly to approve; drafted again, the latest stands until it is approved |
-| `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's decision approves the split, once, and fixes each worker's part |
+| `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's motion approves the split, once, and fixes each worker's part |
 | `POST /api/patronage/distribution.distribute` | ordered | the approved split posted to the books and the shares it buys credited, once |
 
 - **terms.draft** and **distribution.draft** are registers: a draft is
@@ -70,11 +70,11 @@ distribution is approved.
   split from it to the cent with `cella.allocate`, under the basis of the
   adopted terms governing its year (`patronage.drafts`); the law's
   floors are judged at its approval. Percents are sent in hundredths.
-- **terms.adopt** cites the decision that moved to adopt the terms
-  (`decision-patronage`); it settles only if that decision closed and
+- **terms.adopt** cites the motion that moved to adopt the terms
+  (`motion-patronage`); it settles only if that motion closed and
   passed, and never over a year whose distribution is approved.
-- **distribution.approve** cites the assembly's decision approving the
-  split (`decision-patronage`); it settles only if that decision closed
+- **distribution.approve** cites the assembly's motion approving the
+  split (`motion-patronage`); it settles only if that motion closed
   and passed, the year is over and its books closed (`account-patronage`).
   In the same write, the grafts that know each basis make the workers'
   parts (`patronage-payslip`, `patronage-timesheet`), and their guards
@@ -94,7 +94,7 @@ the holder is whoever holds the role the mandate is granted to.
 |---|---|---|
 | terms.draft, distribution.draft | `distribute-surplus` | Julien, as finance |
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
-| distribution.approve | none: decided by the assembly | d-2026-006, for 2025 |
+| distribution.approve | none: decided by the assembly | m-2026-006, for 2025 |
 | distribution.distribute | `distribute-surplus` | Julien, as finance |
 
 `002-powers.sql` registers distribute's power in `cella.power`, and
@@ -122,7 +122,7 @@ The patronage feat owns the guards about its own collection:
 What it does not own:
 
 - that the members approved a split, and moved to adopt terms:
-  `decision-patronage`'s;
+  `motion-patronage`'s;
 - that every period of the year is closed: `account-patronage`'s, since
   the periods are the account feat's;
 - each worker's part on a basis: `patronage-payslip`'s by pay and in equal
@@ -139,7 +139,7 @@ What it does not own:
 
 ## What it does not know
 
-Patronage knows no accounts, transactions, members, decisions, payslips
+Patronage knows no accounts, transactions, members, motions, payslips
 or time. Its approval, its parts, its posting and its credits arrive
 through grafts. Paying the cash left owed in `424`, presence at the
 year's end and seniority (art. 33, 3°), and a fiscal year other than the
@@ -236,7 +236,7 @@ a year's split; `bases`, the patronage terms by year, adopted or
 drafted, and its New form drafting terms; and `statements`, each
 worker's part of each year's work share, a statement's page its part
 basis by basis against each basis's portion and weight. Approving and adopting are
-`decision-patronage`'s forms over this feat's writes, distributing
+`motion-patronage`'s forms over this feat's writes, distributing
 `patronage-transaction`'s. Printed, a page drops the shell and reads as a
 document.
 
@@ -245,7 +245,7 @@ document.
 - The statutes' patronage terms, `st-2021`, carried over, divide the work
   share by pay, employ half of each associate's part in shares, and pay
   at most 3,5 % on the capital.
-- The 2025 surplus of 61 400 € is a draft distribution: d-2026-006
+- The 2025 surplus of 61 400 € is a draft distribution: m-2026-006
   approved its split in June, 27 630 € (45 %) to the members for their
   work, divided by pay, 9 210 € (15 %) to the legal reserve, which is
   under the capital, 24 111,78 € (39,27 %) to the development fund, and

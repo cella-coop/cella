@@ -76,14 +76,14 @@ export interface Anchor {
   to: string
 }
 
-// Adoption cites the decision that adopts; the grafts on the op resolve
+// Adoption cites the motion that adopts; the grafts on the op resolve
 // it, so this feat holds it as an id.
 export interface Adopt {
   document: string
   version: string
   // The adopted version this one replaces, as the adopter read it.
   base: string | null
-  decision: string
+  motion: string
 }
 
 export interface Adopted {

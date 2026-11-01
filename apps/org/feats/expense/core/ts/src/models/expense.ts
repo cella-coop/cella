@@ -55,7 +55,7 @@ export interface Act {
   expense: string
 }
 
-// A decision on an expense, or its reimbursement, for its whole amount.
+// A motion on an expense, or its reimbursement, for its whole amount.
 export interface Acted {
   expense: string
   amount: number

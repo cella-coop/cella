@@ -1,0 +1,9 @@
+# The adoptions already made, each by the motion whose action asked to
+# adopt that version (`motion.toml`). The internal rules were adopted
+# with m-2026-007; the rate card is still up with m-2026-011.
+
+[[adoption]]
+motion = "m-2026-007"
+document = "internal-rules"
+version = "internal-rules@3"
+adopted = 2026-06-20

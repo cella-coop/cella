@@ -21,12 +21,12 @@ export interface Member {
   exited: string | null
 }
 
-// Admission cites the decision that admits; the decision-membership graft's
+// Admission cites the motion that admits; the membership-motion graft's
 // guard resolves it, so this feat holds it as an id.
 export interface Admit {
   member: string
   shares: number
-  decision: string
+  motion: string
 }
 
 export interface Admitted {
@@ -73,10 +73,10 @@ export interface Accepted {
   accepted: string
 }
 
-// A suspension or an exit, citing the decision that asks it.
+// A suspension or an exit, citing the motion that asks it.
 export interface End {
   member: string
-  decision: string
+  motion: string
 }
 
 export interface Ended {
@@ -84,11 +84,11 @@ export interface Ended {
   on: string
 }
 
-// An erasure of a member's personal data: all of it, by the decision
+// An erasure of a member's personal data: all of it, by the motion
 // that asks it, once they have left.
 export interface Erase {
   member: string
-  decision: string
+  motion: string
 }
 
 // The first device an invitation enrolled when it was taken up.

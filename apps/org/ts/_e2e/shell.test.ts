@@ -45,8 +45,8 @@ test('every main page renders on the seed', async () => {
     [`/people/${camille}`, 'Powers held'],
     ['/circles', 'Assemblée générale'],
     ['/circles/ag', 'Gérante'],
-    ['/decisions', 'Admit Inès Haddad'],
-    ['/decisions/d-2026-012', 'passes by consent'],
+    ['/motions', 'Admit Inès Haddad'],
+    ['/motions/m-2026-012', 'passes by consent'],
     ['/documents', 'Rate card 2027'],
     ['/documents/internal-rules', 'Règlement intérieur'],
     ['/invoices', 'F-2026-0055'],
@@ -69,7 +69,7 @@ test('every main page renders on the seed', async () => {
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
   assert.equal((await page('/nowhere')).status, 404)
-  assert.equal((await page('/decisions/d-1999-001')).status, 404)
+  assert.equal((await page('/motions/m-1999-001')).status, 404)
 })
 
 test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
@@ -114,56 +114,56 @@ test('widgets reordered as the keyboard drops them stay in their new order', asy
   assert.ok(at('Overdue') > 0 && at('Overdue') < at('By standing') && at('By standing') < at('Owed'), 'the dashboard renders in the dropped order')
 })
 
-test('circles open as a gallery and decisions as a board, by what each declares', async () => {
+test('circles open as a gallery and motions as a board, by what each declares', async () => {
   const circles = await page('/circles')
   assert.match(circles.text, /class="gallery[\s"]/, 'circles default to the gallery')
   assert.ok(circles.text.includes('Seated'), 'a circle\'s card shows its seats')
-  const decisions = await page('/decisions')
-  assert.match(decisions.text, /class="board[\s"]/, 'decisions default to the board')
+  const motions = await page('/motions')
+  assert.match(motions.text, /class="board[\s"]/, 'motions default to the board')
   for (const lane of ['open', 'passed', 'rejected']) {
-    assert.ok(decisions.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
+    assert.ok(motions.text.includes(`data-drop-list="${lane}"`), `the board has its ${lane} column`)
   }
-  assert.match((await page('/decisions?view=list')).text, /class="list[\s"]/, 'a view in the address overrides the default')
+  assert.match((await page('/motions?view=list')).text, /class="list[\s"]/, 'a view in the address overrides the default')
 })
 
-test('a decision is open, passed or rejected, as the database reads it', async () => {
-  const { text } = await page('/decisions?view=table')
-  assert.ok(text.includes('>passed<'), 'a closed decision that carried reads passed')
-  assert.ok(!/closed and|>closed</.test(text), 'no screen says closed for a decision\'s state')
-  assert.ok((await page('/decisions/d-2026-012')).text.includes('>open<'))
+test('a motion is open, passed or rejected, as the database reads it', async () => {
+  const { text } = await page('/motions?view=table')
+  assert.ok(text.includes('>passed<'), 'a closed motion that carried reads passed')
+  assert.ok(!/closed and|>closed</.test(text), 'no screen says closed for a motion\'s state')
+  assert.ok((await page('/motions/m-2026-012')).text.includes('>open<'))
 })
 
 test('the stance form starts at the acting member\'s latest stance, and is not offered off the roll', async () => {
   const as = async (path: string, actor: string) => (await page(path, actor)).text
-  const hugos = await as('/decisions/d-2026-012?tab=stances', hugo)
+  const hugos = await as('/motions/m-2026-012?tab=stances', hugo)
   assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
   assert.ok(hugos.includes('Now: consent · receipt 33'), 'saying which receipt it is')
-  assert.ok((await as('/decisions/d-2026-012?tab=stances', ines)).includes("Not on this decision's roll."), 'Inès, invited, is on no roll')
+  assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, is on no roll')
 })
 
-test('a decision\'s overview says what is decided in full; its stances are their own tab', async () => {
-  const overview = await page('/decisions/d-2026-012')
+test('a motion\'s overview says what is decided in full; its stances are their own tab', async () => {
+  const overview = await page('/motions/m-2026-012')
   for (const says of ['Overview', 'Stances', 'Proposal', 'admits', 'Inès Haddad', 'passes by consent', 'Deadline 31 Oct 2026']) {
     assert.ok(overview.text.includes(says), `the overview says ${says}`)
   }
   assert.ok(!overview.text.includes('Latest stance'), 'the roll is not on the overview')
-  const stances = await page('/decisions/d-2026-012?tab=stances')
+  const stances = await page('/motions/m-2026-012?tab=stances')
   assert.ok(stances.text.includes('Latest stance') && !stances.text.includes('>Proposal<'), 'the stances tab holds the roll alone')
 })
 
 test('a card dropped on a closed column is the close write; refused before the deadline, it stays open', async () => {
   const shifts = [{ by: 'state', from: ['open'], to: ['passed', 'rejected'], action: 'close' }]
   assert.equal(drag.shift(shifts, 'state', 'open', 'rejected')?.action, 'close')
-  assert.equal(drag.shift(shifts, 'state', 'passed', 'open'), undefined, 'no write reopens a decision, so no drop does')
+  assert.equal(drag.shift(shifts, 'state', 'passed', 'open'), undefined, 'no write reopens a motion, so no drop does')
   assert.equal(drag.shift(shifts, 'state', 'open', 'open'), undefined)
   assert.equal(drag.shift(shifts, 'circle', 'open', 'passed'), undefined, 'a move is a write only on the board it is declared for')
   const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
-  assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'))
-  const done = await act('/decisions/d-2026-012', 'close', {}, hugo)
+  assert.ok(lane((await page('/motions')).text, 'open').includes('Admit Inès Haddad'))
+  const done = await act('/motions/m-2026-012', 'close', {}, hugo)
   assert.notEqual(done.state, 'settled', 'the close is refused before its deadline')
   assert.ok(done.reason, 'and says why')
-  assert.ok(lane((await page('/decisions')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
+  assert.ok(lane((await page('/motions')).text, 'open').includes('Admit Inès Haddad'), 'the card snaps back to open')
 })
 
 test('a collection leads with its All tab and its count, and a view in the address applies its filter', async () => {
@@ -184,14 +184,14 @@ test('a collection leads with its All tab and its count, and a view in the addre
 test('with no session, a page goes to the sign-in and a write is refused before any verdict', async () => {
   const receipts = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.receipt')).n
   const before = await receipts()
-  const unsigned = await shell.page('/decisions/d-2026-012')
+  const unsigned = await shell.page('/motions/m-2026-012')
   assert.equal(unsigned.status, 303)
-  assert.equal(unsigned.location, '/sign-in?back=%2Fdecisions%2Fd-2026-012')
+  assert.equal(unsigned.location, '/sign-in?back=%2Fmotions%2Fm-2026-012')
   assert.equal((await shell.page('/sign-in')).status, 200, 'the sign-in page is reached with no session')
-  const posted = await shell.post('/decisions/d-2026-012', 'vote', new URLSearchParams({ stance: 'object' }))
+  const posted = await shell.post('/motions/m-2026-012', 'vote', new URLSearchParams({ stance: 'object' }))
   assert.equal(posted.status, 401)
   const forged = `cella-session=${Buffer.from(hugo).toString('base64url')}.${'ab'.repeat(32)}.9999999999999.${'00'.repeat(32)}`
-  assert.equal((await shell.post('/decisions/d-2026-012', 'vote', new URLSearchParams({ stance: 'object' }), forged)).status, 401, 'a cookie the server did not MAC opens no session')
+  assert.equal((await shell.post('/motions/m-2026-012', 'vote', new URLSearchParams({ stance: 'object' }), forged)).status, 401, 'a cookie the server did not MAC opens no session')
   assert.equal(await receipts(), before, 'no receipt was taken')
 })
 
@@ -273,28 +273,28 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
 })
 
 test('Hugo objects to admitting Inès, then consents; closing early is refused', async () => {
-  const objected = await act('/decisions/d-2026-012', 'vote', { stance: 'object' }, hugo)
+  const objected = await act('/motions/m-2026-012', 'vote', { stance: 'object' }, hugo)
   assert.equal(objected.state, 'settled')
-  assert.ok((await page('/decisions/d-2026-012')).text.includes('does not pass by consent'))
-  const consented = await act('/decisions/d-2026-012', 'vote', { stance: 'consent' }, hugo)
+  assert.ok((await page('/motions/m-2026-012')).text.includes('does not pass by consent'))
+  const consented = await act('/motions/m-2026-012', 'vote', { stance: 'consent' }, hugo)
   assert.equal(consented.state, 'settled')
-  const early = await act('/decisions/d-2026-012', 'close', {}, camille)
+  const early = await act('/motions/m-2026-012', 'close', {}, camille)
   assert.equal(early.state, 'refused')
   assert.match(early.reason ?? '', /open until 2026-10-31/)
 })
 
-test('closed on 31 October, d-2026-012 admits Inès and seats her in the close\'s own verdict; she signs with the phone she took up her invitation on', async () => {
+test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'s own verdict; she signs with the phone she took up her invitation on', async () => {
   await start('2026-10-31')
-  const closed = await act('/decisions/d-2026-012', 'close', {}, camille)
+  const closed = await act('/motions/m-2026-012', 'close', {}, camille)
   assert.equal(closed.state, 'settled')
   assert.deepEqual(closed.then, [], 'nothing follows: the admission is the close')
   const { text } = await page(`/people/${ines}`)
   assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('phone'))
-  assert.ok((await page('/decisions/d-2026-012')).text.includes('passed by consent'))
+  assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 
 test('the log the shell wrote verifies, and its page says so', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')
-  assert.ok(text.includes('verifies') && text.includes('decision:decision:close'))
+  assert.ok(text.includes('verifies') && text.includes('motion:motion:close'))
 })

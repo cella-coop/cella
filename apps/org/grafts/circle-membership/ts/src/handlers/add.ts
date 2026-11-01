@@ -7,7 +7,7 @@ type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 // Seats a member in a circle from the verdict date. A graft that seats as
-// part of another write, as the close of a decision that admits, runs this
+// part of another write, as the close of a motion that admits, runs this
 // inside that write's transaction.
 export async function seating(tx: Db, input: Add): Promise<Added> {
   const { rows } = await tx.query<{ id: string; since: string }>(
@@ -20,19 +20,19 @@ export async function seating(tx: Db, input: Add): Promise<Added> {
 }
 
 // The seat as a write of its own, ordered and decided: the guards on the
-// op check that the decision it cites carried and that it gives this
+// op check that the motion it cites carried and that it gives this
 // seat.
 export async function add(input: Add, deps: Deps): Out<'circle-membership:position:add', Added> {
   return write(deps, {
     op: 'circle-membership:position:add' satisfies Action,
     request: input,
     state: (tx) => seating(tx, input),
-    payload: (v) => ({ position: v.position, circle: input.circle, member: input.member, role: input.role, decision: input.decision }),
+    payload: (v) => ({ position: v.position, circle: input.circle, member: input.member, role: input.role, motion: input.motion }),
   })
 }
 
 // Ends a member's seat in a circle, in a role or as a plain member, on the
-// verdict date, citing the decision that ends it.
+// verdict date, citing the motion that ends it.
 export async function remove(input: Remove, deps: Deps): Out<'circle-membership:position:remove', Removed> {
   return write(deps, {
     op: 'circle-membership:position:remove' satisfies Action,
@@ -46,6 +46,6 @@ export async function remove(input: Remove, deps: Deps): Out<'circle-membership:
       )
       return { position: Number(rows[0]?.id ?? 0), until: rows[0]?.until ?? '' }
     },
-    payload: (v) => ({ position: v.position, circle: input.circle, member: input.member, role: input.role, decision: input.decision }),
+    payload: (v) => ({ position: v.position, circle: input.circle, member: input.member, role: input.role, motion: input.motion }),
   })
 }

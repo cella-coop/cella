@@ -3,7 +3,7 @@
   import type { Held, Seat } from '../../models/position.ts'
 
   // Joining's circles: a seat in the assembly, which the admission gives,
-  // and one in a working circle, which that circle's decision gives.
+  // and one in a working circle, which that circle's motion gives.
   let { data }: { data: { seats: Seat[]; held: Held[] }; id: string } = $props()
 
   type Step = { id: string; step: string; state: string; detail: string }
@@ -23,7 +23,7 @@
       state: working.length ? 'done' : 'to do',
       detail: working.length
         ? working.map((s) => (s.roleName ? `${s.circleName} as ${s.roleName}` : s.circleName)).join(', ')
-        : 'a circle seats a member by its own decision',
+        : 'a circle seats a member by its own motion',
     },
   ])
   const columns: Column<Step>[] = [

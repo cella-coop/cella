@@ -33,12 +33,12 @@ check.
 |---|---|---|
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
 | accept | self: the invitee, signed by the device it enrols | whoever holds the link |
-| admit | decided: the cited decision admits the member and carried | the assembly, by consent |
-| suspend, exit | decided: the cited decision suspends the member, or ends their membership, and carried | the assembly |
-| erase | decided: the cited decision erases a member who has left, and carried | the assembly |
+| admit | decided: the cited motion admits the member and carried | the assembly, by consent |
+| suspend, exit | decided: the cited motion suspends the member, or ends their membership, and carried | the assembly |
+| erase | decided: the cited motion erases a member who has left, and carried | the assembly |
 
 `004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's; the decided
-writes are listed in `decision.cites` by the `decision-membership` graft.
+writes are listed in `motion.cites` by the `membership-motion` graft.
 
 ## Schema
 
@@ -84,11 +84,11 @@ label is the invitee's wording and stays out.
 - `membership.carries`, on `membership:member:invite`: the link its payload names, if any, is the member's, made by this write.
 - `membership.links`, on `membership:member:link`: the member is invited and has not taken up their invitation, and the link was made by this write.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
-- `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `decision-membership` graft runs it again for each member a decision's close admits.
+- `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
 - `membership.ends`, on `membership:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
 - `membership.erases`, on `membership:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited decision asks it is the `decision-membership` graft's guard on the same actions; whether it closed and passed on its roll, `circle-decision-membership`'s.
+Whether the cited motion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `circle-membership-motion`'s.
 
 ## Handlers
 
@@ -109,16 +109,16 @@ Whether the cited decision asks it is the `decision-membership` graft's guard on
   accepted }`. A secret no link of theirs is the digest of, an
   invitation taken up already or a device enrolled already is refused
   before the notary.
-- `admit` (ordered), and `admitting`, its state alone, which the close of the deciding decision runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, decision }`.
-- `suspend`, `exit` (ordered): set the status and its day; submit `{ member, decision }`. `circle-decision-membership` carries them out when the decision that asks them passes.
-- `erase` (ordered): submits `{ member, decision, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-decision-membership` carries it out when the decision that asks it passes.
+- `admit` (ordered), and `admitting`, its state alone, which the close of the deciding motion runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, motion }`.
+- `suspend`, `exit` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
+- `erase` (ordered): submits `{ member, motion, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-membership-motion` carries it out when the motion that asks it passes.
 
 ### The exit's hook
 
 An exit freezes the member's capital, which is the books', not this
 feat's. The exit sets `status` to `exited` and `exited` to the verdict
 date in its own transaction, and its payload names the member and the
-decision: a graft joining `membership` to the books (`account-membership`)
+motion: a graft joining `membership` to the books (`account-membership`)
 attaches a trigger to that update, or a guard to `membership:member:exit`, and
 so settles or is refused with the exit itself. A reaction to the settled
 op in a slice's `on` runs only for a write made from a page, not for one
@@ -126,9 +126,9 @@ a close carries out, so the freeze belongs in SQL.
 
 ## Grafts
 
-- `decision-membership`
+- `membership-motion`
 - `document-membership`
-- `decision-employment-membership`, declared by `employment`
+- `employment-membership-motion`, declared by `employment`
 - `employment-membership`, at `person`, declared by `employment`
 
 ## Tests
@@ -154,13 +154,13 @@ the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,
 through `accept`; proposing their admission,
-suspension or exit is `circle-decision-membership`'s. Seats and powers are
+suspension or exit is `circle-membership-motion`'s. Seats and powers are
 `circle-membership`'s.
 
 The page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and
 then admitted, and a device that signs; the admission once a probation
-ends (`decision-employment-membership`); the texts to read
+ends (`employment-membership-motion`); the texts to read
 (`document-membership`); the circles (`circle-membership`); and the
 capital (`account-membership`). Own and decide reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
@@ -190,7 +190,7 @@ is served in employment; leave and member categories are not built.
 
 Twelve memberships: ten active, Paul's exited on 30 November 2025, and
 Inès's invited on 30 September 2026, who took up her invitation on
-1 October on her phone, which it enrolled; d-2026-012's close admits her.
+1 October on her phone, which it enrolled; m-2026-012's close admits her.
 
 ## Analytics
 

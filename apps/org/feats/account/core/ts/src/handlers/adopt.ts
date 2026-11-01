@@ -6,9 +6,9 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 const op = 'account:terms:adopt' satisfies keyof typeof actions
 
 // Adopts drafted capital clauses on the verdict date, citing the members'
-// decision. The guards decide: `account.adopts` that they repay an exit
-// within five years, the account-decision graft's that the decision moved
-// to adopt them, and circle-decision-membership's that it passed. Adopted
+// motion. The guards decide: `account.adopts` that they repay an exit
+// within five years, the account-motion graft's that the motion moved
+// to adopt them, and circle-membership-motion's that it passed. Adopted
 // terms never change.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {

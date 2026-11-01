@@ -14,7 +14,7 @@ junction. Each circle also has a channel for its messages.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its decisions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the decision feat holds and `circle-decision` checks |
+| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
 | role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has |
 | mandate | `id`, `role`, `power`, `text`, `limit?`, `budget?`, `from`, `until?`, `revoked?` | `power` is an id; `text` is how members read it; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year") |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
@@ -55,8 +55,8 @@ Its cap never exceeds theirs: one of them is uncapped, or limits a
 write by at least its limit, or budgets the same period by at least its
 budget. A role every working circle has (`*`) is the assembly's to
 grant, and is neither carved nor carved from. Nesting therefore matters:
-moving a circle changes what its mandates are carved from. A power exercised "by decision" is held by a circle and used
-only through a decision of that circle's members.
+moving a circle changes what its mandates are carved from. A power exercised "by motion" is held by a circle and used
+only through a motion of that circle's members.
 
 ## Lifecycle
 
@@ -93,14 +93,14 @@ write; see its [doc](../../grafts/circle-membership/index.md).
 
 | Action | Power or check | Lanterne |
 |---|---|---|
-| nest | decided: the cited decision nests this circle there, and carried | the circle holding both places, or the assembly |
-| mandate.grant, mandate.revoke | decided: the cited decision grants or revokes this mandate, and carried | the circle above the role's, or the assembly |
+| nest | decided: the cited motion nests this circle there, and carried | the circle holding both places, or the assembly |
+| mandate.grant, mandate.revoke | decided: the cited motion grants or revokes this mandate, and carried | the circle above the role's, or the assembly |
 | message | seat: an active member seated in the circle | the circle's members |
 
-Nesting, granting and revoking are decided: they cite a decision, which
-the `circle-decision` graft checks asks this and was put to a circle that
-may decide it, and `circle-decision-membership` that it carried, and which
-`circle-decision-membership` carries out when it passes. A message's seat
+Nesting, granting and revoking are decided: they cite a motion, which
+the `circle-motion` graft checks asks this and was put to a circle that
+may decide it, and `circle-membership-motion` that it carried, and which
+`circle-membership-motion` carries out when it passes. A message's seat
 check is `circle_membership.sits`, the `circle-membership` graft's guard.
 
 ## Guards
@@ -121,9 +121,9 @@ check is `circle_membership.sits`, the `circle-membership` graft's guard.
 
 ## Handlers
 
-- `nest`, `grant`, `revoke` (ordered), each citing its decision: set the
+- `nest`, `grant`, `revoke` (ordered), each citing its motion: set the
   parent; insert the mandate from the verdict date, its limit or budget
-  in cents; set `revoked`. Each submits what it did and the decision; a
+  in cents; set `revoked`. Each submits what it did and the motion; a
   mandate's text is how members read it and stays in the payload.
 
 ## Invariants
@@ -138,13 +138,13 @@ The circle feat owns:
   revoked.
 
 What it does not own: who holds which role (`circle-membership`), and who
-may vote on a circle's decisions: the roll, the members seated in the
-circle when a decision is proposed, and the count of the active members
-on it, are the `circle-decision-membership` graft's.
+may vote on a circle's motions: the roll, the members seated in the
+circle when a motion is proposed, and the count of the active members
+on it, are the `circle-membership-motion` graft's.
 
 ## What it does not know
 
-Circle knows no members, decisions or accounts. Templates of roles for
+Circle knows no members, motions or accounts. Templates of roles for
 common co-op shapes, colleges of a multi-stakeholder co-op and mandates
 requested by another scope (rung 5) build on these entities later.
 
@@ -155,13 +155,13 @@ default; a circle's page lists its roles,
 those every working circle has among them, and the mandates granted to
 them, with their limits and budgets. Seats are `circle-membership`'s.
 Proposing to nest the circle or to grant or revoke its mandates is
-`circle-decision`'s, a seat in it `circle-decision-membership`'s: the page's
-writes propose, and the close of a passing decision carries them out.
+`circle-motion`'s, a seat in it `circle-membership-motion`'s: the page's
+writes propose, and the close of a passing motion carries them out.
 
 ## Grafts
 
 - `circle-membership`: seats, and who may use a power.
-- `circle-decision`: nesting and mandates by decision.
+- `circle-motion`: nesting and mandates by motion.
 - `circle-membership-project`, `circle-membership-timesheet`: a power reaches the
   circle it is held in and those within it, for projects and timesheets;
   the months waiting on a member's approval, in their inbox.

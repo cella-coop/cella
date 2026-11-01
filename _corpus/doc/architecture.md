@@ -19,23 +19,23 @@ flowchart BT
   core["apps/org/core: actions, crypto, log, keystore, …"]
   person["feats/person/core"]
   membership["feats/person/feats/membership/core"]
-  decision["feats/decision/core"]
+  motion["feats/motion/core"]
   circle["feats/circle/core"]
-  graft["grafts/decision-membership"]
-  three["grafts/circle-decision-membership"]
+  graft["grafts/membership-motion"]
+  three["grafts/circle-membership-motion"]
   root["apps/org/ts: the shell"]
   person --> core
   membership --> person
-  decision --> core
+  motion --> core
   circle --> core
   graft --> membership
-  graft --> decision
+  graft --> motion
   three --> graft
   three --> circle
   root --> three
   root --> graft
   root --> membership
-  root --> decision
+  root --> motion
 ```
 
 A node is a directory with a `feat.toml`. It holds:
@@ -65,7 +65,7 @@ npm package in `ts/`, one to a directory. The workspaces find them by glob
 ## Feats
 
 A feat is a collection of things and is named for the collection it holds:
-`person`, `decision`, `invoice`. `account` holds the chart of accounts,
+`person`, `motion`, `invoice`. `account` holds the chart of accounts,
 members' capital accounts, reserves and funds, and their periods and
 balances; `transaction` holds the journal's entries, a collection in its own
 right. A federation-facing name more specific than these may come later.
@@ -132,7 +132,7 @@ home](#writes-stay-home)).
 A graft owns a relationship between feats: its model, its junction table
 with keys into each, and the handlers that react on either side. It is
 named by the feats it joins, hyphenated in alphabetical order
-(`decision-membership`), so a feat's name has no hyphen. Most grafts join two
+(`membership-motion`), so a feat's name has no hyphen. Most grafts join two
 feats; a graft may join more where the relationship needs it, but avoid it
 where two-way grafts will do. The feat that extends the others declares it
 in its `feat.toml`. A graft has no pages of its own.
@@ -140,14 +140,14 @@ in its `feat.toml`. A graft has no pages of its own.
 A graft sits at the lowest node that holds every feat it joins: under that
 node's `grafts/`, where no child of the node holds them all. A graft
 joining two of org's feats sits in `apps/org/grafts/`, and so does one
-joining a nested feat to another of org's, as `decision-membership` joins
-`decision` and `person`'s `membership`; one joining two children of
+joining a nested feat to another of org's, as `membership-motion` joins
+`motion` and `person`'s `membership`; one joining two children of
 `person` sits in `feats/person/grafts/`, as `employment-membership`, a
 worker's candidacy for membership, does. A graft names the feats it joins
 whatever their depth, and never a feat with one nested in it: a child
 already reads its parent, so `membership-person` would join nothing. A
 graft that joins a nested feat reads its parent's core too, as the feat
-does: `decision-membership` reads the member's name from `person`.
+does: `membership-motion` reads the member's name from `person`.
 
 No foreign key crosses a feat boundary. A feat handles an unlinked entity
 gracefully: an invoice without a client is unbilled, not invalid. The graft
@@ -162,9 +162,9 @@ holds a position: its permission is `<graft>:<entity>:<verb>`, served as
 A graft's order is the number of feats it joins. A graft that joins N
 feats may read, in code and in SQL, the feats it joins, the cores below
 them, and the grafts at or below its node that join a proper subset of its
-feats, as `decision-employment-membership` reads `person`'s
+feats, as `employment-membership-motion` reads `person`'s
 `employment-membership`:
-`circle-decision-membership` reads `circle-membership` and `decision-membership`.
+`circle-membership-motion` reads `circle-membership` and `membership-motion`.
 Nothing else: no graft of equal or higher order, and no graft that joins a
 feat it does not. Relationships compose upward, so a higher graft builds on
 lower ones and no lower graft ever depends on one above it. Migrations run
@@ -172,11 +172,11 @@ a node's grafts lowest order first, after every node below it, so a lower
 graft at a nested node is in before the graft above that reads it.
 
 A relationship that needs another graft's data therefore lives in the
-graft that joins all the feats involved. A decision's roll needs seats
-(circle and member) and the decision, so it is `circle-decision-membership`'s,
+graft that joins all the feats involved. A motion's roll needs seats
+(circle and member) and the motion, so it is `circle-membership-motion`'s,
 and so is everything that counts the roll. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
-cites a decision lists its action in `decision.cites`, and the graft that
+cites a motion lists its action in `motion.cites`, and the graft that
 counts the roll attaches its guard to every action listed, so neither reads the
 other.
 
@@ -192,7 +192,7 @@ through its server slice's `on`, and it refuses a feat's action by a guard
 on it in `cella.guard`, which the notary runs. It never uses a
 trigger on the feat's table for either. What a graft would only copy
 from a feat's row it reads by a view in its own schema, as
-`decision_document.adoption` reads what each motion to adopt names. A nested feat changes its
+`document_motion.adoption` reads what each action to adopt names. A nested feat changes its
 parent's rows the same way, through the parent's write. No SQL of a
 feat or a graft inserts, updates, deletes, merges or truncates a table
 outside its own schema, or makes a trigger on one; it writes `cella.*`
@@ -225,7 +225,7 @@ in a node's core only if it spans everything below that node.
   The period is an account's and the entry a transaction's; neither feat
   sees both, and the graft that resolves an entry's lines to accounts does.
 - A surplus split adds up to the surplus: the patronage feat's. That the
-  members approved it is the `decision-patronage` graft's, and that the
+  members approved it is the `motion-patronage` graft's, and that the
   year's books are closed `account-patronage`'s.
 
 A guard is SQL in its owner's schema (see [SQL](#sql)). The notary runs
@@ -244,7 +244,7 @@ become underscores, so `client-invoice` owns the schema `client_invoice`.
 
 A co-op's customisations are custom feats: a feat of its own, with its own
 schema, SQL and grafts, built on the same primitives and enabled by
-decision. Custom feats are how cella is extended.
+motion. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
@@ -287,7 +287,7 @@ reads, as the statements' rubrics and a project's burn are, or a share
 that needs the whole to divide, which filters its rows by the same test
 instead. A stance on a secret ballot is the one row no power opens: its
 policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
-and a decision's tally sums it as its owner, sealed until the close.
+and a motion's tally sums it as its owner, sealed until the close.
 
 SQL is the source of truth for guards. TypeScript calls them and never
 re-implements one; the browser may preview a guard through the primitives
@@ -476,11 +476,11 @@ two halves of one **slice**, matched by name:
   of its own in a collection that gathers them from the slices that know
   each kind (`rows`, a select too), as the person feat's inbox gathers
   what waits on a person, data on an item, what it adds to the collection's `about`, such as the
-  circles a new decision may be put in, writes, and whether it opens an
+  circles a new motion may be put in, writes, and whether it opens an
   item's bytes its owner keeps closed (`allows`), as a power over
   expenses opens a receipt; and reactions to
   other slices' settled writes (`on`), such as carrying out what a
-  passing decision decides once its close settles; and the kinds of file
+  passed motion carries once its close settles; and the kinds of file
   it imports from other tools (`imports`), each record read as one of its
   own writes, which the root runs as the importing member and records in
   the import feat.
@@ -625,11 +625,11 @@ as a unit of its own beside Postgres
 ## Actions
 
 Every change to the records is an action: one change, voting and closing
-included, that an actor signs as an attempt, or that a passed decision
+included, that an actor signs as an attempt, or that a passed motion
 carries, and that passes the guards before it takes effect. Whoever signs
 is an actor, by their address (`cella.actor()`): a person, the one kind
 built. An agent, an AI, and a service, automation, are actors too, named
-and not built: each would hold only limited, termed mandates a decision
+and not built: each would hold only limited, termed mandates a motion
 can revoke, with someone answerable for it, and no participant role
 unless a procedure says so.
 
@@ -660,17 +660,17 @@ a device of its actor and carries its request
 
 No action is allowed by omission. An action with no power declares the check
 that allows it instead: `self`, the actor's own (a profile, a device);
-`roll`, a member on the roll of the decision it names (a stance);
+`roll`, a member on the roll of the motion it names (a stance);
 `seat`, a member seated in the circle it concerns (proposing or closing
-a decision, a circle's message); or `decided`, the decision it cites
-carried (an admission, an adoption, a seat):
+a motion, a circle's message); or `decided`, the motion it cites
+passed and carried (an admission, an adoption, a seat):
 `confluent({ check: 'seat' })`. A check is backed by SQL: a guard
 registered on the action in `cella.guard`, or for `decided` a row in
-`decision.cites`, to which `circle-decision-membership` attaches its guard.
+`motion.cites`, to which `circle-membership-motion` attaches its guard.
 `cella check feats` refuses an action that names neither a power nor a
 check, and a check no literal row backs; that the guard does what the
 check says is its owner's and its tests'. An action not yet decided as
-it should be, such as granting a mandate before a graft ties the decision
+it should be, such as granting a mandate before a graft ties the motion
 to it, needs a power no mandate grants until then.
 
 Every critical invariant is enforced twice: the handler checks the

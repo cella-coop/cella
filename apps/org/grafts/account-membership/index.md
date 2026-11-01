@@ -13,7 +13,7 @@ member may draw, and the freeze when a member leaves. Declared by
 
 - `account_membership.value(day)`: the value of one share on a day, the
   capital clause of the statutes' capital terms governing it in the
-  account feat, adopted by the members' decision; NULL before any adopted
+  account feat, adopted by the members' motion; NULL before any adopted
   terms state it.
   The graft keeps no share value of its own.
 - `account_membership.allowance`: what each member may draw on their account,

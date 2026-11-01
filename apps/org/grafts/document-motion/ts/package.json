@@ -1,0 +1,17 @@
+{
+  "name": "@cella/org-graft-document-motion",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-actions": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-motion": "workspace:*",
+    "@cella/org-document": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

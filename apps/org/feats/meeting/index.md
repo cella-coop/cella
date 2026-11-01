@@ -7,7 +7,7 @@ Circles meeting: when and where, what is on the agenda, and whether the
 meeting was held. A meeting belongs to a circle, named by its id with no
 foreign key, as a project names its circle; who is expected and who came
 are the grafts' (`circle-meeting-membership`, `meeting-membership`), the
-decisions an agenda tables `decision-meeting`'s, and the minutes, a
+motions an agenda tables `meeting-motion`'s, and the minutes, a
 document, `document-meeting`'s.
 
 ## Entities
@@ -40,7 +40,7 @@ document, `document-meeting`'s.
   an index of the agenda as its mover read it, its position becoming the
   midpoint of its new neighbours', so a move changes only its own row and
   two moves of different items commute; **item.remove** drops one. A
-  graft that ties an item to something of its own, as a decision it
+  graft that ties an item to something of its own, as a motion it
   tables, runs `adding` in its own write.
 - **hold** and **cancel** settle a scheduled meeting on the verdict date;
   whichever settles first stands. Holding fixes the agenda, and who came,
@@ -72,8 +72,8 @@ The meeting feat owns:
 
 What it does not own: that the circle exists (`circle-meeting`), who is
 expected and whether the meeting is quorate (`circle-meeting-membership`),
-who came (`meeting-membership`), what decision an item tables
-(`decision-meeting`) and the minutes' text (`document-meeting`).
+who came (`meeting-membership`), what motion an item tables
+(`meeting-motion`) and the minutes' text (`document-meeting`).
 
 ## Schema
 
@@ -111,11 +111,11 @@ card. A new meeting is scheduled from the New form. A meeting's page
 has two tabs: **Agenda**, the agenda as the UI core's `Ordered` list,
 its items dragged into order (each drop the `move` write, shown at once
 by `AgendaState` and put back if refused), removed and added while the
-meeting is scheduled, with what the grafts add under it, the decisions
+meeting is scheduled, with what the grafts add under it, the motions
 it tables and who came; and **Minutes**, `document-meeting`'s, a
 document read as a document is. Minutes earn their tab: they are a
 different thing from the agenda, a text written after it, as a
-decision's stances are beside its overview. Holding and cancelling are
+motion's stances are beside its overview. Holding and cancelling are
 the header's writes.
 
 ## Tests
@@ -132,12 +132,12 @@ the header's writes.
 ## Lanterne
 
 - The general assembly of 20 June 2026, held at the studio: the 2025
-  accounts and the surplus (d-2026-006) and the internal rules, version 3
-  (d-2026-007); all ten members present; its minutes a block document
-  citing both decisions.
+  accounts and the surplus (m-2026-006) and the internal rules, version 3
+  (m-2026-007); all ten members present; its minutes a block document
+  citing both motions.
 - Coordination every Monday at 10:00 from 7 September to 19 October,
   held, at the studio and online, over the pipeline, staffing, the rate
-  card (d-2026-011) and Inès's admission (d-2026-012); Léa came as a
+  card (m-2026-011) and Inès's admission (m-2026-012); Léa came as a
   guest on 21 September; the 26 October one scheduled.
 - The general assembly of 31 October 2026, scheduled, its agenda Inès's
   admission, the 2027 rate card and the minutes of 20 June.

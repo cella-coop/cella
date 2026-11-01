@@ -7,11 +7,11 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { vote } from '@cella/org-decision/api'
+import { vote } from '@cella/org-motion/api'
 import { edit } from '@cella/org-document/api'
 import { createDoc, edits } from '@cella/org-document/models'
 import { admit } from '@cella/org-membership/api'
-import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { close } from '@cella/org-graft-circle-membership-motion/api'
 import { add } from '@cella/org-graft-circle-membership/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
@@ -36,7 +36,7 @@ const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
 const status = async (m: string) => one<{ status: string; since: string | null; shares: number }>(
   `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM membership.member WHERE address = $1`,
   [m],
@@ -67,29 +67,29 @@ test('the seed is the log\'s first entry, and it verifies; Inès is invited, her
   )
 })
 
-test('Hugo objects, and d-2026-012 fails until he consents', async () => {
-  const objected = await vote({ decision: 'd-2026-012', member: hugo, stance: 'object' }, as(hugo))
+test('Hugo objects, and m-2026-012 fails until he consents', async () => {
+  const objected = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(objected.state, 'settled')
   assert.equal(objected.entry, 2)
-  assert.equal(await passes('d-2026-012'), false)
+  assert.equal(await passes('m-2026-012'), false)
 })
 
 test('closing before the deadline is refused and uses no verdict number', async () => {
-  const early = await close({ decision: 'd-2026-012' }, as(camille))
+  const early = await close({ motion: 'm-2026-012' }, as(camille))
   assert.equal(early.state, 'refused')
   assert.match(early.state === 'refused' ? early.reason : '', /open until 2026-10-31/)
-  assert.equal((await one<{ closed: string | null }>(`SELECT closed FROM decision.decision WHERE id = 'd-2026-012'`)).closed, null)
+  assert.equal((await one<{ closed: string | null }>(`SELECT closed FROM motion.motion WHERE id = 'm-2026-012'`)).closed, null)
 
-  const unclosed = await admit({ member: ines, shares: 20, decision: 'd-2026-012' }, as(camille))
+  const unclosed = await admit({ member: ines, shares: 20, motion: 'm-2026-012' }, as(camille))
   assert.equal(unclosed.state, 'refused')
-  assert.match(unclosed.state === 'refused' ? unclosed.reason : '', /d-2026-012 is not closed/)
+  assert.match(unclosed.state === 'refused' ? unclosed.reason : '', /m-2026-012 is not closed/)
   assert.equal((await status(ines)).status, 'invited')
   assert.equal(await head(), 2)
 
-  const consented = await vote({ decision: 'd-2026-012', member: hugo, stance: 'consent' }, as(hugo))
+  const consented = await vote({ motion: 'm-2026-012', member: hugo, stance: 'consent' }, as(hugo))
   assert.equal(consented.state, 'settled')
   assert.equal(consented.entry, 3, 'the next verdict follows the last, with no gap')
-  assert.equal(await passes('d-2026-012'), true)
+  assert.equal(await passes('m-2026-012'), true)
 })
 
 test('the app role cannot write the log', async () => {
@@ -98,9 +98,9 @@ test('the app role cannot write the log', async () => {
   await assert.rejects(app.query('DELETE FROM cella.guard'), /permission denied/)
 })
 
-test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès and seats her in the assembly', async () => {
+test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and seats her in the assembly', async () => {
   await on('2026-10-31')
-  const done = await close({ decision: 'd-2026-012' }, as(camille))
+  const done = await close({ motion: 'm-2026-012' }, as(camille))
   assert.equal(done.state, 'settled')
   assert.equal(done.state === 'settled' && done.entry, 4)
   const position = done.state === 'settled' ? done.value.admitted[0]?.position : 0
@@ -119,23 +119,23 @@ test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès and
   assert.deepEqual(phone, { label: 'phone', enrolled: '2026-10-01', by: null }, 'the phone is the one her invitation enrolled')
 
   const entry = await one<{ op: string; guards: { owner: string }[] }>('SELECT op, guards FROM cella.log WHERE n = 4')
-  assert.equal(entry.op, 'decision:decision:close')
-  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-decision-membership', 'decision', 'decision-membership'])
+  assert.equal(entry.op, 'motion:motion:close')
+  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-membership-motion', 'membership-motion', 'motion'])
 
-  const late = await vote({ decision: 'd-2026-012', member: hugo, stance: 'object' }, as(hugo))
+  const late = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')
-  assert.match(late.state === 'refused' ? late.reason : '', /d-2026-012 is closed/)
+  assert.match(late.state === 'refused' ? late.reason : '', /m-2026-012 is closed/)
   assert.equal(await head(), 4)
 })
 
-test('a seat no decision gives is refused: not twice, not one the decision does not name', async () => {
-  const twice = await add({ circle: 'ag', member: ines, role: 'member', decision: 'd-2026-012' }, as(camille))
+test('a seat no motion gives is refused: not twice, not one the motion does not name', async () => {
+  const twice = await add({ circle: 'ag', member: ines, role: 'member', motion: 'm-2026-012' }, as(camille))
   assert.equal(twice.state, 'refused')
   assert.match(twice.state === 'refused' ? twice.reason : '', /ines@lanterne\.example already sits in ag as member/)
-  const other = await add({ circle: 'ag', member: 'malik@lanterne.example', role: 'manager', decision: 'd-2026-012' }, as(camille))
-  assert.match(other.state === 'refused' ? other.reason : '', /d-2026-012 does not seat malik@lanterne\.example in ag as manager/)
-  const open = await add({ circle: 'ag', member: ines, role: 'member', decision: 'd-2026-011' }, as(camille))
-  assert.match(open.state === 'refused' ? open.reason : '', /d-2026-011 is not closed/)
+  const other = await add({ circle: 'ag', member: 'malik@lanterne.example', role: 'manager', motion: 'm-2026-012' }, as(camille))
+  assert.match(other.state === 'refused' ? other.reason : '', /m-2026-012 does not seat malik@lanterne\.example in ag as manager/)
+  const open = await add({ circle: 'ag', member: ines, role: 'member', motion: 'm-2026-011' }, as(camille))
+  assert.match(open.state === 'refused' ? open.reason : '', /m-2026-011 is not closed/)
   assert.equal(await head(), 4)
 })
 
@@ -152,17 +152,17 @@ test('seated in the assembly, Inès edits a document from the phone she took up 
   assert.equal(edited.state === 'settled' && edited.entry, 5)
 })
 
-test('d-2026-011, which Malik blocks, closes admitting no one, and admitting under it is refused', async () => {
+test('m-2026-011, which Malik blocks, closes admitting no one, and admitting under it is refused', async () => {
   await on('2026-11-09')
-  const done = await close({ decision: 'd-2026-011' }, as(camille))
+  const done = await close({ motion: 'm-2026-011' }, as(camille))
   assert.equal(done.state, 'settled')
   assert.deepEqual(done.state === 'settled' && done.value.admitted, [])
-  assert.equal(await passes('d-2026-011'), false)
+  assert.equal(await passes('m-2026-011'), false)
 
   const since = (await status(ines)).since
-  const refused = await admit({ member: ines, shares: 40, decision: 'd-2026-011' }, as(camille))
+  const refused = await admit({ member: ines, shares: 40, motion: 'm-2026-011' }, as(camille))
   assert.equal(refused.state, 'refused')
-  assert.match(refused.state === 'refused' ? refused.reason : '', /d-2026-011 does not pass by consent/)
+  assert.match(refused.state === 'refused' ? refused.reason : '', /m-2026-011 does not pass by consent/)
   assert.deepEqual(await status(ines), { status: 'active', since, shares: 20 })
 
   const log = await one<{ count: string; max: string }>('SELECT count(*), max(n) FROM cella.log')

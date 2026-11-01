@@ -1,5 +1,5 @@
 // How a circle meets: the share of its seats a meeting needs present, in
-// percent, and whether its minutes are adopted by decision.
+// percent, and whether its minutes are adopted by motion.
 export interface Setting {
   quorum: number
   adopts: boolean

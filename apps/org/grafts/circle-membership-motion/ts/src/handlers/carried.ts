@@ -1,0 +1,68 @@
+import { done, type Deps, type Done } from '@cella/org-db'
+import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
+import { erase, exit, suspend } from '@cella/org-membership/api'
+import { grant, nest, revoke } from '@cella/org-circle/api'
+import { add, remove } from '@cella/org-graft-circle-membership/api'
+
+type Args = Record<string, string | number | undefined>
+
+const cents = (euros: unknown) => (euros === undefined || euros === null ? undefined : Math.round(Number(euros) * 100))
+const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
+
+// How each kind of action is carried out: the decided write it makes, citing
+// the motion. Admissions are not here: the close carries them itself.
+const writes: Record<string, { op: Permission; run: (a: Args, motion: string, deps: Deps) => Promise<Settled<unknown> | Pending | Refused> }> = {
+  suspend: { op: 'membership:member:suspend', run: (a, motion, deps) => suspend({ member: String(a.member), motion }, deps) },
+  exit: { op: 'membership:member:exit', run: (a, motion, deps) => exit({ member: String(a.member), motion }, deps) },
+  erase: { op: 'membership:member:erase', run: (a, motion, deps) => erase({ member: String(a.member), motion }, deps) },
+  nest: { op: 'circle:circle:nest', run: (a, motion, deps) => nest({ circle: String(a.circle), parent: String(a.parent), motion }, deps) },
+  grant: {
+    op: 'circle:mandate:grant',
+    run: (a, motion, deps) =>
+      grant(
+        {
+          role: String(a.role),
+          power: String(a.power),
+          text: String(a.text ?? a.power),
+          limit: cents(a.limit),
+          budget: cents(a.budget),
+          per: a.per === 'month' || a.per === 'year' ? a.per : undefined,
+          motion,
+        },
+        deps,
+      ),
+  },
+  revoke: { op: 'circle:mandate:revoke', run: (a, motion, deps) => revoke({ mandate: Number(a.mandate), motion }, deps) },
+  seat: {
+    op: 'circle-membership:position:add',
+    run: (a, motion, deps) => add({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),
+  },
+  unseat: {
+    op: 'circle-membership:position:remove',
+    run: (a, motion, deps) => remove({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),
+  },
+}
+
+// Carries out what a passing motion decides beyond admissions, once its
+// close has settled: each action, in the order proposed, as its own
+// decided write, signed as the member who closed it and judged again by
+// its guards. A refused one leaves the motion passed and that action
+// undone, as its outcome says; the others still go. It reads outside a
+// write, so whether the motion passed comes from its tally, which a
+// secret ballot opens at its close.
+export async function carried(motion: string, deps: Deps): Promise<Done[]> {
+  const { rows } = await deps.db.query<{ kind: string; args: Args }>(
+    `SELECT m.kind, m.args FROM motion.action m JOIN motion.motion d ON d.id = m.motion
+     WHERE m.motion = $1 AND d.closed IS NOT NULL AND coalesce((circle_membership_motion.tally(d.id)).passes, false)
+     ORDER BY m.n`,
+    [motion],
+  )
+  const out: Done[] = []
+  for (const m of rows) {
+    const w = writes[m.kind]
+    if (w) {
+      out.push(done(w.op, await w.run(m.args, motion, deps)))
+    }
+  }
+  return out
+}

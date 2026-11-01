@@ -1,5 +1,0 @@
-name = "decision"
-group = "governance"
-builtin = true
-rung = 1
-grafts = ["circle-decision-membership"]

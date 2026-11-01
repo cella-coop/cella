@@ -12,7 +12,7 @@ const kinds = ['work', 'legal', 'development', 'interest'] as const
 // Drafts the statutes' terms from a year on, `st-<year>`, or drafts them
 // again while they are not adopted; adopted terms never change. The guards
 // decide: `patronage.drafts_terms` that they divide the whole work share.
-// The members adopt them by a decision that moves to.
+// The members adopt them by a motion that moves to.
 export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:terms:draft', DraftedTerms> {
   return write(deps, {
     op: 'patronage:terms:draft' satisfies Action,

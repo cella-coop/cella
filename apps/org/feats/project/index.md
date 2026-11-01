@@ -15,7 +15,7 @@ the shares of its budget are the grafts'.
 | project | `id`, `title`, `circle?`, `summary`, `started`, `due?`, `budget?`, `archived?` | `id` is a slug of the title; `budget` in cents |
 | milestone | `project`, `n`, `title`, `due?`, `completed?` | numbered in the order added |
 
-`circle` names the circle that runs the project as text, as a decision
+`circle` names the circle that runs the project as text, as a motion
 does; nothing checks it against the circles. A project is **done** once it
 has milestones and every one is complete, and **active** otherwise; an
 archived project is hidden from lists, kept for the books and frozen.

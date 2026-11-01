@@ -4,7 +4,7 @@ export const actions = {
   // a member's draw on their own account, spending the draw limit granted
   // them in advance; beyond it, refused until the limit is raised
   'account:account:draw': bounded('limit', { check: 'self' }),
-  // the members' decision adopts the statutes' capital clauses, once
+  // the members' motion adopts the statutes' capital clauses, once
   'account:terms:adopt': ordered({ decide: 'majority', check: 'decided' }),
   // the month after the latest the books hold, so entries dated in it
   // post; ordered against the next month's opening, which follows it

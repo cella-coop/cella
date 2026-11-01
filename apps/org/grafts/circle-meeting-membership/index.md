@@ -36,7 +36,7 @@ of its own.
   other member marks themselves, as a guest.
 
 Quorum is a reading, not a refusal: a meeting held without it is held,
-and reads as inquorate; what it decides is the decisions' own guards.
+and reads as inquorate; what it decides is the motions' own guards.
 
 ## Shell
 

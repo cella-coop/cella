@@ -29,7 +29,7 @@ it builds on `account-membership` and `account-transaction`. Declared by
   otherwise: where no adopted terms value a share or the day's period is
   not open, the admission settles and nothing is subscribed. Being a
   trigger, it runs inside whichever write admits, the close of the
-  admitting decision included.
+  admitting motion included.
 - `paid`: each payment in on a subscription, its member, its entry and
   whether it came from the bank or was withheld from pay;
   `paying(account, cents)`, the lines a payment in posts: `512` debited
@@ -126,7 +126,7 @@ and, on their own page, the draw form, unless their account is frozen.
 ## Lanterne
 
 The members' capital was carried over on 1 July. Inès subscribes her 20
-shares, 1 000 €, called when d-2026-012 admits her and paid from her pay.
+shares, 1 000 €, called when m-2026-012 admits her and paid from her pay.
 Paul left on 30 November 2025: his 1 500 € is owed him in `4567`, repaid
 500 € a year on 30 November 2026, 2027 and 2028.
 

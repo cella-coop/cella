@@ -1,4 +1,4 @@
-// The id of a procedure the decision feat holds: consent, majority, two
+// The id of a procedure the motion feat holds: consent, majority, two
 // thirds or one of the co-op's own.
 export type Procedure = string
 
@@ -33,12 +33,12 @@ export interface Mandate {
   revoked: string | null
 }
 
-// Each write that changes the tree or its authority cites the decision
+// Each write that changes the tree or its authority cites the motion
 // that asks it.
 export interface Nest {
   circle: string
   parent: string
-  decision: string
+  motion: string
 }
 
 export interface Nested {
@@ -57,7 +57,7 @@ export interface Grant {
   budget?: number
   per?: 'month' | 'year'
   until?: string
-  decision: string
+  motion: string
 }
 
 export interface Granted {
@@ -69,7 +69,7 @@ export interface Granted {
 
 export interface Revoke {
   mandate: number
-  decision: string
+  motion: string
 }
 
 export interface Revoked {

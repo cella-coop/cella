@@ -49,7 +49,7 @@ export interface Event {
   who?: string
 }
 
-// A thing of one slice drawn inside another's item, such as a decision
+// A thing of one slice drawn inside another's item, such as a motion
 // inside a document: the slice that knows the kind of thing draws it by
 // its `ref`, from its own data on the item, and offers the things it may
 // embed. A graft declares it on the page of the feat it extends.

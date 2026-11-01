@@ -16,7 +16,7 @@ export { statement, statements } from '../drivers/statement.ts'
 // Each year's distribution and its split, the statutes' terms for the
 // work share and each worker's statement; drafting a split and terms,
 // which finance prepares, and approving a split and adopting terms, which
-// cite the assembly's decision. Distributing a split posts it, so its
+// cite the assembly's motion. Distributing a split posts it, so its
 // write is patronage-transaction's.
 export const slice: Slice = {
   name: 'patronage',
@@ -29,7 +29,7 @@ export const slice: Slice = {
       about: async (db) => ({ year: Number((await today(db)).slice(0, 4)) - 1 }),
       actions: {
         draft: action('patronage:distribution:draft', (form) => forms.draft(form), draft),
-        approve: action('patronage:distribution:approve', (form, id) => ({ distribution: id ?? '', decision: form.get('decision') }), approve),
+        approve: action('patronage:distribution:approve', (form, id) => ({ distribution: id ?? '', motion: form.get('motion') }), approve),
       },
     },
     bases: {
@@ -37,7 +37,7 @@ export const slice: Slice = {
       item: basis,
       actions: {
         draft: action('patronage:terms:draft', (form) => forms.terms(form), draftTerms),
-        adopt: action('patronage:terms:adopt', (form, id) => ({ terms: id ?? '', decision: form.get('decision') }), adopt),
+        adopt: action('patronage:terms:adopt', (form, id) => ({ terms: id ?? '', motion: form.get('motion') }), adopt),
       },
     },
     statements: {

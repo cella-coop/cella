@@ -7,12 +7,12 @@ export const actions = {
   'membership:member:link': confluent({ power: 'invite-member' }),
   // enrols the invitee's first device: ordered against revoke, as an enrolment is
   'membership:member:accept': ordered({ check: 'self' }),
-  // changes who votes; the cited decision admits
+  // changes who votes; the cited motion admits
   'membership:member:admit': ordered({ decide: 'consent', check: 'decided' }),
-  // changes who votes; the cited decision suspends
+  // changes who votes; the cited motion suspends
   'membership:member:suspend': ordered({ check: 'decided' }),
-  // freezes the capital account; the cited decision ends the membership
+  // freezes the capital account; the cited motion ends the membership
   'membership:member:exit': ordered({ check: 'decided' }),
-  // erasure wins over every update; the cited decision erases a member who has left
+  // erasure wins over every update; the cited motion erases a member who has left
   'membership:member:erase': ordered({ check: 'decided' }),
 } satisfies Actions

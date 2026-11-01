@@ -17,7 +17,7 @@ import { ratchet, scanTs } from '../writes.mjs'
 async function foreign(sql) {
   const repo = mkdtempSync(join(tmpdir(), 'cella-writes-'))
   try {
-    for (const feat of ['decision', 'invoice', 'member']) {
+    for (const feat of ['motion', 'invoice', 'member']) {
       mkdirSync(join(repo, 'apps/org/feats', feat, 'core/sql'), { recursive: true })
       writeFileSync(join(repo, 'apps/org/feats', feat, 'feat.toml'), `name = "${feat}"\n`)
     }
@@ -28,7 +28,7 @@ async function foreign(sql) {
       files.forEach((text, i) => writeFileSync(join(repo, dir, `00${i + 1}.sql`), text))
     }
     const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
-    const known = new Set(['cella', 'decision', 'invoice', 'member', 'invoice_member', 'decision_member'])
+    const known = new Set(['cella', 'motion', 'invoice', 'member', 'invoice_member', 'member_motion'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     assert.deepEqual(errors, [])
     return found.foreign.map((f) => `${f.owner}: ${f.what}`)
@@ -75,11 +75,11 @@ test('a trigger on a feat\'s table or a lower-order graft\'s is found', async ()
   assert.deepEqual(await foreign({
     'invoice-member': [`${table}
 CREATE TRIGGER whose BEFORE INSERT ON invoice.invoice FOR EACH ROW EXECUTE FUNCTION invoice_member.whose();`],
-    'decision-invoice-member': ['CREATE TRIGGER links AFTER INSERT ON invoice_member.link FOR EACH ROW EXECUTE FUNCTION decision_invoice_member.f();'],
+    'invoice-member-motion': ['CREATE TRIGGER links AFTER INSERT ON invoice_member.link FOR EACH ROW EXECUTE FUNCTION invoice_member_motion.f();'],
     member: ['TRUNCATE member.member;'],
   }), [
-    'decision-invoice-member: trigger links on invoice_member.link',
     'invoice-member: trigger whose on invoice.invoice',
+    'invoice-member-motion: trigger links on invoice_member.link',
   ])
 })
 

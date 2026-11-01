@@ -1,0 +1,80 @@
+import type { Db, Read } from '@cella/org-db'
+import type { Motion, Detail, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
+import type { Message } from '../models/thread.ts'
+
+const columns = `id, circle, title, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
+  to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
+
+// The motions as the collection lists them, open first, then the
+// latest proposed.
+export const listing: Read = {
+  sql: `SELECT ${columns} FROM motion.motion`,
+  order: 'closed IS NOT NULL, proposed DESC, id DESC',
+}
+
+// Open motions first, then the latest proposed.
+export async function motions(db: Db): Promise<Motion[]> {
+  const { rows } = await db.query<Motion>(`SELECT ${columns} FROM motion.motion ORDER BY closed IS NOT NULL, proposed DESC, id DESC`)
+  return rows
+}
+
+// A motion, its proposal, every stance given on it, newest first, and
+// its deliberation in the order received.
+export async function motion(db: Db, id: string): Promise<Detail | null> {
+  const found = await db.query<Omit<Detail, 'terms'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
+  if (!found.rows[0]) {
+    return null
+  }
+  const procedure = (await procedures(db)).find((p) => p.id === found.rows[0].procedure)
+  if (!procedure) {
+    throw new Error(`${id} is taken by ${found.rows[0].procedure}, which is no procedure`)
+  }
+  // Its terms are its procedure's, by the ballot it was proposed under.
+  const terms = { ...procedure, ballot: found.rows[0].ballot }
+  const given = await db.query<Given>(
+    `SELECT receipt::text AS id, receipt::int AS receipt, member, stance, to_char(at, 'YYYY-MM-DD') AS at
+     FROM motion.vote WHERE motion = $1 ORDER BY receipt DESC`,
+    [id],
+  )
+  const actions = await db.query<Labelled>(
+    `SELECT m.n::text AS id, m.n, m.kind, k.label, k.fields, m.args
+     FROM motion.action m JOIN motion.carries k ON k.kind = m.kind
+     WHERE m.motion = $1 ORDER BY m.n`,
+    [id],
+  )
+  const messages = await db.query<Message>(
+    `SELECT receipt::int AS receipt, member, reply::int AS reply, body, mentions, links, to_char(at, 'YYYY-MM-DD') AS at
+     FROM motion.message WHERE motion = $1 ORDER BY receipt`,
+    [id],
+  )
+  return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows }
+}
+
+// The procedures a motion may be taken by, the built-in ones first.
+export async function procedures(db: Db): Promise<Procedure[]> {
+  const { rows } = await db.query<Procedure>(
+    `SELECT id, label, method,
+            CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
+            json_build_array(quorum_num, quorum_den) AS quorum, ballot
+     FROM motion.procedure
+     ORDER BY id NOT IN ('consent', 'majority', 'two-thirds', 'election'), label`,
+  )
+  return rows
+}
+
+// Every motion of the scope, the latest first, as a card draws it and a
+// graft offers it: an embed in a document, a motion an agenda tables;
+// a picker that searches replaces the list when they are many.
+export async function summaries(db: Db): Promise<Summary[]> {
+  const { rows } = await db.query<Summary>(
+    `SELECT id, title, circle, method, to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed
+     FROM motion.motion ORDER BY proposed DESC, id DESC`,
+  )
+  return rows
+}
+
+// The kinds of action the grafts register, by label.
+export async function kinds(db: Db): Promise<Kind[]> {
+  const { rows } = await db.query<Kind>('SELECT kind, label, fields FROM motion.carries ORDER BY label')
+  return rows
+}

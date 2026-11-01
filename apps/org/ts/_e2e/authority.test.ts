@@ -9,8 +9,8 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
 import { pay, post } from '@cella/org-transaction/api'
-import { close as closing, vote } from '@cella/org-decision/api'
-import { close } from '@cella/org-graft-circle-decision-membership/api'
+import { close as closing, vote } from '@cella/org-motion/api'
+import { close } from '@cella/org-graft-circle-membership-motion/api'
 import { profile } from '@cella/org-person/api'
 import { enrol, revoke } from '@cella/org-person/api'
 import { add, update } from '@cella/org-client/api'
@@ -42,7 +42,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_decision_membership.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
 const verifies = async () => (await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v
 
 const paying = (cents: number, label = 'Supplier: print proofs') => ({
@@ -146,7 +146,7 @@ test('a forged signature, a replayed nonce, a swapped payload and a revoked devi
   const stranger = await post(small, { db: app, actor: hugo, sign: sign(hugo, undefined, chloe) })
   assert.match(reason(stranger), /chloe@lanterne\.example's laptop signs for chloe@lanterne\.example, not for hugo@lanterne\.example/)
 
-  const old = await vote({ decision: 'd-2026-012', member: hugo, stance: 'consent' }, as(hugo, 'old laptop'))
+  const old = await vote({ motion: 'm-2026-012', member: hugo, stance: 'consent' }, as(hugo, 'old laptop'))
   assert.match(reason(old), /hugo@lanterne\.example's old laptop was revoked on 2026-05-12/)
   assert.equal(await head(), before)
 
@@ -158,25 +158,25 @@ test('a forged signature, a replayed nonce, a swapped payload and a revoked devi
   assert.equal(await head(), before + 1)
 })
 
-test('a member votes only on a decision whose roll holds them, and only for themself', async () => {
+test('a member votes only on a motion whose roll holds them, and only for themself', async () => {
   const before = await head()
-  const off = await vote({ decision: 'd-2026-011', member: chloe, stance: 'consent' }, as(chloe))
+  const off = await vote({ motion: 'm-2026-011', member: chloe, stance: 'consent' }, as(chloe))
   assert.equal(off.state, 'refused')
-  assert.match(reason(off), /chloe@lanterne\.example is not on the roll of d-2026-011/)
+  assert.match(reason(off), /chloe@lanterne\.example is not on the roll of m-2026-011/)
   assert.equal(await head(), before)
 
-  const on = await vote({ decision: 'd-2026-012', member: chloe, stance: 'consent' }, as(chloe))
+  const on = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, as(chloe))
   assert.equal(on.state, 'settled')
-  const stance = await one<{ receipt: string }>(`SELECT max(receipt) AS receipt FROM decision.vote WHERE decision = 'd-2026-012' AND member = $1`, [chloe])
+  const stance = await one<{ receipt: string }>(`SELECT max(receipt) AS receipt FROM motion.vote WHERE motion = 'm-2026-012' AND member = $1`, [chloe])
   const logged = await one<{ receipt: string }>('SELECT receipt FROM cella.log WHERE n = $1', [on.state === 'settled' && on.entry])
   assert.equal(stance.receipt, logged.receipt, 'the stance\'s receipt is the one the notary signed')
 
   const between = await head()
-  const forOther = await vote({ decision: 'd-2026-012', member: chloe, stance: 'object' }, as(hugo))
+  const forOther = await vote({ motion: 'm-2026-012', member: chloe, stance: 'object' }, as(hugo))
   assert.equal(forOther.state, 'refused')
   assert.match(reason(forOther), /hugo@lanterne\.example may not vote for chloe@lanterne\.example/)
   assert.equal(await head(), between)
-  const stances = await all(`SELECT FROM decision.vote WHERE decision = 'd-2026-012' AND member = $1 AND stance = 'object'`, [chloe])
+  const stances = await all(`SELECT FROM motion.vote WHERE motion = 'm-2026-012' AND member = $1 AND stance = 'object'`, [chloe])
   assert.equal(stances.length, 0)
 })
 
@@ -232,7 +232,7 @@ test('Chloé enrols a phone, signed by her laptop, and it signs her writes', asy
   )
   assert.deepEqual(row, { by: (await device(chloe)).key, enrolled: '2026-10-24' })
 
-  const fromPhone = await vote({ decision: 'd-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
+  const fromPhone = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
   assert.equal(fromPhone.state, 'settled')
 })
 
@@ -250,24 +250,24 @@ test('an enrolment signed by another member\'s device is refused', async () => {
 test('Chloé revokes her phone from her laptop, and the phone signs nothing after', async () => {
   const revoked = await revoke({ key: phone.key }, as(chloe))
   assert.equal(revoked.state, 'settled')
-  const late = await vote({ decision: 'd-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
+  const late = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
   assert.match(reason(late), /chloe@lanterne\.example's phone was revoked on 2026-10-24/)
 })
 
-test('a closed decision\'s outcome stays fixed when a member is suspended after', async () => {
+test('a closed motion\'s outcome stays fixed when a member is suspended after', async () => {
   await on('2026-11-09')
   const before = await head()
-  const outsider = await close({ decision: 'd-2026-011' }, as(chloe))
-  assert.match(reason(outsider), /chloe@lanterne\.example holds no seat in coordination, so may not close d-2026-011/)
+  const outsider = await close({ motion: 'm-2026-011' }, as(chloe))
+  assert.match(reason(outsider), /chloe@lanterne\.example holds no seat in coordination, so may not close m-2026-011/)
   assert.equal(await head(), before)
-  // The decision feat's close alone counts no roll, and is refused.
-  const uncounted = await closing({ decision: 'd-2026-011' }, as(camille))
-  assert.match(reason(uncounted), /d-2026-011's close did not count its roll/)
+  // The motion feat's close alone counts no roll, and is refused.
+  const uncounted = await closing({ motion: 'm-2026-011' }, as(camille))
+  assert.match(reason(uncounted), /m-2026-011's close did not count its roll/)
   assert.equal(await head(), before)
-  const closed = await close({ decision: 'd-2026-011' }, as(camille))
+  const closed = await close({ motion: 'm-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')
-  assert.equal(await passes('d-2026-011'), false, 'Malik objects')
-  const counted = await all<{ member: string }>(`SELECT member FROM circle_decision_membership.counted WHERE decision = 'd-2026-011' ORDER BY member`)
+  assert.equal(await passes('m-2026-011'), false, 'Malik objects')
+  const counted = await all<{ member: string }>(`SELECT member FROM circle_membership_motion.counted WHERE motion = 'm-2026-011' ORDER BY member`)
   assert.equal(counted.length, 5)
 
   // Suspending the objector would let the others' consents pass it, were
@@ -275,14 +275,14 @@ test('a closed decision\'s outcome stays fixed when a member is suspended after'
   await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [malik])
   const now = await one<{ p: boolean }>(
     `SELECT cella.consent(v.member, v.stance, v.receipt) AS p
-     FROM decision.vote v
-     JOIN decision.decision d ON d.id = v.decision
-     JOIN circle_decision_membership.roll r ON r.decision = v.decision AND r.member = v.member
+     FROM motion.vote v
+     JOIN motion.motion d ON d.id = v.motion
+     JOIN circle_membership_motion.roll r ON r.motion = v.motion AND r.member = v.member
      JOIN membership.member m ON m.address = v.member AND m.status = 'active'
-     WHERE v.decision = 'd-2026-011' AND v.receipt < d.cutoff`,
+     WHERE v.motion = 'm-2026-011' AND v.receipt < d.cutoff`,
   )
   assert.equal(now.p, true, 'read now, Camille\'s consent alone would carry it')
-  assert.equal(await passes('d-2026-011'), false)
+  assert.equal(await passes('m-2026-011'), false)
 })
 
 test('every verdict names its signed receipt, and the log verifies them both', async () => {

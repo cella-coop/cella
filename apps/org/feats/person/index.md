@@ -222,8 +222,8 @@ The `inbox` collection is what waits on the acting person, at the head of
 the sidebar with its count, each row linking to where it is done. This
 feat keeps it and adds nothing of its own; each slice that knows a kind
 adds its rows (`rows`): an invitation to take up (`membership`), a stance
-to take on an open decision (`circle-decision-membership`), a mention not
-yet answered (`decision-membership`), a meeting to say whether they will
+to take on an open motion (`circle-membership-motion`), a mention not
+yet answered (`membership-motion`), a meeting to say whether they will
 come to (`circle-meeting-membership`), time, expenses and pay runs to
 approve or pay (`circle-membership-timesheet`, `circle-expense-membership`,
 `circle-membership-payslip`). An ask is a row of its kind, what it says,

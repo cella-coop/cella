@@ -5,7 +5,7 @@
   // Someone invited to join, and the link they take it up by: drawn in
   // this browser, its digest in the write, the link itself shown once the
   // invitation settles, to pass on. Opening it, their browser makes their
-  // first device. Invited, they hold nothing; a decision admits them.
+  // first device. Invited, they hold nothing; a motion admits them.
   let {}: { rows: unknown[]; about: unknown } = $props()
 
   const link = useLink('membership:member:invite')

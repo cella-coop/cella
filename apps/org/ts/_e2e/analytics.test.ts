@@ -69,7 +69,7 @@ test('the role logs in read-only and every view it is granted reads', async () =
   for (const { rel } of (await reached()).filter((v) => v.granted)) {
     await analytics.query(`SELECT * FROM ${rel} LIMIT 1`)
   }
-  for (const rel of ['account_transaction.movements', 'invoice.invoices', 'timesheet.months', 'project_timesheet.months', 'payslip.months', 'membership.members', 'person.people', 'project.projects', 'decision.decisions']) {
+  for (const rel of ['account_transaction.movements', 'invoice.invoices', 'timesheet.months', 'project_timesheet.months', 'payslip.months', 'membership.members', 'person.people', 'project.projects', 'motion.motions']) {
     const { rows: [n] } = await analytics.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${rel}`)
     assert.ok(n.n > 0, `${rel} holds Lanterne's rows`)
   }

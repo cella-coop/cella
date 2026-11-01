@@ -170,13 +170,13 @@ sequenceDiagram
   `circle-file-membership` a class of personal files to the powers over
   what they record. No one signed in reads none of it. A stance on a
   secret ballot is read by its member alone, under no power; a
-  decision's tally, read by everyone, stays sealed until its close
-  ([ballots](../../apps/org/feats/decision/index.md#ballots)). A write's
+  motion's tally, read by everyone, stays sealed until its close
+  ([ballots](../../apps/org/feats/motion/index.md#ballots)). A write's
   transaction reads the whole state, whoever asked for it (`cella.writing()`):
   the notary judges whether they may, and a write's state must not depend
   on who wrote it. The guards role reads everything. The statements,
   rubric by rubric, an entry's amount, a project's burn, a
-  distribution's divisions, a decision's tally and the year's return to the federation sum
+  distribution's divisions, a motion's tally and the year's return to the federation sum
   the whole for every reader, as functions running as their owner; the
   figures behind them read as their rows do. The server acts as
   `cella_app` whatever role it logs in as, so an owner's or a
@@ -211,13 +211,13 @@ Guards come in four layers:
 | Layer | Who changes it | Written as |
 |---|---|---|
 | Primitives | us, by release | Rust: the `cella.*` types, aggregates and functions |
-| Composed guards | power users and module developers, adopted by decision | `LANGUAGE sql` functions over the primitives, in the declared subset |
+| Composed guards | power users and module developers, adopted by motion | `LANGUAGE sql` functions over the primitives, in the declared subset |
 | Parameters | circles and the assembly | rows: mandates, limits, the procedure each circle uses |
 | Members' view | members | forms that read back as sentences |
 
 The law for each legal form is ours to write, as primitives and composed
 guards. A co-op's own guards live in custom feats, each with its own schema,
-enabled by decision.
+enabled by motion.
 
 Composed guards are a declared subset of SQL: `SELECT`, joins over the
 scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
@@ -225,7 +225,7 @@ primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
 guard is written as a `BEGIN ATOMIC` body. At rung 1 the subset is a
 check-time boundary, not a runtime one: `cella check feats` parses each
 guard's SQL with libpg_query and refuses one outside the subset at commit
-time, before it ever runs; nothing checks it again once a decision adopts
+time, before it ever runs; nothing checks it again once a motion adopts
 it. Resolving a guard's dependencies against Postgres's catalogue, which
 would see the casts and operators the parser cannot, is research only
 (`research/pgrx/`), not yet part of the check. A statement timeout bounds
@@ -303,9 +303,9 @@ makes no claim that the host cannot forge a vote.
   answers, which only the session that started it may. The server holds
   no member's key.
 
-## What a decision adopts
+## What a motion adopts
 
-A decision that adopts a document names its content, not a row: the
+A motion that adopts a document names its content, not a row: the
 BLAKE3 of the version's canonical form, which anyone holding the version
 can compute again without cella. A document is a Loro tree of blocks; its
 canonical form is that tree as JSON per RFC 8785 (JCS): the blocks in
@@ -321,8 +321,8 @@ the `loro` crate pinned to the browser's `loro-crdt`); the server never
 takes a hash from a client. The browser computes the same bytes to
 preview the hash while members edit, and the document feat's tests hold
 the two to the same bytes. An adoption's log entry commits to the hash,
-and `decision-document`'s guard refuses to adopt a version that hashes
-otherwise than the decision names.
+and `document-motion`'s guard refuses to adopt a version that hashes
+otherwise than the motion names.
 
 ## Personal data
 
@@ -350,9 +350,9 @@ erased until their legal clock runs out.
 - **A secret ballot's stances.** A stance on a secret ballot is logged
   as a commitment, its member the subject, so the log says who gave a
   stance and when, as every entry names its actor, and never which; an
-  open ballot's are logged as given. A decision's procedure says which
+  open ballot's are logged as given. A motion's procedure says which
   ballot it takes, and a proposal may name the other
-  ([ballots](../../apps/org/feats/decision/index.md#ballots)).
+  ([ballots](../../apps/org/feats/motion/index.md#ballots)).
 - **Pay, time and capital.** A time entry's minutes, as it is logged and
   as it is corrected; each payslip's figures, in the payload of the run
   that prepares them; and the amount of a capital payment in and of a
@@ -458,7 +458,7 @@ What the build does not yet do, and what lifts each:
 
 - **The host serves the signing code and says what to sign.** The browser
   signs the request the server asks it to, its own write's and each
-  reaction's, such as carrying out the suspension a passing decision asks
+  reaction's, such as carrying out the suspension a passed motion carries
   once its close settles, and shows none of it to the member; until the
   native client (rung 4) nothing stops a host serving code that signs
   something else with the keys it serves code to.

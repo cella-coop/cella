@@ -60,9 +60,9 @@ test('an expense moves only along its lifecycle', async () => {
   await refused(() => db.query(`UPDATE expense.expense SET status = 'draft' WHERE id = 'ex-0001'`), /ex-0001 is submitted, and cannot become draft/)
 })
 
-test('a decision names the expense\'s whole amount, made on the verdict date', async () => {
+test('a motion names the expense\'s whole amount, made on the verdict date', async () => {
   await db.query(`UPDATE expense.expense SET status = 'approved', decided = '2026-10-24', decider = 'hugo@lanterne.example' WHERE id = 'ex-0001'`)
-  // Outside a write there is no actor, so no decision is this write's.
+  // Outside a write there is no actor, so no motion is this write's.
   assert.equal(await guard('decides', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not approved by this write')
   assert.equal(await guard('decides', { expense: 'ex-0099', amount: 1 }), 'no expense ex-0099')
   assert.equal(await guard('reimburses', { expense: 'ex-0001', amount: 18000 }), 'ex-0001 was not reimbursed by this write')

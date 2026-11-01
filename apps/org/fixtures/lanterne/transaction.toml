@@ -64,7 +64,7 @@ credit = 900000
 account = "1068"
 credit = 710000
 
-# The 2025 result, the surplus d-2026-006 approved, until it is distributed.
+# The 2025 result, the surplus m-2026-006 approved, until it is distributed.
 [[entry.line]]
 account = "120"
 credit = 6140000

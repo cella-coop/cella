@@ -30,7 +30,7 @@ const check = (name) => {
 
   const member = read('membership')
   const circle = read('circle')
-  const decision = read('decision')
+  const motion = read('motion')
   const document = read('document')
   const client = read('client')
   const invoice = read('invoice')
@@ -58,10 +58,10 @@ const check = (name) => {
       has(circles, c.parent, 'circle', `circle ${c.id}`)
     }
   }
-  // A circle decides by a procedure the decision feat holds: one of the
+  // A circle decides by a procedure the motion feat holds: one of the
   // three its migration makes, or one of the co-op's own. No write sets a
   // circle's procedure, so this check is what holds the seed's to it.
-  const procedures = new Set(['consent', 'majority', 'two-thirds', ...ids(decision.procedure)])
+  const procedures = new Set(['consent', 'majority', 'two-thirds', ...ids(motion.procedure)])
   for (const c of circle.circle ?? []) {
     if (!procedures.has(c.procedure ?? 'consent')) {
       fail(`circle ${c.id}: decides by ${c.procedure}, which is no procedure`)
@@ -91,9 +91,9 @@ const check = (name) => {
     }
   }
 
-  const decisions = ids(decision.decision)
-  for (const d of decision.decision ?? []) {
-    has(circles, d.circle, 'circle', `decision ${d.id}`)
+  const motions = ids(motion.motion)
+  for (const d of motion.motion ?? []) {
+    has(circles, d.circle, 'circle', `motion ${d.id}`)
     for (const v of d.vote ?? []) {
       known(v.member, `vote on ${d.id}`)
     }
@@ -109,7 +109,7 @@ const check = (name) => {
       fail(e.message)
       continue
     }
-    const drawn = { decision: decisions, meeting: meetingIds(read) }
+    const drawn = { motion: motions, meeting: meetingIds(read) }
     for (const e of embedded(outlines.get(v.id))) {
       if (!drawn[e.embed]) {
         fail(`${v.id}: embeds a ${e.embed}, which nothing draws`)
@@ -159,24 +159,24 @@ const check = (name) => {
       has(roles, p.role, 'role', 'position')
     }
   }
-  // What a decision moves to adopt or approve names a version or a
-  // distribution, and an adoption made is one a decision moved to make
+  // What a motion moves to adopt or approve names a version or a
+  // distribution, and an adoption made is one a motion moved to make
   const moves = new Set()
-  for (const d of decision.decision ?? []) {
-    for (const m of d.motion ?? []) {
+  for (const d of motion.motion ?? []) {
+    for (const m of d.action ?? []) {
       if (m.kind === 'adopt') {
-        has(versions, m.args?.version, 'version', `motion of ${d.id}`)
+        has(versions, m.args?.version, 'version', `action of ${d.id}`)
         moves.add(`${d.id} ${m.args?.version}`)
       } else if (m.kind === 'distribution') {
-        has(distributions, m.args?.distribution, 'distribution', `motion of ${d.id}`)
+        has(distributions, m.args?.distribution, 'distribution', `action of ${d.id}`)
       }
     }
   }
-  for (const a of read('graft.decision-document').adoption ?? []) {
+  for (const a of read('graft.document-motion').adoption ?? []) {
     has(documents, a.document, 'document', 'adoption')
     has(versions, a.version, 'version', 'adoption')
-    if (!moves.has(`${a.decision} ${a.version}`)) {
-      fail(`adoption of ${a.version}: ${a.decision} has no motion to adopt it`)
+    if (!moves.has(`${a.motion} ${a.version}`)) {
+      fail(`adoption of ${a.version}: ${a.motion} has no action to adopt it`)
     }
   }
   for (const b of read('graft.client-invoice').billing ?? []) {

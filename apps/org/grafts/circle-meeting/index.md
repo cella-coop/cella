@@ -12,7 +12,7 @@ and keeps each circle's setting. Who is expected, the circle's seats, is
 
 `circle_meeting` (`sql/`): `circle_meeting.setting`, by circle, its
 `quorum`, the share of its seats a meeting needs present, in percent,
-and `adopts`, whether its minutes bind only once adopted by decision. A
+and `adopts`, whether its minutes bind only once adopted by motion. A
 circle with no row needs half its seats and keeps its minutes as
 written. A trigger refuses a setting of no circle. The app role and the
 guards role, `cella_guards`, may select; settings are seeded, as nothing
@@ -31,7 +31,7 @@ minutes bind and its latest meetings.
 
 ## Lanterne
 
-The assembly needs half its members and adopts its minutes by decision,
+The assembly needs half its members and adopts its minutes by motion,
 at its next session; coordination needs half its seats and keeps its
 minutes as written.
 

@@ -2,4 +2,4 @@ name = "meeting"
 group = "governance"
 builtin = false
 rung = 1
-grafts = ["circle-meeting", "circle-meeting-membership", "decision-meeting", "document-meeting", "meeting-membership"]
+grafts = ["circle-meeting", "circle-meeting-membership", "meeting-motion", "document-meeting", "meeting-membership"]

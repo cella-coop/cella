@@ -103,3 +103,34 @@ export async function sentences(db: Db, ids: string[]): Promise<Map<string, stri
   )
   return new Map(rows.map((r) => [r.id, r.sentence]))
 }
+
+// A policy as a generated document reads it: its id, its kind and its
+// legal wording as it reads.
+export interface Ordered {
+  id: string
+  kind: Kind
+  sentence: string
+}
+
+// A circle's policies in force on a day, in their order: each where the
+// first policy of its line reads (the policy it replaces, the one that
+// one replaced, and so on back), by the motion and the action that
+// adopted that one, so a replacement takes the place of the policy it
+// replaces. As the document feat generates the statutes.
+export async function inOrder(db: Db, circle: string, day: string): Promise<Ordered[]> {
+  const { rows } = await db.query<Ordered>(
+    `WITH RECURSIVE line (id, first) AS (
+       SELECT p.id, p.id FROM policy.policy p WHERE p.replaces IS NULL
+       UNION ALL
+       SELECT p.id, l.first FROM policy.policy p JOIN line l ON p.replaces = l.id
+     )
+     SELECT f.id, f.kind, policy.sentence(w.legal) AS sentence
+     FROM policy.in_force($1, $2::date) f
+     JOIN policy.wording w ON w.policy = f.id
+     JOIN line l ON l.id = f.id
+     JOIN policy.policy o ON o.id = l.first
+     ORDER BY o.motion, o.n`,
+    [circle, day],
+  )
+  return rows
+}

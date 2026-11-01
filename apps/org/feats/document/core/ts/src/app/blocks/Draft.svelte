@@ -11,7 +11,9 @@
   // it, where the draft stands: the version it still is, or changed since
   // the last one; whether this member's edits are saved; and how a block
   // is added. Its canonical hash as the page was read, what a version
-  // saved then is named by, is among the page's Properties.
+  // saved then is named by, is among the page's Properties. A generated
+  // document is read, never edited: it changes only as its circle's
+  // policies do.
   let { data, embeds = {} }: { data: Page; id: string; embeds?: Embeds } = $props()
 
   const draft = useDraft(() => data)
@@ -33,14 +35,18 @@
     return s.waiting ? 'saving' : 'saved'
   })
 </script>
-
 <Section title="Draft">
-  <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={hash} data-state={state}>
-    <Note text="{stands} · edits {state} · type / for blocks" />
-  </div>
-  {#if draft.doc}
-    <Editor doc={draft.doc} name={data.title} {anchors} {embeds} />
+  {#if data.generated}
+    <Note text="Generated from the policies of {data.generated} at each adoption · {data.adopted ? `adopted as ${data.adopted}` : 'not adopted'} · not edited by hand" />
+    <Reader canon={data.draft} label={data.title} {embeds} />
   {:else}
-    <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
+    <div data-sync={draft.sync?.online ? 'live' : 'off'} data-hash={hash} data-state={state}>
+      <Note text="{stands} · edits {state} · type / for blocks" />
+    </div>
+    {#if draft.doc}
+      <Editor doc={draft.doc} name={data.title} {anchors} {embeds} />
+    {:else}
+      <Reader canon={data.draft} label={data.title} {embeds} readonly={false} />
+    {/if}
   {/if}
 </Section>

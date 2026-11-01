@@ -95,6 +95,29 @@ export interface Adopted {
   receipt: number
 }
 
+// Generates a generated document from its circle's policies in force on
+// the day a motion's adoption or ending of one applies, citing that
+// motion, which this feat holds as an id.
+export interface Generate {
+  document: string
+  motion: string
+  // YYYY-MM-DD.
+  day: string
+}
+
+export interface Generated {
+  document: string
+  version: string
+  // The version's hash, which the log commits to.
+  hash: string
+  // The adopted version it replaces.
+  base: string | null
+  adopted: string
+  receipt: number
+  // The policies it reads, in order.
+  policies: string[]
+}
+
 // A document as the feat lists it.
 export interface Listed {
   id: string
@@ -141,6 +164,8 @@ export interface Page {
   // The draft's canonical hash, as the browser previews it.
   hash: string
   adopted: string | null
+  // The circle whose policies it is generated from, if it is.
+  generated: string | null
   versions: Version[]
   comments: Note[]
   updates: Update[]

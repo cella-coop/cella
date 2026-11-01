@@ -14,7 +14,11 @@
 // copied into the terms by the write that follows the adoption; a rule
 // whose value says no way is stricter is refused when proposed. Nadia,
 // admitted with 8 shares, stays admitted and is refused her subscription
-// with the rule's sentence. The books balance throughout. Run by `cella test e2e capital`.
+// with the rule's sentence. The statutes, the assembly's policies in
+// order, are generated anew once the new terms are adopted, their sentence
+// where the founding one read, and adopted under the same motion; the
+// version before still reads, and no hand edits them. The books balance
+// throughout. Run by `cella test e2e capital`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -27,6 +31,8 @@ import { plan, spread, withheld } from '@cella/org-graft-account-membership-pays
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay as payRun } from '@cella/org-graft-payslip-transaction/api'
 import { approve as approveTime, log, submit as submitTime } from '@cella/org-timesheet/api'
+import { adopt, edit, merged, version } from '@cella/org-document/api'
+import { createDoc, edits, hash, order } from '@cella/org-document/models'
 import type { Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { scope, sign } from './lanterne.ts'
@@ -49,6 +55,8 @@ const founded = 'm-2021-001-43'
 // Its rule, and the rule of the terms the assembly adopts in December.
 const founding = 'm-2021-001/43'
 let newTerms = ''
+let termsMotion = ''
+let generatedAt = 0
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -291,7 +299,7 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
   const then = await react('motion:motion:close', { motion }, as(camille))
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
-    [['motion:policy:adopt', 'settled', [['account:terms:adopt', 'settled']]]],
+    [['motion:policy:adopt', 'settled', [['document:document:generate', 'settled'], ['account:terms:adopt', 'settled']]]],
   )
   const t = await one<{ policy: string; share: string; minimum: number; from: string }>(
     `SELECT t.policy, cella.cents(t.share) AS share, t.minimum, to_char(t."from", 'YYYY-MM-DD') AS "from"
@@ -306,6 +314,59 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
     'A share is worth 25 €. Each associate subscribes at least 10 shares, and may pay them in at most 10 monthly instalments. An associate who leaves is repaid their shares at their nominal value from 12 months after the exit, in 3 yearly repayments',
   )
   newTerms = t.policy
+  termsMotion = motion
+  generatedAt = then[0].then[0].entry ?? 0
+})
+
+// A version's lines, as the database reads its text.
+const linesOf = async (v: string) => (await one<{ plain: string }>('SELECT plain FROM document.version WHERE id = $1', [v])).plain.split('\n')
+
+test('the statutes are generated anew with the new terms where the founding ones read, adopted under the same motion, and the version before still reads', async () => {
+  const founding = (await one<{ s: string }>(`SELECT policy.says('m-2021-001/43') AS s`)).s
+  const adopted = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
+  assert.equal((await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version, 'statutes@3')
+  const before = await linesOf('statutes@2')
+  const after = await linesOf('statutes@3')
+  assert.ok(before.includes(founding), 'statutes@2 reads the founding terms')
+  assert.ok(!after.includes(founding), 'statutes@3 no longer does')
+  assert.equal(after.indexOf(adopted), before.indexOf(founding), 'the new terms read where the founding ones did')
+  assert.equal(after.length, before.length)
+
+  // Its entry commits to the version's hash, which the snapshot computes
+  // again, in the database and out of it.
+  const logged = await one<{ op: string; form: Record<string, unknown> }>('SELECT op, form FROM cella.log WHERE n = $1', [generatedAt])
+  assert.equal(logged.op, 'document:document:generate')
+  assert.deepEqual([logged.form.version, logged.form.base, logged.form.motion, logged.form.day], ['statutes@3', 'statutes@2', termsMotion, '2026-12-15'])
+  const v = await one<{ hash: string; again: string; snapshot: Buffer }>(
+    `SELECT encode(hash, 'hex') AS hash, encode(cella.document_hash(snapshot), 'hex') AS again, snapshot FROM document.version WHERE id = 'statutes@3'`,
+  )
+  assert.equal(logged.form.hash, v.hash)
+  assert.equal(v.again, v.hash)
+  const doc = createDoc()
+  doc.import(new Uint8Array(v.snapshot))
+  assert.equal(hash(doc), v.hash, 'anyone holding the version computes its hash')
+  const guards = await one<{ owners: string[] }>(`SELECT array(SELECT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners FROM cella.log WHERE n = $1`, [generatedAt])
+  assert.deepEqual(guards.owners, ['circle-membership-motion', 'document', 'document'])
+
+  const earlier = await one<{ hash: string; again: string }>(
+    `SELECT encode(hash, 'hex') AS hash, encode(cella.document_hash(snapshot), 'hex') AS again FROM document.version WHERE id = 'statutes@2'`,
+  )
+  assert.equal(earlier.again, earlier.hash, 'statutes@2 still reads as it was adopted')
+})
+
+test('no hand edits the statutes, saves a version of them or adopts one', async () => {
+  const draft = await merged(app, 'statutes')
+  const from = draft.version()
+  const last = order(draft).at(-1)
+  assert.ok(last)
+  edits.after(draft, last.id, 'paragraph', {}, [{ text: 'The gérante may sign alone.' }])
+  draft.commit()
+  const generated = /statutes is generated from the policies of ag: it changes only as they do/
+  assert.match(reason(await edit({ document: 'statutes', update: draft.export({ mode: 'update', from }) }, as(camille))), generated)
+  assert.match(reason(await version({ document: 'statutes' }, as(camille))), generated)
+  const adopting = await adopt({ document: 'statutes', version: 'statutes@2', base: 'statutes@3', motion: termsMotion }, as(camille))
+  assert.equal(adopting.state, 'refused')
+  assert.equal((await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version, 'statutes@3')
 })
 
 test('an admission whose subscription its guard refuses stays an admission: Nadia, admitted with 8 shares, is refused her subscription with the rule\'s sentence', async () => {

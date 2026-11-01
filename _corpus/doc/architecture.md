@@ -829,6 +829,27 @@ the proposal checks them as the feat does (`account.terms_flaw`,
 `patronage.terms_flaw`). Terms are replaced by later terms, never ended,
 since a co-op always has its terms.
 
+**The statutes are the co-op's policies in order**, generated and never
+written. A document may be generated from a circle's policies
+(`document.generated`): its template is the fixed text of the co-op's
+legal form, with a `policies` block where they read, and each policy of
+the circle in force reads there in its legal wording as it reads, a
+replacement where the policy it replaces read. The statutes are the
+root circle's. A policy's adoption or ending writes no document, since
+only the grafts of the feats carrying it may extend it; once it settles,
+`document-motion` carries the document feat's `document:document:generate`,
+which cites the motion, generates the document from the policies in
+force on the day the change applies, and saves and adopts it as a new
+version in one write, whose log entry commits to the version's hash.
+So the statutes are frozen at each adoption, and every earlier version
+still reads. The document feat's guard holds the version to the
+register: every policy of the circle in force that day reads in it, and
+no other of its policies. A generated document is never edited,
+versioned or adopted by hand
+([generated documents](../../apps/org/feats/document/index.md#generated-documents)).
+Minutes, contracts and letters stay ordinary documents, edited and
+adopted as their own text.
+
 A circle's page lists its policies in force, each as its legal wording
 reads, with the motion that adopted it and its days (`circle-motion`).
 A row-level policy, which says which rows a reader sees

@@ -875,8 +875,9 @@ its schema `policy` ([its doc](../../apps/org/core/policy/index.md)). It
 keeps every policy: its circle and kind, its wordings, its values, the
 motion and the action of it that adopted it, by which it is named
 (`m-2026-013/1`), the day it applies from, the day it ends, the
-policy it replaces, the motion's action that ended it and the procedure
-by which alone it is changed, if it names one. It is a
+policy it replaces, the motion's action that ended it, the procedure
+by which alone it is changed, if it names one, and the default policy it
+takes, if any; and the legal forms cella offers. It is a
 core's, as the notary is, so it knows no feat: a motion is named by its
 id, and no foreign key leaves the schema. Unlike the notary, it has rows
 written at run time, and two functions write them all, `policy.adopt`
@@ -917,6 +918,27 @@ neither stricter nor looser, protects it. Rights, and mandates that hand
 out mandates (granting, revoking and seating), start protected: Lanterne's
 founding motion adopts them protected by its extraordinary assembly's
 procedure.
+
+**A legal form supplies default policies** ([legal forms](forms.md)). A
+form, a SCOP SARL in France first, is a set of ready-made policies the
+register keeps (`policy.form`, `policy.default`), each with the law it
+states, by its article, or none where it is cella's practice, and the
+day a co-op lawyer reviewed it, empty for every one until the pilot. A
+policy **takes** a default, its adoption's `takes` argument
+(`policy.policy.takes`), only worded and protected as the default reads:
+the register refuses one that differs, and the motion feat refuses it as
+the motion is proposed. A co-op takes its form's defaults at founding,
+as Lanterne's founding motion does, and **leaves** one by motion,
+replacing the policy that takes it with one that takes none, or ending
+it. The register reads each default's standing in a circle,
+`policy.standing`: taken, updated (cella has since changed its wording),
+left, by the motion's action named, or not taken. A form changes only
+with cella, which offers its defaults again (`policy.offer`); an update
+changes no policy, so a default taken stands as updated until a motion
+takes the new wording, and a default left stays left, never silently
+restored. The circle's page, the motion's page and the statutes show
+every default the co-op left and by which motion. Cella offers the
+forms; it never chooses one.
 
 **Values bind where they are read.** The feat that reads a kind of
 policy copies its values into typed rows of its own as the policy is
@@ -960,7 +982,9 @@ written. A document may be generated from a circle's policies
 (`document.generated`): its template is the fixed text of the co-op's
 legal form, with a `policies` block where they read, and each policy of
 the circle in force reads there in its legal wording as it reads, a
-replacement where the policy it replaces read. The statutes are the
+replacement where the policy it replaces read; a `departures` block
+reads, one line each, every default of its form the circle left or
+never took, and the motion's action that left it. The statutes are the
 root circle's. A policy's adoption or ending writes no document, since
 only the grafts of the feats carrying it may extend it; once it settles,
 `document-motion` carries the document feat's `document:document:generate`,

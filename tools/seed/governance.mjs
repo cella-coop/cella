@@ -16,8 +16,9 @@ export async function actions(db, d) {
 
 // The policies a closed motion adopted, from its actions of kind `policy`:
 // each kept in the register as `policy.adopt` keeps it, protected by the
-// procedure it names, if any, adopted the day
-// the motion closed and applying from then, or from the day it names; a
+// procedure it names, if any, taking the default it names, if any,
+// adopted the day the motion closed and applying from then, or from the
+// day it names; a
 // procedure policy's values copied into the procedure they make, a
 // mandate policy's into the mandate it grants, as circle-motion's
 // `adopt` does, and a rule of the capital's or the work share's terms
@@ -32,8 +33,8 @@ export async function adopted(db, d) {
     }
     const a = m.args
     const applies = a.from && a.from > closed ? a.from : closed
-    const { rows } = await db.query('SELECT policy.adopt($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9, $10) AS id', [
-      d.circle, a.kind, a.wording, a.friendly ?? null, d.id, i + 1, applies, a.until ?? null, a.replaces ?? null, a.protected ?? null,
+    const { rows } = await db.query('SELECT policy.adopt($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9, $10, $11) AS id', [
+      d.circle, a.kind, a.wording, a.friendly ?? null, d.id, i + 1, applies, a.until ?? null, a.replaces ?? null, a.protected ?? null, a.takes ?? null,
     ])
     await db.query('UPDATE policy.policy SET adopted = $2 WHERE id = $1', [rows[0].id, closed])
     await db.query('SELECT motion.procedure_from($1)', [rows[0].id])

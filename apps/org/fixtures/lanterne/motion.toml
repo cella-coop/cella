@@ -27,27 +27,27 @@ and with them how its circles decide and the mandates they grant.
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By {procedure: consent}, a motion is decided by {method: consent}, with a quorum of {quorum: none}: it passes if no member on its roll objects at its close", friendly = "A motion passes if no one objects." }
+args = { kind = "procedure", wording = "By {procedure: consent}, a motion is decided by {method: consent}, with a quorum of {quorum: none}: it passes if no member on its roll objects at its close", friendly = "A motion passes if no one objects.", takes = "scop-sarl-fr:consent" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By {procedure: majority}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: none}: it passes with more for than against", friendly = "A motion passes with more for than against." }
+args = { kind = "procedure", wording = "By {procedure: majority}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: none}: it passes with more for than against", friendly = "A motion passes with more for than against.", takes = "scop-sarl-fr:majority" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By {procedure: two-thirds}, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: none}" }
+args = { kind = "procedure", wording = "By {procedure: two-thirds}, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: none}", takes = "scop-sarl-fr:two-thirds" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By {procedure: election}, a person is elected or removed by a {method: majority} of the votes cast, with a quorum of {quorum: none}, by {ballot: secret} ballot" }
+args = { kind = "procedure", wording = "By {procedure: election}, a person is elected or removed by a {method: majority} of the votes cast, with a quorum of {quorum: none}, by {ballot: secret} ballot", takes = "scop-sarl-fr:election" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By the {label: ordinary assembly}'s procedure, {procedure: ordinary}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: 1/4} of the associates on its roll" }
+args = { kind = "procedure", wording = "By the {label: ordinary assembly}'s procedure, {procedure: ordinary}, a motion is decided by a {method: majority} of the votes cast, with a quorum of {quorum: 1/4} of the associates on its roll", takes = "scop-sarl-fr:ordinary" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "procedure", wording = "By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, which amends the statutes, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: 1/2} of the associates on its roll" }
+args = { kind = "procedure", wording = "By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, which amends the statutes, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: 1/2} of the associates on its roll", takes = "scop-sarl-fr:extraordinary" }
 
 # The mandates the statutes grant, each a policy of the assembly: its
 # sentence marks the role, the power and the cap, copied into the circle
@@ -66,7 +66,7 @@ args = { kind = "mandate", wording = "The {role: member} role holds {power: edit
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time", protected = "extraordinary", takes = "scop-sarl-fr:log-time" }
 
 [[motion.action]]
 kind = "policy"
@@ -217,11 +217,11 @@ args = { kind = "rule", wording = "The work share is divided among the workers {
 # motions, writes in its channel and draws up its meetings' agendas.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: participant} role holds {power: propose}, to propose a motion of the circle and close it" }
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: propose}, to propose a motion of the circle and close it", takes = "scop-sarl-fr:propose" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: participant} role holds {power: discuss}, to discuss the circle's motions, write in its channel and draw up its meetings' agendas" }
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: discuss}, to discuss the circle's motions, write in its channel and draw up its meetings' agendas", takes = "scop-sarl-fr:discuss" }
 
 # The collective mandates: each circle that carries an action by motion
 # holds the power for it on itself, used only by a motion of that circle.
@@ -236,43 +236,43 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 # procedure, or a stricter one, replaces or ends them.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: admit-member}, to admit members, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: admit-member}, to admit members, by motion", takes = "scop-sarl-fr:admit-member" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: suspend-member}, to suspend a member, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: suspend-member}, to suspend a member, by motion", takes = "scop-sarl-fr:suspend-member" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-membership}, to end a membership, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-membership}, to end a membership, by motion", takes = "scop-sarl-fr:end-membership" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: erase-member}, to erase a former member's personal data, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: erase-member}, to erase a former member's personal data, by motion", takes = "scop-sarl-fr:erase-member" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes' among them, by motion", protected = "extraordinary" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes' among them, by motion", protected = "extraordinary", takes = "scop-sarl-fr:adopt-policy" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-policy}, to end policies, by motion", protected = "extraordinary" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: end-policy}, to end policies, by motion", protected = "extraordinary", takes = "scop-sarl-fr:end-policy" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: approve-distribution}, to approve a year's distribution, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: approve-distribution}, to approve a year's distribution, by motion", takes = "scop-sarl-fr:approve-distribution" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-document}, to adopt a document's version, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adopt-document}, to adopt a document's version, by motion", takes = "scop-sarl-fr:adopt-document" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: nest-circle}, to nest circles, by motion" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: nest-circle}, to nest circles, by motion", takes = "scop-sarl-fr:nest-circle" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion", protected = "extraordinary" }
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion", protected = "extraordinary", takes = "scop-sarl-fr:seat-member" }
 
 [[motion.action]]
 kind = "policy"
@@ -303,51 +303,64 @@ args = { kind = "mandate", wording = "The {circle: coordination} circle holds {p
 # Each is protected by the extraordinary assembly's procedure.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details", protected = "extraordinary", takes = "scop-sarl-fr:keep-profile" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices", protected = "extraordinary", takes = "scop-sarl-fr:keep-devices" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary", takes = "scop-sarl-fr:upload-file" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join", protected = "extraordinary", takes = "scop-sarl-fr:accept-invitation" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: file-record}, to file a record of their own", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: file-record}, to file a record of their own", protected = "extraordinary", takes = "scop-sarl-fr:file-record" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary", takes = "scop-sarl-fr:mark-read" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: record-import}, to record an import of their own", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: person} holds {power: record-import}, to record an import of their own", protected = "extraordinary", takes = "scop-sarl-fr:record-import" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit", protected = "extraordinary", takes = "scop-sarl-fr:draw-account" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay", protected = "extraordinary", takes = "scop-sarl-fr:spread-capital" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting", protected = "extraordinary", takes = "scop-sarl-fr:mark-attendance" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own", protected = "extraordinary", takes = "scop-sarl-fr:save-report" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts", protected = "extraordinary" }
+args = { kind = "mandate", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts", protected = "extraordinary", takes = "scop-sarl-fr:claim-expense" }
+
+# The law's floors on each year's surplus, as the SCOP SARL's defaults
+# state them: at least a quarter to all the employees as the work share,
+# and at least 15 % to the reserves (loi n° 78-763 art. 33, unreviewed).
+# Their values are named for no feat, so they bind by the members'
+# judgement; the distribution Lanterne approves keeps above both.
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "At least {work_share: 25 % | more is stricter} of each year's surplus goes to all the employees as the work share", friendly = "At least a quarter of the surplus goes to the workers.", takes = "scop-sarl-fr:work-share" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "At least {reserve_share: 15 % | more is stricter} of each year's surplus goes to the reserves", friendly = "At least 15 % of the surplus is kept in reserve.", takes = "scop-sarl-fr:reserves" }
 
 [[motion]]
 id = "m-2026-006"

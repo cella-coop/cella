@@ -89,7 +89,14 @@ its legal wording as it reads. Their order is the register's (`inOrder`
 in `@cella/org-policy`): each policy where the first policy of its line
 reads, by the motion and the action that adopted that one, so a
 replacement takes the place of the policy it replaces
-([policies](../../../../_corpus/doc/architecture.md#policies)).
+([policies](../../../../_corpus/doc/architecture.md#policies)). An
+`embed` block of kind `departures`, its `ref` a legal form
+(`scop-sarl-fr`), stands where the defaults of that form the circle left
+or never took read: one `bullet` block each, `Leaves the SCOP SARL,
+France default, by m-2026-020/1: <its sentence>.`, or `Never took the
+… default: …`, in the form's order (`departures` in
+`@cella/org-policy`), or one paragraph saying the document leaves none
+([legal forms](../../../../_corpus/doc/forms.md)).
 
 It changes only as its circle's policies do. Each adoption or ending of
 one of them is followed by `generate`, which patches the generated
@@ -147,7 +154,7 @@ draft, and the next adoption names a later version.
   do not refuse it: the members voted on the version, not the draft.
 - **generate** generates a generated document from its circle's policies
   in force on the day a motion's adoption or ending of one of them
-  applies, saves it as the next version and adopts it, naming the
+  applies, and the defaults of its form the circle left by then, saves it as the next version and adopts it, naming the
   adopted version it replaces, as adopt does. It cites the motion. The
   log commits to the version's hash.
 

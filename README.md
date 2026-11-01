@@ -16,6 +16,8 @@ verdict into a log the members can audit.
   and their rotation, backups and restore, upgrades.
 - [Users](_corpus/doc/users.md) — who cella is for, starting with
   professional-services worker co-ops.
+- [Legal forms](_corpus/doc/forms.md) — the forms cella offers, a SCOP
+  SARL in France first, and their default policies, each with its source.
 - [Glossary](_corpus/doc/glossary.md) — cella's terms and the co-op terms it
   uses.
 - [Conflicts](_corpus/doc/conflicts.md) — every write against the

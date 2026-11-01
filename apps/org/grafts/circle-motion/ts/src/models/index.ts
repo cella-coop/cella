@@ -1,4 +1,4 @@
-import type { Policy } from '@cella/org-policy'
+import type { Policy, Standing } from '@cella/org-policy'
 
 // What a circle's page proposes about it: a circle nested, a mandate
 // granted to a role by adopting its policy, a mandate revoked by ending
@@ -21,7 +21,8 @@ export interface Deciding {
 // What a circle's page offers to propose: where each kind of motion
 // goes, the circles it may be nested under, its roles and the mandates in
 // force on them; the open motions about it; and the policies it adopted
-// that are in force, each with its motion and its days.
+// that are in force, each with its motion and its days, and every default
+// of its legal form it left or never took.
 export interface Proposing {
   circle: string
   // The circle that decides about this one: its parent, or the assembly
@@ -33,6 +34,9 @@ export interface Proposing {
   mandates: { policy: string; label: string }[]
   open: { motion: string; title: string; kind: string; deadline: string }[]
   policies: Policy[]
+  // The defaults of its form it left, each with the motion's action that
+  // left it, or never took.
+  departures: Standing[]
 }
 
 // A motion about a circle, carrying one action of this graft's kinds, put

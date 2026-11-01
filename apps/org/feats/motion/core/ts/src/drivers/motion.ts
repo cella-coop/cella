@@ -1,4 +1,5 @@
 import type { Db, Read } from '@cella/org-db'
+import { leftBy } from '@cella/org-policy'
 import type { Motion, Detail, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
 import type { Message } from '../models/thread.ts'
 
@@ -18,10 +19,10 @@ export async function motions(db: Db): Promise<Motion[]> {
   return rows
 }
 
-// A motion, its proposal, every stance given on it, newest first, and
-// its deliberation in the order received.
+// A motion, its proposal, every stance given on it, newest first, its
+// deliberation in the order received, and the defaults its actions left.
 export async function motion(db: Db, id: string): Promise<Detail | null> {
-  const found = await db.query<Omit<Detail, 'terms'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
+  const found = await db.query<Omit<Detail, 'terms' | 'leaves'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
   if (!found.rows[0]) {
     return null
   }
@@ -47,7 +48,7 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
      FROM motion.message WHERE motion = $1 ORDER BY receipt`,
     [id],
   )
-  return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows }
+  return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows, leaves: await leftBy(db, id) }
 }
 
 // The procedures a motion may be taken by, the built-in ones first: those

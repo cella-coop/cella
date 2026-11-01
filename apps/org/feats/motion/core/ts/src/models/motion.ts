@@ -1,3 +1,4 @@
+import type { Left } from '@cella/org-policy'
 import type { Message } from './thread.ts'
 
 export type Stance = 'for' | 'against' | 'abstain' | 'consent' | 'object'
@@ -70,6 +71,8 @@ export interface Detail extends Motion {
   actions: Labelled[]
   // Its deliberation, in the order received.
   messages: Message[]
+  // The default policies of a legal form its actions left.
+  leaves: Left[]
 }
 
 // An argument an action of a kind takes, as the New form asks for it.

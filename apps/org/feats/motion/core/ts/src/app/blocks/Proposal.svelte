@@ -5,8 +5,9 @@
   // What is proposed, in full, under the method and deadline it is decided
   // by, and each action it decides, as its kind names it, with its
   // arguments by the kind's labels: a member as their chip, a power by
-  // its plain name. The grafts that carry an action out show it in their
-  // own words below.
+  // its plain name; and each default policy of a legal form its actions
+  // leave, with the action that leaves it. The grafts that carry an action
+  // out show it in their own words below.
   let { data }: { data: Detail; id: string } = $props()
 
   const args = (m: Labelled): Prop[] =>
@@ -27,5 +28,8 @@
   {#each data.actions as m (m.id)}
     <Note text="Decides: {m.label.toLowerCase()}." />
     {#if args(m).length}<Properties items={args(m)} />{/if}
+  {/each}
+  {#each data.leaves as l (l.id)}
+    <Note text="Leaves the {l.form} default, by {l.action}: {l.sentence}." />
   {/each}
 </Section>

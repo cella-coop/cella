@@ -50,13 +50,18 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
   return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows }
 }
 
-// The procedures a motion may be taken by, the built-in ones first.
+// The procedures a motion may be taken by, the built-in ones first: those
+// whose policy is in force, or which name none.
 export async function procedures(db: Db): Promise<Procedure[]> {
   const { rows } = await db.query<Procedure>(
     `SELECT id, label, method,
             CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
             json_build_array(quorum_num, quorum_den) AS quorum, ballot
-     FROM motion.procedure
+     FROM motion.procedure o
+     WHERE o.policy IS NULL OR EXISTS (
+       SELECT FROM policy.policy r
+       WHERE r.id = o.policy AND r.applies <= cella.verdict_date() AND (r.ends IS NULL OR r.ends > cella.verdict_date())
+     )
      ORDER BY id NOT IN ('consent', 'majority', 'two-thirds', 'election'), label`,
   )
   return rows

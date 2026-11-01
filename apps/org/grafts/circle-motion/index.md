@@ -35,7 +35,8 @@ the revoked mandate's role's circle; a role every working circle has
   asks exactly this, the grant's euros in cents.
 
 No write sets a circle's procedure: the seed carries it in, and the
-fixture check holds it to a procedure the motion feat holds. A write
+fixture check holds it to a procedure the motion feat holds, built in or
+made by a procedure policy the fixture's motions carry. A write
 that sets one will be judged by a guard of this graft's on its action, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).

@@ -2,7 +2,8 @@
 // carried over from before the log, in one write that settles as the log's
 // first entry (the import feat's `import:state:carry`): the scope's address, people, their
 // memberships, employments and candidacies, their devices, circles, roles and mandates,
-// seats, motions with their stances and what they decide, invitations'
+// seats, motions with their stances and what they decide, the policies
+// the closed ones adopted, invitations'
 // first devices, documents with their versions, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
 // their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
@@ -26,7 +27,7 @@ import { fixture, signer } from '../apps/org/core/sign/ts/src/index.ts'
 import { carry } from '../apps/org/feats/import/core/ts/src/api/index.ts'
 import { work } from './seed/work.mjs'
 import { finance } from './seed/finance.mjs'
-import { invitations, actions } from './seed/governance.mjs'
+import { invitations, actions, adopted } from './seed/governance.mjs'
 import { meetings } from './seed/meeting.mjs'
 import { files } from './seed/file.mjs'
 
@@ -126,16 +127,6 @@ async function load() {
     ])
   }
 
-  // The co-op's own procedures, beside the motion feat's built-in ones,
-  // before the circles that decide by them.
-  const procedures = read('motion').procedure ?? []
-  for (const p of procedures) {
-    await db.query(
-      'INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-      [p.id, p.label, p.method, p.share?.[0] ?? null, p.share?.[1] ?? null, p.quorum?.[0] ?? 0, p.quorum?.[1] ?? 1, p.ballot ?? 'open'],
-    )
-  }
-
   const structure = read('circle')
   for (const c of structure.circle ?? []) {
     await db.query('INSERT INTO circle.circle (id, name, parent, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
@@ -168,6 +159,7 @@ async function load() {
   const motions = read('motion').motion ?? []
   let votes = 0
   let moved = 0
+  let policies = 0
   for (const d of motions) {
     const taken = await db.query(
       `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline, body)
@@ -189,6 +181,7 @@ async function load() {
     if (d.closed) {
       await db.query(`UPDATE motion.motion SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
       await db.query('SELECT circle_membership_motion.count($1)', [d.id])
+      policies += await adopted(db, d)
     }
   }
 
@@ -338,7 +331,7 @@ async function load() {
   said =
     `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${seats.length} seats, ` +
     `${motions.length} motions, ${votes} stances, ` +
-    `${moved} actions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+    `${moved} actions, ${policies} policies, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`
   return {
     people: people.length, members: members.length, workers: workers.length, devices: devices.length, seats: seats.length,

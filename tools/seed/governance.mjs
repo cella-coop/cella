@@ -14,6 +14,30 @@ export async function actions(db, d) {
   return (d.action ?? []).length
 }
 
+// The policies a closed motion adopted, from its actions of kind `policy`:
+// each kept in the register as `policy.adopt` keeps it, adopted the day
+// the motion closed and applying from then, or from the day it names; a
+// procedure policy's values copied into the procedure they make, as the
+// motion feat's `adopt` does. Returns how many.
+export async function adopted(db, d) {
+  const closed = new Date(d.closed).toISOString().slice(0, 10)
+  let n = 0
+  for (const [i, m] of (d.action ?? []).entries()) {
+    if (m.kind !== 'policy') {
+      continue
+    }
+    const a = m.args
+    const applies = a.from && a.from > closed ? a.from : closed
+    const { rows } = await db.query('SELECT policy.adopt($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9) AS id', [
+      d.circle, a.kind, a.wording, a.friendly ?? null, d.id, i + 1, applies, a.until ?? null, a.replaces ?? null,
+    ])
+    await db.query('UPDATE policy.policy SET adopted = $2 WHERE id = $1', [rows[0].id, closed])
+    await db.query('SELECT motion.procedure_from($1)', [rows[0].id])
+    n++
+  }
+  return n
+}
+
 // The invitations taken up, from membership.toml's `[[invitation]]`: each
 // enrolled its first device on the day it was accepted, by no device.
 export async function invitations(db, read) {

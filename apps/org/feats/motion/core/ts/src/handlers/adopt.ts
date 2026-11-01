@@ -9,7 +9,8 @@ const op = 'motion:policy:adopt'
 // Adopts the policy a passed motion carries, as its own decided write: the
 // register keeps it in the motion's circle with its wordings and its
 // values, from the day the action names, or the verdict date, whichever is
-// later, and its entry commits to the hash of its wordings. `motion.adopts`
+// later, and its entry commits to the hash of its wordings; a procedure
+// policy makes its procedure. `motion.adopts`
 // holds it to what the motion carries; that the motion passed is the
 // guard of the graft that counts its roll.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
@@ -40,6 +41,9 @@ export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof a
         until: args.until ?? null,
         replaces: args.replaces ?? null,
       })
+      // A procedure policy's values are the procedure a motion is counted
+      // by: copied into the feat's own row in this verdict.
+      await tx.query('SELECT motion.procedure_from($1)', [policy])
       const hashed = await tx.query<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM policy.policy WHERE id = $1`, [policy])
       return { policy, motion: input.motion, n: input.n, applies, hash: hashed.rows[0].hash }
     },

@@ -117,7 +117,7 @@ updated = 2026-11-01
 | **motion** | how a circle acts as a whole: put to it by a procedure and decided by it, carrying actions or none; the `motion` feat's |
 | **decision** | a passed motion, in plain speech; no row and no name in the code |
 | **proposal** | a motion put to a circle, by a procedure, with its deadline |
-| **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, and its quorum; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
+| **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, its quorum and its ballot, each a value of its sentence (`{quorum: 1/2}`) copied into `motion.procedure` as it is adopted, by which a motion is counted; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
 | **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
 | **rule** | a kind of policy: what else the co-op agreed, such as its capital terms or the solidarity rate; a rule with no value binds by people's judgement alone |
 | **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt`, inside the write of a motion's action |

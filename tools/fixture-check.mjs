@@ -59,9 +59,15 @@ const check = (name) => {
     }
   }
   // A circle decides by a procedure the motion feat holds: one of the
-  // three its migration makes, or one of the co-op's own. No write sets a
-  // circle's procedure, so this check is what holds the seed's to it.
-  const procedures = new Set(['consent', 'majority', 'two-thirds', ...ids(motion.procedure)])
+  // four its migrations make, or one a closed motion's procedure policy
+  // makes, by the name its wording marks. No write sets a circle's
+  // procedure, so this check is what holds the seed's to it.
+  const made = (motion.motion ?? [])
+    .filter((d) => d.closed)
+    .flatMap((d) => d.action ?? [])
+    .filter((m) => m.kind === 'policy' && m.args?.kind === 'procedure')
+    .map((m) => /\{\s*procedure\s*:\s*([^{}]*?)\s*\}/.exec(m.args.wording ?? '')?.[1])
+  const procedures = new Set(['consent', 'majority', 'two-thirds', 'election', ...made])
   for (const c of circle.circle ?? []) {
     if (!procedures.has(c.procedure ?? 'consent')) {
       fail(`circle ${c.id}: decides by ${c.procedure}, which is no procedure`)

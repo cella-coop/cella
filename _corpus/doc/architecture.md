@@ -771,7 +771,13 @@ policy copies its values into typed rows of its own as the policy is
 adopted, in the same verdict, so a guard reads a real column, never the
 sentence: a feat's write the adoption calls, through the graft joining
 that feat to `motion`. A guard never parses a wording, and reads the
-register only to know which policies are in force.
+register only to know which policies are in force. So a procedure policy's
+method, share, quorum and ballot are copied by the motion feat into
+`motion.procedure`, which a motion is counted by
+([procedures](../../apps/org/feats/motion/index.md#procedures)); the
+procedures a scope starts with, consent, majority, two thirds and
+election, are built in, and name the policy that adopts them once their
+scope's root does.
 
 A circle's page lists its policies in force, each as its legal wording
 reads, with the motion that adopted it and its days (`circle-motion`).

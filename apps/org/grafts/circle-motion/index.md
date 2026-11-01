@@ -1,22 +1,23 @@
 +++
 title = "circle-motion"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
-The circles' place and powers, by motion: nesting a circle, granting a
-power to a role, revoking a mandate. Declared by the `circle` feat. Who
-sits where needs members as well, so seats by motion are
-`circle-membership-motion`'s, which builds on this graft.
+The circles' place and powers, by motion: nesting a circle, and the
+mandates its roles hold, each a policy a circle adopts and ends
+([mandates](../../feats/circle/index.md#mandates)). Declared by the
+`circle` feat. Who sits where needs members as well, so seats by motion
+are `circle-membership-motion`'s, which builds on this graft.
 
 ## Schema
 
 `circle_motion` (`sql/`) holds no table: the actions are the motion
-feat's `motion.action`, of the kinds this graft registers by
-`motion.register_carries`, `nest` (`circle`, `parent`), `grant` (`role`, `power`,
-`text`, and a `limit` per write or a `budget` with its `per`, in euros as
-the form asks) and `revoke` (`mandate`). `circle_motion.action` reads
-them with the circle each is about: the circle nested, the role's circle,
-the revoked mandate's role's circle; a role every working circle has
+feat's `motion.action`, of the kind this graft registers by
+`motion.register_carries`, `nest` (`circle`, `parent`), and of the
+motion feat's own, `policy` and `end`. `circle_motion.action` reads
+them with the circle each is about: the circle nested; for a mandate
+policy, the circle of the role it marks; for an end, the circle of the
+role of the ended policy's mandate. A role every working circle has
 (`*`) is the assembly's.
 
 ## Guards
@@ -25,14 +26,21 @@ the revoked mandate's role's circle; a role every working circle has
   may decide about `subject`: the assembly about every circle, any other
   circle about those strictly within it. A circle does not decide its own
   place or powers; the one above it does.
-- `circle_motion.asks`, on `motion:motion:propose`: each action of
-  these kinds names what it applies to (a circle, a role, a power in
-  lower case, a cap by limit or by budget per month or year, never both,
-  a mandate in force), and the motion's circle may decide it, about the
-  circle nested and about the place it moves to.
-- `circle_motion.nests`, `.grants`, `.revokes`, on `circle:circle:nest`,
-  `circle:mandate:grant` and `circle:mandate:revoke`: the cited motion
-  asks exactly this, the grant's euros in cents.
+- `circle_motion.asks`, on `motion:motion:propose`: each nesting names
+  its circle and its place, each mandate policy marks sound values
+  (`circle.mandate_flaw`: a role, a power in lower case, a cap by limit
+  or by budget per month or year, never both, and nothing else), and the
+  motion's circle may decide it: about the circle nested and about the
+  place it moves to, about the role's circle, and about the circle of
+  the mandate it ends.
+- `circle_motion.nests`, on `circle:circle:nest`: the cited motion
+  nests exactly this circle there.
+- On `motion:policy:adopt` and `motion:policy:end`, the circle feat's
+  guards, which this graft attaches as the graft joining the two:
+  `circle.grants` that a mandate policy adopted has its mandate as its
+  values say, `circle.revokes` that one ended has its mandate revoked,
+  and `circle.carves` on both that every mandate in force is carved
+  from what the circles above hold.
 
 No write sets a circle's procedure: the seed carries it in, and the
 fixture check holds it to a procedure the motion feat holds, built in or
@@ -41,17 +49,32 @@ that sets one will be judged by a guard of this graft's on its action, not by
 a trigger on the circle feat's table
 ([writes stay home](../../../../_corpus/doc/architecture.md#writes-stay-home)).
 
-The three actions cite a motion: this graft registers them by `motion.register_cite`,
+The nesting cites a motion: this graft registers it by `motion.register_cite`,
 and `circle-membership-motion`, which counts the roll, attaches its guard
-that it carried.
+that it carried; the motion feat registers its adoption and ending of a
+policy so itself.
 
 ## Handlers
 
+- `adopt` and `end` (ordered): the motion feat's `adopting` and
+  `ending`, extended in their one transaction under one verdict by the
+  circle feat's `granting` and `revoking`, so a mandate policy's values
+  are copied into its mandate as it is adopted, and its mandate revoked
+  as it ends, by the policy's own write. They submit the motion feat's
+  payload with the mandate, or none for a policy of another kind.
+  `circle-membership-motion` carries out every policy a passing motion
+  adopts or ends through them.
 - `putting`: the proposal a motion about a circle (`about`, read from
   its page's form) makes, to the circle that decides it, by its
   procedure: the one above it, or for a nesting the deepest circle
   holding both its place and the one it moves to, or the assembly for
-  itself; titled with what it decides. It writes nothing: the circle
+  itself; titled with what it decides. Granting a mandate is proposing
+  its policy, its legal wording made from the role, the power, what it
+  grants in words and its cap, each value marked
+  (`The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write`);
+  revoking one is proposing to end its policy, put to the circle that
+  adopted it, since a policy is ended by its own circle: a mandate the
+  assembly adopted is the assembly's to end. It writes nothing: the circle
   page's `put` is `circle-membership-motion`'s, which proposes it and
   fixes its roll in one write, as only the graft holding the roll can.
   The writes that carry a passing motion out are

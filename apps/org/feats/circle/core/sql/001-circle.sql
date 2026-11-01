@@ -18,23 +18,25 @@ CREATE TABLE circle.role (
   duty text NOT NULL DEFAULT ''
 );
 
--- A grant of one power to one role, for a term. `limit` caps a single
--- write, `budget` a total over `per`; never both. A mandate with no `from`
--- was granted before the records began.
+-- A grant of one power to one role, for a term: the values of the mandate
+-- policy that grants it, copied as it is adopted (`circle.mandate_from`).
+-- `limit` caps a single write, `budget` a total over `per`; never both.
+-- `from` and `until` are the days its policy applies; `revoked`, the day
+-- its policy ended, from which it grants nothing.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   role text NOT NULL REFERENCES circle.role,
   power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
-  text text NOT NULL,
+  policy text NOT NULL UNIQUE,
   "limit" cella.amount,
   budget cella.amount,
   per text CHECK (per IN ('month', 'year')),
-  "from" date,
+  "from" date NOT NULL,
   until date,
   revoked date,
   CHECK ("limit" IS NULL OR budget IS NULL),
   CHECK ((budget IS NULL) = (per IS NULL)),
-  CHECK (until IS NULL OR "from" IS NULL OR "from" < until)
+  CHECK (until IS NULL OR "from" < until)
 );
 
 CREATE INDEX ON circle.mandate (role);

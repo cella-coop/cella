@@ -3,9 +3,9 @@
 // laptop, enrolling it; the assembly admits her and the close seats her
 // in the same verdict, or refuses all of it; a suspension by motion stops a
 // member's writes; a nesting that would make a cycle is refused; a
-// mandate is granted by motion, and one beyond what the circle above
-// holds is refused; and a lead approves the time of their own circle
-// alone, the treasurer everyone's. Run by `cella test` on a fresh database.
+// mandate is granted by motion, a policy copied into its mandate, and one
+// beyond what the circle above holds is refused; and a lead approves the
+// time of their own circle alone, the treasurer everyone's. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,7 +14,6 @@ import { propose as proposeAlone, vote } from '@cella/org-motion/api'
 import { putting } from '@cella/org-graft-circle-motion/api'
 import type { Put } from '@cella/org-graft-circle-motion/models'
 import { carried, close, propose, put } from '@cella/org-graft-circle-membership-motion/api'
-import { grant } from '@cella/org-circle/api'
 import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
@@ -218,7 +217,7 @@ test('nesting Brand under Marketing settles; Marketing under Brand then makes a 
   assert.equal((await one<{ parent: string }>(`SELECT parent FROM circle.circle WHERE id = 'marketing'`)).parent, 'coordination')
 })
 
-test('coordination grants the finance role send-quote by motion; a grant citing a motion that does not grant it is refused', async () => {
+test('coordination grants the finance role send-quote by motion, a mandate policy of coordination\'s, copied into its mandate', async () => {
   const proposed = settled(
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'send-quote', text: 'send a quote', limit: 5000 }, deadline: '2026-11-28', body: '' }, as(camille)),
   )
@@ -227,14 +226,19 @@ test('coordination grants the finance role send-quote by motion; a grant citing 
   }
   await on('2026-11-28')
   settled(await close({ motion: proposed.motion }, as(camille)))
-  assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['circle:mandate:grant', 'settled']])
+  assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
   const granted = await one(
-    `SELECT power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from" FROM circle.mandate WHERE role = 'finance' AND power = 'send-quote'`,
+    `SELECT m.power, cella.cents(m."limit")::int AS "limit", to_char(m."from", 'YYYY-MM-DD') AS "from", r.circle, policy.sentence(w.legal) AS sentence
+     FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy JOIN policy.wording w ON w.policy = r.id
+     WHERE m.role = 'finance' AND m.power = 'send-quote'`,
   )
-  assert.deepEqual(granted, { power: 'send-quote', limit: 500000, from: '2026-11-28' })
-
-  const astray = await grant({ role: 'finance', power: 'sign-lease', text: 'sign leases', motion: proposed.motion }, as(camille))
-  assert.match(reason(astray), /does not grant sign-lease to finance so capped/)
+  assert.deepEqual(granted, {
+    power: 'send-quote',
+    limit: 500000,
+    from: '2026-11-28',
+    circle: 'coordination',
+    sentence: 'The finance role holds send-quote, to send a quote, up to 5 000 € a write',
+  })
 })
 
 test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusuf, Web\'s lead, may', async () => {
@@ -263,7 +267,7 @@ test('a mandate beyond what the circle above holds is refused: finance may not a
   await on('2026-12-08')
   settled(await close({ motion: proposed.motion }, as(camille)))
   const out = await carried(proposed.motion, as(camille))
-  assert.deepEqual(out.map((d) => [d.op, d.state]), [['circle:mandate:grant', 'refused']])
+  assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'refused']])
   assert.match(out[0].reason ?? '', /grants approve-expense to finance beyond what ag holds of it/)
 })
 

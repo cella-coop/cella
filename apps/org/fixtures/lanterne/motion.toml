@@ -2,11 +2,12 @@
 # computed from the votes the notary counted before the deadline.
 
 # The founding assembly, on 1 March 2021, adopted the statutes, and with
-# them how the co-op decides: each procedure a policy of the assembly,
-# its terms the values its sentence marks. Beside consent, majority, two
-# thirds and election, which every scope starts with, the statutes give
-# the assembly two procedures: the ordinary assembly decides by a
-# majority of the votes cast once a quarter of the associates take part;
+# them how the co-op decides and who may do what: each procedure and each
+# mandate a policy of the assembly, its terms the values its sentence
+# marks. Beside consent, majority, two thirds and election, which every
+# scope starts with, the statutes give the assembly two procedures: the
+# ordinary assembly decides by a majority of the votes cast once a
+# quarter of the associates take part;
 # the extraordinary, which amends the statutes, by two thirds of the
 # votes cast once half take part. These follow the CG Scop's model
 # statutes for a SCOP SARL under loi n° 78-763 of 19 July 1978; the
@@ -21,7 +22,7 @@ deadline = 2021-03-01
 closed = 2021-03-01
 body = """
 The founders adopt the statutes of Lanterne SCOP SARL à capital variable,
-and with them how its circles decide.
+and with them how its circles decide and the mandates they grant.
 """
 
 [[motion.action]]
@@ -47,6 +48,153 @@ args = { kind = "procedure", wording = "By the {label: ordinary assembly}'s proc
 [[motion.action]]
 kind = "policy"
 args = { kind = "procedure", wording = "By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, which amends the statutes, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: 1/2} of the associates on its roll" }
+
+# The mandates the statutes grant, each a policy of the assembly: its
+# sentence marks the role, the power and the cap, copied into the circle
+# feat's mandates as it is adopted.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: edit-client}, to add and edit clients" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: edit-document}, to edit, version and comment on documents" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: edit-task}, to create, assign, file and move tasks" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: log-time}, to log and submit one's own time" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: invite-member}, to invite someone to join, with their first device" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: commit}, to sign contracts and commit spending, up to {limit: 20 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: record-entry}, to record entries in the books" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: carry-books}, to carry the books over from the co-op's last tool" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: prepare-payroll}, to prepare the monthly pay run" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: pay-payroll}, to pay the monthly pay run" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: approve-payroll}, to approve the monthly pay run" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: hire-worker}, to hire workers and open their candidacies" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: reimburse-expense}, to reimburse members' expenses, up to {limit: 3 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: approve-expense}, to approve members' expenses, up to {limit: 2 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: approve-bill}, to approve suppliers' bills, up to {limit: 5 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: issue-invoice}, to issue invoices" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: record-receipt}, to record money received" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: record-bill}, to record suppliers' bills" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: repay-capital}, to repay departed associates' capital" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: close-period}, to close a period" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: distribute-surplus}, to distribute a surplus the assembly approved" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: approve-expense}, to approve what the circle's members spend, within {budget: 1 000 €} a {per: month}" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: send-quote}, to send a quote, up to {limit: 15 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: manage-project}, to start and run projects" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: set-budget}, to set a project's budget and grant shares of it, up to {limit: 50 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: erase-personal-data}, to erase a person's data among the clients, when they ask" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: approve-time}, to approve timesheets" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: manage-project}, to start and run projects" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: set-budget}, to set a project's budget and grant shares of it, up to {limit: 15 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: approve-time}, to approve timesheets" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: treasurer} role holds {power: approve-time}, to approve everyone's timesheets" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: schedule-meeting}, to schedule and cancel the circle's meetings" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: schedule-meeting}, to schedule and cancel meetings" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: secretary} role holds {power: keep-minutes}, to hold the circle's meetings, record who came and keep their minutes" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: keep-minutes}, to hold the circle's meetings, record who came and keep their minutes" }
 
 [[motion]]
 id = "m-2026-006"

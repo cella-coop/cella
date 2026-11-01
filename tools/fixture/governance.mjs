@@ -7,9 +7,9 @@
 // invited member has taken up their invitation, with the first device it
 // enrolled, without which their admission is refused, and only they have.
 
-// The kinds the grafts register, and `policy`, which the motion feat
-// registers itself.
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'grant', 'revoke', 'adopt', 'terms', 'patronage', 'distribution', 'policy'])
+// The kinds the grafts register, and `policy` and `end`, which the motion
+// feat registers itself.
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'adopt', 'terms', 'patronage', 'distribution', 'policy', 'end'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))

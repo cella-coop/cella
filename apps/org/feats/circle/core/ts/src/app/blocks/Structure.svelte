@@ -2,8 +2,9 @@
   import { money, power, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Mandate, Role } from '../../models/circle.ts'
 
-  // A circle's roles, and the mandates that grant them powers, each capped
-  // by a limit per write or a budget over a period.
+  // A circle's roles, and the mandates that grant them powers, each its
+  // policy's sentence, capped by a limit per write or a budget over a
+  // period.
   let { data }: { data: Detail; id: string } = $props()
 
   const roles: Column<Role>[] = [
@@ -13,7 +14,7 @@
   ]
   const mandates: Column<Mandate>[] = [
     { key: 'power', label: 'Power', value: (m) => power(m.power) },
-    { key: 'text', label: 'Grants', value: (m) => m.text },
+    { key: 'sentence', label: 'Policy', value: (m) => m.sentence },
     { key: 'role', label: 'Role', value: (m) => m.role },
     { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },
     { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${money(m.budget)} a ${m.per}`) },

@@ -65,8 +65,8 @@ END;
 -- A revoked mandate stays revoked, and a mandate's grant never changes.
 CREATE FUNCTION circle.stays_granted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF (NEW.role, NEW.power, cella.cents(NEW."limit"), cella.cents(NEW.budget), NEW.per, NEW."from", NEW.until)
-       IS DISTINCT FROM (OLD.role, OLD.power, cella.cents(OLD."limit"), cella.cents(OLD.budget), OLD.per, OLD."from", OLD.until)
+  IF (NEW.role, NEW.power, NEW.policy, cella.cents(NEW."limit"), cella.cents(NEW.budget), NEW.per, NEW."from", NEW.until)
+       IS DISTINCT FROM (OLD.role, OLD.power, OLD.policy, cella.cents(OLD."limit"), cella.cents(OLD.budget), OLD.per, OLD."from", OLD.until)
     OR (OLD.revoked IS NOT NULL AND NEW.revoked IS DISTINCT FROM OLD.revoked) THEN
     RAISE EXCEPTION 'mandate % of % keeps its grant, and stays revoked', OLD.id, OLD.role
       USING ERRCODE = 'triggered_action_exception';
@@ -97,37 +97,8 @@ BEGIN ATOMIC
   LEFT JOIN circle.circle up ON up.id = p.parent;
 END;
 
--- circle:mandate:grant — the write granted the mandate its payload names,
--- from the verdict date, to that role, for that power.
-CREATE FUNCTION circle.grants(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN m.id IS NULL THEN 'no mandate ' || coalesce(p.mandate::text, 'is named')
-    WHEN m."from" IS DISTINCT FROM cella.verdict_date() OR m.role IS DISTINCT FROM p.role OR m.power IS DISTINCT FROM p.power
-      THEN 'mandate ' || m.id || ' was not granted by this write'
-  END
-  FROM (SELECT (payload ->> 'mandate')::bigint AS mandate, payload ->> 'role' AS role, payload ->> 'power' AS power) p
-  LEFT JOIN circle.mandate m ON m.id = p.mandate;
-END;
-
--- circle:mandate:revoke — the write revoked the mandate on the verdict
--- date.
-CREATE FUNCTION circle.revokes(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN m.id IS NULL THEN 'no mandate ' || coalesce(p.mandate::text, 'is named')
-    WHEN m.revoked IS DISTINCT FROM cella.verdict_date() THEN 'mandate ' || m.id || ' was not revoked by this write'
-  END
-  FROM (SELECT (payload ->> 'mandate')::bigint AS mandate) p
-  LEFT JOIN circle.mandate m ON m.id = p.mandate;
-END;
-
 INSERT INTO cella.guard (op, fn, owner) VALUES
-  ('circle:circle:nest', 'circle.nests(jsonb)', 'circle'),
-  ('circle:mandate:grant', 'circle.grants(jsonb)', 'circle'),
-  ('circle:mandate:revoke', 'circle.revokes(jsonb)', 'circle');
+  ('circle:circle:nest', 'circle.nests(jsonb)', 'circle');
 
 GRANT UPDATE (parent, path) ON circle.circle TO cella_app;
 GRANT INSERT, UPDATE (revoked) ON circle.mandate TO cella_app;

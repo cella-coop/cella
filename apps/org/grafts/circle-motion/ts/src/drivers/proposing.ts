@@ -29,10 +29,10 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
      WHERE c.id = $1 AND (r.circle = c.id OR (r.circle = '*' AND c.parent IS NULL)) ORDER BY r.circle = '*', r.name`,
     [circle],
   )
-  const mandates = await db.query<{ id: string; label: string }>(
-    `SELECT m.id::text AS id, m.power || ' (' || r.name || ')' AS label
+  const mandates = await db.query<{ policy: string; label: string }>(
+    `SELECT m.policy, m.power || ' (' || r.name || ')' AS label
      FROM circle.mandate m JOIN circle.role r ON r.id = m.role
-     WHERE r.id = ANY($1) AND m.revoked IS NULL ORDER BY r.name, m.power`,
+     WHERE r.id = ANY($1) AND (m.revoked IS NULL OR m.revoked > cella.verdict_date()) ORDER BY r.name, m.power`,
     [roles.rows.map((r) => r.id)],
   )
   const open = await db.query<Proposing['open'][number]>(

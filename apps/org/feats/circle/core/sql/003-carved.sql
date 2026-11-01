@@ -22,7 +22,7 @@ BEGIN ATOMIC
     FROM circle.mandate x
     JOIN circle.role r2 ON r2.id = x.role
     WHERE x.power = m.power
-      AND x.revoked IS NULL
+      AND (x.revoked IS NULL OR x.revoked > beyond.day)
       AND (x."from" IS NULL OR x."from" <= beyond.day)
       AND (x.until IS NULL OR x.until > beyond.day)
       AND r2.circle = ANY(c.path)
@@ -30,7 +30,7 @@ BEGIN ATOMIC
     ORDER BY array_position(c.path, r2.circle) DESC
     LIMIT 1
   ) s ON true
-  WHERE m.revoked IS NULL
+  WHERE (m.revoked IS NULL OR m.revoked > beyond.day)
     AND (m."from" IS NULL OR m."from" <= beyond.day)
     AND (m.until IS NULL OR m.until > beyond.day)
     AND NOT EXISTS (
@@ -38,7 +38,7 @@ BEGIN ATOMIC
       JOIN circle.role r3 ON r3.id = y.role
       WHERE r3.circle = s.circle
         AND y.power = m.power
-        AND y.revoked IS NULL
+        AND (y.revoked IS NULL OR y.revoked > beyond.day)
         AND (y."from" IS NULL OR y."from" <= beyond.day)
         AND (y.until IS NULL OR y.until > beyond.day)
         AND ((y."limit" IS NULL AND y.budget IS NULL)
@@ -49,12 +49,12 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
--- circle:mandate:grant, circle:mandate:revoke, circle:circle:nest — after
--- the write, every mandate in force is carved from what the circle above
--- holds: a grant beyond its source is refused, as is a revocation that
--- leaves a mandate carved from it beyond what remains above, and a
--- nesting that moves a subtree under circles holding less than its
--- mandates.
+-- circle:circle:nest, and the adoption and end of a mandate policy, to
+-- which circle-motion attaches it — after the write, every mandate in
+-- force is carved from what the circle above holds: a grant beyond its
+-- source is refused, as is an end that leaves a mandate carved from it
+-- beyond what remains above, and a nesting that moves a subtree under
+-- circles holding less than its mandates.
 CREATE FUNCTION circle.carves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -62,6 +62,4 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
-  ('circle:circle:nest', 'circle.carves(jsonb)', 'circle'),
-  ('circle:mandate:grant', 'circle.carves(jsonb)', 'circle'),
-  ('circle:mandate:revoke', 'circle.carves(jsonb)', 'circle');
+  ('circle:circle:nest', 'circle.carves(jsonb)', 'circle');

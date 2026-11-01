@@ -189,3 +189,17 @@ export interface Adopted {
   // The BLAKE3 of its wordings, in hex, which the log commits to.
   hash: string
 }
+
+// Ending the policy a passed motion's action `n` names.
+export interface End {
+  motion: string
+  n: number
+}
+
+export interface Ended {
+  policy: string
+  motion: string
+  n: number
+  // The day it ends, the verdict date.
+  ends: string
+}

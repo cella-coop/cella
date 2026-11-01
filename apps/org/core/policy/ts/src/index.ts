@@ -85,3 +85,20 @@ export async function register(db: Db): Promise<Policy[]> {
   const { rows } = await db.query<Policy>(`${select} ORDER BY p.adopted DESC, p.id DESC`)
   return rows
 }
+
+// Ends a policy on the verdict date in the write's transaction, by the
+// motion's action `n`, through the register's own function; a policy not
+// in force is refused there. Returns the day it ends.
+export async function ending(tx: Db, policy: string, motion: string, n: number): Promise<string> {
+  const { rows } = await tx.query<{ ends: string }>(`SELECT to_char(policy.end($1, $2, $3), 'YYYY-MM-DD') AS ends`, [policy, motion, n])
+  return rows[0].ends
+}
+
+// The legal wording of each policy named, as it reads, by its id.
+export async function sentences(db: Db, ids: string[]): Promise<Map<string, string>> {
+  const { rows } = await db.query<{ id: string; sentence: string }>(
+    'SELECT w.policy AS id, policy.sentence(w.legal) AS sentence FROM policy.wording w WHERE w.policy = ANY($1)',
+    [ids],
+  )
+  return new Map(rows.map((r) => [r.id, r.sentence]))
+}

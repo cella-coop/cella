@@ -1,4 +1,5 @@
 import type { Db } from '@cella/org-db'
+import { sentences } from '@cella/org-policy'
 import type { Held, Seat } from '../models/seat.ts'
 
 const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, mp.name AS "memberName", p.role, r.name AS "roleName",
@@ -23,16 +24,18 @@ export async function seats(db: Db, by: { circle?: string; member?: string }): P
 // The mandates a member holds through the seats they hold now: what
 // `circle_membership.may` grants them, before any limit is spent.
 export async function held(db: Db, member: string): Promise<Held[]> {
-  const { rows } = await db.query<Held>(
-    `SELECT DISTINCT ON (md.power, md.id) md.id::text AS id, md.power, md.text, cella.cents(md."limit") AS "limit", md.role, p.circle, c.name AS "circleName"
+  const { rows } = await db.query<Omit<Held, 'sentence'>>(
+    `SELECT DISTINCT ON (md.power, md.id) md.id::text AS id, md.power, md.policy, cella.cents(md."limit") AS "limit", md.role, p.circle, c.name AS "circleName"
      FROM circle_membership.seat p
      JOIN circle.mandate md ON md.role = p.role
      JOIN circle.circle c ON c.id = p.circle
-     WHERE p.member = $1 AND p.until IS NULL AND md.revoked IS NULL AND md.until IS NULL
+     WHERE p.member = $1 AND p.until IS NULL AND (md.revoked IS NULL OR md.revoked > cella.verdict_date()) AND md.until IS NULL
      ORDER BY md.power, md.id`,
     [member],
   )
-  return rows.map((r) => ({ ...r, limit: r.limit === null ? null : Number(r.limit) }))
+  // Each mandate reads as its policy's sentence, from the register.
+  const read = await sentences(db, rows.map((r) => r.policy))
+  return rows.map((r) => ({ ...r, sentence: read.get(r.policy) ?? r.policy, limit: r.limit === null ? null : Number(r.limit) }))
 }
 
 // The circles each member sits in now, by address.

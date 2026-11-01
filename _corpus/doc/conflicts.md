@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 # Conflicts
@@ -28,7 +28,7 @@ state is that of 24 October 2026.
 | `person.revoke`, `person.recover` | ordered | right |
 | `circle.nest` | ordered | right, at rung 1 already; **applied**: decided, and refused when a nesting settled first makes it a cycle ([tree](#the-circles-form-a-tree)) |
 | `circle-membership:seat.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
-| `circle.mandate.grant`, `.revoke` | ordered | right; **applied**: decided, by the circle above the role's |
+| `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by the circle above the role's, the circle feat's mandate copied or revoked in the same write ([mandates](../../apps/org/feats/circle/index.md#mandates)) |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
@@ -250,7 +250,7 @@ the roll.
 
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
-| `expense.approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | someone without authority spends |
+| `expense.approve` vs the end of a mandate policy | the approval stands | refused: no power | someone without authority spends |
 | spend vs `circle-membership:seat.remove` | the spend stands | refused | as above |
 | spend vs `membership.suspend` / `.exit` | the spend stands | refused | as above |
 | `expense.approve` vs `expense.approve`, one budget | both, if the budget covers both | both, if it covers both | the budget is overspent |
@@ -287,7 +287,7 @@ Owner: the `circle` feat.
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `nest` X under Y vs `nest` Y under X | Y under X refused | X under Y refused | a cycle: neither circle reaches the assembly, and no power flows to either |
-| `nest` vs `mandate.grant` in the moved circle | the grant is checked under the new parent | the grant may exceed what the new parent holds | a circle holds powers its parent does not |
+| `nest` vs a mandate policy adopted in the moved circle | the mandate is checked under the new parent | the mandate may exceed what the new parent holds | a circle holds powers its parent does not |
 
 Ordered is right, and needed at rung 1 already: two concurrent server
 transactions can each see no cycle. The `actions.ts` comment ("two offline
@@ -364,7 +364,7 @@ Owner: the `invoice` feat.
 |---|---|---|---|
 | `issue` vs `issue`, one series | the next number | the next number | duplicate numbers |
 | `issue` vs `period.close` | as any post | refused for the period | an invoice dated in closed books |
-| `issue` vs `mandate.revoke` of `issue-invoice` | stands | refused | issued without the power |
+| `issue` vs the end of the mandate policy for `issue-invoice` | stands | refused | issued without the power |
 
 Bounded is right. At rung 1 the server holds the only series. **Rung 2**
 gives each device a series of its own, and three things need guards first:
@@ -533,7 +533,7 @@ Owner: the `membership-project` graft, which sees both the budget (the
 | `share` vs `share`, one project | both, if what is left covers both | both, if it covers both | the budget is overspent |
 | `share` vs `budget` lowered | the budget is refused below the shares | the share is refused beyond the new budget | shares above the budget |
 | `share` vs `archive` | the share stands | refused: the project is archived | a share of a frozen project |
-| `share` vs `circle.mandate.revoke` of `set-budget` | the share stands | refused: no power | as any spend ([a mandate's limit](#a-mandates-limit)) |
+| `share` vs the end of the mandate policy for `set-budget` | the share stands | refused: no power | as any spend ([a mandate's limit](#a-mandates-limit)) |
 
 The share is bounded, as `account.draw` is: the only thing two shares can
 break together is the budget running out, the right they spend. Setting
@@ -643,7 +643,7 @@ the budget; `circle-membership` for the power and its limit.
 |---|---|---|---|
 | `approve` vs `refuse`, one expense | refused: it is approved | refused: it is refused | an expense both paid and refused |
 | `approve` vs `approve`, one expense | the second refused: approved already | as A | charged twice |
-| `approve` vs `circle.mandate.revoke` | the approval stands | refused: no power | as any spend |
+| `approve` vs the end of a mandate policy | the approval stands | refused: no power | as any spend |
 | `approve` vs `approve`, one approver's month | both, if the budget covers both | both, if it covers both | the budget overspent |
 | `reimburse` vs `reimburse` | the second refused | as A | paid back twice |
 

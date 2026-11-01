@@ -1,9 +1,10 @@
 // seed: loads a mock co-op into the feat and graft schemas, as the state
 // carried over from before the log, in one write that settles as the log's
 // first entry (the import feat's `import:state:carry`): the scope's address, people, their
-// memberships, employments and candidacies, their devices, circles, roles and mandates,
+// memberships, employments and candidacies, their devices, circles and roles,
 // seats, motions with their stances and what they decide, the policies
-// the closed ones adopted, invitations'
+// the closed ones adopted, the mandates among them copied into the
+// circles' mandates, invitations'
 // first devices, documents with their versions, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
 // their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
@@ -139,13 +140,6 @@ async function load() {
   }
   for (const r of structure.role ?? []) {
     await db.query('INSERT INTO circle.role (id, circle, name, duty) VALUES ($1, $2, $3, $4)', [r.id, r.circle, r.name, r.duty ?? ''])
-  }
-  for (const m of structure.mandate ?? []) {
-    await db.query(
-      `INSERT INTO circle.mandate (role, power, text, "limit", budget, per, "from", until)
-       VALUES ($1, $2, $3, cella.amount($4), cella.amount($5), $6, $7, $8)`,
-      [m.role, m.power, m.text, m.limit ?? null, m.budget ?? null, m.per ?? null, day(m.from), day(m.until)],
-    )
   }
 
   const seats = read('graft.circle-membership').seat ?? []
@@ -329,7 +323,7 @@ async function load() {
   const met = await meetings(db, read, day)
   const filed = await files(db, read, day, dir)
   said =
-    `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${seats.length} seats, ` +
+    `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${seats.length} seats, ` +
     `${motions.length} motions, ${votes} stances, ` +
     `${moved} actions, ${policies} policies, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`

@@ -1,28 +1,28 @@
 CREATE SCHEMA circle_motion;
 
 -- What a motion may decide of the circles, registered with the motion
--- feat so its New form offers them: nesting a circle under another,
--- granting a power to a role, revoking a mandate. Amounts are in euros,
--- as the form asks for them; the writes carry them in cents.
+-- feat so its New form offers it: nesting a circle under another. A
+-- mandate is a policy, adopted and ended by the motion feat's own kinds,
+-- `policy` and `end`, which this graft extends with the circle feat's copy.
 SELECT motion.register_carries('nest', 'Nest a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "parent", "label": "Under", "type": "text"}]', 'circle-motion');
-SELECT motion.register_carries('grant', 'Grant a mandate', '[{"name": "role", "label": "Role", "type": "text"}, {"name": "power", "label": "Power", "type": "text"}, {"name": "text", "label": "Grants", "type": "text"}, {"name": "limit", "label": "Limit per write, €", "type": "number", "optional": true}, {"name": "budget", "label": "Budget, €", "type": "number", "optional": true}, {"name": "per", "label": "Budget per (month or year)", "type": "text", "optional": true}]', 'circle-motion');
-SELECT motion.register_carries('revoke', 'Revoke a mandate', '[{"name": "mandate", "label": "Mandate", "type": "number"}]', 'circle-motion');
 
--- Which circle an action is about: the circle nested, the role's circle,
--- the revoked mandate's role's circle. A role every working circle has
--- (`*`) is the assembly's to grant.
+-- Which circle an action is about: the circle nested; for a mandate
+-- policy, the circle of the role it marks; for the end of a policy that
+-- granted a mandate, the circle of the mandate's role. A role every
+-- working circle has (`*`) is the assembly's to grant.
 CREATE VIEW circle_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args,
        CASE m.kind
          WHEN 'nest' THEN m.args ->> 'circle'
-         WHEN 'grant' THEN (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = m.args ->> 'role')
-         WHEN 'revoke' THEN (
-           SELECT nullif(r.circle, '*') FROM circle.mandate x JOIN circle.role r ON r.id = x.role
-           WHERE m.args ->> 'mandate' ~ '^[0-9]{1,18}$' AND x.id = (m.args ->> 'mandate')::bigint
+         WHEN 'policy' THEN (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = motion.marked(m.args ->> 'wording') ->> 'role')
+         WHEN 'end' THEN (
+           SELECT nullif(r.circle, '*') FROM circle.mandate x JOIN circle.role r ON r.id = x.role WHERE x.policy = m.args ->> 'policy'
          )
        END AS circle
 FROM motion.action m
-WHERE m.kind IN ('nest', 'grant', 'revoke');
+WHERE m.kind = 'nest'
+  OR (m.kind = 'policy' AND m.args ->> 'kind' = 'mandate')
+  OR (m.kind = 'end' AND EXISTS (SELECT FROM circle.mandate x WHERE x.policy = m.args ->> 'policy'));
 
 -- Whether a motion of the circle `decider` may decide about the circle
 -- `subject`: the assembly decides about every circle, and a circle about
@@ -35,9 +35,11 @@ BEGIN ATOMIC
     OR (decides.decider IS DISTINCT FROM decides.subject AND circle.within(decides.subject, decides.decider));
 END;
 
--- motion:motion:propose — each action of this graft's kinds names
--- what it applies to, and the motion's circle may decide it: about the
--- circle nested, and the place it moves to; about the role's circle.
+-- motion:motion:propose — each action of these kinds names what it
+-- applies to, and the motion's circle may decide it: about the circle
+-- nested, and the place it moves to; for a mandate policy, whose values
+-- the circle feat holds sound (`circle.mandate_flaw`), about the role's
+-- circle; for the end of one, about its mandate's.
 CREATE FUNCTION circle_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -47,20 +49,13 @@ BEGIN ATOMIC
         THEN 'no circle ' || coalesce(m.args ->> 'circle', 'is named') || ' to nest'
       WHEN m.kind = 'nest' AND NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = m.args ->> 'parent')
         THEN 'no circle ' || coalesce(m.args ->> 'parent', 'is named') || ' to nest under'
-      WHEN m.kind = 'grant' AND NOT EXISTS (SELECT FROM circle.role r WHERE r.id = m.args ->> 'role')
-        THEN 'no role ' || coalesce(m.args ->> 'role', 'is named')
-      WHEN m.kind = 'grant' AND coalesce(m.args ->> 'power', '') !~ '^[a-z][a-z-]*$'
-        THEN 'a power is named in lower case, such as approve-time'
-      WHEN m.kind = 'grant' AND m.args ? 'limit' AND m.args ? 'budget'
-        THEN 'a mandate caps by a limit per write or by a budget, not both'
-      WHEN m.kind = 'grant' AND m.args ? 'budget' AND coalesce(m.args ->> 'per', '') NOT IN ('month', 'year')
-        THEN 'a budget runs per month or per year'
-      WHEN m.kind = 'revoke' AND NOT EXISTS (
-        SELECT FROM circle.mandate x WHERE m.args ->> 'mandate' ~ '^[0-9]{1,18}$' AND x.id = (m.args ->> 'mandate')::bigint AND x.revoked IS NULL
-      ) THEN 'no mandate in force ' || coalesce(m.args ->> 'mandate', 'is named')
+      WHEN m.kind = 'policy' AND circle.mandate_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
+        THEN circle.mandate_flaw(motion.marked(m.args ->> 'wording'))
       WHEN NOT circle_motion.decides(d.circle, coalesce(m.circle, '*'))
         OR (m.kind = 'nest' AND NOT circle_motion.decides(d.circle, m.args ->> 'parent') AND d.circle IS DISTINCT FROM m.args ->> 'parent')
-        THEN d.circle || ' may not decide to ' || m.kind || ' in ' || coalesce(m.circle, 'every working circle')
+        THEN d.circle || ' may not decide to '
+          || CASE m.kind WHEN 'nest' THEN 'nest' WHEN 'policy' THEN 'grant a mandate' ELSE 'revoke a mandate' END
+          || ' in ' || coalesce(m.circle, 'every working circle')
     END AS r
     FROM circle_motion.action m
     JOIN motion.motion d ON d.id = m.motion
@@ -86,52 +81,18 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
--- circle:mandate:grant — the cited motion grants this power to this
--- role, capped as the payload caps it, its euros in cents.
-CREATE FUNCTION circle_motion.grants(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
-    WHEN NOT EXISTS (
-      SELECT FROM circle_motion.action m
-      WHERE m.motion = d.id AND m.kind = 'grant'
-        AND m.args ->> 'role' = p.role AND m.args ->> 'power' = p.power
-        AND round((m.args ->> 'limit')::numeric * 100) IS NOT DISTINCT FROM p."limit"
-        AND round((m.args ->> 'budget')::numeric * 100) IS NOT DISTINCT FROM p.budget
-        AND (m.args ->> 'per') IS NOT DISTINCT FROM p.per
-    ) THEN d.id || ' does not grant ' || coalesce(p.power, 'this power') || ' to ' || coalesce(p.role, 'this role') || ' so capped'
-  END
-  FROM (
-    SELECT payload ->> 'motion' AS motion, payload ->> 'role' AS role, payload ->> 'power' AS power,
-           (payload ->> 'limit')::numeric AS "limit", (payload ->> 'budget')::numeric AS budget, payload ->> 'per' AS per
-  ) p
-  LEFT JOIN motion.motion d ON d.id = p.motion;
-END;
-
--- circle:mandate:revoke — the cited motion revokes this mandate.
-CREATE FUNCTION circle_motion.revokes(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
-    WHEN NOT EXISTS (
-      SELECT FROM circle_motion.action m
-      WHERE m.motion = d.id AND m.kind = 'revoke' AND m.args ->> 'mandate' = p.mandate
-    ) THEN d.id || ' does not revoke mandate ' || coalesce(p.mandate, '?')
-  END
-  FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'mandate' AS mandate) p
-  LEFT JOIN motion.motion d ON d.id = p.motion;
-END;
-
+-- The adoption and end of a policy are the motion feat's; this graft,
+-- joining it to the circle feat, attaches the circle feat's guards that a
+-- mandate policy's mandate is copied and revoked with it, and that every
+-- mandate in force is still carved from what the circles above hold.
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'circle_motion.asks(jsonb)', 'circle-motion'),
   ('circle:circle:nest', 'circle_motion.nests(jsonb)', 'circle-motion'),
-  ('circle:mandate:grant', 'circle_motion.grants(jsonb)', 'circle-motion'),
-  ('circle:mandate:revoke', 'circle_motion.revokes(jsonb)', 'circle-motion');
+  ('motion:policy:adopt', 'circle.grants(jsonb)', 'circle-motion'),
+  ('motion:policy:adopt', 'circle.carves(jsonb)', 'circle-motion'),
+  ('motion:policy:end', 'circle.revokes(jsonb)', 'circle-motion'),
+  ('motion:policy:end', 'circle.carves(jsonb)', 'circle-motion');
 SELECT motion.register_cite('circle:circle:nest', 'circle-motion');
-SELECT motion.register_cite('circle:mandate:grant', 'circle-motion');
-SELECT motion.register_cite('circle:mandate:revoke', 'circle-motion');
 
 GRANT USAGE ON SCHEMA circle_motion TO cella_app, cella_guards;
 GRANT SELECT ON circle_motion.action TO cella_app, cella_guards;

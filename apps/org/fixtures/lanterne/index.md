@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 # Lanterne
@@ -67,6 +67,11 @@ Camille hires, and opens a new hire's candidacy for membership.
   which amends the statutes, two thirds of the votes cast once half take
   part (`motion.toml`; loi n° 78-763, as the CG Scop's model statutes
   put it, not checked on Légifrance).
+- **Mandates.** Each mandate is a policy of the assembly, adopted with
+  the statutes by m-2021-001: its sentence marks the role, the power and
+  the cap, as `The {role: finance} role holds {power: pay-supplier}, to
+  pay suppliers, up to {limit: 3 000 €} a write`, and its values are
+  copied into `circle.mandate` as it is adopted (`motion.toml`).
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
@@ -133,7 +138,7 @@ Camille hires, and opens a new hire's candidacy for membership.
 One file per feat and one per graft, so the mock keeps the same boundaries
 as the code: an invoice names whom it bills as text, and the link to the
 client record is the `client-invoice` graft's. Amounts are in cents, and a
-mandate's power is an id beside its text. `tools/fixture-check.mjs` checks
+mandate is a policy whose power is an id. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
 link resolves and the books agree with the invoices; `tools/fixture/work.mjs`,
 that shares stay within budgets, an invoice bills a project of its client,

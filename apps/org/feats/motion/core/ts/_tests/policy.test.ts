@@ -1,9 +1,10 @@
 // Policies, alone, on a database holding only the app's core and this
 // feat: the register in org's core reads the values a legal wording marks,
 // each once, refuses a wording that marks one twice, and is written only
-// through `policy.adopt`, whose wording no guard may read; this feat's
-// guards hold a proposal to a sound policy and an adoption to the policy
-// the motion carries. Run by `cella test slice motion`.
+// through `policy.adopt` and ended through `policy.end`, whose wording no
+// guard may read; this feat's guards hold a proposal to a sound policy,
+// an adoption to the policy the motion carries and an end to the policy
+// it names. Run by `cella test slice motion`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -170,6 +171,37 @@ test('an adoption is the policy its motion carries, worded as the motion names i
     // Worded otherwise than the motion carries: the hash differs.
     await db.query(`SELECT policy.adopt('ag', 'rule', 'Refused clients are named in the rate card', NULL, 'm-2026-014', 2, '2026-11-21', NULL, NULL)`)
     assert.match((await adopts({ motion: 'm-2026-014', n: 2, policy: 'm-2026-014/2' })) ?? '', /m-2026-014\/2 is not the policy m-2026-014 adopts/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a policy is ended by a motion of its own circle, on the verdict date, by the action the register records', async () => {
+  const ends = async (payload: object) => (await db.query<{ r: string | null }>('SELECT motion.ends($1) AS r', [payload])).rows[0].r
+  const asks = async () => (await db.query<{ r: string | null }>(`SELECT motion.asks('{"motion": "m-2026-015"}') AS r`)).rows[0].r
+  const may = (await db.query(`SELECT has_function_privilege('cella_app', 'policy.end(text, text, integer)', 'EXECUTE') AS app,
+      has_function_privilege('cella_guards', 'policy.end(text, text, integer)', 'EXECUTE') AS guards`)).rows[0]
+  assert.deepEqual(may, { app: true, guards: false })
+  await db.query('BEGIN')
+  try {
+    await adopt(solidarity, 1)
+    await db.query(
+      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
+         ('m-2026-015', 'ag', 'No solidarity rate', 'consent', 'consent', '2026-11-07', '2026-11-21')`,
+    )
+    await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-015', 1, 'end', '{"policy": "m-2026-014/1"}')`)
+    assert.equal(await asks(), null)
+    await db.query(`UPDATE motion.action SET args = '{"policy": "m-2026-001/9"}' WHERE motion = 'm-2026-015'`)
+    assert.match((await asks()) ?? '', /no policy of ag in force is m-2026-001\/9: a policy is ended by its own circle/)
+    await db.query(`UPDATE motion.action SET args = '{"policy": "m-2026-014/1"}' WHERE motion = 'm-2026-015'`)
+
+    const payload = { motion: 'm-2026-015', n: 1, policy: 'm-2026-014/1', ends: '2026-11-21' }
+    assert.match((await ends(payload)) ?? '', /m-2026-014\/1 was not ended by this write/)
+    assert.equal((await db.query(`SELECT to_char(policy.end('m-2026-014/1', 'm-2026-015', 1), 'YYYY-MM-DD') AS e`)).rows[0].e, '2026-11-21')
+    assert.equal(await ends(payload), null)
+    assert.deepEqual((await db.query(`SELECT ended_by FROM policy.policy WHERE id = 'm-2026-014/1'`)).rows, [{ ended_by: 'm-2026-015/1' }])
+    assert.deepEqual((await db.query(`SELECT id FROM policy.in_force('ag', '2026-11-21')`)).rows, [])
+    await refused(`SELECT policy.end($1, 'm-2026-015', 1)`, ['m-2026-014/1'], /m-2026-014\/1 is no policy in force on 2026-11-21/)
   } finally {
     await db.query('ROLLBACK')
   }

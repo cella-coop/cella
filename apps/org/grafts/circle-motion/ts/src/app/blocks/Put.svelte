@@ -27,12 +27,12 @@
       {:else if state.kind === 'grant'}
         <Field label="Role" name="arg.role" options={options(data.roles, (r) => r.name)} placeholder="Choose…" required />
         <Field label="Power" name="arg.power" placeholder="approve-time" required />
-        <Field label="Grants" name="arg.text" placeholder="approve timesheets" required wide />
+        <Field label="Grants" name="arg.text" placeholder="approve timesheets" wide />
         <Field label="Limit per write, €" name="arg.limit" type="number" />
         <Field label="Budget, €" name="arg.budget" type="number" />
         <Field label="Budget per" name="arg.per" options={pers} placeholder="—" />
       {:else}
-        <Field label="Mandate" name="arg.mandate" options={options(data.mandates, (m) => m.label)} placeholder="Choose…" required wide />
+        <Field label="Mandate" name="arg.policy" options={data.mandates.map((m) => ({ value: m.policy, label: m.label }))} placeholder="Choose…" required wide />
       {/if}
       <Field label="Deadline" name="deadline" type="date" required />
       <Field label="Why" name="body" rows={3} wide />

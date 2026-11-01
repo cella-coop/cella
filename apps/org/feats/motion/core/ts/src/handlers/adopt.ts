@@ -1,21 +1,20 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
-import { adopting, type Kind } from '@cella/org-policy'
+import { write, type Deps, type Write } from '@cella/org-db'
+import * as register from '@cella/org-policy'
 import type { actions } from '../models/actions.ts'
-import type { Adopt, Adopted } from '../models/motion.ts'
+import type { Adopt, Adopted, End, Ended } from '../models/motion.ts'
 
-const op = 'motion:policy:adopt'
-
-// Adopts the policy a passed motion carries, as its own decided write: the
-// register keeps it in the motion's circle with its wordings and its
-// values, from the day the action names, or the verdict date, whichever is
-// later, and its entry commits to the hash of its wordings; a procedure
-// policy makes its procedure. `motion.adopts`
+// The adoption of the policy a passed motion carries, as a write a graft
+// may extend in its transaction, as circle-motion does with the mandate a
+// mandate policy grants: the register keeps it in the motion's circle with
+// its wordings and its values, from the day the action names, or the
+// verdict date, whichever is later, and its entry commits to the hash of
+// its wordings; a procedure policy makes its procedure. `motion.adopts`
 // holds it to what the motion carries; that the motion passed is the
 // guard of the graft that counts its roll.
-export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
-  return write(deps, {
-    op,
+export function adopting(input: Adopt): Write<Adopted> {
+  return {
+    op: 'motion:policy:adopt',
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ circle: string; args: Record<string, string>; today: string }>(
@@ -30,9 +29,9 @@ export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof a
       }
       const { args, today } = found
       const applies = args.from && args.from > today ? args.from : today
-      const policy = await adopting(tx, {
+      const policy = await register.adopting(tx, {
         circle: found.circle,
-        kind: args.kind as Kind,
+        kind: args.kind as register.Kind,
         legal: args.wording,
         friendly: args.friendly ?? null,
         motion: input.motion,
@@ -48,5 +47,37 @@ export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof a
       return { policy, motion: input.motion, n: input.n, applies, hash: hashed.rows[0].hash }
     },
     payload: (v) => ({ ...v }),
-  })
+  }
+}
+
+export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)['motion:policy:adopt'], Adopted>> {
+  return write(deps, adopting(input))
+}
+
+// The end of the policy a passed motion's action `n` names, as a write a
+// graft may extend, as circle-motion does with the mandate an ended
+// mandate policy revokes: the register ends it on the verdict date, by
+// that action. `motion.ends` holds it to what the motion carries.
+export function ending(input: End): Write<Ended> {
+  return {
+    op: 'motion:policy:end',
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ policy: string }>(
+        `SELECT m.args ->> 'policy' AS policy FROM motion.action m WHERE m.motion = $1 AND m.n = $2 AND m.kind = 'end'`,
+        [input.motion, input.n],
+      )
+      const policy = rows[0]?.policy
+      if (!policy) {
+        return { policy: '', motion: input.motion, n: input.n, ends: '' }
+      }
+      const ends = await register.ending(tx, policy, input.motion, input.n)
+      return { policy, motion: input.motion, n: input.n, ends }
+    },
+    payload: (v) => ({ ...v }),
+  }
+}
+
+export async function end(input: End, deps: Deps): Promise<Outcome<(typeof actions)['motion:policy:end'], Ended>> {
+  return write(deps, ending(input))
 }

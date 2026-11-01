@@ -24,9 +24,9 @@ BEGIN ATOMIC
   LEFT JOIN person.person x ON x.address = p.address;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('person:person:profile', 'person.own_profile(jsonb)', 'person');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('person:person:profile', 'person.own_profile(jsonb)', 'person');
 
-GRANT USAGE ON SCHEMA person TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA person TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON person.person TO cella_app;
 GRANT UPDATE (name, email, phone) ON person.person TO cella_app;
-GRANT SELECT ON person.person TO cella_rules;
+GRANT SELECT ON person.person TO cella_guards;

@@ -89,8 +89,8 @@ test('Hugo approves Sofia\'s print proofs within his budget, which charges them;
     { account: '44566', side: 'debit', cents: '3000' },
     { account: '421', side: 'credit', cents: '18000' },
   ])
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner).sort(), ['circle-expense-membership', 'circle-membership', 'expense', 'expense-transaction'])
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
+  assert.deepEqual(logged.guards.map((r) => r.owner).sort(), ['circle-expense-membership', 'circle-membership', 'expense', 'expense-transaction'])
 })
 
 test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the gérante\'s 2 000 € limit too', async () => {
@@ -240,9 +240,9 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
 
   const approved = await approveSplit({ distribution: '2025', decision: 'd-2026-006' }, as(julien))
   assert.equal(approved.state, 'settled', reason(approved))
-  const ruled = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
+  const judged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
   assert.deepEqual(
-    [...new Set(ruled.rules.map((r) => r.owner))].sort(),
+    [...new Set(judged.guards.map((r) => r.owner))].sort(),
     ['account-patronage', 'circle-decision-membership', 'decision-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
@@ -262,9 +262,9 @@ test('the 2025 surplus is approved by d-2026-006, then distributed, and posts th
   assert.deepEqual(posted[5], { account: '424', side: 'debit', cents: posted.slice(6).reduce((s, l) => s + Number(l.cents), 0).toString() })
   assert.ok(posted.slice(6).every((l) => l.account.startsWith('1013') && l.side === 'credit'))
   assert.equal(await balance('120'), 0)
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.state === 'settled' && done.entry])
   assert.deepEqual(
-    [...new Set(logged.rules.map((r) => r.owner))].sort(),
+    [...new Set(logged.guards.map((r) => r.owner))].sort(),
     ['account-membership-patronage-transaction', 'circle-membership', 'patronage', 'patronage-transaction'],
   )
 

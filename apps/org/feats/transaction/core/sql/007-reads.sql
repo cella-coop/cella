@@ -2,7 +2,7 @@
 -- line; a graft that knows whose an account is opens its lines to more
 -- readers, `key` naming the line's account, as the co-op's own accounts'
 -- to every member. An entry reads wherever one of its lines does. A
--- write's transaction sees the whole journal, as its rules do.
+-- write's transaction sees the whole journal, as its guards do.
 INSERT INTO cella.reading (what, key, power, owner) VALUES
   ('transaction', NULL, 'record-entry', 'transaction'),
   ('transaction', NULL, 'carry-books', 'transaction'),
@@ -16,8 +16,8 @@ CREATE POLICY reads ON transaction.line FOR SELECT TO cella_app
 CREATE POLICY reads ON transaction.entry FOR SELECT TO cella_app
   USING ((SELECT cella.sees('transaction')) OR EXISTS (SELECT FROM transaction.line l WHERE l.entry = entry.id));
 
-CREATE POLICY rules ON transaction.entry FOR SELECT TO cella_rules USING (true);
-CREATE POLICY rules ON transaction.line FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON transaction.entry FOR SELECT TO cella_guards USING (true);
+CREATE POLICY guards ON transaction.line FOR SELECT TO cella_guards USING (true);
 
 CREATE POLICY writes ON transaction.entry FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY writes ON transaction.line FOR INSERT TO cella_app WITH CHECK (true);

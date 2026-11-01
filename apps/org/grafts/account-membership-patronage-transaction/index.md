@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The work share employed in the associates' capital: when a year's
@@ -29,9 +29,9 @@ It joins four feats because crediting a share needs the capital account
   a write of its own, not built. `employing(distribution)` gives those
   lines.
 
-The app role may select and insert; the rules role may select.
+The app role may select and insert; the guards role may select.
 
-## Rules
+## Guards
 
 - `account_membership_patronage_transaction.credited`, on
   `patronage:distribution:distribute`: what the distribution employed in

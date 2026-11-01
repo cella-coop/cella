@@ -14,6 +14,6 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:propose', 'circle_decision_membership.sits(jsonb)', 'circle-decision-membership'),
   ('decision:decision:close', 'circle_decision_membership.sits(jsonb)', 'circle-decision-membership');

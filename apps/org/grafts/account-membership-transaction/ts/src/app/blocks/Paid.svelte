@@ -5,7 +5,7 @@
   // A member's capital paid in and out: their subscription, what they paid
   // of it from the bank or their pay and what is left, and recording a
   // payment while some is; once they left, what they are owed, each
-  // repayment with the day it falls due, and repaying the next. The rules
+  // repayment with the day it falls due, and repaying the next. The guards
   // refuse a payment beyond what is owed and a repayment before its day.
   let { data }: { data: { called: Called }; id: string } = $props()
 

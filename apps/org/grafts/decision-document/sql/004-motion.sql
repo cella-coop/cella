@@ -3,7 +3,7 @@
 -- by a trigger on `decision.motion`. A version never changes, so the hash
 -- the database gave it is the content the members consent to, read as
 -- the motion names it. That the motion names a version is `asks`, the
--- rule on the proposal.
+-- guard on the proposal.
 DROP TRIGGER adopts ON decision.motion;
 DROP FUNCTION decision_document.moved();
 
@@ -21,7 +21,7 @@ WHERE m.kind = 'adopt';
 -- document:document:adopt — the cited decision asks to adopt this
 -- document, and the version adopted hashes as the decision names it: the
 -- members voted on that content, whichever version holds it. That it
--- closed and passed on its roll is circle-decision-membership's rule,
+-- closed and passed on its roll is circle-decision-membership's guard,
 -- attached through decision.cites; that the version is the document's
 -- and its base has not moved, the document feat's.
 CREATE OR REPLACE FUNCTION decision_document.adopts(payload jsonb) RETURNS text
@@ -61,4 +61,4 @@ END;
 
 DROP TABLE decision_document.recorded;
 
-GRANT SELECT ON decision_document.adoption TO cella_app, cella_rules;
+GRANT SELECT ON decision_document.adoption TO cella_app, cella_guards;

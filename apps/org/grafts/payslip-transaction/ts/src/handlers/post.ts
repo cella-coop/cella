@@ -12,7 +12,7 @@ type Event = 'accrual' | 'payment'
 // the transaction feat and linked in `posting`. The accrual is dated the
 // run's last day, so it lands in the month the pay is for; the payment
 // the day it was paid. A run the write did not move posts nothing, and
-// the feat's rule refuses it.
+// the feat's guard refuses it.
 async function posted(tx: Db, v: Ran, event: Event): Promise<string | null> {
   if (!v.day) {
     return null

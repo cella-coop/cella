@@ -10,7 +10,7 @@ const op = 'invoice:invoice:issue' satisfies keyof typeof ops
 // on the verdict date, its amounts computed in SQL from its lines by the
 // VAT core library's `priced`, as a bill's are, each line's VAT rate sent
 // in hundredths of a percent, and the seller kept as the scope's settings
-// name it then (`invoice.seller`). The rules on the op decide: `invoice.numbered`, that the number follows the
+// name it then (`invoice.seller`). The guards on the op decide: `invoice.numbered`, that the number follows the
 // last with no gap, and any graft's on the op.
 export const issuing = (input: Issue): Write<Issued> => ({
   op,

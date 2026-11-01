@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 # Lanterne
@@ -157,7 +157,7 @@ guests, and that no item tables a decision before it was proposed.
 Files are `file.toml`, each one's bytes in `files/` under its name, and
 what holds them its grafts' files. `import/` holds a sample of each kind
 of file the co-op might bring from the tools it leaves, with lines the
-rules refuse beside the ones they take ([the samples](import/index.md));
+guards refuse beside the ones they take ([the samples](import/index.md));
 nothing seeds them.
 
 Pay runs, expenses and bills are `payslip.toml`, `expense.toml` and

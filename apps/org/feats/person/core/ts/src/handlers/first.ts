@@ -4,7 +4,7 @@ import type { Enrol } from '../models/device.ts'
 // Enrols a person's first device, inside a child's write: a hire or an
 // invitation taken up gives someone the device they sign with from the
 // start, enrolled on the verdict date by no device. A key enrolled
-// already, to anyone, is refused. The child's rule checks its write
+// already, to anyone, is refused. The child's guard checks its write
 // enrolled it.
 export async function enrolling(tx: Db, input: Enrol): Promise<{ enrolled: string }> {
   if ((await tx.query(`SELECT FROM person.device WHERE key = decode($1, 'hex')`, [input.key])).rowCount) {

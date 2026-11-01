@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -26,14 +26,14 @@ owns a write is the one that knows its fields:
 
 The root runs an import across them (`apps/org/ts/src/lib/server/import.ts`):
 it reads the file as the kind's slice says, makes each record's write as
-the importing member, in the file's order, signed and judged by the rules
+the importing member, in the file's order, signed and judged by the guards
 like any write, and records the run here. A line the slice cannot read is
 refused before any write. A **dry run** makes each write and rolls it back,
 so it says what would be created and what refused; since the notary takes
 one receipt for a transaction, each write runs in its own, and a line is
 judged on the co-op as it stands, not on the lines before it.
 
-Nothing comes in around the rules: a member comes in invited, their first
+Nothing comes in around the guards: a member comes in invited, their first
 device made when they take up the invitation, a worker's time is their
 own, an entry balances and falls in an open period.
 So each worker imports their own time export, and a FEC's opening balances
@@ -66,7 +66,7 @@ a person's name: a person among the clients is `a person, line 4`.
 | `POST /api/import/record` | confluent, `self` | the record of an import is a fact, the importer's own |
 | `carry`, from `cella seed` | ordered, `first` | the state a scope held before its log comes in once, as the log's first entry |
 
-## Rules
+## Guards
 
 - `import.records`, on `import:run:record`: the run is the actor's on the
   verdict date, with the kind, the dry run and the counts the write names.
@@ -77,13 +77,13 @@ a person's name: a person among the clients is `a person, line 4`.
 ## Schema
 
 `import` (`core/sql/`): `import.run`, numbered from `import.number`. The
-app role may select and insert; the rules role may select.
+app role may select and insert; the guards role may select.
 
 ## Tests
 
 `core/ts/_tests/run.test.ts` (`cella test slice import`): a run recorded
 as its importer on the day, its lines counted; the counts must add up, and
-the rule refuses a run the write does not name. The e2e scenario `import`
+the guard refuses a run the write does not name. The e2e scenario `import`
 runs every kind on Lanterne's samples. The e2e scenario `notarised` finds the
 seed carried in as entry 1, and a second carry refused.
 

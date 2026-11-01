@@ -5,7 +5,7 @@ import type { Propose, Proposed } from '@cella/org-decision/models'
 
 // Proposes a decision and fixes its roll, in the proposal's one
 // transaction under one verdict: the decision feat's proposal, then the
-// members seated in its circle that day. The rules of each slice judge
+// members seated in its circle that day. The guards of each slice judge
 // it: the proposal's own, and `fixed` that the roll was fixed. Every
 // proposal goes through here: the decision feat's New form, a member's
 // page and a circle's.

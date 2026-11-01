@@ -6,7 +6,7 @@ import type { Put, Table } from '../models/tabled.ts'
 // Tables a decision: an item added to the agenda, the meeting feat's,
 // titled as the decision unless it is given a title of its own, and the
 // decision it tables, in one transaction under one verdict, the feat's
-// op. The feat's trigger and the seat rule on the op judge the item; the
+// op. The feat's trigger and the seat guard on the op judge the item; the
 // graft's trigger, that the decision exists.
 export async function table(input: Table, deps: Deps): Promise<Settled<Put> | Refused> {
   const { decision, ...item } = input

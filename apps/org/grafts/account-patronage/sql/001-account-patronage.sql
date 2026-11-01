@@ -14,6 +14,6 @@ BEGIN ATOMIC
   GROUP BY d.year;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('patronage:distribution:approve', 'account_patronage.closed(jsonb)', 'account-patronage');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'account_patronage.closed(jsonb)', 'account-patronage');
 
-GRANT USAGE ON SCHEMA account_patronage TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_patronage TO cella_app, cella_guards;

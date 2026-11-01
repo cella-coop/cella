@@ -50,5 +50,5 @@ BEGIN ATOMIC
   ) t ON true;
 END;
 
-GRANT USAGE ON SCHEMA expense_invoice_project_timesheet TO cella_app, cella_rules;
-GRANT SELECT ON expense_invoice_project_timesheet.threshold TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense_invoice_project_timesheet TO cella_app, cella_guards;
+GRANT SELECT ON expense_invoice_project_timesheet.threshold TO cella_app, cella_guards;

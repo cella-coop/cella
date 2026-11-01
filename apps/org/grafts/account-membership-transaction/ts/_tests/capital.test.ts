@@ -17,7 +17,7 @@ const ines = 'ines@lanterne.example'
 const hugo = 'hugo@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
-// What a payload holds of an amount: its commitment, so the rules read the
+// What a payload holds of an amount: its commitment, so the guards read the
 // amount from the row the write made.
 const commitment = { $commit: '00'.repeat(32) }
 
@@ -112,7 +112,7 @@ test('a payment in moves what it pays from 1012 to her account; beyond what she 
   assert.match(none, /hugo@lanterne.example has no subscription to pay/)
 })
 
-test('draws add up against the limit, and the rule refuses one not the actor\'s own', async () => {
+test('draws add up against the limit, and the guard refuses one not the actor\'s own', async () => {
   const draw = async (cents: number) => {
     await db.query('BEGIN')
     const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ('2026-10-31', 'Draw') RETURNING id`)
@@ -129,7 +129,7 @@ test('draws add up against the limit, and the rule refuses one not the actor\'s 
   const { drawn } = await one<{ drawn: string }>('SELECT drawn FROM account_membership_transaction.drawn WHERE member = $1', [hugo])
   assert.equal(drawn, '30000')
   const beyond = await draw(30000)
-  // Outside a write there is no actor, so the rule says first that it is
+  // Outside a write there is no actor, so the guard says first that it is
   // not the actor's own; the limit it reads is the view's.
   const r = await one<{ r: string }>('SELECT account_membership_transaction.draws($1) AS r', [{ member: hugo, amount: commitment, entry: beyond }])
   assert.match(r.r, /may draw only on their own account/)

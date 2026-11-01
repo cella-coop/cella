@@ -1,6 +1,6 @@
 +++
 title = "circle-membership"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Positions: which member holds which role in which circle. A position is
@@ -19,11 +19,11 @@ the relationship, so the graft owns its writes.
   day. The `circle-decision-membership` graft, a higher order, fixes a
   decision's roll from it.
 
-The app role and the rules role, `cella_rules`, may select; the app role
+The app role and the guards role, `cella_guards`, may select; the app role
 may insert a seat, through `position.add`, and end one, through
 `position.remove`. Lanterne's seats are seeded.
 
-## Rules
+## Guards
 
 Who may use a power needs seats and mandates, and so lives here, the
 lowest level that sees both: mandates are the `circle` feat's, seats this
@@ -37,9 +37,9 @@ graft's, and whether a member is active on a day the `membership` feat's
 - `circle_membership.empowered`, on every op in `cella.power`: the actor may
   use the op's power on the verdict date, for the amount the payload names
   in the op's `amount` field. Each feat registers the power its ops need
-  in `cella.power`, a core registry; this graft attaches its rule to every
+  in `cella.power`, a core registry; this graft attaches its guard to every
   op listed, then and later, as `circle-decision-membership` attaches its own
-  to `decision.cites`. A write with no power gets no such rule.
+  to `decision.cites`. A write with no power gets no such guard.
 - `circle_membership.over(actor, power, about, day)`: the actor holds the
   power through a seat in force in the circle `about` or one it is
   within: a power reaches down the tree from where it is held, never up
@@ -67,7 +67,7 @@ invitee, holds nothing.
   writes read positions through `circle_membership.may`, so they are ordered.
 - Both are decided (`check: 'decided'`): each cites the decision that
   gives or ends the seat. This graft does not join `decision`, so the
-  rules that judge them are `circle-decision-membership`'s, a higher order:
+  guards that judge them are `circle-decision-membership`'s, a higher order:
   the cited decision carried, and it gives or ends this seat. An
   admission gives one, the new member's in the decision's circle in its
   `member` role; a `seat` or `unseat` motion names any other.

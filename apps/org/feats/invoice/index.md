@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -68,13 +68,13 @@ keeps its number, and the void posts a credit note.
 | void | `issue-invoice` | Julien |
 
 `002-powers.sql` registers each in `cella.power`; the `circle-membership`
-graft's rule refuses a write by anyone not holding the power on the
+graft's guard refuses a write by anyone not holding the power on the
 verdict date. Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice,
 and quoting is not built.
 
 ## Invariants
 
-The invoice feat owns the rules about its own collection:
+The invoice feat owns the guards about its own collection:
 
 - `total` = `net` + `vat`, and `net` is the sum of the lines;
 - an issued invoice never changes; a correction is a void and a reissue;
@@ -139,10 +139,10 @@ arrives at rung 3.
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net; another keeps an issued invoice and its lines unchanged,
 sent once, voided once and not sent once voided. The app role may select,
-insert, set `sent`, `voided` and `reason`, and spend a series; the rules
-role, `cella_rules`, may select.
+insert, set `sent`, `voided` and `reason`, and spend a series; the guards
+role, `cella_guards`, may select.
 
-## Rules
+## Guards
 
 - `invoice.numbered`, on `invoice:invoice:issue`: the write issued the
   invoice on the verdict date, with the series' last number, the one after
@@ -152,7 +152,7 @@ role, `cella_rules`, may select.
   and the void uses no verdict number.
 
 That issue and void post their entries is the `invoice-transaction`
-graft's rule on the same ops.
+graft's guard on the same ops.
 
 ## Handlers
 
@@ -180,7 +180,7 @@ labels never wait.
 The `invoices` collection, the latest first, each with its standing; its
 dashboard shows what is owed and overdue, what was invoiced this year,
 the amounts by month and the invoices by standing; overdue reads the
-server's clock, a read no rule depends on. New issues one (`issue`) in a
+server's clock, a read no guard depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
 page shows its lines and payments, marks it sent (`send`) and links its
 PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,

@@ -1,6 +1,6 @@
 +++
 title = "employment-project-timesheet"
-updated = 2026-10-28
+updated = 2026-11-01
 +++
 
 A worker's time on projects by their employment, and the week they enter
@@ -18,7 +18,7 @@ both. Declared by `timesheet`.
 
 `book` is `project-timesheet`'s booking (`booking`) over the timesheet
 feat's entry, under this graft's op: one transaction, one verdict. The
-rules are those of employment-timesheet's log, `timesheet.logs` and
+guards are those of employment-timesheet's log, `timesheet.logs` and
 `employment_timesheet.works`, registered on this op by `sql/`; the booking's
 trigger, `project_timesheet.resolves`, wants a project that exists and is
 not archived.

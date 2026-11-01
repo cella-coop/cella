@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -32,7 +32,7 @@ archived project is hidden from lists, kept for the books and frozen.
 
 Setting a budget is ordered because a share spends it: a budget lowered
 while a share is granted could leave the shares above it, which the
-`membership-project` graft's rule refuses. Every other write commutes.
+`membership-project` graft's guard refuses. Every other write commutes.
 `002-powers.sql` registers each power in `cella.power`, and the
 `circle-membership` graft checks it.
 
@@ -49,7 +49,7 @@ while a share is granted could leave the shares above it, which the
 - an archived project changes no more: no budget, no milestone added or
   completed (`project.stays_archived`, `project.live`, SQLSTATE `09000`);
 - a budget is set by the write that names it (`project.budgets`); that it
-  covers the shares granted from it is `membership-project`'s rule on the
+  covers the shares granted from it is `membership-project`'s guard on the
   same op.
 
 ## What it does not know
@@ -64,7 +64,7 @@ watched, the `report` feat's project margins. Quotes and invoicing by milestone 
 
 `project` (`core/sql/`): `project.project`, `project.milestone` and
 `project.progress`, each project's milestones, how many are complete and
-the next open one. The app role may select, insert and update; the rules
+the next open one. The app role may select, insert and update; the guards
 role may select.
 
 ## Shell

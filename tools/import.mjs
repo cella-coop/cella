@@ -1,7 +1,7 @@
 // import: brings a file from another tool into a scope, as a member,
 // through the same signed writes the Imports page makes: each record is
 // read by the slice whose write it is, submitted as the importing member
-// and judged by the rules, or, with --dry-run, every write is made and
+// and judged by the guards, or, with --dry-run, every write is made and
 // then undone, to say what would be created and what refused. The run is
 // recorded in the import feat either way. The member signs with their
 // TEST-ONLY fixture device, as the dev server does, so it imports for the

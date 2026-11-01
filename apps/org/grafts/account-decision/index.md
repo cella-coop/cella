@@ -1,6 +1,6 @@
 +++
 title = "account-decision"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 The statutes' capital terms and the decision of the members that adopts
@@ -17,9 +17,9 @@ them. Declared by `account`.
   them, a view of the motions of the kind. The motion is the decision
   feat's row, so the graft reads it and keeps no copy.
 
-The app role and the rules role may select.
+The app role and the guards role may select.
 
-## Rules
+## Guards
 
 - `account_decision.asks`, on `decision:decision:propose`: each motion to
   adopt terms names drafted terms not yet adopted.

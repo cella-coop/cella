@@ -58,6 +58,6 @@ SELECT project,
 FROM project_timesheet.costed
 GROUP BY project;
 
-GRANT USAGE ON SCHEMA project_timesheet TO cella_app, cella_rules;
-GRANT SELECT ON project_timesheet.booking, project_timesheet.rate, project_timesheet.costed, project_timesheet.burn TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA project_timesheet TO cella_app, cella_guards;
+GRANT SELECT ON project_timesheet.booking, project_timesheet.rate, project_timesheet.costed, project_timesheet.burn TO cella_app, cella_guards;
 GRANT INSERT ON project_timesheet.booking TO cella_app;

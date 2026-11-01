@@ -3,7 +3,7 @@
   import type { Line, Run } from '../../models/run.ts'
 
   // What each line of the file came to: the write it made and how, with
-  // the rule's reason where it was refused.
+  // the guard's reason where it was refused.
   let { data }: { data: Run; id: string } = $props()
 
   // The table keys its rows by id: a line's is its number.

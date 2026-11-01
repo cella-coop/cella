@@ -20,4 +20,4 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:message:post', 'decision_document.links(jsonb)', 'decision-document');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:message:post', 'decision_document.links(jsonb)', 'decision-document');

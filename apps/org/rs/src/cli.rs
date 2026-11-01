@@ -244,8 +244,8 @@ pub enum Ext {
 
 #[derive(Subcommand)]
 pub enum Test {
-    /// The rule primitives' tests
-    Rules,
+    /// The guard primitives' tests
+    Guards,
     /// This CLI's tests
     Cli,
     /// The notary's own tests, in Postgres: signature, nonce, keyring and chain

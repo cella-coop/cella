@@ -9,7 +9,7 @@ CREATE TABLE decision_patronage.approval (
 
 -- patronage:distribution:approve — the cited decision is the one that
 -- approves this distribution. That it closed and passed on its roll is
--- circle-decision-membership's rule, attached through decision.cites.
+-- circle-decision-membership's guard, attached through decision.cites.
 CREATE FUNCTION decision_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -22,7 +22,7 @@ BEGIN ATOMIC
   LEFT JOIN decision_patronage.approval a ON a.distribution = p.distribution;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('patronage:distribution:approve', 'decision_patronage.approves(jsonb)', 'decision-patronage');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'decision_patronage.approves(jsonb)', 'decision-patronage');
 INSERT INTO decision.cites (op, owner) VALUES ('patronage:distribution:approve', 'decision-patronage');
 
 -- What a decision may decide of the work share's terms, registered with
@@ -80,10 +80,10 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'decision_patronage.asks(jsonb)', 'decision-patronage');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:propose', 'decision_patronage.asks(jsonb)', 'decision-patronage');
 
 -- patronage:terms:adopt — the cited decision moved to adopt these terms.
--- That it closed and passed on its roll is circle-decision-membership's rule,
+-- That it closed and passed on its roll is circle-decision-membership's guard,
 -- attached through decision.cites.
 CREATE FUNCTION decision_patronage.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -97,9 +97,9 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('patronage:terms:adopt', 'decision_patronage.adopts(jsonb)', 'decision-patronage');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:terms:adopt', 'decision_patronage.adopts(jsonb)', 'decision-patronage');
 INSERT INTO decision.cites (op, owner) VALUES ('patronage:terms:adopt', 'decision-patronage');
 
-GRANT USAGE ON SCHEMA decision_patronage TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA decision_patronage TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON decision_patronage.approval, decision_patronage.adoption TO cella_app;
-GRANT SELECT ON decision_patronage.approval, decision_patronage.adoption TO cella_rules;
+GRANT SELECT ON decision_patronage.approval, decision_patronage.adoption TO cella_guards;

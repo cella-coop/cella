@@ -96,9 +96,9 @@ BEGIN ATOMIC
   ) latest ON true;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('transaction:transaction:adjust', 'transaction.corrects(jsonb)', 'transaction');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('transaction:transaction:adjust', 'transaction.corrects(jsonb)', 'transaction');
 
-GRANT USAGE ON SCHEMA transaction TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA transaction TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA transaction TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA transaction TO cella_app, cella_guards;
 GRANT INSERT ON transaction.entry, transaction.line TO cella_app;
 GRANT USAGE ON SEQUENCE transaction.entry_no TO cella_app;

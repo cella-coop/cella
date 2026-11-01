@@ -46,5 +46,5 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'decision' AS decision) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('decision:decision:close', 'circle_decision_membership.counts(jsonb)', 'circle-decision-membership');

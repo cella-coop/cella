@@ -36,8 +36,8 @@ BEGIN ATOMIC
   LEFT JOIN document_meeting.minutes n ON n.meeting = w.meeting;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('meeting:meeting:minute', 'document_meeting.keeps(jsonb)', 'document-meeting');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('meeting:meeting:minute', 'document_meeting.keeps(jsonb)', 'document-meeting');
 
-GRANT USAGE ON SCHEMA document_meeting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA document_meeting TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON document_meeting.minutes TO cella_app;
-GRANT SELECT ON document_meeting.minutes TO cella_rules;
+GRANT SELECT ON document_meeting.minutes TO cella_guards;

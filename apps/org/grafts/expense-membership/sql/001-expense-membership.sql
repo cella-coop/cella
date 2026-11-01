@@ -24,5 +24,5 @@ FROM expense.expense e
 JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = e.member
 LEFT JOIN (membership.member d JOIN person.person dp ON dp.address = d.address) ON d.address = e.decider;
 
-GRANT USAGE ON SCHEMA expense_membership TO cella_app, cella_rules;
-GRANT SELECT ON expense_membership.claim TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense_membership TO cella_app, cella_guards;
+GRANT SELECT ON expense_membership.claim TO cella_app, cella_guards;

@@ -29,5 +29,5 @@ BEGIN ATOMIC
     AND (p.until IS NULL OR p.until > seated.day);
 END;
 
-GRANT USAGE ON SCHEMA circle_membership TO cella_app, cella_rules;
-GRANT SELECT ON circle_membership.position TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_membership TO cella_app, cella_guards;
+GRANT SELECT ON circle_membership.position TO cella_app, cella_guards;

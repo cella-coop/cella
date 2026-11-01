@@ -54,8 +54,8 @@ BEGIN ATOMIC
   LEFT JOIN account.period p ON p.month = x.month;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('account:period:close', 'account.closes(jsonb)', 'account');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:period:close', 'account.closes(jsonb)', 'account');
 
-GRANT USAGE ON SCHEMA account TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA account TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA account TO cella_app, cella_guards;
 GRANT UPDATE (closed) ON account.period TO cella_app;

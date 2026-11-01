@@ -40,5 +40,5 @@ CREATE TABLE circle.mandate (
 CREATE INDEX ON circle.mandate (role);
 CREATE INDEX ON circle.mandate (power);
 
-GRANT USAGE ON SCHEMA circle TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;

@@ -34,7 +34,7 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
 }
 
 // A motion's arguments, each as its kind types it; an empty one is left
-// out, for the kind's rule to refuse if it needs it.
+// out, for the kind's guard to refuse if it needs it.
 export function args(form: Form, fields: Arg[]): Motion['args'] {
   const out: Motion['args'] = {}
   for (const f of fields) {

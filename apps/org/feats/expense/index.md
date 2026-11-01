@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 What members spend for the co-op from their own pocket, to be paid back:
@@ -71,7 +71,7 @@ approver's budget, which needs their seats and mandates
 `expense` (`core/sql/`): `expense.expense`, numbered from
 `expense.number`; `expense.moves`, the lifecycle trigger, raising SQLSTATE
 `09000`; `expense.total(expense)`. The app role may select, insert and
-update; the rules role may select.
+update; the guards role may select.
 
 ## Personal data
 
@@ -83,7 +83,7 @@ them; erasing a member who has left restricts them until `cella vault
 sweep` redacts them, the one change a submitted expense takes
 (`cella.redacting()` in `expense.moves`). Its figures are the books'.
 
-## Rules
+## Guards
 
 - `expense.captures`, on `expense:expense:capture`: the expense is the
   actor's own, spent on a day that has come.
@@ -104,7 +104,7 @@ sweep` redacts them, the one change a submitted expense takes
 
 `core/ts/_tests/expense.test.ts` (`cella test slice expense`): an expense
 is numbered and totalled, moves only along its lifecycle, keeps its
-figures once submitted, and the rules refuse a write that did not do what
+figures once submitted, and the guards refuse a write that did not do what
 it says.
 
 ## Shell

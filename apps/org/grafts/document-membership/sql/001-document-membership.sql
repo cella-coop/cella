@@ -36,9 +36,9 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'member' AS member, payload ->> 'version' AS version) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('document-membership:version:read', 'document_membership.reads(jsonb)', 'document-membership');
 
-GRANT USAGE ON SCHEMA document_membership TO cella_app, cella_rules;
-GRANT SELECT ON document_membership.reading, document_membership.texts TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA document_membership TO cella_app, cella_guards;
+GRANT SELECT ON document_membership.reading, document_membership.texts TO cella_app, cella_guards;
 GRANT INSERT, UPDATE (read) ON document_membership.reading TO cella_app;

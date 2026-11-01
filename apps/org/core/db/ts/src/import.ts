@@ -10,7 +10,7 @@ export interface Line {
 }
 
 // A connection on which each write's transaction is rolled back where it
-// would commit: a dry run's write meets its rules and the notary as it
+// would commit: a dry run's write meets its guards and the notary as it
 // would, and leaves nothing. The notary takes one receipt for a
 // transaction, so each write needs its own, and none sees another's.
 const undone = (db: Db): Db => ({
@@ -18,7 +18,7 @@ const undone = (db: Db): Db => ({
 })
 
 // Runs an imported file's records as writes, in the file's order, as the
-// importing member: each settles, or is refused with the rule's reason,
+// importing member: each settles, or is refused with the guard's reason,
 // alone. A dry run makes each write and undoes it, so it says what would
 // be created and what refused, each line judged on the co-op as it
 // stands; a settled line names no entry, since none stays.

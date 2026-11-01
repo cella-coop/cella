@@ -1,5 +1,5 @@
 // Whose an expense is, on a database holding the app's core, the expense
-// and membership feats and this graft: the rule on a capture refuses an
+// and membership feats and this graft: the guard on a capture refuses an
 // expense of anyone but an active member on the verdict date. Run by
 // `cella test slice expense-membership`.
 
@@ -38,8 +38,8 @@ test('one suspended, one only invited and someone who is no member claim none', 
   }
 })
 
-test('the rule runs on the capture, and no trigger of this graft\'s is on the expenses', async () => {
-  const { rows } = await db.query(`SELECT op FROM cella.rule WHERE fn = 'expense_membership.whose(jsonb)'::regprocedure`)
+test('the guard runs on the capture, and no trigger of this graft\'s is on the expenses', async () => {
+  const { rows } = await db.query(`SELECT op FROM cella.guard WHERE fn = 'expense_membership.whose(jsonb)'::regprocedure`)
   assert.deepEqual(rows, [{ op: 'expense:expense:capture' }])
   const triggers = await db.query(`SELECT tgname FROM pg_trigger WHERE tgrelid = 'expense.expense'::regclass AND tgname = 'whose'`)
   assert.deepEqual(triggers.rows, [])

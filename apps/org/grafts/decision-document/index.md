@@ -1,6 +1,6 @@
 +++
 title = "decision-document"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Adoption by decision: what content of which document a decision asks to
@@ -15,14 +15,14 @@ adopts named by its canonical hash (the BLAKE3 the database gave the
 version) and the version the proposer read it in: a view of the motions
 of the `adopt` kind, each joined to the version it names. The motion is
 the decision feat's row and a version never changes, so the graft reads
-both and keeps no copy. The app role and the rules role, `cella_rules`,
+both and keeps no copy. The app role and the guards role, `cella_guards`,
 may select.
 
 It registers the `adopt` kind with the decision feat (`sql/002-adopt.sql`):
 a motion naming a version, which the New form picks from the versions
 this graft adds to the decisions' `about`.
 
-## Rules
+## Guards
 
 - `decision_document.asks`, on `decision:decision:propose`: each motion
   to adopt names a version, and no two name versions of one document.
@@ -38,12 +38,12 @@ this graft adds to the decisions' `about`.
 
 An adoption cites its decision: this graft declares
 `document:document:adopt` in `decision.cites`, and `circle-decision-membership`,
-which counts the roll, attaches its rule that the decision closed and
+which counts the roll, attaches its guard that the decision closed and
 passed. This graft joins two feats and so cannot read the roll, a
 three-way graft's; it never needs to. That the version is the document's
-and its base has not moved is the document feat's rule (`base: 'adopted'`).
+and its base has not moved is the document feat's guard (`base: 'adopted'`).
 
-Adopting rate-card-2027@2 under d-2026-011 so passes three rules, each at
+Adopting rate-card-2027@2 under d-2026-011 so passes three guards, each at
 the lowest level that sees what it checks: the document's base, the
 decision's content, and the roll's outcome.
 

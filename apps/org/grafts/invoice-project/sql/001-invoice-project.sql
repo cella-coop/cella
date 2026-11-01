@@ -32,6 +32,6 @@ FROM invoice_project.charge c
 JOIN invoice.invoice i ON i.id = c.invoice
 GROUP BY c.project;
 
-GRANT USAGE ON SCHEMA invoice_project TO cella_app, cella_rules;
-GRANT SELECT ON invoice_project.charge, invoice_project.invoiced TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA invoice_project TO cella_app, cella_guards;
+GRANT SELECT ON invoice_project.charge, invoice_project.invoiced TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON invoice_project.charge TO cella_app;

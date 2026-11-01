@@ -1,6 +1,6 @@
 //! The notary's own tests, run in Postgres by `cella test notary`: the
 //! member's signature, the payload restating the request, the nonce, the
-//! keyring, the rules, the chain, the verdict date's day, and a write
+//! keyring, the guards, the chain, the verdict date's day, and a write
 //! begun before its state, which alone a state table takes rows from.
 //! Each runs in a transaction pgrx rolls back, on a keyring and devices of
 //! its own; the notary signs with a TEST-ONLY seed that `pg_test::setup`
@@ -18,9 +18,9 @@ pub const VAULT_KEY: [u8; 32] = [9; 32];
 #[pg_schema]
 mod tests {
     use super::NOTARY_SEED;
-    use cella_rules::hex::hex;
-    use cella_rules::log::{self, Entry, Key, Receipt};
-    use cella_rules::sign::{self, Request};
+    use cella_guards::hex::hex;
+    use cella_guards::log::{self, Entry, Key, Receipt};
+    use cella_guards::sign::{self, Request};
     use ed25519_dalek::{Signer, SigningKey};
     use pgrx::JsonB;
     use pgrx::prelude::*;
@@ -38,7 +38,7 @@ mod tests {
         SigningKey::from_bytes(&[seed; 32])
     }
 
-    /// The scope, a fixed verdict date, the rules role as the org core
+    /// The scope, a fixed verdict date, the guards role as the org core
     /// grants it, a keyring over
     /// `t.device`, Julien's device 1 and Camille's device 2 enrolled, and
     /// `t.attempt`, which begins a write and submits it, and `t.tries`,
@@ -49,8 +49,8 @@ mod tests {
             r"
 SELECT set_config('cella.scope', '{SCOPE}', true), set_config('cella.clock', '2026-10-25', true);
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_rules') THEN
-    CREATE ROLE cella_rules NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
+  IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_guards') THEN
+    CREATE ROLE cella_guards NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
   END IF;
 END $$;
 CREATE SCHEMA t;
@@ -59,8 +59,8 @@ CREATE FUNCTION t.keyring(actor text, device bytea) RETURNS text LANGUAGE sql ST
   SELECT CASE WHEN EXISTS (SELECT FROM t.device d WHERE d.actor = $1 AND d.device = $2 AND NOT d.revoked) THEN NULL
     ELSE 'the device is not a current key of ' || $1 END
 $f$;
-GRANT USAGE ON SCHEMA cella, t TO cella_rules;
-GRANT SELECT ON t.device TO cella_rules;
+GRANT USAGE ON SCHEMA cella, t TO cella_guards;
+GRANT SELECT ON t.device TO cella_guards;
 INSERT INTO cella.keyring (fn, owner) VALUES ('t.keyring(text, bytea)', 't');
 INSERT INTO t.device (actor, device) VALUES ('{JULIEN}', '\x{julien}'), ('{CAMILLE}', '\x{camille}');
 CREATE FUNCTION t.attempt(op text, payload jsonb, actor text, signed jsonb) RETURNS text LANGUAGE plpgsql AS $f$
@@ -310,14 +310,14 @@ $f$;
             "CREATE FUNCTION t.small(payload jsonb) RETURNS text LANGUAGE sql STABLE AS $f$
                SELECT CASE WHEN (payload->>'cents')::bigint > 500 THEN cella.op() || ' is over 500 cents' END
              $f$;
-             INSERT INTO cella.rule (op, fn, owner) VALUES ('test:thing:make', 't.small(jsonb)', 't');",
+             INSERT INTO cella.guard (op, fn, owner) VALUES ('test:thing:make', 't.small(jsonb)', 't');",
         )
-        .expect("a rule");
+        .expect("a guard");
         let big = json!({ "cents": 900 });
         refused(&big, JULIEN, &signed(&device(1), JULIEN, &big, NONCE), "test:thing:make is over 500 cents");
         settle(100);
-        let rules = Spi::get_one::<String>("SELECT rules->0->>'function' FROM cella.log WHERE n = 1").expect("the entry's rules");
-        assert_eq!(rules.as_deref(), Some("t.small(jsonb)"));
+        let guards = Spi::get_one::<String>("SELECT guards->0->>'function' FROM cella.log WHERE n = 1").expect("the entry's guards");
+        assert_eq!(guards.as_deref(), Some("t.small(jsonb)"));
         assert!(verifies());
     }
 
@@ -349,7 +349,7 @@ $f$;
         let request = json!({ "cents": 200 });
         let nonce = "fedcba9876543210fedcba9876543210";
         let s = signed(&device(1), JULIEN, &request, nonce);
-        let sig: [u8; 64] = cella_rules::hex::unhex(s["sig"].as_str().expect("a sig")).expect("hex").try_into().expect("64 bytes");
+        let sig: [u8; 64] = cella_guards::hex::unhex(s["sig"].as_str().expect("a sig")).expect("hex").try_into().expect("64 bytes");
         let form = json!({ "cents": 200 });
         let payload = log::payload_digest(&form).expect("a digest");
         let receipt = Receipt {
@@ -365,7 +365,7 @@ $f$;
         };
         let receipt_hash = receipt.hash();
         let entry =
-            Entry { n: 2, op: OP.into(), actor: JULIEN.into(), date: "2026-10-25".into(), payload, receipt: receipt.n, receipt_hash, rules: vec![] };
+            Entry { n: 2, op: OP.into(), actor: JULIEN.into(), date: "2026-10-25".into(), payload, receipt: receipt.n, receipt_hash, guards: vec![] };
         let hash = log::hash(&prev, &entry).expect("a hash");
         Spi::run_with_args(
             "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
@@ -387,7 +387,7 @@ $f$;
         )
         .expect("receipt 2");
         Spi::run_with_args(
-            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, rules, prev, hash, sig, key)
+            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, guards, prev, hash, sig, key)
              VALUES (2, $1, $2, '2026-10-25', $3, $4, $5, '[]', $6, $7, $8, 1)",
             &[
                 OP.into(),

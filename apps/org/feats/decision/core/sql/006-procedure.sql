@@ -49,4 +49,4 @@ ALTER TABLE decision.decision
 CREATE TRIGGER procedure_kept BEFORE UPDATE OR DELETE ON decision.procedure
   FOR EACH ROW EXECUTE FUNCTION decision.procedure_kept();
 
-GRANT SELECT ON decision.procedure TO cella_app, cella_rules;
+GRANT SELECT ON decision.procedure TO cella_app, cella_guards;

@@ -76,7 +76,7 @@ test('members write, personal data among it, and the scope is backed up whole, i
     assert.ok(existsSync(join(backup, f)), f)
   }
   const manifest = readFileSync(join(backup, 'manifest'), 'utf8')
-  assert.match(manifest, /^version 0\.4\.0$/m)
+  assert.match(manifest, /^version 0\.5\.0$/m)
   assert.match(manifest, /^setting - cella\.scope=lanterne\.example$/m)
   assert.match(manifest, new RegExp(`^head ${written} [0-9a-f]{64}$`, 'm'))
   const keys = await one<{ notary: string; vault: string }>(

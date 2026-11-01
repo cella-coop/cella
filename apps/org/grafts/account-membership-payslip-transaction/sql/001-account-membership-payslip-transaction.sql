@@ -24,7 +24,7 @@ CREATE TABLE account_membership_payslip_transaction.withheld (
 -- What a month's run withholds from each associate on a plan who has a
 -- payslip in it: an instalment, never more than they still owe, nor than
 -- their net pay. What this month withheld already counts as still owed,
--- so the rule reads the same after the payment as the trigger before it.
+-- so the guard reads the same after the payment as the trigger before it.
 CREATE FUNCTION account_membership_payslip_transaction.due(month text)
 RETURNS TABLE (member text, account text, cents bigint)
 LANGUAGE sql STABLE
@@ -148,11 +148,11 @@ BEGIN ATOMIC
   LEFT JOIN account_membership_payslip_transaction.plan p ON p.member = x.member;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('payslip:run:pay', 'account_membership_payslip_transaction.deducted(jsonb)', 'account-membership-payslip-transaction'),
   ('account:capital:spread', 'account_membership_payslip_transaction.spreads(jsonb)', 'account-membership-payslip-transaction');
 
-GRANT USAGE ON SCHEMA account_membership_payslip_transaction TO cella_app, cella_rules;
-GRANT SELECT ON account_membership_payslip_transaction.plan, account_membership_payslip_transaction.withheld TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_membership_payslip_transaction TO cella_app, cella_guards;
+GRANT SELECT ON account_membership_payslip_transaction.plan, account_membership_payslip_transaction.withheld TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_payslip_transaction.plan, account_membership_payslip_transaction.withheld TO cella_app;
 GRANT UPDATE (instalments, each, since) ON account_membership_payslip_transaction.plan TO cella_app;

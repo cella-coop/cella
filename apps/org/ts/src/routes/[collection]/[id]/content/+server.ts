@@ -8,7 +8,7 @@ import type { RequestHandler } from './$types'
 const shown = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'application/pdf', 'text/plain'])
 
 // An item's bytes, such as a stored file, for the acting member: served
-// where its owner's rule opens it to them, or else an extension's, as a
+// where its owner's guard opens it to them, or else an extension's, as a
 // power over expenses opens their receipts; refused otherwise.
 export const GET: RequestHandler = ({ params, locals }) =>
   using(locals.actor, async (db) => {

@@ -54,14 +54,14 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'member' AS member) w;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('meeting-membership:attendance:mark', 'meeting_membership.marks(jsonb)', 'meeting-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('meeting-membership:attendance:mark', 'meeting_membership.marks(jsonb)', 'meeting-membership');
 
 -- Recording another member's attendance is the minutes' keeper's; that
 -- it reaches the meeting's circle, and that the member was expected
--- there, are circle-meeting-membership's rules on the op.
+-- there, are circle-meeting-membership's guards on the op.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('meeting-membership:attendance:record', 'keep-minutes', NULL, 'meeting-membership');
 
-GRANT USAGE ON SCHEMA meeting_membership TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA meeting_membership TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON meeting_membership.attendance TO cella_app;
-GRANT SELECT ON meeting_membership.attendance TO cella_rules;
+GRANT SELECT ON meeting_membership.attendance TO cella_guards;

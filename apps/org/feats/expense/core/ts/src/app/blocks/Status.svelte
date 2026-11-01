@@ -5,7 +5,7 @@
   // The expense's next writes, as its board columns: its member submits a
   // draft; someone else approves or refuses it, within their mandate's
   // limit and month's budget; finance reimburses it once approved. The
-  // rules refuse anyone else.
+  // guards refuse anyone else.
   let { data }: { data: Expense; id: string } = $props()
 </script>
 

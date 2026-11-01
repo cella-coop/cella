@@ -72,7 +72,7 @@ GROUP BY p.id;
 
 -- project:project:budget — the write set the budget it names. Whether the
 -- budget still covers what was shared from it is the membership-project
--- graft's rule on the same op.
+-- graft's guard on the same op.
 CREATE FUNCTION project.budgets(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -84,9 +84,9 @@ BEGIN ATOMIC
   LEFT JOIN project.project p ON p.id = w.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('project:project:budget', 'project.budgets(jsonb)', 'project');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('project:project:budget', 'project.budgets(jsonb)', 'project');
 
-GRANT USAGE ON SCHEMA project TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA project TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON project.project, project.milestone TO cella_app;
 GRANT SELECT ON project.progress TO cella_app;
-GRANT SELECT ON project.project, project.milestone, project.progress TO cella_rules;
+GRANT SELECT ON project.project, project.milestone, project.progress TO cella_guards;

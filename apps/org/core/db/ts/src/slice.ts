@@ -120,7 +120,7 @@ export type Stream = (o: {
 
 // An item's bytes, served at `/<collection>/<id>/content`, such as a
 // stored file: its name, media type and bytes, and whether its owner's
-// rule lets the acting member open it; where it does not, an extension's
+// guard lets the acting member open it; where it does not, an extension's
 // `allows` may.
 export interface Content extends Upload {
   open: boolean
@@ -169,7 +169,7 @@ export interface Extension {
   item?(db: Db, id: string, actor: string | null): Promise<unknown>
   actions?: Record<string, Action>
   // Whether the acting member may open an item's bytes that its owner's
-  // rule keeps closed to them, as a power over expenses opens a receipt.
+  // guard keeps closed to them, as a power over expenses opens a receipt.
   allows?(db: Db, id: string, actor: string | null): Promise<boolean>
 }
 

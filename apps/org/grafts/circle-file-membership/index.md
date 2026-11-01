@@ -1,6 +1,6 @@
 +++
 title = "circle-file-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 Who opens a personal file beyond the person it concerns and who uploaded
@@ -22,7 +22,7 @@ Each opener is also registered as a power that reads its class (`cella.reading`,
 ## Shell
 
 Extends the files collection with `allows`: the shell serves a file's
-bytes where the file feat's rule or this one opens them.
+bytes where the file feat's guard or this one opens them.
 
 ## Tests
 

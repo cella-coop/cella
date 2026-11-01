@@ -25,7 +25,7 @@ and signs each verdict into a log the members can audit.
 This repository works only on the org app.
 
 - `apps/org/` — the ERP: its core (`ops`, `crypto`, `log`, `keystore`,
-  `rules`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
+  `guards`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
   `cella` CLI, and `ts/`, which assembles the app.
 - `tools/` — the node tools `cella` runs: the feat and fixture checks,
   migrations and seeds.

@@ -183,13 +183,13 @@ BEGIN ATOMIC
   LEFT JOIN bill.bill b ON b.id = x.bill;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('bill:bill:record', 'bill.records(jsonb)', 'bill'),
   ('bill:bill:approve', 'bill.approves(jsonb)', 'bill'),
   ('bill:bill:pay', 'bill.pays(jsonb)', 'bill');
 
-GRANT USAGE ON SCHEMA bill TO cella_app, cella_rules;
-GRANT SELECT ON ALL TABLES IN SCHEMA bill TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA bill TO cella_app, cella_guards;
+GRANT SELECT ON ALL TABLES IN SCHEMA bill TO cella_app, cella_guards;
 GRANT INSERT ON bill.bill, bill.line TO cella_app;
 GRANT UPDATE (status, approved, approver, paid) ON bill.bill TO cella_app;
 GRANT USAGE ON SEQUENCE bill.number TO cella_app;

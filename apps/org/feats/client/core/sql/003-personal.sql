@@ -32,4 +32,4 @@ BEGIN ATOMIC
   LEFT JOIN client.client c ON c.id = p.client;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('client:client:erase', 'client.erases(jsonb)', 'client');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('client:client:erase', 'client.erases(jsonb)', 'client');

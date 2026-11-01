@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -16,7 +16,7 @@ project stands alone, which is not invalid. Declared by `task`.
   archived, or a milestone the project does not have (SQLSTATE `09000`).
 - `project_task.count`: each project's tasks and how many are done.
 
-The app role may select, insert and update; the rules role may select.
+The app role may select, insert and update; the guards role may select.
 
 ## Writes
 

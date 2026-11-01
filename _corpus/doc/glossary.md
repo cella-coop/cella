@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 # Glossary
@@ -25,9 +25,9 @@ updated = 2026-10-30
 | **pin** | a widget on the home: a standard widget and the collection it runs over |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
-| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `rules`, `ui` and the notary |
+| **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `ops`, `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui` and the notary |
 | **custom feat** | a co-op's own feat with its own schema, enabled by decision: how cella is extended |
-| **subsidiarity** | a rule lives at the lowest level that owns it: a feat, a graft, or a core |
+| **subsidiarity** | a guard lives at the lowest level that owns it: a feat, a graft, or a core |
 | **scope** | the unit of ownership: a co-op, a joint circle of co-ops or a federation, with its own server, database, log and notary |
 | **address** | a person's stable name in a scope, `ana@coop-a`; keys rotate under it |
 | **device key** | an Ed25519 key on a person's device that signs their writes |
@@ -38,15 +38,16 @@ updated = 2026-10-30
 | **ordered** | a write that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
 | **share** | a right granted in advance that bounded writes spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
-| **notary** | the scope's office for every write: the `cella` Postgres extension, a layer of org's core under every feat, not a feat; it alone writes the log |
+| **notary** | the scope's office every write passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
+| **guard** | a check the notary runs on a write before it takes effect: does the actor hold a mandate, does the write follow the rules, was the decision it cites taken properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
 | **receipt** | the notary's signed, numbered acknowledgement that a write arrived, carrying the member's signature on it; one per write; order comes from receipts, never from clocks |
 | **nonce** | the single-use random value in a write's signature, so the signature counts once |
-| **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any rule |
+| **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any guard |
 | **verdict** | the notary's signed ruling on an ordered write, Settled or Refused, committed with its state change |
 | **log** | the scope's hash-chained, signed record of every accepted write, from which the state folds |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
-| **composed rule** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
+| **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by decision |
 | **power** | the id of something a write needs, such as `issue-invoice`; each op's is registered in `cella.power` |
 | **mandate** | a grant of one power to one role, with an optional limit per write or budget per month or year, and a term |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
@@ -60,7 +61,7 @@ updated = 2026-10-30
 | **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
 | **file** | bytes the co-op keeps, named by their BLAKE3, which the database computes and the log commits to: its own papers, receipts, employment and member records; a personal file has a retention class and a subject |
 | **receipt (file)** | a file attached to an expense, of class `expense-receipt`; not the notary's receipt |
-| **import** | a file from another tool brought in through the normal signed writes, each record one write as the importing member, judged by the rules; recorded with what each line came to |
+| **import** | a file from another tool brought in through the normal signed writes, each record one write as the importing member, judged by the guards; recorded with what each line came to |
 | **dry run** | an import whose writes are each made and rolled back, saying what would be created and what refused |
 | **FEC** | the fichier des écritures comptables every French accounting tool exports (LPF art. A47 A-1); its entries are carried over into the journal |
 | **carry** | posting an entry from the books of the co-op's last tool, which may open accounts and touch cash, under its own power |

@@ -1,13 +1,13 @@
 +++
 title = "Sign"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 The client side of a write's signature (`@cella/org-sign`): what a
 member's device runs to sign each write it asks for, with WebCrypto alone,
 Ed25519 and SHA-256, so the same code signs in a browser and in Node. The
 message and its binding are in [signatures](../../../../_corpus/doc/signatures.md);
-`cella.submit` checks it with `cella_rules::sign`.
+`cella.submit` checks it with `cella_guards::sign`.
 
 - `plain(request)`: the request as the notary reads it, bytes as hex,
   undefined fields dropped, integers only.

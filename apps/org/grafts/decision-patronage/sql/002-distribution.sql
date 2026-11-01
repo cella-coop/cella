@@ -49,6 +49,6 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'decision_patronage.asks_to_approve(jsonb)', 'decision-patronage');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:propose', 'decision_patronage.asks_to_approve(jsonb)', 'decision-patronage');
 
 GRANT UPDATE (decision) ON decision_patronage.approval TO cella_app;

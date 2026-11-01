@@ -15,7 +15,7 @@ path = "src/main.rs"
 workspace = true
 
 [dependencies]
-cella-rules = { workspace = true }
+cella-guards = { workspace = true }
 clap = { workspace = true }
 rand_core = { workspace = true }
 zeroize = { workspace = true }

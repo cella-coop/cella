@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -31,7 +31,7 @@ and on `payslip-transaction`, whose payment it adds lines to. Declared by
   credited; and it is recorded as paid in through their pay.
 
 The app role may select, insert and update a plan, and insert what is
-withheld; the rules role may select.
+withheld; the guards role may select.
 
 The cents of each instalment are personal data of class `books`,
 registered by the member's address (`sql/003-salted.sql`): a spread's
@@ -46,7 +46,7 @@ while they owe some: what they owe is spread over as many monthly
 instalments as they choose, each rounded up to the cent, from the verdict
 date on.
 
-## Rules
+## Guards
 
 - `account_membership_payslip_transaction.spreads`, on `account:capital:spread`:
   they owe something, no more instalments than the statutes' clauses
@@ -63,9 +63,9 @@ account-membership-payslip-transaction`): a plan beyond the statutes'
 instalments, one this write did not set and one not the actor's own are
 refused; paying a run withholds an instalment in its own entry, the bank
 paying less by it and the capital account holding it, and both the
-payment's rules pass; a payment that withholds less is refused; an
+payment's guards pass; a payment that withholds less is refused; an
 instalment never exceeds what is owed; lines that credit the bank are
-refused by the payment's rule.
+refused by the payment's guard.
 
 ## Reads
 

@@ -25,13 +25,13 @@ BEGIN ATOMIC
   LEFT JOIN employment_file.record r ON r.worker = x.worker AND r.file = x.file;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-file:worker:attach', 'employment_file.files(jsonb)', 'employment-file');
 
 -- Who keeps the employment records: whoever hires.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('employment-file:worker:attach', 'hire-worker', NULL, 'employment-file');
 
-GRANT USAGE ON SCHEMA employment_file TO cella_app, cella_rules;
-GRANT SELECT ON employment_file.record TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment_file TO cella_app, cella_guards;
+GRANT SELECT ON employment_file.record TO cella_app, cella_guards;
 GRANT INSERT ON employment_file.record TO cella_app;

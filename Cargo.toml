@@ -14,7 +14,7 @@ repository = "https://codeberg.org/cella/cella"
 cella-crypto = { path = "apps/org/core/crypto/rs" }
 cella-log = { path = "apps/org/core/log/rs" }
 cella-keystore = { path = "apps/org/core/keystore/rs" }
-cella-rules = { path = "apps/org/core/rules/rs" }
+cella-guards = { path = "apps/org/core/guards/rs" }
 
 ed25519-dalek = { version = "2", default-features = false, features = ["std", "rand_core", "zeroize", "serde"] }
 blake3 = { version = "1", default-features = false, features = ["std", "serde"] }

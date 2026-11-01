@@ -1,6 +1,6 @@
 -- decision:decision:vote — a stance is the actor's own: no member votes for
 -- another. Whether the actor is on the decision's roll is the
--- circle-decision-membership graft's rule on the same op.
+-- circle-decision-membership graft's guard on the same op.
 CREATE FUNCTION decision.own_stance(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -10,4 +10,4 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'member' AS member) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:vote', 'decision.own_stance(jsonb)', 'decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:vote', 'decision.own_stance(jsonb)', 'decision');

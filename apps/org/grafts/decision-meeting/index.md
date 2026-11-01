@@ -1,6 +1,6 @@
 +++
 title = "decision-meeting"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Decisions on an agenda: an item that tables a decision, and where the
@@ -15,13 +15,13 @@ decision may be tabled at several meetings, as one is discussed in
 coordination before its assembly votes. A trigger refuses an item not on
 its meeting's agenda and a decision that does not exist. An item removed
 leaves its row, which the reads no longer find. The app role may select
-and insert; the rules role, `cella_rules`, may select.
+and insert; the guards role, `cella_guards`, may select.
 
 ## Writes
 
 Tabling is the meeting feat's `meeting:item:add`, run with the link in
 one transaction under one verdict, as `project-timesheet` books time:
-the item is titled as the decision unless named, and the seat rule on
+the item is titled as the decision unless named, and the seat guard on
 the op judges who adds it. It is a write of its own name, `table`, on a
 meeting's page, beside the feat's `item`.
 

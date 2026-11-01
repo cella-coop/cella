@@ -2,7 +2,7 @@
 // core, the patronage and timesheet feats and this graft: the portion that
 // divides by time divides by the minutes of each member's approved months
 // in the year alone, to the cent; approving makes the parts in that
-// write, which the rules take. Run by `cella test slice patronage-timesheet`.
+// write, which the guards take. Run by `cella test slice patronage-timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -10,7 +10,7 @@ import pg from 'pg'
 
 const db = new pg.Client()
 const rows = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 
 // Minutes logged on a day, and the month approved or left open.
 async function worked(member: string, day: string, minutes: number) {
@@ -54,17 +54,17 @@ test('the portion divides by the minutes of approved months in the year alone', 
   ])
 })
 
-test('approving makes the parts in that write, which both rules take', async () => {
+test('approving makes the parts in that write, which both guards take', async () => {
   await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
   assert.deepEqual(await rows(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part ORDER BY worker`), [
     { worker: 'ana@x', basis: 'hours', quantity: '600', cents: '600000' },
     { worker: 'ben@x', basis: 'hours', quantity: '300', cents: '300000' },
   ])
-  assert.equal(await rule('patronage_timesheet.divides', { distribution: '2025' }), null)
-  assert.equal(await rule('patronage.divides', { distribution: '2025' }), null)
+  assert.equal(await guard('patronage_timesheet.divides', { distribution: '2025' }), null)
+  assert.equal(await guard('patronage.divides', { distribution: '2025' }), null)
 })
 
 test('parts no longer what the approved time gives are refused', async () => {
   await approve('ben@x', '2025-04')
-  assert.equal(await rule('patronage_timesheet.divides', { distribution: '2025' }), '2025\'s parts by time worked are not its portion divided by the minutes approved in 2025')
+  assert.equal(await guard('patronage_timesheet.divides', { distribution: '2025' }), '2025\'s parts by time worked are not its portion divided by the minutes approved in 2025')
 })

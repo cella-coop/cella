@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, folded deterministically into the state.
@@ -11,8 +11,8 @@ Copied from cella@2398d87 `distros/core/runtime/rust/log`, where its history liv
 
 `ts/` (`@cella/org-log`) reads the notary's log as the shell shows it: its
 entries, newest first, each with its op, actor, verdict date, receipt and
-deciding rules' owners; an entry with its receipt, hashes and signatures
-and each rule's text from `cella.rule_text`; whether `cella.verify_log()`
+deciding guards' owners; an entry with its receipt, hashes and signatures
+and each guard's text from `cella.guard_text`; whether `cella.verify_log()`
 passes, which the collection's header shows as its status, and the head
 and the scope's key; and the scope's address, and its name and legal
 name (`named`, from `cella.scope_name` and `cella.scope_legal_name`). Its slice

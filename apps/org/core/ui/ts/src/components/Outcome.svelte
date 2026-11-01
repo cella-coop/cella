@@ -8,7 +8,7 @@
   import Icon from './Icon.svelte'
 
   // A write's outcome, floating until dismissed: each write it made, its
-  // verdict and, if refused, the rule's reason; for a write of several
+  // verdict and, if refused, the guard's reason; for a write of several
   // stopped part-way, that those it wrote first stand and only the rest
   // is left to send; and, when no answer came back, that it is unknown.
   let { outcome, ondismiss }: { outcome: Outcome; ondismiss: () => void } = $props()

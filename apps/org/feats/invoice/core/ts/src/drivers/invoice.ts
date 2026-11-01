@@ -2,7 +2,7 @@ import type { Db, Read } from '@cella/org-db'
 import type { Detail, Issuing, Lined, Listed, Printed, Received, Seller, Taxed } from '../models/invoice.ts'
 
 // An invoice is overdue when something is owed past its due date, the
-// scope's day (`cella.verdict_date()`): a read, so no rule depends on it.
+// scope's day (`cella.verdict_date()`): a read, so no guard depends on it.
 const overdue = `(s.owed > 0 AND i.due < cella.verdict_date())`
 const columns = (state: string) => `i.id, to_char(i.issued, 'YYYY-MM-DD') AS issued, to_char(i.due, 'YYYY-MM-DD') AS due, i.bill_to, i.label,
   s.total::bigint AS total, s.paid::bigint AS paid, s.owed::bigint AS owed, s.credit::bigint AS credit, ${state} AS state,

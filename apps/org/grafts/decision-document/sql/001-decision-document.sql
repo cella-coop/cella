@@ -15,7 +15,7 @@ CREATE TABLE decision_document.adoption (
 -- document:document:adopt — the cited decision asks to adopt this
 -- document, and the version adopted hashes as the decision names it: the
 -- members voted on that content, whichever version holds it. That it
--- closed and passed on its roll is circle-decision-membership's rule,
+-- closed and passed on its roll is circle-decision-membership's guard,
 -- attached through decision.cites; that the version is the document's
 -- and its base has not moved, the document feat's.
 CREATE FUNCTION decision_document.adopts(payload jsonb) RETURNS text
@@ -35,9 +35,9 @@ BEGIN ATOMIC
   LEFT JOIN document.version v ON v.id = p.version AND v.document = p.document;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('document:document:adopt', 'decision_document.adopts(jsonb)', 'decision-document');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('document:document:adopt', 'decision_document.adopts(jsonb)', 'decision-document');
 INSERT INTO decision.cites (op, owner) VALUES ('document:document:adopt', 'decision-document');
 
-GRANT USAGE ON SCHEMA decision_document TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA decision_document TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON decision_document.adoption TO cella_app;
-GRANT SELECT ON decision_document.adoption TO cella_rules;
+GRANT SELECT ON decision_document.adoption TO cella_guards;

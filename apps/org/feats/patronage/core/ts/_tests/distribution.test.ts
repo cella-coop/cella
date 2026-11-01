@@ -11,8 +11,8 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
-const splits = (distribution: string) => rule('patronage.splits', { distribution })
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
+const splits = (distribution: string) => guard('patronage.splits', { distribution })
 
 // A distribution and its shares, by percent of the surplus, approved on
 // the verdict date.
@@ -79,9 +79,9 @@ test('a year not over is not approved', async () => {
 test('only an approved split is distributed, once', async () => {
   await db.query(`INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ('2013', 2013, cella.amount(100000), 'salary')`)
   await assert.rejects(db.query(`UPDATE patronage.distribution SET distributed = cella.verdict_date() WHERE id = '2013'`), /2013 is not approved by the assembly/)
-  assert.equal(await rule('patronage.distributes', { distribution: '2013' }), '2013 is not approved by the assembly')
-  assert.equal(await rule('patronage.distributes', { distribution: '2025' }), '2025 was not distributed by this write')
+  assert.equal(await guard('patronage.distributes', { distribution: '2013' }), '2013 is not approved by the assembly')
+  assert.equal(await guard('patronage.distributes', { distribution: '2025' }), '2025 was not distributed by this write')
   await db.query(`UPDATE patronage.distribution SET distributed = cella.verdict_date() WHERE id = '2025'`)
-  assert.equal(await rule('patronage.distributes', { distribution: '2025' }), null)
+  assert.equal(await guard('patronage.distributes', { distribution: '2025' }), null)
   await assert.rejects(db.query(`UPDATE patronage.distribution SET distributed = '2026-10-25' WHERE id = '2025'`), /the 2025 surplus was distributed on 2026-10-24/)
 })

@@ -2,14 +2,14 @@
 //! committed to in what the log keeps and sealed in `vault.*`; erasure;
 //! opening an entry's commitments; and the sweep that erases restricted
 //! data once its legal clock runs out. Commitments, sealing and the
-//! markers are `cella_rules::vault`'s; the classes and their clocks are
+//! markers are `cella_guards::vault`'s; the classes and their clocks are
 //! rows of `cella.retention`, and which columns hold personal data, rows of
 //! `cella.personal`, which each feat registers.
 
 use crate::notary::{fail, first, lock_head, refuse, setting, spi};
 use crate::{VAULT_KEY_FILE, VAULT_KEY_PREVIOUS};
-use cella_rules::log::canonical;
-use cella_rules::vault::{self, Erase, Marked, NONCE, Personal};
+use cella_guards::log::canonical;
+use cella_guards::vault::{self, Erase, Marked, NONCE, Personal};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
 use serde_json::{Value, json};
@@ -119,7 +119,7 @@ fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: 
 fn class_of(c: &SpiClient<'_>, field: &str) -> String {
     let parts: Vec<&str> = field.split('.').collect();
     let [schema, tab, col] = parts[..] else {
-        refuse(format!("{field} names no column: a personal field is schema.table.column"), "refused before any rule");
+        refuse(format!("{field} names no column: a personal field is schema.table.column"), "refused before any guard");
     };
     let rows = spi(c.select(
         "SELECT class FROM cella.personal WHERE schema = $1 AND tab = $2 AND col = $3",
@@ -127,7 +127,7 @@ fn class_of(c: &SpiClient<'_>, field: &str) -> String {
         &[schema.into(), tab.into(), col.into()],
     ));
     first::<String>(rows)
-        .unwrap_or_else(|| refuse(format!("{field} is not registered as personal data in cella.personal"), "refused before any rule"))
+        .unwrap_or_else(|| refuse(format!("{field} is not registered as personal data in cella.personal"), "refused before any guard"))
 }
 
 /// Commits to one personal value: a fresh salt, the commitment, and the
@@ -142,11 +142,11 @@ fn commit(c: &mut SpiClient<'_>, p: &Personal, receipt: i64, year: i32) -> Value
         &[p.subject.clone().into(), class.clone().into()],
     ));
     if let Some(at) = first::<i64>(erased) {
-        refuse(format!("{}'s {class} data was erased at receipt {at}: erasure wins", p.subject), "refused before any rule");
+        refuse(format!("{}'s {class} data was erased at receipt {at}: erasure wins", p.subject), "refused before any guard");
     }
     let (key, _) = data_key(c, &p.subject, &class, year, true).expect("made");
     let salt = random::<32>();
-    let commitment = vault::commit(&salt, &p.value).unwrap_or_else(|e| refuse(format!("{}: {e}", p.field), "refused before any rule"));
+    let commitment = vault::commit(&salt, &p.value).unwrap_or_else(|e| refuse(format!("{}: {e}", p.field), "refused before any guard"));
     let plain = canonical(&p.value).unwrap_or_else(|e| fail(format!("cella: {e}")));
     let aad = secret_aad(&commitment, &p.subject, &class, year, &p.field);
     let sealed = vault::seal(&key, &random::<NONCE>(), &aad, plain.as_bytes()).unwrap_or_else(|e| fail(format!("cella: {e}")));
@@ -183,7 +183,7 @@ fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) 
         None => known.iter().map(|(k, _, _)| k.clone()).collect(),
     };
     if let Some(unknown) = wanted.iter().find(|w| !known.iter().any(|(k, _, _)| k == *w)) {
-        refuse(format!("no retention class {unknown}"), "refused before any rule");
+        refuse(format!("no retention class {unknown}"), "refused before any guard");
     }
     let (mut erased, mut restricted) = (Vec::new(), Vec::new());
     for (class, years, kept) in known.into_iter().filter(|(k, _, _)| wanted.contains(k)) {
@@ -257,7 +257,7 @@ pub fn logged(c: &mut SpiClient<'_>, payload: &Value, receipt: i64, date: &str) 
             Marked::Erase(e) => erase(c, &e, receipt, date, year),
         })
     })
-    .unwrap_or_else(|e| refuse(format!("the payload: {e}"), "refused before any rule"))
+    .unwrap_or_else(|e| refuse(format!("the payload: {e}"), "refused before any guard"))
 }
 
 /// What one commitment opens to: the value, if its salt and key are still

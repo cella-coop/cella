@@ -26,4 +26,4 @@ BEGIN ATOMIC
   LEFT JOIN transaction.entry e ON e.id = p.entry;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('transaction:transaction:pay', 'transaction.pays(jsonb)', 'transaction');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('transaction:transaction:pay', 'transaction.pays(jsonb)', 'transaction');

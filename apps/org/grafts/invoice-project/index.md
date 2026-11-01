@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -17,7 +17,7 @@ is not invalid; it still says what it bills in its label. Declared by
 - `invoice_project.invoiced`: what each project invoiced, net of VAT, its
   voided invoices left out, in cents.
 
-The app role may select, insert and update; the rules role may select.
+The app role may select, insert and update; the guards role may select.
 
 ## Writes
 

@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 # Conflicts
@@ -11,7 +11,7 @@ is the same: run it in both orders, then ask what breaks if both writes
 were confluent. A write may be confluent only if every invariant it touches
 holds in any order; it is bounded if the only thing that can break is a
 right running out; otherwise it is ordered. Each invariant is owned at the
-lowest level that sees all of it ([architecture](architecture.md#rules)).
+lowest level that sees all of it ([architecture](architecture.md#guards)).
 
 This page recommends; the labels themselves change only in `ops.ts`, by
 decision. At rung 1 nothing reads a label to run its write differently
@@ -52,7 +52,7 @@ state is that of 24 October 2026.
 | `expense-project:expense.rebill` | confluent | right: a register |
 | `payslip:run.generate`, `.approve`, `.pay` | ordered | right ([pay](#a-pay-run-reads-approved-time)) |
 | `transaction.adjust` | ordered, `base: 'corrected'` | **applied**: the decision is now a circle setting, not part of the label |
-| `invoice.issue` | bounded | right; rung 2 needs late-write rules |
+| `invoice.issue` | bounded | right; rung 2 needs late-write guards |
 | `invoice.send` | confluent | right |
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
@@ -119,7 +119,7 @@ refuse the later month, where both settling would leave the books a
 month they skip.
 
 **Rung 2.** A post made offline and dated in a period that closed before
-it arrived needs a late-write rule. The accountant's practice is the rule
+it arrived needs a late-write guard. The accountant's practice is the rule
 to adopt: the entry is refused for its period and re-dated into the first
 open one, flagged as late.
 
@@ -184,7 +184,7 @@ stated as a reading rather than a refusal: an invoice paid beyond its
 total shows the excess as a credit owed to the client, refunded or
 applied elsewhere. The same bank reference recorded twice merges into one
 payment, which removes the common case.
-[Architecture](architecture.md#rules) stated the rule as a refusal; it now
+[Architecture](architecture.md#guards) stated the guard as a refusal; it now
 reads this way.
 
 `void` is ordered against the payments: it settles only if no payment's
@@ -244,7 +244,7 @@ cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
 and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
 names the power its ops need in `cella.power`, a core registry, and the
-graft attaches its rule to every op listed, as `decision.cites` does for
+graft attaches its guard to every op listed, as `decision.cites` does for
 the roll.
 
 | Pair | Spend first | Revoke first | Both confluent |
@@ -303,7 +303,7 @@ the same afternoon by Hugo and Malik: the second is refused.
 
 ## A revoked key signs nothing new
 
-Owner: the `person` feat; signatures are checked at ingress, before any rule.
+Owner: the `person` feat; signatures are checked at ingress, before any guard.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
@@ -366,7 +366,7 @@ Owner: the `invoice` feat.
 | `issue` vs `mandate.revoke` of `issue-invoice` | stands | refused | issued without the power |
 
 Bounded is right. At rung 1 the server holds the only series. **Rung 2**
-gives each device a series of its own, and three things need rules first:
+gives each device a series of its own, and three things need guards first:
 
 - an invoice is dated when issued and cannot be back-dated into a closed
   period; one issued offline whose period closed before it arrived is
@@ -401,7 +401,7 @@ du 19 juillet 1978, art. 33, read on Légifrance in its text in force since
 2 August 2014: 15 % to the legal reserve until it reaches the highest
 amount the capital reached (1°), a development fund (2°), at least 25 %
 to the workers (3°), and interest on capital no more than the reserves'
-allocations nor the workers' (4°). The rules cite the article when they
+allocations nor the workers' (4°). The guards cite the article when they
 refuse.
 
 **Lanterne.** d-2026-006 approved the 2025 split in June: 45 % work,
@@ -427,7 +427,7 @@ pay and in equal parts, `patronage-timesheet` by time worked;
 
 All ordered; right. **Applied**: the parts are made by triggers in the
 write that approves, from the terms, the salaries and the approved time
-as they stand at its verdict, and never change after; each basis's rule
+as they stand at its verdict, and never change after; each basis's guard
 checks its parts against what it gives, and `patronage.divides` that
 each portion adds up. The shares are credited in the write that
 distributes, from the members as they stand at its verdict. The work
@@ -477,7 +477,7 @@ The close, the admissions it makes and their seats settle in one
 transaction under one verdict, or not at all. Before, the close settled and each admission and seat followed as
 writes of their own, and a refused seat left an active member with none.
 **Applied**: the decision feat's close is a write a graft extends, and
-`circle-decision-membership` extends it; the rules of each slice run on the
+`circle-decision-membership` extends it; the guards of each slice run on the
 close (`decision_membership.closes`, `circle_decision_membership.settles`, and
 `membership`'s trigger). What else a decision decides, a suspension, a
 seat, a nesting, a mandate, is carried out after the close, each its own
@@ -568,7 +568,7 @@ raises it, so corrections need no order among themselves; time missed
 is an entry of its own. After the approval the month's entries stand.
 
 **Rung 2.** An entry logged offline for a month approved before it
-arrived needs a late-write rule, as a post into a closed period does: it
+arrived needs a late-write guard, as a post into a closed period does: it
 is refused for its month and logged into the first open one, flagged.
 
 **Lanterne.** Thomas logs the 30 October on 2 November, after Yusuf
@@ -619,8 +619,8 @@ settles between the exit and the freeze. A frozen account never thaws;
 what it held moves to 4567 in the same write and is repaid from there.
 Subscribing never holds an admission back, but for the statutes'
 minimum. A payment in is a deposit, so it is confluent; at rung 2 two
-offline payments could pass what is owed, which the server's rule
-refuses today and which then needs a late-write rule, as an invoice's
+offline payments could pass what is owed, which the server's guard
+refuses today and which then needs a late-write guard, as an invoice's
 overpayment has. A repayment is ordered: it is paid once, and after the
 one before it.
 
@@ -732,7 +732,7 @@ refuses nothing.
 **Rung 2.** Positions are numbers the server picks; two devices moving
 offline can pick one, so an item needs a fractional index of its own,
 as a milestone needs an id. A mark made offline before the hold and
-received after it needs a late-write rule: refused, and the minutes say
+received after it needs a late-write guard: refused, and the minutes say
 who came. Minutes begun on two devices offline make two documents; the
 second should take the first's on sync.
 
@@ -773,7 +773,7 @@ nothing.
 
 | Write | Why nothing contends |
 |---|---|
-| `circle.message`, `document.comment` | appended; no rule reads them |
+| `circle.message`, `document.comment` | appended; no guard reads them |
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
 | `decision.propose` | a fact; the roll and the motions are fixed when the server receives it, and the cutoff by `close` |
 | `membership.invite` | two invitations do no harm, unless they carry one device key, which is refused |

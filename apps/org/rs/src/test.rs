@@ -14,14 +14,14 @@ const DB: &str = "cella_test";
 pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
     match only {
         None => {
-            rust(repo, steps, "rules", "cella-rules")?;
+            rust(repo, steps, "guards", "cella-guards")?;
             rust(repo, steps, "cli", "cella-cli")?;
             notary(repo, steps)?;
             tools(repo, steps)?;
             slices(repo, steps, None)?;
             e2e(repo, steps, None)
         }
-        Some(Test::Rules) => rust(repo, steps, "rules", "cella-rules"),
+        Some(Test::Guards) => rust(repo, steps, "guards", "cella-guards"),
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
         Some(Test::Notary) => notary(repo, steps),
         Some(Test::Tools) => tools(repo, steps),

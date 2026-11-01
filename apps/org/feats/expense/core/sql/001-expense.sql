@@ -126,14 +126,14 @@ BEGIN ATOMIC
   LEFT JOIN expense.expense e ON e.id = x.expense;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('expense:expense:capture', 'expense.captures(jsonb)', 'expense'),
   ('expense:expense:submit', 'expense.submits(jsonb)', 'expense'),
   ('expense:expense:approve', 'expense.decides(jsonb)', 'expense'),
   ('expense:expense:refuse', 'expense.decides(jsonb)', 'expense'),
   ('expense:expense:reimburse', 'expense.reimburses(jsonb)', 'expense');
 
-GRANT USAGE ON SCHEMA expense TO cella_app, cella_rules;
-GRANT SELECT ON expense.expense TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA expense TO cella_app, cella_guards;
+GRANT SELECT ON expense.expense TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON expense.expense TO cella_app;
 GRANT USAGE ON SEQUENCE expense.number TO cella_app;

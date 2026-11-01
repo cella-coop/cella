@@ -141,4 +141,4 @@ SELECT CASE kind WHEN 'month' THEN to_char(since, 'YYYY-MM') WHEN 'quarter' THEN
        closed
 FROM grouped;
 
-GRANT SELECT ON account.rubric, account.report TO cella_app, cella_rules;
+GRANT SELECT ON account.rubric, account.report TO cella_app, cella_guards;

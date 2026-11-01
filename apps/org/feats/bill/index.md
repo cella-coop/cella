@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -99,9 +99,9 @@ waits on a contact feat.
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net and the VAT; `bill.moves` keeps the lifecycle, a bill's
 figures and its lines. The app role may select, insert and update; the
-rules role may select.
+guards role may select.
 
-## Rules
+## Guards
 
 - `bill.records`, on `bill:bill:record`: the bill was recorded on the
   verdict date by the actor, unless it merged into one recorded before.
@@ -112,7 +112,7 @@ rules role may select.
   date, for the total the payload names.
 
 That approving and paying post their entries is the `bill-transaction`
-graft's rule on the same ops.
+graft's guard on the same ops.
 
 ## Handlers
 
@@ -128,7 +128,7 @@ trader, and nothing of a bill says whose yet.
 `core/ts/_tests/bill.test.ts` (`cella test slice bill`): a bill is
 numbered and adds up line by line with its VAT by rate, merges by its
 supplier's reference, moves only along its lifecycle, keeps its figures
-and lines, and the rules refuse a write that did not do what it says,
+and lines, and the guards refuse a write that did not do what it says,
 an approval by its recorder among them.
 
 ## Shell

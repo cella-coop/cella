@@ -6,7 +6,7 @@ import type { Adopt, Adopted } from '../models/document.ts'
 const op = 'document:document:adopt' satisfies keyof typeof ops
 
 // Makes a version binding, on the verdict date; the log commits to the
-// version's hash, the content adopted. The rules on this op decide:
+// version's hash, the content adopted. The guards on this op decide:
 // `document.adopts`, that the version is the document's and its base is
 // still the adopted version; the grafts', that the cited decision asks
 // for this content, closed and passed.

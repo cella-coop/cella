@@ -1,6 +1,6 @@
 +++
 title = "decision-employment-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 A candidate's admission, once their probation is over: the proposal to
@@ -16,7 +16,7 @@ circle-decision-membership's, put to the assembly from the person's page.
 each candidate, employee or invited, with their probation and pledge,
 the latest decision moving to admit them, open ones first, and whether a
 proposal is due: their probation is over, they are invited, and no open
-decision moves to admit them. The app role and the rules role may
+decision moves to admit them. The app role and the guards role may
 select.
 
 ## Tests

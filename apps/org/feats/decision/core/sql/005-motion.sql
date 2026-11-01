@@ -13,7 +13,7 @@ CREATE TABLE decision.kind (
 
 -- What a decision decides, in the order proposed: a motion of a
 -- registered kind and its arguments, which the kind's graft reads and its
--- rules check. Motions are fixed with the proposal.
+-- guards check. Motions are fixed with the proposal.
 CREATE TABLE decision.motion (
   decision text NOT NULL REFERENCES decision.decision,
   n integer NOT NULL CHECK (n > 0),
@@ -60,8 +60,8 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.id;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'decision.proposes(jsonb)', 'decision');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:propose', 'decision.proposes(jsonb)', 'decision');
 
-GRANT SELECT ON decision.kind TO cella_app, cella_rules;
+GRANT SELECT ON decision.kind TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON decision.motion TO cella_app;
-GRANT SELECT ON decision.motion TO cella_rules;
+GRANT SELECT ON decision.motion TO cella_guards;

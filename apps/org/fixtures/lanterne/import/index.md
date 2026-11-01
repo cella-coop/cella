@@ -1,11 +1,11 @@
 +++
 title = "Lanterne's imports"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 Sample files from the tools a co-op leaves when it moves to cella, one for
 each kind `cella import` and the Imports page read, each with lines the
-rules refuse beside the ones they take:
+guards refuse beside the ones they take:
 
 - `members.csv`: Nadia and Olivier, invited, each to be given a link from
   their page; Rose, whose row carries no address.

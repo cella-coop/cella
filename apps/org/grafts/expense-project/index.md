@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -17,7 +17,7 @@ pending.
 `expense-project:expense:rebill` (confluent, `self`): files an expense
 under a project, replacing any it was under; the last filing wins.
 
-## Rules
+## Guards
 
 - `expense_project.files`, on the write: the expense is the actor's own,
   neither refused nor reimbursed, and the project exists and is not

@@ -8,7 +8,7 @@
   // its mentions and links drawn by the slices that know members and
   // documents, and, while it is open, a message as the acting member,
   // `@` mentioning a member and `[[…]]` linking a document. Members seated
-  // in its circle post; the rules refuse anyone else.
+  // in its circle post; the guards refuse anyone else.
   let { data, embeds = {} }: { data: Detail; id: string; embeds?: Embeds } = $props()
 
   const thread = useThread(() => data.messages)

@@ -16,5 +16,5 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'worker' AS worker, payload ->> 'key' AS key) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('employment:worker:hire', 'employment.carries(jsonb)', 'employment');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('employment:worker:hire', 'employment.carries(jsonb)', 'employment');
 

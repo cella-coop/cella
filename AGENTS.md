@@ -34,7 +34,7 @@ only on the org app, `apps/org/`. Read
 - **Writes stay home.** A feat's rows change only through its own code. A
   graft writes only its own schema: it changes a feat by calling that
   feat's published write from its handler, reacts through `on` and
-  refuses through a rule, and never inserts, updates, deletes or puts a
+  refuses through a guard, and never inserts, updates, deletes or puts a
   trigger on a feat's or a lower-order graft's table. A nested feat
   writes its parent the same way. `cella check feats` refuses any such
   write that `apps/org/foreign.list`, the shrinking list of exceptions
@@ -50,9 +50,9 @@ only on the org app, `apps/org/`. Read
   changes by a new version's upgrade script and a migration that updates
   the extension, never by dropping it
   ([operations](_corpus/doc/operations.md#upgrades)).
-- **SQL is the source of truth for rules.** Never re-implement a rule in
-  TypeScript; never call `now()` in a rule, read `cella.verdict_date()`.
-- **A rule lives at the lowest level that owns it**: a feat, a graft, or a
+- **SQL is the source of truth for guards.** Never re-implement a guard in
+  TypeScript; never call `now()` in a guard, read `cella.verdict_date()`.
+- **A guard lives at the lowest level that owns it**: a feat, a graft, or a
   node's core only when it spans everything below.
 - **Personal data never enters the log.** Commit to it; keep it in the vault.
 - **A slice's UI is its own.** A feat mounts its collections in the shell

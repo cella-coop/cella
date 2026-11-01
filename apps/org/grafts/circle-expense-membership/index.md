@@ -1,6 +1,6 @@
 +++
 title = "circle-expense-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 A mandate's budget, spent by the expenses its holder approves. A budget
@@ -14,16 +14,16 @@ the member decided (expense), so it joins all three and builds on
 `circle_expense_membership` (`sql/`): `approved(member, day, per)`, what a
 member approved of expenses over the month or year of a day, in cents.
 
-## Rules
+## Guards
 
 - `circle_expense_membership.within`, on `expense:expense:approve`: the actor
   holds `approve-expense` on the verdict date through a mandate with no
   budget, or through one whose budget their approvals over its period,
   this one included, stay within. That they hold the power at all, and
-  within its limit for the one expense, is `circle-membership`'s rule.
+  within its limit for the one expense, is `circle-membership`'s guard.
 
 A budget is spent per holder of the mandate: each lead has their own
-1 000 € a month. The rule runs under the log's head lock, so two
+1 000 € a month. The guard runs under the log's head lock, so two
 approvals by one member are judged one after the other. Budgets over
 other spending, such as a circle's purchases, come with the writes that
 spend them.

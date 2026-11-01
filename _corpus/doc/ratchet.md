@@ -1,6 +1,6 @@
 +++
 title = "Ratchet"
-updated = 2026-10-24
+updated = 2026-11-01
 +++
 
 # Ratchet
@@ -13,7 +13,7 @@ decentralisation and zero trust.
 | Rung | Adds | Guarantees |
 |---|---|---|
 | 1 · Pilot | hosted, online; double-entry books; an audit log; democratic roles; members sign on their devices | every decision traces to who signed it; nobody rewrites history quietly; outsiders cannot forge a vote |
-| 2 · Offline | queued confluent writes, budget shares and device series; rules for late writes | members keep working without signal |
+| 2 · Offline | queued confluent writes, budget shares and device series; guards for late writes | members keep working without signal |
 | 3 · Books of record | VAT, statutory exports such as France's FEC, e-invoicing through an approved platform | cella replaces the accounting tool instead of feeding it |
 | 4 · Native client | signing in an app the host does not serve | the host cannot forge a vote |
 | 5 · Federation | signed events between co-ops, sign-in across servers, joint scopes | co-ops can trust each other's records |
@@ -31,9 +31,9 @@ cost little now and a rewrite later, so rung 1 keeps all of them:
 - personal data out of the log, behind single-use salted commitments;
 - double-entry books;
 - stable addresses and a server key per scope;
-- rules as primitives in a pure Rust crate behind one declared SQL surface,
-  composed in a declared SQL subset, each rule's text and version in the log,
-  and a conformance suite any engine can run ([trust](trust.md#rules)).
+- guards as primitives in a pure Rust crate behind one declared SQL surface,
+  composed in a declared SQL subset, each guard's text and version in the log,
+  and a conformance suite any engine can run ([trust](trust.md#guards)).
 
 ## Rung 1
 
@@ -48,7 +48,7 @@ federation, Merkle proofs for peers and end-to-end encryption.
 ## Moving a notary
 
 The notary is the scope's database, so moving it is moving the database to
-another host: state, log, rules and the scope's key together. It arrives
+another host: state, log, guards and the scope's key together. It arrives
 at rung 6, when peers cosign log heads and a move can be shown to lose no
 write. Its governance write, the scope's decision to move, belongs to the
 feat that holds the scope's hosts and peers, which arrives with

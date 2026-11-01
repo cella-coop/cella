@@ -14,9 +14,9 @@
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema;
-//   - writes cella.* only to register, under its own name: its rules, on
+//   - writes cella.* only to register, under its own name: its guards, on
 //     ops of its own feat, of the feats it joins or of the lower-order
-//     grafts it builds on (cella.rule); the power
+//     grafts it builds on (cella.guard); the power
 //     each of its own ops needs (cella.power), which feat-check compares
 //     with its ops.ts; a feat only, the keyring (cella.keyring); the
 //     powers that read the rows of its own feat or of the feats it joins
@@ -24,7 +24,7 @@
 //     holds a power (cella.authority) and the functions that open the
 //     rows of the feats it joins to more readers (cella.reach);
 //   - never sets search_path but on a function, to the catalog;
-//   - never reads the clock or randomness, since rules read
+//   - never reads the clock or randomness, since guards read
 //     cella.verdict_date(), and has no DO block, which this check cannot
 //     see into;
 //   - writes and triggers on no table outside its own schema and cella.*:
@@ -173,11 +173,11 @@ function inspect(tree, o, s, known, fail, found) {
     if (n.FuncCall && o.kind !== 'core') {
       const f = strings(n.FuncCall.funcname)
       if ((f.length === 1 || f[0] === 'pg_catalog') && clock.has(f.at(-1))) {
-        fail(`calls ${f.join('.')}(): rules read cella.verdict_date(), never the clock or randomness`)
+        fail(`calls ${f.join('.')}(): guards read cella.verdict_date(), never the clock or randomness`)
       }
     }
     if (n.SQLValueFunction && o.kind !== 'core') {
-      fail(`reads ${n.SQLValueFunction.op.replace('SVFOP_', '').toLowerCase()}: rules read cella.verdict_date(), never the clock`)
+      fail(`reads ${n.SQLValueFunction.op.replace('SVFOP_', '').toLowerCase()}: guards read cella.verdict_date(), never the clock`)
     }
     if (n.TypeCast && regtypes.has(strings(n.TypeCast.typeName?.names).at(-1))) {
       const name = n.TypeCast.arg?.A_Const?.sval?.sval ?? ''
@@ -193,7 +193,7 @@ function inspect(tree, o, s, known, fail, found) {
   }
 }
 
-const registries = new Set(['rule', 'power', 'keyring', 'personal', 'reading', 'reach', 'authority'])
+const registries = new Set(['guard', 'power', 'keyring', 'personal', 'reading', 'reach', 'authority'])
 
 // A column whose name and type suggest personal data: a person's name,
 // contact details, address, bank details, birth, pay, notes or a
@@ -222,7 +222,7 @@ export function undeclared(found) {
 
 // The decision feat's register of the ops that cite a decision, whose
 // rows mark an op as decided: the graft that counts a decision's roll
-// attaches its rule to every op listed.
+// attaches its guard to every op listed.
 const cites = { schema: 'decision', table: 'cites' }
 
 function citing(b, o, found) {
@@ -372,7 +372,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'DeleteStmt':
       if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
         if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
-          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its rules, its powers, its personal columns, the keyring or who reads`)
+          fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its guards, its powers, its personal columns, the keyring or who reads`)
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
           fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
         } else if (['reach', 'authority'].includes(b.relation.relname) && o.kind !== 'graft') {
@@ -385,7 +385,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
   }
 }
 
-// A registration under its owner's name: a rule on an op of a feat it may
+// A registration under its owner's name: a guard on an op of a feat it may
 // see; a power only on an op of its own. Literal power rows are collected
 // for feat-check to compare with ops.ts.
 function registers(b, o, s, fail, found) {
@@ -395,8 +395,8 @@ function registers(b, o, s, fail, found) {
   for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
     const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], literal(v)]))
     const feat = vals.op?.split(':')[0]
-    if (what === 'rule' && vals.op && !s.ops.includes(feat)) {
-      fail(`registers a rule on ${vals.op}, an op of ${feat}, which ${o.name} neither joins nor builds on`)
+    if (what === 'guard' && vals.op && !s.ops.includes(feat)) {
+      fail(`registers a guard on ${vals.op}, an op of ${feat}, which ${o.name} neither joins nor builds on`)
     }
     if (what === 'power' && feat !== o.name) {
       fail(`registers a power on ${vals.op}, an op of ${feat}: only ${feat} names what its ops need`)
@@ -404,8 +404,8 @@ function registers(b, o, s, fail, found) {
     if (vals.owner !== undefined && vals.owner !== o.name) {
       fail(`registers a ${what} as ${vals.owner}, not as itself, ${o.name}`)
     }
-    if (what === 'rule' && vals.op) {
-      found.rules.push({ op: vals.op, owner: o.name })
+    if (what === 'guard' && vals.op) {
+      found.guards.push({ op: vals.op, owner: o.name })
     }
     if (what === 'power' && vals.op) {
       found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: o.name })
@@ -653,9 +653,9 @@ function plpgsql(lib, fn) {
 }
 
 // Collects what the SQL registers as literal rows, for feat-check to
-// compare with each op's label: the powers in cella.power, the rules in
-// cella.rule, and the ops that cite a decision in decision.cites.
-export async function checkSql(repo, apps, known, found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
+// compare with each op's label: the powers in cella.power, the guards in
+// cella.guard, and the ops that cite a decision in decision.cites.
+export async function checkSql(repo, apps, known, found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
   const errors = []

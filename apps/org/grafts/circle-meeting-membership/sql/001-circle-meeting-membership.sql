@@ -79,7 +79,7 @@ BEGIN ATOMIC
   LEFT JOIN meeting.meeting m ON m.id = w.meeting;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('meeting:item:add', 'circle_meeting_membership.sits(jsonb)', 'circle-meeting-membership'),
   ('meeting:item:move', 'circle_meeting_membership.sits(jsonb)', 'circle-meeting-membership'),
   ('meeting:item:remove', 'circle_meeting_membership.sits(jsonb)', 'circle-meeting-membership'),
@@ -90,5 +90,5 @@ INSERT INTO cella.rule (op, fn, owner) VALUES
   ('meeting-membership:attendance:record', 'circle_meeting_membership.reaches(jsonb)', 'circle-meeting-membership'),
   ('meeting-membership:attendance:record', 'circle_meeting_membership.records(jsonb)', 'circle-meeting-membership');
 
-GRANT USAGE ON SCHEMA circle_meeting_membership TO cella_app, cella_rules;
-GRANT SELECT ON circle_meeting_membership.roll, circle_meeting_membership.quorum TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_meeting_membership TO cella_app, cella_guards;
+GRANT SELECT ON circle_meeting_membership.roll, circle_meeting_membership.quorum TO cella_app, cella_guards;

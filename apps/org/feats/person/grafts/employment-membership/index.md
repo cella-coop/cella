@@ -1,6 +1,6 @@
 +++
 title = "employment-membership"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 The way from employee to member: a worker's candidacy, the probation
@@ -22,7 +22,7 @@ member vote and a capital subscription ([users](../../../../../../_corpus/doc/us
   and their stage: `employee`, `candidate`, `invited`, `member` (active
   or suspended) or `gone`.
 
-The app role may select and insert candidacies; the rules role may
+The app role may select and insert candidacies; the guards role may
 select.
 
 ## Writes
@@ -34,7 +34,7 @@ select.
 `001-employment-membership.sql` registers the power in `cella.power`, and the
 `circle-membership` graft checks it.
 
-## Rules
+## Guards
 
 - `employment_membership.opens`, on `employment-membership:candidacy:open`: the
   candidacy is a worker's who is no member yet, or only invited; it was

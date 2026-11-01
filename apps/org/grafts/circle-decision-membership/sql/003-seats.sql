@@ -73,8 +73,8 @@ BEGIN ATOMIC
   LEFT JOIN decision.decision d ON d.id = p.decision;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle-membership:position:add', 'circle_decision_membership.seats(jsonb)', 'circle-decision-membership'),
   ('circle-membership:position:remove', 'circle_decision_membership.unseats(jsonb)', 'circle-decision-membership');
 
-GRANT SELECT ON circle_decision_membership.seating TO cella_app, cella_rules;
+GRANT SELECT ON circle_decision_membership.seating TO cella_app, cella_guards;

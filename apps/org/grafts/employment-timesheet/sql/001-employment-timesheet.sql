@@ -22,7 +22,7 @@ CREATE TRIGGER worker BEFORE INSERT ON timesheet.entry
 -- timesheet feat's writes need the log-time mandate a seat gives: the
 -- actor is a worker employed on the entry's day, or in the month. That it
 -- is their own time, on a day that has come, or their own month with time
--- in it, is the timesheet feat's rules, run on these ops too.
+-- in it, is the timesheet feat's guards, run on these ops too.
 CREATE FUNCTION employment_timesheet.works(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -37,7 +37,7 @@ BEGIN ATOMIC
   FROM (SELECT (payload ->> 'day')::date AS day, payload ->> 'month' AS month) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-timesheet:entry:log', 'timesheet.logs(jsonb)', 'employment-timesheet'),
   ('employment-timesheet:entry:log', 'employment_timesheet.works(jsonb)', 'employment-timesheet'),
   ('employment-timesheet:period:submit', 'timesheet.submits(jsonb)', 'employment-timesheet'),
@@ -52,5 +52,5 @@ FROM timesheet.sheet s
 JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = s.member
 LEFT JOIN (employment.worker a JOIN person.person ap ON ap.address = a.address) ON a.address = s.approver;
 
-GRANT USAGE ON SCHEMA employment_timesheet TO cella_app, cella_rules;
-GRANT SELECT ON employment_timesheet.sheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment_timesheet TO cella_app, cella_guards;
+GRANT SELECT ON employment_timesheet.sheet TO cella_app, cella_guards;

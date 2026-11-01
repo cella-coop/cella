@@ -95,7 +95,7 @@ test('closing before the deadline is refused and uses no verdict number', async 
 test('the app role cannot write the log', async () => {
   await assert.rejects(app.query(`INSERT INTO cella.log (n) VALUES (99)`), /permission denied/)
   await assert.rejects(app.query('UPDATE cella.head SET n = 0'), /permission denied/)
-  await assert.rejects(app.query('DELETE FROM cella.rule'), /permission denied/)
+  await assert.rejects(app.query('DELETE FROM cella.guard'), /permission denied/)
 })
 
 test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès and seats her in the assembly', async () => {
@@ -118,9 +118,9 @@ test('d-2026-012 closes on 31 October and, in the same verdict, admits Inès and
   )
   assert.deepEqual(phone, { label: 'phone', enrolled: '2026-10-01', by: null }, 'the phone is the one her invitation enrolled')
 
-  const entry = await one<{ op: string; rules: { owner: string }[] }>('SELECT op, rules FROM cella.log WHERE n = 4')
+  const entry = await one<{ op: string; guards: { owner: string }[] }>('SELECT op, guards FROM cella.log WHERE n = 4')
   assert.equal(entry.op, 'decision:decision:close')
-  assert.deepEqual([...new Set(entry.rules.map((r) => r.owner))].sort(), ['circle-decision-membership', 'decision', 'decision-membership'])
+  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-decision-membership', 'decision', 'decision-membership'])
 
   const late = await vote({ decision: 'd-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')
@@ -169,7 +169,7 @@ test('d-2026-011, which Malik blocks, closes admitting no one, and admitting und
   assert.deepEqual([Number(log.count), Number(log.max), await head()], [6, 6, 6])
 })
 
-test('the log verifies, records its rules, and catches tampering', async () => {
+test('the log verifies, records its guards, and catches tampering', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const admission = await one<{ date: string }>(`SELECT to_char(date, 'YYYY-MM-DD') AS date FROM cella.log WHERE n = 4`)
   assert.equal(admission.date, '2026-10-31')

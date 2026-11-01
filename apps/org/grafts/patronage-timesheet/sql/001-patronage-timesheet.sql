@@ -72,6 +72,6 @@ BEGIN ATOMIC
   JOIN patronage.distribution d ON d.id = x.distribution;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('patronage:distribution:approve', 'patronage_timesheet.divides(jsonb)', 'patronage-timesheet');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('patronage:distribution:approve', 'patronage_timesheet.divides(jsonb)', 'patronage-timesheet');
 
-GRANT USAGE ON SCHEMA patronage_timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA patronage_timesheet TO cella_app, cella_guards;

@@ -5,7 +5,7 @@
 export type Label = 'confluent' | 'bounded' | 'ordered'
 
 // The decision an ordered write waits on, whose outcome the notary folds
-// from signed votes. Without one, the notary checks the write's rule alone.
+// from signed votes. Without one, the notary checks the write's guard alone.
 export type Decide = 'consent' | 'majority'
 
 // The power a write needs, which the actor must hold through a mandate on
@@ -20,8 +20,8 @@ export interface Grant {
   check?: Check
 }
 
-// Who may make a write that needs no power, each a rule registered on the
-// op in `cella.rule`, or for `decided` a row in `decision.cites`:
+// Who may make a write that needs no power, each a guard registered on the
+// op in `cella.guard`, or for `decided` a row in `decision.cites`:
 // - `self`: the actor's own, such as their profile or their devices;
 // - `roll`: a member on the roll of the decision the write names;
 // - `seat`: a member seated in the circle the write concerns;
@@ -60,7 +60,7 @@ export type Permission = `${string}:${string}:${string}`
 export type Ops = Record<Permission, Op>
 
 // An ordered write is Pending until its verdict; the others never wait. Until
-// rung 2 every write still meets the server's rules and triggers, so any of
+// rung 2 every write still meets the server's guards and triggers, so any of
 // them may be Refused: an unbalanced entry, a comment quoting text its
 // version lacks, a stance on a closed decision.
 export type Outcome<O extends Op, T> = O extends Ordered

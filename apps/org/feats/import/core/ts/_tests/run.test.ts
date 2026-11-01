@@ -44,7 +44,7 @@ test('a run is recorded as its importer on the day, its lines counted', async ()
   assert.equal((await runs(db)).length, 1)
 })
 
-test('the counts hold the lines, and the rule refuses a run the write does not name', async () => {
+test('the counts hold the lines, and the guard refuses a run the write does not name', async () => {
   await db.query('BEGIN')
   try {
     await assert.rejects(
@@ -54,8 +54,8 @@ test('the counts hold the lines, and the rule refuses a run the write does not n
   } finally {
     await db.query('ROLLBACK')
   }
-  const rule = async (payload: object) => (await db.query<{ r: string | null }>('SELECT import.records($1) AS r', [payload])).rows[0].r
-  assert.match((await rule({ run: 'im-0009' })) ?? '', /no run im-0009/)
+  const guard = async (payload: object) => (await db.query<{ r: string | null }>('SELECT import.records($1) AS r', [payload])).rows[0].r
+  assert.match((await guard({ run: 'im-0009' })) ?? '', /no run im-0009/)
   // Outside a write no one acts, so no run was recorded by it.
-  assert.match((await rule({ run: 'im-0001', kind: 'members', dry: true, settled: 1, refused: 2 })) ?? '', /im-0001 was not recorded by this write/)
+  assert.match((await guard({ run: 'im-0001', kind: 'members', dry: true, settled: 1, refused: 2 })) ?? '', /im-0001 was not recorded by this write/)
 })

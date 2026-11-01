@@ -1,6 +1,6 @@
 +++
 title = "Signatures"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 # Signatures
@@ -15,9 +15,9 @@ type is added here before it is signed anywhere.
 
 | Type | Signer | Tag | Binding | Checked by |
 |---|---|---|---|---|
-| write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any rule; `cella.verify_log` again |
+| write | a member's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the op, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any guard; `cella.verify_log` again |
 | receipt | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the op, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived; the request's salt sits beside it, outside the hash, which holds the digest it salts | `cella.verify_log` |
-| log entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding rule | `cella.verify_log` |
+| log entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the op, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding guard | `cella.verify_log` |
 | session opening | a member's device, Ed25519 | `cella org 2026-10 session`, the message's first line | the scope, the actor, the device's key and the server's single-use challenge | the shell's server, `opens` in `lib/server/session.ts`, before it keeps a session |
 
 ### A write
@@ -65,7 +65,7 @@ nonce <16 random bytes, 32 lowercase hex digits>
 
 The signature is checked strictly (`verify_strict`): no weak keys and no
 malleable signatures. `apps/org/core/sign/ts` builds and signs the message
-in TypeScript; `cella_rules::sign` builds and checks it in Rust.
+in TypeScript; `cella_guards::sign` builds and checks it in Rust.
 
 ### A session's opening
 
@@ -92,7 +92,7 @@ by the device, in the browser.
 
 ### A receipt and an entry
 
-`submit` signs the receipt once the write's rules accept, then the entry,
+`submit` signs the receipt once the write's guards accept, then the entry,
 which names the receipt by number and hash, so a verdict cannot be moved
 to another receipt and a receipt cannot be moved to another write. The
 receipt's time orders nothing; receipt numbers order stances.
@@ -104,7 +104,7 @@ receipt's time orders nothing; receipt numbers order stances.
 | payload | BLAKE3 derive-key | `cella org 2026-10 log payload` | the canonical JSON of the payload as the log keeps it, each personal value replaced by its commitment |
 | request | SHA-256 | none: the write message's tag separates it | the canonical JSON of `{"request": …, "salt": …}`, a fresh salt each write |
 | personal commitment | BLAKE3 derive-key | `cella org 2026-10 personal commitment` | a fresh 32-byte salt, then the value's canonical JSON; kept in the logged payload as `{"$commit": hex}` |
-| rule text | BLAKE3 derive-key | `cella org 2026-10 rule text` | a rule's definition, as `pg_get_functiondef` gives it |
+| guard text | BLAKE3 derive-key | `cella org 2026-10 rule text`, the tag it took before guards were named, so the digests the log holds keep verifying | a guard's definition, as `pg_get_functiondef` gives it |
 | invitation link | SHA-256 | none: it names a secret no other digest takes | the 32 random bytes an inviter's browser draws, which only the link holds; `membership.link` keeps the digest, and taking the invitation up shows the secret |
 | content | BLAKE3, plain | none: it names content, as `b3sum` computes it | a document version's canonical form: its block tree as RFC 8785 JSON, computed from its Loro snapshot ([trust](trust.md#what-a-decision-adopts)) |
 

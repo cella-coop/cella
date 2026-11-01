@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -164,9 +164,9 @@ adopting decision names its circle).
 Updates, versions and adoptions never change, by trigger; a comment
 changes only by being resolved. The triggers raise SQLSTATE `09000`. The
 app role may select, and insert updates, versions, comments and
-adoptions; the rules role, `cella_rules`, may select.
+adoptions; the guards role, `cella_guards`, may select.
 
-## Rules
+## Guards
 
 - `document.adopts`, on `document:document:adopt`: the write's adoption
   names a version of its document, and its base is the version the latest

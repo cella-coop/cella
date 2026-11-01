@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -31,7 +31,7 @@ member may draw, and the freeze when a member leaves. Declared by
   the verdict date, the account holding them (under `1013`), whether it
   is frozen, and their draw limit.
 
-Triggers raise SQLSTATE `09000`. The app role and the rules role may
+Triggers raise SQLSTATE `09000`. The app role and the guards role may
 select.
 
 ## Writes

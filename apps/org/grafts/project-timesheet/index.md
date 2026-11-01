@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -35,7 +35,7 @@ to no project is the co-op's own time, not invalid. Declared by
   completion at the pace so far. The day is the caller's, since SQL
   reads no clock.
 
-The app role may select and insert bookings; the rules role may select.
+The app role may select and insert bookings; the guards role may select.
 
 ## Writes
 
@@ -43,7 +43,7 @@ The app role may select and insert bookings; the rules role may select.
 |---|---|---|---|
 | `timesheet:entry:log`, on a project's page | confluent | `log-time` | the timesheet feat's log and the booking, in one transaction under its verdict |
 
-The feat's rules judge the entry, the graft's trigger the booking. An
+The feat's guards judge the entry, the graft's trigger the booking. An
 entry is booked when it is logged; moving it to another project is not
 built. `booking` (`./api`) books the entry any write logs, under that
 write's op: this graft's `book` over the feat's log, and

@@ -197,13 +197,13 @@ test('once Malik consents and d-2026-011 closes, only content hashing as it name
   assert.match(reason(wrong), new RegExp(`d-2026-011 adopts rate-card-2027 as ${v2.slice(0, 12)}, not rate-card-2027@3`))
 
   // @4 was saved at @2's frontier: the same content, the same hash, so the
-  // decision's consent covers it; the base rule still names the first.
+  // decision's consent covers it; the base guard still names the first.
   const done = await adopt({ document: card, version: 'rate-card-2027@2', base: null, decision: 'd-2026-011' }, as(camille))
   assert.equal(done.state, 'settled')
   assert.deepEqual(done.value, { document: card, version: 'rate-card-2027@2', hash: v2, adopted: '2026-11-09', receipt: done.value.receipt })
   assert.equal(await adopted(card), 'rate-card-2027@2')
-  const logged = await one<{ rules: { owner: string }[] }>('SELECT rules FROM cella.log WHERE n = $1', [done.entry])
-  assert.deepEqual(logged.rules.map((r) => r.owner), ['circle-decision-membership', 'decision-document', 'document'])
+  const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.entry])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-decision-membership', 'decision-document', 'document'])
 })
 
 test('a second adoption naming a stale base is refused, and uses no verdict number', async () => {

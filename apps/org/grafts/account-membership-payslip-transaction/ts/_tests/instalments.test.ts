@@ -3,7 +3,7 @@
 // an associate spreads what they owe on their subscription, no more
 // instalments than the statutes allow; when a run is paid, each
 // instalment due is withheld in its payment's own entry, never more than
-// is owed, and the payment's rules take the lines it adds. Run by `cella
+// is owed, and the payment's guards take the lines it adds. Run by `cella
 // test slice account-membership-payslip-transaction`.
 
 import { after, before, test } from 'node:test'
@@ -14,7 +14,7 @@ const db = new pg.Client()
 const ines = 'ines@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
-const rule = async (fn: string, payload: object) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).r
+const guard = async (fn: string, payload: object) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).r
 const lines = async (entry: string) =>
   (await db.query(`SELECT n, account, side, cella.cents(amount) AS cents FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).rows
 
@@ -63,17 +63,17 @@ test('only the app\'s core, the feats it joins and its lower grafts are migrated
 test('Inès spreads her 1 000 € over at most the statutes\' 10 instalments, in a plan only her own write sets', async () => {
   assert.equal((await one<{ unpaid: string }>('SELECT unpaid FROM account_membership_transaction.called WHERE member = $1', [ines])).unpaid, '100000')
   assert.equal(
-    await rule('account_membership_payslip_transaction.spreads', { member: ines, instalments: 11 }),
+    await guard('account_membership_payslip_transaction.spreads', { member: ines, instalments: 11 }),
     'ines@lanterne.example spreads their subscription over 11 instalments: t-2021 allow at most 10',
   )
   assert.equal(
-    await rule('account_membership_payslip_transaction.spreads', { member: ines, instalments: 10 }),
+    await guard('account_membership_payslip_transaction.spreads', { member: ines, instalments: 10 }),
     'ines@lanterne.example\'s plan was not set by this write: 10 instalments of what they owe, rounded up to the cent',
   )
   await db.query(`INSERT INTO account_membership_payslip_transaction.plan (member, instalments, each, since) VALUES ($1, 10, cella.amount(10000), cella.verdict_date())`, [ines])
-  // Outside a write there is no actor, so the rule's last word is whose it is.
-  assert.match((await rule('account_membership_payslip_transaction.spreads', { member: ines, instalments: 10 })) ?? '', /may spread only their own subscription/)
-  assert.equal(await rule('account_membership_payslip_transaction.spreads', { member: 'nobody@x', instalments: 1 }), 'nobody@x owes nothing on a subscription')
+  // Outside a write there is no actor, so the guard's last word is whose it is.
+  assert.match((await guard('account_membership_payslip_transaction.spreads', { member: ines, instalments: 10 })) ?? '', /may spread only their own subscription/)
+  assert.equal(await guard('account_membership_payslip_transaction.spreads', { member: 'nobody@x', instalments: 1 }), 'nobody@x owes nothing on a subscription')
 })
 
 test('paying November\'s run withholds one instalment in its own entry: the bank pays her less, and her capital account holds it', async () => {
@@ -101,8 +101,8 @@ test('paying November\'s run withholds one instalment in its own entry: the bank
   ])
   assert.deepEqual(await one(`SELECT via, cella.cents(amount) AS cents FROM account_membership_transaction.paid WHERE entry = $1`, [entry]), { via: 'pay', cents: '10000' })
   assert.equal((await one<{ unpaid: string }>('SELECT unpaid FROM account_membership_transaction.called WHERE member = $1', [ines])).unpaid, '90000')
-  assert.equal(await rule('account_membership_payslip_transaction.deducted', { month: '2026-11' }), null)
-  assert.equal(await rule('payslip_transaction.paid', { month: '2026-11' }), null)
+  assert.equal(await guard('account_membership_payslip_transaction.deducted', { month: '2026-11' }), null)
+  assert.equal(await guard('payslip_transaction.paid', { month: '2026-11' }), null)
   const bank = await one<{ b: string }>(
     `SELECT sum(CASE side WHEN 'debit' THEN cella.cents(amount) ELSE -cella.cents(amount) END) AS b FROM transaction.line WHERE entry = $1 AND account = '512'`,
     [entry],
@@ -112,11 +112,11 @@ test('paying November\'s run withholds one instalment in its own entry: the bank
 
   await db.query('BEGIN')
   await db.query(`DELETE FROM account_membership_payslip_transaction.withheld WHERE month = '2026-11'`)
-  assert.equal(await rule('account_membership_payslip_transaction.deducted', { month: '2026-11' }), '2026-11\'s pay does not withhold the instalments its associates owe')
+  assert.equal(await guard('account_membership_payslip_transaction.deducted', { month: '2026-11' }), '2026-11\'s pay does not withhold the instalments its associates owe')
   await db.query('ROLLBACK')
 })
 
-test('an instalment is never more than she still owes, and lines that credit the bank are refused by the payment\'s rule', async () => {
+test('an instalment is never more than she still owes, and lines that credit the bank are refused by the payment\'s guard', async () => {
   await db.query(`UPDATE account_membership_payslip_transaction.plan SET each = cella.amount(95000) WHERE member = $1`, [ines])
   await run('2026-12', '2026-12-30', '2026-12-31')
   assert.equal((await one<{ cents: string }>(`SELECT cents FROM account_membership_payslip_transaction.due('2026-12')`)).cents, '90000')
@@ -132,7 +132,7 @@ test('an instalment is never more than she still owes, and lines that credit the
     [entry],
   )
   await db.query(`INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, '2026-12', 'payment')`, [entry])
-  assert.match((await rule('payslip_transaction.paid', { month: '2026-12' })) ?? '', /posts more than 2026-12's payment, and not in balance away from its own accounts and the bank/)
-  assert.match((await rule('account_membership_payslip_transaction.deducted', { month: '2026-12' })) ?? '', /does not post what 2026-12's pay withheld/)
+  assert.match((await guard('payslip_transaction.paid', { month: '2026-12' })) ?? '', /posts more than 2026-12's payment, and not in balance away from its own accounts and the bank/)
+  assert.match((await guard('account_membership_payslip_transaction.deducted', { month: '2026-12' })) ?? '', /does not post what 2026-12's pay withheld/)
   await db.query('ROLLBACK')
 })

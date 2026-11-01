@@ -1,6 +1,6 @@
 +++
 title = "employment-file"
-updated = 2026-10-25
+updated = 2026-11-01
 +++
 
 A worker's employment records, such as their signed contract and its
@@ -17,7 +17,7 @@ id, a file kept once.
 `employment-file:worker:attach` (confluent, `hire-worker`): whoever hires
 files a worker's record; the log commits to its name and BLAKE3.
 
-## Rules
+## Guards
 
 - `employment_file.files`, on the write: the worker is employed by the co-op,
   and the file was uploaded by this write about them, of class `payroll`.

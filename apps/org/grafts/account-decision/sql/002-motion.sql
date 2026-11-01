@@ -1,7 +1,7 @@
 -- Writes stay home: the adoption a decision asks for is its motion,
 -- which the decision feat writes, so this graft reads it rather than
 -- copying it by a trigger on `decision.motion`. That the motion names
--- terms not yet adopted is `asks`, the rule on the proposal.
+-- terms not yet adopted is `asks`, the guard on the proposal.
 DROP TRIGGER adopts_terms ON decision.motion;
 DROP FUNCTION account_decision.moved();
 
@@ -47,4 +47,4 @@ END;
 
 DROP TABLE account_decision.recorded;
 
-GRANT SELECT ON account_decision.adoption TO cella_app, cella_rules;
+GRANT SELECT ON account_decision.adoption TO cella_app, cella_guards;

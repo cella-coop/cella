@@ -9,7 +9,7 @@ const op = 'decision:decision:close'
 // circle-decision-membership does with the admissions a passing close makes:
 // closes the decision on the verdict date and fixes which stances made
 // it, those received before the close's receipt. Whether it may close is
-// the rule's, `decision.closes`.
+// the guard's, `decision.closes`.
 export function closing(input: Close): Write<Closed> {
   return {
     op,

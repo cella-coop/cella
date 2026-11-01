@@ -45,7 +45,7 @@ END
 $$;
 
 -- timesheet:entry:correct — the actor's own entry. The payload commits to
--- the minutes it was brought to, so the rule reads the entry alone; that
+-- the minutes it was brought to, so the guard reads the entry alone; that
 -- a correction only lowers is `timesheet.lowers`'.
 CREATE OR REPLACE FUNCTION timesheet.corrects(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

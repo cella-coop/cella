@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -12,7 +12,7 @@ Declared by `task`.
 by id and address, with no foreign key into either feat. A trigger refuses
 a task that does not exist or an assignee who is not an active member
 (SQLSTATE `09000`). The app role may select, insert, update and delete;
-the rules role may select.
+the guards role may select.
 
 ## Writes
 

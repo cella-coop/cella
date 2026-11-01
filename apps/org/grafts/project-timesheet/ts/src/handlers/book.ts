@@ -9,7 +9,7 @@ export interface Booked extends Logged {
 
 // An entry a write logs, booked to a project in the same transaction
 // under one verdict, the write's op: the timesheet feat's log here, a
-// worker's by their employment in a graft above. The feat's rules and
+// worker's by their employment in a graft above. The feat's guards and
 // triggers judge the entry; the graft's trigger, that the project exists
 // and is not archived.
 export const booking = (w: Write<Logged>, project: string): Write<Booked> => ({

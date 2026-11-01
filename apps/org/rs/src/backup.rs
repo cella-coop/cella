@@ -227,8 +227,8 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     let mut prepare = String::from(
         "DO $$ BEGIN
            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_app') THEN CREATE ROLE cella_app LOGIN; END IF;
-           IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_rules') THEN
-             CREATE ROLE cella_rules NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
+           IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_guards') THEN
+             CREATE ROLE cella_guards NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
            END IF;
            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_analytics') THEN
              CREATE ROLE cella_analytics LOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT NOCREATEDB NOCREATEROLE;

@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -22,7 +22,7 @@ up per member, and together never exceed the budget. Declared by
 - `membership_project.pot`: each project's budget, what was shared from it
   and what remains, in cents.
 
-The app role may select and insert; the rules role may select.
+The app role may select and insert; the guards role may select.
 
 ## Writes
 

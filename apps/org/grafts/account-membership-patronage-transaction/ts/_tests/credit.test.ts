@@ -3,7 +3,7 @@
 // grafts and this graft: distributing a year employs half of an
 // associate's part in whole shares, as lines of the distribution's own
 // entry, adds them to what the associate holds and pays a worker who is
-// no associate it all; the rule takes exactly that entry, and refuses one
+// no associate it all; the guard takes exactly that entry, and refuses one
 // that posts anything beside the split and the shares. Run by `cella test
 // slice account-membership-patronage-transaction`.
 
@@ -15,7 +15,7 @@ const db = new pg.Client()
 const hugo = 'hugo@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
-const rule = async (fn: string) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [{ distribution: '2025' }])).r
+const guard = async (fn: string) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [{ distribution: '2025' }])).r
 
 // An entry of the distribution's split, as patronage-transaction's handler
 // posts it, linked to the distribution in the same transaction, with the
@@ -74,7 +74,7 @@ test('only the app\'s core, the feats it joins and its lower grafts are migrated
 test('an entry beside the split and the shares is refused', async () => {
   const entry = await post([['424', 'debit', 100], ['512', 'credit', 100]])
   await db.query(`INSERT INTO patronage_transaction.distribution (distribution, entry) VALUES ('2025', $1)`, [entry])
-  assert.match((await rule('account_membership_patronage_transaction.credited')) ?? '', new RegExp(`${entry} does not post exactly the split of 2025`))
+  assert.match((await guard('account_membership_patronage_transaction.credited')) ?? '', new RegExp(`${entry} does not post exactly the split of 2025`))
   await db.query('ROLLBACK')
 })
 
@@ -97,6 +97,6 @@ test('distributing employs half of an associate\'s part in whole shares, in the 
     entry,
   })
   assert.equal((await one<{ shares: number }>('SELECT shares FROM membership.member WHERE address = $1', [hugo])).shares, shares + 12)
-  assert.equal(await rule('account_membership_patronage_transaction.credited'), null)
-  assert.equal(await rule('patronage_transaction.posted'), null)
+  assert.equal(await guard('account_membership_patronage_transaction.credited'), null)
+  assert.equal(await guard('patronage_transaction.posted'), null)
 })

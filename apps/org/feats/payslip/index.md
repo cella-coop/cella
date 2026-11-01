@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -69,7 +69,7 @@ Wages are owed whatever their size, so no power has a limit.
 `spread(month)`, why a run's pay is wider than the ratio; `stays` and
 `once`, triggers raising SQLSTATE `09000`. The app role may select,
 insert runs and payslips, and set a run's approval and payment and a
-payslip's minutes; the rules role may select.
+payslip's minutes; the guards role may select.
 
 ## Personal data
 
@@ -83,7 +83,7 @@ vault sweep` redacts them to NULL, so the figures are nullable, and
 generates it holds each payslip's figures too, by commitment, so the
 log keeps a salted digest of every member's pay, never the figures.
 
-## Rules
+## Guards
 
 - `payslip.generates`, on `payslip:run:generate`: the run was prepared by
   this write with exactly what its members are due.
@@ -99,7 +99,7 @@ approved and paid once, its payslips fixed from its approval; the ratio.
 
 ## Reads
 
-Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads all of them; no one signed in reads any. A write's transaction reads every row, as the rules do.
+Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads all of them; no one signed in reads any. A write's transaction reads every row, as the guards do.
 
 ## Shell
 

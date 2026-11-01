@@ -133,13 +133,13 @@ BEGIN ATOMIC
   LEFT JOIN timesheet.period p ON p.member = w.member AND p.month = w.month;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('timesheet:entry:log', 'timesheet.logs(jsonb)', 'timesheet'),
   ('timesheet:period:submit', 'timesheet.submits(jsonb)', 'timesheet'),
   ('timesheet:period:approve', 'timesheet.approves(jsonb)', 'timesheet');
 
-GRANT USAGE ON SCHEMA timesheet TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA timesheet TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON timesheet.entry TO cella_app;
 GRANT SELECT, INSERT, UPDATE ON timesheet.period TO cella_app;
 GRANT SELECT ON timesheet.sheet TO cella_app;
-GRANT SELECT ON timesheet.entry, timesheet.period, timesheet.sheet TO cella_rules;
+GRANT SELECT ON timesheet.entry, timesheet.period, timesheet.sheet TO cella_guards;

@@ -24,7 +24,7 @@ BEGIN ATOMIC
   LEFT JOIN project.project pr ON pr.id = w.project;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('project:project:create', 'circle_membership_project.runs(jsonb)', 'circle-membership-project'),
   ('project:milestone:add', 'circle_membership_project.runs(jsonb)', 'circle-membership-project'),
   ('project:milestone:complete', 'circle_membership_project.runs(jsonb)', 'circle-membership-project'),
@@ -32,4 +32,4 @@ INSERT INTO cella.rule (op, fn, owner) VALUES
   ('project:project:archive', 'circle_membership_project.runs(jsonb)', 'circle-membership-project'),
   ('membership-project:project:share', 'circle_membership_project.runs(jsonb)', 'circle-membership-project');
 
-GRANT USAGE ON SCHEMA circle_membership_project TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_membership_project TO cella_app, cella_guards;

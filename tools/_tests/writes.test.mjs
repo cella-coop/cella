@@ -27,7 +27,7 @@ async function foreign(sql) {
       mkdirSync(join(repo, dir), { recursive: true })
       files.forEach((text, i) => writeFileSync(join(repo, dir, `00${i + 1}.sql`), text))
     }
-    const found = { powers: [], rules: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
+    const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [], foreign: [] }
     const known = new Set(['cella', 'decision', 'invoice', 'member', 'invoice_member', 'decision_member'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     assert.deepEqual(errors, [])
@@ -48,7 +48,7 @@ BEGIN
   RETURN NEW;
 END $$;
 CREATE TRIGGER links AFTER INSERT ON invoice_member.link FOR EACH ROW EXECUTE FUNCTION invoice_member.links();
-INSERT INTO cella.rule (op, fn, owner) VALUES ('invoice:invoice:issue', 'invoice_member.linked(jsonb)', 'invoice-member');`],
+INSERT INTO cella.guard (op, fn, owner) VALUES ('invoice:invoice:issue', 'invoice_member.linked(jsonb)', 'invoice-member');`],
   }), [])
 })
 

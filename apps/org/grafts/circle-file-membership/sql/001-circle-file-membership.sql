@@ -30,5 +30,5 @@ BEGIN ATOMIC
   WHERE f.id = opens.id;
 END;
 
-GRANT USAGE ON SCHEMA circle_file_membership TO cella_app, cella_rules;
-GRANT SELECT ON circle_file_membership.opener TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_file_membership TO cella_app, cella_guards;
+GRANT SELECT ON circle_file_membership.opener TO cella_app, cella_guards;

@@ -1,6 +1,6 @@
 +++
 title = "client-project"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Whom a project is for. A project without a link is the co-op's own, not
@@ -11,7 +11,7 @@ invalid. Declared by `project`.
 `client_project` (`sql/`): `client_project.commission`, a project and the
 client it is for, by id, with no foreign key into either feat. A trigger
 refuses a project or a client that does not exist (SQLSTATE `09000`). The
-app role may select, insert and update; the rules role may select.
+app role may select, insert and update; the guards role may select.
 
 ## Writes
 

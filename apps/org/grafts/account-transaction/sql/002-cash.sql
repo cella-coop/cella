@@ -1,5 +1,5 @@
 -- Money leaves a cash account only through the writes that carry their own
--- power and limit, pay and payroll, whose feat's rules check the entry is
+-- power and limit, pay and payroll, whose feat's guards check the entry is
 -- exactly that. A post keeps the books and touches no cash account; a
 -- correction credits one only to undo what the entry it corrects debited.
 
@@ -47,6 +47,6 @@ BEGIN ATOMIC
   ) o ON true;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('transaction:transaction:post', 'account_transaction.cashless(jsonb)', 'account-transaction'),
   ('transaction:transaction:adjust', 'account_transaction.restores(jsonb)', 'account-transaction');

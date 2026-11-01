@@ -17,7 +17,7 @@ END;
 -- approve-expense on the verdict date through a mandate with no budget, or
 -- through one whose budget their approvals over its month or year, this
 -- one included, stay within. Whether they hold the power at all, and
--- within its limit for this one expense, is circle-membership's rule; this one
+-- within its limit for this one expense, is circle-membership's guard; this one
 -- reads the same seats and mandates, and the expenses they decided.
 CREATE FUNCTION circle_expense_membership.within(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -44,6 +44,6 @@ BEGIN ATOMIC
   END;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('expense:expense:approve', 'circle_expense_membership.within(jsonb)', 'circle-expense-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('expense:expense:approve', 'circle_expense_membership.within(jsonb)', 'circle-expense-membership');
 
-GRANT USAGE ON SCHEMA circle_expense_membership TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA circle_expense_membership TO cella_app, cella_guards;

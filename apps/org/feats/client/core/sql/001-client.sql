@@ -35,6 +35,6 @@ $$;
 CREATE TRIGGER parent_is_company BEFORE INSERT OR UPDATE OF parent ON client.client
   FOR EACH ROW EXECUTE FUNCTION client.parent_is_company();
 
-GRANT USAGE ON SCHEMA client TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA client TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON client.client TO cella_app;
-GRANT SELECT ON client.client TO cella_rules;
+GRANT SELECT ON client.client TO cella_guards;

@@ -42,4 +42,4 @@ SELECT l.invoice, l.vat_rate AS rate,
 FROM invoice.line l
 GROUP BY l.invoice, l.vat_rate;
 
-GRANT SELECT ON invoice.taxed TO cella_app, cella_rules;
+GRANT SELECT ON invoice.taxed TO cella_app, cella_guards;

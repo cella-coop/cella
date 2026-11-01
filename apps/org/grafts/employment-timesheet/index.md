@@ -1,6 +1,6 @@
 +++
 title = "employment-timesheet"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Whose time is, and logging it by one's employment. A worker logs,
@@ -12,7 +12,7 @@ not a mandate a seat gives, is what entitles them to. Declared by
 
 `employment_timesheet` (`sql/`):
 
-- `employment_timesheet.whose`, a rule on `timesheet:entry:log`: a
+- `employment_timesheet.whose`, a guard on `timesheet:entry:log`: a
   worker's entry falls on a day of their employment, never before their
   hire nor after they leave. An entry of no worker's, a member who is not
   employed, is membership-timesheet's to judge. A log by one's employment
@@ -33,12 +33,12 @@ under this graft's op, which needs no power: the feat's own writes need
 `log-time`, which only a seat's mandate grants, and a worker who is no
 member sits nowhere. Approving stays the feat's, under `approve-time`.
 
-## Rules
+## Guards
 
 - `employment_timesheet.works`, on every op: the actor is a worker
   employed on the entry's day, or on a day of the month.
 - `timesheet.logs`, `timesheet.corrects` and `timesheet.submits`, the
-  feat's own rules, run on them too: the time is the actor's own, on a
+  feat's own guards, run on them too: the time is the actor's own, on a
   day that has come, an entry corrected only down, and a month submitted
   holds time.
 
@@ -46,7 +46,7 @@ member sits nowhere. Approving stays the feat's, under `approve-time`.
 
 `ts/_tests/works.test.ts` (`cella test slice employment-timesheet`): a
 worker's entries within their employment, one of no worker's left to the
-members, and the rules on its ops. Whose the actor is, the `people`
+members, and the guards on its ops. Whose the actor is, the `people`
 scenario; a correction from an entry's page, `participation`.
 
 ## Reads

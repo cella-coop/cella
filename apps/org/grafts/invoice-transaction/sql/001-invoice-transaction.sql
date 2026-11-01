@@ -85,10 +85,10 @@ CREATE FUNCTION invoice_transaction.voided(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 RETURN invoice_transaction.unposted(payload ->> 'invoice', 'void');
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('invoice:invoice:issue', 'invoice_transaction.issued(jsonb)', 'invoice-transaction'),
   ('invoice:invoice:void', 'invoice_transaction.voided(jsonb)', 'invoice-transaction');
 
-GRANT USAGE ON SCHEMA invoice_transaction TO cella_app, cella_rules;
-GRANT SELECT ON invoice_transaction.posting TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA invoice_transaction TO cella_app, cella_guards;
+GRANT SELECT ON invoice_transaction.posting TO cella_app, cella_guards;
 GRANT INSERT ON invoice_transaction.posting TO cella_app;

@@ -1,6 +1,6 @@
 +++
 title = "circle-membership-timesheet"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Whose time a power reaches: a lead approves the time of their own
@@ -9,7 +9,7 @@ and timesheet, since what an approval concerns is a member's seats, and
 reads `circle-membership` beneath it; it has no table of its own, and no
 shell.
 
-## Rules
+## Guards
 
 - `circle_membership_timesheet.approves`, on `timesheet:period:approve`: the
   approver holds the op's power (`approve-time`) over a circle the
@@ -27,7 +27,7 @@ Camille, the gérante, seated in the assembly, approves anyone's, and so
 does Julien, seated there as treasurer, for the pay run. Julien approves
 Inès's months, though she is no member yet.
 
-Slice tests: none of its own; the rule is `circle-membership`'s `over` and
+Slice tests: none of its own; the guard is `circle-membership`'s `over` and
 its tests, and the `governance` and `people` scenarios.
 
 ## Shell

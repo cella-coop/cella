@@ -94,8 +94,8 @@ BEGIN ATOMIC
   LEFT JOIN account_membership_transaction.drawn w ON w.member = x.member;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('account:account:draw', 'account_membership_transaction.draws(jsonb)', 'account-membership-transaction');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('account:account:draw', 'account_membership_transaction.draws(jsonb)', 'account-membership-transaction');
 
-GRANT USAGE ON SCHEMA account_membership_transaction TO cella_app, cella_rules;
-GRANT SELECT ON account_membership_transaction.subscription, account_membership_transaction.draw, account_membership_transaction.drawn TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA account_membership_transaction TO cella_app, cella_guards;
+GRANT SELECT ON account_membership_transaction.subscription, account_membership_transaction.draw, account_membership_transaction.drawn TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_transaction.subscription, account_membership_transaction.draw TO cella_app;

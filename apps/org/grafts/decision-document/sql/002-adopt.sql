@@ -45,4 +45,4 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:propose', 'decision_document.asks(jsonb)', 'decision-document');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:propose', 'decision_document.asks(jsonb)', 'decision-document');

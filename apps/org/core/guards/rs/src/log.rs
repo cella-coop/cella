@@ -17,7 +17,9 @@ pub const GENESIS: [u8; 32] = [0; 32];
 pub const ENTRY: &str = "cella org 2026-10 log entry";
 pub const RECEIPT: &str = "cella org 2026-10 receipt";
 pub const PAYLOAD: &str = "cella org 2026-10 log payload";
-pub const RULE: &str = "cella org 2026-10 rule text";
+// A guard's text keeps the key it was hashed under when guards were
+// called rules, so a digest the log holds keeps verifying.
+pub const GUARD: &str = "cella org 2026-10 rule text";
 
 /// The notary's acknowledgement that a signed write arrived: its number,
 /// the op, who asked from which device, the member's signature and what
@@ -61,10 +63,10 @@ impl Receipt {
     }
 }
 
-/// A rule that decided a verdict, by its owner, its signature and the
+/// A guard that decided a verdict, by its owner, its signature and the
 /// digest of its text.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Rule {
+pub struct Guard {
     pub owner: String,
     pub function: String,
     pub text: [u8; 32],
@@ -81,7 +83,7 @@ pub struct Entry {
     /// The receipt this verdict rules on, by number and hash.
     pub receipt: i64,
     pub receipt_hash: [u8; 32],
-    pub rules: Vec<Rule>,
+    pub guards: Vec<Guard>,
 }
 
 /// JSON with sorted keys, no whitespace and integers only, so the same
@@ -131,8 +133,8 @@ pub fn payload_digest(v: &Value) -> Result<[u8; 32]> {
 }
 
 #[must_use]
-pub fn rule_digest(text: &str) -> [u8; 32] {
-    *blake3::Hasher::new_derive_key(RULE).update(text.as_bytes()).finalize().as_bytes()
+pub fn guard_digest(text: &str) -> [u8; 32] {
+    *blake3::Hasher::new_derive_key(GUARD).update(text.as_bytes()).finalize().as_bytes()
 }
 
 fn check_date(d: &str) -> Result<()> {
@@ -166,8 +168,8 @@ pub fn hash(prev: &[u8; 32], e: &Entry) -> Result<[u8; 32]> {
     h.update(&e.payload);
     h.update(&e.receipt.to_be_bytes());
     h.update(&e.receipt_hash);
-    h.update(&(e.rules.len() as u64).to_be_bytes());
-    for r in &e.rules {
+    h.update(&(e.guards.len() as u64).to_be_bytes());
+    for r in &e.guards {
         field(&mut h, r.owner.as_bytes());
         field(&mut h, r.function.as_bytes());
         h.update(&r.text);
@@ -325,10 +327,10 @@ mod tests {
             payload: payload_digest(&json!({"member": "ines@lanterne.example", "shares": 20})).unwrap(),
             receipt: n + 40,
             receipt_hash: [n.to_le_bytes()[0]; 32],
-            rules: vec![Rule {
+            guards: vec![Guard {
                 owner: "decision-membership".into(),
                 function: "decision_membership.admit(jsonb)".into(),
-                text: rule_digest("select 1"),
+                text: guard_digest("select 1"),
             }],
         }
     }

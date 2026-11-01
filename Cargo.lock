@@ -401,9 +401,9 @@ dependencies = [
 
 [[package]]
 name = "cella"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
- "cella-rules",
+ "cella-guards",
  "ed25519-dalek",
  "pgrx",
  "pgrx-tests",
@@ -415,7 +415,7 @@ dependencies = [
 name = "cella-cli"
 version = "0.1.0-alpha"
 dependencies = [
- "cella-rules",
+ "cella-guards",
  "clap",
  "rand_core 0.6.4",
  "zeroize",
@@ -440,6 +440,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "cella-guards"
+version = "0.1.0-alpha"
+dependencies = [
+ "blake3",
+ "chacha20poly1305",
+ "ed25519-dalek",
+ "loro",
+ "serde_json",
+ "sha2 0.10.9",
+ "thiserror 2.0.18",
+]
+
+[[package]]
 name = "cella-keystore"
 version = "0.1.0-alpha"
 dependencies = [
@@ -458,19 +471,6 @@ dependencies = [
  "serde_bytes",
  "thiserror 2.0.18",
  "zeroize",
-]
-
-[[package]]
-name = "cella-rules"
-version = "0.1.0-alpha"
-dependencies = [
- "blake3",
- "chacha20poly1305",
- "ed25519-dalek",
- "loro",
- "serde_json",
- "sha2 0.10.9",
- "thiserror 2.0.18",
 ]
 
 [[package]]

@@ -1,5 +1,5 @@
--- Whose an expense is, as a rule on its capture rather than a trigger on
--- the expense feat's table: a graft refuses a feat's write by a rule on
+-- Whose an expense is, as a guard on its capture rather than a trigger on
+-- the expense feat's table: a graft refuses a feat's write by a guard on
 -- the op, which the notary runs.
 DROP TRIGGER whose ON expense.expense;
 DROP FUNCTION expense_membership.whose();
@@ -18,5 +18,5 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'member' AS member) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('expense:expense:capture', 'expense_membership.whose(jsonb)', 'expense-membership');

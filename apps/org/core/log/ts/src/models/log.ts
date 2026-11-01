@@ -2,10 +2,10 @@
 // digest only, so what a write was about is its op and actor, never its
 // content.
 
-export interface Rule {
+export interface Guard {
   owner: string
   function: string
-  // The BLAKE3 of the rule's text, hex; the text is in cella.rule_text.
+  // The BLAKE3 of the guard's text, hex; the text is in cella.guard_text.
   text: string
 }
 
@@ -15,7 +15,7 @@ export interface Entry {
   op: string
   actor: string
   date: string
-  rules: Rule[]
+  guards: Guard[]
   receipt: number
   // When the receipt was signed, as the notary's clock read it.
   at: string
@@ -30,7 +30,7 @@ export interface Detail extends Entry {
   nonce: string
   request: string
   signature: string
-  // Each deciding rule with its source, from the registry of rule texts.
+  // Each deciding guard with its source, from the registry of guard texts.
   texts: { owner: string; function: string; text: string; body: string | null }[]
 }
 

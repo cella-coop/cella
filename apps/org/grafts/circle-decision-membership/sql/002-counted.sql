@@ -10,7 +10,7 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'decision' AS decision, payload ->> 'member' AS member) p;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('decision:decision:vote', 'circle_decision_membership.on_roll(jsonb)', 'circle-decision-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('decision:decision:vote', 'circle_decision_membership.on_roll(jsonb)', 'circle-decision-membership');
 
 -- Who was counted: the members of a decision's roll who were active when
 -- it closed, fixed by the close, so a later suspension or exit cannot
@@ -74,4 +74,4 @@ BEGIN ATOMIC
   WHERE d.id = ref;
 END;
 
-GRANT SELECT ON circle_decision_membership.counted TO cella_app, cella_rules;
+GRANT SELECT ON circle_decision_membership.counted TO cella_app, cella_guards;

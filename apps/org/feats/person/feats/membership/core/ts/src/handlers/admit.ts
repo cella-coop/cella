@@ -6,7 +6,7 @@ import type { Admit, Admitted } from '../models/member.ts'
 const op = 'membership:member:admit'
 
 // Makes an invited member active, since the verdict date, with their
-// shares; a member already admitted is left as they are, for the rules to
+// shares; a member already admitted is left as they are, for the guards to
 // refuse. A graft that admits as part of another write, as the close of
 // the decision that admits, runs this inside that write's transaction.
 export async function admitting(tx: Db, input: Admit): Promise<Admitted> {
@@ -19,7 +19,7 @@ export async function admitting(tx: Db, input: Admit): Promise<Admitted> {
   return { member: input.member, since: rows[0]?.since ?? '' }
 }
 
-// The admission as a write of its own, citing the decision. The rules on
+// The admission as a write of its own, citing the decision. The guards on
 // this op decide: `membership.admitted` that the write did so, the
 // decision-membership graft's that the cited decision admits, and
 // circle-decision-membership's that it closed and passed on its roll.

@@ -31,7 +31,7 @@ async function draft(id: string, year: number, surplus: number, shares: Record<s
   }
 }
 
-const rule = async (fn: string, distribution: string) =>
+const guard = async (fn: string, distribution: string) =>
   (await db.query<{ r: string | null }>(`SELECT patronage_transaction.${fn}($1) AS r`, [{ distribution }])).rows[0].r
 
 before(async () => {
@@ -63,41 +63,41 @@ test('a distribution\'s split posts from the year\'s result to where each share 
     { account: '424', side: 'credit', cents: '2763000' },
     { account: '457', side: 'credit', cents: '44822' },
   ])
-  assert.equal(await rule('reserves', '2025'), null)
+  assert.equal(await guard('reserves', '2025'), null)
 })
 
 test('interest on capital is at most its terms\' rate of the capital (loi 47-1775, art. 14)', async () => {
   // 448,22 € on 13 000 €, under the 455 € that 3.5 % allows.
-  assert.equal(await rule('interest', '2025'), null)
+  assert.equal(await guard('interest', '2025'), null)
   await draft('2023', 2023, 100_000_00, { work: [50, 50_000_00], legal: [15, 15_000_00], development: [34.5, 34_500_00], interest: [0.5, 500_00] })
-  assert.equal(await rule('interest', '2023'), '2023\'s interest on capital of 50000 cents exceeds the 3.50 % its terms pay on 1300000 cents of capital, 45500 cents (loi 47-1775, art. 14)')
+  assert.equal(await guard('interest', '2023'), '2023\'s interest on capital of 50000 cents exceeds the 3.50 % its terms pay on 1300000 cents of capital, 45500 cents (loi 47-1775, art. 14)')
   // A year no terms govern pays no interest at all.
   await draft('2020', 2020, 10_000_00, { work: [50, 5_000_00], legal: [15, 1_500_00], development: [34, 3_400_00], interest: [1, 100_00] })
-  assert.equal(await rule('interest', '2020'), '2020\'s interest on capital of 10000 cents exceeds the 0 % its terms pay on 1300000 cents of capital, 0 cents (loi 47-1775, art. 14)')
+  assert.equal(await guard('interest', '2020'), '2020\'s interest on capital of 10000 cents exceeds the 0 % its terms pay on 1300000 cents of capital, 0 cents (loi 47-1775, art. 14)')
 })
 
 test('under 15 % to the legal reserve is refused while it is under the highest capital', async () => {
   await draft('2024', 2024, 10_000_00, { work: [50, 5_000_00], legal: [10, 1_000_00], development: [40, 4_000_00] })
-  assert.equal(await rule('reserves', '2024'), '2024 puts less than 15 % in the legal reserve, which is under the highest capital (loi 78-763, art. 33, 1°)')
+  assert.equal(await guard('reserves', '2024'), '2024 puts less than 15 % in the legal reserve, which is under the highest capital (loi 78-763, art. 33, 1°)')
 })
 
 test('its entry posts the split, dated on the distribution, and only what balances away from the result beside it', async () => {
   await db.query(`UPDATE patronage.distribution SET approved = '2026-10-24', distributed = '2026-10-24' WHERE id = '2025'`)
-  assert.equal(await rule('posted', '2025'), '2025 posted no entry')
+  assert.equal(await guard('posted', '2025'), '2025 posted no entry')
   const split: Line[] = [['120', 'debit', 61_400_00], ['424', 'credit', 27_630_00], ['1061', 'credit', 9_210_00], ['1068', 'credit', 24_111_78], ['457', 'credit', 448_22]]
   const short = await post('2026-10-24', [['120', 'debit', 52_190_00], ['424', 'credit', 27_630_00], ['1068', 'credit', 24_111_78], ['457', 'credit', 448_22]])
   await db.query(`INSERT INTO patronage_transaction.distribution (distribution, entry) VALUES ('2025', $1)`, [short])
-  assert.equal(await rule('posted', '2025'), `${short} does not post the split of 2025`)
+  assert.equal(await guard('posted', '2025'), `${short} does not post the split of 2025`)
   const more = await post('2026-10-24', [...split, ['424', 'debit', 100_00], ['101301', 'credit', 50_00], ['120', 'credit', 50_00]])
   await db.query(`UPDATE patronage_transaction.distribution SET entry = $1 WHERE distribution = '2025'`, [more])
-  assert.equal(await rule('posted', '2025'), `${more} posts more than the split of 2025, and not in balance away from the result`)
+  assert.equal(await guard('posted', '2025'), `${more} posts more than the split of 2025, and not in balance away from the result`)
   const whole = await post('2026-10-24', [...split, ['424', 'debit', 100_00], ['101301', 'credit', 100_00]])
   await db.query(`UPDATE patronage_transaction.distribution SET entry = $1 WHERE distribution = '2025'`, [whole])
-  assert.equal(await rule('posted', '2025'), null)
+  assert.equal(await guard('posted', '2025'), null)
 })
 
 test('once the legal reserve reaches the highest capital, the 15 % is no longer owed', async () => {
   // The entries above credited the legal reserve twice with 2025's 15 %:
   // 27 420 €, over the highest capital, 13 150 €.
-  assert.equal(await rule('reserves', '2024'), null)
+  assert.equal(await guard('reserves', '2024'), null)
 })

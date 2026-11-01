@@ -62,13 +62,13 @@ BEGIN ATOMIC
   LEFT JOIN employment_membership.candidacy c ON c.worker = p.worker;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-membership:candidacy:open', 'employment_membership.opens(jsonb)', 'employment-membership');
 
 -- The power opening a candidacy needs, the manager's, as a hire's is.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('employment-membership:candidacy:open', 'hire-worker', NULL, 'employment-membership');
 
-GRANT USAGE ON SCHEMA employment_membership TO cella_app, cella_rules;
-GRANT SELECT ON employment_membership.candidacy, employment_membership.path TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA employment_membership TO cella_app, cella_guards;
+GRANT SELECT ON employment_membership.candidacy, employment_membership.path TO cella_app, cella_guards;
 GRANT INSERT ON employment_membership.candidacy TO cella_app;

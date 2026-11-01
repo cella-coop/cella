@@ -23,7 +23,7 @@ BEGIN ATOMIC
   LEFT JOIN membership.invitation i ON i.member = p.member;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('membership:member:invite', 'membership.carries(jsonb)', 'membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('membership:member:invite', 'membership.carries(jsonb)', 'membership');
 
 -- Admission enrols the invitation's device, in the admitting write's own
 -- transaction: when a member moves from invited to active, their first
@@ -51,4 +51,4 @@ CREATE TRIGGER enrol AFTER UPDATE OF status ON membership.member
   EXECUTE FUNCTION membership.enrol();
 
 GRANT SELECT, INSERT ON membership.invitation TO cella_app;
-GRANT SELECT ON membership.invitation TO cella_rules;
+GRANT SELECT ON membership.invitation TO cella_guards;

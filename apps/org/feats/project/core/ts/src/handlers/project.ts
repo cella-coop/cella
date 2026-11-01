@@ -86,7 +86,7 @@ export async function complete(input: Complete, deps: Deps): Out<'project:milest
 }
 
 // Sets the pot. Ordered: `project.budgets` checks the write set it, and
-// the membership-project graft's rule that it still covers the shares.
+// the membership-project graft's guard that it still covers the shares.
 export async function budget(input: Budget, deps: Deps): Out<'project:project:budget', Budget> {
   return write(deps, {
     op: 'project:project:budget' satisfies Op,

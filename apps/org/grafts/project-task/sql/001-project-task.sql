@@ -45,6 +45,6 @@ SELECT f.project, count(*)::integer AS tasks, (count(*) FILTER (WHERE t.status =
 FROM project_task.filing f JOIN task.task t ON t.id = f.task
 GROUP BY f.project;
 
-GRANT USAGE ON SCHEMA project_task TO cella_app, cella_rules;
-GRANT SELECT ON project_task.filing, project_task.count TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA project_task TO cella_app, cella_guards;
+GRANT SELECT ON project_task.filing, project_task.count TO cella_app, cella_guards;
 GRANT INSERT, UPDATE ON project_task.filing TO cella_app;

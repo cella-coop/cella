@@ -5,7 +5,7 @@
 ALTER TABLE account_membership.allowance ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY reads ON account_membership.allowance FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
-CREATE POLICY rules ON account_membership.allowance FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON account_membership.allowance FOR SELECT TO cella_guards USING (true);
 
 CREATE OR REPLACE VIEW account_membership.capital AS
 SELECT m.address AS member, mp.name, m.status, m.shares, v.value,

@@ -1,7 +1,7 @@
 // The bills alone, on a database holding only the app's core and this
 // feat: a bill is numbered and adds up line by line, as the VAT core
 // library counts it; it merges by its supplier's reference, moves only
-// along its lifecycle and keeps its figures and lines; and the rules
+// along its lifecycle and keeps its figures and lines; and the guards
 // refuse a write that did not do what it says. Run by `cella test slice
 // bill`.
 
@@ -27,7 +27,7 @@ const refused = async (run: () => Promise<unknown>, says: RegExp) => {
   }
 }
 
-const rule = async (fn: string, payload: object) =>
+const guard = async (fn: string, payload: object) =>
   (await db.query<{ r: string | null }>(`SELECT bill.${fn}($1) AS r`, [payload])).rows[0].r
 
 // Records a bill as the record handler does, its amounts from its lines
@@ -112,24 +112,24 @@ test('a bill moves only along its lifecycle, and its figures and lines never cha
   await refused(() => db.query(`DELETE FROM bill.bill WHERE id = 'bi-0001'`), /bi-0001 was recorded and is never deleted/)
 })
 
-test('the rules refuse a write that did not do what it says, and an approval by the bill\'s recorder', async () => {
+test('the guards refuse a write that did not do what it says, and an approval by the bill\'s recorder', async () => {
   // Outside a write there is no actor, so no record is this write's; a
   // merge names a bill recorded before.
-  assert.equal(await rule('records', { bill: 'bi-0001', merged: false }), 'bi-0001 was not recorded by this write')
-  assert.equal(await rule('records', { bill: 'bi-0001', merged: true }), null)
-  assert.equal(await rule('records', { bill: 'bi-0099' }), 'no bill bi-0099')
-  assert.equal(await rule('approves', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not approved by this write')
+  assert.equal(await guard('records', { bill: 'bi-0001', merged: false }), 'bi-0001 was not recorded by this write')
+  assert.equal(await guard('records', { bill: 'bi-0001', merged: true }), null)
+  assert.equal(await guard('records', { bill: 'bi-0099' }), 'no bill bi-0099')
+  assert.equal(await guard('approves', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not approved by this write')
 
   await db.query('BEGIN')
   await db.query(`UPDATE bill.bill SET status = 'approved', approved = '2026-10-24', approver = $1 WHERE id = 'bi-0001'`, [julien])
-  assert.equal(await rule('approves', { bill: 'bi-0001', amount: 147287 }), `${julien} recorded bi-0001, and may not approve it too`)
+  assert.equal(await guard('approves', { bill: 'bi-0001', amount: 147287 }), `${julien} recorded bi-0001, and may not approve it too`)
   await db.query('ROLLBACK')
 
   await db.query(`UPDATE bill.bill SET status = 'approved', approved = '2026-10-24', approver = $1 WHERE id = 'bi-0001'`, [camille])
-  assert.equal(await rule('approves', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not approved by this write')
-  assert.equal(await rule('pays', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not paid by this write')
+  assert.equal(await guard('approves', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not approved by this write')
+  assert.equal(await guard('pays', { bill: 'bi-0001', amount: 147287 }), 'bi-0001 was not paid by this write')
   await db.query(`UPDATE bill.bill SET status = 'paid', paid = '2026-10-24' WHERE id = 'bi-0001'`)
-  assert.equal(await rule('pays', { bill: 'bi-0001', amount: 147287 }), null)
-  assert.equal(await rule('pays', { bill: 'bi-0001', amount: 147000 }), 'bi-0001 comes to 147287 cents, not 147000')
+  assert.equal(await guard('pays', { bill: 'bi-0001', amount: 147287 }), null)
+  assert.equal(await guard('pays', { bill: 'bi-0001', amount: 147000 }), 'bi-0001 comes to 147287 cents, not 147000')
   await refused(() => db.query(`UPDATE bill.bill SET status = 'paid', paid = '2026-10-25' WHERE id = 'bi-0001'`), /bi-0001 is paid already/)
 })

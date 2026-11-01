@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-10-30
+updated = 2026-11-01
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -92,7 +92,7 @@ approved its entries stand, and correcting one then is not built.
 `timesheet` (`core/sql/`): `timesheet.entry`, `timesheet.period` and
 `timesheet.sheet`, each month's hours, billable hours, entries and state.
 The app role may select and insert entries, update their minutes, and
-update periods; the rules role may select. A month's `entries` counts
+update periods; the guards role may select. A month's `entries` counts
 those with time in them.
 
 ## Reads

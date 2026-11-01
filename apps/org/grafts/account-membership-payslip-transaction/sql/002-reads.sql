@@ -7,8 +7,8 @@ ALTER TABLE account_membership_payslip_transaction.withheld ENABLE ROW LEVEL SEC
 CREATE POLICY reads ON account_membership_payslip_transaction.plan FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY reads ON account_membership_payslip_transaction.withheld FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
 
-CREATE POLICY rules ON account_membership_payslip_transaction.plan FOR SELECT TO cella_rules USING (true);
-CREATE POLICY rules ON account_membership_payslip_transaction.withheld FOR SELECT TO cella_rules USING (true);
+CREATE POLICY guards ON account_membership_payslip_transaction.plan FOR SELECT TO cella_guards USING (true);
+CREATE POLICY guards ON account_membership_payslip_transaction.withheld FOR SELECT TO cella_guards USING (true);
 
 CREATE POLICY writes ON account_membership_payslip_transaction.plan FOR INSERT TO cella_app WITH CHECK (true);
 CREATE POLICY changes ON account_membership_payslip_transaction.plan FOR UPDATE TO cella_app USING (true);

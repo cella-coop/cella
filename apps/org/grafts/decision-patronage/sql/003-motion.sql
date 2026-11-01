@@ -1,7 +1,7 @@
 -- Writes stay home: what a decision asks to adopt or approve is its
 -- motion, which the decision feat writes, so this graft reads it rather
 -- than copying it by a trigger on `decision.motion`. That the motion names
--- drafted terms or a drafted distribution is the rules on the proposal.
+-- drafted terms or a drafted distribution is the guards on the proposal.
 DROP TRIGGER adopts_patronage_terms ON decision.motion;
 DROP TRIGGER approves_patronage_distribution ON decision.motion;
 DROP FUNCTION decision_patronage.moved();
@@ -27,7 +27,7 @@ WHERE m.kind = 'distribution';
 
 -- patronage:distribution:approve — the cited decision moved to approve
 -- this distribution. That it closed and passed on its roll is
--- circle-decision-membership's rule, attached through decision.cites.
+-- circle-decision-membership's guard, attached through decision.cites.
 CREATE OR REPLACE FUNCTION decision_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -92,4 +92,4 @@ END;
 DROP TABLE decision_patronage.recorded_adoption;
 DROP TABLE decision_patronage.recorded_approval;
 
-GRANT SELECT ON decision_patronage.adoption, decision_patronage.approval TO cella_app, cella_rules;
+GRANT SELECT ON decision_patronage.adoption, decision_patronage.approval TO cella_app, cella_guards;

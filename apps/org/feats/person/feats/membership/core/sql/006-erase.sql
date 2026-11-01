@@ -5,7 +5,7 @@ COMMENT ON COLUMN membership.member.address IS 'not personal: the pseudonymous a
 
 -- membership:member:erase — the write erased the personal data of a member
 -- who has left, every class: the cited decision asks it, which is the
--- decision-membership graft's rule.
+-- decision-membership graft's guard.
 CREATE FUNCTION membership.erases(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -26,4 +26,4 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.member;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES ('membership:member:erase', 'membership.erases(jsonb)', 'membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES ('membership:member:erase', 'membership.erases(jsonb)', 'membership');

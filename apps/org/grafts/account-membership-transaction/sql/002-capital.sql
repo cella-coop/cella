@@ -252,12 +252,12 @@ SELECT r.member, count(*)::integer AS repayments,
 FROM account_membership_transaction.repayment r
 GROUP BY r.member;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('account:capital:pay', 'account_membership_transaction.pays(jsonb)', 'account-membership-transaction'),
   ('account:capital:repay', 'account_membership_transaction.repays(jsonb)', 'account-membership-transaction');
 
 GRANT SELECT ON account_membership_transaction.paid, account_membership_transaction.called,
-  account_membership_transaction.repayment, account_membership_transaction.owed TO cella_app, cella_rules;
+  account_membership_transaction.repayment, account_membership_transaction.owed TO cella_app, cella_guards;
 GRANT INSERT ON account_membership_transaction.paid, account_membership_transaction.repayment TO cella_app;
 GRANT UPDATE (amount, cancelled) ON account_membership_transaction.subscription TO cella_app;
 GRANT UPDATE (entry, paid) ON account_membership_transaction.repayment TO cella_app;

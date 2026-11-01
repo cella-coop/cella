@@ -1,4 +1,4 @@
--- The power each meeting write needs; the circle-membership graft's rule
+-- The power each meeting write needs; the circle-membership graft's guard
 -- checks that the actor holds it, and circle-meeting-membership that it
 -- reaches the meeting's circle. The agenda's writes need a seat in the
 -- circle instead, a check the same graft backs.

@@ -8,7 +8,7 @@ import { merged } from './loro.ts'
 const op = 'document:document:edit' satisfies keyof typeof ops
 
 // Appends a Loro update to the document's log. Confluent: Loro merges
-// concurrent updates in any order, so no rule orders them. The update must
+// concurrent updates in any order, so no guard orders them. The update must
 // import onto the draft and leave it a document of blocks, one with a
 // canonical form; bytes that are not, are a fault of the caller, thrown
 // rather than logged.

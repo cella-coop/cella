@@ -1,6 +1,6 @@
 +++
 title = "employment-payslip"
-updated = 2026-10-29
+updated = 2026-11-01
 +++
 
 Whose pay is: a worker's, member or not. The payslip feat holds the
@@ -11,7 +11,7 @@ a member.
 
 ## Schema
 
-`employment_payslip` (`sql/`): `employment_payslip.whose`, a rule on
+`employment_payslip` (`sql/`): `employment_payslip.whose`, a guard on
 `payslip:run:generate`: every payslip of the run is a worker's employed
 on some day of its month, so a worker is paid for the month they leave
 and none after. No op writes a salary; a run turns each into a payslip,
@@ -22,7 +22,7 @@ so a salary of no worker's is refused there.
 
 `ts/_tests/whose.test.ts` (`cella test slice employment-payslip`): a run
 holding a payslip of no worker's refused; Inès's payslip though she is
-no member; Paul's for the month he left and none after; the rule is on
+no member; Paul's for the month he left and none after; the guard is on
 the run and no trigger on the payslip feat's tables.
 
 ## Reads

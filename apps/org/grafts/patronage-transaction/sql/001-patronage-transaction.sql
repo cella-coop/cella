@@ -101,10 +101,10 @@ BEGIN ATOMIC
   JOIN patronage.distribution d ON d.id = x.distribution;
 END;
 
-INSERT INTO cella.rule (op, fn, owner) VALUES
+INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:distribute', 'patronage_transaction.posted(jsonb)', 'patronage-transaction'),
   ('patronage:distribution:approve', 'patronage_transaction.reserves(jsonb)', 'patronage-transaction');
 
-GRANT USAGE ON SCHEMA patronage_transaction TO cella_app, cella_rules;
-GRANT SELECT ON patronage_transaction.distribution TO cella_app, cella_rules;
+GRANT USAGE ON SCHEMA patronage_transaction TO cella_app, cella_guards;
+GRANT SELECT ON patronage_transaction.distribution TO cella_app, cella_guards;
 GRANT INSERT ON patronage_transaction.distribution TO cella_app;

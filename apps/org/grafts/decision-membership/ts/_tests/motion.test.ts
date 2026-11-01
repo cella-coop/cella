@@ -1,7 +1,7 @@
 // What a decision asks of members, on a database holding the app's core,
 // the decision and member feats and this graft: the kinds it registers,
 // `decision_membership.asks` checking each motion applies to its member, and
-// the rules on a suspension and an exit naming what the cited decision
+// the guards on a suspension and an exit naming what the cited decision
 // asks. Run by `cella test slice decision-membership`.
 
 import { after, before, test } from 'node:test'
@@ -10,7 +10,7 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
-const rule = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT decision_membership.${fn}($1) AS r`, [payload])).rows[0].r
+const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT decision_membership.${fn}($1) AS r`, [payload])).rows[0].r
 
 before(async () => {
   await db.connect()
@@ -48,19 +48,19 @@ test('the graft registers admitting, suspending and ending a membership, and era
 })
 
 test('a proposal asks of each member what can become of them', async () => {
-  assert.equal(await rule('asks', { decision: 'd-1' }), null)
-  assert.equal(await rule('asks', { decision: 'd-3' }), null)
-  assert.equal(await rule('asks', { decision: 'd-2' }), 'chloe@lanterne.example is active, not invited')
-  assert.equal(await rule('asks', { decision: 'd-4' }), 'old@lanterne.example is exited')
+  assert.equal(await guard('asks', { decision: 'd-1' }), null)
+  assert.equal(await guard('asks', { decision: 'd-3' }), null)
+  assert.equal(await guard('asks', { decision: 'd-2' }), 'chloe@lanterne.example is active, not invited')
+  assert.equal(await guard('asks', { decision: 'd-4' }), 'old@lanterne.example is exited')
 })
 
 test('a suspension or an exit cites a decision that asks it of that member', async () => {
-  assert.match((await rule('admits', { decision: 'd-1', member: 'ines@lanterne.example', shares: 40 })) ?? '', /d-1 does not admit ines@lanterne.example with 40 shares/)
-  assert.equal(await rule('admits', { decision: 'd-1', member: 'ines@lanterne.example', shares: 20 }), null)
-  assert.equal(await rule('ends', { decision: 'nowhere', member: 'chloe@lanterne.example' }), 'no decision nowhere')
+  assert.match((await guard('admits', { decision: 'd-1', member: 'ines@lanterne.example', shares: 40 })) ?? '', /d-1 does not admit ines@lanterne.example with 40 shares/)
+  assert.equal(await guard('admits', { decision: 'd-1', member: 'ines@lanterne.example', shares: 20 }), null)
+  assert.equal(await guard('ends', { decision: 'nowhere', member: 'chloe@lanterne.example' }), 'no decision nowhere')
 })
 
 test('a close admits only whom the decision asks to admit', async () => {
-  assert.equal(await rule('closes', { decision: 'd-3', admitted: [] }), null)
-  assert.equal(await rule('closes', { decision: 'd-3', admitted: [{ member: 'chloe@lanterne.example' }] }), 'd-3 does not admit chloe@lanterne.example')
+  assert.equal(await guard('closes', { decision: 'd-3', admitted: [] }), null)
+  assert.equal(await guard('closes', { decision: 'd-3', admitted: [{ member: 'chloe@lanterne.example' }] }), 'd-3 does not admit chloe@lanterne.example')
 })

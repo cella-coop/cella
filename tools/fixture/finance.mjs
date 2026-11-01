@@ -1,7 +1,7 @@
 // fixture check, finance: a mock co-op's capital, surplus distributions, pay
 // and expenses are consistent. A capital account is a member's, under
 // 1013, and the journal credits it with their shares at the share's value,
-// the statutes' capital clause, or, once they left, holds nothing and their
+// the statutes' capital clause, a rule of the founding assembly's, or, once they left, holds nothing and their
 // repayments, due as the clauses say, add up to it, owed in 4567;
 // the work share's terms divide all of it and govern each distribution;
 // a distribution honours a SCOP's floors (loi n° 78-763, art. 33) and its
@@ -13,13 +13,41 @@
 
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
+// The terms a closed motion's rules adopted for a feat: each rule marking
+// a value named `<feat>_…`, its values by the rest of their names, typed
+// as the register types them (an amount in cents, a share or a number as
+// written), from the year it applies in and adopted the day the motion
+// closed.
+const number = (literal) => Number(literal.replace(/[\s  ]/g, '').replace(/[€%]$/, '').replace(',', '.'))
+function rules(read, feat) {
+  const out = []
+  for (const d of (read('motion').motion ?? []).filter((d) => d.closed)) {
+    for (const [i, m] of (d.action ?? []).entries()) {
+      if (m.kind !== 'policy' || m.args?.kind !== 'rule') {
+        continue
+      }
+      const marks = [...m.args.wording.matchAll(/\{\s*([a-z][a-z0-9_]*)\s*:([^{}|]*)(?:\|[^{}]*)?\}/g)].filter(([, name]) => name.startsWith(`${feat}_`))
+      if (!marks.length) {
+        continue
+      }
+      const t = { id: `${d.id}/${i + 1}`, from: Number((m.args.from ?? iso(d.closed)).slice(0, 4)), adopted: d.closed }
+      for (const [, name, literal] of marks) {
+        const v = number(literal.trim())
+        t[name.slice(feat.length + 1)] = literal.trim().endsWith('€') ? Math.round(v * 100) : v
+      }
+      out.push(t)
+    }
+  }
+  return out
+}
+
 export function finance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
   const workers = new Set((read('employment').worker ?? []).map((w) => w.address))
   const books = read('account')
   const patronage = read('patronage')
   // The share's value and the capital clauses: the latest adopted terms
-  const clauses = (books.terms ?? []).filter((t) => t.adopted).sort((x, y) => y.from - x.from)[0] ?? {}
+  const clauses = rules(read, 'account').filter((t) => t.adopted).sort((x, y) => y.from - x.from)[0] ?? {}
   const value = clauses.share
   const repayments = read('graft.account-membership-transaction').repayment ?? []
   const accounts = new Map((books.account ?? []).map((a) => [a.code, a]))
@@ -76,7 +104,7 @@ export function finance(read, fail) {
 
   // The work share's terms divide all of it (Code du travail, art.
   // L3324-5), and each distribution names its year's terms' basis
-  const terms = patronage.terms ?? []
+  const terms = rules(read, 'patronage')
   const weights = ['salary', 'hours', 'equal']
   for (const t of terms) {
     if (weights.reduce((s, w) => s + (t[w] ?? 0), 0) !== 100) {

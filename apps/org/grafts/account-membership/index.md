@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -77,6 +77,6 @@ chart each capital account's holder.
 
 ## Lanterne
 
-A share is 50 €, as `st-2021` say. The ten members hold 260 shares,
+A share is 50 €, as the capital's terms, the founding rule `m-2021-001/43`, say. The ten members hold 260 shares,
 13 000 €, each in their own account from `101301` to `101310`; each may
 draw up to 500 €. Paul's `101311` has been frozen since he left.

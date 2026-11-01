@@ -45,8 +45,8 @@ before(async () => {
        ('455', 'Current accounts', 'liability', false), ('512', 'Bank', 'asset', true)`,
   )
   await db.query(
-    `INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted)
-     VALUES ('t-2021', 2021, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
+    `INSERT INTO account.terms (id, policy, "from", share, minimum, instalments, delay, repayments, adopted)
+     VALUES ('t-2021', 't-2021', '2021-01-01', cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`,
   )
   await db.query(`INSERT INTO account.period (month) VALUES ('2026-10'), ('2026-11')`)
   await db.query(

@@ -1,10 +1,7 @@
 import { confluent, ordered, type Actions } from '@cella/org-actions'
 
 export const actions = {
-  // finance drafts the statutes' terms for the members to adopt: a
-  // register, the latest draft standing until they are adopted
-  'patronage:terms:draft': confluent({ power: 'distribute-surplus' }),
-  // the members' motion adopts the statutes' terms for the work share,
+  // the work share rule a passed motion adopted copied into its terms,
   // once
   'patronage:terms:adopt': ordered({ decide: 'majority', check: 'decided' }),
   // finance drafts a year's split for the assembly to approve: a register,

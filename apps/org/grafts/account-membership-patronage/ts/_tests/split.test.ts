@@ -16,8 +16,8 @@ const rows = async <R>(sql: string, values: unknown[] = []) => (await db.query(s
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-11-02'`)
-  await db.query(`INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted) VALUES ('st', 2021, cella.amount(5000), 1, 10, 12, 3, '2021-03-01')`)
-  await db.query(`INSERT INTO patronage.terms (id, "from", salary, capital, adopted) VALUES ('st', 2021, 100, 50, '2021-03-01')`)
+  await db.query(`INSERT INTO account.terms (id, policy, "from", share, minimum, instalments, delay, repayments, adopted) VALUES ('st', 'st', '2021-01-01', cella.amount(5000), 1, 10, 12, 3, '2021-03-01')`)
+  await db.query(`INSERT INTO patronage.terms (id, policy, "from", salary, capital, adopted) VALUES ('st', 'st', 2021, 100, 50, '2021-03-01')`)
   await db.query(
     `WITH person AS (INSERT INTO person.person (address, name) VALUES ('ana@x', 'Ana'), ('ben@x', 'Ben') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, shares) VALUES ('ana@x', 'active', 20), ('ben@x', 'active', 20)`,
   )

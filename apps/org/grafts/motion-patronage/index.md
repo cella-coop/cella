@@ -1,10 +1,11 @@
 +++
 title = "motion-patronage"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A year's distribution and the motion of the assembly that approves its
-split; the work share's terms and the motion that adopts them.
+split; the work share's terms, a rule the members adopt by motion, and
+the motion that adopted it.
 Declared by `patronage`.
 
 ## Schema
@@ -18,11 +19,9 @@ Declared by `patronage`.
 - the `distribution` kind of action, "Approve a year's distribution",
   registered by `motion.register_carries`, with the drafted distributions as its
   options (`distributions`).
-- the `patronage` kind of action, "Adopt the work share's terms",
-  registered by `motion.register_carries`, so a new motion's form offers it, with
-  the drafted patronage terms as its options (`bases`).
-- `motion_patronage.adoption`: the terms and the motion moving to
-  adopt them, a view of the actions of the `patronage` kind.
+- the work share's terms are no action of their own: a rule whose values
+  are named `patronage_…` is adopted as any policy, by the motion feat's
+  `policy` action, and copied into terms by the reaction below.
 
 The actions are the motion feat's rows, so the graft reads them and
 keeps no copy. The app role and the guards role may select.
@@ -33,24 +32,37 @@ keeps no copy. The app role and the guards role may select.
   `patronage:distribution:distribute` and `patronage:part:employ`, which
   follow the approval citing its motion: the cited motion moved to
   approve this distribution.
-- `motion_patronage.asks`, on `motion:motion:propose`: each action
-  to adopt patronage terms names drafted terms not yet adopted.
+- `motion_patronage.asks`, on `motion:motion:propose`: each rule the
+  motion would adopt that marks a value named `patronage_…` makes sound
+  terms (`patronage.terms_flaw`: the five shares marked, each at most all,
+  the weights adding up to 100), applies from the first day of a fiscal
+  year, and replaces the rule of the latest terms, if any; and no policy
+  it would end is one terms copy, since terms are replaced, never ended.
 - `motion_patronage.asks_to_approve`, on `motion:motion:propose`:
   each action to approve a distribution names a draft not yet approved.
 - `motion_patronage.adopts`, on `patronage:terms:adopt`: the cited
-  motion moved to adopt these terms.
+  motion adopted the rule the terms copy.
 - The four actions are registered by `motion.register_cite`, so `circle-membership-motion`'s
   `carried` attaches to them: the motion closed and passed on its roll.
   Their labels declare `check: 'decided'`: adopting and approving, the
   distribution and the credits of shares that follow an approval.
 
+## Reaction
+
+On `motion:policy:adopt`, once the adoption settles: a rule whose values
+are named for the patronage feat is copied into terms by the patronage
+feat's `adopt`, a write of its own signed by whoever signed the adoption
+and citing the motion (`handlers/terms.ts`). Any other policy is copied
+nothing, and no write is made.
+
 ## Tests
 
 `ts/_tests/terms.test.ts` (`cella test slice motion-patronage`): a
-action to adopt drafted terms is the adoption it asks for, and a proposal
-moving to adopt no such terms is refused; adopting cites a motion that
-moved to adopt the terms, and approving one that moved to approve the
-distribution, never another; a draft moved again is approved by either
+proposal adopts a work share rule only as sound terms from the first of
+a year, replacing the latest, and ends none; copying terms cites the
+motion that adopted the rule, never another. `ts/_tests/approval.test.ts`:
+approving cites the motion that moved to approve the distribution, never
+another; a draft moved again is approved by either
 motion moving to, and a proposal moving to approve no draft is refused;
 the four actions cite a motion, and the distribution and the credits that
 follow an approval are judged by the motion it cites.
@@ -59,15 +71,14 @@ follow an approval are judged by the motion it cites.
 
 Adds to a distribution's page the motion approving it, and the Approve
 form, which posts the patronage feat's write citing that motion; to the
-patronage terms' page the motions moving to adopt them, and the Adopt
-form; to a motion's page the distribution it approves and the terms it
-adopts; and to a new motion's form the drafted terms it may move to
-adopt and the drafted distributions it may move to approve.
+patronage terms' page the motion that adopted their rule; to a motion's
+page the distribution it approves and the terms its rules made; and to a
+new motion's form the drafted distributions it may move to approve.
 
 ## Lanterne
 
 m-2026-006, a majority of the assembly closed on 20 June 2026, approves
 the 2025 distribution by its action; a later year's is
 moved by a motion of the `distribution` kind. The statutes' patronage
-terms, `st-2021`, were adopted with the statutes in 2021, before the
-books moved here, so no motion here adopts them.
+terms are the founding assembly's rule `m-2021-001/44`, adopted with the
+statutes on 1 March 2021.

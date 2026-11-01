@@ -237,20 +237,3 @@ month = "2026-11"
 
 [[period]]
 month = "2026-12"
-
-# The statutes' capital clauses, adopted when the co-op was founded and
-# carried over: a share is worth 50 € and an associate subscribes at least
-# 20, paying them in at most 10 monthly instalments; one who leaves is
-# repaid a year after the exit, in three yearly repayments. How the work
-# share divides is the patronage feat's terms (patronage.toml). Later
-# terms are drafted here and adopted by a motion of the assembly that
-# moves to adopt them.
-[[terms]]
-id = "st-2021"
-from = 2021
-share = 5000
-minimum = 20
-instalments = 10
-delay = 12
-repayments = 3
-adopted = 2021-03-01

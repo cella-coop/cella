@@ -1,11 +1,10 @@
-// A motion of the members that moves to adopt the work share's terms,
-// and where each stands.
+// The work share's terms and the motion that adopted the rule they copy.
 export interface Adoption {
-  id: string
   terms: string
+  policy: string
   from: number
   motion: string
   title: string
   closed: string | null
-  adopted: string | null
+  adopted: string
 }

@@ -1,26 +1,28 @@
-// The statutes' capital clauses: the value of a share in cents, the
-// fewest shares an associate subscribes, the most monthly instalments
-// they pay them in, and the months after an exit before the first
-// repayment and how many yearly repayments follow. They govern from a
-// year on, once adopted, until later terms are.
+// The statutes' capital clauses, copied from the rule the members
+// adopted (`policy`): the value of a share in cents, the fewest shares an
+// associate subscribes, the most monthly instalments they pay them in,
+// and the months after an exit before the first repayment and how many
+// yearly repayments follow. They govern from the day their rule applies,
+// until later terms do.
 export interface Terms {
   id: string
-  from: number
+  policy: string
+  from: string
   share: number
   minimum: number
   instalments: number
   delay: number
   repayments: number
-  adopted: string | null
+  adopted: string
 }
 
-// The members' motion adopting drafted terms, which the motion it
-// cites must have passed.
+// The capital rule a passed motion adopted, whose values the terms copy.
 export interface Adopt {
-  terms: string
+  policy: string
   motion: string
 }
 
 export interface Adopted extends Adopt {
+  terms: string
   adopted: string
 }

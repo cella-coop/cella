@@ -1,11 +1,10 @@
-// A motion of the members that moves to adopt the capital's terms,
-// and where each stands.
+// Capital terms and the motion that adopted the rule they copy.
 export interface Adoption {
-  id: string
   terms: string
-  from: number
+  policy: string
+  from: string
   motion: string
   title: string
   closed: string | null
-  adopted: string | null
+  adopted: string
 }

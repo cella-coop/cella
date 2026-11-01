@@ -1,4 +1,4 @@
-// seed, finance: loads a mock co-op's capital, the statutes' terms, surplus
+// seed, finance: loads a mock co-op's capital, its surplus
 // distributions, pay, expenses and bills into the account, patronage, payslip,
 // expense and bill schemas and their grafts' (account-membership,
 // account-membership-transaction's repayments, employment-payslip,
@@ -17,20 +17,7 @@ export async function finance(db, read, day) {
     await db.query('INSERT INTO account_membership.allowance (member, amount) VALUES ($1, cella.amount($2))', [a.member, a.amount])
   }
 
-  for (const t of books.terms ?? []) {
-    await db.query(
-      `INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted)
-       VALUES ($1, $2, cella.amount($3), $4, $5, $6, $7, $8)`,
-      [t.id, t.from, t.share, t.minimum, t.instalments, t.delay, t.repayments, day(t.adopted)],
-    )
-  }
   const patronage = read('patronage')
-  for (const t of patronage.terms ?? []) {
-    await db.query(
-      `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, interest, adopted) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [t.id, t.from, t.salary ?? 0, t.hours ?? 0, t.equal ?? 0, t.capital ?? 0, t.interest ?? 0, day(t.adopted)],
-    )
-  }
   for (const a of patronage.distribution ?? []) {
     await db.query('INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ($1, $2, cella.amount($3), $4)', [a.id, a.year, a.surplus, a.basis])
     for (const s of a.share ?? []) {

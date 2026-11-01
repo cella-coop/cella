@@ -9,14 +9,17 @@
 // first is refused before its day and by anyone without the power, then
 // paid once on it. Malik's exit, which the assembly carries, is followed
 // by the freeze and the withdrawal of his capital, each its own write
-// signed by Camille; Nadia, admitted with 10 shares, stays admitted and
-// is refused her subscription under the statutes' 20. The books balance
-// throughout. Run by `cella test e2e capital`.
+// signed by Camille. The assembly then adopts new capital terms, a rule of
+// at least ten shares at 25 € replacing the founding one, whose values are
+// copied into the terms by the write that follows the adoption; a rule
+// whose value says no way is stricter is refused when proposed. Nadia,
+// admitted with 8 shares, stays admitted and is refused her subscription
+// with the rule's sentence. The books balance throughout. Run by `cella test e2e capital`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { close, put } from '@cella/org-graft-circle-membership-motion/api'
+import { close, propose, put } from '@cella/org-graft-circle-membership-motion/api'
 import { vote } from '@cella/org-motion/api'
 import { accept, invite } from '@cella/org-membership/api'
 import { called, pay, repay } from '@cella/org-graft-account-membership-transaction/api'
@@ -40,6 +43,12 @@ const paul = 'paul@lanterne.example'
 const nadia = 'nadia@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 const malik = 'malik@lanterne.example'
+// The capital's terms the founding assembly adopted, as the rule
+// m-2021-001/43.
+const founded = 'm-2021-001-43'
+// Its rule, and the rule of the terms the assembly adopts in December.
+const founding = 'm-2021-001/43'
+let newTerms = ''
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -88,7 +97,7 @@ test('the statutes value a share at 50 €, and Paul, who left, is owed his 1 50
     `SELECT t.id AS terms, cella.cents(t.share) AS share, t.minimum, t.instalments, t.delay, t.repayments
      FROM account.terms t WHERE t.id = account.capital_for(cella.verdict_date())`,
   )
-  assert.deepEqual(t, { terms: 'st-2021', share: '5000', minimum: 20, instalments: 10, delay: 12, repayments: 3 })
+  assert.deepEqual(t, { terms: founded, share: '5000', minimum: 20, instalments: 10, delay: 12, repayments: 3 })
   const c = await called(await reading(julien), paul)
   assert.deepEqual(
     c.repayments.map((r) => [r.n, r.due, r.amount, r.paid]),
@@ -132,7 +141,7 @@ test('m-2026-012 admits Inès, and the subscription it carries, signed by Camill
 
 test('she spreads it over the statutes\' ten instalments from her pay; more is refused, and no one spreads it but her', async () => {
   const more = await spread({ member: ines, instalments: 12 }, as(ines))
-  assert.match(reason(more), /spreads their subscription over 12 instalments: st-2021 allow at most 10/)
+  assert.match(reason(more), /spreads their subscription over 12 instalments: "A share is worth 50 €. .*may pay them in at most 10 monthly instalments./)
   const forHer = await spread({ member: ines, instalments: 10 }, as(camille))
   assert.match(reason(forHer), /camille@lanterne.example may spread only their own subscription/)
   const p = settled(await spread({ member: ines, instalments: 10 }, as(ines)))
@@ -252,17 +261,70 @@ test('an exit the assembly carries is followed by the freeze and the withdrawal 
   await balanced()
 })
 
-test('an admission whose subscription its guard refuses stays an admission: Nadia, admitted with 10 shares, is refused her subscription under the statutes\' 20', async () => {
+test('the assembly adopts capital terms of at least ten shares at 25 €, a rule replacing the founding one; a value that says no way is stricter is refused', async () => {
+  const wording = (minimum: string) =>
+    `A share is worth {account_share: 25 € | more is stricter}. Each associate subscribes at least {account_minimum: ${minimum}} shares, ` +
+    'and may pay them in at most {account_instalments: 10 | less is stricter} monthly instalments. An associate who leaves is repaid their shares ' +
+    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 3 | more is stricter} yearly repayments'
+  const rule = (args: Record<string, string>) =>
+    propose(
+      { circle: 'ag', title: 'Adopt new capital terms', procedure: 'consent', deadline: '2026-12-15', body: '', actions: [{ kind: 'policy', args: { kind: 'rule', ...args } }] },
+      as(camille),
+    )
   await on('2026-12-08')
+  const undirected = await rule({ wording: wording('10'), replaces: founding })
+  assert.match(reason(undirected), /account_minimum is 10: a rule's value says which way is stricter, as \{account_minimum: 10 \| more is stricter\}/)
+  const unplaced = await rule({ wording: wording('10 | more is stricter') })
+  assert.match(reason(unplaced), new RegExp(`the capital's terms replace those that govern, ${founding}`))
+
+  const motion = settled(await rule({ wording: wording('10 | more is stricter'), replaces: founding })).motion
+  const roll = await all<{ member: string }>(
+    `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member
+     WHERE r.motion = $1 AND m.status = 'active'`,
+    [motion],
+  )
+  for (const { member } of roll) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+  }
+  await on('2026-12-15')
+  settled(await close({ motion }, as(camille)))
+  const then = await react('motion:motion:close', { motion }, as(camille))
+  assert.deepEqual(
+    then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
+    [['motion:policy:adopt', 'settled', [['account:terms:adopt', 'settled']]]],
+  )
+  const t = await one<{ policy: string; share: string; minimum: number; from: string }>(
+    `SELECT t.policy, cella.cents(t.share) AS share, t.minimum, to_char(t."from", 'YYYY-MM-DD') AS "from"
+     FROM account.terms t WHERE t.policy = $1`,
+    [`${motion}/1`],
+  )
+  assert.equal((await one<{ t: string }>(`SELECT account.capital_for('2026-12-15') AS t`)).t, `${motion}-1`, 'they govern from the day the rule applies')
+  assert.deepEqual({ share: t.share, minimum: t.minimum, from: t.from }, { share: '2500', minimum: 10, from: '2026-12-15' })
+  assert.equal((await one<{ ends: string }>(`SELECT to_char(ends, 'YYYY-MM-DD') AS ends FROM policy.policy WHERE id = $1`, [founding])).ends, '2026-12-15')
+  assert.equal(
+    (await one<{ s: string }>('SELECT policy.sentence(w.legal) AS s FROM policy.wording w WHERE w.policy = $1', [t.policy])).s,
+    'A share is worth 25 €. Each associate subscribes at least 10 shares, and may pay them in at most 10 monthly instalments. An associate who leaves is repaid their shares at their nominal value from 12 months after the exit, in 3 yearly repayments',
+  )
+  newTerms = t.policy
+})
+
+test('an admission whose subscription its guard refuses stays an admission: Nadia, admitted with 8 shares, is refused her subscription with the rule\'s sentence', async () => {
+  await on('2026-12-15')
   const secret = random()
   settled(await invite({ address: nadia, name: 'Nadia Benali', link: await sha256(secret) }, as(thomas)))
   settled(await accept({ member: nadia, secret, key: (await fixture(nadia, 'laptop')).key, label: 'laptop' }, as(nadia)))
-  const then = await decided('admit', { member: nadia, shares: 10 }, '2026-12-08', '2026-12-15')
+  const then = await decided('admit', { member: nadia, shares: 8 }, '2026-12-15', '2026-12-22')
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['membership:member:admit', 'settled']])
   const refused = then[0].then[0]
   assert.equal(refused.op, 'account:capital:subscribe')
   assert.equal(refused.state, 'refused')
-  assert.match(refused.reason ?? '', /nadia@lanterne.example subscribes 10 shares: st-2021 ask at least 20/)
+  assert.equal(
+    refused.reason,
+    'nadia@lanterne.example subscribes 8 shares: "' +
+      (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s +
+      '"',
+  )
+  assert.match(refused.reason ?? '', /Each associate subscribes at least 10 shares/)
   assert.equal((await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [nadia])).status, 'active')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM account.account WHERE holder = $1', [nadia])).n, '0', 'and holds no capital account')
   await balanced()

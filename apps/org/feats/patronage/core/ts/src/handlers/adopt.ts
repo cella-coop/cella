@@ -5,22 +5,23 @@ import type { Adopt, Adopted } from '../models/terms.ts'
 
 const op = 'patronage:terms:adopt' satisfies keyof typeof actions
 
-// Adopts drafted terms on the verdict date, citing the members' motion.
-// The guards decide: `patronage.adopts` that they divide the whole work
-// share and govern no year already approved, motion-patronage's that
-// the motion moved to adopt them, and circle-membership-motion's that it
-// passed. Adopted terms never change.
+// Copies the work share rule a passed motion adopted into the terms its
+// values make, on the verdict date, citing the motion: motion-patronage
+// carries it once the adoption settles. The guards decide:
+// `patronage.copies` that the terms are what the rule marks,
+// `patronage.adopts` that they divide the whole work share and govern no
+// year already approved, motion-patronage's that the motion adopted the
+// rule, and circle-membership-motion's that it passed. Adopted terms
+// never change.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {
     op,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ adopted: string }>(
-        `UPDATE patronage.terms SET adopted = cella.verdict_date() WHERE id = $1
-         RETURNING to_char(adopted, 'YYYY-MM-DD') AS adopted`,
-        [input.terms],
-      )
-      return { ...input, adopted: rows[0]?.adopted ?? '' }
+      const made = await tx.query<{ terms: string | null }>('SELECT patronage.terms_from($1) AS terms', [input.policy])
+      const terms = made.rows[0]?.terms ?? ''
+      const { rows } = await tx.query<{ adopted: string }>(`SELECT to_char(adopted, 'YYYY-MM-DD') AS adopted FROM patronage.terms WHERE id = $1`, [terms])
+      return { ...input, terms, adopted: rows[0]?.adopted ?? '' }
     },
     payload: (v) => ({ ...v }),
   })

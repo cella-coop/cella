@@ -154,7 +154,7 @@ GRANT UPDATE (entry, paid) ON account_membership_transaction.repayment TO cella_
 -- account:capital:subscribe — a member admitted subscribes their shares,
 -- by the write that follows their admission: they are active and hold at
 -- least the shares the terms governing the verdict date ask, which value
--- a share; this write made their one subscription, of exactly their
+-- a share, a refusal quoting the rule they copy (`policy.says`); this write made their one subscription, of exactly their
 -- shares at that value, on a capital account under 1013 they hold; and the
 -- entry is exactly it, 4562 debited and 1012 credited. That the month is
 -- open is account-transaction's guard on every line.
@@ -166,7 +166,8 @@ BEGIN ATOMIC
     WHEN m.status <> 'active' THEN m.address || ' is ' || m.status || ': only a member admitted subscribes'
     WHEN m.shares = 0 THEN m.address || ' holds no shares to subscribe'
     WHEN t.id IS NULL THEN 'no adopted terms value a share on ' || cella.verdict_date()
-    WHEN m.shares < t.minimum THEN m.address || ' subscribes ' || m.shares || ' shares: ' || t.id || ' ask at least ' || t.minimum
+    WHEN m.shares < t.minimum THEN m.address || ' subscribes ' || m.shares || ' shares: '
+      || coalesce('"' || policy.says(t.policy) || '"', t.id || ' ask at least ' || t.minimum)
     WHEN s.member IS NULL OR s.entry IS DISTINCT FROM x.entry OR s.account IS DISTINCT FROM x.account
       THEN coalesce(x.entry, 'the entry') || ' is not ' || m.address || '''s subscription'
     WHEN s.shares <> m.shares OR cella.cents(s.amount) IS DISTINCT FROM m.shares * cella.cents(t.share)

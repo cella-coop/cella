@@ -745,8 +745,23 @@ The value's type is how it is written: `3 000 €` an amount in cents,
 value named `role` or `power`, or ending so, a role's or a power's id;
 anything else text. A policy may carry a friendly wording beside the
 legal one, in plain words, which never binds and marks no value, so a
-value exists once. A rule may mark none, and then binds by people's
-judgement alone.
+value exists once.
+
+A **rule**'s value that is ordered, an amount, a share, a day or a number,
+declares which way is stricter after a bar, `| more is stricter` or
+`| less is stricter`, so a policy that tightens a rule can be told from
+one that loosens it; a text, a role or a power has no order and declares
+none. A rule's ordered value with no direction is refused when its
+motion is proposed and again when it is adopted. The direction is in the
+legal wording and the register (`policy.value.stricter`), never in the
+sentence as it reads:
+
+```text
+Each associate subscribes at least {account_minimum: 20 | more is stricter} shares
+```
+
+A rule may mark no value, and then binds by people's judgement alone: no
+guard reads it.
 
 **The register** is org's core library `policy` (`core/policy`), with
 its schema `policy` ([its doc](../../apps/org/core/policy/index.md)). It
@@ -762,7 +777,9 @@ app may call, inside the write of the action that adopts or ends the
 policy; its tables are state tables, so the notary's trigger refuses a
 row outside a write. A slice's SQL may read the register's
 policies and values, never `policy.wording`, which `cella check feats`
-refuses and the guards role is granted nothing on.
+refuses and the guards role is granted nothing on. A guard may quote a
+policy in the reason it refuses, by `policy.says(id)`, the sentence as it
+reads, and decides by its own columns alone.
 
 **Adoption** is an action a motion carries, `policy` in `motion.carries`,
 which the motion feat registers itself, since a policy is a sentence a
@@ -778,9 +795,9 @@ of the policy's circle ends it on the verdict date.
 
 **Values bind where they are read.** The feat that reads a kind of
 policy copies its values into typed rows of its own as the policy is
-adopted, in the same verdict, so a guard reads a real column, never the
-sentence: a feat's write the adoption calls, through the graft joining
-that feat to `motion`. A guard never parses a wording, and reads the
+adopted, on the same verdict date, so a guard reads a real column, never
+the sentence: a feat's write the adoption calls, or carries once it
+settles, through the graft joining that feat to `motion`. A guard never parses a wording, and reads the
 register only to know which policies are in force. So a procedure policy's
 method, share, quorum and ballot are copied by the motion feat into
 `motion.procedure`, which a motion is counted by
@@ -793,6 +810,24 @@ are copied by the circle feat into `circle.mandate`, which
 and ending of a policy are the motion feat's with the circle feat's copy
 in the same write
 ([mandates](../../apps/org/feats/circle/index.md#mandates)).
+
+A rule whose values are named for a feat, as `account_minimum`, is that
+feat's to read, and marks every value the feat reads of it. The capital's
+terms are the account feat's rule (`account_share`, `account_minimum`,
+`account_instalments`, `account_delay`, `account_repayments`), copied
+into `account.terms`; the work share's terms the patronage feat's
+(`patronage_salary`, `patronage_hours`, `patronage_equal`,
+`patronage_capital`, `patronage_interest`), copied into
+`patronage.terms`. The adoption's own write reaches only the grafts of
+the feats that carry it out, so these are copied by a reaction: once the
+adoption settles, the graft joining the feat to `motion`
+(`account-motion`, `motion-patronage`) carries the feat's own write,
+`account:terms:adopt` or `patronage:terms:adopt`, which cites the motion
+and copies the values on the same verdict date. So that no rule is
+adopted whose values its feat would refuse, the same graft's guard on
+the proposal checks them as the feat does (`account.terms_flaw`,
+`patronage.terms_flaw`). Terms are replaced by later terms, never ended,
+since a co-op always has its terms.
 
 A circle's page lists its policies in force, each as its legal wording
 reads, with the motion that adopted it and its days (`circle-motion`).

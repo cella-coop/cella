@@ -136,7 +136,8 @@ BEGIN ATOMIC
 END;
 
 -- motion:motion:propose — each policy the motion would adopt is of a
--- kind, worded soundly (`policy.flaw`), its days in order and none before
+-- kind, worded soundly for its kind (`policy.flaw`), a rule's ordered
+-- values each saying which way is stricter, its days in order and none before
 -- the motion's deadline, and replaces, if it names one, a policy of the
 -- motion's circle and kind in force; a procedure policy marks terms that
 -- make a procedure (`motion.procedure_flaw`); and each policy it would
@@ -148,8 +149,8 @@ BEGIN ATOMIC
     SELECT CASE
       WHEN coalesce(m.args ->> 'kind', '') NOT IN ('mandate', 'rule', 'procedure')
         THEN 'a policy is a mandate, a rule or a procedure, not ' || coalesce(m.args ->> 'kind', 'nothing')
-      WHEN policy.flaw(m.args ->> 'wording', m.args ->> 'friendly') IS NOT NULL
-        THEN policy.flaw(m.args ->> 'wording', m.args ->> 'friendly')
+      WHEN policy.flaw(m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly') IS NOT NULL
+        THEN policy.flaw(m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly')
       WHEN coalesce(m.args ->> 'from', '') !~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
         OR coalesce(m.args ->> 'until', '') !~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
         THEN 'a policy''s days are written YYYY-MM-DD'

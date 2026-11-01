@@ -44,8 +44,8 @@ before(async () => {
        ('1013', 'Capital', 'equity', false), ('120', 'Result', 'equity', false), ('424', 'Work share owed', 'liability', false),
        ('1061', 'Legal reserve', 'equity', false), ('512', 'Bank', 'asset', true)`,
   )
-  await db.query(`INSERT INTO account.terms (id, "from", share, minimum, instalments, delay, repayments, adopted) VALUES ('t-2021', 2021, cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`)
-  await db.query(`INSERT INTO patronage.terms (id, "from", salary, capital, adopted) VALUES ('t-2021', 2021, 100, 50, '2021-03-01')`)
+  await db.query(`INSERT INTO account.terms (id, policy, "from", share, minimum, instalments, delay, repayments, adopted) VALUES ('t-2021', 't-2021', '2021-01-01', cella.amount(5000), 20, 10, 12, 3, '2021-03-01')`)
+  await db.query(`INSERT INTO patronage.terms (id, policy, "from", salary, capital, adopted) VALUES ('t-2021', 't-2021', 2021, 100, 50, '2021-03-01')`)
   await db.query(`INSERT INTO account.period (month) VALUES ('2026-11')`)
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Hugo Lefèvre') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2021-03-01', 40)`, [hugo])
   await db.query(`INSERT INTO account.account (code, label, kind, parent, holder) VALUES ('101301', 'Capital — Hugo', 'equity', '1013', $1)`, [hugo])

@@ -2,21 +2,22 @@
 // exists, the write spec a graft composes, its reads, and its slice, which
 // the shell mounts.
 import { action, today, type Slice } from '@cella/org-db'
-import { adopt, approve, draft, draftTerms } from '../handlers/index.ts'
+import { approve, draft } from '../handlers/index.ts'
 import { distribution, distributions, years } from '../drivers/distribution.ts'
 import { basis, bases } from '../drivers/terms.ts'
 import { parts, statement, statements } from '../drivers/statement.ts'
 import * as forms from './forms.ts'
 
-export { adopt, approve, distributing, draft, draftTerms } from '../handlers/index.ts'
+export { adopt, approve, distributing, draft } from '../handlers/index.ts'
 export { distribution, distributions } from '../drivers/distribution.ts'
 export { basis, bases } from '../drivers/terms.ts'
 export { statement, statements } from '../drivers/statement.ts'
 
 // Each year's distribution and its split, the statutes' terms for the
-// work share and each worker's statement; drafting a split and terms,
-// which finance prepares, and approving a split and adopting terms, which
-// cite the assembly's motion. Distributing a split posts it, so its
+// work share and each worker's statement; drafting a split, which finance
+// prepares, and approving it, which cites the assembly's motion. Terms
+// are copied from the rule a motion adopts, by `adopt`, which
+// motion-patronage carries. Distributing a split posts it, so its
 // write is patronage-transaction's.
 export const slice: Slice = {
   name: 'patronage',
@@ -35,10 +36,6 @@ export const slice: Slice = {
     bases: {
       list: bases,
       item: basis,
-      actions: {
-        draft: action('patronage:terms:draft', (form) => forms.terms(form), draftTerms),
-        adopt: action('patronage:terms:adopt', (form, id) => ({ terms: id ?? '', motion: form.get('motion') }), adopt),
-      },
     },
     statements: {
       list: parts,

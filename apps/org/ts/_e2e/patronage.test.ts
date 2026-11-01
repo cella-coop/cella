@@ -7,10 +7,11 @@
 // signed by Camille, who approved it: half of each part buys whole
 // shares, blocked five years, and the rest is owed in cash. The parts,
 // the shares, the cash and the books reconcile to the cent; each member
-// reads their own statement, and finance the year's return. Then finance
-// drafts new terms, a mix of pay and time from 2027, the assembly decides
-// them, and they are adopted citing that motion, never one that does not
-// move them nor over a year already approved. Last, the second year runs
+// reads their own statement, and finance the year's return. Then the
+// assembly adopts a rule of new terms, a mix of pay and time from 2027,
+// replacing the founding one; a rule dividing less than the whole, or with
+// a value that says no way is stricter, is refused when proposed, and the
+// values are copied into the terms citing that motion, once. Last, the second year runs
 // with no fixture SQL: finance opens 2027's first month and closes
 // 2026's, drafts the 2026 split, the assembly moves to approve it, and
 // once it is approved its distribution and credits follow, signed by the
@@ -20,7 +21,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { adopt, approve, draft, draftTerms, statement, statements } from '@cella/org-patronage/api'
+import { adopt, approve, draft, statement, statements } from '@cella/org-patronage/api'
 import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import { react } from '../src/lib/server/slices.ts'
@@ -40,6 +41,9 @@ const julien = 'julien@lanterne.example'
 const hugo = 'hugo@lanterne.example'
 const chloe = 'chloe@lanterne.example'
 const share = 50_00
+// The work share's terms the founding assembly adopted, as the rule
+// m-2021-001/44.
+const founded = 'm-2021-001-44'
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -90,7 +94,7 @@ test('before the approval, no statement is drawn, and the work share would divid
   assert.equal(preview.length, 10)
   assert.equal(preview.reduce((s, p) => s + Number(p.amount), 0), 27_630_00)
   const terms = await one<{ terms: string; basis: string }>(`SELECT patronage.terms_for(2025) AS terms, patronage.basis_of(patronage.terms_for(2025)) AS basis`)
-  assert.deepEqual(terms, { terms: 'st-2021', basis: 'salary' })
+  assert.deepEqual(terms, { terms: founded, basis: 'salary' })
   before2025 = new Map(
     (await all<{ member: string; shares: number; b: string }>(
       `SELECT c.member, c.shares, coalesce((SELECT -b.balance FROM account_transaction.balance b WHERE b.code = c.account), 0) AS b
@@ -204,7 +208,7 @@ test('each member reads their statement, which reconciles with the books; their 
   const part = Number(parts.find((p) => p.worker === camille)?.cents)
   assert.equal(sheet?.amount, part)
   assert.deepEqual(sheet?.lines.map((l) => [l.basis, l.weight, l.portion, l.amount]), [['salary', 100, 27_630_00, part]])
-  assert.equal(sheet?.terms?.id, 'st-2021')
+  assert.equal(sheet?.terms?.id, founded)
 
   const became = await employed(app, id)
   assert.equal((became?.capital ?? 0) + (became?.cash ?? 0), part)
@@ -250,43 +254,47 @@ test('the report feat\'s federation figures, read through the analytics shell, a
   }
 })
 
-test('finance drafts terms mixing pay and time from 2027, the assembly decides them, and they are adopted citing that motion alone', async () => {
-  const lead = await draftTerms({ from: 2027, salary: 60_00, hours: 40_00, equal: 0, capital: 50_00, interest: 3_50 }, as(hugo))
-  assert.match(reason(lead), /distribute-surplus/)
-  const short = await draftTerms({ from: 2027, salary: 60_00, hours: 30_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien))
-  assert.match(reason(short), /st-2027 divide 90.00 % of the work share, not 100 %/)
-  settled(await draftTerms({ from: 2027, salary: 50_00, hours: 50_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien)))
-  // Drafted again before the members adopt them, the latest draft stands.
-  const drafted = settled(await draftTerms({ from: 2027, salary: 60_00, hours: 40_00, equal: 0, capital: 50_00, interest: 3_50 }, as(julien)))
-  assert.equal(drafted.terms, 'st-2027')
-  assert.deepEqual(await one(`SELECT salary::float8 AS salary, hours::float8 AS hours, interest::float8 AS interest, adopted FROM patronage.terms WHERE id = 'st-2027'`), { salary: 60, hours: 40, interest: 3.5, adopted: null })
-  settled(await draftTerms({ from: 2025, salary: 50_00, hours: 50_00, equal: 0, capital: 50_00, interest: 0 }, as(julien)))
-
-  const early = await adopt({ terms: 'st-2025', motion: 'm-2026-006' }, as(camille))
-  assert.match(reason(early), /st-2025 would govern 2025, whose distribution is approved|m-2026-006 does not adopt st-2025/)
-  const astray = await adopt({ terms: 'st-2027', motion: 'm-2026-006' }, as(camille))
-  assert.match(reason(astray), /m-2026-006 does not adopt st-2027/)
-
-  const proposed = settled(
-    await propose(
-      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', procedure: 'consent', deadline: '2026-11-16', body: '', actions: [{ kind: 'patronage', args: { terms: 'st-2027' } }] },
+test('the assembly adopts a rule mixing pay and time from 2027, and its values are copied into the work share\'s terms citing that motion, once', async () => {
+  const wording = (salary: string, hours: string) =>
+    `The work share is divided among the workers {patronage_salary: ${salary} | more is stricter} in proportion to pay, ` +
+    `{patronage_hours: ${hours} | more is stricter} to time worked and {patronage_equal: 0 % | more is stricter} in equal parts. ` +
+    '{patronage_capital: 50 % | more is stricter} of each associate\'s part is employed in shares of the capital, and the capital earns ' +
+    'interest of at most {patronage_interest: 3.5 % | less is stricter} a year'
+  const founding = (await one<{ policy: string }>('SELECT policy FROM patronage.terms WHERE id = $1', [founded])).policy
+  const put = (args: Record<string, string>) =>
+    propose(
+      { circle: 'ag', title: 'Divide the work share by pay and time from 2027', procedure: 'consent', deadline: '2026-11-16', body: '', actions: [{ kind: 'policy', args }] },
       as(camille),
-    ),
-  )
-  const motion = proposed.motion
+    )
+  const rule = { kind: 'rule', wording: wording('60 %', '40 %'), from: '2027-01-01', replaces: founding }
+  const short = await put({ ...rule, wording: wording('60 %', '30 %') })
+  assert.match(reason(short), /the work share's terms divide 90 % of the work share, not 100 %/)
+  const undirected = await put({ ...rule, wording: wording('60 %', '40 %').replace('40 % | more is stricter', '40 %') })
+  assert.match(reason(undirected), /patronage_hours is 40 %: a rule's value says which way is stricter/)
+  const { replaces: _, ...unplaced } = rule
+  const loose = await put(unplaced)
+  assert.match(reason(loose), new RegExp(`the work share's terms replace the latest, ${founding}`))
+
+  const motion = settled(await put(rule)).motion
   for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
-  const open = await adopt({ terms: 'st-2027', motion }, as(camille))
-  assert.match(reason(open), new RegExp(`${motion} is not closed`))
-
   await on('2026-11-16')
   settled(await close({ motion }, as(camille)))
-  const adopted = settled(await adopt({ terms: 'st-2027', motion }, as(camille)))
-  assert.equal(adopted.adopted, '2026-11-16')
-  assert.deepEqual(await one(`SELECT patronage.terms_for(2026) AS a, patronage.terms_for(2027) AS b, patronage.basis_of('st-2027') AS basis`), { a: 'st-2021', b: 'st-2027', basis: 'mix' })
-  const again = await adopt({ terms: 'st-2027', motion }, as(camille))
-  assert.match(reason(again), /st-2027 were adopted on 2026-11-16/)
+  const then = await react('motion:motion:close', { motion }, as(camille))
+  assert.deepEqual(
+    then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
+    [['motion:policy:adopt', 'settled', [['patronage:terms:adopt', 'settled']]]],
+  )
+  const terms = `${motion}-1`
+  assert.deepEqual(
+    await one(`SELECT policy, "from", salary::float8 AS salary, hours::float8 AS hours, interest::float8 AS interest, to_char(adopted, 'YYYY-MM-DD') AS adopted FROM patronage.terms WHERE id = $1`, [terms]),
+    { policy: `${motion}/1`, from: 2027, salary: 60, hours: 40, interest: 3.5, adopted: '2026-11-16' },
+  )
+  assert.deepEqual(await one(`SELECT patronage.terms_for(2026) AS a, patronage.terms_for(2027) AS b, patronage.basis_of($1) AS basis`, [terms]), { a: founded, b: terms, basis: 'mix' })
+  assert.equal((await one<{ ends: string }>(`SELECT to_char(ends, 'YYYY-MM-DD') AS ends FROM policy.policy WHERE id = $1`, [founding])).ends, '2027-01-01', 'the founding rule ends the day the new one applies')
+  const again = await adopt({ policy: `${motion}/1`, motion }, as(camille))
+  assert.match(reason(again), new RegExp(`${motion}/1 are copied into terms already`))
 })
 
 test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 and drafts its split; the assembly moves to approve it; it is approved and distributed', async () => {

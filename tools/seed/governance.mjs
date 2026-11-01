@@ -17,9 +17,11 @@ export async function actions(db, d) {
 // The policies a closed motion adopted, from its actions of kind `policy`:
 // each kept in the register as `policy.adopt` keeps it, adopted the day
 // the motion closed and applying from then, or from the day it names; a
-// procedure policy's values copied into the procedure they make, and a
+// procedure policy's values copied into the procedure they make, a
 // mandate policy's into the mandate it grants, as circle-motion's
-// `adopt` does. Returns how many.
+// `adopt` does, and a rule of the capital's or the work share's terms
+// into them, as account-motion and motion-patronage carry them. Returns
+// how many.
 export async function adopted(db, d) {
   const closed = new Date(d.closed).toISOString().slice(0, 10)
   let n = 0
@@ -35,6 +37,8 @@ export async function adopted(db, d) {
     await db.query('UPDATE policy.policy SET adopted = $2 WHERE id = $1', [rows[0].id, closed])
     await db.query('SELECT motion.procedure_from($1)', [rows[0].id])
     await db.query('SELECT circle.mandate_from($1)', [rows[0].id])
+    await db.query('SELECT account.terms_from($1)', [rows[0].id])
+    await db.query('SELECT patronage.terms_from($1)', [rows[0].id])
     n++
   }
   return n

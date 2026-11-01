@@ -5,14 +5,12 @@ import type { Sheet, Statement } from '../models/statement.ts'
 import Shares from './blocks/Shares.svelte'
 import Basis from './blocks/Basis.svelte'
 import Draft from './blocks/Draft.svelte'
-import DraftTerms from './blocks/DraftTerms.svelte'
 
 const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approved: 'accent', distributed: 'positive' }
 // A row as its collection lists it: its state, and how terms divide, as
 // the list shows them.
 type Staged = Distribution & { state: ReturnType<typeof stage> }
 type Divided = Omit<Terms, 'basis'> & { basis: string; state: string }
-const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
 const standing = (d: Distribution) =>
   d.distributed
     ? `distributed on ${date(d.distributed)}`
@@ -67,22 +65,20 @@ export const app: App = {
         title: 'Patronage terms',
         caption: 'The statutes’ terms for the work share: how it divides, what of it buys shares, and the most interest capital earns',
         icon: icons.SealCheck,
-        create: DraftTerms,
         columns: [
           { key: 'from', label: 'From', kind: 'title', role: 'title', value: (t: Terms) => String(t.from) },
           { key: 'basis', label: 'Divides', role: 'sub', value: (t: Divided) => t.basis },
           { key: 'capital', label: 'In shares %', kind: 'number', role: 'hidden', value: (t: Terms) => t.capital },
           { key: 'interest', label: 'Interest at most %', kind: 'number', role: 'hidden', value: (t: Terms) => t.interest },
           { key: 'adopted', label: 'Adopted on', kind: 'date', role: 'hidden', value: (t: Terms) => t.adopted },
-          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (t: Divided) => t.state, tone: (t: Terms) => (t.adopted ? 'positive' : 'accent') },
+          { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (t: Divided) => t.state, tone: (t: Divided) => (t.state === 'governing' ? 'positive' : 'neutral') },
         ],
       },
       page: {
         eyebrow: 'Patronage terms',
         title: (t: Terms) => `Patronage terms from ${t.from}`,
-        subtitle: (t: Terms) => (t.adopted ? `adopted on ${date(t.adopted)}` : 'drafted: adopted once the members decide'),
+        subtitle: (t: Terms) => `adopted on ${date(t.adopted)}, as the rule ${t.policy}`,
         properties: (t: Terms) => [
-          { label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' },
           { label: 'From', value: String(t.from) },
           { label: 'By pay %', value: t.salary, kind: 'number' },
           { label: 'By time worked %', value: t.hours, kind: 'number' },

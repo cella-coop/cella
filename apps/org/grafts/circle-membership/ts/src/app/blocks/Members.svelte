@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
-  import { sittings, type Seat, type Sitting } from '../../models/position.ts'
+  import { sittings, type Seat, type Sitting } from '../../models/seat.ts'
 
   // Who sits in a circle, one row per person, in which roles, since when.
   let { data }: { data: Seat[]; id: string } = $props()

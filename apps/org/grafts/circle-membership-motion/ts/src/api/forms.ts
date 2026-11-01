@@ -27,7 +27,7 @@ export function standing(form: Form, member: string): Asking {
 }
 
 // A proposal from a circle's page: to seat a member in it, in a role or as
-// a plain member, or to end a seat held there, named by its position.
+// a plain member, or to end a seat held there, named by its id.
 export async function appointing(form: Form, circle: string, db: Db): Promise<Asking> {
   const kind = form.get('kind')
   if (kind === 'seat') {
@@ -36,7 +36,7 @@ export async function appointing(form: Form, circle: string, db: Db): Promise<As
   }
   if (kind === 'unseat') {
     const { rows } = await db.query<{ member: string; role: string | null }>(
-      'SELECT member, role FROM circle_membership.position WHERE id::text = $1 AND circle = $2 AND until IS NULL',
+      'SELECT member, role FROM circle_membership.seat WHERE id::text = $1 AND circle = $2 AND until IS NULL',
       [form.get('seat'), circle],
     )
     if (!rows[0]) {

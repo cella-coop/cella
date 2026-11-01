@@ -8,7 +8,7 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN EXISTS (SELECT FROM membership.member m WHERE m.address = w.member AND m.status = 'active')
       AND NOT EXISTS (
-        SELECT FROM circle_membership.position s
+        SELECT FROM circle_membership.seat s
         WHERE s.member = w.member
           AND (s.since IS NULL OR s.since <= cella.verdict_date())
           AND (s.until IS NULL OR s.until > cella.verdict_date())

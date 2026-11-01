@@ -85,9 +85,9 @@ coordination's, counts its five.
   `document:document:adopt`), and this graft attaches the guard to every
   op listed, then and later. A graft that cites a motion so never reads
   this one, and this one never names a feat it does not join. This graft
-  lists `circle-membership:position:add` and `:remove` itself, a lower-order
+  lists `circle-membership:seat:add` and `:remove` itself, a lower-order
   graft's ops.
-- `circle_membership_motion.seats`, on `circle-membership:position:add`: the
+- `circle_membership_motion.seats`, on `circle-membership:seat:add`: the
   seat is one the cited motion gives (`seating`), to an active member,
   from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited motion

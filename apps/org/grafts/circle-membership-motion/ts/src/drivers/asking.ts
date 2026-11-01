@@ -39,7 +39,7 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
   )
   const seats = await db.query<Appointing['seats'][number]>(
     `SELECT p.id::text AS id, mp.name || coalesce(', ' || r.name, '') AS label, p.member, p.role
-     FROM circle_membership.position p JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = p.member LEFT JOIN circle.role r ON r.id = p.role
+     FROM circle_membership.seat p JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = p.member LEFT JOIN circle.role r ON r.id = p.role
      WHERE p.circle = $1 AND p.until IS NULL ORDER BY mp.name, r.name`,
     [circle],
   )

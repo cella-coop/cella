@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
-  import type { Held, Seat } from '../../models/position.ts'
+  import type { Held, Seat } from '../../models/seat.ts'
 
   // Joining's circles: a seat in the assembly, which the admission gives,
   // and one in a working circle, which that circle's motion gives.

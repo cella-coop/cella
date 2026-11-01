@@ -34,11 +34,11 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   },
   revoke: { op: 'circle:mandate:revoke', run: (a, motion, deps) => revoke({ mandate: Number(a.mandate), motion }, deps) },
   seat: {
-    op: 'circle-membership:position:add',
+    op: 'circle-membership:seat:add',
     run: (a, motion, deps) => add({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),
   },
   unseat: {
-    op: 'circle-membership:position:remove',
+    op: 'circle-membership:seat:remove',
     run: (a, motion, deps) => remove({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),
   },
 }

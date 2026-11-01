@@ -69,7 +69,7 @@ export interface Add {
 }
 
 export interface Added {
-  position: number
+  seat: number
   since: string
 }
 
@@ -77,6 +77,6 @@ export interface Added {
 export type Remove = Add
 
 export interface Removed {
-  position: number
+  seat: number
   until: string
 }

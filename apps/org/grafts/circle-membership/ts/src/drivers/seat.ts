@@ -1,10 +1,10 @@
 import type { Db } from '@cella/org-db'
-import type { Held, Seat } from '../models/position.ts'
+import type { Held, Seat } from '../models/seat.ts'
 
 const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, mp.name AS "memberName", p.role, r.name AS "roleName",
   to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until, c.procedure, c.parent IS NULL AS root`
 
-const from = `FROM circle_membership.position p
+const from = `FROM circle_membership.seat p
   JOIN circle.circle c ON c.id = p.circle
   LEFT JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = p.member
   LEFT JOIN circle.role r ON r.id = p.role`
@@ -25,7 +25,7 @@ export async function seats(db: Db, by: { circle?: string; member?: string }): P
 export async function held(db: Db, member: string): Promise<Held[]> {
   const { rows } = await db.query<Held>(
     `SELECT DISTINCT ON (md.power, md.id) md.id::text AS id, md.power, md.text, cella.cents(md."limit") AS "limit", md.role, p.circle, c.name AS "circleName"
-     FROM circle_membership.position p
+     FROM circle_membership.seat p
      JOIN circle.mandate md ON md.role = p.role
      JOIN circle.circle c ON c.id = p.circle
      WHERE p.member = $1 AND p.until IS NULL AND md.revoked IS NULL AND md.until IS NULL
@@ -37,11 +37,11 @@ export async function held(db: Db, member: string): Promise<Held[]> {
 
 // The circles each member sits in now, by address.
 export const circlesOf = `SELECT member AS id, string_agg(DISTINCT circle, ', ' ORDER BY circle) AS circles
-  FROM circle_membership.position WHERE until IS NULL GROUP BY member`
+  FROM circle_membership.seat WHERE until IS NULL GROUP BY member`
 
 // How many members sit in each circle now, by circle, none where no one does.
 export const seated = `SELECT c.id, count(DISTINCT p.member)::int AS seated
-  FROM circle.circle c LEFT JOIN circle_membership.position p ON p.circle = c.id AND p.until IS NULL GROUP BY c.id`
+  FROM circle.circle c LEFT JOIN circle_membership.seat p ON p.circle = c.id AND p.until IS NULL GROUP BY c.id`
 
 // A member's name, for their page to call them by when they sit nowhere.
 export async function named(db: Db, member: string): Promise<string> {

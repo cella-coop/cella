@@ -147,7 +147,7 @@ test('only the assembly admits: coordination may not; Malik proposes Nadia\'s ad
 
 test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
   await on('2026-11-07')
-  await su.query(`INSERT INTO circle_membership.position (circle, member, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
+  await su.query(`INSERT INTO circle_membership.seat (circle, member, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
   const before = await head()
   const refused = await close({ motion: admission }, as(camille))
   assert.match(reason(refused), /nadia@lanterne\.example already sits in ag as member/)
@@ -155,7 +155,7 @@ test('a close whose seat is refused refuses the whole close: no admission, no de
   assert.equal(await status(nadia), 'invited')
   assert.equal((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [admission])).closed, null)
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '1', 'her laptop, enrolled when she took up the invitation, is all she holds')
-  await su.query(`DELETE FROM circle_membership.position WHERE member = $1`, [nadia])
+  await su.query(`DELETE FROM circle_membership.seat WHERE member = $1`, [nadia])
 })
 
 test('the close admits Nadia and seats her in the assembly, in one verdict; she signs from the laptop she took up her invitation on', async () => {
@@ -170,7 +170,7 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
     { passes: true, counted: 10, given: 10, quorate: true },
   )
   assert.deepEqual(
-    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_membership.position WHERE member = $1', [nadia]),
+    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_membership.seat WHERE member = $1', [nadia]),
     { circle: 'ag', role: 'member', since: '2026-11-07' },
   )
   assert.deepEqual(

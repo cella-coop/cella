@@ -5,7 +5,7 @@ CREATE SCHEMA circle_membership;
 -- feat. A seat with no `since` was held before the records began; one that
 -- ends keeps its row, with `until`, so who sat where on a past day can be
 -- read back.
-CREATE TABLE circle_membership.position (
+CREATE TABLE circle_membership.seat (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   circle text NOT NULL,
   member text NOT NULL,
@@ -15,19 +15,19 @@ CREATE TABLE circle_membership.position (
   CHECK (until IS NULL OR since IS NULL OR since < until)
 );
 
-CREATE INDEX ON circle_membership.position (circle);
-CREATE INDEX ON circle_membership.position (member);
+CREATE INDEX ON circle_membership.seat (circle);
+CREATE INDEX ON circle_membership.seat (member);
 
 -- The members seated in a circle on a day.
 CREATE FUNCTION circle_membership.seated(circle text, day date) RETURNS SETOF text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT DISTINCT p.member
-  FROM circle_membership.position p
+  FROM circle_membership.seat p
   WHERE p.circle = seated.circle
     AND (p.since IS NULL OR p.since <= seated.day)
     AND (p.until IS NULL OR p.until > seated.day);
 END;
 
 GRANT USAGE ON SCHEMA circle_membership TO cella_app, cella_guards;
-GRANT SELECT ON circle_membership.position TO cella_app, cella_guards;
+GRANT SELECT ON circle_membership.seat TO cella_app, cella_guards;

@@ -157,10 +157,10 @@ async function load() {
     )
   }
 
-  const positions = read('graft.circle-membership').position ?? []
-  for (const p of positions) {
+  const seats = read('graft.circle-membership').seat ?? []
+  for (const p of seats) {
     await db.query(
-      'INSERT INTO circle_membership.position (circle, member, role, since, until) VALUES ($1, $2, $3, $4, $5)',
+      'INSERT INTO circle_membership.seat (circle, member, role, since, until) VALUES ($1, $2, $3, $4, $5)',
       [p.circle, p.member, p.role ?? null, day(p.since), day(p.until)],
     )
   }
@@ -336,12 +336,12 @@ async function load() {
   const met = await meetings(db, read, day)
   const filed = await files(db, read, day, dir)
   said =
-    `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${positions.length} seats, ` +
+    `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${(structure.mandate ?? []).length} mandates, ${seats.length} seats, ` +
     `${motions.length} motions, ${votes} stances, ` +
     `${moved} actions, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
     `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`
   return {
-    people: people.length, members: members.length, workers: workers.length, devices: devices.length, seats: positions.length,
+    people: people.length, members: members.length, workers: workers.length, devices: devices.length, seats: seats.length,
     motions: motions.length, stances: votes, versions, clients: clients.length, entries: entries.length, invoices: invoices.length,
   }
 }

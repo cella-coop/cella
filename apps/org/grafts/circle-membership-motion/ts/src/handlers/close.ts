@@ -10,7 +10,7 @@ import { seating } from '@cella/org-graft-circle-membership/api'
 export interface Admitted {
   member: string
   shares: number
-  position: number
+  seat: number
 }
 
 // Closes a motion, counts its roll and, when it passes on it, admits
@@ -42,11 +42,11 @@ export async function close(input: Close, deps: Deps): Promise<Settled<Closed & 
       const admitted: Admitted[] = []
       for (const a of rows) {
         await admitting(tx, { member: a.member, shares: a.shares, motion: input.motion })
-        const seat = await seating(tx, { circle: a.circle, member: a.member, role: 'member', motion: input.motion })
-        admitted.push({ member: a.member, shares: a.shares, position: seat.position })
+        const added = await seating(tx, { circle: a.circle, member: a.member, role: 'member', motion: input.motion })
+        admitted.push({ member: a.member, shares: a.shares, seat: added.seat })
       }
       return { ...closed, admitted }
     },
-    payload: (v) => ({ ...w.payload(v), admitted: v.admitted.map((a) => ({ member: a.member, position: a.position })) }),
+    payload: (v) => ({ ...w.payload(v), admitted: v.admitted.map((a) => ({ member: a.member, seat: a.seat })) }),
   })
 }

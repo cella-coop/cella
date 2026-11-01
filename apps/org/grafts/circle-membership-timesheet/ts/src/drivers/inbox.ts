@@ -14,7 +14,7 @@ export const approvals: Read = {
         WHERE p.submitted IS NOT NULL AND p.approved IS NULL AND p.member <> cella.reader()
           AND CASE
             WHEN membership.active(p.member, cella.verdict_date()) THEN EXISTS (
-              SELECT FROM circle_membership.position s
+              SELECT FROM circle_membership.seat s
               WHERE s.member = p.member
                 AND (s.since IS NULL OR s.since <= cella.verdict_date()) AND (s.until IS NULL OR s.until > cella.verdict_date())
                 AND circle_membership.over(cella.reader(), 'approve-time', s.circle, cella.verdict_date())

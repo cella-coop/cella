@@ -125,7 +125,7 @@ test('a graft registers guards on ops of the feats it joins and of the lower-ord
   const guard = (op, owner) => `INSERT INTO cella.guard (op, fn, owner) VALUES ('${op}', 'cella.action()', '${owner}');`
   const lower = await check({
     'circle-member': 'SELECT 1;',
-    'circle-invoice-member': guard('circle-member:position:add', 'circle-invoice-member') + guard('member:member:admit', 'circle-invoice-member'),
+    'circle-invoice-member': guard('circle-member:seat:add', 'circle-invoice-member') + guard('member:member:admit', 'circle-invoice-member'),
   })
   assert.deepEqual(lower.errors, [])
   const beside = await check({ 'circle-member': guard('invoice-member:link:add', 'circle-member') })

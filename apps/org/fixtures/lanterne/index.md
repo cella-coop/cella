@@ -95,7 +95,12 @@ Camille hires, and opens a new hire's candidacy for membership.
   their expenses. So Inès, employed and no member, keeps her profile,
   logs her time and claims an expense by her rights, beside the
   mandates her seat in Web gives her there, and Paul,
-  gone since 30 November 2025, holds a person's alone.
+  gone since 30 November 2025, holds a person's alone. The rights, and
+  the collective mandates that hand out mandates, the assembly's and
+  coordination's to adopt and end policies and to seat members
+  (`m-2021-001/51`, `/52`, `/56`, `/57`, `/58` and `/61`), are protected
+  by the extraordinary assembly's procedure: only a motion decided by it,
+  or by a stricter one, replaces or ends them.
 - **Rules.** The statutes' capital terms and the work share's terms are
   rules of the assembly adopted by m-2021-001, their values named for the
   feat that reads them and copied into its terms as each is adopted:

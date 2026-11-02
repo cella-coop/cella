@@ -158,3 +158,46 @@ test('adopting a procedure policy makes its procedure, or names the built-in one
   }
   assert.match((await decides('2026-11-21')) ?? '', /statutory is no procedure in force: m-2026-092\/1 ended on 2026-11-21/)
 })
+
+test('a procedure is as strict as another when whatever passes by it passes by the other', async () => {
+  await db.query('BEGIN')
+  try {
+    await db.query(
+      `INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, voters, veto) VALUES
+         ('ordinary', 'Ordinary', 'majority', NULL, NULL, 1, 4, NULL, '{}'),
+         ('extraordinary', 'Extraordinary', 'majority', 2, 3, 1, 2, NULL, '{}'),
+         ('half', 'Half', 'majority', 1, 2, 1, 2, NULL, '{}'),
+         ('leads', 'Leads', 'majority', 2, 3, 1, 2, '{lead}', '{}'),
+         ('vetoed', 'Vetoed', 'majority', 2, 3, 1, 2, NULL, '{lead}'),
+         ('quorate-consent', 'Quorate consent', 'consent', NULL, NULL, 1, 2, NULL, '{}')`,
+    )
+    const strict = async (a: string, b: string) =>
+      (await db.query<{ s: boolean }>('SELECT motion.as_strict($1, $2) AS s', [a, b])).rows[0].s
+    const pairs: [string, string, boolean][] = [
+      ['extraordinary', 'extraordinary', true],
+      ['extraordinary', 'ordinary', true],
+      ['ordinary', 'extraordinary', false],
+      ['two-thirds', 'majority', true],
+      ['majority', 'two-thirds', false],
+      // More for than against is stricter than half the votes cast, which a tie meets.
+      ['ordinary', 'half', false],
+      ['half', 'ordinary', false],
+      ['extraordinary', 'half', true],
+      // A roll of other seats counts other stances.
+      ['leads', 'ordinary', false],
+      ['vetoed', 'extraordinary', true],
+      ['extraordinary', 'vetoed', false],
+      // Consent and a majority count different stances.
+      ['quorate-consent', 'consent', true],
+      ['consent', 'quorate-consent', false],
+      ['consent', 'majority', false],
+      ['majority', 'consent', false],
+      ['nowhere', 'majority', false],
+    ]
+    for (const [a, b, s] of pairs) {
+      assert.equal(await strict(a, b), s, `${a} as strict as ${b}`)
+    }
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

@@ -37,6 +37,8 @@ export interface Policy {
   applies: string
   ends: string | null
   replaces: string | null
+  // The procedure by which alone it is replaced or ended, if it names one.
+  protected: string | null
 }
 
 // What adopting a policy writes, inside the write of the action that
@@ -52,6 +54,9 @@ export interface Adopting {
   applies: string
   until?: string | null
   replaces?: string | null
+  // The procedure by which alone it is replaced or ended, for a protected
+  // policy.
+  protected?: string | null
 }
 
 // Adopts a policy in the write's transaction, through the register's own
@@ -59,8 +64,8 @@ export interface Adopting {
 // refused there. Returns its id.
 export async function adopting(tx: Db, p: Adopting): Promise<string> {
   const { rows } = await tx.query<{ id: string }>(
-    'SELECT policy.adopt($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9) AS id',
-    [p.circle, p.kind, p.legal, p.friendly ?? null, p.motion, p.n, p.applies, p.until ?? null, p.replaces ?? null],
+    'SELECT policy.adopt($1, $2, $3, $4, $5, $6, $7::date, $8::date, $9, $10) AS id',
+    [p.circle, p.kind, p.legal, p.friendly ?? null, p.motion, p.n, p.applies, p.until ?? null, p.replaces ?? null, p.protected ?? null],
   )
   return rows[0].id
 }
@@ -69,7 +74,7 @@ const select = `SELECT p.id, p.circle, p.kind, p.motion, policy.sentence(w.legal
          coalesce((SELECT json_agg(json_build_object('name', v.name, 'type', v.type, 'literal', v.literal, 'value', v.value, 'stricter', v.stricter) ORDER BY v.n)
                    FROM policy.value v WHERE v.policy = p.id), '[]') AS values,
          to_char(p.adopted, 'YYYY-MM-DD') AS adopted, to_char(p.applies, 'YYYY-MM-DD') AS applies,
-         to_char(p.ends, 'YYYY-MM-DD') AS ends, p.replaces
+         to_char(p.ends, 'YYYY-MM-DD') AS ends, p.replaces, p.protected
   FROM policy.policy p JOIN policy.wording w ON w.policy = p.id`
 
 // The policies of a circle in force today, by the day each applies.

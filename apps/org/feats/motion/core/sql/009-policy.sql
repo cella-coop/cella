@@ -3,8 +3,9 @@
 -- motion and the register, `policy`, is org's core's. Its arguments: the
 -- policy's kind, its legal wording with each value marked once as
 -- `{name: value}`, perhaps a friendly wording, perhaps the day it applies
--- from and the day it ends, perhaps the policy of its circle it replaces.
-SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}]', 'motion:policy:adopt', 'motion');
+-- from and the day it ends, perhaps the policy of its circle it replaces,
+-- perhaps the procedure by which alone it is replaced or ended.
+SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}, {"name": "protected", "label": "Changed only by", "type": "text", "optional": true, "options": "protections"}]', 'motion:policy:adopt', 'motion');
 
 -- Ending a policy, which binds no longer from the verdict date: its
 -- argument, the policy of the motion's circle it ends.
@@ -135,6 +136,54 @@ $$;
 
 GRANT INSERT, UPDATE (policy) ON motion.procedure TO cella_app;
 
+-- Whether procedure `a` is at least as strict as procedure `b`: every
+-- count that passes by `a` passes by `b` too. So both decide by the same
+-- method and call the same roll, every seat or the seats in the same
+-- roles, those that vote and those that may veto; `a`'s quorum is no
+-- lower; and, for a majority, `a` lets every role veto that `b` does, and
+-- its share of the votes cast is no lower, more for than against being
+-- stricter than any half or less and looser than any more than half.
+-- Consent and a majority count different stances, so neither is stricter
+-- than the other; under consent any objection blocks, so a veto adds
+-- nothing. The ballot changes no count. A procedure is as strict as
+-- itself, and a name no procedure has is as strict as none.
+CREATE FUNCTION motion.as_strict(a text, b text) RETURNS boolean
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT coalesce((
+    SELECT x.id = y.id OR (
+      x.method = y.method
+      AND (CASE WHEN x.voters IS NULL OR 'participant' = ANY (x.voters) THEN NULL
+                ELSE ARRAY(SELECT DISTINCT r FROM unnest(x.voters || x.veto) r ORDER BY r) END)
+        IS NOT DISTINCT FROM
+          (CASE WHEN y.voters IS NULL OR 'participant' = ANY (y.voters) THEN NULL
+                ELSE ARRAY(SELECT DISTINCT r FROM unnest(y.voters || y.veto) r ORDER BY r) END)
+      AND x.quorum_num::bigint * y.quorum_den >= y.quorum_num::bigint * x.quorum_den
+      AND (x.method = 'consent' OR (x.veto @> y.veto AND CASE
+        WHEN x.share_num IS NULL AND y.share_num IS NULL THEN true
+        WHEN y.share_num IS NULL THEN 2 * x.share_num > x.share_den
+        WHEN x.share_num IS NULL THEN 2 * y.share_num <= y.share_den
+        ELSE x.share_num::bigint * y.share_den >= y.share_num::bigint * x.share_den
+      END))
+    )
+    FROM motion.procedure x, motion.procedure y
+    WHERE x.id = as_strict.a AND y.id = as_strict.b
+  ), false);
+END;
+
+-- What keeps a motion from replacing or ending a policy, or null: a
+-- protected policy is replaced or ended only by a motion decided by the
+-- procedure it names or a stricter one, and the reason says which.
+CREATE FUNCTION motion.protection_flaw(ref text, by_motion text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT r.id || ' is protected: only a motion decided by ' || r.protected || ', or by a stricter procedure, replaces or ends it, and '
+    || d.id || ' is decided by ' || d.procedure
+  FROM policy.policy r
+  JOIN motion.motion d ON d.id = protection_flaw.by_motion
+  WHERE r.id = protection_flaw.ref AND r.protected IS NOT NULL AND NOT motion.as_strict(d.procedure, r.protected);
+END;
+
 -- motion:motion:propose — the procedure a motion is put to is built in,
 -- or made by a policy in force on the verdict date: one ended, or applying
 -- only later, puts no motion.
@@ -155,9 +204,12 @@ END;
 -- kind, worded soundly for its kind (`policy.flaw`), a rule's ordered
 -- values each saying which way is stricter, its days in order and none before
 -- the motion's deadline, and replaces, if it names one, a policy of the
--- motion's circle and kind in force; a procedure policy marks terms that
+-- motion's circle and kind in force and not protected from it
+-- (`motion.protection_flaw`), and is protected, if it names one, by a
+-- procedure in force no looser than the motion's own; a procedure policy marks terms that
 -- make a procedure (`motion.procedure_flaw`); and each policy it would
--- end is one of its circle in force on the verdict date.
+-- end is one of its circle in force on the verdict date, not protected
+-- from it.
 CREATE FUNCTION motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -178,8 +230,18 @@ BEGIN ATOMIC
         SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f
         WHERE f.id = m.args ->> 'replaces' AND f.kind = m.args ->> 'kind'
       ) THEN 'no ' || (m.args ->> 'kind') || ' of ' || d.circle || ' in force is ' || (m.args ->> 'replaces')
+      WHEN m.args ? 'replaces' AND motion.protection_flaw(m.args ->> 'replaces', d.id) IS NOT NULL
+        THEN motion.protection_flaw(m.args ->> 'replaces', d.id)
       WHEN m.args ->> 'kind' = 'procedure' AND motion.procedure_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
         THEN motion.procedure_flaw(motion.marked(m.args ->> 'wording'))
+      WHEN m.args ? 'protected' AND NOT EXISTS (
+        SELECT FROM motion.procedure o LEFT JOIN policy.policy q ON q.id = o.policy
+        WHERE o.id = m.args ->> 'protected'
+          AND (o.policy IS NULL OR (q.applies <= cella.verdict_date() AND (q.ends IS NULL OR q.ends > cella.verdict_date())))
+      ) THEN 'a policy is protected by a procedure in force, not ' || (m.args ->> 'protected')
+      WHEN motion.as_strict(d.procedure, m.args ->> 'protected') AND NOT motion.as_strict(m.args ->> 'protected', d.procedure)
+        THEN (m.args ->> 'protected') || ' is looser than ' || d.procedure || ', by which ' || d.id
+          || ' is decided: a policy is protected by a procedure no looser than its own motion''s'
     END AS r
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
@@ -188,6 +250,8 @@ BEGIN ATOMIC
     SELECT CASE
       WHEN NOT EXISTS (SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f WHERE f.id = m.args ->> 'policy')
         THEN 'no policy of ' || d.circle || ' in force is ' || coalesce(m.args ->> 'policy', 'named') || ': a policy is ended by its own circle'
+      WHEN motion.protection_flaw(m.args ->> 'policy', d.id) IS NOT NULL
+        THEN motion.protection_flaw(m.args ->> 'policy', d.id)
     END
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
@@ -202,7 +266,9 @@ END;
 -- motion names it (by the hash of its wordings, never by reading them
 -- back), applying from the day the action names, or the verdict date,
 -- whichever is later, and until the day it names; a policy it
--- replaces ends that day; the entry commits to its hash; and a procedure
+-- replaces ends that day; it is protected as the action names, and the
+-- policy it replaces is not protected from the motion; the entry commits
+-- to its hash; and a procedure
 -- policy has made the procedure its values say.
 CREATE FUNCTION motion.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -223,6 +289,9 @@ BEGIN ATOMIC
     WHEN r.replaces IS NOT NULL AND NOT EXISTS (
       SELECT FROM policy.policy o WHERE o.id = r.replaces AND o.ends = r.applies
     ) THEN r.replaces || ' does not end the day ' || r.id || ' applies'
+    WHEN r.protected IS DISTINCT FROM m.args ->> 'protected' THEN r.id || ' is not protected as ' || d.id || ' names'
+    WHEN r.replaces IS NOT NULL AND motion.protection_flaw(r.replaces, d.id) IS NOT NULL
+      THEN motion.protection_flaw(r.replaces, d.id)
     WHEN r.kind = 'procedure' AND NOT EXISTS (
       SELECT FROM motion.procedure o, motion.terms(motion.marked_by(r.id)) t
       WHERE o.policy = r.id AND o.id = t.id
@@ -238,7 +307,8 @@ END;
 
 -- motion:policy:end — the register's policy is the one the cited motion's
 -- action names, of the motion's circle, ended on the verdict date by that
--- action, and the entry names it and the day.
+-- action, and the entry names it and the day; and it is not protected
+-- from the motion.
 CREATE FUNCTION motion.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -250,6 +320,7 @@ BEGIN ATOMIC
     WHEN r.ends IS DISTINCT FROM cella.verdict_date() OR r.ended_by IS DISTINCT FROM d.id || '/' || m.n
       OR p.ends IS DISTINCT FROM to_char(cella.verdict_date(), 'YYYY-MM-DD')
       THEN r.id || ' was not ended by this write'
+    WHEN motion.protection_flaw(r.id, d.id) IS NOT NULL THEN motion.protection_flaw(r.id, d.id)
   END
   FROM (SELECT payload ->> 'motion' AS motion, (payload ->> 'n')::integer AS n, payload ->> 'policy' AS policy, payload ->> 'ends' AS ends) p
   LEFT JOIN motion.motion d ON d.id = p.motion

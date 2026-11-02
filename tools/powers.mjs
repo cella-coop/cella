@@ -61,16 +61,21 @@ export function agree(ops, registered) {
 // The checks a label may declare, and what backs each: a guard registered
 // on the action in cella.guard, or for `decided` a row in motion.cites, to
 // which the graft that counts a motion's roll attaches its guard.
-const checks = new Set(['self', 'roll', 'seat', 'decided', 'first'])
+const checks = new Set(['self', 'roll', 'decided', 'first'])
 
 // Where an action is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
-// registers: `guards` in cella.guard and `cites` in motion.cites.
+// registers: `guards` in cella.guard and `cites` in motion.cites. A seat is
+// no check, with a power or without one: what a seat allows is its roles'
+// mandates, its circle's participant role among them.
 export function covered(ops, found) {
   const errors = []
   const judged = new Set(found.guards.map((r) => r.op))
   const cited = new Set(found.cites.map((c) => c.op))
-  for (const o of ops.filter((o) => !o.power)) {
+  for (const o of ops.filter((o) => o.check === 'seat')) {
+    errors.push(`${o.file}: ${o.op} checks seat, which is no check: a seat allows what its roles' mandates grant, the participant's among them, so name the power, as propose or discuss`)
+  }
+  for (const o of ops.filter((o) => !o.power && o.check !== 'seat')) {
     if (!o.check) {
       errors.push(`${o.file}: ${o.op} names neither a power nor a check: no action is allowed by omission`)
     } else if (!checks.has(o.check)) {

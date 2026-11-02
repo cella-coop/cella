@@ -9,7 +9,9 @@
 // the home shows the co-op's figures from several collections; and Inès,
 // employed and no member, logs her week in the grid, booking hours to a
 // project where the log-time mandate refuses her, and corrects a cell she
-// typed too high from its entry's page. Run by
+// typed too high from its entry's page. Chloé proposes and discusses a
+// motion in the assembly by the participant role her seat brings, which
+// Thomas, with no seat in Marketing, lacks there. Run by
 // `cella test e2e participation`.
 
 import { after, before, test } from 'node:test'
@@ -336,4 +338,34 @@ test('Inès corrects the hours she booked too high from the entry\'s page, and t
   )
   assert.ok(signed.some((s) => s.op === 'employment-timesheet:entry:log'))
   assert.equal(signed.filter((s) => s.op === 'employment-timesheet:entry:correct').length, 2)
+})
+
+test('Chloé proposes and discusses a motion in the assembly by her participant role; Thomas, with no seat in Marketing, may not propose there', async () => {
+  const chloe = at('chloe')
+  // The founding motion grants the participant role every circle has its
+  // two mandates, each a policy of the assembly.
+  const granted = await all<{ power: string; circle: string }>(
+    `SELECT m.power, r.circle FROM circle.mandate m JOIN circle.role r ON r.id = m.role WHERE m.role = 'participant' AND m.revoked IS NULL ORDER BY m.power`,
+  )
+  assert.deepEqual(granted, [{ power: 'discuss', circle: '*' }, { power: 'propose', circle: '*' }])
+  // Chloé sits in the assembly as a member and in Marketing with no role:
+  // each seat brings its circle's participant role.
+  const proposed = settled(
+    await propose({ circle: 'ag', title: 'A bike shelter in the courtyard', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(chloe)),
+  )
+  const page = `/motions/${proposed.motion}`
+  const posted = await shell.act(page, 'post', { body: 'Six places would do, by the door.', reply: '' }, chloe)
+  assert.equal(posted.state, 'settled', reason(posted))
+  const said = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [posted.entry])
+  assert.deepEqual(said, { op: 'motion:message:post', actor: chloe })
+  // A seat above brings no participant role below: Thomas sits in the
+  // assembly and in Web, not in Marketing.
+  const outside = await propose({ circle: 'marketing', title: 'A newsletter', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(thomas))
+  assert.equal(outside.state, 'refused')
+  assert.match(reason(outside), /thomas@lanterne.example holds no seat in marketing, so may not propose/)
+  // Inès, employed and no member, holds no seat at all, so no participant
+  // role anywhere.
+  const none = await propose({ circle: 'web', title: 'A standing desk', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(ines))
+  assert.equal(none.state, 'refused')
+  assert.match(reason(none), /ines@lanterne.example holds no mandate for propose/)
 })

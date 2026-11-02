@@ -6,9 +6,9 @@ export const actions = {
   'meeting:meeting:schedule': confluent({ power: 'schedule-meeting' }),
   // the agenda is registers: an item's place is its own, the last move
   // winning; fixed once the meeting is held
-  'meeting:item:add': confluent({ check: 'seat' }),
-  'meeting:item:move': confluent({ check: 'seat' }),
-  'meeting:item:remove': confluent({ check: 'seat' }),
+  'meeting:item:add': confluent({ power: 'discuss' }),
+  'meeting:item:move': confluent({ power: 'discuss' }),
+  'meeting:item:remove': confluent({ power: 'discuss' }),
   // held or cancelled, never both: whichever settles first stands, and
   // holding fixes the agenda and who attended
   'meeting:meeting:hold': ordered({ power: 'keep-minutes' }),

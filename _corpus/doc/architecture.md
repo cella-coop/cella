@@ -701,13 +701,27 @@ action declared outside a `models/actions.ts`. Every action is signed by
 a device of its actor and carries its request
 ([signatures](signatures.md)).
 
+**Every circle has a participant role**, built in, which every seat in
+it holds there: a seat brings its own role, if any, and the circle's
+participant role besides, and a seat above brings no participant role
+below. The participant's mandates cover proposing and discussing:
+`propose`, to propose a motion of the circle and close it, and
+`discuss`, to post on a motion's deliberation, in the circle's channel
+and on its meetings' agendas. They are mandates like any other, policies
+the assembly adopts, since `participant` is a role every circle has
+(`*`). `circle_membership.may` finds them on any seat the actor holds,
+and the guard of the graft that knows which circle the action concerns
+narrows them to a seat in that circle
+([circle](../../apps/org/feats/circle/index.md#the-participant-role)).
+
 No action is allowed by omission. An action with no power declares the check
 that allows it instead: `self`, the actor's own (a profile, a device);
 `roll`, a member on the roll of the motion it names (a stance);
-`seat`, a member seated in the circle it concerns (proposing or closing
-a motion, a circle's message); or `decided`, the motion it cites
+or `decided`, the motion it cites
 passed and carried (an admission, an adoption, a seat):
-`confluent({ check: 'seat' })`. A check is backed by SQL: a guard
+`ordered({ check: 'decided' })`. A seat is no check: what a seat allows
+is its roles' mandates, the participant's among them, and `cella check
+feats` refuses `check: 'seat'`. A check is backed by SQL: a guard
 registered on the action in `cella.guard`, or for `decided` a row in
 `motion.cites`, registered by `motion.register_cite`, which attaches
 `circle-membership-motion`'s guard to it.

@@ -44,3 +44,15 @@ CREATE INDEX ON circle.mandate (power);
 
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
+
+-- Every circle's participant role, built in, which every seat in a
+-- circle holds there: its mandates cover proposing and discussing, as
+-- `propose` and `discuss`. Its `circle` is `*`, so it is the assembly's
+-- to grant; a seat above brings it in no circle below.
+INSERT INTO circle.role (id, circle, name, duty) VALUES
+  ('participant', '*', 'Participant', 'every seat in the circle: proposing and discussing its motions, its channel and its agendas');
+
+-- circle:circle:message needs the participant's `discuss`, which
+-- circle-membership holds to a seat in the message's circle.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('circle:circle:message', 'discuss', NULL, 'circle');

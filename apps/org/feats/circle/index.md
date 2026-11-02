@@ -15,7 +15,7 @@ junction. Each circle also has a channel for its messages.
 | Entity | Fields | Notes |
 |---|---|---|
 | circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
-| role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has |
+| role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has; `participant`, built in, is every circle's, the assembly's too |
 | mandate | `id`, `role`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
@@ -25,7 +25,8 @@ or `close-period`; the feat owning a write names the power in
 limit, for a term. Who holds a role is a seat, the `circle-membership`
 graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
-a role with a mandate in force for the power, within its limit. A power
+a role with a mandate in force for the power, within its limit, the
+circle's participant role among them. A power
 every member holds is granted the same way, through a mandate on a role
 every member is seated in, such as a `member` role in the assembly:
 nothing is allowed by omission.
@@ -56,6 +57,30 @@ adoption and ending of a policy. What a mandate's values may be is this
 feat's too, `circle.mandate_flaw(marked)`: a role it has, a power named
 in lower case, at most a limit or a budget, an amount, a budget with its
 `per`, and no other value.
+
+## The participant role
+
+Every circle has a participant role, built in: the role `participant`,
+whose `circle` is `*`, which this feat's migration makes, so no circle
+is without it. Every seat in a circle holds it there, beside the seat's
+own role if it has one; a seat above brings no participant role below,
+so a member of the assembly is no participant of Marketing unless they
+sit in Marketing too. The participant's mandates cover proposing and
+discussing:
+
+| Power | Actions |
+|---|---|
+| `propose` | proposing a motion of the circle (`motion:motion:propose`) and closing it (`motion:motion:close`) |
+| `discuss` | posting on a motion's deliberation (`motion:message:post`), in the circle's channel (`circle:circle:message`), and adding, moving and removing an item of its meetings' agendas (`meeting:item:add`, `:move`, `:remove`) |
+
+They are mandates like any other, each a policy, and since the role is
+every circle's (`*`) they are the assembly's to grant and reach every
+circle. `circle_membership.may` finds a participant's mandate on any seat
+the actor holds; the guard of the graft that knows which circle an
+action concerns (`circle_membership.sits`, `circle_membership_motion.sits`,
+`circle_meeting_membership.sits`) asks for a seat in that circle. An
+agent's or a service's seat would bring no participant role unless a
+procedure says so: named, not built.
 
 ## Schema
 
@@ -125,13 +150,15 @@ ordered, which `circle-motion` extends with this feat's `granting` and
 |---|---|---|
 | nest | decided: the cited motion nests this circle there, and carried | the circle holding both places, or the assembly |
 | a mandate policy adopted or ended | decided: the cited motion adopts or ends it, and carried | the circle above the role's, or the assembly |
-| message | seat: an active member seated in the circle | the circle's members |
+| message | `discuss`, held in the circle | the circle's participants |
 
 Nesting and a mandate's policy are decided: they cite a motion, which
 the `circle-motion` graft checks asks this and was put to a circle that
 may decide it, and `circle-membership-motion` that it carried, and which
-`circle-membership-motion` carries out when it passes. A message's seat
-check is `circle_membership.sits`, the `circle-membership` graft's guard.
+`circle-membership-motion` carries out when it passes. A message needs
+the participant's `discuss`, which `circle_membership.may` finds on a
+seat and `circle_membership.sits`, the `circle-membership` graft's guard,
+on a seat in the message's circle.
 
 ## Guards
 
@@ -234,6 +261,7 @@ close of a passing motion carries them out.
 | Circle lead | `schedule-meeting`, `keep-minutes` | — |
 | Gérante | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | — |
+| Participant (every seat, in its circle) | `propose`, `discuss` | — |
 
 Each is a mandate policy of the assembly, adopted with the statutes by
 the founding motion, m-2021-001, on 1 March 2021, and in force since.

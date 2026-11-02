@@ -57,7 +57,8 @@ updated = 2026-11-02
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
 | **mandate** | a kind of policy: a grant of one power to one role, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
-| **seat** | a member's place in a circle, perhaps with a role: the `circle-membership` graft's |
+| **participant** | the role every circle has, built in, which every seat in it holds there; its mandates cover proposing and discussing, the powers `propose` and `discuss` |
+| **seat** | a member's place in a circle, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
 | **rung** | a step of the ratchet, from the hosted pilot to zero trust |
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |

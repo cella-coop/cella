@@ -70,8 +70,11 @@ coordination's, counts its five.
   member gives no stance.
 - `circle_membership_motion.sits`, on `motion:motion:propose`,
   `motion:motion:close` and `motion:message:post`: the actor is an
-  active member seated in the motion's circle on the verdict date, so a
-  circle's members put, close and deliberate on its motions.
+  active member seated in the motion's circle on the verdict date, so
+  the participant's `propose` (propose, close) and `discuss` (post),
+  which `circle_membership.may` finds on any seat, are held in the
+  motion's circle: a circle's participants put, close and deliberate on
+  its motions.
 - `circle_membership_motion.asks`, on `motion:motion:propose`: only the
   assembly admits, suspends and lets members go; a seat given or ended is
   the motion of the circle above it, or the assembly

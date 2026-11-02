@@ -1,6 +1,7 @@
 -- motion:motion:propose, motion:motion:close — the actor is an
--- active member seated in the motion's circle on the verdict date: a
--- circle's members put its motions and close them.
+-- active member seated in the motion's circle on the verdict date: the
+-- participant's `propose` and `discuss`, which circle_membership.may
+-- finds on any seat, are held in the motion's circle.
 CREATE FUNCTION circle_membership_motion.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

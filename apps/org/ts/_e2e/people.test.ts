@@ -4,7 +4,8 @@
 // mandate would refuse her. Camille hires Bastien with his first device
 // and opens his candidacy. Inès's member page lists what joining asks of
 // her, the texts, the capital, a device and the circles, and reads back
-// what she would own and decide; she marks the internal rules read, and
+// what she would own and decide; she marks the internal rules and the
+// statutes read, and
 // once m-2026-012 admits her every step but a working circle is done. In
 // November she submits her October and finance approves it, and Bastien
 // logs his first day. His probation ends, he is invited, and his
@@ -181,12 +182,15 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
   }
 })
 
-test('Inès marks the internal rules read, her own reading and no one else\'s', async () => {
+test('Inès marks the internal rules and the statutes read, her own reading and no one else\'s', async () => {
   const forLea = await shell.act(`/people/lea@lanterne.example`, 'read', { version: 'internal-rules@3' }, ines)
   assert.match(forLea.reason ?? '', /ines@lanterne\.example may mark only their own reading/)
   const read = await shell.act(`/people/${ines}`, 'read', { version: 'internal-rules@3' }, ines)
   assert.deepEqual([read.op, read.state], ['document-membership:version:read', 'settled'])
   assert.ok((await tab(ines, 'joining', ines)).includes('internal-rules@3, read 24 Oct 2026'))
+  const statutes = await shell.act(`/people/${ines}`, 'read', { version: 'statutes@2' }, ines)
+  assert.deepEqual([statutes.op, statutes.state], ['document-membership:version:read', 'settled'])
+  assert.ok((await tab(ines, 'joining', ines)).includes('statutes@2, read 24 Oct 2026'))
 })
 
 test('once m-2026-012 admits her, every step of joining is done but a working circle, and her page reads back her shares, her seat and her powers', async () => {

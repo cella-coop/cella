@@ -284,7 +284,7 @@ test('the assembly adopts a rule mixing pay and time from 2027, and its values a
   const then = await react('motion:motion:close', { motion }, as(camille))
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
-    [['motion:policy:adopt', 'settled', [['patronage:terms:adopt', 'settled']]]],
+    [['motion:policy:adopt', 'settled', [['document:document:generate', 'settled'], ['patronage:terms:adopt', 'settled']]]],
   )
   const terms = `${motion}-1`
   assert.deepEqual(

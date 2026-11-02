@@ -1,11 +1,11 @@
 +++
 title = "document-motion"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Adoption by motion: what content of which document a motion asks to
-adopt, and motions drawn inside documents. Declared by the `document`
-feat.
+adopt, the statutes frozen anew as a motion adopts or ends a policy, and
+motions drawn inside documents. Declared by the `document` feat.
 
 ## Schema
 
@@ -47,6 +47,24 @@ Adopting rate-card-2027@2 under m-2026-011 so passes three guards, each at
 the lowest level that sees what it checks: the document's base, the
 motion's content, and the roll's outcome.
 
+It registers `document:document:generate` by `motion.register_cite` too
+(`sql/005-generate.sql`), so `circle-membership-motion`'s guard holds the
+statutes' generation to a motion that closed and passed; that the motion
+adopted or ended a policy of the document's circle that day, and that
+the version reads its policies, are the document feat's guard.
+
+## Reaction
+
+On `motion:policy:adopt` and `motion:policy:end`, once the write
+settles: each document generated from the policies of the circle the
+policy is of, as the statutes are from the root circle's, is generated
+anew by the document feat's `generate`, a write of its own signed by
+whoever signed the adoption or the ending and citing the motion, from
+the policies in force on the day the adopted policy applies or the ended
+one ends (`handlers/generate.ts`). A policy of a circle no document is
+generated from makes no write. The request names the motion's action,
+`n`, so the reaction reads the policy it adopted or ended.
+
 ## Shell
 
 - On a motion's Overview, the version it asks to adopt, in full: read
@@ -70,6 +88,8 @@ motion's content, and the roll's outcome.
 
 ## Lanterne
 
+m-2021-001 adopted the policies `statutes@1` reads on 1 March 2021, and
+m-2026-007 the rules `statutes@2` adds on 20 June 2026.
 m-2026-007 adopted internal-rules@3 on 20 June 2026; m-2026-011 asks to
 adopt rate-card-2027@2, by its hash, coordination's motion, open until
 9 November while Malik objects. The rate card's version 2 embeds

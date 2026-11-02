@@ -121,6 +121,8 @@ updated = 2026-11-02
 | **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
 | **rule** | a kind of policy: what else the co-op agreed, such as its capital terms, the work share's terms or the solidarity rate; each ordered value declares which way is stricter (`\| more is stricter`, `\| less is stricter`); a value named for a feat (`account_minimum`) is that feat's to read; a rule with no value binds by people's judgement alone |
 | **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt` and `policy.end`, inside the write of a motion's action |
+| **statutes** | the co-op's policies in order: the document generated from the root circle's policies in force, around the fixed text of its legal form, and frozen as a new version, adopted, each time one of them is adopted or ended, the earlier versions kept; never edited by hand |
+| **generated document** | a document generated from a circle's policies around a template, as the statutes are; minutes, contracts and letters are ordinary documents |
 | **row-level policy** | a Postgres policy on a table, saying which rows a reader sees; always called so, and never a policy |
 | **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |
 | **consent** | passes if no one objects at close; a member's latest stance counts |

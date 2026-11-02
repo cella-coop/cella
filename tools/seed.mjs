@@ -5,7 +5,8 @@
 // seats, motions with their stances and what they decide, the policies
 // the closed ones adopted, the mandates among them copied into the
 // circles' mandates, invitations'
-// first devices, documents with their versions, comments, adoptions and
+// first devices, documents with their versions, those generated from a
+// circle's policies generated at each day they changed, comments, adoptions and
 // who read them, clients, the chart, periods and journal, invoices with
 // their payments, files and what holds them, and the grafts' links. Stances, document updates, adoptions and
 // payments take receipt numbers in file order, unsigned, from before the
@@ -21,7 +22,8 @@
 
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
-import { anchor, createDoc, edits, outline } from '../apps/org/feats/document/core/ts/src/models/index.ts'
+import { anchor, createDoc, edits, fill, outline } from '../apps/org/feats/document/core/ts/src/models/index.ts'
+import { inOrder } from '../apps/org/core/policy/ts/src/index.ts'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { fixture, signer } from '../apps/org/core/sign/ts/src/index.ts'
@@ -204,6 +206,41 @@ async function load() {
         [d.id, Number(v.id.split('@')[1]), day(v.saved), loro.export({ mode: 'snapshot' }), JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
       )
       versions++
+    }
+    // A document generated from a circle's policies, as the statutes are,
+    // is carried over with its template and generated at each day its
+    // circle's policies changed, from those in force that day, patched
+    // onto the version before and adopted that day, as the document
+    // feat's `generate` does once a motion adopts or ends one.
+    if (d.circle) {
+      const template = outline(d.template ?? [], `${d.id}'s template`)
+      await db.query('INSERT INTO document.generated (document, circle, template) VALUES ($1, $2, $3)', [d.id, d.circle, JSON.stringify(template)])
+      const { rows: days } = await db.query(
+        `SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS d FROM (
+           SELECT adopted AS d FROM policy.policy WHERE circle = $1
+           UNION SELECT ends FROM policy.policy WHERE circle = $1 AND ended_by IS NOT NULL
+         ) x ORDER BY d`,
+        [d.circle],
+      )
+      for (const { d: on } of days) {
+        const from = loro.version()
+        edits.patch(loro, undefined, fill(template, await inOrder(db, d.circle, on)))
+        loro.commit()
+        await db.query(
+          `INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (${receipt}, $1, NULL, $2, $3)`,
+          [d.id, on, loro.export({ mode: 'update', from })],
+        )
+        const { rows } = await db.query(
+          'INSERT INTO document.version (document, saved, snapshot, frontier, vv) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+          [d.id, on, loro.export({ mode: 'snapshot' }), JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
+        )
+        await db.query(
+          `INSERT INTO document.adoption (receipt, document, version, base, adopted)
+           VALUES (${receipt}, $1, $2, (SELECT version FROM document.adopted WHERE document = $1), $3)`,
+          [d.id, rows[0].id, on],
+        )
+        versions++
+      }
     }
   }
   // A comment anchors where its version holds its quote, as the comment

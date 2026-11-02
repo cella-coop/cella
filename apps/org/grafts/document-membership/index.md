@@ -1,6 +1,6 @@
 +++
 title = "document-membership"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Who has read the co-op's texts: a member marks a document's binding
@@ -47,5 +47,5 @@ they read each, and marking one read, their own.
 
 The ten members read the internal rules' third version before the
 assembly adopted it on 20 June 2026; Inès has not marked it read yet. The
-statutes are not a document of Lanterne's yet, so the internal rules are
-the one text to read.
+statutes, generated from the assembly's policies, are the other text to
+read, `statutes@2` since 20 June 2026; no member has marked them read.

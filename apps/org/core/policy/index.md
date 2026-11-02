@@ -81,6 +81,12 @@ it may only quote, by `policy.says`.
   reads, by its id, as the circle feat's page shows a mandate.
 - `inForce(db, circle)`: a circle's policies in force today, each with
   its sentence as it reads, its wordings, its values and its days.
+- `inOrder(db, circle, day)`: a circle's policies in force on a day, in
+  their order, each with its kind and its sentence as it reads: each
+  where the first policy of its line reads, the policy it replaces, the
+  one that replaced, and so on back, by the motion and the action that
+  adopted that one, so a replacement takes its place; as the document
+  feat generates the statutes.
 - `register(db)`: every policy, newest first.
 
 ## Tests

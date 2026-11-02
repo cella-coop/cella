@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -8,7 +8,9 @@ minutes, written together and adopted by motion. A document is a Loro
 tree of blocks that members edit at once; a version is a named, immutable
 point in its history, named by the hash of its canonical form; adoption
 makes one version the document's binding text. The motion that adopts
-it is the `document-motion` graft's.
+it is the `document-motion` graft's. The statutes are written by no one:
+they are generated from the root circle's policies in order and frozen
+at each adoption ([generated documents](#generated-documents)).
 
 ## Entities
 
@@ -19,6 +21,7 @@ it is the `document-motion` graft's.
 | version | `id`, `saved`, `snapshot`, `canonical`, `hash`, `plain`, `frontier`, `vv` | the document at a Loro frontier; `id` is `<document>@<n>` |
 | comment | `version`, `author`, `at`, `quote`, `anchor`, `text`, `resolved` | on the text it quotes, anchored by Loro cursors |
 | adoption | `receipt`, `version`, `base`, `adopted` | makes a version binding, naming the one it replaces |
+| generated | `document`, `circle`, `template` | a document generated from a circle's policies, around its template |
 
 ## The model
 
@@ -72,6 +75,35 @@ client. `models/canonical.ts` writes the same bytes in TypeScript, so the
 editor previews the hash a version saved now would have; the slice tests
 hold the two to the same bytes on 300 random documents.
 
+## Generated documents
+
+A document may be generated from a circle's policies, as the statutes
+are from the root circle's: `document.generated` names the circle, by id
+as the policy register names it, and the template, the fixed text of the
+co-op's legal form, as blocks (the fragments `create` takes). In the
+template, an `embed` block of kind `policies` stands where the policies
+read, its `ref` a kind (`procedure`, `mandate` or `rule`), or empty for
+every kind. Generating replaces each with one `numbered` block per
+policy of the circle in force on the day, of its kind, in their order,
+its legal wording as it reads. Their order is the register's (`inOrder`
+in `@cella/org-policy`): each policy where the first policy of its line
+reads, by the motion and the action that adopted that one, so a
+replacement takes the place of the policy it replaces
+([policies](../../../../_corpus/doc/architecture.md#policies)).
+
+It changes only as its circle's policies do. Each adoption or ending of
+one of them is followed by `generate`, which patches the generated
+blocks onto the draft, saves the result as the next version and adopts
+it, in one write whose log entry commits to the version's hash: the
+document is frozen at each adoption, and every earlier version still
+reads. An edit, a version or an adoption by hand is refused; a comment is
+not. A generated document is carried over with its template, as the
+seed carries Lanterne's statutes; no action creates one or changes its
+template yet.
+
+Minutes, contracts and letters are not generated: they are ordinary
+documents, edited together and adopted as their own text.
+
 ## Lifecycle
 
 | Thing | States |
@@ -92,6 +124,7 @@ draft, and the next adoption names a later version.
 | `POST /api/document/version` | confluent | a version is the document at a frontier; two saves are two versions |
 | `POST /api/document/comment` | confluent | anchored to the text, needs no notary |
 | `POST /api/document/adopt` | ordered | names the adopted version it replaces, not the draft; refused only if that moved on |
+| `POST /api/document/generate` | ordered | as adopt: names the adopted version it replaces |
 
 - **create** starts a document, named by its title's slug, and may open
   its draft with blocks as the creator's first edit, as a meeting's
@@ -112,6 +145,11 @@ draft, and the next adoption names a later version.
   it if another adoption settled in between. The log commits to the
   adopted version's hash. Edits to the draft after the version was saved
   do not refuse it: the members voted on the version, not the draft.
+- **generate** generates a generated document from its circle's policies
+  in force on the day a motion's adoption or ending of one of them
+  applies, saves it as the next version and adopts it, naming the
+  adopted version it replaces, as adopt does. It cites the motion. The
+  log commits to the version's hash.
 
 ## Powers
 
@@ -119,6 +157,7 @@ draft, and the next adoption names a later version.
 |---|---|---|
 | create, edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
 | adopt | decided: the cited motion asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
+| generate | decided: the cited motion adopted or ended a policy of the document's circle that day, and carried | `ag` for the statutes |
 
 `002-powers.sql` and `003-create.sql` register `edit-document` in `cella.power`, and the
 `circle-membership` graft checks it as any other: every member holds it
@@ -133,7 +172,10 @@ The document feat owns:
 - a version, once saved, never changes, and is named by its content;
 - an adoption names a version of this document;
 - the adopted version only moves forward, from the base the adoption
-  names; two adoptions from the same base cannot both settle.
+  names; two adoptions from the same base cannot both settle;
+- a generated document's version reads every policy of its circle in
+  force on its day and no other of its policies, and it changes by no
+  hand.
 
 What it does not own: that the cited motion asks for this content (the
 `document-motion` graft's), that it closed and passed on its roll
@@ -160,6 +202,9 @@ adopting motion names its circle).
   A trigger refuses a quote the version's text does not hold.
 - `document.adoption`: an adoption by receipt: the version, its base and
   the day it was adopted. `document.adopted` is each document's latest.
+- `document.generated` (`004-generated.sql`): a generated document, the
+  circle whose policies it reads, and its template, a JSON array of
+  fragments; it never changes.
 
 Updates, versions and adoptions never change, by trigger; a comment
 changes only by being resolved. The triggers raise SQLSTATE `09000`. The
@@ -172,7 +217,14 @@ adoptions; the guards role, `cella_guards`, may select.
   names a version of its document, and its base is the version the latest
   adoption before it made binding, and the version is later than that one.
   A second adoption from the same base is refused; edits to the draft
-  never refuse one.
+  never refuse one. It judges `document:document:generate` too.
+- `document.generates`, on `document:document:generate`: the document is
+  generated, the cited motion adopted a policy of its circle applying on
+  the write's day or ended one that day, and the version reads, each as
+  a line as it reads (`policy.says`), every policy of the circle in force
+  that day and no other of its policies.
+- `document.handmade`, on `document:document:edit`, `:version` and
+  `:adopt`: the document is not generated.
 
 ## Handlers
 
@@ -194,6 +246,13 @@ adoptions; the guards role, `cella_guards`, may select.
   on the verdict date and submits `{ document, version, hash, base,
   motion, receipt }`; the cited motion is an id this feat does not
   resolve.
+- `generate` (ordered, `base: 'adopted'`), and `generating`, its write:
+  reads the template and the circle's policies in force on the day, in
+  their order, generates the blocks (`models/generated.ts`), patches them
+  onto the merged draft and appends what changed as an update by the
+  actor, saves the snapshot as the next version and adopts it on the
+  verdict date, from the adopted version before it; it submits
+  `{ document, version, hash, base, adopted, receipt, motion, day }`.
 - `draft(db, document)`: the merged draft's canonical form, for reading.
 
 Loro is `loro-crdt`, pinned to an exact version, in this package only.
@@ -225,7 +284,9 @@ block, which an empty block it holds the caret in, and the last block
 when empty, also say; the draft's hash as the page was read is among
 its Properties. The header saves the draft as a version (`version`), and
 the page comments on one (`comment`). The server renders the draft read-only; the editor takes it
-over once the browser holds the Loro document.
+over once the browser holds the Loro document. A generated document's
+page reads its draft without the editor or the header's Save, and says
+whose policies it is generated from.
 
 The editor (`components/`, its state in `hooks/`) draws each block's text
 by hand: Svelte draws the element, never its children. Every
@@ -266,6 +327,11 @@ a motion's page.
   ones, with a version's generated columns and immutability.
 - `_e2e/document.test.ts`: concurrent edits, versions named by hash,
   comments by cursor, adoption by hash under m-2026-011.
+- `_e2e/capital.test.ts`: once the assembly adopts new capital terms,
+  the statutes' next version is generated and adopted with the new
+  sentence where the founding one read, its hash in its log entry and
+  recomputed from the version; the earlier version still reads, and an
+  edit, a version or an adoption of the statutes by hand is refused.
 - `_e2e/editor.test.ts`: the editor in Chromium, Firefox and WebKit
   (nixpkgs' Playwright browsers), two tabs syncing through the shell:
   typing, Enter and Backspace across blocks, shortcuts, the slash menu and
@@ -281,6 +347,11 @@ a motion's page.
 
 ## Lanterne
 
+- The statutes are generated from the assembly's policies, around the
+  fixed text of a SCOP SARL à capital variable: `statutes@1`, adopted on
+  1 March 2021 with m-2021-001's procedures, mandates and rules, and
+  `statutes@2`, on 20 June 2026, once m-2026-007 adopted the internal
+  rules' five rules. The seed generates each and adopts it that day.
 - The internal rules, version 3, were adopted on 20 June 2026 by
   m-2026-007: remote days, the pay ratio of 1.6, the solidarity rate and
   the clients Lanterne refuses.

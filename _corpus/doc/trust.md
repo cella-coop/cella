@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 # Trust
@@ -346,6 +346,17 @@ the motion carries them. The guards role reads a policy's values and
 never its wording: a guard reads the values the feat that reads a kind of
 policy copied into its own rows, so what binds is the sentence the
 members adopted, and what a guard checks is a column.
+
+The statutes are no text a motion names: they are the root circle's
+policies in order, generated from the register
+([policies](architecture.md#policies)). Each adoption or ending of one
+of them is followed by a write citing the motion that generates them
+anew, saves them as a version and adopts it; its log entry commits to
+the version's hash, as any adoption's does, and the document feat's
+guard holds the version to the register: every policy of the circle in
+force that day reads in it, as it reads, and no other of its policies.
+Anyone holding the version computes the hash again, and no hand edits a
+generated version or saves one.
 
 ## Personal data
 

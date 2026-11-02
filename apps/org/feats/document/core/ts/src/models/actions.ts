@@ -12,4 +12,8 @@ export const actions = {
   // names the adopted version it replaces, not the draft it saw;
   // refused only if that adopted version moved on
   'document:document:adopt': ordered({ base: 'adopted', check: 'decided' }),
+  // a generated document's next version, adopted as adopt does: names the
+  // adopted version it replaces, and cites the motion that changed its
+  // circle's policies
+  'document:document:generate': ordered({ base: 'adopted', check: 'decided' }),
 } satisfies Actions

@@ -21,9 +21,10 @@ export async function documents(db: Db): Promise<Listed[]> {
 }
 
 export async function document(db: Db, id: string): Promise<Page | null> {
-  const found = await db.query<{ id: string; title: string; adopted: string | null }>(
-    `SELECT d.id, d.title, a.version AS adopted
-     FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id WHERE d.id = $1`,
+  const found = await db.query<{ id: string; title: string; adopted: string | null; generated: string | null }>(
+    `SELECT d.id, d.title, a.version AS adopted, g.circle AS generated
+     FROM document.document d LEFT JOIN document.adopted a ON a.document = d.id
+     LEFT JOIN document.generated g ON g.document = d.id WHERE d.id = $1`,
     [id],
   )
   const d = found.rows[0]
@@ -50,6 +51,7 @@ export async function document(db: Db, id: string): Promise<Page | null> {
     id: d.id,
     title: d.title,
     adopted: d.adopted,
+    generated: d.generated,
     snapshot: b64.encode(doc.export({ mode: 'snapshot' })),
     draft: canonical(doc),
     hash: hash(doc),

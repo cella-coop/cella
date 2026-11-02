@@ -325,3 +325,60 @@ text = "Closed"
 
 [[document.version.block]]
 text = "The session closed at 12:40."
+
+# The statutes, generated from the assembly's policies and written by no
+# one: a `circle` names whose policies a document reads, and its
+# `template` is the fixed text of the legal form, a SCOP SARL à capital
+# variable after the CG Scop's model statutes (not checked on
+# Légifrance), each `policies` embed where the policies of the kind its
+# ref names read, in order. The seed generates a version at each day the
+# assembly's policies changed, and adopts it that day: statutes@1 on 1
+# March 2021, statutes@2 on 20 June 2026.
+[[document]]
+id = "statutes"
+title = "Statuts"
+circle = "ag"
+
+[[document.template]]
+type = "heading"
+level = 1
+text = "Statuts de Lanterne SCOP SARL à capital variable"
+
+[[document.template]]
+text = "Lanterne is a société coopérative et participative, a société à responsabilité limitée à capital variable, governed by loi n° 47-1775 of 10 September 1947, loi n° 78-763 of 19 July 1978 and the Code de commerce. Its object is graphic design and illustration for print and the web. Its seat is at 14 rue des Graviers, 93100 Montreuil, and it is formed for ninety-nine years."
+
+[[document.template]]
+text = "Its associates are those who work in it and have subscribed its shares. Each associate holds one vote, whatever the shares they hold. Its capital varies as associates join and leave, and never falls below a quarter of the highest it has reached."
+
+[[document.template]]
+text = "What follows is what the associates adopted, in force as these statutes were generated: each article a policy of the assembly, as the motion that adopted it worded it."
+
+[[document.template]]
+type = "heading"
+level = 2
+text = "How the co-op decides"
+
+[[document.template]]
+type = "embed"
+embed = "policies"
+ref = "procedure"
+
+[[document.template]]
+type = "heading"
+level = 2
+text = "Who may do what"
+
+[[document.template]]
+type = "embed"
+embed = "policies"
+ref = "mandate"
+
+[[document.template]]
+type = "heading"
+level = 2
+text = "What the associates agreed"
+
+[[document.template]]
+type = "embed"
+embed = "policies"
+ref = "rule"

@@ -82,7 +82,14 @@ Camille hires, and opens a new hire's candidacy for membership.
   rules: the 35-hour week, at most three remote days, the pay ratio of at
   most 1.6, the solidarity rate for associations and co-ops under ten
   staff, each value saying which way is stricter, and the clients refused,
-  which bind by their words alone.- **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
+  which bind by their words alone.
+- **Statutes (generated).** The statutes are the assembly's policies in
+  order, generated around the fixed text of a SCOP SARL à capital
+  variable (`document.toml`): `statutes@1`, adopted on 1 March 2021 with
+  m-2021-001's procedures, mandates and rules, and `statutes@2`, on 20
+  June 2026, with the internal rules' five rules m-2026-007 adopted.
+  No one edits them; the next adoption by the assembly generates the next.
+- **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
   0051, and 0050 was voided and reissued at the solidarity rate.

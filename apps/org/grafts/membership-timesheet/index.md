@@ -1,28 +1,26 @@
 +++
 title = "membership-timesheet"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A member's time, as the members see it: none is a suspended or former
 member's. The timesheet feat holds the member's address on each entry,
 as a motion holds a voter's. Whose time an entry is otherwise, a
 worker's within their employment, is `employment-timesheet`'s, and so are
-a person's months on their page: member or not, a person logs time by
-their employment, and one page shows it once. Declared by `timesheet`.
+a person's months on their page: member or not, a worker logs time by
+every employee's right, and one page shows it once. Declared by `timesheet`.
 
 ## Schema
 
 `membership_timesheet` (`sql/`): `membership_timesheet.whose`, a guard on
 `timesheet:entry:log`: the entry is no member's who is suspended or has
-left. A worker logs by their employment, member or not, through
-`employment-timesheet`'s own actions, which this graft does not judge; Inès,
-no member before her admission, logs hers so. The graft holds no table,
+left. A worker who is no member, as Inès before her admission, is not
+this graft's to judge, and logs by the same write. The graft holds no table,
 no view and no write of its own, and has no client or server package.
 
 ## Invariants
 
-- an entry logged by the log-time mandate is no suspended or former
-  member's.
+- an entry is no suspended or former member's.
 
 ## Tests
 

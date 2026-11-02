@@ -7,10 +7,10 @@ const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, mp.n
 
 const from = `FROM circle_membership.seat p
   JOIN circle.circle c ON c.id = p.circle
-  LEFT JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = p.member
+  LEFT JOIN person.person mp ON mp.address = p.member
   LEFT JOIN circle.role r ON r.id = p.role`
 
-// The seats in a circle, or a member's; ended ones last.
+// The seats in a circle, or a person's, member or not; ended ones last.
 export async function seats(db: Db, by: { circle?: string; member?: string }): Promise<Seat[]> {
   const { rows } = await db.query<Seat>(
     `SELECT ${seat} ${from}

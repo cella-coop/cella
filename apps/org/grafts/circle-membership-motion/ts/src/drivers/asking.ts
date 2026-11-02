@@ -22,8 +22,9 @@ export async function standing(db: Db, member: string): Promise<Standing | null>
   return { member, ...found.rows[0], open: open.rows }
 }
 
-// Whom a motion may seat in a circle and in which of its roles, the
-// seats held there, and the circle that decides.
+// Whom a motion may seat in a circle, anyone whose seat would count
+// there, and in which of its roles; the seats held there, and the circle
+// that decides.
 export async function appointing(db: Db, circle: string): Promise<Appointing | null> {
   const found = await db.query<{ decider: Decider; root: boolean }>(
     `SELECT ${decider} AS decider, c.parent IS NULL AS root FROM circle.circle c JOIN circle.circle d ON d.id = coalesce(c.parent, c.id) WHERE c.id = $1`,
@@ -32,14 +33,17 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
   if (!found.rows[0]) {
     return null
   }
-  const members = await db.query<{ id: string; name: string }>(`SELECT m.address AS id, p.name FROM membership.member m JOIN person.person p ON p.address = m.address WHERE membership.active(m.address, cella.verdict_date()) ORDER BY p.name`)
+  const members = await db.query<{ id: string; name: string }>(
+    `SELECT p.address AS id, p.name FROM person.person p WHERE circle_membership.counts(p.address, $1, cella.verdict_date()) ORDER BY p.name`,
+    [circle],
+  )
   const roles = await db.query<{ id: string; name: string }>(
     `SELECT r.id, r.name FROM circle.role r WHERE r.circle = $1 OR (r.circle = '*' AND NOT $2) ORDER BY r.name`,
     [circle, found.rows[0].root],
   )
   const seats = await db.query<Appointing['seats'][number]>(
     `SELECT p.id::text AS id, mp.name || coalesce(', ' || r.name, '') AS label, p.member, p.role
-     FROM circle_membership.seat p JOIN (membership.member m JOIN person.person mp ON mp.address = m.address) ON m.address = p.member LEFT JOIN circle.role r ON r.id = p.role
+     FROM circle_membership.seat p JOIN person.person mp ON mp.address = p.member LEFT JOIN circle.role r ON r.id = p.role
      WHERE p.circle = $1 AND p.until IS NULL ORDER BY mp.name, r.name`,
     [circle],
   )

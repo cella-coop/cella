@@ -1,6 +1,31 @@
--- A power is held, and a circle's channel kept, by an active member as
--- membership says one is on the day (`membership.active`), not by a copy
--- of its status: so a power asked of a past day reads who was active then.
+-- Whether a seat counts on a day. Any person may hold a seat, member or
+-- not: the assembly's, the root circle's, asks an active membership, as
+-- membership says one is on the day (`membership.active`), not a copy of
+-- its status; any other asks a person the co-op knows whom membership
+-- has not suspended or let go by the day. So a worker who is no member
+-- sits in their working circle, and a power asked of a past day reads
+-- who sat then.
+CREATE FUNCTION circle_membership.counts(person text, circle text, day date) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN CASE
+  WHEN EXISTS (SELECT FROM circle.circle c WHERE c.id = counts.circle AND c.parent IS NULL)
+    THEN membership.active(counts.person, counts.day)
+  ELSE person.known(counts.person, counts.day)
+    AND (membership.active(counts.person, counts.day)
+      OR NOT EXISTS (
+        SELECT FROM membership.member m
+        WHERE m.address = counts.person AND m.status IN ('suspended', 'exited')
+      ))
+END;
+
+-- Whether a person holds a seat in a circle on a day, and it counts: what
+-- the guards that know the circle an action concerns ask.
+CREATE FUNCTION circle_membership.sits_in(person text, circle text, day date) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN EXISTS (SELECT FROM circle_membership.seated(sits_in.circle, sits_in.day) s WHERE s = sits_in.person)
+  AND circle_membership.counts(sits_in.person, sits_in.circle, sits_in.day);
+
+-- A power is held, and a circle's channel kept, by a seat that counts.
 -- Every seat holds its circle's participant role beside its own, so the
 -- participant's mandates are found on any seat; the guard that knows the
 -- circle a write concerns holds them to a seat there (`sits`).
@@ -11,7 +36,7 @@ BEGIN ATOMIC
     SELECT FROM circle_membership.seat p
     JOIN circle.mandate m ON m.role = p.role OR m.role = 'participant'
     WHERE p.member = may.actor
-      AND membership.active(p.member, may.day)
+      AND circle_membership.counts(p.member, p.circle, may.day)
       AND m.power = may.power
       AND (p.since IS NULL OR p.since <= may.day)
       AND (p.until IS NULL OR p.until > may.day)
@@ -26,8 +51,7 @@ CREATE OR REPLACE FUNCTION circle_membership.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN NOT EXISTS (SELECT FROM circle_membership.seated(p.circle, cella.verdict_date()) s WHERE s = cella.actor())
-      OR NOT membership.active(cella.actor(), cella.verdict_date())
+    WHEN NOT circle_membership.sits_in(cella.actor(), p.circle, cella.verdict_date())
       THEN cella.actor() || ' holds no seat in ' || coalesce(p.circle, 'no circle')
   END
   FROM (SELECT payload ->> 'circle' AS circle) p;

@@ -1,6 +1,6 @@
 import { csv, type Db, type Imported, type Importer } from '@cella/org-db'
-import { log } from '@cella/org-graft-employment-timesheet/api'
-import { book } from '../handlers/book.ts'
+import { log } from '@cella/org-timesheet/api'
+import { book } from '@cella/org-graft-project-timesheet/api'
 import { hours } from '../models/week.ts'
 
 // One worked stretch of a time tracker's export, read: whose, by the
@@ -31,7 +31,7 @@ async function booked(stretches: Stretch[], db: Db): Promise<Imported[]> {
   return stretches.map((s) => {
     const p = titled.get(s.project.trim().toLowerCase())
     const label = `${s.day}, ${s.project ? (p?.title ?? s.project) : 'the co-op'}, ${hours(s.minutes)} h`
-    const op = s.project ? 'employment-project-timesheet:entry:book' : 'employment-timesheet:entry:log'
+    const op = 'timesheet:entry:log'
     const worker =
       workers.find((w) => w.address === s.email.toLowerCase()) ?? workers.find((w) => s.name && w.name?.trim().toLowerCase() === s.name.trim().toLowerCase())
     if (!worker) {

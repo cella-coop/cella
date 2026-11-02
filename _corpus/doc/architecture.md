@@ -745,7 +745,7 @@ right's mandate, found by `circle_membership.entitled`, as it takes
 one on the actor's seats, so a person with no seat holds their rights
 all the same. A right lets each act on what is their own, and so is
 never the authority a read asks (`circle_membership.may`): holding
-`keep-profile` opens no one else's profile, nor `log-own-time` another's
+`keep-profile` opens no one else's profile, nor `log-time` another's
 time. A right is the assembly's to grant, as a role every circle has
 is, and reaches the whole co-op: it is neither carved nor carved from.
 What was once the actor's own is a right's power, and the guard that it
@@ -756,8 +756,21 @@ up an invitation (`accept-invitation`), files a record of their own
 (`record-import`); a member draws on their account (`draw-account`),
 spreads what they owe (`spread-capital`), marks their attendance
 (`mark-attendance`) and saves a report (`save-report`); an employee
-logs their own time (`log-own-time`) and claims their expenses
-(`claim-expense`) ([circle](../../apps/org/feats/circle/index.md#rights)).
+logs, corrects and submits their own time (`log-time`), on a project or
+not, and claims their expenses (`claim-expense`)
+([circle](../../apps/org/feats/circle/index.md#rights)).
+
+**Any person may hold a seat.** A seat is a person's place in a circle,
+member or not, and only the assembly's seats ask an active membership:
+`circle_membership.counts(person, circle, day)` says whether a seat
+counts on a day, in the assembly where membership says the person is
+active, in any other circle unless membership has suspended them or let
+them go. A worker who is no member sits in their working circle, by a
+motion of the circle above it as any seat is given, and holds that
+circle's mandates there, its participant's among them. A seat is how
+someone takes part in a circle; what is their own is still a right's,
+so a worker logs their time by their employment wherever they sit
+([circle-membership](../../apps/org/grafts/circle-membership/index.md)).
 
 No action is allowed by omission. An action with no power declares the check
 that allows it instead: `roll`, a member on the roll of the motion it

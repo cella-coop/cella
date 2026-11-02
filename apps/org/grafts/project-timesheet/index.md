@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -45,10 +45,11 @@ The app role may select and insert bookings; the guards role may select.
 
 The feat's guards judge the entry, the graft's trigger the booking. An
 entry is booked when it is logged; moving it to another project is not
-built. `booking` (`./api`) books the entry any write logs, under that
-write's op: this graft's `book` over the feat's log, and
-`employment-project-timesheet`'s over a worker's log by their employment,
-which needs no mandate.
+built. `booking` (`./api`) books the entry a write logs, under that
+write's op: this graft's `book` over the feat's log, which needs
+`log-time`, every employee's right, member or not; the week
+`employment-project-timesheet` builds books each project's cell through
+it.
 
 ## Invariants
 

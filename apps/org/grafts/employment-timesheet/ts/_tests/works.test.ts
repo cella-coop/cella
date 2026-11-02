@@ -1,9 +1,9 @@
 // A worker's time, on a database holding the app's core, the timesheet and
 // worker feats and this graft: a worker's entry falls on a day of their
 // employment, while an entry of no worker's is the members' to judge; and
-// the guards on logging, correcting and submitting by one's employment,
-// this graft's and the timesheet feat's own. Whose the actor is, the e2e
-// scenario `people` holds. Run by `cella test slice employment-timesheet`.
+// the graft has no action of its own, a worker logging by the timesheet
+// feat's. Whose the actor is, the e2e scenario `people` holds. Run by
+// `cella test slice employment-timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -14,7 +14,6 @@ const ines = 'ines@lanterne.example'
 const paul = 'paul@lanterne.example'
 
 const all = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
-const works = async (payload: object) => (await all<{ r: string | null }>('SELECT employment_timesheet.works($1) AS r', [payload]))[0].r
 const whose = async (payload: object) => (await all<{ r: string | null }>('SELECT employment_timesheet.whose($1) AS r', [payload]))[0].r
 
 before(async () => {
@@ -49,23 +48,11 @@ test('a worker logs time on days of their employment, and none after they leave'
   ])
 })
 
-test('outside a write the guard judges no one a worker: who logs is the write\'s actor', async () => {
-  assert.match((await works({ member: ines, day: '2026-10-23' })) ?? '', /no one is no worker: a worker logs their time by their employment/)
+test('the graft has no action of its own: a worker logs, corrects and submits by the timesheet feat\'s writes', async () => {
+  assert.deepEqual(await all(`SELECT op FROM cella.guard WHERE op LIKE 'employment-timesheet:%' UNION ALL SELECT op FROM cella.power WHERE op LIKE 'employment-timesheet:%'`), [])
 })
 
-test('the timesheet feat\'s own guards run on these actions too: the time is the actor\'s own', async () => {
-  const guards = await all<{ op: string; fn: string }>(`SELECT op, fn::text AS fn FROM cella.guard WHERE op LIKE 'employment-timesheet:%' ORDER BY op, fn::text`)
-  assert.deepEqual(guards, [
-    { op: 'employment-timesheet:entry:correct', fn: 'employment_timesheet.works(jsonb)' },
-    { op: 'employment-timesheet:entry:correct', fn: 'timesheet.corrects(jsonb)' },
-    { op: 'employment-timesheet:entry:log', fn: 'employment_timesheet.works(jsonb)' },
-    { op: 'employment-timesheet:entry:log', fn: 'timesheet.logs(jsonb)' },
-    { op: 'employment-timesheet:period:submit', fn: 'employment_timesheet.works(jsonb)' },
-    { op: 'employment-timesheet:period:submit', fn: 'timesheet.submits(jsonb)' },
-  ])
-})
-
-test('a log by the log-time mandate meets the worker\'s days by a guard, and no trigger of this graft\'s is on the entries', async () => {
+test('a log meets the worker\'s days by a guard, and no trigger of this graft\'s is on the entries', async () => {
   const guards = await all<{ op: string }>(`SELECT op FROM cella.guard WHERE fn = 'employment_timesheet.whose(jsonb)'::regprocedure`)
   assert.deepEqual(guards, [{ op: 'timesheet:entry:log' }])
   assert.deepEqual(await all(`SELECT tgname FROM pg_trigger WHERE tgrelid = 'timesheet.entry'::regclass AND tgname = 'worker'`), [])

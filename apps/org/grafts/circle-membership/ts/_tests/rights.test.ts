@@ -29,7 +29,7 @@ before(async () => {
     `INSERT INTO circle.mandate ("right", power, policy, "from") VALUES
        ('person', 'keep-profile', 'm-2021-001/1', '2021-03-01'),
        ('member', 'draw-account', 'm-2021-001/2', '2021-03-01'),
-       ('employee', 'log-own-time', 'm-2021-001/3', '2021-03-01')`,
+       ('employee', 'log-time', 'm-2021-001/3', '2021-03-01')`,
   )
 })
 
@@ -54,7 +54,7 @@ test('a member\'s right is held by the active members on the day: not by an invi
 })
 
 test('a right nobody registered is held by no one, and a right grants only its power', async () => {
-  assert.equal(await holds(amina, 'log-own-time'), false)
+  assert.equal(await holds(amina, 'log-time'), false)
   assert.equal(await holds(amina, 'approve-time'), false)
 })
 

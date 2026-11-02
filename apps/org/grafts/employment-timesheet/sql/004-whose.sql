@@ -7,8 +7,7 @@ DROP FUNCTION employment_timesheet.whose();
 -- timesheet:entry:log — whose time an entry is, where it is a worker's:
 -- theirs on a day of their employment, never before their hire nor after
 -- they leave. An entry of no worker's, a member's who is not employed, is
--- membership-timesheet's to judge. A worker's log by their employment is
--- `employment_timesheet.works`'s.
+-- membership-timesheet's to judge.
 CREATE FUNCTION employment_timesheet.whose(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

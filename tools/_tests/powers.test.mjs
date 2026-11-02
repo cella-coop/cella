@@ -151,7 +151,7 @@ test('a declared check is backed by SQL: a guard on the op', () => {
 
 test('what is the actor\'s own is no check: an action of theirs names the power their right grants, and check self is refused', () => {
   const self = covered([op('member:member:profile', null, null, 'self')], { guards: [{ op: 'member:member:profile', owner: 'member' }], cites: [] })
-  assert.match(self[0], /member:member:profile checks self, which is no check: .* so name the power, as keep-profile or log-own-time/)
+  assert.match(self[0], /member:member:profile checks self, which is no check: .* so name the power, as keep-profile or log-time/)
   const both = covered([op('member:member:profile', 'keep-profile', null, 'self')], { guards: [], cites: [] })
   assert.match(both[0], /member:member:profile checks self, which is no check/)
   assert.deepEqual(covered([op('member:member:profile', 'keep-profile')], { guards: [], cites: [] }), [])

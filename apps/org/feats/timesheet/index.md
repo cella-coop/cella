@@ -50,19 +50,21 @@ the approval updates it, so Postgres serialises them.
 
 | Power | Lanterne |
 |---|---|
-| `log-time` | every member, through the `member` role's mandate |
+| `log-time` | every employee, by their right, member or not |
 | `approve-time` | the circle leads, finance and the gérante |
 
 Logging, correcting and submitting are also the member's own
 (`timesheet.logs`, `timesheet.corrects`, `timesheet.submits`), and
 approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
-`circle-membership` graft checks them; that a lead approves only their own
-circle's members is `circle-membership-timesheet`'s. A worker logs and
-submits their own time by every employee's right instead, member or not,
-through `employment-timesheet`'s writes of the same effect, which need
-`log-own-time`, a right with no seat: the shell logs through those,
-since a worker who is no member holds no seat and so no `log-time`.
+`circle-membership` graft checks them; that a lead approves only the time
+of those seated in their circle is `circle-membership-timesheet`'s.
+`log-time` is every employee's right, held with no seat from the first
+day of their contract to its last, member or not: what a worker logs is
+their own, and a right opens no one else's time to read, as a seat's
+mandate would ([rights](../circle/index.md#rights)). Whose time an entry
+is on its day, within the worker's employment and no suspended or former
+member's, is `employment-timesheet`'s and `membership-timesheet`'s.
 
 ## Invariants
 
@@ -107,13 +109,12 @@ the hours, the billable hours and those awaiting approval, by month and
 by kind, and by worker and by project from the grafts. Its New form is the
 acting worker's week (`employment-project-timesheet`): a project to a row,
 the co-op's own time last, and a day to a column, each cell adding the
-hours typed into it by their employment, booked to the row's project;
-the feat's own one-entry form, with a note, is what that replaces. An
-entry's page shows its worker's month and, in its header, lets its
-member correct the entry's hours down while the month is not approved,
+hours typed into it, the feat's log, booked to the row's project by
+`project-timesheet`; the feat's own one-entry form, with a note, is what
+that replaces. An entry's page shows its worker's month and, in its
+header, lets its worker correct the entry's hours down while the month is not approved,
 and submits the month while open or approves it once submitted; a
-person's page lists their months with the same writes (`employment-timesheet`,
-`membership-timesheet`).
+person's page lists their months with the same writes (`employment-timesheet`).
 
 ## Lanterne
 
@@ -121,8 +122,9 @@ Timesheets began on 1 September 2026. Every worker logs seven hours a
 working day, the 35-hour week of the internal rules, under a third of it
 billable, in line with what the invoices bill at the 80 € hourly rate.
 September is submitted by everyone and approved: each lead approved their
-circle's members, Julien in finance the leads and Inès, who is no member
-yet, and Camille as gérante Julien. October is open.
+circle's, Julien in finance the leads and Inès, who is no member yet
+and sits in Web, and Camille as gérante Julien. Inès logs hers by her
+right as every worker does. October is open.
 
 ## Analytics
 

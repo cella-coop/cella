@@ -76,11 +76,9 @@ state is that of 24 October 2026.
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
-| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); a worker who is no active member sits in no circle, so any holder of the power approves theirs |
+| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); any person sits in a circle, member or not, so a worker who is no member is approved within their working circle; one whose seat counts nowhere, by any holder of the power |
 | `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
 | `employment-membership:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
-| `employment-timesheet:entry.log`, `:entry.correct`, `:period.submit` | confluent | right: the feat's log, correction and submit by the worker's employment, contending as those do |
-| `employment-project-timesheet:entry.book` | confluent | right: the feat's log by the worker's employment, booked to a project, contending as the log does and with an archiving as project-timesheet's booking does |
 | `document-membership:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
@@ -690,10 +688,9 @@ for the candidacy.
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `hire` vs `hire`, one worker | the second refused | the first refused | two contracts for one person, neither the other's end |
-| `hire` vs `employment-timesheet:entry.log` by them | the log stands | refused: no worker | — |
+| `hire` vs `timesheet:entry.log` by them | the log stands | refused: no employee's right to `log-time` | — |
 | `candidacy.open` vs `candidacy.open`, one worker | the second refused | as A | two probations, two pledges |
 | `candidacy.open` vs `membership.admit` | the admission follows | refused: a member is no candidate | — |
-| `employment-timesheet:entry.log` vs `timesheet:period.approve` | as the feat's log | as the feat's log | as the feat's log |
 
 Every write is a fact, the hire and the candidacy once each, so all stay
 confluent: what can break is only a second of one, which the key

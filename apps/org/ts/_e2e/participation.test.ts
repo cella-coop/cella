@@ -7,11 +7,11 @@
 // waits in his inbox until he answers, and the text stays out of the log.
 // Each member's inbox holds what waits on them, counted in the sidebar;
 // the home shows the co-op's figures from several collections; and Inès,
-// employed and no member, logs her week in the grid, booking hours to a
-// project where the log-time mandate refuses her, and corrects a cell she
-// typed too high from its entry's page. Chloé proposes and discusses a
-// motion in the assembly by the participant role her seat brings, which
-// Thomas, with no seat in Marketing, lacks there. Run by
+// employed, no member and seated in Web, logs her week in the grid by her
+// right, booking hours to a project, and corrects a cell she typed too
+// high from its entry's page. Chloé proposes and discusses a motion in
+// the assembly by the participant role her seat brings, which Thomas,
+// with no seat in Marketing, lacks there, and Inès proposes in Web. Run by
 // `cella test e2e participation`.
 
 import { after, before, test } from 'node:test'
@@ -21,8 +21,7 @@ import { procedures, vote } from '@cella/org-motion/api'
 import { terms } from '@cella/org-motion/models'
 import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
 import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
-import { book } from '@cella/org-graft-project-timesheet/api'
-import { submit } from '@cella/org-graft-employment-timesheet/api'
+import { submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
@@ -235,7 +234,7 @@ test('the home shows the co-op’s figures from several collections and its repo
   assert.ok(!pinned.includes('Owed by clients'))
 })
 
-test('Inès logs her week in the grid, booking hours to a project where the mandate refuses her', async () => {
+test('Inès logs her week in the grid by her right, booking hours to a project', async () => {
   // Behind the New button, her week from Monday the 19th, the co-op's own
   // time last, the days from her hire to today open.
   const [now, before] = await weeks(await reading(ines), ines)
@@ -246,9 +245,6 @@ test('Inès logs her week in the grid, booking hours to a project where the mand
     [true, true, true, true, true, true, false],
   )
   assert.deepEqual(await weeks(app, 'nadia@lanterne.example'), [])
-  // Booking through the mandate: Inès holds no seat, so no log-time.
-  const mandate = await book({ member: ines, day: '2026-10-22', minutes: 120, billable: true, project: 'ferrand-packaging' }, as(ines))
-  assert.equal(mandate.state, 'refused')
   const week: [string, string][] = [
     ['row', 'ferrand-packaging'],
     ['row', '_'],
@@ -261,7 +257,7 @@ test('Inès logs her week in the grid, booking hours to a project where the mand
   assert.equal(logged.state, 'settled', reason(logged))
   assert.deepEqual(
     [logged.op, ...logged.then.map((t) => t.op)],
-    ['employment-timesheet:entry:log', 'employment-project-timesheet:entry:book'],
+    ['timesheet:entry:log', 'timesheet:entry:log'],
   )
   const entries = await all(
     `SELECT to_char(e.day, 'YYYY-MM-DD') AS day, e.minutes, e.billable, b.project
@@ -324,7 +320,7 @@ test('Inès corrects the hours she booked too high from the entry\'s page, and t
   assert.match(reason(other), /may not correct ines@lanterne.example's time/)
   const fixed = await shell.act(`/timesheets/${booked.id}`, 'correct', { hours: '0,5' }, ines)
   assert.equal(fixed.state, 'settled', reason(fixed))
-  assert.equal(fixed.op, 'employment-timesheet:entry:correct')
+  assert.equal(fixed.op, 'timesheet:entry:correct')
   assert.equal(await burnt(), before - 1.5)
   // A correction only lowers: one to more than the entry holds leaves it.
   const higher = await shell.act(`/timesheets/${booked.id}`, 'correct', { hours: '3' }, ines)
@@ -333,14 +329,14 @@ test('Inès corrects the hours she booked too high from the entry\'s page, and t
   assert.equal(entry.minutes, 30)
   // The log keeps both: what she logged, and what she corrected it to.
   const signed = await all<{ op: string }>(
-    `SELECT op FROM cella.log WHERE op IN ('employment-timesheet:entry:log', 'employment-timesheet:entry:correct') AND actor = $1 ORDER BY n`,
+    `SELECT op FROM cella.log WHERE op IN ('timesheet:entry:log', 'timesheet:entry:correct') AND actor = $1 ORDER BY n`,
     [ines],
   )
-  assert.ok(signed.some((s) => s.op === 'employment-timesheet:entry:log'))
-  assert.equal(signed.filter((s) => s.op === 'employment-timesheet:entry:correct').length, 2)
+  assert.ok(signed.some((s) => s.op === 'timesheet:entry:log'))
+  assert.equal(signed.filter((s) => s.op === 'timesheet:entry:correct').length, 2)
 })
 
-test('Chloé proposes and discusses a motion in the assembly by her participant role; Thomas, with no seat in Marketing, may not propose there', async () => {
+test('Chloé proposes and discusses a motion in the assembly by her participant role; Thomas, with no seat in Marketing, may not propose there, and Inès, seated in Web, proposes in Web and not in the assembly', async () => {
   const chloe = at('chloe')
   // The founding motion grants the participant role every circle has its
   // two mandates, each a policy of the assembly.
@@ -363,9 +359,10 @@ test('Chloé proposes and discusses a motion in the assembly by her participant 
   const outside = await propose({ circle: 'marketing', title: 'A newsletter', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(thomas))
   assert.equal(outside.state, 'refused')
   assert.match(reason(outside), /thomas@lanterne.example holds no seat in marketing, so may not propose/)
-  // Inès, employed and no member, holds no seat at all, so no participant
-  // role anywhere.
-  const none = await propose({ circle: 'web', title: 'A standing desk', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(ines))
+  // Inès, employed and no member, sits in Web: she proposes there by its
+  // participant role, and holds none in the assembly.
+  settled(await propose({ circle: 'web', title: 'A standing desk', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(ines)))
+  const none = await propose({ circle: 'ag', title: 'A standing desk for everyone', procedure: 'consent', deadline: '2026-11-30', body: '', actions: [] }, as(ines))
   assert.equal(none.state, 'refused')
-  assert.match(reason(none), /ines@lanterne.example holds no mandate for propose/)
+  assert.match(reason(none), /ines@lanterne.example holds no seat in ag, so may not propose/)
 })

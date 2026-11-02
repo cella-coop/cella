@@ -69,16 +69,18 @@ coordination's, counts its five.
   member is on the motion's roll, and active: a suspended or exited
   member gives no stance.
 - `circle_membership_motion.sits`, on `motion:motion:propose`,
-  `motion:motion:close` and `motion:message:post`: the actor is an
-  active member seated in the motion's circle on the verdict date, so
+  `motion:motion:close` and `motion:message:post`: the actor holds a
+  seat that counts in the motion's circle on the verdict date
+  (`circle_membership.sits_in`), so
   the participant's `propose` (propose, close) and `discuss` (post),
   which `circle_membership.may` finds on any seat, are held in the
   motion's circle: a circle's participants put, close and deliberate on
   its motions.
 - `circle_membership_motion.asks`, on `motion:motion:propose`: a seat
   given or ended is the motion of the circle above it, or the assembly
-  (`circle_motion.decides`), and names an active member for a role of
-  that circle, or a seat held. Which circle admits, suspends and lets
+  (`circle_motion.decides`), and names for a role of that circle, or as
+  a plain seat, an active member in the assembly and elsewhere any
+  person whom membership has not suspended or let go; or a seat held. Which circle admits, suspends and lets
   members go is no rule of this graft's: it is the one holding the
   collective mandate for it, `circle-motion`'s guard `empowers`, and in
   Lanterne that is the assembly alone.
@@ -98,8 +100,8 @@ coordination's, counts its five.
   registers `circle-membership:seat:add` and `:remove` itself, a
   lower-order graft's actions.
 - `circle_membership_motion.seats`, on `circle-membership:seat:add`: the
-  seat is one the cited motion gives (`seating`), to an active member,
-  from the verdict date, where they held no such seat. `unseats`, on
+  seat is one the cited motion gives (`seating`), to a person whose seat
+  counts there (`circle_membership.counts`), from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited motion
   ends it. A graft may register guards on the actions of the lower-order
   grafts it builds on, as on its feats'.

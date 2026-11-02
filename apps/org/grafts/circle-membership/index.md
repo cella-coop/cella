@@ -3,21 +3,35 @@ title = "circle-membership"
 updated = 2026-11-02
 +++
 
-Seats: which member holds which role in which circle. A seat is the
-relationship, so the graft owns its actions.
+Seats: which person holds which role in which circle. A seat is the
+relationship, so the graft owns its actions. Any person may hold one,
+member or not: the graft joins `circle` to `membership` because the
+assembly's seats ask an active membership, and every other seat is a
+person's place in a circle all the same.
 
 ## Schema
 
 `circle_membership` (`sql/`):
 
-- `circle_membership.seat`: a seat, by circle id and member address, with
+- `circle_membership.seat`: a seat, by circle id and person address, with
   no foreign key into either feat; an optional `role`, and `since` and
   `until`. A seat with no `since` was held before the records began; an
   ended seat keeps its row with `until`, so who sat where on a past day
   reads back.
-- `circle_membership.seated(circle, day)`: the members seated in a circle on a
+- `circle_membership.seated(circle, day)`: the people seated in a circle on a
   day. The `circle-membership-motion` graft, a higher order, fixes a
   motion's roll from it.
+- `circle_membership.counts(person, circle, day)` (`007-active.sql`):
+  whether a seat counts on a day: in the assembly, the root circle,
+  where membership says the person is active (`membership.active`); in
+  any other circle, where the person is one the co-op knows
+  (`person.known`) and membership has not suspended them or let them
+  go. A worker who is no member, invited or never, holds a seat in their
+  working circle; a suspended member's seats grant nothing until the
+  suspension is lifted.
+- `circle_membership.sits_in(person, circle, day)`: they hold a seat in
+  the circle on the day, and it counts; the guards that know the circle
+  an action concerns ask it.
 
 The app role and the guards role, `cella_guards`, may select; the app role
 may insert a seat, through `seat.add`, and end one, through
@@ -28,11 +42,11 @@ may insert a seat, through `seat.add`, and end one, through
 Who may use a power needs seats and mandates, and so lives here, the
 lowest level that sees both: mandates are the `circle` feat's, seats this
 graft's, and whether a member is active on a day the `membership` feat's
-`membership.active(person, day)`.
+`membership.active(person, day)`, which the assembly's seats ask.
 
-- `circle_membership.may(actor, power, cents, day)`: the actor is active and
-  holds, on the day, a seat whose role, or the participant role every
-  seat holds, has a mandate in force for the
+- `circle_membership.may(actor, power, cents, day)`: the actor holds, on
+  the day, a seat that counts (`counts`), whose role, or the participant
+  role every seat holds, has a mandate in force for the
   power, not revoked by the day, within its `limit` when the write
   carries an amount.
   A `budget` is not checked: it needs the spend over its period tracked.
@@ -56,18 +70,20 @@ graft's, and whether a member is active on a day the `membership` feat's
 - `circle_membership.over(actor, power, about, day)`: the actor holds the
   power through a seat in force in the circle `about` or one it is
   within: a power reaches down the tree from where it is held, never up
-  or across. It checks no limit and no active status, which `may` does
-  for every write; the three-way grafts that know what a write concerns,
-  `circle-membership-project` a project's circle and `circle-membership-timesheet`
-  a member's seats, narrow `may` with it.
+  or across. It checks no limit and whether the seat counts, which `may`
+  does for every write; the three-way grafts that know what a write
+  concerns, `circle-membership-project` a project's circle and
+  `circle-membership-timesheet` a worker's seats, narrow `may` with it.
 
 Lanterne: Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
 holds only the `member` seat in the assembly, so she edits clients and
 documents and does none of these; Camille's `commit` mandate, up to
-20 000 €, is not needed by any write yet. A suspended member, or an
-invitee, holds no seat's mandate; Inès, invited and employed, holds a
-person's rights and an employee's, and Paul, gone, a person's alone.
+20 000 €, is not needed by any write yet. A suspended member holds no
+seat's mandate. Inès, invited and employed, no member yet, sits in Web
+since her hire: she holds Web's participant mandates there, proposing
+and discussing in Web, and none of the assembly's; beside them, a
+person's rights and an employee's. Paul, gone, holds a person's alone.
 
 ## Actions
 
@@ -83,9 +99,11 @@ person's rights and an employee's, and Paul, gone, a person's alone.
   motion carries them: each cites the motion that
   gives or ends the seat. This graft does not join `motion`, so the
   guards that judge them are `circle-membership-motion`'s, a higher order:
-  the cited motion carried, and it gives or ends this seat. An
-  admission gives one, the new member's in the motion's circle in its
-  `member` role; a `seat` or `unseat` action names any other.
+  the cited motion carried, and it gives or ends this seat, which in
+  the assembly is an active member's and elsewhere any person's whom
+  membership has not suspended or let go. An admission gives one, the
+  new member's in the motion's circle in its `member` role; a `seat` or
+  `unseat` action names any other.
 
 ## Handlers
 
@@ -107,7 +125,7 @@ and ends, as its reaction to the close.
 | seat.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
 
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
-the actor is an active member seated in the circle on the verdict date,
+the actor holds a seat that counts in the circle on the verdict date,
 where the participant's `discuss` is held.
 
 ## Reads

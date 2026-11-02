@@ -101,7 +101,7 @@ export function covered(ops, found) {
   const judged = new Set(found.guards.map((r) => r.op))
   const none = new Set(['self', 'seat', 'decided'])
   for (const o of ops.filter((o) => o.check === 'self')) {
-    errors.push(`${o.file}: ${o.op} checks self, which is no check: what is the actor's own needs the power their right grants, every person's, member's or employee's, so name the power, as keep-profile or log-own-time`)
+    errors.push(`${o.file}: ${o.op} checks self, which is no check: what is the actor's own needs the power their right grants, every person's, member's or employee's, so name the power, as keep-profile or log-time`)
   }
   for (const o of ops.filter((o) => o.check === 'seat')) {
     errors.push(`${o.file}: ${o.op} checks seat, which is no check: a seat allows what its roles' mandates grant, the participant's among them, so name the power, as propose or discuss`)

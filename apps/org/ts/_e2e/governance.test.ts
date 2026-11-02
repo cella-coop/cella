@@ -176,7 +176,10 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
     await one(`SELECT label, to_char(enrolled, 'YYYY-MM-DD') AS enrolled FROM person.device WHERE address = $1`, [nadia]),
     { label: 'laptop', enrolled: '2026-10-24' },
   )
-  settled(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia)))
+  // A member, she invites by the member role's mandate; she is no
+  // employee, so logging time is no right of hers.
+  settled(await invite({ address: 'yara@lanterne.example', name: 'Yara Haddad', link: await sha256(random()) }, as(nadia)))
+  assert.match(reason(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia))), /nadia@lanterne\.example holds no mandate for log-time/)
 })
 
 test('Chloé suspended by the assembly\'s motion: carried out after the close, her writes are refused', async () => {

@@ -1,8 +1,8 @@
 // The work share's terms and its parts alone, on a database holding only
 // the app's core and this feat: the terms governing a year, what they
-// divide by, and each basis's portion to the cent; `patronage.adopts`
-// refuses terms that divide less than the whole or would govern a year
-// already approved; `patronage.divides` takes parts that add up to each
+// divide by, and each basis's portion to the cent; terms are copied from a
+// work share rule, and `patronage.adopts` refuses terms that divide less
+// than the whole or would govern a year already approved; `patronage.divides` takes parts that add up to each
 // portion and refuses those that miss it or a basis the terms do not
 // name; parts are made only in the write that approves, and never change.
 // Run by `cella test slice patronage`.
@@ -34,9 +34,9 @@ before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(
-    `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, adopted) VALUES
-       ('t-2010', 2010, 100, 0, 0, 0, '2010-01-15'),
-       ('t-2016', 2016, 50, 30, 20, 50, '2016-03-01')`,
+    `INSERT INTO patronage.terms (id, policy, "from", salary, hours, equal, capital, adopted) VALUES
+       ('t-2010', 't-2010', 2010, 100, 0, 0, 0, '2010-01-15'),
+       ('t-2016', 't-2016', 2016, 50, 30, 20, 50, '2016-03-01')`,
   )
 })
 
@@ -87,13 +87,44 @@ test('parts are made in the write that approves, and never change', async () => 
   await assert.rejects(db.query(`DELETE FROM patronage.part WHERE distribution = '2018'`), /never change/)
 })
 
-test('terms are adopted whole, never over a year already approved, and never change after', async () => {
-  await db.query(`INSERT INTO patronage.terms (id, "from", salary, hours) VALUES ('t-2019', 2019, 60, 30), ('t-2018', 2018, 100, 0), ('t-2027', 2027, 70, 30)`)
-  assert.equal(await guard('patronage.adopts', { terms: 't-2027' }), 't-2027 were not adopted by this write')
-  await db.query(`UPDATE patronage.terms SET adopted = cella.verdict_date() WHERE id IN ('t-2019', 't-2018', 't-2027')`)
-  assert.equal(await guard('patronage.adopts', { terms: 't-2019' }), 't-2019 divide 90.00 % of the work share, not 100 %')
-  assert.equal(await guard('patronage.adopts', { terms: 't-2018' }), 't-2018 would govern 2018, whose distribution is approved')
-  assert.equal(await guard('patronage.adopts', { terms: 't-2027' }), null)
-  assert.equal(await guard('patronage.adopts', { terms: 't-1999' }), 'no terms t-1999')
-  await assert.rejects(db.query(`UPDATE patronage.terms SET capital = 10 WHERE id = 't-2027'`), /t-2027 were adopted on 2026-10-24/)
+const work = (salary: string, hours: string, from = '2027-01-01') => ({ salary, hours, from })
+const rule = (w: { salary: string; hours: string }) =>
+  `The work share is divided {patronage_salary: ${w.salary} | more is stricter} by pay, {patronage_hours: ${w.hours} | more is stricter} by time worked ` +
+  'and {patronage_equal: 0 % | more is stricter} in equal parts; {patronage_capital: 50 % | more is stricter} of an associate\'s part buys shares, ' +
+  'and capital earns at most {patronage_interest: 3.5 % | less is stricter}'
+const flaw = async (legal: string) =>
+  (await one<{ f: string | null }>('SELECT patronage.terms_flaw((SELECT jsonb_object_agg(m.name, m.literal) FROM policy.marks($1) m)) AS f', [legal])).f
+
+test('a work share rule marks the five shares, and divides the whole of it', async () => {
+  assert.equal(await flaw(rule(work('60 %', '40 %'))), null)
+  assert.equal(await flaw(rule(work('60 %', '30 %'))), 'the work share\'s terms divide 90 % of the work share, not 100 %')
+  assert.match((await flaw(rule(work('60', '40 %')))) ?? '', /patronage_salary is a share of at most all, as 50 %, not 60/)
+  assert.equal(await flaw('Remote work is at most {remote_days: 3 | less is stricter} days a week'), 'the work share\'s terms mark patronage_salary too')
+})
+
+test('terms are copied from the rule, never over a year already approved, and never change after', async () => {
+  await db.query('BEGIN')
+  try {
+    const adopt = async (legal: string, n: number, applies: string) => {
+      const { rows } = await db.query<{ id: string }>(`SELECT policy.adopt('ag', 'rule', $1, NULL, 'm-2026-020', $2, $3::date, NULL, NULL) AS id`, [legal, n, applies])
+      return (await one<{ t: string | null }>('SELECT patronage.terms_from($1) AS t', [rows[0].id])).t
+    }
+    assert.equal(await adopt('Remote work is at most {remote_days: 3 | less is stricter} days a week', 1, '2026-10-24'), null, 'a rule of no value of this feat\'s makes no terms')
+    assert.equal(await adopt(rule(work('60 %', '40 %')), 2, '2027-01-01'), 'm-2026-020-2')
+    assert.deepEqual(
+      await one(`SELECT policy, "from", salary::float8 AS salary, hours::float8 AS hours, equal::float8 AS equal, capital::float8 AS capital, interest::float8 AS interest FROM patronage.terms WHERE id = 'm-2026-020-2'`),
+      { policy: 'm-2026-020/2', from: 2027, salary: 60, hours: 40, equal: 0, capital: 50, interest: 3.5 },
+    )
+    assert.equal(await guard('patronage.adopts', { policy: 'm-2026-020/2', terms: 'm-2026-020-2' }), null)
+    assert.equal(await guard('patronage.copies', { policy: 'm-2026-020/2' }), null)
+    assert.equal(await guard('patronage.adopts', { policy: 'm-2026-020/9' }), 'no terms copy m-2026-020/9')
+    assert.equal(await adopt(rule(work('100 %', '0 %')), 3, '2018-01-01'), 'm-2026-020-3')
+    assert.equal(await guard('patronage.adopts', { policy: 'm-2026-020/3', terms: 'm-2026-020-3' }), 'm-2026-020-3 would govern 2018, whose distribution is approved')
+    await db.query('SAVEPOINT s')
+    await assert.rejects(adopt(rule(work('60 %', '30 %')), 4, '2028-01-01'), /divide 90 % of the work share, not 100 %/)
+    await db.query('ROLLBACK TO SAVEPOINT s')
+    await assert.rejects(db.query(`UPDATE patronage.terms SET capital = 10 WHERE id = 'm-2026-020-2'`), /m-2026-020-2 were adopted on 2026-10-24/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })

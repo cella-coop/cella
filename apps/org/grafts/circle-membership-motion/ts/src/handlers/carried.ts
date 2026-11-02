@@ -53,7 +53,9 @@ export async function carried(motion: string, deps: Deps): Promise<Done[]> {
     }
     const w = writes[m.kind]
     if (w) {
-      const input = { ...m.args, motion }
+      // A policy's adoption and end name the motion's action, `n`, so what
+      // reacts to it reads the policy the action is.
+      const input = m.kind === 'policy' || m.kind === 'end' ? { ...m.args, motion, n: m.n } : { ...m.args, motion }
       out.push(done(w.op, await w.run(m.args, motion, deps, m.n), [], input))
     }
   }

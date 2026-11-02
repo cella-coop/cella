@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -16,7 +16,7 @@ anyone can replay from the log.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| terms | `id`, `from`, `salary`, `hours`, `equal`, `capital`, `interest`, `adopted?` | the statutes' terms for the work share from a year on: the weights, in percent, by which it divides by pay, by time worked and in equal parts, adding up to 100, the percent of an associate's part that buys shares, and the highest rate of interest, in percent, the capital earns; terms with no rate pay none |
+| terms | `id`, `policy`, `from`, `salary`, `hours`, `equal`, `capital`, `interest`, `adopted` | the statutes' terms for the work share, copied from the rule (`policy`) a motion adopted, from the fiscal year it applies in: the weights, in percent, by which it divides by pay, by time worked and in equal parts, adding up to 100, the percent of an associate's part that buys shares, and the highest rate of interest, in percent, the capital earns; terms with no rate pay none |
 | distribution | `id`, `year`, `surplus`, `basis`, `approved?`, `distributed?` | one per financial year's surplus; `basis` is how the work share divides, as its year's terms say: by `salary`, `hours`, `equal` or a `mix` |
 | share | `kind`, `percent`, `amount` | `work`, `legal` (the legal reserve), `development` (the development fund) or `interest` (on capital); a share of nothing has no row |
 | part | `distribution`, `worker`, `basis`, `quantity`, `amount` | a worker's part of a distribution's work share on one basis: what they were paid (cents), the minutes they worked, or one equal part, and the cents it gave them |
@@ -43,7 +43,7 @@ fiscal year is the calendar year.
 
 | Thing | States |
 |---|---|
-| terms | drafted → adopted (once, citing the members' motion) |
+| terms | adopted (copied once from a rule, citing the motion that adopted it) |
 | distribution | draft → approved (by the assembly, once its year is closed) → distributed (posted, once, by the write that follows the approval) |
 | part | made (by the approval) → employed (its shares credited, once, by the write that follows the distribution; an associate's alone) |
 
@@ -58,24 +58,26 @@ distribution is approved.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/patronage/terms.draft` | confluent | finance drafts the terms for the members to adopt; drafted again, the latest stands until they are adopted |
-| `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' motion adopts the work share's terms, once |
+| `POST /api/patronage/terms.adopt` | ordered, `decided` | the work share rule a passed motion adopted copied into its terms, once |
 | `POST /api/patronage/distribution.draft` | confluent | finance drafts a year's split for the assembly to approve; drafted again, the latest stands until it is approved |
 | `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's motion approves the split, once, and fixes each worker's part |
 | `POST /api/patronage/distribution.distribute` | ordered, `decided` | the approved split posted to the books, once, following the approval and citing its motion |
 | `POST /api/patronage/part.employ` | ordered, `decided` | what an associate's part buys in shares credited to their capital, once, following the distribution and citing its motion |
 
-- **terms.draft** and **distribution.draft** are registers: a draft is
-  `st-<year>` for terms, the year for a split, and drafting it again
-  replaces it, the latest standing, until it is adopted or approved, after
-  which it never changes. Terms divide the whole work share
-  (`patronage.drafts_terms`). A split's shares make the whole surplus,
+- **distribution.draft** is a register: a draft is the year, and drafting
+  it again replaces it, the latest standing, until it is approved, after
+  which it never changes. A split's shares make the whole surplus,
   split from it to the cent with `cella.allocate`, under the basis of the
   adopted terms governing its year (`patronage.drafts`); the law's
   floors are judged at its approval. Percents are sent in hundredths.
-- **terms.adopt** cites the motion that moved to adopt the terms
-  (`motion-patronage`); it settles only if that motion closed and
-  passed, and never over a year whose distribution is approved.
+- **terms.adopt** follows the adoption of a rule whose values are named
+  for this feat (`patronage_salary`, `patronage_hours`, `patronage_equal`,
+  `patronage_capital`, `patronage_interest`, each a share in percent),
+  which `motion-patronage` carries once the adoption settles
+  ([policies](../../../../_corpus/doc/architecture.md#policies)); it
+  cites the motion that adopted the rule, settles only if that motion
+  closed and passed, and never over a year whose distribution is
+  approved. Terms divide the whole work share.
 - **distribution.approve** cites the assembly's motion approving the
   split (`motion-patronage`); it settles only if that motion closed
   and passed, the year is over and its books closed (`account-patronage`).
@@ -104,8 +106,8 @@ the holder is whoever holds the role the mandate is granted to.
 
 | Action | Power | Lanterne |
 |---|---|---|
-| terms.draft, distribution.draft | `distribute-surplus` | Julien, as finance |
-| terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
+| distribution.draft | `distribute-surplus` | Julien, as finance |
+| terms.adopt | none: decided by the members | the founding assembly's rule, `m-2021-001/44` |
 | distribution.approve | none: decided by the assembly | m-2026-006, for 2025 |
 | distribution.distribute, part.employ | none: they follow the approval, citing its motion | whoever signed the approval: Camille, for 2025 |
 
@@ -129,12 +131,12 @@ The patronage feat owns the guards about its own collection:
   to its portion of the work share, to the cent;
 - a split is distributed once, after it is approved;
 - a part is employed in shares only once its split is distributed;
-- terms divide the whole work share, and are adopted once, never over a
-  year already approved.
+- terms are what their rule marks, divide the whole work share, and are
+  copied once, never over a year already approved.
 
 What it does not own:
 
-- that the members approved a split, and moved to adopt terms:
+- that the members approved a split, and adopted the rule terms copy:
   `motion-patronage`'s;
 - that every period of the year is closed: `account-patronage`'s, since
   the periods are the account feat's;
@@ -169,9 +171,15 @@ whose ceiling falls under the terms' rate is not refused.
 
 - `patronage.terms`: the statutes' terms for the work share and the
   interest on capital (`interest`, added by `005-interest.sql`),
-  `stays_adopted` keeping adopted ones as they were; `terms_for(year)`
-  names the terms governing a year and `basis_of(terms)` what they divide
-  by.
+  each copied from its rule, `stays_adopted` keeping them as they were;
+  `terms_for(year)` names the terms governing a year and
+  `basis_of(terms)` what they divide by.
+- `007-rule.sql`: `patronage.work(marked)`, `patronage.reads(marked)` and
+  `patronage.terms_flaw(marked)`, a rule's values by name, typed, whether
+  it marks a value of this feat's, and what is wrong with the terms they
+  would make, or null: all five marked, each a share of at most all, the
+  weights adding up to 100; `patronage.terms_from(ref)` copies a rule's
+  values into terms, or refuses them (SQLSTATE `09000`).
 - `patronage.distribution` and `patronage.share`: a year's surplus, the
   basis of its work share, the days it was approved and distributed, and
   its shares; `stays_approved` and `share_fixed` keep an approved split as
@@ -184,8 +192,8 @@ whose ceiling falls under the terms' rate is not refused.
   `divided(distribution)` sets each basis's parts against its portion, and
   `patronage.statement` sums each worker's parts for a year.
 
-Triggers raise SQLSTATE `09000`. The app role may select, insert parts,
-set terms' `adopted` and a distribution's `approved` and `distributed`;
+Triggers raise SQLSTATE `09000`. The app role may select, insert parts and
+terms, set a distribution's `approved` and `distributed`;
 the guards role, `cella_guards`, may select.
 
 ## Personal data
@@ -208,13 +216,16 @@ L3243-4) and redacted after.
 - `patronage.employs`, on `patronage:part:employ`: the split was
   distributed, and the worker the payload names has a part in it. What
   the part buys and its credit are `account-membership-patronage-transaction`'s.
-- `patronage.adopts`, on `patronage:terms:adopt`: the write adopted the
-  terms on the verdict date, their weights add up to 100, and no year they
-  would govern is approved.
+- `patronage.adopts`, on `patronage:terms:adopt`: the write copied the rule
+  it names into terms on the verdict date, their weights add up to 100,
+  and no year they would govern is approved; `patronage.copies`, on the
+  same op, that they are what the rule marks, from the year it applies
+  in.
 
 ## Handlers
 
-- `adopt` (ordered): sets the terms' `adopted` to the verdict date.
+- `adopt` (ordered): copies the rule's values into terms by
+  `patronage.terms_from`, adopted the day the rule was.
 - `approve` (ordered): sets the distribution's `approved` to the verdict
   date, after which the basis grafts' triggers make its parts.
 - `distributing`: the spec that marks a distribution distributed on the
@@ -233,13 +244,13 @@ distributed. `core/ts/_tests/terms.test.ts`: the terms governing a
 year and what they divide by; each basis's portion, adding up to the
 work share; parts that add up pass, one missing or a basis the terms do
 not name is refused; parts are made only in the write that approves and
-never change; terms that divide less than the whole, or would govern an
-approved year, are refused, and adopted terms never change.
-`core/ts/_tests/drafts.test.ts`: terms drafted as the request says and
-whole pass, adopted ones are refused; a split drafted under adopted
+never change; a work share rule marks the five shares and divides the
+whole of it; terms are copied from it, those that would govern an
+approved year are refused, and adopted terms never change.
+`core/ts/_tests/drafts.test.ts`: a split drafted under adopted
 terms whose shares make its surplus passes, a year with no terms,
 shares that miss 100 % and an approved split are refused. The e2e
-scenario `patronage` drafts terms and runs a second year, 2026, from
+scenario `patronage` adopts a rule of new terms and runs a second year, 2026, from
 its periods to its distribution with no fixture SQL.
 
 ## Reads
@@ -251,17 +262,19 @@ A worker's parts of a work share, and so their statement, read for the worker an
 The `distributions` collection, each year's surplus in a table, the
 latest first, a distribution's page showing its split under a Split tab
 and its state, draft, approved or distributed, and its New form drafting
-a year's split; `bases`, the patronage terms by year, adopted or
-drafted, and its New form drafting terms; and `statements`, each
+a year's split; `bases`, the patronage terms by year, governing,
+to govern or replaced, each copied from its rule; and `statements`, each
 worker's part of each year's work share, a statement's page its part
-basis by basis against each basis's portion and weight. Approving and adopting are
-`motion-patronage`'s forms over this feat's writes; distributing and employing follow
-the approval, with no form. Printed, a page drops the shell and reads as a
+basis by basis against each basis's portion and weight. Approving is
+`motion-patronage`'s form over this feat's write; distributing and
+employing follow the approval, and adopting terms a rule's adoption, with
+no form. Printed, a page drops the shell and reads as a
 document.
 
 ## Lanterne
 
-- The statutes' patronage terms, `st-2021`, carried over, divide the work
+- The statutes' patronage terms, the founding assembly's rule
+  `m-2021-001/44`, copied into `m-2021-001-44`, divide the work
   share by pay, employ half of each associate's part in shares, and pay
   at most 3,5 % on the capital.
 - The 2025 surplus of 61 400 € is a draft distribution: m-2026-006

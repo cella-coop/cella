@@ -10,17 +10,20 @@ CREATE SCHEMA patronage;
 -- by revenue, which the law does not offer. Employing a part in shares is
 -- reserved to the associates employed in the co-op (art. R3323-11), and
 -- what is employed so is blocked five years from the first day of the
--- sixth month after the year (art. L3324-10). Terms govern from a fiscal
--- year on, until later terms are adopted; they are drafted, then adopted
--- once, citing the members' motion.
+-- sixth month after the year (art. L3324-10). Terms are a rule the
+-- members adopt by motion, its values named for this feat and copied here
+-- as it is adopted; they govern from the fiscal year their rule applies
+-- in, until later terms do.
 CREATE TABLE patronage.terms (
   id text PRIMARY KEY,
+  -- The rule they copy, `m-2026-013/1`, by its id in the policy register.
+  policy text NOT NULL UNIQUE,
   "from" integer NOT NULL CHECK ("from" BETWEEN 1900 AND 9999),
   salary numeric(5, 2) NOT NULL DEFAULT 0 CHECK (salary BETWEEN 0 AND 100),
   hours numeric(5, 2) NOT NULL DEFAULT 0 CHECK (hours BETWEEN 0 AND 100),
   equal numeric(5, 2) NOT NULL DEFAULT 0 CHECK (equal BETWEEN 0 AND 100),
   capital numeric(5, 2) NOT NULL DEFAULT 0 CHECK (capital BETWEEN 0 AND 100),
-  adopted date
+  adopted date NOT NULL
 );
 
 COMMENT ON COLUMN patronage.terms.salary IS 'not personal: the weight the statutes give pay, a percent';
@@ -28,24 +31,21 @@ COMMENT ON COLUMN patronage.terms.salary IS 'not personal: the weight the statut
 -- Adopted terms never change; later terms replace them from their year.
 CREATE FUNCTION patronage.stays_adopted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF OLD.adopted IS NOT NULL THEN
-    RAISE EXCEPTION '% were adopted on %', OLD.id, OLD.adopted
-      USING ERRCODE = 'triggered_action_exception';
-  END IF;
-  RETURN coalesce(NEW, OLD);
+  RAISE EXCEPTION '% were adopted on %', OLD.id, OLD.adopted
+    USING ERRCODE = 'triggered_action_exception';
 END
 $$;
 
 CREATE TRIGGER stays_adopted BEFORE UPDATE OR DELETE ON patronage.terms
   FOR EACH ROW EXECUTE FUNCTION patronage.stays_adopted();
 
--- The terms governing a year: the adopted terms from the latest year not
--- after it, the latest adopted where two start the same year.
+-- The terms governing a year: those from the latest year not after it,
+-- the latest adopted where two start the same year.
 CREATE FUNCTION patronage.terms_for(year integer) RETURNS text
 LANGUAGE sql STABLE
 RETURN (
   SELECT t.id FROM patronage.terms t
-  WHERE t.adopted IS NOT NULL AND t."from" <= year
+  WHERE t."from" <= year
   ORDER BY t."from" DESC, t.adopted DESC, t.id DESC
   LIMIT 1
 );
@@ -294,24 +294,25 @@ BEGIN ATOMIC
   LEFT JOIN patronage.distribution d ON d.id = x.distribution;
 END;
 
--- patronage:terms:adopt — the write adopted the terms on the verdict date;
--- their weights divide the whole work share; and no year they would
+-- patronage:terms:adopt — the write copied the rule it names into the
+-- terms on the verdict date (`patronage.copies`, beside the rule's
+-- functions, holds them to its values); their weights divide the whole work share; and no year they would
 -- govern has its distribution approved already. That the members decided
 -- them is motion-patronage's.
 CREATE FUNCTION patronage.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN t.id IS NULL THEN 'no terms ' || coalesce(x.terms, 'are named')
-    WHEN t.adopted IS DISTINCT FROM cella.verdict_date() THEN t.id || ' were not adopted by this write'
+    WHEN t.id IS NULL THEN 'no terms copy ' || coalesce(x.policy, 'a rule')
+    WHEN t.id IS DISTINCT FROM x.terms OR t.adopted IS DISTINCT FROM cella.verdict_date() THEN t.id || ' were not adopted by this write'
     WHEN t.salary + t.hours + t.equal <> 100
       THEN t.id || ' divide ' || (t.salary + t.hours + t.equal) || ' % of the work share, not 100 %'
     WHEN EXISTS (SELECT FROM patronage.distribution d WHERE d.year >= t."from" AND d.approved IS NOT NULL)
       THEN t.id || ' would govern ' || (SELECT min(d.year) FROM patronage.distribution d WHERE d.year >= t."from" AND d.approved IS NOT NULL)
         || ', whose distribution is approved'
   END
-  FROM (SELECT payload ->> 'terms' AS terms) x
-  LEFT JOIN patronage.terms t ON t.id = x.terms;
+  FROM (SELECT payload ->> 'policy' AS policy, payload ->> 'terms' AS terms) x
+  LEFT JOIN patronage.terms t ON t.policy = x.policy;
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
@@ -324,5 +325,5 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 GRANT USAGE ON SCHEMA patronage TO cella_app, cella_guards;
 GRANT SELECT ON patronage.terms, patronage.distribution, patronage.share, patronage.part, patronage.statement TO cella_app, cella_guards;
 GRANT INSERT ON patronage.part TO cella_app;
-GRANT UPDATE (adopted) ON patronage.terms TO cella_app;
+GRANT INSERT ON patronage.terms TO cella_app;
 GRANT UPDATE (approved, distributed) ON patronage.distribution TO cella_app;

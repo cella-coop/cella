@@ -2,35 +2,11 @@ import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Draft, Drafted } from '../models/distribution.ts'
-import type { DraftTerms, DraftedTerms } from '../models/terms.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
 const kinds = ['work', 'legal', 'development', 'interest'] as const
-
-// Drafts the statutes' terms from a year on, `st-<year>`, or drafts them
-// again while they are not adopted; adopted terms never change. The guards
-// decide: `patronage.drafts_terms` that they divide the whole work share.
-// The members adopt them by a motion that moves to.
-export async function draftTerms(input: DraftTerms, deps: Deps): Out<'patronage:terms:draft', DraftedTerms> {
-  return write(deps, {
-    op: 'patronage:terms:draft' satisfies Action,
-    request: input,
-    state: async (tx) => {
-      const { rows } = await tx.query<{ id: string }>(
-        `INSERT INTO patronage.terms (id, "from", salary, hours, equal, capital, interest)
-         VALUES ('st-' || $1::integer, $1::integer, $2 / 100.0, $3 / 100.0, $4 / 100.0, $5 / 100.0, $6 / 100.0)
-         ON CONFLICT (id) DO UPDATE SET "from" = excluded."from", salary = excluded.salary, hours = excluded.hours,
-           equal = excluded.equal, capital = excluded.capital, interest = excluded.interest
-         RETURNING id`,
-        [input.from, input.salary, input.hours, input.equal, input.capital, input.interest],
-      )
-      return { ...input, terms: rows[0].id }
-    },
-    payload: (v) => ({ ...v }),
-  })
-}
 
 // Drafts a year's split, or drafts it again while it is not approved:
 // its surplus, the basis of the terms governing the year, and each share

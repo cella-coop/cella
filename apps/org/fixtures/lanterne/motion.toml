@@ -196,6 +196,22 @@ args = { kind = "mandate", wording = "The {role: secretary} role holds {power: k
 kind = "policy"
 args = { kind = "mandate", wording = "The {role: lead} role holds {power: keep-minutes}, to hold the circle's meetings, record who came and keep their minutes" }
 
+# The statutes' capital clauses and the work share's terms, each a rule
+# of the assembly whose values are named for the feat that reads them and
+# copied into its terms as it is adopted: a share is worth 50 € and an
+# associate subscribes at least 20, paying them in at most 10 monthly
+# instalments, and one who leaves is repaid a year after the exit, in
+# three yearly repayments; the work share divides among the workers by
+# pay, half of each associate's part employed in shares, and capital
+# earns at most 3.5 % a year, within the law's ceiling (patronage.toml).
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "A share is worth {account_share: 50 € | more is stricter}. Each associate subscribes at least {account_minimum: 20 | more is stricter} shares, and may pay them in at most {account_instalments: 10 | less is stricter} monthly instalments. An associate who leaves is repaid their shares at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 3 | more is stricter} yearly repayments", friendly = "A share costs 50 €; each associate holds at least 20, and one who leaves is repaid over three years, starting a year after." }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "The work share is divided among the workers {patronage_salary: 100 % | more is stricter} in proportion to pay, {patronage_hours: 0 % | more is stricter} to time worked and {patronage_equal: 0 % | more is stricter} in equal parts. {patronage_capital: 50 % | more is stricter} of each associate's part is employed in shares of the capital, and the capital earns interest of at most {patronage_interest: 3.5 % | less is stricter} a year", friendly = "The work share follows pay; half of an associate's part buys shares." }
+
 [[motion]]
 id = "m-2026-006"
 circle = "ag"
@@ -279,6 +295,29 @@ body = "Version 3 adds remote work days and the solidarity rate for associations
 [[motion.action]]
 kind = "adopt"
 args = { version = "internal-rules@3" }
+
+# The rules version 3 holds, each a rule of the assembly: those with a
+# value mark it, and say which way is stricter; the clients refused bind
+# by their words alone.
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "A full-time member works {week_hours: 35 | more is stricter} hours a week", friendly = "Full time is 35 hours a week." }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "Up to {remote_days: 3 | less is stricter} days a week may be worked remotely; Tuesday is a studio day for everyone" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "Pay follows one grid: the ratio between the highest and the lowest salary is at most {pay_ratio: 1.6 | less is stricter}" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "Associations and co-ops with fewer than {solidarity_staff: 10 | less is stricter} staff pay the solidarity rate" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "Lanterne refuses fossil fuel companies, arms makers and political parties as clients" }
 
 [[motion.vote]]
 member = "camille@lanterne.example"

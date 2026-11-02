@@ -8,42 +8,29 @@ export const divides: Record<Basis, string> = { salary: 'by pay', hours: 'by tim
 // and in equal parts, which add up to 100, and the percent of an
 // associate's part employed in shares of the capital, and the highest
 // rate of interest they pay on the capital (loi n° 47-1775, art. 14).
-// They govern from a year on, once adopted, until later terms are.
+// They are copied from the rule the members adopted (`policy`), and
+// govern from the fiscal year it applies in, until later terms do.
 export interface Terms {
   id: string
+  policy: string
   from: number
   salary: number
   hours: number
   equal: number
   capital: number
   interest: number
-  adopted: string | null
+  adopted: string
   basis: Basis
 }
 
-// The members' motion adopting drafted terms, which the motion it
-// cites must have passed.
+// The work share rule a passed motion adopted, whose values the terms
+// copy.
 export interface Adopt {
-  terms: string
+  policy: string
   motion: string
 }
 
 export interface Adopted extends Adopt {
-  adopted: string
-}
-
-// Terms drafted for the members to adopt, from a year on: the weights, the
-// percent employed in shares and the highest rate of interest, each in
-// hundredths of a percent, as a signed request holds integers only.
-export interface DraftTerms {
-  from: number
-  salary: number
-  hours: number
-  equal: number
-  capital: number
-  interest: number
-}
-
-export interface DraftedTerms extends DraftTerms {
   terms: string
+  adopted: string
 }

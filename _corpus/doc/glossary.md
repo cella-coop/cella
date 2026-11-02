@@ -91,8 +91,8 @@ updated = 2026-11-02
 | **surplus** | what remains of a year's income after expenses; a co-op's profit |
 | **work share** | the part of the surplus paid to the workers for their work (participation) |
 | **distribution** | a year's surplus shared out: its split, drafted, approved by the assembly, which fixes each worker's part, and then distributed, posted and its shares credited; the patronage feat's |
-| **patronage terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares |
-| **capital terms** | the statutes' capital clauses: a share's value, the fewest an associate subscribes, the instalments they may pay them in, and how one who leaves is repaid |
+| **patronage terms** | the statutes' rule for each year's work share: how it divides among the workers, by pay, time worked, equal parts or a mix, and what part of an associate's part buys shares; a rule of the patronage feat's, its values (`patronage_salary`, …) copied into `patronage.terms` as it is adopted |
+| **capital terms** | the statutes' capital clauses, a rule of the account feat's: a share's value, the fewest an associate subscribes, the instalments they may pay them in, and how one who leaves is repaid; its values (`{account_minimum: 20 \| more is stricter}`) are copied into `account.terms` as it is adopted |
 | **statement** | a worker's part of a year's work share, by basis, and what became of it once distributed: shares, blocked five years, and cash |
 | **financial statements** | the income statement (compte de résultat) over a month, a quarter or a year and the balance sheet (bilan) at its end, from the journal in the PCG's rubrics, beside the span before; a **statement** alone is a worker's |
 | **margin** | what a project invoiced less what its time cost the co-op and what was spent for it |
@@ -119,7 +119,7 @@ updated = 2026-11-02
 | **proposal** | a motion put to a circle, by a procedure, with its deadline |
 | **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, its quorum and its ballot, each a value of its sentence (`{quorum: 1/2}`) copied into `motion.procedure` as it is adopted, by which a motion is counted; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
 | **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
-| **rule** | a kind of policy: what else the co-op agreed, such as its capital terms or the solidarity rate; a rule with no value binds by people's judgement alone |
+| **rule** | a kind of policy: what else the co-op agreed, such as its capital terms, the work share's terms or the solidarity rate; each ordered value declares which way is stricter (`\| more is stricter`, `\| less is stricter`); a value named for a feat (`account_minimum`) is that feat's to read; a rule with no value binds by people's judgement alone |
 | **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt` and `policy.end`, inside the write of a motion's action |
 | **row-level policy** | a Postgres policy on a table, saying which rows a reader sees; always called so, and never a policy |
 | **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |

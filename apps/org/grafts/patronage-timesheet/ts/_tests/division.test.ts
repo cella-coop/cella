@@ -22,7 +22,7 @@ const approve = (member: string, month: string) =>
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
-  await db.query(`INSERT INTO patronage.terms (id, "from", hours, capital, adopted) VALUES ('t-2020', 2020, 100, 0, '2020-01-10')`)
+  await db.query(`INSERT INTO patronage.terms (id, policy, "from", hours, capital, adopted) VALUES ('t-2020', 't-2020', 2020, 100, 0, '2020-01-10')`)
   await worked('ana@x', '2025-03-03', 360)
   await worked('ana@x', '2025-03-04', 240)
   await worked('ben@x', '2025-03-03', 300)

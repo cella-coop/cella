@@ -9,7 +9,7 @@
 
 // The kinds the grafts register, and `policy` and `end`, which the motion
 // feat registers itself.
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'adopt', 'terms', 'patronage', 'distribution', 'policy', 'end'])
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'adopt', 'distribution', 'policy', 'end'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))

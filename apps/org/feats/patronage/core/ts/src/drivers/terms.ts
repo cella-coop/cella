@@ -1,7 +1,7 @@
 import { literal, type Db, type Read } from '@cella/org-db'
 import { divides, type Terms } from '../models/terms.ts'
 
-const fields = (basis: string) => `t.id, t."from", t.salary::float8 AS salary, t.hours::float8 AS hours, t.equal::float8 AS equal,
+const fields = (basis: string) => `t.id, t.policy, t."from", t.salary::float8 AS salary, t.hours::float8 AS hours, t.equal::float8 AS equal,
   t.capital::float8 AS capital, t.interest::float8 AS interest, to_char(t.adopted, 'YYYY-MM-DD') AS adopted, ${basis} AS basis`
 const columns = fields('patronage.basis_of(t.id)')
 
@@ -12,12 +12,13 @@ const division = `CASE patronage.basis_of(t.id) ${Object.entries(divides).map(([
   CASE WHEN t.hours > 0 THEN t.hours::float8 || ' % time worked' END,
   CASE WHEN t.equal > 0 THEN t.equal::float8 || ' % equal parts' END)`
 
-// The statutes' terms for the work share, the latest year first, drafts
-// before adopted, each with how it divides, and adopted or drafted, as the
-// list shows them.
+// The statutes' terms for the work share, the latest year first, each
+// with how it divides, and governing this year, to govern a later one or
+// replaced, as the list shows them.
 export const bases: Read = {
-  sql: `SELECT ${fields(division)}, CASE WHEN t.adopted IS NULL THEN 'drafted' ELSE 'adopted' END AS state FROM patronage.terms t`,
-  order: '"from" DESC, adopted DESC NULLS FIRST, id',
+  sql: `SELECT ${fields(division)}, CASE WHEN t.id = patronage.terms_for(extract(year FROM cella.verdict_date())::integer) THEN 'governing'
+          WHEN t."from" > extract(year FROM cella.verdict_date()) THEN 'to govern' ELSE 'replaced' END AS state FROM patronage.terms t`,
+  order: '"from" DESC, adopted DESC, id',
 }
 
 export async function basis(db: Db, id: string): Promise<Terms | null> {

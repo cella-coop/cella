@@ -72,7 +72,17 @@ Camille hires, and opens a new hire's candidacy for membership.
   the cap, as `The {role: finance} role holds {power: pay-supplier}, to
   pay suppliers, up to {limit: 3 000 €} a write`, and its values are
   copied into `circle.mandate` as it is adopted (`motion.toml`).
-- **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
+- **Rules.** The statutes' capital terms and the work share's terms are
+  rules of the assembly adopted by m-2021-001, their values named for the
+  feat that reads them and copied into its terms as each is adopted:
+  `m-2021-001/43`, `Each associate subscribes at least {account_minimum:
+  20 | more is stricter} shares`, and `m-2021-001/44`, the work share
+  `{patronage_salary: 100 % | more is stricter}` by pay. The internal
+  rules' third version, adopted by m-2026-007 on 20 June 2026, holds five
+  rules: the 35-hour week, at most three remote days, the pay ratio of at
+  most 1.6, the solidarity rate for associations and co-ops under ten
+  staff, each value saying which way is stricter, and the clients refused,
+  which bind by their words alone.- **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
   0051, and 0050 was voided and reissued at the solidarity rate.
@@ -89,9 +99,9 @@ Camille hires, and opens a new hire's candidacy for membership.
   carried over undistributed. The 2025 distribution (`patronage.toml`) is
   a draft until its approval cites m-2026-006, which makes each worker's
   part; distributing it, posting it and crediting its shares, is Julien's
-  to do as finance. The statutes' patronage terms divide the work share by
+  to do as finance. The statutes' patronage terms, a rule, divide the work share by
   pay and employ half of each member's part in shares, blocked five
-  years; the rest is paid. Their capital terms value a share at 50 €, ask
+  years; the rest is paid. Their capital terms, a rule too, value a share at 50 €, ask
   at least 20 of an associate, paid in at most
   10 monthly instalments, and repay one who leaves a year after the exit,
   in three yearly repayments. Paul Garnier, an art director, left on 30
@@ -169,9 +179,9 @@ nothing seeds them.
 Pay runs, expenses and bills are `payslip.toml`, `expense.toml` and
 `bill.toml`;
 `tools/fixture/finance.mjs` checks that each capital account holds its
-member's shares at the share's value the statutes give, or, once they
+member's shares at the share's value the founding capital rule gives, or, once they
 left, nothing, their repayments adding up to it, due as the statutes
-say, and owed in 4567; the work share's terms divide all of it and govern the
+say, and owed in 4567; the work share's terms, read from its rule, divide all of it and govern the
 2025 split, which honours art. 33, salaries keep within the
 ratio and each carried run's entry is exactly its payslips. Device keys are
 TEST-ONLY, derived from each device's address and label when the fixtures

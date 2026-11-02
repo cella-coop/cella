@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 What of a worker's part of the work share buys shares: the split of each
@@ -45,4 +45,4 @@ read back as a sentence from the patronage terms in force.
 
 ## Lanterne
 
-Half of each associate's part buys shares of 50 €, as `st-2021` say.
+Half of each associate's part buys shares of 50 €, as the founding rules `m-2021-001/43` and `m-2021-001/44` say.

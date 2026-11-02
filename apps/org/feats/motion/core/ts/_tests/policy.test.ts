@@ -2,7 +2,8 @@
 // feat: the register in org's core reads the values a legal wording marks,
 // each once, refuses a wording that marks one twice, and is written only
 // through `policy.adopt` and ended through `policy.end`, whose wording no
-// guard may read; this feat's guards hold a proposal to a sound policy,
+// guard may read, and holds each ordered value of a rule to the way it
+// says is stricter; this feat's guards hold a proposal to a sound policy,
 // an adoption to the policy the motion carries and an end to the policy
 // it names. Run by `cella test slice motion`.
 
@@ -12,7 +13,7 @@ import pg from 'pg'
 
 const db = new pg.Client()
 
-const solidarity = 'Associations and small co-ops pay the solidarity rate, {rate: 20 %} below the rate card'
+const solidarity = 'Associations and small co-ops pay the solidarity rate, {rate: 20 % | less is stricter} below the rate card'
 
 const refused = async (sql: string, values: unknown[], says: RegExp) => {
   await db.query('SAVEPOINT refused')
@@ -87,6 +88,33 @@ test('a wording that marks a value twice, marks one without a value, or holds a 
   assert.match((await flaw('  ')) ?? '', /a policy is a sentence/)
 })
 
+test('a rule\'s ordered value says which way is stricter, and a value of no order says none', async () => {
+  const flaw = async (kind: string, legal: string) =>
+    (await db.query<{ f: string | null }>('SELECT policy.flaw($1, $2, NULL) AS f', [kind, legal])).rows[0].f
+  assert.equal(await flaw('rule', solidarity), null)
+  assert.equal(await flaw('rule', 'Each associate subscribes at least {minimum: 10 | More  is stricter} shares'), null)
+  assert.deepEqual(
+    (await db.query(`SELECT name, literal, stricter FROM policy.marks('at least {minimum: 10 | more is stricter}, at most {ratio: 1.6 | less is stricter}')`)).rows,
+    [
+      { name: 'minimum', literal: '10', stricter: 'more' },
+      { name: 'ratio', literal: '1.6', stricter: 'less' },
+    ],
+  )
+  assert.equal((await db.query<{ s: string }>(`SELECT policy.sentence('at least {minimum: 10 | more is stricter} shares') AS s`)).rows[0].s, 'at least 10 shares')
+  assert.match((await flaw('rule', 'Each associate subscribes at least {minimum: 10} shares')) ?? '', /minimum is 10: a rule's value says which way is stricter, as \{minimum: 10 \| more is stricter\}/)
+  assert.match((await flaw('rule', 'at least {minimum: 10 | higher}')) ?? '', /minimum says "higher": a value says which way is stricter/)
+  assert.match((await flaw('rule', 'We refuse {sector: arms makers | more is stricter}')) ?? '', /sector is text, which has no order/)
+  assert.equal(await flaw('rule', 'We refuse {sector: arms makers}'), null, 'a text value says no direction')
+  assert.equal(await flaw('mandate', 'The {role: finance} role holds {power: pay-supplier}, up to {limit: 3 000 €} a write'), null, 'only a rule must')
+  await db.query('BEGIN')
+  try {
+    await refused(`SELECT policy.adopt('ag', 'rule', $1, NULL, 'm-2026-014', 5, '2026-11-21', NULL, NULL)`, ['at least {minimum: 10} shares'], /a rule's value says which way is stricter/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+
 test('the register is written only through policy.adopt, which only the app may call, and no guard reads a wording', async () => {
   const { rows } = await db.query(`SELECT
       has_function_privilege('cella_app', 'policy.adopt(text, text, text, text, text, integer, date, date, text)', 'EXECUTE') AS app_adopts,
@@ -113,8 +141,8 @@ test('adopting keeps the policy with its motion, its days and its value once; a 
       (await db.query(`SELECT id, circle, kind, motion, n, to_char(applies, 'YYYY-MM-DD') AS applies, ends FROM policy.policy`)).rows,
       [{ id: 'm-2026-014/1', circle: 'ag', kind: 'rule', motion: 'm-2026-014', n: 1, applies: '2026-11-21', ends: null }],
     )
-    assert.deepEqual((await db.query('SELECT policy, name, type, literal, value FROM policy.value')).rows, [
-      { policy: 'm-2026-014/1', name: 'rate', type: 'share', literal: '20 %', value: 20 },
+    assert.deepEqual((await db.query('SELECT policy, name, type, literal, value, stricter FROM policy.value')).rows, [
+      { policy: 'm-2026-014/1', name: 'rate', type: 'share', literal: '20 %', value: 20, stricter: 'less' },
     ])
     assert.deepEqual((await db.query(`SELECT id FROM policy.in_force('ag', '2026-11-21')`)).rows, [{ id: 'm-2026-014/1' }])
     assert.deepEqual((await db.query(`SELECT id FROM policy.in_force('ag', '2026-11-20')`)).rows, [], 'not before it applies')
@@ -123,7 +151,7 @@ test('adopting keeps the policy with its motion, its days and its value once; a 
     await refused(`SELECT policy.adopt('ag', 'mandate', $1, NULL, 'm-2026-014', 2, '2026-11-21', NULL, 'm-2026-014/1')`, [solidarity], /replaces no mandate of ag in force/)
 
     // A replacement ends the policy it replaces the day it applies.
-    await adopt('Associations pay the solidarity rate, {rate: 25 %} below the rate card', 2, { replaces: 'm-2026-014/1', applies: '2026-12-01' })
+    await adopt('Associations pay the solidarity rate, {rate: 25 % | less is stricter} below the rate card', 2, { replaces: 'm-2026-014/1', applies: '2026-12-01' })
     assert.deepEqual(
       (await db.query(`SELECT id, to_char(ends, 'YYYY-MM-DD') AS ends, replaces FROM policy.policy ORDER BY id`)).rows,
       [
@@ -149,6 +177,7 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   }
   assert.equal(await asks({ kind: 'rule', wording: 'Remote work is two days a week' }), null)
   assert.match((await asks({ kind: 'rule', wording: '{rate: 20 %}, then {rate: 20 %}' })) ?? '', /rate is marked twice/)
+  assert.match((await asks({ kind: 'rule', wording: 'at least {minimum: 10} shares' })) ?? '', /minimum is 10: a rule's value says which way is stricter/)
   assert.match((await asks({ kind: 'custom', wording: 'x' })) ?? '', /a policy is a mandate, a rule or a procedure, not custom/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '2026-11-14' })) ?? '', /applies at the earliest from 2026-11-21/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '1 December' })) ?? '', /written YYYY-MM-DD/)

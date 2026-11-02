@@ -18,7 +18,7 @@ SELECT r.id, r.sheet, r.n, r.kind, r.label, r.side, r.prefixes, r.adds, r.subtra
 FROM account.rubric r;
 
 CREATE VIEW account.capital_terms AS
-SELECT t.id, t."from", cella.cents(t.share) AS share, t.minimum, t.instalments, t.delay, t.repayments, t.adopted
+SELECT t.id, t.policy, t."from", cella.cents(t.share) AS share, t.minimum, t.instalments, t.delay, t.repayments, t.adopted
 FROM account.terms t;
 
 -- The statements' spans: each month, quarter and year the books hold, with

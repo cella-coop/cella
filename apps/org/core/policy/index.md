@@ -25,24 +25,34 @@ reads it.
   binds and marks none.
 - `policy.value`: each value the legal wording marks, in the order it
   reads: its name, its type (`amount` in cents, `share` in percent,
-  `day`, `number`, `role`, `power` or `text`), as written and typed.
+  `day`, `number`, `role`, `power` or `text`), as written and typed,
+  and which way is stricter (`stricter`, `more` or `less`), where its
+  mark says so after a bar, `{account_minimum: 20 | more is stricter}`.
 
 Its functions:
 
 - `policy.marks(legal)` and `policy.typed(name, literal)`: the values a
-  wording marks, and each one's type and value from how it is written.
+  wording marks, which way each says is stricter, and each one's type and
+  value from how it is written.
 - `policy.flaw(legal, friendly)`: what is wrong with the wordings, or
   null: a legal wording says something, marks each value once and with a
-  value, and holds no brace that is not a mark; a friendly one marks
-  none.
+  value, holds no brace that is not a mark, and says which way is
+  stricter as `more is stricter` or `less is stricter`, if at all; a
+  friendly one marks none. `policy.flaw(kind, legal, friendly)` adds the
+  kind's: a text, a role or a power says no way is stricter, and each
+  value of a rule that is an amount, a share, a day or a number says
+  which way is.
 - `policy.sentence(legal)`: the wording as it reads, each mark replaced
-  by its value as written.
+  by its value as written, without its direction.
+- `policy.says(id)`: a policy's sentence as it reads, which a guard may
+  quote in the reason it refuses; it runs with its owner's rights, and
+  the app role and the guards role may call it.
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
   two as a JSON array.
 - `policy.in_force(circle, day)`: a circle's policies applying on a day.
 - `policy.adopt(circle, kind, legal, friendly, motion, n, applies, until,
   replaces)`: a write, inside the write of the action that adopts the
-  policy. It refuses a flawed wording, a policy adopted already and a
+  policy. It refuses a wording flawed for its kind, a policy adopted already and a
   replacement of a policy not in force in that circle and kind
   (SQLSTATE `09000`), keeps the policy, its wordings and its values, and
   ends the policy it replaces the day it applies.
@@ -56,7 +66,8 @@ them.
 The app role and the guards role, `cella_guards`, may select the
 policies and their values; only the app reads the wordings. A slice's SQL
 that reads `policy.wording` is refused by `cella check feats`: a guard
-reads a policy's values from its own columns, never its sentence.
+reads a policy's values from its own columns, never its sentence, which
+it may only quote, by `policy.says`.
 
 ## TypeScript
 

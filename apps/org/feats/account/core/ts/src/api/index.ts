@@ -2,7 +2,7 @@
 // the write spec a graft composes, its reads, and its slice, which the
 // shell mounts.
 import { action, type Slice } from '@cella/org-db'
-import { adopt, close, nextPeriod, open } from '../handlers/index.ts'
+import { close, nextPeriod, open } from '../handlers/index.ts'
 import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
 
@@ -14,8 +14,8 @@ export { report, reports } from '../drivers/report.ts'
 // The chart, the periods and the statutes' capital clauses; opening the
 // next period, and
 // closing one, which `account.closes` decides and after which nothing
-// posts into it, and adopting capital clauses, which cites the members'
-// motion.
+// posts into it. Capital clauses are copied from the rule a motion adopts,
+// by `adopt`, which account-motion carries.
 export const slice: Slice = {
   name: 'account',
   collections: {
@@ -37,9 +37,6 @@ export const slice: Slice = {
     terms: {
       list: terms,
       item: term,
-      actions: {
-        adopt: action('account:terms:adopt', (form, id) => ({ terms: id ?? '', motion: form.get('motion') }), adopt),
-      },
     },
   },
 }

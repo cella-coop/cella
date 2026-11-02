@@ -12,12 +12,13 @@ export const kinds: { value: Kind; label: string }[] = [
 
 // A value marked in a policy's legal wording, `{rate: 20 %}`: its name,
 // its type, as written and typed (an amount in cents, a share in percent,
-// a day as YYYY-MM-DD).
+// a day as YYYY-MM-DD), and which way is stricter, where it says.
 export interface Value {
   name: string
   type: 'amount' | 'share' | 'day' | 'number' | 'role' | 'power' | 'text'
   literal: string
   value: string | number
+  stricter: 'more' | 'less' | null
 }
 
 // A policy as the register keeps it: its id, the action that adopted it
@@ -65,7 +66,7 @@ export async function adopting(tx: Db, p: Adopting): Promise<string> {
 }
 
 const select = `SELECT p.id, p.circle, p.kind, p.motion, policy.sentence(w.legal) AS sentence, w.legal, w.friendly,
-         coalesce((SELECT json_agg(json_build_object('name', v.name, 'type', v.type, 'literal', v.literal, 'value', v.value) ORDER BY v.n)
+         coalesce((SELECT json_agg(json_build_object('name', v.name, 'type', v.type, 'literal', v.literal, 'value', v.value, 'stricter', v.stricter) ORDER BY v.n)
                    FROM policy.value v WHERE v.policy = p.id), '[]') AS values,
          to_char(p.adopted, 'YYYY-MM-DD') AS adopted, to_char(p.applies, 'YYYY-MM-DD') AS applies,
          to_char(p.ends, 'YYYY-MM-DD') AS ends, p.replaces

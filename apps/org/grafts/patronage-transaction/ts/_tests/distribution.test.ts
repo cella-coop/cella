@@ -41,7 +41,7 @@ before(async () => {
   await post('2026-07-01', [['4561', 'debit', 13_000_00], ['1013', 'credit', 13_000_00]])
   await post('2026-07-01', [['120', 'debit', 9_000_00], ['1061', 'credit', 9_000_00]])
   // Terms from 2021 that pay at most 3.5 % on the capital.
-  await db.query(`INSERT INTO patronage.terms (id, "from", salary, capital, interest, adopted) VALUES ('st-2021', 2021, 100, 50, 3.5, '2021-03-01')`)
+  await db.query(`INSERT INTO patronage.terms (id, policy, "from", salary, capital, interest, adopted) VALUES ('st-2021', 'st-2021', 2021, 100, 50, 3.5, '2021-03-01')`)
 })
 
 after(async () => {

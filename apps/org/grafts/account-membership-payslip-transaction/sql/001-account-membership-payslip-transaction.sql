@@ -127,7 +127,8 @@ END;
 
 -- account:capital:spread — an associate spreads what they owe on their
 -- subscription over monthly instalments from their pay: their own, no
--- more instalments than the statutes allow, each what is owed divided by
+-- more instalments than the statutes allow, a refusal quoting the rule
+-- they copy (`policy.says`), each what is owed divided by
 -- them, rounded up to the cent, and set by this write.
 CREATE FUNCTION account_membership_payslip_transaction.spreads(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -136,7 +137,7 @@ BEGIN ATOMIC
     WHEN c.member IS NULL OR c.unpaid <= 0 THEN coalesce(x.member, 'no one') || ' owes nothing on a subscription'
     WHEN t.instalments IS NULL OR x.instalments > t.instalments
       THEN x.member || ' spreads their subscription over ' || x.instalments || ' instalments: '
-        || coalesce(t.id || ' allow at most ' || t.instalments, 'no adopted terms allow any')
+        || coalesce('"' || policy.says(t.policy) || '"', t.id || ' allow at most ' || t.instalments, 'no adopted terms allow any')
     WHEN p.member IS NULL OR p.since IS DISTINCT FROM cella.verdict_date() OR p.instalments <> x.instalments
       OR cella.cents(p.each) <> (c.unpaid + x.instalments - 1) / x.instalments
       THEN x.member || '''s plan was not set by this write: ' || x.instalments || ' instalments of what they owe, rounded up to the cent'

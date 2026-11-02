@@ -1,29 +1,21 @@
 import type { App } from '@cella/org-ui'
 import type { Adoption } from '../models/adoption.ts'
-import Adopt from './blocks/Adopt.svelte'
 
-const link = (a: { motion: string; title: string; closed: string | null }) => ({
-  label: a.motion,
-  sub: a.closed ? `${a.title}, closed ${a.closed}` : a.title,
-  href: `/motions/${a.motion}`,
-})
-
-// The graft's client side: the motions moving to adopt the capital's
-// terms, and adopting them from the terms' page; the terms a motion
-// adopts, on the motion's.
+// The graft's client side: the motion that adopted the rule capital terms
+// copy, on the terms' page; the terms a motion's rules made, on the
+// motion's.
 export const app: App = {
   name: 'account-motion',
   extends: {
     terms: {
       page: {
-        related: (a: Adoption[]) => a.map(link),
-        actions: Adopt,
+        related: (a: Adoption[]) =>
+          a.map((x) => ({ label: x.motion, sub: x.closed ? `${x.title}, closed ${x.closed}` : x.title, href: `/motions/${x.motion}` })),
       },
     },
     motions: {
       page: {
-        related: (d: Adoption[]) =>
-          d.map((x) => ({ label: `Capital terms from ${x.from}`, sub: x.adopted ? `adopted ${x.adopted}` : 'to adopt', href: `/terms/${x.terms}` })),
+        related: (d: Adoption[]) => d.map((x) => ({ label: `Capital terms from ${x.from}`, sub: `adopted ${x.adopted}`, href: `/terms/${x.terms}` })),
       },
     },
   },

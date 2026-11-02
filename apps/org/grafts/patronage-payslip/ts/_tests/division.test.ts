@@ -21,7 +21,7 @@ async function draft(id: string, year: number, work: number) {
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-10-24'`)
-  await db.query(`INSERT INTO patronage.terms (id, "from", salary, equal, capital, adopted) VALUES ('t-2020', 2020, 75, 25, 50, '2020-01-10')`)
+  await db.query(`INSERT INTO patronage.terms (id, policy, "from", salary, equal, capital, adopted) VALUES ('t-2020', 't-2020', 2020, 75, 25, 50, '2020-01-10')`)
   // Ana is paid 3 000 € all year; Ben 1 500 € from July, so 9 000 € in 2025.
   await db.query(
     `INSERT INTO payslip.salary (member, "from", gross) VALUES

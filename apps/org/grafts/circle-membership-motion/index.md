@@ -134,7 +134,9 @@ coordination's, counts its five.
   (membership feat), a nesting
   (circle feat), a seat given or ended (circle-membership), a policy
   adopted or ended, a mandate's with it (circle-motion's `adopt` and
-  `end`, which extend the motion feat's). A refused one
+  `end`, which extend the motion feat's), whose request names the
+  motion's action, `n`, so the writes that react to an adoption, a rule's
+  terms, read the policy it is. A refused one
   leaves the motion passed and that action undone, as its outcome
   says. The slice runs it as its reaction to `motion:motion:close`.
   Before them it reports each admission the close made, as settled in

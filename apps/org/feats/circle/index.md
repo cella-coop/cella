@@ -288,9 +288,10 @@ The circle feat owns:
   `from` before `until`; a revoked mandate stays revoked.
 
 What it does not own: who holds which role (`circle-membership`), and who
-may vote on a circle's motions: the roll, the members seated in the
-circle when a motion is proposed, and the count of the active members
-on it, are the `circle-membership-motion` graft's.
+may vote on a circle's motions: the roll, those seated in the circle
+when a motion is proposed as its procedure says, and the count of
+those on it whose seat counts, are the `circle-membership-motion`
+graft's.
 
 ## What it does not know
 

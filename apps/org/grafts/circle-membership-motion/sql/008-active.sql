@@ -1,10 +1,10 @@
--- Who is an active member is membership's to say, on a day
--- (`membership.active`): who gives a stance, who counts while a motion is
--- open and who is counted at its close read it on the verdict date, not a
--- copy of the member's status. Who puts, closes and deliberates on a
--- motion, and who is seated by one, is whoever holds, or may hold, a seat
--- that counts in its circle (`circle_membership.counts`): any person, and
--- in the assembly an active member.
+-- Whose seat counts is circle-membership's to say, on a day
+-- (`circle_membership.counts`): any person's whom membership has not
+-- suspended or let go, and in the assembly an active member's. Who gives a
+-- stance, who counts while a motion is open and who is counted at its
+-- close read it on the verdict date, not a copy of the member's status;
+-- who puts, closes and deliberates on a motion, and who is seated by one,
+-- is whoever holds, or may hold, a seat that counts in its circle.
 CREATE OR REPLACE FUNCTION circle_membership_motion.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -44,6 +44,9 @@ BEGIN ATOMIC
   LEFT JOIN motion.motion d ON d.id = p.motion;
 END;
 
+-- motion:motion:vote — the actor holds `vote`, the power the motion's
+-- procedure gives the seats on its roll: they are on the roll, and their
+-- seat counts in its circle on the verdict date.
 CREATE OR REPLACE FUNCTION circle_membership_motion.on_roll(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -51,10 +54,12 @@ BEGIN ATOMIC
     WHEN NOT EXISTS (
       SELECT FROM circle_membership_motion.roll r WHERE r.motion = p.motion AND r.member = p.member
     ) THEN coalesce(p.member, 'no one') || ' is not on the roll of ' || coalesce(p.motion, 'no motion')
-    WHEN NOT membership.active(p.member, cella.verdict_date())
-      THEN p.member || ' is not an active member'
+    WHEN NOT circle_membership.counts(p.member, d.circle, cella.verdict_date())
+      THEN p.member || CASE WHEN c.parent IS NULL THEN ' is not an active member' ELSE ' may sit in ' || d.circle || ' no longer' END
   END
-  FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p;
+  FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p
+  LEFT JOIN motion.motion d ON d.id = p.motion
+  LEFT JOIN circle.circle c ON c.id = d.circle;
 END;
 
 CREATE OR REPLACE FUNCTION circle_membership_motion.asks(payload jsonb) RETURNS text
@@ -99,7 +104,7 @@ BEGIN ATOMIC
   SELECT r.member
   FROM circle_membership_motion.roll r
   JOIN motion.motion d ON d.id = r.motion AND d.closed IS NULL
-  WHERE r.motion = ref AND membership.active(r.member, cella.verdict_date());
+  WHERE r.motion = ref AND circle_membership.counts(r.member, d.circle, cella.verdict_date());
 END;
 
 CREATE OR REPLACE FUNCTION circle_membership_motion.count_roll() RETURNS trigger

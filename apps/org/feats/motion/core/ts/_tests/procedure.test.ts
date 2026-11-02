@@ -70,14 +70,17 @@ const twoThirds =
 
 const terms = async (legal: string) => (await db.query('SELECT * FROM motion.terms(motion.marked($1))', [legal])).rows[0]
 
-test('a procedure policy\'s terms are the values its wording marks, a share written as a fraction, a percent or none', async () => {
+test('a procedure policy\'s terms are the values its wording marks, a share written as a fraction, a percent or none, roles by id', async () => {
   assert.deepEqual(await terms(twoThirds), {
-    id: 'statutory', label: 'Statutory assembly', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2, ballot: 'open', flaw: null,
+    id: 'statutory', label: 'Statutory assembly', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2, ballot: 'open', voters: null, veto: [], flaw: null,
   })
   assert.deepEqual(await terms('By {procedure: open-floor}, {method: consent}, with {quorum: 25 %}'), {
-    id: 'open-floor', label: 'Open floor', method: 'consent', share_num: null, share_den: null, quorum_num: 25, quorum_den: 100, ballot: 'open', flaw: null,
+    id: 'open-floor', label: 'Open floor', method: 'consent', share_num: null, share_den: null, quorum_num: 25, quorum_den: 100, ballot: 'open', voters: null, veto: [], flaw: null,
   })
   assert.equal((await terms('By {procedure: open-floor}, {method: consent}, with {quorum: none}')).quorum_num, 0)
+  // The roles that vote and those that may veto, by id, in order.
+  const led = await terms('By {procedure: led}, a {method: majority}, with {quorum: none}, of {voters: secretary, member and lead}, which the {veto: lead} may veto')
+  assert.deepEqual([led.voters, led.veto, led.flaw], [['lead', 'member', 'secretary'], ['lead'], null])
 })
 
 test('a procedure policy names itself, decides by consent or majority, marks its quorum, a share only for a majority, and nothing else', async () => {
@@ -92,7 +95,9 @@ test('a procedure policy names itself, decides by consent or majority, marks its
   assert.match((await flaw('By {procedure: crowd}, {method: consent}, {share: 2/3}, with {quorum: none}')) ?? '', /a share is a majority's/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, {share: 0/3}, with {quorum: none}')) ?? '', /more than none of the votes cast and at most all/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {ballot: show} of hands')) ?? '', /a ballot is open or secret, not show/)
-  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, {veto: coordination}')) ?? '', /marks its procedure, label, method, share, quorum and ballot, not veto/)
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, {delegates: coordination}')) ?? '', /marks its procedure, label, method, share, quorum, ballot, voters and veto, not delegates/)
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {voters: Circle Leads}')) ?? '', /names the roles that vote by id, as \{voters: lead, secretary\}, not Circle Leads/)
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, the {veto: , } may veto')) ?? '', /names the roles that may veto by id/)
   // A name taken: a built-in one only on its own terms, and none a policy made.
   assert.equal(await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: none}'), null)
   assert.match((await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: 1/2}')) ?? '', /two-thirds is a procedure already, and its terms are fixed/)

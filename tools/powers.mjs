@@ -2,8 +2,9 @@
 // guards read and which is the source of truth: in cella.power for a
 // power an individual mandate grants, held through a seat, or in
 // motion.cites for one a collective mandate grants, used by a motion of
-// its circle. It is mirrored in the action's label in actions.ts, which
-// the TypeScript reads. This keeps the two equal: every power in one is
+// its circle, or in motion.stance_power for the one a procedure gives the
+// seats on a motion's roll. It is mirrored in the action's label in
+// actions.ts, which the TypeScript reads. This keeps the two equal: every power in one is
 // in the other, with the same amount field. And no action is allowed by
 // omission: one with no power declares the check that allows it, which
 // SQL must back.
@@ -31,8 +32,10 @@ export async function declared(repo, dirs) {
 // Where actions.ts and the SQL disagree. `ops` lists every declared
 // action by its id, `op`, with or without a power; `registered`, the rows
 // of cella.power; `cites`, the rows of motion.cites, each an action a
-// motion carries with the power its circle's collective mandate grants.
-export function agree(ops, registered, cites = []) {
+// motion carries with the power its circle's collective mandate grants;
+// `stances`, the rows of motion.stance_power, the power a stance needs,
+// which a motion's procedure gives the seats on its roll.
+export function agree(ops, registered, cites = [], stances = []) {
   const errors = []
   const byOp = new Map()
   for (const r of registered) {
@@ -50,7 +53,18 @@ export function agree(ops, registered, cites = []) {
   }
   const known = new Map(ops.map((o) => [o.op, o]))
   const say = (x) => (x.power ? `${x.power}${x.amount ? ` up to its ${x.amount}` : ''}` : 'no power')
-  for (const o of ops.filter((o) => o.power)) {
+  const given = new Map(stances.map((s) => [s.op, s]))
+  for (const s of stances) {
+    const o = known.get(s.op)
+    if (!o) {
+      errors.push(`${s.owner}: lists ${s.op} in motion.stance_power, which no actions.ts declares`)
+    } else if (byOp.has(s.op) || cited.has(s.op)) {
+      errors.push(`${o.file}: ${s.op} is listed in motion.stance_power and registered elsewhere: a stance's power is its procedure's alone`)
+    } else if (s.power !== o.power || o.amount) {
+      errors.push(`${o.file}: ${s.op} needs ${say(o)}, but motion.stance_power lists it with ${s.power}, which a procedure gives the seats on a roll and caps no amount`)
+    }
+  }
+  for (const o of ops.filter((o) => o.power && !given.has(o.op))) {
     const r = byOp.get(o.op)
     const c = cited.get(o.op)
     if (r && c) {
@@ -60,7 +74,7 @@ export function agree(ops, registered, cites = []) {
         errors.push(`${o.file}: ${o.op} needs ${say(o)}, but motion.cites lists it with ${c.power ?? 'no power'}, a collective mandate's, which caps no amount`)
       }
     } else if (!r) {
-      errors.push(`${o.file}: ${o.op} needs ${say(o)}, which no SQL registers in cella.power or motion.cites`)
+      errors.push(`${o.file}: ${o.op} needs ${say(o)}, which no SQL registers in cella.power, motion.cites or motion.stance_power`)
     } else if (r.power !== o.power || (r.amount ?? null) !== (o.amount ?? null)) {
       errors.push(`${o.file}: ${o.op} needs ${say(o)}, but cella.power registers ${say(r)}`)
     }
@@ -86,11 +100,13 @@ export function agree(ops, registered, cites = []) {
 
 // The checks a label may declare, each backed by a guard registered on the
 // action in cella.guard.
-const checks = new Set(['roll', 'first'])
+const checks = new Set(['first'])
 
 // Where an action is allowed by omission: it names no power, and declares no
 // check, or one that no SQL backs. `found` holds the literal rows the SQL
-// registers: `guards` in cella.guard. What is the actor's own, `self`, is
+// registers: `guards` in cella.guard. A stance on a roll, `roll`, is no
+// check: it needs the power its procedure gives the seats on the roll.
+// What is the actor's own, `self`, is
 // no check, with a power or without one: it needs the power their right
 // grants, every person's, member's or employee's. Nor is a seat: what a
 // seat allows is its roles' mandates, its circle's participant role among
@@ -99,7 +115,10 @@ const checks = new Set(['roll', 'first'])
 export function covered(ops, found) {
   const errors = []
   const judged = new Set(found.guards.map((r) => r.op))
-  const none = new Set(['self', 'seat', 'decided'])
+  const none = new Set(['roll', 'self', 'seat', 'decided'])
+  for (const o of ops.filter((o) => o.check === 'roll')) {
+    errors.push(`${o.file}: ${o.op} checks roll, which is no check: a stance needs the power its procedure gives the seats on the roll, so name it, vote, and list it in motion.stance_power`)
+  }
   for (const o of ops.filter((o) => o.check === 'self')) {
     errors.push(`${o.file}: ${o.op} checks self, which is no check: what is the actor's own needs the power their right grants, every person's, member's or employee's, so name the power, as keep-profile or log-time`)
   }

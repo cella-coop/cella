@@ -5,8 +5,9 @@ updated = 2026-11-02
 
 The electorate: who may vote on a motion, and whether it passes on
 their stances; and what a passing motion does to members and seats. A
-roll is a relation of all three feats: the members (member) seated in a
-motion's circle (circle) when it was proposed (motion). Declared by
+roll is a relation of all three feats: the people seated in a motion's
+circle (circle), as the assembly's seats ask a membership (member),
+when it was proposed and as its procedure says (motion). Declared by
 the `motion` feat.
 
 A three-way graft reads the two-way grafts of its feats, a lower order
@@ -20,21 +21,29 @@ here.
 
 `circle_membership_motion` (`sql/`):
 
-- `circle_membership_motion.roll`: a motion and a member on its roll, by
-  id and address, with no foreign key into any feat, fixed by
-  `circle_membership_motion.fix(motion)` from
-  `circle_membership.seated(circle, proposed)`, which this graft's
-  `propose` calls in the proposal's own write. `fix` runs with its
-  owner's rights, since nothing else writes the roll, and only the app
+- `circle_membership_motion.roll`: a motion and a person on its roll, by
+  id and address, with no foreign key into any feat, and whether they
+  may veto it (`veto`), fixed by `circle_membership_motion.fix(motion)`,
+  which this graft's `propose` calls in the proposal's own write, from
+  `circle_membership_motion.called(motion)`: the people seated in its
+  circle on the day it is proposed, in `circle_membership.seat`, a
+  lower-order graft's, by its procedure: every seat, or where it names
+  `voters` the seats in those roles (`participant` every seat), and the
+  seats in a role it names in `veto`, who may veto. Seats are people's,
+  so no agent and no service is ever on a roll, and only the motion's
+  own circle's seats are read, so a seat above carries no vote below. `fix` runs
+  with its owner's rights, since nothing else writes the roll, and only the app
   role may call it; the app role and the guards role, `cella_guards`, may
   select the roll.
-- `circle_membership_motion.counted`: who was counted, the members on a
-  motion's roll who were active (`membership.active`) on the day it
-  closed, fixed by `circle_membership_motion.count(motion)`, which this
-  graft's `close` calls in the close's own write. A suspension or exit
-  after the close cannot change the outcome. `count` runs with its owner's
-  rights, since nothing else writes the table, and only the app role may
-  call it.
+- `circle_membership_motion.counted`: who was counted, the people on a
+  motion's roll whose seat counted (`circle_membership.counts`: in the
+  assembly an active member, elsewhere one membership has not suspended
+  or let go) on the day it closed, fixed by
+  `circle_membership_motion.count(motion)`, which this graft's `close`
+  calls in the close's own write. A suspension or exit after the close
+  cannot change the outcome. `count` runs with its owner's rights,
+  since nothing else writes the table, and only the app role may call
+  it.
 - `circle_membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
@@ -44,14 +53,16 @@ A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
 Lanterne's m-2026-012 is the assembly's: its roll is the ten members seated
 in `ag`, and not Inès, whose admission it decides. m-2026-011,
-coordination's, counts its five.
+coordination's, counts its five. Inès, invited and employed, sits in
+Web, and votes on Web's motions by its procedure as any seat there does;
+she is on no roll of the assembly's.
 
 ## Guards
 
 - `circle_membership_motion.electorate(motion)`: who counts on it, once
-  it is closed the members counted at its close, while it is open the
-  members on its roll who are active on the verdict date
-  (`membership.active`); `stances(motion)`, their
+  it is closed the people counted at its close, while it is open the
+  people on its roll whose seat counts in its circle on the verdict date
+  (`circle_membership.counts`); `stances(motion)`, their
   stances received before its cutoff, but a redacted one; and `turnout(motion)`, how many
   count, how many of them gave a stance, an abstention taking part, and
   whether that meets its procedure's quorum.
@@ -64,10 +75,14 @@ coordination's, counts its five.
   its procedure over those stances: its quorum met, and then by its method,
   `cella.consent`, or for a majority `cella.majority`, more for than
   against, or `cella.share`, at least the share of the votes cast the
-  procedure needs, as two thirds, abstentions counting for neither.
+  procedure needs, as two thirds, abstentions counting for neither; and
+  no veto: no one on the roll who may veto it (`veto`) and counts gave,
+  as their latest stance, one against or an objection.
 - `circle_membership_motion.on_roll`, on `motion:motion:vote`: the
-  member is on the motion's roll, and active: a suspended or exited
-  member gives no stance.
+  actor holds `vote`, the power the motion's procedure gives the seats
+  on its roll: they are on the roll, and their seat counts in its
+  circle on the verdict date, so a suspended or exited member, or one
+  the assembly's seat no longer counts, gives no stance.
 - `circle_membership_motion.sits`, on `motion:motion:propose`,
   `motion:motion:close` and `motion:message:post`: the actor holds a
   seat that counts in the motion's circle on the verdict date
@@ -110,13 +125,14 @@ coordination's, counts its five.
   `seats` as a seat of its own would be; a close that does not pass
   admits no one.
 - `circle_membership_motion.counts`, on `motion:motion:close`: those
-  counted are exactly the members of the roll active on the verdict date,
-  so a close that did not count its roll, as the motion feat's own
+  counted are exactly the people of the roll whose seat counts in its
+  circle on the verdict date, so a close that did not count its roll, as the motion feat's own
   `close` alone does not, is refused.
 - `circle_membership_motion.fixed`, on `motion:motion:propose`: the
-  motion's roll is exactly the members seated in its circle on the day
-  it is proposed, so a proposal that did not fix its roll, as the
-  motion feat's own `propose` alone does not, is refused.
+  motion's roll is exactly those its procedure calls on the day it is
+  proposed (`called`), each who may veto marked so, so a proposal that
+  did not fix its roll, as the motion feat's own `propose` alone does
+  not, is refused.
 
 ## Handlers
 
@@ -161,8 +177,8 @@ coordination's, counts its five.
 
 ## Shell
 
-Adds to a motion's page its roll: each member's latest stance received
-before the cutoff, whether the close counted them, the outcome
+Adds to a motion's page its roll: each person by name,
+their latest stance received before the cutoff, whether the close counted them, the outcome
 `circle_membership_motion.passes` computes by the motion's procedure, how
 many of those counted took part against its quorum, and the acting member's own
 stance, read by receipt for them. On the roll and open, the stance form
@@ -182,8 +198,8 @@ and a refused close leaves the card open. On a motion's page, the
 outcome sits in its Overview, the roll and the stance form in its
 Stances tab; the writes a close carried out show as what followed it.
 
-In the acting member's inbox, each open motion whose roll they are on,
-active, that they have given no stance on, by its deadline, linking to
+In the acting person's inbox, each open motion whose roll they are on,
+their seat counting, that they have given no stance on, by its deadline, linking to
 its Stances tab.
 
 On a person's page, Propose…: admitting someone invited, with their

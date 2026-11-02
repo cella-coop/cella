@@ -1,11 +1,13 @@
 CREATE SCHEMA circle_membership_motion;
 
--- Who may vote on a motion: the members seated in its circle on the day
--- it was proposed, fixed when it is proposed. The motion is named by id
--- and the member by address, with no foreign key into either feat.
+-- Who may vote on a motion: the people seated in its circle on the day
+-- it was proposed, as its procedure says, fixed when it is proposed, and
+-- whether each may veto it. The motion is named by id and the person by
+-- address, with no foreign key into either feat.
 CREATE TABLE circle_membership_motion.roll (
   motion text NOT NULL,
   member text NOT NULL,
+  veto boolean NOT NULL DEFAULT false,
   PRIMARY KEY (motion, member)
 );
 

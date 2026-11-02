@@ -698,7 +698,8 @@ amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
 `circle-membership` graft's guard reads, or for an action a motion
-carries the row in `motion.cites`; the label mirrors it for the
+carries the row in `motion.cites`, or for a stance the row in
+`motion.stance_power`; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference, and any
 action declared outside a `models/actions.ts`. Every action is signed by
 a device of its actor and carries its request
@@ -772,19 +773,41 @@ someone takes part in a circle; what is their own is still a right's,
 so a worker logs their time by their employment wherever they sit
 ([circle-membership](../../apps/org/grafts/circle-membership/index.md)).
 
+**Who may vote or veto is the procedure's.** A motion's roll is what
+its procedure says: by default the people seated in its circle on the
+day it was proposed, never an agent or a service; a procedure may name
+the roles whose seats vote (`{voters: lead}`) and those that may veto
+(`{veto: lead}`), each a value of its sentence copied into
+`motion.procedure`. A seat above carries no vote below: the roll reads
+the seats of the motion's own circle alone. A stance needs `vote`, the
+power a procedure gives the seats on the roll and no mandate grants: the
+motion feat registers it in `motion.stance_power`, and
+`circle-membership-motion`'s guard `on_roll` judges it, the actor on the
+roll and their seat counting on the verdict date
+(`circle_membership.counts`), so a worker who is no member votes in
+their working circle and not in the assembly. A stance against, or an
+objection, by someone on the roll in a veto role is a veto, and the
+motion does not pass whatever the count. Delegates, people chosen to
+vote for others at a higher level, are part of a procedure's
+configuration and not built
+([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md)).
+
 No action is allowed by omission. An action with no power declares the check
-that allows it instead: `roll`, a member on the roll of the motion it
-names (a stance). What is the actor's own is no check: it needs the
-power their right grants, and `cella check feats` refuses `check:
-'self'`. Nor is a seat: what a seat allows is its roles' mandates, the
+that allows it instead: `first`, the log's first entry, which carries
+in once the state a scope held before its log. A stance is no check: it
+needs the power its procedure gives the seats on the roll, and `cella
+check feats` refuses `check: 'roll'`. What is the actor's own is no
+check: it needs the power their right grants, and `cella check feats`
+refuses `check: 'self'`. Nor is a seat: what a seat allows is its roles' mandates, the
 participant's among them, and `cella check feats` refuses `check:
 'seat'`; nor is a passed motion, which allows what its circle's
 collective mandates grant, and `cella check feats` refuses `check:
 'decided'`. A check is backed by SQL, a guard registered on the action
-in `cella.guard`, and a collective mandate's power by a row in
+in `cella.guard`; a collective mandate's power by a row in
 `motion.cites`, to which `motion.register_cite` attaches
 `circle-membership-motion`'s guard, that the motion passed on its roll,
-and `circle-motion`'s, that its circle holds the power.
+and `circle-motion`'s, that its circle holds the power; and the voting
+power by a row in `motion.stance_power`.
 `cella check feats` refuses an action that names neither a power nor a
 check, and a check no literal row backs; that the guard does what the
 check says is its owner's and its tests'. An action not yet decided as

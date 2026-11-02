@@ -2,7 +2,9 @@
 -- counts; for a majority, the share of the votes cast it needs, at least
 -- `share_num` in every `share_den` of those for and against, or with none
 -- more for than against; and its quorum, how many of those counted must
--- give a stance, at least `quorum_num` in every `quorum_den`. A circle
+-- give a stance, at least `quorum_num` in every `quorum_den`; the roles
+-- whose seats vote, `voters`, none for every seat, and those that may
+-- veto, `veto`, by id, which the graft that fixes the roll reads. A circle
 -- decides by one unless a proposal names another, and a motion keeps
 -- the one it was proposed under. Every procedure but the built-in ones is
 -- a procedure policy's, its values copied here as it is adopted
@@ -15,6 +17,8 @@ CREATE TABLE motion.procedure (
   share_den integer,
   quorum_num integer NOT NULL DEFAULT 0,
   quorum_den integer NOT NULL DEFAULT 1,
+  voters text[] CHECK (cardinality(voters) > 0),
+  veto text[] NOT NULL DEFAULT '{}',
   CHECK ((share_num IS NULL) = (share_den IS NULL)),
   CHECK (share_num IS NULL OR (method = 'majority' AND 0 < share_num AND share_num <= share_den)),
   CHECK (0 <= quorum_num AND quorum_num <= quorum_den),

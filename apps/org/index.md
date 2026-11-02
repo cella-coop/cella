@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -166,7 +166,7 @@ and admit a member by vote (ordered).
 | `account-membership` | who holds each capital account, the share's value from the statutes' terms, draw limits and the freeze on exit; the capital joining asks, and what a member owns, read back from the terms |
 | `account-patronage` | a year's split approved only once its books are closed |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; the income statement and the balance sheet; the books carried over from a FEC |
-| `circle-membership-motion` | a motion's roll, who was seated in its circle when it was proposed, whether it passes on it, and what a passing one does to members and seats |
+| `circle-membership-motion` | a motion's roll, who was seated in its circle when it was proposed as its procedure says, and who may veto it, whether it passes on it, and what a passing one does to members and seats |
 | `circle-motion` | nesting circles and granting and revoking mandates by motion |
 | `circle-expense-membership` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
 | `circle-file-membership` | who opens a personal file by a power over what it records |

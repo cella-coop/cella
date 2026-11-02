@@ -111,14 +111,14 @@ test('a member suspended while it is open no longer counts, and the close fixes 
 test('a close that did not count its roll is refused; counted, it is not', async () => {
   await propose('m-2026-105', 'majority')
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-105', ++receipt])
-  assert.equal(await counts('m-2026-105'), "m-2026-105's close did not count its roll: those counted are its active members on the day it closes")
+  assert.equal(await counts('m-2026-105'), "m-2026-105's close did not count its roll: those counted are those of its roll whose seat counts on the day it closes")
   assert.equal((await db.query<{ n: number }>('SELECT circle_membership_motion.count($1) AS n', ['m-2026-105'])).rows[0].n, 10)
   assert.equal(await counts('m-2026-105'), null)
 })
 
 test('a proposal that did not fix its roll is refused; fixed, it is not', async () => {
   await insert('m-2026-107', 'majority')
-  assert.equal(await fixed('m-2026-107'), "m-2026-107's proposal did not fix its roll: its roll is those seated in ag on the day it is proposed")
+  assert.equal(await fixed('m-2026-107'), "m-2026-107's proposal did not fix its roll: its roll is those its procedure calls in ag on the day it is proposed")
   assert.equal(await fix('m-2026-107'), 10)
   assert.equal(await fixed('m-2026-107'), null)
 })

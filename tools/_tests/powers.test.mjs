@@ -54,7 +54,7 @@ async function check(sql) {
       mkdirSync(join(repo, dir), { recursive: true })
       writeFileSync(join(repo, dir, '001.sql'), text)
     }
-    const found = { powers: [], guards: [], cites: [], personal: [], impersonal: [], columns: [] }
+    const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [] }
     const known = new Set(['cella', 'circle', 'invoice', 'member', 'motion', 'circle_member', 'circle_invoice_member', 'member_motion', 'invoice_member'])
     const errors = await checkSql(repo, ['apps/org'], known, found)
     return { errors, powers: found.powers, found }
@@ -140,13 +140,33 @@ test('an op with neither a power nor a check is refused: nothing is allowed by o
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
   assert.deepEqual(covered([op('invoice:invoice:issue', 'issue-invoice')], { guards: [], cites: [] }), [])
   const odd = covered([op('invoice:invoice:send', null, null, 'anyone')], { guards: [], cites: [] })
-  assert.match(odd[0], /declares the check anyone, which is none of roll, first/)
+  assert.match(odd[0], /declares the check anyone, which is none of first/)
 })
 
 test('a declared check is backed by SQL: a guard on the op', () => {
-  const roll = op('motion:motion:vote', null, null, 'roll')
-  assert.match(covered([roll], { guards: [], cites: [] })[0], /motion:motion:vote checks roll, but no SQL registers a guard on it in cella.guard/)
-  assert.deepEqual(covered([roll], { guards: [{ op: 'motion:motion:vote', owner: 'circle-membership-motion' }], cites: [] }), [])
+  const first = op('person:person:first', null, null, 'first')
+  assert.match(covered([first], { guards: [], cites: [] })[0], /person:person:first checks first, but no SQL registers a guard on it in cella.guard/)
+  assert.deepEqual(covered([first], { guards: [{ op: 'person:person:first', owner: 'person' }], cites: [] }), [])
+})
+
+test('a stance is no check: check roll is refused, with a guard on the op or without one, and a stance names vote', () => {
+  const roll = covered([op('motion:motion:vote', null, null, 'roll')], { guards: [{ op: 'motion:motion:vote', owner: 'circle-membership-motion' }], cites: [] })
+  assert.match(roll[0], /motion:motion:vote checks roll, which is no check: a stance needs the power its procedure gives the seats on the roll, so name it, vote, and list it in motion.stance_power/)
+  const both = covered([op('motion:motion:vote', 'vote', null, 'roll')], { guards: [], cites: [] })
+  assert.match(both[0], /motion:motion:vote checks roll, which is no check/)
+  assert.deepEqual(covered([op('motion:motion:vote', 'vote')], { guards: [], cites: [] }), [])
+})
+
+test('a stance names the power motion.stance_power lists it with, which its procedure gives the seats on the roll, and is in no other register', () => {
+  const vote = op('motion:motion:vote', 'vote')
+  const given = (power, o = 'motion:motion:vote') => ({ op: o, power, owner: 'motion' })
+  assert.deepEqual(agree([vote], [], [], [given('vote')]), [])
+  assert.match(agree([vote], [], [], [given('ballot')])[0], /motion:motion:vote needs vote, but motion.stance_power lists it with ballot/)
+  assert.match(agree([op('motion:motion:vote', 'vote', 'amount')], [], [], [given('vote')])[0], /caps no amount/)
+  assert.match(agree([op('motion:motion:vote')], [], [], [given('vote')])[0], /motion:motion:vote needs no power, but motion.stance_power lists it with vote/)
+  assert.match(agree([], [], [], [given('vote')])[0], /lists motion:motion:vote in motion.stance_power, which no actions.ts declares/)
+  assert.match(agree([vote], [row('motion:motion:vote', 'vote', null, 'motion')], [], [given('vote')])[0], /listed in motion.stance_power and registered elsewhere: a stance's power is its procedure's alone/)
+  assert.match(agree([vote], [], [])[0], /needs vote, which no SQL registers in cella.power, motion.cites or motion.stance_power/)
 })
 
 test('what is the actor\'s own is no check: an action of theirs names the power their right grants, and check self is refused', () => {
@@ -175,7 +195,7 @@ test('an action a motion carries names the power motion.cites lists it with, a c
   assert.match(agree([op('member:member:admit')], [], [cite('admit-member')])[0], /member:member:admit needs admit-member in motion.cites, which its label does not name/)
   assert.match(agree([], [], [cite('admit-member')])[0], /lists member:member:admit in motion.cites, which no actions.ts declares/)
   assert.match(agree([admit], [row('member:member:admit', 'admit-member')], [cite('admit-member')])[0], /registered in cella.power and listed in motion.cites: a power is a seat's or a motion's, never both/)
-  assert.match(agree([admit], [], [])[0], /needs admit-member, which no SQL registers in cella.power or motion.cites/)
+  assert.match(agree([admit], [], [])[0], /needs admit-member, which no SQL registers in cella.power, motion.cites or motion.stance_power/)
 })
 
 test('a column that may hold personal data is registered personal or commented not personal, in its own schema', async () => {
@@ -208,6 +228,8 @@ test('the SQL check collects the literal guard and cites rows, each cite with it
   assert.deepEqual(errors, [])
   assert.deepEqual(found.guards, [{ op: 'member:member:profile', owner: 'member' }])
   assert.deepEqual(found.cites, [{ op: 'member:member:admit', power: 'admit-member', owner: 'member-motion' }])
+  const stances = await check({ motion: `INSERT INTO motion.stance_power (op, power, owner) VALUES ('motion:motion:vote', 'vote', 'motion');` })
+  assert.deepEqual([stances.errors, stances.found.stances], [[], [{ op: 'motion:motion:vote', power: 'vote', owner: 'motion' }]])
 })
 
 test('a seat is no check: an action a seat allows names the participant\'s power, and check seat is refused', () => {

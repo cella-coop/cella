@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { money, Prose, Section } from '@cella/org-ui'
+  import { Prose, Section } from '@cella/org-ui'
   import type { Held, Seat } from '../../models/seat.ts'
 
   // What a member decides, in plain words, read back from their seats and
   // the mandates those give: where they sit, how each of those circles
-  // decides, and what their powers let them do, within what limit.
+  // decides, and the mandates their powers come by, each as its policy
+  // reads, its limit in it.
   let { data }: { data: { seats: Seat[]; held: Held[]; name: string }; id: string } = $props()
 
   const who = $derived(data.name.split(' ')[0])
@@ -20,16 +21,14 @@
       .map((p) => ({ p, names: circles.filter((c) => c.procedure === p).map((c) => c.circleName) }))
       .filter((w) => w.names.length),
   )
-  const powers = $derived([
-    ...new Map(data.held.map((h) => [`${h.text}${h.limit}`, h.limit ? `${h.text}, up to ${money(h.limit)}` : h.text])).values(),
-  ])
+  const powers = $derived([...new Set(data.held.map((h) => h.sentence))])
   const text = $derived(
     !now.length
       ? `${who} sits in no circle yet, so decides nothing and holds no power. The assembly seats a member when it admits them; a working circle, by its own motion.`
       : [
           `${who} sits in ${and(now.map((s, i) => `${i ? 'in ' : ''}${s.circleName}${s.roleName ? ` as ${s.roleName}` : ''}`))}.`,
           ...ways.map((w) => `${and(w.names)} ${w.names.length > 1 ? 'decide' : 'decides'} ${procedures[w.p]}.`),
-          powers.length ? `Through these seats ${who} may ${powers.join('; ')}.` : '',
+          powers.length ? `Through these seats ${who} may act by these mandates: ${powers.join('; ')}.` : '',
         ]
           .filter(Boolean)
           .join('\n\n'),

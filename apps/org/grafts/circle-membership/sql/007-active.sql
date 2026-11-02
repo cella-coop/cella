@@ -14,7 +14,7 @@ BEGIN ATOMIC
       AND (p.until IS NULL OR p.until > may.day)
       AND (m."from" IS NULL OR m."from" <= may.day)
       AND (m.until IS NULL OR m.until > may.day)
-      AND m.revoked IS NULL
+      AND (m.revoked IS NULL OR m.revoked > may.day)
       AND (m."limit" IS NULL OR may.cents IS NULL OR may.cents <= cella.cents(m."limit"))
   );
 END;

@@ -78,10 +78,17 @@ const check = (name) => {
       has(circles, r.circle, 'circle', `role ${r.id}`)
     }
   }
-  for (const m of circle.mandate ?? []) {
-    has(roles, m.role, 'role', 'mandate')
-    if (!/^[a-z]+(-[a-z]+)*$/.test(m.power ?? '')) {
-      fail(`mandate of ${m.role}: power ${m.power} is no id`)
+  // A mandate is a policy a closed motion adopted: its sentence marks a
+  // role the circles have and a power named as an id.
+  const mandates = (motion.motion ?? [])
+    .filter((d) => d.closed)
+    .flatMap((d) => (d.action ?? []).map((m, i) => ({ m, where: `${d.id}/${i + 1}` })))
+    .filter(({ m }) => m.kind === 'policy' && m.args?.kind === 'mandate')
+  for (const { m, where } of mandates) {
+    const marked = (name) => new RegExp(`\\{\\s*${name}\\s*:\\s*([^{}]*?)\\s*\\}`).exec(m.args.wording ?? '')?.[1]
+    has(roles, marked('role'), 'role', `mandate ${where}`)
+    if (!/^[a-z]+(-[a-z]+)*$/.test(marked('power') ?? '')) {
+      fail(`mandate ${where}: power ${marked('power')} is no id`)
     }
   }
 

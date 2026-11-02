@@ -1,6 +1,6 @@
 +++
 title = "circle-membership-motion"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The electorate: who may vote on a motion, and whether it passes on
@@ -81,9 +81,9 @@ coordination's, counts its five.
   motion the payload cites is closed and passes. The motion feat keeps
   that list; a graft that joins motion to a write's feat registers its
   action there by `motion.register_cite` (`membership-motion` for
-  admission, suspension and exit, `circle-motion` for nesting and
-  mandates, `document-motion` for `document:document:adopt`, and the
-  motion feat itself for `motion:policy:adopt`), and this
+  admission, suspension and exit, `circle-motion` for nesting,
+  `document-motion` for `document:document:adopt`, and the
+  motion feat itself for `motion:policy:adopt` and `:end`), and this
   graft registers the guard by `motion.register_cite_guard`, which
   attaches it to every action listed, then and later: the motion feat's
   register functions attach it, and this graft puts no trigger on
@@ -131,9 +131,10 @@ coordination's, counts its five.
   out its other actions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its guards: a
   suspension, an exit or the erasure of a former member's personal data
-  (membership feat), a nesting, a grant or a revocation
+  (membership feat), a nesting
   (circle feat), a seat given or ended (circle-membership), a policy
-  adopted (the motion feat's `adopt`). A refused one
+  adopted or ended, a mandate's with it (circle-motion's `adopt` and
+  `end`, which extend the motion feat's). A refused one
   leaves the motion passed and that action undone, as its outcome
   says. The slice runs it as its reaction to `motion:motion:close`.
   Before them it reports each admission the close made, as settled in

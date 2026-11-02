@@ -48,11 +48,13 @@ export function sittings(seats: Seat[]): Sitting[] {
   })
 }
 
-// A mandate a member holds through a seat they hold; amounts in cents.
+// A mandate a member holds through a seat they hold, the policy that
+// grants it and its sentence as it reads; amounts in cents.
 export interface Held {
   id: string
   power: string
-  text: string
+  policy: string
+  sentence: string
   limit: number | null
   role: string
   circle: string

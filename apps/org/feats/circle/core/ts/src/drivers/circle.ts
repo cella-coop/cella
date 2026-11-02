@@ -1,4 +1,5 @@
 import type { Db, Read } from '@cella/org-db'
+import { sentences } from '@cella/org-policy'
 import type { Circle, Detail, Mandate, Role } from '../models/circle.ts'
 
 // The names from the assembly down to a circle, which order the tree.
@@ -17,7 +18,7 @@ export async function circles(db: Db): Promise<Circle[]> {
 }
 
 // A circle, its children, its roles, those every working circle has among
-// them, and the mandates granted to those roles.
+// them, and the mandates granted to those roles, each as its policy reads.
 export async function circle(db: Db, id: string): Promise<Detail | null> {
   const found = await db.query<Circle & { parentName: string | null }>(
     `SELECT c.id, c.name, c.parent, c.purpose, c.procedure, p.name AS "parentName"
@@ -34,13 +35,20 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
     `SELECT id, circle, name, duty FROM circle.role WHERE circle = $1 OR (circle = '*' AND $2) ORDER BY circle = '*', name`,
     [id, working],
   )
-  const mandates = await db.query<Mandate>(
-    `SELECT id::text, role, power, text, cella.cents("limit") AS "limit", cella.cents(budget) AS budget, per,
+  const mandates = await db.query<Omit<Mandate, 'sentence'>>(
+    `SELECT id::text, role, power, policy, cella.cents("limit") AS "limit", cella.cents(budget) AS budget, per,
             to_char("from", 'YYYY-MM-DD') AS "from", to_char(until, 'YYYY-MM-DD') AS until, to_char(revoked, 'YYYY-MM-DD') AS revoked
-     FROM circle.mandate WHERE role = ANY($1) ORDER BY role, power`,
+     FROM circle.mandate WHERE role = ANY($1) ORDER BY role, power, "from"`,
     [roles.rows.map((r) => r.id)],
   )
-  return { ...c, children: children.rows, roles: roles.rows, mandates: mandates.rows.map((m) => ({ ...m, limit: num(m.limit), budget: num(m.budget) })) }
+  // Each mandate reads as its policy's sentence, from the register.
+  const read = await sentences(db, mandates.rows.map((m) => m.policy))
+  return {
+    ...c,
+    children: children.rows,
+    roles: roles.rows,
+    mandates: mandates.rows.map((m) => ({ ...m, sentence: read.get(m.policy) ?? m.policy, limit: num(m.limit), budget: num(m.budget) })),
+  }
 }
 
 const num = (v: unknown) => (v === null || v === undefined ? null : Number(v))

@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 # Architecture
@@ -745,14 +745,15 @@ judgement alone.
 its schema `policy` ([its doc](../../apps/org/core/policy/index.md)). It
 keeps every policy: its circle and kind, its wordings, its values, the
 motion and the action of it that adopted it, by which it is named
-(`m-2026-013/1`), the day it applies from, the day it ends and the
-policy it replaces. It is a core's, as the notary is, so it knows no
-feat: a motion is named by its id, and no foreign key leaves the schema.
-Unlike the notary, it has rows written at run time, and one function
-writes them all, `policy.adopt`, which runs with its owner's rights and
-which only the app may call, inside the write of the action that adopts
-the policy; its tables are state tables, so the notary's trigger
-refuses a row outside a write. A slice's SQL may read the register's
+(`m-2026-013/1`), the day it applies from, the day it ends, the
+policy it replaces and the motion's action that ended it. It is a
+core's, as the notary is, so it knows no feat: a motion is named by its
+id, and no foreign key leaves the schema. Unlike the notary, it has rows
+written at run time, and two functions write them all, `policy.adopt`
+and `policy.end`, which run with their owner's rights and which only the
+app may call, inside the write of the action that adopts or ends the
+policy; its tables are state tables, so the notary's trigger refuses a
+row outside a write. A slice's SQL may read the register's
 policies and values, never `policy.wording`, which `cella check feats`
 refuses and the guards role is granted nothing on.
 
@@ -764,7 +765,9 @@ its kind and wordings, checked sound as the motion is proposed
 feat's `motion:policy:adopt`, which cites the motion. The policy is its
 motion's circle's, applying from the day the action names or the verdict
 date, whichever is later. A policy replacing another of its circle and
-kind ends that one the day it applies.
+kind ends that one the day it applies. **Ending** one is an action too,
+`end` in `motion.carries`, carried out as `motion:policy:end`: a motion
+of the policy's circle ends it on the verdict date.
 
 **Values bind where they are read.** The feat that reads a kind of
 policy copies its values into typed rows of its own as the policy is
@@ -777,7 +780,12 @@ method, share, quorum and ballot are copied by the motion feat into
 ([procedures](../../apps/org/feats/motion/index.md#procedures)); the
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
-scope's root does.
+scope's root does. A mandate policy's role, power and limit or budget
+are copied by the circle feat into `circle.mandate`, which
+`circle_membership.may` reads, through `circle-motion`, whose adoption
+and ending of a policy are the motion feat's with the circle feat's copy
+in the same write
+([mandates](../../apps/org/feats/circle/index.md#mandates)).
 
 A circle's page lists its policies in force, each as its legal wording
 reads, with the motion that adopted it and its days (`circle-motion`).

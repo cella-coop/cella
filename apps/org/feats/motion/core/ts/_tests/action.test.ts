@@ -39,10 +39,10 @@ after(async () => {
   await db.end()
 })
 
-test('only the app\'s core and this feat are migrated, and no kind is registered but the feat\'s own, adopting a policy, and the test\'s', async () => {
+test('only the app\'s core and this feat are migrated, and no kind is registered but the feat\'s own, adopting and ending a policy, and the test\'s', async () => {
   const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('membership', 'membership_motion', 'circle_membership_motion')`)
   assert.deepEqual(rows, [])
-  assert.deepEqual((await db.query('SELECT kind FROM motion.carries ORDER BY kind')).rows, [{ kind: 'admit' }, { kind: 'policy' }])
+  assert.deepEqual((await db.query('SELECT kind FROM motion.carries ORDER BY kind')).rows, [{ kind: 'admit' }, { kind: 'end' }, { kind: 'policy' }])
 })
 
 test('a kind registers through register_carries; a cite through register_cite, and a guard through register_cite_guard covers those listed before it and after', async () => {
@@ -56,6 +56,7 @@ test('a kind registers through register_carries; a cite through register_cite, a
     await db.query(`SELECT motion.register_cite('test:thing:approve', 'test')`)
     assert.deepEqual((await db.query('SELECT op, owner FROM motion.cites ORDER BY op')).rows, [
       { op: 'motion:policy:adopt', owner: 'motion' },
+      { op: 'motion:policy:end', owner: 'motion' },
       { op: 'test:thing:adopt', owner: 'test' },
       { op: 'test:thing:approve', owner: 'test' },
     ])

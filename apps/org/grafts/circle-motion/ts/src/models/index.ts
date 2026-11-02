@@ -1,7 +1,8 @@
 import type { Policy } from '@cella/org-policy'
 
-// The kinds of action this graft carries: a circle nested, a power
-// granted to a role, a mandate revoked.
+// What a circle's page proposes about it: a circle nested, a mandate
+// granted to a role by adopting its policy, a mandate revoked by ending
+// its policy.
 export type Kind = 'nest' | 'grant' | 'revoke'
 
 export const kinds: { value: Kind; label: string }[] = [
@@ -28,8 +29,9 @@ export interface Proposing {
   decider: Deciding
   under: { id: string; name: string }[]
   roles: { id: string; name: string }[]
-  mandates: { id: string; label: string }[]
-  open: { motion: string; title: string; kind: Kind; deadline: string }[]
+  // The mandates in force on them, each by the policy that grants it.
+  mandates: { policy: string; label: string }[]
+  open: { motion: string; title: string; kind: string; deadline: string }[]
   policies: Policy[]
 }
 

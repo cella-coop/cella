@@ -1,18 +1,16 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { write, type Db, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Grant, Granted, Nest, Nested, Revoke, Revoked } from '../models/circle.ts'
+import type { Nest, Nested } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
-// Each write is decided: it cites the motion that asks it, which the
+// Nests a circle under another, citing the motion that asks it, which the
 // circle-motion graft checks asks this, and circle-membership-motion that
-// it carried. This feat's guards check the write did what its payload says.
-
-// Nests a circle under another. The tree's trigger refuses a cycle in the
-// write's own view; `circle.nests` refuses one that a nesting settled
-// first made, which the trigger could not see.
+// it carried. The tree's trigger refuses a cycle in the write's own view;
+// `circle.nests` refuses one that a nesting settled first made, which the
+// trigger could not see.
 export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', Nested> {
   return write(deps, {
     op: 'circle:circle:nest' satisfies Action,
@@ -28,38 +26,21 @@ export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', N
   })
 }
 
-// Grants a power to a role from the verdict date.
-export async function grant(input: Grant, deps: Deps): Out<'circle:mandate:grant', Granted> {
-  return write(deps, {
-    op: 'circle:mandate:grant' satisfies Action,
-    request: input,
-    state: async (tx) => {
-      const { rows } = await tx.query<{ id: string; from: string }>(
-        `INSERT INTO circle.mandate (role, power, text, "limit", budget, per, "from", until)
-         VALUES ($1, $2, $3, cella.amount($4), cella.amount($5), $6, cella.verdict_date(), $7)
-         RETURNING id, to_char("from", 'YYYY-MM-DD') AS from`,
-        [input.role, input.power, input.text, input.limit ?? null, input.budget ?? null, input.per ?? null, input.until ?? null],
-      )
-      return { mandate: Number(rows[0].id), role: input.role, power: input.power, from: rows[0].from }
-    },
-    payload: (v) => ({ ...v, limit: input.limit ?? null, budget: input.budget ?? null, per: input.per ?? null, motion: input.motion }),
-  })
+// Grants the mandate a mandate policy marks, in the transaction of the
+// write that adopts it: its values copied into `circle.mandate`, and the
+// mandate of the policy it replaces revoked the day it applies. Returns
+// the mandate, or null for a policy of another kind. `circle.grants`, which
+// circle-motion attaches to the adoption, checks it did.
+export async function granting(tx: Db, policy: string): Promise<number | null> {
+  const { rows } = await tx.query<{ mandate: string | null }>('SELECT circle.mandate_from($1) AS mandate', [policy])
+  return rows[0]?.mandate === null || rows[0]?.mandate === undefined ? null : Number(rows[0].mandate)
 }
 
-// Revokes a mandate on the verdict date: a write received after it is
-// refused, a share granted before it runs out on its own.
-export async function revoke(input: Revoke, deps: Deps): Out<'circle:mandate:revoke', Revoked> {
-  return write(deps, {
-    op: 'circle:mandate:revoke' satisfies Action,
-    request: input,
-    state: async (tx) => {
-      const { rows } = await tx.query<{ revoked: string }>(
-        `UPDATE circle.mandate SET revoked = cella.verdict_date() WHERE id = $1 AND revoked IS NULL
-         RETURNING to_char(revoked, 'YYYY-MM-DD') AS revoked`,
-        [input.mandate],
-      )
-      return { mandate: input.mandate, revoked: rows[0]?.revoked ?? '' }
-    },
-    payload: (v) => ({ mandate: v.mandate, motion: input.motion }),
-  })
+// Revokes the mandate of a mandate policy, in the transaction of the write
+// that ends it, on the day it ends: a write received after it is refused,
+// a share granted before it runs out on its own. Returns the mandate, or
+// null. `circle.revokes` checks it did.
+export async function revoking(tx: Db, policy: string): Promise<number | null> {
+  const { rows } = await tx.query<{ mandate: string | null }>('SELECT circle.mandate_ended($1) AS mandate', [policy])
+  return rows[0]?.mandate === null || rows[0]?.mandate === undefined ? null : Number(rows[0].mandate)
 }

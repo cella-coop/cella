@@ -14,7 +14,7 @@
   ]
   const held: Column<Held>[] = [
     { key: 'power', label: 'Power', value: (h) => power(h.power) },
-    { key: 'text', label: 'Grants', value: (h) => h.text },
+    { key: 'sentence', label: 'Policy', value: (h) => h.sentence },
     { key: 'limit', label: 'Limit', kind: 'money', value: (h) => h.limit },
     { key: 'through', label: 'Through', value: (h) => `${h.role} in ${h.circleName}` },
   ]

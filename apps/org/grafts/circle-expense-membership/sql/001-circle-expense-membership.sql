@@ -33,7 +33,7 @@ BEGIN ATOMIC
       AND (p.until IS NULL OR p.until > cella.verdict_date())
       AND (m."from" IS NULL OR m."from" <= cella.verdict_date())
       AND (m.until IS NULL OR m.until > cella.verdict_date())
-      AND m.revoked IS NULL
+      AND (m.revoked IS NULL OR m.revoked > cella.verdict_date())
   )
   SELECT CASE
     WHEN EXISTS (SELECT FROM held h WHERE h.budget IS NOT NULL)

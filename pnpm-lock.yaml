@@ -137,6 +137,9 @@ importers:
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
+      '@cella/org-policy':
+        specifier: workspace:*
+        version: link:../../../../core/policy/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
@@ -789,6 +792,9 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
+      '@cella/org-policy':
+        specifier: workspace:*
+        version: link:../../../core/policy/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts

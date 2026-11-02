@@ -14,4 +14,7 @@ export const actions = {
   // a policy its circle adopts, a sentence that binds; the cited motion
   // carries it
   'motion:policy:adopt': ordered({ check: 'decided' }),
+  // a policy its circle ends, which binds no longer from its verdict; the
+  // cited motion ends it
+  'motion:policy:end': ordered({ check: 'decided' }),
 } satisfies Actions

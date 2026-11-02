@@ -6,9 +6,14 @@
 -- from and the day it ends, perhaps the policy of its circle it replaces.
 SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}]', 'motion');
 
--- An adoption cites the motion that carries it: the graft that counts the
--- roll attaches its guard that the motion closed and passed.
+-- Ending a policy, which binds no longer from the verdict date: its
+-- argument, the policy of the motion's circle it ends.
+SELECT motion.register_carries('end', 'End a policy', '[{"name": "policy", "label": "Policy", "type": "text", "options": "policies"}]', 'motion');
+
+-- An adoption and an end cite the motion that carries them: the graft that
+-- counts the roll attaches its guard that the motion closed and passed.
 SELECT motion.register_cite('motion:policy:adopt', 'motion');
+SELECT motion.register_cite('motion:policy:end', 'motion');
 
 -- A share as a procedure policy writes it, its numerator and its
 -- denominator: a fraction, `2/3`; a whole percent, `25 %`; or `none`.
@@ -134,7 +139,8 @@ END;
 -- kind, worded soundly (`policy.flaw`), its days in order and none before
 -- the motion's deadline, and replaces, if it names one, a policy of the
 -- motion's circle and kind in force; a procedure policy marks terms that
--- make a procedure (`motion.procedure_flaw`).
+-- make a procedure (`motion.procedure_flaw`); and each policy it would
+-- end is one of its circle in force on the verdict date.
 CREATE FUNCTION motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -161,6 +167,14 @@ BEGIN ATOMIC
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy'
+    UNION ALL
+    SELECT CASE
+      WHEN NOT EXISTS (SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f WHERE f.id = m.args ->> 'policy')
+        THEN 'no policy of ' || d.circle || ' in force is ' || coalesce(m.args ->> 'policy', 'named') || ': a policy is ended by its own circle'
+    END
+    FROM motion.action m
+    JOIN motion.motion d ON d.id = m.motion
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'end'
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;
@@ -205,7 +219,29 @@ BEGIN ATOMIC
   LEFT JOIN policy.policy r ON r.motion = d.id AND r.n = p.n;
 END;
 
+-- motion:policy:end — the register's policy is the one the cited motion's
+-- action names, of the motion's circle, ended on the verdict date by that
+-- action, and the entry names it and the day.
+CREATE FUNCTION motion.ends(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
+    WHEN m.kind IS DISTINCT FROM 'end' THEN d.id || ' ends no policy as its action ' || coalesce(p.n::text, '?')
+    WHEN r.id IS NULL OR r.id IS DISTINCT FROM p.policy THEN d.id || ' ends no policy ' || coalesce(p.policy, '')
+    WHEN r.circle <> d.circle THEN r.id || ' is not ' || d.circle || '''s to end'
+    WHEN r.ends IS DISTINCT FROM cella.verdict_date() OR r.ended_by IS DISTINCT FROM d.id || '/' || m.n
+      OR p.ends IS DISTINCT FROM to_char(cella.verdict_date(), 'YYYY-MM-DD')
+      THEN r.id || ' was not ended by this write'
+  END
+  FROM (SELECT payload ->> 'motion' AS motion, (payload ->> 'n')::integer AS n, payload ->> 'policy' AS policy, payload ->> 'ends' AS ends) p
+  LEFT JOIN motion.motion d ON d.id = p.motion
+  LEFT JOIN motion.action m ON m.motion = d.id AND m.n = p.n
+  LEFT JOIN policy.policy r ON r.id = m.args ->> 'policy';
+END;
+
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'motion.asks(jsonb)', 'motion'),
   ('motion:motion:propose', 'motion.decides_by(jsonb)', 'motion'),
-  ('motion:policy:adopt', 'motion.adopts(jsonb)', 'motion');
+  ('motion:policy:adopt', 'motion.adopts(jsonb)', 'motion'),
+  ('motion:policy:end', 'motion.ends(jsonb)', 'motion');

@@ -1,9 +1,10 @@
 -- Whether a member may use a power on a day: they are active and hold a
 -- seat whose role has a mandate in force granting it, within its limit for
 -- `cents` when the write carries an amount. A revoked mandate grants
--- nothing from its revocation's receipt on, so any revocation counts. A
--- mandate's budget, a total over a period, is not checked: it needs spend
--- tracking that is not built.
+-- nothing from the day it was revoked, its policy's end: a revocation on
+-- the verdict date counts from its receipt. A mandate's budget, a total
+-- over a period, is not checked: it needs spend tracking that is not
+-- built.
 CREATE FUNCTION circle_membership.may(actor text, power text, cents bigint, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -18,7 +19,7 @@ BEGIN ATOMIC
       AND (p.until IS NULL OR p.until > may.day)
       AND (m."from" IS NULL OR m."from" <= may.day)
       AND (m.until IS NULL OR m.until > may.day)
-      AND m.revoked IS NULL
+      AND (m.revoked IS NULL OR m.revoked > may.day)
       AND (m."limit" IS NULL OR may.cents IS NULL OR may.cents <= cella.cents(m."limit"))
   );
 END;

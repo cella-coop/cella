@@ -1,11 +1,11 @@
 -- The policy register: every policy a circle adopted by motion, its kind,
 -- its wordings, the values marked in its legal wording, the motion and
 -- the action of it that adopted it, the day it applies from and the day
--- it ends, and the policy it replaces. A core library's, beside the
--- notary: it knows no feat, so a motion is named by its id and no foreign
--- key leaves the schema. Only `policy.adopt` writes it, inside a write a
--- motion carries; every slice reads its policies and values, and only the
--- app reads the wording, which no guard reads.
+-- it ends, the policy it replaces and the action that ended it. A core
+-- library's, beside the notary: it knows no feat, so a motion is named by
+-- its id and no foreign key leaves the schema. Only `policy.adopt` and `policy.end` write it,
+-- inside a write a motion carries; every slice reads its policies and
+-- values, and only the app reads the wording, which no guard reads.
 CREATE SCHEMA policy;
 
 -- A policy's id is the action that adopted it: its motion and its number
@@ -22,6 +22,8 @@ CREATE TABLE policy.policy (
   applies date NOT NULL,
   ends date CHECK (ends >= applies),
   replaces text UNIQUE REFERENCES policy.policy,
+  -- The action that ended it, `m-2026-020/1`, if a motion did.
+  ended_by text CHECK ((ended_by IS NULL) OR (ends IS NOT NULL)),
   UNIQUE (motion, n),
   CHECK (id = motion || '/' || n)
 );
@@ -181,8 +183,30 @@ BEGIN
 END
 $$;
 
+-- Ends a policy on the verdict date, inside the write of the action that
+-- ends it, `by_motion`'s action `by_n`, which it records. A policy not in force
+-- on the verdict date is refused (SQLSTATE 09000). It runs with its
+-- owner's rights, as `policy.adopt` does, and only the app may call it.
+CREATE FUNCTION policy.end(ref text, by_motion text, by_n integer) RETURNS date
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  ended date;
+BEGIN
+  UPDATE policy.policy p SET ends = cella.verdict_date(), ended_by = by_motion || '/' || by_n
+  WHERE p.id = ref AND p.applies <= cella.verdict_date() AND (p.ends IS NULL OR p.ends > cella.verdict_date())
+  RETURNING p.ends INTO ended;
+  IF ended IS NULL THEN
+    RAISE EXCEPTION '% is no policy in force on %', ref, cella.verdict_date()
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  RETURN ended;
+END
+$$;
+
 REVOKE EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text) TO cella_app;
+REVOKE EXECUTE ON FUNCTION policy.end(text, text, integer) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION policy.end(text, text, integer) TO cella_app;
 
 GRANT USAGE ON SCHEMA policy TO cella_app, cella_guards;
 GRANT SELECT ON policy.policy, policy.value TO cella_app, cella_guards;

@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 # Glossary
@@ -55,7 +55,7 @@ updated = 2026-11-01
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, and a mandate names the power it grants |
-| **mandate** | a kind of policy: a grant of one power to one role, with an optional limit per action or budget per month or year, and a term |
+| **mandate** | a kind of policy: a grant of one power to one role, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **seat** | a member's place in a circle, perhaps with a role: the `circle-membership` graft's |
 | **circle** | a self-governing unit of the co-op; circles nest in one tree |
@@ -120,7 +120,7 @@ updated = 2026-11-01
 | **procedure** | a kind of policy: how a motion is decided, its method, for a majority the share of the votes cast it needs, its quorum and its ballot, each a value of its sentence (`{quorum: 1/2}`) copied into `motion.procedure` as it is adopted, by which a motion is counted; a circle decides by one unless a proposal names another, and a motion keeps the one it was proposed under |
 | **policy** | one binding sentence a circle adopted by motion, a mandate, a rule or a procedure: its legal wording, each value marked in it once (`{rate: 20 %}`), perhaps a friendly wording that never binds; kept in the register, `policy`, with the motion that adopted it and the days it applies; never a row-level policy |
 | **rule** | a kind of policy: what else the co-op agreed, such as its capital terms or the solidarity rate; a rule with no value binds by people's judgement alone |
-| **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt`, inside the write of a motion's action |
+| **register (policy)** | org's core library `policy`: every policy, its wordings, its values, the motion that adopted it and its days; written only by `policy.adopt` and `policy.end`, inside the write of a motion's action |
 | **row-level policy** | a Postgres policy on a table, saying which rows a reader sees; always called so, and never a policy |
 | **supermajority** | a majority needing more than half of the votes cast, as two thirds: a procedure's share |
 | **consent** | passes if no one objects at close; a member's latest stance counts |

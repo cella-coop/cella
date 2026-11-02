@@ -13,7 +13,7 @@ BEGIN ATOMIC
     JOIN circle.mandate md ON md.role = a.role
     WHERE a.member = over.actor
       AND md.power = over.power
-      AND md.revoked IS NULL
+      AND (md.revoked IS NULL OR md.revoked > over.day)
       AND (md."from" IS NULL OR md."from" <= over.day)
       AND (md.until IS NULL OR md.until > over.day)
       AND (a.since IS NULL OR a.since <= over.day)

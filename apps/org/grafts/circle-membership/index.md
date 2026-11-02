@@ -1,6 +1,6 @@
 +++
 title = "circle-membership"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Seats: which member holds which role in which circle. A seat is the
@@ -32,7 +32,8 @@ graft's, and whether a member is active on a day the `membership` feat's
 
 - `circle_membership.may(actor, power, cents, day)`: the actor is active and
   holds, on the day, a seat whose role has a mandate in force for the
-  power, not revoked, within its `limit` when the write carries an amount.
+  power, not revoked by the day, within its `limit` when the write
+  carries an amount.
   A `budget` is not checked: it needs the spend over its period tracked.
 - `circle_membership.empowered`, on every action in `cella.power`: the actor may
   use the action's power on the verdict date, for the amount the payload names
@@ -103,13 +104,13 @@ It is the authority every read asks (`cella.authority`, `sql/006-authority.sql`)
 Adds a circle's seats to its page, one row per person with every role
 they hold in it, and how many sit in it to the list and its gallery
 cards; and to a person's page their seats and the powers they hold
-through them, each power by its plain name,
+through them, each power by its plain name and its policy's sentence,
 the mandates `circle_membership.may` would grant before any limit is spent,
 and to the list the circles they sit in; under Joining, whether they sit
 in the assembly and in a working circle; and under Own and decide, what
 they decide read back as sentences: where they sit, how each of those
-circles decides, and what their mandates let them do, within what
-limit.
+circles decides, and the mandates they act by, each as its policy
+reads, its limit in it.
 
 ## Analytics
 

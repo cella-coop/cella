@@ -1,13 +1,12 @@
 import { done, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { erase, exit, suspend } from '@cella/org-membership/api'
-import { grant, nest, revoke } from '@cella/org-circle/api'
+import { nest } from '@cella/org-circle/api'
 import { add, remove } from '@cella/org-graft-circle-membership/api'
-import { adopt } from '@cella/org-motion/api'
+import { adopt, end } from '@cella/org-graft-circle-motion/api'
 
 type Args = Record<string, string | number | undefined>
 
-const cents = (euros: unknown) => (euros === undefined || euros === null ? undefined : Math.round(Number(euros) * 100))
 const text = (v: unknown) => (v === undefined || v === null ? null : String(v))
 
 // How each kind of action is carried out: the decided write it makes, citing
@@ -17,24 +16,8 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   exit: { op: 'membership:member:exit', run: (a, motion, deps) => exit({ member: String(a.member), motion }, deps) },
   erase: { op: 'membership:member:erase', run: (a, motion, deps) => erase({ member: String(a.member), motion }, deps) },
   nest: { op: 'circle:circle:nest', run: (a, motion, deps) => nest({ circle: String(a.circle), parent: String(a.parent), motion }, deps) },
-  grant: {
-    op: 'circle:mandate:grant',
-    run: (a, motion, deps) =>
-      grant(
-        {
-          role: String(a.role),
-          power: String(a.power),
-          text: String(a.text ?? a.power),
-          limit: cents(a.limit),
-          budget: cents(a.budget),
-          per: a.per === 'month' || a.per === 'year' ? a.per : undefined,
-          motion,
-        },
-        deps,
-      ),
-  },
-  revoke: { op: 'circle:mandate:revoke', run: (a, motion, deps) => revoke({ mandate: Number(a.mandate), motion }, deps) },
   policy: { op: 'motion:policy:adopt', run: (_, motion, deps, n) => adopt({ motion, n }, deps) },
+  end: { op: 'motion:policy:end', run: (_, motion, deps, n) => end({ motion, n }, deps) },
   seat: {
     op: 'circle-membership:seat:add',
     run: (a, motion, deps) => add({ circle: String(a.circle), member: String(a.member), role: text(a.role), motion }, deps),

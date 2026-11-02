@@ -1,12 +1,48 @@
 -- The policy register: every policy a circle adopted by motion, its kind,
 -- its wordings, the values marked in its legal wording, the motion and
 -- the action of it that adopted it, the day it applies from and the day
--- it ends, the policy it replaces and the action that ended it. A core
+-- it ends, the policy it replaces, the action that ended it and the
+-- default it takes; and the legal forms cella offers, with their default
+-- policies. A core
 -- library's, beside the notary: it knows no feat, so a motion is named by
 -- its id and no foreign key leaves the schema. Only `policy.adopt` and `policy.end` write it,
 -- inside a write a motion carries; every slice reads its policies and
--- values, and only the app reads the wording, which no guard reads.
+-- values, and only the app reads the wording, which no guard reads. A
+-- form's defaults are written by its migration alone, through
+-- `policy.offer`.
 CREATE SCHEMA policy;
+
+-- A legal form in a region, as cella offers it: a kind of co-op the law
+-- knows, `scop-sarl-fr`, a SCOP SARL in France, with its ready-made
+-- policies. Cella offers the forms; a co-op chooses one.
+CREATE TABLE policy.form (
+  id text PRIMARY KEY CHECK (id ~ '^[a-z][a-z0-9-]*$'),
+  label text NOT NULL,
+  region text NOT NULL
+);
+
+-- A default policy of a form, `scop-sarl-fr:ordinary`, in the form's
+-- order: its kind, its wordings and their hash, as `policy.hash` makes
+-- it, perhaps the procedure that alone changes it, the law it states, by
+-- its article, or none where it is cella's practice, and the day a co-op
+-- lawyer reviewed it, empty until one has. Only `policy.offer` writes it,
+-- from a form's migration.
+CREATE TABLE policy.default (
+  id text PRIMARY KEY,
+  form text NOT NULL REFERENCES policy.form,
+  key text NOT NULL CHECK (key ~ '^[a-z][a-z0-9-]*$'),
+  n integer NOT NULL CHECK (n > 0),
+  kind text NOT NULL CHECK (kind IN ('mandate', 'rule', 'procedure')),
+  legal text NOT NULL,
+  friendly text,
+  hash bytea NOT NULL,
+  protected text CHECK (protected ~ '^[a-z][a-z-]*$'),
+  source text CHECK (btrim(source) <> ''),
+  reviewed date,
+  UNIQUE (form, key),
+  UNIQUE (form, n),
+  CHECK (id = form || ':' || key)
+);
 
 -- A policy's id is the action that adopted it: its motion and its number
 -- there, `m-2026-013/1`.
@@ -29,11 +65,15 @@ CREATE TABLE policy.policy (
   -- guards hold a motion that changes it to that procedure or a stricter
   -- one.
   protected text CHECK (protected ~ '^[a-z][a-z-]*$'),
+  -- The default policy it takes, worded and protected as that default
+  -- read when it was adopted, if it takes one.
+  takes text REFERENCES policy.default,
   UNIQUE (motion, n),
   CHECK (id = motion || '/' || n)
 );
 
 CREATE INDEX ON policy.policy (circle, kind);
+CREATE INDEX ON policy.policy (takes);
 
 -- What a policy says: its legal wording, which binds, each value marked
 -- once as `{name: value}`, and perhaps a friendly one beside it, in
@@ -188,24 +228,132 @@ CREATE FUNCTION policy.says(ref text) RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
 RETURN (SELECT policy.sentence(w.legal) FROM policy.wording w WHERE w.policy = says.ref);
 
+-- Offers a default policy of a form, from the form's migration: a new one
+-- after the form's others, or the same one on a new wording, which a
+-- later release of cella ships and no policy follows by itself; a default
+-- whose wording changes is reviewed anew. A flawed wording for its kind
+-- is refused (SQLSTATE 09000). Returns its id.
+CREATE FUNCTION policy.offer(
+  form text, key text, kind text, legal text, friendly text, protected text, source text
+) RETURNS text
+LANGUAGE plpgsql AS $$
+DECLARE
+  made text := offer.form || ':' || offer.key;
+  wrong text := policy.flaw(offer.kind, offer.legal, offer.friendly);
+BEGIN
+  IF wrong IS NOT NULL THEN
+    RAISE EXCEPTION '%: %', made, wrong USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  INSERT INTO policy.default AS d (id, form, key, n, kind, legal, friendly, hash, protected, source)
+  VALUES (made, offer.form, offer.key,
+          coalesce((SELECT max(o.n) FROM policy.default o WHERE o.form = offer.form), 0) + 1,
+          offer.kind, offer.legal, nullif(btrim(offer.friendly), ''),
+          policy.hash(offer.legal, nullif(btrim(offer.friendly), '')), offer.protected, offer.source)
+  ON CONFLICT (id) DO UPDATE SET kind = excluded.kind, legal = excluded.legal, friendly = excluded.friendly,
+    hash = excluded.hash, protected = excluded.protected, source = excluded.source,
+    reviewed = CASE WHEN d.hash = excluded.hash THEN d.reviewed END;
+  RETURN made;
+END
+$$;
+
+-- What keeps a policy from taking a default, or null: the default is
+-- one the register offers, and the policy is of its kind, worded as it
+-- reads now, by the hash of its wordings, and protected as it is. A
+-- guard may call it: it reads no wording.
+CREATE FUNCTION policy.takes_flaw(takes text, kind text, legal text, friendly text, protected text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN takes_flaw.takes IS NULL THEN NULL
+    WHEN d.id IS NULL THEN 'no legal form offers a default ' || takes_flaw.takes
+    WHEN d.kind <> takes_flaw.kind THEN d.id || ' is a ' || d.kind || ', not a ' || coalesce(takes_flaw.kind, 'policy of no kind')
+    WHEN d.hash <> policy.hash(takes_flaw.legal, nullif(btrim(takes_flaw.friendly), ''))
+      THEN 'a policy takes ' || d.id || ' worded as it reads: one worded otherwise takes no default'
+    WHEN d.protected IS DISTINCT FROM nullif(takes_flaw.protected, '')
+      THEN d.id || CASE WHEN d.protected IS NULL THEN ' is protected by no procedure'
+                        ELSE ' is protected by ' || d.protected END
+        || ': a policy takes it protected as it is'
+  END
+  FROM (SELECT 1) one
+  LEFT JOIN policy.default d ON d.id = takes_flaw.takes;
+END;
+
+-- Where each default of a form stands in a circle on a day, for each
+-- form the circle took any default of, in the form's order: `taken`, a
+-- policy in force takes it as it reads; `updated`, a policy in force takes
+-- it as it read before cella changed it; `left`, the last policy that
+-- took it ended, by the motion's action that replaced it with a policy
+-- taking none or that ended it, `left_by`, on `left_on`; `not taken`, no
+-- policy of the circle took it.
+CREATE FUNCTION policy.standing(circle text, day date) RETURNS TABLE (
+  id text, form text, form_label text, kind text, sentence text, source text, reviewed date,
+  standing text, policy text, left_by text, left_on date
+)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  WITH took AS (
+    SELECT DISTINCT ON (p.takes) p.*
+    FROM policy.policy p
+    WHERE p.circle = standing.circle AND p.takes IS NOT NULL AND p.applies <= standing.day
+    ORDER BY p.takes, p.applies DESC, p.id DESC
+  )
+  SELECT d.id, f.id, f.label || ', ' || f.region, d.kind, policy.sentence(d.legal), d.source, d.reviewed,
+    CASE
+      WHEN t.id IS NULL THEN 'not taken'
+      WHEN t.ends <= standing.day THEN 'left'
+      WHEN t.hash <> d.hash OR t.protected IS DISTINCT FROM d.protected THEN 'updated'
+      ELSE 'taken'
+    END,
+    t.id,
+    CASE WHEN t.ends <= standing.day THEN coalesce(t.ended_by, (SELECT r.id FROM policy.policy r WHERE r.replaces = t.id)) END,
+    CASE WHEN t.ends <= standing.day THEN t.ends END
+  FROM policy.form f
+  JOIN policy.default d ON d.form = f.id
+  LEFT JOIN took t ON t.takes = d.id
+  WHERE f.id IN (SELECT o.form FROM took k JOIN policy.default o ON o.id = k.takes)
+  ORDER BY f.id, d.n;
+END;
+
+-- The defaults a motion left, by its actions: each policy taking a
+-- default that one of them ended, or replaced with a policy taking none,
+-- with the action that did.
+CREATE FUNCTION policy.left_by(motion text) RETURNS TABLE (
+  id text, form_label text, sentence text, policy text, action text
+)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT d.id, f.label || ', ' || f.region, policy.sentence(d.legal), p.id, coalesce(r.id, p.ended_by)
+  FROM policy.policy p
+  JOIN policy.default d ON d.id = p.takes
+  JOIN policy.form f ON f.id = d.form
+  LEFT JOIN policy.policy r ON r.replaces = p.id
+  WHERE (r.motion = left_by.motion AND r.takes IS DISTINCT FROM p.takes)
+     OR (r.id IS NULL AND split_part(p.ended_by, '/', 1) = left_by.motion)
+  ORDER BY coalesce(r.n, split_part(p.ended_by, '/', 2)::integer);
+END;
+
 
 -- Adopts a policy, inside the write of the action that adopts it: its
 -- wordings, its values as its legal wording marks them, from the day it
 -- applies, perhaps until a day, perhaps replacing a policy of the same
 -- circle and kind, which ends the day this one applies, perhaps
--- protected by the procedure that alone changes it. A flawed wording, or
--- a replacement of a policy not in force there, is refused
--- (SQLSTATE 09000). It runs with its owner's rights, since nothing else
--- writes the register, and only the app may call it; the notary's
--- trigger refuses its rows outside a write.
+-- protected by the procedure that alone changes it, perhaps taking a
+-- default. A flawed wording, a replacement of a policy not in force there,
+-- a default it is not worded and protected as, or one a policy in force
+-- it does not replace takes already, is refused (SQLSTATE 09000). It
+-- runs with its owner's rights, since nothing else writes the register,
+-- and only the app may call it; the notary's trigger refuses its rows
+-- outside a write.
 CREATE FUNCTION policy.adopt(
   circle text, kind text, legal text, friendly text, motion text, n integer,
-  applies date, until date, replaces text, protected text DEFAULT NULL
+  applies date, until date, replaces text, protected text DEFAULT NULL, takes text DEFAULT NULL
 ) RETURNS text
 LANGUAGE plpgsql SECURITY DEFINER SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
   made text := adopt.motion || '/' || adopt.n;
-  wrong text := policy.flaw(adopt.kind, adopt.legal, adopt.friendly);
+  wrong text := coalesce(policy.flaw(adopt.kind, adopt.legal, adopt.friendly),
+    policy.takes_flaw(adopt.takes, adopt.kind, adopt.legal, adopt.friendly, adopt.protected));
+  taken text;
   prior policy.policy;
 BEGIN
   IF wrong IS NOT NULL THEN
@@ -223,9 +371,15 @@ BEGIN
     END IF;
     UPDATE policy.policy p SET ends = adopt.applies WHERE p.id = adopt.replaces;
   END IF;
-  INSERT INTO policy.policy (id, circle, kind, motion, n, hash, adopted, applies, ends, replaces, protected)
+  SELECT f.id INTO taken FROM policy.in_force(adopt.circle, adopt.applies) f
+  WHERE f.takes = adopt.takes AND f.id IS DISTINCT FROM adopt.replaces;
+  IF taken IS NOT NULL THEN
+    RAISE EXCEPTION '% takes % already: a policy taking it again replaces that one', taken, adopt.takes
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  INSERT INTO policy.policy (id, circle, kind, motion, n, hash, adopted, applies, ends, replaces, protected, takes)
   VALUES (made, adopt.circle, adopt.kind, adopt.motion, adopt.n, policy.hash(adopt.legal, adopt.friendly),
-          cella.verdict_date(), adopt.applies, adopt.until, adopt.replaces, adopt.protected);
+          cella.verdict_date(), adopt.applies, adopt.until, adopt.replaces, adopt.protected, adopt.takes);
   INSERT INTO policy.wording (policy, legal, friendly) VALUES (made, adopt.legal, nullif(btrim(adopt.friendly), ''));
   INSERT INTO policy.value (policy, n, name, type, literal, value, stricter)
   SELECT made, m.n, m.name, t.type, m.literal, t.value, m.stricter
@@ -254,8 +408,8 @@ BEGIN
 END
 $$;
 
-REVOKE EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text) FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text) TO cella_app;
+REVOKE EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text, text) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION policy.adopt(text, text, text, text, text, integer, date, date, text, text, text) TO cella_app;
 REVOKE EXECUTE ON FUNCTION policy.end(text, text, integer) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION policy.end(text, text, integer) TO cella_app;
 
@@ -264,3 +418,10 @@ GRANT SELECT ON policy.policy, policy.value TO cella_app, cella_guards;
 GRANT SELECT ON policy.wording TO cella_app;
 REVOKE EXECUTE ON FUNCTION policy.says(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION policy.says(text) TO cella_app, cella_guards;
+REVOKE EXECUTE ON FUNCTION policy.offer(text, text, text, text, text, text, text) FROM PUBLIC;
+
+-- The forms and their defaults: the app reads them whole; the guards role
+-- all but a default's wordings, as it reads no policy's.
+GRANT SELECT ON policy.form, policy.default TO cella_app;
+GRANT SELECT ON policy.form TO cella_guards;
+GRANT SELECT (id, form, key, n, kind, hash, protected, source, reviewed) ON policy.default TO cella_guards;

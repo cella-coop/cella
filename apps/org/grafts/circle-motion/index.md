@@ -105,6 +105,12 @@ about it, and Propose…: nesting it under another circle, granting a
 mandate to one of its roles, or revoking one, with a deadline and why,
 posted to the `put` circle-membership-motion serves; and its Policies,
 the policies it adopted that are in force, each as its legal wording
-reads (`policy.sentence`), its kind, the motion that adopted it, linked,
-and the days it applies from and until, read from the register in
-org's core (`inForce` in `@cella/org-policy`).
+reads (`policy.sentence`), its kind, whether it takes a default of the
+co-op's legal form (Default, or Default, since updated, where cella has
+changed that default since) or is the co-op's own, the motion that
+adopted it, linked, and the days it applies from and until, read from
+the register in org's core (`inForce` in `@cella/org-policy`); and,
+where the circle left any, its Defaults left: each default of its form
+it left or never took, its sentence, its form, the motion's action that
+left it, linked, and the day (`departures`,
+[legal forms](../../../../_corpus/doc/forms.md)).

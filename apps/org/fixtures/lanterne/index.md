@@ -106,15 +106,30 @@ Camille hires, and opens a new hire's candidacy for membership.
   feat that reads them and copied into its terms as each is adopted:
   `m-2021-001/43`, `Each associate subscribes at least {account_minimum:
   20 | more is stricter} shares`, and `m-2021-001/44`, the work share
-  `{patronage_salary: 100 % | more is stricter}` by pay. The internal
+  `{patronage_salary: 100 % | more is stricter}` by pay; and the law's
+  floors on the surplus, `m-2021-001/74`, at least `{work_share: 25 % |
+  more is stricter}` to all the employees, and `/75`, at least
+  `{reserve_share: 15 % | more is stricter}` to the reserves, named for no
+  feat. The internal
   rules' third version, adopted by m-2026-007 on 20 June 2026, holds five
   rules: the 35-hour week, at most three remote days, the pay ratio of at
   most 1.6, the solidarity rate for associations and co-ops under ten
   staff, each value saying which way is stricter, and the clients refused,
   which bind by their words alone.
+- **Legal form.** Lanterne is a SCOP SARL in France, and its founding
+  motion takes that form's defaults ([legal forms](../../../../_corpus/doc/forms.md)):
+  each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
+  worded and protected as it reads. They are its six procedures, the
+  participant's mandates (`/45`, `/46`), the assembly's collective
+  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`) and the
+  floors on the surplus (`/74`, `/75`): 33 policies. Its role mandates,
+  coordination's collective mandates and its capital and work share terms
+  are its own. It has left none of the defaults, so its statutes say they
+  leave none.
 - **Statutes (generated).** The statutes are the assembly's policies in
   order, generated around the fixed text of a SCOP SARL à capital
-  variable (`document.toml`): `statutes@1`, adopted on 1 March 2021 with
+  variable (`document.toml`), and after them the defaults of the SCOP
+  SARL the assembly left: `statutes@1`, adopted on 1 March 2021 with
   m-2021-001's procedures, mandates and rules, and `statutes@2`, on 20
   June 2026, with the internal rules' five rules m-2026-007 adopted.
   No one edits them; the next adoption by the assembly generates the next.

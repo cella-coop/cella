@@ -4,8 +4,9 @@
 -- policy's kind, its legal wording with each value marked once as
 -- `{name: value}`, perhaps a friendly wording, perhaps the day it applies
 -- from and the day it ends, perhaps the policy of its circle it replaces,
--- perhaps the procedure by which alone it is replaced or ended.
-SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}, {"name": "protected", "label": "Changed only by", "type": "text", "optional": true, "options": "protections"}]', 'motion:policy:adopt', 'motion');
+-- perhaps the procedure by which alone it is replaced or ended, perhaps
+-- the default policy of a legal form it takes.
+SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}, {"name": "protected", "label": "Changed only by", "type": "text", "optional": true, "options": "protections"}, {"name": "takes", "label": "Takes the default", "type": "text", "optional": true, "options": "defaults"}]', 'motion:policy:adopt', 'motion');
 
 -- Ending a policy, which binds no longer from the verdict date: its
 -- argument, the policy of the motion's circle it ends.
@@ -205,7 +206,9 @@ END;
 -- values each saying which way is stricter, its days in order and none before
 -- the motion's deadline, and replaces, if it names one, a policy of the
 -- motion's circle and kind in force and not protected from it
--- (`motion.protection_flaw`), and is protected, if it names one, by a
+-- (`motion.protection_flaw`), takes, if it names one, a default it is
+-- worded and protected as (`policy.takes_flaw`) that no policy in force
+-- it does not replace takes already, and is protected, if it names one, by a
 -- procedure in force no looser than the motion's own; a procedure policy marks terms that
 -- make a procedure (`motion.procedure_flaw`); and each policy it would
 -- end is one of its circle in force on the verdict date, not protected
@@ -232,6 +235,13 @@ BEGIN ATOMIC
       ) THEN 'no ' || (m.args ->> 'kind') || ' of ' || d.circle || ' in force is ' || (m.args ->> 'replaces')
       WHEN m.args ? 'replaces' AND motion.protection_flaw(m.args ->> 'replaces', d.id) IS NOT NULL
         THEN motion.protection_flaw(m.args ->> 'replaces', d.id)
+      WHEN policy.takes_flaw(nullif(m.args ->> 'takes', ''), m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly', m.args ->> 'protected') IS NOT NULL
+        THEN policy.takes_flaw(nullif(m.args ->> 'takes', ''), m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly', m.args ->> 'protected')
+      WHEN EXISTS (
+        SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f
+        WHERE f.takes = m.args ->> 'takes' AND f.id IS DISTINCT FROM m.args ->> 'replaces'
+      ) THEN (SELECT f.id FROM policy.in_force(d.circle, cella.verdict_date()) f WHERE f.takes = m.args ->> 'takes' LIMIT 1)
+        || ' takes ' || (m.args ->> 'takes') || ' already: a policy taking it again replaces that one'
       WHEN m.args ->> 'kind' = 'procedure' AND motion.procedure_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
         THEN motion.procedure_flaw(motion.marked(m.args ->> 'wording'))
       WHEN m.args ? 'protected' AND NOT EXISTS (
@@ -267,8 +277,9 @@ END;
 -- back), applying from the day the action names, or the verdict date,
 -- whichever is later, and until the day it names; a policy it
 -- replaces ends that day; it is protected as the action names, and the
--- policy it replaces is not protected from the motion; the entry commits
--- to its hash; and a procedure
+-- policy it replaces is not protected from the motion; it takes the
+-- default the action names, worded and protected as that default reads;
+-- the entry commits to its hash; and a procedure
 -- policy has made the procedure its values say.
 CREATE FUNCTION motion.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -290,6 +301,9 @@ BEGIN ATOMIC
       SELECT FROM policy.policy o WHERE o.id = r.replaces AND o.ends = r.applies
     ) THEN r.replaces || ' does not end the day ' || r.id || ' applies'
     WHEN r.protected IS DISTINCT FROM m.args ->> 'protected' THEN r.id || ' is not protected as ' || d.id || ' names'
+    WHEN r.takes IS DISTINCT FROM nullif(m.args ->> 'takes', '') THEN r.id || ' does not take the default ' || d.id || ' names'
+    WHEN policy.takes_flaw(r.takes, r.kind, m.args ->> 'wording', m.args ->> 'friendly', r.protected) IS NOT NULL
+      THEN policy.takes_flaw(r.takes, r.kind, m.args ->> 'wording', m.args ->> 'friendly', r.protected)
     WHEN r.replaces IS NOT NULL AND motion.protection_flaw(r.replaces, d.id) IS NOT NULL
       THEN motion.protection_flaw(r.replaces, d.id)
     WHEN r.kind = 'procedure' AND NOT EXISTS (

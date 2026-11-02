@@ -9,10 +9,10 @@ import type { Adopt, Adopted, End, Ended } from '../models/motion.ts'
 // mandate policy grants: the register keeps it in the motion's circle with
 // its wordings and its values, from the day the action names, or the
 // verdict date, whichever is later, and its entry commits to the hash of
-// its wordings, protected by the procedure it names, if any; a procedure
-// policy makes its procedure. `motion.adopts`
-// holds it to what the motion carries; that the motion passed is the
-// guard of the graft that counts its roll.
+// its wordings, protected by the procedure it names, if any, taking the
+// default it names, if any; a procedure policy makes its procedure.
+// `motion.adopts` holds it to what the motion carries; that the motion
+// passed is the guard of the graft that counts its roll.
 export function adopting(input: Adopt): Write<Adopted> {
   return {
     op: 'motion:policy:adopt',
@@ -41,6 +41,7 @@ export function adopting(input: Adopt): Write<Adopted> {
         until: args.until ?? null,
         replaces: args.replaces ?? null,
         protected: args.protected ?? null,
+        takes: args.takes || null,
       })
       // A procedure policy's values are the procedure a motion is counted
       // by: copied into the feat's own row in this verdict.

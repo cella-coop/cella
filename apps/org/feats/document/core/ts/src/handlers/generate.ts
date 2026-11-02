@@ -1,6 +1,6 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps, type Write } from '@cella/org-db'
-import { inOrder } from '@cella/org-policy'
+import { departures, inOrder } from '@cella/org-policy'
 import type { actions } from '../models/actions.ts'
 import type { Fragment } from '../models/edits.ts'
 import { patch } from '../models/edits.ts'
@@ -11,7 +11,8 @@ import { merged, snapshot } from './loro.ts'
 const op = 'document:document:generate' satisfies keyof typeof actions
 
 // Generates a generated document anew from its circle's policies in force
-// on the day, in their order, around its template, and freezes it: the
+// on the day, in their order, and the defaults of its form the circle
+// left or never took, around its template, and freezes it: the
 // generated blocks are patched onto the draft, keeping the blocks that
 // still read the same, and what changed is appended as an update by the
 // actor; the result is saved as the next version and adopted on the
@@ -34,7 +35,7 @@ export const generating = (input: Generate, author: string): Write<Generated> =>
     const policies = await inOrder(tx, g.circle, input.day)
     const doc = await merged(tx, input.document)
     const from = doc.version()
-    patch(doc, undefined, fill(g.template, policies))
+    patch(doc, undefined, fill(g.template, policies, await departures(tx, g.circle, input.day)))
     doc.commit()
     const update = doc.export({ mode: 'update', from })
     if (doc.version().compare(from) !== 0) {

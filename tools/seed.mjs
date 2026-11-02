@@ -23,7 +23,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
 import { anchor, createDoc, edits, fill, outline } from '../apps/org/feats/document/core/ts/src/models/index.ts'
-import { inOrder } from '../apps/org/core/policy/ts/src/index.ts'
+import { departures, inOrder } from '../apps/org/core/policy/ts/src/index.ts'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { fixture, signer } from '../apps/org/core/sign/ts/src/index.ts'
@@ -224,7 +224,7 @@ async function load() {
       )
       for (const { d: on } of days) {
         const from = loro.version()
-        edits.patch(loro, undefined, fill(template, await inOrder(db, d.circle, on)))
+        edits.patch(loro, undefined, fill(template, await inOrder(db, d.circle, on), await departures(db, d.circle, on)))
         loro.commit()
         await db.query(
           `INSERT INTO document.update (receipt, document, author, at, bytes) VALUES (${receipt}, $1, NULL, $2, $3)`,

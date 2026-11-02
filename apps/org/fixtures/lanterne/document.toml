@@ -331,9 +331,12 @@ text = "The session closed at 12:40."
 # `template` is the fixed text of the legal form, a SCOP SARL à capital
 # variable after the CG Scop's model statutes (not checked on
 # Légifrance), each `policies` embed where the policies of the kind its
-# ref names read, in order. The seed generates a version at each day the
-# assembly's policies changed, and adopts it that day: statutes@1 on 1
-# March 2021, statutes@2 on 20 June 2026.
+# ref names read, in order, and its `departures` embed where the defaults
+# of the form its ref names the assembly left read, or a line saying it
+# left none.
+# The seed generates a version at each day the assembly's policies
+# changed, and adopts it that day: statutes@1 on 1 March 2021, statutes@2
+# on 20 June 2026.
 [[document]]
 id = "statutes"
 title = "Statuts"
@@ -382,3 +385,13 @@ text = "What the associates agreed"
 type = "embed"
 embed = "policies"
 ref = "rule"
+
+[[document.template]]
+type = "heading"
+level = 2
+text = "Where they leave the SCOP SARL's defaults"
+
+[[document.template]]
+type = "embed"
+embed = "departures"
+ref = "scop-sarl-fr"

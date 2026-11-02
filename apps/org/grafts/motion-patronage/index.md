@@ -29,17 +29,20 @@ keeps no copy. The app role and the guards role may select.
 
 ## Guards
 
-- `motion_patronage.approves`, on `patronage:distribution:approve`: the
-  cited motion moved to approve this distribution.
+- `motion_patronage.approves`, on `patronage:distribution:approve`, and on
+  `patronage:distribution:distribute` and `patronage:part:employ`, which
+  follow the approval citing its motion: the cited motion moved to
+  approve this distribution.
 - `motion_patronage.asks`, on `motion:motion:propose`: each action
   to adopt patronage terms names drafted terms not yet adopted.
 - `motion_patronage.asks_to_approve`, on `motion:motion:propose`:
   each action to approve a distribution names a draft not yet approved.
 - `motion_patronage.adopts`, on `patronage:terms:adopt`: the cited
   motion moved to adopt these terms.
-- Both actions are registered by `motion.register_cite`, so `circle-membership-motion`'s
+- The four actions are registered by `motion.register_cite`, so `circle-membership-motion`'s
   `carried` attaches to them: the motion closed and passed on its roll.
-  Their labels declare `check: 'decided'`.
+  Their labels declare `check: 'decided'`: adopting and approving, the
+  distribution and the credits of shares that follow an approval.
 
 ## Tests
 
@@ -49,7 +52,8 @@ moving to adopt no such terms is refused; adopting cites a motion that
 moved to adopt the terms, and approving one that moved to approve the
 distribution, never another; a draft moved again is approved by either
 motion moving to, and a proposal moving to approve no draft is refused;
-both actions cite a motion.
+the four actions cite a motion, and the distribution and the credits that
+follow an approval are judged by the motion it cites.
 
 ## Shell
 

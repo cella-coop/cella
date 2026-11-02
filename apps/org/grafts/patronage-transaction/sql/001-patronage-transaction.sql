@@ -43,11 +43,10 @@ RETURN coalesce((
 ), 0);
 
 -- patronage:distribution:distribute — the distribution is in the books:
--- one entry, dated the day it was distributed, which posts every line of
--- its split. A write posts one entry, so what a graft above posts in the
--- same write, the work share employed in shares, is lines of that entry:
--- they balance among themselves and touch not the year's result (120),
--- and the graft that adds them checks they are exactly its own.
+-- one entry, dated the day it was distributed, which posts exactly the
+-- lines of its split and no other. The shares the work share buys are
+-- credited by writes of their own after it, so none of their lines are
+-- in it.
 CREATE FUNCTION patronage_transaction.posted(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -60,19 +59,10 @@ BEGIN ATOMIC
       (SELECT t.account, t.side, cella.cents(t.amount) FROM transaction.line t WHERE t.entry = p.entry)
     ) THEN p.entry || ' does not post the split of ' || x.distribution
     WHEN EXISTS (
-      SELECT FROM (
-        (SELECT t.account, t.side, cella.cents(t.amount) AS cents FROM transaction.line t WHERE t.entry = p.entry)
-        EXCEPT ALL
-        (SELECT l.account, l.side, l.cents FROM patronage_transaction.lines(x.distribution) l)
-      ) r
-      WHERE r.account = '120'
-    ) OR (
-      SELECT coalesce(sum(CASE r.side WHEN 'debit' THEN r.cents ELSE -r.cents END), 0) FROM (
-        (SELECT t.account, t.side, cella.cents(t.amount) AS cents FROM transaction.line t WHERE t.entry = p.entry)
-        EXCEPT ALL
-        (SELECT l.account, l.side, l.cents FROM patronage_transaction.lines(x.distribution) l)
-      ) r
-    ) <> 0 THEN p.entry || ' posts more than the split of ' || x.distribution || ', and not in balance away from the result'
+      (SELECT t.account, t.side, cella.cents(t.amount) FROM transaction.line t WHERE t.entry = p.entry)
+      EXCEPT ALL
+      (SELECT l.account, l.side, l.cents FROM patronage_transaction.lines(x.distribution) l)
+    ) THEN p.entry || ' posts more than the split of ' || x.distribution
   END
   FROM (SELECT payload ->> 'distribution' AS distribution) x
   LEFT JOIN patronage.distribution d ON d.id = x.distribution

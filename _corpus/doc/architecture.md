@@ -209,9 +209,16 @@ follows an admission or an exit reacts to it through `on`.
 through the account feat's `freeze`; `account-membership-transaction`
 subscribes a member admitted, their account opened by the account
 feat's `holding` and their shares called through `record()`, and
-withdraws a departed associate's capital. The shell runs the reactions
-to each write a reaction makes, so a close carries an exit and the exit
-its freeze and withdrawal, each settled before the next. A write is one
+withdraws a departed associate's capital. A distribution approved citing
+the assembly's motion is followed the same way: `patronage-transaction`
+posts it through `distribute`, and
+`account-membership-patronage-transaction` credits each associate the
+shares their part buys through `employ`, posted through `record()` and
+added to what they hold by the membership feat's `crediting`, each
+signed by whoever signed the approval and citing its motion. The shell
+runs the reactions to each write a reaction makes, so a close carries an
+exit and the exit its freeze and withdrawal, and an approval its posting
+and the posting its credits, each settled before the next. A write is one
 transaction with one verdict, so a carried action refused leaves the
 close and every action before it settled, and says why
 ([trust](trust.md#three-kinds-of-action)).

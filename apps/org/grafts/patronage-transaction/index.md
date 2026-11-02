@@ -30,11 +30,9 @@ role may select.
 
 - `patronage_transaction.posted`, on `patronage:distribution:distribute`:
   the distribution posted one entry, dated the day it was distributed,
-  which posts every line of its split. A write posts one entry, so what a
-  graft above posts in the same write, the work share employed in shares,
-  is lines of that entry: they balance among themselves and touch not the
-  year's result, and `account-membership-patronage-transaction` checks they
-  are exactly its own and that nothing else is posted.
+  which posts exactly the lines of its split and no other. The shares
+  the work share buys are credited by writes of their own after it, so
+  none of their lines are in it.
 - `patronage_transaction.reserves`, on `patronage:distribution:approve`:
   at least 15 % of the surplus goes to the legal reserve until the
   reserve, read from the journal, reaches the highest amount the capital
@@ -50,32 +48,42 @@ role may select.
 
 ## Handlers
 
-`distribute` (ordered, `distribute-surplus`) wraps the patronage feat's
+`distribute` (ordered, `decided`) wraps the patronage feat's
 `distributing`: the distribution marked, then its entry through the
-transaction feat's `record`, linked here, after which the grafts above
-add their lines to it.
+transaction feat's `record`, linked here. It cites the motion that
+approved the split, and `motion-patronage`'s guards check it.
+
+## Reactions
+
+- To `patronage:distribution:approve`: `distribute`, a write of its own
+  after the approval, signed by whoever signed it and citing its motion,
+  and judged by its own guards. A refused one leaves the split approved
+  and undistributed, and says why, as when the verdict date's month is
+  not open; the Distribute button then posts it, citing the same motion.
 
 ## Tests
 
 `ts/_tests/distribution.test.ts` (`cella test slice
 patronage-transaction`): a distribution's lines; its entry posts the
-split, and is refused when it misses a line or posts beside it what does
-not balance away from the result; the legal reserve's 15 % is owed while
-it is under the highest capital, and no longer once it reaches it;
+split, and is refused when it misses a line or posts any beside it; the
+legal reserve's 15 % is owed while it is under the highest capital, and
+no longer once it reaches it;
 interest under its terms' rate of the capital passes, and interest over
 it, or in a year no terms govern, is refused.
 
 ## Shell
 
-Adds to a distribution's page the entry it posted, and the Distribute
-button once the split is approved.
+Adds to a distribution's page the entry it posted, and, where the posting
+that follows the approval was refused, the Distribute button, citing the
+motion that approved the split.
 
 ## Lanterne
 
 Approving 2025 finds 13 000 € of capital, so its terms' 3,5 % allows
-455 € of interest, and the split pays 448,22 €. Distributing it posts
-61 400 € out of `120`: 27 630 € to `424`, 9 210 € to the legal reserve,
-24 111,78 € to the development fund and 448,22 € to `457`.
+455 € of interest, and the split pays 448,22 €. The distribution that
+follows, signed by Camille, who approved it, posts 61 400 € out of
+`120`: 27 630 € to `424`, 9 210 € to the legal reserve, 24 111,78 € to
+the development fund and 448,22 € to `457`.
 
 ## Analytics
 

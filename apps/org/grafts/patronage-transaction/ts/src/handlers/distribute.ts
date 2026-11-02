@@ -1,5 +1,5 @@
 import type { Refused, Settled } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { done, write, type Deps, type Done } from '@cella/org-db'
 import { distributing } from '@cella/org-patronage/api'
 import type { Distribute, Distributed } from '@cella/org-patronage/models'
 import { record } from '@cella/org-transaction/api'
@@ -7,10 +7,10 @@ import type { Line } from '@cella/org-transaction/models'
 
 // Distributes an approved split and posts it in one write: the patronage
 // feat's state, then the entry whose lines `patronage_transaction.lines`
-// gives, linked in `distribution`, after which the grafts above credit
-// the shares the work share buys as lines of the same entry. The guards
-// decide: that the split was approved (`patronage.distributes`), the
-// entry (`posted`) and the credits (account-membership-patronage-transaction's).
+// gives, linked in `distribution`. It cites the motion that approved the
+// split. The guards decide: that the split was approved
+// (`patronage.distributes`), by that motion (motion-patronage's), and
+// that the entry posts exactly the split (`posted`).
 export async function distribute(input: Distribute, deps: Deps): Promise<Settled<Distributed & { entry: string }> | Refused> {
   const w = distributing(input)
   return write(deps, {
@@ -34,4 +34,14 @@ export async function distribute(input: Distribute, deps: Deps): Promise<Settled
     },
     payload: (v) => ({ ...w.payload(v), entry: v.entry }),
   })
+}
+
+// What follows an approval: the split distributed and posted, a write of
+// its own signed by whoever signed the approval and citing its motion,
+// with the request the reactions to a distribution read, so the credits
+// of shares follow it.
+export async function distributed(request: unknown, deps: Deps): Promise<Done[]> {
+  const { distribution, motion } = request as Distribute
+  const input = { distribution, motion }
+  return [done('patronage:distribution:distribute', await distribute(input, deps), [], input)]
 }

@@ -2,7 +2,8 @@
 // this feat: `patronage.splits` takes a split that adds up and honours a
 // SCOP's floors, loi n° 78-763, art. 33, and refuses one that does not and
 // a year not over; a split is approved once and never changes after, and
-// `patronage.distributes` distributes only an approved one, once. Run by
+// `patronage.distributes` distributes only an approved one, once, and
+// `patronage.employs` employs a part only once it is distributed. Run by
 // `cella test slice patronage`.
 
 import { after, before, test } from 'node:test'
@@ -84,4 +85,14 @@ test('only an approved split is distributed, once', async () => {
   await db.query(`UPDATE patronage.distribution SET distributed = cella.verdict_date() WHERE id = '2025'`)
   assert.equal(await guard('patronage.distributes', { distribution: '2025' }), null)
   await assert.rejects(db.query(`UPDATE patronage.distribution SET distributed = '2026-10-25' WHERE id = '2025'`), /the 2025 surplus was distributed on 2026-10-24/)
+})
+
+test('a part is employed in shares only once its split is distributed, and only a worker\'s who has one', async () => {
+  await db.query(`INSERT INTO patronage.distribution (id, year, surplus, basis, approved) VALUES ('2011', 2011, cella.amount(100000), 'salary', cella.verdict_date())`)
+  await db.query(`INSERT INTO patronage.part (distribution, worker, basis, quantity, amount) VALUES ('2011', 'ana@x', 'salary', 100, cella.amount(1000))`)
+  assert.equal(await guard('patronage.employs', { distribution: '2011', member: 'ana@x' }), '2011 is not distributed')
+  await db.query(`UPDATE patronage.distribution SET distributed = cella.verdict_date() WHERE id = '2011'`)
+  assert.equal(await guard('patronage.employs', { distribution: '2011', member: 'ana@x' }), null)
+  assert.equal(await guard('patronage.employs', { distribution: '2011', member: 'bo@x' }), 'bo@x has no part in 2011')
+  assert.equal(await guard('patronage.employs', { distribution: '1999', member: 'ana@x' }), 'no distribution 1999')
 })

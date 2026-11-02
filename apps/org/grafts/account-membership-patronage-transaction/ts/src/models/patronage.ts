@@ -10,8 +10,8 @@ export interface Movement {
   balance: number
 }
 
-// What a worker's part of a year's work share became when the distribution
-// posted: the shares it bought, blocked until a day the law sets, on which
+// What a worker's part of a year's work share became once the distribution
+// posted: the shares its credit bought, blocked until a day the law sets, on which
 // capital account and by which entry; the rest owed in cash, which no
 // write pays out yet; and the account's movements.
 export interface Employed {
@@ -49,4 +49,24 @@ export interface Owed {
   capital: number
   cash: number
   distributed: boolean
+}
+
+// An associate's part of a distribution employed in shares, citing the
+// motion that approved the split.
+export interface Employ {
+  distribution: string
+  member: string
+  motion: string
+}
+
+// What the credit made: the shares and their value in cents, the capital
+// account they credit, the day they are blocked until, the entry that
+// posted them and what the member holds after.
+export interface Credited extends Employ {
+  account: string
+  shares: number
+  amount: number
+  until: string
+  entry: string
+  holds: number
 }

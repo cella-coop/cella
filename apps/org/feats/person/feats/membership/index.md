@@ -111,6 +111,7 @@ Whether the cited motion asks it is the `membership-motion` graft's guard on the
   before the notary.
 - `admit` (ordered), and `admitting`, its state alone, which the close of the deciding motion runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, motion }`.
 - `suspend`, `exit` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
+- `crediting`, inside another write's transaction: adds shares to what an active member holds, and refuses a member who is not. It is no action of its own: the write that runs it and its guards decide how many, as `account-membership-patronage-transaction`'s `employ` adds the shares an associate's part of the work share buys.
 - `erase` (ordered): submits `{ member, motion, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-membership-motion` carries it out when the motion that asks it passes.
 
 ### The exit's hook

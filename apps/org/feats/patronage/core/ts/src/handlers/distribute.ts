@@ -4,10 +4,12 @@ import type { Distribute, Distributed } from '../models/distribution.ts'
 
 const op = 'patronage:distribution:distribute' satisfies keyof typeof actions
 
-// Distributes an approved split on the verdict date. The feat alone cannot
-// post it, so its only handler is the patronage-transaction graft's, which
-// wraps this spec with the entry; `patronage.distributes` decides that it
-// was approved, and the grafts that post and credit decide their lines.
+// Distributes an approved split on the verdict date, citing the motion
+// that approved it. The feat alone cannot post it, so its only handler is
+// the patronage-transaction graft's, which wraps this spec with the entry
+// and runs it after the approval; `patronage.distributes` decides that it
+// was approved, motion-patronage's that the motion approved it, and the
+// graft that posts its lines.
 export const distributing = (input: Distribute): Write<Distributed> => ({
   op,
   request: input,

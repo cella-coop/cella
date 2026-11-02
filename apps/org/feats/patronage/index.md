@@ -44,11 +44,13 @@ fiscal year is the calendar year.
 | Thing | States |
 |---|---|
 | terms | drafted → adopted (once, citing the members' motion) |
-| distribution | draft → approved (by the assembly, once its year is closed) → distributed (posted, once) |
+| distribution | draft → approved (by the assembly, once its year is closed) → distributed (posted, once, by the write that follows the approval) |
+| part | made (by the approval) → employed (its shares credited, once, by the write that follows the distribution; an associate's alone) |
 
 An approved split never changes, nor do its parts, made in the write that
 approves it. A distributed one never changes again: its entry is in the
-books and its shares in the associates' capital. Adopted terms never
+books, and the shares its parts buy are credited by the writes that follow
+it, each once. Adopted terms never
 change, and later terms govern from their year, never over a year whose
 distribution is approved.
 
@@ -60,7 +62,8 @@ distribution is approved.
 | `POST /api/patronage/terms.adopt` | ordered, `decided` | the members' motion adopts the work share's terms, once |
 | `POST /api/patronage/distribution.draft` | confluent | finance drafts a year's split for the assembly to approve; drafted again, the latest stands until it is approved |
 | `POST /api/patronage/distribution.approve` | ordered, `decided` | the assembly's motion approves the split, once, and fixes each worker's part |
-| `POST /api/patronage/distribution.distribute` | ordered | the approved split posted to the books and the shares it buys credited, once |
+| `POST /api/patronage/distribution.distribute` | ordered, `decided` | the approved split posted to the books, once, following the approval and citing its motion |
+| `POST /api/patronage/part.employ` | ordered, `decided` | what an associate's part buys in shares credited to their capital, once, following the distribution and citing its motion |
 
 - **terms.draft** and **distribution.draft** are registers: a draft is
   `st-<year>` for terms, the year for a split, and drafting it again
@@ -80,10 +83,19 @@ distribution is approved.
   parts (`patronage-payslip`, `patronage-timesheet`), and their guards
   check them.
 - **distribution.distribute** is ordered because the split is posted
-  once, after its approval. Its handler is `patronage-transaction`'s,
-  which wraps this feat's `distributing` spec with the entry; in that
-  write `account-membership-patronage-transaction` credits the shares the
-  work share buys as lines of the same entry.
+  once, after its approval. It follows the approval as a write of its
+  own, signed by whoever signed the approval and citing the same motion
+  (`motion-patronage`), so it settles only if that motion closed, passed
+  and approved this split. Its handler is `patronage-transaction`'s,
+  which wraps this feat's `distributing` spec with the entry and reacts
+  to the approval with it.
+- **part.employ** is ordered because a part buys shares once. It follows
+  the distribution as a write of its own for each associate whose part
+  buys some, signed and citing the motion as the distribution is. Its
+  handler is `account-membership-patronage-transaction`'s, which posts
+  the credit, records it and adds the shares to what the associate holds.
+  A refused one leaves the distribution and every credit before it
+  settled, and says why; what it would have bought stays owed in `424`.
 
 ## Powers
 
@@ -95,10 +107,10 @@ the holder is whoever holds the role the mandate is granted to.
 | terms.draft, distribution.draft | `distribute-surplus` | Julien, as finance |
 | terms.adopt | none: decided by the members | the statutes' `st-2021`, carried over |
 | distribution.approve | none: decided by the assembly | m-2026-006, for 2025 |
-| distribution.distribute | `distribute-surplus` | Julien, as finance |
+| distribution.distribute, part.employ | none: they follow the approval, citing its motion | whoever signed the approval: Camille, for 2025 |
 
-`002-powers.sql` registers distribute's power in `cella.power`, and
-`006-draft.sql` the drafts'; the `circle-membership` graft checks them.
+`006-draft.sql` registers the drafts' power in `cella.power`; the
+`circle-membership` graft checks it.
 
 ## Invariants
 
@@ -116,6 +128,7 @@ The patronage feat owns the guards about its own collection:
   terms, the distribution names their basis, and each basis's parts add up
   to its portion of the work share, to the cent;
 - a split is distributed once, after it is approved;
+- a part is employed in shares only once its split is distributed;
 - terms divide the whole work share, and are adopted once, never over a
   year already approved.
 
@@ -192,6 +205,9 @@ L3243-4) and redacted after.
   parts add up to its portion.
 - `patronage.distributes`, on `patronage:distribution:distribute`: the
   split was approved, and this write distributed it on the verdict date.
+- `patronage.employs`, on `patronage:part:employ`: the split was
+  distributed, and the worker the payload names has a part in it. What
+  the part buys and its credit are `account-membership-patronage-transaction`'s.
 - `patronage.adopts`, on `patronage:terms:adopt`: the write adopted the
   terms on the verdict date, their weights add up to 100, and no year they
   would govern is approved.
@@ -203,6 +219,8 @@ L3243-4) and redacted after.
   date, after which the basis grafts' triggers make its parts.
 - `distributing`: the spec that marks a distribution distributed on the
   verdict date, which `patronage-transaction` wraps with its entry.
+- `part.employ` has no spec here: it changes nothing of this feat's, and
+  its handler is `account-membership-patronage-transaction`'s.
 
 ## Tests
 
@@ -210,7 +228,8 @@ L3243-4) and redacted after.
 Lanterne's 2025 split passes; a split under the floors, one that misses
 its surplus or a percent, and a year not over are refused; a split is
 approved once and never changes after; only an approved split is
-distributed, once. `core/ts/_tests/terms.test.ts`: the terms governing a
+distributed, once, and a part is employed only once its split is
+distributed. `core/ts/_tests/terms.test.ts`: the terms governing a
 year and what they divide by; each basis's portion, adding up to the
 work share; parts that add up pass, one missing or a basis the terms do
 not name is refused; parts are made only in the write that approves and
@@ -236,8 +255,8 @@ a year's split; `bases`, the patronage terms by year, adopted or
 drafted, and its New form drafting terms; and `statements`, each
 worker's part of each year's work share, a statement's page its part
 basis by basis against each basis's portion and weight. Approving and adopting are
-`motion-patronage`'s forms over this feat's writes, distributing
-`patronage-transaction`'s. Printed, a page drops the shell and reads as a
+`motion-patronage`'s forms over this feat's writes; distributing and employing follow
+the approval, with no form. Printed, a page drops the shell and reads as a
 document.
 
 ## Lanterne
@@ -251,7 +270,8 @@ document.
   under the capital, 24 111,78 € (39,27 %) to the development fund, and
   448,22 € (0,73 %) as interest on the 13 000 € of capital, 3,45 %, under
   the 455 € the terms allow. Approved citing it, ten parts make
-  27 630,00 €; distributed, they buy 270 shares (13 500 €), blocked until
+  27 630,00 €; the distribution and the ten credits that follow it, each
+  signed by Camille, buy 270 shares (13 500 €), blocked until
   1 June 2031, and leave 14 130 € owed in cash.
 
 ## Analytics

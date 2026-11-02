@@ -12,7 +12,8 @@ use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line, quiet};
 
 /// The dev cluster: Postgres 18 in .data/pg, owned by the user, on
-/// 127.0.0.1 at `CELLA_PGPORT` (54342), its database `CELLA_DB` (cella).
+/// 127.0.0.1 at `CELLA_PGPORT` (54342) and no socket, its database
+/// `CELLA_DB` (cella).
 pub struct Dev<'a> {
     pub repo: &'a Repo,
     pub port: String,
@@ -110,21 +111,22 @@ impl<'a> Dev<'a> {
             key::vault(&vault)?;
         }
         // Rewritten each time: the paths follow the Nix store. Postgres 18
-        // loads the extension from outside the read-only store.
+        // loads the extension from outside the read-only store. It listens on
+        // TCP alone: every client connects to 127.0.0.1, and a socket in a deep
+        // checkout's .data would pass the 107 bytes a socket's path may hold.
         let config = pg_config();
         let share = staged(&dir, &Steps::read(Command::new(&config).arg("--sharedir"))?);
         let lib = staged(&dir, &Steps::read(Command::new(&config).arg("--pkglibdir"))?);
         let conf = format!(
             "port = {port}\n\
              listen_addresses = '127.0.0.1'\n\
-             unix_socket_directories = '{data}'\n\
+             unix_socket_directories = ''\n\
              extension_control_path = '$system:{share}'\n\
              dynamic_library_path = '$libdir:{lib}'\n\
              shared_preload_libraries = 'cella'\n\
              cella.key_file = '{key}'\n\
              cella.vault_key_file = '{vault}'\n",
             port = self.port,
-            data = data.display(),
             share = share.display(),
             lib = lib.display(),
             key = key.display(),
@@ -144,6 +146,9 @@ impl<'a> Dev<'a> {
             let mut create = self.cmd("createdb");
             create.arg(&self.db);
             steps.run("createdb", &mut [create], quiet)?;
+            // Migrated at once: the analytics shell attaches as
+            // `cella_analytics`, a role the notary's migrations make.
+            crate::data::migrate(self.repo, steps, None)?;
         }
         println!("postgres 18 on 127.0.0.1:{}, database {}", self.port, self.db);
         Ok(())

@@ -59,8 +59,10 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('meeting-membership:attendance:m
 -- Recording another member's attendance is the minutes' keeper's; that
 -- it reaches the meeting's circle, and that the member was expected
 -- there, are circle-meeting-membership's guards on the op.
+-- Marking one's own attendance is every member's right, `mark-attendance`.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
-  ('meeting-membership:attendance:record', 'keep-minutes', NULL, 'meeting-membership');
+  ('meeting-membership:attendance:record', 'keep-minutes', NULL, 'meeting-membership'),
+  ('meeting-membership:attendance:mark', 'mark-attendance', NULL, 'meeting-membership');
 
 GRANT USAGE ON SCHEMA meeting_membership TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON meeting_membership.attendance TO cella_app;

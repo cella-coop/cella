@@ -11,4 +11,9 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-project-timesheet:entry:book', 'timesheet.logs(jsonb)', 'employment-project-timesheet'),
   ('employment-project-timesheet:entry:book', 'employment_timesheet.works(jsonb)', 'employment-project-timesheet');
 
+-- Booking one's own time to a project is every employee's right, as
+-- logging it is: `log-own-time`.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('employment-project-timesheet:entry:book', 'log-own-time', NULL, 'employment-project-timesheet');
+
 GRANT USAGE ON SCHEMA employment_project_timesheet TO cella_app, cella_guards;

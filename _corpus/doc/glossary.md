@@ -35,9 +35,9 @@ updated = 2026-11-02
 | **guardian** | a person holding a share of another's recovery secret |
 | **label** | how an action contends: confluent, bounded or ordered; part of its type |
 | **confluent** | an action that merges in any order and never waits: an edit, a vote cast, a payment |
-| **bounded** | an action that spends a right granted in advance and waits only when the right runs out: a draw, an invoice number |
+| **bounded** | an action that spends a share granted in advance and waits only when the share runs out: a draw, an invoice number |
 | **ordered** | an action that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
-| **share** | a right granted in advance that bounded actions spend: a budget, a block of numbers, a draw limit |
+| **share** | an allowance granted in advance that bounded actions spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
 | **notary** | the scope's office every attempt passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
 | **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the motion that carries it decided properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
@@ -55,9 +55,10 @@ updated = 2026-11-02
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, or for an action a motion carries in `motion.cites`, and a mandate names the power it grants |
-| **mandate** | a kind of policy: a grant of one power to one role or to one circle, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
+| **mandate** | a kind of policy: a grant of one power to one role, to one circle, or to the people who hold a right, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
 | **individual mandate** | a mandate on a role (`{role: finance}`), used by whoever holds a seat with that role |
 | **collective mandate** | a mandate on a circle as a whole (`{circle: ag}`), used only by a motion of that circle: an action a passed motion carries takes effect only where the motion's circle holds one for the action's power; carved from what the circle above holds, as an individual mandate is |
+| **right** | a mandate people hold as such (`{right: member}`), with no seat: every person, every member or every employee, as person's core says who is one on a day; never an agent or a service. A right is the assembly's to grant, reaches the whole co-op, and is neither carved nor carved from. By their rights a person keeps their profile and devices, uploads a file, takes up an invitation, files a record of their own, marks a text read and records an import; a member draws on their account, spreads what they owe, marks their attendance and saves a report; an employee logs their own time and claims their expenses. A right lets each act on what is their own and opens no one else's rows |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **participant** | the role every circle has, built in, which every seat in it holds there; its mandates cover proposing and discussing, the powers `propose` and `discuss` |
 | **seat** | a member's place in a circle, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's |

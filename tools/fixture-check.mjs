@@ -80,16 +80,18 @@ const check = (name) => {
     }
   }
   // A mandate is a policy a closed motion adopted: its sentence marks a
-  // role the circles have, or for a collective mandate a circle, never
-  // both, and a power named as an id.
+  // role the circles have, for a collective mandate a circle, or for a
+  // right the people who hold it, only one, and a power named as an id.
   const mandates = (motion.motion ?? [])
     .filter((d) => d.closed)
     .flatMap((d) => (d.action ?? []).map((m, i) => ({ m, where: `${d.id}/${i + 1}` })))
     .filter(({ m }) => m.kind === 'policy' && m.args?.kind === 'mandate')
   for (const { m, where } of mandates) {
     const marked = (name) => new RegExp(`\\{\\s*${name}\\s*:\\s*([^{}]*?)\\s*\\}`).exec(m.args.wording ?? '')?.[1]
-    if (marked('role') && marked('circle')) {
-      fail(`mandate ${where}: is on a role or on a circle, not both`)
+    if ([marked('role'), marked('circle'), marked('right')].filter(Boolean).length > 1) {
+      fail(`mandate ${where}: is on a role, on a circle or a right, only one`)
+    } else if (marked('right')) {
+      has(new Set(['person', 'member', 'employee']), marked('right'), 'right', `mandate ${where}`)
     } else if (marked('circle')) {
       has(circles, marked('circle'), 'circle', `mandate ${where}`)
     } else {

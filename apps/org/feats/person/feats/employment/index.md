@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -74,7 +74,12 @@ which the `payslip` feat holds, so the power has no limit.
   hired unable to sign.
 - `employment.employed(address, day)` and `employment.employed_in(address,
   month)`: whether a worker is employed on a day, or on any day of a
-  month; the grafts that join employment read them.
+  month; the grafts that join employment read them. `employed` is who
+  holds every employee's right: `001-employment.sql` registers it with
+  person's core as `employee`, by `person.register_right`, so a worker
+  logs their own time and claims their expenses from the first day of
+  their contract to its last
+  ([rights](../../../circle/index.md#rights)).
 
 ## Schema
 

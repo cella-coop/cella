@@ -156,15 +156,18 @@ sequenceDiagram
   names it in `cella.power`, registered by its feat; the `circle-membership`
   graft attaches a guard to every such op that the actor holds, on the
   verdict date, a seat whose role has a mandate granting the power, within
-  its limit for the write's amount. A write a passed motion carries (an
+  its limit for the write's amount, or a right granting it: every person,
+  every member or every employee, as person's core says the actor is one
+  that day. What is the actor's own (a profile, a device, their time, a
+  claim) needs a right's power, and the feat's guard that the record is
+  theirs; a right opens no one else's rows to read. A write a passed motion carries (an
   admission, an adoption, a seat) names its power in `motion.cites`
   instead, registered by the graft that cites the motion, and needs a
   collective mandate: `circle-motion` attaches a guard to every such op
   that the cited motion's circle holds, on the verdict date, a mandate
   on the circle itself granting the power, as it checked when the
-  motion was proposed. A write with no power is the actor's own (a
-  profile, a device) or a member's of a roll (a stance): its label
-  declares that check and a guard enforces it, and `cella check
+  motion was proposed. A write with no power is a member's of a roll (a
+  stance): its label declares that check and a guard enforces it, and `cella check
   feats` refuses an action that names neither, so nothing is allowed by
   omission. Money leaves a cash account only through writes with their
   own right and a guard that checks the entry is exactly what they say:

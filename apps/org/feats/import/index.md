@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -63,7 +63,7 @@ a person's name: a person among the clients is `a person, line 4`.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/import/record` | confluent, `self` | the record of an import is a fact, the importer's own |
+| `POST /api/import/record` | confluent, `record-import` | the record of an import is a fact, the importer's own; every person's right |
 | `carry`, from `cella seed` | ordered, `first` | the state a scope held before its log comes in once, as the log's first entry |
 
 ## Guards

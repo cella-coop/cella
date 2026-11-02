@@ -36,8 +36,18 @@ graft's, and whether a member is active on a day the `membership` feat's
   power, not revoked by the day, within its `limit` when the write
   carries an amount.
   A `budget` is not checked: it needs the spend over its period tracked.
+  It is the authority every read asks (`cella.authority`), and finds no
+  right.
+- `circle_membership.entitled(actor, power, cents, day)` (`008-rights.sql`):
+  the actor holds the power by a right, with no seat: a mandate in force
+  on every person, member or employee, within its `limit`, where
+  person's core says the actor is one of them on the day
+  (`person.holds`). A right lets each act on what is their own, which
+  the feat's guard checks, so it opens no one else's rows to read
+  ([rights](../../feats/circle/index.md#rights)).
 - `circle_membership.empowered`, on every action in `cella.power`: the actor may
-  use the action's power on the verdict date, for the amount the payload names
+  use the action's power on the verdict date, by a seat (`may`) or by a
+  right (`entitled`), for the amount the payload names
   in the action's `amount` field. Each feat registers the power its actions need
   in `cella.power`, a core registry; this graft attaches its guard to every
   op listed, then and later, as `circle-membership-motion` attaches its own
@@ -56,7 +66,8 @@ periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
 holds only the `member` seat in the assembly, so she edits clients and
 documents and does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet. A suspended member, or an
-invitee, holds nothing.
+invitee, holds no seat's mandate; Inès, invited and employed, holds a
+person's rights and an employee's, and Paul, gone, a person's alone.
 
 ## Actions
 

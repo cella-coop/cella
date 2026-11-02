@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -59,10 +59,10 @@ approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
 `circle-membership` graft checks them; that a lead approves only their own
 circle's members is `circle-membership-timesheet`'s. A worker logs and
-submits their own time by their employment instead, member or not,
-through `employment-timesheet`'s writes of the same effect, which need no
-mandate: the shell logs through those, since a worker who is no member
-holds no seat and so no `log-time`.
+submits their own time by every employee's right instead, member or not,
+through `employment-timesheet`'s writes of the same effect, which need
+`log-own-time`, a right with no seat: the shell logs through those,
+since a worker who is no member holds no seat and so no `log-time`.
 
 ## Invariants
 

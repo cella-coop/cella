@@ -1,9 +1,9 @@
 +++
 title = "Expense"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
-What members spend for the co-op from their own pocket, to be paid back:
+What the co-op's workers spend for it from their own pocket, to be paid back:
 claimed, submitted, approved or refused by someone with the power to,
 within their mandate's limit and their budget for the month, and
 reimbursed from the bank.
@@ -14,9 +14,9 @@ reimbursed from the bank.
 |---|---|---|
 | expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference the member typed, beside the receipts kept as files |
 
-An expense names its member and its decider by address, as text; that the
-member is an active one is the `expense-membership` graft's. Its label and
-receipt are the member's own words and stay out of the log. Its total is
+An expense names its claimant, `member`, and its decider by address, as
+text; their names are the `expense-membership` graft's. Its label and
+receipt are the claimant's own words and stay out of the log. Its total is
 `expense.total`, the amount before VAT and the deductible VAT.
 
 ## Lifecycle
@@ -29,8 +29,8 @@ figures never change.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/expense/capture` | confluent, `self` | a claim is a fact, the member's own |
-| `POST /api/expense/submit` | confluent, `self` | the member's own, once |
+| `POST /api/expense/capture` | confluent, `claim-expense` | a claim is a fact, the claimant's own; every employee's right |
+| `POST /api/expense/submit` | confluent, `claim-expense` | the claimant's own, once; every employee's right |
 | `POST /api/expense/approve` | bounded on the approver's budget | spends a budget granted in advance by the approver's mandate |
 | `POST /api/expense/refuse` | ordered | decides the expense against an approval: only one stands |
 | `POST /api/expense/reimburse` | ordered | money leaves the bank, once |
@@ -43,13 +43,14 @@ this feat's `approving` and `reimbursing` specs.
 
 | Action | Power | Lanterne |
 |---|---|---|
-| capture, submit | none: the member's own | every member |
+| capture, submit | `claim-expense`, every employee's right: the claimant's own | every worker, member or not |
 | approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as gérante, up to 2 000 € an expense |
 | refuse | `approve-expense` | as approve |
 | reimburse | `reimburse-expense`, within the mandate's limit | Julien, as finance, up to 3 000 € |
 
 `002-powers.sql` registers them in `cella.power`; the `circle-membership`
-graft checks the power and the limit, and the `circle-expense-membership`
+graft checks the power and the limit, a right's for a claim
+([rights](../circle/index.md#rights)), and the `circle-expense-membership`
 graft the budget.
 
 ## Invariants

@@ -68,12 +68,12 @@ day their rule applies.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/account/draw` | bounded, `self` | a member's draw on their own account, spending the draw limit granted in advance |
+| `POST /api/account/draw` | bounded, `draw-account`, every member's right | a member's draw on their own account, spending the draw limit granted in advance |
 | `POST /api/account/terms.adopt` | ordered, `adopt-policy` by motion | the capital rule a passed motion adopted copied into its terms, once |
 | `POST /api/account/period.open` | ordered | the month after the latest opens, so entries dated in it post; the next month's opening follows it |
 | `POST /api/account/period.close` | ordered | nothing posts into a closed period |
 | `POST /api/account/capital.pay` | confluent | money an associate pays in on their subscription, a deposit |
-| `POST /api/account/capital.spread` | confluent, `self` | an associate spreads what they owe over monthly instalments from their pay |
+| `POST /api/account/capital.spread` | confluent, `spread-capital`, every member's right | an associate spreads what they owe over monthly instalments from their pay |
 | `POST /api/account/capital.repay` | ordered | a departed associate's capital repaid, one repayment, once and in its turn |
 | `POST /api/account/account.freeze` | ordered, `end-membership` by motion | a departed member's capital accounts frozen, citing the motion that ended the membership |
 | `POST /api/account/capital.subscribe` | ordered, `admit-member` by motion | a member admitted subscribes their shares: their capital account opened and the shares called, citing the motion that admitted them |
@@ -122,21 +122,22 @@ day their rule applies.
 ## Powers
 
 No role is hard-coded. A write needs a power held through a mandate, and
-the holder is whoever holds the role the mandate is granted to.
+the holder is whoever holds the role the mandate is granted to, the
+circle whose motion carries it, or every member, by a right
+([rights](../circle/index.md#rights)).
 
 | Action | Power | Lanterne |
 |---|---|---|
-| draw | none: the member's own, within their draw limit | every member, 500 € |
-
-| terms.adopt | none: decided by the members | the founding assembly's rule, `m-2021-001/43` |
+| draw | `draw-account`, every member's right: their own, within their draw limit | every member, 500 € |
+| terms.adopt | `adopt-policy`, a collective mandate: it follows the adoption of the capital rule | the founding assembly's rule, `m-2021-001/43` |
 | period.open | `close-period`: the power that keeps the periods | Julien, as finance |
 | period.close | `close-period` | Julien, as finance |
 | capital.pay | `record-receipt` | Julien, as finance |
-| capital.spread | none: the associate's own | Inès, once admitted |
+| capital.spread | `spread-capital`, every member's right: the associate's own | Inès, once admitted |
 | capital.repay | `repay-capital` | Julien, as finance |
-| account.freeze, capital.subscribe, capital.withdraw | none: carried by the motion that admits or ends the membership | whoever closes the assembly's motion |
+| account.freeze, capital.subscribe, capital.withdraw | `end-membership`, `admit-member`, `end-membership`, collective mandates: carried by the motion that admits or ends the membership | whoever closes the assembly's motion |
 
-`002-powers.sql` registers period.close's power in `cella.power`,
+`002-powers.sql` registers period.close's, draw's and capital.spread's powers in `cella.power`,
 `006-terms.sql` capital.pay's and capital.repay's, and `010-period.sql`
 period.open's; the `circle-membership` graft checks them.
 

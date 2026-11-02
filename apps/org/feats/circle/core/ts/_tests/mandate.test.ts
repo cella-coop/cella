@@ -50,7 +50,7 @@ after(async () => {
   await db.end()
 })
 
-test('a mandate marks a role or a circle, a power in lower case and at most one cap, an amount', async () => {
+test('a mandate marks a role, a circle or a right, a power in lower case and at most one cap, an amount', async () => {
   await staged()
   try {
     assert.equal(await flaw({ role: 'finance', power: 'pay-supplier', limit: '3 000 €' }), null)
@@ -62,11 +62,15 @@ test('a mandate marks a role or a circle, a power in lower case and at most one 
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', limit: 'three thousand' })) ?? '', /a limit is an amount/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', budget: '1 000 €' })) ?? '', /per month or per year/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', rate: '20 %' })) ?? '', /not rate/)
-    // A collective mandate marks a circle instead, never both.
+    // A collective mandate marks a circle instead, and a right the people
+    // who hold it: only one of the three.
     assert.equal(await flaw({ circle: 'operations', power: 'admit-member' }), null)
-    assert.match((await flaw({ power: 'admit-member' })) ?? '', /names its role, as {role: finance}, or its circle, as {circle: ag}/)
-    assert.match((await flaw({ role: 'finance', circle: 'operations', power: 'admit-member' })) ?? '', /on a role or on a circle, not both/)
+    assert.match((await flaw({ power: 'admit-member' })) ?? '', /names its role, as {role: finance}, its circle, as {circle: ag}, or its right, as {right: member}/)
+    assert.match((await flaw({ role: 'finance', circle: 'operations', power: 'admit-member' })) ?? '', /on a role, on a circle or a right, only one/)
     assert.match((await flaw({ circle: 'web', power: 'admit-member' })) ?? '', /no circle web/)
+    assert.equal(await flaw({ right: 'employee', power: 'claim-expense' }), null)
+    assert.match((await flaw({ right: 'member', role: 'finance', power: 'draw-account' })) ?? '', /only one/)
+    assert.match((await flaw({ right: 'visitor', power: 'keep-profile' })) ?? '', /a right is held by every person, member or employee, as {right: member}, not visitor/)
   } finally {
     await db.query('ROLLBACK')
   }

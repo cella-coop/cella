@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -40,7 +40,7 @@ by it. Redacting the bytes empties the hash generated from them.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/file/upload` | confluent, `self` | a file of the co-op's own is a fact, the uploader's; two commute |
+| `POST /api/file/upload` | confluent, `upload-file` | a file of the co-op's own is a fact, the uploader's; two commute; every person's right |
 
 A personal file comes in through the graft that attaches it, in that
 graft's write: a receipt with `expense-file`, an employment record with

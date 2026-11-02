@@ -43,6 +43,12 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('employment-timesheet:period:submit', 'timesheet.submits(jsonb)', 'employment-timesheet'),
   ('employment-timesheet:period:submit', 'employment_timesheet.works(jsonb)', 'employment-timesheet');
 
+-- Logging and submitting one's own time is every employee's right,
+-- `log-own-time`; correcting it too (`003-correct.sql`).
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('employment-timesheet:entry:log', 'log-own-time', NULL, 'employment-timesheet'),
+  ('employment-timesheet:period:submit', 'log-own-time', NULL, 'employment-timesheet');
+
 -- Each worker's months, by name: their hours and where each stands, and
 -- who approved it.
 CREATE VIEW employment_timesheet.sheet AS

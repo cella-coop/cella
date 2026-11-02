@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -14,7 +14,7 @@ pending.
 
 ## Actions
 
-`expense-project:expense:rebill` (confluent, `self`): files an expense
+`expense-project:expense:rebill` (confluent, `claim-expense`, every employee's right): files an expense
 under a project, replacing any it was under; the last filing wins.
 
 ## Guards

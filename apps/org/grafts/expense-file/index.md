@@ -1,6 +1,6 @@
 +++
 title = "expense-file"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The receipts on an expense: files of class `expense-receipt` about its
@@ -17,7 +17,7 @@ file attached once.
 - `expense:expense:capture`, the expense feat's claim, replaced by one
   carrying its receipt: the claim, then the receipt stored and attached,
   in one write. A claim without one attaches nothing.
-- `expense-file:expense:attach` (confluent, `self`): a receipt attached
+- `expense-file:expense:attach` (confluent, `claim-expense`, every employee's right): a receipt attached
   to an expense already claimed.
 
 Each stores the receipt about the acting member, and the log commits to

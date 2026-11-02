@@ -35,6 +35,11 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('expense-file:expense:attach', 'expense_file.attaches(jsonb)', 'expense-file'),
   ('expense:expense:capture', 'expense_file.attaches(jsonb)', 'expense-file');
 
+-- Attaching a receipt to one's claim is every employee's right, as
+-- claiming it is; expense_file.attaches checks the claim is their own.
+INSERT INTO cella.power (op, power, amount, owner) VALUES
+  ('expense-file:expense:attach', 'claim-expense', NULL, 'expense-file');
+
 GRANT USAGE ON SCHEMA expense_file TO cella_app, cella_guards;
 GRANT SELECT ON expense_file.receipt TO cella_app, cella_guards;
 GRANT INSERT ON expense_file.receipt TO cella_app;

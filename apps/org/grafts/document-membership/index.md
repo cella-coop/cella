@@ -22,9 +22,9 @@ guards role may select.
 
 ## Actions
 
-| Action | Label | Check | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
-| `document-membership:version:read` | confluent | `self` | a fact the member states of themselves; marking a version read again changes nothing |
+| `document-membership:version:read` | confluent | `mark-read`, every person's right | a fact a person states of themselves, the invitee's as a member's; marking a version read again changes nothing |
 
 ## Guards
 

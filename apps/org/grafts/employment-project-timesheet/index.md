@@ -1,6 +1,6 @@
 +++
 title = "employment-project-timesheet"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A worker's time on projects by their employment, and the week they enter
@@ -12,9 +12,9 @@ both. Declared by `timesheet`.
 
 ## Actions
 
-| Action | Label | Check | Why |
+| Action | Label | Power | Why |
 |---|---|---|---|
-| `employment-project-timesheet:entry:book` | confluent | `self` | entries add up in any order; the worker's own, while employed |
+| `employment-project-timesheet:entry:book` | confluent | `log-own-time`, every employee's right | entries add up in any order; the worker's own, while employed |
 
 `book` is `project-timesheet`'s booking (`booking`) over the timesheet
 feat's entry, under this graft's op: one transaction, one verdict. The

@@ -732,10 +732,38 @@ that it still does; an admission, which settles inside the close, is
 checked at the proposal alone. Both kinds are carved from what the circle above
 holds ([circle](../../apps/org/feats/circle/index.md#authority)).
 
+**A right is a mandate people hold as such**, with no seat: every
+person, every member or every employee (`{right: member}`), never an
+agent or a service. Who holds a right on a day is said by person's
+core, which every kind of person nests in: `person.holds(actor, right,
+day)` asks the function each kind registers by `person.register_right`,
+`person` itself the known people, `membership` the active members by
+`membership.active`, `employment` those employed by
+`employment.employed`, so person's core knows none of its children by
+name. `circle-membership`'s guard on every op with a power takes a
+right's mandate, found by `circle_membership.entitled`, as it takes
+one on the actor's seats, so a person with no seat holds their rights
+all the same. A right lets each act on what is their own, and so is
+never the authority a read asks (`circle_membership.may`): holding
+`keep-profile` opens no one else's profile, nor `log-own-time` another's
+time. A right is the assembly's to grant, as a role every circle has
+is, and reaches the whole co-op: it is neither carved nor carved from.
+What was once the actor's own is a right's power, and the guard that it
+is their own stays the feat's: a person keeps their profile and devices
+(`keep-profile`, `keep-devices`), uploads a file (`upload-file`), takes
+up an invitation (`accept-invitation`), files a record of their own
+(`file-record`), marks a text read (`mark-read`) and records an import
+(`record-import`); a member draws on their account (`draw-account`),
+spreads what they owe (`spread-capital`), marks their attendance
+(`mark-attendance`) and saves a report (`save-report`); an employee
+logs their own time (`log-own-time`) and claims their expenses
+(`claim-expense`) ([circle](../../apps/org/feats/circle/index.md#rights)).
+
 No action is allowed by omission. An action with no power declares the check
-that allows it instead: `self`, the actor's own (a profile, a device);
-or `roll`, a member on the roll of the motion it names (a stance). A
-seat is no check: what a seat allows is its roles' mandates, the
+that allows it instead: `roll`, a member on the roll of the motion it
+names (a stance). What is the actor's own is no check: it needs the
+power their right grants, and `cella check feats` refuses `check:
+'self'`. Nor is a seat: what a seat allows is its roles' mandates, the
 participant's among them, and `cella check feats` refuses `check:
 'seat'`; nor is a passed motion, which allows what its circle's
 collective mandates grant, and `cella check feats` refuses `check:
@@ -837,9 +865,9 @@ method, share, quorum and ballot are copied by the motion feat into
 ([procedures](../../apps/org/feats/motion/index.md#procedures)); the
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
-scope's root does. A mandate policy's role or circle, power and limit
+scope's root does. A mandate policy's role, circle or right, power and limit
 or budget are copied by the circle feat into `circle.mandate`, which
-`circle_membership.may` reads for a role's and `circle-motion` for a
+`circle_membership.may` reads for a role's, `circle_membership.entitled` for a right's and `circle-motion` for a
 circle's, through `circle-motion`, whose adoption
 and ending of a policy are the motion feat's with the circle feat's copy
 in the same write

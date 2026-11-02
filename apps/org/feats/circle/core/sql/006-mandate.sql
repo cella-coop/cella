@@ -1,24 +1,28 @@
 -- A mandate is a policy: a sentence a circle adopted by motion, marking
--- the role it grants to, or the circle for a collective mandate, the
--- power, and perhaps a limit per write or a budget over a month or a
--- year. Its values are copied into `circle.mandate` as it is adopted,
--- and its mandate revoked as it ends, in the same write; the register is
--- org's core's, read here by its values, never its wording.
+-- the role it grants to, the circle for a collective mandate, or the
+-- right for one people hold as such, the power, and perhaps a limit per
+-- write or a budget over a month or a year. Its values are copied into
+-- `circle.mandate` as it is adopted, and its mandate revoked as it ends,
+-- in the same write; the register is org's core's, read here by its
+-- values, never its wording.
 
 -- What is wrong with a mandate's values, by name as written (`{"role":
 -- "finance", "power": "pay-supplier", "limit": "3 000 €"}`), or null: it
--- marks a role this feat has or a circle it has, never both, a power in
--- lower case, at most a limit or a budget, each an amount, a budget with
--- its period, and nothing else.
+-- marks one of a role this feat has, a circle it has or a right, every
+-- person, member or employee, a power in lower case, at most a limit or
+-- a budget, each an amount, a budget with its period, and nothing else.
 CREATE FUNCTION circle.mandate_flaw(marked jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN x.other IS NOT NULL THEN 'a mandate marks its role or circle, power, limit, budget and per, not ' || x.other
-    WHEN v.role IS NULL AND v.circle IS NULL THEN 'a mandate policy names its role, as {role: finance}, or its circle, as {circle: ag}'
-    WHEN v.role IS NOT NULL AND v.circle IS NOT NULL THEN 'a mandate is on a role or on a circle, not both'
+    WHEN x.other IS NOT NULL THEN 'a mandate marks its role, circle or right, power, limit, budget and per, not ' || x.other
+    WHEN num_nonnulls(v.role, v.circle, v."right") = 0
+      THEN 'a mandate policy names its role, as {role: finance}, its circle, as {circle: ag}, or its right, as {right: member}'
+    WHEN num_nonnulls(v.role, v.circle, v."right") > 1 THEN 'a mandate is on a role, on a circle or a right, only one'
     WHEN v.role IS NOT NULL AND NOT EXISTS (SELECT FROM circle.role r WHERE r.id = v.role) THEN 'no role ' || v.role
     WHEN v.circle IS NOT NULL AND NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = v.circle) THEN 'no circle ' || v.circle
+    WHEN v."right" NOT IN ('person', 'member', 'employee')
+      THEN 'a right is held by every person, member or employee, as {right: member}, not ' || v."right"
     WHEN coalesce(v.power, '') !~ '^[a-z][a-z-]*$' THEN 'a mandate names its power in lower case, as {power: approve-time}'
     WHEN v."limit" IS NOT NULL AND v.budget IS NOT NULL THEN 'a mandate caps by a limit per write or by a budget, not both'
     WHEN v."limit" IS NOT NULL AND (SELECT t.type FROM policy.typed('limit', v."limit") t) <> 'amount'
@@ -28,25 +32,26 @@ BEGIN ATOMIC
     WHEN (v.budget IS NULL) <> (v.per IS NULL) OR v.per NOT IN ('month', 'year') THEN 'a budget runs per month or per year'
   END
   FROM (
-    SELECT marked ->> 'role' AS role, marked ->> 'circle' AS circle, marked ->> 'power' AS power,
+    SELECT marked ->> 'role' AS role, marked ->> 'circle' AS circle, marked ->> 'right' AS "right", marked ->> 'power' AS power,
            marked ->> 'limit' AS "limit", marked ->> 'budget' AS budget, marked ->> 'per' AS per
   ) v,
   LATERAL (
     SELECT (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
-            WHERE k NOT IN ('role', 'circle', 'power', 'limit', 'budget', 'per') ORDER BY k LIMIT 1) AS other
+            WHERE k NOT IN ('role', 'circle', 'right', 'power', 'limit', 'budget', 'per') ORDER BY k LIMIT 1) AS other
   ) x;
 END;
 
--- A mandate policy's values as the register types them: its role or its
--- circle, its power, its limit or budget in cents and its period, and its
--- days.
+-- A mandate policy's values as the register types them: its role, its
+-- circle or its right, its power, its limit or budget in cents and its
+-- period, and its days.
 CREATE FUNCTION circle.mandated(ref text) RETURNS TABLE (
-  role text, circle text, power text, "limit" bigint, budget bigint, per text, "from" date, until date
+  role text, circle text, "right" text, power text, "limit" bigint, budget bigint, per text, "from" date, until date
 )
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT max(v.value #>> '{}') FILTER (WHERE v.name = 'role'),
          max(v.value #>> '{}') FILTER (WHERE v.name = 'circle'),
+         max(v.value #>> '{}') FILTER (WHERE v.name = 'right'),
          max(v.value #>> '{}') FILTER (WHERE v.name = 'power'),
          max((v.value #>> '{}')::bigint) FILTER (WHERE v.name = 'limit' AND v.type = 'amount'),
          max((v.value #>> '{}')::bigint) FILTER (WHERE v.name = 'budget' AND v.type = 'amount'),
@@ -76,8 +81,8 @@ BEGIN
   IF wrong IS NOT NULL THEN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
-  INSERT INTO circle.mandate (role, circle, power, policy, "limit", budget, per, "from", until)
-  SELECT m.role, m.circle, m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m."from", m.until
+  INSERT INTO circle.mandate (role, circle, "right", power, policy, "limit", budget, per, "from", until)
+  SELECT m.role, m.circle, m."right", m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m."from", m.until
   FROM circle.mandated(ref) m
   RETURNING id INTO made;
   UPDATE circle.mandate o SET revoked = p.applies
@@ -99,7 +104,7 @@ BEGIN ATOMIC
 END;
 
 -- motion:policy:adopt, which circle-motion attaches it to — a mandate
--- policy the write adopted has its mandate, on the role or the circle,
+-- policy the write adopted has its mandate, on the role, the circle or the right,
 -- for the power, capped and on the days its values and its policy say;
 -- the mandate of the policy it replaces is revoked the day it applies;
 -- and a policy of another kind has none.
@@ -111,8 +116,8 @@ BEGIN ATOMIC
     WHEN r.kind = 'mandate' AND m.id IS NULL THEN r.id || ' grants no mandate: its values are copied as it is adopted'
     WHEN r.kind = 'mandate' AND NOT EXISTS (
       SELECT FROM circle.mandated(r.id) v
-      WHERE (m.role, m.circle, m.power, cella.cents(m."limit"), cella.cents(m.budget), m.per, m."from", m.until)
-        IS NOT DISTINCT FROM (v.role, v.circle, v.power, v."limit", v.budget, v.per, v."from", v.until)
+      WHERE (m.role, m.circle, m."right", m.power, cella.cents(m."limit"), cella.cents(m.budget), m.per, m."from", m.until)
+        IS NOT DISTINCT FROM (v.role, v.circle, v."right", v.power, v."limit", v.budget, v.per, v."from", v.until)
     ) THEN 'mandate ' || m.id || ' is not what ' || r.id || ' marks'
     WHEN r.kind = 'mandate' AND EXISTS (
       SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies

@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -111,14 +111,17 @@ worker who was never a member is not erased yet.
 
 | Action | Power | Lanterne |
 |---|---|---|
-| profile | self: the person's own | everyone |
-| forget | self: the person's own contact details | everyone |
-| enrol | self: the person's own current key | everyone, for their own devices |
-| revoke | self: the person's own key; `revoke-key` for anyone else's, not built | Julien, for a lost device reported by phone |
+| profile | `keep-profile`, every person's right: their own | everyone |
+| forget | `keep-profile`, every person's right: their own contact details | everyone |
+| enrol | `keep-devices`, every person's right: their own current key | everyone, for their own devices |
+| revoke | `keep-devices`, every person's right: their own key; `revoke-key` for anyone else's, not built | Julien, for a lost device reported by phone |
 | recover | the guardians' threshold, once built; until then `recover-key`, which no mandate grants | a threshold the assembly sets |
 
-`003-powers.sql` registers recover's power, so it is never allowed by
-omission.
+`003-powers.sql` registers each action's power, so none is allowed by
+omission: the four a person takes on what is their own need a power
+every person's right grants ([rights](../circle/index.md#rights)),
+checked by `circle-membership`'s guard, and this feat's guards check
+what they keep is theirs.
 
 ## Schema
 
@@ -133,6 +136,16 @@ omission.
   device's key, address and enrolment fixed and a revocation standing,
   raising SQLSTATE `09000`. The app role may select, insert and update;
   the guards role may select.
+- `person.rights`, who holds each right, one row a right with the
+  function `(address, day) → boolean` that says whether an address is
+  one of its people on a day: `person.known` for every person, which
+  this core registers, and the active members and those employed, which
+  `membership` and `employment` register by
+  `person.register_right(name, fn, owner)`, so this core knows neither
+  by name. `person.holds(actor, right, day)` asks it: only a person the
+  co-op knows holds any right, and no one a right nobody registered.
+  The app role and the guards role may select it; only the migrations
+  register.
 
 The children's SQL reads this schema, as a graft's reads the feats it
 joins: membership enrols the device an invitation's acceptance makes, and employment

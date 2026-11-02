@@ -50,7 +50,7 @@ after(async () => {
   await db.end()
 })
 
-test('a mandate marks a role, a power in lower case and at most one cap, an amount', async () => {
+test('a mandate marks a role or a circle, a power in lower case and at most one cap, an amount', async () => {
   await staged()
   try {
     assert.equal(await flaw({ role: 'finance', power: 'pay-supplier', limit: '3 000 €' }), null)
@@ -62,6 +62,11 @@ test('a mandate marks a role, a power in lower case and at most one cap, an amou
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', limit: 'three thousand' })) ?? '', /a limit is an amount/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', budget: '1 000 €' })) ?? '', /per month or per year/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', rate: '20 %' })) ?? '', /not rate/)
+    // A collective mandate marks a circle instead, never both.
+    assert.equal(await flaw({ circle: 'operations', power: 'admit-member' }), null)
+    assert.match((await flaw({ power: 'admit-member' })) ?? '', /names its role, as {role: finance}, or its circle, as {circle: ag}/)
+    assert.match((await flaw({ role: 'finance', circle: 'operations', power: 'admit-member' })) ?? '', /on a role or on a circle, not both/)
+    assert.match((await flaw({ circle: 'web', power: 'admit-member' })) ?? '', /no circle web/)
   } finally {
     await db.query('ROLLBACK')
   }
@@ -117,6 +122,35 @@ test('a policy whose values grant no mandate is refused as it is copied', async 
       return true
     })
     await db.query('ROLLBACK TO SAVEPOINT copy')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a collective mandate is on a circle, and the circle holds it itself, not the circle above nor any role', async () => {
+  await staged()
+  try {
+    const holds = async (circle: string, power: string) =>
+      (await db.query<{ h: boolean }>(`SELECT circle.holds($1, $2, cella.verdict_date()) AS h`, [circle, power])).rows[0].h
+    assert.equal(await holds('operations', 'admit-member'), false)
+    const policy = await adopt('mandate', 'The {circle: operations} circle holds {power: admit-member}, to admit members, by motion', 'm-2026-020', 1)
+    await db.query('SELECT circle.mandate_from($1)', [policy])
+    assert.equal(await guard('grants', policy), null)
+    assert.deepEqual((await db.query(`SELECT role, circle, power FROM circle.mandate WHERE policy = $1`, [policy])).rows, [
+      { role: null, circle: 'operations', power: 'admit-member' },
+    ])
+    assert.equal(await holds('operations', 'admit-member'), true)
+    assert.equal(await holds('ag', 'admit-member'), false)
+    assert.equal(await holds('operations', 'suspend-member'), false)
+    await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
+    await db.query('SELECT circle.mandate_ended($1)', [policy])
+    assert.equal(await holds('operations', 'admit-member'), false)
+    await db.query('SAVEPOINT holder')
+    await assert.rejects(
+      db.query(`INSERT INTO circle.mandate (role, circle, power, policy, "from") VALUES ('finance', 'operations', 'admit-member', 'm-2026-022/1', '2026-01-01')`),
+      /mandate_check/,
+    )
+    await db.query('ROLLBACK TO SAVEPOINT holder')
   } finally {
     await db.query('ROLLBACK')
   }

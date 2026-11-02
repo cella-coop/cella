@@ -42,9 +42,11 @@ keeps no copy. The app role and the guards role may select.
   each action to approve a distribution names a draft not yet approved.
 - `motion_patronage.adopts`, on `patronage:terms:adopt`: the cited
   motion adopted the rule the terms copy.
-- The four actions are registered by `motion.register_cite`, so `circle-membership-motion`'s
+- The four actions are registered by `motion.register_cite` with their powers, so `circle-membership-motion`'s
   `carried` attaches to them: the motion closed and passed on its roll.
-  Their labels declare `check: 'decided'`: adopting and approving, the
+  Their labels name the powers they register with them, collective
+  mandates of the motion's circle: `adopt-policy` for the terms adopted,
+  `approve-distribution` for approving, the
   distribution and the credits of shares that follow an approval.
 
 ## Reaction

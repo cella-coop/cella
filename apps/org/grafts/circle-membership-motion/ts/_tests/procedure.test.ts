@@ -158,11 +158,12 @@ test('the guard covers every action that cites a motion, registered before this 
   const uncovered = await db.query(`SELECT c.op FROM motion.cites c WHERE NOT EXISTS (SELECT FROM cella.guard g WHERE g.op = c.op AND g.fn = ${carried})`)
   assert.deepEqual(uncovered.rows, [])
   assert.ok((await db.query('SELECT op FROM motion.cites')).rows.length >= 2)
-  assert.deepEqual((await db.query('SELECT fn::text AS fn, owner FROM motion.cite_guard')).rows, [
+  assert.deepEqual((await db.query('SELECT fn::text AS fn, owner FROM motion.cite_guard ORDER BY owner')).rows, [
     { fn: 'circle_membership_motion.carried(jsonb)', owner: 'circle-membership-motion' },
+    { fn: 'circle_motion.mandated(jsonb)', owner: 'circle-motion' },
   ])
 
-  await db.query(`SELECT motion.register_cite('later:thing:do', 'later')`)
+  await db.query(`SELECT motion.register_cite('later:thing:do', 'do-thing', 'later')`)
   assert.deepEqual((await db.query(`SELECT owner FROM cella.guard WHERE op = 'later:thing:do' AND fn = ${carried}`)).rows, [
     { owner: 'circle-membership-motion' },
   ])

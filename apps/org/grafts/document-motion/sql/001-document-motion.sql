@@ -36,7 +36,7 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('document:document:adopt', 'document_motion.adopts(jsonb)', 'document-motion');
-SELECT motion.register_cite('document:document:adopt', 'document-motion');
+SELECT motion.register_cite('document:document:adopt', 'adopt-document', 'document-motion');
 
 GRANT USAGE ON SCHEMA document_motion TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON document_motion.adoption TO cella_app;

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -63,7 +63,7 @@ subscription, posted as `paying` gives it, and recorded as paid in.
 of a departed member: the bank pays their next repayment, `4567` debited and
 `512` credited, on the verdict date, and the repayment is paid.
 
-`account:capital:subscribe` (ordered, `decided`): a member admitted
+`account:capital:subscribe` (ordered, `admit-member` by motion): a member admitted
 subscribes their shares. Their capital account opens under `1013`, next
 in the chart, by the account feat's `holding`, and their shares at the
 share's value are called on the verdict date, `4562` (Apporteurs, capital
@@ -71,7 +71,7 @@ appelé non versé) debited and `1012` (Capital souscrit, appelé, non
 versé) credited, as a SCOP's variable capital is called whole when it is
 subscribed; the account under `1013` holds what they pay in.
 
-`account:capital:withdraw` (ordered, `decided`): a departed associate's
+`account:capital:withdraw` (ordered, `end-membership` by motion): a departed associate's
 capital. What their capital accounts hold moves to `4567` (Associés,
 capital à rembourser), what they had not paid of their subscription is
 cancelled, `1012` debited and `4562` credited, and their repayments are

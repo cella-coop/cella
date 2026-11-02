@@ -13,8 +13,8 @@ export const actions = {
   'motion:message:post': confluent({ power: 'discuss' }),
   // a policy its circle adopts, a sentence that binds; the cited motion
   // carries it
-  'motion:policy:adopt': ordered({ check: 'decided' }),
+  'motion:policy:adopt': ordered({ power: 'adopt-policy' }),
   // a policy its circle ends, which binds no longer from its verdict; the
   // cited motion ends it
-  'motion:policy:end': ordered({ check: 'decided' }),
+  'motion:policy:end': ordered({ power: 'end-policy' }),
 } satisfies Actions

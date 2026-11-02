@@ -8,12 +8,16 @@ export type Label = 'confluent' | 'bounded' | 'ordered'
 // from signed votes. Without one, the notary checks the action's guards alone.
 export type Decide = 'consent' | 'majority'
 
-// The power an action needs, which the actor must hold through a mandate on
-// the verdict date, and the payload field holding its amount in cents when
-// the mandate's limit caps it. The owning feat registers the same in
-// `cella.power`, the source of truth; `cella check feats` keeps the two
-// equal. An action with no power declares the check that allows it instead,
-// and nothing is allowed by omission.
+// The power an action needs and the payload field holding its amount in
+// cents when the mandate's limit caps it. An individual mandate grants
+// it: the actor holds it through a seat on the verdict date, and the
+// owning feat registers the same in `cella.power`, the source of truth.
+// Or a collective mandate grants it, for an action a passed motion
+// carries: the motion's circle holds it, and the graft that cites the
+// motion registers the same in `motion.cites` instead. `cella check
+// feats` keeps the label and the SQL equal. An action with no power
+// declares the check that allows it instead, and nothing is allowed by
+// omission.
 export interface Grant {
   power?: string
   amount?: string
@@ -21,15 +25,15 @@ export interface Grant {
 }
 
 // Who may take an action that needs no power, each a guard registered on
-// the action in `cella.guard`, or for `decided` a row in `motion.cites`:
+// the action in `cella.guard`:
 // - `self`: the actor's own, such as their profile or their devices;
 // - `roll`: a member on the roll of the motion the action names;
-// - `decided`: the motion the action cites closed and passed;
 // - `first`: the log's first entry, as the state a scope held before its
 //   log is carried in once.
 // A seat is no check: what it allows is its roles' mandates, its circle's
-// participant role among them.
-export type Check = 'self' | 'roll' | 'decided' | 'first'
+// participant role among them. Nor is a passed motion: what it carries
+// needs the power its circle's collective mandate grants.
+export type Check = 'self' | 'roll' | 'first'
 
 export interface Confluent extends Grant {
   label: 'confluent'

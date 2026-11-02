@@ -112,3 +112,23 @@ test('a mandate is carved from what the circle above holds, and a moved subtree 
     await db.query('ROLLBACK')
   }
 })
+
+test('a collective mandate is carved as a role\'s is, and caps the mandates below as a role\'s does', async () => {
+  const beyond = async () => (await db.query<{ r: string | null }>(`SELECT circle.beyond('2026-10-24') AS r`)).rows[0].r
+  await db.query('BEGIN')
+  try {
+    await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('maker', 'brand', 'Maker')`)
+    // Coordination holds set-budget as a whole, up to 10 000 €.
+    await db.query(`INSERT INTO circle.mandate (circle, power, policy, "from", "limit") VALUES ('coordination', 'set-budget', 'm-2026-003/1', '2026-01-01', '10000')`)
+    assert.equal(await beyond(), null)
+    // Brand, below it, as a whole at 20 000 €: beyond what coordination holds.
+    await db.query(`INSERT INTO circle.mandate (circle, power, policy, "from", "limit") VALUES ('brand', 'set-budget', 'm-2026-003/2', '2026-01-01', '20000')`)
+    assert.match((await beyond()) ?? '', /grants set-budget to brand beyond what coordination holds of it/)
+    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE policy = 'm-2026-003/2'`)
+    // A role of brand's is carved from coordination's collective mandate too.
+    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('maker', 'set-budget', 'm-2026-003/3', '2026-01-01', '12000')`)
+    assert.match((await beyond()) ?? '', /grants set-budget to maker beyond what coordination holds of it/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

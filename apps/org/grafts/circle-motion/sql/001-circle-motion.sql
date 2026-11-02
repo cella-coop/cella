@@ -4,19 +4,25 @@ CREATE SCHEMA circle_motion;
 -- feat so its New form offers it: nesting a circle under another. A
 -- mandate is a policy, adopted and ended by the motion feat's own kinds,
 -- `policy` and `end`, which this graft extends with the circle feat's copy.
-SELECT motion.register_carries('nest', 'Nest a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "parent", "label": "Under", "type": "text"}]', 'circle-motion');
+SELECT motion.register_carries('nest', 'Nest a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "parent", "label": "Under", "type": "text"}]', 'circle:circle:nest', 'circle-motion');
 
 -- Which circle an action is about: the circle nested; for a mandate
--- policy, the circle of the role it marks; for the end of a policy that
--- granted a mandate, the circle of the mandate's role. A role every
+-- policy, the circle of the role it marks, or the circle it marks for a
+-- collective mandate; for the end of a policy that granted a mandate,
+-- the circle of the mandate's role, or the circle it is on. A role every
 -- working circle has (`*`) is the assembly's to grant.
 CREATE VIEW circle_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args,
        CASE m.kind
          WHEN 'nest' THEN m.args ->> 'circle'
-         WHEN 'policy' THEN (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = motion.marked(m.args ->> 'wording') ->> 'role')
+         WHEN 'policy' THEN coalesce(
+           motion.marked(m.args ->> 'wording') ->> 'circle',
+           (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = motion.marked(m.args ->> 'wording') ->> 'role')
+         )
          WHEN 'end' THEN (
-           SELECT nullif(r.circle, '*') FROM circle.mandate x JOIN circle.role r ON r.id = x.role WHERE x.policy = m.args ->> 'policy'
+           SELECT coalesce(x.circle, nullif(r.circle, '*'))
+           FROM circle.mandate x LEFT JOIN circle.role r ON r.id = x.role
+           WHERE x.policy = m.args ->> 'policy'
          )
        END AS circle
 FROM motion.action m
@@ -92,7 +98,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:policy:adopt', 'circle.carves(jsonb)', 'circle-motion'),
   ('motion:policy:end', 'circle.revokes(jsonb)', 'circle-motion'),
   ('motion:policy:end', 'circle.carves(jsonb)', 'circle-motion');
-SELECT motion.register_cite('circle:circle:nest', 'circle-motion');
+SELECT motion.register_cite('circle:circle:nest', 'nest-circle', 'circle-motion');
 
 GRANT USAGE ON SCHEMA circle_motion TO cella_app, cella_guards;
 GRANT SELECT ON circle_motion.action TO cella_app, cella_guards;

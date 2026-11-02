@@ -156,8 +156,8 @@ draft, and the next adoption names a later version.
 | Action | Power | Lanterne |
 |---|---|---|
 | create, edit, version, comment | `edit-document` | every member, through the `member` role's mandate |
-| adopt | decided: the cited motion asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
-| generate | decided: the cited motion adopted or ended a policy of the document's circle that day, and carried | `ag` for the statutes |
+| adopt | `adopt-document`, a collective mandate: the cited motion asks to adopt this content and carried | `ag` for the internal rules, `coordination` for the rate card |
+| generate | `adopt-policy`, a collective mandate: the cited motion adopted or ended a policy of the document's circle that day, and carried | `ag` for the statutes |
 
 `002-powers.sql` and `003-create.sql` register `edit-document` in `cella.power`, and the
 `circle-membership` graft checks it as any other: every member holds it

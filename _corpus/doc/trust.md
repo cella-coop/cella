@@ -45,8 +45,10 @@ may be `Refused` as well as `Settled`; only an ordered action may also be
 An action a passed motion carries is an attempt like any other. Once
 the close settles, each is a write of its own, in the order proposed,
 signed by the member who closed the motion, by their device, citing it,
-and judged by its own guards and by `circle-membership-motion`'s that
-the motion it cites closed and passed; what follows a carried action,
+and judged by its own guards, by `circle-membership-motion`'s that
+the motion it cites closed and passed, and by `circle-motion`'s that
+the motion's circle holds, on the verdict date, a collective mandate
+for the action's power; what follows a carried action,
 such as the freeze and the withdrawal of capital that follow an exit,
 is a write after it the same way. Each has its own log entry. A
 motion's admissions alone settle inside its close, with the seats they
@@ -154,10 +156,15 @@ sequenceDiagram
   names it in `cella.power`, registered by its feat; the `circle-membership`
   graft attaches a guard to every such op that the actor holds, on the
   verdict date, a seat whose role has a mandate granting the power, within
-  its limit for the write's amount. A write with no power is the actor's
-  own (a profile, a device), a member's of a roll or a circle (a stance,
-  a proposal, a close) or decided (an admission, an adoption, a seat):
-  its label declares that check and a guard enforces it, and `cella check
+  its limit for the write's amount. A write a passed motion carries (an
+  admission, an adoption, a seat) names its power in `motion.cites`
+  instead, registered by the graft that cites the motion, and needs a
+  collective mandate: `circle-motion` attaches a guard to every such op
+  that the cited motion's circle holds, on the verdict date, a mandate
+  on the circle itself granting the power, as it checked when the
+  motion was proposed. A write with no power is the actor's own (a
+  profile, a device) or a member's of a roll (a stance): its label
+  declares that check and a guard enforces it, and `cella check
   feats` refuses an action that names neither, so nothing is allowed by
   omission. Money leaves a cash account only through writes with their
   own right and a guard that checks the entry is exactly what they say:
@@ -419,7 +426,8 @@ erased until their legal clock runs out.
   and its BLAKE3, never the bytes, and erasure empties them. Who may open
   one is a guard, the file feat's and the grafts' that see a power over
   what it records.
-- **Erasure** is a write: `membership:member:erase`, decided, for a former
+- **Erasure** is a write: `membership:member:erase`, carried by the
+  assembly's motion under its collective `erase-member`, for a former
   member's whole profile, the person's; `person:person:forget`, the
   person's own, for their optional contact fields; `client:client:erase`, under the
   `erase-personal-data` power, for a person among the clients. Each

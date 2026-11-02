@@ -2,26 +2,29 @@
 -- registered by the graft that carries it out: admitting a member,
 -- nesting a circle. `fields` names the arguments an action of the kind
 -- takes, as the New form asks for them: [{ name, label, type, optional }],
--- type `text` or `number`. This feat knows no kind; it keeps the register, as
--- it keeps `motion.cites`, and motion.register_carries alone writes it.
+-- type `text` or `number`; `op`, the action that carries it out, whose
+-- power in `motion.cites` the motion's circle must hold to propose it.
+-- This feat knows no kind; it keeps the register, as it keeps
+-- `motion.cites`, and motion.register_carries alone writes it.
 CREATE TABLE motion.carries (
   kind text PRIMARY KEY CHECK (kind ~ '^[a-z][a-z-]*$'),
   label text NOT NULL,
   fields jsonb NOT NULL DEFAULT '[]' CHECK (jsonb_typeof(fields) = 'array'),
+  op text NOT NULL CHECK (op ~ '^[a-z][a-z-]*:[a-z][a-z-]*:[a-z][a-z-]*$'),
   owner text NOT NULL
 );
 
 -- Registers a kind of action a motion can carry, with the arguments its
--- New form asks for. A graft's migration calls it, and never inserts into
--- motion.carries itself.
-CREATE FUNCTION motion.register_carries(action text, label text, fields jsonb, owner text) RETURNS void
+-- New form asks for and the action that carries it out. A graft's
+-- migration calls it, and never inserts into motion.carries itself.
+CREATE FUNCTION motion.register_carries(action text, label text, fields jsonb, op text, owner text) RETURNS void
 LANGUAGE sql
 BEGIN ATOMIC
-  INSERT INTO motion.carries (kind, label, fields, owner)
-  VALUES (register_carries.action, register_carries.label, register_carries.fields, register_carries.owner);
+  INSERT INTO motion.carries (kind, label, fields, op, owner)
+  VALUES (register_carries.action, register_carries.label, register_carries.fields, register_carries.op, register_carries.owner);
 END;
 
-REVOKE EXECUTE ON FUNCTION motion.register_carries(text, text, jsonb, text) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION motion.register_carries(text, text, jsonb, text, text) FROM PUBLIC;
 
 -- What a motion decides, in the order proposed: an action of a
 -- registered kind and its arguments, which the kind's graft reads and its

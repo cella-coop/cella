@@ -49,6 +49,6 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('account:terms:adopt', 'account_motion.adopts(jsonb)', 'account-motion');
-SELECT motion.register_cite('account:terms:adopt', 'account-motion');
+SELECT motion.register_cite('account:terms:adopt', 'adopt-policy', 'account-motion');
 
 GRANT USAGE ON SCHEMA account_motion TO cella_app, cella_guards;

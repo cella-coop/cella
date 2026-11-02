@@ -65,10 +65,10 @@ END;
 -- A revoked mandate stays revoked, and a mandate's grant never changes.
 CREATE FUNCTION circle.stays_granted() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
-  IF (NEW.role, NEW.power, NEW.policy, cella.cents(NEW."limit"), cella.cents(NEW.budget), NEW.per, NEW."from", NEW.until)
-       IS DISTINCT FROM (OLD.role, OLD.power, OLD.policy, cella.cents(OLD."limit"), cella.cents(OLD.budget), OLD.per, OLD."from", OLD.until)
+  IF (NEW.role, NEW.circle, NEW.power, NEW.policy, cella.cents(NEW."limit"), cella.cents(NEW.budget), NEW.per, NEW."from", NEW.until)
+       IS DISTINCT FROM (OLD.role, OLD.circle, OLD.power, OLD.policy, cella.cents(OLD."limit"), cella.cents(OLD.budget), OLD.per, OLD."from", OLD.until)
     OR (OLD.revoked IS NOT NULL AND NEW.revoked IS DISTINCT FROM OLD.revoked) THEN
-    RAISE EXCEPTION 'mandate % of % keeps its grant, and stays revoked', OLD.id, OLD.role
+    RAISE EXCEPTION 'mandate % of % keeps its grant, and stays revoked', OLD.id, coalesce(OLD.role, OLD.circle)
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;

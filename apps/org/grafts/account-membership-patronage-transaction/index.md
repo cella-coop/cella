@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -35,7 +35,7 @@ The app role may select and insert; the guards role may select.
 
 ## Actions
 
-`patronage:part:employ` (ordered, `decided`), the patronage feat's, whose
+`patronage:part:employ` (ordered, `approve-distribution` by motion), the patronage feat's, whose
 handler is this graft's `employ`: what an associate's part of a
 distributed split buys in shares, as `account_membership_patronage.split`
 gives it, posted on the verdict date through the journal's `record`,

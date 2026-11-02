@@ -8,11 +8,11 @@ export const actions = {
   // enrols the invitee's first device: ordered against revoke, as an enrolment is
   'membership:member:accept': ordered({ check: 'self' }),
   // changes who votes; the cited motion admits
-  'membership:member:admit': ordered({ decide: 'consent', check: 'decided' }),
+  'membership:member:admit': ordered({ decide: 'consent', power: 'admit-member' }),
   // changes who votes; the cited motion suspends
-  'membership:member:suspend': ordered({ check: 'decided' }),
+  'membership:member:suspend': ordered({ power: 'suspend-member' }),
   // freezes the capital account; the cited motion ends the membership
-  'membership:member:exit': ordered({ check: 'decided' }),
+  'membership:member:exit': ordered({ power: 'end-membership' }),
   // erasure wins over every update; the cited motion erases a member who has left
-  'membership:member:erase': ordered({ check: 'decided' }),
+  'membership:member:erase': ordered({ power: 'erase-member' }),
 } satisfies Actions

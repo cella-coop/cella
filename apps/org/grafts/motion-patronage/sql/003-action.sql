@@ -59,5 +59,5 @@ GRANT SELECT ON motion_patronage.approval TO cella_app, cella_guards;
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('patronage:distribution:distribute', 'motion_patronage.approves(jsonb)', 'motion-patronage'),
   ('patronage:part:employ', 'motion_patronage.approves(jsonb)', 'motion-patronage');
-SELECT motion.register_cite('patronage:distribution:distribute', 'motion-patronage');
-SELECT motion.register_cite('patronage:part:employ', 'motion-patronage');
+SELECT motion.register_cite('patronage:distribution:distribute', 'approve-distribution', 'motion-patronage');
+SELECT motion.register_cite('patronage:part:employ', 'approve-distribution', 'motion-patronage');

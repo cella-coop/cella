@@ -41,7 +41,8 @@ graft's, and whether a member is active on a day the `membership` feat's
   in the action's `amount` field. Each feat registers the power its actions need
   in `cella.power`, a core registry; this graft attaches its guard to every
   op listed, then and later, as `circle-membership-motion` attaches its own
-  to `motion.cites`. A write with no power gets no such guard.
+  to `motion.cites`. A write with no power, or whose power is in
+  `motion.cites`, a collective mandate's, gets no such guard.
 - `circle_membership.over(actor, power, about, day)`: the actor holds the
   power through a seat in force in the circle `about` or one it is
   within: a power reaches down the tree from where it is held, never up
@@ -67,7 +68,8 @@ invitee, holds nothing.
 - **seat.add** and **seat.remove** change who holds a role in a
   circle, and so who may use the powers a mandate grants it. Spending
   writes read seats through `circle_membership.may`, so they are ordered.
-- Both are decided (`check: 'decided'`): each cites the motion that
+- Both need `seat-member`, a collective mandate of the circle whose
+  motion carries them: each cites the motion that
   gives or ends the seat. This graft does not join `motion`, so the
   guards that judge them are `circle-membership-motion`'s, a higher order:
   the cited motion carried, and it gives or ends this seat. An

@@ -2,7 +2,7 @@
 -- motion feat so its New form offers it: approving a drafted
 -- distribution, picked from those this graft adds to the form
 -- (`options`).
-SELECT motion.register_carries('distribution', 'Approve a year''s distribution', '[{"name": "distribution", "label": "Distribution", "type": "text", "options": "distributions"}]', 'motion-patronage');
+SELECT motion.register_carries('distribution', 'Approve a year''s distribution', '[{"name": "distribution", "label": "Distribution", "type": "text", "options": "distributions"}]', 'patronage:distribution:approve', 'motion-patronage');
 
 -- An action to approve a distribution names a draft not yet approved,
 -- whatever wrote it; the approval it asks for is recorded with it. A

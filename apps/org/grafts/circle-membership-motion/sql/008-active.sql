@@ -59,13 +59,6 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
-      WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = d.circle AND c.parent IS NULL)
-        THEN 'only the assembly decides to ' || a.kind || ' a member, not ' || d.circle
-    END AS r
-    FROM membership_motion.action a JOIN motion.motion d ON d.id = a.motion
-    WHERE a.motion = payload ->> 'motion'
-    UNION ALL
-    SELECT CASE
       WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = g.circle) THEN 'no circle ' || coalesce(g.circle, 'is named')
       WHEN g.kind = 'seat' AND NOT membership.active(g.member, cella.verdict_date())
         THEN coalesce(g.member, 'no one') || ' is not an active member'
@@ -78,7 +71,7 @@ BEGIN ATOMIC
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
       WHEN NOT circle_motion.decides(d.circle, g.circle)
         THEN d.circle || ' may not decide who sits in ' || g.circle
-    END
+    END AS r
     FROM (
       SELECT m.motion, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'member' AS member, m.args ->> 'role' AS role
       FROM motion.action m

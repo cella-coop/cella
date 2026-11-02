@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -33,12 +33,12 @@ check.
 |---|---|---|
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
 | accept | self: the invitee, signed by the device it enrols | whoever holds the link |
-| admit | decided: the cited motion admits the member and carried | the assembly, by consent |
-| suspend, exit | decided: the cited motion suspends the member, or ends their membership, and carried | the assembly |
-| erase | decided: the cited motion erases a member who has left, and carried | the assembly |
+| admit | `admit-member`, a collective mandate: the cited motion admits the member and carried | the assembly, by consent |
+| suspend, exit | `suspend-member`, `end-membership`, collective mandates: the cited motion suspends the member, or ends their membership, and carried | the assembly, by motion |
+| erase | `erase-member`, a collective mandate: the cited motion erases a member who has left, and carried | the assembly, by motion |
 
-`004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's; the decided
-writes are listed in `motion.cites` by the `membership-motion` graft.
+`004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's; the writes a motion carries
+are listed in `motion.cites`, with their powers, by the `membership-motion` graft.
 
 ## Schema
 

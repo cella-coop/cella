@@ -3,4 +3,4 @@
 -- a motion's roll attaches its guard that the motion closed and passed.
 -- That the motion changed the circle's policies that day, and that the
 -- version reads them, is the document feat's guard.
-SELECT motion.register_cite('document:document:generate', 'document-motion');
+SELECT motion.register_cite('document:document:generate', 'adopt-policy', 'document-motion');

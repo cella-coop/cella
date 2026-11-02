@@ -14,21 +14,15 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p;
 END;
 
--- motion:motion:propose — who decides what of members and seats:
--- the assembly alone admits, suspends and lets members go; a seat is the
+-- motion:motion:propose — who decides what of seats: a seat is the
 -- motion of the circle above it, or of the assembly, and names an
 -- active member for a role of that circle; ending one names a seat held.
+-- Which circle admits, suspends and lets members go is the collective
+-- mandates', which circle-motion's guard `empowers` reads.
 CREATE FUNCTION circle_membership_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
-    SELECT CASE
-      WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = d.circle AND c.parent IS NULL)
-        THEN 'only the assembly decides to ' || a.kind || ' a member, not ' || d.circle
-    END AS r
-    FROM membership_motion.action a JOIN motion.motion d ON d.id = a.motion
-    WHERE a.motion = payload ->> 'motion'
-    UNION ALL
     SELECT CASE
       WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = g.circle) THEN 'no circle ' || coalesce(g.circle, 'is named')
       WHEN g.kind = 'seat' AND NOT EXISTS (SELECT FROM membership.member m WHERE m.address = g.member AND m.status = 'active')
@@ -42,7 +36,7 @@ BEGIN ATOMIC
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
       WHEN NOT circle_motion.decides(d.circle, g.circle)
         THEN d.circle || ' may not decide who sits in ' || g.circle
-    END
+    END AS r
     FROM (
       SELECT m.motion, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'member' AS member, m.args ->> 'role' AS role
       FROM motion.action m

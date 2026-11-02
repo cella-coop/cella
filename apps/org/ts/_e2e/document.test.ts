@@ -203,7 +203,7 @@ test('once Malik consents and m-2026-011 closes, only content hashing as it name
   assert.deepEqual(done.value, { document: card, version: 'rate-card-2027@2', hash: v2, adopted: '2026-11-09', receipt: done.value.receipt })
   assert.equal(await adopted(card), 'rate-card-2027@2')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership-motion', 'document', 'document', 'document-motion'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership-motion', 'circle-motion', 'document', 'document', 'document-motion'])
 })
 
 test('a second adoption naming a stale base is refused, and uses no verdict number', async () => {

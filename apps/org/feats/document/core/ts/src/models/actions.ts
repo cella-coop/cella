@@ -11,9 +11,9 @@ export const actions = {
   'document:document:comment': confluent({ power: 'edit-document' }),
   // names the adopted version it replaces, not the draft it saw;
   // refused only if that adopted version moved on
-  'document:document:adopt': ordered({ base: 'adopted', check: 'decided' }),
+  'document:document:adopt': ordered({ base: 'adopted', power: 'adopt-document' }),
   // a generated document's next version, adopted as adopt does: names the
   // adopted version it replaces, and cites the motion that changed its
   // circle's policies
-  'document:document:generate': ordered({ base: 'adopted', check: 'decided' }),
+  'document:document:generate': ordered({ base: 'adopted', power: 'adopt-policy' }),
 } satisfies Actions

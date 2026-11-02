@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-11-01
+updated = 2026-11-02
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -48,7 +48,7 @@ role may select.
 
 ## Handlers
 
-`distribute` (ordered, `decided`) wraps the patronage feat's
+`distribute` (ordered, `approve-distribution` by motion) wraps the patronage feat's
 `distributing`: the distribution marked, then its entry through the
 transaction feat's `record`, linked here. It cites the motion that
 approved the split, and `motion-patronage`'s guards check it.

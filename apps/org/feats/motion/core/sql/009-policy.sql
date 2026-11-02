@@ -4,16 +4,17 @@
 -- policy's kind, its legal wording with each value marked once as
 -- `{name: value}`, perhaps a friendly wording, perhaps the day it applies
 -- from and the day it ends, perhaps the policy of its circle it replaces.
-SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}]', 'motion');
+SELECT motion.register_carries('policy', 'Adopt a policy', '[{"name": "kind", "label": "Kind", "type": "text", "options": "policyKinds"}, {"name": "wording", "label": "Wording, each value marked {name: value}", "type": "text"}, {"name": "friendly", "label": "In plain words", "type": "text", "optional": true}, {"name": "from", "label": "Applies from (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "until", "label": "Until (YYYY-MM-DD)", "type": "text", "optional": true}, {"name": "replaces", "label": "Replaces", "type": "text", "optional": true, "options": "policies"}]', 'motion:policy:adopt', 'motion');
 
 -- Ending a policy, which binds no longer from the verdict date: its
 -- argument, the policy of the motion's circle it ends.
-SELECT motion.register_carries('end', 'End a policy', '[{"name": "policy", "label": "Policy", "type": "text", "options": "policies"}]', 'motion');
+SELECT motion.register_carries('end', 'End a policy', '[{"name": "policy", "label": "Policy", "type": "text", "options": "policies"}]', 'motion:policy:end', 'motion');
 
--- An adoption and an end cite the motion that carries them: the graft that
+-- An adoption and an end cite the motion that carries them, with the
+-- powers a collective mandate of its circle grants them: the graft that
 -- counts the roll attaches its guard that the motion closed and passed.
-SELECT motion.register_cite('motion:policy:adopt', 'motion');
-SELECT motion.register_cite('motion:policy:end', 'motion');
+SELECT motion.register_cite('motion:policy:adopt', 'adopt-policy', 'motion');
+SELECT motion.register_cite('motion:policy:end', 'end-policy', 'motion');
 
 -- A share as a procedure policy writes it, its numerator and its
 -- denominator: a fraction, `2/3`; a whole percent, `25 %`; or `none`.

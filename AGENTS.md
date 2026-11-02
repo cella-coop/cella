@@ -12,6 +12,11 @@ repository works only on the org app, `apps/org/`. Read
   `cella check feats` must pass; never route around it with a re-export.
 - **Every action has a label and a permission** in its feat's
   `models/actions.ts`. A new action without one is incomplete.
+- **Every action declares the power it needs**, its SQL registers it,
+  and a mandate, collective mandate or right that Lanterne adopts grants
+  it; `cella check feats` refuses one that does not. Only the log's
+  first entry declares a check, `first`, instead. An action not yet
+  built is not declared ([actions](_corpus/doc/architecture.md#actions)).
 - **The notary is the only path that appends to the log.** It is a layer,
   the `cella` extension in org's core, not a feat, and has no actions of its
   own. Only the extension's functions write the log; a handler writes

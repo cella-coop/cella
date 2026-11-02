@@ -85,7 +85,6 @@ recovery is not built.
 | `POST /api/person/forget` | ordered | erasure wins over every update |
 | `POST /api/person/enrol` | ordered | a stolen key must not enrol a device that survives its own revocation |
 | `POST /api/person/revoke` | ordered | ordered against that device's writes |
-| `POST /api/person/recover` | ordered | guardian shares |
 
 - **profile** sets a person's own name, email or phone.
 - **forget** erases a person's own contact details.
@@ -101,7 +100,9 @@ recovery is not built.
   revoking itself is no longer current when the notary checks it.
 - **recover** enrols a key from a threshold of guardian shares, with the
   secret split by cella's secret app. It is ordered because two recoveries,
-  or a recovery and a revocation, must not both stand. Not built.
+  or a recovery and a revocation, must not both stand. Not built, so
+  not declared: `POST /api/person/recover` comes with the guardians, and
+  with the power it needs and the mandate that grants it.
 
 Erasing all of a person's personal data, once they have left, is decided
 by the assembly as a membership's write (`membership:member:erase`); a
@@ -115,7 +116,7 @@ worker who was never a member is not erased yet.
 | forget | `keep-profile`, every person's right: their own contact details | everyone |
 | enrol | `keep-devices`, every person's right: their own current key | everyone, for their own devices |
 | revoke | `keep-devices`, every person's right: their own key; `revoke-key` for anyone else's, not built | Julien, for a lost device reported by phone |
-| recover | the guardians' threshold, once built; until then `recover-key`, which no mandate grants | a threshold the assembly sets |
+| recover | not built, and not declared until it is: the guardians' threshold, with the power it needs and the mandate that grants it | a threshold the assembly sets |
 
 `003-powers.sql` registers each action's power, so none is allowed by
 omission: the four a person takes on what is their own need a power

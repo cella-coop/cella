@@ -1,14 +1,14 @@
 // The feat check's power rules: what an action's label in actions.ts says it needs
 // is what its feat registers in cella.power, or for an action a motion
 // carries what motion.cites lists it with, and only the op's own feat
-// registers it.
+// registers it, and a mandate a fixture adopts grants it.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { agree, covered } from '../powers.mjs'
+import { agree, covered, granted, mandates } from '../powers.mjs'
 import { checkSql, undeclared } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
@@ -238,4 +238,28 @@ test('a seat is no check: an action a seat allows names the participant\'s power
   const both = covered([op('motion:motion:propose', 'propose', null, 'seat')], { guards: [], cites: [] })
   assert.match(both[0], /motion:motion:propose checks seat, which is no check/)
   assert.deepEqual(covered([op('motion:motion:propose', 'propose')], { guards: [], cites: [] }), [])
+})
+
+test('a power no mandate, collective mandate or right a fixture adopts grants is refused, but a stance\'s', () => {
+  const motion = (closed, ...wordings) => ({
+    id: 'm-1',
+    closed,
+    action: wordings.map((wording) => ({ kind: 'policy', args: { kind: 'mandate', wording } })),
+  })
+  const grants = mandates([
+    motion('2021-03-01', 'The {role: finance} role holds {power: issue-invoice}, up to {limit: 3 000 €} a write', 'Every {right: member} holds {power: draw-account}'),
+    motion(undefined, 'The {circle: ag} circle holds {power: admit-member}, by motion'),
+    { id: 'm-2', closed: '2021-03-01', action: [{ kind: 'policy', args: { kind: 'rule', wording: 'A {power: pay-supplier} is no mandate' } }] },
+  ], 'lanterne')
+  assert.deepEqual(grants.map((g) => g.power), ['issue-invoice', 'draw-account'])
+  assert.deepEqual(granted([op('invoice:invoice:issue', 'issue-invoice'), op('account:account:draw', 'draw-account')], grants), [])
+
+  const [open] = granted([op('membership:member:admit', 'admit-member')], grants)
+  assert.match(open, /membership:member:admit needs admit-member, which no mandate, collective mandate or right grants in lanterne/)
+  assert.match(granted([op('transaction:transaction:pay', 'pay-supplier')], grants)[0], /needs pay-supplier, which no mandate/)
+  assert.match(granted([op('invoice:invoice:issue', 'issue-invoice')], [])[0], /grants in no fixture/)
+
+  const stance = op('motion:stance:give', 'vote')
+  assert.deepEqual(granted([stance], grants, [{ op: 'motion:stance:give', power: 'vote', owner: 'motion' }]), [])
+  assert.deepEqual(granted([op('import:state:carry', null, null, 'first')], grants), [])
 })

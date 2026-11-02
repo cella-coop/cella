@@ -10,6 +10,4 @@ export const actions = {
   'person:device:enrol': ordered({ power: 'keep-devices' }),
   // ordered against that device's writes; the person's own
   'person:device:revoke': ordered({ power: 'keep-devices' }),
-  // guardian shares, not built
-  'person:device:recover': ordered({ power: 'recover-key' }),
 } satisfies Actions

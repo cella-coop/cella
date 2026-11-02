@@ -27,8 +27,8 @@
 // through writes.mjs that no feat or graft writes a table it does not own
 // beyond the app's listed exceptions, and through
 // powers.mjs that the power each action's label names is the one its SQL
-// registers, and that an action with no power declares a check its SQL
-// backs.
+// registers, that a mandate a fixture adopts grants it, and that an
+// action with no power declares a check its SQL backs.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -36,7 +36,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared } from './sql-check.mjs'
-import { agree, covered, declared } from './powers.mjs'
+import { agree, covered, declared, granted, mandates } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { listed, ratchet, scanTs } from './writes.mjs'
 
@@ -345,6 +345,20 @@ if (sql) {
   })
   const ops = await declared(repo, owned)
   errors.push(...agree(ops, found.powers, found.cites, found.stances), ...covered(ops, found))
+  // The mandates each app's fixtures adopt, which every power must be
+  // among.
+  const { parse } = await import('smol-toml')
+  const grants = []
+  for (const app of apps) {
+    const dir = join(repo, app, 'fixtures')
+    for (const name of existsSync(dir) ? readdirSync(dir) : []) {
+      const file = join(dir, name, 'motion.toml')
+      if (existsSync(file)) {
+        grants.push(...mandates(parse(readFileSync(file, 'utf8')).motion, name))
+      }
+    }
+  }
+  errors.push(...granted(ops, grants, found.stances))
 }
 
 if (errors.length) {

@@ -1,6 +1,6 @@
 // The notary unavoidable, end to end on a seeded Lanterne: a write's state
 // lands only inside a transaction `cella.begin` opened and `cella.submit`
-// settled. The seed carried Lanterne in as the log's first entry, and
+// settled. The seed founded Lanterne as the log's first entry, and
 // every table a feat or a graft made is registered. A psql insert, as the
 // app or as a superuser, is refused; a handler that skips submit, or rolls
 // its verdict back to a savepoint, commits nothing; a verdict settles only
@@ -10,7 +10,8 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { carry, record } from '@cella/org-import/api'
+import { record } from '@cella/org-import/api'
+import { found } from '@cella/org-graft-circle-membership-motion/api'
 import type { Db, Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -51,10 +52,10 @@ after(async () => {
   await su.end()
 })
 
-test('the seed is the log\'s first entry, and every table a feat or a graft made is registered', async () => {
+test('the seed founds Lanterne as the log\'s first entry, and every table a feat or a graft made is registered', async () => {
   assert.equal(await head(), 1)
   const first = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = 1')
-  assert.deepEqual(first, { op: 'import:state:carry', actor: camille })
+  assert.deepEqual(first, { op: 'circle-membership-motion:scope:found', actor: camille })
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const tables = await one<{ made: string; registered: string; triggered: string }>(
     `SELECT count(*) AS made,
@@ -67,9 +68,9 @@ test('the seed is the log\'s first entry, and every table a feat or a graft made
   )
   assert.ok(Number(tables.made) > 50, `${tables.made} tables`)
   assert.deepEqual(tables, { made: tables.made, registered: tables.made, triggered: tables.made })
-  const again = await carry({ from: 'again', load: async () => ({}) }, as())
+  const again = await found({ form: 'scop-sarl-fr', from: 'again', load: async () => ({}) }, as())
   assert.equal(again.state, 'refused')
-  assert.match((again as { reason: string }).reason, /the state before the log comes in once, as its first entry; the log holds 1 already/)
+  assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 1 already/)
 })
 
 test('a psql write is refused, as the app or as a superuser', async () => {

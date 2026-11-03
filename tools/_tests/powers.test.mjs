@@ -261,5 +261,5 @@ test('a power no mandate, collective mandate or right a fixture adopts grants is
 
   const stance = op('motion:stance:give', 'vote')
   assert.deepEqual(granted([stance], grants, [{ op: 'motion:stance:give', power: 'vote', owner: 'motion' }]), [])
-  assert.deepEqual(granted([op('import:state:carry', null, null, 'first')], grants), [])
+  assert.deepEqual(granted([op('circle-membership-motion:scope:found', null, null, 'first')], grants), [])
 })

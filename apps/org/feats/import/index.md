@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -39,16 +39,15 @@ own, an entry balances and falls in an open period.
 So each worker imports their own time export, and a FEC's opening balances
 are an à-nouveaux entry dated in the first open month.
 
-## Carrying the state before the log
+## After the founding
 
-A scope that holds state from before its log, a mock co-op's fixture, brings
-it in once, as one write and the log's first entry: `carry`, which a
-member signs, writes every row inside its transaction, as any write's
-state, and logs where the state came from and how many rows of each kind,
-never the rows. `cella seed` carries a fixture in so, signed by the first
-device in force it enrols. A state table refuses rows written outside a
-write ([the notary](../../core/notary/index.md#bound)), so a seed is a
-write like any other, and on a log that holds an entry it is refused.
+A co-op is founded once, by the log's first entry, the founding
+([circle-membership-motion](../../grafts/circle-membership-motion/index.md#founding)),
+which `cella seed` makes for a mock co-op from its fixture, carrying the
+state it held before its log with it. Every import comes after it: a
+co-op leaving its tools brings its books in after its founding, never in
+it, each import below a write under the importer's mandates, as a FEC's
+entries are carried over by the power `carry-books`.
 
 ## Entities
 
@@ -64,15 +63,12 @@ a person's name: a person among the clients is `a person, line 4`.
 | Action | Label | Why |
 |---|---|---|
 | `POST /api/import/record` | confluent, `record-import` | the record of an import is a fact, the importer's own; every person's right |
-| `carry`, from `cella seed` | ordered, `first` | the state a scope held before its log comes in once, as the log's first entry |
 
 ## Guards
 
 - `import.records`, on `import:run:record`: the run is the actor's on the
   verdict date, with the kind, the dry run and the counts the write names.
 - The table checks that the counts add up to the lines.
-- `import.carries`, on `import:state:carry`: the log is empty, so the state
-  before it comes in once, as its first entry.
 
 ## Schema
 
@@ -84,8 +80,7 @@ app role may select and insert; the guards role may select.
 `core/ts/_tests/run.test.ts` (`cella test slice import`): a run recorded
 as its importer on the day, its lines counted; the counts must add up, and
 the guard refuses a run the write does not name. The e2e scenario `import`
-runs every kind on Lanterne's samples. The e2e scenario `notarised` finds the
-seed carried in as entry 1, and a second carry refused.
+runs every kind on Lanterne's samples.
 
 ## Shell
 

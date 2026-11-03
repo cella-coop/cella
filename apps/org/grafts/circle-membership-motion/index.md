@@ -17,6 +17,47 @@ seats are `circle-membership`'s, what a motion asks of members
 them reads this graft, so the roll and everything that counts it live
 here.
 
+## Founding
+
+A co-op is founded once, by the log's first entry, the founding
+(`found`, `circle-membership-motion:scope:found`), which a founder signs
+from a device it enrols. It lives here because it is what this graft
+joins: the founders' memberships, the root circle they sit in, and the
+founding motion by which they decide. It names the legal form the co-op
+chose ([legal forms](../../../../_corpus/doc/forms.md)) and writes,
+inside its transaction as any write's state, the founders as persons
+with their devices and their memberships, the root circle with each
+founder seated in it, and the root's founding motion, which its founders
+decided and which adopts the first policies, each a default of that
+form, the procedure the root decides by among them. Its writes are the
+fixture's loader's, the seed's (`tools/seed/found.mjs`), never this
+graft's SQL. The log keeps the form, where the founding came from and
+how many rows of each kind, never the rows. A state table refuses rows
+written outside a write
+([the notary](../../core/notary/index.md#bound)), so a founding is a
+write like any other, judged by its guard, `founds`, and every later
+write by the guards its policies set.
+
+`cella seed` founds a mock co-op from its fixture so, signed by the
+first device in force it enrols, and the founding carries the state the
+mock co-op held before its log too: Lanterne's founding motion, the
+assembly of 1 March 2021, and everything since. A fresh scope is founded
+from its form alone (`tools/seed/founding.mjs`): its founders, the
+assembly `ag`, and a founding motion they consent to, taking every
+default of the form. Books come in after the founding, by the import
+feat's imports under the importer's mandates
+([import](../../feats/import/index.md#after-the-founding)).
+
+The e2e scenario `founding` founds a fresh scope as a SCOP SARL in France
+by three founders, whose next write passes the guards its policies set,
+and refuses a founding with no procedure for its root, leaving the log
+empty, and a second founding; `notarised` finds Lanterne's seed founded
+as entry 1.
+
+| Action | Label | Why |
+|---|---|---|
+| `found`, from `cella seed` | ordered, `first` | a co-op is founded once, as the log's first entry, before any policy grants a power |
+
 ## Schema
 
 `circle_membership_motion` (`sql/`):
@@ -144,6 +185,18 @@ she is on no roll of the assembly's.
   asked of the applicant, whose right puts it, so `sits` is not run; an
   application that puts no motion, as the membership feat's `applying`
   alone does not, is refused.
+- `circle_membership_motion.founds`, on `circle-membership-motion:scope:found`, the log's
+  first entry, its check `first`: the log is empty, so a co-op is founded
+  once; the form the founding names is one cella offers (`policy.form`),
+  and its policies take that form's defaults and no other form's, at
+  least one of them. Once the founding's state is written, the co-op can
+  decide: there is one root circle; it decides by a procedure a policy
+  in force there makes, which its founding motion adopted, never only a
+  procedure every scope starts with; and the signer sits in it with a
+  vote, their seat counting on the verdict date
+  (`circle_membership.sits_in`) and, where the procedure names the roles
+  that vote, holding one. A founding with no procedure for its root is
+  refused, saying so, and leaves the log empty.
 
 ## Handlers
 

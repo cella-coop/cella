@@ -801,10 +801,15 @@ configuration and not built
 ([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md)).
 
 No action is allowed by omission: every action declares the power it
-needs. The one that cannot is the log's first entry, which carries in
-once the state a scope held before its log, before any mandate is
-adopted: it declares the check `first` instead, backed by a guard
-registered on it in `cella.guard`. A stance is no check: it
+needs. The one that cannot is the log's first entry, the founding
+(`circle-membership-motion:scope:found`), which founds the co-op once,
+before any mandate is adopted: it declares the check `first` instead,
+backed by `circle-membership-motion`'s guard registered on it in
+`cella.guard`: the log is empty, the form it names is one cella offers
+and the one its policies take, and the state it writes is a root that
+can decide, one root circle deciding by a procedure a policy in force
+there makes, with its signer seated there with a vote
+([the first entry](trust.md#one-server)). A stance is no check: it
 needs the power its procedure gives the seats on the roll, and `cella
 check feats` refuses `check: 'roll'`. What is the actor's own is no
 check: it needs the power their right grants, and `cella check feats`

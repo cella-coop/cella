@@ -5,7 +5,7 @@
 import type { Slice } from '@cella/org-db'
 import { listing, run, runs } from '../drivers/run.ts'
 
-export { carry, record, type Carrying } from '../handlers/index.ts'
+export { record } from '../handlers/index.ts'
 export { run, runs } from '../drivers/run.ts'
 
 export const slice: Slice = {

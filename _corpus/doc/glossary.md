@@ -51,6 +51,7 @@ updated = 2026-11-03
 | **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any guard |
 | **verdict** | the notary's signed ruling on an ordered action, Settled or Refused, committed with its state change |
 | **log** | the scope's hash-chained, signed record of every accepted action, from which the state folds |
+| **founding** | the log's first entry, which settles on an empty log alone and founds the co-op (`circle-membership-motion:scope:found`), signed by a founder seated in its root: its legal form, its founders as persons with their devices and memberships, the root circle with each founder seated in it, and the root's founding motion, which adopts the first policies from the form's defaults, the procedure the root decides by among them; a mock co-op's founding carries the state it held before its log too. Every later entry passes the guards those policies set |
 | **fold** | rebuilding state, or an outcome, deterministically from the log |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
@@ -74,7 +75,7 @@ updated = 2026-11-03
 | **import** | a file from another tool brought in through the normal signed actions, each record one action as the importing member, judged by the guards; recorded with what each line came to |
 | **dry run** | an import whose actions are each made and rolled back, saying what would be created and what refused |
 | **FEC** | the fichier des écritures comptables every French accounting tool exports (LPF art. A47 A-1); its entries are carried over into the journal |
-| **carry** | posting an entry from the books of the co-op's last tool, which may open accounts and touch cash, under its own power |
+| **carry** | posting an entry from the books of the co-op's last tool, which may open accounts and touch cash, under its own power: a write after the founding, by the importer's mandates |
 
 ## Co-ops
 

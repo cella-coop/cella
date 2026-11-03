@@ -50,10 +50,3 @@ export interface Kind {
   title: string
   formats: string
 }
-
-// The state a scope held before its log, as it was carried in: where it
-// came from, such as a fixture, and how many rows of each kind.
-export interface Carried {
-  from: string
-  carried: Record<string, number>
-}

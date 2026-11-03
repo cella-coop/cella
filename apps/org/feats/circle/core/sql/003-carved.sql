@@ -6,19 +6,20 @@
 -- mandate's, or a budget over the same period at least the mandate's. A
 -- power no circle above holds by a mandate is the assembly's, which
 -- holds every power inherently, so it caps nothing; a role every working
--- circle has (`*`) and a right are the assembly's to grant, and are neither
--- carved nor carved from.
+-- circle has (`*`) is the assembly's to grant, and is neither carved nor
+-- carved from.
 --
 -- Each mandate in force on `day` with the circle it is of: its role's,
--- or the circle a collective mandate is on; none for a right.
+-- or the circle a collective mandate is on.
 CREATE FUNCTION circle.held(day date) RETURNS TABLE (
   id bigint, circle text, power text, "limit" cella.amount, budget cella.amount, per text
 )
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT m.id, coalesce(m.circle, r.circle), m.power, m."limit", m.budget, m.per
+  SELECT m.id, coalesce(c.id, r.circle), m.power, m."limit", m.budget, m.per
   FROM circle.mandate m
-  LEFT JOIN circle.role r ON r.id = m.role
+  LEFT JOIN circle.circle c ON c.id = m.grantee
+  LEFT JOIN circle.role r ON r.id = m.grantee
   WHERE (m.revoked IS NULL OR m.revoked > held.day)
     AND (m."from" IS NULL OR m."from" <= held.day)
     AND (m.until IS NULL OR m.until > held.day);
@@ -29,7 +30,7 @@ END;
 CREATE FUNCTION circle.beyond(day date) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT 'mandate ' || m.id || ' grants ' || m.power || ' to ' || coalesce(o.role, o.circle)
+  SELECT 'mandate ' || m.id || ' grants ' || m.power || ' to ' || o.grantee
     || ' beyond what ' || s.circle || ' holds of it'
   FROM circle.held(beyond.day) m
   JOIN circle.mandate o ON o.id = m.id

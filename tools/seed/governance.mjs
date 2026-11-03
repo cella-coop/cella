@@ -20,7 +20,8 @@ export async function actions(db, d) {
 // adopted the day the motion closed and applying from then, or from the
 // day it names; a
 // procedure policy's values copied into the procedure they make, a
-// mandate policy's into the mandate it grants, as circle-motion's
+// mandate policy's into the mandate it grants and a right policy's into
+// its right, as circle-motion's
 // `adopt` does, and a rule of the capital's or the work share's terms
 // into them, as account-motion and motion-patronage carry them. Returns
 // how many.

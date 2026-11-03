@@ -9,8 +9,9 @@ SELECT motion.register_carries('nest', 'Nest a circle', '[{"name": "circle", "la
 -- Which circle an action is about: the circle nested; for a mandate
 -- policy, the circle of the role it marks, or the circle it marks for a
 -- collective mandate; for the end of a policy that granted a mandate,
--- the circle of the mandate's role, or the circle it is on. A role every
--- working circle has (`*`) is the assembly's to grant.
+-- the circle of the mandate's role, or the circle that is its grantee.
+-- A role every working circle has (`*`) is the assembly's to grant, and
+-- so is a right, which reaches every circle: neither names one.
 CREATE VIEW circle_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args,
        CASE m.kind
@@ -20,15 +21,18 @@ SELECT m.motion, m.n, m.kind, m.args,
            (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = motion.marked(m.args ->> 'wording') ->> 'role')
          )
          WHEN 'end' THEN (
-           SELECT coalesce(x.circle, nullif(r.circle, '*'))
-           FROM circle.mandate x LEFT JOIN circle.role r ON r.id = x.role
+           SELECT coalesce(c.id, nullif(r.circle, '*'))
+           FROM circle.mandate x
+           LEFT JOIN circle.circle c ON c.id = x.grantee
+           LEFT JOIN circle.role r ON r.id = x.grantee
            WHERE x.policy = m.args ->> 'policy'
          )
        END AS circle
 FROM motion.action m
 WHERE m.kind = 'nest'
-  OR (m.kind = 'policy' AND m.args ->> 'kind' = 'mandate')
-  OR (m.kind = 'end' AND EXISTS (SELECT FROM circle.mandate x WHERE x.policy = m.args ->> 'policy'));
+  OR (m.kind = 'policy' AND m.args ->> 'kind' IN ('mandate', 'right'))
+  OR (m.kind = 'end' AND EXISTS (SELECT FROM circle.mandate x WHERE x.policy = m.args ->> 'policy'))
+  OR (m.kind = 'end' AND EXISTS (SELECT FROM circle.right x WHERE x.policy = m.args ->> 'policy'));
 
 -- Whether a motion of the circle `decider` may decide about the circle
 -- `subject`: the assembly decides about every circle, and a circle about
@@ -45,7 +49,9 @@ END;
 -- applies to, and the motion's circle may decide it: about the circle
 -- nested, and the place it moves to; for a mandate policy, whose values
 -- the circle feat holds sound (`circle.mandate_flaw`), about the role's
--- circle; for the end of one, about its mandate's.
+-- circle; for a right policy, whose values it holds sound
+-- (`circle.right_flaw`), about every circle; for the end of one, about
+-- its mandate's or its right's.
 CREATE FUNCTION circle_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -55,12 +61,14 @@ BEGIN ATOMIC
         THEN 'no circle ' || coalesce(m.args ->> 'circle', 'is named') || ' to nest'
       WHEN m.kind = 'nest' AND NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = m.args ->> 'parent')
         THEN 'no circle ' || coalesce(m.args ->> 'parent', 'is named') || ' to nest under'
-      WHEN m.kind = 'policy' AND circle.mandate_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
+      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'mandate' AND circle.mandate_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
         THEN circle.mandate_flaw(motion.marked(m.args ->> 'wording'))
+      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'right' AND circle.right_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
+        THEN circle.right_flaw(motion.marked(m.args ->> 'wording'))
       WHEN NOT circle_motion.decides(d.circle, coalesce(m.circle, '*'))
         OR (m.kind = 'nest' AND NOT circle_motion.decides(d.circle, m.args ->> 'parent') AND d.circle IS DISTINCT FROM m.args ->> 'parent')
         THEN d.circle || ' may not decide to '
-          || CASE m.kind WHEN 'nest' THEN 'nest' WHEN 'policy' THEN 'grant a mandate' ELSE 'revoke a mandate' END
+          || CASE m.kind WHEN 'nest' THEN 'nest' WHEN 'policy' THEN CASE m.args ->> 'kind' WHEN 'right' THEN 'give a right' ELSE 'grant a mandate' END ELSE 'revoke a mandate' END
           || ' in ' || coalesce(m.circle, 'every working circle')
     END AS r
     FROM circle_motion.action m

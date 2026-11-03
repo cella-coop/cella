@@ -32,7 +32,7 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
   )
   const mandates = await db.query<{ policy: string; label: string }>(
     `SELECT m.policy, m.power || ' (' || r.name || ')' AS label
-     FROM circle.mandate m JOIN circle.role r ON r.id = m.role
+     FROM circle.mandate m JOIN circle.role r ON r.id = m.grantee
      WHERE r.id = ANY($1) AND (m.revoked IS NULL OR m.revoked > cella.verdict_date()) ORDER BY r.name, m.power`,
     [roles.rows.map((r) => r.id)],
   )

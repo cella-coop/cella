@@ -1,6 +1,6 @@
 +++
 title = "circle-membership"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Seats: which person holds which role in which circle. A seat is the
@@ -53,8 +53,8 @@ graft's, and whether a member is active on a day the `membership` feat's
   It is the authority every read asks (`cella.authority`), and finds no
   right.
 - `circle_membership.entitled(actor, power, cents, day)` (`008-rights.sql`):
-  the actor holds the power by a right, with no seat: a mandate in force
-  on every person, member or employee, within its `limit`, where
+  the actor holds the power by a right, with no seat: a right in force
+  in `circle.right`, no mandate, on every person, member or employee, within its `limit`, where
   person's core says the actor is one of them on the day
   (`person.holds`). A right lets each act on what is their own, which
   the feat's guard checks, so it opens no one else's rows to read

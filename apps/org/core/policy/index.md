@@ -1,10 +1,10 @@
 +++
 title = "Policy"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
-circle adopted by motion, a mandate, a rule or a procedure, with the
+circle adopted by motion, a mandate, a right, a rule or a procedure, with the
 motion that adopted it, the days it applies and the default it takes, and
 the legal forms cella offers with their default policies
 ([policies](../../../../_corpus/doc/architecture.md#policies)). A core
@@ -27,7 +27,7 @@ reads it.
   defaults, `sql/002-scop-sarl-fr.sql` the SCOP SARL's.
 - `policy.policy`: a policy, named by the action that adopted it, its
   motion and its number there (`m-2026-013/1`); its circle, its kind
-  (`mandate`, `rule` or `procedure`), the BLAKE3 of its wordings
+  (`mandate`, `right`, `rule` or `procedure`), the BLAKE3 of its wordings
   (`policy.hash`), the day it was adopted, the day it applies from, the
   day it ends, if any, the policy it replaces, and the action that ended
   it (`ended_by`, `m-2026-020/1`), if a motion did; and, for a protected

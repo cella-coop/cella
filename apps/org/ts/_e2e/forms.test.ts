@@ -106,7 +106,7 @@ test('a policy taking a default worded otherwise, or one taken already, is refus
   assert.match(reason(otherwise), /a policy takes scop-sarl-fr:work-share worded as it reads: one worded otherwise takes no default/)
   const again = await proposal({ kind: 'rule', wording: workShare, friendly: 'At least a quarter of the surplus goes to the workers.', takes: 'scop-sarl-fr:work-share' })
   assert.match(reason(again), /m-2021-001\/74 takes scop-sarl-fr:work-share already: a policy taking it again replaces that one/)
-  const unprotected = await proposal({ kind: 'mandate', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/67' }, 'extraordinary')
+  const unprotected = await proposal({ kind: 'right', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/67' }, 'extraordinary')
   assert.match(reason(unprotected), /scop-sarl-fr:mark-read is protected by extraordinary: a policy takes it protected as it is/)
 })
 

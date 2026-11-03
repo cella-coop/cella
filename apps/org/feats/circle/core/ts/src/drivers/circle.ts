@@ -36,9 +36,9 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
     [id, working],
   )
   const mandates = await db.query<Omit<Mandate, 'sentence'>>(
-    `SELECT id::text, role, power, policy, cella.cents("limit") AS "limit", cella.cents(budget) AS budget, per,
+    `SELECT id::text, grantee, power, policy, cella.cents("limit") AS "limit", cella.cents(budget) AS budget, per,
             to_char("from", 'YYYY-MM-DD') AS "from", to_char(until, 'YYYY-MM-DD') AS until, to_char(revoked, 'YYYY-MM-DD') AS revoked
-     FROM circle.mandate WHERE role = ANY($1) ORDER BY role, power, "from"`,
+     FROM circle.mandate WHERE grantee = ANY($1) ORDER BY grantee, power, "from"`,
     [roles.rows.map((r) => r.id)],
   )
   // Each mandate reads as its policy's sentence, from the register.

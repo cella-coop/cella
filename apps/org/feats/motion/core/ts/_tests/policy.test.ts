@@ -182,7 +182,7 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   assert.equal(await asks({ kind: 'rule', wording: 'Remote work is two days a week' }), null)
   assert.match((await asks({ kind: 'rule', wording: '{rate: 20 %}, then {rate: 20 %}' })) ?? '', /rate is marked twice/)
   assert.match((await asks({ kind: 'rule', wording: 'at least {minimum: 10} shares' })) ?? '', /minimum is 10: a rule's value says which way is stricter/)
-  assert.match((await asks({ kind: 'custom', wording: 'x' })) ?? '', /a policy is a mandate, a rule or a procedure, not custom/)
+  assert.match((await asks({ kind: 'custom', wording: 'x' })) ?? '', /a policy is a mandate, a right, a rule or a procedure, not custom/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '2026-11-14' })) ?? '', /applies at the earliest from 2026-11-21/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '1 December' })) ?? '', /written YYYY-MM-DD/)
   assert.match((await asks({ kind: 'rule', wording: 'x', replaces: 'm-2026-001/1' })) ?? '', /no rule of ag in force is m-2026-001\/1/)

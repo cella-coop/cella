@@ -1,6 +1,6 @@
 // Rights, on a database holding the app's core, the circle and member
-// feats and this graft: `circle_membership.entitled` finds a right's mandate
-// with no seat, held by whoever person's core says is one of the people
+// feats and this graft: `circle_membership.entitled` finds a right, no
+// mandate, with no seat, held by whoever person's core says is one of the people
 // it names that day: every person, every active member. A right no feat
 // registered, every employee's here, where employment is not migrated,
 // is held by no one. Run by `cella test slice circle-membership`.
@@ -26,7 +26,7 @@ before(async () => {
     [amina, ines, paul],
   )
   await db.query(
-    `INSERT INTO circle.mandate ("right", power, policy, "from") VALUES
+    `INSERT INTO circle.right ("right", power, policy, "from") VALUES
        ('person', 'keep-profile', 'm-2021-001/1', '2021-03-01'),
        ('member', 'draw-account', 'm-2021-001/2', '2021-03-01'),
        ('employee', 'log-time', 'm-2021-001/3', '2021-03-01')`,

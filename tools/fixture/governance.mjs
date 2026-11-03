@@ -27,8 +27,8 @@ export function governance(read, fail) {
       if (m.kind === 'admit' && (members.get(a.member)?.status !== 'invited' || !(a.shares > 0))) {
         fail(`${where}: admits someone invited, with shares`)
       }
-      if (m.kind === 'policy' && (!['mandate', 'rule', 'procedure'].includes(a.kind) || !a.wording)) {
-        fail(`${where}: a policy is a mandate, a rule or a procedure, with its wording`)
+      if (m.kind === 'policy' && (!['mandate', 'right', 'rule', 'procedure'].includes(a.kind) || !a.wording)) {
+        fail(`${where}: a policy is a mandate, a right, a rule or a procedure, with its wording`)
       }
       if (['seat', 'unseat', 'nest'].includes(m.kind) && !circles.has(a.circle)) {
         fail(`${where}: no circle ${a.circle}`)

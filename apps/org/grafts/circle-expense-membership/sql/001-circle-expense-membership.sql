@@ -26,7 +26,7 @@ BEGIN ATOMIC
     SELECT cella.cents(m.budget) AS budget, m.per,
            circle_expense_membership.approved(cella.actor(), cella.verdict_date(), coalesce(m.per, 'month')) AS spent
     FROM circle_membership.seat p
-    JOIN circle.mandate m ON m.role = p.role
+    JOIN circle.mandate m ON m.grantee = p.role
     WHERE p.member = cella.actor()
       AND m.power = 'approve-expense'
       AND (p.since IS NULL OR p.since <= cella.verdict_date())

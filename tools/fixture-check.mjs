@@ -79,26 +79,31 @@ const check = (name) => {
       has(circles, r.circle, 'circle', `role ${r.id}`)
     }
   }
-  // A mandate is a policy a closed motion adopted: its sentence marks a
-  // role the circles have, for a collective mandate a circle, or for a
-  // right the people who hold it, only one, and a power named as an id.
-  const mandates = (motion.motion ?? [])
+  // A mandate is a policy a closed motion adopted: its sentence marks its
+  // grantee, a role the circles have or, for a collective mandate, a
+  // circle, only one, never a person nor a right, and a power named as an
+  // id. A right is a policy of its own kind: it marks the people it is
+  // given to, every person, member or employee, and a power.
+  const policies = (motion.motion ?? [])
     .filter((d) => d.closed)
     .flatMap((d) => (d.action ?? []).map((m, i) => ({ m, where: `${d.id}/${i + 1}` })))
-    .filter(({ m }) => m.kind === 'policy' && m.args?.kind === 'mandate')
-  for (const { m, where } of mandates) {
+    .filter(({ m }) => m.kind === 'policy' && ['mandate', 'right'].includes(m.args?.kind))
+  for (const { m, where } of policies) {
     const marked = (name) => new RegExp(`\\{\\s*${name}\\s*:\\s*([^{}]*?)\\s*\\}`).exec(m.args.wording ?? '')?.[1]
-    if ([marked('role'), marked('circle'), marked('right')].filter(Boolean).length > 1) {
-      fail(`mandate ${where}: is on a role, on a circle or a right, only one`)
-    } else if (marked('right')) {
-      has(new Set(['person', 'member', 'employee']), marked('right'), 'right', `mandate ${where}`)
+    const kind = m.args.kind
+    if (kind === 'right') {
+      has(new Set(['person', 'member', 'employee']), marked('right'), 'right', `right ${where}`)
+    } else if (marked('person') || marked('right')) {
+      fail(`mandate ${where}: is granted to a role or a circle, never to ${marked('person') ? 'a person' : 'a right'}`)
+    } else if (marked('role') && marked('circle')) {
+      fail(`mandate ${where}: has one grantee, a role or a circle`)
     } else if (marked('circle')) {
       has(circles, marked('circle'), 'circle', `mandate ${where}`)
     } else {
       has(roles, marked('role'), 'role', `mandate ${where}`)
     }
     if (!/^[a-z]+(-[a-z]+)*$/.test(marked('power') ?? '')) {
-      fail(`mandate ${where}: power ${marked('power')} is no id`)
+      fail(`${kind} ${where}: power ${marked('power')} is no id`)
     }
   }
 

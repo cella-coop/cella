@@ -218,8 +218,8 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
-      WHEN coalesce(m.args ->> 'kind', '') NOT IN ('mandate', 'rule', 'procedure')
-        THEN 'a policy is a mandate, a rule or a procedure, not ' || coalesce(m.args ->> 'kind', 'nothing')
+      WHEN coalesce(m.args ->> 'kind', '') NOT IN ('mandate', 'right', 'rule', 'procedure')
+        THEN 'a policy is a mandate, a right, a rule or a procedure, not ' || coalesce(m.args ->> 'kind', 'nothing')
       WHEN policy.flaw(m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly') IS NOT NULL
         THEN policy.flaw(m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly')
       WHEN coalesce(m.args ->> 'from', '') !~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'

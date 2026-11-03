@@ -66,7 +66,7 @@ args = { kind = "mandate", wording = "The {role: member} role holds {power: edit
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time", protected = "extraordinary", takes = "scop-sarl-fr:log-time" }
+args = { kind = "right", wording = "Every {right: employee} holds {power: log-time}, to log, correct and submit their own time", protected = "extraordinary", takes = "scop-sarl-fr:log-time" }
 
 [[motion.action]]
 kind = "policy"
@@ -251,7 +251,7 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: excl
 # Protected as every right is.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: erase-own-data}, to erase their own personal data once they have left", protected = "extraordinary", takes = "scop-sarl-fr:erase-own-data" }
+args = { kind = "right", wording = "Every {right: person} holds {power: erase-own-data}, to erase their own personal data once they have left", protected = "extraordinary", takes = "scop-sarl-fr:erase-own-data" }
 
 [[motion.action]]
 kind = "policy"
@@ -306,51 +306,51 @@ args = { kind = "mandate", wording = "The {circle: coordination} circle holds {p
 # Each is protected by the extraordinary assembly's procedure.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details", protected = "extraordinary", takes = "scop-sarl-fr:keep-profile" }
+args = { kind = "right", wording = "Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details", protected = "extraordinary", takes = "scop-sarl-fr:keep-profile" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices", protected = "extraordinary", takes = "scop-sarl-fr:keep-devices" }
+args = { kind = "right", wording = "Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices", protected = "extraordinary", takes = "scop-sarl-fr:keep-devices" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary", takes = "scop-sarl-fr:upload-file" }
+args = { kind = "right", wording = "Every {right: person} holds {power: upload-file}, to upload a file of the co-op's", protected = "extraordinary", takes = "scop-sarl-fr:upload-file" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join", protected = "extraordinary", takes = "scop-sarl-fr:accept-invitation" }
+args = { kind = "right", wording = "Every {right: person} holds {power: accept-invitation}, to take up their invitation to join", protected = "extraordinary", takes = "scop-sarl-fr:accept-invitation" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: file-record}, to file a record of their own", protected = "extraordinary", takes = "scop-sarl-fr:file-record" }
+args = { kind = "right", wording = "Every {right: person} holds {power: file-record}, to file a record of their own", protected = "extraordinary", takes = "scop-sarl-fr:file-record" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary", takes = "scop-sarl-fr:mark-read" }
+args = { kind = "right", wording = "Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read", protected = "extraordinary", takes = "scop-sarl-fr:mark-read" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: record-import}, to record an import of their own", protected = "extraordinary", takes = "scop-sarl-fr:record-import" }
+args = { kind = "right", wording = "Every {right: person} holds {power: record-import}, to record an import of their own", protected = "extraordinary", takes = "scop-sarl-fr:record-import" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit", protected = "extraordinary", takes = "scop-sarl-fr:draw-account" }
+args = { kind = "right", wording = "Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit", protected = "extraordinary", takes = "scop-sarl-fr:draw-account" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay", protected = "extraordinary", takes = "scop-sarl-fr:spread-capital" }
+args = { kind = "right", wording = "Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay", protected = "extraordinary", takes = "scop-sarl-fr:spread-capital" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting", protected = "extraordinary", takes = "scop-sarl-fr:mark-attendance" }
+args = { kind = "right", wording = "Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting", protected = "extraordinary", takes = "scop-sarl-fr:mark-attendance" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: member} holds {power: save-report}, to save a report of their own", protected = "extraordinary", takes = "scop-sarl-fr:save-report" }
+args = { kind = "right", wording = "Every {right: member} holds {power: save-report}, to save a report of their own", protected = "extraordinary", takes = "scop-sarl-fr:save-report" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts", protected = "extraordinary", takes = "scop-sarl-fr:claim-expense" }
+args = { kind = "right", wording = "Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts", protected = "extraordinary", takes = "scop-sarl-fr:claim-expense" }
 
 # The law's floors on each year's surplus, as the SCOP SARL's defaults
 # state them: at least a quarter to all the employees as the work share,
@@ -371,7 +371,7 @@ args = { kind = "rule", wording = "At least {reserve_share: 15 % | more is stric
 # their own. Protected as every right is.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership", protected = "extraordinary", takes = "scop-sarl-fr:withdraw-membership" }
+args = { kind = "right", wording = "Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership", protected = "extraordinary", takes = "scop-sarl-fr:withdraw-membership" }
 
 # The right to apply, the last of the founding motion: an employee who
 # has worked a year asks to join by their own action, which puts their
@@ -379,7 +379,7 @@ args = { kind = "mandate", wording = "Every {right: person} holds {power: withdr
 # Protected as every right is.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on", protected = "extraordinary", takes = "scop-sarl-fr:apply-membership" }
+args = { kind = "right", wording = "Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on", protected = "extraordinary", takes = "scop-sarl-fr:apply-membership" }
 
 [[motion]]
 id = "m-2026-006"

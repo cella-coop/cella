@@ -341,7 +341,7 @@ test('Chloé proposes and discusses a motion in the assembly by her participant 
   // The founding motion grants the participant role every circle has its
   // two mandates, each a policy of the assembly.
   const granted = await all<{ power: string; circle: string }>(
-    `SELECT m.power, r.circle FROM circle.mandate m JOIN circle.role r ON r.id = m.role WHERE m.role = 'participant' AND m.revoked IS NULL ORDER BY m.power`,
+    `SELECT m.power, r.circle FROM circle.mandate m JOIN circle.role r ON r.id = m.grantee WHERE m.grantee = 'participant' AND m.revoked IS NULL ORDER BY m.power`,
   )
   assert.deepEqual(granted, [{ power: 'discuss', circle: '*' }, { power: 'propose', circle: '*' }])
   // Chloé sits in the assembly as a member and in Marketing with no role:

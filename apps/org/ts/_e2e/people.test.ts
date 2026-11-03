@@ -116,10 +116,10 @@ test('Inès, seated in Web and no member, logs her own time and books it to a We
 })
 
 test('Inès, employed and no member, keeps her profile and devices, logs her time and claims an expense by her rights, beside her seat in Web; Paul, gone, holds an employee\'s no longer', async () => {
-  // The founding motion grants every person, member and employee their
-  // rights, each a mandate of the assembly with no seat.
+  // The founding motion gives every person, member and employee their
+  // rights, each a policy of its own kind, no mandate, with no seat.
   const rights = await all<{ right: string; powers: string[] }>(
-    `SELECT "right", array_agg(power ORDER BY power) AS powers FROM circle.mandate WHERE "right" IS NOT NULL AND revoked IS NULL GROUP BY "right" ORDER BY "right"`,
+    `SELECT "right", array_agg(power ORDER BY power) AS powers FROM circle.right WHERE revoked IS NULL GROUP BY "right" ORDER BY "right"`,
   )
   assert.deepEqual(rights, [
     { right: 'employee', powers: ['apply-membership', 'claim-expense', 'log-time'] },

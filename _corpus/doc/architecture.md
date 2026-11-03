@@ -741,22 +741,33 @@ that it still does; an admission, which settles inside the close, is
 checked at the proposal alone. Both kinds are carved from what the circle above
 holds ([circle](../../apps/org/feats/circle/index.md#authority)).
 
-**A right is a mandate people hold as such**, with no seat: every
-person, every member or every employee (`{right: member}`), never an
-agent or a service. Who holds a right on a day is said by person's
+**A mandate's grantee is one circle or one role**, by one key: every
+circle and every role is a grantee, `circle.grantee`, the supertype in
+circle's core that a mandate's `grantee` references, so circles and
+roles share one namespace of ids. A person never holds a mandate
+directly: they hold a role by a seat, and the role holds the mandate, so
+`circle.mandate_flaw` refuses a mandate policy that names a person
+([circle](../../apps/org/feats/circle/index.md#entities)).
+
+**A right is no mandate**: it is a power the legal form gives every
+person, every member or every employee as such (`{right: member}`),
+with no seat, never an agent or a service, so it has no grantee, no
+issuer and no chain. It is a policy of its own kind, `right`, and its
+values are copied into `circle.right` as a mandate's are into
+`circle.mandate`. Who holds a right on a day is said by person's
 core, which every kind of person nests in: `person.holds(actor, right,
 day)` asks the function each kind registers by `person.register_right`,
 `person` itself the known people, `membership` the active members by
 `membership.active`, `employment` those employed by
 `employment.employed`, so person's core knows none of its children by
 name. `circle-membership`'s guard on every op with a power takes a
-right's mandate, found by `circle_membership.entitled`, as it takes
-one on the actor's seats, so a person with no seat holds their rights
-all the same. A right lets each act on what is their own, and so is
-never the authority a read asks (`circle_membership.may`): holding
-`keep-profile` opens no one else's profile, nor `log-time` another's
-time. A right is the assembly's to grant, as a role every circle has
-is, and reaches the whole co-op: it is neither carved nor carved from.
+right, found by `circle_membership.entitled`, as it takes a mandate on
+the actor's seats, so a person with no seat holds their rights all the
+same. A right lets each act on what is their own, and so is never the
+authority a read asks (`circle_membership.may`): holding `keep-profile`
+opens no one else's profile, nor `log-time` another's time. A right is
+adopted with the statutes and reaches the whole co-op: it is neither
+carved nor carved from.
 What was once the actor's own is a right's power, and the guard that it
 is their own stays the feat's: a person keeps their profile and devices
 (`keep-profile`, `keep-devices`), uploads a file (`upload-file`), takes
@@ -967,10 +978,11 @@ method, share, quorum and ballot are copied by the motion feat into
 ([procedures](../../apps/org/feats/motion/index.md#procedures)); the
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
-scope's root does. A mandate policy's role, circle or right, power and limit
+scope's root does. A mandate policy's grantee, a role or a circle, power and limit
 or budget are copied by the circle feat into `circle.mandate`, which
-`circle_membership.may` reads for a role's, `circle_membership.entitled` for a right's and `circle-motion` for a
-circle's, through `circle-motion`, whose adoption
+`circle_membership.may` reads for a role's and `circle-motion` for a
+circle's, and a right policy's right, power and limit into
+`circle.right`, which `circle_membership.entitled` reads, through `circle-motion`, whose adoption
 and ending of a policy are the motion feat's with the circle feat's copy
 in the same write
 ([mandates](../../apps/org/feats/circle/index.md#mandates)).

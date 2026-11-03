@@ -41,7 +41,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 
 // The policy granting the members their right to draw on their account.
 const drawing = async () =>
-  (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE "right" = 'member' AND power = 'draw-account'`)).policy
+  (await one<{ policy: string }>(`SELECT policy FROM circle.right WHERE "right" = 'member' AND power = 'draw-account'`)).policy
 
 before(async () => {
   await su.connect()
@@ -55,8 +55,8 @@ after(async () => {
 
 test('Lanterne\'s rights and the mandates that hand out mandates are protected by the extraordinary assembly', async () => {
   const protectedBy = await all<{ id: string; protected: string; held: string }>(
-    `SELECT r.id, r.protected, coalesce('right ' || m."right", m.circle || ' ' || m.power) AS held
-     FROM policy.policy r JOIN circle.mandate m ON m.policy = r.id
+    `SELECT r.id, r.protected, coalesce('right ' || g."right", m.grantee || ' ' || m.power) AS held
+     FROM policy.policy r LEFT JOIN circle.mandate m ON m.policy = r.id LEFT JOIN circle.right g ON g.policy = r.id
      WHERE r.protected IS NOT NULL ORDER BY r.n`,
   )
   assert.equal(protectedBy.length, 22)
@@ -65,7 +65,7 @@ test('Lanterne\'s rights and the mandates that hand out mandates are protected b
     protectedBy.filter((p) => !p.held.startsWith('right ')).map((p) => p.held),
     ['ag adopt-policy', 'ag end-policy', 'ag seat-member', 'coordination adopt-policy', 'coordination end-policy', 'coordination seat-member'],
   )
-  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE "right" IS NOT NULL`)).n, 16)
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.right`)).n, 16)
 })
 
 test('an ordinary assembly\'s motion ending the members\' right to draw is refused, saying which procedure it needs', async () => {
@@ -98,7 +98,7 @@ test('a policy naming a procedure looser than its own motion\'s is refused', asy
       actions: [
         {
           kind: 'policy',
-          args: { kind: 'mandate', wording: 'Every {right: member} holds {power: mark-read}, to mark a text read', protected: 'ordinary' },
+          args: { kind: 'right', wording: 'Every {right: member} holds {power: mark-read}, to mark a text read', protected: 'ordinary' },
         },
       ],
     },
@@ -107,7 +107,7 @@ test('a policy naming a procedure looser than its own motion\'s is refused', asy
   assert.match(reason(out), /ordinary is looser than extraordinary, by which m-2026-\d+ is decided/)
 })
 
-test('the same motion put to the extraordinary assembly and passed ends the right, and its mandate is revoked', async () => {
+test('the same motion put to the extraordinary assembly and passed ends the right, and it is revoked', async () => {
   const policy = await drawing()
   const { motion } = settled(
     await propose(
@@ -133,7 +133,7 @@ test('the same motion put to the extraordinary assembly and passed ends the righ
     ends: '2026-11-21',
     ended_by: `${motion}/1`,
   })
-  assert.equal((await one<{ revoked: boolean }>(`SELECT revoked IS NOT NULL AS revoked FROM circle.mandate WHERE policy = $1`, [policy])).revoked, true)
+  assert.equal((await one<{ revoked: boolean }>(`SELECT revoked IS NOT NULL AS revoked FROM circle.right WHERE policy = $1`, [policy])).revoked, true)
 })
 
 test('the log verifies', async () => {

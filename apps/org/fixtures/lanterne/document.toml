@@ -379,6 +379,16 @@ ref = "mandate"
 [[document.template]]
 type = "heading"
 level = 2
+text = "What every person, member and employee may do as such"
+
+[[document.template]]
+type = "embed"
+embed = "policies"
+ref = "right"
+
+[[document.template]]
+type = "heading"
+level = 2
 text = "What the associates agreed"
 
 [[document.template]]

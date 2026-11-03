@@ -68,10 +68,10 @@ after(async () => {
 
 test('the founding motion grants the assembly\'s collective mandates and coordination\'s, each a policy on a circle, and no working circle\'s', async () => {
   const held = await all<{ circle: string; powers: string[] }>(
-    `SELECT m.circle, array_agg(m.power ORDER BY m.power) AS powers
-     FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy
-     WHERE m.circle IS NOT NULL AND m.role IS NULL AND r.motion = 'm-2021-001' AND m.revoked IS NULL
-     GROUP BY m.circle ORDER BY m.circle`,
+    `SELECT m.grantee AS circle, array_agg(m.power ORDER BY m.power) AS powers
+     FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy JOIN circle.grantee g ON g.id = m.grantee
+     WHERE g.kind = 'circle' AND r.motion = 'm-2021-001' AND m.revoked IS NULL
+     GROUP BY m.grantee ORDER BY m.grantee`,
   )
   assert.deepEqual(held, [
     {
@@ -111,7 +111,7 @@ test('the assembly ends coordination\'s nest-circle, and coordination\'s next ne
   const nesting = { kind: 'nest', args: { circle: 'brand', parent: 'web' } }
   const before = await propose({ circle: 'coordination', title: 'Brand works under Web', procedure: 'consent', deadline: '2026-11-15', body: '', actions: [nesting] }, as(camille))
   assert.equal(before.state, 'settled', reason(before))
-  const nests = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE circle = 'coordination' AND power = 'nest-circle'`)).policy
+  const nests = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'coordination' AND power = 'nest-circle'`)).policy
   const { out } = await decided('Coordination nests no circle', [{ kind: 'end', args: { policy: nests } }], '2026-11-01', '2026-11-15')
   assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:end', 'settled', '']])
   assert.equal(await holds('coordination', 'nest-circle', '2026-11-14'), true)
@@ -132,7 +132,7 @@ test('a collective mandate beyond what the circle above holds is refused as it i
   )
   assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled'], ['motion:policy:adopt', 'refused']])
   assert.match(out[1].reason ?? '', /grants set-budget to web beyond what coordination holds of it/)
-  assert.deepEqual(await all(`SELECT circle, cella.cents("limit")::int AS "limit" FROM circle.mandate WHERE power = 'set-budget' AND circle IS NOT NULL`), [
+  assert.deepEqual(await all(`SELECT m.grantee AS circle, cella.cents(m."limit")::int AS "limit" FROM circle.mandate m JOIN circle.grantee g ON g.id = m.grantee WHERE m.power = 'set-budget' AND g.kind = 'circle'`), [
     { circle: 'coordination', limit: 1000000 },
   ])
 })

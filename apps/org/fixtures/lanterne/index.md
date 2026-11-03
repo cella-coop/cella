@@ -84,8 +84,9 @@ assembly, and no one opens a candidacy for another.
   seat members; coordination's to adopt and end policies, adopt
   documents, nest circles and seat members. No working circle holds
   one, so a motion of Web carries no action. The rights follow,
-  `m-2021-001/62` to `/73`, each on the people who hold it as such, with
-  no seat, as `Every {right: employee} holds {power: claim-expense}, to
+  `m-2021-001/62` to `/73`, each a policy of the kind `right`, no
+  mandate, given to the people who hold it as such, with no seat and no
+  grantee, as `Every {right: employee} holds {power: claim-expense}, to
   claim their expenses and file their receipts`, and among the first,
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
   log, correct and submit their own time`, and

@@ -10,7 +10,7 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
     SELECT FROM circle_membership.seat a
-    JOIN circle.mandate md ON md.role = a.role
+    JOIN circle.mandate md ON md.grantee = a.role
     WHERE a.member = over.actor
       AND md.power = over.power
       AND (md.revoked IS NULL OR md.revoked > over.day)

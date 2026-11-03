@@ -26,9 +26,8 @@ state is that of 24 October 2026.
 |---|---|---|
 | `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `person.revoke`, `person.recover` | ordered | right |
-| `circle.nest` | ordered | right, at rung 1 already; **applied**: decided, and refused when a nesting settled first makes it a cycle ([tree](#the-circles-form-a-tree)) |
 | `circle-membership:seat.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
-| `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by the circle above the role's, the circle feat's mandate copied or revoked in the same write ([mandates](../../apps/org/feats/circle/index.md#mandates)) |
+| `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by a circle holding a mandate to issue it under, or the assembly, the circle feat's mandate copied or revoked in the same write ([mandates](../../apps/org/feats/circle/index.md#mandates)) |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
@@ -76,7 +75,7 @@ state is that of 24 October 2026.
 | `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
-| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); any person sits in a circle, member or not, so a worker who is no member is approved within their working circle; one whose seat counts nowhere, by any holder of the power |
+| `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within what the approver's mandate covers ([scope](#a-mandate-covers-what-its-scope-names)); any person sits in a circle, member or not, so a worker who is no member is approved within their working circle; one whose seat counts nowhere, by any holder of the power |
 | `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
 | `membership:member.apply` | confluent | right: a fact, once to a person, the employee's own after a year's employment, and only before they are a member; the motion it puts is a proposal, confluent as any |
 | `employment-membership:candidacy.open` | confluent | right: once to a worker, their own on their application, and only before they are a member |
@@ -280,27 +279,15 @@ share. Shares should be small and expire.
 on the train while coordination revokes his `approve-expense` mandate:
 the approval stands, his remaining 820 € is gone at the next sync.
 
-## The circles form a tree
+## Circles never nest
 
 Owner: the `circle` feat.
 
-| Pair | A first | B first | Both confluent |
-|---|---|---|---|
-| `nest` X under Y vs `nest` Y under X | Y under X refused | X under Y refused | a cycle: neither circle reaches the assembly, and no power flows to either |
-| `nest` vs a mandate policy adopted in the moved circle | the mandate is checked under the new parent | the mandate may exceed what the new parent holds | a circle holds powers its parent does not |
-
-Ordered is right, and needed at rung 1 already: two concurrent server
-transactions can each see no cycle. The `actions.ts` comment ("two offline
-nestings") understated it; **applied**, it now says a cycle can form even
-online. **Applied**: each circle keeps its path from the assembly; the
-tree's trigger refuses a cycle the write itself sees, and `circle.nests`,
-run under the log's lock, refuses one a nesting settled first made, as
-the second's path no longer follows its parent's. `nest` should also
-check that the moved subtree's mandates still fit within its new
-parent's; it does not yet.
-
-**Lanterne.** Brand under Marketing and Marketing under Brand, proposed
-the same afternoon by Hugo and Malik: the second is refused.
+No write places a circle, so no pair of writes can make a cycle: a
+circle has no parent, and what is under it is what it issued, the
+mandates' provenance, whose own pairs are the mandates' (a grant or a
+revocation, each an ordered adoption or end of a policy, read under the
+log's lock with `circle.narrows`).
 
 ## A revoked key signs nothing new
 
@@ -489,20 +476,22 @@ undone, which its outcome shows.
 **Lanterne.** d-2026-012 closes on 31 October: Inès is admitted with her
 20 shares, seated in the assembly and her laptop enrolled, in one verdict.
 
-## A power reaches down the tree
+## A mandate covers what its scope names
 
-Owners: the `circle-membership` graft for how far a power reaches
-(`circle_membership.over`); `circle-membership-timesheet` and
-`circle-membership-project` for what a write concerns.
+Owners: the `circle-membership` graft for what a mandate covers
+(`circle_membership.over`, reading its scope); `circle-membership-timesheet`
+and `circle-membership-project` for what a write concerns.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
 | `timesheet:period.approve` by a lead vs `circle-membership:seat.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
-| `project.budget` by a lead vs `circle.nest` of the project's circle away | set | refused: the circle is no longer within the lead's | a lead budgets another circle's project |
+| `project.budget` by a lead vs `motion.policy.end` of the lead's `set-budget` | set | refused: the lead holds no mandate covering the project's circle | a lead budgets a project after their mandate ends |
 
-A power held through a seat reaches the seat's circle and the circles
-within it, never above or across. Both writes are ordered, and so are
-seats and nestings, so the reach is read under the log's lock.
+A mandate covers what its scope names: a circle's records, those of the
+circle its holder holds the role in, or, marked none, the whole co-op's,
+never by where a circle sits. Both writes are ordered, and so are seats
+and the adoption and end of a policy, so what a mandate covers is read
+under the log's lock.
 
 **Lanterne.** Hugo, Brand's lead, may not approve Thomas's October, which
 is Web's; Yusuf may.
@@ -823,8 +812,8 @@ The matrix found writes no `actions.ts` declares:
 5. **Not yet.** `decision.vote` stays confluent; **at rung 2 a stance
    names its parent**, since receipt order is not signing order across a
    member's devices.
-6. **Applied.** No other label changes. `circle.nest`'s comment now says
-   it is ordered at rung 1 too, and `document.adopt`'s that the base is
+6. **Applied.** No other label changes. `document.adopt`'s comment now says
+   that the base is
    the adopted version, not the draft.
 7. **Applied, beyond this page's recommendations.** Seats move from
    `circle` to the `circle-membership` graft, which owns the relationship:

@@ -9,14 +9,20 @@ CREATE TABLE circle.grantee (
   kind text NOT NULL CHECK (kind IN ('circle', 'role'))
 );
 
--- A circle of the co-op; the root, the assembly, has no parent.
+-- A circle of the co-op: its members, the circle-membership graft's, and
+-- its decision rule, the procedure its motions are decided by where
+-- nothing they act under asks another. Circles never nest: no circle has
+-- a parent, and `assembly` marks the general assembly, one circle only,
+-- which holds every power inherently.
 CREATE TABLE circle.circle (
   id text PRIMARY KEY,
   name text NOT NULL,
-  parent text REFERENCES circle.circle,
+  assembly boolean NOT NULL DEFAULT false,
   purpose text NOT NULL DEFAULT '',
   procedure text NOT NULL DEFAULT 'consent' CHECK (procedure IN ('consent', 'majority'))
 );
+
+CREATE UNIQUE INDEX one_assembly ON circle.circle ((true)) WHERE assembly;
 
 -- A named duty that mandates attach to: in one circle, or in every working
 -- circle (`*`). `holders` caps how many hold it at once in a circle, by
@@ -61,7 +67,9 @@ ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
 -- a mandate the assembly issues, a root of the provenance tree.
 -- `procedure` names the procedure the motions acting under it are
 -- decided by, which passes down its chain; the motion feat holds
--- procedures, so this feat keeps its name alone.
+-- procedures, so this feat keeps its name alone. `scope` is the
+-- condition on what it covers: a circle's id, or `own`, the circle its
+-- holder holds the role in; none, the whole co-op.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   grantee text NOT NULL REFERENCES circle.grantee,
@@ -73,6 +81,7 @@ CREATE TABLE circle.mandate (
   budget cella.amount,
   per text CHECK (per IN ('month', 'year')),
   procedure text CHECK (procedure ~ '^[a-z][a-z-]*$'),
+  scope text,
   "from" date NOT NULL,
   until date,
   revoked date,
@@ -106,10 +115,18 @@ CREATE INDEX ON circle.right (power);
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 
+-- The general assembly's id: the one circle marked so, or null before
+-- the co-op is founded.
+CREATE FUNCTION circle.assembly() RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT c.id FROM circle.circle c WHERE c.assembly;
+END;
+
 -- Every circle's participant role, built in, which every seat in a
 -- circle holds there: its mandates cover proposing and discussing, as
 -- `propose` and `discuss`. Its `circle` is `*`, so it is the assembly's
--- to grant; a seat above brings it in no circle below.
+-- to grant; a seat in one circle brings it in no other.
 INSERT INTO circle.role (id, circle, name, duty) VALUES
   ('participant', '*', 'Participant', 'every seat in the circle: proposing and discussing its motions, its channel and its agendas');
 

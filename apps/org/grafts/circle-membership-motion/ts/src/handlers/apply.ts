@@ -25,7 +25,7 @@ export interface Applied {
 export async function apply(input: Applying, deps: Deps): Promise<Settled<Applied> | Refused> {
   const { rows } = await deps.db.query<{ decider: string; name: string | null }>(
     `SELECT d.id AS decider, (SELECT p.name FROM person.person p WHERE p.address = $1) AS name
-     FROM circle.circle d WHERE d.parent IS NULL`,
+     FROM circle.circle d WHERE d.assembly`,
     [input.member],
   )
   const found = rows[0]

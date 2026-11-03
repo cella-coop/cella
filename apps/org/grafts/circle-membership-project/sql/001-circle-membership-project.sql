@@ -2,9 +2,10 @@ CREATE SCHEMA circle_membership_project;
 
 -- Every write that runs a project or spends its budget — its creation,
 -- milestones, budget and archive, and the shares of its budget — the
--- actor's power must reach the project's circle (`circle_membership.over`):
+-- actor must hold the power by a mandate whose scope covers the
+-- project's circle (`circle_membership.over`):
 -- a lead runs their own circle's projects and no other's; a project of
--- no circle is the whole co-op's, run from the assembly. The project is
+-- no circle is the whole co-op's, run by a mandate on it. The project is
 -- the one the payload names.
 CREATE FUNCTION circle_membership_project.runs(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -13,9 +14,9 @@ BEGIN ATOMIC
     WHEN pr.id IS NULL THEN NULL
     WHEN NOT circle_membership.over(
       cella.actor(), w.power,
-      coalesce(pr.circle, (SELECT c.id FROM circle.circle c WHERE c.parent IS NULL)),
+      pr.circle,
       cella.verdict_date()
-    ) THEN cella.actor() || ' holds ' || coalesce(w.power, 'no power') || ' over no circle that runs ' || pr.id
+    ) THEN cella.actor() || ' holds ' || coalesce(w.power, 'no power') || ' by no mandate covering ' || pr.id
       || coalesce(', ' || pr.circle || '''s', '')
   END
   FROM (

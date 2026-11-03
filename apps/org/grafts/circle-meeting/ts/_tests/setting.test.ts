@@ -11,7 +11,7 @@ const db = new pg.Client()
 
 before(async () => {
   await db.connect()
-  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('ag', 'Assemblée générale')`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true)`)
   await db.query(
     `INSERT INTO meeting.meeting (id, circle, title, at) VALUES
        ('ag-2026-10-31', 'ag', 'General assembly', '2026-10-31 10:00'),

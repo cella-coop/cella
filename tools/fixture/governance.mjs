@@ -9,7 +9,7 @@
 
 // The kinds the grafts register, and `policy` and `end`, which the motion
 // feat registers itself.
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'nest', 'adopt', 'distribution', 'policy', 'end'])
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'adopt', 'distribution', 'policy', 'end'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
@@ -30,7 +30,7 @@ export function governance(read, fail) {
       if (m.kind === 'policy' && (!['mandate', 'right', 'rule', 'procedure'].includes(a.kind) || !a.wording)) {
         fail(`${where}: a policy is a mandate, a right, a rule or a procedure, with its wording`)
       }
-      if (['seat', 'unseat', 'nest'].includes(m.kind) && !circles.has(a.circle)) {
+      if (['seat', 'unseat'].includes(m.kind) && !circles.has(a.circle)) {
         fail(`${where}: no circle ${a.circle}`)
       }
     }

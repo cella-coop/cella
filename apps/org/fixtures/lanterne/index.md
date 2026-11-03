@@ -19,7 +19,8 @@ and documents; and in one working circle, as its member or its lead.
 The lead role is a member of coordination, which meets weekly, so each
 circle's lead sits there by their tenure, and Camille sits there as a
 member. A capped role, as the gérante's or a circle's lead, is held by
-one person at a time.
+one person at a time. No circle sits in another: the assembly is one
+circle beside coordination and the four working circles.
 
 | Circle | Members | Lead |
 |---|---|---|
@@ -79,23 +80,27 @@ assembly, and no one opens a candidacy for another.
   the statutes by m-2021-001: its sentence marks the role, the power and
   the cap, as `The {role: finance} role holds {power: pay-supplier}, to
   pay suppliers, up to {limit: 3 000 €} a write`, and its values are
-  copied into `circle.mandate` as it is adopted (`motion.toml`). The
-  collective mandates follow them, `m-2021-001/47` to `/61` but `/50`, each on a
+  copied into `circle.mandate` as it is adopted (`motion.toml`). A
+  lead's mandates to run projects, approve time and hold meetings, and
+  a secretary's, mark their scope, the circle the role is held in
+  (`{scope: own}`), so each lead covers their own circle alone; the
+  others mark none and cover the whole co-op. The
+  collective mandates follow them, `m-2021-001/47` to `/59` but `/50`, each on a
   circle, as `The {circle: ag} circle holds {power: admit-member}, to
   admit members, by motion`: the assembly's to admit, suspend and
-  exclude members, adopt and end policies, approve the distribution, adopt documents, nest circles and
+  exclude members, adopt and end policies, approve the distribution, adopt documents and
   seat members; coordination's to adopt and end policies, adopt
-  documents, nest circles and seat members. No working circle holds
+  documents and seat members. No working circle holds
   one, so a motion of Web carries no action. The rights follow,
-  `m-2021-001/62` to `/73`, each a policy of the kind `right`, no
+  `m-2021-001/60` to `/71`, each a policy of the kind `right`, no
   mandate, given to the people who hold it as such, with no seat and no
   grantee, as `Every {right: employee} holds {power: claim-expense}, to
   claim their expenses and file their receipts`, and among the first,
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
   log, correct and submit their own time`, and
-  `m-2021-001/76`, `Every {right: person} holds {power:
+  `m-2021-001/74`, `Every {right: person} holds {power:
   withdraw-membership}, to withdraw their own membership`, and the last
-  of the founding motion, `m-2021-001/77`, `Every {right: employee}
+  of the founding motion, `m-2021-001/75`, `Every {right: employee}
   holds {power: apply-membership}, to apply to join once they have
   worked a year, which the assembly must rule on`, and in the
   collective mandates' place, `m-2021-001/50`, `Every {right: person}
@@ -114,7 +119,7 @@ assembly, and no one opens a candidacy for another.
   gone since 30 November 2025, holds a person's alone. The rights, and
   the collective mandates that hand out mandates, the assembly's and
   coordination's to adopt and end policies and to seat members
-  (`m-2021-001/51`, `/52`, `/56`, `/57`, `/58` and `/61`), are protected
+  (`m-2021-001/51`, `/52`, `/55`, `/56`, `/57` and `/59`), are protected
   by the extraordinary assembly's procedure: only a motion decided by it,
   or by a stricter one, replaces or ends them.
 - **Rules.** The statutes' capital terms and the work share's terms are
@@ -123,7 +128,7 @@ assembly, and no one opens a candidacy for another.
   `m-2021-001/43`, `Each associate subscribes at least {account_minimum:
   20 | more is stricter} shares`, and `m-2021-001/44`, the work share
   `{patronage_salary: 100 % | more is stricter}` by pay; and the law's
-  floors on the surplus, `m-2021-001/74`, at least `{work_share: 25 % |
+  floors on the surplus, `m-2021-001/72`, at least `{work_share: 25 % |
   more is stricter}` to all the employees, and `/75`, at least
   `{reserve_share: 15 % | more is stricter}` to the reserves, named for no
   feat. The internal

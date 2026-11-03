@@ -2,11 +2,12 @@
 // thirds or one of the co-op's own.
 export type Procedure = string
 
-// A circle as the feat reads it.
+// A circle as the feat reads it: none is within another, and one only
+// is the assembly.
 export interface Circle {
   id: string
   name: string
-  parent: string | null
+  assembly: boolean
   purpose: string
   procedure: Procedure
 }
@@ -31,6 +32,10 @@ export interface Mandate {
   limit: number | null
   budget: number | null
   per: 'month' | 'year' | null
+  // What it covers: a circle's id, `own`, the circle its holder holds
+  // the role in, or null, the whole co-op.
+  scope: string | null
+  issuer: string
   from: string
   until: string | null
   revoked: string | null
@@ -45,22 +50,12 @@ export interface Granted {
   revoked: number[]
 }
 
-// Each write that changes the tree cites the motion that asks it.
-export interface Nest {
-  circle: string
-  parent: string
-  motion: string
-}
-
-export interface Nested {
-  circle: string
-  parent: string
-  path: string[]
-}
-
 export interface Detail extends Circle {
-  parentName: string | null
-  children: { id: string; name: string }[]
+  // The circles that issued what this circle and its roles hold, and
+  // those it issued to: how the mandates link it to the others, since
+  // circles never nest.
+  issuers: { id: string; name: string }[]
+  issued: { id: string; name: string }[]
   roles: Role[]
   mandates: Mandate[]
 }

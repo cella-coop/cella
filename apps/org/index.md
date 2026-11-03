@@ -47,7 +47,7 @@ guard's reason:
 - an invitation carrying the invitee's first device; a new motion, by
   its circle's procedure or another, consent, a majority, two thirds or
   one of the co-op's own with its quorum, with what it decides: admitting, suspending or
-  letting go a member, seating or unseating one, nesting a circle,
+  letting go a member, seating or unseating one,
   granting or revoking a mandate, proposed from the New form or from a
   member's or a circle's page;
 - a stance on an open motion, and closing it, which in the same verdict

@@ -22,9 +22,9 @@ before(async () => {
   await db.connect()
   // The slice's tests share one database: what this one makes, it undoes.
   await db.query('BEGIN')
-  await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('ag', 'ag', NULL) ON CONFLICT DO NOTHING`)
-  root = (await db.query<{ id: string }>('SELECT id FROM circle.circle WHERE parent IS NULL')).rows[0].id
-  await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('counts-web', 'Web', $1)`, [root])
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true) ON CONFLICT DO NOTHING`)
+  root = (await db.query<{ id: string }>('SELECT circle.assembly() AS id')).rows[0].id
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('counts-web', 'Web')`)
   await db.query(`INSERT INTO person.person (address, name) VALUES ($1, 'Léa'), ($2, 'Inès'), ($3, 'Chloé'), ($4, 'Paul')`, [lea, ines, chloe, paul])
   await db.query(
     `INSERT INTO membership.member (address, status, since, suspended, exited) VALUES

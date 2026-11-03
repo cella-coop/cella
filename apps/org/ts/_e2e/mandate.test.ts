@@ -73,7 +73,7 @@ test('Lanterne\'s mandates are policies of the assembly, adopted by its founding
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE r.kind = 'mandate' AND r.circle = 'ag' AND r.motion = 'm-2021-001')::int AS adopted
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy`,
     ),
-    { mandates: 51, adopted: 51 },
+    { mandates: 49, adopted: 49 },
   )
   assert.deepEqual(
     await one(
@@ -142,12 +142,12 @@ test('Julien\'s finance role and coordination each hold their mandates through a
   // mandate, and coordination its collective ones, each one grantee.
   assert.deepEqual(
     await all(
-      `SELECT g.id, g.kind, array_agg(DISTINCT m.power ORDER BY m.power) FILTER (WHERE m.power IN ('pay-supplier', 'close-period', 'adopt-policy', 'nest-circle')) AS powers
+      `SELECT g.id, g.kind, array_agg(DISTINCT m.power ORDER BY m.power) FILTER (WHERE m.power IN ('pay-supplier', 'close-period', 'adopt-policy')) AS powers
        FROM circle.grantee g JOIN circle.mandate m ON m.grantee = g.id
        WHERE g.id IN ('finance', 'coordination') AND m.revoked IS NULL GROUP BY g.id, g.kind ORDER BY g.id`,
     ),
     [
-      { id: 'coordination', kind: 'circle', powers: ['adopt-policy', 'nest-circle'] },
+      { id: 'coordination', kind: 'circle', powers: ['adopt-policy'] },
       { id: 'finance', kind: 'role', powers: ['close-period', 'pay-supplier'] },
     ],
   )

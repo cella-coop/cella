@@ -5,7 +5,7 @@
 // decides it, fixing its roll in the same write, and carries out each
 // policy a passing motion adopts or ends through `adopt` and `end`.
 import type { Db, Form, Slice } from '@cella/org-db'
-import { forms, kinds } from '@cella/org-motion/api'
+import { forms } from '@cella/org-motion/api'
 import type { Arg } from '@cella/org-motion/models'
 import { deciding, proposing } from '../drivers/proposing.ts'
 import type { Kind, Put } from '../models/index.ts'
@@ -24,22 +24,23 @@ const asked: Record<'grant' | 'revoke', Arg[]> = {
     { name: 'limit', label: 'Limit per write, €', type: 'number', optional: true },
     { name: 'budget', label: 'Budget, €', type: 'number', optional: true },
     { name: 'per', label: 'Budget per', type: 'text', optional: true },
+    { name: 'scope', label: 'Covers', type: 'text', optional: true },
   ],
   revoke: [{ name: 'policy', label: 'Mandate', type: 'text' }],
 }
 
 // A motion about the circle whose page it is, read as its kind declares
-// its arguments; the circle a nesting moves is the page's.
+// its arguments.
 export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   const kind = form.get('kind') as Kind
-  const fields = kind === 'grant' || kind === 'revoke' ? asked[kind] : kind === 'nest' ? (await kinds(db)).find((k) => k.kind === 'nest')?.fields : undefined
+  const fields = kind === 'grant' || kind === 'revoke' ? asked[kind] : undefined
   if (!fields) {
     throw new Error('choose what to propose')
   }
   if (!form.get('deadline')) {
     throw new Error('a motion needs a deadline')
   }
-  const args = forms.args(form, fields.filter((f) => !(kind === 'nest' && f.name === 'circle')))
+  const args = forms.args(form, fields)
   return { circle, kind, args, deadline: form.get('deadline'), body: form.get('body') }
 }
 

@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -58,7 +58,7 @@ the version reads its policies, are the document feat's guard.
 
 On `motion:policy:adopt` and `motion:policy:end`, once the write
 settles: each document generated from the policies of the circle the
-policy is of, as the statutes are from the root circle's, is generated
+policy is of, as the statutes are from the assembly's, is generated
 anew by the document feat's `generate`, a write of its own signed by
 whoever signed the adoption or the ending and citing the motion, from
 the policies in force on the day the adopted policy applies or the ended

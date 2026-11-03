@@ -91,7 +91,6 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `end-policy` | mandate, protected | the assembly ends policies | Code de commerce art. L223-30 |
 | `approve-distribution` | mandate | the assembly approves a year's distribution | loi n° 47-1775 art. 8; loi n° 78-763 art. 33 |
 | `adopt-document` | mandate | the assembly adopts a document's version | cella |
-| `nest-circle` | mandate | the assembly nests circles | cella |
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
 | `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |

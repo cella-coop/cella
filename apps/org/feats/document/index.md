@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -9,7 +9,7 @@ tree of blocks that members edit at once; a version is a named, immutable
 point in its history, named by the hash of its canonical form; adoption
 makes one version the document's binding text. The motion that adopts
 it is the `document-motion` graft's. The statutes are written by no one:
-they are generated from the root circle's policies in order and frozen
+they are generated from the assembly's policies in order and frozen
 at each adoption ([generated documents](#generated-documents)).
 
 ## Entities
@@ -78,7 +78,7 @@ hold the two to the same bytes on 300 random documents.
 ## Generated documents
 
 A document may be generated from a circle's policies, as the statutes
-are from the root circle's: `document.generated` names the circle, by id
+are from the assembly's: `document.generated` names the circle, by id
 as the policy register names it, and the template, the fixed text of the
 co-op's legal form, as blocks (the fragments `create` takes). In the
 template, an `embed` block of kind `policies` stands where the policies

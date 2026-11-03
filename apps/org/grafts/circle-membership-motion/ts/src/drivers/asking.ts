@@ -15,7 +15,7 @@ export async function standing(db: Db, member: string, actor?: string | null): P
     `SELECT m.status, to_char(m.applied, 'YYYY-MM-DD') AS applied, ${decider} AS decider,
             person.holds($1, 'employee', cella.verdict_date()) AS employee, to_char(cella.verdict_date() + 14, 'YYYY-MM-DD') AS until
      FROM circle.circle d LEFT JOIN membership.member m ON m.address = $1
-     WHERE d.parent IS NULL AND (m.address IS NOT NULL OR $2)`,
+     WHERE d.assembly AND (m.address IS NOT NULL OR $2)`,
     [member, own],
   )
   if (!found.rows[0]) {
@@ -35,7 +35,8 @@ export async function standing(db: Db, member: string, actor?: string | null): P
 // that decides.
 export async function appointing(db: Db, circle: string): Promise<Appointing | null> {
   const found = await db.query<{ decider: Decider; root: boolean }>(
-    `SELECT ${decider} AS decider, c.parent IS NULL AS root FROM circle.circle c JOIN circle.circle d ON d.id = coalesce(c.parent, c.id) WHERE c.id = $1`,
+    `SELECT ${decider} AS decider, c.assembly AS root FROM circle.circle c
+     JOIN circle.circle d ON d.id = circle_motion.decider(c.id, ARRAY['seat-member'], cella.verdict_date()) WHERE c.id = $1`,
     [circle],
   )
   if (!found.rows[0]) {

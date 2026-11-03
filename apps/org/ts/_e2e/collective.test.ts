@@ -3,8 +3,8 @@
 // motion. The founding motion grants the assembly's and coordination's,
 // and no working circle's; the assembly's m-2026-012 admits Inès under its
 // `admit-member`, while the same admission put in Web is refused at its
-// proposal; the assembly ends coordination's `nest-circle`, and
-// coordination's next nesting is refused; and a collective mandate
+// proposal; the assembly ends coordination's `adopt-document`, and
+// coordination's next adoption is refused; and a collective mandate
 // coordination issues wider than the one it holds is refused as it is
 // adopted, by `circle.narrows`. Run by `cella test e2e collective`.
 
@@ -76,9 +76,9 @@ test('the founding motion grants the assembly\'s collective mandates and coordin
   assert.deepEqual(held, [
     {
       circle: 'ag',
-      powers: ['admit-member', 'adopt-document', 'adopt-policy', 'approve-distribution', 'end-policy', 'exclude-member', 'nest-circle', 'seat-member', 'suspend-member'],
+      powers: ['admit-member', 'adopt-document', 'adopt-policy', 'approve-distribution', 'end-policy', 'exclude-member', 'seat-member', 'suspend-member'],
     },
-    { circle: 'coordination', powers: ['adopt-document', 'adopt-policy', 'end-policy', 'nest-circle', 'seat-member'] },
+    { circle: 'coordination', powers: ['adopt-document', 'adopt-policy', 'end-policy', 'seat-member'] },
   ])
   assert.equal(
     (await one<{ sentence: string }>(`SELECT policy.sentence(w.legal) AS sentence FROM policy.wording w WHERE w.policy = 'm-2021-001/47'`)).sentence,
@@ -106,18 +106,18 @@ test('the assembly\'s m-2026-012 admits Inès under its collective admit-member,
   assert.deepEqual(await one(`SELECT status FROM membership.member WHERE address = $1`, [ines]), { status: 'active' })
 })
 
-test('the assembly ends coordination\'s nest-circle, and coordination\'s next nesting is refused at its proposal', async () => {
+test('the assembly ends coordination\'s adopt-document, and coordination\'s next adoption is refused at its proposal', async () => {
   await on('2026-11-01')
-  const nesting = { kind: 'nest', args: { circle: 'brand', parent: 'web' } }
-  const before = await propose({ circle: 'coordination', title: 'Brand works under Web', procedure: 'consent', deadline: '2026-11-15', body: '', actions: [nesting] }, as(camille))
+  const adopting = { kind: 'adopt', args: { version: 'rate-card-2027@2' } }
+  const before = await propose({ circle: 'coordination', title: 'Adopt the 2027 rate card', procedure: 'consent', deadline: '2026-11-15', body: '', actions: [adopting] }, as(camille))
   assert.equal(before.state, 'settled', reason(before))
-  const nests = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'coordination' AND power = 'nest-circle'`)).policy
-  const { out } = await decided('Coordination nests no circle', [{ kind: 'end', args: { policy: nests } }], '2026-11-01', '2026-11-15')
+  const adopts = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'coordination' AND power = 'adopt-document'`)).policy
+  const { out } = await decided('Coordination adopts no document', [{ kind: 'end', args: { policy: adopts } }], '2026-11-01', '2026-11-15')
   assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:end', 'settled', '']])
-  assert.equal(await holds('coordination', 'nest-circle', '2026-11-14'), true)
-  assert.equal(await holds('coordination', 'nest-circle', '2026-11-15'), false)
-  const after = await propose({ circle: 'coordination', title: 'Brand works under Web', procedure: 'consent', deadline: '2026-11-29', body: '', actions: [nesting] }, as(camille))
-  assert.match(reason(after), /coordination holds no collective mandate for nest-circle, so its motion may not nest a circle/)
+  assert.equal(await holds('coordination', 'adopt-document', '2026-11-14'), true)
+  assert.equal(await holds('coordination', 'adopt-document', '2026-11-15'), false)
+  const after = await propose({ circle: 'coordination', title: 'Adopt the 2027 rate card', procedure: 'consent', deadline: '2026-11-29', body: '', actions: [adopting] }, as(camille))
+  assert.match(reason(after), /coordination holds no collective mandate for adopt-document, so its motion may not adopt a document version/)
 })
 
 test('a collective mandate wider than the one it is issued under is refused as it is adopted: coordination may not grant Web budgets of 20 000 € under its own 10 000 €', async () => {

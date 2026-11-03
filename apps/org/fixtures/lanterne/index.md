@@ -40,7 +40,9 @@ those of their own circle's members; Julien, seated in the assembly as
 treasurer, approves everyone's, as Camille does. Every member creates
 and moves tasks; every worker logs their own time and claims their
 expenses, by an employee's rights.
-Camille hires, and opens a new hire's candidacy for membership.
+Camille hires; a worker employed a year applies to join by their own
+right, which opens their candidacy and puts their admission to the
+assembly, and no one opens a candidacy for another.
 
 ## Where things stand on 24 October 2026
 
@@ -86,9 +88,12 @@ Camille hires, and opens a new hire's candidacy for membership.
   no seat, as `Every {right: employee} holds {power: claim-expense}, to
   claim their expenses and file their receipts`, and among the first,
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
-  log, correct and submit their own time`, and the last of the founding
-  motion, `m-2021-001/76`, `Every {right: person} holds {power:
-  withdraw-membership}, to withdraw their own membership`, and in the
+  log, correct and submit their own time`, and
+  `m-2021-001/76`, `Every {right: person} holds {power:
+  withdraw-membership}, to withdraw their own membership`, and the last
+  of the founding motion, `m-2021-001/77`, `Every {right: employee}
+  holds {power: apply-membership}, to apply to join once they have
+  worked a year, which the assembly must rule on`, and in the
   collective mandates' place, `m-2021-001/50`, `Every {right: person}
   holds {power: erase-own-data}, to erase their own personal data once
   they have left`: every person keeps their
@@ -97,8 +102,9 @@ Camille hires, and opens a new hire's candidacy for membership.
   withdraws their own membership, and one who has left erases their
   own data; every member
   draws on their account, spreads what they owe, marks their attendance
-  and saves a report; every employee logs their own time and claims
-  their expenses. So Inès, employed and no member, keeps her profile,
+  and saves a report; every employee logs their own time, claims
+  their expenses and, once employed a year, applies to join. So Inès,
+  employed and no member, keeps her profile,
   logs her time and claims an expense by her rights, beside the
   mandates her seat in Web gives her there, and Paul,
   gone since 30 November 2025, holds a person's alone. The rights, and
@@ -127,8 +133,8 @@ Camille hires, and opens a new hire's candidacy for membership.
   each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
   worded and protected as it reads. They are its six procedures, the
   participant's mandates (`/45`, `/46`), the assembly's collective
-  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`, `/76`) and the
-  floors on the surplus (`/74`, `/75`): 34 policies. Its role mandates,
+  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`, `/76`, `/77`) and the
+  floors on the surplus (`/74`, `/75`): 35 policies. Its role mandates,
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.

@@ -78,10 +78,12 @@ guard's reason:
   booked to a project or the co-op's own, a month submitted by its
   worker and approved by someone else (ordered), which closes it to new
   entries;
-- a hire with the worker's first device, enrolled at once; a worker's
-  candidacy, the probation before the assembly may admit them and the
-  shares they pledge; once it is over, their admission proposed from the
-  form it fills in; a member marking the co-op's adopted texts read;
+- a hire with the worker's first device, enrolled at once; an
+  employee's application to join by right after a year, which puts their
+  admission to the assembly and opens their candidacy, the probation they
+  served and the shares they pledge; for a candidate invited by a member,
+  their admission proposed from the form their candidacy fills in once
+  it is over; a member marking the co-op's adopted texts read;
 - an expense claimed as the acting member, submitted, approved within the
   approver's limit and monthly budget or refused, and reimbursed, each a
   drop between the board's columns, approval and reimbursement posted;

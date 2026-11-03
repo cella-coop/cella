@@ -78,7 +78,8 @@ state is that of 24 October 2026.
 | `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within the approver's circles ([reach](#a-power-reaches-down-the-tree)); any person sits in a circle, member or not, so a worker who is no member is approved within their working circle; one whose seat counts nowhere, by any holder of the power |
 | `employment.hire` | confluent | right: a fact; two hires of one worker cannot both stand, whichever comes first ([employment](#a-workers-time-and-pay-rest-on-their-employment)) |
-| `employment-membership:candidacy.open` | confluent | right: once to a worker, and only before they are a member |
+| `membership:member.apply` | confluent | right: a fact, once to a person, the employee's own after a year's employment, and only before they are a member; the motion it puts is a proposal, confluent as any |
+| `employment-membership:candidacy.open` | confluent | right: once to a worker, their own on their application, and only before they are a member |
 | `document-membership:version.read` | confluent | right: the member's own register, its first day standing |
 | `meeting.schedule`, `.minute` | confluent | right: a fact, and idempotent |
 | `meeting:item.add`, `.move`, `.remove` | confluent | right: an item's place is its own register; fixed by the hold ([meetings](#a-meeting-is-held-once)) |
@@ -691,6 +692,7 @@ for the candidacy.
 | `hire` vs `timesheet:entry.log` by them | the log stands | refused: no employee's right to `log-time` | — |
 | `candidacy.open` vs `candidacy.open`, one worker | the second refused | as A | two probations, two pledges |
 | `candidacy.open` vs `membership.admit` | the admission follows | refused: a member is no candidate | — |
+| `membership.apply` vs `membership.apply`, one employee | the second refused before the notary: one applies once | as A | two motions to admit one person |
 
 Every write is a fact, the hire and the candidacy once each, so all stay
 confluent: what can break is only a second of one, which the key
@@ -700,8 +702,9 @@ does with its entries, and be ordered.
 
 **Lanterne.** Inès, hired in September 2025 and no member, logs her own
 time and is paid in October's run; Camille hires Bastien, an apprentice,
-and opens his candidacy, and opening one for Yusuf, a member, is
-refused.
+and opens no candidacy for him; a year on, he applies by his right, which
+opens his own and puts his admission to the assembly; applying eight
+months in is refused.
 
 ## A meeting is held once
 

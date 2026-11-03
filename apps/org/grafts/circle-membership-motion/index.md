@@ -133,6 +133,17 @@ she is on no roll of the assembly's.
   proposed (`called`), each who may veto marked so, so a proposal that
   did not fix its roll, as the motion feat's own `propose` alone does
   not, is refused.
+- `circle_membership_motion.puts`, on `membership:member:apply`: the
+  application put the motion to admit the applicant in its own write:
+  the motion its payload names asks only to admit them, with the shares
+  they pledge, by its circle's procedure, and passes every check a
+  proposal does but the seat, each run here over it: `motion.proposes`,
+  `balloted` and `decides_by`, `circle_motion.empowers` (its circle holds
+  the collective mandate to admit), `membership_motion.asks` (someone
+  invited, a whole number of shares) and `fixed` (its roll). No seat is
+  asked of the applicant, whose right puts it, so `sits` is not run; an
+  application that puts no motion, as the membership feat's `applying`
+  alone does not, is refused.
 
 ## Handlers
 
@@ -168,6 +179,17 @@ she is on no roll of the assembly's.
   carry, so the writes that react to an admission, the subscription,
   follow it as they follow one; the shell runs the reactions to each
   write it reports.
+- `apply` (confluent), an employee's application by their own right
+  (`apply-membership`), from their own page: in one transaction under one
+  verdict, the membership feat's `applying`, which invites them, the
+  motion feat's `proposing` of their admission to the assembly, by its
+  procedure and a secret ballot, titled as `put` titles one, and `fix`.
+  It submits the application's op, `membership:member:apply`, with the
+  application and the proposal in its payload; the guards judge it
+  (`membership.applies`, employment-membership's `serves`, `puts`). The
+  assembly must rule on it as on any motion: the close admits them, and
+  the subscription follows. Its request names the shares, so the
+  candidacy employment-membership opens after it pledges them.
 - `put`: what a member's or a circle's page proposes, through this
   graft's `propose`, to the circle that decides it, by its
   procedure, titled with what it decides: a membership to the assembly,
@@ -204,7 +226,10 @@ its Stances tab.
 
 On a person's page, Propose…: admitting someone invited, with their
 shares, suspending an active member or excluding a member, put to the
-assembly, and the open motions about them. On a circle's page,
+assembly, and the open motions about them; on an employee's own page,
+with no membership or only invited and no motion open to admit them,
+Apply to join…: the shares they pledge and the motion's deadline, two
+weeks on, and reasons, posted to `apply`. On a circle's page,
 Appoint…: seating a member in it, in one of its roles or as a plain
 member, or ending a seat held there, put to the circle above; and
 circle-motion's Propose…, whose write this graft serves.

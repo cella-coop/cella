@@ -115,3 +115,14 @@ export interface Membership {
   // once they have left erase their data.
   own: boolean
 }
+
+// An application, an employee asking to join by their own right: the
+// applicant, who is the actor.
+export interface Apply {
+  member: string
+}
+
+export interface Applied {
+  member: string
+  applied: string
+}

@@ -1,12 +1,12 @@
 +++
 title = "Employment"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 A person's employment, member or not: the job, the contract, the days it
 runs and the time it asks a week. In a worker co-op most workers are
-members, 70 to 85 % of them, but not all: a new hire works through a
-probation before the assembly admits them, and some never ask to join.
+members, 70 to 85 % of them, but not all: a new hire works a year before
+they may apply to join by right, and some never ask to.
 Employment is nested in `person`, whose core it inherits: who a worker is,
 their name and their devices, is the person's. Membership is the
 `membership` feat's, its sibling; pay is the `payslip` feat's and time the
@@ -28,7 +28,10 @@ employment governs: `employment-payslip` (whose pay is),
 `employment-project-timesheet` (a worker's week of time),
 `employment-file` (their employment records), `employment-membership` (the
 candidacy and the path to membership) and `employment-membership-motion`
-(the admission once the probation is over).
+(the admission once the probation is over). An employee applies to join
+through `circle-membership-motion`, which puts their admission to the
+assembly; `employment-membership` holds the application to a year's
+employment and opens the candidacy that follows it.
 
 ## Entities
 
@@ -77,7 +80,8 @@ which the `payslip` feat holds, so the power has no limit.
   month; the grafts that join employment read them. `employed` is who
   holds every employee's right: `001-employment.sql` registers it with
   person's core as `employee`, by `person.register_right`, so a worker
-  logs their own time and claims their expenses from the first day of
+  logs their own time, claims their expenses and, once employed a year,
+  applies to join, from the first day of
   their contract to its last
   ([rights](../../../circle/index.md#rights)).
 

@@ -79,20 +79,20 @@ test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its sta
   const page = await proposing(app, 'ag')
   assert.ok(page)
   const taking = page.policies.filter((p) => p.takes)
-  assert.equal(taking.length, 34)
+  assert.equal(taking.length, 35)
   assert.ok(taking.every((p) => p.takes?.startsWith('scop-sarl-fr:') && !p.outdated))
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/5')?.takes, 'scop-sarl-fr:ordinary')
   // Its role mandates and its terms are its own.
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/12')?.takes, null)
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/43')?.takes, null)
   assert.deepEqual(page.departures, [])
-  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 34 }])
+  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 35 }])
   assert.deepEqual(await all(`SELECT * FROM policy.standing('coordination', '2026-11-07')`), [])
   assert.ok((await statutes()).plain.split('\n').includes('These statutes leave none of their legal form\'s defaults.'))
   // Each default that states the law names it, and none is reviewed yet.
   assert.deepEqual(
     await one(`SELECT count(*) FILTER (WHERE source IS NOT NULL)::int AS sourced, count(*) FILTER (WHERE reviewed IS NOT NULL)::int AS reviewed FROM policy.default`),
-    { sourced: 12, reviewed: 0 },
+    { sourced: 13, reviewed: 0 },
   )
 })
 
@@ -142,7 +142,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   const s = await standing()
   assert.deepEqual(s.get('scop-sarl-fr:suspend-member'), { id: 'scop-sarl-fr:suspend-member', standing: 'left', left_by: `${motion}/1`, left_on: '2026-11-21' })
   assert.deepEqual(s.get('scop-sarl-fr:work-share'), { id: 'scop-sarl-fr:work-share', standing: 'left', left_by: `${motion}/2`, left_on: '2026-11-21' })
-  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 32)
+  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 33)
 
   const page = await detail(app, motion)
   assert.deepEqual(

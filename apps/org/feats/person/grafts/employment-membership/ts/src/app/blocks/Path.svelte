@@ -3,7 +3,8 @@
   import type { Path } from '../../models/path.ts'
 
   // The way someone came to membership, step by step: hired, on probation
-  // as a candidate with the shares they pledge, invited, admitted, gone.
+  // as a candidate with the shares they pledge, invited or applied,
+  // admitted, gone.
   // A step not taken yet reads as what comes next.
   let { data }: { data: Path | null; id: string } = $props()
 
@@ -16,7 +17,11 @@
           ...(data.probation
             ? [{ id: 'probation', step: 'Candidate', day: data.probation, what: `probation to ${date(data.probationEnd)}, pledging ${data.pledged} shares` }]
             : []),
-          ...(data.invited ? [{ id: 'invited', step: 'Invited', day: data.invited, what: 'asked to join' }] : []),
+          ...(data.applied
+            ? [{ id: 'applied', step: 'Applied', day: data.applied, what: 'applied to join by right: the assembly rules on it' }]
+            : data.invited
+              ? [{ id: 'invited', step: 'Invited', day: data.invited, what: 'asked to join' }]
+              : []),
           ...(data.admitted ? [{ id: 'admitted', step: 'Member', day: data.admitted, what: 'admitted by the assembly' }] : []),
           ...(data.exited ? [{ id: 'exited', step: 'Gone', day: data.exited, what: 'membership ended' }] : []),
           ...(data.due ? [{ id: 'due', step: 'Next', day: null, what: 'the probation is over: the assembly may admit them' }] : []),

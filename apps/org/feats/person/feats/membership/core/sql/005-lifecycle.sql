@@ -1,8 +1,10 @@
--- The days a membership moved: invited, suspended and exited, beside
--- `since`, the day it was admitted. A suspension lifted keeps its day
+-- The days a membership moved: invited, applied, suspended and exited, beside
+-- `since`, the day it was admitted; `applied` is the day an employee
+-- asked to join by their right. A suspension lifted keeps its day
 -- until the next.
 ALTER TABLE membership.member
   ADD COLUMN invited date,
+  ADD COLUMN applied date,
   ADD COLUMN suspended date,
   ADD COLUMN exited date;
 
@@ -57,8 +59,29 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.address;
 END;
 
+-- membership:member:apply — an employee asks to join by their own right:
+-- the applicant is the actor, and the write left them invited, having
+-- applied on the verdict date. One who is or was a member does not apply.
+-- That they have worked a year is the employment-membership graft's
+-- guard, and that the write put the motion to admit them,
+-- circle-membership-motion's.
+CREATE FUNCTION membership.applies(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN p.address IS DISTINCT FROM cella.actor()
+      THEN cella.actor() || ' may not apply for ' || coalesce(p.address, 'no one') || ': only for themselves'
+    WHEN m.address IS NULL THEN 'no member ' || p.address
+    WHEN m.status <> 'invited' THEN m.address || ' is ' || m.status || ': only someone not yet a member applies'
+    WHEN m.applied IS DISTINCT FROM cella.verdict_date() THEN m.address || ' did not apply by this write'
+  END
+  FROM (SELECT payload ->> 'member' AS address) p
+  LEFT JOIN membership.member m ON m.address = p.address;
+END;
+
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:invite', 'membership.invites(jsonb)', 'membership'),
+  ('membership:member:apply', 'membership.applies(jsonb)', 'membership'),
   ('membership:member:suspend', 'membership.ends(jsonb)', 'membership'),
   ('membership:member:exclude', 'membership.ends(jsonb)', 'membership'),
   ('membership:member:withdraw', 'membership.withdraws(jsonb)', 'membership');

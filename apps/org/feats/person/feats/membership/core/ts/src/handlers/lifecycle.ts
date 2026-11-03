@@ -2,7 +2,7 @@ import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Db, type Deps, type Write } from '@cella/org-db'
 import { enrolling, entering } from '@cella/org-person/api'
 import type { actions } from '../models/actions.ts'
-import type { Accept, Accepted, End, Ended, Invite, Invited, Link, Withdraw } from '../models/member.ts'
+import type { Accept, Accepted, Applied, Apply, End, Ended, Invite, Invited, Link, Withdraw } from '../models/member.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -45,6 +45,35 @@ export function inviting(input: Invite): Write<Invited> {
 
 export async function invite(input: Invite, deps: Deps): Out<'membership:member:invite', Invited> {
   return write(deps, inviting(input))
+}
+
+// The application, an employee asking to join by their own right: invites
+// the applicant on the verdict date, holding nothing, or marks the
+// invitation they hold already, and records the day they applied, once.
+// Someone who is or was a member, or has applied already, is refused
+// before the notary. It is a write only
+// circle-membership-motion's `apply` runs, in the transaction that puts
+// the motion to admit them: `membership.applies` checks the write made
+// the row, and that graft's guard that it put the motion.
+export function applying(input: Apply): Write<Applied> {
+  return {
+    op: 'membership:member:apply' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ applied: string }>(
+        `INSERT INTO membership.member (address, status, invited, applied) VALUES ($1, 'invited', cella.verdict_date(), cella.verdict_date())
+         ON CONFLICT (address) DO UPDATE SET applied = cella.verdict_date()
+         WHERE membership.member.status = 'invited' AND membership.member.applied IS NULL
+         RETURNING to_char(applied, 'YYYY-MM-DD') AS applied`,
+        [input.member],
+      )
+      if (!rows[0]) {
+        throw new Error(`${input.member} is or was a member, or has applied already: one applies once`)
+      }
+      return { member: input.member, applied: rows[0].applied }
+    },
+    payload: (v) => ({ ...v }),
+  }
 }
 
 // A link's digest as a write carries it: 32 bytes in hex.

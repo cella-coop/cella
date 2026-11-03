@@ -1,9 +1,9 @@
 CREATE SCHEMA patronage_payslip;
 
 -- What each worker was paid in a year, gross, in cents: their salary in
--- force on the first of each of its months. The basis on which a surplus's
--- work share divides when the statutes divide it by pay (Code du travail,
--- art. L3324-5).
+-- force on the first of each of its months, so none for a month after it
+-- ended. The basis on which a surplus's work share divides when the
+-- statutes divide it by pay (Code du travail, art. L3324-5).
 CREATE FUNCTION patronage_payslip.basis(year integer)
 RETURNS TABLE (member text, cents bigint)
 LANGUAGE sql STABLE
@@ -11,11 +11,12 @@ BEGIN ATOMIC
   SELECT s.member, sum(s.gross)::bigint
   FROM generate_series(1, 12) AS m (n)
   CROSS JOIN LATERAL (
-    SELECT DISTINCT ON (x.member) x.member, cella.cents(x.gross) AS gross
+    SELECT DISTINCT ON (x.member) x.member, x.until, cella.cents(x.gross) AS gross
     FROM payslip.salary x
     WHERE x."from" <= make_date(basis.year, m.n, 1)
     ORDER BY x.member, x."from" DESC
   ) s
+  WHERE s.until IS NULL OR s.until >= make_date(basis.year, m.n, 1)
   GROUP BY s.member;
 END;
 

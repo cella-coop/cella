@@ -78,6 +78,37 @@ test('a worker is paid for the month they leave, and none after', async () => {
   })
 })
 
+test('a salary ending on its worker\'s last day is due for the month they leave and none after', async () => {
+  await within(async () => {
+    await db.query(
+      `INSERT INTO payslip.salary (member, "from", until, gross) VALUES ($1, '2021-03-01', '2024-12-31', cella.amount(260000)), ($1, '2025-01-01', '2025-11-30', cella.amount(280000))`,
+      [paul],
+    )
+    const due = async (month: string) => (await db.query(`SELECT gross FROM payslip.due($1) WHERE member = $2`, [month, paul])).rows
+    assert.deepEqual(await due('2025-11'), [{ gross: '280000' }])
+    assert.deepEqual(await due('2025-12'), [])
+    await slip('2025-11', paul)
+    assert.equal(await whose('2025-11'), null)
+  })
+})
+
+test('a salary running past its worker\'s last day, or with no end where the contract names one, is refused', async () => {
+  await within(async () => {
+    await db.query(`INSERT INTO payslip.salary (member, "from", until, gross) VALUES ($1, '2025-01-01', '2025-12-31', cella.amount(280000))`, [paul])
+    assert.equal(
+      await whose('2026-10'),
+      'paul@lanterne.example\'s salary from 2025-01-01 ends on 2025-12-31, after their last day, 2025-11-30: a salary ends when its worker leaves',
+    )
+  })
+  await within(async () => {
+    await db.query(`INSERT INTO payslip.salary (member, "from", gross) VALUES ($1, '2025-01-01', cella.amount(280000))`, [paul])
+    assert.equal(
+      await whose('2026-10'),
+      'paul@lanterne.example\'s salary from 2025-01-01 has no end, though their last day is 2025-11-30: a salary ends when its worker leaves',
+    )
+  })
+})
+
 test('the guard runs on the run that makes the payslips, and no trigger of this graft\'s is left on the payslip feat\'s tables', async () => {
   const guards = await db.query(`SELECT op FROM cella.guard WHERE fn = 'employment_payslip.whose(jsonb)'::regprocedure`)
   assert.deepEqual(guards.rows, [{ op: 'payslip:run:generate' }])

@@ -11,13 +11,17 @@ CREATE TABLE payslip.terms (
   ratio numeric(4, 2) NOT NULL CHECK (ratio >= 1)
 );
 
--- A member's monthly gross salary from a day on. The member is an address,
--- as text; that it is a worker's is the employment-payslip graft's.
+-- A member's monthly gross salary from a day on, until its last day where
+-- it has one, in force on each day between, both included, until a later
+-- one replaces it. The member is an address, as text; that it is a
+-- worker's, and ends when they leave, is the employment-payslip graft's.
 CREATE TABLE payslip.salary (
   member text NOT NULL,
   "from" date NOT NULL,
+  until date,
   gross cella.amount NOT NULL,
-  PRIMARY KEY (member, "from")
+  PRIMARY KEY (member, "from"),
+  CHECK (until IS NULL OR until >= "from")
 );
 
 -- A month's pay run: prepared, then approved, then paid, each once.
@@ -56,7 +60,8 @@ LANGUAGE sql IMMUTABLE
 RETURN (to_date(month || '-01', 'YYYY-MM-DD') + interval '1 month')::date;
 
 -- What each salaried member is due for a month: the salary in force on its
--- first day, and the contributions at the terms' rates, to the cent.
+-- first day, and the contributions at the terms' rates, to the cent; a
+-- salary that ended before the month is due nothing in it.
 CREATE FUNCTION payslip.due(month text)
 RETURNS TABLE (member text, gross bigint, employee bigint, employer bigint, net bigint)
 LANGUAGE sql STABLE
@@ -66,12 +71,13 @@ BEGIN ATOMIC
          round(s.gross * t.employer / 100)::bigint,
          s.gross - round(s.gross * t.employee / 100)::bigint
   FROM (
-    SELECT DISTINCT ON (x.member) x.member, cella.cents(x.gross) AS gross
+    SELECT DISTINCT ON (x.member) x.member, x.until, cella.cents(x.gross) AS gross
     FROM payslip.salary x
     WHERE x."from" <= payslip.first(due.month)
     ORDER BY x.member, x."from" DESC
   ) s
-  CROSS JOIN payslip.terms t;
+  CROSS JOIN payslip.terms t
+  WHERE s.until IS NULL OR s.until >= payslip.first(due.month);
 END;
 
 -- A run's payslips never change once it is approved, nor its approval and

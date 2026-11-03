@@ -21,5 +21,7 @@ export async function pay(db: Db, worker: string): Promise<Pay> {
 }
 
 // Each worker's salary in force, by their address.
-export const salaries = `SELECT DISTINCT ON (member) member AS id, cella.cents(gross) AS salary FROM payslip.salary
-  WHERE "from" <= cella.verdict_date() ORDER BY member, "from" DESC`
+export const salaries = `SELECT s.id, s.salary FROM (
+  SELECT DISTINCT ON (member) member AS id, until, cella.cents(gross) AS salary FROM payslip.salary
+  WHERE "from" <= cella.verdict_date() ORDER BY member, "from" DESC
+) s WHERE s.until IS NULL OR s.until >= cella.verdict_date()`

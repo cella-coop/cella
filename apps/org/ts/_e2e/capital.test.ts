@@ -7,9 +7,12 @@
 // entry. Paul, who left in
 // November 2025, is owed his 1 500 € in three yearly repayments: the
 // first is refused before its day and by anyone without the power, then
-// paid once on it. Malik's exit, which the assembly carries, is followed
+// paid once on it. Malik's exclusion, which the assembly carries, is followed
 // by the freeze and the withdrawal of his capital, each its own write
-// signed by Camille. The assembly then adopts new capital terms, a rule of
+// signed by Camille. Amina withdraws by her own right, and her own freeze
+// and withdrawal of her capital follow, signed by her; no one withdraws
+// another, nor excludes a member without the assembly's motion. The
+// assembly then adopts new capital terms, a rule of
 // at least ten shares at 25 € replacing the founding one, whose values are
 // copied into the terms by the write that follows the adoption; a rule
 // whose value says no way is stricter is refused when proposed. Nadia,
@@ -25,7 +28,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { close, propose, put } from '@cella/org-graft-circle-membership-motion/api'
 import { vote } from '@cella/org-motion/api'
-import { accept, invite } from '@cella/org-membership/api'
+import { accept, exclude, invite, withdraw } from '@cella/org-membership/api'
 import { called, pay, repay } from '@cella/org-graft-account-membership-transaction/api'
 import { plan, spread, withheld } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
@@ -49,6 +52,7 @@ const paul = 'paul@lanterne.example'
 const nadia = 'nadia@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 const malik = 'malik@lanterne.example'
+const amina = 'amina@lanterne.example'
 // The capital's terms the founding assembly adopted, as the rule
 // m-2021-001/43.
 const founded = 'm-2021-001-43'
@@ -228,7 +232,7 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
 // A motion of the assembly asking `kind` of `args`, put on `from`: every
 // active member on its roll consents, it closes on `until`, and what its
 // close carries follows it, signed by Camille, who closes it.
-async function decided(kind: 'admit' | 'exit', args: Record<string, string | number>, from: string, until: string) {
+async function decided(kind: 'admit' | 'exclude', args: Record<string, string | number>, from: string, until: string) {
   await on(from)
   const proposed = settled(await put({ kind, args, deadline: until, body: '' }, as(camille))) as { motion: string }
   const roll = await all<{ member: string }>(
@@ -244,13 +248,13 @@ async function decided(kind: 'admit' | 'exit', args: Record<string, string | num
   return react('motion:motion:close', { motion: proposed.motion }, as(camille))
 }
 
-test('an exit the assembly carries is followed by the freeze and the withdrawal of the capital, each its own write signed by Camille', async () => {
+test('an exclusion the assembly carries is followed by the freeze and the withdrawal of the capital, each its own write signed by Camille', async () => {
   const before = await balance('101308')
   assert.ok(before < 0, 'Malik\'s account holds his capital')
-  const then = await decided('exit', { member: malik }, '2026-12-01', '2026-12-08')
+  const then = await decided('exclude', { member: malik }, '2026-12-01', '2026-12-08')
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
-    [['membership:member:exit', 'settled', [['account:account:freeze', 'settled'], ['account:capital:withdraw', 'settled']]]],
+    [['membership:member:exclude', 'settled', [['account:account:freeze', 'settled'], ['account:capital:withdraw', 'settled']]]],
   )
   for (const t of then[0].then) {
     assert.equal((await one<{ actor: string }>('SELECT actor FROM cella.log WHERE n = $1', [t.entry])).actor, camille)
@@ -266,6 +270,37 @@ test('an exit the assembly carries is followed by the freeze and the withdrawal 
       [3, '2029-12-08'],
     ],
   })
+  await balanced()
+})
+
+test('Amina withdraws by her own right, followed by her own freeze and withdrawal of her capital, each signed by her; no one withdraws another, nor excludes without the assembly\'s motion', async () => {
+  await on('2026-12-09')
+  assert.match(reason(await withdraw({ member: amina }, as(julien))), /julien@lanterne\.example may not withdraw amina@lanterne\.example's membership: only their own/)
+  assert.match(reason(await exclude({ member: amina, motion: 'm-2026-999' }, as(camille))), /no motion m-2026-999/)
+  assert.equal((await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [amina])).status, 'active')
+  const before = await balance('101309')
+  assert.ok(before < 0, 'Amina\'s account holds her capital')
+  const left = await withdraw({ member: amina }, as(amina))
+  settled(left)
+  assert.equal((await one<{ cites: boolean }>(`SELECT form ? 'motion' AS cites FROM cella.log WHERE n = $1`, [(left as { entry: number }).entry])).cites, false, 'a withdrawal cites no motion')
+  const then = await react('membership:member:withdraw', { member: amina }, as(amina))
+  assert.deepEqual(then.map((d) => [d.op, d.state]), [['account:own:freeze', 'settled'], ['account:own:withdraw', 'settled']])
+  for (const t of then) {
+    assert.equal((await one<{ actor: string }>('SELECT actor FROM cella.log WHERE n = $1', [t.entry])).actor, amina)
+  }
+  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101309'`)).frozen, true)
+  assert.equal(await balance('101309'), 0, 'what it held moved to 4567')
+  const c = await called(await reading(julien), amina)
+  assert.deepEqual({ owed: c.owed, repayments: c.repayments.map((r) => [r.n, r.due]) }, {
+    owed: -before,
+    repayments: [
+      [1, '2027-12-09'],
+      [2, '2028-12-09'],
+      [3, '2029-12-09'],
+    ],
+  })
+  // Gone, she withdraws no more.
+  await assert.rejects(withdraw({ member: amina }, as(amina)), /amina@lanterne\.example is no member, or is exited already/)
   await balanced()
 })
 

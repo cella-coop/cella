@@ -24,7 +24,7 @@ export { stances } from '../drivers/inbox.ts'
 // its proposal, replaced by one that fixes its roll in the same verdict,
 // and its close by one that admits and seats; and, once a close settles,
 // what else it decides, carried out. On a member's page, proposing their
-// admission, suspension or exit; on a circle's, a seat in it, or what
+// admission, suspension or exclusion; on a circle's, a seat in it, or what
 // circle-motion proposes about its place and powers.
 export const slice: Slice = {
   name: 'circle-membership-motion',

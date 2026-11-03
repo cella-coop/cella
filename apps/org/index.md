@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -181,7 +181,7 @@ and admit a member by vote (ordered).
 | `document-motion` | adoption of a document version by a motion |
 | `employment-membership-motion` | a candidate's admission, proposed from their candidacy once their probation is over |
 | `meeting-motion` | the motions a meeting's agenda tables, and where each stands |
-| `membership-motion` | admission, suspension and exit by a motion |
+| `membership-motion` | admission, suspension and exclusion by a motion |
 | `motion-patronage` | a year's distribution and the motion that approves its split; the work share's terms and the motion that adopts them |
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-membership` | who has read the co-op's adopted texts |

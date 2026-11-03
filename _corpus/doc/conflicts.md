@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Conflicts
@@ -62,7 +62,7 @@ state is that of 24 October 2026.
 | `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation is taken up by its link; erasure wins |
 | `membership.link` | confluent | right: links are facts; the first taken up ends them all |
 | `membership.accept` | ordered | right: it enrols a first device, ordered against revoke as `person.enrol` is ([membership](#membership-changes-are-decided)) |
-| `membership.admit`, `.suspend`, `.exit` | ordered | right; **applied**: each decided; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
+| `membership.admit`, `.suspend`, `.exclude`, `.withdraw` | ordered | right; **applied**: each decided but the withdrawal, the member's own right; an admission settles inside its decision's close ([admission](#an-admission-settles-with-its-close)) |
 | `decision.propose` | confluent | right; **applied**: what it decides is fixed with it, before any stance |
 | `decision.vote` | confluent | right at rung 1; **needs a parent at rung 2** |
 | `decision.close` | ordered | right; **applied**: a passing close admits and seats in its own verdict |
@@ -458,7 +458,7 @@ deciding vote.
 | `membership.suspend` vs `decision.vote` by that member | the stance refused: not active | the stance stands; if before the close, it is counted only if they are active at the close | a suspended member's stance decides |
 
 `invite` and `profile` are rightly confluent; `admit`, `suspend` and `exit`
-rightly ordered. **Applied**: suspension and exit are decided, citing the
+rightly ordered (an exit is a withdrawal or an exclusion). **Applied**: suspension and exclusion are decided, citing the
 assembly's decision, and carried out once its close settles; until then
 they needed a power no mandate granted.
 

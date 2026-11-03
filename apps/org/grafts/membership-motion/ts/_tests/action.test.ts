@@ -1,7 +1,7 @@
 // What a motion asks of members, on a database holding the app's core,
 // the motion and member feats and this graft: the kinds it registers,
 // `membership_motion.asks` checking each action applies to its member, and
-// the guards on a suspension and an exit naming what the cited motion
+// the guards on a suspension and an exclusion naming what the cited motion
 // asks. Run by `cella test slice membership-motion`.
 
 import { after, before, test } from 'node:test'
@@ -34,7 +34,7 @@ before(async () => {
        ('m-1', 1, 'admit', '{"member": "ines@lanterne.example", "shares": 20}'),
        ('m-2', 1, 'admit', '{"member": "chloe@lanterne.example", "shares": 5}'),
        ('m-3', 1, 'suspend', '{"member": "chloe@lanterne.example"}'),
-       ('m-4', 1, 'exit', '{"member": "old@lanterne.example"}')`,
+       ('m-4', 1, 'exclude', '{"member": "old@lanterne.example"}')`,
   )
 })
 
@@ -44,7 +44,7 @@ after(async () => {
 
 test('the graft registers admitting, suspending and ending a membership, and erasing a former member', async () => {
   const { rows } = await db.query(`SELECT kind FROM motion.carries WHERE owner = 'membership-motion' ORDER BY kind`)
-  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'erase', 'exit', 'suspend'])
+  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'erase', 'exclude', 'suspend'])
 })
 
 test('a proposal asks of each member what can become of them', async () => {
@@ -54,7 +54,7 @@ test('a proposal asks of each member what can become of them', async () => {
   assert.equal(await guard('asks', { motion: 'm-4' }), 'old@lanterne.example is exited')
 })
 
-test('a suspension or an exit cites a motion that asks it of that member', async () => {
+test('a suspension or an exclusion cites a motion that asks it of that member', async () => {
   assert.match((await guard('admits', { motion: 'm-1', member: 'ines@lanterne.example', shares: 40 })) ?? '', /m-1 does not admit ines@lanterne.example with 40 shares/)
   assert.equal(await guard('admits', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20 }), null)
   assert.equal(await guard('ends', { motion: 'nowhere', member: 'chloe@lanterne.example' }), 'no motion nowhere')

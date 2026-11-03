@@ -73,11 +73,12 @@ export interface Subscribed {
   entry: string
 }
 
-// A departed associate's capital withdrawn, citing the motion that ended
-// their membership.
+// A departed associate's capital withdrawn.
 export interface Withdraw {
   member: string
-  motion: string
+  // The motion that excluded them; none where they withdrew by their
+  // right and withdraw their own.
+  motion?: string
 }
 
 // What a withdrawal moved to 4567, what it cancelled of the subscription,

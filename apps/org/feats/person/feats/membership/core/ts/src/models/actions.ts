@@ -11,8 +11,10 @@ export const actions = {
   'membership:member:admit': ordered({ decide: 'consent', power: 'admit-member' }),
   // changes who votes; the cited motion suspends
   'membership:member:suspend': ordered({ power: 'suspend-member' }),
-  // freezes the capital account; the cited motion ends the membership
-  'membership:member:exit': ordered({ power: 'end-membership' }),
+  // a member leaves by their own right; the freeze of their capital follows it
+  'membership:member:withdraw': ordered({ power: 'withdraw-membership' }),
+  // freezes the capital account; the cited motion excludes the member
+  'membership:member:exclude': ordered({ power: 'exclude-member' }),
   // erasure wins over every update; the cited motion erases a member who has left
   'membership:member:erase': ordered({ power: 'erase-member' }),
 } satisfies Actions

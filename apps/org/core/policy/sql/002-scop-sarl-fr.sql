@@ -39,8 +39,8 @@ SELECT policy.offer('scop-sarl-fr', 'admit-member', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'suspend-member', 'mandate',
   'The {circle: ag} circle holds {power: suspend-member}, to suspend a member, by motion',
   NULL, NULL, NULL);
-SELECT policy.offer('scop-sarl-fr', 'end-membership', 'mandate',
-  'The {circle: ag} circle holds {power: end-membership}, to end a membership, by motion',
+SELECT policy.offer('scop-sarl-fr', 'exclude-member', 'mandate',
+  'The {circle: ag} circle holds {power: exclude-member}, to exclude a member, by motion',
   NULL, NULL, 'loi n° 47-1775 art. 7; Code de commerce art. L231-6');
 SELECT policy.offer('scop-sarl-fr', 'erase-member', 'mandate',
   'The {circle: ag} circle holds {power: erase-member}, to erase a former member''s personal data, by motion',
@@ -63,6 +63,9 @@ SELECT policy.offer('scop-sarl-fr', 'nest-circle', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'seat-member', 'mandate',
   'The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion',
   NULL, 'extraordinary', NULL);
+SELECT policy.offer('scop-sarl-fr', 'withdraw-membership', 'mandate',
+  'Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership',
+  NULL, 'extraordinary', 'Code de commerce art. L231-6');
 SELECT policy.offer('scop-sarl-fr', 'keep-profile', 'mandate',
   'Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details',
   NULL, 'extraordinary', 'GDPR art. 16');

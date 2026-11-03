@@ -32,7 +32,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
   const titles: Record<Asking['kind'], string> = {
     admit: `Admit ${who} as a member`,
     suspend: `Suspend ${who}`,
-    exit: `End ${who}'s membership`,
+    exclude: `Exclude ${who}`,
     erase: `Erase ${who}'s personal data`,
     seat: `Seat ${who} in ${found.circle}${as}`,
     unseat: `End ${who}'s seat in ${found.circle}${as}`,

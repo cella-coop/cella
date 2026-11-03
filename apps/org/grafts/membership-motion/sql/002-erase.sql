@@ -1,5 +1,5 @@
 -- Erasing the personal data of a member who has left, decided by the
--- assembly as an exit is: the motion asks it, and its close carries it
+-- assembly as an exclusion is: the motion asks it, and its close carries it
 -- out.
 SELECT motion.register_carries('erase', 'Erase a former member''s personal data', '[{"name": "member", "label": "Address", "type": "text"}]', 'membership:member:erase', 'membership-motion');
 
@@ -7,7 +7,7 @@ CREATE OR REPLACE VIEW membership_motion.action AS
 SELECT m.motion, m.n, m.kind, m.args ->> 'member' AS member,
        CASE WHEN m.args ->> 'shares' ~ '^[0-9]{1,9}$' THEN (m.args ->> 'shares')::integer END AS shares
 FROM motion.action m
-WHERE m.kind IN ('admit', 'suspend', 'exit', 'erase');
+WHERE m.kind IN ('admit', 'suspend', 'exclude', 'erase');
 
 -- motion:motion:propose — as before, and an erasure names a member
 -- who has left.
@@ -21,7 +21,7 @@ BEGIN ATOMIC
       WHEN m.kind = 'admit' AND mm.status <> 'invited' THEN m.member || ' is ' || mm.status || ', not invited'
       WHEN m.kind = 'admit' AND coalesce(m.shares, 0) <= 0 THEN 'an admission subscribes a whole number of shares'
       WHEN m.kind = 'suspend' AND mm.status <> 'active' THEN m.member || ' is ' || mm.status || ', not active'
-      WHEN m.kind = 'exit' AND mm.status NOT IN ('active', 'suspended') THEN m.member || ' is ' || mm.status
+      WHEN m.kind = 'exclude' AND mm.status NOT IN ('active', 'suspended') THEN m.member || ' is ' || mm.status
       WHEN m.kind = 'erase' AND mm.status <> 'exited' THEN m.member || ' is ' || mm.status || ': only a member who has left is erased'
     END AS r
     FROM membership_motion.action m

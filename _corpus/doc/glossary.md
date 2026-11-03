@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Glossary
@@ -58,7 +58,7 @@ updated = 2026-11-02
 | **mandate** | a kind of policy: a grant of one power to one role, to one circle, or to the people who hold a right, with an optional limit per action or budget per month or year, and a term, the days its policy applies; its values (`{role: finance}`, `{power: pay-supplier}`, `{limit: 3 000 €}`) are copied into `circle.mandate` as it is adopted, and ending its policy revokes it |
 | **individual mandate** | a mandate on a role (`{role: finance}`), used by whoever holds a seat with that role |
 | **collective mandate** | a mandate on a circle as a whole (`{circle: ag}`), used only by a motion of that circle: an action a passed motion carries takes effect only where the motion's circle holds one for the action's power; carved from what the circle above holds, as an individual mandate is |
-| **right** | a mandate people hold as such (`{right: member}`), with no seat: every person, every member or every employee, as person's core says who is one on a day; never an agent or a service. A right is the assembly's to grant, reaches the whole co-op, and is neither carved nor carved from. By their rights a person keeps their profile and devices, uploads a file, takes up an invitation, files a record of their own, marks a text read and records an import; a member draws on their account, spreads what they owe, marks their attendance and saves a report; an employee logs their own time and claims their expenses. A right lets each act on what is their own and opens no one else's rows |
+| **right** | a mandate people hold as such (`{right: member}`), with no seat: every person, every member or every employee, as person's core says who is one on a day; never an agent or a service. A right is the assembly's to grant, reaches the whole co-op, and is neither carved nor carved from. By their rights a person keeps their profile and devices, uploads a file, takes up an invitation, files a record of their own, marks a text read and records an import; a member withdraws from the co-op, draws on their account, spreads what they owe, marks their attendance and saves a report; an employee logs their own time and claims their expenses. A right lets each act on what is their own and opens no one else's rows |
 | **role** | a named duty in a circle that mandates attach to: gérante, finance, lead, secretary |
 | **participant** | the role every circle has, built in, which every seat in it holds there; its mandates cover proposing and discussing, the powers `propose` and `discuss` |
 | **seat** | a person's place in a circle, member or not, perhaps with a role, and always with the circle's participant role: the `circle-membership` graft's. Only the assembly's seats ask an active membership; a worker who is no member sits in their working circle and holds its mandates there |
@@ -86,6 +86,9 @@ updated = 2026-11-02
 | **gérant(e)** | the elected manager and legal representative of a SCOP SARL |
 | **person** | someone the co-op knows, by their address, with their name and devices, whatever they hold; the one kind of actor built; a member if they hold a membership, a worker if they hold an employment, roles derived and never stored |
 | **membership** | a person's belonging to the co-op, invited to exited, with the shares they hold; the feat nested in `person` that keeps it |
+| **exit** | a membership's end, one of two ways: a withdrawal or an exclusion; either is followed by the freeze of the member's capital accounts and the move of their capital to what is owed them, repaid as the capital's terms say |
+| **withdrawal** | a member leaving the co-op by their own action, a right no motion decides (`withdraw-membership`); the freeze and the move of their capital that follow are their own writes, by the same right |
+| **exclusion** | a member's exit the assembly decides, by a motion its collective mandate allows (`exclude-member`); the freeze and the move of their capital that follow cite the same motion |
 | **employment** | a person's contract with the co-op, member or not; the feat nested in `person` that keeps it |
 | **worker** | a person who holds an employment, under a contract that runs from a first day to a last; their time and pay rest on their employment |
 | **candidate** | a worker serving a probation before the assembly may admit them, pledging the shares they will subscribe |

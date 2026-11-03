@@ -73,10 +73,15 @@ export interface Accepted {
   accepted: string
 }
 
-// A suspension or an exit, citing the motion that asks it.
+// A suspension or an exclusion, citing the motion that asks it.
 export interface End {
   member: string
   motion: string
+}
+
+// A withdrawal, the member's own: it cites no motion.
+export interface Withdraw {
+  member: string
 }
 
 export interface Ended {
@@ -107,4 +112,6 @@ export interface Membership {
   first: First | null
   links: number
   devices: Device[]
+  // Whether the page is the reader's own, where they may withdraw.
+  own: boolean
 }

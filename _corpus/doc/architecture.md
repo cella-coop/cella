@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 # Architecture
@@ -203,13 +203,18 @@ What follows a passed motion is its carried actions, never a trigger.
 Each is its owner's published action, a write of its own after the
 close, signed by whoever closed the motion, citing it, and judged by its
 own guards: `circle-membership-motion` carries out a suspension or an
-exit through the membership feat's, and the graft that knows what
+exclusion through the membership feat's, and the graft that knows what
 follows an admission or an exit reacts to it through `on`.
 `account-membership` freezes a departed member's capital accounts
 through the account feat's `freeze`; `account-membership-transaction`
 subscribes a member admitted, their account opened by the account
 feat's `holding` and their shares called through `record()`, and
-withdraws a departed associate's capital. A distribution approved citing
+withdraws a departed associate's capital. A member who withdraws by
+their own right cites no motion: what follows their withdrawal is
+signed by them and is theirs by the same right, so the account feat
+publishes its freeze and its capital's withdrawal twice, once citing
+the motion that excluded a member and once as the member's own
+(`account:own:freeze`, `account:own:withdraw`). A distribution approved citing
 the assembly's motion is followed the same way: `patronage-transaction`
 posts it through `distribute`, and
 `account-membership-patronage-transaction` credits each associate the
@@ -754,7 +759,10 @@ is their own stays the feat's: a person keeps their profile and devices
 (`keep-profile`, `keep-devices`), uploads a file (`upload-file`), takes
 up an invitation (`accept-invitation`), files a record of their own
 (`file-record`), marks a text read (`mark-read`) and records an import
-(`record-import`); a member draws on their account (`draw-account`),
+(`record-import`); a member withdraws from the co-op
+(`withdraw-membership`, worded on every person, since the withdrawal
+ends the membership on its own verdict date, and held to their own
+membership by the feat), draws on their account (`draw-account`),
 spreads what they owe (`spread-capital`), marks their attendance
 (`mark-attendance`) and saves a report (`save-report`); an employee
 logs, corrects and submits their own time (`log-time`), on a project or

@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -18,7 +18,8 @@ adds.
 | `POST /api/membership/accept` | ordered | enrols the invitee's first device, ordered against revoke as any enrolment |
 | `POST /api/membership/admit` | ordered | changes who votes |
 | `POST /api/membership/suspend` | ordered | changes who votes |
-| `POST /api/membership/exit` | ordered | ends a membership; its capital's freeze and withdrawal follow it |
+| `POST /api/membership/withdraw` | ordered | a member leaves by their own right; their capital's freeze and withdrawal follow it |
+| `POST /api/membership/exclude` | ordered | the assembly's motion ends a membership; the capital's freeze and withdrawal follow it |
 | `POST /api/membership/erase` | ordered | erasure wins over every update |
 
 A person's own name and contact details are the person's writes
@@ -34,10 +35,11 @@ check.
 | invite, link | `invite-member` | every member, through the assembly's `member` role |
 | accept | `accept-invitation`, every person's right: the invitee, signed by the device it enrols | whoever holds the link |
 | admit | `admit-member`, a collective mandate: the cited motion admits the member and carried | the assembly, by consent |
-| suspend, exit | `suspend-member`, `end-membership`, collective mandates: the cited motion suspends the member, or ends their membership, and carried | the assembly, by motion |
+| withdraw | `withdraw-membership`, every person's right: the membership is the actor's own, active or suspended until the write | each member, of their own membership |
+| suspend, exclude | `suspend-member`, `exclude-member`, collective mandates: the cited motion suspends or excludes the member, and carried | the assembly, by motion |
 | erase | `erase-member`, a collective mandate: the cited motion erases a member who has left, and carried | the assembly, by motion |
 
-`004-powers.sql` registers invite's power in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
+`004-powers.sql` registers invite's and withdraw's powers in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
 are listed in `motion.cites`, with their powers, by the `membership-motion` graft.
 
 ## Schema
@@ -88,7 +90,8 @@ label is the invitee's wording and stays out.
 - `membership.links`, on `membership:member:link`: the member is invited and has not taken up their invitation, and the link was made by this write.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
-- `membership.ends`, on `membership:member:suspend` and `:exit`: the write left the member suspended, or exited, on the verdict date.
+- `membership.withdraws`, on `membership:member:withdraw`: the member is the actor, and the write left them exited on the verdict date; the lifecycle lets only an active or a suspended member exit.
+- `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date.
 - `membership.erases`, on `membership:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
 
 Whether the cited motion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `circle-membership-motion`'s.
@@ -113,20 +116,22 @@ Whether the cited motion asks it is the `membership-motion` graft's guard on the
   invitation taken up already or a device enrolled already is refused
   before the notary.
 - `admit` (ordered), and `admitting`, its state alone, which the close of the deciding motion runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, motion }`.
-- `suspend`, `exit` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
+- `withdraw` (ordered): the member leaves by their own right, signing it themselves: sets the status `exited` and its day; submits `{ member }`, citing no motion. Someone withdrawing another is refused by the guards, and a member who left withdrawing again before the notary.
+- `suspend`, `exclude` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
 - `crediting`, inside another write's transaction: adds shares to what an active member holds, and refuses a member who is not. It is no action of its own: the write that runs it and its guards decide how many, as `account-membership-patronage-transaction`'s `employ` adds the shares an associate's part of the work share buys.
 - `erase` (ordered): submits `{ member, motion, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-membership-motion` carries it out when the motion that asks it passes.
 
 ### The exit's hook
 
-An exit, and an admission, change the member's capital, which is the
-books', not this feat's. Each sets the status and its day in its own
-transaction, and its request names the member and the motion, the
-shares too for an admission: a graft joining `membership` to the books
-reacts to the settled op in its slice's `on` with a write of its own,
-citing the same motion, as `account-membership` freezes the member's
-capital accounts and `account-membership-transaction` subscribes and
-withdraws their capital. The shell runs the reactions to the writes a
+An exit, a withdrawal or an exclusion, and an admission change the
+member's capital, which is the books', not this feat's. Each sets the
+status and its day in its own transaction, and its request names the
+member and the motion, the shares too for an admission, and no motion
+for a withdrawal: a graft joining `membership` to the books reacts to
+the settled op in its slice's `on` with a write of its own, citing the
+same motion, or for a withdrawal signed by the member as their own, as
+`account-membership` freezes the member's capital accounts and
+`account-membership-transaction` subscribes and withdraws their capital. The shell runs the reactions to the writes a
 close carries out as to one made from a page, and the close reports each
 admission it made, so they follow it too. No trigger on `member` does
 it.
@@ -161,7 +166,9 @@ the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,
 through `accept`; proposing their admission,
-suspension or exit is `circle-membership-motion`'s. Seats and powers are
+suspension or exclusion is `circle-membership-motion`'s. A member's own
+page offers them Withdraw, which asks them to confirm and signs
+`withdraw`; no one else's page offers it. Seats and powers are
 `circle-membership`'s.
 
 The page gains two tabs. Joining lists what joining asks, step by step,

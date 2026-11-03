@@ -28,9 +28,10 @@ $$;
 CREATE TRIGGER held BEFORE INSERT OR UPDATE OF holder ON account.account
   FOR EACH ROW EXECUTE FUNCTION account_membership.held();
 
--- account:account:freeze — a member who leaves has their capital frozen
--- until it is repaid, by the freeze that follows their exit: the holder is
--- a member who has left, so no active member's capital is frozen.
+-- account:account:freeze, account:own:freeze — a member who leaves has
+-- their capital frozen until it is repaid, by the freeze that follows
+-- their exclusion or their withdrawal: the holder is a member who has
+-- left, so no active member's capital is frozen.
 CREATE FUNCTION account_membership.freezes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -42,7 +43,9 @@ BEGIN ATOMIC
   LEFT JOIN membership.member m ON m.address = p.holder;
 END;
 
-INSERT INTO cella.guard (op, fn, owner) VALUES ('account:account:freeze', 'account_membership.freezes(jsonb)', 'account-membership');
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('account:account:freeze', 'account_membership.freezes(jsonb)', 'account-membership'),
+  ('account:own:freeze', 'account_membership.freezes(jsonb)', 'account-membership');
 
 -- Each member's capital: their shares at the share's value, the account
 -- that holds it, whether it is frozen, and what they may draw.

@@ -48,7 +48,7 @@ const erased = async (subject: string) =>
 
 // A motion about Chloé, put to the assembly: every active member on its
 // roll consents, it closes and its close carries it out.
-async function decided(kind: 'exit' | 'erase', from: string, until: string) {
+async function decided(kind: 'exclude' | 'erase', from: string, until: string) {
   await on(from)
   const proposed = settled(await put({ kind, args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { motion: string }
   const roll = await all<{ member: string }>(
@@ -116,8 +116,8 @@ test('Chloé claims a receipt, which the log commits to, and leaves by the assem
   )
   receipt = claimed.entry
   assert.equal((await opened(receipt)).label, 'Taxi to the Mauve première')
-  const exit = await decided('exit', '2026-10-24', '2026-11-07')
-  assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exit', 'settled']])
+  const exit = await decided('exclude', '2026-10-24', '2026-11-07')
+  assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exclude', 'settled']])
 })
 
 test('the assembly erases Chloé: her name at once; her payslips, receipts and capital account kept, restricted', async () => {

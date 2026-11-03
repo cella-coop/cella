@@ -35,11 +35,12 @@ export interface Hold {
   label: string
 }
 
-// The capital accounts of a holder to freeze, citing the motion that
-// ended their membership.
+// The capital accounts of a holder to freeze, once they left.
 export interface Freeze {
   holder: string
-  motion: string
+  // The motion that excluded the holder; none where they withdrew by
+  // their right and freeze their own.
+  motion?: string
 }
 
 // The accounts a freeze froze.

@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The co-op's structure and the authority that flows through it. A circle is
@@ -85,7 +85,7 @@ when the motion is proposed and again when each action is carried out
 |---|---|
 | `admit-member` | admitting a member (`membership:member:admit`), and the subscription that follows (`account:capital:subscribe`) |
 | `suspend-member` | suspending a member (`membership:member:suspend`) |
-| `end-membership` | ending a membership (`membership:member:exit`), and the freeze and withdrawal of capital that follow (`account:account:freeze`, `account:capital:withdraw`) |
+| `exclude-member` | excluding a member (`membership:member:exclude`), and the freeze and withdrawal of capital that follow (`account:account:freeze`, `account:capital:withdraw`) |
 | `erase-member` | erasing a former member's personal data (`membership:member:erase`) |
 | `adopt-policy` | adopting a policy (`motion:policy:adopt`), granting a mandate among them, and the copies into terms and the statutes that follow (`account:terms:adopt`, `patronage:terms:adopt`, `document:document:generate`) |
 | `end-policy` | ending a policy (`motion:policy:end`), revoking a mandate among them |
@@ -152,6 +152,7 @@ reaches the whole co-op, and is neither carved nor carved from.
 | person | `file-record` | filing a record of their own (`file-membership:member:attach`) |
 | person | `mark-read` | marking a text the co-op adopted read (`document-membership:version:read`) |
 | person | `record-import` | recording an import of their own (`import:run:record`) |
+| person | `withdraw-membership` | withdrawing their own membership, and the freeze and withdrawal of their capital that follow (`membership:member:withdraw`, `account:own:freeze`, `account:own:withdraw`); worded on every person, since the withdrawal ends the membership on its own verdict date, and held to a member's own by the membership feat's guard |
 | member | `draw-account` | drawing on their account within its draw limit (`account:account:draw`) |
 | member | `spread-capital` | spreading what they owe over their pay (`account:capital:spread`) |
 | member | `mark-attendance` | marking their attendance at a meeting (`meeting-membership:attendance:mark`) |
@@ -352,12 +353,12 @@ close of a passing motion carries them out.
 
 | Circle, by motion | Power |
 |---|---|
-| Assemblée générale | `admit-member`, `suspend-member`, `end-membership`, `erase-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `nest-circle`, `seat-member` |
+| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `erase-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `nest-circle`, `seat-member` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `nest-circle`, `seat-member` |
 
 | Right | Power |
 |---|---|
-| Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import` |
+| Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import`, `withdraw-membership` |
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
 | Every employee | `log-time`, `claim-expense` |
 

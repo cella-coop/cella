@@ -1,6 +1,6 @@
 +++
 title = "account-motion"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The statutes' capital terms, a rule the members adopt by motion, and the
@@ -17,12 +17,12 @@ which this graft reads.
   and passed on its roll, and `circle-motion`'s `mandated`, that its
   circle holds `adopt-policy`, the power it registers with it.
 - It registers by `motion.register_cite` the actions a passed motion
-  carries into the books once it admits or ends a membership,
+  carries into the books once it admits or excludes a member,
   `account:account:freeze`, `account:capital:subscribe` and
   `account:capital:withdraw`, with the powers their motion's own action
-  needs, `end-membership`, `admit-member` and `end-membership`, so each
+  needs, `exclude-member`, `admit-member` and `exclude-member`, so each
   settles only once the motion it cites closed and passed, and its
-  circle holds the power. Whether that motion admitted or ended the
+  circle holds the power. Whether that motion admitted or excluded the
   member it names is not checked: no graft joins account, membership and
   motion; the guards of `account-membership` and
   `account-membership-transaction` check that the member was admitted or

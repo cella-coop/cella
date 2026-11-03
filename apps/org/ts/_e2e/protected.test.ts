@@ -59,13 +59,13 @@ test('Lanterne\'s rights and the mandates that hand out mandates are protected b
      FROM policy.policy r JOIN circle.mandate m ON m.policy = r.id
      WHERE r.protected IS NOT NULL ORDER BY r.n`,
   )
-  assert.equal(protectedBy.length, 19)
+  assert.equal(protectedBy.length, 20)
   assert.ok(protectedBy.every((p) => p.protected === 'extraordinary'))
   assert.deepEqual(
     protectedBy.filter((p) => !p.held.startsWith('right ')).map((p) => p.held),
     ['ag adopt-policy', 'ag end-policy', 'ag seat-member', 'coordination adopt-policy', 'coordination end-policy', 'coordination seat-member'],
   )
-  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE "right" IS NOT NULL`)).n, 13)
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE "right" IS NOT NULL`)).n, 14)
 })
 
 test('an ordinary assembly\'s motion ending the members\' right to draw is refused, saying which procedure it needs', async () => {

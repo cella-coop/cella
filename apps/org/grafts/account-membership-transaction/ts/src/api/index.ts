@@ -9,7 +9,7 @@ import { draw } from '../handlers/draw.ts'
 import { pay } from '../handlers/pay.ts'
 import { repay } from '../handlers/repay.ts'
 import { subscribed } from '../handlers/subscribe.ts'
-import { withdrawn } from '../handlers/withdraw.ts'
+import { withdrawn, withdrawnOwn } from '../handlers/withdraw.ts'
 import { account } from '../drivers/draw.ts'
 import { called } from '../drivers/capital.ts'
 
@@ -17,7 +17,7 @@ export { draw } from '../handlers/draw.ts'
 export { pay } from '../handlers/pay.ts'
 export { repay } from '../handlers/repay.ts'
 export { subscribe, subscribed, subscribing } from '../handlers/subscribe.ts'
-export { withdraw, withdrawing, withdrawn } from '../handlers/withdraw.ts'
+export { withdraw, withdrawing, withdrawn, withdrawnOwn, withdrawOwn } from '../handlers/withdraw.ts'
 export { account } from '../drivers/draw.ts'
 export { called } from '../drivers/capital.ts'
 export type { Called, Payment, Repayment } from '../models/capital.ts'
@@ -61,6 +61,7 @@ export const slice: Slice = {
   },
   on: {
     'membership:member:admit': subscribed,
-    'membership:member:exit': withdrawn,
+    'membership:member:exclude': withdrawn,
+    'membership:member:withdraw': withdrawnOwn,
   },
 }

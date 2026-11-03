@@ -1,5 +1,5 @@
 export { close } from './close.ts'
 export { adopt } from './adopt.ts'
-export { freeze, freezing } from './freeze.ts'
+export { freeze, freezeOwn, freezing } from './freeze.ts'
 export { holding, opening } from './open.ts'
 export { nextPeriod, open } from './period.ts'

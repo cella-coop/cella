@@ -50,8 +50,13 @@ END;
 -- The circle a proposal about `subject` is put to: a circle other than
 -- the assembly that may decide about it and holds, on `day`, a collective
 -- mandate for every power in `powers`, the first by id; or else the
--- assembly, which holds every power inherently.
-CREATE FUNCTION circle_motion.decider(subject text, powers text[], day date) RETURNS text
+-- assembly, which holds every power inherently. For a grant, `grant`
+-- carries its values, its power, its limit and budget in cents, its
+-- period and its scope, and the circle also holds, standing on `day`, a
+-- collective mandate for its power that a mandate of those values from
+-- `day` is no wider than (`circle.wider`), the one it issues the grant
+-- under, so `circle.narrows` never refuses the grant for its issuer.
+CREATE FUNCTION circle_motion.decider(subject text, powers text[], day date, "grant" jsonb DEFAULT NULL) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT coalesce(
@@ -59,6 +64,24 @@ BEGIN ATOMIC
      WHERE NOT c.assembly
        AND circle_motion.decides(c.id, coalesce(decider.subject, '*'))
        AND NOT EXISTS (SELECT FROM unnest(decider.powers) w(power) WHERE NOT circle.holds(c.id, w.power, decider.day))
+       AND (decider."grant" IS NULL OR EXISTS (
+         SELECT FROM circle.mandate u
+         JOIN circle.grantee g ON g.id = u.grantee AND g.kind = 'circle'
+         WHERE u.grantee = c.id
+           AND u.power = decider."grant" ->> 'power'
+           AND (u."from" IS NULL OR u."from" <= decider.day)
+           AND (u.until IS NULL OR u.until > decider.day)
+           AND (u.revoked IS NULL OR u.revoked > decider.day)
+           AND circle.wider(
+             decider."grant" ->> 'power',
+             ((decider."grant" ->> 'limit')::bigint)::cella.amount,
+             ((decider."grant" ->> 'budget')::bigint)::cella.amount,
+             decider."grant" ->> 'per',
+             decider."grant" ->> 'scope',
+             decider.day,
+             NULL,
+             u.id
+           ) IS NULL))
      ORDER BY c.id
      LIMIT 1),
     circle.assembly()

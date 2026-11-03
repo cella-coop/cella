@@ -6,6 +6,8 @@
 // marking themselves as a guest; an item tables a motion proposed by the
 // meeting's day; a circle's setting is a share between 1 and 100 %.
 
+import { seats as seatsOf } from './seats.mjs'
+
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 // The meetings, for the document check's embeds.
@@ -18,7 +20,7 @@ export function meeting(read, fail) {
   const motions = new Map((read('motion').motion ?? []).map((d) => [d.id, d]))
   const documents = new Set((read('document').document ?? []).map((d) => d.id))
   const meetings = new Map((read('meeting').meeting ?? []).map((m) => [m.id, m]))
-  const seats = read('graft.circle-membership').seat ?? []
+  const seats = seatsOf(read)
   const seated = (circle, member, day) =>
     seats.some((p) => p.circle === circle && p.member === member && (!p.since || iso(p.since) <= day) && (!p.until || iso(p.until) > day))
   const keeps = (circle, member, day) =>

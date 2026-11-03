@@ -745,7 +745,7 @@ holds ([circle](../../apps/org/feats/circle/index.md#authority)).
 circle and every role is a grantee, `circle.grantee`, the supertype in
 circle's core that a mandate's `grantee` references, so circles and
 roles share one namespace of ids. A person never holds a mandate
-directly: they hold a role by a seat, and the role holds the mandate, so
+directly: they hold a role by a tenure, and the role holds the mandate, so
 `circle.mandate_flaw` refuses a mandate policy that names a person
 ([circle](../../apps/org/feats/circle/index.md#entities)).
 
@@ -783,8 +783,20 @@ logs, corrects and submits their own time (`log-time`), on a project or
 not, and claims their expenses (`claim-expense`)
 ([circle](../../apps/org/feats/circle/index.md#rights)).
 
+**A person holds a role by a tenure, and a role that is a member of a
+circle seats whoever holds it.** A circle's members are people and
+roles, and a tenure is a person's time in a role, from a day until a
+day, no more of them at once in a circle than the role's `holders`;
+each holder acts alone under the role's mandates. A seat is read from
+the two, never stored (`circle_membership.seat`): a person sits in a
+circle as its member, by a tenure of one of its roles, or by a tenure
+of a role that is its member (the double link). So a handover, one
+tenure ending as the next begins, moves every seat the role brings to
+the new holder and ends no mandate
+([circle-membership](../../apps/org/grafts/circle-membership/index.md#schema)).
+
 **Any person may hold a seat.** A seat is a person's place in a circle,
-member or not, and only the assembly's seats ask an active membership:
+member of the co-op or not, and only the assembly's seats ask an active membership:
 `circle_membership.counts(person, circle, day)` says whether a seat
 counts on a day, in the assembly where membership says the person is
 active, in any other circle unless membership has suspended them or let

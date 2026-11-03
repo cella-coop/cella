@@ -13,10 +13,13 @@ name, number and identifier here is invented.
 
 ## People and circles
 
-Every member sits in the general assembly, one member one vote, in its
-`member` role, whose mandates let every member edit clients and documents;
-and in one working circle. The leads and the manager also sit on
-coordination, which meets weekly.
+Every member sits in the general assembly, one member one vote, by a
+tenure of its `member` role, whose mandates let every member edit clients
+and documents; and in one working circle, as its member or its lead.
+The lead role is a member of coordination, which meets weekly, so each
+circle's lead sits there by their tenure, and Camille sits there as a
+member. A capped role, as the gérante's or a circle's lead, is held by
+one person at a time.
 
 | Circle | Members | Lead |
 |---|---|---|
@@ -25,7 +28,7 @@ coordination, which meets weekly.
 | Marketing | Malik Benali, Chloé Moreau | Malik |
 | Operations | Julien Petit | Julien |
 
-Camille is the gérante, elected in June 2024 for four years, with a mandate to
+Camille is the gérante, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
 keeps the books, issues invoices, records suppliers' bills and pays them
 up to 3 000 € a payment,

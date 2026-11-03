@@ -7,8 +7,9 @@ The co-op's structure and the authority that flows through it. A circle is
 a self-governing unit, after sociocracy: the general assembly, a
 coordination circle, a working team. Circles nest in one tree whose root is
 the assembly. Each circle defines roles, and grants powers to them through
-mandates; who holds a role is a seat, the `circle-membership` graft's
-junction. A mandate's grantee is one circle or one role, never a person.
+mandates; a person holds a role by a tenure, and a circle counts people
+and roles among its members, both the `circle-membership` graft's
+junctions. A mandate's grantee is one circle or one role, never a person.
 Each circle also has a channel for its messages.
 
 ## Entities
@@ -16,7 +17,7 @@ Each circle also has a channel for its messages.
 | Entity | Fields | Notes |
 |---|---|---|
 | circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
-| role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has; `participant`, built in, is every circle's, the assembly's too |
+| role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one gérante or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
 | grantee | `id`, `kind` | what a mandate is granted to: a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
 | mandate | `id`, `grantee`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
@@ -26,8 +27,8 @@ A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
 `cella.power`. A mandate grants one power to one grantee, a role or a
 circle, by one key and never to a person, with an optional limit, for a
-term. Who holds a role is a seat, the `circle-membership`
-graft's, so whether an actor may use a power is that graft's guard,
+term. Who holds a role is a tenure, and where they sit by it a seat,
+the `circle-membership` graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit, the
 circle's participant role among them. A power every member holds in a
@@ -68,13 +69,13 @@ feat's too, `circle.mandate_flaw(marked)`: one grantee, a role it has
 or a circle it has, a power named in lower case, at most a limit or a
 budget, an amount, a budget with its `per`, and no other value. A
 mandate naming a person (`{person: …}`) is refused, since a person holds
-a role by a seat and the role holds the mandate; so is one naming a
+a role by a tenure and the role holds the mandate; so is one naming a
 right, which is a policy of its own kind.
 
 ## Collective mandates
 
-A mandate on a role is individual: whoever holds a seat with that role
-uses it. A mandate on a circle is collective: the circle holds it as a
+A mandate on a role is individual: whoever holds that role by a tenure
+uses it, each holder alone. A mandate on a circle is collective: the circle holds it as a
 whole and uses it only by motion, so no seat brings it. An action a
 passed motion carries, such as admitting a member, adopting a policy or
 nesting a circle, needs the power a collective mandate grants, and
@@ -175,7 +176,7 @@ whole co-op, and is neither carved nor carved from.
 
 `circle` (`core/sql/`): `circle.circle`, `circle.role`,
 `circle.grantee`, `circle.mandate` and `circle.right`, as in the
-entities above. Every circle and every role is a grantee, its row made
+entities above; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
 by a trigger as the circle or the role is, so a circle and a role never
 share an id and a mandate's `grantee` is one foreign key; a mandate's
 `limit` and `budget` and a right's `limit` are `cella.amount`s, and each
@@ -216,7 +217,8 @@ that circle.
 | circle | active → dissolved |
 | mandate | granted, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
 | right | given, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
-| seat | held → ended (the graft's) |
+| tenure | held → ended (the graft's); a handover ends one and begins the next, and ends no mandate |
+| member of a circle | a person or a role, from → until (the graft's) |
 
 ## Actions
 
@@ -225,8 +227,8 @@ that circle.
 | `POST /api/circle/nest` | ordered | two nestings can form a cycle even online |
 | `POST /api/circle/message` | confluent | the circle's channel |
 
-Who holds which role is a seat, the `circle-membership` graft's own
-action; see its [doc](../../grafts/circle-membership/index.md). A
+Who holds which role is a tenure, and who is a member of a circle a
+member, the `circle-membership` graft's own actions; see its [doc](../../grafts/circle-membership/index.md). A
 mandate has no action of its own: it is granted and revoked by the
 motion feat's `motion:policy:adopt` and `motion:policy:end`, both
 ordered, which `circle-motion` extends with this feat's `granting` and
@@ -332,7 +334,8 @@ close of a passing motion carries them out.
 
 ## Grafts
 
-- `circle-membership`: seats, and who may use a power.
+- `circle-membership`: members of circles, tenures, the seats read from
+  them, and who may use a power.
 - `circle-motion`: nesting by motion, and mandates as the policies its
   circles adopt and end.
 - `circle-membership-project`, `circle-membership-timesheet`: a power reaches the
@@ -367,6 +370,13 @@ close of a passing motion carries them out.
 | Gérante | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | — |
 | Participant (every seat, in its circle) | `propose`, `discuss` | — |
+
+The gérante, the treasurer, finance, a circle's lead and a circle's
+secretary are each held by one person at a time (`holders` 1); the
+member role is uncapped. Each holds their role by a tenure, Camille
+hers as gérante from 20 June 2024 until 20 June 2028; the lead role is
+a member of coordination, so each working circle's lead sits there by
+their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|

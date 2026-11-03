@@ -22,7 +22,7 @@ before(async () => {
   await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('ag', 'ag', NULL)`)
   await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('finance', 'ag', 'Finance'), ('manager', 'ag', 'Gérante')`)
   await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from") VALUES ('finance', 'reimburse-expense', 'm-2026-001/1', '2026-01-01'), ('manager', 'hire-worker', 'm-2026-001/2', '2026-01-01')`)
-  await db.query(`INSERT INTO circle_membership.seat (circle, member, role, until) VALUES ('ag', $1, 'finance', NULL), ('ag', $2, 'manager', NULL)`, [julien, camille])
+  await db.query(`INSERT INTO circle_membership.tenure (circle, holder, role, until) VALUES ('ag', $1, 'finance', NULL), ('ag', $2, 'manager', NULL)`, [julien, camille])
   await db.query(
     `INSERT INTO file.file (id, class, subject, name, type, size, bytes, uploader, uploaded) VALUES
        ('fi-0001', 'expense-receipt', $1, 'ticket.pdf', 'application/pdf', 1, '\\x00', $1, '2026-10-20'),

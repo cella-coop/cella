@@ -30,7 +30,7 @@ before(async () => {
     `INSERT INTO circle.mandate (grantee, power, policy, "from") VALUES ('lead', 'approve-time', 'm-2026-001/1', '2026-01-01'), ('manager', 'approve-time', 'm-2026-001/2', '2026-01-01')`,
   )
   await db.query(
-    `INSERT INTO circle_membership.seat (circle, member, role, until) VALUES
+    `INSERT INTO circle_membership.tenure (circle, holder, role, until) VALUES
        ('brand', $1, 'lead', NULL), ('ag', $2, 'manager', NULL), ('web', $1, 'lead', '2026-01-01')`,
     [hugo, camille],
   )

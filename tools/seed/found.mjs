@@ -137,16 +137,37 @@ export async function seed(db, read, { from, dir }) {
       ])
     }
     for (const r of structure.role ?? []) {
-      await db.query('INSERT INTO circle.role (id, circle, name, duty) VALUES ($1, $2, $3, $4)', [r.id, r.circle, r.name, r.duty ?? ''])
+      await db.query('INSERT INTO circle.role (id, circle, name, duty, holders) VALUES ($1, $2, $3, $4, $5)', [
+        r.id,
+        r.circle,
+        r.name,
+        r.duty ?? '',
+        r.holders ?? null,
+      ])
     }
 
-    const seats = read('graft.circle-membership').seat ?? []
-    for (const p of seats) {
-      await db.query(
-        'INSERT INTO circle_membership.seat (circle, member, role, since, until) VALUES ($1, $2, $3, $4, $5)',
-        [p.circle, p.member, p.role ?? null, day(p.since), day(p.until)],
-      )
+    // A circle's members, people and roles, and the tenures of its roles;
+    // the seats are read from them.
+    const sitting = read('graft.circle-membership')
+    for (const m of sitting.member ?? []) {
+      await db.query('INSERT INTO circle_membership.member (circle, person, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
+        m.circle,
+        m.person ?? null,
+        m.role ?? null,
+        day(m.since),
+        day(m.until),
+      ])
     }
+    for (const t of sitting.tenure ?? []) {
+      await db.query('INSERT INTO circle_membership.tenure (circle, holder, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
+        t.circle,
+        t.holder,
+        t.role,
+        day(t.since),
+        day(t.until),
+      ])
+    }
+    const seats = [...(sitting.member ?? []), ...(sitting.tenure ?? [])]
 
     const motions = read('motion').motion ?? []
     let votes = 0

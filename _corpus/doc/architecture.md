@@ -451,9 +451,12 @@ file anywhere else fails `cella test`:
   so a slice test cannot lean on a slice it does not own, and a package
   imports only what its manifest names. Its database is unbound
   (`cella.unbound`), since a slice test writes the rows it needs below
-  the notary. A slice that publishes an analytical contract is migrated
-  so even with no test file, which applies its contract on its part alone
-  and reads each view as `cella_analytics`.
+  the notary. A slice's test files run at once on its one database, so a
+  test that writes rows another of its tests reads writes them inside a
+  transaction it rolls back, and commits none. A slice that publishes an
+  analytical contract is migrated so even with no test file, which
+  applies its contract on its part alone and reads each view as
+  `cella_analytics`.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
   seeded with Lanterne, through the handlers.

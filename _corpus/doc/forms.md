@@ -86,7 +86,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `admit-member` | mandate | the assembly admits members, by motion | loi n° 47-1775 art. 7 |
 | `suspend-member` | mandate | the assembly suspends a member, by motion | cella |
 | `exclude-member` | mandate | the assembly excludes a member, by motion | loi n° 47-1775 art. 7; Code de commerce art. L231-6 |
-| `erase-member` | mandate | the assembly erases a former member's data, by motion | GDPR art. 17 |
+| `erase-own-data` | right, protected | every person who has left erases their own personal data, within the holds the law keeps | GDPR art. 17 |
 | `adopt-policy` | mandate, protected | the assembly adopts policies, the statutes' among them | Code de commerce art. L223-30 |
 | `end-policy` | mandate, protected | the assembly ends policies | Code de commerce art. L223-30 |
 | `approve-distribution` | mandate | the assembly approves a year's distribution | loi n° 47-1775 art. 8; loi n° 78-763 art. 33 |
@@ -114,7 +114,11 @@ Every protected default is protected by `extraordinary`. The right to
 withdraw is worded on every person, `{right: person}`, since the
 withdrawal ends the membership on its own verdict date: the guard that
 the membership is the actor's own, active or suspended until then, is
-the membership feat's, so only a member withdraws. A rule's
+the membership feat's, so only a member withdraws. The right to erase
+is every person's too: the membership feat's guard holds it to one's
+own data, once one has left, and the notary keeps restricted what the
+law keeps (GDPR art. 17(3)(b) and (e);
+[personal data](trust.md#personal-data)). A rule's
 values are named for no feat, so no guard reads them: they bind by the
 members' judgement, as the law's floors do until a feat reads them.
 

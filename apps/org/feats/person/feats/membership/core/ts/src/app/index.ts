@@ -5,6 +5,7 @@ import Invite from './blocks/Invite.svelte'
 import Joining from './blocks/Joining.svelte'
 import Rights from './blocks/Rights.svelte'
 import Withdraw from './blocks/Withdraw.svelte'
+import Erase from './blocks/Erase.svelte'
 
 const tones: Record<Status, Tone> = { active: 'positive', invited: 'accent', suspended: 'warning', exited: 'neutral' }
 
@@ -51,6 +52,7 @@ export const app: App = {
           { tab: 'joining', block: Device },
           { tab: 'rights', block: Rights },
           { tab: 'rights', block: Withdraw },
+          { tab: 'rights', block: Erase },
         ],
       },
     },

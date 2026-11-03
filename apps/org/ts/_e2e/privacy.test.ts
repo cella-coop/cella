@@ -1,10 +1,10 @@
 // The privacy scenario, end to end on a seeded Lanterne, through the
 // handlers: Camille erases Margaux Roux, Les Halles' contact, at her
 // request; Léa gives her email and phone, then erases them herself; Chloé
-// leaves, and the assembly erases her personal data by motion, her name
-// at once, her payslips, time, receipts and capital account's label restricted
-// until their legal clocks run out and the sweep redacts them. The log
-// verifies throughout. Run by `cella test e2e privacy`.
+// leaves, and erases her personal data herself, by her right, no motion's:
+// her name at once, her payslips, time, receipts and capital account's
+// label restricted until their legal clocks run out and the sweep redacts
+// them. The log verifies throughout. Run by `cella test e2e privacy`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -13,7 +13,9 @@ import { vote } from '@cella/org-motion/api'
 import { carried, close, put } from '@cella/org-graft-circle-membership-motion/api'
 import { erase as eraseClient, update } from '@cella/org-client/api'
 import { capture } from '@cella/org-expense/api'
+import { log as logTime } from '@cella/org-timesheet/api'
 import { forget, profile } from '@cella/org-person/api'
+import { erase } from '@cella/org-membership/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -46,11 +48,11 @@ const opened = async (n: number) => (await one<{ o: Record<string, any> }>('SELE
 const erased = async (subject: string) =>
   Object.fromEntries((await all<{ class: string; restricted: boolean }>('SELECT class, restricted FROM vault.erased WHERE subject = $1 ORDER BY class', [subject])).map((r) => [r.class, r.restricted]))
 
-// A motion about Chloé, put to the assembly: every active member on its
-// roll consents, it closes and its close carries it out.
-async function decided(kind: 'exclude' | 'erase', from: string, until: string) {
+// Chloé's exclusion, put to the assembly: every active member on its roll
+// consents, it closes and its close carries it out.
+async function excluded(from: string, until: string) {
   await on(from)
-  const proposed = settled(await put({ kind, args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { motion: string }
+  const proposed = settled(await put({ kind: 'exclude', args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { motion: string }
   const roll = await all<{ member: string }>(
     `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member
      WHERE r.motion = $1 AND m.status = 'active'`,
@@ -103,30 +105,46 @@ test('Léa gives her email and phone, which the log commits to and the vault ope
   assert.equal(await verifies(), true)
 })
 
-test('an active member\'s personal data is not erased: the motion is refused at its proposal', async () => {
-  const out = await put({ kind: 'erase', args: { member: chloe }, deadline: '2026-11-07', body: '' }, as(camille))
-  assert.match(reason(out), /chloe@lanterne\.example is active: only a member who has left is erased/)
+test('an active member\'s personal data is not erased: Chloé erasing her own while a member is refused', async () => {
+  assert.match(reason(await erase({ member: chloe }, as(chloe))), /chloe@lanterne\.example is active: only a member who has left is erased/)
 })
 
 let receipt = 0
+let time = 0
 
-test('Chloé claims a receipt, which the log commits to, and leaves by the assembly\'s motion', async () => {
+test('Chloé logs her time and claims a receipt, which the log commits to, and leaves by the assembly\'s motion', async () => {
+  time = settled(await logTime({ member: chloe, day: '2026-10-23', minutes: 150, billable: false }, as(chloe))).entry
+  assert.equal((await opened(time)).minutes, 150)
   const claimed = settled(
     await capture({ member: chloe, day: '2026-10-23', label: 'Taxi to the Mauve première', category: '6251', net: 3200, vat: null, receipt: 'TAXI CLAIRVAL 23/10 32,00 EUR' }, as(chloe)),
   )
   receipt = claimed.entry
   assert.equal((await opened(receipt)).label, 'Taxi to the Mauve première')
-  const exit = await decided('exclude', '2026-10-24', '2026-11-07')
+  const exit = await excluded('2026-10-24', '2026-11-07')
   assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exclude', 'settled']])
 })
 
-test('the assembly erases Chloé: her name at once; her payslips, receipts and capital account kept, restricted', async () => {
-  const done = await decided('erase', '2026-11-08', '2026-11-22')
-  assert.deepEqual(done.map((d) => [d.op, d.state]), [['membership:member:erase', 'settled']])
+test('no one erases another: Julien, and Camille as gérante, may not erase Chloé, who has left', async () => {
+  await on('2026-11-08')
+  for (const actor of [julien, camille]) {
+    assert.match(reason(await erase({ member: chloe }, as(actor))), new RegExp(`${actor.replaceAll('.', '\\.')} may not erase chloe@lanterne\\.example's personal data: only their own`))
+  }
+  assert.equal((await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [chloe])).name, 'Chloé Moreau')
+})
+
+test('Chloé erases her own data, by her right and no motion: her name at once; her payslips, receipts and capital account kept, restricted', async () => {
+  const done = settled(await erase({ member: chloe }, as(chloe)))
+  const logged = await one<{ form: Record<string, unknown> }>('SELECT form FROM cella.log WHERE n = $1', [done.entry])
+  assert.equal(logged.form.motion, undefined, 'her erasure cites no motion')
   assert.equal((await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [chloe])).name, 'redacted')
   assert.deepEqual(await erased(chloe), { books: true, contact: false, 'expense-receipt': true, profile: false, payroll: true })
-  // Kept, as the law requires, and no longer opened to readers.
+  // Kept, as the law requires, and no longer opened to readers: her pay
+  // and her time stay in the payslips and her timesheet, and the log
+  // commits to them, but the vault opens them to no one until their five
+  // years run out.
   assert.ok(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n) > 0)
+  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND day = '2026-10-23' AND minutes = 150`, [chloe])).n), 1)
+  assert.equal((await opened(time)).minutes, 'restricted')
   assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'Taxi to the Mauve première')
   assert.equal((await opened(receipt)).label, 'restricted')
   assert.match((await one<{ label: string }>(`SELECT label FROM account.account WHERE holder = $1`, [chloe])).label, /Chloé/)
@@ -141,6 +159,7 @@ test('the sweep redacts what the law kept once its clock runs out: payroll after
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.salary WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND minutes IS NOT NULL`, [chloe])).n), 0, 'her time too, in months long approved')
+  assert.equal((await opened(time)).minutes, 'redacted')
   await su.query(`SET cella.clock = '2037-01-01'`)
   const swept = await all<{ subject: string; class: string; keys: string; redacted: boolean }>('SELECT * FROM cella.vault_sweep() ORDER BY class')
   assert.deepEqual(swept.map((r) => [r.class, r.redacted]), [['books', true], ['expense-receipt', true]])

@@ -75,11 +75,10 @@ Camille hires, and opens a new hire's candidacy for membership.
   the cap, as `The {role: finance} role holds {power: pay-supplier}, to
   pay suppliers, up to {limit: 3 000 €} a write`, and its values are
   copied into `circle.mandate` as it is adopted (`motion.toml`). The
-  collective mandates follow them, `m-2021-001/47` to `/61`, each on a
+  collective mandates follow them, `m-2021-001/47` to `/61` but `/50`, each on a
   circle, as `The {circle: ag} circle holds {power: admit-member}, to
   admit members, by motion`: the assembly's to admit, suspend and
-  exclude members, erase a former member's data, adopt and end
-  policies, approve the distribution, adopt documents, nest circles and
+  exclude members, adopt and end policies, approve the distribution, adopt documents, nest circles and
   seat members; coordination's to adopt and end policies, adopt
   documents, nest circles and seat members. No working circle holds
   one, so a motion of Web carries no action. The rights follow,
@@ -89,10 +88,14 @@ Camille hires, and opens a new hire's candidacy for membership.
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
   log, correct and submit their own time`, and the last of the founding
   motion, `m-2021-001/76`, `Every {right: person} holds {power:
-  withdraw-membership}, to withdraw their own membership`: every person keeps their
+  withdraw-membership}, to withdraw their own membership`, and in the
+  collective mandates' place, `m-2021-001/50`, `Every {right: person}
+  holds {power: erase-own-data}, to erase their own personal data once
+  they have left`: every person keeps their
   profile and devices, uploads files, takes up an invitation, files
-  their records, marks a text read and records an import, and a member
-  withdraws their own membership; every member
+  their records, marks a text read and records an import, a member
+  withdraws their own membership, and one who has left erases their
+  own data; every member
   draws on their account, spreads what they owe, marks their attendance
   and saves a report; every employee logs their own time and claims
   their expenses. So Inès, employed and no member, keeps her profile,

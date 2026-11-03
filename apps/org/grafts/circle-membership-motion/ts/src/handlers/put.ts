@@ -10,8 +10,7 @@ import type { Asking } from '../models/asking.ts'
 // own. The title says what is decided; the guards on the proposal check
 // the action and that circle's say over it. Admitting, suspending or
 // ending a membership, and giving or ending a seat, elect or remove a
-// person, so they go to a secret ballot, as co-ops commonly do; an
-// erasure goes by the procedure's.
+// person, so they go to a secret ballot, as co-ops commonly do.
 export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> | Refused> {
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
   const { rows } = await deps.db.query<{ decider: string; procedure: string; member: string | null; circle: string | null; role: string | null }>(
@@ -33,7 +32,6 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
     admit: `Admit ${who} as a member`,
     suspend: `Suspend ${who}`,
     exclude: `Exclude ${who}`,
-    erase: `Erase ${who}'s personal data`,
     seat: `Seat ${who} in ${found.circle}${as}`,
     unseat: `End ${who}'s seat in ${found.circle}${as}`,
   }
@@ -42,7 +40,7 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
       circle: found.decider,
       title: titles[input.kind],
       procedure: found.procedure,
-      ballot: input.kind === 'erase' ? undefined : 'secret',
+      ballot: 'secret',
       deadline: input.deadline,
       body: input.body,
       actions: [{ kind: input.kind, args: input.args }],

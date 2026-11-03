@@ -4,7 +4,10 @@
 -- member's own, so none of them is here. A withdrawal is the member's
 -- own right, `withdraw-membership`, held as every person's, since the
 -- write ends the membership on its own verdict date: that it is the
--- actor's own is `membership.withdraws`.
+-- actor's own is `membership.withdraws`. An erasure is the right of one
+-- who has left, `erase-own-data`, held as every person's, since they are
+-- a member no longer: that it is their own is `membership.erases`.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('membership:member:invite', 'invite-member', NULL, 'membership'),
-  ('membership:member:withdraw', 'withdraw-membership', NULL, 'membership');
+  ('membership:member:withdraw', 'withdraw-membership', NULL, 'membership'),
+  ('membership:member:erase', 'erase-own-data', NULL, 'membership');

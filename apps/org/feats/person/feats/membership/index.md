@@ -20,7 +20,7 @@ adds.
 | `POST /api/membership/suspend` | ordered | changes who votes |
 | `POST /api/membership/withdraw` | ordered | a member leaves by their own right; their capital's freeze and withdrawal follow it |
 | `POST /api/membership/exclude` | ordered | the assembly's motion ends a membership; the capital's freeze and withdrawal follow it |
-| `POST /api/membership/erase` | ordered | erasure wins over every update |
+| `POST /api/membership/erase` | ordered | a person who has left erases their own personal data by their right; erasure wins over every update |
 
 A person's own name and contact details are the person's writes
 (`profile`, `forget`).
@@ -37,9 +37,9 @@ check.
 | admit | `admit-member`, a collective mandate: the cited motion admits the member and carried | the assembly, by consent |
 | withdraw | `withdraw-membership`, every person's right: the membership is the actor's own, active or suspended until the write | each member, of their own membership |
 | suspend, exclude | `suspend-member`, `exclude-member`, collective mandates: the cited motion suspends or excludes the member, and carried | the assembly, by motion |
-| erase | `erase-member`, a collective mandate: the cited motion erases a member who has left, and carried | the assembly, by motion |
+| erase | `erase-own-data`, every person's right: the membership is the actor's own, and they have left | each former member, of their own data |
 
-`004-powers.sql` registers invite's and withdraw's powers in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
+`004-powers.sql` registers invite's, withdraw's and erase's powers in `cella.power`, and `008-link.sql` link's and accept's; the writes a motion carries
 are listed in `motion.cites`, with their powers, by the `membership-motion` graft.
 
 ## Schema
@@ -92,9 +92,9 @@ label is the invitee's wording and stays out.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
 - `membership.withdraws`, on `membership:member:withdraw`: the member is the actor, and the write left them exited on the verdict date; the lifecycle lets only an active or a suspended member exit.
 - `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date.
-- `membership.erases`, on `membership:member:erase`: the member has left, and the write erased every class of their personal data, at once or restricted.
+- `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited motion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `circle-membership-motion`'s.
+Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `circle-membership-motion`'s.
 
 ## Handlers
 
@@ -119,7 +119,7 @@ Whether the cited motion asks it is the `membership-motion` graft's guard on the
 - `withdraw` (ordered): the member leaves by their own right, signing it themselves: sets the status `exited` and its day; submits `{ member }`, citing no motion. Someone withdrawing another is refused by the guards, and a member who left withdrawing again before the notary.
 - `suspend`, `exclude` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
 - `crediting`, inside another write's transaction: adds shares to what an active member holds, and refuses a member who is not. It is no action of its own: the write that runs it and its guards decide how many, as `account-membership-patronage-transaction`'s `employ` adds the shares an associate's part of the work share buys.
-- `erase` (ordered): submits `{ member, motion, erasure }`, the erasure of every class of the member's personal data, which the notary carries out as it settles: the person's name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. `circle-membership-motion` carries it out when the motion that asks it passes.
+- `erase` (ordered): a person who has left erases their own personal data by their right, signing it themselves: submits `{ member, erasure }`, citing no motion, the erasure of every class of their personal data, which the notary carries out as it settles: their name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. Someone erasing another, or a member who has not left, is refused by the guards.
 
 ### The exit's hook
 
@@ -168,7 +168,9 @@ way. Taking an invitation up is the shell's `/join/<secret>` page,
 through `accept`; proposing their admission,
 suspension or exclusion is `circle-membership-motion`'s. A member's own
 page offers them Withdraw, which asks them to confirm and signs
-`withdraw`; no one else's page offers it. Seats and powers are
+`withdraw`; no one else's page offers it. Once they have left, their own
+page offers them Erase my data instead, which says what the law keeps,
+asks them to confirm and signs `erase`. Seats and powers are
 `circle-membership`'s.
 
 The page gains two tabs. Joining lists what joining asks, step by step,

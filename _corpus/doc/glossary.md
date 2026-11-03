@@ -67,7 +67,7 @@ updated = 2026-11-03
 | **vault** | where personal data and its salts live, outside the log, so erasure leaves the log verifiable |
 | **commitment** | what the log keeps of a personal value: the BLAKE3, under its own domain, of a fresh salt and the value, which opens only while the vault holds both |
 | **retention class** | how long the law keeps a kind of personal data: `profile`, a person's name and records, and `contact`, erased when asked; `payroll`, five years; `expense-receipt` and `books`, ten |
-| **erasure** | an ordered action that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock |
+| **erasure** | an ordered action that deletes a subject's salts, values and keys, redacts their columns and refuses any later value of the class; a restricted class waits for its clock. Erasing one's own personal data, once one has left, is every person's right, by their own action, no motion's (`erase-own-data`) |
 | **restricted** | personal data the law keeps, which erasure leaves in place, unread, until the sweep finds its clock out |
 | **file** | bytes the co-op keeps, named by their BLAKE3, which the database computes and the log commits to: its own papers, receipts, employment and member records; a personal file has a retention class and a subject |
 | **receipt (file)** | a file attached to an expense, of class `expense-receipt`; not the notary's receipt |

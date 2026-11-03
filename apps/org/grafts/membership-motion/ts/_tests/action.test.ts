@@ -42,9 +42,9 @@ after(async () => {
   await db.end()
 })
 
-test('the graft registers admitting, suspending and ending a membership, and erasing a former member', async () => {
+test('the graft registers admitting, suspending and excluding a member', async () => {
   const { rows } = await db.query(`SELECT kind FROM motion.carries WHERE owner = 'membership-motion' ORDER BY kind`)
-  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'erase', 'exclude', 'suspend'])
+  assert.deepEqual(rows.map((r) => r.kind), ['admit', 'exclude', 'suspend'])
 })
 
 test('a proposal asks of each member what can become of them', async () => {

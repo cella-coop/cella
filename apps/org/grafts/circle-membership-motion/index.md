@@ -154,7 +154,7 @@ she is on no roll of the assembly's.
 - `carried(motion)`: on a settled close of a passing motion, carries
   out its other actions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its guards: a
-  suspension, an exclusion or the erasure of a former member's personal data
+  suspension or an exclusion
   (membership feat), a nesting
   (circle feat), a seat given or ended (circle-membership), a policy
   adopted or ended, a mandate's with it (circle-motion's `adopt` and
@@ -173,7 +173,7 @@ she is on no roll of the assembly's.
   procedure, titled with what it decides: a membership to the assembly,
   a seat to the circle above its own. Admitting, suspending or ending a
   membership, and giving or ending a seat, elect or remove a person, so
-  `put` names a secret ballot for them; an erasure takes the procedure's.
+  `put` names a secret ballot for each.
 
 ## Shell
 

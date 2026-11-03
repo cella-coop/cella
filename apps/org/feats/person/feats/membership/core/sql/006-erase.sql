@@ -3,14 +3,17 @@
 -- entry names the member by.
 COMMENT ON COLUMN membership.member.address IS 'not personal: the pseudonymous address every log entry names the member by';
 
--- membership:member:erase — the write erased the personal data of a member
--- who has left, every class: the cited motion asks it, which is the
--- membership-motion graft's guard.
+-- membership:member:erase — one who has left erases their own personal
+-- data, by their right, every class: the member is the actor, they have
+-- left, and the write erased it all, at once or restricted. No one erases
+-- another, and no motion decides it.
 CREATE FUNCTION membership.erases(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN m.address IS NULL THEN 'no member ' || coalesce(p.member, 'is named')
+    WHEN p.member IS DISTINCT FROM cella.actor()
+      THEN cella.actor() || ' may not erase ' || coalesce(p.member, 'no one') || '''s personal data: only their own'
+    WHEN m.address IS NULL THEN 'no member ' || p.member
     WHEN m.status <> 'exited' THEN m.address || ' is ' || m.status || ': only a member who has left is erased'
     WHEN p.subject IS DISTINCT FROM m.address
       OR coalesce(jsonb_array_length(p.erased), 0) + coalesce(jsonb_array_length(p.restricted), 0)

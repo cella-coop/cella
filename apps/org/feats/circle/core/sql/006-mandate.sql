@@ -12,7 +12,8 @@
 -- "finance", "power": "pay-supplier", "limit": "3 000 €"}`), or null: it
 -- marks one grantee, a role this feat has or a circle it has, never a
 -- person nor a right, a power in lower case, at most a limit or a budget,
--- each an amount, a budget with its period, and nothing else.
+-- each an amount, a budget with its period, perhaps a procedure by name,
+-- and nothing else.
 CREATE FUNCTION circle.mandate_flaw(marked jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -20,7 +21,7 @@ BEGIN ATOMIC
     WHEN marked ? 'person'
       THEN 'a person holds no mandate: a mandate names the role they hold, as {role: finance}, or a circle, as {circle: ag}'
     WHEN marked ? 'right' THEN 'a right is no mandate: it is a policy of its own kind, which the legal form gives'
-    WHEN x.other IS NOT NULL THEN 'a mandate marks its role or circle, power, limit, budget and per, not ' || x.other
+    WHEN x.other IS NOT NULL THEN 'a mandate marks its role or circle, power, limit, budget, per and procedure, not ' || x.other
     WHEN num_nonnulls(v.role, v.circle) = 0
       THEN 'a mandate policy names its grantee, a role, as {role: finance}, or a circle, as {circle: ag}'
     WHEN num_nonnulls(v.role, v.circle) > 1 THEN 'a mandate has one grantee, a role or a circle'
@@ -33,14 +34,17 @@ BEGIN ATOMIC
     WHEN v.budget IS NOT NULL AND (SELECT t.type FROM policy.typed('budget', v.budget) t) <> 'amount'
       THEN 'a budget is an amount, as 1 000 €, not ' || v.budget
     WHEN (v.budget IS NULL) <> (v.per IS NULL) OR v.per NOT IN ('month', 'year') THEN 'a budget runs per month or per year'
+    WHEN v.procedure IS NOT NULL AND btrim(v.procedure) !~ '^[a-z][a-z-]*$'
+      THEN 'a mandate names its procedure in lower case, as {procedure: ordinary}, not ' || v.procedure
   END
   FROM (
     SELECT marked ->> 'role' AS role, marked ->> 'circle' AS circle, marked ->> 'power' AS power,
-           marked ->> 'limit' AS "limit", marked ->> 'budget' AS budget, marked ->> 'per' AS per
+           marked ->> 'limit' AS "limit", marked ->> 'budget' AS budget, marked ->> 'per' AS per,
+           marked ->> 'procedure' AS procedure
   ) v,
   LATERAL (
     SELECT (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
-            WHERE k NOT IN ('role', 'circle', 'power', 'limit', 'budget', 'per') ORDER BY k LIMIT 1) AS other
+            WHERE k NOT IN ('role', 'circle', 'power', 'limit', 'budget', 'per', 'procedure') ORDER BY k LIMIT 1) AS other
   ) x;
 END;
 
@@ -70,9 +74,9 @@ END;
 
 -- A mandate or right policy's values as the register types them: its
 -- grantee, the role or the circle it marks, or its right, its power, its
--- limit or budget in cents and its period, and its days.
+-- limit or budget in cents and its period, its procedure, and its days.
 CREATE FUNCTION circle.mandated(ref text) RETURNS TABLE (
-  grantee text, "right" text, power text, "limit" bigint, budget bigint, per text, "from" date, until date
+  grantee text, "right" text, power text, "limit" bigint, budget bigint, per text, procedure text, "from" date, until date
 )
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -82,6 +86,7 @@ BEGIN ATOMIC
          max((v.value #>> '{}')::bigint) FILTER (WHERE v.name = 'limit' AND v.type = 'amount'),
          max((v.value #>> '{}')::bigint) FILTER (WHERE v.name = 'budget' AND v.type = 'amount'),
          max(v.value #>> '{}') FILTER (WHERE v.name = 'per'),
+         max(btrim(v.value #>> '{}')) FILTER (WHERE v.name = 'procedure'),
          p.applies, p.ends
   FROM policy.policy p
   LEFT JOIN policy.value v ON v.policy = p.id
@@ -134,8 +139,8 @@ BEGIN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF k = 'mandate' THEN
-    INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "limit", budget, per, "from", until)
-    SELECT m.grantee, p.circle, circle.parent_of(ref), m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m."from", m.until
+    INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "limit", budget, per, procedure, "from", until)
+    SELECT m.grantee, p.circle, circle.parent_of(ref), m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m.procedure, m."from", m.until
     FROM circle.mandated(ref) m
     JOIN policy.policy p ON p.id = ref
     RETURNING id INTO made;

@@ -29,8 +29,10 @@ mandate. A role every working circle has (`*`) is the assembly's.
 - `circle_motion.asks`, on `motion:motion:propose`: each nesting names
   its circle and its place, each mandate policy marks sound values
   (`circle.mandate_flaw`: a role or a circle, a power in lower case, a
-  cap by limit or by budget per month or year, never both, and nothing
-  else), and the motion's circle may decide it: about the circle nested
+  cap by limit or by budget per month or year, never both, perhaps a
+  procedure, and nothing else), a mandate's procedure is one the motion
+  feat holds, a procedure policy consults, if any, a circle there is, and
+  the motion's circle may decide it: about the circle nested
   and about the place it moves to, about the role's circle or the
   circle a collective mandate is on, and about the circle of the
   mandate it ends.
@@ -48,6 +50,20 @@ mandate. A role every working circle has (`*`) is the assembly's.
   `circle-membership-motion`'s `carried`. An admission settles inside
   the close, under the close's guards, so `empowers` checks it at the
   proposal alone.
+- `circle_motion.required(circle, actions, day)`: the procedure a motion
+  of `circle` carrying `actions` is decided by, its requirements
+  ([policies](../../../../_corpus/doc/architecture.md#policies)): for
+  each action, what the chain of the collective mandate its circle holds
+  for the action's power on the day asks (`circle_motion.asks_of`, the
+  nearest procedure stated on `circle.chain`), the first standing by id;
+  and for each policy it replaces or ends, the procedure protecting it.
+  It is the one of them as strict as all the others, or the circle's
+  procedure where none asks one, or none where no one meets them all.
+  `circle_motion.requirements` lists them, each with why it is asked.
+- `circle_motion.requires`, on `motion:motion:propose`: the motion is
+  decided by what `required` fixes on the verdict date, so a proposal
+  naming another, or whose requirements no one procedure meets, is
+  refused saying what they ask.
 - `circle_motion.nests`, on `circle:circle:nest`: the cited motion
   nests exactly this circle there.
 - On `motion:policy:adopt` and `motion:policy:end`, the circle feat's
@@ -58,7 +74,11 @@ mandate. A role every working circle has (`*`) is the assembly's.
   the assembly issued or is issued under a parent its issuer holds,
   and is narrower than it. So a motion of coordination grants a
   working circle's role a mandate only under one coordination holds for
-  the power, within its cap and its term.
+  the power, within its cap and its term. And `circle_motion.passes_down`
+  on adoption, as the graft that knows both mandates and procedures:
+  a mandate adopted stating a procedure states one at least as strict
+  (`motion.as_strict`) as what its parent's chain asks, so a procedure
+  passes down the chain and no mandate issued under it loosens it.
 
 No write sets a circle's procedure: the seed carries it in, and the
 fixture check holds it to a procedure the motion feat holds, built in or
@@ -84,8 +104,9 @@ adoption and ending of a policy so itself.
   `circle-membership-motion` carries out every policy a passing motion
   adopts or ends through them.
 - `putting`: the proposal a motion about a circle (`about`, read from
-  its page's form) makes, to the circle that decides it, by its
-  procedure: the one above it, or for a nesting the deepest circle
+  its page's form) makes, to the circle that decides it, naming no
+  procedure, since `circle-membership-motion`'s `propose` gives it the
+  one its requirements fix: the one above it, or for a nesting the deepest circle
   holding both its place and the one it moves to, or the assembly for
   itself; titled with what it decides. Granting a mandate is proposing
   its policy, its legal wording made from the role, the power, what it
@@ -102,7 +123,7 @@ adoption and ending of a policy so itself.
 ## Shell
 
 Adds to the motions collection's `about` the circles a motion may be
-put in, with their procedures, which the motion feat's New form offers.
+put in, which the motion feat's New form offers.
 On a circle's page, which circle decides about it, the open motions
 about it, and Propose…: nesting it under another circle, granting a
 mandate to one of its roles, or revoking one, with a deadline and why,

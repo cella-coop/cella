@@ -21,16 +21,17 @@ export function worded(args: Put['args']): string {
 }
 
 // The proposal an action about a circle makes, to the circle that decides
-// it, by that circle's procedure: its parent, or for a nesting the deepest
+// it, its parent, or for a nesting the deepest
 // circle holding both its place and the one it moves to; the assembly for
 // itself; for the end of a mandate's policy, the circle that adopted it,
 // whose own it is. Granting a mandate proposes its policy, revoking one
 // ends its policy. The title says what is decided; `circle_motion.asks`
 // checks the action and that circle's say over it. circle-membership-motion
-// puts it, fixing its roll in the same write.
+// puts it by the procedure its requirements fix, fixing its roll in the
+// same write.
 export async function putting(input: Put, db: Db): Promise<Propose> {
-  const { rows } = await db.query<{ decider: string | null; procedure: string; name: string; parent: string | null; role: string | null; mandate: string | null }>(
-    `SELECT d.id AS decider, d.procedure, c.name,
+  const { rows } = await db.query<{ decider: string | null; name: string; parent: string | null; role: string | null; mandate: string | null }>(
+    `SELECT d.id AS decider, c.name,
             (SELECT p.name FROM circle.circle p WHERE p.id = $3) AS parent,
             (SELECT r.name FROM circle.role r WHERE r.id = $4) AS role,
             (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $5) AS mandate
@@ -64,7 +65,6 @@ export async function putting(input: Put, db: Db): Promise<Propose> {
   return {
     circle: found.decider,
     title: titles[input.kind],
-    procedure: found.procedure,
     deadline: input.deadline,
     body: input.body,
     actions: [actions[input.kind]],

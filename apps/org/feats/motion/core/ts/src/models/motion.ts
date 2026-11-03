@@ -17,8 +17,8 @@ export const stances: Record<Method, Stance[]> = {
 // How a motion is taken: its method; for a majority, the share of the
 // votes cast it needs, at least `[num, den]` of those for and against, or
 // none for more for than against; and its quorum, at least `[num, den]`
-// of those counted giving a stance; and the ballot a motion under it
-// takes unless its proposal names the other.
+// of those counted giving a stance; the ballot a motion under it takes
+// unless its proposal names the other; and the circle it consults, if any.
 export interface Procedure {
   id: string
   label: string
@@ -26,16 +26,19 @@ export interface Procedure {
   share: [number, number] | null
   quorum: [number, number]
   ballot: Ballot
+  consult: string | null
 }
 
 const fraction = ([n, d]: [number, number]) => (n === d ? 'all' : `${n} in ${d}`)
 
 // A procedure's terms in words: "consent", "majority, quorum 1 in 4",
-// "2 in 3 of votes cast, quorum 1 in 2", "majority, secret ballot".
+// "2 in 3 of votes cast, quorum 1 in 2", "majority, secret ballot",
+// "consent, consulting coordination".
 export function terms(p: Procedure): string {
   const method = p.share ? `${fraction(p.share)} of votes cast` : p.method
   const quorum = p.quorum[0] ? `${method}, quorum ${fraction(p.quorum)}` : method
-  return p.ballot === 'secret' ? `${quorum}, secret ballot` : quorum
+  const ballot = p.ballot === 'secret' ? `${quorum}, secret ballot` : quorum
+  return p.consult ? `${ballot}, consulting ${p.consult}` : ballot
 }
 
 // A motion as the feat reads it. Its outcome is never stored: the
@@ -127,13 +130,16 @@ export interface Labelled extends Carried {
   fields: Arg[]
 }
 
-// A proposal: a motion of a circle, by a procedure, open until its
-// deadline, and the actions it decides. Its id, the day it is proposed and
+// A proposal: a motion of a circle, open until its deadline, and the
+// actions it decides. Its id, the day it is proposed, its procedure and
 // its method, its procedure's, are the server's.
 export interface Propose {
   circle: string
   title: string
-  procedure: string
+  // The procedure it is decided by, which the graft that knows its
+  // requirements gives it, whatever a proposal names; consent where none
+  // does, as for the motion feat alone.
+  procedure?: string
   // Its ballot, where it is not its procedure's.
   ballot?: Ballot
   deadline: string

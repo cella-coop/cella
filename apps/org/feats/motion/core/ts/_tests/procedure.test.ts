@@ -72,15 +72,17 @@ const terms = async (legal: string) => (await db.query('SELECT * FROM motion.ter
 
 test('a procedure policy\'s terms are the values its wording marks, a share written as a fraction, a percent or none, roles by id', async () => {
   assert.deepEqual(await terms(twoThirds), {
-    id: 'statutory', label: 'Statutory assembly', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2, ballot: 'open', voters: null, veto: [], flaw: null,
+    id: 'statutory', label: 'Statutory assembly', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2, ballot: 'open', voters: null, veto: [], consult: null, flaw: null,
   })
   assert.deepEqual(await terms('By {procedure: open-floor}, {method: consent}, with {quorum: 25 %}'), {
-    id: 'open-floor', label: 'Open floor', method: 'consent', share_num: null, share_den: null, quorum_num: 25, quorum_den: 100, ballot: 'open', voters: null, veto: [], flaw: null,
+    id: 'open-floor', label: 'Open floor', method: 'consent', share_num: null, share_den: null, quorum_num: 25, quorum_den: 100, ballot: 'open', voters: null, veto: [], consult: null, flaw: null,
   })
   assert.equal((await terms('By {procedure: open-floor}, {method: consent}, with {quorum: none}')).quorum_num, 0)
   // The roles that vote and those that may veto, by id, in order.
   const led = await terms('By {procedure: led}, a {method: majority}, with {quorum: none}, of {voters: secretary, member and lead}, which the {veto: lead} may veto')
   assert.deepEqual([led.voters, led.veto, led.flaw], [['lead', 'member', 'secretary'], ['lead'], null])
+  // The circle it consults, by id.
+  assert.equal((await terms('By {procedure: heard}, {method: consent}, with {quorum: none}, after consulting {consult: coordination}')).consult, 'coordination')
 })
 
 test('a procedure policy names itself, decides by consent or majority, marks its quorum, a share only for a majority, and nothing else', async () => {
@@ -95,9 +97,10 @@ test('a procedure policy names itself, decides by consent or majority, marks its
   assert.match((await flaw('By {procedure: crowd}, {method: consent}, {share: 2/3}, with {quorum: none}')) ?? '', /a share is a majority's/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, {share: 0/3}, with {quorum: none}')) ?? '', /more than none of the votes cast and at most all/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {ballot: show} of hands')) ?? '', /a ballot is open or secret, not show/)
-  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, {delegates: coordination}')) ?? '', /marks its procedure, label, method, share, quorum, ballot, voters and veto, not delegates/)
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, {delegates: coordination}')) ?? '', /marks its procedure, label, method, share, quorum, ballot, voters, veto and consult, not delegates/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {voters: Circle Leads}')) ?? '', /names the roles that vote by id, as \{voters: lead, secretary\}, not Circle Leads/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, the {veto: , } may veto')) ?? '', /names the roles that may veto by id/)
+  assert.match((await flaw('By {procedure: crowd}, {method: consent}, with {quorum: none}, after consulting {consult: Coordination}')) ?? '', /names the circle it consults by id, as \{consult: coordination\}, not Coordination/)
   // A name taken: a built-in one only on its own terms, and none a policy made.
   assert.equal(await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: none}'), null)
   assert.match((await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: 1/2}')) ?? '', /two-thirds is a procedure already, and its terms are fixed/)
@@ -171,6 +174,7 @@ test('a procedure is as strict as another when whatever passes by it passes by t
          ('vetoed', 'Vetoed', 'majority', 2, 3, 1, 2, NULL, '{lead}'),
          ('quorate-consent', 'Quorate consent', 'consent', NULL, NULL, 1, 2, NULL, '{}')`,
     )
+    await db.query(`INSERT INTO motion.procedure (id, label, method, consult) VALUES ('heard', 'Heard', 'consent', 'coordination'), ('elsewhere', 'Elsewhere', 'consent', 'ag')`)
     const strict = async (a: string, b: string) =>
       (await db.query<{ s: boolean }>('SELECT motion.as_strict($1, $2) AS s', [a, b])).rows[0].s
     const pairs: [string, string, boolean][] = [
@@ -193,6 +197,10 @@ test('a procedure is as strict as another when whatever passes by it passes by t
       ['consent', 'majority', false],
       ['majority', 'consent', false],
       ['nowhere', 'majority', false],
+      // A procedure consulting a circle is as strict as one consulting none, never one consulting another.
+      ['heard', 'consent', true],
+      ['consent', 'heard', false],
+      ['heard', 'elsewhere', false],
     ]
     for (const [a, b, s] of pairs) {
       assert.equal(await strict(a, b), s, `${a} as strict as ${b}`)

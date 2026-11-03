@@ -42,21 +42,22 @@ END;
 -- "2/3", "quorum": "none"}`), and what is wrong with them, or null: it
 -- names itself, decides by consent or majority, marks its quorum, a share
 -- only for a majority, a ballot open or secret, perhaps the roles that
--- vote and those that may veto, each a role's id, and no other value. Its
--- label, unless it marks one, is its name in words.
+-- vote and those that may veto, each a role's id, perhaps the circle it
+-- consults, by id, and no other value. Its label, unless it marks one, is
+-- its name in words.
 CREATE FUNCTION motion.terms(marked jsonb) RETURNS TABLE (
   id text, label text, method text, share_num integer, share_den integer,
-  quorum_num integer, quorum_den integer, ballot text, voters text[], veto text[], flaw text
+  quorum_num integer, quorum_den integer, ballot text, voters text[], veto text[], consult text, flaw text
 )
 LANGUAGE sql IMMUTABLE
 BEGIN ATOMIC
-  SELECT v.id, upper(left(v.label, 1)) || substr(v.label, 2), v.method, f.s[1], f.s[2], f.q[1], f.q[2], coalesce(v.ballot, 'open'), f.voters, coalesce(f.veto, '{}'),
+  SELECT v.id, upper(left(v.label, 1)) || substr(v.label, 2), v.method, f.s[1], f.s[2], f.q[1], f.q[2], coalesce(v.ballot, 'open'), f.voters, coalesce(f.veto, '{}'), v.consult,
     CASE
       WHEN (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
-            WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto') ORDER BY k LIMIT 1) IS NOT NULL
-        THEN 'a procedure marks its procedure, label, method, share, quorum, ballot, voters and veto, not '
+            WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto', 'consult') ORDER BY k LIMIT 1) IS NOT NULL
+        THEN 'a procedure marks its procedure, label, method, share, quorum, ballot, voters, veto and consult, not '
           || (SELECT k FROM jsonb_object_keys(marked) k
-              WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto') ORDER BY k LIMIT 1)
+              WHERE k NOT IN ('procedure', 'label', 'method', 'share', 'quorum', 'ballot', 'voters', 'veto', 'consult') ORDER BY k LIMIT 1)
       WHEN v.id IS NULL THEN 'a procedure policy names its procedure, as {procedure: ordinary}'
       WHEN v.id !~ '^[a-z][a-z-]*$' THEN v.id || ' is no procedure''s name: lower-case letters and dashes'
       WHEN v.method IS NULL OR v.method NOT IN ('consent', 'majority')
@@ -72,11 +73,13 @@ BEGIN ATOMIC
         THEN 'a procedure names the roles that vote by id, as {voters: lead, secretary}, not ' || v.voters
       WHEN v.veto IS NOT NULL AND (cardinality(f.veto) = 0 OR EXISTS (SELECT FROM unnest(f.veto) x WHERE x !~ '^[a-z][a-z0-9-]*$'))
         THEN 'a procedure names the roles that may veto by id, as {veto: lead}, not ' || v.veto
+      WHEN v.consult IS NOT NULL AND btrim(v.consult) !~ '^[a-z][a-z0-9-]*$'
+        THEN 'a procedure names the circle it consults by id, as {consult: coordination}, not ' || v.consult
     END
   FROM (
     SELECT marked ->> 'procedure' AS id, coalesce(marked ->> 'label', replace(marked ->> 'procedure', '-', ' ')) AS label,
            marked ->> 'method' AS method, marked ->> 'share' AS share, marked ->> 'quorum' AS quorum, marked ->> 'ballot' AS ballot,
-           marked ->> 'voters' AS voters, marked ->> 'veto' AS veto
+           marked ->> 'voters' AS voters, marked ->> 'veto' AS veto, btrim(marked ->> 'consult') AS consult
   ) v,
   LATERAL (SELECT motion.fraction(v.share) AS s, motion.fraction(v.quorum) AS q, motion.roles(v.voters) AS voters, motion.roles(v.veto) AS veto) f;
 END;
@@ -101,8 +104,8 @@ BEGIN ATOMIC
     SELECT o.id || ' is a procedure already, and its terms are fixed: a procedure on new terms takes a new name'
     FROM motion.procedure o
     WHERE o.id = t.id AND (o.policy IS NOT NULL
-      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto)
-         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto))
+      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto, o.consult)
+         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult))
   ))
   FROM motion.terms(marked) t;
 END;
@@ -128,8 +131,8 @@ BEGIN
   END IF;
   UPDATE motion.procedure o SET policy = ref WHERE o.id = t.id AND o.policy IS NULL;
   IF NOT FOUND THEN
-    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, voters, veto, policy)
-    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, ref);
+    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, voters, veto, consult, policy)
+    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult, ref);
   END IF;
   RETURN t.id;
 END
@@ -146,7 +149,8 @@ GRANT INSERT, UPDATE (policy) ON motion.procedure TO cella_app;
 -- stricter than any half or less and looser than any more than half.
 -- Consent and a majority count different stances, so neither is stricter
 -- than the other; under consent any objection blocks, so a veto adds
--- nothing. The ballot changes no count. A procedure is as strict as
+-- nothing. `a` consults the circle `b` consults, if any. The ballot
+-- changes no count. A procedure is as strict as
 -- itself, and a name no procedure has is as strict as none.
 CREATE FUNCTION motion.as_strict(a text, b text) RETURNS boolean
 LANGUAGE sql STABLE
@@ -166,6 +170,7 @@ BEGIN ATOMIC
         WHEN x.share_num IS NULL THEN 2 * y.share_num <= y.share_den
         ELSE x.share_num::bigint * y.share_den >= y.share_num::bigint * x.share_den
       END))
+      AND (y.consult IS NULL OR x.consult = y.consult)
     )
     FROM motion.procedure x, motion.procedure y
     WHERE x.id = as_strict.a AND y.id = as_strict.b
@@ -309,8 +314,8 @@ BEGIN ATOMIC
     WHEN r.kind = 'procedure' AND NOT EXISTS (
       SELECT FROM motion.procedure o, motion.terms(motion.marked_by(r.id)) t
       WHERE o.policy = r.id AND o.id = t.id
-        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto)
-          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto)
+        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto, o.consult)
+          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult)
     ) THEN r.id || ' makes no procedure on the terms it marks'
   END
   FROM (SELECT payload ->> 'motion' AS motion, (payload ->> 'n')::integer AS n, payload ->> 'policy' AS policy, payload ->> 'hash' AS hash) p

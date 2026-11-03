@@ -98,17 +98,20 @@ test('Lanterne decides by consent, majority, two thirds and election, and by its
   assert.ok(offered.includes('Extraordinary assembly: 2 in 3 of votes cast, quorum 1 in 2'), offered.join('; '))
   assert.ok(offered.includes('Two thirds: 2 in 3 of votes cast'))
   assert.ok(offered.includes('Ordinary assembly: majority, quorum 1 in 4'))
-  const refused = await shell.act('/motions', 'propose', { circle: 'ag', procedure: 'acclamation', title: 'Cheer', deadline: '2026-10-31', body: '' }, camille)
-  assert.match(reason(refused), /a motion is taken by a procedure of the co-op’s, not “acclamation”/)
 })
 
 test('an amendment by the extraordinary assembly: short of its quorum, then of its two thirds, though more are for', async () => {
+  // The host stages the assembly's procedure, as only a superuser may: no
+  // write sets one yet. A motion of its text alone acts under no mandate,
+  // so its circle's procedure decides it, whatever its proposal names.
+  await su.query("SET cella.unbound = on; UPDATE circle.circle SET procedure = 'extraordinary' WHERE id = 'ag'")
   const proposed = settled(
     await propose(
-      { circle: 'ag', title: 'Amend the statutes: the work share paid in December', procedure: 'extraordinary', deadline: '2026-10-31', body: '', actions: [] },
+      { circle: 'ag', title: 'Amend the statutes: the work share paid in December', procedure: 'consent', deadline: '2026-10-31', body: '', actions: [] },
       as(camille),
     ),
   )
+  await su.query("UPDATE circle.circle SET procedure = 'consent' WHERE id = 'ag'")
   const d = proposed.motion
   assert.deepEqual(await one('SELECT method, procedure FROM motion.motion WHERE id = $1', [d]), { method: 'majority', procedure: 'extraordinary' })
   for (const member of assembly.slice(0, 4)) {

@@ -745,13 +745,16 @@ it.** Its issuer is the circle whose motion adopted its policy, and its
 parent a mandate that circle holds as a whole for the same power, so
 the mandates form a provenance tree by `parent`: what is under a circle
 or a role is what it issued, never where it sits. A mandate is narrower
-than its parent, the same power, a cap no wider and a term no longer;
+than its parent, the same power, a cap no wider, a term no longer and
+a procedure no looser;
 the assembly holds every power inherently, so what it issues is a root,
 the founding motion's first from the legal form. `circle.narrows`
 refuses a grant its issuer holds nothing to issue under, or one wider
 than its parent, and an end that leaves a mandate issued under one
 that no longer stands
-([circle](../../apps/org/feats/circle/index.md#authority)).
+([circle](../../apps/org/feats/circle/index.md#authority)), and
+`circle_motion.passes_down` one stating a procedure looser than the one
+its parent's chain asks ([requirements](#policies)).
 
 **A mandate's grantee is one circle or one role**, by one key: every
 circle and every role is a grantee, `circle.grantee`, the supertype in
@@ -968,7 +971,29 @@ by would protect it from nothing, and is refused; one stricter, or one
 neither stricter nor looser, protects it. Rights, and mandates that hand
 out mandates (granting, revoking and seating), start protected: Lanterne's
 founding motion adopts them protected by its extraordinary assembly's
-procedure.
+procedure, so a motion ending a right is decided by it.
+
+**A motion's requirements are the procedures on its mandate's chain**,
+never one the motion chooses. A procedure rides on a mandate, a value of
+its policy (`{procedure: ordinary}`), and passes down the chain to every
+mandate issued under it: what a mandate's chain asks is the nearest
+procedure stated on it, the mandate's own or else what its parent's
+chain asks, and a mandate stating one states one at least as strict as
+what its parent's chain asks, so the nearest is as strict as every
+procedure on the chain. Each action a motion carries acts under the
+collective mandate its circle holds for the action's power, the first
+standing; a motion's requirements are what the chain of each asks, and
+the procedure protecting each policy it replaces or ends. It is decided
+by the one of them as strict as all the others, or by its circle's
+procedure where none asks one, whatever its proposal names; one whose
+requirements no one of them meets, as consent beside a majority, is
+refused (`circle_motion.required`,
+[circle-motion](../../apps/org/grafts/circle-motion/index.md#guards)).
+A procedure may consult a circle (`{consult: coordination}`): a motion
+decided by it closes only once someone seated in that circle has said
+something on its deliberation, where the consulted circle's seats speak
+as its own do
+([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md#guards)).
 
 **A legal form supplies default policies** ([legal forms](forms.md)). A
 form, a SCOP SARL in France first, is a set of ready-made policies the
@@ -1002,8 +1027,8 @@ method, share, quorum and ballot are copied by the motion feat into
 ([procedures](../../apps/org/feats/motion/index.md#procedures)); the
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
-scope's root does. A mandate policy's grantee, a role or a circle, power and limit
-or budget are copied by the circle feat into `circle.mandate`, which
+scope's root does. A mandate policy's grantee, a role or a circle, power, limit
+or budget and procedure are copied by the circle feat into `circle.mandate`, which
 `circle_membership.may` reads for a role's and `circle-motion` for a
 circle's, and a right policy's right, power and limit into
 `circle.right`, which `circle_membership.entitled` reads, through `circle-motion`, whose adoption

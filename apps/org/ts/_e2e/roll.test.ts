@@ -4,8 +4,9 @@
 // member, votes on Web's motion and is refused a stance on the assembly's;
 // a seat above carries no vote below, so Camille, seated in the assembly,
 // is on no roll of Web's; and once the assembly adopts a procedure giving
-// a circle's lead a veto, a Web motion put under it with the majority for
-// fails when its lead votes against, while one put by majority passes. Run
+// a circle's lead a veto, a Web motion decided by it with the majority
+// for fails when its lead votes against, while one decided by majority
+// passes. Run
 // by `cella test e2e roll`.
 
 import { after, before, test } from 'node:test'
@@ -44,8 +45,17 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
 const roll = (d: string) => all<{ member: string; veto: boolean }>('SELECT member, veto FROM circle_membership_motion.roll WHERE motion = $1 ORDER BY member', [d])
 
-const put = async (circle: string, title: string, procedure: string, deadline: string, by: string) =>
-  settled(await propose({ circle, title, procedure, deadline, body: '', actions: [] }, as(by))).motion
+// A motion of a circle's text alone acts under no mandate, so the circle's
+// procedure decides it: the host stages that procedure, as only a
+// superuser may, since no write sets one yet, and puts back Lanterne's
+// consent once the motion keeps it.
+const put = async (circle: string, title: string, procedure: string, deadline: string, by: string) => {
+  await su.query('SET cella.unbound = on')
+  await su.query('UPDATE circle.circle SET procedure = $1 WHERE id = $2', [procedure, circle])
+  const { motion } = settled(await propose({ circle, title, deadline, body: '', actions: [] }, as(by)))
+  await su.query("UPDATE circle.circle SET procedure = 'consent' WHERE id = $1", [circle])
+  return motion
+}
 
 before(async () => {
   await su.connect()

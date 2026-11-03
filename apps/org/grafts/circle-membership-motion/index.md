@@ -131,7 +131,15 @@ she is on no roll of the assembly's.
   the participant's `propose` (propose, close) and `discuss` (post),
   which `circle_membership.may` finds on any seat, are held in the
   motion's circle: a circle's participants put, close and deliberate on
-  its motions.
+  its motions. A message may be posted, too, from a seat in the circle
+  the motion's procedure consults, so that circle is heard.
+- `circle_membership_motion.consulted`, on `motion:motion:close`: a
+  motion whose procedure consults a circle (`consult`) closes only once
+  someone seated in that circle on the day they posted it has said
+  something on its deliberation, so a motion of Web under a mandate whose
+  chain asks coordination's consultation is refused its close until
+  someone of coordination has spoken
+  ([procedures](../../feats/motion/index.md#procedures)).
 - `circle_membership_motion.asks`, on `motion:motion:propose`: a seat
   given or ended is the motion of the circle above it, or the assembly
   (`circle_motion.decides`), and names for a role of that circle, or as
@@ -177,10 +185,11 @@ she is on no roll of the assembly's.
 - `circle_membership_motion.puts`, on `membership:member:apply`: the
   application put the motion to admit the applicant in its own write:
   the motion its payload names asks only to admit them, with the shares
-  they pledge, by its circle's procedure, and passes every check a
+  they pledge, by the procedure its requirements fix, and passes every check a
   proposal does but the seat, each run here over it: `motion.proposes`,
   `balloted` and `decides_by`, `circle_motion.empowers` (its circle holds
-  the collective mandate to admit), `membership_motion.asks` (someone
+  the collective mandate to admit), `circle_motion.requires` (it is
+  decided as its requirements fix), `membership_motion.asks` (someone
   invited, a whole number of shares) and `fixed` (its roll). No seat is
   asked of the applicant, whose right puts it, so `sits` is not run; an
   application that puts no motion, as the membership feat's `applying`
@@ -201,9 +210,11 @@ she is on no roll of the assembly's.
 ## Handlers
 
 - `propose` (confluent), replacing the motion feat's in the shell: the
-  motion feat's `proposing`, then `fix`, in one transaction under one
-  verdict; the guards of each slice judge it (`motion.proposes`, `sits`,
-  `asks`, `fixed`, and the guard of each action's kind). Every proposal
+  motion feat's `proposing`, by the procedure its requirements fix
+  (`circle_motion.required`) whatever the proposal names, then `fix`, in
+  one transaction under one verdict; the guards of each slice judge it
+  (`motion.proposes`, `sits`, `asks`, `fixed`, `circle_motion.requires`,
+  and the guard of each action's kind). Every proposal
   goes through it: the New motion form, `put`, and on a circle's page
   what circle-motion proposes about its place and powers, read by its
   `about` and made by its `putting`.
@@ -235,8 +246,8 @@ she is on no roll of the assembly's.
 - `apply` (confluent), an employee's application by their own right
   (`apply-membership`), from their own page: in one transaction under one
   verdict, the membership feat's `applying`, which invites them, the
-  motion feat's `proposing` of their admission to the assembly, by its
-  procedure and a secret ballot, titled as `put` titles one, and `fix`.
+  motion feat's `proposing` of their admission to the assembly, by the
+  procedure its requirements fix and a secret ballot, titled as `put` titles one, and `fix`.
   It submits the application's op, `membership:member:apply`, with the
   application and the proposal in its payload; the guards judge it
   (`membership.applies`, employment-membership's `serves`, `puts`). The
@@ -244,8 +255,7 @@ she is on no roll of the assembly's.
   the subscription follows. Its request names the shares, so the
   candidacy employment-membership opens after it pledges them.
 - `put`: what a member's or a circle's page proposes, through this
-  graft's `propose`, to the circle that decides it, by its
-  procedure, titled with what it decides: a membership to the assembly,
+  graft's `propose`, to the circle that decides it, titled with what it decides: a membership to the assembly,
   a seat to the circle above its own. Admitting, suspending or ending a
   membership, and giving or ending a seat, elect or remove a person, so
   `put` names a secret ballot for each.

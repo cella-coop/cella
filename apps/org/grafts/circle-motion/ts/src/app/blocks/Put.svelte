@@ -4,8 +4,8 @@
   import { usePut } from '../../hooks/usePut.ts'
 
   // Proposing a change to the circle's place or powers: a motion put to
-  // the circle that decides it, its parent, by that circle's procedure,
-  // pre-filled with what it decides. Carried out when it passes.
+  // the circle that decides it, its parent, by the procedure its
+  // requirements fix, pre-filled with what it decides. Carried out when it passes.
   let { data }: { data: Proposing | null; id: string } = $props()
 
   const state = usePut()
@@ -20,7 +20,7 @@
   <Popover label="Propose a motion about this circle" menu={false} wide button>
     {#snippet trigger()}Propose…{/snippet}
     <Form action="put" submit="Propose">
-      <Note text="Put to {data.decider.name}, by {data.decider.procedure}." />
+      <Note text="Put to {data.decider.name}, by the procedure what it decides asks, or else by {data.decider.procedure}." />
       <Field label="Proposes to" name="kind" options={kinds} bind:value={state.kind} required wide />
       {#if state.kind === 'nest'}
         <Field label="Under" name="arg.parent" options={options(data.under, (c) => c.name)} placeholder="Choose…" required />

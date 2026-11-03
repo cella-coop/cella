@@ -5,16 +5,16 @@ import type { Proposed } from '@cella/org-motion/models'
 import type { Asking } from '../models/asking.ts'
 
 // Puts what a member's or a circle's page proposes to the circle that
-// decides it, by that circle's procedure: a membership to the assembly; a
-// seat to the circle above the one it is in, or to the assembly for its
-// own. The title says what is decided; the guards on the proposal check
+// decides it, by the procedure its requirements fix: a membership to
+// the assembly; a seat to the circle above the one it is in, or to the
+// assembly for its own. The title says what is decided; the guards on the proposal check
 // the action and that circle's say over it. Admitting, suspending or
 // ending a membership, and giving or ending a seat, elect or remove a
 // person, so they go to a secret ballot, as co-ops commonly do.
 export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> | Refused> {
   const circle = input.kind === 'seat' || input.kind === 'unseat' ? String(input.args.circle) : null
-  const { rows } = await deps.db.query<{ decider: string; procedure: string; member: string | null; circle: string | null; role: string | null }>(
-    `SELECT d.id AS decider, d.procedure,
+  const { rows } = await deps.db.query<{ decider: string; member: string | null; circle: string | null; role: string | null }>(
+    `SELECT d.id AS decider,
             (SELECT mp.name FROM person.person mp WHERE mp.address = $2) AS member,
             (SELECT c.name FROM circle.circle c WHERE c.id = $1) AS circle,
             (SELECT r.name FROM circle.role r WHERE r.id = $3) AS role
@@ -39,7 +39,6 @@ export async function put(input: Asking, deps: Deps): Promise<Settled<Proposed> 
     {
       circle: found.decider,
       title: titles[input.kind],
-      procedure: found.procedure,
       ballot: 'secret',
       deadline: input.deadline,
       body: input.body,

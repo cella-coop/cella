@@ -19,12 +19,14 @@ CREATE TABLE circle.circle (
 );
 
 -- A named duty that mandates attach to: in one circle, or in every working
--- circle (`*`).
+-- circle (`*`). `holders` caps how many hold it at once in a circle, by
+-- their tenures; none, uncapped.
 CREATE TABLE circle.role (
   id text PRIMARY KEY,
   circle text NOT NULL,
   name text NOT NULL,
-  duty text NOT NULL DEFAULT ''
+  duty text NOT NULL DEFAULT '',
+  holders int CHECK (holders > 0)
 );
 
 -- Each circle and each role is a grantee, made with it: an id the other

@@ -32,7 +32,7 @@ BEGIN ATOMIC
         THEN 'no role ' || g.role || ' in ' || g.circle
       WHEN g.kind = 'unseat' AND NOT EXISTS (
         SELECT FROM circle_membership.seat o
-        WHERE o.circle = g.circle AND o.member = g.member AND o.role IS NOT DISTINCT FROM g.role AND o.until IS NULL
+        WHERE o.id IS NOT NULL AND o.circle = g.circle AND o.member = g.member AND o.role IS NOT DISTINCT FROM g.role AND o.until IS NULL
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
       WHEN NOT circle_motion.decides(d.circle, g.circle)
         THEN d.circle || ' may not decide who sits in ' || g.circle

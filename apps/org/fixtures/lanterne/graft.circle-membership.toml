@@ -1,152 +1,144 @@
-# Who sits where: every member is in the assembly, as a member, and in one
-# working circle; the leads and the manager also sit on coordination.
+# Who is in which circle and who holds which role. Every member holds the
+# assembly's member role and is a member of one working circle; each
+# working circle's lead holds its lead role, which is a member of
+# coordination, so every lead sits there; Camille, the gérante, sits there
+# as a member.
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "camille@lanterne.example"
+holder = "camille@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "yusuf@lanterne.example"
+holder = "yusuf@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "hugo@lanterne.example"
+holder = "hugo@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "julien@lanterne.example"
+holder = "julien@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "lea@lanterne.example"
+holder = "lea@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "thomas@lanterne.example"
+holder = "thomas@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "sofia@lanterne.example"
+holder = "sofia@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "malik@lanterne.example"
+holder = "malik@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "amina@lanterne.example"
+holder = "amina@lanterne.example"
 role = "member"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "chloe@lanterne.example"
+holder = "chloe@lanterne.example"
 role = "member"
 
-[[seat]]
+[[member]]
 circle = "brand"
-member = "camille@lanterne.example"
+person = "camille@lanterne.example"
 
-[[seat]]
+[[member]]
 circle = "web"
-member = "yusuf@lanterne.example"
-role = "lead"
+person = "lea@lanterne.example"
 
-[[seat]]
+[[member]]
+circle = "web"
+person = "thomas@lanterne.example"
+
+[[member]]
 circle = "brand"
-member = "hugo@lanterne.example"
-role = "lead"
+person = "sofia@lanterne.example"
 
-[[seat]]
-circle = "operations"
-member = "julien@lanterne.example"
-role = "lead"
-
-[[seat]]
+[[member]]
 circle = "web"
-member = "lea@lanterne.example"
+person = "amina@lanterne.example"
 
-[[seat]]
-circle = "web"
-member = "thomas@lanterne.example"
-
-[[seat]]
-circle = "brand"
-member = "sofia@lanterne.example"
-
-[[seat]]
+[[member]]
 circle = "marketing"
-member = "malik@lanterne.example"
-role = "lead"
+person = "chloe@lanterne.example"
 
-[[seat]]
+# Inès, employed and no member yet, is a member of Web since her hire:
+# any person may sit in a circle, and only the assembly's seats ask a
+# membership.
+[[member]]
 circle = "web"
-member = "amina@lanterne.example"
-
-# Inès, employed and no member yet, sits in Web since her hire: any
-# person may hold a seat, and only the assembly's asks a membership.
-[[seat]]
-circle = "web"
-member = "ines@lanterne.example"
+person = "ines@lanterne.example"
 since = 2025-09-01
 
-[[seat]]
-circle = "marketing"
-member = "chloe@lanterne.example"
+[[member]]
+circle = "coordination"
+person = "camille@lanterne.example"
 
-[[seat]]
+[[member]]
+circle = "coordination"
+role = "lead"
+
+[[tenure]]
+circle = "web"
+holder = "yusuf@lanterne.example"
+role = "lead"
+
+[[tenure]]
+circle = "brand"
+holder = "hugo@lanterne.example"
+role = "lead"
+
+[[tenure]]
+circle = "operations"
+holder = "julien@lanterne.example"
+role = "lead"
+
+[[tenure]]
+circle = "marketing"
+holder = "malik@lanterne.example"
+role = "lead"
+
+[[tenure]]
 circle = "ag"
-member = "camille@lanterne.example"
+holder = "camille@lanterne.example"
 role = "manager"
 since = 2024-06-20
 until = 2028-06-20
 
-[[seat]]
+[[tenure]]
 circle = "operations"
-member = "julien@lanterne.example"
+holder = "julien@lanterne.example"
 role = "finance"
 
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "julien@lanterne.example"
+holder = "julien@lanterne.example"
 role = "treasurer"
 
-[[seat]]
-circle = "coordination"
-member = "camille@lanterne.example"
+# Each takes their circle's minutes, beside the role they already hold.
 
-[[seat]]
-circle = "coordination"
-member = "yusuf@lanterne.example"
-
-[[seat]]
-circle = "coordination"
-member = "hugo@lanterne.example"
-
-[[seat]]
-circle = "coordination"
-member = "malik@lanterne.example"
-
-[[seat]]
-circle = "coordination"
-member = "julien@lanterne.example"
-
-# Each takes their circle's minutes, beside the seat they already hold.
-
-[[seat]]
+[[tenure]]
 circle = "ag"
-member = "julien@lanterne.example"
+holder = "julien@lanterne.example"
 role = "secretary"
 
-[[seat]]
+[[tenure]]
 circle = "coordination"
-member = "malik@lanterne.example"
+holder = "malik@lanterne.example"
 role = "secretary"

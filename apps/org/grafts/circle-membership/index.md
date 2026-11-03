@@ -3,21 +3,41 @@ title = "circle-membership"
 updated = 2026-11-03
 +++
 
-Seats: which person holds which role in which circle. A seat is the
-relationship, so the graft owns its actions. Any person may hold one,
-member or not: the graft joins `circle` to `membership` because the
-assembly's seats ask an active membership, and every other seat is a
-person's place in a circle all the same.
+Who is in which circle, and who holds which role: a circle's members,
+people and roles, and a person's tenures of roles, and the seats read
+from them. Each is a relationship between the two feats, so the graft
+owns its actions. Any person may hold a role or be a member of a
+circle, member of the co-op or not: the graft joins `circle` to
+`membership` because the assembly's seats ask an active membership,
+and every other seat is a person's place in a circle all the same.
 
 ## Schema
 
 `circle_membership` (`sql/`):
 
-- `circle_membership.seat`: a seat, by circle id and person address, with
-  no foreign key into either feat; an optional `role`, and `since` and
-  `until`. A seat with no `since` was held before the records began; an
-  ended seat keeps its row with `until`, so who sat where on a past day
+- `circle_membership.member`: a member of a circle, by circle id, and
+  either a person, by address, or a role, by id, with no foreign key
+  into either feat, and `since` and `until`. A role that is a member of a
+  circle seats whoever holds it there (the double link); a `*` role
+  seats its holder of every circle.
+- `circle_membership.tenure`: a person's time in a role, by `holder`
+  address, `role` id and the `circle` it is held in, the role's own or,
+  for a `*` role, the working circle, with `since` and `until`. A
+  tenure of a role in a circle that is not its own is refused, and so is
+  one that would make more holders of the role in the circle at once
+  than its `holders` (`circle_membership.capped`, raising SQLSTATE
+  `09000`), so a handover ends one tenure on the day the next begins.
+- Both draw their ids from one sequence, so a seat's id names one row
+  of either. One with no `since` was held before the records began; an
+  ended one keeps its row with `until`, so who sat where on a past day
   reads back.
+- `circle_membership.seat`, a view: where each person sits, read from
+  the two and never stored, by `circle`, `member` (the person), `role`,
+  `since` and `until`. A person member sits as such, with no role; a
+  tenure seats its holder in its circle with its role; a tenure of a
+  role that is a member of a circle seats its holder there too, with no
+  role, for the days the two overlap, so the role's mandates reach no
+  further than they do. This last row has no id of its own.
 - `circle_membership.seated(circle, day)`: the people seated in a circle on a
   day. The `circle-membership-motion` graft, a higher order, fixes a
   motion's roll from it.
@@ -34,8 +54,10 @@ person's place in a circle all the same.
   an action concerns ask it.
 
 The app role and the guards role, `cella_guards`, may select; the app role
-may insert a seat, through `seat.add`, and end one, through
-`seat.remove`. Lanterne's seats are seeded.
+may insert a member or a tenure, through `seat.add`, and end one, through
+`seat.remove`. No action yet makes a role a member of a circle: the
+founding and a mock co-op's fixture do. Lanterne's members and tenures
+are seeded.
 
 ## Guards
 
@@ -75,9 +97,11 @@ graft's, and whether a member is active on a day the `membership` feat's
   concerns, `circle-membership-project` a project's circle and
   `circle-membership-timesheet` a worker's seats, narrow `may` with it.
 
-Lanterne: Julien issues invoices, records payments, posts entries, closes
+Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
+until 20 June 2028, and acts alone under its mandates while it runs.
+Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
-holds only the `member` seat in the assembly, so she edits clients and
+holds only the `member` role in the assembly, so she edits clients and
 documents and does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet. A suspended member holds no
 seat's mandate. Inès, invited and employed, no member yet, sits in Web
@@ -92,8 +116,13 @@ person's rights and an employee's. Paul, gone, holds a person's alone.
 | `POST /api/circle-membership/seat.add` | ordered | who holds which role |
 | `POST /api/circle-membership/seat.remove` | ordered | who holds which role |
 
-- **seat.add** and **seat.remove** change who holds a role in a
-  circle, and so who may use the powers a mandate grants it. Spending
+- **seat.add** and **seat.remove** begin and end a tenure, where they
+  name a role, or a person's membership of a circle, where they name
+  none, and so change who may use the powers a mandate grants. A
+  handover is a motion ending one tenure and beginning the next, in that
+  order, since the role's cap counts both on the verdict date; every
+  mandate stays on the role, and every seat the role brings, as the lead
+  role's in coordination, moves to the new holder. Spending
   writes read seats through `circle_membership.may`, so they are ordered.
 - Both need `seat-member`, a collective mandate of the circle whose
   motion carries them: each cites the motion that
@@ -109,10 +138,12 @@ person's rights and an employee's. Paul, gone, holds a person's alone.
 
 - `add` (ordered), and `seating`, its state alone, which a passing
   close runs in its own transaction for each member it admits: inserts
-  the seat from the verdict date and commits its id, circle, member, role
-  and the motion it cites.
-- `remove` (ordered): ends the member's seat in the circle, in the role
-  or as a plain member, on the verdict date, and commits the same.
+  a tenure of the role it names, or a membership of the circle where it
+  names none, from the verdict date, and commits its id, circle, member,
+  role and the motion it cites.
+- `remove` (ordered): ends the person's tenure of the role in the
+  circle, or their membership of it where it names no role, on the
+  verdict date, and commits the same.
 
 `circle-membership-motion` carries out the seats a passing motion gives
 and ends, as its reaction to the close.

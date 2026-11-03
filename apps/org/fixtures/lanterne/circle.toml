@@ -49,28 +49,33 @@ id = "manager"
 circle = "ag"
 name = "Gérante"
 duty = "the legal representative, elected by the assembly for four years"
+holders = 1
 
 [[role]]
 id = "lead"
 circle = "*"
 name = "Circle lead"
 duty = "runs a working circle and sits on coordination"
+holders = 1
 
 [[role]]
 id = "secretary"
 circle = "*"
 name = "Secretary"
 duty = "keeps a circle's minutes and records who came to its meetings"
+holders = 1
 
 [[role]]
 id = "finance"
 circle = "operations"
 name = "Finance"
 duty = "issues invoices, pays suppliers and closes the books each month"
+holders = 1
 
 [[role]]
 id = "treasurer"
 circle = "ag"
 name = "Treasurer"
 duty = "finance's hand in the assembly: approves everyone's time for the pay run"
+holders = 1
 

@@ -47,7 +47,7 @@ before(async () => {
   }
   await db.query(`INSERT INTO circle.circle (id, name) VALUES ('ag', 'Assemblée générale')`)
   for (const name of ten) {
-    await db.query(`INSERT INTO circle_membership.seat (circle, member, since) VALUES ('ag', $1, '2021-03-01')`, [at(name)])
+    await db.query(`INSERT INTO circle_membership.member (circle, person, since) VALUES ('ag', $1, '2021-03-01')`, [at(name)])
   }
   await db.query(
     `INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den) VALUES

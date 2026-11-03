@@ -14,7 +14,7 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('circle:circle:message', 'circle_membership.sits(jsonb)', 'circle-membership');
 
--- A seat ends by `circle-membership:seat:remove`, on the verdict date; it
--- keeps its row, so who sat where reads back. Both writes are decided:
+-- A member or a tenure ends by `circle-membership:seat:remove`, on the
+-- verdict date; it keeps its row, so who sat where reads back. Both writes are decided:
 -- circle-membership-motion, which joins the motion, judges them.
-GRANT UPDATE (until) ON circle_membership.seat TO cella_app;
+GRANT UPDATE (until) ON circle_membership.member, circle_membership.tenure TO cella_app;

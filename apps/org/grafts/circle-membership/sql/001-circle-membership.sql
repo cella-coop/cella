@@ -1,22 +1,102 @@
 CREATE SCHEMA circle_membership;
 
--- A member's seat in a circle, with a role or as a plain member. The circle
--- is named by id and the member by address, with no foreign key into either
--- feat. A seat with no `since` was held before the records began; one that
--- ends keeps its row, with `until`, so who sat where on a past day can be
--- read back.
-CREATE TABLE circle_membership.seat (
-  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+-- One sequence for members and tenures, so a seat's id names one row of
+-- either.
+CREATE SEQUENCE circle_membership.seat_id;
+
+-- A member of a circle: a person, by address, or a role, by id, with no
+-- foreign key into either feat. A role that is a member seats whoever
+-- holds it (the double link); a `*` role, its holder of every circle. One
+-- with no `since` was held before the records began; one that ends keeps
+-- its row, with `until`, so who sat where on a past day can be read back.
+CREATE TABLE circle_membership.member (
+  id bigint PRIMARY KEY DEFAULT nextval('circle_membership.seat_id'),
   circle text NOT NULL,
-  member text NOT NULL,
+  person text,
   role text,
+  since date,
+  until date,
+  CHECK (num_nonnulls(person, role) = 1),
+  CHECK (until IS NULL OR since IS NULL OR since < until)
+);
+
+CREATE INDEX ON circle_membership.member (circle);
+CREATE INDEX ON circle_membership.member (person);
+CREATE INDEX ON circle_membership.member (role);
+
+-- A person's time in a role: its `circle` is the role's own, or for a `*`
+-- role the working circle it is held in.
+CREATE TABLE circle_membership.tenure (
+  id bigint PRIMARY KEY DEFAULT nextval('circle_membership.seat_id'),
+  holder text NOT NULL,
+  role text NOT NULL,
+  circle text NOT NULL,
   since date,
   until date,
   CHECK (until IS NULL OR since IS NULL OR since < until)
 );
 
-CREATE INDEX ON circle_membership.seat (circle);
-CREATE INDEX ON circle_membership.seat (member);
+CREATE INDEX ON circle_membership.tenure (holder);
+CREATE INDEX ON circle_membership.tenure (role, circle);
+
+-- A tenure is of a role in its own circle, and makes no more holders of
+-- it in the circle at once than its `holders`: the tenures it overlaps,
+-- itself among them, are within the cap. A handover ends one tenure on
+-- the day the next begins, so the two never overlap.
+CREATE FUNCTION circle_membership.capped() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE
+  r circle.role;
+  held int;
+BEGIN
+  SELECT * INTO r FROM circle.role WHERE id = NEW.role;
+  IF r.id IS NULL THEN
+    RAISE EXCEPTION 'no role %', NEW.role USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF r.circle <> '*' AND r.circle <> NEW.circle THEN
+    RAISE EXCEPTION 'the % role is % circle''s, not %''s', NEW.role, r.circle, NEW.circle
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF r.holders IS NOT NULL THEN
+    SELECT count(*) INTO held FROM circle_membership.tenure t
+    WHERE t.role = NEW.role AND t.circle = NEW.circle AND t.id <> NEW.id
+      AND (t.since IS NULL OR NEW.until IS NULL OR t.since < NEW.until)
+      AND (t.until IS NULL OR NEW.since IS NULL OR t.until > NEW.since);
+    IF held >= r.holders THEN
+      RAISE EXCEPTION 'the % role is held by % at most in %, and % holds it then', NEW.role, r.holders, NEW.circle,
+        (SELECT string_agg(t.holder, ', ') FROM circle_membership.tenure t
+         WHERE t.role = NEW.role AND t.circle = NEW.circle AND t.id <> NEW.id
+           AND (t.since IS NULL OR NEW.until IS NULL OR t.since < NEW.until)
+           AND (t.until IS NULL OR NEW.since IS NULL OR t.until > NEW.since))
+        USING ERRCODE = 'triggered_action_exception';
+    END IF;
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER capped BEFORE INSERT OR UPDATE ON circle_membership.tenure
+  FOR EACH ROW EXECUTE FUNCTION circle_membership.capped();
+
+-- Where each person sits, read from the members and the tenures and
+-- never stored: as a member of the circle, with no role; by a tenure, in
+-- its circle with its role; and by a tenure of a role that is a member of
+-- a circle, there with no role, for the days the two overlap, so the
+-- role's mandates reach no further than they do. That last row has no id.
+CREATE VIEW circle_membership.seat AS
+SELECT m.id, m.circle, m.person AS member, NULL::text AS role, m.since, m.until
+FROM circle_membership.member m
+WHERE m.person IS NOT NULL
+UNION ALL
+SELECT t.id, t.circle, t.holder, t.role, t.since, t.until
+FROM circle_membership.tenure t
+UNION ALL
+SELECT NULL::bigint, m.circle, t.holder, NULL::text,
+  CASE WHEN m.since IS NULL THEN t.since WHEN t.since IS NULL THEN m.since ELSE greatest(m.since, t.since) END,
+  CASE WHEN m.until IS NULL THEN t.until WHEN t.until IS NULL THEN m.until ELSE least(m.until, t.until) END
+FROM circle_membership.member m
+JOIN circle_membership.tenure t ON t.role = m.role
+WHERE (m.since IS NULL OR t.until IS NULL OR m.since < t.until)
+  AND (m.until IS NULL OR t.since IS NULL OR m.until > t.since);
 
 -- The members seated in a circle on a day.
 CREATE FUNCTION circle_membership.seated(circle text, day date) RETURNS SETOF text
@@ -30,4 +110,5 @@ BEGIN ATOMIC
 END;
 
 GRANT USAGE ON SCHEMA circle_membership TO cella_app, cella_guards;
-GRANT SELECT ON circle_membership.seat TO cella_app, cella_guards;
+GRANT SELECT ON circle_membership.member, circle_membership.tenure, circle_membership.seat TO cella_app, cella_guards;
+GRANT USAGE ON SEQUENCE circle_membership.seat_id TO cella_app;

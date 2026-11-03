@@ -180,11 +180,35 @@ const check = (name) => {
   const entries = new Map((transaction.entry ?? []).map((e) => [e.id, e]))
 
   // Each graft's links resolve on both sides
-  for (const p of read('graft.circle-membership').seat ?? []) {
-    has(circles, p.circle, 'circle', 'seat')
-    known(p.member, 'seat')
-    if (p.role) {
-      has(roles, p.role, 'role', 'seat')
+  // A circle's member is a person or a role; a tenure is a person's, of a
+  // role in its own circle, or in any for a `*` role, and no more of them
+  // overlap in a circle than the role's holders allow
+  const sitting = read('graft.circle-membership')
+  for (const m of sitting.member ?? []) {
+    has(circles, m.circle, 'circle', 'member')
+    if (!m.person === !m.role) {
+      fail(`member of ${m.circle}: is a person or a role, one of the two`)
+    } else if (m.person) {
+      known(m.person, 'member')
+    } else {
+      has(roles, m.role, 'role', 'member')
+    }
+  }
+  const byRole = new Map((circle.role ?? []).map((r) => [r.id, r]))
+  const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
+  const overlap = (a, b) => (!a.since || !b.until || day(a.since) < day(b.until)) && (!b.since || !a.until || day(b.since) < day(a.until))
+  const tenures = sitting.tenure ?? []
+  for (const t of tenures) {
+    const where = `tenure of ${t.holder} as ${t.role} in ${t.circle}`
+    has(circles, t.circle, 'circle', where)
+    known(t.holder, where)
+    const r = byRole.get(t.role)
+    if (!r) {
+      has(roles, t.role, 'role', where)
+    } else if (r.circle !== '*' && r.circle !== t.circle) {
+      fail(`${where}: the ${t.role} role is ${r.circle}'s`)
+    } else if (r.holders && tenures.filter((o) => o.role === t.role && o.circle === t.circle && overlap(o, t)).length > r.holders) {
+      fail(`${where}: the role is held by ${r.holders} at most at once`)
     }
   }
   // What a motion moves to adopt or approve names a version or a

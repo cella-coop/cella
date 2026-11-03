@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Nest, Nested } from '../models/circle.ts'
+import type { Granted, Nest, Nested } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -26,23 +26,35 @@ export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', N
   })
 }
 
+// The mandate and the mandates revoked, as `circle.mandate_from` and
+// `circle.mandate_ended` return them.
+async function granted(tx: Db, sql: string, policy: string): Promise<Granted> {
+  const { rows } = await tx.query<{ mandate: string | null; revoked: string[] | null }>(sql, [policy])
+  const row = rows[0]
+  return {
+    mandate: row?.mandate === null || row?.mandate === undefined ? null : Number(row.mandate),
+    revoked: (row?.revoked ?? []).map(Number),
+  }
+}
+
 // Grants the mandate a mandate policy marks, in the transaction of the
 // write that adopts it: its values copied into `circle.mandate`, with its
 // issuer, the circle that adopted it, and the mandate it is issued under,
-// none for the assembly's; and the
-// mandate of the policy it replaces revoked the day it applies. Returns
-// the mandate, or null for a policy of another kind. `circle.grants`, which
-// circle-motion attaches to the adoption, checks it did.
-export async function granting(tx: Db, policy: string): Promise<number | null> {
-  const { rows } = await tx.query<{ mandate: string | null }>('SELECT circle.mandate_from($1) AS mandate', [policy])
-  return rows[0]?.mandate === null || rows[0]?.mandate === undefined ? null : Number(rows[0].mandate)
+// none for the assembly's; and the mandate of the policy it replaces
+// revoked the day it applies, with every mandate issued under it. Returns
+// the mandate, or null for a policy of another kind, and those revoked.
+// `circle.grants`, which circle-motion attaches to the adoption, checks
+// it did.
+export async function granting(tx: Db, policy: string): Promise<Granted> {
+  return granted(tx, 'SELECT mandate, revoked FROM circle.mandate_from($1)', policy)
 }
 
 // Revokes the mandate of a mandate policy, in the transaction of the write
-// that ends it, on the day it ends: a write received after it is refused,
-// a share granted before it runs out on its own. Returns the mandate, or
-// null. `circle.revokes` checks it did.
-export async function revoking(tx: Db, policy: string): Promise<number | null> {
-  const { rows } = await tx.query<{ mandate: string | null }>('SELECT circle.mandate_ended($1) AS mandate', [policy])
-  return rows[0]?.mandate === null || rows[0]?.mandate === undefined ? null : Number(rows[0].mandate)
+// that ends it, on the day it ends, and with it every mandate issued under
+// it, down the provenance tree: a write received after it is refused, a
+// share granted before it runs out on its own. Returns the mandate, or
+// null, and those revoked, the mandate first. `circle.revokes` checks it
+// did.
+export async function revoking(tx: Db, policy: string): Promise<Granted> {
+  return granted(tx, 'SELECT mandate, revoked FROM circle.mandate_ended($1)', policy)
 }

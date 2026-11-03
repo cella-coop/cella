@@ -5,7 +5,8 @@
 -- roots are the assembly's, the founding motion's first from the legal
 -- form, and what is under a circle or a role is what it issued, never
 -- where it sits. A mandate is narrower than its parent: the same power,
--- a cap no wider and a term no longer.
+-- a cap no wider and a term no longer. Revoking a mandate revokes every
+-- mandate issued under it, down the tree, on the same day.
 
 -- A mandate's cap in words: up to a limit a write, within a budget a
 -- period, or uncapped.
@@ -51,7 +52,7 @@ BEGIN ATOMIC
       WHEN u.id IS NULL THEN ', which holds no mandate for ' || m.power || ' to issue it under'
       WHEN u.grantee <> m.issuer THEN ', under mandate ' || u.id || ', which is ' || u.grantee || '''s'
       WHEN u.revoked <= overreach.day
-        THEN ', under mandate ' || u.id || ', revoked on ' || u.revoked || ': end the mandates issued under it first'
+        THEN ', under mandate ' || u.id || ', revoked on ' || u.revoked || ', which revokes every mandate issued under it'
       ELSE ', is wider than mandate ' || u.id || ' it is issued under: '
         || circle.wider(m.power, m."limit", m.budget, m.per, m."from", m.until, u.id)
     END
@@ -72,8 +73,9 @@ END;
 -- attaches it — after the write, every mandate standing is a root the
 -- assembly issued, or is issued under a parent its issuer holds and is
 -- narrower than it: a grant its issuer holds nothing to issue under, or
--- wider than its parent, is refused, as is an end that leaves a mandate
--- issued under one that no longer stands.
+-- wider than its parent, is refused, as is a write that leaves a mandate
+-- standing under one that no longer stands, which `circle.revoke` revokes
+-- with it.
 CREATE FUNCTION circle.narrows(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -93,4 +95,56 @@ BEGIN ATOMIC
   SELECT up.id, up.grantee, up.issuer, (max(up.height) OVER () - up.height)::int
   FROM up
   ORDER BY up.height DESC;
+END;
+
+-- A mandate and every mandate issued under it, down its provenance tree,
+-- with the depth of each below it, its own 0.
+CREATE FUNCTION circle.under(mandate bigint) RETURNS TABLE (id bigint, depth int)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  WITH RECURSIVE down AS (
+    SELECT m.id, 0 AS depth FROM circle.mandate m WHERE m.id = under.mandate
+    UNION ALL
+    SELECT m.id, down.depth + 1 FROM circle.mandate m JOIN down ON m.parent = down.id
+  )
+  SELECT down.id, down.depth FROM down ORDER BY down.depth, down.id;
+END;
+
+-- Revokes a mandate on `day`, and with it every mandate issued under it,
+-- down its provenance tree, that still stands then: one revoked later,
+-- or not at all, is revoked that day; one revoked or expired by then is
+-- left as it is. Returns those it revoked, the mandate first, then down
+-- the tree.
+CREATE FUNCTION circle.revoke(mandate bigint, day date) RETURNS bigint[]
+LANGUAGE plpgsql AS $$
+DECLARE
+  done bigint[];
+BEGIN
+  WITH gone AS (
+    UPDATE circle.mandate m SET revoked = revoke.day
+    FROM circle.under(revoke.mandate) u
+    WHERE m.id = u.id
+      AND (m.revoked IS NULL OR m.revoked > revoke.day)
+      AND (m.until IS NULL OR m.until > revoke.day)
+    RETURNING m.id, u.depth
+  )
+  SELECT coalesce(array_agg(g.id ORDER BY g.depth, g.id), '{}') INTO done FROM gone g;
+  RETURN done;
+END
+$$;
+
+-- The first mandate issued under `mandate`, down its tree, that still
+-- stands after `day`, as a reason; or NULL when none does, as revoking
+-- the mandate that day leaves it.
+CREATE FUNCTION circle.outlives(mandate bigint, day date) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'mandate ' || m.id || ', issued under mandate ' || outlives.mandate || ', is not revoked with it on ' || outlives.day
+  FROM circle.under(outlives.mandate) u
+  JOIN circle.mandate m ON m.id = u.id
+  WHERE u.depth > 0
+    AND (m.revoked IS NULL OR m.revoked > outlives.day)
+    AND (m.until IS NULL OR m.until > outlives.day)
+  ORDER BY u.depth, m.id
+  LIMIT 1;
 END;

@@ -70,6 +70,7 @@ mandate. A role every working circle has (`*`) is the assembly's.
   guards, which this graft attaches as the graft joining the two:
   `circle.grants` that a mandate policy adopted has its mandate as its
   values say, `circle.revokes` that one ended has its mandate revoked,
+  with every mandate issued under it,
   and `circle.narrows` on both that every mandate standing is a root
   the assembly issued or is issued under a parent its issuer holds,
   and is narrower than it. So a motion of coordination grants a
@@ -99,8 +100,10 @@ adoption and ending of a policy so itself.
   `ending`, extended in their one transaction under one verdict by the
   circle feat's `granting` and `revoking`, so a mandate policy's values
   are copied into its mandate as it is adopted, and its mandate revoked
-  as it ends, by the policy's own write. They submit the motion feat's
-  payload with the mandate, or none for a policy of another kind.
+  as it ends, with every mandate issued under it, by the policy's own
+  write. They submit the motion feat's payload with the mandate, or none
+  for a policy of another kind, and `revoked`, every mandate the write
+  revoked, the one ended or replaced first, so the log says each.
   `circle-membership-motion` carries out every policy a passing motion
   adopts or ends through them.
 - `putting`: the proposal a motion about a circle (`about`, read from

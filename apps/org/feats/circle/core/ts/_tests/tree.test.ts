@@ -3,7 +3,8 @@
 // a cycle is refused, a moved circle carries its subtree, `circle.nests`
 // refuses a cycle a nesting settled first made, and a mandate keeps its
 // grant and is a root the assembly issued or issued under a parent its
-// issuer holds, narrower than it. Run by `cella test slice circle`.
+// issuer holds, narrower than it, and revoking one revokes every mandate
+// issued under it. Run by `cella test slice circle`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -77,17 +78,21 @@ test('circle.nests refuses a nesting whose parent moved within the circle meanwh
   await db.query('ROLLBACK')
 })
 
-test('a mandate keeps its grant, and a revoked one stays revoked', async () => {
+test('a mandate keeps its grant, and a revoked one stays revoked, from its day or an earlier one', async () => {
   await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('lead', '*', 'Circle lead')`)
   const { rows } = await db.query<{ id: string }>(
     `INSERT INTO circle.mandate (grantee, issuer, power, policy, "from", revoked) VALUES ('lead', 'ag', 'approve-time', 'm-2026-001/1', '2026-01-01', '2026-10-01') RETURNING id`,
   )
   await refused(`UPDATE circle.mandate SET revoked = NULL WHERE id = ${rows[0].id}`, /keeps its grant, and stays revoked/)
+  await refused(`UPDATE circle.mandate SET revoked = '2026-11-01' WHERE id = ${rows[0].id}`, /keeps its grant, and stays revoked/)
+  // A revocation down the tree may bring its day earlier, never later.
+  await db.query(`UPDATE circle.mandate SET revoked = '2026-09-01' WHERE id = ${rows[0].id}`)
   await refused(`UPDATE circle.mandate SET power = 'commit' WHERE id = ${rows[0].id}`, /keeps its grant/)
 })
 
 test('a mandate the assembly issues is a root; one another circle issues stands under a parent its issuer holds, narrower than it', async () => {
   const overreach = async () => (await db.query<{ r: string | null }>(`SELECT circle.overreach('2026-10-24') AS r`)).rows[0].r
+  const outlives = async (id: string) => (await db.query<{ r: string | null }>(`SELECT circle.outlives($1, '2026-10-24') AS r`, [id])).rows[0].r
   // A mandate from 1 January 2026, its cap and term as `cap` says.
   const grant = async (grantee: string, issuer: string, parent: string | null, power: string, n: number, cap: { limit?: string; budget?: string; per?: string; until?: string } = {}) =>
     (
@@ -143,11 +148,21 @@ test('a mandate the assembly issues is a root; one another circle issues stands 
     // Nesting moves no mandate: Brand under Marketing, its maker stands under coordination's.
     await db.query(`UPDATE circle.circle SET parent = 'marketing' WHERE id = 'brand'`)
     assert.equal(await overreach(), null)
-    // Ending a parent while a mandate issued under it stands is refused.
-    await revoke(root)
-    assert.match((await overreach()) ?? '', new RegExp(`mandate ${maker} grants pay-supplier to maker, issued by coordination, under mandate ${root}, revoked on 2026-10-24: end the mandates issued under it first`))
-    await revoke(maker)
+    // A parent revoked alone leaves a mandate standing under it, which is
+    // refused; `circle.revoke` revokes it on the same day with every
+    // mandate issued under it, down the tree, and says each.
+    const deep = await grant('steward', 'maker', maker, 'pay-supplier', 11, { limit: '1000' })
     assert.equal(await overreach(), null)
+    await db.query('SAVEPOINT alone')
+    await revoke(root)
+    assert.match((await overreach()) ?? '', new RegExp(`mandate ${maker} grants pay-supplier to maker, issued by coordination, under mandate ${root}, revoked on 2026-10-24, which revokes every mandate issued under it`))
+    assert.equal(await outlives(root), `mandate ${maker}, issued under mandate ${root}, is not revoked with it on 2026-10-24`)
+    await db.query('ROLLBACK TO SAVEPOINT alone')
+    const { rows } = await db.query<{ gone: string[] }>(`SELECT circle.revoke($1, '2026-10-24') AS gone`, [root])
+    assert.deepEqual(rows[0].gone, [root, maker, deep])
+    assert.equal(await overreach(), null)
+    assert.equal(await outlives(root), null)
+    assert.deepEqual((await db.query<{ gone: string[] }>(`SELECT circle.revoke($1, '2026-10-24') AS gone`, [root])).rows[0].gone, [], 'none is revoked twice')
   } finally {
     await db.query('ROLLBACK')
   }

@@ -118,20 +118,24 @@ END;
 -- Copies a mandate policy's values into the mandate they grant, with its
 -- issuer and the mandate it is issued under, or a
 -- right policy's into the right, in the write that adopts it, and revokes
--- the mandate or the right of the policy it replaces the day it applies.
--- Returns the mandate, or null for a right or a policy of another kind;
--- values that grant nothing are refused (SQLSTATE 09000).
-CREATE FUNCTION circle.mandate_from(ref text) RETURNS bigint
+-- the mandate or the right of the policy it replaces the day it applies,
+-- with every mandate issued under that mandate (`circle.revoke`).
+-- Returns the mandate, or null for a right or a policy of another kind,
+-- and the mandates it revoked; values that grant nothing are refused
+-- (SQLSTATE 09000).
+CREATE FUNCTION circle.mandate_from(ref text) RETURNS TABLE (mandate bigint, revoked bigint[])
 LANGUAGE plpgsql AS $$
 DECLARE
   k text;
   marked jsonb;
   wrong text;
   made bigint;
+  gone bigint[] := '{}';
 BEGIN
   SELECT p.kind INTO k FROM policy.policy p WHERE p.id = ref AND p.kind IN ('mandate', 'right');
   IF k IS NULL THEN
-    RETURN NULL;
+    RETURN QUERY SELECT NULL::bigint, gone;
+    RETURN;
   END IF;
   marked := (SELECT jsonb_object_agg(v.name, v.literal) FROM policy.value v WHERE v.policy = ref);
   wrong := CASE k WHEN 'mandate' THEN circle.mandate_flaw(marked) ELSE circle.right_flaw(marked) END;
@@ -144,9 +148,11 @@ BEGIN
     FROM circle.mandated(ref) m
     JOIN policy.policy p ON p.id = ref
     RETURNING id INTO made;
-    UPDATE circle.mandate o SET revoked = p.applies
+    SELECT coalesce(circle.revoke(o.id, p.applies), '{}') INTO gone
     FROM policy.policy p
-    WHERE p.id = ref AND o.policy = p.replaces AND o.revoked IS NULL;
+    JOIN circle.mandate o ON o.policy = p.replaces
+    WHERE p.id = ref;
+    gone := coalesce(gone, '{}');
   ELSE
     INSERT INTO circle.right ("right", power, policy, "limit", "from", until)
     SELECT m."right", m.power, ref, cella.amount(m."limit"), m."from", m.until
@@ -155,25 +161,28 @@ BEGIN
     FROM policy.policy p
     WHERE p.id = ref AND o.policy = p.replaces AND o.revoked IS NULL;
   END IF;
-  RETURN made;
+  RETURN QUERY SELECT made, gone;
 END
 $$;
 
 -- Revokes the mandate or the right of a policy that ended, on the day it
--- ended, in the write that ends it. Returns the mandate, or null.
-CREATE FUNCTION circle.mandate_ended(ref text) RETURNS bigint
+-- ended, in the write that ends it, and with the mandate every mandate
+-- issued under it (`circle.revoke`). Returns the mandate, or null, and
+-- the mandates it revoked, the policy's first.
+CREATE FUNCTION circle.mandate_ended(ref text) RETURNS TABLE (mandate bigint, revoked bigint[])
 LANGUAGE plpgsql AS $$
 DECLARE
   made bigint;
+  gone bigint[];
 BEGIN
   UPDATE circle.right r SET revoked = p.ends
   FROM policy.policy p
   WHERE p.id = ref AND r.policy = p.id AND p.kind = 'right' AND p.ends IS NOT NULL AND r.revoked IS NULL;
-  UPDATE circle.mandate m SET revoked = p.ends
+  SELECT m.id, circle.revoke(m.id, p.ends) INTO made, gone
   FROM policy.policy p
-  WHERE p.id = ref AND m.policy = p.id AND p.kind = 'mandate' AND p.ends IS NOT NULL AND m.revoked IS NULL
-  RETURNING m.id INTO made;
-  RETURN made;
+  JOIN circle.mandate m ON m.policy = p.id
+  WHERE p.id = ref AND p.kind = 'mandate' AND p.ends IS NOT NULL;
+  RETURN QUERY SELECT made, coalesce(gone, '{}');
 END
 $$;
 
@@ -182,8 +191,8 @@ $$;
 -- the circle that adopted it under the parent it holds, for the
 -- power, capped and on the days its values and its policy say, and a
 -- right policy its right; the mandate or the right of the policy it
--- replaces is revoked the day it applies; and a policy of another kind
--- has neither.
+-- replaces is revoked by the day it applies, and with that mandate every
+-- mandate issued under it; and a policy of another kind has neither.
 CREATE FUNCTION circle.grants(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -206,9 +215,10 @@ BEGIN ATOMIC
       WHERE (g."right", g.power, cella.cents(g."limit"), g."from", g.until)
         IS NOT DISTINCT FROM (v."right", v.power, v."limit", v."from", v.until)
     ) THEN 'right ' || g.id || ' is not what ' || r.id || ' marks'
-    WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
+    WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND (o.revoked IS NULL OR o.revoked > r.applies))
       OR EXISTS (SELECT FROM circle.right o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       THEN 'what ' || r.replaces || ' granted is not revoked the day ' || r.id || ' applies'
+    ELSE (SELECT circle.outlives(o.id, r.applies) FROM circle.mandate o WHERE o.policy = r.replaces)
   END
   FROM policy.policy r
   LEFT JOIN circle.mandate m ON m.policy = r.id
@@ -217,13 +227,15 @@ BEGIN ATOMIC
 END;
 
 -- motion:policy:end, which circle-motion attaches it to — the mandate or
--- the right of a policy the write ended is revoked the day it ends.
+-- the right of a policy the write ended is revoked by the day it ends,
+-- and with the mandate every mandate issued under it.
 CREATE FUNCTION circle.revokes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT coalesce(
     (SELECT 'mandate ' || m.id || ' of ' || r.id || ' is not revoked the day it ends'
-     FROM circle.mandate m WHERE m.policy = r.id AND r.kind = 'mandate' AND m.revoked IS DISTINCT FROM r.ends),
+     FROM circle.mandate m WHERE m.policy = r.id AND r.kind = 'mandate' AND (m.revoked IS NULL OR m.revoked > r.ends)),
+    (SELECT circle.outlives(m.id, r.ends) FROM circle.mandate m WHERE m.policy = r.id AND r.kind = 'mandate'),
     (SELECT 'right ' || g.id || ' of ' || r.id || ' is not revoked the day it ends'
      FROM circle.right g WHERE g.policy = r.id AND r.kind = 'right' AND g.revoked IS DISTINCT FROM r.ends)
   )

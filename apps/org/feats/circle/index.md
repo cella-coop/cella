@@ -61,7 +61,9 @@ is adopting its policy, and its values are copied into `circle.mandate`
 in the same write, so `circle_membership.may` reads a column, never the
 sentence; revoking one is ending its policy, which revokes its mandate
 on the verdict date. A mandate policy replacing another revokes the
-other's mandate the day it applies. The copy is this feat's, by
+other's mandate the day it applies. Either revocation revokes every
+mandate issued under the one revoked, down its provenance tree, the
+same day ([revocation](#revocation)). The copy is this feat's, by
 `circle.mandate_from(policy)` and `circle.mandate_ended(policy)`, which
 read the register's values and never its wording; the write that calls
 them is `circle-motion`'s, which joins this feat to the motion feat's
@@ -236,19 +238,37 @@ this feat knows procedures by name alone. The parent is found as the policy is a
 power, standing on the day the policy applies, that the new one is
 narrower than, or else the first it holds for the power, so a refusal
 says how the new one is wider. A grant from a circle that holds no
-mandate for its power, or one wider than all it holds, is refused; so
-is ending a mandate while one issued under it stands. A role every
+mandate for its power, or one wider than all it holds, is refused. A role every
 working circle has (`*`) is the assembly's to grant, so its mandates
 are roots; a right, no mandate, is in none of it. A power exercised "by
 motion" is a collective mandate, held by a circle and used only through
 a motion of that circle.
+
+## Revocation
+
+Revoking a mandate revokes everything issued under it. Ending a mandate
+policy, or replacing it, revokes its mandate and every mandate below it
+in the provenance tree, on the same day, in the write that ends or
+replaces it: `circle.revoke(mandate, day)` walks the tree down from it
+(`circle.under`) and revokes each that still stands then, returning
+them, the mandate first, so the write submits each it revoked. When the
+assembly ends coordination's `approve-expense`, Web's lead's, issued
+under it, is revoked the same day, and a Web expense its lead approves
+after is refused. A mandate already revoked, or expired, by that day is left
+as it is; one to be revoked later has its day brought forward, the one
+change a revoked mandate allows. The policies of the mandates revoked
+below stay in the register, their mandates granting nothing, and a
+motion of their own circle may still end them.
+
+A handover revokes nothing: the role holds the mandate, and a change of
+tenure changes who holds the role, never what it holds.
 
 ## Lifecycle
 
 | Thing | States |
 |---|---|
 | circle | active → dissolved |
-| mandate | granted, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
+| mandate | granted, as its policy is adopted → revoked, as its policy ends or is replaced, or as a mandate it is issued under is revoked, or expired at `until` |
 | right | given, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
 | tenure | held → ended (the graft's); a handover ends one and begins the next, and ends no mandate |
 | member of a circle | a person or a role, from → until (the graft's) |
@@ -303,11 +323,13 @@ on a seat in the message's circle.
   a mandate policy the write adopted has its mandate, to the grantee,
   for the power, capped and on the days its values and its policy say,
   and a right policy its right; the mandate or the right of the policy
-  it replaces is revoked the day it applies; and no policy of another
-  kind has one.
+  it replaces is revoked by the day it applies, and with that mandate
+  every mandate issued under it (`circle.outlives`, the first still
+  standing, as a reason); and no policy of another kind has one.
 - `circle.revokes`, which `circle-motion` attaches to `motion:policy:end`:
-  the mandate or the right of a policy the write ended is revoked on the
-  verdict date.
+  the mandate or the right of a policy the write ended is revoked by the
+  verdict date, and with the mandate every mandate issued under it, down
+  its provenance tree (`circle.outlives`).
 - `circle.narrows`, which `circle-motion` attaches to both: after the
   write, every mandate standing on the verdict date, in force or yet to
   be, is a root the assembly issued, or is issued under a parent its
@@ -315,10 +337,10 @@ on a seat in the message's circle.
   (`circle.overreach(day)`, the first that is not, as a reason, and
   `circle.wider`, how a mandate's values are wider than a parent's). A
   grant from a circle holding no mandate for its power, or wider than
-  every one it holds, is refused; so is an end, or a replacement, that
-  leaves a mandate issued under one that no longer stands: end the
-  mandates issued under it first. Nesting a circle moves no mandate, so
-  none of these is on it.
+  every one it holds, is refused; so is a write that leaves a mandate
+  standing under one that no longer stands, which `circle.revoke`
+  revokes with it ([revocation](#revocation)). Nesting a circle moves no
+  mandate, so none of these is on it.
 
 ## Handlers
 
@@ -329,8 +351,10 @@ on a seat in the message's circle.
   with its issuer, the policy's circle, and its parent,
   or a right policy's into `circle.right`, and revoke those of an ended
   one and of the one a new policy replaces, by `circle.mandate_from` and
-  `circle.mandate_ended`; each returns the mandate, or none for a right
-  or a policy of another kind.
+  `circle.mandate_ended`, the mandate with every mandate issued under it
+  (`circle.revoke`); each returns the mandate, or none for a right or a
+  policy of another kind, and every mandate it revoked, the one ended or
+  replaced first, which `circle-motion` submits.
 
 ## Invariants
 
@@ -344,7 +368,10 @@ The circle feat owns:
 - a mandate caps its power with a `limit` per write or a `budget` over a
   period, never both;
 - a mandate is its policy's values, on its policy's days; its term has
-  `from` before `until`; a revoked mandate stays revoked.
+  `from` before `until`; a revoked mandate stays revoked, from its day
+  or an earlier one;
+- no mandate stands under one revoked: revoking a mandate revokes every
+  mandate issued under it, the same day.
 
 What it does not own: who holds which role (`circle-membership`), and who
 may vote on a circle's motions: the roll, those seated in the circle

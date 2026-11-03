@@ -4,9 +4,9 @@
 // and no working circle's; the assembly's m-2026-012 admits Inès under its
 // `admit-member`, while the same admission put in Web is refused at its
 // proposal; the assembly ends coordination's `nest-circle`, and
-// coordination's next nesting is refused; and a collective mandate beyond
-// what the circle above holds is refused as it is adopted, by
-// `circle.carves`. Run by `cella test e2e collective`.
+// coordination's next nesting is refused; and a collective mandate
+// coordination issues wider than the one it holds is refused as it is
+// adopted, by `circle.narrows`. Run by `cella test e2e collective`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -120,18 +120,36 @@ test('the assembly ends coordination\'s nest-circle, and coordination\'s next ne
   assert.match(reason(after), /coordination holds no collective mandate for nest-circle, so its motion may not nest a circle/)
 })
 
-test('a collective mandate beyond what the circle above holds is refused as it is adopted: Web may not set budgets of 20 000 € under coordination\'s 10 000 €', async () => {
-  const { out } = await decided(
-    'Coordination and Web set budgets by motion',
-    [
-      { kind: 'policy', args: { kind: 'mandate', wording: 'The {circle: coordination} circle holds {power: set-budget}, to set a project\'s budget by motion, up to {limit: 10 000 €} a write' } },
-      { kind: 'policy', args: { kind: 'mandate', wording: 'The {circle: web} circle holds {power: set-budget}, to set a project\'s budget by motion, up to {limit: 20 000 €} a write' } },
-    ],
+test('a collective mandate wider than the one it is issued under is refused as it is adopted: coordination may not grant Web budgets of 20 000 € under its own 10 000 €', async () => {
+  const { out: granted } = await decided(
+    'Coordination sets budgets by motion',
+    [{ kind: 'policy', args: { kind: 'mandate', wording: 'The {circle: coordination} circle holds {power: set-budget}, to set a project\'s budget by motion, up to {limit: 10 000 €} a write' } }],
     '2026-11-15',
     '2026-11-29',
   )
-  assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled'], ['motion:policy:adopt', 'refused']])
-  assert.match(out[1].reason ?? '', /grants set-budget to web beyond what coordination holds of it/)
+  assert.deepEqual(granted.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
+  await on('2026-11-29')
+  const { motion } = settled(
+    await propose(
+      {
+        circle: 'coordination',
+        title: 'Web sets budgets by motion',
+        procedure: 'consent',
+        deadline: '2026-12-06',
+        body: '',
+        actions: [{ kind: 'policy', args: { kind: 'mandate', wording: 'The {circle: web} circle holds {power: set-budget}, to set a project\'s budget by motion, up to {limit: 20 000 €} a write' } }],
+      },
+      as(camille),
+    ),
+  )
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+  }
+  await on('2026-12-06')
+  settled(await close({ motion }, as(camille)))
+  const out = await carried(motion, as(camille))
+  assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'refused']])
+  assert.match(out[0].reason ?? '', /grants set-budget to web, issued by coordination, is wider than mandate \d+ it is issued under: its cap, up to 20000\.00 € a write, is wider than its parent's, up to 10000\.00 € a write/)
   assert.deepEqual(await all(`SELECT m.grantee AS circle, cella.cents(m."limit")::int AS "limit" FROM circle.mandate m JOIN circle.grantee g ON g.id = m.grantee WHERE m.power = 'set-budget' AND g.kind = 'circle'`), [
     { circle: 'coordination', limit: 1000000 },
   ])

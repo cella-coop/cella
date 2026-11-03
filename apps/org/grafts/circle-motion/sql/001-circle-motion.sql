@@ -98,14 +98,15 @@ END;
 -- The adoption and end of a policy are the motion feat's; this graft,
 -- joining it to the circle feat, attaches the circle feat's guards that a
 -- mandate policy's mandate is copied and revoked with it, and that every
--- mandate in force is still carved from what the circles above hold.
+-- mandate standing is still a root the assembly issued or issued under a
+-- parent its issuer holds, and narrower than it.
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'circle_motion.asks(jsonb)', 'circle-motion'),
   ('circle:circle:nest', 'circle_motion.nests(jsonb)', 'circle-motion'),
   ('motion:policy:adopt', 'circle.grants(jsonb)', 'circle-motion'),
-  ('motion:policy:adopt', 'circle.carves(jsonb)', 'circle-motion'),
+  ('motion:policy:adopt', 'circle.narrows(jsonb)', 'circle-motion'),
   ('motion:policy:end', 'circle.revokes(jsonb)', 'circle-motion'),
-  ('motion:policy:end', 'circle.carves(jsonb)', 'circle-motion');
+  ('motion:policy:end', 'circle.narrows(jsonb)', 'circle-motion');
 SELECT motion.register_cite('circle:circle:nest', 'nest-circle', 'circle-motion');
 
 GRANT USAGE ON SCHEMA circle_motion TO cella_app, cella_guards;

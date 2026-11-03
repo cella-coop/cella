@@ -3,8 +3,9 @@
 // laptop, enrolling it; the assembly admits her and the close seats her
 // in the same verdict, or refuses all of it; a suspension by motion stops a
 // member's writes; a nesting that would make a cycle is refused; a
-// mandate is granted by motion, a policy copied into its mandate, and one
-// beyond what the circle above holds is refused; and a lead approves the
+// mandate is granted by motion, a policy copied into its mandate, under
+// one its issuer holds, and one its issuer holds nothing to issue under
+// is refused; and a lead approves the
 // time of their own circle alone, the treasurer everyone's. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
@@ -220,7 +221,26 @@ test('nesting Brand under Marketing settles; Marketing under Brand then makes a 
   assert.equal((await one<{ parent: string }>(`SELECT parent FROM circle.circle WHERE id = 'marketing'`)).parent, 'coordination')
 })
 
-test('coordination grants the finance role send-quote by motion, a mandate policy of coordination\'s, copied into its mandate', async () => {
+test('coordination grants the finance role send-quote by motion, under the send-quote the assembly grants it, a mandate policy of coordination\'s, copied into its mandate', async () => {
+  // Coordination issues a mandate only under one it holds: the assembly
+  // grants it send-quote first, closed the same day before its own.
+  const issuing = settled(
+    await propose(
+      {
+        circle: 'ag',
+        title: 'Coordination grants the working circles send-quote',
+        procedure: 'consent',
+        deadline: '2026-11-28',
+        body: '',
+        actions: [{ kind: 'policy', args: { kind: 'mandate', wording: 'The {circle: coordination} circle holds {power: send-quote}, to grant the working circles\' roles quotes, by motion, up to {limit: 15 000 €} a write' } }],
+      },
+      as(camille),
+    ),
+  )
+  // Chloé, suspended, gives no stance; consent passes with no objection.
+  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1 AND member <> $2', [issuing.motion, chloe])) {
+    settled(await vote({ motion: issuing.motion, member, stance: 'consent' }, as(member)))
+  }
   const proposed = settled(
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'send-quote', text: 'send a quote', limit: 5000 }, deadline: '2026-11-28', body: '' }, as(camille)),
   )
@@ -228,8 +248,14 @@ test('coordination grants the finance role send-quote by motion, a mandate polic
     settled(await vote({ motion: proposed.motion, member: m, stance: 'consent' }, as(m)))
   }
   await on('2026-11-28')
+  settled(await close({ motion: issuing.motion }, as(camille)))
+  assert.deepEqual((await carried(issuing.motion, as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
   settled(await close({ motion: proposed.motion }, as(camille)))
   assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
+  assert.equal(
+    (await one<{ parent: string }>(`SELECT p.grantee AS parent FROM circle.mandate m JOIN circle.mandate p ON p.id = m.parent WHERE m.grantee = 'finance' AND m.power = 'send-quote'`)).parent,
+    'coordination',
+  )
   const granted = await one(
     `SELECT m.power, cella.cents(m."limit")::int AS "limit", to_char(m."from", 'YYYY-MM-DD') AS "from", r.circle, policy.sentence(w.legal) AS sentence
      FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy JOIN policy.wording w ON w.policy = r.id
@@ -259,7 +285,7 @@ test('Julien, seated in the assembly as treasurer, approves Amina\'s time, which
   settled(await approve({ member: amina, month: '2026-10' }, as(julien)))
 })
 
-test('a mandate beyond what the circle above holds is refused: finance may not approve expenses beyond the gérante\'s 2 000 €', async () => {
+test('a mandate its issuer holds nothing to issue under is refused: coordination, holding no approve-expense, may not grant finance one', async () => {
   await on('2026-12-01')
   const proposed = settled(
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'approve-expense', text: 'approve expenses', limit: 3000 }, deadline: '2026-12-08', body: '' }, as(camille)),
@@ -271,7 +297,7 @@ test('a mandate beyond what the circle above holds is refused: finance may not a
   settled(await close({ motion: proposed.motion }, as(camille)))
   const out = await carried(proposed.motion, as(camille))
   assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'refused']])
-  assert.match(out[0].reason ?? '', /grants approve-expense to finance beyond what ag holds of it/)
+  assert.match(out[0].reason ?? '', /grants approve-expense to finance, issued by coordination, which holds no mandate for approve-expense to issue it under/)
 })
 
 test('the log verifies', async () => {

@@ -738,8 +738,20 @@ proposed, that its circle holds a collective mandate for the power of
 every action it carries (`motion.carries` names the action that carries
 out each kind), and on the verdict date of each write citing the motion,
 that it still does; an admission, which settles inside the close, is
-checked at the proposal alone. Both kinds are carved from what the circle above
-holds ([circle](../../apps/org/feats/circle/index.md#authority)).
+checked at the proposal alone.
+
+**Each mandate is issued under a parent mandate and is narrower than
+it.** Its issuer is the circle whose motion adopted its policy, and its
+parent a mandate that circle holds as a whole for the same power, so
+the mandates form a provenance tree by `parent`: what is under a circle
+or a role is what it issued, never where it sits. A mandate is narrower
+than its parent, the same power, a cap no wider and a term no longer;
+the assembly holds every power inherently, so what it issues is a root,
+the founding motion's first from the legal form. `circle.narrows`
+refuses a grant its issuer holds nothing to issue under, or one wider
+than its parent, and an end that leaves a mandate issued under one
+that no longer stands
+([circle](../../apps/org/feats/circle/index.md#authority)).
 
 **A mandate's grantee is one circle or one role**, by one key: every
 circle and every role is a grantee, `circle.grantee`, the supertype in
@@ -766,8 +778,8 @@ the actor's seats, so a person with no seat holds their rights all the
 same. A right lets each act on what is their own, and so is never the
 authority a read asks (`circle_membership.may`): holding `keep-profile`
 opens no one else's profile, nor `log-time` another's time. A right is
-adopted with the statutes and reaches the whole co-op: it is neither
-carved nor carved from.
+adopted with the statutes and reaches the whole co-op: no mandate is
+issued under it.
 What was once the actor's own is a right's power, and the guard that it
 is their own stays the feat's: a person keeps their profile and devices
 (`keep-profile`, `keep-devices`), uploads a file (`upload-file`), takes

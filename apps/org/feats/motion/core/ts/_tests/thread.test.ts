@@ -1,7 +1,8 @@
 // A motion's deliberation, alone, on a database holding only the app's
 // core and this feat: a message answers one of the same motion posted
-// before it, a closed motion takes none, and a text's mentions and links
-// are read from it. Run by `cella test slice motion`.
+// before it, a closed motion takes none, and the table generates a
+// text's mentions and links from it, as the parser reads them. Run by
+// `cella test slice motion`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -65,6 +66,27 @@ test('a text mentions by handle or address, after a space, and links documents b
   assert.deepEqual(parts('Hi @amina.'), [{ text: 'Hi ' }, { mention: 'amina' }, { text: '.' }])
   assert.deepEqual(parts('[[rate-card]]'), [{ link: 'rate-card' }])
   assert.deepEqual(parts('no mention'), [{ text: 'no mention' }])
+})
+
+test('the table generates a message’s mentions and links from its text, as the parser reads them', async () => {
+  const texts = [
+    'Thanks @Amina, and @hugo@lanterne.example. Write to julien@lanterne.example; see [[internal-rules]] and [[Internal-Rules@3]], @amina.',
+    '@malik what would it take? [[rate-card-2027@2]]',
+    'Ask @lea_. or @chloe-, (@sofia) and x@yusuf: [[]] [[-no]]',
+    'no mention',
+  ]
+  for (const text of texts) {
+    const { rows } = await db.query(`SELECT motion.mentions($1) AS mentions, motion.links($1) AS links`, [text])
+    assert.deepEqual(rows[0], { mentions: mentions(text), links: links(text) }, text)
+  }
+  await post(1010, 'm-2026-201', null, 'Over to @amina, see [[internal-rules]].')
+  const { rows } = await db.query(`SELECT mentions, links FROM motion.message WHERE receipt = 1010`)
+  assert.deepEqual(rows[0], { mentions: ['amina'], links: ['internal-rules'] })
+  await rejects(
+    `INSERT INTO motion.message (receipt, motion, member, body, mentions, links, at) VALUES (1011, 'm-2026-201', 'x', 'Agreed.', '{amina}', '{internal-rules}', '2026-10-24')`,
+    [],
+    /cannot insert a non-DEFAULT value into column "mentions"/,
+  )
 })
 
 test('a thread reads each reply under the message it answers', () => {

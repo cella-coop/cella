@@ -5,14 +5,48 @@
 -- (`[[internal-rules]]`), which the grafts joining members and documents
 -- resolve and check; the text is its author's words and stays out of the
 -- log, as a proposal's does.
+
+-- A text's tokens in the order given, by the grammar models/thread.ts
+-- draws it with: a handle starts after a space or at the start, so an
+-- address in the text is no mention, and drops its trailing `._-`; a link
+-- is a document's id in double brackets. Each is lowered.
+CREATE FUNCTION motion.tokens(body text) RETURNS TABLE (n bigint, mention text, link text)
+LANGUAGE sql IMMUTABLE
+BEGIN ATOMIC
+  SELECT r.n, lower(rtrim(r.t[1], '._-')), lower(r.t[2])
+  FROM regexp_matches(
+    body,
+    '(?<![A-Za-z0-9_.@])@([a-z0-9][a-z0-9._-]*(?:@[a-z0-9-]+(?:\.[a-z0-9-]+)+)?)|\[\[([a-z0-9][a-z0-9@._-]*)\]\]',
+    'gi'
+  ) WITH ORDINALITY AS r(t, n);
+END;
+
+-- The handles a text mentions and the documents it links, each once, in
+-- the order given.
+CREATE FUNCTION motion.mentions(body text) RETURNS text[]
+LANGUAGE sql IMMUTABLE
+BEGIN ATOMIC
+  SELECT coalesce(array_agg(mention ORDER BY n), '{}')
+  FROM (SELECT mention, min(n) AS n FROM motion.tokens(body) WHERE mention IS NOT NULL GROUP BY mention) t;
+END;
+
+CREATE FUNCTION motion.links(body text) RETURNS text[]
+LANGUAGE sql IMMUTABLE
+BEGIN ATOMIC
+  SELECT coalesce(array_agg(link ORDER BY n), '{}')
+  FROM (SELECT link, min(n) AS n FROM motion.tokens(body) WHERE link IS NOT NULL GROUP BY link) t;
+END;
+
+-- The mentions and the links are the text's: the table generates them, so
+-- no row names one its text does not give, whatever its writer names.
 CREATE TABLE motion.message (
   receipt bigint PRIMARY KEY,
   motion text NOT NULL REFERENCES motion.motion,
   member text NOT NULL,
   reply bigint,
   body text NOT NULL CHECK (btrim(body) <> ''),
-  mentions text[] NOT NULL DEFAULT '{}',
-  links text[] NOT NULL DEFAULT '{}',
+  mentions text[] NOT NULL GENERATED ALWAYS AS (motion.mentions(body)) STORED,
+  links text[] NOT NULL GENERATED ALWAYS AS (motion.links(body)) STORED,
   at date NOT NULL,
   UNIQUE (motion, receipt),
   FOREIGN KEY (motion, reply) REFERENCES motion.message (motion, receipt),
@@ -26,7 +60,7 @@ CREATE TRIGGER open_for_messages BEFORE INSERT ON motion.message
   FOR EACH ROW EXECUTE FUNCTION motion.open_for_votes();
 
 -- motion:message:post — the message is the actor's own, and mentions and
--- links what its payload names. That the actor sits in the motion's
+-- links what its payload names, which are its text's. That the actor sits in the motion's
 -- circle is circle-membership-motion's guard on the same op; that each
 -- mention is a member's and each link a document's, membership-motion's and
 -- document-motion's.

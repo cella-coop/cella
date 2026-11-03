@@ -1,7 +1,7 @@
 import type { Db, Form } from '@cella/org-db'
 import { kinds } from '../drivers/motion.ts'
 import type { Arg, Carried, Propose } from '../models/motion.ts'
-import { links, mentions, type Post } from '../models/thread.ts'
+import type { Post } from '../models/thread.ts'
 
 // What the New form sends, read into a proposal: the motion, and at most
 // one action, its kind's arguments in fields named `arg.<name>`, read as
@@ -50,8 +50,8 @@ export function args(form: Form, fields: Arg[]): Carried['args'] {
   return out
 }
 
-// A message as the acting member, perhaps answering another: its text,
-// and the handles it mentions and the documents it links, read from it.
+// A message as the acting member, perhaps answering another: its text, from
+// which the table reads the handles it mentions and the documents it links.
 export function post(form: Form, motion: string, member: string): Post {
   const body = form.get('body').trim()
   if (!body) {
@@ -61,5 +61,5 @@ export function post(form: Form, motion: string, member: string): Post {
   if (reply && !/^\d+$/.test(reply)) {
     throw new Error(`a reply answers a message by its number, not “${reply}”`)
   }
-  return { motion, member, reply: reply ? Number(reply) : null, body, mentions: mentions(body), links: links(body) }
+  return { motion, member, reply: reply ? Number(reply) : null, body }
 }

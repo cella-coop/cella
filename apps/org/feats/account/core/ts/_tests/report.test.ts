@@ -2,8 +2,8 @@
 // core and this feat: each account is placed in one rubric of each sheet
 // by its code's longest prefix, every total names rubrics of its own
 // sheet, and the spans are drawn from the periods of the books. The
-// slice's other tests share the database and keep their periods in 2025,
-// so this one reads 2026's spans. Run by `cella test slice account`.
+// slice's other tests share the database, so the periods this one writes
+// are rolled back after it. Run by `cella test slice account`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -66,18 +66,23 @@ test('a total adds and subtracts rubrics of its own sheet, and a line names its 
 })
 
 test('the spans are each month, quarter and year of the books, against the one before', async () => {
-  await db.query(`INSERT INTO account.period (month, closed) VALUES ('2026-07', '2026-08-05'), ('2026-08', '2026-09-04'), ('2026-09', '2026-10-05'), ('2026-10', NULL)`)
-  const { rows } = await db.query(
-    `SELECT id, kind, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until, before, closed
-     FROM account.report WHERE since >= '2026-01-01' ORDER BY until, kind`,
-  )
-  assert.deepEqual(rows, [
-    { id: '2026-07', kind: 'month', since: '2026-07-01', until: '2026-07-31', before: '2026-06', closed: true },
-    { id: '2026-08', kind: 'month', since: '2026-08-01', until: '2026-08-31', before: '2026-07', closed: true },
-    { id: '2026-09', kind: 'month', since: '2026-09-01', until: '2026-09-30', before: '2026-08', closed: true },
-    { id: '2026-Q3', kind: 'quarter', since: '2026-07-01', until: '2026-09-30', before: '2026-Q2', closed: true },
-    { id: '2026-10', kind: 'month', since: '2026-10-01', until: '2026-10-31', before: '2026-09', closed: false },
-    { id: '2026-Q4', kind: 'quarter', since: '2026-10-01', until: '2026-12-31', before: '2026-Q3', closed: false },
-    { id: '2026', kind: 'year', since: '2026-01-01', until: '2026-12-31', before: '2025', closed: false },
-  ])
+  await db.query('BEGIN')
+  try {
+    await db.query(`INSERT INTO account.period (month, closed) VALUES ('2026-07', '2026-08-05'), ('2026-08', '2026-09-04'), ('2026-09', '2026-10-05'), ('2026-10', NULL)`)
+    const { rows } = await db.query(
+      `SELECT id, kind, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until, before, closed
+       FROM account.report WHERE since >= '2026-01-01' ORDER BY until, kind`,
+    )
+    assert.deepEqual(rows, [
+      { id: '2026-07', kind: 'month', since: '2026-07-01', until: '2026-07-31', before: '2026-06', closed: true },
+      { id: '2026-08', kind: 'month', since: '2026-08-01', until: '2026-08-31', before: '2026-07', closed: true },
+      { id: '2026-09', kind: 'month', since: '2026-09-01', until: '2026-09-30', before: '2026-08', closed: true },
+      { id: '2026-Q3', kind: 'quarter', since: '2026-07-01', until: '2026-09-30', before: '2026-Q2', closed: true },
+      { id: '2026-10', kind: 'month', since: '2026-10-01', until: '2026-10-31', before: '2026-09', closed: false },
+      { id: '2026-Q4', kind: 'quarter', since: '2026-10-01', until: '2026-12-31', before: '2026-Q3', closed: false },
+      { id: '2026', kind: 'year', since: '2026-01-01', until: '2026-12-31', before: '2025', closed: false },
+    ])
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })

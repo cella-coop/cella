@@ -36,6 +36,15 @@ export interface Mandate {
   revoked: string | null
 }
 
+// What adopting or ending a policy did to the mandates: the mandate its
+// policy grants or ended, none for a policy of another kind, and every
+// mandate the write revoked, down the provenance tree from the one it
+// ended or replaced, that one first.
+export interface Granted {
+  mandate: number | null
+  revoked: number[]
+}
+
 // Each write that changes the tree cites the motion that asks it.
 export interface Nest {
   circle: string

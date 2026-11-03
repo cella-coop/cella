@@ -97,7 +97,7 @@ test('adopting a mandate policy copies its values into its mandate, and one repl
 
     // A rule grants no mandate.
     const rule = await adopt('rule', 'Refused clients are named in the internal rules', 'm-2026-020', 3)
-    assert.equal(await db.query('SELECT circle.mandate_from($1) AS m', [rule]).then((r) => r.rows[0].m), null)
+    assert.equal(await db.query('SELECT mandate AS m FROM circle.mandate_from($1)', [rule]).then((r) => r.rows[0].m), null)
     assert.equal(await guard('grants', rule), null)
   } finally {
     await db.query('ROLLBACK')
@@ -202,7 +202,7 @@ test('a right is a policy of its own kind, copied into circle.right with no gran
 
     const policy = await adopt('right', 'Every {right: employee} holds {power: log-time}, to log, correct and submit their own time', 'm-2026-020', 1)
     assert.match((await guard('grants', policy)) ?? '', /gives no right: its values are copied as it is adopted/)
-    assert.equal(await db.query('SELECT circle.mandate_from($1) AS m', [policy]).then((r) => r.rows[0].m), null, 'a right is no mandate')
+    assert.equal(await db.query('SELECT mandate AS m FROM circle.mandate_from($1)', [policy]).then((r) => r.rows[0].m), null, 'a right is no mandate')
     assert.equal(await guard('grants', policy), null)
     assert.deepEqual(
       (await db.query(`SELECT "right", power, to_char(revoked, 'YYYY-MM-DD') AS revoked FROM circle.right WHERE policy = $1`, [policy])).rows,

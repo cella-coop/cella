@@ -715,8 +715,8 @@ a device of its actor and carries its request
 
 **Every circle has a participant role**, built in, which every seat in
 it holds there: a seat brings its own role, if any, and the circle's
-participant role besides, and a seat above brings no participant role
-below. The participant's mandates cover proposing and discussing:
+participant role besides, and a seat in one circle brings no participant
+role in another. The participant's mandates cover proposing and discussing:
 `propose`, to propose a motion of the circle and close it, and
 `discuss`, to post on a motion's deliberation, in the circle's channel
 and on its meetings' agendas. They are mandates like any other, policies
@@ -730,7 +730,7 @@ narrows them to a seat in that circle
 a role, and whoever holds a seat with that role uses it. A collective
 mandate is on a circle as a whole, and is used only by a motion of that
 circle: an action a passed motion carries (an admission, an adoption, a
-seat, a nesting) needs the power its collective mandate grants, which
+seat) needs the power its collective mandate grants, which
 the action's graft registers with it in `motion.cites` by
 `motion.register_cite` rather than in `cella.power`, so no seat's
 mandate allows it. `circle-motion` checks it twice: when the motion is
@@ -740,13 +740,39 @@ out each kind), and on the verdict date of each write citing the motion,
 that it still does; an admission, which settles inside the close, is
 checked at the proposal alone.
 
+**Circles never nest.** A circle is its members and a decision rule,
+the procedure its motions are decided by where nothing they act under
+asks another, and it contains no circle: the assembly, marked so
+(`circle.circle.assembly`), is one circle beside the others, and no
+circle is above or below another. What is under a circle is what it
+issued, read from the mandates' provenance below. Whom a circle's
+motion may decide about is never where it sits either: the assembly
+decides about every circle, and any other circle about every circle but
+itself and the assembly, a circle's own seats and powers being
+another's to decide, while what it may grant is what it holds to issue
+under and what it may revoke what it issued, or what was issued under
+that ([circle-motion](../../apps/org/grafts/circle-motion/index.md#guards)).
+
+**A mandate's scope is a condition on its permission**: the resources it
+covers, never a place in a tree. A mandate policy may mark it, a circle
+(`{scope: web}`, Web's projects, meetings and time) or the circle its
+holder holds the role in (`{scope: own}`), and one that marks none
+covers the whole co-op; it is copied into `circle.mandate.scope` with
+the rest. `circle_membership.over(actor, power, about, day)` reads it
+against the circle a record belongs to: Web's lead, whose mandates are
+on their own circle, runs Web's projects and is refused Brand's, and
+the gérante's, on the whole co-op, cover every circle's records and
+those of no circle
+([circle-membership](../../apps/org/grafts/circle-membership/index.md#guards)).
+
 **Each mandate is issued under a parent mandate and is narrower than
 it.** Its issuer is the circle whose motion adopted its policy, and its
 parent a mandate that circle holds as a whole for the same power, so
 the mandates form a provenance tree by `parent`: what is under a circle
 or a role is what it issued, never where it sits. A mandate is narrower
-than its parent, the same power, a cap no wider, a term no longer and
-a procedure no looser;
+than its parent, the same power, a cap no wider, a scope no wider (any
+under one on the whole co-op, under one on a circle that circle alone),
+a term no longer and a procedure no looser;
 the assembly holds every power inherently, so what it issues is a root,
 the founding motion's first from the legal form. `circle.narrows`
 refuses a grant its issuer holds nothing to issue under, or one wider
@@ -816,7 +842,7 @@ member of the co-op or not, and only the assembly's seats ask an active membersh
 counts on a day, in the assembly where membership says the person is
 active, in any other circle unless membership has suspended them or let
 them go. A worker who is no member sits in their working circle, by a
-motion of the circle above it as any seat is given, and holds that
+motion of a circle holding `seat-member` as any seat is given, and holds that
 circle's mandates there, its participant's among them. A seat is how
 someone takes part in a circle; what is their own is still a right's,
 so a worker logs their time by their employment wherever they sit
@@ -827,7 +853,7 @@ its procedure says: by default the people seated in its circle on the
 day it was proposed, never an agent or a service; a procedure may name
 the roles whose seats vote (`{voters: lead}`) and those that may veto
 (`{veto: lead}`), each a value of its sentence copied into
-`motion.procedure`. A seat above carries no vote below: the roll reads
+`motion.procedure`. A seat in one circle carries no vote in another: the roll reads
 the seats of the motion's own circle alone. A stance needs `vote`, the
 power a procedure gives the seats on the roll and no mandate grants: the
 motion feat registers it in `motion.stance_power`, and
@@ -848,7 +874,7 @@ before any mandate is adopted: it declares the check `first` instead,
 backed by `circle-membership-motion`'s guard registered on it in
 `cella.guard`: the log is empty, the form it names is one cella offers
 and the one its policies take, and the state it writes is a root that
-can decide, one root circle deciding by a procedure a policy in force
+can decide, one assembly deciding by a procedure a policy in force
 there makes, with its signer seated there with a vote
 ([the first entry](trust.md#one-server)). A stance is no check: it
 needs the power its procedure gives the seats on the roll, and `cella
@@ -1062,7 +1088,7 @@ the circle in force reads there in its legal wording as it reads, a
 replacement where the policy it replaces read; a `departures` block
 reads, one line each, every default of its form the circle left or
 never took, and the motion's action that left it. The statutes are the
-root circle's. A policy's adoption or ending writes no document, since
+assembly's. A policy's adoption or ending writes no document, since
 only the grafts of the feats carrying it may extend it; once it settles,
 `document-motion` carries the document feat's `document:document:generate`,
 which cites the motion, generates the document from the policies in

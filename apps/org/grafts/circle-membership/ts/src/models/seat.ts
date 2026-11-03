@@ -10,8 +10,7 @@ export interface Seat {
   roleName: string | null
   since: string | null
   until: string | null
-  // How the seat's circle decides, and whether it is the scope's root,
-  // the assembly.
+  // How the seat's circle decides, and whether it is the assembly.
   procedure: string
   root: boolean
 }

@@ -5,9 +5,12 @@ updated = 2026-11-03
 
 The co-op's structure and the authority that flows through it. A circle is
 a self-governing unit, after sociocracy: the general assembly, a
-coordination circle, a working team. Circles nest in one tree whose root is
-the assembly. Each circle defines roles, and grants powers to them through
-mandates; a person holds a role by a tenure, and a circle counts people
+coordination circle, a working team: its members and a decision rule,
+acting jointly by motion. Circles never nest: the assembly is one circle
+beside the others, and what is under a circle is what it issued, the
+mandates' provenance, never where it sits. Each circle defines roles, and
+grants powers to them through mandates, each perhaps scoped to the
+resources it covers; a person holds a role by a tenure, and a circle counts people
 and roles among its members, both the `circle-membership` graft's
 junctions. A mandate's grantee is one circle or one role, never a person.
 Each circle also has a channel for its messages.
@@ -16,10 +19,10 @@ Each circle also has a channel for its messages.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
+| circle | `id`, `name`, `assembly`, `purpose`, `procedure` | `assembly` marks the general assembly, one circle and only one, which holds every power inherently; no circle contains another; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
 | role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one gérante or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
 | grantee | `id`, `kind` | what a mandate is granted to: a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
-| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `from` and `until` are the days its policy applies |
+| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole co-op; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
@@ -45,12 +48,13 @@ their own ([rights](#rights)).
 A mandate is a policy, a sentence a circle adopted by motion
 ([policies](../../../../_corpus/doc/architecture.md#policies)), its
 values marked in it: its grantee, the role it grants to or the circle,
-the power, and perhaps a limit per write or a budget over a month or a
-year.
+the power, perhaps a limit per write or a budget over a month or a
+year, and perhaps its scope.
 
 ```text
 The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write
 The {role: lead} role holds {power: approve-expense}, to approve what the circle's members spend, within {budget: 1 000 €} a {per: month}
+The {role: lead} role holds {power: manage-project}, to start and run the projects of its {scope: own} circle
 The {circle: ag} circle holds {power: admit-member}, to admit members, by motion
 The {circle: web} circle holds {power: adopt-policy}, to adopt its own policies, by motion, by {procedure: consulted}
 ```
@@ -71,7 +75,17 @@ adoption and ending of a policy. What a mandate's values may be is this
 feat's too, `circle.mandate_flaw(marked)`: one grantee, a role it has
 or a circle it has, a power named in lower case, at most a limit or a
 budget, an amount, a budget with its `per`, perhaps a procedure by name,
-and no other value. A mandate's procedure is what the motions acting
+perhaps a scope, a circle it has or `own`, and no other value.
+
+A mandate's scope is a condition on its permission, the resources it
+covers, never a place in a tree: one marking `{scope: web}` covers
+Web's projects, meetings and time; one on a role marking `{scope: own}`
+covers those of the circle its holder holds the role in, so each
+working circle's lead covers their own circle's alone; one marking none
+covers the whole co-op, a record of no circle among them. The circle
+feat keeps it as a value; `circle_membership.over`, which knows where
+each holder sits, reads it against the circle a record belongs to
+([circle-membership](../../grafts/circle-membership/index.md#guards)). A mandate's procedure is what the motions acting
 under it are decided by, and passes down its chain: `circle-motion`,
 which knows procedures, holds it to one at least as strict as its
 parent's chain asks and fixes each motion's by it
@@ -93,10 +107,10 @@ A mandate on a role is individual: whoever holds that role by a tenure
 uses it, each holder alone. A mandate on a circle is collective: the circle holds it as a
 whole and uses it only by motion, so no seat brings it. An action a
 passed motion carries, such as admitting a member, adopting a policy or
-nesting a circle, needs the power a collective mandate grants, and
+giving a seat, needs the power a collective mandate grants, and
 takes effect only where the motion's circle holds one for that power:
 `circle.holds(circle, power, day)`, which reads the circle's own
-mandates, never those of a circle above or below it. The action's
+mandates, never another circle's. The action's
 power is registered with it in the motion feat's `motion.cites`, and
 `circle-motion`, which joins this feat to the motion feat, checks it
 when the motion is proposed and again when each action is carried out
@@ -111,21 +125,23 @@ when the motion is proposed and again when each action is carried out
 | `end-policy` | ending a policy (`motion:policy:end`), revoking a mandate among them |
 | `approve-distribution` | approving a year's distribution (`patronage:distribution:approve`), and the posting and the parts employed that follow (`patronage:distribution:distribute`, `patronage:part:employ`) |
 | `adopt-document` | adopting a document's version (`document:document:adopt`) |
-| `nest-circle` | nesting a circle (`circle:circle:nest`) |
 | `seat-member` | giving and ending a seat (`circle-membership:seat:add`, `:remove`) |
 
-Where a collective mandate reaches is still `circle_motion.decides`: a
-circle decides about those strictly within it, and the assembly about
-every circle, itself included, so nesting circles and granting mandates
-are the circle above's.
+Whom a circle's motion decides about is `circle_motion.decides`, and
+never where a circle sits, since none nests: the assembly decides about
+every circle, itself included, and any other circle about every circle
+but itself and the assembly, so a circle's own seats and powers are
+another's to decide. What it may grant is what it holds to issue under
+([authority](#authority)), and what it may revoke what it issued or
+what was issued under that.
 
 ## The participant role
 
 Every circle has a participant role, built in: the role `participant`,
 whose `circle` is `*`, which this feat's migration makes, so no circle
 is without it. Every seat in a circle holds it there, beside the seat's
-own role if it has one; a seat above brings no participant role below,
-so a member of the assembly is no participant of Marketing unless they
+own role if it has one; a seat in one circle brings no participant role
+in another, so a member of the assembly is no participant of Marketing unless they
 sit in Marketing too. The participant's mandates cover proposing and
 discussing:
 
@@ -135,7 +151,7 @@ discussing:
 | `discuss` | posting on a motion's deliberation (`motion:message:post`), in the circle's channel (`circle:circle:message`), and adding, moving and removing an item of its meetings' agendas (`meeting:item:add`, `:move`, `:remove`) |
 
 They are mandates like any other, each a policy, and since the role is
-every circle's (`*`) they are the assembly's to grant and reach every
+every circle's (`*`) they are the assembly's to grant and hold in every
 circle. `circle_membership.may` finds a participant's mandate on any seat
 the actor holds; the guard of the graft that knows which circle an
 action concerns (`circle_membership.sits`, `circle_membership_motion.sits`,
@@ -199,15 +215,13 @@ share an id and a mandate's `grantee` is one foreign key, as its
 by it, and `circle.chain(mandate)` reads a mandate's chain from its root
 down to itself, each with its grantee and its issuer. A mandate's
 `limit` and `budget` and a right's `limit` are `cella.amount`s, and each
-names the policy that grants it, one a policy. Each circle keeps its `path`, its ancestors
-from the assembly down and itself last, which triggers keep as circles
-are added and moved, a moved circle carrying its subtree; so
-`circle.within(part, whole)` asks whether one circle is within another
-without recursion. One circle only has no parent. Triggers refuse a
-nesting that makes a cycle and keep a mandate's grant fixed and a
-revocation standing, a right's as a mandate's, raising SQLSTATE
-`09000`. The app role and the guards role, `cella_guards`, may select;
-the app role may move a circle and grant and revoke mandates and rights. A mandate is in force on a day from its `from`,
+names the policy that grants it, one a policy. A circle has no parent
+and no place: one circle only is the assembly, a unique index holding
+it so, and `circle.assembly()` names it. Triggers keep a mandate's
+grant fixed and a revocation standing, a right's as a mandate's,
+raising SQLSTATE `09000`. The app role and the guards role,
+`cella_guards`, may select; the app role may grant and revoke mandates
+and rights. A mandate is in force on a day from its `from`,
 before its `until` and before its `revoked`; `circle.holds(circle,
 power, day)` asks whether a circle holds a collective mandate in force
 for a power on a day, one whose grantee is the circle.
@@ -230,8 +244,10 @@ coordination, and may grant none while it holds none.
 A mandate is narrower than its parent: it grants the same power; its
 cap is no wider, so where the parent is capped it limits a write by at
 most the parent's limit or budgets the same period by at most its
-budget; its term is no longer, from no earlier and until no later
-than the parent's; and its procedure, where it states one, is no looser
+budget; its scope is no wider, any under a parent on the whole co-op,
+and under one on a circle, or on `own`, the same; its term is no
+longer, from no earlier and until no later than the parent's; and its
+procedure, where it states one, is no looser
 than what the parent's chain asks, which `circle-motion` checks, since
 this feat knows procedures by name alone. The parent is found as the policy is adopted,
 `circle.parent_of(policy)`: the first of the issuer's mandates for the
@@ -277,7 +293,6 @@ tenure changes who holds the role, never what it holds.
 
 | Action | Label | Why |
 |---|---|---|
-| `POST /api/circle/nest` | ordered | two nestings can form a cycle even online |
 | `POST /api/circle/message` | confluent | the circle's channel |
 
 Who holds which role is a tenure, and who is a member of a circle a
@@ -285,13 +300,8 @@ member, the `circle-membership` graft's own actions; see its [doc](../../grafts/
 mandate has no action of its own: it is granted and revoked by the
 motion feat's `motion:policy:adopt` and `motion:policy:end`, both
 ordered, which `circle-motion` extends with this feat's `granting` and
-`revoking`.
+`revoking`. No action places a circle: circles never nest.
 
-- **nest** sets a circle's parent. Two nestings that are each acyclic can
-  together form a cycle, so the notary orders them already at rung 1:
-  two concurrent transactions can each see no cycle. The tree's trigger
-  refuses a cycle in the write's own view; `circle.nests`, run under the
-  log's lock, refuses one a nesting settled first made.
 - A mandate's grant and revocation change what a role may do. A
   revocation takes effect at its receipt: a write received after it is
   refused; a share already granted runs out on its own.
@@ -302,12 +312,11 @@ ordered, which `circle-motion` extends with this feat's `granting` and
 
 | Action | Power or check | Lanterne |
 |---|---|---|
-| nest | `nest-circle`, a collective mandate: the cited motion nests this circle there, and carried | the assembly or coordination, by motion |
 | a mandate policy adopted or ended | `adopt-policy` or `end-policy`, collective mandates: the cited motion adopts or ends it, and carried | the assembly or coordination, by motion |
 | message | `discuss`, held in the circle | the circle's participants |
 
-Nesting and a mandate's policy are carried by a motion: they cite it,
-which the `circle-motion` graft checks asks this, was put to a circle
+A mandate's policy is carried by a motion: it cites it, which the
+`circle-motion` graft checks asks this, was put to a circle
 that may decide it and that holds the collective mandate for the
 power, and `circle-membership-motion` that it carried, and which
 `circle-membership-motion` carries out when it passes. A message needs
@@ -317,12 +326,10 @@ on a seat in the message's circle.
 
 ## Guards
 
-- `circle.nests`, on `circle:circle:nest`: the circle sits under the
-  parent the payload names, and its path is its parent's as it stands.
 - `circle.grants`, which `circle-motion` attaches to `motion:policy:adopt`:
   a mandate policy the write adopted has its mandate, to the grantee,
-  for the power, capped and on the days its values and its policy say,
-  and a right policy its right; the mandate or the right of the policy
+  for the power, capped, scoped and on the days its values and its
+  policy say, and a right policy its right; the mandate or the right of the policy
   it replaces is revoked by the day it applies, and with that mandate
   every mandate issued under it (`circle.outlives`, the first still
   standing, as a reason); and no policy of another kind has one.
@@ -339,13 +346,10 @@ on a seat in the message's circle.
   grant from a circle holding no mandate for its power, or wider than
   every one it holds, is refused; so is a write that leaves a mandate
   standing under one that no longer stands, which `circle.revoke`
-  revokes with it ([revocation](#revocation)). Nesting a circle moves no
-  mandate, so none of these is on it.
+  revokes with it ([revocation](#revocation)).
 
 ## Handlers
 
-- `nest` (ordered), citing its motion: sets the parent, and submits what
-  it did and the motion.
 - `granting(tx, policy)` and `revoking(tx, policy)`, the state of a write
   a graft extends: copy a mandate policy's values into `circle.mandate`,
   with its issuer, the policy's circle, and its parent,
@@ -360,7 +364,8 @@ on a seat in the message's circle.
 
 The circle feat owns:
 
-- the circles form one tree: no cycle, one root;
+- circles never nest: no circle has a parent, and one circle only is
+  the assembly;
 - a mandate is a root the assembly issued, or is issued under a parent
   its issuer holds and is narrower than it (`circle.narrows`);
 - a mandate's grantee is one circle or one role, by one key, never a
@@ -388,12 +393,15 @@ requested by another scope (rung 5) build on these entities later.
 
 ## Shell
 
-The `circles` collection, in tree order, as a gallery of cards by
-default; a circle's page lists its roles,
+The `circles` collection, the assembly first and the others by name, as
+a gallery of cards by default, and its structure drawn as the mandates
+link the circles, never as a tree: each circle with the circles that
+issued what it and its roles hold, and those it issued to. A circle's
+page lists its roles,
 those every working circle has among them, and the mandates granted to
 them, each its policy's sentence as it reads (`sentences` in
-`@cella/org-policy`), with their limits, budgets and days. Seats are
-`circle-membership`'s. Proposing to nest the circle, or to grant a
+`@cella/org-policy`), with their limits, budgets, scopes and days, and
+who issued each. Seats are `circle-membership`'s. Proposing to grant a
 mandate to one of its roles or revoke one, is `circle-motion`'s, a seat
 in it `circle-membership-motion`'s: the page's writes propose, and the
 close of a passing motion carries them out.
@@ -402,20 +410,24 @@ close of a passing motion carries them out.
 
 - `circle-membership`: members of circles, tenures, the seats read from
   them, and who may use a power.
-- `circle-motion`: nesting by motion, and mandates as the policies its
-  circles adopt and end.
-- `circle-membership-project`, `circle-membership-timesheet`: a power reaches the
-  circle it is held in and those within it, for projects and timesheets;
-  the months waiting on a member's approval, in their inbox.
+- `circle-motion`: mandates as the policies its circles adopt and end,
+  and whom a circle's motion decides about.
+- `circle-membership-project`, `circle-membership-timesheet`,
+  `circle-meeting-membership`: a power covers what its mandate's scope
+  does, for projects, timesheets and meetings; the months waiting on a
+  member's approval, in their inbox.
 
 
 ## Lanterne
 
-| Circle | Parent | Purpose |
-|---|---|---|
-| Assemblée générale | — | every member, one vote: statutes, admissions, accounts and surplus |
-| Coordination | ag | weekly: pipeline, staffing and anything that crosses circles |
-| Web, Brand, Marketing, Operations | coordination | the working circles |
+| Circle | Purpose |
+|---|---|
+| Assemblée générale, the assembly | every member, one vote: statutes, admissions, accounts and surplus |
+| Coordination | weekly: pipeline, staffing and anything that crosses circles |
+| Web, Brand, Marketing, Operations | the working circles |
+
+No circle sits in another: coordination is the working circles' by the
+mandates the assembly issued it, not by a place above them.
 
 | Role | Power | Cap |
 |---|---|---|
@@ -431,10 +443,17 @@ close of a passing motion carries them out.
 | Circle lead (`*`) | `approve-expense` | 1 000 € budget, a month |
 | Circle lead | `send-quote` | 15 000 € limit |
 | Circle lead | `set-budget` | 15 000 € limit |
-| Circle lead | `manage-project`, `approve-time` | — |
-| Circle lead | `schedule-meeting`, `keep-minutes` | — |
+| Circle lead | `manage-project`, `approve-time` | its own circle |
+| Circle lead | `schedule-meeting`, `keep-minutes` | its own circle |
 | Gérante | `schedule-meeting`, `erase-personal-data` | — |
-| Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | — |
+| Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | its own circle |
+
+A cap of "its own circle" is the mandate's scope, `{scope: own}`: a
+lead runs, approves the time of and keeps the minutes of their own
+circle alone. Every other mandate marks none and covers the whole
+co-op, so the gérante's `manage-project` and the treasurer's
+`approve-time` cover every circle's, and finance pays a Web supplier
+as it pays any.
 | Participant (every seat, in its circle) | `propose`, `discuss` | — |
 
 The gérante, the treasurer, finance, a circle's lead and a circle's
@@ -446,8 +465,8 @@ their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `nest-circle`, `seat-member` |
-| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `nest-circle`, `seat-member` |
+| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member` |
+| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member` |
 
 | Right, given by the form | Power |
 |---|---|
@@ -463,7 +482,8 @@ working circle's role none until the assembly grants it one to issue
 under.
 So the working circles carry no action by motion: a motion of Web
 decides by its text alone, and one carrying an action is refused at its
-proposal until a circle above grants Web a collective mandate for it.
+proposal until a circle holding one grants Web a collective mandate for
+it.
 
 ## Analytics
 

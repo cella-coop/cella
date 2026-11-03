@@ -1,10 +1,9 @@
-// The circles' tree, alone, on a database holding only the app's core and
-// this feat: each circle's path follows its parent's, a nesting that makes
-// a cycle is refused, a moved circle carries its subtree, `circle.nests`
-// refuses a cycle a nesting settled first made, and a mandate keeps its
-// grant and is a root the assembly issued or issued under a parent its
-// issuer holds, narrower than it, and revoking one revokes every mandate
-// issued under it. Run by `cella test slice circle`.
+// The circles and the mandates' provenance, alone, on a database holding
+// only the app's core and this feat: circles never nest and one only is
+// the assembly, and a mandate keeps its grant and is a root the assembly
+// issued or issued under a parent its issuer holds, narrower than it in
+// cap, scope and term, and revoking one revokes every mandate issued
+// under it. Run by `cella test slice circle`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -25,19 +24,11 @@ const refused = async (sql: string, says: RegExp) => {
   }
 }
 
-const path = async (id: string) => (await db.query<{ path: string[] }>('SELECT path FROM circle.circle WHERE id = $1', [id])).rows[0].path
-const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT circle.${fn}($1) AS r`, [payload])).rows[0].r
-
 before(async () => {
   await db.connect()
-  for (const [id, parent] of [
-    ['ag', null],
-    ['coordination', 'ag'],
-    ['brand', 'coordination'],
-    ['marketing', 'coordination'],
-    ['print', 'brand'],
-  ]) {
-    await db.query('INSERT INTO circle.circle (id, name, parent) VALUES ($1, $1, $2)', [id, parent])
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true)`)
+  for (const id of ['coordination', 'brand', 'marketing']) {
+    await db.query('INSERT INTO circle.circle (id, name) VALUES ($1, $1)', [id])
   }
 })
 
@@ -45,37 +36,14 @@ after(async () => {
   await db.end()
 })
 
-test('a circle\'s path runs from the assembly down to itself, and the tree has one root', async () => {
-  assert.deepEqual(await path('print'), ['ag', 'coordination', 'brand', 'print'])
-  await db.query('BEGIN')
-  await assert.rejects(db.query(`INSERT INTO circle.circle (id, name) VALUES ('rival', 'A second assembly')`), /one_root/)
-  await db.query('ROLLBACK')
-})
-
-test('nesting a circle within itself is refused, whatever writes it', async () => {
-  await refused(`UPDATE circle.circle SET parent = 'print' WHERE id = 'brand'`, /print is within brand: nesting it there makes a cycle/)
-  await refused(`UPDATE circle.circle SET parent = 'brand' WHERE id = 'brand'`, /brand is within brand/)
-})
-
-test('a moved circle carries its subtree', async () => {
-  await db.query('BEGIN')
-  await db.query(`UPDATE circle.circle SET parent = 'marketing' WHERE id = 'brand'`)
-  assert.deepEqual(await path('print'), ['ag', 'coordination', 'marketing', 'brand', 'print'])
-  assert.equal((await db.query(`SELECT circle.within('print', 'marketing') AS w`)).rows[0].w, true)
-  assert.equal((await db.query(`SELECT circle.within('marketing', 'brand') AS w`)).rows[0].w, false)
-  await db.query('ROLLBACK')
-})
-
-test('circle.nests refuses a nesting whose parent moved within the circle meanwhile', async () => {
-  assert.equal(await guard('nests', { circle: 'print', parent: 'brand' }), null)
-  assert.match((await guard('nests', { circle: 'print', parent: 'marketing' })) ?? '', /print was not nested under marketing by this write/)
-  // As a concurrent nesting leaves it: brand under print committed, while
-  // this write's view of brand's path was from before.
-  await db.query('BEGIN')
-  await db.query('ALTER TABLE circle.circle DISABLE TRIGGER placed')
-  await db.query(`UPDATE circle.circle SET parent = 'print', path = '{ag,coordination,brand,print,brand}' WHERE id = 'brand'`)
-  assert.match((await guard('nests', { circle: 'print', parent: 'brand' })) ?? '', /brand is within print: nesting it there makes a cycle/)
-  await db.query('ROLLBACK')
+test('circles never nest, and one circle only is the assembly', async () => {
+  assert.equal((await db.query<{ a: string }>('SELECT circle.assembly() AS a')).rows[0].a, 'ag')
+  await assert.rejects(db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('rival', 'A second assembly', true)`), /one_assembly/)
+  const columns = await db.query<{ c: string }>(
+    `SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'circle' AND table_name = 'circle' ORDER BY ordinal_position`,
+  )
+  assert.deepEqual(columns.rows.map((r) => r.c), ['id', 'name', 'assembly', 'purpose', 'procedure'])
+  assert.equal((await db.query(`SELECT FROM cella.guard WHERE op LIKE 'circle:circle:%'`)).rowCount, 0)
 })
 
 test('a mandate keeps its grant, and a revoked one stays revoked, from its day or an earlier one', async () => {
@@ -94,12 +62,19 @@ test('a mandate the assembly issues is a root; one another circle issues stands 
   const overreach = async () => (await db.query<{ r: string | null }>(`SELECT circle.overreach('2026-10-24') AS r`)).rows[0].r
   const outlives = async (id: string) => (await db.query<{ r: string | null }>(`SELECT circle.outlives($1, '2026-10-24') AS r`, [id])).rows[0].r
   // A mandate from 1 January 2026, its cap and term as `cap` says.
-  const grant = async (grantee: string, issuer: string, parent: string | null, power: string, n: number, cap: { limit?: string; budget?: string; per?: string; until?: string } = {}) =>
+  const grant = async (
+    grantee: string,
+    issuer: string,
+    parent: string | null,
+    power: string,
+    n: number,
+    cap: { limit?: string; budget?: string; per?: string; until?: string; scope?: string } = {},
+  ) =>
     (
       await db.query<{ id: string }>(
-        `INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "from", "limit", budget, per, until)
-         VALUES ($1, $2, $3, $4, $5, '2026-01-01', $6, $7, $8, $9) RETURNING id`,
-        [grantee, issuer, parent, power, `m-2026-002/${n}`, cap.limit ?? null, cap.budget ?? null, cap.per ?? null, cap.until ?? null],
+        `INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "from", "limit", budget, per, until, scope)
+         VALUES ($1, $2, $3, $4, $5, '2026-01-01', $6, $7, $8, $9, $10) RETURNING id`,
+        [grantee, issuer, parent, power, `m-2026-002/${n}`, cap.limit ?? null, cap.budget ?? null, cap.per ?? null, cap.until ?? null, cap.scope ?? null],
       )
     ).rows[0].id
   const revoke = (id: string) => db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE id = $1`, [id])
@@ -145,8 +120,16 @@ test('a mandate the assembly issues is a root; one another circle issues stands 
     const borrowed = await grant('maker', 'brand', root, 'pay-supplier', 10, { limit: '1000' })
     assert.match((await overreach()) ?? '', new RegExp(`mandate ${borrowed} grants pay-supplier to maker, issued by brand, under mandate ${root}, which is coordination's`))
     await revoke(borrowed)
-    // Nesting moves no mandate: Brand under Marketing, its maker stands under coordination's.
-    await db.query(`UPDATE circle.circle SET parent = 'marketing' WHERE id = 'brand'`)
+    // No wider a scope: under one on Brand's resources, Brand's alone, so
+    // the whole co-op's or another circle's is wider.
+    const branded = await grant('coordination', 'ag', null, 'manage-project', 12, { scope: 'brand' })
+    const whole = await grant('maker', 'coordination', branded, 'manage-project', 13)
+    assert.match((await overreach()) ?? '', new RegExp(`mandate ${whole} .* it covers the whole co-op, wider than its parent, which covers brand alone`))
+    await revoke(whole)
+    const elsewhere = await grant('maker', 'coordination', branded, 'manage-project', 14, { scope: 'marketing' })
+    assert.match((await overreach()) ?? '', /it covers marketing, wider than its parent, which covers brand alone/)
+    await revoke(elsewhere)
+    await grant('maker', 'coordination', branded, 'manage-project', 15, { scope: 'brand' })
     assert.equal(await overreach(), null)
     // A parent revoked alone leaves a mandate standing under it, which is
     // refused; `circle.revoke` revokes it on the same day with every

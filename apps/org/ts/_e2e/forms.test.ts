@@ -79,14 +79,14 @@ test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its sta
   const page = await proposing(app, 'ag')
   assert.ok(page)
   const taking = page.policies.filter((p) => p.takes)
-  assert.equal(taking.length, 35)
+  assert.equal(taking.length, 34)
   assert.ok(taking.every((p) => p.takes?.startsWith('scop-sarl-fr:') && !p.outdated))
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/5')?.takes, 'scop-sarl-fr:ordinary')
   // Its role mandates and its terms are its own.
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/12')?.takes, null)
   assert.equal(page.policies.find((p) => p.id === 'm-2021-001/43')?.takes, null)
   assert.deepEqual(page.departures, [])
-  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 35 }])
+  assert.deepEqual(await all(`SELECT standing, count(*)::int AS n FROM policy.standing('ag', '2026-11-07') GROUP BY 1`), [{ standing: 'taken', n: 34 }])
   assert.deepEqual(await all(`SELECT * FROM policy.standing('coordination', '2026-11-07')`), [])
   assert.ok((await statutes()).plain.split('\n').includes('These statutes leave none of their legal form\'s defaults.'))
   // Each default that states the law names it, and none is reviewed yet.
@@ -102,11 +102,11 @@ test('a policy taking a default worded otherwise, or one taken already, is refus
       { circle: 'ag', title: 'The work share', deadline: '2026-11-21', body: '', actions: [{ kind: 'policy', args }] },
       as(camille),
     )
-  const otherwise = await proposal({ kind: 'rule', wording: workShare.replace('25 %', '30 %'), takes: 'scop-sarl-fr:work-share', replaces: 'm-2021-001/74' })
+  const otherwise = await proposal({ kind: 'rule', wording: workShare.replace('25 %', '30 %'), takes: 'scop-sarl-fr:work-share', replaces: 'm-2021-001/72' })
   assert.match(reason(otherwise), /a policy takes scop-sarl-fr:work-share worded as it reads: one worded otherwise takes no default/)
   const again = await proposal({ kind: 'rule', wording: workShare, friendly: 'At least a quarter of the surplus goes to the workers.', takes: 'scop-sarl-fr:work-share' })
-  assert.match(reason(again), /m-2021-001\/74 takes scop-sarl-fr:work-share already: a policy taking it again replaces that one/)
-  const unprotected = await proposal({ kind: 'right', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/67' })
+  assert.match(reason(again), /m-2021-001\/72 takes scop-sarl-fr:work-share already: a policy taking it again replaces that one/)
+  const unprotected = await proposal({ kind: 'right', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/65' })
   assert.match(reason(unprotected), /scop-sarl-fr:mark-read is protected by extraordinary: a policy takes it protected as it is/)
 })
 
@@ -124,7 +124,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
         body: 'The assembly stops suspending members, and gives the workers 40 % of each surplus at least.',
         actions: [
           { kind: 'end', args: { policy: 'm-2021-001/48' } },
-          { kind: 'policy', args: { kind: 'rule', wording: workShare.replace('25 %', '40 %'), replaces: 'm-2021-001/74' } },
+          { kind: 'policy', args: { kind: 'rule', wording: workShare.replace('25 %', '40 %'), replaces: 'm-2021-001/72' } },
         ],
       },
       as(camille),
@@ -146,7 +146,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   const s = await standing()
   assert.deepEqual(s.get('scop-sarl-fr:suspend-member'), { id: 'scop-sarl-fr:suspend-member', standing: 'left', left_by: `${motion}/1`, left_on: '2026-11-21' })
   assert.deepEqual(s.get('scop-sarl-fr:work-share'), { id: 'scop-sarl-fr:work-share', standing: 'left', left_by: `${motion}/2`, left_on: '2026-11-21' })
-  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 33)
+  assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 32)
 
   const page = await detail(app, motion)
   assert.deepEqual(

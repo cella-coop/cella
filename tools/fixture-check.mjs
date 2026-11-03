@@ -54,10 +54,14 @@ const check = (name) => {
   const circles = ids(circle.circle)
   // The participant role is built in: the circle feat's migration makes it.
   const roles = new Set([...ids(circle.role), 'participant'])
+  // Circles never nest: none names a parent, and one only is the assembly.
   for (const c of circle.circle ?? []) {
-    if (c.parent) {
-      has(circles, c.parent, 'circle', `circle ${c.id}`)
+    if ('parent' in c) {
+      fail(`circle ${c.id}: circles never nest, so a circle names no parent`)
     }
+  }
+  if ((circle.circle ?? []).filter((c) => c.assembly).length !== 1) {
+    fail('circle: one circle, and one only, is the assembly')
   }
   // A circle decides by a procedure the motion feat holds: one of the
   // four its migrations make, or one a closed motion's procedure policy

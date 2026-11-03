@@ -4,8 +4,8 @@
 -- same power. So the mandates form a provenance tree by `parent`, whose
 -- roots are the assembly's, the founding motion's first from the legal
 -- form, and what is under a circle or a role is what it issued, never
--- where it sits. A mandate is narrower than its parent: the same power,
--- a cap no wider and a term no longer. Revoking a mandate revokes every
+-- where it sits, since circles never nest. A mandate is narrower than its parent: the same power,
+-- a cap and a scope no wider and a term no longer. Revoking a mandate revokes every
 -- mandate issued under it, down the tree, on the same day.
 
 -- A mandate's cap in words: up to a limit a write, within a budget a
@@ -20,9 +20,11 @@ END;
 -- reason, or NULL when it is narrower: another power; a cap wider than
 -- the parent's, where the parent is capped, which a limit per write at
 -- most its limit or a budget over the same period at most its budget is
--- not; a term from before the parent's, or until after it.
+-- not; a scope wider than the parent's, where the parent is scoped, which
+-- only the same scope is not; a term from before the parent's, or until
+-- after it.
 CREATE FUNCTION circle.wider(
-  power text, "limit" cella.amount, budget cella.amount, per text, "from" date, until date, parent bigint
+  power text, "limit" cella.amount, budget cella.amount, per text, scope text, "from" date, until date, parent bigint
 ) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -33,6 +35,8 @@ BEGIN ATOMIC
       AND NOT coalesce(wider.per = u.per AND cella.cents(wider.budget) <= cella.cents(u.budget), false)
       THEN 'its cap, ' || circle.cap(wider."limit", wider.budget, wider.per)
         || ', is wider than its parent''s, ' || circle.cap(u."limit", u.budget, u.per)
+    WHEN u.scope IS NOT NULL AND wider.scope IS DISTINCT FROM u.scope
+      THEN 'it covers ' || coalesce(wider.scope, 'the whole co-op') || ', wider than its parent, which covers ' || u.scope || ' alone'
     WHEN wider."from" < u."from" THEN 'it applies from ' || wider."from" || ', before its parent, from ' || u."from"
     WHEN u.until IS NOT NULL AND (wider.until IS NULL OR wider.until > u.until)
       THEN 'it outlasts its parent, which ends on ' || u.until
@@ -54,17 +58,17 @@ BEGIN ATOMIC
       WHEN u.revoked <= overreach.day
         THEN ', under mandate ' || u.id || ', revoked on ' || u.revoked || ', which revokes every mandate issued under it'
       ELSE ', is wider than mandate ' || u.id || ' it is issued under: '
-        || circle.wider(m.power, m."limit", m.budget, m.per, m."from", m.until, u.id)
+        || circle.wider(m.power, m."limit", m.budget, m.per, m.scope, m."from", m.until, u.id)
     END
   FROM circle.mandate m
   LEFT JOIN circle.mandate u ON u.id = m.parent
   WHERE (m.revoked IS NULL OR m.revoked > overreach.day)
     AND (m.until IS NULL OR m.until > overreach.day)
-    AND NOT (m.parent IS NULL AND EXISTS (SELECT FROM circle.circle r WHERE r.id = m.issuer AND r.parent IS NULL))
+    AND NOT (m.parent IS NULL AND m.issuer = circle.assembly())
     AND (u.id IS NULL
       OR u.grantee <> m.issuer
       OR u.revoked <= overreach.day
-      OR circle.wider(m.power, m."limit", m.budget, m.per, m."from", m.until, u.id) IS NOT NULL)
+      OR circle.wider(m.power, m."limit", m.budget, m.per, m.scope, m."from", m.until, u.id) IS NOT NULL)
   ORDER BY m.id
   LIMIT 1;
 END;

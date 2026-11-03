@@ -1,6 +1,6 @@
 +++
 title = "Users"
-updated = 2026-11-01
+updated = 2026-11-03
 +++
 
 # Users
@@ -28,7 +28,7 @@ and run by the people who work in them.
 capital. A general assembly at least yearly approves the accounts, admits
 members and splits the surplus. An elected manager (the gérant of a SCOP
 SARL) represents the co-op; working circles run day to day, often with a
-coordination circle above them. Any member may propose.
+coordination circle beside them. Any member may propose.
 
 **Money.** The surplus is split as the law and statutes require: a share
 to the members for their work, a share to indivisible reserves, and

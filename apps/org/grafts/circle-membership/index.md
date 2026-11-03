@@ -42,7 +42,7 @@ and every other seat is a person's place in a circle all the same.
   day. The `circle-membership-motion` graft, a higher order, fixes a
   motion's roll from it.
 - `circle_membership.counts(person, circle, day)` (`007-active.sql`):
-  whether a seat counts on a day: in the assembly, the root circle,
+  whether a seat counts on a day: in the assembly,
   where membership says the person is active (`membership.active`); in
   any other circle, where the person is one the co-op knows
   (`person.known`) and membership has not suspended them or let them
@@ -90,12 +90,17 @@ graft's, and whether a member is active on a day the `membership` feat's
   to `motion.cites`. A write with no power, or whose power is in
   `motion.cites`, a collective mandate's, gets no such guard.
 - `circle_membership.over(actor, power, about, day)`: the actor holds the
-  power through a seat in force in the circle `about` or one it is
-  within: a power reaches down the tree from where it is held, never up
-  or across. It checks no limit and whether the seat counts, which `may`
-  does for every write; the three-way grafts that know what a write
-  concerns, `circle-membership-project` a project's circle and
-  `circle-membership-timesheet` a worker's seats, narrow `may` with it.
+  power through a seat in force whose role has a mandate in force for
+  it whose scope covers the circle `about`: a mandate marking no scope
+  covers every circle and what belongs to none (`about` null); one on a
+  circle (`{scope: web}`) that circle alone; one on `own` the circle of
+  the seat it is held by, so a lead's covers their own circle and no
+  other. Circles never nest, so a power held in one circle reaches no
+  other by where it sits. It checks no limit and whether the seat
+  counts, which `may` does for every write; the three-way grafts that
+  know what a write concerns, `circle-membership-project` a project's
+  circle, `circle-membership-timesheet` a worker's seats and
+  `circle-meeting-membership` a meeting's circle, narrow `may` with it.
 
 Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.
@@ -152,8 +157,8 @@ and ends, as its reaction to the close.
 
 | Action | Check | Lanterne |
 |---|---|---|
-| seat.add | decided: the motion it cites gives this seat | the assembly, admitting a member; the circle above, seating one |
-| seat.remove | decided: the motion it cites ends this seat | the circle above, or the assembly |
+| seat.add | decided: the motion it cites gives this seat | the assembly, admitting a member; coordination, seating one in a working circle, and the assembly in coordination or itself |
+| seat.remove | decided: the motion it cites ends this seat | as seat.add |
 
 `004-sits.sql` registers `circle_membership.sits` on `circle:circle:message`:
 the actor holds a seat that counts in the circle on the verdict date,

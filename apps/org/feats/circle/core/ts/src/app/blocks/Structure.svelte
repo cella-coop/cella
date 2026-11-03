@@ -4,7 +4,7 @@
 
   // A circle's roles, and the mandates that grant them powers, each its
   // policy's sentence, capped by a limit per write or a budget over a
-  // period.
+  // period, scoped to what it covers, and the circle that issued it.
   let { data }: { data: Detail; id: string } = $props()
 
   const roles: Column<Role>[] = [
@@ -18,6 +18,8 @@
     { key: 'grantee', label: 'Role', value: (m) => m.grantee },
     { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },
     { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${money(m.budget)} a ${m.per}`) },
+    { key: 'scope', label: 'Covers', value: (m) => (m.scope === null ? 'the whole co-op' : m.scope === 'own' ? 'its own circle' : m.scope) },
+    { key: 'issuer', label: 'Issued by', kind: 'mono', value: (m) => m.issuer },
     { key: 'until', label: 'Until', kind: 'date', value: (m) => m.revoked ?? m.until },
   ]
 </script>

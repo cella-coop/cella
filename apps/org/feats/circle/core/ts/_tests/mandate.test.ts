@@ -35,11 +35,11 @@ const mandate = async (policy: string) =>
   ).rows[0]
 
 // Each test stages its circles and roles in its own transaction, beside
-// the tree test's on the same database, and rolls them back.
+// the circles test's on the same database, and rolls them back.
 const staged = async () => {
   await db.query('BEGIN')
-  await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('ag', 'Assemblée', NULL) ON CONFLICT DO NOTHING`)
-  await db.query(`INSERT INTO circle.circle (id, name, parent) VALUES ('operations', 'Operations', 'ag') ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('operations', 'Operations') ON CONFLICT DO NOTHING`)
   await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('finance', 'operations', 'Finance'), ('lead', '*', 'Circle lead') ON CONFLICT DO NOTHING`)
 }
 
@@ -64,6 +64,9 @@ test('a mandate marks one grantee, a role or a circle, a power in lower case and
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', limit: 'three thousand' })) ?? '', /a limit is an amount/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', budget: '1 000 €' })) ?? '', /per month or per year/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', rate: '20 %' })) ?? '', /not rate/)
+    assert.equal(await flaw({ role: 'lead', power: 'manage-project', scope: 'own' }), null)
+    assert.equal(await flaw({ role: 'finance', power: 'pay-supplier', scope: 'operations' }), null)
+    assert.match((await flaw({ role: 'lead', power: 'manage-project', scope: 'print' })) ?? '', /scope is a circle, as \{scope: web\}, or its holder's own/)
     // A collective mandate marks a circle instead: one grantee, whose kind
     // is the one it is marked as.
     assert.equal(await flaw({ circle: 'operations', power: 'admit-member' }), null)

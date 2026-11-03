@@ -15,7 +15,8 @@ BEGIN ATOMIC
 END;
 
 -- motion:motion:propose — who decides what of seats: a seat is the
--- motion of the circle above it, or of the assembly, and names an
+-- motion of a circle that may decide about its circle, never its own
+-- but for the assembly's (`circle_motion.decides`), and names an
 -- active member for a role of that circle; ending one names a seat held.
 -- Which circle admits, suspends and lets members go is the collective
 -- mandates', which circle-motion's guard `empowers` reads.

@@ -22,14 +22,14 @@ here.
 A co-op is founded once, by the log's first entry, the founding
 (`found`, `circle-membership-motion:scope:found`), which a founder signs
 from a device it enrols. It lives here because it is what this graft
-joins: the founders' memberships, the root circle they sit in, and the
+joins: the founders' memberships, the assembly they sit in, and the
 founding motion by which they decide. It names the legal form the co-op
 chose ([legal forms](../../../../_corpus/doc/forms.md)) and writes,
 inside its transaction as any write's state, the founders as persons
-with their devices and their memberships, the root circle with each
-founder seated in it, and the root's founding motion, which its founders
+with their devices and their memberships, the assembly with each
+founder seated in it, and the assembly's founding motion, which its founders
 decided and which adopts the first policies, each a default of that
-form, the procedure the root decides by among them. Its writes are the
+form, the procedure the assembly decides by among them. Its writes are the
 fixture's loader's, the seed's (`tools/seed/found.mjs`), never this
 graft's SQL. The log keeps the form, where the founding came from and
 how many rows of each kind, never the rows. A state table refuses rows
@@ -72,7 +72,7 @@ as entry 1.
   `voters` the seats in those roles (`participant` every seat), and the
   seats in a role it names in `veto`, who may veto. Seats are people's,
   so no agent and no service is ever on a roll, and only the motion's
-  own circle's seats are read, so a seat above carries no vote below. `fix` runs
+  own circle's seats are read, so a seat in one circle carries no vote in another. `fix` runs
   with its owner's rights, since nothing else writes the roll, and only the app
   role may call it; the app role and the guards role, `cella_guards`, may
   select the roll.
@@ -141,8 +141,8 @@ she is on no roll of the assembly's.
   someone of coordination has spoken
   ([procedures](../../feats/motion/index.md#procedures)).
 - `circle_membership_motion.asks`, on `motion:motion:propose`: a seat
-  given or ended is the motion of the circle above it, or the assembly
-  (`circle_motion.decides`), and names for a role of that circle, or as
+  given or ended is the motion of a circle that may decide about it,
+  never itself but for the assembly (`circle_motion.decides`), and names for a role of that circle, or as
   a plain seat, an active member in the assembly and elsewhere any
   person whom membership has not suspended or let go; or a seat held. Which circle admits, suspends and lets
   members go is no rule of this graft's: it is the one holding the
@@ -152,7 +152,7 @@ she is on no roll of the assembly's.
   motion the payload cites is closed and passes. The motion feat keeps
   that list; a graft that joins motion to a write's feat registers its
   action there with its power by `motion.register_cite` (`membership-motion` for
-  admission, suspension and exclusion, `circle-motion` for nesting,
+  admission, suspension and exclusion,
   `document-motion` for `document:document:adopt`, and the
   motion feat itself for `motion:policy:adopt` and `:end`), and this
   graft registers the guard by `motion.register_cite_guard`, which
@@ -199,7 +199,7 @@ she is on no roll of the assembly's.
   once; the form the founding names is one cella offers (`policy.form`),
   and its policies take that form's defaults and no other form's, at
   least one of them. Once the founding's state is written, the co-op can
-  decide: there is one root circle; it decides by a procedure a policy
+  decide: there is one assembly; it decides by a procedure a policy
   in force there makes, which its founding motion adopted, never only a
   procedure every scope starts with; and the signer sits in it with a
   vote, their seat counting on the verdict date
@@ -230,8 +230,8 @@ she is on no roll of the assembly's.
   out its other actions in the order proposed, each its own decided write
   signed as the member who closed it and judged again by its guards: a
   suspension or an exclusion
-  (membership feat), a nesting
-  (circle feat), a seat given or ended (circle-membership), a policy
+  (membership feat),
+  a seat given or ended (circle-membership), a policy
   adopted or ended, a mandate's with it (circle-motion's `adopt` and
   `end`, which extend the motion feat's), whose request names the
   motion's action, `n`, so the writes that react to an adoption, a rule's
@@ -256,7 +256,7 @@ she is on no roll of the assembly's.
   candidacy employment-membership opens after it pledges them.
 - `put`: what a member's or a circle's page proposes, through this
   graft's `propose`, to the circle that decides it, titled with what it decides: a membership to the assembly,
-  a seat to the circle above its own. Admitting, suspending or ending a
+  a seat to the circle `circle_motion.decider` finds holding `seat-member`, or the assembly. Admitting, suspending or ending a
   membership, and giving or ending a seat, elect or remove a person, so
   `put` names a secret ballot for each.
 
@@ -294,5 +294,5 @@ with no membership or only invited and no motion open to admit them,
 Apply to join…: the shares they pledge and the motion's deadline, two
 weeks on, and reasons, posted to `apply`. On a circle's page,
 Appoint…: seating a member in it, in one of its roles or as a plain
-member, or ending a seat held there, put to the circle above; and
+member, or ending a seat held there, put to the circle that decides it; and
 circle-motion's Propose…, whose write this graft serves.

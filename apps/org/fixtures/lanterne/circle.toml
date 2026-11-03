@@ -1,41 +1,37 @@
-# The co-op's units. The general assembly is every member; coordination is the
-# circle leads and the manager; four working circles sit under it. What
+# The co-op's units, none in another. The general assembly is every member; coordination is the
+# circle leads and the manager; four working circles beside them. What
 # each role may do is a mandate, a policy the founding assembly adopted
 # (`motion.toml`).
 
 [[circle]]
 id = "ag"
 name = "Assemblée générale"
+assembly = true
 purpose = "every member, one vote: statutes, admissions, accounts and surplus"
 
 [[circle]]
 id = "coordination"
 name = "Coordination"
-parent = "ag"
 purpose = "weekly: pipeline, staffing and anything that crosses circles"
 
 [[circle]]
 id = "web"
 name = "Web"
-parent = "coordination"
 purpose = "sites, shops and applications"
 
 [[circle]]
 id = "brand"
 name = "Brand"
-parent = "coordination"
 purpose = "identity, print, packaging, illustration and motion"
 
 [[circle]]
 id = "marketing"
 name = "Marketing"
-parent = "coordination"
 purpose = "strategy, content, social media and campaigns"
 
 [[circle]]
 id = "operations"
 name = "Operations"
-parent = "coordination"
 purpose = "finance, administration, contracts and tools"
 
 [[role]]

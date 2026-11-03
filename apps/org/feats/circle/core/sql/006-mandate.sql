@@ -13,7 +13,7 @@
 -- marks one grantee, a role this feat has or a circle it has, never a
 -- person nor a right, a power in lower case, at most a limit or a budget,
 -- each an amount, a budget with its period, perhaps a procedure by name,
--- and nothing else.
+-- perhaps a scope, a circle it has or `own`, and nothing else.
 CREATE FUNCTION circle.mandate_flaw(marked jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -21,7 +21,7 @@ BEGIN ATOMIC
     WHEN marked ? 'person'
       THEN 'a person holds no mandate: a mandate names the role they hold, as {role: finance}, or a circle, as {circle: ag}'
     WHEN marked ? 'right' THEN 'a right is no mandate: it is a policy of its own kind, which the legal form gives'
-    WHEN x.other IS NOT NULL THEN 'a mandate marks its role or circle, power, limit, budget, per and procedure, not ' || x.other
+    WHEN x.other IS NOT NULL THEN 'a mandate marks its role or circle, power, limit, budget, per, procedure and scope, not ' || x.other
     WHEN num_nonnulls(v.role, v.circle) = 0
       THEN 'a mandate policy names its grantee, a role, as {role: finance}, or a circle, as {circle: ag}'
     WHEN num_nonnulls(v.role, v.circle) > 1 THEN 'a mandate has one grantee, a role or a circle'
@@ -36,15 +36,18 @@ BEGIN ATOMIC
     WHEN (v.budget IS NULL) <> (v.per IS NULL) OR v.per NOT IN ('month', 'year') THEN 'a budget runs per month or per year'
     WHEN v.procedure IS NOT NULL AND btrim(v.procedure) !~ '^[a-z][a-z-]*$'
       THEN 'a mandate names its procedure in lower case, as {procedure: ordinary}, not ' || v.procedure
+    WHEN v.scope IS NOT NULL AND btrim(v.scope) <> 'own'
+      AND NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = btrim(v.scope))
+      THEN 'a mandate''s scope is a circle, as {scope: web}, or its holder''s own, as {scope: own}, not ' || v.scope
   END
   FROM (
     SELECT marked ->> 'role' AS role, marked ->> 'circle' AS circle, marked ->> 'power' AS power,
            marked ->> 'limit' AS "limit", marked ->> 'budget' AS budget, marked ->> 'per' AS per,
-           marked ->> 'procedure' AS procedure
+           marked ->> 'procedure' AS procedure, marked ->> 'scope' AS scope
   ) v,
   LATERAL (
     SELECT (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
-            WHERE k NOT IN ('role', 'circle', 'power', 'limit', 'budget', 'per', 'procedure') ORDER BY k LIMIT 1) AS other
+            WHERE k NOT IN ('role', 'circle', 'power', 'limit', 'budget', 'per', 'procedure', 'scope') ORDER BY k LIMIT 1) AS other
   ) x;
 END;
 
@@ -74,9 +77,10 @@ END;
 
 -- A mandate or right policy's values as the register types them: its
 -- grantee, the role or the circle it marks, or its right, its power, its
--- limit or budget in cents and its period, its procedure, and its days.
+-- limit or budget in cents and its period, its procedure, its scope, and
+-- its days.
 CREATE FUNCTION circle.mandated(ref text) RETURNS TABLE (
-  grantee text, "right" text, power text, "limit" bigint, budget bigint, per text, procedure text, "from" date, until date
+  grantee text, "right" text, power text, "limit" bigint, budget bigint, per text, procedure text, scope text, "from" date, until date
 )
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -87,6 +91,7 @@ BEGIN ATOMIC
          max((v.value #>> '{}')::bigint) FILTER (WHERE v.name = 'budget' AND v.type = 'amount'),
          max(v.value #>> '{}') FILTER (WHERE v.name = 'per'),
          max(btrim(v.value #>> '{}')) FILTER (WHERE v.name = 'procedure'),
+         max(btrim(v.value #>> '{}')) FILTER (WHERE v.name = 'scope'),
          p.applies, p.ends
   FROM policy.policy p
   LEFT JOIN policy.value v ON v.policy = p.id
@@ -108,10 +113,10 @@ BEGIN ATOMIC
   CROSS JOIN circle.mandated(parent_of.ref) v
   JOIN circle.mandate u ON u.grantee = p.circle AND u.power = v.power AND u.policy <> p.id AND u.policy IS DISTINCT FROM p.replaces
   WHERE p.id = parent_of.ref
-    AND NOT EXISTS (SELECT FROM circle.circle r WHERE r.id = p.circle AND r.parent IS NULL)
+    AND p.circle IS DISTINCT FROM circle.assembly()
     AND (u.revoked IS NULL OR u.revoked > p.applies)
     AND (u.until IS NULL OR u.until > p.applies)
-  ORDER BY circle.wider(v.power, cella.amount(v."limit"), cella.amount(v.budget), v.per, v."from", v.until, u.id) IS NULL DESC, u.id
+  ORDER BY circle.wider(v.power, cella.amount(v."limit"), cella.amount(v.budget), v.per, v.scope, v."from", v.until, u.id) IS NULL DESC, u.id
   LIMIT 1;
 END;
 
@@ -143,8 +148,8 @@ BEGIN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF k = 'mandate' THEN
-    INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "limit", budget, per, procedure, "from", until)
-    SELECT m.grantee, p.circle, circle.parent_of(ref), m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m.procedure, m."from", m.until
+    INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "limit", budget, per, procedure, scope, "from", until)
+    SELECT m.grantee, p.circle, circle.parent_of(ref), m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m.procedure, m.scope, m."from", m.until
     FROM circle.mandated(ref) m
     JOIN policy.policy p ON p.id = ref
     RETURNING id INTO made;
@@ -205,8 +210,8 @@ BEGIN ATOMIC
       THEN r.id || ' gives no right: its values are copied as it is adopted'
     WHEN r.kind = 'mandate' AND NOT EXISTS (
       SELECT FROM circle.mandated(r.id) v
-      WHERE (m.grantee, m.power, cella.cents(m."limit"), cella.cents(m.budget), m.per, m."from", m.until)
-        IS NOT DISTINCT FROM (v.grantee, v.power, v."limit", v.budget, v.per, v."from", v.until)
+      WHERE (m.grantee, m.power, cella.cents(m."limit"), cella.cents(m.budget), m.per, m.scope, m."from", m.until)
+        IS NOT DISTINCT FROM (v.grantee, v.power, v."limit", v.budget, v.per, v.scope, v."from", v.until)
     ) THEN 'mandate ' || m.id || ' is not what ' || r.id || ' marks'
     WHEN r.kind = 'mandate' AND (m.issuer <> r.circle OR m.parent IS DISTINCT FROM circle.parent_of(r.id))
       THEN 'mandate ' || m.id || ' is not issued by ' || r.circle || ', which adopted ' || r.id || ', under the mandate it holds for ' || m.power

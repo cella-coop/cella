@@ -87,7 +87,7 @@ test('a fresh scope is founded as a SCOP SARL in France by three founders, as th
   // The root decides by consent, a policy of its founding motion makes it,
   // and every default of the form is taken.
   const root = await one<{ procedure: string; policy: string }>(
-    `SELECT c.procedure, p.policy FROM circle.circle c JOIN motion.procedure p ON p.id = c.procedure WHERE c.parent IS NULL`,
+    `SELECT c.procedure, p.policy FROM circle.circle c JOIN motion.procedure p ON p.id = c.procedure WHERE c.assembly`,
   )
   assert.deepEqual(root, { procedure: 'consent', policy: 'm-2026-001/1' })
   const standing = await su.query<{ standing: string; n: string }>(

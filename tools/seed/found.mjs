@@ -128,10 +128,10 @@ export async function seed(db, read, { from, dir }) {
 
     const structure = read('circle')
     for (const c of structure.circle ?? []) {
-      await db.query('INSERT INTO circle.circle (id, name, parent, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
+      await db.query('INSERT INTO circle.circle (id, name, assembly, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
         c.id,
         c.name,
-        c.parent ?? null,
+        c.assembly ?? false,
         c.purpose ?? '',
         c.procedure ?? 'consent',
       ])

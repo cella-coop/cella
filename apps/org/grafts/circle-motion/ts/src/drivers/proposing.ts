@@ -2,32 +2,32 @@ import type { Db } from '@cella/org-db'
 import { departures, inForce } from '@cella/org-policy'
 import type { Deciding, Proposing } from '../models/index.ts'
 
-// Every circle, in tree order, with the procedure its motions follow.
+// Every circle, the assembly first and the others by name, with the
+// procedure its motions follow.
 export async function deciding(db: Db): Promise<Deciding[]> {
-  const { rows } = await db.query<Deciding>('SELECT id, name, procedure FROM circle.circle ORDER BY path')
+  const { rows } = await db.query<Deciding>('SELECT id, name, procedure FROM circle.circle ORDER BY assembly DESC, name')
   return rows
 }
 
 // What a circle's page offers to propose about it, the policies it has
 // adopted that are in force, and the defaults of its form it left or
-// never took.
+// never took. Its seats are decided by another circle holding
+// `seat-member`, or else the assembly (`circle_motion.decider`).
 export async function proposing(db: Db, circle: string): Promise<Proposing | null> {
   const found = await db.query<{ decider: Deciding }>(
     `SELECT json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure) AS decider
-     FROM circle.circle c JOIN circle.circle d ON d.id = coalesce(c.parent, c.id) WHERE c.id = $1`,
+     FROM circle.circle c
+     JOIN circle.circle d ON d.id = circle_motion.decider(c.id, ARRAY['seat-member'], cella.verdict_date())
+     WHERE c.id = $1`,
     [circle],
   )
   if (!found.rows[0]) {
     return null
   }
-  const under = await db.query<{ id: string; name: string }>(
-    `SELECT u.id, u.name FROM circle.circle u, circle.circle c
-     WHERE c.id = $1 AND NOT (c.id = ANY(u.path)) AND u.id IS DISTINCT FROM c.parent ORDER BY u.path`,
-    [circle],
-  )
+  const circles = await db.query<{ id: string; name: string }>('SELECT id, name FROM circle.circle ORDER BY assembly DESC, name')
   const roles = await db.query<{ id: string; name: string }>(
     `SELECT r.id, r.name FROM circle.role r, circle.circle c
-     WHERE c.id = $1 AND (r.circle = c.id OR (r.circle = '*' AND c.parent IS NULL)) ORDER BY r.circle = '*', r.name`,
+     WHERE c.id = $1 AND (r.circle = c.id OR (r.circle = '*' AND c.assembly)) ORDER BY r.circle = '*', r.name`,
     [circle],
   )
   const mandates = await db.query<{ policy: string; label: string }>(
@@ -45,7 +45,7 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
   return {
     circle,
     decider: found.rows[0].decider,
-    under: under.rows,
+    circles: circles.rows,
     roles: roles.rows,
     mandates: mandates.rows,
     open: open.rows,

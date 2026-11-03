@@ -141,12 +141,12 @@ sequenceDiagram
   (`circle-membership-motion:scope:found`), settles on an empty log alone, so a scope is
   founded once and a second founding is refused. It names the legal
   form the co-op chose, one cella offers, and brings in its founders, as
-  persons with their devices and their memberships; the root circle,
+  persons with their devices and their memberships; the assembly,
   with each founder seated in it; and the root's founding motion, which
   its founders decided and which adopts the first policies, each taking
   a default of that form and none of another's, among them the
   procedure the root decides by. Its guards hold it, once its state is
-  written, to one root circle that decides by a procedure a policy in
+  written, to one assembly that decides by a procedure a policy in
   force there makes, and to a signer who is a founder seated in the
   root with a vote, enrolled by a device the founding brings. A
   founding with no procedure for its root, or a signer with no vote
@@ -379,7 +379,7 @@ never its wording: a guard reads the values the feat that reads a kind of
 policy copied into its own rows, so what binds is the sentence the
 members adopted, and what a guard checks is a column.
 
-The statutes are no text a motion names: they are the root circle's
+The statutes are no text a motion names: they are the assembly's
 policies in order, generated from the register
 ([policies](architecture.md#policies)). Each adoption or ending of one
 of them is followed by a write citing the motion that generates them

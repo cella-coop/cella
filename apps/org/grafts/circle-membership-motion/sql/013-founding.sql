@@ -3,7 +3,7 @@
 -- founded once. It names the legal form the co-op chose, one cella
 -- offers, and its policies take that form's defaults and no other form's,
 -- at least one of them. Once its state is written, the co-op can decide:
--- one root circle, deciding by a procedure a policy in force there makes,
+-- one assembly, deciding by a procedure a policy in force there makes,
 -- never only one every scope starts with, and the founder who signs it
 -- seated there with a vote, their seat counting on the verdict date and,
 -- where the procedure names the roles that vote, in one of them. A
@@ -18,7 +18,7 @@ BEGIN ATOMIC
       THEN 'founded as ' || f.id || ', but a policy takes the default of another form'
     WHEN NOT EXISTS (SELECT FROM policy.policy p JOIN policy.default d ON d.id = p.takes WHERE d.form = f.id)
       THEN 'founded as ' || f.id || ', but no policy takes one of its defaults'
-    WHEN x.roots <> 1 THEN 'a co-op is founded with one root circle; this founding makes ' || x.roots
+    WHEN x.roots <> 1 THEN 'a co-op is founded with one assembly; this founding makes ' || x.roots
     WHEN NOT EXISTS (
       SELECT FROM motion.procedure p
       JOIN policy.in_force(r.id, cella.verdict_date()) i ON i.id = p.policy AND i.kind = 'procedure'
@@ -37,10 +37,10 @@ BEGIN ATOMIC
   END
   FROM (
     SELECT payload ->> 'form' AS form, coalesce((SELECT h.n FROM cella.head h), 0) AS n,
-           (SELECT count(*) FROM circle.circle c WHERE c.parent IS NULL) AS roots
+           (SELECT count(*) FROM circle.circle c WHERE c.assembly) AS roots
   ) x
   LEFT JOIN policy.form f ON f.id = x.form
-  LEFT JOIN circle.circle r ON r.parent IS NULL AND x.roots = 1;
+  LEFT JOIN circle.circle r ON r.assembly AND x.roots = 1;
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES

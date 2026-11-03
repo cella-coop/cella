@@ -37,7 +37,7 @@ BEGIN ATOMIC
     ) THEN d.id || ' does not seat ' || s.member || ' in ' || s.circle || coalesce(' as ' || s.role, '')
     WHEN NOT circle_membership.counts(s.member, s.circle, cella.verdict_date())
       THEN s.member || ' may not sit in ' || s.circle || ': '
-        || CASE WHEN c.parent IS NULL THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
+        || CASE WHEN c.assembly THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
     WHEN EXISTS (
       SELECT FROM circle_membership.seat o
       WHERE o.id <> s.id AND o.circle = s.circle AND o.member = s.member AND o.role IS NOT DISTINCT FROM s.role
@@ -61,7 +61,7 @@ BEGIN ATOMIC
       SELECT FROM circle_membership_motion.roll r WHERE r.motion = p.motion AND r.member = p.member
     ) THEN coalesce(p.member, 'no one') || ' is not on the roll of ' || coalesce(p.motion, 'no motion')
     WHEN NOT circle_membership.counts(p.member, d.circle, cella.verdict_date())
-      THEN p.member || CASE WHEN c.parent IS NULL THEN ' is not an active member' ELSE ' may sit in ' || d.circle || ' no longer' END
+      THEN p.member || CASE WHEN c.assembly THEN ' is not an active member' ELSE ' may sit in ' || d.circle || ' no longer' END
   END
   FROM (SELECT payload ->> 'motion' AS motion, payload ->> 'member' AS member) p
   LEFT JOIN motion.motion d ON d.id = p.motion
@@ -76,7 +76,7 @@ BEGIN ATOMIC
       WHEN c.id IS NULL THEN 'no circle ' || coalesce(g.circle, 'is named')
       WHEN g.kind = 'seat' AND NOT circle_membership.counts(g.member, g.circle, cella.verdict_date())
         THEN coalesce(g.member, 'no one') || ' may not sit in ' || g.circle || ': '
-          || CASE WHEN c.parent IS NULL THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
+          || CASE WHEN c.assembly THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
       WHEN g.kind = 'seat' AND g.role IS NOT NULL
         AND NOT EXISTS (SELECT FROM circle.role x WHERE x.id = g.role AND x.circle IN (g.circle, '*'))
         THEN 'no role ' || g.role || ' in ' || g.circle

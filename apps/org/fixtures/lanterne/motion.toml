@@ -166,15 +166,15 @@ args = { kind = "mandate", wording = "The {role: manager} role holds {power: app
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: lead} role holds {power: manage-project}, to start and run projects" }
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: manage-project}, to start and run the projects of its {scope: own} circle" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: lead} role holds {power: set-budget}, to set a project's budget and grant shares of it, up to {limit: 15 000 €} a write" }
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: set-budget}, to set the budget of a project of its {scope: own} circle and grant shares of it, up to {limit: 15 000 €} a write" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: lead} role holds {power: approve-time}, to approve timesheets" }
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: approve-time}, to approve the timesheets of its {scope: own} circle" }
 
 [[motion.action]]
 kind = "policy"
@@ -182,7 +182,7 @@ args = { kind = "mandate", wording = "The {role: treasurer} role holds {power: a
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: lead} role holds {power: schedule-meeting}, to schedule and cancel the circle's meetings" }
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: schedule-meeting}, to schedule and cancel the meetings of its {scope: own} circle" }
 
 [[motion.action]]
 kind = "policy"
@@ -190,11 +190,11 @@ args = { kind = "mandate", wording = "The {role: manager} role holds {power: sch
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: secretary} role holds {power: keep-minutes}, to hold the circle's meetings, record who came and keep their minutes" }
+args = { kind = "mandate", wording = "The {role: secretary} role holds {power: keep-minutes}, to hold the meetings of its {scope: own} circle, record who came and keep their minutes" }
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: lead} role holds {power: keep-minutes}, to hold the circle's meetings, record who came and keep their minutes" }
+args = { kind = "mandate", wording = "The {role: lead} role holds {power: keep-minutes}, to hold the meetings of its {scope: own} circle, record who came and keep their minutes" }
 
 # The statutes' capital clauses and the work share's terms, each a rule
 # of the assembly whose values are named for the feat that reads them and
@@ -228,7 +228,7 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 # The assembly admits, suspends and excludes members, adopts and ends
 # policies, the statutes' among them, approves the distribution and
 # adopts documents, and with coordination
-# nests circles and seats members; coordination grants and revokes the
+# seats members; coordination grants and revokes the
 # working circles' mandates and adopts their documents, the rate card
 # among them. The working circles hold none. Those that hand out
 # mandates, adopting and ending policies and giving and ending seats, are
@@ -271,10 +271,6 @@ args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: adop
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: nest-circle}, to nest circles, by motion", takes = "scop-sarl-fr:nest-circle" }
-
-[[motion.action]]
-kind = "policy"
 args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion", protected = "extraordinary", takes = "scop-sarl-fr:seat-member" }
 
 [[motion.action]]
@@ -288,10 +284,6 @@ args = { kind = "mandate", wording = "The {circle: coordination} circle holds {p
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: adopt-document}, to adopt a document's version, by motion" }
-
-[[motion.action]]
-kind = "policy"
-args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: nest-circle}, to nest the working circles, by motion" }
 
 [[motion.action]]
 kind = "policy"

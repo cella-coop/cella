@@ -3,7 +3,7 @@ import { sentences } from '@cella/org-policy'
 import type { Held, Seat } from '../models/seat.ts'
 
 const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, mp.name AS "memberName", p.role, r.name AS "roleName",
-  to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until, c.procedure, c.parent IS NULL AS root`
+  to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until, c.procedure, c.assembly AS root`
 
 const from = `FROM circle_membership.seat p
   JOIN circle.circle c ON c.id = p.circle

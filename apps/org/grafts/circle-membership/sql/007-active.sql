@@ -1,5 +1,5 @@
 -- Whether a seat counts on a day. Any person may hold a seat, member or
--- not: the assembly's, the root circle's, asks an active membership, as
+-- not: the assembly's asks an active membership, as
 -- membership says one is on the day (`membership.active`), not a copy of
 -- its status; any other asks a person the co-op knows whom membership
 -- has not suspended or let go by the day. So a worker who is no member
@@ -8,7 +8,7 @@
 CREATE FUNCTION circle_membership.counts(person text, circle text, day date) RETURNS boolean
 LANGUAGE sql STABLE
 RETURN CASE
-  WHEN EXISTS (SELECT FROM circle.circle c WHERE c.id = counts.circle AND c.parent IS NULL)
+  WHEN counts.circle = circle.assembly()
     THEN membership.active(counts.person, counts.day)
   ELSE person.known(counts.person, counts.day)
     AND (membership.active(counts.person, counts.day)

@@ -3,8 +3,9 @@
 // him and files it under the Halles shop, and Thomas moves it across the
 // board and completes it; he logs time against the shop, submits October,
 // and once the month is over Yusuf approves it, which closes it to new
-// entries; Yusuf may not approve his own month; and no share or budget
-// goes beyond the pot. Run by `cella test`, which builds the shell first,
+// entries; Yusuf may not approve his own month; no share or budget
+// goes beyond the pot; and a lead budgets their own circle's projects
+// alone, by their mandates' scope. Run by `cella test`, which builds the shell first,
 // on a fresh database.
 
 import { after, before, test } from 'node:test'
@@ -171,6 +172,21 @@ test('no share goes beyond what is left of the budget, and no budget falls below
   const capped = await shell.act('/projects/halles-shop', 'budget', { amount: '60000' }, yusuf)
   assert.equal(capped.state, 'refused', 'a lead sets budgets up to 15 000 €')
   assert.match(capped.reason ?? '', /holds no mandate for set-budget up to/)
+})
+
+test('a lead\'s mandates cover their own circle\'s projects: Yusuf, Web\'s lead, budgets Web\'s and is refused Brand\'s', async () => {
+  const own = await shell.act('/projects/clairval-site', 'budget', { amount: '14000' }, yusuf)
+  assert.deepEqual([own.op, own.state], ['project:project:budget', 'settled'], own.reason)
+  const brand = await shell.act('/projects/velo-identity', 'budget', { amount: '3400' }, yusuf)
+  assert.equal(brand.state, 'refused')
+  assert.match(brand.reason ?? '', /holds set-budget by no mandate covering velo-identity, brand's/)
+  // His mandates mark their scope; the gérante's mark none and cover the whole co-op.
+  const scopes = await one<{ lead: string[]; manager: string[] }>(
+    `SELECT array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'lead' AND power IN ('manage-project', 'set-budget')) AS lead,
+            array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'manager' AND power IN ('manage-project', 'set-budget')) AS manager
+     FROM circle.mandate`,
+  )
+  assert.deepEqual(scopes, { lead: ['own'], manager: ['—'] })
 })
 
 test('the log the work wrote verifies', async () => {

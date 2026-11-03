@@ -54,9 +54,6 @@ SELECT policy.offer('scop-sarl-fr', 'approve-distribution', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'adopt-document', 'mandate',
   'The {circle: ag} circle holds {power: adopt-document}, to adopt a document''s version, by motion',
   NULL, NULL, NULL);
-SELECT policy.offer('scop-sarl-fr', 'nest-circle', 'mandate',
-  'The {circle: ag} circle holds {power: nest-circle}, to nest circles, by motion',
-  NULL, NULL, NULL);
 SELECT policy.offer('scop-sarl-fr', 'seat-member', 'mandate',
   'The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion',
   NULL, 'extraordinary', NULL);

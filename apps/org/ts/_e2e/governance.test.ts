@@ -2,7 +2,7 @@
 // handlers: Malik invites a friend by a link, which she takes up on her
 // laptop, enrolling it; the assembly admits her and the close seats her
 // in the same verdict, or refuses all of it; a suspension by motion stops a
-// member's writes; a nesting that would make a cycle is refused; a
+// member's writes; circles never nest, so no motion nests one; a
 // mandate is granted by motion, a policy copied into its mandate, under
 // one its issuer holds, and one its issuer holds nothing to issue under
 // is refused; and a lead approves the
@@ -199,26 +199,22 @@ test('Chloé suspended by the assembly\'s motion: carried out after the close, h
   assert.match(reason(stance), /chloe@lanterne\.example is (not on the roll|not an active member)/)
 })
 
-test('nesting Brand under Marketing settles; Marketing under Brand then makes a cycle and is refused', async () => {
+test('circles never nest: no circle has a parent, and a motion to nest one carries no action the co-op knows', async () => {
+  const columns = await all<{ c: string }>(`SELECT column_name AS c FROM information_schema.columns WHERE table_schema = 'circle' AND table_name = 'circle'`)
+  assert.equal(columns.some((r) => r.c === 'parent' || r.c === 'path'), false)
+  assert.deepEqual(await all(`SELECT id FROM circle.circle WHERE assembly`), [{ id: 'ag' }])
+  assert.equal((await all(`SELECT FROM motion.carries WHERE kind = 'nest'`)).length, 0)
+  assert.equal((await all(`SELECT FROM circle.mandate WHERE power = 'nest-circle'`)).length, 0)
   await on('2026-11-14')
-  const one_ = settled(await putCircle({ circle: 'brand', kind: 'nest', args: { parent: 'marketing' }, deadline: '2026-11-21', body: '' }, as(hugo)))
-  const two = settled(await putCircle({ circle: 'marketing', kind: 'nest', args: { parent: 'brand' }, deadline: '2026-11-21', body: '' }, as(malik)))
-  for (const d of [one_.motion, two.motion]) {
-    assert.equal((await one<{ circle: string }>('SELECT circle FROM motion.motion WHERE id = $1', [d])).circle, 'coordination')
-    for (const m of coordination) {
-      settled(await vote({ motion: d, member: m, stance: 'consent' }, as(m)))
-    }
-  }
-  await on('2026-11-21')
-  settled(await close({ motion: one_.motion }, as(hugo)))
-  assert.deepEqual((await carried(one_.motion, as(hugo))).map((d) => [d.op, d.state]), [['circle:circle:nest', 'settled']])
-  assert.deepEqual((await one<{ path: string[] }>(`SELECT path FROM circle.circle WHERE id = 'brand'`)).path, ['ag', 'coordination', 'marketing', 'brand'])
-
-  settled(await close({ motion: two.motion }, as(malik)))
-  const cycle = await carried(two.motion, as(malik))
-  assert.deepEqual(cycle.map((d) => [d.op, d.state]), [['circle:circle:nest', 'refused']])
-  assert.match(cycle[0].reason ?? '', /brand is within marketing: nesting it there makes a cycle/)
-  assert.equal((await one<{ parent: string }>(`SELECT parent FROM circle.circle WHERE id = 'marketing'`)).parent, 'coordination')
+  // A nesting is no kind of action the motion feat knows, so the proposal
+  // cannot even be written.
+  await assert.rejects(
+    proposeAlone(
+      { circle: 'coordination', title: 'Nest Brand under Marketing', procedure: 'consent', deadline: '2026-11-21', body: '', actions: [{ kind: 'nest', args: { circle: 'brand', parent: 'marketing' } }] },
+      as(hugo),
+    ),
+    /action_kind_fkey/,
+  )
 })
 
 test('coordination grants the finance role send-quote by motion, under the send-quote the assembly grants it, a mandate policy of coordination\'s, copied into its mandate', async () => {

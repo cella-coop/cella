@@ -1,12 +1,12 @@
 +++
 title = "circle-meeting-membership"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 Who is expected at a meeting, whether it is quorate, and who may act on
 it. Declared by the `meeting` feat. It joins circle, meeting and member,
 since all three need seats: it reads `circle-membership` for the seats and
-the reach of a power, `circle-meeting` for the quorum and
+what a power covers, `circle-meeting` for the quorum and
 `meeting-membership` for the marks, each a graft beneath it. It has no table
 of its own.
 
@@ -30,8 +30,8 @@ of its own.
 - `circle_meeting_membership.reaches`, on `meeting:meeting:schedule`,
   `:hold`, `:cancel` and `:minute` and on
   `meeting-membership:attendance:record`: the actor holds the action's power over
-  the meeting's circle (`circle_membership.over`): a lead's reaches their own
-  circle, the gérante's, held in the assembly, every circle.
+  the meeting's circle (`circle_membership.over`): a lead's, scoped to their own
+  circle, covers it alone, and the gérante's, on the whole co-op, every circle.
 - `circle_meeting_membership.records`, on `meeting-membership:attendance:record`:
   the member recorded is seated in the meeting's circle on its day; any
   other member marks themselves, as a guest.
@@ -43,7 +43,7 @@ and reads as inquorate; what it decides is the motions' own guards.
 
 On a meeting's page whether it is quorate, and under its agenda the
 attendance block: the roll, the acting member marking themselves and,
-when their `keep-minutes` reaches the circle, recording anyone expected.
+when their `keep-minutes` covers the circle, recording anyone expected.
 In the acting member's inbox, each meeting still scheduled, from today,
 that they are expected at and have not marked themselves for.
 

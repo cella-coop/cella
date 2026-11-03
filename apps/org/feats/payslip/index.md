@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-01
+updated = 2026-11-03
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -14,7 +14,7 @@ a payroll integration computes them line by line.
 | Entity | Fields | Notes |
 |---|---|---|
 | terms | `employee`, `employer`, `ratio` | the contributions' rates on gross pay, in percent, and the widest ratio between the highest and the lowest salary |
-| salary | `member`, `from`, `gross` | a monthly gross salary from a day on |
+| salary | `member`, `from`, `until?`, `gross` | a monthly gross salary from a day on, until its last day where it has one; in force on each day between, both included |
 | run | `month`, `generated`, `approved?`, `approver?`, `paid?` | one per month |
 | payslip | `month`, `member`, `minutes?`, `gross`, `employee`, `employer`, `net` | amounts in cents; net is gross less the employee's contributions; minutes are the worker's approved month's |
 
@@ -57,7 +57,8 @@ Wages are owed whatever their size, so no power has a limit.
 
 - a run's payslips are exactly what its salaried workers are due:
   `payslip.due(month)`, the salary in force on the month's first day and
-  the contributions at the terms' rates, to the cent;
+  the contributions at the terms' rates, to the cent, so a salary that
+  ended before the month is due nothing in it;
 - a run is approved, then paid, each once, and its payslips are fixed
   from its approval;
 - the highest gross salary of a run is at most the terms' ratio times the
@@ -94,7 +95,8 @@ log keeps a salted digest of every member's pay, never the figures.
 ## Tests
 
 `core/ts/_tests/payslip.test.ts` (`cella test slice payslip`): what each
-member is due from the salary in force; a run prepared with exactly that;
+member is due from the salary in force, and nothing once it has ended;
+a run prepared with exactly that;
 approved and paid once, its payslips fixed from its approval; the ratio.
 
 ## Reads

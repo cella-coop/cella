@@ -1,6 +1,6 @@
 // The payslips alone, on a database holding only the app's core and this
 // feat: what each salaried member is due, from the salary in force and
-// the terms' rates; a run prepared with exactly that; a run approved and
+// the terms' rates, and nothing once it has ended; a run prepared with exactly that; a run approved and
 // paid once, its payslips fixed from its approval; and the pay ratio.
 // Run by `cella test slice payslip`.
 
@@ -65,6 +65,25 @@ test('each salaried member is due the salary in force on the month\'s first day,
   ])
   const november = await db.query(`SELECT gross FROM payslip.due('2026-11') WHERE member = 'chloe@lanterne.example'`)
   assert.equal(november.rows[0].gross, '250000')
+})
+
+test('a salary is due until its last day, and nothing in a month after it ended', async () => {
+  await db.query('BEGIN')
+  try {
+    await db.query(`INSERT INTO payslip.salary (member, "from", until, gross) VALUES ('lea@lanterne.example', '2025-01-01', '2026-09-30', cella.amount(200000))`)
+    const due = async (month: string) =>
+      (await db.query(`SELECT gross FROM payslip.due($1) WHERE member = 'lea@lanterne.example'`, [month])).rows
+    assert.deepEqual(await due('2026-09'), [{ gross: '200000' }])
+    assert.deepEqual(await due('2026-10'), [])
+  } finally {
+    await db.query('ROLLBACK')
+  }
+  await db.query('BEGIN')
+  await assert.rejects(
+    db.query(`INSERT INTO payslip.salary (member, "from", until, gross) VALUES ('lea@lanterne.example', '2025-01-01', '2024-12-31', cella.amount(200000))`),
+    /salary_check/,
+  )
+  await db.query('ROLLBACK')
 })
 
 test('a run is prepared with exactly what its members are due', async () => {

@@ -1,6 +1,6 @@
 +++
 title = "patronage-payslip"
-updated = 2026-11-01
+updated = 2026-11-03
 +++
 
 How a surplus's work share divides among the workers by pay and in equal
@@ -13,7 +13,11 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 `patronage_payslip` (`sql/`):
 
 - `basis(year)`: what each worker was paid in a year, gross, from the
-  salary in force on the first of each month.
+  salary in force on the first of each month, so a worker who left
+  counts the months before they left and none after, that year or any
+  later. Presence at the year's end is no condition: the law gives the
+  work share to every employee, and a condition the statutes add is
+  `patronage`'s, not built.
 - `division(distribution)`: the portions of the work share the year's
   terms give pay and equal parts (`patronage.portion`), each split among
   those paid that year by `cella.allocate`, by what each was paid or one
@@ -34,7 +38,9 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 
 `ts/_tests/division.test.ts` (`cella test slice patronage-payslip`): a
 mix of pay and equal parts divides among those paid in the year, half a
-year's pay counting half; approving makes the parts, which both guards
+year's pay counting half; a worker who left on 30 November counts eleven
+months, and one who left the year before none, by pay or in equal parts;
+approving makes the parts, which both guards
 take; parts no longer what the year's pay gives are refused.
 
 ## Reads

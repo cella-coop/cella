@@ -1,6 +1,7 @@
 // The work share divided by pay and in equal parts, on a database holding
 // the app's core, the patronage and payslip feats and this graft: a mix of
-// the two divides each portion among those paid that year, to the cent;
+// the two divides each portion among those paid that year, to the cent,
+// a worker who left counting only the months before;
 // approving makes the parts in that write, and the guard takes them, and
 // refuses parts that are no longer what the year's pay gives. Run by
 // `cella test slice patronage-payslip`.
@@ -49,6 +50,32 @@ test('the pay portion divides by what each was paid that year, the equal portion
     { member: 'ana@x', amount: '600000' },
     { member: 'ben@x', amount: '150000' },
   ])
+})
+
+test('a worker who left on 30 November counts eleven months, and one who left the year before none', async () => {
+  await db.query('BEGIN')
+  try {
+    // Dee is paid 1 200 € until 30 November 2025; Eve left on 31 December 2024.
+    await db.query(
+      `INSERT INTO payslip.salary (member, "from", until, gross) VALUES
+         ('dee@x', '2025-01-01', '2025-11-30', cella.amount(120000)), ('eve@x', '2023-01-01', '2024-12-31', cella.amount(200000))`,
+    )
+    assert.deepEqual(await rows(`SELECT member, cents FROM patronage_payslip.basis(2025) ORDER BY member`), [
+      { member: 'ana@x', cents: '3600000' },
+      { member: 'ben@x', cents: '900000' },
+      { member: 'dee@x', cents: '1320000' },
+    ])
+    assert.deepEqual(await rows(`SELECT worker, basis, quantity FROM patronage_payslip.division('2025') ORDER BY basis, worker`), [
+      { worker: 'ana@x', basis: 'equal', quantity: '1' },
+      { worker: 'ben@x', basis: 'equal', quantity: '1' },
+      { worker: 'dee@x', basis: 'equal', quantity: '1' },
+      { worker: 'ana@x', basis: 'salary', quantity: '3600000' },
+      { worker: 'ben@x', basis: 'salary', quantity: '900000' },
+      { worker: 'dee@x', basis: 'salary', quantity: '1320000' },
+    ])
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })
 
 test('approving makes the parts in that write, which both guards take', async () => {

@@ -1,6 +1,6 @@
 +++
 title = "circle-motion"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 The circles' place and powers, by motion: nesting a circle, and the
@@ -54,8 +54,11 @@ mandate. A role every working circle has (`*`) is the assembly's.
   guards, which this graft attaches as the graft joining the two:
   `circle.grants` that a mandate policy adopted has its mandate as its
   values say, `circle.revokes` that one ended has its mandate revoked,
-  and `circle.carves` on both that every mandate in force is carved
-  from what the circles above hold.
+  and `circle.narrows` on both that every mandate standing is a root
+  the assembly issued or is issued under a parent its issuer holds,
+  and is narrower than it. So a motion of coordination grants a
+  working circle's role a mandate only under one coordination holds for
+  the power, within its cap and its term.
 
 No write sets a circle's procedure: the seed carries it in, and the
 fixture check holds it to a procedure the motion feat holds, built in or

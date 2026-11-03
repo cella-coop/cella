@@ -89,7 +89,29 @@ BEGIN ATOMIC
   GROUP BY p.id, p.applies, p.ends;
 END;
 
--- Copies a mandate policy's values into the mandate they grant, or a
+-- The mandate a mandate policy is issued under, or null: none where its
+-- issuer, the circle that adopted it, is the assembly, whose mandates are
+-- roots; else the first of the issuer's mandates for the power, standing
+-- on the day the policy applies, that its values are narrower than
+-- (`circle.wider`), or the first standing at all, which `circle.narrows`
+-- then refuses saying how it is wider.
+CREATE FUNCTION circle.parent_of(ref text) RETURNS bigint
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT u.id
+  FROM policy.policy p
+  CROSS JOIN circle.mandated(parent_of.ref) v
+  JOIN circle.mandate u ON u.grantee = p.circle AND u.power = v.power AND u.policy <> p.id AND u.policy IS DISTINCT FROM p.replaces
+  WHERE p.id = parent_of.ref
+    AND NOT EXISTS (SELECT FROM circle.circle r WHERE r.id = p.circle AND r.parent IS NULL)
+    AND (u.revoked IS NULL OR u.revoked > p.applies)
+    AND (u.until IS NULL OR u.until > p.applies)
+  ORDER BY circle.wider(v.power, cella.amount(v."limit"), cella.amount(v.budget), v.per, v."from", v.until, u.id) IS NULL DESC, u.id
+  LIMIT 1;
+END;
+
+-- Copies a mandate policy's values into the mandate they grant, with its
+-- issuer and the mandate it is issued under, or a
 -- right policy's into the right, in the write that adopts it, and revokes
 -- the mandate or the right of the policy it replaces the day it applies.
 -- Returns the mandate, or null for a right or a policy of another kind;
@@ -112,9 +134,10 @@ BEGIN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF k = 'mandate' THEN
-    INSERT INTO circle.mandate (grantee, power, policy, "limit", budget, per, "from", until)
-    SELECT m.grantee, m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m."from", m.until
+    INSERT INTO circle.mandate (grantee, issuer, parent, power, policy, "limit", budget, per, "from", until)
+    SELECT m.grantee, p.circle, circle.parent_of(ref), m.power, ref, cella.amount(m."limit"), cella.amount(m.budget), m.per, m."from", m.until
     FROM circle.mandated(ref) m
+    JOIN policy.policy p ON p.id = ref
     RETURNING id INTO made;
     UPDATE circle.mandate o SET revoked = p.applies
     FROM policy.policy p
@@ -150,7 +173,8 @@ END
 $$;
 
 -- motion:policy:adopt, which circle-motion attaches it to — a mandate
--- policy the write adopted has its mandate, to the grantee, for the
+-- policy the write adopted has its mandate, to the grantee, issued by
+-- the circle that adopted it under the parent it holds, for the
 -- power, capped and on the days its values and its policy say, and a
 -- right policy its right; the mandate or the right of the policy it
 -- replaces is revoked the day it applies; and a policy of another kind
@@ -170,6 +194,8 @@ BEGIN ATOMIC
       WHERE (m.grantee, m.power, cella.cents(m."limit"), cella.cents(m.budget), m.per, m."from", m.until)
         IS NOT DISTINCT FROM (v.grantee, v.power, v."limit", v.budget, v.per, v."from", v.until)
     ) THEN 'mandate ' || m.id || ' is not what ' || r.id || ' marks'
+    WHEN r.kind = 'mandate' AND (m.issuer <> r.circle OR m.parent IS DISTINCT FROM circle.parent_of(r.id))
+      THEN 'mandate ' || m.id || ' is not issued by ' || r.circle || ', which adopted ' || r.id || ', under the mandate it holds for ' || m.power
     WHEN r.kind = 'right' AND NOT EXISTS (
       SELECT FROM circle.mandated(r.id) v
       WHERE (g."right", g.power, cella.cents(g."limit"), g."from", g.until)

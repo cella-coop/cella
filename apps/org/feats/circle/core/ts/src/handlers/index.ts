@@ -27,7 +27,9 @@ export async function nest(input: Nest, deps: Deps): Out<'circle:circle:nest', N
 }
 
 // Grants the mandate a mandate policy marks, in the transaction of the
-// write that adopts it: its values copied into `circle.mandate`, and the
+// write that adopts it: its values copied into `circle.mandate`, with its
+// issuer, the circle that adopted it, and the mandate it is issued under,
+// none for the assembly's; and the
 // mandate of the policy it replaces revoked the day it applies. Returns
 // the mandate, or null for a policy of another kind. `circle.grants`, which
 // circle-motion attaches to the adoption, checks it did.

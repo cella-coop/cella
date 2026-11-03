@@ -157,7 +157,7 @@ test('a collective mandate is on a circle, and the circle holds it itself, not t
     // A grantee is a circle or a role, never a person.
     await db.query('SAVEPOINT holder')
     await assert.rejects(
-      db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from") VALUES ('julien@lanterne.coop', 'admit-member', 'm-2026-022/1', '2026-01-01')`),
+      db.query(`INSERT INTO circle.mandate (grantee, issuer, power, policy, "from") VALUES ('julien@lanterne.coop', 'ag', 'admit-member', 'm-2026-022/1', '2026-01-01')`),
       /mandate_grantee_fkey/,
     )
     await db.query('ROLLBACK TO SAVEPOINT holder')

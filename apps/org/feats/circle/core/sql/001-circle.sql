@@ -56,10 +56,14 @@ ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
 -- adopted (`circle.mandate_from`). `limit` caps a single write, `budget`
 -- a total over `per`; never both. `from` and `until` are the days its
 -- policy applies; `revoked`, the day its policy ended, from which it
--- grants nothing.
+-- grants nothing. `issuer` is the circle whose motion adopted it, and
+-- `parent` the mandate it is issued under, one its issuer holds; none for
+-- a mandate the assembly issues, a root of the provenance tree.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   grantee text NOT NULL REFERENCES circle.grantee,
+  issuer text NOT NULL REFERENCES circle.grantee,
+  parent bigint REFERENCES circle.mandate,
   power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
   policy text NOT NULL UNIQUE,
   "limit" cella.amount,
@@ -75,6 +79,7 @@ CREATE TABLE circle.mandate (
 
 CREATE INDEX ON circle.mandate (grantee);
 CREATE INDEX ON circle.mandate (power);
+CREATE INDEX ON circle.mandate (parent);
 
 -- A power the legal form gives every person, member or employee as such,
 -- no mandate: it has no grantee, no issuer and no chain. The values of

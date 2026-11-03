@@ -105,8 +105,10 @@ day their rule applies.
   subscription. At rung 1 the guard refuses one beyond what is owed. It
   posts, so its handler and guard are `account-membership-transaction`'s.
 - **capital.spread** is the associate's own register, the latest
-  standing: no more instalments than the statutes allow. The instalments
-  are withheld when a pay run is paid, so its handler and guard are
+  standing: no more instalments than the statutes allow, counting those
+  already withheld from their pay, and none withheld past the plan's
+  count, whatever the pay covered; what is left is paid in through the
+  bank. The instalments are withheld when a pay run is paid, so its handler and guard are
   `account-membership-payslip-transaction`'s.
 - **capital.repay** is ordered because a repayment is paid once and after
   the one before it, and not before the day it falls due. It posts, so

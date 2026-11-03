@@ -8,9 +8,11 @@ const op = 'account:capital:spread' satisfies keyof typeof actions
 // An associate spreads what they owe on their subscription over monthly
 // instalments from their pay, each what is owed divided by them, rounded
 // up to the cent, from the verdict date on; spreading again replaces the
-// plan. `account_membership_payslip_transaction.spreads` decides: their own,
-// something owed, and no more instalments than the statutes allow. Each
-// run's payment then withholds an instalment, in its own write.
+// plan, which counts the instalments their pay withheld before it.
+// `account_membership_payslip_transaction.spreads` decides: their own,
+// something owed, and no more instalments than the statutes allow less
+// those withheld already. Each run's payment then withholds an
+// instalment, in its own write, until the plan's count is withheld.
 export async function spread(input: Spread, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Spreading>> {
   return write(deps, {
     op,
@@ -23,9 +25,10 @@ export async function spread(input: Spread, deps: Deps): Promise<Outcome<(typeof
       const each = rows[0]?.each == null ? null : Number(rows[0].each)
       if (each !== null && input.instalments > 0) {
         await tx.query(
-          `INSERT INTO account_membership_payslip_transaction.plan (member, instalments, each, since)
-           VALUES ($1, $2, cella.amount($3), cella.verdict_date())
-           ON CONFLICT (member) DO UPDATE SET instalments = EXCLUDED.instalments, each = EXCLUDED.each, since = EXCLUDED.since`,
+          `INSERT INTO account_membership_payslip_transaction.plan (member, instalments, each, since, prior)
+           VALUES ($1, $2, cella.amount($3), cella.verdict_date(),
+                   (SELECT count(*) FROM account_membership_payslip_transaction.withheld w WHERE w.member = $1))
+           ON CONFLICT (member) DO UPDATE SET instalments = EXCLUDED.instalments, each = EXCLUDED.each, since = EXCLUDED.since, prior = EXCLUDED.prior`,
           [input.member, input.instalments, each],
         )
       }

@@ -19,7 +19,8 @@ export interface Instalment {
 
 // A member's plan as their page shows it: how many instalments, of how
 // much, since when, what was withheld so far and what is still owed; the
-// most the statutes allow; and whether the one looking may spread it.
+// most the statutes still allow, less what was withheld; and whether the
+// one looking may spread it.
 export interface Plan {
   instalments: number | null
   each: number | null

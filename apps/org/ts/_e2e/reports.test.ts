@@ -63,7 +63,7 @@ before(async () => {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '2026-10-25'`)
   app = new pg.Client({ user: 'cella_app' })
   await app.connect()
-  shell = await reading(su, '54363', '2026-10-25')
+  shell = await reading(su, 20, '2026-10-25')
 })
 
 after(async () => {

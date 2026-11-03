@@ -215,7 +215,7 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
 
 test('the home shows the co-op’s figures from several collections and its reports, and a viewer pins their own', async () => {
   // The projects' margins are a report, read through the analytics shell.
-  const reports = await analytics(su, '54373', '2026-10-24')
+  const reports = await analytics(su, 30, '2026-10-24')
   await shell.start('2026-10-24', reports.env)
   const home = await read('/', camille).finally(() => reports.stop())
   for (const title of ['Cash', 'Owed by clients', 'Overdue', 'Margin on projects', 'Open motions', 'Meetings ahead', 'Invoiced by month', 'Projects by watch']) {

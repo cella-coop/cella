@@ -237,7 +237,7 @@ test('the year\'s return to the federation reconciles with the split, the parts 
 
 test('the report feat\'s federation figures, read through the analytics shell, are the return\'s, and its entry posts each share', async () => {
   const f = Object.fromEntries((await figures(await reading(chloe), '2025')).map((x) => [x.id, Number(x.value) || x.value]))
-  const shell = await analytics(su, '54383', '2026-11-02')
+  const shell = await analytics(su, 40, '2026-11-02')
   try {
     const { federation: r } = await federation(shell.analytics, 2025)
     assert.ok(r)

@@ -27,11 +27,19 @@ so is a right.
   never nest: the assembly about every circle, and any other circle
   about every circle but itself and the assembly. A circle does not
   decide its own seats or powers; another does.
-- `circle_motion.decider(subject, powers, day)`: the circle a proposal
+- `circle_motion.decider(subject, powers, day, grant)`: the circle a proposal
   about `subject` is put to, which `putting` and
   `circle-membership-motion` ask: a circle other than the assembly that
   may decide about it and holds, on the day, a collective mandate for
-  every power in `powers`, the first by id, or else the assembly.
+  every power in `powers`, the first by id, or else the assembly. For a
+  grant, `powers` is `adopt-policy` and the power granted, `grant` its
+  values (its power, limit and budget in cents, period and scope), and the
+  circle's mandate for the power granted is one the grant is no wider
+  than (`circle.wider`), so a grant is put only to a circle that may
+  issue it under a mandate of its own and `circle.narrows` never
+  refuses it for its issuer: a circle holding `adopt-policy` alone, or
+  a mandate for the power narrower than the grant, is passed over for
+  the next, and where none is left the assembly decides it.
 - `circle_motion.asks`, on `motion:motion:propose`: each mandate policy
   marks sound values (`circle.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
@@ -108,8 +116,8 @@ a trigger on the circle feat's table
   its page's form) makes, to the circle that decides it, naming no
   procedure, since `circle-membership-motion`'s `propose` gives it the
   one its requirements fix: for a grant, the circle `decider` finds
-  holding `adopt-policy`, which `circle.narrows` then holds to what it
-  holds to issue under the power granted, or
+  holding `adopt-policy` and a mandate for the power granted that the
+  grant is no wider than, the one it issues the grant under, or else
   the assembly; titled with what it decides. Granting a mandate is
   proposing its policy, its legal wording made from the role, the power,
   what it grants in words, its cap and its scope, each value marked

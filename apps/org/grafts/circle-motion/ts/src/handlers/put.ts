@@ -27,11 +27,25 @@ export function worded(args: Put['args']): string {
   return `The {role: ${args.role}} role holds {power: ${args.power}}${grants}${cap}${scope}`
 }
 
+// A grant's values as `circle_motion.decider` reads them: its power, its
+// limit and budget in cents, its period and its scope, none left blank.
+function granting(args: Put['args']) {
+  const given = (v: string | number | undefined) => (v === undefined || v === '' ? null : v)
+  const cents = (v: string | number | undefined) => (given(v) === null ? null : Math.round(Number(v) * 100))
+  return {
+    power: String(args.power),
+    limit: cents(args.limit),
+    budget: cents(args.budget),
+    per: given(args.per),
+    scope: given(args.scope),
+  }
+}
+
 // The proposal an action about a circle makes, to the circle that decides
 // it, never by where it sits, since circles never nest: for a grant, a
-// circle holding `adopt-policy`, which `circle.narrows` then holds to
-// what it holds to issue under, or else the assembly
-// (`circle_motion.decider`); for the end of a
+// circle holding `adopt-policy` and a mandate for the power granted that
+// the grant is no wider than, the one it issues the grant under, or else
+// the assembly (`circle_motion.decider`); for the end of a
 // mandate's policy, the circle that adopted it, whose own it is. Granting
 // a mandate proposes its policy, revoking one ends its policy. The title
 // says what is decided; `circle_motion.asks` checks the action and that
@@ -40,13 +54,19 @@ export function worded(args: Put['args']): string {
 export async function putting(input: Put, db: Db): Promise<Propose> {
   const { rows } = await db.query<{ decider: string | null; name: string; role: string | null; mandate: string | null }>(
     `SELECT CASE WHEN $2 = 'revoke' THEN (SELECT r.circle FROM policy.policy r WHERE r.id = $4)
-                 ELSE circle_motion.decider(c.id, ARRAY['adopt-policy'], cella.verdict_date()) END AS decider,
+                 ELSE circle_motion.decider(c.id, ARRAY['adopt-policy', $5::jsonb ->> 'power'], cella.verdict_date(), $5::jsonb) END AS decider,
             c.name,
             (SELECT r.name FROM circle.role r WHERE r.id = $3) AS role,
             (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $4) AS mandate
      FROM circle.circle c
      WHERE c.id = $1`,
-    [input.circle, input.kind, input.args.role ?? null, input.args.policy === undefined ? null : String(input.args.policy)],
+    [
+      input.circle,
+      input.kind,
+      input.args.role ?? null,
+      input.args.policy === undefined ? null : String(input.args.policy),
+      input.kind === 'grant' ? JSON.stringify(granting(input.args)) : null,
+    ],
   )
   const found = rows[0]
   if (!found?.decider) {

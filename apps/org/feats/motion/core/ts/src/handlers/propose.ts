@@ -7,15 +7,18 @@ const op = 'motion:motion:propose' satisfies keyof typeof actions
 
 // Proposes a motion on the verdict date with the actions it decides,
 // numbered the year's next (`m-2026-013`) under a lock on the numbering,
-// so two proposals at once take two numbers. Its method is its procedure's,
-// which a foreign key keeps, and its ballot the one the proposal names or
-// else the procedure's; `motion.proposes` checks the write made it, the
+// so two proposals at once take two numbers. Its procedure is the one the
+// write gives it, which the graft knowing its requirements fixes, or
+// consent; its method is its procedure's, which a foreign key keeps, and
+// its ballot the one the proposal names or else the procedure's;
+// `motion.proposes` checks the write made it, the
 // graft registering each action's kind checks the action, and the actor
 // must sit in the circle. A graft that fixes more in the same write, as
 // circle-membership-motion fixes the roll, runs this state inside its
 // own. The title and the text are the proposer's words and stay out of
 // the log.
 export function proposing(input: Propose): Write<Proposed> {
+  const procedure = input.procedure ?? 'consent'
   return {
     op,
     request: input,
@@ -30,10 +33,10 @@ export function proposing(input: Propose): Write<Proposed> {
          LEFT JOIN motion.motion d ON d.id LIKE 'm-' || v.y || '-%'
          GROUP BY v.y, p.id, p.method, p.ballot
          RETURNING id AS motion, to_char(proposed, 'YYYY-MM-DD') AS proposed, ballot`,
-        [input.circle, input.title, input.procedure, input.deadline, input.body, input.ballot ?? null],
+        [input.circle, input.title, procedure, input.deadline, input.body, input.ballot ?? null],
       )
       if (!rows[0]) {
-        throw new Error(`a motion is taken by a procedure of the co-op’s, not “${input.procedure}”`)
+        throw new Error(`a motion is taken by a procedure of the co-op’s, not “${procedure}”`)
       }
       const { motion } = rows[0]
       for (const [i, m] of input.actions.entries()) {
@@ -41,7 +44,7 @@ export function proposing(input: Propose): Write<Proposed> {
       }
       return rows[0]
     },
-    payload: (v) => ({ motion: v.motion, circle: input.circle, procedure: input.procedure, ballot: v.ballot, deadline: input.deadline, actions: input.actions }),
+    payload: (v) => ({ motion: v.motion, circle: input.circle, procedure, ballot: v.ballot, deadline: input.deadline, actions: input.actions }),
   }
 }
 

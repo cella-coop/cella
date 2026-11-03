@@ -4,13 +4,19 @@
 -- stance, who counts while a motion is open and who is counted at its
 -- close read it on the verdict date, not a copy of the member's status;
 -- who puts, closes and deliberates on a motion, and who is seated by one,
--- is whoever holds, or may hold, a seat that counts in its circle.
+-- is whoever holds, or may hold, a seat that counts in its circle; and a
+-- message may be posted, too, from a seat that counts in the circle the
+-- motion's procedure consults.
 CREATE OR REPLACE FUNCTION circle_membership_motion.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is named')
     WHEN NOT circle_membership.sits_in(cella.actor(), d.circle, cella.verdict_date())
+      AND NOT (cella.action() = 'motion:message:post' AND EXISTS (
+        SELECT FROM motion.procedure o
+        WHERE o.id = d.procedure AND circle_membership.sits_in(cella.actor(), o.consult, cella.verdict_date())
+      ))
       THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.action(), ':', 3) || ' ' || d.id
   END
   FROM (SELECT payload ->> 'motion' AS motion) p

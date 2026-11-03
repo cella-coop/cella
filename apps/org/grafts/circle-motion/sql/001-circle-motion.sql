@@ -49,9 +49,11 @@ END;
 -- applies to, and the motion's circle may decide it: about the circle
 -- nested, and the place it moves to; for a mandate policy, whose values
 -- the circle feat holds sound (`circle.mandate_flaw`), about the role's
--- circle; for a right policy, whose values it holds sound
--- (`circle.right_flaw`), about every circle; for the end of one, about
--- its mandate's or its right's.
+-- circle, and the procedure it asks, if any, is one the motion feat
+-- holds or the motion adopts; for a right policy, whose values it holds
+-- sound (`circle.right_flaw`), about every circle; for the end of one,
+-- about its mandate's or its right's. A procedure policy consults, if
+-- any, a circle there is.
 CREATE FUNCTION circle_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -65,6 +67,14 @@ BEGIN ATOMIC
         THEN circle.mandate_flaw(motion.marked(m.args ->> 'wording'))
       WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'right' AND circle.right_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
         THEN circle.right_flaw(motion.marked(m.args ->> 'wording'))
+      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'mandate' AND v.procedure IS NOT NULL
+        AND NOT EXISTS (SELECT FROM motion.procedure o WHERE o.id = v.procedure)
+        AND NOT EXISTS (
+          SELECT FROM motion.action o
+          WHERE o.motion = m.motion AND o.kind = 'policy' AND o.args ->> 'kind' = 'procedure'
+            AND btrim(motion.marked(o.args ->> 'wording') ->> 'procedure') = v.procedure
+        )
+        THEN 'no procedure ' || v.procedure || ' for a mandate to ask: a mandate asks a procedure the co-op has, or one its motion adopts'
       WHEN NOT circle_motion.decides(d.circle, coalesce(m.circle, '*'))
         OR (m.kind = 'nest' AND NOT circle_motion.decides(d.circle, m.args ->> 'parent') AND d.circle IS DISTINCT FROM m.args ->> 'parent')
         THEN d.circle || ' may not decide to '
@@ -73,7 +83,14 @@ BEGIN ATOMIC
     END AS r
     FROM circle_motion.action m
     JOIN motion.motion d ON d.id = m.motion
+    CROSS JOIN LATERAL (SELECT btrim(motion.marked(m.args ->> 'wording') ->> 'procedure') AS procedure) v
     WHERE m.motion = payload ->> 'motion'
+    UNION ALL
+    SELECT 'no circle ' || c.consult || ' for a procedure to consult'
+    FROM motion.action m
+    CROSS JOIN LATERAL (SELECT btrim(motion.marked(m.args ->> 'wording') ->> 'consult') AS consult) c
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'procedure'
+      AND c.consult IS NOT NULL AND NOT EXISTS (SELECT FROM circle.circle o WHERE o.id = c.consult)
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;

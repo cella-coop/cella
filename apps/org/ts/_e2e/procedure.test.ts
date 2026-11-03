@@ -3,9 +3,10 @@
 // adopted by its founding motion; a procedure policy whose quorum is not
 // marked is refused at its proposal; the assembly adopts by consent a
 // procedure of two thirds of the votes cast once half take part, its
-// values copied into the procedure a motion is counted by; and a motion
-// put under it with six for and four against fails, one with seven for
-// and three against passes. Run by `cella test e2e procedure`.
+// values copied into the procedure a motion is counted by; and, the
+// assembly deciding by it, a motion of its text alone with six for and
+// four against fails, one with seven for and three against passes,
+// whatever procedure its proposal names. Run by `cella test e2e procedure`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -116,9 +117,13 @@ test('the assembly adopts the statutory procedure by consent, and its values mak
 })
 
 test('put under it, six for and four against fails, seven for and three against passes', async () => {
+  // The host stages the assembly's procedure, as only a superuser may: no
+  // write sets one yet. A motion of its text alone acts under no mandate,
+  // so its circle's procedure decides it.
+  await su.query("SET cella.unbound = on; UPDATE circle.circle SET procedure = 'statutory' WHERE id = 'ag'")
   const put = async (title: string, fors: number) => {
     const { motion } = settled(
-      await propose({ circle: 'ag', title, procedure: 'statutory', deadline: '2026-12-05', body: '', actions: [] }, as(camille)),
+      await propose({ circle: 'ag', title, procedure: 'consent', deadline: '2026-12-05', body: '', actions: [] }, as(camille)),
     )
     assert.deepEqual(await one('SELECT method, procedure FROM motion.motion WHERE id = $1', [motion]), { method: 'majority', procedure: 'statutory' })
     for (const [i, member] of assembly.entries()) {

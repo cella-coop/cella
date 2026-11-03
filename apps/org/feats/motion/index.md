@@ -22,8 +22,8 @@ How a circle acts as a whole: motions, proposed, voted on and closed, each carry
 
 `motion` (`core/sql/`):
 
-- `motion.motion`: circle, title, method (`consent` or `majority`), the procedure it is decided by, whose method it keeps by a foreign key, its ballot (`open` or `secret`, [below](#ballots)), proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
-- `motion.procedure`: how a motion is decided: its method; for a majority, the share of the votes cast it needs, at least `share_num` in every `share_den` of those for and against, or none for more for than against; and its quorum, at least `quorum_num` in every `quorum_den` of those counted giving a stance; and its ballot, `open` or `secret`, which a motion proposed under it takes unless the proposal names the other; the roles whose seats vote, `voters`, none for every seat, and those that may veto, `veto`, none where no one may; and the procedure policy whose values it holds (`policy`, [below](#procedures)). Consent, majority and two thirds are built in, by open ballot, and election, a majority by secret ballot, each naming no policy until its scope adopts it; every other procedure is a policy's, as Lanterne's ordinary and extraordinary assemblies are. A procedure a motion names is fixed (`motion.procedure_kept`), but for the policy a built-in one comes to name; a circle's default names one, which `circle-motion` checks.
+- `motion.motion`: circle, title, method (`consent` or `majority`), the procedure it is decided by, which its requirements fix as it is proposed and never its proposal ([requirements](#requirements)), whose method it keeps by a foreign key, its ballot (`open` or `secret`, [below](#ballots)), proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
+- `motion.procedure`: how a motion is decided: its method; for a majority, the share of the votes cast it needs, at least `share_num` in every `share_den` of those for and against, or none for more for than against; and its quorum, at least `quorum_num` in every `quorum_den` of those counted giving a stance; and its ballot, `open` or `secret`, which a motion proposed under it takes unless the proposal names the other; the roles whose seats vote, `voters`, none for every seat, and those that may veto, `veto`, none where no one may; the circle it consults, `consult`, none where it consults none; and the procedure policy whose values it holds (`policy`, [below](#procedures)). Consent, majority and two thirds are built in, by open ballot, and election, a majority by secret ballot, each naming no policy until its scope adopts it; every other procedure is a policy's, as Lanterne's ordinary and extraordinary assemblies are. A procedure a motion is decided by is fixed (`motion.procedure_kept`), but for the policy a built-in one comes to name; a circle's procedure, by which its motions are decided where nothing asks another, names one, which `circle-motion` checks.
 - `motion.vote`: a stance by receipt, the motion, the member's address and the day they give. Receipts order stances; only those received before the cutoff count. A stance is personal data of its member, of class `books`, so a secret one is logged by its commitment ([below](#ballots)); ten years after a former member's erasure, `cella vault sweep` redacts their stances to `redacted`, which counts as none given.
 
 - `motion.message`: a motion's deliberation, by receipt: its author's address, the message it answers (one of the same motion, received before it), its text, the handles it mentions (`@amina`, or a whole address) and the documents it links (`[[internal-rules]]`), as the text gives them, and the day. A closed motion takes no message (`open_for_messages`). The handles and links are resolved and checked by `membership-motion` and `document-motion`; the text is the author's words and stays out of the log.
@@ -58,6 +58,11 @@ By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, 
 - `ballot`, where not `open`: `secret`.
 - `voters`, where not every seat: the roles whose seats in the motion's circle vote, by id, separated by commas (`{voters: lead, secretary}`); `participant` is every seat.
 - `veto`, where any: the roles whose seats on the roll may veto, written as `voters` is (`{veto: lead}`). A stance against, or an objection, from one of them is a veto: the motion does not pass, whatever the count. A veto role's seats are on the roll though `voters` does not name it.
+- `consult`, where any: the circle a motion decided by it consults, by
+  id (`{consult: coordination}`). It closes only once someone seated in
+  that circle has said something on its deliberation, which they may,
+  and `circle-motion` checks the circle is one as the policy is proposed
+  ([consultation](../../grafts/circle-membership-motion/index.md#guards)).
 - `label`, where not its name in words: how the New form and a motion's
   page call it, its first letter capitalised.
 
@@ -76,13 +81,31 @@ later, puts no motion.
 Lanterne's six procedures are policies of the assembly, adopted by its
 founding motion, `m-2021-001`, which the seed carries in.
 
+### Requirements
+
+A motion names no procedure: what it is decided by is its requirements,
+never its proposal's choice
+([policies](../../../../_corpus/doc/architecture.md#policies)). A
+procedure rides on a mandate and passes down its chain, and each action
+a motion carries acts under the collective mandate its circle holds for
+the action's power; so its requirements are what those chains ask, and
+the procedure protecting each policy it replaces or ends. It is decided
+by the one of them as strict as all the others (`motion.as_strict`), or
+by its circle's procedure where none asks one. This feat knows neither
+mandates nor circles' procedures: `circle-motion`, which joins them,
+finds the requirements (`circle_motion.required`) and refuses a
+proposal decided by another (`circle_motion.requires`), and
+`circle-membership-motion`'s `propose`, through which every proposal
+goes, puts the motion to the one they fix, whatever the proposal says.
+
 ### Protected policies
 
 A policy may name the procedure by which alone it is replaced or ended,
 its adoption's `protected` argument, which the register keeps
 (`policy.policy.protected`,
 [policies](../../../../_corpus/doc/architecture.md#policies)). A motion
-that replaces or ends a protected policy is refused unless it is decided
+that replaces or ends a protected policy has that procedure among its
+requirements ([above](#requirements)), and is refused unless it is decided
 by that procedure or a stricter one, and the refusal names the procedure
 it needs (`motion.protection_flaw`): as it is proposed, by `motion.asks`,
 and again as its action is carried out, by `motion.adopts` and
@@ -98,7 +121,8 @@ as `b`, so that every count that passes by `a` passes by `b` too:
 - `a`'s quorum is no lower;
 - for a majority, `a` lets veto every role `b` does, and its share of
   the votes cast is no lower: more for than against is stricter than
-  any share of a half or less, and looser than any of more than half.
+  any share of a half or less, and looser than any of more than half;
+- `a` consults the circle `b` consults, if `b` consults one.
 
 A procedure is as strict as itself; the ballot changes no count. A
 policy is protected by a procedure in force, built in or by a policy in
@@ -110,10 +134,11 @@ majority, may protect it.
 
 Lanterne's founding motion adopts its rights, and the assembly's and
 coordination's collective mandates to adopt and end policies and to give
-and end seats, protected by the extraordinary assembly's procedure: an
-ordinary assembly's motion ending the members' right to draw on their
-account is refused, and the same motion put to the extraordinary
-assembly, and passed, ends it.
+and end seats, protected by the extraordinary assembly's procedure: a
+motion of the assembly ending the members' right to draw on their
+account is decided by the extraordinary assembly's procedure, whatever
+its proposal names, and ends it once passed by it; a motion the motion
+feat alone puts to the ordinary is refused.
 
 ### Default policies
 
@@ -160,7 +185,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 ## Handlers
 
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed motion returns `Refused`, as the guards and the trigger judge it; the handler throws for none of them.
-- `propose` (confluent): inserts the motion by the procedure it names, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`) under a lock on the numbering, proposed on the verdict date, and its actions; circle-membership-motion's `propose` replaces it in the shell and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, procedure, ballot, deadline, actions }`: the title and the text are the proposer's words and stay out of the log.
+- `propose` (confluent): inserts the motion by the procedure the write gives it, consent where it gives none, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`) under a lock on the numbering, proposed on the verdict date, and its actions; circle-membership-motion's `propose` replaces it in the shell, gives it the procedure its requirements fix and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, procedure, ballot, deadline, actions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another; the form reads the handles it mentions and the documents it links from its text (`models/thread.ts`). Submits `{ motion, member, message, reply, mentions, links }`, without the text.
 - `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `circle-membership-motion` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
 - `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, protected by the procedure the action names, if any, taking the default it names, if any, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `circle-membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what `circle-motion`'s `adopt` extends with the circle feat's copy of a mandate.
@@ -174,8 +199,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 
 The `motions` collection, open ones first. Its New form proposes one:
 the circle it is put in, from those `circle-motion` lists in the
-collection's `about`; the procedure, from those built in or whose policy is in force, its terms in words, a secret ballot among them, which follows
-the circle's until another is chosen; the deadline, the title and the text; and the
+collection's `about`, and no procedure, since its requirements fix the one it is decided by, which its page shows; the deadline, the title and the text; and the
 actions it carries, each a kind from `motion.carries`, whose arguments the
 form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows its proposal and each action it
 carries, its arguments by its kind's labels, a member by name, the default a policy takes as its form names it, each default the motion leaves and by which of its actions, every stance given as its activity, on a secret ballot the reader's own alone, and closes it (`close`).

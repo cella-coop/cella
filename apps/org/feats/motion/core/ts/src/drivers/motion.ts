@@ -57,7 +57,7 @@ export async function procedures(db: Db): Promise<Procedure[]> {
   const { rows } = await db.query<Procedure>(
     `SELECT id, label, method,
             CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
-            json_build_array(quorum_num, quorum_den) AS quorum, ballot
+            json_build_array(quorum_num, quorum_den) AS quorum, ballot, consult
      FROM motion.procedure o
      WHERE o.policy IS NULL OR EXISTS (
        SELECT FROM policy.policy r

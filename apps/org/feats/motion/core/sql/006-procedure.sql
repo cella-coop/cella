@@ -4,9 +4,10 @@
 -- more for than against; and its quorum, how many of those counted must
 -- give a stance, at least `quorum_num` in every `quorum_den`; the roles
 -- whose seats vote, `voters`, none for every seat, and those that may
--- veto, `veto`, by id, which the graft that fixes the roll reads. A circle
--- decides by one unless a proposal names another, and a motion keeps
--- the one it was proposed under. Every procedure but the built-in ones is
+-- veto, `veto`, by id, which the graft that fixes the roll reads; and
+-- the circle it consults, `consult`, by id, whose seats must have spoken
+-- on a motion before it closes. A motion is decided by the one its
+-- requirements fix, never one its proposal names, and keeps it. Every procedure but the built-in ones is
 -- a procedure policy's, its values copied here as it is adopted
 -- (009-policy.sql).
 CREATE TABLE motion.procedure (
@@ -19,6 +20,7 @@ CREATE TABLE motion.procedure (
   quorum_den integer NOT NULL DEFAULT 1,
   voters text[] CHECK (cardinality(voters) > 0),
   veto text[] NOT NULL DEFAULT '{}',
+  consult text CHECK (consult ~ '^[a-z][a-z0-9-]*$'),
   CHECK ((share_num IS NULL) = (share_den IS NULL)),
   CHECK (share_num IS NULL OR (method = 'majority' AND 0 < share_num AND share_num <= share_den)),
   CHECK (0 <= quorum_num AND quorum_num <= quorum_den),

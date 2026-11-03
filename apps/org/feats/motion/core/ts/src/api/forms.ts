@@ -1,5 +1,5 @@
 import type { Db, Form } from '@cella/org-db'
-import { kinds, procedures } from '../drivers/motion.ts'
+import { kinds } from '../drivers/motion.ts'
 import type { Arg, Carried, Propose } from '../models/motion.ts'
 import { links, mentions, type Post } from '../models/thread.ts'
 
@@ -16,17 +16,12 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
     }
     actions.push({ kind, args: args(form, declared.fields) })
   }
-  const procedure = form.get('procedure')
-  if (!(await procedures(db)).some((p) => p.id === procedure)) {
-    throw new Error(`a motion is taken by a procedure of the co-op’s, not “${procedure}”`)
-  }
   if (!form.get('deadline')) {
     throw new Error('a motion needs a deadline')
   }
   return {
     circle: form.get('circle'),
     title: form.get('title'),
-    procedure,
     deadline: form.get('deadline'),
     body: form.get('body'),
     actions,

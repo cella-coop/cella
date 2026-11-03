@@ -16,10 +16,10 @@ Each circle also has a channel for its messages.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
+| circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
 | role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one gérante or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
 | grantee | `id`, `kind` | what a mandate is granted to: a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
-| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
+| mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
@@ -52,6 +52,7 @@ year.
 The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write
 The {role: lead} role holds {power: approve-expense}, to approve what the circle's members spend, within {budget: 1 000 €} a {per: month}
 The {circle: ag} circle holds {power: admit-member}, to admit members, by motion
+The {circle: web} circle holds {power: adopt-policy}, to adopt its own policies, by motion, by {procedure: consulted}
 ```
 
 Its term is its policy's days: it applies from the day its motion names
@@ -67,7 +68,12 @@ them is `circle-motion`'s, which joins this feat to the motion feat's
 adoption and ending of a policy. What a mandate's values may be is this
 feat's too, `circle.mandate_flaw(marked)`: one grantee, a role it has
 or a circle it has, a power named in lower case, at most a limit or a
-budget, an amount, a budget with its `per`, and no other value. A
+budget, an amount, a budget with its `per`, perhaps a procedure by name,
+and no other value. A mandate's procedure is what the motions acting
+under it are decided by, and passes down its chain: `circle-motion`,
+which knows procedures, holds it to one at least as strict as its
+parent's chain asks and fixes each motion's by it
+([requirements](../../../../_corpus/doc/architecture.md#policies)). A
 mandate naming a person (`{person: …}`) is refused, since a person holds
 a role by a tenure and the role holds the mandate; so is one naming a
 right, which is a policy of its own kind.
@@ -222,8 +228,10 @@ coordination, and may grant none while it holds none.
 A mandate is narrower than its parent: it grants the same power; its
 cap is no wider, so where the parent is capped it limits a write by at
 most the parent's limit or budgets the same period by at most its
-budget; and its term is no longer, from no earlier and until no later
-than the parent's. The parent is found as the policy is adopted,
+budget; its term is no longer, from no earlier and until no later
+than the parent's; and its procedure, where it states one, is no looser
+than what the parent's chain asks, which `circle-motion` checks, since
+this feat knows procedures by name alone. The parent is found as the policy is adopted,
 `circle.parent_of(policy)`: the first of the issuer's mandates for the
 power, standing on the day the policy applies, that the new one is
 narrower than, or else the first it holds for the power, so a refusal

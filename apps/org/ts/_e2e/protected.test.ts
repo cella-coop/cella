@@ -1,17 +1,16 @@
 // A protected policy changes only by the stricter procedure it names, end
 // to end on a seeded Lanterne, through the handlers: its rights, and the
 // collective mandates that hand out mandates, are protected by the
-// extraordinary assembly's procedure; an ordinary assembly's motion ending
-// the members' right to draw on their account is refused, saying which
-// procedure it needs; the same motion put to the extraordinary assembly
-// and passed ends it, and its mandate is revoked; and a policy naming a
+// extraordinary assembly's procedure; a motion ending the members' right
+// to draw on their account is decided by it whatever its proposal names,
+// and passed by it ends the right, which is revoked; and a policy naming a
 // procedure looser than its own motion's is refused. Run by `cella test
 // e2e protected`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { vote } from '@cella/org-motion/api'
+import { propose as proposeAlone, vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
@@ -68,37 +67,31 @@ test('Lanterne\'s rights and the mandates that hand out mandates are protected b
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.right`)).n, 16)
 })
 
-test('an ordinary assembly\'s motion ending the members\' right to draw is refused, saying which procedure it needs', async () => {
+let ending = ''
+
+test('a motion of the assembly ending the members\' right to draw is decided by the extraordinary assembly\'s procedure, whatever its proposal names', async () => {
   const policy = await drawing()
-  const out = await propose(
-    {
-      circle: 'ag',
-      title: 'End the members\' draws',
-      procedure: 'ordinary',
-      deadline: '2026-11-21',
-      body: '',
-      actions: [{ kind: 'end', args: { policy } }],
-    },
-    as(camille),
-  )
-  assert.match(
-    reason(out),
-    new RegExp(`${policy} is protected: only a motion decided by extraordinary, or by a stricter procedure, replaces or ends it`),
-  )
+  const named = { circle: 'ag', title: 'End the members\' draws', procedure: 'ordinary', deadline: '2026-11-21', actions: [{ kind: 'end', args: { policy } }] }
+  ending = settled(await propose({ ...named, body: 'Draws on capital accounts stop; members are repaid as the statutes say.' }, as(camille))).motion
+  assert.deepEqual(await one('SELECT procedure, method FROM motion.motion WHERE id = $1', [ending]), { procedure: 'extraordinary', method: 'majority' })
+  // Put to the ordinary assembly by the motion feat alone, it is refused.
+  const alone = await proposeAlone({ ...named, body: '' }, as(camille))
+  assert.equal(alone.state, 'refused')
 })
 
 test('a policy naming a procedure looser than its own motion\'s is refused', async () => {
+  // Replacing a right protected by the extraordinary assembly, the motion is decided by it.
+  const { policy } = await one<{ policy: string }>(`SELECT policy FROM circle.right WHERE power = 'mark-read'`)
   const out = await propose(
     {
       circle: 'ag',
       title: 'Members read the internal rules',
-      procedure: 'extraordinary',
       deadline: '2026-11-21',
       body: '',
       actions: [
         {
           kind: 'policy',
-          args: { kind: 'right', wording: 'Every {right: member} holds {power: mark-read}, to mark a text read', protected: 'ordinary' },
+          args: { kind: 'right', wording: 'Every {right: member} holds {power: mark-read}, to mark a text read', replaces: policy, protected: 'ordinary' },
         },
       ],
     },
@@ -107,21 +100,9 @@ test('a policy naming a procedure looser than its own motion\'s is refused', asy
   assert.match(reason(out), /ordinary is looser than extraordinary, by which m-2026-\d+ is decided/)
 })
 
-test('the same motion put to the extraordinary assembly and passed ends the right, and it is revoked', async () => {
+test('passed by the extraordinary assembly\'s procedure, the motion ends the right, and it is revoked', async () => {
   const policy = await drawing()
-  const { motion } = settled(
-    await propose(
-      {
-        circle: 'ag',
-        title: 'End the members\' draws',
-        procedure: 'extraordinary',
-        deadline: '2026-11-21',
-        body: 'Draws on capital accounts stop; members are repaid as the statutes say.',
-        actions: [{ kind: 'end', args: { policy } }],
-      },
-      as(camille),
-    ),
-  )
+  const motion = ending
   for (const [i, member] of assembly.entries()) {
     settled(await vote({ motion, member, stance: i < 8 ? 'for' : 'against' }, as(member)))
   }

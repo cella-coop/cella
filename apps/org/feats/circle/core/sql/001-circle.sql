@@ -59,6 +59,9 @@ ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
 -- grants nothing. `issuer` is the circle whose motion adopted it, and
 -- `parent` the mandate it is issued under, one its issuer holds; none for
 -- a mandate the assembly issues, a root of the provenance tree.
+-- `procedure` names the procedure the motions acting under it are
+-- decided by, which passes down its chain; the motion feat holds
+-- procedures, so this feat keeps its name alone.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   grantee text NOT NULL REFERENCES circle.grantee,
@@ -69,6 +72,7 @@ CREATE TABLE circle.mandate (
   "limit" cella.amount,
   budget cella.amount,
   per text CHECK (per IN ('month', 'year')),
+  procedure text CHECK (procedure ~ '^[a-z][a-z-]*$'),
   "from" date NOT NULL,
   until date,
   revoked date,

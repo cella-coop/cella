@@ -97,26 +97,29 @@ test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its sta
 })
 
 test('a policy taking a default worded otherwise, or one taken already, is refused as it is proposed', async () => {
-  const proposal = (args: Record<string, string>, procedure = 'ordinary') =>
+  const proposal = (args: Record<string, string>) =>
     propose(
-      { circle: 'ag', title: 'The work share', procedure, deadline: '2026-11-21', body: '', actions: [{ kind: 'policy', args }] },
+      { circle: 'ag', title: 'The work share', deadline: '2026-11-21', body: '', actions: [{ kind: 'policy', args }] },
       as(camille),
     )
   const otherwise = await proposal({ kind: 'rule', wording: workShare.replace('25 %', '30 %'), takes: 'scop-sarl-fr:work-share', replaces: 'm-2021-001/74' })
   assert.match(reason(otherwise), /a policy takes scop-sarl-fr:work-share worded as it reads: one worded otherwise takes no default/)
   const again = await proposal({ kind: 'rule', wording: workShare, friendly: 'At least a quarter of the surplus goes to the workers.', takes: 'scop-sarl-fr:work-share' })
   assert.match(reason(again), /m-2021-001\/74 takes scop-sarl-fr:work-share already: a policy taking it again replaces that one/)
-  const unprotected = await proposal({ kind: 'right', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/67' }, 'extraordinary')
+  const unprotected = await proposal({ kind: 'right', wording: 'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read', takes: 'scop-sarl-fr:mark-read', replaces: 'm-2021-001/67' })
   assert.match(reason(unprotected), /scop-sarl-fr:mark-read is protected by extraordinary: a policy takes it protected as it is/)
 })
 
 test('an ordinary assembly\'s motion leaving two defaults marks each left, by its action, on the motion\'s page, the circle\'s and in the statutes', async () => {
+  // The host stages the assembly's procedure, as only a superuser may: no
+  // write sets one yet. Nothing the motion acts under asks another, so the
+  // assembly's procedure decides it.
+  await su.query("SET cella.unbound = on; UPDATE circle.circle SET procedure = 'ordinary' WHERE id = 'ag'; RESET cella.unbound")
   const { motion } = settled(
     await propose(
       {
         circle: 'ag',
         title: 'No suspensions, and a larger work share',
-        procedure: 'ordinary',
         deadline: '2026-11-21',
         body: 'The assembly stops suspending members, and gives the workers 40 % of each surplus at least.',
         actions: [
@@ -128,6 +131,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
     ),
   )
   leaving = motion
+  await su.query("SET cella.unbound = on; UPDATE circle.circle SET procedure = 'consent' WHERE id = 'ag'; RESET cella.unbound")
   for (const [i, member] of assembly.entries()) {
     settled(await vote({ motion, member, stance: i < 8 ? 'for' : 'against' }, as(member)))
   }
@@ -196,7 +200,6 @@ test('a later update of the form marks a default taken as updated, restores none
       {
         circle: 'ag',
         title: 'Admit on the statutes\' conditions',
-        procedure: 'ordinary',
         deadline: '2026-12-05',
         body: '',
         actions: [{ kind: 'policy', args: { kind: 'mandate', wording, takes: 'scop-sarl-fr:admit-member', replaces: 'm-2021-001/47' } }],

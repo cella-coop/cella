@@ -80,7 +80,7 @@ test('circle.nests refuses a nesting whose parent moved within the circle meanwh
 test('a mandate keeps its grant, and a revoked one stays revoked', async () => {
   await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('lead', '*', 'Circle lead')`)
   const { rows } = await db.query<{ id: string }>(
-    `INSERT INTO circle.mandate (role, power, policy, "from", revoked) VALUES ('lead', 'approve-time', 'm-2026-001/1', '2026-01-01', '2026-10-01') RETURNING id`,
+    `INSERT INTO circle.mandate (grantee, power, policy, "from", revoked) VALUES ('lead', 'approve-time', 'm-2026-001/1', '2026-01-01', '2026-10-01') RETURNING id`,
   )
   await refused(`UPDATE circle.mandate SET revoked = NULL WHERE id = ${rows[0].id}`, /keeps its grant, and stays revoked/)
   await refused(`UPDATE circle.mandate SET power = 'commit' WHERE id = ${rows[0].id}`, /keeps its grant/)
@@ -92,20 +92,20 @@ test('a mandate is carved from what the circle above holds, and a moved subtree 
   try {
     await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('steward', 'coordination', 'Steward'), ('maker', 'brand', 'Maker'), ('printer', 'print', 'Printer'), ('seller', 'marketing', 'Seller')`)
     // No circle above holds pay-supplier: the assembly's, uncapped.
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('printer', 'pay-supplier', 'm-2026-002/1', '2026-01-01', '9000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('printer', 'pay-supplier', 'm-2026-002/1', '2026-01-01', '9000')`)
     assert.equal(await beyond(), null)
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('steward', 'pay-supplier', 'm-2026-002/2', '2026-01-01', '5000'), ('maker', 'pay-supplier', 'm-2026-002/3', '2026-01-01', '3000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('steward', 'pay-supplier', 'm-2026-002/2', '2026-01-01', '5000'), ('maker', 'pay-supplier', 'm-2026-002/3', '2026-01-01', '3000')`)
     // print's nearest holder is brand, at 3 000 €; brand's is coordination, at 5 000 €.
     assert.match((await beyond()) ?? '', /grants pay-supplier to printer beyond what brand holds of it/)
-    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE role = 'printer'`)
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('printer', 'pay-supplier', 'm-2026-002/4', '2026-01-01', '2000')`)
+    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE grantee = 'printer'`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('printer', 'pay-supplier', 'm-2026-002/4', '2026-01-01', '2000')`)
     assert.equal(await beyond(), null)
     // A budget is carved from a budget over the same period.
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", budget, per) VALUES ('steward', 'approve-expense', 'm-2026-002/5', '2026-01-01', '1000', 'month'), ('maker', 'approve-expense', 'm-2026-002/6', '2026-01-01', '500', 'year')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", budget, per) VALUES ('steward', 'approve-expense', 'm-2026-002/5', '2026-01-01', '1000', 'month'), ('maker', 'approve-expense', 'm-2026-002/6', '2026-01-01', '500', 'year')`)
     assert.match((await beyond()) ?? '', /grants approve-expense to maker beyond what coordination holds of it/)
-    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE role = 'maker' AND power = 'approve-expense'`)
+    await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE grantee = 'maker' AND power = 'approve-expense'`)
     // Moved under marketing, whose seller holds pay-supplier at 1 000 €, print's 2 000 € is beyond it.
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('seller', 'pay-supplier', 'm-2026-002/7', '2026-01-01', '1000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('seller', 'pay-supplier', 'm-2026-002/7', '2026-01-01', '1000')`)
     await db.query(`UPDATE circle.circle SET parent = 'marketing' WHERE id = 'print'`)
     assert.match((await beyond()) ?? '', /grants pay-supplier to printer beyond what marketing holds of it/)
   } finally {
@@ -119,14 +119,14 @@ test('a collective mandate is carved as a role\'s is, and caps the mandates belo
   try {
     await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('maker', 'brand', 'Maker')`)
     // Coordination holds set-budget as a whole, up to 10 000 €.
-    await db.query(`INSERT INTO circle.mandate (circle, power, policy, "from", "limit") VALUES ('coordination', 'set-budget', 'm-2026-003/1', '2026-01-01', '10000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('coordination', 'set-budget', 'm-2026-003/1', '2026-01-01', '10000')`)
     assert.equal(await beyond(), null)
     // Brand, below it, as a whole at 20 000 €: beyond what coordination holds.
-    await db.query(`INSERT INTO circle.mandate (circle, power, policy, "from", "limit") VALUES ('brand', 'set-budget', 'm-2026-003/2', '2026-01-01', '20000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('brand', 'set-budget', 'm-2026-003/2', '2026-01-01', '20000')`)
     assert.match((await beyond()) ?? '', /grants set-budget to brand beyond what coordination holds of it/)
     await db.query(`UPDATE circle.mandate SET revoked = '2026-10-24' WHERE policy = 'm-2026-003/2'`)
     // A role of brand's is carved from coordination's collective mandate too.
-    await db.query(`INSERT INTO circle.mandate (role, power, policy, "from", "limit") VALUES ('maker', 'set-budget', 'm-2026-003/3', '2026-01-01', '12000')`)
+    await db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from", "limit") VALUES ('maker', 'set-budget', 'm-2026-003/3', '2026-01-01', '12000')`)
     assert.match((await beyond()) ?? '', /grants set-budget to maker beyond what coordination holds of it/)
   } finally {
     await db.query('ROLLBACK')

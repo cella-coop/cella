@@ -32,7 +32,7 @@ CREATE TABLE policy.default (
   form text NOT NULL REFERENCES policy.form,
   key text NOT NULL CHECK (key ~ '^[a-z][a-z0-9-]*$'),
   n integer NOT NULL CHECK (n > 0),
-  kind text NOT NULL CHECK (kind IN ('mandate', 'rule', 'procedure')),
+  kind text NOT NULL CHECK (kind IN ('mandate', 'right', 'rule', 'procedure')),
   legal text NOT NULL,
   friendly text,
   hash bytea NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE policy.default (
 CREATE TABLE policy.policy (
   id text PRIMARY KEY,
   circle text NOT NULL,
-  kind text NOT NULL CHECK (kind IN ('mandate', 'rule', 'procedure')),
+  kind text NOT NULL CHECK (kind IN ('mandate', 'right', 'rule', 'procedure')),
   motion text NOT NULL,
   n integer NOT NULL CHECK (n > 0),
   -- What the motion adopted: the BLAKE3 of its wordings (`policy.hash`).

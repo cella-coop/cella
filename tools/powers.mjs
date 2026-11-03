@@ -141,15 +141,15 @@ export function covered(ops, found) {
   return errors
 }
 
-// The powers a fixture's co-op grants: every mandate among the policies
-// its closed motions adopt, as the seed adopts them, on a role, on a
-// circle or to the people a right names, by the power its sentence
+// The powers a fixture's co-op grants: every mandate and right among the
+// policies its closed motions adopt, as the seed adopts them, to a role,
+// to a circle or to the people a right names, by the power its sentence
 // marks, `{power: pay-supplier}`. `motions` is the fixture's motion.toml
 // `[[motion]]` list.
 export function mandates(motions, fixture) {
   const out = []
   for (const m of (motions ?? []).filter((m) => m.closed)) {
-    for (const a of (m.action ?? []).filter((a) => a.kind === 'policy' && a.args?.kind === 'mandate')) {
+    for (const a of (m.action ?? []).filter((a) => a.kind === 'policy' && ['mandate', 'right'].includes(a.args?.kind))) {
       for (const [, power] of (a.args.wording ?? '').matchAll(/\{power:\s*([^}]*?)\s*\}/g)) {
         out.push({ power, fixture, motion: m.id })
       }

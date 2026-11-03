@@ -8,7 +8,8 @@ a self-governing unit, after sociocracy: the general assembly, a
 coordination circle, a working team. Circles nest in one tree whose root is
 the assembly. Each circle defines roles, and grants powers to them through
 mandates; who holds a role is a seat, the `circle-membership` graft's
-junction. Each circle also has a channel for its messages.
+junction. A mandate's grantee is one circle or one role, never a person.
+Each circle also has a channel for its messages.
 
 ## Entities
 
@@ -16,13 +17,16 @@ junction. Each circle also has a channel for its messages.
 |---|---|---|
 | circle | `id`, `name`, `parent?`, `purpose`, `procedure` | the root has no parent; `procedure` names the procedure its motions are taken by unless a proposal names another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and `circle-motion` checks |
 | role | `id`, `circle`, `name`, `duty` | `circle` is one circle, or `*` for a role every working circle has; `participant`, built in, is every circle's, the assembly's too |
-| mandate | `id`, `role?`, `circle?`, `right?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its holder is a `role`, an individual mandate, a `circle`, a collective one, or a `right`, the people who hold it as such, `person`, `member` or `employee`, only one; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
+| grantee | `id`, `kind` | what a mandate is granted to: a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
+| mandate | `id`, `grantee`, `power`, `policy`, `limit?`, `budget?`, `per?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `from` and `until` are the days its policy applies |
+| right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
 
 A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
-`cella.power`. A mandate grants one power to one role, with an optional
-limit, for a term. Who holds a role is a seat, the `circle-membership`
+`cella.power`. A mandate grants one power to one grantee, a role or a
+circle, by one key and never to a person, with an optional limit, for a
+term. Who holds a role is a seat, the `circle-membership`
 graft's, so whether an actor may use a power is that graft's guard,
 `circle_membership.may`: an actor may if a seat they hold on the day carries
 a role with a mandate in force for the power, within its limit, the
@@ -31,15 +35,15 @@ circle is granted the same way, through a mandate on a role every member
 is seated in, such as a `member` role in the assembly: nothing is
 allowed by omission. A mandate on a circle itself, a collective mandate,
 is no seat's: it is used only by a motion of that circle ([collective
-mandates](#collective-mandates)). Nor is a right, which people hold as
-such, every person, member or employee, to act on what is their own
-([rights](#rights)).
+mandates](#collective-mandates)). A right is no mandate: the legal form
+gives it to every person, member or employee as such, to act on what is
+their own ([rights](#rights)).
 
 ## Mandates
 
 A mandate is a policy, a sentence a circle adopted by motion
 ([policies](../../../../_corpus/doc/architecture.md#policies)), its
-values marked in it: the role it grants to, the circle, or the right,
+values marked in it: its grantee, the role it grants to or the circle,
 the power, and perhaps a limit per write or a budget over a month or a
 year.
 
@@ -47,7 +51,6 @@ year.
 The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write
 The {role: lead} role holds {power: approve-expense}, to approve what the circle's members spend, within {budget: 1 000 €} a {per: month}
 The {circle: ag} circle holds {power: admit-member}, to admit members, by motion
-Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts
 ```
 
 Its term is its policy's days: it applies from the day its motion names
@@ -61,10 +64,12 @@ other's mandate the day it applies. The copy is this feat's, by
 read the register's values and never its wording; the write that calls
 them is `circle-motion`'s, which joins this feat to the motion feat's
 adoption and ending of a policy. What a mandate's values may be is this
-feat's too, `circle.mandate_flaw(marked)`: one of a role it has, a
-circle it has or a right, `person`, `member` or `employee`, a power
-named in lower case, at most a limit or a
-budget, an amount, a budget with its `per`, and no other value.
+feat's too, `circle.mandate_flaw(marked)`: one grantee, a role it has
+or a circle it has, a power named in lower case, at most a limit or a
+budget, an amount, a budget with its `per`, and no other value. A
+mandate naming a person (`{person: …}`) is refused, since a person holds
+a role by a seat and the role holds the mandate; so is one naming a
+right, which is a policy of its own kind.
 
 ## Collective mandates
 
@@ -124,23 +129,28 @@ procedure says so: named, not built.
 
 ## Rights
 
-A right is a mandate people hold as such, with no seat: on every person
+A right is no mandate: it is what the legal form gives every person
 (`{right: person}`), every member (`{right: member}`) or every employee
-(`{right: employee}`), never an agent or a service. Who is one of them
-on a day is person's core's to say, `person.holds(actor, right, day)`,
-by the function each kind of person registers there: `person` the
-people the co-op knows, `membership` its active members, `employment`
-those employed. `circle-membership`'s guard on every op with a power
-takes a right's mandate, `circle_membership.entitled`, beside those on
-the actor's seats, so Inès, employed and no member, holds an employee's
-rights beside the mandates of her seat in Web, and Paul, gone since 30
-November 2025, a person's alone.
+(`{right: employee}`) as such, never an agent or a service, so it has
+no grantee, no issuer and no chain. It is a policy of its own kind,
+`right`, which the form offers and the founding motion adopts with the
+statutes, and its values are copied into `circle.right` as it is
+adopted, as a mandate's are into `circle.mandate`, by the same
+`circle.mandate_from`; what they may be is `circle.right_flaw(marked)`:
+one right, a power, at most a limit, and no other value. Who is one of
+them on a day is person's core's to say, `person.holds(actor, right,
+day)`, by the function each kind of person registers there: `person`
+the people the co-op knows, `membership` its active members,
+`employment` those employed. `circle-membership`'s guard on every op
+with a power takes a right, `circle_membership.entitled`, beside the
+mandates on the actor's seats, so Inès, employed and no member, holds an
+employee's rights beside the mandates of her seat in Web, and Paul, gone
+since 30 November 2025, a person's alone.
 
 A right lets each act on what is their own: the feat's guard that the
 record is theirs stays, and a right is never the authority a read asks
-(`circle_membership.may`), so it opens no one else's rows. A right is a
-mandate like any other, a policy, and is the assembly's to grant: it
-reaches the whole co-op, and is neither carved nor carved from.
+(`circle_membership.may`), so it opens no one else's rows. It reaches the
+whole co-op, and is neither carved nor carved from.
 
 | Right | Power | Actions |
 |---|---|---|
@@ -163,21 +173,24 @@ reaches the whole co-op, and is neither carved nor carved from.
 
 ## Schema
 
-`circle` (`core/sql/`): `circle.circle`, `circle.role` and
-`circle.mandate`, as in the entities above; a mandate's `limit` and
-`budget` are `cella.amount`s, and each mandate names the policy that
-grants it, one mandate a policy. Each circle keeps its `path`, its ancestors
+`circle` (`core/sql/`): `circle.circle`, `circle.role`,
+`circle.grantee`, `circle.mandate` and `circle.right`, as in the
+entities above. Every circle and every role is a grantee, its row made
+by a trigger as the circle or the role is, so a circle and a role never
+share an id and a mandate's `grantee` is one foreign key; a mandate's
+`limit` and `budget` and a right's `limit` are `cella.amount`s, and each
+names the policy that grants it, one a policy. Each circle keeps its `path`, its ancestors
 from the assembly down and itself last, which triggers keep as circles
 are added and moved, a moved circle carrying its subtree; so
 `circle.within(part, whole)` asks whether one circle is within another
 without recursion. One circle only has no parent. Triggers refuse a
 nesting that makes a cycle and keep a mandate's grant fixed and a
-revocation standing, raising SQLSTATE `09000`. The app role and the guards
-role, `cella_guards`, may select; the app role may move a circle and grant
-and revoke mandates. A mandate is in force on a day from its `from`,
+revocation standing, a right's as a mandate's, raising SQLSTATE
+`09000`. The app role and the guards role, `cella_guards`, may select;
+the app role may move a circle and grant and revoke mandates and rights. A mandate is in force on a day from its `from`,
 before its `until` and before its `revoked`; `circle.holds(circle,
 power, day)` asks whether a circle holds a collective mandate in force
-for a power on a day.
+for a power on a day, one whose grantee is the circle.
 
 ## Authority
 
@@ -190,8 +203,8 @@ collective mandate the circle it is on, so the two kinds are carved
 alike and each is carved from both. Its cap never exceeds theirs: one
 of them is uncapped, or limits a write by at least its limit, or
 budgets the same period by at least its budget. A role every working
-circle has (`*`) and a right are the assembly's to grant, and are
-neither carved nor carved from. Nesting therefore matters: moving a circle changes what
+circle has (`*`) is the assembly's to grant, and is neither carved nor
+carved from; a right, no mandate, is in none of it. Nesting therefore matters: moving a circle changes what
 its mandates are carved from. A power exercised "by motion" is a
 collective mandate, held by a circle and used only through a motion of
 that circle.
@@ -202,6 +215,7 @@ that circle.
 |---|---|
 | circle | active → dissolved |
 | mandate | granted, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
+| right | given, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
 | seat | held → ended (the graft's) |
 
 ## Actions
@@ -251,13 +265,13 @@ on a seat in the message's circle.
 - `circle.nests`, on `circle:circle:nest`: the circle sits under the
   parent the payload names, and its path is its parent's as it stands.
 - `circle.grants`, which `circle-motion` attaches to `motion:policy:adopt`:
-  a mandate policy the write adopted has its mandate, on the role or the
-  circle, for the power, capped and on the days its values and its
-  policy say; the
-  mandate of the policy it replaces is revoked the day it applies; and no
-  policy of another kind has one.
+  a mandate policy the write adopted has its mandate, to the grantee,
+  for the power, capped and on the days its values and its policy say,
+  and a right policy its right; the mandate or the right of the policy
+  it replaces is revoked the day it applies; and no policy of another
+  kind has one.
 - `circle.revokes`, which `circle-motion` attaches to `motion:policy:end`:
-  the mandate of a mandate policy the write ended is revoked on the
+  the mandate or the right of a policy the write ended is revoked on the
   verdict date.
 - `circle.carves`, on `circle:circle:nest`, and which `circle-motion`
   attaches to both: after the write, every mandate in force is carved
@@ -273,9 +287,10 @@ on a seat in the message's circle.
   it did and the motion.
 - `granting(tx, policy)` and `revoking(tx, policy)`, the state of a write
   a graft extends: copy a mandate policy's values into `circle.mandate`,
-  and revoke the mandate of an ended one and of the one a new policy
-  replaces, by `circle.mandate_from` and `circle.mandate_ended`; each
-  returns the mandate, or none for a policy of another kind.
+  or a right policy's into `circle.right`, and revoke those of an ended
+  one and of the one a new policy replaces, by `circle.mandate_from` and
+  `circle.mandate_ended`; each returns the mandate, or none for a right
+  or a policy of another kind.
 
 ## Invariants
 
@@ -283,7 +298,8 @@ The circle feat owns:
 
 - the circles form one tree: no cycle, one root;
 - a mandate is carved from what the circles above hold (`circle.carves`);
-- a mandate is on a role or on a circle, never both;
+- a mandate's grantee is one circle or one role, by one key, never a
+  person, and a right has none;
 - a mandate caps its power with a `limit` per write or a `budget` over a
   period, never both;
 - a mandate is its policy's values, on its policy's days; its term has
@@ -357,18 +373,18 @@ close of a passing motion carries them out.
 | Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `nest-circle`, `seat-member` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `nest-circle`, `seat-member` |
 
-| Right | Power |
+| Right, given by the form | Power |
 |---|---|
 | Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import`, `withdraw-membership`, `erase-own-data` |
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
 | Every employee | `log-time`, `claim-expense` |
 
-Each is a mandate policy of the assembly, adopted with the statutes by
-the founding motion, m-2021-001, on 1 March 2021, and in force since.
+Each is a policy of the assembly, a mandate or a right, adopted with
+the statutes by the founding motion, m-2021-001, on 1 March 2021, and in force since.
 So the working circles carry no action by motion: a motion of Web
 decides by its text alone, and one carrying an action is refused at its
 proposal until a circle above grants Web a collective mandate for it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `circle.circles`, `circle.roles` and `circle.mandates` to the analytics shell: the circles, their roles and the mandates each role holds, with their limits and budgets.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `circle.circles`, `circle.roles`, `circle.mandates` and `circle.rights` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their limits and budgets, and the rights the form gives.

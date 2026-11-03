@@ -33,7 +33,7 @@ export async function putting(input: Put, db: Db): Promise<Propose> {
     `SELECT d.id AS decider, d.procedure, c.name,
             (SELECT p.name FROM circle.circle p WHERE p.id = $3) AS parent,
             (SELECT r.name FROM circle.role r WHERE r.id = $4) AS role,
-            (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.role WHERE x.policy = $5) AS mandate
+            (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $5) AS mandate
      FROM circle.circle c
      LEFT JOIN circle.circle d ON d.id = CASE
        WHEN $2 = 'nest' THEN (

@@ -34,7 +34,7 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
     SELECT FROM circle_membership.seat p
-    JOIN circle.mandate m ON m.role = p.role OR m.role = 'participant'
+    JOIN circle.mandate m ON m.grantee = p.role OR m.grantee = 'participant'
     WHERE p.member = may.actor
       AND circle_membership.counts(p.member, p.circle, may.day)
       AND m.power = may.power

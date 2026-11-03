@@ -60,52 +60,52 @@ SELECT policy.offer('scop-sarl-fr', 'nest-circle', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'seat-member', 'mandate',
   'The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'withdraw-membership', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'withdraw-membership', 'right',
   'Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership',
   NULL, 'extraordinary', 'Code de commerce art. L231-6');
-SELECT policy.offer('scop-sarl-fr', 'erase-own-data', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'erase-own-data', 'right',
   'Every {right: person} holds {power: erase-own-data}, to erase their own personal data once they have left',
   NULL, 'extraordinary', 'GDPR art. 17');
-SELECT policy.offer('scop-sarl-fr', 'keep-profile', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'keep-profile', 'right',
   'Every {right: person} holds {power: keep-profile}, to keep their own profile and contact details',
   NULL, 'extraordinary', 'GDPR art. 16');
-SELECT policy.offer('scop-sarl-fr', 'keep-devices', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'keep-devices', 'right',
   'Every {right: person} holds {power: keep-devices}, to enrol and revoke their own devices',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'upload-file', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'upload-file', 'right',
   'Every {right: person} holds {power: upload-file}, to upload a file of the co-op''s',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'accept-invitation', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'accept-invitation', 'right',
   'Every {right: person} holds {power: accept-invitation}, to take up their invitation to join',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'file-record', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'file-record', 'right',
   'Every {right: person} holds {power: file-record}, to file a record of their own',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'mark-read', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'mark-read', 'right',
   'Every {right: person} holds {power: mark-read}, to mark a text the co-op adopted read',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'record-import', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'record-import', 'right',
   'Every {right: person} holds {power: record-import}, to record an import of their own',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'draw-account', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'draw-account', 'right',
   'Every {right: member} holds {power: draw-account}, to draw on their own account within its draw limit',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'spread-capital', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'spread-capital', 'right',
   'Every {right: member} holds {power: spread-capital}, to spread what they owe for their shares over their pay',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'mark-attendance', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'mark-attendance', 'right',
   'Every {right: member} holds {power: mark-attendance}, to mark their own attendance at a meeting',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'save-report', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'save-report', 'right',
   'Every {right: member} holds {power: save-report}, to save a report of their own',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'log-time', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'log-time', 'right',
   'Every {right: employee} holds {power: log-time}, to log, correct and submit their own time',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'claim-expense', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'claim-expense', 'right',
   'Every {right: employee} holds {power: claim-expense}, to claim their expenses and file their receipts',
   NULL, 'extraordinary', NULL);
-SELECT policy.offer('scop-sarl-fr', 'apply-membership', 'mandate',
+SELECT policy.offer('scop-sarl-fr', 'apply-membership', 'right',
   'Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on',
   NULL, 'extraordinary', 'loi n° 78-763, as the CG Scop''s model statutes put it');
 SELECT policy.offer('scop-sarl-fr', 'work-share', 'rule',

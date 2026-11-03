@@ -15,7 +15,7 @@
   const mandates: Column<Mandate>[] = [
     { key: 'power', label: 'Power', value: (m) => power(m.power) },
     { key: 'sentence', label: 'Policy', value: (m) => m.sentence },
-    { key: 'role', label: 'Role', value: (m) => m.role },
+    { key: 'grantee', label: 'Role', value: (m) => m.grantee },
     { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },
     { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${money(m.budget)} a ${m.per}`) },
     { key: 'until', label: 'Until', kind: 'date', value: (m) => m.revoked ?? m.until },

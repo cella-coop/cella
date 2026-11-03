@@ -233,7 +233,7 @@ test('coordination grants the finance role send-quote by motion, a mandate polic
   const granted = await one(
     `SELECT m.power, cella.cents(m."limit")::int AS "limit", to_char(m."from", 'YYYY-MM-DD') AS "from", r.circle, policy.sentence(w.legal) AS sentence
      FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy JOIN policy.wording w ON w.policy = r.id
-     WHERE m.role = 'finance' AND m.power = 'send-quote'`,
+     WHERE m.grantee = 'finance' AND m.power = 'send-quote'`,
   )
   assert.deepEqual(granted, {
     power: 'send-quote',

@@ -1,5 +1,14 @@
 CREATE SCHEMA circle;
 
+-- What a mandate is granted to: a circle or a role, one row for each, by
+-- its id, so circles and roles share one key and a mandate's recipient
+-- is one foreign key. Never a person: a person holds a role by a seat.
+-- Its rows are made by the triggers below as each circle and role is.
+CREATE TABLE circle.grantee (
+  id text PRIMARY KEY,
+  kind text NOT NULL CHECK (kind IN ('circle', 'role'))
+);
+
 -- A circle of the co-op; the root, the assembly, has no parent.
 CREATE TABLE circle.circle (
   id text PRIMARY KEY,
@@ -18,9 +27,29 @@ CREATE TABLE circle.role (
   duty text NOT NULL DEFAULT ''
 );
 
--- A grant of one power to one role, an individual mandate, to one
--- circle as a whole, a collective mandate its motions use, or to the
--- people who hold a right, every person, member or employee, for a term:
+-- Each circle and each role is a grantee, made with it: an id the other
+-- kind holds already is refused.
+CREATE FUNCTION circle.granted_to() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF EXISTS (SELECT FROM circle.grantee g WHERE g.id = NEW.id AND g.kind <> TG_ARGV[0]) THEN
+    RAISE EXCEPTION '% is a % already: a circle and a role never share an id', NEW.id, (SELECT g.kind FROM circle.grantee g WHERE g.id = NEW.id)
+      USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  INSERT INTO circle.grantee (id, kind) VALUES (NEW.id, TG_ARGV[0]) ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER granted_to BEFORE INSERT ON circle.circle
+  FOR EACH ROW EXECUTE FUNCTION circle.granted_to('circle');
+CREATE TRIGGER granted_to BEFORE INSERT ON circle.role
+  FOR EACH ROW EXECUTE FUNCTION circle.granted_to('role');
+
+ALTER TABLE circle.circle ADD FOREIGN KEY (id) REFERENCES circle.grantee;
+ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
+
+-- A grant of one power to one grantee, a role, an individual mandate, or
+-- a circle as a whole, a collective mandate its motions use, for a term:
 -- the values of the mandate policy that grants it, copied as it is
 -- adopted (`circle.mandate_from`). `limit` caps a single write, `budget`
 -- a total over `per`; never both. `from` and `until` are the days its
@@ -28,9 +57,7 @@ CREATE TABLE circle.role (
 -- grants nothing.
 CREATE TABLE circle.mandate (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  role text REFERENCES circle.role,
-  circle text REFERENCES circle.circle,
-  "right" text CHECK ("right" IN ('person', 'member', 'employee')),
+  grantee text NOT NULL REFERENCES circle.grantee,
   power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
   policy text NOT NULL UNIQUE,
   "limit" cella.amount,
@@ -39,15 +66,31 @@ CREATE TABLE circle.mandate (
   "from" date NOT NULL,
   until date,
   revoked date,
-  CHECK (num_nonnulls(role, circle, "right") = 1),
   CHECK ("limit" IS NULL OR budget IS NULL),
   CHECK ((budget IS NULL) = (per IS NULL)),
   CHECK (until IS NULL OR "from" < until)
 );
 
-CREATE INDEX ON circle.mandate (role);
-CREATE INDEX ON circle.mandate (circle);
+CREATE INDEX ON circle.mandate (grantee);
 CREATE INDEX ON circle.mandate (power);
+
+-- A power the legal form gives every person, member or employee as such,
+-- no mandate: it has no grantee, no issuer and no chain. The values of
+-- the right policy that gives it, copied as it is adopted, on its
+-- policy's days; `limit` caps a single write.
+CREATE TABLE circle.right (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  "right" text NOT NULL CHECK ("right" IN ('person', 'member', 'employee')),
+  power text NOT NULL CHECK (power ~ '^[a-z][a-z-]*$'),
+  policy text NOT NULL UNIQUE,
+  "limit" cella.amount,
+  "from" date NOT NULL,
+  until date,
+  revoked date,
+  CHECK (until IS NULL OR "from" < until)
+);
+
+CREATE INDEX ON circle.right (power);
 
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;

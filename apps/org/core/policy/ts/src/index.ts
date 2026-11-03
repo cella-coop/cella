@@ -1,11 +1,13 @@
 import type { Db } from '@cella/org-db'
 
-// The kinds of policy: who may do something, what else the co-op
-// agreed, and how a circle decides.
-export type Kind = 'mandate' | 'rule' | 'procedure'
+// The kinds of policy: who may do something, what the legal form gives
+// every person, member or employee, what else the co-op agreed, and how
+// a circle decides.
+export type Kind = 'mandate' | 'right' | 'rule' | 'procedure'
 
 export const kinds: { value: Kind; label: string }[] = [
   { value: 'mandate', label: 'Mandate: who may do something' },
+  { value: 'right', label: 'Right: what every person, member or employee may do as such' },
   { value: 'rule', label: 'Rule: what else the co-op agreed' },
   { value: 'procedure', label: 'Procedure: how a circle decides' },
 ]

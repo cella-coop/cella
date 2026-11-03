@@ -1,6 +1,8 @@
-// Mandates, alone, on a database holding only the app's core and this
-// feat: a mandate is a policy, whose values this feat holds sound, copies
-// into `circle.mandate` as it is adopted and revokes as it ends; its
+// Mandates and rights, alone, on a database holding only the app's core
+// and this feat: a mandate is a policy granted to one grantee, a circle or
+// a role, whose values this feat holds sound, copies into `circle.mandate`
+// as it is adopted and revokes as it ends, and a right one of its own
+// kind, copied into `circle.right`; its
 // guards refuse a mandate policy adopted without its mandate, and an end
 // that leaves it standing. Run by `cella test slice circle`.
 
@@ -25,8 +27,8 @@ const adopt = async (kind: string, wording: string, motion: string, n: number, r
   ).rows[0].id
 const mandate = async (policy: string) =>
   (
-    await db.query<{ role: string; power: string; limit: number; from: string; revoked: string | null }>(
-      `SELECT role, power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from", to_char(revoked, 'YYYY-MM-DD') AS revoked
+    await db.query<{ grantee: string; power: string; limit: number; from: string; revoked: string | null }>(
+      `SELECT grantee, power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from", to_char(revoked, 'YYYY-MM-DD') AS revoked
        FROM circle.mandate WHERE policy = $1`,
       [policy],
     )
@@ -50,27 +52,29 @@ after(async () => {
   await db.end()
 })
 
-test('a mandate marks a role, a circle or a right, a power in lower case and at most one cap, an amount', async () => {
+test('a mandate marks one grantee, a role or a circle, a power in lower case and at most one cap, an amount', async () => {
   await staged()
   try {
     assert.equal(await flaw({ role: 'finance', power: 'pay-supplier', limit: '3 000 €' }), null)
     assert.equal(await flaw({ role: 'lead', power: 'approve-expense', budget: '1 000 €', per: 'month' }), null)
-    assert.match((await flaw({ power: 'pay-supplier' })) ?? '', /names its role/)
+    assert.match((await flaw({ power: 'pay-supplier' })) ?? '', /names its grantee/)
     assert.match((await flaw({ role: 'printer', power: 'pay-supplier' })) ?? '', /no role printer/)
     assert.match((await flaw({ role: 'finance', power: 'Pay suppliers' })) ?? '', /power in lower case/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', limit: '3 000 €', budget: '1 000 €', per: 'month' })) ?? '', /not both/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', limit: 'three thousand' })) ?? '', /a limit is an amount/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', budget: '1 000 €' })) ?? '', /per month or per year/)
     assert.match((await flaw({ role: 'finance', power: 'pay-supplier', rate: '20 %' })) ?? '', /not rate/)
-    // A collective mandate marks a circle instead, and a right the people
-    // who hold it: only one of the three.
+    // A collective mandate marks a circle instead: one grantee, whose kind
+    // is the one it is marked as.
     assert.equal(await flaw({ circle: 'operations', power: 'admit-member' }), null)
-    assert.match((await flaw({ power: 'admit-member' })) ?? '', /names its role, as {role: finance}, its circle, as {circle: ag}, or its right, as {right: member}/)
-    assert.match((await flaw({ role: 'finance', circle: 'operations', power: 'admit-member' })) ?? '', /on a role, on a circle or a right, only one/)
+    assert.match((await flaw({ power: 'admit-member' })) ?? '', /names its grantee, a role, as {role: finance}, or a circle, as {circle: ag}/)
+    assert.match((await flaw({ role: 'finance', circle: 'operations', power: 'admit-member' })) ?? '', /one grantee, a role or a circle/)
     assert.match((await flaw({ circle: 'web', power: 'admit-member' })) ?? '', /no circle web/)
-    assert.equal(await flaw({ right: 'employee', power: 'claim-expense' }), null)
-    assert.match((await flaw({ right: 'member', role: 'finance', power: 'draw-account' })) ?? '', /only one/)
-    assert.match((await flaw({ right: 'visitor', power: 'keep-profile' })) ?? '', /a right is held by every person, member or employee, as {right: member}, not visitor/)
+    assert.match((await flaw({ role: 'operations', power: 'admit-member' })) ?? '', /no role operations/)
+    assert.match((await flaw({ circle: 'finance', power: 'admit-member' })) ?? '', /no circle finance/)
+    // A person never holds a mandate, and a right is none.
+    assert.match((await flaw({ person: 'julien@lanterne.coop', power: 'pay-supplier' })) ?? '', /a person holds no mandate/)
+    assert.match((await flaw({ right: 'employee', power: 'claim-expense' })) ?? '', /a right is no mandate/)
   } finally {
     await db.query('ROLLBACK')
   }
@@ -83,7 +87,7 @@ test('adopting a mandate policy copies its values into its mandate, and one repl
     assert.match((await guard('grants', first)) ?? '', /m-2026-020\/1 grants no mandate: its values are copied as it is adopted/)
     await db.query('SELECT circle.mandate_from($1)', [first])
     assert.equal(await guard('grants', first), null)
-    assert.deepEqual(await mandate(first), { role: 'finance', power: 'pay-supplier', limit: 300000, from: '2026-11-21', revoked: null })
+    assert.deepEqual(await mandate(first), { grantee: 'finance', power: 'pay-supplier', limit: 300000, from: '2026-11-21', revoked: null })
 
     const second = await adopt('mandate', pays('4 000 €'), 'm-2026-020', 2, first)
     await db.query('SELECT circle.mandate_from($1)', [second])
@@ -140,21 +144,76 @@ test('a collective mandate is on a circle, and the circle holds it itself, not t
     const policy = await adopt('mandate', 'The {circle: operations} circle holds {power: admit-member}, to admit members, by motion', 'm-2026-020', 1)
     await db.query('SELECT circle.mandate_from($1)', [policy])
     assert.equal(await guard('grants', policy), null)
-    assert.deepEqual((await db.query(`SELECT role, circle, power FROM circle.mandate WHERE policy = $1`, [policy])).rows, [
-      { role: null, circle: 'operations', power: 'admit-member' },
-    ])
+    assert.deepEqual(
+      (await db.query(`SELECT m.grantee, g.kind, m.power FROM circle.mandate m JOIN circle.grantee g ON g.id = m.grantee WHERE m.policy = $1`, [policy])).rows,
+      [{ grantee: 'operations', kind: 'circle', power: 'admit-member' }],
+    )
     assert.equal(await holds('operations', 'admit-member'), true)
     assert.equal(await holds('ag', 'admit-member'), false)
     assert.equal(await holds('operations', 'suspend-member'), false)
     await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
     await db.query('SELECT circle.mandate_ended($1)', [policy])
     assert.equal(await holds('operations', 'admit-member'), false)
+    // A grantee is a circle or a role, never a person.
     await db.query('SAVEPOINT holder')
     await assert.rejects(
-      db.query(`INSERT INTO circle.mandate (role, circle, power, policy, "from") VALUES ('finance', 'operations', 'admit-member', 'm-2026-022/1', '2026-01-01')`),
-      /mandate_check/,
+      db.query(`INSERT INTO circle.mandate (grantee, power, policy, "from") VALUES ('julien@lanterne.coop', 'admit-member', 'm-2026-022/1', '2026-01-01')`),
+      /mandate_grantee_fkey/,
     )
     await db.query('ROLLBACK TO SAVEPOINT holder')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('every circle and every role is a grantee, and a circle and a role never share an id', async () => {
+  await staged()
+  try {
+    assert.deepEqual(
+      (await db.query(`SELECT id, kind FROM circle.grantee WHERE id IN ('ag', 'operations', 'finance', 'lead', 'participant') ORDER BY id`)).rows,
+      [
+        { id: 'ag', kind: 'circle' },
+        { id: 'finance', kind: 'role' },
+        { id: 'lead', kind: 'role' },
+        { id: 'operations', kind: 'circle' },
+        { id: 'participant', kind: 'role' },
+      ],
+    )
+    await db.query('SAVEPOINT shared')
+    await assert.rejects(db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('operations', 'operations', 'Operator')`), (e: Error & { code?: string }) => {
+      assert.equal(e.code, '09000', e.message)
+      assert.match(e.message, /operations is a circle already: a circle and a role never share an id/)
+      return true
+    })
+    await db.query('ROLLBACK TO SAVEPOINT shared')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a right is a policy of its own kind, copied into circle.right with no grantee, and ending it revokes it', async () => {
+  await staged()
+  try {
+    const right = async (marked: object) => (await db.query<{ r: string | null }>('SELECT circle.right_flaw($1) AS r', [marked])).rows[0].r
+    assert.equal(await right({ right: 'employee', power: 'claim-expense' }), null)
+    assert.match((await right({ power: 'claim-expense' })) ?? '', /names who it is given to/)
+    assert.match((await right({ right: 'visitor', power: 'keep-profile' })) ?? '', /every person, member or employee, as {right: member}, not visitor/)
+    assert.match((await right({ right: 'member', role: 'finance', power: 'draw-account' })) ?? '', /not role/)
+
+    const policy = await adopt('right', 'Every {right: employee} holds {power: log-time}, to log, correct and submit their own time', 'm-2026-020', 1)
+    assert.match((await guard('grants', policy)) ?? '', /gives no right: its values are copied as it is adopted/)
+    assert.equal(await db.query('SELECT circle.mandate_from($1) AS m', [policy]).then((r) => r.rows[0].m), null, 'a right is no mandate')
+    assert.equal(await guard('grants', policy), null)
+    assert.deepEqual(
+      (await db.query(`SELECT "right", power, to_char(revoked, 'YYYY-MM-DD') AS revoked FROM circle.right WHERE policy = $1`, [policy])).rows,
+      [{ right: 'employee', power: 'log-time', revoked: null }],
+    )
+    assert.equal((await db.query('SELECT count(*)::int AS n FROM circle.mandate WHERE policy = $1', [policy])).rows[0].n, 0)
+
+    await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [policy])
+    assert.match((await guard('revokes', policy)) ?? '', /right \d+ of m-2026-020\/1 is not revoked the day it ends/)
+    await db.query('SELECT circle.mandate_ended($1)', [policy])
+    assert.equal(await guard('revokes', policy), null)
   } finally {
     await db.query('ROLLBACK')
   }

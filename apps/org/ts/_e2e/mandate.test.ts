@@ -4,14 +4,17 @@
 // 3 100 €; the assembly adopts a mandate of 4 000 € a payment, its values
 // copied into his role's mandate, and 3 100 € passes; ending the policy
 // revokes it, and the next 3 100 € is refused; a mandate policy marking no
-// role is refused at its proposal, and one beyond what the circle above
-// holds is refused as it is adopted. Run by `cella test e2e mandate`.
+// grantee, or a person, is refused at its proposal, and one beyond what
+// the circle above holds is refused as it is adopted; finance and
+// coordination hold theirs through a grantee, and every employee logs
+// their time by right. Run by `cella test e2e mandate`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { log } from '@cella/org-timesheet/api'
 import { pay } from '@cella/org-transaction/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
@@ -70,12 +73,12 @@ test('Lanterne\'s mandates are policies of the assembly, adopted by its founding
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE r.kind = 'mandate' AND r.circle = 'ag' AND r.motion = 'm-2021-001')::int AS adopted
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy`,
     ),
-    { mandates: 67, adopted: 67 },
+    { mandates: 51, adopted: 51 },
   )
   assert.deepEqual(
     await one(
       `SELECT m.policy, cella.cents(m."limit")::int AS "limit", to_char(m."from", 'YYYY-MM-DD') AS "from", policy.sentence(w.legal) AS sentence
-       FROM circle.mandate m JOIN policy.wording w ON w.policy = m.policy WHERE m.role = 'finance' AND m.power = 'pay-supplier'`,
+       FROM circle.mandate m JOIN policy.wording w ON w.policy = m.policy WHERE m.grantee = 'finance' AND m.power = 'pay-supplier'`,
     ),
     { policy: 'm-2021-001/15', limit: 300000, from: '2021-03-01', sentence: 'The finance role holds pay-supplier, to pay suppliers, up to 3 000 € a write' },
   )
@@ -95,10 +98,10 @@ test('the assembly adopts a mandate of 4 000 € a payment, copied into finance\
   raising = `${motion}/1`
   assert.deepEqual(
     await one(
-      `SELECT role, power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from", revoked FROM circle.mandate WHERE policy = $1`,
+      `SELECT grantee, power, cella.cents("limit")::int AS "limit", to_char("from", 'YYYY-MM-DD') AS "from", revoked FROM circle.mandate WHERE policy = $1`,
       [raising],
     ),
-    { role: 'finance', power: 'pay-supplier', limit: 400000, from: '2026-11-21', revoked: null },
+    { grantee: 'finance', power: 'pay-supplier', limit: 400000, from: '2026-11-21', revoked: null },
   )
   settled(await paying('2026-11-21', 3100))
 })
@@ -131,7 +134,76 @@ test('a mandate policy marking no role is refused at its proposal', async () => 
     },
     as(camille),
   )
-  assert.match(reason(unmarked), /a mandate policy names its role, as \{role: finance\}/)
+  assert.match(reason(unmarked), /a mandate policy names its grantee, a role, as \{role: finance\}, or a circle, as \{circle: ag\}/)
+})
+
+test('Julien\'s finance role and coordination each hold their mandates through a grantee, one key, and no mandate is a person\'s', async () => {
+  // Julien holds finance by his seat in Operations; the role holds the
+  // mandate, and coordination its collective ones, each one grantee.
+  assert.deepEqual(
+    await all(
+      `SELECT g.id, g.kind, array_agg(DISTINCT m.power ORDER BY m.power) FILTER (WHERE m.power IN ('pay-supplier', 'close-period', 'adopt-policy', 'nest-circle')) AS powers
+       FROM circle.grantee g JOIN circle.mandate m ON m.grantee = g.id
+       WHERE g.id IN ('finance', 'coordination') AND m.revoked IS NULL GROUP BY g.id, g.kind ORDER BY g.id`,
+    ),
+    [
+      { id: 'coordination', kind: 'circle', powers: ['adopt-policy', 'nest-circle'] },
+      { id: 'finance', kind: 'role', powers: ['close-period', 'pay-supplier'] },
+    ],
+  )
+  assert.deepEqual(await all(`SELECT circle FROM circle_membership.seat WHERE member = $1 AND role = 'finance' AND until IS NULL`, [julien]), [{ circle: 'operations' }])
+  assert.equal(
+    (await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate m WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = m.grantee AND g.kind IN ('circle', 'role'))`)).n,
+    0,
+  )
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.grantee WHERE id LIKE '%@%'`)).n, 0, 'no person is a grantee')
+})
+
+test('a mandate policy naming a person is refused at its proposal by circle.mandate_flaw: the person\'s role holds it', async () => {
+  await on('2026-12-05')
+  const personal = await propose(
+    {
+      circle: 'ag',
+      title: 'Julien pays suppliers himself',
+      procedure: 'consent',
+      deadline: '2026-12-19',
+      body: '',
+      actions: [{ kind: 'policy', args: { kind: 'mandate', wording: `The {person: ${julien}} holds {power: pay-supplier}, to pay suppliers` } }],
+    },
+    as(camille),
+  )
+  assert.match(reason(personal), /a person holds no mandate: a mandate names the role they hold, as \{role: finance\}, or a circle, as \{circle: ag\}/)
+  const right = await propose(
+    {
+      circle: 'ag',
+      title: 'Every employee pays suppliers',
+      procedure: 'consent',
+      deadline: '2026-12-19',
+      body: '',
+      actions: [{ kind: 'policy', args: { kind: 'mandate', wording: 'Every {right: employee} holds {power: pay-supplier}, to pay suppliers' } }],
+    },
+    as(camille),
+  )
+  assert.match(reason(right), /a right is no mandate: it is a policy of its own kind, which the legal form gives/)
+})
+
+test('every employee still logs their time by right, no mandate: the right is the form\'s, given by the founding motion', async () => {
+  assert.deepEqual(
+    await one(
+      `SELECT g."right", r.kind, r.motion, r.protected FROM circle.right g JOIN policy.policy r ON r.id = g.policy WHERE g.power = 'log-time' AND g.revoked IS NULL`,
+    ),
+    { right: 'employee', kind: 'right', motion: 'm-2021-001', protected: 'extraordinary' },
+  )
+  assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE power = 'log-time'`)).n, 0)
+  const employees = await all<{ address: string; entitled: boolean; may: boolean }>(
+    `SELECT w.address, circle_membership.entitled(w.address, 'log-time', NULL, '2026-12-19') AS entitled,
+            circle_membership.may(w.address, 'log-time', NULL, '2026-12-19') AS may
+     FROM employment.worker w WHERE employment.employed(w.address, '2026-12-19') ORDER BY w.address`,
+  )
+  assert.ok(employees.length > 0)
+  assert.deepEqual(employees.filter((e) => !e.entitled || e.may), [], 'each holds log-time by right alone')
+  await on('2026-12-19')
+  settled(await log({ member: julien, day: '2026-12-18', minutes: 90, billable: false, note: 'Supplier reconciliation' }, as(julien)))
 })
 
 test('a mandate policy beyond what the circle above holds is refused as it is adopted: finance may not approve 3 000 € of expenses, beyond the gérante\'s 2 000 €', async () => {

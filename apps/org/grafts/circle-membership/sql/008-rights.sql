@@ -1,4 +1,4 @@
--- A right's mandate needs no seat: the actor holds it where person's
+-- A right needs no seat, and is no mandate: the actor holds it where person's
 -- core says they are one of the people it names on the day
 -- (`person.holds`), every person, every member or every employee. A
 -- right lets each act on what is their own, which the feat's guard
@@ -8,9 +8,8 @@ CREATE FUNCTION circle_membership.entitled(actor text, power text, cents bigint,
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
-    SELECT FROM circle.mandate m
-    WHERE m."right" IS NOT NULL
-      AND m.power = entitled.power
+    SELECT FROM circle.right m
+    WHERE m.power = entitled.power
       AND (m."from" IS NULL OR m."from" <= entitled.day)
       AND (m.until IS NULL OR m.until > entitled.day)
       AND (m.revoked IS NULL OR m.revoked > entitled.day)

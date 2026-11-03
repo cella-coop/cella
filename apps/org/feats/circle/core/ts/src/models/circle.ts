@@ -19,11 +19,12 @@ export interface Role {
   duty: string
 }
 
-// A grant of one power to one role: the values of the mandate policy that
-// grants it, and its sentence as it reads; amounts in cents.
+// A grant of one power to one grantee, here a role of the circle: the
+// values of the mandate policy that grants it, and its sentence as it
+// reads; amounts in cents.
 export interface Mandate {
   id: string
-  role: string
+  grantee: string
   power: string
   policy: string
   sentence: string

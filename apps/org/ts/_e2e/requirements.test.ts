@@ -129,11 +129,11 @@ test('a motion of Web is decided by what its mandate\'s chain asks, whatever its
 
 test('its close is refused until someone of coordination has spoken on it; a word from Web counts for nothing', async () => {
   await on('2026-11-23')
-  settled(await post({ motion: webMotion, member: webber, reply: null, body: 'All of us agree.', mentions: [], links: [] }, as(webber)))
+  settled(await post({ motion: webMotion, member: webber, reply: null, body: 'All of us agree.' }, as(webber)))
   const early = await close({ motion: webMotion }, as(webber))
   assert.match(reason(early), new RegExp(`${webMotion} is decided by heard, which consults coordination: it closes once someone seated in coordination has said something on it`))
   assert.ok(!(await all<{ s: string }>(`SELECT s FROM circle_membership.seated('web', '2026-11-23') s`)).some((r) => r.s === camille))
-  settled(await post({ motion: webMotion, member: camille, reply: null, body: 'Coordination is glad of it.', mentions: [], links: [] }, as(camille)))
+  settled(await post({ motion: webMotion, member: camille, reply: null, body: 'Coordination is glad of it.' }, as(camille)))
   settled(await close({ motion: webMotion }, as(webber)))
   const out = await carried(webMotion, as(webber))
   assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])

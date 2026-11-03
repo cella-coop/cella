@@ -17,8 +17,8 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { procedures, vote } from '@cella/org-motion/api'
-import { terms } from '@cella/org-motion/models'
+import { post, procedures, vote } from '@cella/org-motion/api'
+import { terms, type Post } from '@cella/org-motion/models'
 import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
 import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
 import { submit } from '@cella/org-timesheet/api'
@@ -171,6 +171,20 @@ test('deliberation on m-2026-011: Camille asks Malik, linking the rate card, and
   assert.equal((await one<{ reply: string }>(`SELECT reply::text FROM motion.message WHERE member = $1`, [malik])).reply, message.receipt)
   assert.ok(!(await shell.page('/inbox', malik)).text.includes('mentioned you on Raise the day rate'))
   assert.ok((await shell.page('/inbox', camille)).text.includes('Malik Benali mentioned you on Raise the day rate for 2027'))
+})
+
+test('a message mentions and links only what its text gives, whatever its request names', async () => {
+  // A caller of the handler naming a mention and a link the text does not
+  // give: the table generates both from the text, so neither is stored,
+  // logged or in Julien's inbox.
+  const forged = { motion: 'm-2026-011', member: camille, reply: null, body: 'Nothing more from me.', mentions: ['julien'], links: ['rate-card-2027@2'] } as Post
+  const out = await post(forged, as(camille))
+  const { message } = settled(out)
+  const row = await one<{ mentions: string[]; links: string[] }>(`SELECT mentions, links FROM motion.message WHERE receipt = $1`, [message])
+  assert.deepEqual([row.mentions, row.links], [[], []])
+  const logged = await one<{ payload: { mentions: string[]; links: string[] } }>('SELECT cella.opened($1) AS payload', [out.state === 'settled' ? out.entry : null])
+  assert.deepEqual([logged.payload.mentions, logged.payload.links], [[], []])
+  assert.ok(!(await shell.page('/inbox', julien)).text.includes('Camille Martin mentioned you on Raise the day rate'))
 })
 
 test('a message names members and documents there are, is posted by the circle’s members, and not once it closes', async () => {

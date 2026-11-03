@@ -3,8 +3,8 @@
 
 // A message, ordered by its receipt; `reply` is the receipt of the message
 // it answers. `mentions` holds each handle its text gives, `links` each
-// document it links, as typed: the grafts that join members and documents
-// resolve them.
+// document it links, as the table generated them from it: the grafts that
+// join members and documents resolve them.
 export interface Message {
   receipt: number
   member: string
@@ -15,17 +15,20 @@ export interface Message {
   at: string
 }
 
+// A message to post: its text, and no mentions or links of its own, since the
+// table generates them from the text.
 export interface Post {
   motion: string
   member: string
   reply: number | null
   body: string
-  mentions: string[]
-  links: string[]
 }
 
+// A posted message, by its receipt, and what its text mentions and links.
 export interface Posted {
   message: number
+  mentions: string[]
+  links: string[]
 }
 
 // A piece of a message's text: plain text, a member mentioned by handle
@@ -59,7 +62,8 @@ export function parts(body: string): Part[] {
 }
 
 // The handles a text mentions and the documents it links, each once, in
-// the order given.
+// the order given, as `motion.mentions` and `motion.links` read them in SQL,
+// which alone fix a message's; no guard reads these.
 export const mentions = (body: string): string[] => [...new Set(parts(body).flatMap((p) => ('mention' in p ? [p.mention] : [])))]
 export const links = (body: string): string[] => [...new Set(parts(body).flatMap((p) => ('link' in p ? [p.link] : [])))]
 

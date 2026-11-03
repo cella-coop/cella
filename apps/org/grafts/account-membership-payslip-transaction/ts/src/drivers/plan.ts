@@ -2,11 +2,13 @@ import type { Db } from '@cella/org-db'
 import type { Instalment, Plan, Withheld } from '../models/plan.ts'
 
 // A member's plan: their instalments and what each month's pay withheld,
-// what they still owe, and the most instalments the statutes allow.
+// what they still owe, and the most instalments the statutes still allow,
+// less those their pay withheld already.
 export async function plan(db: Db, member: string, actor: string | null): Promise<Plan> {
   const { rows } = await db.query<{ instalments: number | null; each: string | null; since: string | null; unpaid: string | null; allowed: number | null }>(
     `SELECT p.instalments, cella.cents(p.each) AS each, to_char(p.since, 'YYYY-MM-DD') AS since, c.unpaid,
-            (SELECT t.instalments FROM account.terms t WHERE t.id = account.capital_for(cella.verdict_date())) AS allowed
+            (SELECT greatest(t.instalments - (SELECT count(*) FROM account_membership_payslip_transaction.withheld w WHERE w.member = x.member), 0)::integer
+             FROM account.terms t WHERE t.id = account.capital_for(cella.verdict_date())) AS allowed
      FROM (SELECT $1::text AS member) x
      LEFT JOIN account_membership_payslip_transaction.plan p ON p.member = x.member
      LEFT JOIN account_membership_transaction.called c ON c.member = x.member`,

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-02
+updated = 2026-11-03
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -16,13 +16,19 @@ and on `payslip-transaction`, whose payment it adds lines to. Declared by
 
 `account_membership_payslip_transaction` (`sql/`):
 
-- `plan`: an associate's instalments, how many, the cents of each and the
-  day they chose them; their own register, which spreading again replaces.
+- `plan`: an associate's instalments, how many, the cents of each, the
+  day they chose them and how many their pay had withheld before it;
+  their own register, which spreading again replaces.
 - `withheld`: what a month's pay withheld from each associate and the
   entry, the run's payment, that posted it.
 - `due(month)`: what a month's run withholds from each associate on a plan
-  with a payslip in it: an instalment, never more than they still owe nor
-  than their net pay.
+  with a payslip in it, while the plan has instalments left: an
+  instalment, and on the plan's last all they still owe, never more than
+  they still owe nor than their net pay. A month withholding anything
+  counts as one instalment, whatever its amount, so a net pay below the
+  instalment never stretches a plan past its count; once its last is
+  withheld the plan withholds nothing more, and what is left is owed as
+  any called capital is, paid in through the bank (`account:capital:pay`).
 - `withholds`, a trigger after a run's payment is linked, in the write that
   pays the run: each instalment due is withheld, posted as lines of the
   payment's own entry, since a write posts one, as a payment in through
@@ -44,13 +50,15 @@ clock runs out `cella vault sweep` redacts them to NULL.
 `account:capital:spread` (confluent, `spread-capital`, every member's right), served on a member's own page
 while they owe some: what they owe is spread over as many monthly
 instalments as they choose, each rounded up to the cent, from the verdict
-date on.
+date on. The statutes' ceiling counts every instalment the subscription
+has had withheld from pay, under this plan or an earlier one, so
+spreading again offers only what the ceiling has left.
 
 ## Guards
 
 - `account_membership_payslip_transaction.spreads`, on `account:capital:spread`:
   they owe something, no more instalments than the statutes' clauses
-  allow, the plan was set by this write, and it is their own.
+  allow less those already withheld from their pay, the plan was set by this write, and it is their own.
 - `account_membership_payslip_transaction.deducted`, on `payslip:run:pay`: the
   payment withheld exactly each instalment due, each recorded as paid in
   through pay, and its entry posts exactly those lines beyond the run's
@@ -64,7 +72,12 @@ instalments, one this write did not set and one not the actor's own are
 refused; paying a run withholds an instalment in its own entry, the bank
 paying less by it and the capital account holding it, and both the
 payment's guards pass; a payment that withholds less is refused; an
-instalment never exceeds what is owed; lines that credit the bank are
+instalment never exceeds what is owed; spreading again over more than
+the ceiling has left once instalments were withheld is refused; an
+associate whose net pay is below their instalment has it withheld in
+exactly the plan's count of months, the last all their net pay allows,
+and nothing the month after, what is left still owed on their capital
+account; lines that credit the bank are
 refused by the payment's guard.
 
 ## Reads

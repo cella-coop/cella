@@ -20,12 +20,13 @@ import { shell } from '@cella/org-analytics/api'
 import { profile } from '@cella/org-person/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
+import { own } from './port.ts'
 
 const repo = new URL('../../../../', import.meta.url).pathname
 const bin = process.env.CELLA_BIN ?? 'cella'
 const db = process.env.PGDATABASE ?? 'cella_test'
-// A port of its own, apart from the dev shell's.
-const port = '54353'
+// A port of its own, apart from the dev shell's and the run's others.
+const port = own(10)
 const url = `quack:localhost:${port}`
 const extensions = process.env.CELLA_DUCKDB_EXTENSIONS ?? ''
 const cella = (...args: string[]) => spawnSync(bin, [...args, '--port', port], { cwd: repo, encoding: 'utf8' })

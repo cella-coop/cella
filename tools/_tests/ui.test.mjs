@@ -119,3 +119,13 @@ test('a menu floated by hand is refused; the Popover opens it in the top layer',
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Table.svelte', stretched, true), [], 'a stretched link is no layer')
   assert.deepEqual(problems('apps/org/core/ui/ts/src/components/Popover.svelte', floated, true), [])
 })
+
+test('a rule that sets outline: none without the focus ring is refused, in a stylesheet or a <style> block', () => {
+  const sheet = 'apps/org/core/ui/ts/src/styles/base.css'
+  const found = problems(sheet, 'input:focus,\nselect:focus {\n  outline: none;\n  border-color: var(--accent-border);\n}\n', true)
+  assert.equal(found.length, 1, `${found}`)
+  assert.match(found[0], /input:focus, select:focus sets outline: none and draws no ring/)
+  assert.match(problems(sheet, '@media (hover: hover) {\n  .x { outline: 0 }\n}\n', true)[0], /\.x sets outline: none/)
+  assert.match(problems('apps/org/core/ui/ts/src/components/Grid.svelte', component('', '<input />\n<style>\n  input:focus {\n    outline: none;\n  }\n</style>'), true)[0], /input:focus sets outline: none/)
+  assert.deepEqual(problems(sheet, ':focus-visible {\n  outline: none;\n  box-shadow: var(--focus);\n}\n.drop {\n  outline: 2px dashed transparent;\n}\n/* outline: none */\n', true), [], 'the ring, or an outline drawn, passes')
+})

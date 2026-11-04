@@ -548,11 +548,13 @@ top-level `let` or `var`; no `.svelte` file or module under `app/`,
 `hooks/` or `components/` imports a server layer: a package's `api`,
 `drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`; `$effect`
 appears only in a state class, so a component derives, attaches
-(`{@attach}`) or handles an event instead; and no source uses a legacy
+(`{@attach}`) or handles an event instead; no source uses a legacy
 Svelte or SvelteKit form: `on:event`, `<slot>`, `use:`, `{@const}`,
 `$$props`, `export let`, `$:`, `createEventDispatcher`, string-keyed
 `setContext`/`getContext`, `$app/stores`, `$lib`, `$env` or
-`invalidateAll`, nor `{@html}`.
+`invalidateAll`, nor `{@html}`; and no rule of a stylesheet or a
+`<style>` sets `outline: none` without drawing `--focus` as its
+box-shadow.
 
 ## The shell
 

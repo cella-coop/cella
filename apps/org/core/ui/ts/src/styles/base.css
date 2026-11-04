@@ -73,12 +73,18 @@ textarea {
   transition: border-color var(--fast) var(--ease);
 }
 
+/* A focused field keeps the ring :focus-visible draws, beside its border. */
 input:focus,
 select:focus,
 textarea:focus {
-  outline: none;
   border-color: var(--accent-border);
-  box-shadow: none;
+}
+
+/* WebKit's native menu list drops a box-shadow, so a select draws the same
+   ring as an outline. */
+select:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: 0;
 }
 
 /* A textarea holds prose, a note or a message, so it reads as the rest. */

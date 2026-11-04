@@ -26,7 +26,6 @@
 
 <style>
   .blocks {
-    outline: none;
     padding: var(--space-2) var(--space-2) var(--space-5) var(--space-5);
     font-family: var(--font-display);
     font-size: var(--text-lg);
@@ -95,7 +94,6 @@
     bottom: -2px;
   }
   .blocks :global(.text) {
-    outline: none;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
     min-height: 1.55em;

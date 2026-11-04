@@ -92,6 +92,9 @@
   /* Shadow stays dark in both themes, as light does; floating things only. */
   --shadow-float: 0 2px 6px oklch(0.2 0.02 60 / 10%), 0 16px 40px oklch(0.2 0.02 60 / 16%);
   --focus: 0 0 0 2px var(--accent-border);
+  /* The same ring as an outline, for a select, whose native menu list
+     WebKit draws without a shadow. */
+  --focus-outline: 2px solid var(--accent-border);
 
   /* Type: Alegreya for the voice, its sans sibling for everything read or
      measured. */

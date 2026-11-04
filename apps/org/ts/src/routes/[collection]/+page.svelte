@@ -43,6 +43,7 @@
       shifts={shifts(data.name)}
       values={data.values}
       dashboard={data.dashboard}
+      sorted={data.sorted}
     />
   {/key}
 {/if}

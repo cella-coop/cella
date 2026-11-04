@@ -27,3 +27,27 @@ export const nearest =
       node.scrollIntoView({ block: 'nearest' })
     }
   }
+
+// Where the keyboard's row goes from `at`, `by` rows on, over the `drawn`
+// rows with `left` more the server holds: one past the last drawn row is
+// the next page's first, which the move asks for, and no further.
+export const step = (at: number, by: number, drawn: number, left: number): number =>
+  Math.max(0, Math.min(at + by, drawn - 1 + (left > 0 ? 1 : 0)))
+
+// The one row in the tab order, where the keyboard roves the rows: its
+// row, the first before it is on one, the last drawn while the next page
+// it moved to is asked for.
+export const stop = (at: number, drawn: number): number => Math.max(0, Math.min(at, drawn - 1))
+
+// The keyboard's row takes the focus: scrolled to the nearest edge and
+// focused whenever it becomes the active one, unless the focus is in it.
+export const focused =
+  (active: boolean): Attachment<HTMLElement> =>
+  (node) => {
+    if (active) {
+      node.scrollIntoView({ block: 'nearest' })
+      if (!node.contains(document.activeElement)) {
+        node.focus({ preventScroll: true })
+      }
+    }
+  }

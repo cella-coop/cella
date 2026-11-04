@@ -161,7 +161,17 @@ The theme is light, dark or the system's, a cookie the server writes into
   only a page of rows; a collection page renders nothing else, which the ui
   check enforces on the shell's `[collection]` page. Keyboard
   first: `j`/`k` move, Enter opens, `/` filters (opening the drawer), `c`
-  opens New.
+  opens New. The row `j`/`k` moves to takes the focus, one row in the
+  tab order at a time (a roving `tabindex`, the row's link out of it),
+  so a screen reader reads it and the ring shows where the keyboard is;
+  Tab leaves the rows from it and comes back to it, moving past the last
+  drawn row focuses the next page's first once it is drawn, and coming
+  back from the item it opened focuses it again (a navigation
+  `snapshot`). A table's column the rows are ordered by says so by
+  `aria-sort` on its header, ascending or descending, and the others
+  carry none: the field the collection's read orders by first
+  (`ordered`), where one select reads its rows and its order leads with
+  a field by name; the view orders no rows of its own.
 - `Detail`: the one detail view, the item's blocks in the content and the
   drawer's Details panel, its cards stacked as Linear stacks an issue's
   properties: Properties (label and value rows), Related and Activity.

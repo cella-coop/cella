@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -12,10 +12,12 @@ limit, and draws the financial statements from the journal.
 
 `account_transaction` (`sql/`):
 
-- `account_transaction.posts`, a trigger before each journal line is
-  inserted, whichever write posts it (a transaction's own, or an invoice's
-  through `invoice-transaction`): the line's account exists, and its
-  entry's month is a period of the books and is open. It reads the period
+- `account_transaction.posts`, a line check its migration registers by
+  the transaction feat's `transaction.register_line_check`, which the
+  journal's own trigger runs before each line is inserted, whichever
+  write posts it (a transaction's own, or an invoice's through
+  `invoice-transaction`): the line's account exists, and its entry's
+  month is a period of the books and is open. It reads the period
   row `FOR SHARE`, and `account:period:close` updates it, so a post and a
   concurrent close are serialised. It raises SQLSTATE `09000`, so the
   write is refused and uses no verdict number.
@@ -38,8 +40,10 @@ The app role and the guards role, `cella_guards`, may select the balance.
 
 ## Guards
 
-The open-period guard is a trigger rather than a guard `submit` runs, since
-it holds for every write that posts, whatever its action. At rung 2 a late
+The open-period guard is a line check rather than a guard `submit` runs,
+since it holds for every write that posts, whatever its action; the
+transaction feat's own trigger runs it, never one of this graft's on
+the journal. At rung 2 a late
 post is re-dated into the first open period and flagged, instead of
 refused.
 

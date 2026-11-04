@@ -114,7 +114,15 @@ A deferred constraint trigger checks that every entry balances over two
 lines or more; the db library makes it immediate before the verdict, so an
 unbalanced entry is refused inside the write. Another trigger refuses any
 update or delete: the journal is permanent. A third numbers each entry
-(below). All raise SQLSTATE `09000`.
+(below). A fourth runs, before each line is inserted, whichever write
+posts it, every check an extender registered by
+`transaction.register_line_check(check, owner)`, the feat's published
+register, each a function of the line, `(transaction.line) → void`,
+that raises to refuse it, in the order of their owners and names; the
+feat knows none of its extenders by name, and no extender puts a
+trigger on the journal. All raise SQLSTATE `09000`.
+`transaction.line_check` is that register, a registry the extenders'
+migrations fill through the function and never insert into.
 The app role may select and insert; the guards role, `cella_guards`, may
 select.
 

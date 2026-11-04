@@ -70,6 +70,7 @@ test('every table of a feat or a graft names its owning circle, never null, keye
     'person.rights',
     'report.drawn',
     'transaction.journal',
+    'transaction.line_check',
   ])
   // A setting is keyed by its circle, and a generated document names the
   // circle whose policies it reads: neither falls back to the root.

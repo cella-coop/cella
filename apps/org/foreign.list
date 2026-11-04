@@ -9,7 +9,6 @@
 account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes transaction.line
 account-membership-payslip-transaction: account_membership_payslip_transaction.withholds() writes account_membership_transaction.paid
 account-membership-payslip-transaction: trigger withholds on payslip_transaction.posting
-account-transaction: trigger posts on transaction.line
 patronage-payslip: patronage_payslip.parts() writes patronage.part
 patronage-payslip: trigger parts_by_pay on patronage.distribution
 patronage-timesheet: patronage_timesheet.parts() writes patronage.part

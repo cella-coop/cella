@@ -1,7 +1,7 @@
 <script lang="ts">
   import { tick, type Component } from 'svelte'
   import { applyAction } from '$app/forms'
-  import { goto, refreshAll } from '$app/navigation'
+  import { goto, refreshAll, snapshot } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
@@ -23,7 +23,7 @@
     type Widget,
   } from '../models/query.ts'
   import { anchor, period } from '../models/calendar.ts'
-  import { control, nearest, typing } from '../models/keys.ts'
+  import { control, focused, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
   import { post } from '../post.ts'
@@ -77,6 +77,7 @@
     look,
     shifts,
     dashboard = null,
+    sorted = null,
   }: {
     name: string
     title: string
@@ -108,6 +109,9 @@
     shifts: Shift[]
     // In the dashboard layout, the server's run of its widgets.
     dashboard?: { custom: boolean; widgets: Widget[]; results: Result[]; errors: string[] } | null
+    // The field the rows are ordered by first, and which way, which a
+    // table's header says.
+    sorted?: { key: string; dir: 'ascending' | 'descending' } | null
   } = $props()
 
   const typed = $derived(fields(columns))
@@ -130,6 +134,9 @@
       },
     },
   )
+  // The keyboard's row, kept as the page is left and focused again when
+  // history comes back to it.
+  snapshot({ id: 'collection-row', capture: () => state.active, restore: (i) => (state.active = i) })
   const shell = useShell()
   const saved = useViews(
     () => name,
@@ -369,7 +376,15 @@
     {:else if state.shown.length === 0}
       <p class="empty">{spec.q ? `Nothing matches “${spec.q}”.` : empty}</p>
     {:else if spec.layout === 'table'}
-      <Table columns={visible} rows={state.shown} {href} active={state.active} />
+      <Table
+        columns={visible}
+        rows={state.shown}
+        {href}
+        active={state.active}
+        stop={state.stop}
+        onfocusrow={(i) => (state.active = i)}
+        {sorted}
+      />
     {:else if spec.layout === 'gallery'}
       <Gallery rows={state.shown} {titled} {shown} {href} />
     {:else if spec.layout === 'board' && grouped}
@@ -389,10 +404,16 @@
       <ul class="list">
         {#each state.shown as row, i (row.id)}
           {const to = $derived(href?.(row))}
-          <li class:active={i === state.active} {@attach nearest(i === state.active)}>
+          <!-- svelte-ignore a11y_no_noninteractive_tabindex: the keyboard roves the rows, one in the tab order, so a screen reader reads the row it is on -->
+          <li
+            class:active={i === state.active}
+            tabindex={i === state.stop ? 0 : -1}
+            onfocusin={() => (state.active = i)}
+            {@attach focused(i === state.active)}
+          >
             <span class="main">
               {#if to}
-                <a href={to} class="title stretched">{titled.value(row)}</a>
+                <a href={to} class="title stretched" tabindex="-1">{titled.value(row)}</a>
               {:else}
                 <span class="title">{titled.value(row)}</span>
               {/if}

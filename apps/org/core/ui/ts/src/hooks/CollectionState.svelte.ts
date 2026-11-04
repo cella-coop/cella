@@ -1,3 +1,5 @@
+import { step, stop } from '../models/keys.ts'
+
 // What a collection's page holds while it is looked at: the text filter
 // as typed, the row the keyboard is on, and whether the New form is open.
 // The rows are the server's: the page of them the address asks for, kept
@@ -52,13 +54,19 @@ export class CollectionState {
     this.#ask.more()
   }
 
-  // The keyboard moving past the last drawn row asks for the next page.
+  // The keyboard moving past the last drawn row asks for the next page
+  // once, and is on its first row, which takes the focus once it is drawn.
   move(by: number) {
-    const to = Math.max(0, Math.min(this.active + by, this.shown.length - 1 + (this.left > 0 ? 1 : 0)))
-    if (to >= this.shown.length) {
+    const to = step(this.active, by, this.shown.length, this.left)
+    if (to >= this.shown.length && this.active < this.shown.length) {
       this.extend()
     }
-    this.active = Math.min(to, this.shown.length - 1)
+    this.active = to
+  }
+
+  // The row in the tab order.
+  get stop() {
+    return stop(this.active, this.shown.length)
   }
 
   toggle() {

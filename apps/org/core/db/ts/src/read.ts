@@ -136,6 +136,14 @@ export const counts = async (db: Db, s: Source, keeps: Keep[]) => (await read(db
 // Each of `keys`' values over the rows.
 export const values = async (db: Db, s: Source, keys: string[]) => (await read(db, s, { values: keys })).values
 
+// The field the rows are ordered by first, and which way: where one select
+// reads them and its order leads with a field it selects by name. None
+// where an expression leads, or where extensions' rows follow the owner's.
+export function ordered(s: Source): { key: string; dir: 'ascending' | 'descending' } | null {
+  const lead = s.rows.length === 1 ? /^\s*"?([a-z_][a-z0-9_]*)"?(?:\s+(asc|desc))?\s*(?:,|$)/i.exec(s.rows[0].order) : null
+  return lead ? { key: lead[1], dir: lead[2]?.toLowerCase() === 'desc' ? 'descending' : 'ascending' } : null
+}
+
 // A field's number, where the row holds one under its key.
 const number = (st: Statement, field: string) => {
   const key = st.p(field)

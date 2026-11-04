@@ -1,5 +1,5 @@
 import { error, type Actions } from '@sveltejs/kit'
-import { read, today, type Db, type Source } from '@cella/org-db'
+import { ordered, read, today, type Db, type Source } from '@cella/org-db'
 import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { using } from '#lib/server/db.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
@@ -13,7 +13,8 @@ import type { PageServerLoad } from './$types'
 // fields its extensions add to each, read in SQL a page at a time (`n`
 // rows, in the collection's order), in one statement with how many it
 // keeps, how many of those hold the text filter, its tabs' counts and
-// each enumeration's values; what its header says about it; and, in the
+// each enumeration's values; the field its rows are ordered by first;
+// what its header says about it; and, in the
 // dashboard layout, its widgets run over the rows it keeps. A board
 // places every row the view keeps, a calendar those on the days it shows,
 // and a dashboard draws none.
@@ -54,6 +55,7 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
       look: looks,
       errors,
       dashboard: spec.layout === 'dashboard' ? await measured(db, from, spec, fs, params.collection) : null,
+      sorted: ordered(from),
     }
   })
 }

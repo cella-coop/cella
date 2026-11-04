@@ -6,8 +6,9 @@
 // Then a fuzzer drives random keys, compositions and remote edits through
 // the editor and checks that the page shows the model and the two tabs
 // converge. Last, a field of a New form the keyboard reaches draws the
-// focus ring in both themes. Run by `cella test e2e editor`, on the built
-// shell.
+// focus ring in both themes, the row j and k reach in a collection takes
+// the focus and has it again on back, and a table marks the column its
+// rows are ordered by. Run by `cella test e2e editor`, on the built shell.
 
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -744,6 +745,60 @@ for (const [name, launch] of browsers()) {
             }
           }
         }
+        await page.close()
+      })
+
+      it('moves the focus to the row j and k reach, opens it on Enter and focuses it again on back; a table marks the column its rows are ordered by', async () => {
+        const page = await context.newPage()
+        await page.goto(`${base}/people`)
+        await page.waitForLoadState('networkidle')
+        const rows = page.locator('.rows li')
+        const focused = () => page.evaluate(() => [...document.querySelectorAll('.rows li')].indexOf(document.activeElement as Element))
+        // Before the keyboard is on a row, the first is the one in the tab
+        // order, and its link is in none.
+        assert.deepEqual(await rows.evaluateAll((ls) => ls.map((l) => l.getAttribute('tabindex')).slice(0, 3)), ['0', '-1', '-1'])
+        assert.equal(await rows.first().locator('a').getAttribute('tabindex'), '-1')
+        for (const key of ['j', 'j', 'j']) {
+          await page.keyboard.press(key)
+        }
+        assert.equal(await focused(), 2, 'three j focus the third row')
+        await page.keyboard.press('k')
+        assert.equal(await focused(), 1, 'k focuses the second')
+        await page.keyboard.press('ArrowDown')
+        assert.equal(await focused(), 2, 'the arrow focuses the third again')
+        assert.equal(await rows.nth(2).getAttribute('tabindex'), '0')
+        // Tab leaves the rows from it, and coming back returns to it.
+        await page.keyboard.press('Tab')
+        assert.equal(await focused(), -1, 'Tab leaves the rows')
+        await page.keyboard.press('Shift+Tab')
+        assert.equal(await focused(), 2, 'Shift+Tab comes back to the third row')
+        const href = await rows.nth(2).locator('a').getAttribute('href')
+        await page.keyboard.press('Enter')
+        await page.waitForURL(`${base}${href}`)
+        await page.goBack()
+        await page.waitForURL(`${base}/people`)
+        await rows.nth(2).waitFor()
+        for (let i = 0; i < 50 && (await focused()) !== 2; i++) {
+          await page.waitForTimeout(20)
+        }
+        assert.equal(await focused(), 2, 'back focuses the row Enter opened')
+        await page.screenshot({ path: `${shots}/${name}-row-focus.png` })
+
+        // People list by name, expenses the latest spent first.
+        for (const [at, label, dir] of [
+          ['/people?view=table', 'Name', 'ascending'],
+          ['/expenses?view=table', 'Spent on', 'descending'],
+        ] as const) {
+          await page.goto(`${base}${at}`)
+          const sorted = await page.locator('th[aria-sort]').evaluateAll((hs) => hs.map((h) => [h.textContent?.trim(), h.getAttribute('aria-sort')]))
+          assert.deepEqual(sorted, [[label, dir]], `${at} marks ${label} alone`)
+        }
+        // A table's rows rove as the list's do.
+        await page.waitForLoadState('networkidle')
+        await page.keyboard.press('j')
+        await page.keyboard.press('j')
+        assert.equal(await page.evaluate(() => [...document.querySelectorAll('tbody tr')].indexOf(document.activeElement as Element)), 1, 'two j focus the second row of the table')
+        await page.screenshot({ path: `${shots}/${name}-table-focus.png` })
         await page.close()
       })
     })

@@ -14,6 +14,9 @@
 //   `api`, its `drivers`, `handlers` or `interfaces`, `@cella/*-db` or `pg`.
 // - Effects live in hooks too: `$effect` only in a hook's state class; a
 //   component derives, attaches or handles an event instead.
+// - Focus keeps its ring: no rule in a stylesheet or a <style> block sets
+//   `outline: none` without drawing `--focus` as its box-shadow, so
+//   whatever the keyboard reaches shows where it is.
 // - Svelte 5 and SvelteKit 3 only: none of the legacy forms below, which
 //   still compile but are what code written from older knowledge reaches
 //   for, and no `{@html}`, which would render text as markup.
@@ -73,6 +76,16 @@ const style = (text) => {
   return /<style[\s>]/.test(markup) || /\sstyle\s*=/.test(markup) || /\sstyle:[\w-]+/.test(markup)
 }
 
+// The selectors of a stylesheet's rules, or a component's <style> blocks',
+// that set `outline: none` and draw no ring: each innermost block, past
+// comments.
+const ringless = (path, text) => {
+  const css = path.endsWith('.css') ? text : [...text.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map((m) => m[1]).join('\n')
+  return [...css.replace(/\/\*[\s\S]*?\*\//g, '').matchAll(/([^{}]*)\{([^{}]*)\}/g)]
+    .filter(([, , body]) => /(^|[;{\s])outline\s*:\s*(none|0)\s*(!important\s*)?(;|$)/.test(body) && !/box-shadow\s*:[^;]*var\(--focus\)/.test(body))
+    .map(([, selector]) => selector.trim().replace(/\s+/g, ' '))
+}
+
 // Unindented `let` or `var` in a module's own scope; in a component, only
 // in its `<script module>`, whose top level is indented once.
 const mutable = (path, text) => {
@@ -109,6 +122,9 @@ export function problems(path, text, ui) {
     out.push(`${path}: runs an $effect; an effect lives in a hook's state class, and a component derives, attaches or handles an event`)
   }
   out.push(...legacy(path, text))
+  for (const selector of ringless(path, text)) {
+    out.push(`${path}: ${selector} sets outline: none and draws no ring; draw box-shadow: var(--focus) with it, or leave focus to :focus-visible`)
+  }
   // An up or down arrow on a control that moves something is a reorder
   // button, which dragging replaces.
   for (const spec of imports(text)) {
@@ -154,7 +170,7 @@ const walk = (repo, dir, out = []) => {
     }
     if (statSync(join(repo, path)).isDirectory()) {
       walk(repo, path, out)
-    } else if (/\.(svelte|ts)$/.test(name)) {
+    } else if (/\.(svelte|ts|css)$/.test(name)) {
       out.push(path)
     }
   }

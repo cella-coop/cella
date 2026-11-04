@@ -5,7 +5,9 @@
 // document's stream. Each test edits a fresh copy of the 2027 rate card.
 // Then a fuzzer drives random keys, compositions and remote edits through
 // the editor and checks that the page shows the model and the two tabs
-// converge. Run by `cella test e2e editor`, on the built shell.
+// converge. Last, a field of a New form the keyboard reaches draws the
+// focus ring in both themes. Run by `cella test e2e editor`, on the built
+// shell.
 
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
@@ -694,6 +696,54 @@ for (const [name, launch] of browsers()) {
         assert.match(text, /rate-card-2027@2/)
         assert.match(text, /Online shop/)
         await page.screenshot({ path: `${shots}/${name}-motion.png`, fullPage: true })
+        await page.close()
+      })
+
+      it('draws the focus ring on a text field, a select and a textarea the keyboard reaches, light and dark', async () => {
+        const page = await context.newPage()
+        await page.goto(`${base}/motions`)
+        await page.waitForLoadState('networkidle')
+        await page.keyboard.press('c')
+        const form = page.locator('form[action$="propose"]')
+        await form.waitFor()
+        // The ring a field draws: its box-shadow, or for a select its
+        // outline, which WebKit's native menu list keeps where it drops a
+        // shadow.
+        const ring = () =>
+          page.evaluate(() => {
+            const probe = document.body.appendChild(document.createElement('div'))
+            probe.style.boxShadow = 'var(--focus)'
+            probe.style.outline = 'var(--focus-outline)'
+            const s = getComputedStyle(probe)
+            const drawn = { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
+            probe.remove()
+            return drawn
+          })
+        for (const theme of ['light', 'dark']) {
+          await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
+          const expected = await ring()
+          assert.notEqual(expected.shadow, 'none')
+          for (const [field, at] of [
+            ['text field', form.locator('input[name=title]')],
+            ['select', form.locator('select[name=circle]')],
+            ['textarea', form.locator('textarea[name=body]')],
+          ] as const) {
+            // Reached by Tab from the control before it, as a person does.
+            await at.focus()
+            await page.keyboard.press('Shift+Tab')
+            await page.keyboard.press('Tab')
+            assert.ok(await at.evaluate((el) => el === document.activeElement), `Tab reaches the ${field}`)
+            const got = await at.evaluate((el) => {
+              const s = getComputedStyle(el)
+              return { shadow: s.boxShadow, outline: `${s.outlineStyle} ${s.outlineWidth} ${s.outlineColor}` }
+            })
+            const drawn = field === 'select' ? got.shadow === expected.shadow || got.outline === expected.outline : got.shadow === expected.shadow
+            assert.ok(drawn, `the ${field} draws the ring, ${theme}: ${JSON.stringify(got)}`)
+            if (field !== 'textarea') {
+              await form.screenshot({ path: `${shots}/${name}-focus-${field === 'select' ? 'select-' : ''}${theme}.png` })
+            }
+          }
+        }
         await page.close()
       })
     })

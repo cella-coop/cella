@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -46,7 +46,12 @@ of surfaces. Components read roles, never shades:
   (16/10/2026), whatever the browser's language; amounts read as euros
   the French way;
 - shape: 12px radius on floating things and panels, 6px on controls; soft
-  shadows on floating things only (`--shadow-float`).
+  shadows on floating things only (`--shadow-float`);
+- focus: one ring, `--focus`, on whatever the keyboard reaches, a field
+  as much as a button; a focused field keeps the ring with its accent
+  border, a select drawing it as an outline (`--focus-outline`), since
+  WebKit's native menu list drops a shadow; and nothing sets `outline:
+  none` without drawing the ring.
 
 The theme is light, dark or the system's, a cookie the server writes into
 `<html data-theme>` before any script runs.

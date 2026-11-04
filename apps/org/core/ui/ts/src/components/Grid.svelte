@@ -172,7 +172,6 @@
     color: var(--text-subtle);
   }
   input:focus {
-    outline: none;
     border-color: var(--accent-border);
     background: var(--raised);
   }

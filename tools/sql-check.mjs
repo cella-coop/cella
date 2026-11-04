@@ -42,8 +42,7 @@
 //     see into;
 //   - writes and triggers on no table outside its own schema and cella.*:
 //     each such write or trigger its migrations leave standing is
-//     collected (`found.foreign`) and refused unless the app's
-//     foreign.list still names it (writes.mjs).
+//     collected (`found.foreign`) and refused (writes.mjs).
 //   - grants nothing to cella_analytics, which `cella migrate` grants
 //     only the views the slices publish.
 // A slice's analytical contract, its sql/analytics.sql, holds only views

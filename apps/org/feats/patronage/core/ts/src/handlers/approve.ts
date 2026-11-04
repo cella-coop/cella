@@ -6,8 +6,9 @@ import type { Approve, Approved } from '../models/distribution.ts'
 const op = 'patronage:distribution:approve' satisfies keyof typeof actions
 
 // Approves a year's split on the verdict date, citing the assembly's
-// motion; in the same write the grafts that know each basis make the
-// workers' parts. The guards decide: `patronage.splits` the split and the
+// motion; in the same write it makes the workers' parts, as the division
+// each basis's graft registers answers them (`patronage.divide`). The
+// guards decide: `patronage.splits` the split and the
 // law's floors, `patronage.divides` the parts against the terms, each
 // basis's graft its own parts, account-patronage's that the year is
 // closed, patronage-transaction's the legal reserve, motion-patronage's
@@ -23,6 +24,7 @@ export async function approve(input: Approve, deps: Deps): Promise<Outcome<(type
          RETURNING to_char(approved, 'YYYY-MM-DD') AS approved`,
         [input.distribution],
       )
+      await tx.query('SELECT patronage.divide($1)', [input.distribution])
       return { ...input, approved: rows[0]?.approved ?? '' }
     },
     payload: (v) => ({ ...v }),

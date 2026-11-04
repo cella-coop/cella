@@ -1,6 +1,6 @@
 +++
 title = "patronage-timesheet"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 How a surplus's work share divides among the workers by time worked,
@@ -16,9 +16,11 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 - `division(distribution)`: the portion of the work share the year's
   terms give time worked (`patronage.portion`), split by each worker's
   minutes with `cella.allocate`, so the parts add up to it to the cent.
-- `parts_by_time`, a trigger after a distribution is approved, in that
-  write, whichever makes it: it inserts the division into
-  `patronage.part`.
+- its division, registered by its migration for the basis `hours`
+  through the patronage feat's `patronage.register_division`, which the
+  feat's approve asks and whose answer it inserts into `patronage.part`
+  itself; the graft writes no part and puts no trigger on
+  `patronage.distribution`.
 - `time_share`, a view: each worker's share by time worked of each
   distribution, as the division gives it.
 

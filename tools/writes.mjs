@@ -3,15 +3,11 @@
 // published write from its handler. sql-check.mjs collects what a slice's
 // SQL still writes or triggers on a table it does not own, net of what a
 // later migration drops or replaces; `scanTs` does the same for the SQL a
-// slice's TypeScript sends. `ratchet` holds both to the app's
-// `foreign.list`, the exceptions not yet moved to their owners: one that
-// is not listed is refused, and so is a listed one that is gone, so the
-// list only shrinks.
+// slice's TypeScript sends. `refuse` refuses every one of both: there
+// are no exceptions.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-
-export const LIST = 'foreign.list'
 
 // A statement that writes a table, or a trigger on one, as TypeScript
 // spells SQL: the keyword in capitals, the table qualified.
@@ -53,28 +49,7 @@ export function scanTs(repo, dir, owner, own) {
   return out
 }
 
-// The app's listed exceptions, `<owner>: <what>` a line; `#` comments.
-export function listed(repo, app) {
-  const file = join(repo, app, LIST)
-  if (!existsSync(file)) {
-    return []
-  }
-  return readFileSync(file, 'utf8').split('\n').map((l) => l.trim()).filter((l) => l && !l.startsWith('#'))
-}
-
-// Every foreign write found is listed, and every listed one is found.
-export function ratchet(found, list, app) {
-  const errors = []
-  const keys = new Set()
-  for (const f of found) {
-    const key = `${f.owner}: ${f.what}`
-    keys.add(key)
-    if (!list.includes(key)) {
-      errors.push(`${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
-    }
-  }
-  for (const key of list.filter((k) => !keys.has(k))) {
-    errors.push(`${app}/${LIST}: ${key} is gone: strike it from the list`)
-  }
-  return errors
+// Every foreign write found, refused.
+export function refuse(found) {
+  return found.map((f) => `${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
 }

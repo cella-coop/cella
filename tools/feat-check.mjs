@@ -24,8 +24,8 @@
 // through ui-check.mjs the client layers' rules, that a feat's or graft's
 // actions are named for it and declared only in its models/actions.ts,
 // through sql-check.mjs every sql/ file's boundaries,
-// through writes.mjs that no feat or graft writes a table it does not own
-// beyond the app's listed exceptions, and through
+// through writes.mjs that no feat or graft writes a table it does not own,
+// with no exceptions, and through
 // powers.mjs that the power each action's label names is the one its SQL
 // registers, that a mandate a fixture adopts grants it, and that an
 // action with no power declares a check its SQL backs.
@@ -38,7 +38,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned } from './sql-check.mjs'
 import { agree, covered, declared, granted, mandates } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
-import { listed, ratchet, scanTs } from './writes.mjs'
+import { refuse, scanTs } from './writes.mjs'
 
 const args = process.argv.slice(2)
 const sql = !args.includes('--no-sql')
@@ -335,7 +335,7 @@ if (sql) {
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found))
   // What a feat's or a graft's TypeScript writes outside its own schema,
-  // held with what its SQL does to the app's foreign.list.
+  // refused with what its SQL does there.
   for (const dir of byName.values()) {
     const p = place(dir)
     if (p?.kind === 'graft') {
@@ -344,10 +344,7 @@ if (sql) {
       found.foreign.push(...scanTs(repo, dir, basename(p.node), basename(p.node)))
     }
   }
-  for (const app of apps) {
-    const mine = found.foreign.filter((f) => f.path.startsWith(app + '/'))
-    errors.push(...ratchet(mine, listed(repo, app), app))
-  }
+  errors.push(...refuse(found.foreign))
   // A feat's or graft's ops, and those of a core library that has
   // actions, not the app core's own types.
   const owned = [...byName.values()].filter((d) => {

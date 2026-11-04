@@ -4,8 +4,9 @@
 // work share rule, and `patronage.adopts` refuses terms that divide less
 // than the whole or would govern a year already approved; `patronage.divides` takes parts that add up to each
 // portion and refuses those that miss it or a basis the terms do not
-// name; parts are made only in the write that approves, and never change.
-// Run by `cella test slice patronage`.
+// name; parts are made only in the write that approves, and never change,
+// each basis the terms weigh divided by the division registered for it
+// and one none divides refused. Run by `cella test slice patronage`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -124,6 +125,44 @@ test('terms are copied from the rule, never over a year already approved, and ne
     await assert.rejects(adopt(rule(work('60 %', '30 %')), 4, '2028-01-01'), /divide 90 % of the work share, not 100 %/)
     await db.query('ROLLBACK TO SAVEPOINT s')
     await assert.rejects(db.query(`UPDATE patronage.terms SET capital = 10 WHERE id = 'm-2026-020-2'`), /m-2026-020-2 were adopted on 2026-10-24/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('approving makes each weighed basis\'s parts as the division registered for it answers, and refuses a basis none divides', async () => {
+  await db.query('BEGIN')
+  try {
+    // An extender's division of pay and of equal parts, and one of time
+    // worked that also answers a row by pay, which its basis's rows alone
+    // keep out.
+    await db.query(`CREATE SCHEMA extender`)
+    await db.query(
+      `CREATE FUNCTION extender.by_pay(ref text) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
+         VALUES ('a@x', 'salary', 300000::bigint, patronage.portion(ref, 'salary')), ('a@x', 'equal', 1::bigint, patronage.portion(ref, 'equal'))
+       $$`,
+    )
+    await db.query(
+      `CREATE FUNCTION extender.by_time(ref text) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
+         VALUES ('b@x', 'hours', 600::bigint, patronage.portion(ref, 'hours')), ('b@x', 'salary', 1::bigint, 1::bigint)
+       $$`,
+    )
+    await db.query(`SELECT patronage.register_division('salary', 'extender.by_pay(text)'), patronage.register_division('equal', 'extender.by_pay(text)')`)
+    await approved('2024', 2024, 20_000_00, 'mix')
+    await db.query('SAVEPOINT s')
+    await assert.rejects(
+      db.query(`SELECT patronage.divide('2024')`),
+      (e: Error & { code?: string }) => e.code === '09000' && /2024 divides its work share by hours, which no division is registered for/.test(e.message),
+    )
+    await db.query('ROLLBACK TO SAVEPOINT s')
+    await db.query(`SELECT patronage.register_division('hours', 'extender.by_time(text)')`)
+    await db.query(`SELECT patronage.divide('2024')`)
+    assert.deepEqual((await db.query(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2024' ORDER BY basis, worker`)).rows, [
+      { worker: 'a@x', basis: 'equal', quantity: '1', cents: '200000' },
+      { worker: 'b@x', basis: 'hours', quantity: '600', cents: '300000' },
+      { worker: 'a@x', basis: 'salary', quantity: '300000', cents: '500000' },
+    ])
+    assert.equal(await guard('patronage.divides', { distribution: '2024' }), null)
   } finally {
     await db.query('ROLLBACK')
   }

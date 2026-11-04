@@ -12,6 +12,13 @@ const db = new pg.Client()
 const rows = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
 const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 
+// Approves a split as the patronage feat's approve does: on the verdict
+// date, its parts made in that write by the divisions registered.
+async function approveSplit(id: string) {
+  await db.query('UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = $1', [id])
+  await db.query('SELECT patronage.divide($1)', [id])
+}
+
 // Minutes logged on a day, and the month approved or left open.
 async function worked(member: string, day: string, minutes: number) {
   await db.query(`INSERT INTO timesheet.entry (member, day, minutes) VALUES ($1, $2, $3)`, [member, day, minutes])
@@ -48,14 +55,14 @@ test('the portion divides by the minutes of approved months in the year alone', 
     { member: 'ana@x', minutes: '600' },
     { member: 'ben@x', minutes: '300' },
   ])
-  assert.deepEqual(await rows(`SELECT worker, minutes, cents FROM patronage_timesheet.division('2025') ORDER BY worker`), [
-    { worker: 'ana@x', minutes: '600', cents: '600000' },
-    { worker: 'ben@x', minutes: '300', cents: '300000' },
+  assert.deepEqual(await rows(`SELECT worker, basis, quantity, cents FROM patronage_timesheet.division('2025') ORDER BY worker`), [
+    { worker: 'ana@x', basis: 'hours', quantity: '600', cents: '600000' },
+    { worker: 'ben@x', basis: 'hours', quantity: '300', cents: '300000' },
   ])
 })
 
 test('approving makes the parts in that write, which both guards take', async () => {
-  await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
+  await approveSplit('2025')
   assert.deepEqual(await rows(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part ORDER BY worker`), [
     { worker: 'ana@x', basis: 'hours', quantity: '600', cents: '600000' },
     { worker: 'ben@x', basis: 'hours', quantity: '300', cents: '300000' },

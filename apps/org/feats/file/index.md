@@ -96,7 +96,7 @@ personal file's name and hash are commitments in the log.
 
 ## Reads
 
-Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): the co-op's own files, anyone; a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
+Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)), in place of core's: the co-op's own files, whoever reads their circle ([reading](../../core/circle/index.md#reading)); a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
 
 ## Shell
 

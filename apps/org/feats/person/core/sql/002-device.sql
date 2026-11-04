@@ -86,3 +86,8 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 GRANT SELECT, INSERT, UPDATE ON person.device TO cella_app;
 GRANT SELECT ON person.device TO cella_guards;
 COMMENT ON COLUMN person.device.address IS 'not personal: the holder''s pseudonymous address';
+
+-- A device's key is what checks a signature, so every reader reads the
+-- keyring, signed in or not, as a session's device is checked before
+-- anyone reads; beside core's row-level policy, which reads the rest.
+CREATE POLICY keyring ON person.device FOR SELECT TO cella_app USING (true);

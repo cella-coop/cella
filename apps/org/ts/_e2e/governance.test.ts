@@ -19,7 +19,7 @@ import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
-import { scope, sign } from './lanterne.ts'
+import { reader, scope, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -43,7 +43,7 @@ async function on(date: string) {
 }
 
 const as = (actor: string): Deps =>
-  actor === nadia ? { db: app, actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: app, actor, sign: sign(actor) }
+  actor === nadia ? { db: reader(app, actor), actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: reader(app, actor), actor, sign: sign(actor) }
 // What a circle's page proposes about it, put as the shell puts it.
 const putCircle = async (m: circleMotions.Put, deps: Deps) => propose(await circles.putting(m, deps.db), deps)
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]

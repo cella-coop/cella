@@ -15,16 +15,18 @@ CREATE FUNCTION cella.writing() RETURNS boolean
 LANGUAGE sql STABLE
 RETURN coalesce(current_setting('cella.writing', true), '') = 'on';
 
--- The registries of who reads what, registered as literal rows: the one
--- function that says whether a member holds a power on a day, `(actor,
+-- The registries of who reads what, registered as literal rows: the
+-- functions that say whether a member holds a power on a day, `(actor,
 -- power, cents, about, day) → boolean`, over a record of the circle
--- `about` or, null, of none, a feat's; the powers that read a feat's
+-- `about` or, null, of none, and which owning circles their mandates for
+-- a power cover on a day, `(actor, power, day) → text[]`, a feat's; the powers that read a feat's
 -- rows, `key` narrowing one to the rows the feat passes it, such as a
 -- file's class; and the functions a graft registers to open a feat's rows
 -- it joins to more readers, `(key, reader) → boolean`.
 CREATE TABLE cella.authority (
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
   fn regprocedure NOT NULL,
+  covered regprocedure NOT NULL,
   owner text NOT NULL
 );
 
@@ -46,9 +48,12 @@ CREATE TABLE cella.reach (
 GRANT SELECT ON cella.authority, cella.reading, cella.reach TO PUBLIC;
 
 -- Whether the reader holds a power on the verdict date, as the authority
--- says; no one does where none is registered.
+-- says; no one does where none is registered. It runs as its owner, so
+-- the authority reads the seats and the members past the row-level
+-- policies that ask it, as `covered` does.
 CREATE FUNCTION cella.may(power text) RETURNS boolean
-LANGUAGE plpgsql STABLE AS $$
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
   f regprocedure;
   ok boolean;
@@ -63,26 +68,51 @@ BEGIN
 END
 $$;
 
--- Whether the reader holds a power that reads every row of `what`.
-CREATE FUNCTION cella.reads_all(what text) RETURNS boolean
+-- The owning circles whose records the reader's mandates for a power
+-- cover on the verdict date, as the authority says; none where no
+-- authority is registered or no one reads.
+CREATE FUNCTION cella.covered(power text) RETURNS text[]
+LANGUAGE plpgsql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp AS $$
+DECLARE
+  f regprocedure;
+  got text[];
+BEGIN
+  SELECT a.covered INTO f FROM cella.authority a;
+  IF f IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
+    RETURN '{}';
+  END IF;
+  EXECUTE format('SELECT %s($1, $2, $3)', f::oid::regproc)
+    INTO got USING cella.reader(), covered.power, cella.verdict_date();
+  RETURN coalesce(got, '{}');
+END
+$$;
+
+-- The owning circles whose rows of `what` the reader reads by a power
+-- its feat names as reading them, each by its mandates' scope. It does
+-- not depend on the row, so a policy asks it once per query, as
+-- `circle = ANY ((SELECT cella.circles(what))::text[])`.
+CREATE FUNCTION cella.circles(what text) RETURNS text[]
 LANGUAGE sql STABLE
-RETURN cella.reader() IS NOT NULL AND EXISTS (
-  SELECT FROM cella.reading g WHERE g.what = reads_all.what AND g.key IS NULL AND cella.may(g.power)
+RETURN ARRAY(
+  SELECT DISTINCT c
+  FROM cella.reading g, unnest(cella.covered(g.power)) c
+  WHERE g.what = circles.what AND g.key IS NULL
+  ORDER BY c
 );
 
 -- Whether the reader sees every row of `what`: this is a write's
--- transaction, the role reading reads past row-level security (a
+-- transaction, or the role reading reads past row-level security (a
 -- superuser's tools and tests, or a function running as its owner to sum
--- the whole), or the reader holds a power that reads it. The server reads
--- as `cella_app` whatever it logs in as. It does not depend on the row,
--- so a policy asks it once per query, as `(SELECT cella.sees(what))`; a
--- view that filters its rows by reader asks it the same way. A function
--- that runs as its owner to answer for the reader asks `reads_all`.
+-- the whole). The server reads as `cella_app` whatever it logs in as.
+-- It does not depend on the row, so a policy asks it once per query, as
+-- `(SELECT cella.sees(what))`; a view that filters its rows by reader
+-- asks it the same way. Anyone else reads the rows of the circles they
+-- read in, `cella.circles`.
 CREATE FUNCTION cella.sees(what text) RETURNS boolean
 LANGUAGE sql STABLE
 RETURN cella.writing()
-  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r WHERE r.rolname = current_user)
-  OR cella.reads_all(what);
+  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r WHERE r.rolname = current_user);
 
 -- Whether the reader reaches one row of `what` beyond their own, by the
 -- key its feat passes: a power that reads rows of that key, or a graft's

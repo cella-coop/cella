@@ -61,7 +61,8 @@ test('Thomas claims his train with its receipt in one write, the receipt a file 
 
 test('who opens a file: the person it concerns, who uploaded it, and a power over what it records', async () => {
   const opens = async (id: string, who: string) => (await shell.page(`/files/${id}/content`, who)).status
-  // fi-0001, the statutes, the co-op's own.
+  // fi-0001, the statutes, the co-op's own, the assembly's: every seat
+  // reads it, Inès's in Web too.
   const statutes = await shell.page('/files/fi-0001/content', ines)
   assert.equal(statutes.status, 200)
   assert.equal(statutes.type, 'application/pdf')
@@ -103,12 +104,12 @@ test('whoever hires files a worker\'s records, and a member their own', async ()
   assert.match(other.reason ?? '', /camille@lanterne.example may not file a record of hugo@lanterne.example/)
 })
 
-test('Thomas uploads a paper of the co-op\'s own, which anyone opens', async () => {
+test('Thomas uploads a paper of the co-op\'s own, which every member opens', async () => {
   const done = await shell.upload('/files', 'upload', {}, { file: pdf('reglement interieur v3') }, thomas)
   assert.equal(done.state, 'settled', done.reason)
   const f = await one<{ id: string; class: string }>(`SELECT id, class FROM file.file WHERE name = 'reglement-interieur-v3.pdf'`)
   assert.equal(f.class, 'none')
-  assert.equal((await shell.page(`/files/${f.id}/content`, ines)).status, 200)
+  assert.equal((await shell.page(`/files/${f.id}/content`, sofia)).status, 200)
   const list = await shell.page('/files', thomas)
   assert.match(list.text, /reglement-interieur-v3\.pdf/)
   const refused = await shell.upload('/files', 'upload', {}, {}, thomas)

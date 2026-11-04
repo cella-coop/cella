@@ -128,7 +128,11 @@ test('as the app role, a member reads their own entries, months and sheets; whoe
      LANGUAGE sql STABLE RETURN actor = 'hugo@lanterne.example' AND power = 'approve-time'`,
   )
   await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
+  await db.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
   const camille = 'camille@lanterne.example'
   await db.query(`INSERT INTO timesheet.entry (member, day, minutes, billable) VALUES ($1, '2026-10-05', 420, true)`, [camille])
   const members = async (actor: string | null, sql: string) => [...new Set((await reading(actor, sql)).map((r) => r.member))]

@@ -12,7 +12,7 @@ import pg from 'pg'
 import { capture } from '@cella/org-expense/api'
 import { create } from '@cella/org-document/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -20,7 +20,7 @@ let app: pg.Client
 const camille = 'camille@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 before(async () => {

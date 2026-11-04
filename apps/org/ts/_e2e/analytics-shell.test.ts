@@ -19,7 +19,7 @@ import { check, Invalid, type Analytics, type Catalog, type Report } from '@cell
 import { shell } from '@cella/org-analytics/api'
 import { profile } from '@cella/org-person/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { own } from './port.ts'
 
 const repo = new URL('../../../../', import.meta.url).pathname
@@ -36,7 +36,7 @@ let app: pg.Client
 let analytics: Analytics & { close: () => void }
 let catalog: Catalog
 const hugo = 'hugo@lanterne.example'
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 
 before(async () => {
   await su.connect()

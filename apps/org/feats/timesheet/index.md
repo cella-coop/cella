@@ -110,7 +110,7 @@ months ([membership](../person/feats/membership/index.md#seats)).
 
 ## Reads
 
-Who reads time is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own entries, months and sheets; whoever holds `approve-time`, `prepare-payroll` or `distribute-surplus` reads everyone's; no one signed in reads any. `timesheet.sheet` reads as its reader. A write's transaction reads every row.
+Who reads time is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own entries, months and sheets; whoever holds `approve-time`, `prepare-payroll` or `distribute-surplus` reads those of the circles their mandate covers, so Web's lead reads Web's time and the Treasurer everyone's; `read` opens none of it, since the feat's own policy replaces core's; no one signed in reads any. `timesheet.sheet` reads as its reader. A write's transaction reads every row.
 
 ## Shell
 

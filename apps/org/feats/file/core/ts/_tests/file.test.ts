@@ -126,7 +126,7 @@ test('a personal file\'s name and hash are committed to, and the co-op\'s own ar
   assert.equal(committed({ ...stored, class: 'none', subject: null }, 'statuts.txt').name, 'statuts.txt')
 })
 
-test('as the app role, the co-op\'s own files are anyone\'s, a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {
+test('as the app role, the co-op\'s own files are their circle\'s readers\', a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {
   await app.connect()
   await db.query(`CREATE SCHEMA mandate`)
   await db.query(
@@ -134,7 +134,11 @@ test('as the app role, the co-op\'s own files are anyone\'s, a personal one its 
      LANGUAGE sql STABLE RETURN actor = 'lea@test.example' AND power = 'approve-expense'`,
   )
   await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
+  await db.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN (power = 'read' AND actor <> 'anyone@test.example') OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
   await db.query(`INSERT INTO cella.reading (what, key, power, owner) VALUES ('file', 'expense-receipt', 'approve-expense', 'test')`)
   const add = (id: string, cls: string, subject: string | null, uploader: string) =>
     db.query(
@@ -145,8 +149,8 @@ test('as the app role, the co-op\'s own files are anyone\'s, a personal one its 
   await add('fi-9002', 'expense-receipt', sofia, sofia)
   await add('fi-9003', 'payroll', sofia, camille)
   const ids = async (actor: string | null) => (await reading(actor, `SELECT id FROM file.file WHERE id LIKE 'fi-9%' ORDER BY id`)).map((r) => r.id)
-  assert.deepEqual(await ids(null), ['fi-9001'])
-  assert.deepEqual(await ids('anyone@test.example'), ['fi-9001'])
+  assert.deepEqual(await ids(null), [], 'no one signed in reads none')
+  assert.deepEqual(await ids('anyone@test.example'), [], 'nor one who holds no read over the co-op\'s circle')
   assert.deepEqual(await ids(sofia), ['fi-9001', 'fi-9002', 'fi-9003'])
   assert.deepEqual(await ids(camille), ['fi-9001', 'fi-9003'])
   assert.deepEqual(await ids('lea@test.example'), ['fi-9001', 'fi-9002'], 'a power registered for a class reads that class alone')

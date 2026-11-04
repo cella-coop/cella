@@ -1,6 +1,7 @@
 // Who reads a worker's part of the work share, as the app role reads it,
 // on a database holding only the app's core and this feat: the worker,
-// and whoever distributes the surplus; the distribution itself, anyone.
+// and whoever distributes the surplus; the distribution itself, whoever
+// reads its circle.
 // The authority is a stub here, as the membership feat registers the real
 // one. Run by `cella test slice patronage`.
 
@@ -39,7 +40,11 @@ before(async () => {
      LANGUAGE sql STABLE RETURN actor = '${julien}' AND power = 'distribute-surplus'`,
   )
   await su.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await su.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
+  await su.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
 })
 
 after(async () => {
@@ -47,10 +52,11 @@ after(async () => {
   await su.end()
 })
 
-test('a worker reads their own statement; no one signed in, none; the distribution, anyone', async () => {
+test('a worker reads their own statement; no one signed in, none; the distribution, whoever reads its circle', async () => {
   assert.deepEqual(await workers(chloe), [chloe])
   assert.deepEqual(await workers(null), [])
-  assert.deepEqual(await as(null, `SELECT id FROM patronage.distribution WHERE id = 'pd-1990'`), [{ id: 'pd-1990' }])
+  assert.deepEqual(await as(chloe, `SELECT id FROM patronage.distribution WHERE id = 'pd-1990'`), [{ id: 'pd-1990' }])
+  assert.deepEqual(await as(null, `SELECT id FROM patronage.distribution WHERE id = 'pd-1990'`), [])
 })
 
 test('whoever distributes the surplus reads every worker\'s', async () => {

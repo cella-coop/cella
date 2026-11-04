@@ -139,7 +139,7 @@ test('the stance form starts at the acting member\'s latest stance, and is not o
   assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
   assert.ok(hugos.includes('Now: consent · receipt 34'), 'saying which receipt it is')
-  assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, is on no roll')
+  assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, reads the assembly\'s motion as every seat does, and is on no roll')
 })
 
 test('a motion\'s overview says what is decided in full; its stances are their own tab', async () => {

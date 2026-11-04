@@ -4,7 +4,8 @@
 -- shares, stays the membership feat's, which every member reads.
 ALTER TABLE account_membership.allowance ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY reads ON account_membership.allowance FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
+DROP POLICY circle ON account_membership.allowance;
+CREATE POLICY reads ON account_membership.allowance FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR circle = ANY ((SELECT cella.circles('account'))::text[]) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY guards ON account_membership.allowance FOR SELECT TO cella_guards USING (true);
 
 CREATE OR REPLACE VIEW account_membership.capital AS
@@ -16,4 +17,4 @@ FROM membership.member m JOIN person.person mp ON mp.address = m.address
 JOIN LATERAL (SELECT account_membership.value(cella.verdict_date()) AS value) v ON v.value IS NOT NULL
 LEFT JOIN account.account a ON a.holder = m.address AND a.parent = '1013'
 LEFT JOIN account_membership.allowance w ON w.member = m.address
-WHERE (SELECT cella.sees('account')) OR m.address = cella.reader() OR cella.reaches('account', m.address);
+WHERE (SELECT cella.sees('account')) OR m.circle = ANY ((SELECT cella.circles('account'))::text[]) OR m.address = cella.reader() OR cella.reaches('account', m.address);

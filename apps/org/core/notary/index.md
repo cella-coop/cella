@@ -42,9 +42,9 @@ guards' and the analytics', and who reads ([below](#reads)):
 | SQL | What |
 |---|---|
 | `cella.reader()`, `cella.writing()` | the person this transaction reads for, from `cella.actor`, which the server sets from the session; and whether it is a write's, from `cella.writing`, which `write` sets for its transaction |
-| `cella.authority`, `cella.reading`, `cella.reach` | the registries of who reads: the one function saying whether a member holds a power on a day, a graft's; the powers that read a feat's rows, `(what, key, power, owner)`; a graft's functions opening a joined feat's rows to more readers, `(what, fn, owner)` |
-| `cella.may(power)` | whether the reader holds the power on the verdict date, as the authority says |
-| `cella.reads_all(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | whether the reader holds a power that reads every row of `what`; whether they see every row: a write's transaction, a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole), or such a power; and whether they reach one row by its key: a power for that key, or a graft's function |
+| `cella.authority`, `cella.reading`, `cella.reach` | the registries of who reads: the functions saying whether a member holds a power on a day, and which owning circles its mandates cover, the membership feat's; the powers that read a feat's rows, `(what, key, power, owner)`; a graft's functions opening a joined feat's rows to more readers, `(what, fn, owner)` |
+| `cella.may(power)`, `cella.covered(power)` | whether the reader holds the power on the verdict date, by any mandate, as the authority says; and the owning circles their mandates for it cover that day |
+| `cella.circles(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | the owning circles whose rows of `what` the reader reads, by the powers that read them; whether they see every row: a write's transaction, or a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole); and whether they reach one row by its key: a power for that key, or a graft's function |
 | `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its action's power; null for anyone else |
 | `cella_analytics` | the role the analytics shell reads as: it logs in, its transactions are read-only, and it is granted nothing here; `cella migrate` grants it the views the slices publish in their analytical contracts and nothing else ([trust](../../../../_corpus/doc/trust.md#the-analytics-role)) |
 
@@ -96,7 +96,7 @@ security, and its policies ask the functions above
 [trust](../../../../_corpus/doc/trust.md#one-server)). `cella.log.form`
 is the owner's alone: every other column of the log stays everyone's,
 and the vault opens to the app only through `cella.disclosed(n)`.
-`may` and `reaches` call the functions their registries name, so each
+`may`, `covered` and `reaches` call the functions their registries name, so each
 is a `STABLE` function of the shape it is registered for.
 
 ## The guards role

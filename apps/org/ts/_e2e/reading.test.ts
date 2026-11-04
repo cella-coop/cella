@@ -1,5 +1,7 @@
 // The reading scenario, end to end on a seeded Lanterne, through the built
-// shell outside dev mode, each page read as a signed-in member: Chloé, a
+// shell outside dev mode, each page read as a signed-in member: reading
+// follows the mandates, so Chloé, in Marketing, reads Marketing's
+// expenses and not Web's, and Web's lead Web's time alone; Chloé, a
 // designer holding no power over pay or the books, reads her own pay and
 // capital and no colleague's; Julien, in finance, reads everyone's; what
 // sums the whole, the statements, an entry's amount and a share the 2025
@@ -13,7 +15,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { profile } from '@cella/org-person/api'
 import { Shell } from './serve.ts'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
@@ -23,6 +25,7 @@ const camille = 'camille@lanterne.example'
 const chloe = 'chloe@lanterne.example'
 const julien = 'julien@lanterne.example'
 const lea = 'lea@lanterne.example'
+const yusuf = 'yusuf@lanterne.example'
 
 const page = async (path: string, actor: string) => {
   const p = await shell.page(path, actor)
@@ -60,6 +63,34 @@ test('a worker reads their own payslips and no colleague\'s; finance reads every
     assert.ok(all.text.includes(`2026-09~${member}`), `Julien reads ${member}'s`)
   }
   assert.equal((await page(`/payslips/2026-09~${camille}`, julien)).status, 200)
+})
+
+test('reading follows the mandates: Chloé reads Marketing\'s expenses and her own pay, and not Web\'s expenses or Yusuf\'s pay', async () => {
+  const expenses = await page('/expenses', chloe)
+  assert.equal(expenses.status, 200)
+  assert.ok(expenses.text.includes('ex-0003'), 'Chloé, in Marketing, reads Marketing\'s expense by read on her own circle')
+  assert.ok(expenses.text.includes('ex-0004'), 'and the assembly\'s, the whole co-op\'s, seated there as a member')
+  assert.ok(!expenses.text.includes('ex-0002'), 'and not Web\'s')
+  assert.equal((await page('/expenses/ex-0002', chloe)).status, 404, 'Web\'s expense is none to her')
+  assert.equal((await page('/expenses/ex-0002', camille)).status, 200, 'the gérante, approving every circle\'s expenses, reads it')
+  assert.deepEqual(await reading(chloe, `SELECT id FROM expense.expense WHERE circle = 'web'`), [], 'and a direct query as the app role reads none of Web\'s')
+
+  const pay = await page('/payslips', chloe)
+  assert.ok(pay.text.includes(`2026-09~${chloe}`) && !pay.text.includes(`~${yusuf}`), 'she reads her own pay and not Yusuf\'s')
+  assert.deepEqual(await reading(chloe, 'SELECT member FROM payslip.payslip WHERE member = $1', [yusuf]), [], 'a direct query as the app role for Yusuf\'s pay returns no row')
+  assert.deepEqual(await reading(chloe, 'SELECT member FROM payslip.salary WHERE member <> $1', [chloe]), [], 'nor for anyone\'s salary but hers: read opens no pay')
+
+  const sql = `SELECT id, amount FROM account_transaction.statement('balance', NULL, '2026-09-30') ORDER BY n`
+  for (const member of [chloe, lea, yusuf]) {
+    assert.deepEqual(await reading(member, sql), await reading(julien, sql), `${member} reads the year's accounts whole`)
+  }
+
+  // Time reads by the scope of the mandate that approves it: Web's lead
+  // approves Web's alone, so reads Web's alone beside their own.
+  const time = await reading(yusuf, 'SELECT DISTINCT circle FROM timesheet.entry WHERE member <> $1 ORDER BY circle', [yusuf])
+  assert.deepEqual(time, [{ circle: 'web' }], 'Yusuf reads his circle\'s time and no other\'s')
+  const everyone = await reading(julien, 'SELECT DISTINCT circle FROM timesheet.entry ORDER BY circle')
+  assert.ok(everyone.length > 1, 'the Treasurer, approving everyone\'s, reads every circle\'s')
 })
 
 test('a worker reads their own capital account and its lines, and no colleague\'s; finance reads every one', async () => {
@@ -104,7 +135,7 @@ test('the log\'s form and the vault are closed to the app; an entry opens to the
   await assert.rejects(reading(lea, 'SELECT cella.opened(1)'), /permission denied for function opened/)
 
   await app.query(`SELECT set_config('cella.actor', '', false)`)
-  const given = await profile({ person: lea, email: 'lea@bernard.example', phone: '+33 7 00 00 00 01' }, { db: app, actor: lea, sign: sign(lea) })
+  const given = await profile({ person: lea, email: 'lea@bernard.example', phone: '+33 7 00 00 00 01' }, { db: reader(app, lea), actor: lea, sign: sign(lea) })
   assert.equal(given.state, 'settled')
   const n = given.state === 'settled' ? given.entry : 0
   const [mine] = await reading(lea, 'SELECT cella.disclosed($1) AS o', [n])

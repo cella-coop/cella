@@ -50,7 +50,10 @@ transaction). Someone already known keeps their name, so a worker invited
 to join is the same person, not a second one.
 
 Device keys are Ed25519, generated on the device with WebCrypto; the
-private key never leaves it. The scope's own key, at the root, is Ed25519
+private key never leaves it. The devices are the keyring that checks every
+signature, so every reader reads them, signed in or not, beside core's
+row-level policy, which reads every other person record by its circle
+([reading](../../core/circle/index.md#reading)). The scope's own key, at the root, is Ed25519
 too: the notary signs receipts and log entries with it, read from a file
 only the database superuser can read. No signature is post-quantum yet.
 Every signed artifact names its binding (the parent, a sequence, its

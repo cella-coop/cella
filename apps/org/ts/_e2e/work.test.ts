@@ -60,13 +60,19 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/timesheets?view=dashboard', 'Hours by project'],
     [`/people/${yusuf}`, 'Timesheets'],
     ['/clients/halles', 'Les Halles Paysannes, online shop'],
-    ['/invoices/F-2026-0052', 'Maison Ferrand, packaging'],
+    ['/invoices/F-2026-0054', 'Les Halles Paysannes, online shop'],
   ]
   for (const [path, says] of pages) {
     const { status, text } = await shell.page(path, thomas)
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
+  // An invoice is the whole co-op's and reads for every member; the project
+  // it charges is its circle's, so Thomas, in Web, reads no Brand title on it.
+  const brands = await shell.page('/invoices/F-2026-0052', thomas)
+  assert.equal(brands.status, 200)
+  assert.ok(!brands.text.includes('Maison Ferrand, packaging'), 'a Brand project\'s title is none to Thomas')
+  assert.ok((await shell.page('/invoices/F-2026-0052', hugo)).text.includes('Maison Ferrand, packaging'), 'and Brand\'s lead reads it')
   const time = await shell.page('/timesheets', thomas)
   assert.ok(!time.text.includes('Books, invoicing, payroll and contracts'), 'Thomas reads his own time, not Julien\'s')
   const projects = await shell.page('/projects', thomas)

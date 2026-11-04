@@ -38,7 +38,7 @@ import { adopt, edit, merged, version } from '@cella/org-document/api'
 import { createDoc, edits, hash, order } from '@cella/org-document/models'
 import type { Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
-import { scope, sign } from './lanterne.ts'
+import { reader, scope, sign } from './lanterne.ts'
 import { react } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
@@ -71,7 +71,7 @@ async function on(date: string) {
 
 // Inès signs from the laptop her hire enrolled, and Nadia from the one
 // her invitation enrolls.
-const as = (actor: string): Deps => ({ db: app, actor, sign: actor === ines || actor === nadia ? signer(scope, actor, fixture(actor, 'laptop')) : sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: actor === ines || actor === nadia ? signer(scope, actor, fixture(actor, 'laptop')) : sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The app's connection reading as `actor`, as the server reads for the

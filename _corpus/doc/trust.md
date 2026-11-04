@@ -212,14 +212,28 @@ sequenceDiagram
 - **Who may read is a row-level policy in the database.** Every
   connection the server hands out reads as the session's person: it sets `cella.actor`
   from the session before any query, and `write` sets it again for its
-  transaction (`cella.reader()`). Each table holding a person's pay, time,
-  capital, personal files or a capital account's lines keeps row-level
-  security for the app role. The person reads their own rows. A feat
-  names in `cella.reading` the powers that read all of them, as its actions
-  name theirs in `cella.power`, and the membership feat, as
-  `cella.authority`, says who holds a power on the verdict date: the
-  payroll powers read pay, `approve-time` time, the books' and capital's
-  powers capital. A graft that knows whose a row is opens it further
+  transaction (`cella.reader()`). Reading follows the mandates: every
+  record table keeps row-level security for the app role, core's
+  row-level policy by its owning circle, and a person reads a record
+  only by a mandate whose scope covers that circle, for `read`, the
+  read group's power, or for a power the record's feat names as reading
+  its rows in `cella.reading`, as its actions name theirs in
+  `cella.power`; the membership feat, as `cella.authority`, says which
+  circles a power's mandates cover for a person on the verdict date,
+  on seats that count (`membership.covered`). Ownership grants nothing,
+  and a seat in a circle nothing without a mandate: Lanterne's
+  participants hold `read` on their own circle and on the assembly, so
+  Chloé, in Marketing, reads Marketing's expenses and the assembly's,
+  and not Web's. Each
+  table holding a person's pay, time, capital, personal files or a
+  capital account's lines has a row-level policy of its own in place
+  of core's, which `read` opens nothing of. The person reads their own
+  rows. The powers its feat names read those of the circles their
+  mandates cover: the payroll powers read pay, `approve-time` time, so
+  Web's lead reads Web's time alone, the books' and capital's powers
+  capital. What the law gives every member to read, the year's accounts
+  and the activity report, needs no mandate: the statements sum the
+  whole for every reader, below. A graft that knows whose a row is opens it further
   (`cella.reach`): `account-transaction` opens the lines on the co-op's
   own accounts to every member and a capital account's to its holder, and
   `file-membership` a class of personal files to the powers over
@@ -560,6 +574,12 @@ What the build does not yet do, and what lifts each:
   rows shows the sum of those its reader reads, but for the statements,
   an entry's amount, the burn, the divisions and the return to the
   federation, which sum the whole.
+- **A view that reads as its owner reads every circle's rows.** Core's
+  row-level policy keeps every record table, but a slice's view that is
+  not `security_invoker`, such as a document's adoption or an expense's
+  claim beside it, reads past it, so a page that reads the view shows
+  what it adds of a record another circle owns. Every such view reading
+  as its reader, or summing the whole, lifts this.
 - **The log says who wrote what.** Every member reads each entry's op,
   actor, date and receipt, and its payload's digest. Pay, time and
   capital are committed to with a salt the vault keeps, so their digests

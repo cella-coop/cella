@@ -58,7 +58,10 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
   SHA-256 of a 32-byte secret the inviter's browser drew, which only the
   link (`/join/<secret in hex>`) holds, the member it invites and the day
   it was made. The server keeps the digest, never the secret. An invited
-  member may hold several; the first taken up ends them all.
+  member may hold several; the first taken up ends them all. Whom a
+  link invites is read by its secret before anyone signs in,
+  `membership.invited(secret)`, which reads as its owner past the
+  row-level policies and answers only for the secret it is given.
 - `membership.invitation`, an invitation taken up: the invitee's address,
   the public key of the first device it enrolled, the label they gave it
   and the day (`accepted`). One per member. `membership.signs`, a trigger
@@ -185,14 +188,19 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   never nest, so a power held in one circle reaches no other by where
   it sits; the record's circle grants nothing by itself, and a seat in
   it nothing without a mandate. `about` null asks of no record and any
-  mandate for the power answers it, as reading asks until it follows
-  the mandates. A `budget` is not checked: it needs the spend over its
-  period tracked. It is the authority every read asks
-  (`cella.authority`, `013-authority.sql`): on the verdict date it says
-  whether the reader holds a power a feat names as reading its rows in
-  `cella.reading`
-  ([the pattern](../../../../../../_corpus/doc/architecture.md#sql)), and
-  it finds no right.
+  mandate for the power answers it, as a key's reach and the log's
+  disclosure ask. A `budget` is not checked: it needs the spend over its
+  period tracked.
+- `membership.covered(actor, power, day)` (`013-authority.sql`): the
+  owning circles whose records the actor's mandates for the power cover
+  on the day, by the same seats and mandates as `may`: every circle for
+  one marking no scope, the seat's circle for `own`, the circle it
+  names for any other. With `may` it is the authority every read asks
+  (`cella.authority`): on the verdict date it says in which circles
+  the reader holds `read`, or a power a feat names as reading its rows
+  in `cella.reading`
+  ([reading](../../../../core/circle/index.md#reading)), and it finds no
+  right.
 - `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
   the actor holds the power by a right, with no seat: a right in force
   in `circle.right`, on every person, member or employee, within its

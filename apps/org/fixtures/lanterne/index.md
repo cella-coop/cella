@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 # Lanterne
@@ -99,8 +99,8 @@ assembly, and no one opens a candidacy for another.
   `m-2021-001/10`, `Every {right: employee} holds {power: log-time}, to
   log, correct and submit their own time`, and
   `m-2021-001/74`, `Every {right: person} holds {power:
-  withdraw-membership}, to withdraw their own membership`, and the last
-  of the founding motion, `m-2021-001/75`, `Every {right: employee}
+  withdraw-membership}, to withdraw their own membership`, and
+  `m-2021-001/75`, `Every {right: employee}
   holds {power: apply-membership}, to apply to join once they have
   worked a year, which the assembly must rule on`, and in the
   collective mandates' place, `m-2021-001/50`, `Every {right: person}
@@ -121,7 +121,18 @@ assembly, and no one opens a candidacy for another.
   coordination's to adopt and end policies and to seat members
   (`m-2021-001/51`, `/52`, `/55`, `/56`, `/57` and `/59`), are protected
   by the extraordinary assembly's procedure: only a motion decided by it,
-  or by a stricter one, replaces or ends them.
+  or by a stricter one, replaces or ends them. The last two of the
+  founding motion, `m-2021-001/76` and `/77`, are how Lanterne reads:
+  `The {role: participant} role holds {power: read}, to read the records
+  of its {scope: own} circle`, and of the `{scope: ag}` circle, the
+  whole co-op's. Every seat reads its own circle's records and the
+  assembly's, so Inès, seated in Web alone, reads Web's and the statutes
+  she would join under; Chloé, in Marketing, reads Marketing's expenses and the
+  books, and not Web's expenses; her own pay and not Yusuf's, since
+  `read` opens no one's pay. A power that reads a feat's rows reads
+  them by its mandate's scope beside it: the gérante's
+  `approve-expense`, on the whole co-op, every circle's expenses, and
+  Web's lead's `approve-time`, on their own circle, Web's time alone.
 - **Rules.** The statutes' capital terms and the work share's terms are
   rules of the assembly adopted by m-2021-001, their values named for the
   feat that reads them and copied into its terms as each is adopted:

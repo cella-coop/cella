@@ -365,20 +365,40 @@ a graft only what opens a joined feat's rows to more readers
 (`cella.reach`), each a literal row; sets
 `search_path` other than a function's to the catalog; reads the clock or
 randomness; or hides statements in a `DO` block. A row-level policy is
-created, and a function altered, only in the owner's own schema. It
+created, and a function altered, only in the owner's own schema, but
+core's on every record table, which a slice whose table holds a
+person's data drops for its own. It
 also refuses a write or a trigger on a table outside the owner's schema
 and `cella.*`, beyond the exceptions the app's `foreign.list` still
 names ([writes stay home](#writes-stay-home)). A slice may drop a
 trigger of its own on another's table.
 
+Reading follows the mandates. Every record table is under row-level
+security for the app role, by its owning circle: core's circles put a
+row-level policy, `circle`, on each table of a feat or a graft that
+names one, as it is made (`circle.scoped`, `core/circle/sql/009-reads.sql`),
+which lets a reader see a row whose circle is among those they read
+in, `circle = ANY ((SELECT circle.reads(<feats>))::text[])`, asked once per
+query: the circles a mandate of theirs for `read`, the read group's
+power, covers, or one for a power the feats whose table it is name as
+reading their rows in `cella.reading`, Expense's `approve-expense`
+among them, by its scope ([the scope](#actions)). A write's transaction
+and the guards role read the whole; ownership grants nothing by itself,
+and a seat nothing without a mandate. A record is the same whoever
+reads it, and reading passes no notary.
+
 A table holding a person's pay, time, capital, personal files or a
-capital account's lines keeps row-level security for the app role: the
+capital account's lines, or a secret ballot's stance, replaces core's
+row-level policy with its own, which `read` opens nothing of: the
 person reads their own rows; whoever holds a power its feat names in
-`cella.reading` reads them all; a graft that knows more opens a row
-further through `cella.reach`; a write's transaction and the guards role
-read the whole. The pattern every row-level policy takes, the power checks asked
-once per query:
-`USING ((SELECT cella.sees('<feat>')) OR member = cella.reader() OR
+`cella.reading` reads those of the circles its mandate covers
+(`cella.circles`), so Web's lead, approving Web's time, reads Web's and
+no other's; a graft that knows more opens a row further through
+`cella.reach`; a write's transaction and the guards role read the
+whole. The pattern every such row-level policy takes, the power checks
+asked once per query:
+`USING ((SELECT cella.sees('<feat>')) OR circle = ANY ((SELECT
+cella.circles('<feat>'))::text[]) OR member = cella.reader() OR
 cella.reaches('<feat>', member))`. A view over such a table reads as its
 reader (`security_invoker`), unless what it shows is a sum every member
 reads, as the statements' rubrics and a project's burn are, or a share
@@ -645,7 +665,9 @@ refused. Every read is the session's person's: each connection the shell
 takes (`using(actor, …)` in `lib/server/db.ts`) sets `cella.actor` from the
 session before any query and clears it after, so the database's
 row-level policies, not the shell, decide what a page shows
-([trust](trust.md#one-server)). A write is signed in the browser by the session's device: the
+([trust](trust.md#one-server)): a collection lists the records of the
+circles its reader reads in, by their mandates ([SQL](#sql)), and an
+item of another circle's is none to them, a 404. A write is signed in the browser by the session's device: the
 action runs as a relay (`lib/server/relay.ts`), and each time a handler
 signs, the post is answered with what to sign; the browser signs it
 (`post` in `@cella/org-ui`) and posts the proof back to the run, which
@@ -663,7 +685,12 @@ its owner's select, the selects of the extensions that add rows, and one
 join per extension that adds fields into one statement (`src/read.ts`),
 each row the JSON of its fields; the view's conditions, its text filter,
 the collection's order and the page's limit run in it, so the server
-holds a page of rows and Postgres the rest. The same statement counts
+holds a page of rows and Postgres the rest. Which rows its reader reads
+is asked once per statement, not once per row: each row-level policy
+asks the circles the reader reads in as an uncorrelated subquery,
+`(SELECT circle.reads(…))`, which Postgres runs once, and compares each
+row's owning circle with that list, so a page costs the same reading
+by mandate as reading everything. The same statement counts
 the rows each tab keeps and that the sidebar counts, gives each
 enumeration's values, and runs a dashboard's or the home's widgets as
 SQL aggregates. A field is read in SQL as the row holds it under the
@@ -842,6 +869,13 @@ and is refused Brand's, and the gérante's, on the whole co-op, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
 ([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
+Reading reads the same scope: a mandate for `read`, the read group's
+power, which no action needs, lets its holder read every record its
+scope covers, and one for a power a feat names as reading its rows
+those of that feat's, so Web's lead reads Web's time and not Brand's
+([SQL](#sql)). Lanterne's participants hold `read` on their own circle
+and on the assembly, so a member of Marketing reads Marketing's records
+and the assembly's, the whole co-op's, and not Web's.
 
 **Each mandate is issued under a parent mandate and is narrower than
 it.** Its issuer is the circle whose motion adopted its policy, and its

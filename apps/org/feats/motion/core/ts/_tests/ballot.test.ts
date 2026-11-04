@@ -3,7 +3,7 @@
 // keeps the ballot it was proposed by, as its payload names it; a stance
 // on a secret ballot is logged by its commitment alone, one on an open
 // ballot as given; and the app reads a secret ballot's stance only as its
-// own member's, an open ballot's all. Run by `cella test slice motion`.
+// own member's, an open ballot's to whoever reads its circle. Run by `cella test slice motion`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -30,6 +30,15 @@ async function reads(member: string): Promise<{ motion: string; member: string }
 
 before(async () => {
   await db.connect()
+  // A stub authority: every member reads the assembly's records by `read`,
+  // as Lanterne's participants do; the membership feat registers the real one.
+  await db.query(`CREATE SCHEMA mandate`)
+  await db.query(`CREATE FUNCTION mandate.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean LANGUAGE sql STABLE RETURN false`)
+  await db.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
   await db.query(
     `INSERT INTO motion.motion (id, circle, title, method, procedure, ballot, proposed, deadline) VALUES
        ('m-2026-301', 'ag', 'An action', 'majority', 'majority', 'open', '2026-10-20', '2026-11-03'),
@@ -81,7 +90,7 @@ test('motion.seals refuses a secret stance logged as given, and an open one logg
   )
 })
 
-test('the app reads every stance on an open ballot, and on a secret one only the reader\'s own', async () => {
+test('the app reads every stance on an open ballot to whoever reads its circle, and on a secret one only the reader\'s own', async () => {
   assert.deepEqual(await reads(at('camille')), [
     { motion: 'm-2026-301', member: at('camille') },
     { motion: 'm-2026-301', member: at('yusuf') },
@@ -92,10 +101,7 @@ test('the app reads every stance on an open ballot, and on a secret one only the
     { motion: 'm-2026-301', member: at('yusuf') },
     { motion: 'm-2026-302', member: at('yusuf') },
   ])
-  assert.deepEqual(await reads(''), [
-    { motion: 'm-2026-301', member: at('camille') },
-    { motion: 'm-2026-301', member: at('yusuf') },
-  ])
+  assert.deepEqual(await reads(''), [], 'no one signed in reads any, as no one reads the motion\'s circle')
 })
 
 test('a stance is personal data of its member, kept as the books are, and the sweep\'s marker is a stance', async () => {

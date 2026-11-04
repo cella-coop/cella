@@ -8,7 +8,7 @@ CREATE FUNCTION account_transaction.holds(code text, reader text) RETURNS boolea
 LANGUAGE sql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  SELECT coalesce(bool_and(a.holder IS NULL OR a.holder = holds.reader OR cella.reads_all('account') OR cella.reaches('account', a.holder)), false)
+  SELECT coalesce(bool_and(a.holder IS NULL OR a.holder = holds.reader OR a.circle = ANY (cella.circles('account')) OR cella.reaches('account', a.holder)), false)
   FROM account.account a
   WHERE a.code = holds.code AND holds.reader = cella.reader();
 END;

@@ -1,6 +1,7 @@
 // Who reads a capital account, as the app role reads it, on a database
 // holding only the app's core and this feat: its holder, and whoever holds
-// a power that reads capital; every other account, anyone. The authority
+// a power that reads capital; every other account, whoever holds `read`
+// over its circle, here every reader signed in. The authority
 // is a stub here, as the membership feat registers the real one. Run by
 // `cella test slice account`.
 
@@ -36,7 +37,11 @@ before(async () => {
      LANGUAGE sql STABLE RETURN actor = '${julien}' AND power = 'carry-books'`,
   )
   await su.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await su.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
+  await su.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN power = 'read' OR mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await su.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
 })
 
 after(async () => {
@@ -44,10 +49,10 @@ after(async () => {
   await su.end()
 })
 
-test('a capital account reads for its holder; the accounts that are no one\'s, for anyone', async () => {
+test('a capital account reads for its holder; the accounts that are no one\'s, for whoever reads their circle', async () => {
   assert.deepEqual(await as(chloe), ['1013', '101302'])
   assert.deepEqual(await as(camille), ['1013', '101301'])
-  assert.deepEqual(await as(null), ['1013'])
+  assert.deepEqual(await as(null), [], 'no one signed in reads none')
 })
 
 test('whoever keeps the books reads every capital account', async () => {

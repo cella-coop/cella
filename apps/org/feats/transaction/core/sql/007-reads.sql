@@ -11,10 +11,12 @@ INSERT INTO cella.reading (what, key, power, owner) VALUES
 ALTER TABLE transaction.entry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transaction.line ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY circle ON transaction.line;
 CREATE POLICY reads ON transaction.line FOR SELECT TO cella_app
-  USING ((SELECT cella.sees('transaction')) OR cella.reaches('transaction', account));
+  USING ((SELECT cella.sees('transaction')) OR circle = ANY ((SELECT cella.circles('transaction'))::text[]) OR cella.reaches('transaction', account));
+DROP POLICY circle ON transaction.entry;
 CREATE POLICY reads ON transaction.entry FOR SELECT TO cella_app
-  USING ((SELECT cella.sees('transaction')) OR EXISTS (SELECT FROM transaction.line l WHERE l.entry = entry.id));
+  USING ((SELECT cella.sees('transaction')) OR circle = ANY ((SELECT cella.circles('transaction'))::text[]) OR EXISTS (SELECT FROM transaction.line l WHERE l.entry = entry.id));
 
 CREATE POLICY guards ON transaction.entry FOR SELECT TO cella_guards USING (true);
 CREATE POLICY guards ON transaction.line FOR SELECT TO cella_guards USING (true);

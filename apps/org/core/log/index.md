@@ -1,9 +1,9 @@
 +++
 title = "Log"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
-A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, folded deterministically into the state.
+A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, checked by their hashes and signatures and never replayed to rebuild the state, which a scope restores from its backup ([trust](../../../../_corpus/doc/trust.md#one-server)).
 
 Copied from cella@2398d87 `distros/core/runtime/rust/log`, where its history lives. Its API still speaks of claims and cells; the notary's port renames them.
 

@@ -117,8 +117,13 @@ sequenceDiagram
   commit, so calling it last keeps ordered writes from queueing behind slow
   transactions. Entries are numbered from that locked head, so an aborted
   write leaves no gap. The log is hash-chained (BLAKE3) and signed
-  (Ed25519) with a deterministic fold, so the state can always be rebuilt
-  from it and checked. A Merkle tree over the log (RFC 9162), giving
+  (Ed25519), so anyone holding it checks that no entry was changed,
+  dropped or reordered, and computes an outcome again from its signed
+  votes. It is checked, never replayed: no code folds the state from it,
+  the founding logs how many rows of each kind it carried and never the
+  rows, and personal values are commitments, so a scope comes back from
+  its backup and its keys ([operations](operations.md)), and the log
+  proves the history of what came back. A Merkle tree over the log (RFC 9162), giving
   inclusion and consistency proofs, is not built: it arrives with
   federation, when a scope must let another check its copy without
   replaying the whole log.
@@ -165,7 +170,7 @@ sequenceDiagram
   ordinary error that aborts the transaction. A hard crash makes Postgres
   restart every connection in the scope, in about 0.2 s, and lose nothing
   committed.
-- **A scope's database is the unit** that moves, backs up and replays: state,
+- **A scope's database is the unit** that moves, backs up and restores: state,
   log, guards and the notary's key together. The notary is a layer under
   every feat, not a feat, and has no writes of its own; moving it is moving
   the database to another host, which arrives at rung 6

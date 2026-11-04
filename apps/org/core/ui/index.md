@@ -189,7 +189,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   written before it stopped, are emptied),
   `Field` (text, a number, a date, a time, an address, an email or a
   file; a date is typed in the app's locale and posts as an ISO day, the
-  browser's own calendar a button beside it (`DateField`); which `accept` narrows to the media types it offers; a
+  browser's own calendar a button beside it (`DateField`); a day typed
+  that names none keeps the form from posting and says how to write
+  one, until a valid day is typed or one is picked from the calendar,
+  which replaces what is typed and drops the complaint; which `accept` narrows to the media types it offers; a
   select with a `placeholder` offers it as a disabled first choice,
   never a blank), `Ordered` (a list a slice's writes reorder, as an
   agenda: each row numbered, with its grip and its columns, what the
@@ -241,7 +244,7 @@ exported.
 
 A component holds no state of its own: the collection's filter and row,
 the command menu, the dismissed outcome, the drawer's opening and the
-people's names, and what a date field holds typed, are state classes in
+people's names, and what a date field holds typed and says of it, are state classes in
 `hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)

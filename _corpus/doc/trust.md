@@ -289,18 +289,25 @@ The law for each legal form is ours to write, as primitives and composed
 guards. A co-op's own guards live in custom feats, each with its own schema,
 enabled by motion.
 
-Composed guards are a declared subset of SQL: `SELECT`, joins over the
-scope's tables, `FILTER`, a closed list of aggregates and the `cella.*`
-primitives; no `now()` or `random()`, no recursion, no DDL, no writes. Each
-guard is written as a `BEGIN ATOMIC` body. At rung 1 the subset is a
-check-time boundary, not a runtime one: `cella check feats` parses each
-guard's SQL with libpg_query and refuses one outside the subset at commit
-time, before it ever runs; nothing checks it again once a motion adopts
-it. Resolving a guard's dependencies against Postgres's catalogue, which
-would see the casts and operators the parser cannot, is research only
-(`research/pgrx/`), not yet part of the check. A statement timeout bounds
-evaluation. The log records
-the text and version of every guard that decided a verdict.
+Composed guards are written in a declared subset of SQL: `SELECT`, joins
+over the scope's tables, `FILTER`, a closed list of aggregates and the
+`cella.*` primitives; no `now()` or `random()`, no recursion, no DDL, no
+writes. Each guard is written as a `BEGIN ATOMIC` body. At rung 1 no one
+place holds the whole subset. `cella check feats` parses each guard's SQL
+with libpg_query at commit time and refuses a reference outside the
+schemas its feat or graft may read, a write to a table outside its own
+schema or to `cella.*` but to register, a call to the clock or to
+randomness, and a `DO` block; it holds no list of statements, aggregates
+or functions, so a guard that writes its own schema, or is outside the
+subset in any other way, passes it. At run time a guard runs as
+`cella_guards`, which can write nothing (below), so any write fails when
+it runs. Recursion, the closed list of aggregates and the
+`BEGIN ATOMIC` form are held by review alone, and nothing checks a guard
+again once a motion adopts it. Resolving a guard's dependencies against
+Postgres's catalogue, which would see the casts and operators the parser
+cannot, is research only (`research/pgrx/`), not yet part of the check. No
+timeout bounds a guard's evaluation yet. The log records the text and
+version of every guard that decided a verdict.
 
 A guard runs as `cella_guards`, never with the extension owner's rights:
 `submit` switches to that role in a security-restricted operation around

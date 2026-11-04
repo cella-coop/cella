@@ -72,7 +72,7 @@
     <div class="coop">
       <Popover label="Co-op: {scope.name}">
         {#snippet trigger()}
-          <span class="mark">{scope.name.slice(0, 1).toUpperCase()}</span>
+          <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
           <b class="name">{scope.name}</b>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
@@ -107,7 +107,7 @@
     <div class="account">
       <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
-          <span class="avatar">{actor ? initials(actor.name) : '–'}</span>
+          <span class="avatar" aria-hidden="true">{actor ? initials(actor.name) : '–'}</span>
           <span class="names">
             <b>{actor?.name ?? 'No one signed in'}</b>
             {#if dev}<span class="dev">Development</span>{/if}

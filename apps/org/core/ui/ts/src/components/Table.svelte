@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Column } from '../models/view.ts'
-  import { focused } from '../models/keys.ts'
+  import { focused, scroller } from '../models/keys.ts'
   import { useSection } from '../hooks/useSection.ts'
   import Cell from './Cell.svelte'
 
@@ -38,7 +38,7 @@
 {#if rows.length === 0}
   <p class="empty">{none}</p>
 {:else}
-  <div class="scroll">
+  <div class="scroll" {@attach scroller(section?.() ?? 'Table')}>
     <table>
       <thead>
         <tr>

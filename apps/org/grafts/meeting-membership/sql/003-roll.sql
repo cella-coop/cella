@@ -43,25 +43,6 @@ BEGIN ATOMIC
   LEFT JOIN meeting.meeting m ON m.id = w.meeting;
 END;
 
--- Every meeting write with a power — scheduling, holding, cancelling,
--- beginning the minutes and recording another's attendance — the
--- actor's power reaches the meeting's circle (`membership.over`): a
--- lead schedules their own circle's meetings, the gérante, seated in the
--- assembly, any circle's.
-CREATE FUNCTION meeting_membership.reaches(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN m.id IS NULL THEN NULL
-    WHEN NOT membership.over(cella.actor(), w.power, m.circle, cella.verdict_date())
-      THEN coalesce(cella.actor(), 'no one') || ' holds ' || coalesce(w.power, 'no power') || ' over no circle that holds ' || m.id
-  END
-  FROM (
-    SELECT payload ->> 'meeting' AS meeting, (SELECT p.power FROM cella.power p WHERE p.op = cella.action()) AS power
-  ) w
-  LEFT JOIN meeting.meeting m ON m.id = w.meeting;
-END;
-
 -- meeting-membership:attendance:record — the minutes' keeper records only
 -- those expected, the members seated in the meeting's circle on its day;
 -- anyone else marks themselves, as a guest.
@@ -82,11 +63,6 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('meeting:item:add', 'meeting_membership.sits(jsonb)', 'meeting-membership'),
   ('meeting:item:move', 'meeting_membership.sits(jsonb)', 'meeting-membership'),
   ('meeting:item:remove', 'meeting_membership.sits(jsonb)', 'meeting-membership'),
-  ('meeting:meeting:schedule', 'meeting_membership.reaches(jsonb)', 'meeting-membership'),
-  ('meeting:meeting:hold', 'meeting_membership.reaches(jsonb)', 'meeting-membership'),
-  ('meeting:meeting:cancel', 'meeting_membership.reaches(jsonb)', 'meeting-membership'),
-  ('meeting:meeting:minute', 'meeting_membership.reaches(jsonb)', 'meeting-membership'),
-  ('meeting-membership:attendance:record', 'meeting_membership.reaches(jsonb)', 'meeting-membership'),
   ('meeting-membership:attendance:record', 'meeting_membership.records(jsonb)', 'meeting-membership');
 
 GRANT USAGE ON SCHEMA meeting_membership TO cella_app, cella_guards;

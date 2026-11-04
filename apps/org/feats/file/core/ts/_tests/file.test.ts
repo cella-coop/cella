@@ -130,11 +130,11 @@ test('as the app role, the co-op\'s own files are anyone\'s, a personal one its 
   await app.connect()
   await db.query(`CREATE SCHEMA mandate`)
   await db.query(
-    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, day date) RETURNS boolean
+    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
      LANGUAGE sql STABLE RETURN actor = 'lea@test.example' AND power = 'approve-expense'`,
   )
   await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, date)', 'test')`)
+  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
   await db.query(`INSERT INTO cella.reading (what, key, power, owner) VALUES ('file', 'expense-receipt', 'approve-expense', 'test')`)
   const add = (id: string, cls: string, subject: string | null, uploader: string) =>
     db.query(

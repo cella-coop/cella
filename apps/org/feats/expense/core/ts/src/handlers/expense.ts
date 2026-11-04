@@ -36,14 +36,14 @@ export async function capture(input: Capture, deps: Deps): Out<'expense:expense:
 }
 
 // Moves an expense to a status on the verdict date, as the actor, and
-// returns its total and the day.
+// returns its owning circle, its total and the day.
 async function move(tx: Db, expense: string, set: string, actor?: string): Promise<Acted> {
-  const { rows } = await tx.query<{ total: string; day: string }>(
+  const { rows } = await tx.query<{ circle: string; total: string; day: string }>(
     `UPDATE expense.expense AS e SET ${set} WHERE e.id = $1
-     RETURNING expense.total(e) AS total, to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day`,
+     RETURNING e.circle, expense.total(e) AS total, to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day`,
     actor ? [expense, actor] : [expense],
   )
-  return { expense, amount: Number(rows[0]?.total ?? 0), day: rows[0]?.day ?? '' }
+  return { expense, circle: rows[0]?.circle ?? '', amount: Number(rows[0]?.total ?? 0), day: rows[0]?.day ?? '' }
 }
 
 // Submits a draft for approval; `expense.submits` checks it is the actor's.

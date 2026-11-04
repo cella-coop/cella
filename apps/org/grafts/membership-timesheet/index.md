@@ -25,32 +25,25 @@ no view and no write of its own, and has no client or server package.
 
 ## Circles
 
-Whose time a power covers: a lead approves the time of those seated in
-their own circle, since what an approval concerns is a worker's seats
-(`003-circle.sql` to `005-active.sql`).
-
-- `membership_timesheet.approves`, on `timesheet:period:approve`: the
-  approver holds the action's power (`approve-time`) over a circle the
-  worker sits in on the verdict date, through `membership.over`: a seat
-  whose role has the mandate, its scope covering that circle. Any person
-  may sit in a circle, member or not, so a worker who is no member is
-  approved by whoever holds `approve-time` over their working circle; a
-  worker whose seat counts nowhere on the verdict date
-  (`membership.counts`) sits in no circle, and anyone holding
-  `approve-time` approves their time. `membership.empowered` checks the
-  power itself, for every write; this narrows what it covers.
+Whose time a power covers is the month's owning circle, the circle its
+time is worked for, which its first entry names
+([timesheet](../../feats/timesheet/index.md#schema)), and the
+membership feat's one guard reads it, as it reads every record's
+([membership](../../feats/person/feats/membership/index.md#seats)): a
+lead approves the months of their own circle by a mandate on `own`, and
+no slice checks a worker's seats again.
 
 In the shell, the graft adds to the acting member's inbox each month
 submitted and not yet approved, of someone else, that they may approve
-today by the same test as `approves`: holding `approve-time` over a
-circle its worker sits in, or, for a worker whose seat counts nowhere,
-holding it at all; linking to the person's page, which approves it. In
-Lanterne, Yusuf, Web's lead, approves Thomas's month, and Inès's, since
-she sits in Web; Hugo, Brand's, is refused them; Camille, the gérante,
-seated in the assembly by a mandate on the whole co-op, approves
-anyone's, and so does Julien, seated there as treasurer, for the pay
-run, who approved Inès's September. Its tests are the membership feat's
-of `over`, and the `governance` and `people` scenarios.
+today by the same test as the guard: holding `approve-time` by a
+mandate covering the month's circle (`membership.may`); linking to the
+person's page, which approves it. In Lanterne, Yusuf, Web's lead,
+approves Thomas's month, and Inès's, Web's; Hugo, Brand's, is refused
+them; Camille, the gérante, seated in the assembly by a mandate on the
+whole co-op, approves anyone's, and so does Julien, seated there as
+treasurer, for the pay run, who approved Inès's September. Its tests
+are the membership feat's of `may`, and the `governance` and `people`
+scenarios.
 
 ## Tests
 

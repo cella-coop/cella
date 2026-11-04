@@ -74,6 +74,10 @@ assembly's, unless the write that makes it names another.
 `project.project.circle` is the circle that runs the project; its
 milestones are in its circle, which `project.in_its_circle` copies into
 each as it is made.
+Each write on a project, a milestone, its budget or its archive names
+the project's circle in its payload, which the membership feat's guard
+reads a mandate's scope against, so a lead runs their own circle's
+projects alone ([membership](../person/feats/membership/index.md#seats)).
 
 ## Shell
 

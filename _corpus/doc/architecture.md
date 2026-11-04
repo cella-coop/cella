@@ -295,6 +295,11 @@ in a node's core only if it spans everything below that node.
 - A surplus split adds up to the surplus: the patronage feat's. That the
   members approved it is the `motion-patronage` graft's, and that the
   year's books are closed `account-patronage`'s.
+- An actor holds a power by a mandate covering the record's owning
+  circle: one guard on every action with a power, the membership
+  feat's, since whether a seat counts is that feat's to say; whether a
+  scope covers a circle is core's rule (`circle.covers`), and no slice
+  checks a scope again ([actions](#actions)).
 
 A guard is SQL in its owner's schema (see [SQL](#sql)). The notary runs
 every guard that attaches to an ordered write, those of the feat and of the
@@ -769,6 +774,18 @@ action declared outside a `models/actions.ts`. Every action is signed by
 a device of its actor and carries its request
 ([signatures](signatures.md)).
 
+An action's payload names the owning circle of the record it concerns,
+`circle`, as its handler reads it from the record or writes it there:
+a project's writes name the project's, a month's approval the month's,
+a meeting's the meeting's, and a share or an attendance record the
+circle of the project or meeting it is of. One naming none concerns the
+root's, the assembly's. The membership feat's guard on every power reads
+it, the one guard that reads a permission's scope: the actor holds the
+power by a mandate whose scope covers that circle, or by a right, which
+reaches the whole co-op (`membership.may`, its scope below). No slice
+checks a scope again; a slice's own guard still checks what is its own,
+as that an approver is not the month's member.
+
 **Every circle has a participant role**, built in, which every seat in
 it holds there: a seat brings its own role, if any, and the circle's
 participant role besides, and a seat in one circle brings no participant
@@ -814,11 +831,14 @@ covers, never a place in a tree. A mandate policy may mark it, a circle
 (`{scope: web}`, Web's projects, meetings and time) or the circle its
 holder holds the role in (`{scope: own}`), and one that marks none
 covers the whole co-op; it is copied into `circle.mandate.scope` with
-the rest. `membership.over(actor, power, about, day)` reads it
-against the circle a record belongs to: Web's lead, whose mandates are
-on their own circle, runs Web's projects and is refused Brand's, and
-the gérante's, on the whole co-op, cover every circle's records and
-those of no circle
+the rest. One guard reads it on every action, the membership feat's
+`membership.empowered`, by `membership.may(actor, power, cents, about,
+day)` against the record's owning circle, `about`, which the write's
+payload names, and core's `circle.covers`: Web's lead, whose mandates
+are on their own circle, runs Web's projects and approves Web's time
+and is refused Brand's, and the gérante's, on the whole co-op, cover
+every circle's records. Ownership grants nothing by itself, and a seat
+in a circle nothing over its records without a mandate
 ([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
 
 **Each mandate is issued under a parent mandate and is narrower than

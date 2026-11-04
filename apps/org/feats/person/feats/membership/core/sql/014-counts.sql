@@ -29,7 +29,7 @@ RETURN EXISTS (SELECT FROM circle.seated(sits_in.circle, sits_in.day) s WHERE s 
 -- Every seat holds its circle's participant role beside its own, so the
 -- participant's mandates are found on any seat; the guard that knows the
 -- circle a write concerns holds them to a seat there (`sits`).
-CREATE OR REPLACE FUNCTION membership.may(actor text, power text, cents bigint, day date) RETURNS boolean
+CREATE OR REPLACE FUNCTION membership.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
@@ -38,6 +38,7 @@ BEGIN ATOMIC
     WHERE p.member = may.actor
       AND membership.counts(p.member, p.circle, may.day)
       AND m.power = may.power
+      AND circle.covers(m.scope, p.circle, may.about)
       AND (p.since IS NULL OR p.since <= may.day)
       AND (p.until IS NULL OR p.until > may.day)
       AND (m."from" IS NULL OR m."from" <= may.day)

@@ -98,6 +98,7 @@ export interface Act {
 // An approval or a payment, for the bill's whole total, on its day.
 export interface Acted {
   bill: string
+  circle: string
   amount: number
   day: string
 }

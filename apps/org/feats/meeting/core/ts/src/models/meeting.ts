@@ -95,6 +95,8 @@ export interface Settle {
 
 export interface Settled {
   meeting: string
+  // Its owning circle, which the guard reads a mandate's scope against.
+  circle: string
   status: Status
   settled: string
 }
@@ -105,5 +107,6 @@ export interface Minute {
 
 export interface Minuted {
   meeting: string
+  circle: string
   minuted: string
 }

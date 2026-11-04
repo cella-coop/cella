@@ -33,8 +33,9 @@ assembly's, unless the write that makes it names another.
   `meeting_membership.marks` that it is theirs. A member not seated in the meeting's circle may
   mark themselves, and comes as a guest, counted in no quorum.
 - **record** is the minutes' keeper's, for anyone expected: it needs
-  `keep-minutes`, which `meeting-membership` checks reaches the
-  meeting's circle, and refuses for a member not seated there.
+  `keep-minutes` by a mandate covering the meeting's circle, which its
+  payload names for the membership feat's guard, and `meeting-membership`
+  refuses it for a member not seated there.
 
 ## Shell
 
@@ -67,11 +68,13 @@ shell `meeting-membership/circles`, `api/circles.ts` and
   `:remove`: the actor holds a seat that counts in the meeting's circle
   on the verdict date (`membership.sits_in`): the participant's `discuss`, which
   `membership.may` finds on any seat, is held there.
-- `meeting_membership.reaches`, on `meeting:meeting:schedule`,
-  `:hold`, `:cancel` and `:minute` and on
-  `meeting-membership:attendance:record`: the actor holds the action's power over
-  the meeting's circle (`membership.over`): a lead's, scoped to their own
-  circle, covers it alone, and the gérante's, on the whole co-op, every circle.
+- Whose meetings a power covers is the meeting's owning circle, which
+  the membership feat's one guard reads from the payload
+  ([membership](../../feats/person/feats/membership/index.md#seats)):
+  an attendance record names its meeting's circle, as the meeting feat's
+  own writes do, so a lead's or secretary's `keep-minutes`, scoped to
+  their own circle, covers it alone, and the gérante's, on the whole
+  co-op, every circle.
 - `meeting_membership.records`, on `meeting-membership:attendance:record`:
   the member recorded is seated in the meeting's circle on its day; any
   other member marks themselves, as a guest.

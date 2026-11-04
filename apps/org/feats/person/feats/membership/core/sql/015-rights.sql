@@ -19,20 +19,29 @@ BEGIN ATOMIC
 END;
 
 -- Every op with a power in cella.power — the actor holds it on the verdict
--- date, by a seat's mandate or by a right, within the mandate's limit for
--- the amount the payload names.
+-- date, by a seat's mandate whose scope covers the owning circle of the
+-- record the write concerns, or by a right, within the mandate's limit
+-- for the amount the payload names. The payload names the record's
+-- circle, `circle`, as its handler reads it from the record or writes it
+-- there, and one naming none concerns the root's, the assembly's. This is
+-- the one guard that reads a permission's scope: no slice checks it again.
+-- A right reaches the whole co-op.
 CREATE OR REPLACE FUNCTION membership.empowered(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN w.amount IS NOT NULL AND w.cents IS NULL THEN w.op || ' names its amount in ' || w.amount || ', which the payload lacks'
-    WHEN NOT membership.may(cella.actor(), w.power, w.cents, cella.verdict_date())
-      AND NOT membership.entitled(cella.actor(), w.power, w.cents, cella.verdict_date()) THEN
+    WHEN membership.may(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
+      OR membership.entitled(cella.actor(), w.power, w.cents, cella.verdict_date()) THEN NULL
+    WHEN membership.may(cella.actor(), w.power, w.cents, NULL, cella.verdict_date()) THEN
+      cella.actor() || ' holds ' || w.power || ' by no mandate covering ' || w.about || '''s records'
+    ELSE
       cella.actor() || ' holds no mandate for ' || w.power
         || coalesce(' up to ' || cella.amount(w.cents)::text || ' €', '')
   END
   FROM (
-    SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents
+    SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents,
+      coalesce(payload ->> 'circle', circle.assembly()) AS about
     FROM cella.power p
     WHERE p.op = cella.action()
   ) w;

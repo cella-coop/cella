@@ -284,7 +284,7 @@ test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusu
   settled(await log({ member: thomas, day: '2026-10-30', minutes: 420, billable: true }, as(thomas)))
   settled(await submit({ member: thomas, month: '2026-10' }, as(thomas)))
   const astray = await approve({ member: thomas, month: '2026-10' }, as(hugo))
-  assert.match(reason(astray), /hugo@lanterne\.example holds approve-time over no circle thomas@lanterne\.example sits in/)
+  assert.match(reason(astray), /hugo@lanterne\.example holds approve-time by no mandate covering web's records/)
   settled(await approve({ member: thomas, month: '2026-10' }, as(yusuf)))
 })
 

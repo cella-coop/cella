@@ -59,15 +59,15 @@ export async function record(input: Incoming, deps: Deps): Out<'bill:bill:record
   return write(deps, recording(input, deps.actor))
 }
 
-// Moves a bill to a status on the verdict date and returns its total and
-// the day.
+// Moves a bill to a status on the verdict date and returns its owning
+// circle, its total and the day.
 async function move(tx: Db, bill: string, set: string, actor?: string): Promise<Acted> {
-  const { rows } = await tx.query<{ total: string; day: string }>(
+  const { rows } = await tx.query<{ circle: string; total: string; day: string }>(
     `UPDATE bill.bill SET ${set} WHERE id = $1
-     RETURNING cella.cents(total) AS total, to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day`,
+     RETURNING circle, cella.cents(total) AS total, to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day`,
     actor ? [bill, actor] : [bill],
   )
-  return { bill, amount: Number(rows[0]?.total ?? 0), day: rows[0]?.day ?? '' }
+  return { bill, circle: rows[0]?.circle ?? '', amount: Number(rows[0]?.total ?? 0), day: rows[0]?.day ?? '' }
 }
 
 // Approves a recorded bill as the actor. The bill-transaction graft wraps

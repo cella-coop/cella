@@ -240,7 +240,7 @@ d-2026-012. Inès is not on its roll: her admission is what it decides.
 ## A mandate's limit
 
 Owner: the membership feat, through `membership.may(actor, power,
-cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
+cents, about, day)`, which reads mandates (the `circle` feat's), seats (its own)
 and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
 names the power its actions need in `cella.power`, a core registry, and the
@@ -479,12 +479,13 @@ undone, which its outcome shows.
 ## A mandate covers what its scope names
 
 Owners: the membership feat for what a mandate covers
-(`membership.over`, reading its scope); `membership-timesheet`
-and `membership-project` for what a write concerns.
+(`membership.may`, reading its scope against the circle a write's
+payload names); the feat whose record a write concerns for naming its
+circle.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `timesheet:period.approve` by a lead vs `circle:seat.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
+| `timesheet:period.approve` by a lead vs `circle:seat.remove` of the lead's tenure | approved | refused: the lead holds no mandate covering the month's circle | a lead approves a month of a circle they no longer lead |
 | `project.budget` by a lead vs `motion.policy.end` of the lead's `set-budget` | set | refused: the lead holds no mandate covering the project's circle | a lead budgets a project after their mandate ends |
 
 A mandate covers what its scope names: a circle's records, those of the

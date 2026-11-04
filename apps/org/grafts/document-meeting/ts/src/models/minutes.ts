@@ -42,6 +42,7 @@ export interface Minute {
 
 export interface Minuted {
   meeting: string
+  circle: string
   minuted: string
   document: string
   // The opening update's digest, when this write began the minutes.

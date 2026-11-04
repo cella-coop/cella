@@ -45,7 +45,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 
 const may = async (actor: string, power: string, day: string) =>
-  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, $3) AS may', [actor, power, day])).may
+  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) AS may', [actor, power, day])).may
 
 // An expense Thomas, of Web, spends on `day` and claims: 50 € and its VAT.
 async function spent(label: string, day: string) {

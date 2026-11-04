@@ -86,9 +86,13 @@ covers, never a place in a tree: one marking `{scope: web}` covers
 Web's projects, meetings and time; one on a role marking `{scope: own}`
 covers those of the circle its holder holds the role in, so each
 working circle's lead covers their own circle's alone; one marking none
-covers the whole co-op, a record of no circle among them. Core keeps it
-as a value; `membership.over`, which knows whether each holder's seat
-counts, reads it against the circle a record belongs to
+covers the whole co-op, every circle's records. Whether a scope covers a
+record's owning circle is core's, `circle.covers(scope, held, about)`
+(`008-scope.sql`), `held` the circle the holder holds the role in;
+ownership grants nothing by itself, only the label a scope is read
+against. The one guard that reads it on every action is the membership
+feat's, which knows whether each holder's seat counts, `membership.may`
+against the circle the write's payload names
 ([membership](../../feats/person/feats/membership/index.md#seats)). A
 mandate's procedure is what the motions acting under it are decided by,
 and passes down its chain: the motion feat, which knows procedures, holds it to one at least as strict as its

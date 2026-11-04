@@ -10,8 +10,10 @@ type Action = keyof typeof actions
 // `meeting_membership.marks` checks; `record` is the minutes' keeper's for
 // anyone expected, which meeting-membership checks. The graft's
 // trigger refuses a meeting already held and anyone not an active member.
+// The payload names the meeting's circle, which the guard reads the
+// keep-minutes mandate's scope against.
 function marking<O extends Action>(op: O) {
-  return (input: Attend, deps: Deps): Promise<Outcome<(typeof actions)[O], Attend>> => {
+  return (input: Attend, deps: Deps): Promise<Outcome<(typeof actions)[O], Attend & { circle: string }>> => {
     if (!statuses.includes(input.status)) {
       throw new Error(`“${input.status}” is none of ${statuses.join(', ')}`)
     }
@@ -25,7 +27,8 @@ function marking<O extends Action>(op: O) {
            ON CONFLICT (meeting, member) DO UPDATE SET status = excluded.status, marked = excluded.marked, by = excluded.by`,
           [input.meeting, input.member, input.status, deps.actor],
         )
-        return input
+        const { rows } = await tx.query<{ circle: string }>('SELECT circle FROM meeting.meeting WHERE id = $1', [input.meeting])
+        return { ...input, circle: rows[0]?.circle ?? '' }
       },
       payload: (v) => ({ ...v }),
     })

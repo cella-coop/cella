@@ -50,6 +50,24 @@ test('an expense is numbered, a draft, and comes to its amount and VAT', async (
   assert.deepEqual(rows[0], { id: 'ex-0001', status: 'draft', total: '18000' })
 })
 
+test('an expense is owned by the circle it was spent for, the root where it names none, never by one that does not exist', async () => {
+  await db.query('BEGIN')
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('web', 'Web')`)
+  const { rows } = await db.query(
+    `INSERT INTO expense.expense (member, day, label, category, net, circle) VALUES
+       ($1, '2026-10-21', 'Train to Clairval', '6251', cella.amount(7855), 'web'),
+       ($1, '2026-10-22', 'Font licence', '651', cella.amount(9000), DEFAULT)
+     RETURNING label, circle`,
+    [sofia],
+  )
+  assert.deepEqual(rows, [{ label: 'Train to Clairval', circle: 'web' }, { label: 'Font licence', circle: 'ag' }])
+  await db.query('ROLLBACK')
+  await assert.rejects(
+    db.query(`INSERT INTO expense.expense (member, day, label, category, net, circle) VALUES ($1, '2026-10-21', 'x', '6251', cella.amount(1), 'wbe')`, [sofia]),
+    /expense_circle_fkey/,
+  )
+})
+
 test('an expense moves only along its lifecycle', async () => {
   await refused(
     () => db.query(`UPDATE expense.expense SET status = 'approved', decided = '2026-10-24', decider = 'hugo@lanterne.example' WHERE id = 'ex-0001'`),

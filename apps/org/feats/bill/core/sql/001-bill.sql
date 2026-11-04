@@ -9,6 +9,7 @@ CREATE SEQUENCE bill.number;
 -- it, who approved it and when it was paid. The supplier is a name, as
 -- text; a supplier as a record of its own waits on a contact feat.
 CREATE TABLE bill.bill (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 'bi-' || lpad(nextval('bill.number')::text, 4, '0'),
   supplier text NOT NULL CHECK (supplier <> ''),
   reference text NOT NULL CHECK (reference <> ''),
@@ -36,6 +37,7 @@ CREATE TABLE bill.bill (
 CREATE INDEX ON bill.bill (status, due);
 
 CREATE TABLE bill.line (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   bill text NOT NULL REFERENCES bill.bill,
   n integer NOT NULL CHECK (n > 0),
   description text NOT NULL,
@@ -193,3 +195,16 @@ GRANT SELECT ON ALL TABLES IN SCHEMA bill TO cella_app, cella_guards;
 GRANT INSERT ON bill.bill, bill.line TO cella_app;
 GRANT UPDATE (status, approved, approver, paid) ON bill.bill TO cella_app;
 GRANT USAGE ON SEQUENCE bill.number TO cella_app;
+
+-- A bill's line is in its bill's circle, copied as it is made; a line
+-- made in the statement that makes its bill, which it cannot see yet,
+-- names the bill's circle itself.
+CREATE FUNCTION bill.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.circle := coalesce((SELECT b.circle FROM bill.bill b WHERE b.id = NEW.bill), NEW.circle);
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON bill.line
+  FOR EACH ROW EXECUTE FUNCTION bill.in_its_circle();

@@ -26,6 +26,11 @@ Declared by `patronage`.
 The actions are the motion feat's rows, so the graft reads them and
 keeps no copy. The app role and the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Guards
 
 - `motion_patronage.approves`, on `patronage:distribution:approve`, and on

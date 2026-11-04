@@ -81,6 +81,11 @@ unless it is a picture, a PDF or plain text, and sandboxed.
 `file.number`; `file.largest()`, `file.opens`, `file.stored`. The app role
 may select and insert; the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Tests
 
 `core/ts/_tests/file.test.ts` (`cella test slice file`): a file is named

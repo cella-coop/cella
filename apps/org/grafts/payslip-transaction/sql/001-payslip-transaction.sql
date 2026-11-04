@@ -5,6 +5,7 @@ CREATE SCHEMA payslip_transaction;
 -- moved here posted both in one entry. Both sides are referenced by id,
 -- with no foreign key into either feat.
 CREATE TABLE payslip_transaction.posting (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text PRIMARY KEY,
   month text NOT NULL,
   event text NOT NULL CHECK (event IN ('accrual', 'payment', 'carried')),

@@ -16,6 +16,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:motion:vote', 'membershi
 -- it closed, fixed by the close, so a later suspension or exit cannot
 -- change its outcome.
 CREATE TABLE membership_motion.counted (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   motion text NOT NULL,
   member text NOT NULL,
   PRIMARY KEY (motion, member)

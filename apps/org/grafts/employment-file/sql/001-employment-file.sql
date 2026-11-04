@@ -4,6 +4,7 @@ CREATE SCHEMA employment_file;
 -- or its amendments: each a file of class payroll about them, kept once.
 -- Both by id, with no foreign key into either feat.
 CREATE TABLE employment_file.record (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   worker text NOT NULL,
   file text NOT NULL UNIQUE,
   PRIMARY KEY (worker, file)

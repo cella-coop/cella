@@ -17,6 +17,11 @@ meeting `FOR SHARE` as the agenda's trigger does, and a mark of anyone
 who is not an active member on the verdict date (`membership.active`). The app role may select, insert and update;
 the guards role, `cella_guards`, may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Actions
 
 | Action | Label | Why |

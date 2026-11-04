@@ -52,3 +52,5 @@ $$;
 COMMENT ON COLUMN person.rights.name IS 'not personal: the name of a right, such as member';
 
 GRANT SELECT ON person.rights TO cella_app, cella_guards;
+
+COMMENT ON TABLE person.rights IS 'registry: who holds each right, as the nested feats register it';

@@ -9,6 +9,7 @@ CREATE SCHEMA employment;
 -- whether they are a member, membership's;
 -- their pay, employment-payslip's; their time, employment-timesheet's.
 CREATE TABLE employment.worker (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   address text PRIMARY KEY,
   name text,
   job text NOT NULL CHECK (job <> ''),

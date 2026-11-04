@@ -5,6 +5,7 @@ CREATE SCHEMA document_motion;
 -- version the proposer read it in. The motion is named by id and the
 -- document and version by theirs, with no foreign key into either feat.
 CREATE TABLE document_motion.adoption (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   motion text NOT NULL,
   document text NOT NULL,
   version text NOT NULL,

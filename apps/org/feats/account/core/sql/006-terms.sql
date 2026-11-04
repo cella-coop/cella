@@ -12,6 +12,7 @@
 -- later terms do. How the work share divides is the patronage feat's
 -- terms.
 CREATE TABLE account.terms (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   -- The rule they copy, `m-2026-013/1`, by its id in the policy register.
   policy text NOT NULL UNIQUE,

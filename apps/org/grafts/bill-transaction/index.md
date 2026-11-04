@@ -1,6 +1,6 @@
 +++
 title = "bill-transaction"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 A bill's approval and its payment post balanced entries, in the same
@@ -25,6 +25,11 @@ approved; the payment moves only the balance sheet.
 event, one of each per bill; `lines(bill, event)`, the lines an event
 posts, which the handlers ask the database for, so the postings are
 SQL's, never TypeScript's.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Guards
 

@@ -4,6 +4,7 @@ CREATE SCHEMA membership;
 -- suspended or exited, and the shares they hold. Who they are is the
 -- person's, the core this feat nests in.
 CREATE TABLE membership.member (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   address text PRIMARY KEY,
   status text NOT NULL CHECK (status IN ('invited', 'active', 'suspended', 'exited')),
   since date,

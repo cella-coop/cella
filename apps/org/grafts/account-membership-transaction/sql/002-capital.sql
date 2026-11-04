@@ -20,6 +20,7 @@ ALTER TABLE account_membership_transaction.subscription
 -- What an associate paid in on their subscription, the entry that posted
 -- it and how: from the bank, or withheld from their pay.
 CREATE TABLE account_membership_transaction.paid (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text NOT NULL,
   member text NOT NULL,
   amount cella.amount NOT NULL,
@@ -84,6 +85,7 @@ END;
 -- by its number, the day it falls due, its amount, and the entry and day
 -- that paid it. A repayment paid never changes.
 CREATE TABLE account_membership_transaction.repayment (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text NOT NULL,
   n integer NOT NULL CHECK (n > 0),
   due date NOT NULL,
@@ -189,6 +191,7 @@ END;
 -- What an associate who leaves withdrew, once: the entry that moved their
 -- capital to 4567 and cancelled what they had not paid.
 CREATE TABLE account_membership_transaction.withdrawal (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   entry text NOT NULL UNIQUE
 );

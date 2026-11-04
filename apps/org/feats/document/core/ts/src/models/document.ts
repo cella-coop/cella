@@ -16,6 +16,9 @@ export interface Create {
   id?: string
   title: string
   blocks?: Fragment[]
+  // The circle it is owned by, by id; the root's, the assembly's, when
+  // none is named.
+  circle?: string | null
 }
 
 export interface Created {

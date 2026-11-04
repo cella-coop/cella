@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -33,8 +33,9 @@ A report's `kind` says how it is drawn:
 - `custom`, a member's own: a port report, its `definition`, saved with
   how it is charted.
 
-The four the feat draws itself are rows its migration makes, owned by no
-one; a custom report is its `owner`'s, saved on the verdict date.
+The four the feat draws itself are rows its migration makes in a
+registry, `report.drawn`, owned by no one; a custom report is its
+`owner`'s, saved on the verdict date, a row of `report.report`.
 
 ## The financial statements
 
@@ -142,12 +143,22 @@ reasons and never saved, then upserts the actor's report.
 
 `report` (`sql/`):
 
-- `report.report`: the saved reports, the four built-in ones seeded.
+- `report.drawn`: the four reports the feat draws itself, a registry its
+  migration fills.
+- `report.report`: the members' own reports.
+- `report.listed`: both, as the collection lists them.
 - `report.threshold`: the watch's thresholds by the day they apply from.
 - `report.saves(payload)`: the save's guard.
 
-The app role reads both tables and writes reports; the guards role reads
-them.
+The app role reads the tables and the list and writes reports; the
+guards role reads the tables.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`report.drawn`, the four reports the feat draws itself, is a registry
+and names none; `report.listed` lists them with the members' own.
 
 ## Tests
 

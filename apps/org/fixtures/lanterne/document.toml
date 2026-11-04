@@ -3,7 +3,8 @@
 # one more than the block it nests under), the props its type keeps, and its
 # text, plain or as runs with their marks. The seed carries each version
 # over into the next, keeping the blocks that did not change, so edits
-# between versions are Loro's and are not fixtures.
+# between versions are Loro's and are not fixtures. A document names the
+# circle it is owned by; one that names none is the assembly's.
 
 [[document]]
 id = "internal-rules"
@@ -73,6 +74,7 @@ text = "Political parties"
 
 [[document]]
 id = "rate-card-2027"
+circle = "coordination"
 title = "Rate card 2027"
 
 [[document.version]]
@@ -327,10 +329,10 @@ text = "Closed"
 text = "The session closed at 12:40."
 
 # The statutes, generated from the assembly's policies and written by no
-# one: a `circle` names whose policies a document reads, and its
-# `template` is the fixed text of the legal form, a SCOP SARL à capital
-# variable after the CG Scop's model statutes (not checked on
-# Légifrance), each `policies` embed where the policies of the kind its
+# one: its `circle`, which owns it, names whose policies it reads, and
+# its `template`, which makes it generated, is the fixed text of the
+# legal form, a SCOP SARL à capital variable after the CG Scop's model
+# statutes (not checked on Légifrance), each `policies` embed where the policies of the kind its
 # ref names read, in order, and its `departures` embed where the defaults
 # of the form its ref names the assembly left read, or a line saying it
 # left none.

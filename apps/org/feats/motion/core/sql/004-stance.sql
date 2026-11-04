@@ -26,3 +26,5 @@ BEGIN ATOMIC
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:motion:vote', 'motion.own_stance(jsonb)', 'motion');
+
+COMMENT ON TABLE motion.stance_power IS 'registry: the power a stance needs, as the feat registers it';

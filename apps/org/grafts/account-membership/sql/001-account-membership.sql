@@ -2,6 +2,7 @@ CREATE SCHEMA account_membership;
 
 -- The value of one share of the co-op's capital, as its statutes set it.
 CREATE TABLE account_membership.terms (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
   share cella.amount NOT NULL
 );
@@ -9,6 +10,7 @@ CREATE TABLE account_membership.terms (
 -- What each member may draw on their account, granted in advance: the
 -- right a draw spends.
 CREATE TABLE account_membership.allowance (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   amount cella.amount NOT NULL
 );

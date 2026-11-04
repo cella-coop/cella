@@ -3,6 +3,7 @@ CREATE SCHEMA client_project;
 -- Which client a project is for. A project without a row here is the
 -- co-op's own, not invalid.
 CREATE TABLE client_project.commission (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   project text PRIMARY KEY,
   client text NOT NULL
 );

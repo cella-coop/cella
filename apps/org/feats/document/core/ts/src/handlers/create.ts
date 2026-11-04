@@ -19,10 +19,11 @@ export const slug = (title: string) =>
     .replace(/^-|-$/g, '')
     .slice(0, 60)
 
-// Starts a document, by its id or its title's slug, a taken one refused,
-// and its draft's first update, its opening blocks, if it has any, as its
-// author's edit. A graft that keeps a document for something of its own,
-// as a meeting's minutes, runs this in its own write.
+// Starts a document in the circle it names, or the root's, by its id or
+// its title's slug, a taken one refused, and its draft's first update,
+// its opening blocks, if it has any, as its author's edit. A graft that
+// keeps a document for something of its own, as a meeting's minutes,
+// runs this in its own write.
 export const creating = (input: Create, author: string): Write<Created> => ({
   op,
   request: input,
@@ -35,7 +36,7 @@ export const creating = (input: Create, author: string): Write<Created> => ({
     if (taken.rowCount) {
       throw new Error(`a document ${id} exists already`)
     }
-    await tx.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [id, input.title])
+    await tx.query('INSERT INTO document.document (id, title, circle) VALUES ($1, $2, coalesce($3, circle.assembly()))', [id, input.title, input.circle ?? null])
     if (!input.blocks?.length) {
       return { document: id, receipt: null, digest: null }
     }

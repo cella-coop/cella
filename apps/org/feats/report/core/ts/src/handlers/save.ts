@@ -14,10 +14,10 @@ export const saving = (input: Save, actor: string): Write<Stored> => ({
   request: { id: input.id, title: input.title, caption: input.caption, definition: input.definition },
   state: async (tx) => {
     await tx.query(
-      `INSERT INTO report.report (id, title, caption, kind, definition, owner, saved)
-       VALUES ($1, $2, $3, 'custom', $4, $5, cella.verdict_date())
+      `INSERT INTO report.report (id, title, caption, definition, owner, saved)
+       VALUES ($1, $2, $3, $4, $5, cella.verdict_date())
        ON CONFLICT (id) DO UPDATE SET title = EXCLUDED.title, caption = EXCLUDED.caption, definition = EXCLUDED.definition, saved = EXCLUDED.saved
-       WHERE report.report.kind = 'custom' AND report.report.owner = EXCLUDED.owner`,
+       WHERE report.report.owner = EXCLUDED.owner`,
       [input.id, input.title, input.caption, JSON.stringify(input.definition), actor],
     )
     return { report: input.id }

@@ -6,7 +6,7 @@
 -- `document:document:generate`, and never by hand.
 CREATE TABLE document.generated (
   document text PRIMARY KEY REFERENCES document.document,
-  circle text NOT NULL,
+  circle text NOT NULL REFERENCES circle.circle,
   template jsonb NOT NULL CHECK (jsonb_typeof(template) = 'array')
 );
 

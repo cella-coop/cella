@@ -4,6 +4,7 @@ CREATE SCHEMA project_task;
 -- with no row here stands alone, which is not invalid; it is in one
 -- project at a time, and the last filing wins.
 CREATE TABLE project_task.filing (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   task text PRIMARY KEY,
   project text NOT NULL,
   milestone integer

@@ -41,10 +41,14 @@ export interface Capture {
   net: number
   vat: number | null
   receipt: string | null
+  // The circle it was spent for, by id; the root's, the assembly's, when
+  // none is named.
+  circle?: string | null
 }
 
 export interface Captured {
   expense: string
+  circle: string
   member: string
   day: string
   category: string

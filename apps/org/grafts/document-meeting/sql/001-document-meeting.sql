@@ -4,6 +4,7 @@ CREATE SCHEMA document_meeting;
 -- meeting's id and the document's, with no foreign key into either feat.
 -- A meeting has one set of minutes and a document minutes one meeting.
 CREATE TABLE document_meeting.minutes (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   meeting text PRIMARY KEY,
   document text NOT NULL UNIQUE
 );

@@ -4,6 +4,7 @@ CREATE SCHEMA bill_transaction;
 -- its payment. Both sides are referenced by id, with no foreign key into
 -- either feat.
 CREATE TABLE bill_transaction.posting (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text PRIMARY KEY,
   bill text NOT NULL,
   event text NOT NULL CHECK (event IN ('charge', 'payment')),

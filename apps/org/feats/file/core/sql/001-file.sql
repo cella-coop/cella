@@ -16,6 +16,7 @@ RETURN 10485760;
 -- notary's redaction empties its name and bytes, and its hash with them.
 -- What it is attached to is the graft's that attaches it.
 CREATE TABLE file.file (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text NOT NULL DEFAULT 'fi-' || lpad(nextval('file.number')::text, 4, '0'),
   class text NOT NULL CHECK (class IN ('none', 'expense-receipt', 'payroll', 'profile')),
   subject text,

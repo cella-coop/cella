@@ -56,9 +56,9 @@ export async function finance(db, read, day) {
   const expenses = read('expense').expense ?? []
   for (const e of expenses) {
     await db.query(
-      `INSERT INTO expense.expense (id, member, day, label, category, net, vat, receipt)
-       VALUES ($1, $2, $3, $4, $5, cella.amount($6), cella.amount($7), $8)`,
-      [e.id, e.member, day(e.day), e.label, e.category, e.net, e.vat ?? null, e.receipt ?? null],
+      `INSERT INTO expense.expense (id, member, day, label, category, net, vat, receipt, circle)
+       VALUES ($1, $2, $3, $4, $5, cella.amount($6), cella.amount($7), $8, coalesce($9, circle.assembly()))`,
+      [e.id, e.member, day(e.day), e.label, e.category, e.net, e.vat ?? null, e.receipt ?? null, e.circle ?? null],
     )
     if (e.submitted) {
       await db.query(`UPDATE expense.expense SET status = 'submitted', submitted = $2 WHERE id = $1`, [e.id, day(e.submitted)])
@@ -84,14 +84,15 @@ export async function finance(db, read, day) {
        ),
        sums AS (SELECT sum(amount)::bigint AS net, sum(cella.line_vat(amount, vat_rate))::bigint AS vat FROM lines),
        made AS (
-         INSERT INTO bill.bill (id, supplier, reference, issued, due, label, category, recorded, recorder, net, vat, total)
-         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, cella.amount(net), CASE WHEN vat > 0 THEN cella.amount(vat) END, cella.amount(net + vat)
+         INSERT INTO bill.bill (id, supplier, reference, issued, due, label, category, recorded, recorder, net, vat, total, circle)
+         SELECT $1, $2, $3, $4, $5, $6, $7, $8, $9, cella.amount(net), CASE WHEN vat > 0 THEN cella.amount(vat) END, cella.amount(net + vat),
+                coalesce($11, circle.assembly())
          FROM sums
-         RETURNING id
+         RETURNING id, circle
        )
-       INSERT INTO bill.line (bill, n, description, quantity, unit_price, amount, vat_rate)
-       SELECT made.id, n, description, quantity, cella.amount(unit_price), cella.amount(amount), vat_rate FROM made, lines`,
-      [b.id, b.supplier, b.reference, day(b.issued), day(b.due), b.label, b.category, day(b.recorded), b.recorder, JSON.stringify(b.line ?? [])],
+       INSERT INTO bill.line (bill, circle, n, description, quantity, unit_price, amount, vat_rate)
+       SELECT made.id, made.circle, n, description, quantity, cella.amount(unit_price), cella.amount(amount), vat_rate FROM made, lines`,
+      [b.id, b.supplier, b.reference, day(b.issued), day(b.due), b.label, b.category, day(b.recorded), b.recorder, JSON.stringify(b.line ?? []), b.circle ?? null],
     )
   }
   if (bills.length) {

@@ -46,3 +46,7 @@ END;
 REVOKE EXECUTE ON FUNCTION motion.register_cite(text, text, text), motion.register_cite_guard(regprocedure, text) FROM PUBLIC;
 
 GRANT SELECT ON motion.cites, motion.cite_guard TO cella_app, cella_guards;
+
+COMMENT ON TABLE motion.cites IS 'registry: the actions that cite a motion, as the grafts register them';
+
+COMMENT ON TABLE motion.cite_guard IS 'registry: the guards covering every action that cites a motion, as the grafts register them';

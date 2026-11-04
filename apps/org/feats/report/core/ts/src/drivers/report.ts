@@ -11,20 +11,20 @@ const kinds = `array_position(ARRAY['income', 'balance', 'margins', 'federation'
 // The saved reports as the collection lists them: the four the feat draws
 // itself first, then the members' own by title.
 export const listing: Read = {
-  sql: `SELECT id, title, caption, kind, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.report`,
+  sql: `SELECT id, title, caption, kind, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.listed`,
   order: `${kinds}, title`,
 }
 
 export async function reports(db: Db): Promise<Report[]> {
   const { rows } = await db.query<Report>(
-    `SELECT id, title, caption, kind, definition, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.report ORDER BY ${kinds}, title`,
+    `SELECT id, title, caption, kind, definition, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.listed ORDER BY ${kinds}, title`,
   )
   return rows
 }
 
 export async function report(db: Db, id: string): Promise<Report | null> {
   const { rows } = await db.query<Report>(
-    `SELECT id, title, caption, kind, definition, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.report WHERE id = $1`,
+    `SELECT id, title, caption, kind, definition, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.listed WHERE id = $1`,
     [id],
   )
   return rows[0] ?? null

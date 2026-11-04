@@ -91,6 +91,11 @@ which the `payslip` feat holds, so the power has no limit.
 `employment.employed_in`, `employment.hires` and `employment.carries`. The
 app role may select and insert; the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../../../_corpus/doc/architecture.md#sql)): the root's,
+the assembly's, unless the write that makes it names another.
+
 ## Personal data
 
 The register's copy of a worker's name is personal data of class

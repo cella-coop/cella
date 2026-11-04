@@ -60,6 +60,11 @@ active member, `membership-task`'s.
 take. The app role may select, insert and update; the guards role may
 select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Shell
 
 The `tasks` collection opens as a board grouped by status, its columns

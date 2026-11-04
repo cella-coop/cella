@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -36,6 +36,11 @@ to no project is the co-op's own time, not invalid. Declared by
   reads no clock.
 
 The app role may select and insert bookings; the guards role may select.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

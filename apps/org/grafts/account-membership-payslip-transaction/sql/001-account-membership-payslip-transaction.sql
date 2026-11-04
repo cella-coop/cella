@@ -6,6 +6,7 @@ CREATE SCHEMA account_membership_payslip_transaction;
 -- pay had withheld before it. Their own register: spreading again
 -- replaces it for the instalments to come.
 CREATE TABLE account_membership_payslip_transaction.plan (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   instalments integer NOT NULL CHECK (instalments > 0),
   each cella.amount NOT NULL,
@@ -16,6 +17,7 @@ CREATE TABLE account_membership_payslip_transaction.plan (
 -- What a month's pay run withheld from an associate's pay for their
 -- subscription, and the entry, the run's payment, that posted it.
 CREATE TABLE account_membership_payslip_transaction.withheld (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   month text NOT NULL,
   member text NOT NULL,
   amount cella.amount NOT NULL,

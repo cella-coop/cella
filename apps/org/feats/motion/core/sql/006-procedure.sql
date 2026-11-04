@@ -65,3 +65,5 @@ CREATE TRIGGER procedure_kept BEFORE UPDATE OR DELETE ON motion.procedure
   FOR EACH ROW EXECUTE FUNCTION motion.procedure_kept();
 
 GRANT SELECT ON motion.procedure TO cella_app, cella_guards;
+
+COMMENT ON TABLE motion.procedure IS 'registry: the built-in procedures and the values each procedure policy adopted fixes, copied from the register, where the policy names its circle';

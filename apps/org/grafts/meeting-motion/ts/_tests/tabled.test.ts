@@ -25,6 +25,7 @@ const refused = async (sql: string, values: unknown[], says: RegExp) => {
 
 before(async () => {
   await db.connect()
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('coordination', 'Coordination') ON CONFLICT DO NOTHING`)
   await db.query(
     `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline)
      VALUES ('m-2026-011', 'coordination', 'Raise the day rate for 2027', 'consent', 'consent', '2026-10-12', '2026-11-09')`,

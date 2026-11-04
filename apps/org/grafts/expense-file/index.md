@@ -1,6 +1,6 @@
 +++
 title = "expense-file"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The receipts on an expense: files of class `expense-receipt` about its
@@ -11,6 +11,11 @@ L123-22). Declared by `file`.
 
 `expense_file` (`sql/`): `receipt`, an expense and a file, each by id, a
 file attached once.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

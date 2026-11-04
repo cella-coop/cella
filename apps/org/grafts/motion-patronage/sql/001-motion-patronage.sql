@@ -3,6 +3,7 @@ CREATE SCHEMA motion_patronage;
 -- The motion of the members that approves a year's distribution. Both
 -- sides are referenced by id, with no foreign key into either feat.
 CREATE TABLE motion_patronage.approval (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   distribution text PRIMARY KEY,
   motion text NOT NULL
 );

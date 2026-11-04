@@ -30,6 +30,7 @@ REVOKE EXECUTE ON FUNCTION motion.register_carries(text, text, jsonb, text, text
 -- registered kind and its arguments, which the kind's graft reads and its
 -- guards check. Actions are fixed with the proposal.
 CREATE TABLE motion.action (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   motion text NOT NULL REFERENCES motion.motion,
   n integer NOT NULL CHECK (n > 0),
   kind text NOT NULL REFERENCES motion.carries,
@@ -80,3 +81,5 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:motion:propose', 'motion
 GRANT SELECT ON motion.carries TO cella_app, cella_guards;
 GRANT SELECT, INSERT ON motion.action TO cella_app;
 GRANT SELECT ON motion.action TO cella_guards;
+
+COMMENT ON TABLE motion.carries IS 'registry: the kinds of action a motion carries, as the grafts register them';

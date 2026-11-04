@@ -6,6 +6,7 @@ CREATE SCHEMA account_membership_patronage_transaction;
 -- blocked until (Code du travail, art. L3324-10) and the entry that
 -- posted them. One per associate and distribution.
 CREATE TABLE account_membership_patronage_transaction.credit (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   distribution text NOT NULL,
   member text NOT NULL,
   account text NOT NULL,

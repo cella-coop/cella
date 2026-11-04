@@ -3,6 +3,7 @@
 -- the billable rate is, seeded with the co-op's figure; a cost per member,
 -- or one read from the pay runs, is not built.
 CREATE TABLE project_timesheet.cost (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   since date PRIMARY KEY,
   hourly cella.amount NOT NULL
 );

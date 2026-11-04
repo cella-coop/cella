@@ -15,6 +15,7 @@ CREATE SCHEMA patronage;
 -- as it is adopted; they govern from the fiscal year their rule applies
 -- in, until later terms do.
 CREATE TABLE patronage.terms (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   -- The rule they copy, `m-2026-013/1`, by its id in the policy register.
   policy text NOT NULL UNIQUE,
@@ -66,6 +67,7 @@ RETURN (
 -- which what each part employs in shares is credited to its associate's
 -- capital, by a write of its own.
 CREATE TABLE patronage.distribution (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   year integer NOT NULL UNIQUE CHECK (year BETWEEN 1900 AND 9999),
   surplus cella.amount NOT NULL,
@@ -78,6 +80,7 @@ CREATE TABLE patronage.distribution (
 );
 
 CREATE TABLE patronage.share (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   distribution text NOT NULL REFERENCES patronage.distribution,
   kind text NOT NULL CHECK (kind IN ('work', 'legal', 'development', 'interest')),
   percent numeric(5, 2) NOT NULL CHECK (percent > 0 AND percent <= 100),
@@ -148,6 +151,7 @@ RETURN coalesce((
 -- portion when the distribution is approved, in that write; a part of
 -- nothing has no row.
 CREATE TABLE patronage.part (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   distribution text NOT NULL REFERENCES patronage.distribution,
   worker text NOT NULL,
   basis text NOT NULL CHECK (basis IN ('salary', 'hours', 'equal')),

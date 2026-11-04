@@ -7,6 +7,7 @@ CREATE SCHEMA invoice;
 -- never runs out. A device's right at rung 2 has an end, and a number past
 -- it needs a fresh grant, which is ordered.
 CREATE TABLE invoice.series (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   name text PRIMARY KEY,
   next integer NOT NULL CHECK (next > 0),
   until integer CHECK (until > 0)
@@ -16,6 +17,7 @@ CREATE TABLE invoice.series (
 -- client-invoice graft's; `bill_to` is the name as printed. A NULL `vat`
 -- is an invoice without VAT.
 CREATE TABLE invoice.invoice (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   series text NOT NULL REFERENCES invoice.series,
   number integer NOT NULL CHECK (number > 0),
@@ -36,6 +38,7 @@ CREATE TABLE invoice.invoice (
 );
 
 CREATE TABLE invoice.line (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   invoice text NOT NULL REFERENCES invoice.invoice,
   n integer NOT NULL CHECK (n > 0),
   description text NOT NULL,
@@ -51,6 +54,7 @@ CREATE TABLE invoice.line (
 -- Money received, a fact from the bank, ordered by its receipt. The bank's
 -- reference names the transfer: the same one recorded twice is one payment.
 CREATE TABLE invoice.payment (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   invoice text NOT NULL REFERENCES invoice.invoice,
   receipt bigint NOT NULL UNIQUE,

@@ -67,6 +67,14 @@ watched, the `report` feat's project margins. Quotes and invoicing by milestone 
 the next open one. The app role may select, insert and update; the guards
 role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`project.project.circle` is the circle that runs the project; its
+milestones are in its circle, which `project.in_its_circle` copies into
+each as it is made.
+
 ## Shell
 
 The `projects` collection opens as a gallery, each card naming its client,

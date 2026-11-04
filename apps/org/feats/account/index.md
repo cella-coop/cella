@@ -224,6 +224,12 @@ Triggers raise SQLSTATE `09000`. The app role may select, insert accounts
 account's `frozen`, and insert terms; the guards role,
 `cella_guards`, may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`account.rubric` is a registry and names none.
+
 ## Personal data
 
 A capital account's label names its member: personal data of class

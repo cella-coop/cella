@@ -1,6 +1,7 @@
 CREATE SCHEMA document;
 
 CREATE TABLE document.document (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   title text NOT NULL
 );
@@ -9,6 +10,7 @@ CREATE TABLE document.document (
 -- in any. The live text is their merge; the server keeps and relays them.
 -- An update carried over from before the log has no author.
 CREATE TABLE document.update (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   receipt bigint PRIMARY KEY,
   document text NOT NULL REFERENCES document.document,
   author text,
@@ -24,6 +26,7 @@ CREATE INDEX ON document.update (document);
 -- the snapshot by the cella extension, never taken from a client.
 -- Numbered per document, `<document>@<n>`; immutable.
 CREATE TABLE document.version (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   document text NOT NULL REFERENCES document.document,
   n integer NOT NULL CHECK (n > 0),
@@ -43,6 +46,7 @@ CREATE TABLE document.version (
 -- each cursor in base64), which find the quote in the draft however the
 -- text around it moves.
 CREATE TABLE document.comment (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   version text NOT NULL REFERENCES document.version,
   author text NOT NULL,
@@ -59,6 +63,7 @@ CREATE INDEX ON document.comment (version);
 -- adopted version it replaces, its base; `document.adopts` refuses it if
 -- the adopted version moved since. Ordered by receipt.
 CREATE TABLE document.adoption (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   receipt bigint PRIMARY KEY,
   document text NOT NULL REFERENCES document.document,
   version text NOT NULL,
@@ -157,3 +162,28 @@ GRANT USAGE ON SCHEMA document TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA document TO cella_app, cella_guards;
 GRANT INSERT ON document.update, document.version, document.comment, document.adoption TO cella_app;
 GRANT UPDATE (resolved) ON document.comment TO cella_app;
+
+-- An update, a version and an adoption are in their document's circle,
+-- and a comment in its version's, copied as each is made.
+CREATE FUNCTION document.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  IF TG_TABLE_NAME = 'comment' THEN
+    NEW.circle := coalesce((SELECT v.circle FROM document.version v WHERE v.id = NEW.version), NEW.circle);
+  ELSE
+    NEW.circle := coalesce((SELECT d.circle FROM document.document d WHERE d.id = NEW.document), NEW.circle);
+  END IF;
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON document.update
+  FOR EACH ROW EXECUTE FUNCTION document.in_its_circle();
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON document.version
+  FOR EACH ROW EXECUTE FUNCTION document.in_its_circle();
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON document.comment
+  FOR EACH ROW EXECUTE FUNCTION document.in_its_circle();
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON document.adoption
+  FOR EACH ROW EXECUTE FUNCTION document.in_its_circle();

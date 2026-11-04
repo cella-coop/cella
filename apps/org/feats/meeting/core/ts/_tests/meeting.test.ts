@@ -27,6 +27,7 @@ const guard = async (fn: string, payload: object) => (await db.query<{ r: string
 
 before(async () => {
   await db.connect()
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('coordination', 'Coordination') ON CONFLICT DO NOTHING`)
   await db.query(
     `INSERT INTO meeting.meeting (id, circle, title, at, place) VALUES
        ('coordination-2026-10-19', 'coordination', 'Coordination', '2026-10-19 10:00', 'Studio'),

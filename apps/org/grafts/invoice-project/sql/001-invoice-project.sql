@@ -3,6 +3,7 @@ CREATE SCHEMA invoice_project;
 -- Which project an invoice bills work of. An invoice without a row here
 -- bills no project, which is not invalid.
 CREATE TABLE invoice_project.charge (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   invoice text PRIMARY KEY,
   project text NOT NULL
 );

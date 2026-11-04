@@ -5,6 +5,7 @@ CREATE SCHEMA payslip;
 -- integration computes them line by line; and the widest ratio its guards
 -- allow between the highest and the lowest salary.
 CREATE TABLE payslip.terms (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
   employee numeric(5, 2) NOT NULL CHECK (employee >= 0 AND employee < 100),
   employer numeric(5, 2) NOT NULL CHECK (employer >= 0),
@@ -16,6 +17,7 @@ CREATE TABLE payslip.terms (
 -- one replaces it. The member is an address, as text; that it is a
 -- worker's, and ends when they leave, is the employment-payslip graft's.
 CREATE TABLE payslip.salary (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text NOT NULL,
   "from" date NOT NULL,
   until date,
@@ -26,6 +28,7 @@ CREATE TABLE payslip.salary (
 
 -- A month's pay run: prepared, then approved, then paid, each once.
 CREATE TABLE payslip.run (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   month text PRIMARY KEY CHECK (month ~ '^\d{4}-(0[1-9]|1[0-2])$'),
   generated date NOT NULL,
   approved date,
@@ -39,6 +42,7 @@ CREATE TABLE payslip.run (
 -- contributions, the employer's, and net pay; and the time they worked,
 -- in minutes, where their month was timed.
 CREATE TABLE payslip.payslip (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   month text NOT NULL REFERENCES payslip.run,
   member text NOT NULL,
   minutes integer CHECK (minutes >= 0),

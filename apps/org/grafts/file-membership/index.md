@@ -12,6 +12,12 @@ a personal file opens to ([circles](#circles)). Declared by `file`.
 `file_membership` (`sql/`): `record`, a member and a file, each by address or
 id, a file kept once.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`file_membership.opener` is a registry and names none.
+
 ## Actions
 
 `file-membership:member:attach` (confluent, `file-record`, every person's right): a member or an invitee files a record

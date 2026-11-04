@@ -3,6 +3,7 @@
 -- whether each may veto it. The motion is named by id and the person by
 -- address, with no foreign key into either feat.
 CREATE TABLE membership_motion.roll (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   motion text NOT NULL,
   member text NOT NULL,
   veto boolean NOT NULL DEFAULT false,

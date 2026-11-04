@@ -9,6 +9,7 @@ CREATE SEQUENCE import.number;
 -- or the reason it was refused. What each line is names a record by its
 -- id, address or title, never a person's name. A run never changes.
 CREATE TABLE import.run (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 'im-' || lpad(nextval('import.number')::text, 4, '0'),
   kind text NOT NULL CHECK (kind ~ '^[a-z]+$'),
   name text NOT NULL CHECK (name <> ''),

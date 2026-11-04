@@ -94,11 +94,11 @@ test('Julien records a supplier\'s bill, its amounts counted from its lines; rec
   assert.equal(recorded.state, 'settled', reason(recorded))
   assert.ok(recorded.state === 'settled')
   bill = recorded.value.bill
-  assert.deepEqual(recorded.value, { bill, net, vat, total: net + vat, merged: false })
+  assert.deepEqual(recorded.value, { bill, circle: 'ag', net, vat, total: net + vat, merged: false })
 
   const again = await record(licences, as(julien))
   assert.ok(again.state === 'settled')
-  assert.deepEqual(again.value, { bill, net, vat, total: net + vat, merged: true })
+  assert.deepEqual(again.value, { bill, circle: 'ag', net, vat, total: net + vat, merged: true })
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM bill.bill WHERE supplier = $1', [licences.supplier])).n, '1')
 
   const due = await one<{ due: string; recorder: string }>(`SELECT to_char(due, 'YYYY-MM-DD') AS due, recorder FROM bill.bill WHERE id = $1`, [bill])

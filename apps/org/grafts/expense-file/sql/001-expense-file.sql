@@ -4,6 +4,7 @@ CREATE SCHEMA expense_file;
 -- expense-receipt about the expense's member, attached once. Both by id,
 -- with no foreign key into either feat.
 CREATE TABLE expense_file.receipt (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   expense text NOT NULL,
   file text NOT NULL UNIQUE,
   PRIMARY KEY (expense, file)

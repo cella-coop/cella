@@ -220,8 +220,12 @@ down to itself, each with its grantee and its issuer. A mandate's
 `limit` and `budget` and a right's `limit` are `cella.amount`s, and each
 names the policy that grants it, one a policy. A circle has no parent
 and no place: one circle only is the assembly, a unique index holding
-it so, and `circle.assembly()` names it. Triggers keep a mandate's
-grant fixed and a revocation standing, a right's as a mandate's,
+it so, and `circle.assembly()` names it. `circle.circle` is what every
+record's owning circle keys into: each table of a feat or a graft has a
+`circle` column, a foreign key into it, which defaults to
+`circle.assembly()`, the root, where a write names none
+([architecture](../../../../_corpus/doc/architecture.md#sql)). Triggers keep a
+mandate's grant fixed and a revocation standing, a right's as a mandate's,
 raising SQLSTATE `09000`. The app role and the guards role,
 `cella_guards`, may select; the app role may grant and revoke mandates
 and rights. A mandate is in force on a day from its `from`,

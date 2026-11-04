@@ -80,13 +80,14 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
   const issued = await issue({
     series: 'F-2026',
     bill_to: 'Maison Ferrand',
+    bill_address: '16 avenue Jean-Jaurès\n93500 Pantin',
     label: 'Packaging, range of six: print preparation',
     lines: [{ description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 2000 }],
   }, as(julien))
   assert.equal(issued.state, 'settled')
   assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice-transaction', 'membership'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice', 'invoice-transaction', 'membership'])
 })
 
 test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no number', async () => {
@@ -94,6 +95,7 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
   const refused = await issue({
     series: 'F-2026',
     bill_to: 'Atelier Ondine',
+    bill_address: '11 rue Kléber\n93100 Montreuil',
     label: 'Newsletter',
     lines: [{ description: 'Newsletter', quantity: '1', unit_price: 300_00, vat_rate: 2000 }],
   }, as(chloe))

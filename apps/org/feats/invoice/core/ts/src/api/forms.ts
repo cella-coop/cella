@@ -10,7 +10,7 @@ import type { Issue, Payment, Send, Void } from '../models/invoice.ts'
 export const issue = (form: Form): Issue => ({
   series: form.get('series'),
   bill_to: form.get('bill_to'),
-  bill_address: form.get('bill_address').replace(/\r\n?/g, '\n') || undefined,
+  bill_address: form.get('bill_address').replace(/\r\n?/g, '\n'),
   label: form.get('label'),
   due: form.get('due') || undefined,
   lines: lines(form),

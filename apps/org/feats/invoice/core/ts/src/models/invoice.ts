@@ -67,8 +67,8 @@ export interface Issue {
   series: string
   bill_to: string
   // The address billed, its lines separated by newlines: a mandatory
-  // mention, which an import from a file without it leaves out.
-  bill_address?: string
+  // mention, so `invoice.identified` refuses an issue where it is blank.
+  bill_address: string
   label: string
   // YYYY-MM-DD; thirty days after issue when absent.
   due?: string
@@ -126,7 +126,9 @@ export interface Voided {
 // The seller as an invoice names it (code de commerce, art. R123-237):
 // the scope's settings, `cella.scope_legal_name` and beside it, kept with
 // the invoice when it issues (`invoice.seller`); a setting not made is
-// null and not printed.
+// null and not printed, and `invoice.identified` issues no invoice
+// without any but the capital, and the VAT number where no line carries
+// VAT.
 export interface Seller {
   name: string | null
   form: string | null

@@ -3,7 +3,9 @@
 // them when it issued, a decimal VAT rate,
 // the address billed as issued, each line, the VAT by rate adding up to
 // the invoice's, and the terms of payment; it is a well-formed PDF, the
-// same bytes each time, breaking onto pages with the mentions on each.
+// same bytes each time, breaking onto pages with the mentions on each;
+// and an invoice lacking a mention of its buyer or its seller is refused
+// at issue (`invoice.identified`), spending no number.
 // Run by `cella test slice invoice`.
 
 import { after, before, test } from 'node:test'
@@ -227,4 +229,63 @@ test('an invoice\'s bytes are its PDF, for whoever reads it', async () => {
   assert.equal(found.type, 'application/pdf')
   assert.equal(found.open, true)
   assert.equal(await content(db, 'F-2026-9999', null), null)
+})
+
+// The series' next number, which a refused issue never spends.
+const next = async () => Number((await db.query<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).rows[0].next)
+
+async function refused(input: Issue): Promise<string> {
+  const before = await next()
+  const out = await issue(input, as)
+  assert.equal(out.state, 'refused')
+  assert.equal(await next(), before, 'a refused issue spends no number')
+  return out.state === 'refused' ? out.reason : ''
+}
+
+// Unsets one of the seller's settings around `run`, as a scope whose host
+// had not made it.
+async function without(setting: string, run: () => Promise<void>) {
+  await db.query(`SET cella.${setting} = ''`)
+  try {
+    await run()
+  } finally {
+    await db.query(`SET cella.${setting} = ${db.escapeLiteral(settings[setting as keyof typeof settings])}`)
+  }
+}
+
+const one = draft([{ description: 'Design, 1 day', quantity: '1', unit_price: 600_00, vat_rate: 2000 }])
+
+test('an invoice whose address billed is blank is refused at issue, and spends no number', async () => {
+  for (const bill_address of ['', '  \n ']) {
+    assert.match(await refused({ ...one, bill_address }), /^F-2026-\d{4} does not issue without the address it bills: an issued invoice is corrected only by a void/)
+  }
+  assert.match(await refused({ ...one, bill_to: ' ' }), /does not issue without the name it bills/)
+})
+
+test('an invoice whose seller lacks its legal name, form, seat, SIREN or registry is refused, naming the setting', async () => {
+  const named = {
+    scope_legal_name: 'legal name',
+    scope_form: 'legal form',
+    scope_seat: 'seat',
+    scope_siren: 'SIREN',
+    scope_rcs: 'registry',
+  }
+  for (const [setting, what] of Object.entries(named)) {
+    await without(setting, async () => {
+      const reason = await refused(one)
+      assert.ok(reason.includes(`the seller's ${what} (cella.${setting})`), reason)
+    })
+  }
+})
+
+test('the seller\'s VAT number is required where a line carries VAT, and not on an invoice without VAT', async () => {
+  await without('scope_vat', async () => {
+    assert.match(await refused(one), /the seller's VAT number \(cella\.scope_vat\), as a line carries VAT/)
+    const id = await issued(draft([{ description: 'Training, exempt', quantity: '1', unit_price: 900_00, vat_rate: 0 }]))
+    const p = await printed(db, id)
+    assert.ok(p)
+    assert.equal(p.seller.vat, null)
+    assert.equal(p.invoice.vat, null)
+    assert.ok(!text(pdf(p)).includes('TVA intracommunautaire'))
+  })
 })

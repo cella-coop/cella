@@ -1,6 +1,6 @@
 +++
 title = "patronage-payslip"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 How a surplus's work share divides among the workers by pay and in equal
@@ -19,9 +19,14 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
   work share to every employee, and a condition the statutes add is
   `patronage`'s, not built.
 - `division(distribution)`: the portions of the work share the year's
-  terms give pay and equal parts (`patronage.portion`), each split among
-  those paid that year by `cella.allocate`, by what each was paid or one
-  part each, so the parts add up to the portion to the cent.
+  terms give pay and equal parts (`patronage.portion`), each split by
+  `cella.allocate` so the parts add up to the portion to the cent. The
+  part by pay goes among those paid more than nothing that year, by what
+  each was paid. The equal part goes one each to every worker with a
+  salary in force on some day of the year, whatever it pays and whether
+  or not it was in force on a month's first day, so one hired on 15
+  December, or paid from 2 to 30 March, has an equal part and none by
+  pay. No salary is 0 €: an amount is positive.
 - `parts_by_pay`, a trigger after a distribution is approved, in that
   write, whichever makes it: it inserts the division into
   `patronage.part`.
@@ -32,7 +37,7 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 
 - `patronage_payslip.divides`, on `patronage:distribution:approve`: the
   parts by pay and in equal parts are exactly the division among those
-  paid that year.
+  with a salary that year.
 
 ## Tests
 
@@ -40,8 +45,9 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
 mix of pay and equal parts divides among those paid in the year, half a
 year's pay counting half; a worker who left on 30 November counts eleven
 months, and one who left the year before none, by pay or in equal parts;
-approving makes the parts, which both guards
-take; parts no longer what the year's pay gives are refused.
+a worker paid from 2 to 30 March and one hired on 15 December each have
+an equal part and none by pay; approving makes the parts, which both
+guards take; parts no longer what the year's pay gives are refused.
 
 ## Reads
 

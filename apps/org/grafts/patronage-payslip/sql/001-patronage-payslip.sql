@@ -20,13 +20,14 @@ BEGIN ATOMIC
   GROUP BY s.member;
 END;
 
--- The work share's portions that divide by pay and in equal parts, among
--- the workers paid in the surplus's year (Code du travail, art. L3324-5):
--- by pay, in proportion to what each was paid; in equal parts, one each.
--- Each portion is split by `cella.allocate`, so its parts add up to it to
--- the cent; a part of nothing has no row. Who was paid is what the
--- payslip feat knows: a worker with a salary in force in one of the
--- year's months.
+-- The work share's portions that divide by pay and in equal parts (Code
+-- du travail, art. L3324-5): by pay, in proportion to what each was paid,
+-- among the workers paid more than nothing in the surplus's year; in
+-- equal parts, one each, among every worker with a salary in force on
+-- some day of the year, whatever it pays (loi n° 78-763, art. 33, 3°):
+-- the salary in force on its first day, unless it ended before, or one
+-- from a later day of it. Each portion is split by `cella.allocate`, so
+-- its parts add up to it to the cent; a part of nothing has no row.
 CREATE FUNCTION patronage_payslip.division(ref text)
 RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint)
 LANGUAGE sql STABLE
@@ -37,16 +38,27 @@ BEGIN ATOMIC
     CROSS JOIN LATERAL patronage_payslip.basis(d.year) b
     WHERE d.id = ref AND b.cents > 0
   ),
+  employed AS (
+    SELECT e.member, row_number() OVER (ORDER BY e.member) AS n
+    FROM (
+      SELECT DISTINCT x.member
+      FROM patronage.distribution d
+      JOIN payslip.salary x ON (x."from" > make_date(d.year, 1, 1) AND x."from" <= make_date(d.year, 12, 31))
+        OR ((x.until IS NULL OR x.until >= make_date(d.year, 1, 1))
+          AND x."from" = (SELECT max(y."from") FROM payslip.salary y WHERE y.member = x.member AND y."from" <= make_date(d.year, 1, 1)))
+      WHERE d.id = ref
+    ) e
+  ),
   split AS (
     SELECT
       CASE WHEN patronage.portion(ref, 'salary') > 0 AND EXISTS (SELECT FROM paid)
         THEN cella.allocate(cella.amount(patronage.portion(ref, 'salary')), (SELECT array_agg(p.cents ORDER BY p.n) FROM paid p)) END AS salary,
-      CASE WHEN patronage.portion(ref, 'equal') > 0 AND EXISTS (SELECT FROM paid)
-        THEN cella.allocate(cella.amount(patronage.portion(ref, 'equal')), (SELECT array_agg(1::bigint ORDER BY p.n) FROM paid p)) END AS equal
+      CASE WHEN patronage.portion(ref, 'equal') > 0 AND EXISTS (SELECT FROM employed)
+        THEN cella.allocate(cella.amount(patronage.portion(ref, 'equal')), (SELECT array_agg(1::bigint ORDER BY e.n) FROM employed e)) END AS equal
   )
   SELECT x.member, 'salary', x.cents, s.salary[x.n] FROM paid x CROSS JOIN split s WHERE s.salary[x.n] > 0
   UNION ALL
-  SELECT x.member, 'equal', 1::bigint, s.equal[x.n] FROM paid x CROSS JOIN split s WHERE s.equal[x.n] > 0;
+  SELECT x.member, 'equal', 1::bigint, s.equal[x.n] FROM employed x CROSS JOIN split s WHERE s.equal[x.n] > 0;
 END;
 
 -- When a distribution is approved, in that write, its parts by pay and in
@@ -65,8 +77,8 @@ CREATE TRIGGER parts_by_pay AFTER UPDATE OF approved ON patronage.distribution
   FOR EACH ROW EXECUTE FUNCTION patronage_payslip.parts();
 
 -- patronage:distribution:approve — the distribution's parts by pay and in
--- equal parts are exactly its portions divided among the workers paid
--- that year.
+-- equal parts are exactly its portions divided among the workers with a
+-- salary that year.
 CREATE FUNCTION patronage_payslip.divides(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -79,7 +91,7 @@ BEGIN ATOMIC
       (SELECT p.worker, p.basis, p.quantity, cella.cents(p.amount) FROM patronage.part p WHERE p.distribution = d.id AND p.basis IN ('salary', 'equal'))
       EXCEPT ALL
       (SELECT v.worker, v.basis, v.quantity, v.cents FROM patronage_payslip.division(d.id) v)
-    ) THEN d.id || '''s parts by pay and in equal parts are not its work share divided among those paid in ' || d.year
+    ) THEN d.id || '''s parts by pay and in equal parts are not its work share divided among those with a salary in ' || d.year
   END
   FROM (SELECT payload ->> 'distribution' AS distribution) x
   JOIN patronage.distribution d ON d.id = x.distribution;

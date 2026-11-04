@@ -1,5 +1,5 @@
 // seed, found: founds a co-op from a fixture, as the log's first entry,
-// the founding (the import feat's `circle-membership-motion:scope:found`), which the first
+// the founding (the import feat's `membership-motion:scope:found`), which the first
 // device the fixture enrols in force signs, as its founder seated in the
 // root: the scope's address, people, their memberships, employments and
 // candidacies, their devices, circles and roles, seats, motions with their
@@ -13,8 +13,8 @@
 // adoptions and payments take receipt numbers in file order, unsigned,
 // from before the log; a closed motion's cutoff is the number after its
 // last stance. Seats load before motions, whose rolls are fixed from them
-// as circle-membership-motion's proposal fixes them; a closed motion
-// counts its roll as circle-membership-motion's close does; and periods
+// as membership-motion's proposal fixes them; a closed motion
+// counts its roll as membership-motion's close does; and periods
 // close after the journal is in. Each device's key is the TEST-ONLY key
 // derived from its address and label (`@cella/org-sign`'s `fixture`), so
 // the tests sign with the keys enrolled here.
@@ -27,7 +27,7 @@
 import { anchor, createDoc, edits, fill, outline } from '../../apps/org/feats/document/core/ts/src/models/index.ts'
 import { departures, inOrder } from '../../apps/org/core/policy/ts/src/index.ts'
 import { fixture, signer } from '../../apps/org/core/sign/ts/src/index.ts'
-import { found } from '../../apps/org/grafts/circle-membership-motion/ts/src/handlers/found.ts'
+import { found } from '../../apps/org/grafts/membership-motion/ts/src/handlers/found.ts'
 import { work } from './work.mjs'
 import { finance } from './finance.mjs'
 import { invitations, actions, adopted } from './governance.mjs'
@@ -70,7 +70,7 @@ export async function seed(db, read, { from, dir }) {
 
   // The founding is one write, the log's first entry, which the first
   // device the fixture enrols in force signs, as its founder: the import
-  // feat lets it settle only on an empty log, and circle-membership-motion
+  // feat lets it settle only on an empty log, and membership-motion
   // only with its signer seated in the root with a vote. Every row below
   // is written inside it.
   const carrier = (read('person').device ?? []).find((d) => !d.revoked)
@@ -148,9 +148,9 @@ export async function seed(db, read, { from, dir }) {
 
     // A circle's members, people and roles, and the tenures of its roles;
     // the seats are read from them.
-    const sitting = read('graft.circle-membership')
+    const sitting = read('circle')
     for (const m of sitting.member ?? []) {
-      await db.query('INSERT INTO circle_membership.member (circle, person, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
+      await db.query('INSERT INTO circle.member (circle, person, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
         m.circle,
         m.person ?? null,
         m.role ?? null,
@@ -159,7 +159,7 @@ export async function seed(db, read, { from, dir }) {
       ])
     }
     for (const t of sitting.tenure ?? []) {
-      await db.query('INSERT INTO circle_membership.tenure (circle, holder, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
+      await db.query('INSERT INTO circle.tenure (circle, holder, role, since, until) VALUES ($1, $2, $3, $4, $5)', [
         t.circle,
         t.holder,
         t.role,
@@ -182,7 +182,7 @@ export async function seed(db, read, { from, dir }) {
       if (!taken.rowCount) {
         throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)
       }
-      await db.query('SELECT circle_membership_motion.fix($1)', [d.id])
+      await db.query('SELECT membership_motion.fix($1)', [d.id])
       moved += await actions(db, d)
       for (const v of d.vote ?? []) {
         await db.query(
@@ -193,7 +193,7 @@ export async function seed(db, read, { from, dir }) {
       }
       if (d.closed) {
         await db.query(`UPDATE motion.motion SET closed = $2, cutoff = ${receipt} WHERE id = $1`, [d.id, day(d.closed)])
-        await db.query('SELECT circle_membership_motion.count($1)', [d.id])
+        await db.query('SELECT membership_motion.count($1)', [d.id])
         policies += await adopted(db, d)
       }
     }

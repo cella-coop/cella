@@ -28,7 +28,10 @@ before(async () => {
   // this test enrols no devices.
   await db.query('DELETE FROM cella.keyring')
   await db.query(`INSERT INTO cella.keyring (fn, owner) VALUES ('public.anyone(text, bytea)', 'test')`)
-  await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Camille') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2021-03-01', 40)`, [camille])
+  await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Camille') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2021-03-01', 40) ON CONFLICT DO NOTHING`, [camille])
+  // Filing a record of one's own is every member's right, which the
+  // membership feat's guard on every power finds.
+  await db.query(`INSERT INTO circle.right ("right", power, policy, "from") VALUES ('member', 'file-record', 'r-test/1', '2021-01-01')`)
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Paul') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares, exited) VALUES ($1, 'exited', '2021-03-01', 30, '2025-11-30')`, [paul])
 })
 

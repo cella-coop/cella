@@ -42,7 +42,7 @@ END;
 
 -- membership:member:admit — the cited motion asks to admit this member,
 -- with these shares. That it closed and passed on its roll is
--- circle-membership-motion's guard, which this graft cannot read: an
+-- membership-motion's guard, which this graft cannot read: an
 -- admission cites a motion.
 CREATE FUNCTION membership_motion.admits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
@@ -78,7 +78,7 @@ END;
 -- payload's `admitted` names them, is one the motion asks to admit, and
 -- the close left them admitted with the shares it asks (`membership.admitted`,
 -- the membership feat's guard on a standalone admission, run here for each).
--- Whether the close admits everyone it must is circle-membership-motion's,
+-- Whether the close admits everyone it must is membership-motion's,
 -- which can tell whether it passed.
 CREATE FUNCTION membership_motion.closes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

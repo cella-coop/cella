@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -42,7 +42,7 @@ are an à-nouveaux entry dated in the first open month.
 ## After the founding
 
 A co-op is founded once, by the log's first entry, the founding
-([circle-membership-motion](../../grafts/circle-membership-motion/index.md#founding)),
+([membership-motion](../../grafts/membership-motion/index.md#founding)),
 which `cella seed` makes for a mock co-op from its fixture, carrying the
 state it held before its log with it. Every import comes after it: a
 co-op leaving its tools brings its books in after its founding, never in

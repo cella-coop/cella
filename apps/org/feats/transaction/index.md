@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -62,7 +62,7 @@ before issue, a distribution before its approval).
 
 `003-powers.sql` registers post's power in `cella.power`, and
 `004-pay.sql` pay's, with `amount` as the payload field the limit caps,
-and `006-adjust.sql` adjust's; the `circle-membership` graft checks them.
+and `006-adjust.sql` adjust's; the membership feat checks them.
 Payroll is not this feat's: a month's pay posts through the `payslip`
 feat's runs, by `payslip-transaction`.
 Keeping the books is a duty, so a VAT return or an accrual posts under

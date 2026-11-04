@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -119,7 +119,7 @@ own columns, never its sentence, which it may only quote, by
   transaction, as the motion feat's `end` calls it; returns the day it
   ends.
 - `sentences(db, ids)`: the legal wording of each policy named, as it
-  reads, by its id, as the circle feat's page shows a mandate.
+  reads, by its id, as a circle's page shows a mandate.
 - `inForce(db, circle)`: a circle's policies in force today, each with
   its sentence as it reads, its wordings, its values, its days and the
   procedure that alone changes it, if any, the default it takes, if

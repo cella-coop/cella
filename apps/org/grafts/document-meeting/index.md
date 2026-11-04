@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -31,7 +31,7 @@ any document is, live, by the `edit` write, and saved as versions.
   a document names the meeting's own minutes.
 
 Minutes bind as written unless their circle adopts them by motion
-(`circle-meeting`'s setting); then they are adopted as any document is,
+(the meeting feat's setting); then they are adopted as any document is,
 by `document-motion`'s adoption of a version by its hash, cited by a
 motion of the circle. This graft adds nothing to adoption.
 

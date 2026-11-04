@@ -36,6 +36,15 @@ before(async () => {
   // Camille invites, from the laptop her hire enrolled.
   await db.query(`INSERT INTO person.person (address, name) VALUES ($1, 'Camille Martin')`, [camille])
   await db.query(`INSERT INTO person.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2025-01-01')`, [(await fixture(camille, 'laptop')).key, camille])
+  // She invites by a mandate of the recruiting circle's, where she holds
+  // its one role: the feat's guard on every power finds it.
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('recruiting', 'Recruiting')`)
+  await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('recruiter', 'recruiting', 'Recruiter')`)
+  await db.query(`INSERT INTO circle.mandate (grantee, issuer, power, policy, "from") VALUES ('recruiter', 'ag', 'invite-member', 'm-test/invite', '2025-01-01')`)
+  await db.query(`INSERT INTO circle.tenure (circle, holder, role) VALUES ('recruiting', $1, 'recruiter')`, [camille])
+  // Taking up an invitation is every person's right.
+  await db.query(`INSERT INTO circle.right ("right", power, policy, "from") VALUES ('person', 'accept-invitation', 'r-test/accept', '2025-01-01')`)
 })
 
 after(async () => {

@@ -1,4 +1,4 @@
--- The power each account write needs; the circle-membership graft's guard checks
+-- The power each account write needs; the membership feat's guard checks
 -- that the actor holds it. Drawing on one's account, against its draw
 -- limit, and spreading what one owes over one's pay are every member's
 -- right, the grafts that judge them checking it is their own; adopting

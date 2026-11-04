@@ -1,5 +1,5 @@
 -- The power each member write without a motion needs; the
--- circle-membership graft's guard checks that the actor holds it.
+-- membership feat's guard checks that the actor holds it.
 -- Admission, suspension and exclusion are decided, and a profile is the
 -- member's own, so none of them is here. A withdrawal is the member's
 -- own right, `withdraw-membership`, held as every person's, since the

@@ -1,5 +1,5 @@
 // The graft's reads and its slice, which the shell mounts. It writes
-// nothing: the proposal it fills in is circle-membership-motion's, put to
+// nothing: the proposal it fills in is membership-motion's, put to
 // the assembly from a member's page.
 import type { Slice } from '@cella/org-db'
 import { admission } from '../drivers/admission.ts'

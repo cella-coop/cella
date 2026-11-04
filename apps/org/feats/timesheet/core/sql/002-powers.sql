@@ -1,4 +1,4 @@
--- The power each timesheet write needs; the circle-membership graft's guard
+-- The power each timesheet write needs; the membership feat's guard
 -- checks that the actor holds it. Logging and submitting are also the
 -- member's own, by `timesheet.logs` and `timesheet.submits`; approving is
 -- never one's own, by `timesheet.approves`.

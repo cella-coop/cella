@@ -17,9 +17,9 @@ import { app as timesheet } from '@cella/org-timesheet/app'
 import { app as employment } from '@cella/org-employment/app'
 import { app as file } from '@cella/org-file/app'
 import { app as imports } from '@cella/org-import/app'
-import { app as circleMembership } from '@cella/org-graft-circle-membership/app'
-import { app as circleMotion } from '@cella/org-graft-circle-motion/app'
-import { app as circleMembershipMotion } from '@cella/org-graft-circle-membership-motion/app'
+import { seats as membershipSeats } from '@cella/org-membership/app'
+import { circles as motionCircles } from '@cella/org-motion/app'
+import { circles as membershipMotionCircles } from '@cella/org-graft-membership-motion/app'
 import { app as membershipMotion } from '@cella/org-graft-membership-motion/app'
 import { app as documentMotion } from '@cella/org-graft-document-motion/app'
 import { app as clientInvoice } from '@cella/org-graft-client-invoice/app'
@@ -51,8 +51,8 @@ import { app as expenseTransaction } from '@cella/org-graft-expense-transaction/
 import { app as billTransaction } from '@cella/org-graft-bill-transaction/app'
 import { app as payslipTransaction } from '@cella/org-graft-payslip-transaction/app'
 import { app as meeting } from '@cella/org-meeting/app'
-import { app as circleMeeting } from '@cella/org-graft-circle-meeting/app'
-import { app as circleMeetingMembership } from '@cella/org-graft-circle-meeting-membership/app'
+import { circles as meetingCircles } from '@cella/org-meeting/app'
+import { circles as meetingMembershipCircles } from '@cella/org-graft-meeting-membership/app'
 import { app as meetingMotion } from '@cella/org-graft-meeting-motion/app'
 import { app as documentMeeting } from '@cella/org-graft-document-meeting/app'
 import { app as meetingMembership } from '@cella/org-graft-meeting-membership/app'
@@ -103,9 +103,9 @@ export const apps: App[] = [
   log,
   employmentMembershipMotion,
   documentMembership,
-  circleMembership,
-  circleMotion,
-  circleMembershipMotion,
+  membershipSeats.app,
+  motionCircles.app,
+  membershipMotionCircles.app,
   membershipMotion,
   documentMotion,
   clientInvoice,
@@ -132,11 +132,11 @@ export const apps: App[] = [
   expenseTransaction,
   billTransaction,
   payslipTransaction,
-  circleMeeting,
+  meetingCircles.app,
   meetingMotion,
   documentMeeting,
   meetingMembership,
-  circleMeetingMembership,
+  meetingMembershipCircles.app,
   employmentMembership,
   employmentPayslip,
   employmentTimesheet,

@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 # Conflicts
@@ -26,8 +26,8 @@ state is that of 24 October 2026.
 |---|---|---|
 | `person.enrol` | ordered | **applied**: ordered against revoke ([keys](#a-revoked-key-signs-nothing-new)) |
 | `person.revoke`, `person.recover` | ordered | right |
-| `circle-membership:seat.add`, `.remove` | ordered | right; **applied**: moved from `circle` to the `circle-membership` graft, which owns the relationship; both decided |
-| `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by a circle holding a mandate to issue it under, or the assembly, the circle feat's mandate copied or revoked in the same write ([mandates](../../apps/org/feats/circle/index.md#mandates)) |
+| `circle:seat.add`, `.remove` | ordered | right; **applied**: core's circles' seats; both decided |
+| `motion.policy.adopt`, `.end` of a mandate | ordered | right; **applied**: decided, by a circle holding a mandate to issue it under, or the assembly, core's mandate copied or revoked in the same write ([mandates](../../apps/org/core/circle/index.md#mandates)) |
 | `circle.message` | confluent | right |
 | `document.create`, `.edit`, `.comment` | confluent | right |
 | `document.version` | confluent | **applied**: declared; two saves are two versions, numbered under a lock |
@@ -202,8 +202,8 @@ void settled and posted the credit note `je-0026`.
 ## Who votes
 
 Owners: the `decision-membership` graft for membership (admitted, suspended,
-exited); the roll of a circle's decision needs seats too, which are the
-`circle-membership` graft's. The roll, and whether a decision passes on it, are
+exited); the roll of a circle's decision needs seats too, which are
+core's, counting as the membership feat says. The roll, and whether a decision passes on it, are
 the `circle-decision-membership` graft's, which the decision feat declares.
 
 | Pair | A first | B first | Both confluent |
@@ -211,7 +211,7 @@ the `circle-decision-membership` graft's, which the decision feat declares.
 | `decision.vote` vs `decision.close` | the vote counts | the vote is too late | the outcome changes after it was announced |
 | `decision.vote` vs `membership.suspend` / `.exit` | the vote counts if suspension follows close | the vote is dropped | a suspended member's vote decides |
 | `decision.close` vs `membership.admit` | the new member was not on the roll | the new member is on the roll | the roll depends on which server saw what |
-| `decision.close` vs `circle-membership:seat.add` / `.remove` | as admit | as admit | as admit |
+| `decision.close` vs `circle:seat.add` / `.remove` | as admit | as admit | as admit |
 | `decision.vote` vs `decision.vote`, same member | the later receipt counts | the later receipt counts | — |
 | `decision:message.post` vs `decision.close` | the message is part of the deliberation | the message is refused: the deliberation is over | — |
 
@@ -239,7 +239,7 @@ d-2026-012. Inès is not on its roll: her admission is what it decides.
 
 ## A mandate's limit
 
-Owner: the `circle-membership` graft, through `circle_membership.may(actor, power,
+Owner: the membership feat, through `membership.may(actor, power,
 cents, day)`, which reads mandates (the `circle` feat's), seats (its own)
 and whether the member is active (the `membership` feat's). It spans every
 feat that spends, but org's core may read no feat's schema; each feat
@@ -250,7 +250,7 @@ the roll.
 | Pair | Spend first | Revoke first | Both confluent |
 |---|---|---|---|
 | `expense.approve` vs the end of a mandate policy | the approval stands | refused: no power | someone without authority spends |
-| spend vs `circle-membership:seat.remove` | the spend stands | refused | as above |
+| spend vs `circle:seat.remove` | the spend stands | refused | as above |
 | spend vs `membership.suspend` / `.exit` | the spend stands | refused | as above |
 | `expense.approve` vs `expense.approve`, one budget | both, if the budget covers both | both, if it covers both | the budget is overspent |
 
@@ -267,7 +267,7 @@ mandate names them apart: `limit` caps a single write, in cents;
 `budget`, with `per` ("month" or "year"), caps a cumulative total over a
 period. **Applied**: a budget is enforced on the writes that spend it,
 by the graft that sees the mandate, the seat and the spend:
-`circle-expense-membership` sums what the approver approved over the
+`expense-membership` sums what the approver approved over the
 budget's period, this approval included. Two approvals by one member are
 judged one after the other under the log's head lock.
 
@@ -453,12 +453,12 @@ they needed a power no mandate granted.
 ## An admission settles with its close
 
 Owners: the `circle-decision-membership` graft, which counts the roll; the
-`membership` feat, which refuses an admission of someone holding no device, and `circle-membership`
+`membership` feat, which refuses an admission of someone holding no device, and core's circles
 for the state each admission changes.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| close admitting M vs `circle-membership:seat.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
+| close admitting M vs `circle:seat.add` of M | the seat refused: M sits there | the close refused, all of it: M already sits | an admitted member twice seated, or seated and not admitted |
 | close admitting M vs the admission alone | — | — | an active member with no seat and no device, who cannot vote or sign |
 | `decision.propose` vs `decision.vote` on it | the motion is fixed before the stance | no motion is added after it | members consent to one thing and are counted for another |
 
@@ -478,13 +478,13 @@ undone, which its outcome shows.
 
 ## A mandate covers what its scope names
 
-Owners: the `circle-membership` graft for what a mandate covers
-(`circle_membership.over`, reading its scope); `circle-membership-timesheet`
-and `circle-membership-project` for what a write concerns.
+Owners: the membership feat for what a mandate covers
+(`membership.over`, reading its scope); `membership-timesheet`
+and `membership-project` for what a write concerns.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
-| `timesheet:period.approve` by a lead vs `circle-membership:seat.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
+| `timesheet:period.approve` by a lead vs `circle:seat.remove` of the member | approved | refused: the member no longer sits in the lead's circle | a lead approves the time of someone who left the circle |
 | `project.budget` by a lead vs `motion.policy.end` of the lead's `set-budget` | set | refused: the lead holds no mandate covering the project's circle | a lead budgets a project after their mandate ends |
 
 A mandate covers what its scope names: a circle's records, those of the
@@ -626,8 +626,8 @@ first is refused on 29 November 2026 and paid on the 30th, once.
 
 ## An expense is decided once, within a budget
 
-Owner: the `expense` feat for the lifecycle; `circle-expense-membership` for
-the budget; `circle-membership` for the power and its limit.
+Owner: the `expense` feat for the lifecycle; `expense-membership` for
+the budget; the membership feat for the power and its limit.
 
 | Pair | A first | B first | Both confluent |
 |---|---|---|---|
@@ -698,7 +698,7 @@ months in is refused.
 ## A meeting is held once
 
 Owners: the `meeting` feat for the meeting and its agenda;
-`meeting-membership` for who came; `circle-meeting-membership` for who is
+`meeting-membership` for who came; `meeting-membership` for who is
 expected and who may record them.
 
 | Pair | A first | B first | Both confluent |
@@ -815,8 +815,7 @@ The matrix found writes no `actions.ts` declares:
 6. **Applied.** No other label changes. `document.adopt`'s comment now says
    that the base is
    the adopted version, not the draft.
-7. **Applied, beyond this page's recommendations.** Seats move from
-   `circle` to the `circle-membership` graft, which owns the relationship:
-   `circle-membership:seat.add` and `.remove`, both ordered. A mandate's
+7. **Applied, beyond this page's recommendations.** Seats are
+   core's circles, `circle:seat.add` and `.remove`, both ordered. A mandate's
    cap splits into `limit` (per write) and `budget` (cumulative, over
    `per`).

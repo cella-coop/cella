@@ -14,7 +14,7 @@ const op = 'motion:motion:propose' satisfies keyof typeof actions
 // `motion.proposes` checks the write made it, the
 // graft registering each action's kind checks the action, and the actor
 // must sit in the circle. A graft that fixes more in the same write, as
-// circle-membership-motion fixes the roll, runs this state inside its
+// membership-motion fixes the roll, runs this state inside its
 // own. The title and the text are the proposer's words and stay out of
 // the log.
 export function proposing(input: Propose): Write<Proposed> {

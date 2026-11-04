@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -67,8 +67,8 @@ keeps its number, and the void posts a credit note.
 | payment | `record-receipt` | Julien |
 | void | `issue-invoice` | Julien |
 
-`002-powers.sql` registers each in `cella.power`; the `circle-membership`
-graft's guard refuses a write by anyone not holding the power on the
+`002-powers.sql` registers each in `cella.power`; the membership
+feat's guard refuses a write by anyone not holding the power on the
 verdict date. Leads quote up to 15 000 € with `send-quote`; a quote is not an invoice,
 and quoting is not built.
 

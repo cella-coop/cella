@@ -11,7 +11,7 @@ CREATE TABLE employment_file.record (
 
 -- employment-file:worker:attach — whoever hires files a worker's employment
 -- record, a file they uploaded by this write about that worker; the
--- circle-membership graft checks the power.
+-- membership feat checks the power.
 CREATE FUNCTION employment_file.files(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -59,7 +59,7 @@ covers the content; the receipt keeps only its salted digest.
 
 `file.opens(id, actor)`: the co-op's own files anyone may; a personal file
 the person it concerns and who uploaded it. A graft that sees a power over
-what a file records opens it to more: `circle-file-membership` to whoever
+what a file records opens it to more: `file-membership` to whoever
 holds a power over expenses, pay or members. The shell serves the bytes at
 `/files/<id>/content` only where one of them opens it, as an attachment
 unless it is a picture, a PDF or plain text, and sandboxed.
@@ -91,7 +91,7 @@ personal file's name and hash are commitments in the log.
 
 ## Reads
 
-Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): the co-op's own files, anyone; a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`circle-file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
+Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made a row-level policy (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): the co-op's own files, anyone; a personal file, the person it concerns, who uploaded it and whoever holds a power a graft registers for its class (`file-membership`). A file its reader may not read is none to them: its page and its content answer 404, and no name or size is shown. The parts are read only through `file.file`, so its policy holds. A write's transaction reads every file.
 
 ## Shell
 

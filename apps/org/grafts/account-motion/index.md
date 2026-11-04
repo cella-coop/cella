@@ -1,6 +1,6 @@
 +++
 title = "account-motion"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 The statutes' capital terms, a rule the members adopt by motion, and the
@@ -13,8 +13,8 @@ register's and the motion feat's, and the terms are the account feat's,
 which this graft reads.
 
 - The op `account:terms:adopt` is registered by `motion.register_cite`, so
-  `circle-membership-motion`'s `carried` attaches to it: the motion closed
-  and passed on its roll, and `circle-motion`'s `mandated`, that its
+  `membership-motion`'s `carried` attaches to it: the motion closed
+  and passed on its roll, and the motion feat's `mandated`, that its
   circle holds `adopt-policy`, the power it registers with it.
 - It registers by `motion.register_cite` the actions a passed motion
   carries into the books once it admits or excludes a member,

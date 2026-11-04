@@ -102,7 +102,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
     { account: '44571', side: 'credit', cents: 296_00 },
   ])
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = 2')
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice-transaction', 'membership'])
 
   const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
@@ -190,7 +190,7 @@ test('voiding an unpaid invoice posts a credit note', async () => {
   assert.equal(unsent.state, 'settled')
   assert.equal(unsent.value.sent, null, 'a voided invoice is not sent')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [voided.state === 'settled' && voided.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice-transaction', 'membership'])
 })
 
 test('posting into September, which is closed, is refused by the account-transaction graft', async () => {

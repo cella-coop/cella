@@ -1,6 +1,6 @@
 +++
 title = "employment-file"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 A worker's employment records, such as their signed contract and its
@@ -21,8 +21,8 @@ files a worker's record; the log commits to its name and BLAKE3.
 
 - `employment_file.files`, on the write: the worker is employed by the co-op,
   and the file was uploaded by this write about them, of class `payroll`.
-- `001-employment-file.sql` registers the power, which the `circle-membership`
-  graft checks.
+- `001-employment-file.sql` registers the power, which the membership
+  feat checks.
 
 ## Tests
 

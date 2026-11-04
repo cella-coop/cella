@@ -1,6 +1,6 @@
 +++
 title = "Notary"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
@@ -84,7 +84,7 @@ A payload marks an erasure as `{"$erase": {"subject": …, "classes": […]}}`, 
 
 `cella.opened(n)` reads an entry's logged payload back with its commitments opened, checking each against its salt: the value, `restricted` while the law keeps it, `redacted` once erased. The log verifies the same before and after an erasure, since erasure deletes what a commitment opens to, never the commitment.
 
-`cella.power (op, power, amount, owner)` names the power each action needs and the payload field holding its amount in cents, registered by the action's feat; the extension holds no guard over it: the `circle-membership` graft attaches one to every action listed.
+`cella.power (op, power, amount, owner)` names the power each action needs and the payload field holding its amount in cents, registered by the action's feat; the extension holds no guard over it: the membership feat attaches one to every action listed.
 
 The log tables and the registries are readable by everyone, but the log's `form` and a receipt's `salt`, and writable by no role but the extension's owner and the migrations; `submit`, `receipt`, `verify_log` and `notary_key` are `SECURITY DEFINER` with a pinned `search_path`. Only `cella_app` may execute `begin`, `submit` and `receipt`.
 

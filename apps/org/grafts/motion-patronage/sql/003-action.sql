@@ -17,7 +17,7 @@ WHERE m.kind = 'distribution';
 
 -- patronage:distribution:approve — the cited motion moved to approve
 -- this distribution. That it closed and passed on its roll is
--- circle-membership-motion's guard, attached through motion.cites.
+-- membership-motion's guard, attached through motion.cites.
 CREATE OR REPLACE FUNCTION motion_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

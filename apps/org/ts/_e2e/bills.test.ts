@@ -130,7 +130,7 @@ test('the gérante approves it, which charges it to the books and lowers the yea
     { account: '401', side: 'credit', cents: String(net + vat) },
   ])
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner).sort(), ['bill', 'bill-transaction', 'circle-membership'])
+  assert.deepEqual(logged.guards.map((r) => r.owner).sort(), ['bill', 'bill-transaction', 'membership'])
 
   assert.equal(await result(), before - net)
   assert.equal(await balance('401'), before401 - (net + vat))

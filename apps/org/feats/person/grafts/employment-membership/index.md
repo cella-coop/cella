@@ -1,6 +1,6 @@
 +++
 title = "employment-membership"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 The way from employee to member: a worker's candidacy, the probation
@@ -13,7 +13,7 @@ hired, a probation, then a member vote and a capital subscription
 employment an employee applies to join by their own right
 (`apply-membership`): the application, `membership:member:apply`, puts
 the motion to admit them to the assembly
-([circle-membership-motion](../../../../grafts/circle-membership-motion/index.md)),
+([membership-motion](../../../../grafts/membership-motion/index.md)),
 and their candidacy opens after it. No one opens another's candidacy,
 the employer neither.
 
@@ -41,7 +41,7 @@ select.
 | `employment-membership:candidacy:open` | confluent | `apply-membership` | a fact, once to a worker: two openings of one candidacy cannot both stand, whichever comes first |
 
 `001-employment-membership.sql` registers the power in `cella.power`, and the
-`circle-membership` graft checks it: every employee's right, held to
+membership feat checks it: every employee's right, held to
 their own candidacy by `opens`.
 
 ## Guards
@@ -80,7 +80,7 @@ for one who has not applied.
 Adds to each person their stage on the way to membership, a hidden column
 of the people collection; and to a person's page, their path to
 membership, step by step, the day they were hired and the day they
-applied. The application itself is offered by circle-membership-motion.
+applied. The application itself is offered by membership-motion.
 
 ## Lanterne
 

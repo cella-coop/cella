@@ -10,7 +10,7 @@ const op = 'motion:motion:vote'
 // secret ballot the stance is personal, so the log keeps its commitment
 // and the vault the stance. A stance on a closed motion is refused by
 // the feat's trigger; one for another member by `motion.own_stance`, and
-// one off the roll by the circle-membership-motion graft's guard, each as
+// one off the roll by the membership-motion graft's guard, each as
 // Refused.
 export async function vote(input: Vote, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Cast>> {
   let secret = false

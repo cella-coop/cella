@@ -9,7 +9,7 @@ CREATE TABLE motion_patronage.approval (
 
 -- patronage:distribution:approve — the cited motion is the one that
 -- approves this distribution. That it closed and passed on its roll is
--- circle-membership-motion's guard, attached through motion.cites.
+-- membership-motion's guard, attached through motion.cites.
 CREATE FUNCTION motion_patronage.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -59,7 +59,7 @@ END;
 INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:motion:propose', 'motion_patronage.asks(jsonb)', 'motion-patronage');
 
 -- patronage:terms:adopt — the cited motion adopted the rule the terms
--- copy. That it closed and passed on its roll is circle-membership-motion's
+-- copy. That it closed and passed on its roll is membership-motion's
 -- guard, attached through motion.cites.
 CREATE FUNCTION motion_patronage.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

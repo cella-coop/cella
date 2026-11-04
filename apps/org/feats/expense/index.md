@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -48,9 +48,9 @@ this feat's `approving` and `reimbursing` specs.
 | refuse | `approve-expense` | as approve |
 | reimburse | `reimburse-expense`, within the mandate's limit | Julien, as finance, up to 3 000 € |
 
-`002-powers.sql` registers them in `cella.power`; the `circle-membership`
-graft checks the power and the limit, a right's for a claim
-([rights](../circle/index.md#rights)), and the `circle-expense-membership`
+`002-powers.sql` registers them in `cella.power`; the membership
+feat checks the power and the limit, a right's for a claim
+([rights](../circle/index.md#rights)), and the `expense-membership`
 graft the budget.
 
 ## Invariants
@@ -65,7 +65,7 @@ What it does not own: whose it is (`expense-membership`), what it charges and
 pays in the books (`expense-transaction`), the project it is billed on to
 (`expense-project`), its receipts, kept as files (`expense-file`), and the
 approver's budget, which needs their seats and mandates
-(`circle-expense-membership`).
+(`expense-membership`).
 
 ## Schema
 

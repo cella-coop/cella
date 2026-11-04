@@ -1,7 +1,7 @@
 // Who reads a worker's part of the work share, as the app role reads it,
 // on a database holding only the app's core and this feat: the worker,
 // and whoever distributes the surplus; the distribution itself, anyone.
-// The authority is a stub here, as circle-membership registers the real
+// The authority is a stub here, as the membership feat registers the real
 // one. Run by `cella test slice patronage`.
 
 import { after, before, test } from 'node:test'

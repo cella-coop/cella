@@ -4,7 +4,7 @@
 // make sound terms, from the first of a year, replacing the latest; one
 // ending a rule terms copy is refused; copying terms cites the motion that
 // adopted the rule, never another. That the motion passed is
-// circle-membership-motion's, not migrated here. Run by `cella test slice
+// membership-motion's, not migrated here. Run by `cella test slice
 // motion-patronage`.
 
 import { after, before, test } from 'node:test'

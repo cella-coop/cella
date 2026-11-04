@@ -11,7 +11,7 @@ const op = 'patronage:distribution:approve' satisfies keyof typeof actions
 // law's floors, `patronage.divides` the parts against the terms, each
 // basis's graft its own parts, account-patronage's that the year is
 // closed, patronage-transaction's the legal reserve, motion-patronage's
-// that the motion approves this split, and circle-membership-motion's
+// that the motion approves this split, and membership-motion's
 // that it passed.
 export async function approve(input: Approve, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Approved>> {
   return write(deps, {

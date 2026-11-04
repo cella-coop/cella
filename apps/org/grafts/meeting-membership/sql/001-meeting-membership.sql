@@ -3,7 +3,7 @@ CREATE SCHEMA meeting_membership;
 -- Who came to a meeting: each member marked present, excused or absent,
 -- the last mark winning, with the day it was made and who made it. A
 -- member with no row was not marked. Who was expected, the circle's
--- seats, is circle-meeting-membership's.
+-- seats, is meeting-membership's.
 CREATE TABLE meeting_membership.attendance (
   meeting text NOT NULL,
   member text NOT NULL,
@@ -58,7 +58,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('meeting-membership:attendance:m
 
 -- Recording another member's attendance is the minutes' keeper's; that
 -- it reaches the meeting's circle, and that the member was expected
--- there, are circle-meeting-membership's guards on the op.
+-- there, are meeting-membership's guards on the op.
 -- Marking one's own attendance is every member's right, `mark-attendance`.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('meeting-membership:attendance:record', 'keep-minutes', NULL, 'meeting-membership'),

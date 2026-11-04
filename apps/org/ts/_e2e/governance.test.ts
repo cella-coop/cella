@@ -12,10 +12,9 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { propose as proposeAlone, vote } from '@cella/org-motion/api'
-import { putting } from '@cella/org-graft-circle-motion/api'
-import type { Put } from '@cella/org-graft-circle-motion/models'
-import { carried, close, propose, put } from '@cella/org-graft-circle-membership-motion/api'
+import { circles, propose as proposeAlone, vote } from '@cella/org-motion/api'
+import type { circles as circleMotions } from '@cella/org-motion/models'
+import { carried, close, propose, put } from '@cella/org-graft-membership-motion/api'
 import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
@@ -46,7 +45,7 @@ async function on(date: string) {
 const as = (actor: string): Deps =>
   actor === nadia ? { db: app, actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: app, actor, sign: sign(actor) }
 // What a circle's page proposes about it, put as the shell puts it.
-const putCircle = async (m: Put, deps: Deps) => propose(await putting(m, deps.db), deps)
+const putCircle = async (m: circleMotions.Put, deps: Deps) => propose(await circles.putting(m, deps.db), deps)
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -59,7 +58,7 @@ const status = async (m: string) => (await one<{ status: string }>('SELECT statu
 
 // Every member on a motion's roll consents.
 async function consented(motion: string) {
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 }
@@ -121,7 +120,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
   admission = proposed.motion
   assert.equal(admission, 'm-2026-013')
   const d = await one<{ circle: string; title: string; roll: string }>(
-    `SELECT circle, title, (SELECT count(*) FROM circle_membership_motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
+    `SELECT circle, title, (SELECT count(*) FROM membership_motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
     [admission],
   )
   assert.deepEqual(d, { circle: 'ag', title: 'Admit Nadia Benali as a member', roll: '10' })
@@ -140,7 +139,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
   await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
   const read = (await app.query<{ member: string }>('SELECT member FROM motion.vote WHERE motion = $1', [admission])).rows
   assert.deepEqual(read, [{ member: camille }])
-  const tally = (await app.query('SELECT passes, counted, given, quorate FROM circle_membership_motion.tally($1)', [admission])).rows[0]
+  const tally = (await app.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', [admission])).rows[0]
   assert.deepEqual(tally, { passes: null, counted: null, given: null, quorate: null })
   await app.query(`SELECT set_config('cella.actor', '', false)`)
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM motion.vote WHERE motion = $1', [admission])).n, '10')
@@ -148,7 +147,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
 
 test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
   await on('2026-11-07')
-  await su.query(`INSERT INTO circle_membership.tenure (circle, holder, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
+  await su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
   const before = await head()
   const refused = await close({ motion: admission }, as(camille))
   assert.match(reason(refused), /nadia@lanterne\.example already sits in ag as member/)
@@ -156,7 +155,7 @@ test('a close whose seat is refused refuses the whole close: no admission, no de
   assert.equal(await status(nadia), 'invited')
   assert.equal((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [admission])).closed, null)
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '1', 'her laptop, enrolled when she took up the invitation, is all she holds')
-  await su.query(`DELETE FROM circle_membership.tenure WHERE holder = $1`, [nadia])
+  await su.query(`DELETE FROM circle.tenure WHERE holder = $1`, [nadia])
 })
 
 test('the close admits Nadia and seats her in the assembly, in one verdict; she signs from the laptop she took up her invitation on', async () => {
@@ -167,11 +166,11 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
   assert.equal(await status(nadia), 'active')
   // Closed, the secret ballot's tally opens to every member.
   assert.deepEqual(
-    (await app.query('SELECT passes, counted, given, quorate FROM circle_membership_motion.tally($1)', [admission])).rows[0],
+    (await app.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', [admission])).rows[0],
     { passes: true, counted: 10, given: 10, quorate: true },
   )
   assert.deepEqual(
-    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle_membership.seat WHERE member = $1', [nadia]),
+    await one('SELECT circle, role, to_char(since, \'YYYY-MM-DD\') AS since FROM circle.seat WHERE member = $1', [nadia]),
     { circle: 'ag', role: 'member', since: '2026-11-07' },
   )
   assert.deepEqual(
@@ -238,7 +237,7 @@ test('coordination grants the finance role send-quote by motion, under the send-
     ),
   )
   // Chloé, suspended, gives no stance; consent passes with no objection.
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1 AND member <> $2', [issuing.motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [issuing.motion, chloe])) {
     settled(await vote({ motion: issuing.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-28')
@@ -250,11 +249,11 @@ test('coordination grants the finance role send-quote by motion, under the send-
   // A grant wider than coordination's 15 000 € is coordination's to issue
   // under nothing, so it is the assembly's.
   const decider = async (grant: Record<string, unknown>) =>
-    (await one<{ d: string }>(`SELECT circle_motion.decider('operations', ARRAY['adopt-policy', 'send-quote'], '2026-11-28', $1) AS d`, [grant])).d
+    (await one<{ d: string }>(`SELECT motion.decider('operations', ARRAY['adopt-policy', 'send-quote'], '2026-11-28', $1) AS d`, [grant])).d
   assert.equal(await decider({ power: 'send-quote', limit: 2000000 }), 'ag')
   assert.equal(await decider({ power: 'send-quote', limit: 500000 }), 'coordination')
-  const put: Put = { circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'send-quote', text: 'send a quote', limit: 5000 }, deadline: '2026-12-05', body: '' }
-  assert.equal((await putting(put, app)).circle, 'coordination')
+  const put: circleMotions.Put = { circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'send-quote', text: 'send a quote', limit: 5000 }, deadline: '2026-12-05', body: '' }
+  assert.equal((await circles.putting(put, app)).circle, 'coordination')
   const proposed = settled(await putCircle(put, as(camille)))
   for (const m of coordination) {
     settled(await vote({ motion: proposed.motion, member: m, stance: 'consent' }, as(m)))
@@ -301,7 +300,7 @@ test('a grant no circle holds a mandate to issue under is put to the assembly: c
     await putCircle({ circle: 'operations', kind: 'grant', args: { role: 'finance', power: 'approve-expense', text: 'approve expenses', limit: 3000 }, deadline: '2026-12-08', body: '' }, as(camille)),
   )
   assert.equal((await one<{ circle: string }>('SELECT circle FROM motion.motion WHERE id = $1', [proposed.motion])).circle, 'ag')
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1 AND member <> $2', [proposed.motion, chloe])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1 AND member <> $2', [proposed.motion, chloe])) {
     settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-08')

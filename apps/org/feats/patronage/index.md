@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -112,7 +112,7 @@ the holder is whoever holds the role the mandate is granted to.
 | distribution.distribute, part.employ | none: they follow the approval, citing its motion | whoever signed the approval: Camille, for 2025 |
 
 `006-draft.sql` registers the drafts' power in `cella.power`; the
-`circle-membership` graft checks it.
+membership feat checks it.
 
 ## Invariants
 

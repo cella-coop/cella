@@ -14,7 +14,7 @@ GRANT SELECT ON motion.stance_power TO cella_app, cella_guards;
 
 -- motion:motion:vote — a stance is the actor's own: no one votes for
 -- another. That the actor holds `vote`, on the motion's roll with a seat
--- that counts, is the circle-membership-motion graft's guard on the same
+-- that counts, is the membership-motion graft's guard on the same
 -- op.
 CREATE FUNCTION motion.own_stance(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

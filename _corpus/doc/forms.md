@@ -1,6 +1,6 @@
 +++
 title = "Legal forms"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 # Legal forms
@@ -60,7 +60,7 @@ that takes it again does, in the open.
 
 **Where it shows.** The circle's page marks each of its policies that
 takes a default, and lists every default it left or never took, each
-with the motion that left it ([circle-motion](../../apps/org/grafts/circle-motion/index.md)).
+with the motion that left it ([motion](../../apps/org/feats/motion/index.md#circles)).
 A motion's page says the default each policy it adopts takes, and each
 default it leaves ([the motion feat](../../apps/org/feats/motion/index.md)).
 The statutes say, after their policies, every default the co-op left
@@ -122,7 +122,7 @@ law keeps (GDPR art. 17(3)(b) and (e);
 employee's: the application is the applicant's own, by the membership
 feat's guard, made once they have worked a year, by the
 employment-membership graft's, and puts the motion to admit them to the
-assembly in the same write, by circle-membership-motion's, so the
+assembly in the same write, by membership-motion's, so the
 assembly must rule on it as it rules on any motion. The year is the
 guard's and not a value of the policy's: a co-op that rewords it changes
 no guard ([the membership feat](../../apps/org/feats/person/feats/membership/index.md)). A rule's

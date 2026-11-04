@@ -32,7 +32,7 @@ END;
 INSERT INTO cella.guard (op, fn, owner) VALUES ('motion:motion:propose', 'account_motion.asks(jsonb)', 'account-motion');
 
 -- account:terms:adopt — the cited motion adopted the rule the terms copy.
--- That it closed and passed on its roll is circle-membership-motion's guard,
+-- That it closed and passed on its roll is membership-motion's guard,
 -- attached through motion.cites.
 CREATE FUNCTION account_motion.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE

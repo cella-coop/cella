@@ -4,13 +4,17 @@
 //   SQL in            may reference
 //   a node's core     cella.*; the notary's vault; the catalog; a core
 //                     library's own schema, named for it, in its SQL
-//                     (analytics, the port's; policy, the register's)
+//                     (analytics, the port's; policy, the register's;
+//                     circle, the circles'), and the schemas of the core
+//                     libraries its package depends on
 //   a feat            its own schema; those of the feats it nests in;
-//                     cella.*; the policy register; the catalog
+//                     cella.*; core's circles; the policy register; the
+//                     catalog
 //   a graft           its own schema; the schemas of the feats it joins and
 //                     of the feats they nest in; the schemas of the grafts
 //                     at or below its node that join a proper subset of its
-//                     feats; cella.*; the policy register; the catalog
+//                     feats; cella.*; core's circles; the policy register;
+//                     the catalog
 //
 // A slice reads the policy register's policies and values, never their
 // wording, policy.wording: a guard reads a policy's values from its own
@@ -20,13 +24,13 @@
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema;
 //   - writes cella.* only to register, under its own name: its guards, on
-//     ops of its own feat, of the feats it joins or of the lower-order
-//     grafts it builds on (cella.guard); the power
+//     ops of its own feat, of the feats it joins, of the lower-order
+//     grafts it builds on or of core's circles (cella.guard); the power
 //     each of its own ops needs (cella.power), which feat-check compares
 //     with its actions.ts; a feat only, the keyring (cella.keyring); the
 //     powers that read the rows of its own feat or of the feats it joins
-//     (cella.reading); and, a graft only, the authority that says who
-//     holds a power (cella.authority) and the functions that open the
+//     (cella.reading); the authority that says who holds a power
+//     (cella.authority); and, a graft only, the functions that open the
 //     rows of the feats it joins to more readers (cella.reach);
 //   - never sets search_path but on a function, to the catalog;
 //   - never reads the clock or randomness, since guards read
@@ -51,7 +55,8 @@
 // view reads through a function runs as the role, and is caught when
 // cella migrate reads each view as it, or by review.
 // No core publishes a contract but the analytics port, org's core library
-// `analytics`, whose views stay in its schema: the log's head.
+// `analytics`, whose views stay in its schema: the log's head; and core's
+// circles, `circle`, whose views stay in theirs.
 // PL/pgSQL bodies are parsed statement by statement; LANGUAGE sql bodies,
 // atomic or quoted, are parsed whole.
 
@@ -83,7 +88,7 @@ export function owners(repo, apps) {
     }
     for (const lib of existsSync(join(repo, core)) ? readdirSync(join(repo, core)) : []) {
       if (existsSync(join(repo, core, lib, 'sql'))) {
-        out.push({ dir: join(core, lib, 'sql'), ...owner })
+        out.push({ dir: join(core, lib, 'sql'), ...owner, ...(feat ? {} : { lib, uses: uses(repo, core, lib) }) })
       }
     }
     const inner = feat ? [...lineage, feat] : []
@@ -102,14 +107,23 @@ export function owners(repo, apps) {
   return out
 }
 
+// The core libraries with SQL of their own that a core library's package
+// depends on, by name: its SQL may reference their schemas.
+function uses(repo, core, lib) {
+  const pkg = join(repo, core, lib, 'ts', 'package.json')
+  const deps = existsSync(pkg) ? Object.keys(JSON.parse(readFileSync(pkg, 'utf8')).dependencies ?? {}) : []
+  return deps
+    .map((d) => d.match(/^@cella\/[a-z]+-([a-z]+)$/)?.[1])
+    .filter((d) => d && d !== lib && existsSync(join(repo, core, d, 'sql')))
+}
+
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    const lib = o.dir.match(/(?:^|\/)core\/([a-z]+)\/sql$/)?.[1]
-    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(lib ? [lib] : [])]), feats: [], ops: [] }
+    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
-    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', REGISTER, ...catalog]), feats: [o.name], ops: [o.name] }
+    return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
   }
   const feats = o.name.split('-')
   const outer = feats.flatMap((f) => o.nests.get(f) ?? [])
@@ -117,8 +131,13 @@ function scope(o) {
     const parts = g.split('-')
     return parts.length < feats.length && parts.every((p) => feats.includes(p))
   })
-  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', REGISTER, ...catalog]), feats, ops: [o.name, ...feats, ...lower] }
+  return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, REGISTER, ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
 }
+
+// Core's circles, org's core library `circle`: the circles, roles,
+// tenures, seats and mandates, which every feat and graft builds on and
+// whose ops each may guard, as groups are in standard RBAC.
+const CIRCLES = 'circle'
 
 // The policy register, org's core library `policy`, which every slice
 // reads: its policies and their values, never their wording.
@@ -419,18 +438,37 @@ function statement(type, b, o, s, fail, owned, named, found) {
     // falls through
     case 'UpdateStmt':
     case 'DeleteStmt':
-      if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
+      if (b.relation.schemaname === 'cella' && o.kind === 'core' && type === 'InsertStmt' && o.lib) {
+        collects(b, o.lib, found)
+      } else if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
         if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
           fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its guards, its powers, its personal columns, the keyring or who reads`)
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
           fail(`registers the keyring: only a feat resolves device keys, not ${o.kind} ${o.name}`)
-        } else if (['reach', 'authority'].includes(b.relation.relname) && o.kind !== 'graft') {
-          fail(`registers cella.${b.relation.relname}: only a graft opens a feat's rows to more readers, not ${o.kind} ${o.name}`)
+        } else if (b.relation.relname === 'reach' && o.kind !== 'graft') {
+          fail(`registers cella.reach: only a graft opens a feat's rows to more readers, not ${o.kind} ${o.name}`)
         } else {
           registers(b, o, s, fail, found)
         }
       }
       break
+  }
+}
+
+// What a core library registers, under its own name: the powers its ops
+// need and the guards on them, for feat-check to compare with its
+// actions.ts as it does a slice's.
+function collects(b, lib, found) {
+  const cols = (b.cols ?? []).map((c) => c.ResTarget.name)
+  const literal = (v) => (v.A_Const?.isnull ? null : v.A_Const?.sval?.sval)
+  for (const row of b.selectStmt?.SelectStmt?.valuesLists ?? []) {
+    const vals = Object.fromEntries(row.List.items.map((v, i) => [cols[i], literal(v)]))
+    if (b.relation.relname === 'power' && vals.op) {
+      found.powers.push({ op: vals.op, power: vals.power ?? null, amount: vals.amount ?? null, owner: lib })
+    }
+    if (b.relation.relname === 'guard' && vals.op) {
+      found.guards.push({ op: vals.op, owner: lib })
+    }
   }
 }
 
@@ -610,13 +648,14 @@ function carry(v, found) {
 
 function contract(tree, o, fail, found) {
   if (o.kind === 'core') {
-    if (!PORT.test(o.dir)) {
-      fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s')
+    if (!PORT.test(o.dir) && o.lib !== CIRCLES) {
+      fail('an analytical contract is a feat\'s or a graft\'s, never a core\'s but the analytics port\'s and the circles\'')
       return
     }
+    const own = PORT.test(o.dir) ? 'analytics' : CIRCLES
     for (const { stmt } of tree.stmts ?? []) {
-      if (stmt.ViewStmt && stmt.ViewStmt.view?.schemaname !== 'analytics') {
-        fail(`${stmt.ViewStmt.view?.relname}: the analytics port publishes only in its own schema, analytics`)
+      if (stmt.ViewStmt && stmt.ViewStmt.view?.schemaname !== own) {
+        fail(`${stmt.ViewStmt.view?.relname}: a core library publishes only in its own schema, ${own}`)
       }
     }
   }

@@ -29,7 +29,7 @@ import { federation } from '@cella/org-report/api'
 import { reading as analytics } from './port.ts'
 import { employ, employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { vote } from '@cella/org-motion/api'
-import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -142,9 +142,9 @@ test('the distribution and the credits of shares follow the approval, each a wri
      FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n`,
     [[then[0].entry, ...credits.map((c) => c.entry)]],
   )
-  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
+  assert.deepEqual(logged[0], { op: 'patronage:distribution:distribute', actor: camille, owners: ['membership-motion', 'motion', 'motion-patronage', 'patronage', 'patronage-transaction'] })
   for (const l of logged.slice(1)) {
-    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'circle-membership-motion', 'circle-motion', 'motion-patronage', 'patronage'] })
+    assert.deepEqual(l, { op: 'patronage:part:employ', actor: camille, owners: ['account-membership-patronage-transaction', 'membership-motion', 'motion', 'motion-patronage', 'patronage'] })
   }
   const entry = (await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)).entry
   assert.deepEqual((await all(`SELECT account FROM transaction.line WHERE entry = $1 ORDER BY n`, [entry])).length, 5, 'the distribution\'s entry posts its split alone')
@@ -276,7 +276,7 @@ test('the assembly adopts a rule mixing pay and time from 2027, and its values a
   assert.match(reason(loose), new RegExp(`the work share's terms replace the latest, ${founding}`))
 
   const motion = settled(await put(rule)).motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-16')
@@ -343,7 +343,7 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
     ),
   )
   const motion = proposed.motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2027-01-29')

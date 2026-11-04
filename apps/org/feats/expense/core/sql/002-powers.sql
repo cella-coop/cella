@@ -1,8 +1,8 @@
 -- The power each expense write needs; the
--- circle-membership graft's guard checks that the actor holds it. Approving
+-- membership feat's guard checks that the actor holds it. Approving
 -- needs approve-expense within the mandate's limit for the expense's
 -- amount, and within its budget for the month, which the
--- circle-expense-membership graft checks; money leaves the bank only under
+-- expense-membership graft checks; money leaves the bank only under
 -- reimburse-expense, within its limit. Capturing and submitting a claim
 -- are every employee's right, `claim-expense`, and the claim their own,
 -- by `expense.captures` and `expense.submits`.

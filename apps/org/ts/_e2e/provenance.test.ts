@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import { capture, submit as claim } from '@cella/org-expense/api'
 import { approve as approveExpense } from '@cella/org-graft-expense-transaction/api'
 import type { Deps } from '@cella/org-db'
@@ -45,7 +45,7 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
 }
 
 const may = async (actor: string, power: string, day: string) =>
-  (await one<{ may: boolean }>('SELECT circle_membership.may($1, $2, NULL, $3) AS may', [actor, power, day])).may
+  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, $3) AS may', [actor, power, day])).may
 
 // An expense Thomas, of Web, spends on `day` and claims: 50 € and its VAT.
 async function spent(label: string, day: string) {
@@ -59,7 +59,7 @@ async function spent(label: string, day: string) {
 async function decided(circle: string, title: string, actions: { kind: string; args: Record<string, string> }[], from: string, deadline: string) {
   await on(from)
   const { motion } = settled(await propose({ circle, title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on(deadline)
@@ -151,7 +151,7 @@ test('the chain of Web\'s lead\'s mandate reads from the assembly down', async (
 
 test('handing Web\'s lead from Amina to Léa revokes no mandate, and each approves a Web expense under it', async () => {
   // The host stages Amina's tenure of Web's lead, as only a superuser may.
-  await su.query(`INSERT INTO circle_membership.tenure (circle, holder, role, since) VALUES ('web', $1, 'web-lead', '2026-11-23')`, [amina])
+  await su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('web', $1, 'web-lead', '2026-11-23')`, [amina])
   await on('2026-11-23')
   settled(await approveExpense({ expense: await spent('Usability test incentives', '2026-11-23') }, as(amina)))
 
@@ -168,8 +168,8 @@ test('handing Web\'s lead from Amina to Léa revokes no mandate, and each approv
     '2026-11-30',
   )
   assert.deepEqual(out.map((d) => [d.op, d.state]), [
-    ['circle-membership:seat:remove', 'settled'],
-    ['circle-membership:seat:add', 'settled'],
+    ['circle:seat:remove', 'settled'],
+    ['circle:seat:add', 'settled'],
   ])
   assert.deepEqual(await one(standing), { n: 2 }, 'the handover ends no mandate')
   settled(await approveExpense({ expense: await spent('Screen reader licence', '2026-11-30') }, as(lea)))

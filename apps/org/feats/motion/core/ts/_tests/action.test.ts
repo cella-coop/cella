@@ -40,7 +40,7 @@ after(async () => {
 })
 
 test('only the app\'s core and this feat are migrated, and no kind is registered but the feat\'s own, adopting and ending a policy, and the test\'s', async () => {
-  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('membership', 'membership_motion', 'circle_membership_motion')`)
+  const { rows } = await db.query(`SELECT nspname FROM pg_namespace WHERE nspname IN ('membership', 'membership_motion')`)
   assert.deepEqual(rows, [])
   assert.deepEqual((await db.query('SELECT kind FROM motion.carries ORDER BY kind')).rows, [{ kind: 'admit' }, { kind: 'end' }, { kind: 'policy' }])
 })

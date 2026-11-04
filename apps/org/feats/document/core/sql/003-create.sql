@@ -1,5 +1,5 @@
 -- Starting a document is editing: it needs edit-document, which the
--- circle-membership graft's guard checks the actor holds.
+-- membership feat's guard checks the actor holds.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('document:document:create', 'edit-document', NULL, 'document');
 

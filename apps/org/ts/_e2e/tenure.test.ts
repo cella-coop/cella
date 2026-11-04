@@ -11,7 +11,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import { capture, submit as claim } from '@cella/org-expense/api'
 import { approve as approveExpense } from '@cella/org-graft-expense-transaction/api'
 import type { Deps } from '@cella/org-db'
@@ -44,9 +44,9 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   return out.value as T
 }
 const may = async (actor: string, power: string, day: string) =>
-  (await one<{ may: boolean }>('SELECT circle_membership.may($1, $2, NULL, $3) AS may', [actor, power, day])).may
+  (await one<{ may: boolean }>('SELECT membership.may($1, $2, NULL, $3) AS may', [actor, power, day])).may
 const seated = async (circle: string, day: string) =>
-  (await all<{ s: string }>('SELECT s FROM circle_membership.seated($1, $2) s ORDER BY s', [circle, day])).map((r) => r.s)
+  (await all<{ s: string }>('SELECT s FROM circle.seated($1, $2) s ORDER BY s', [circle, day])).map((r) => r.s)
 
 before(async () => {
   await su.connect()
@@ -64,7 +64,7 @@ test('Camille holds the gérante role by a tenure, 2024 to 2028, and approves an
   assert.deepEqual(
     await one(
       `SELECT circle, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until
-       FROM circle_membership.tenure WHERE holder = $1 AND role = 'manager'`,
+       FROM circle.tenure WHERE holder = $1 AND role = 'manager'`,
       [camille],
     ),
     { circle: 'ag', since: '2024-06-20', until: '2028-06-20' },
@@ -85,7 +85,7 @@ test('a second tenure of the gérante role, capped at one, is refused while hers
   await su.query('BEGIN')
   try {
     await assert.rejects(
-      su.query(`INSERT INTO circle_membership.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2026-11-01')`, [julien]),
+      su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2026-11-01')`, [julien]),
       /the manager role is held by 1 at most in ag, and camille@lanterne\.example holds it then/,
     )
   } finally {
@@ -93,14 +93,14 @@ test('a second tenure of the gérante role, capped at one, is refused while hers
   }
   await su.query('BEGIN')
   try {
-    await su.query(`INSERT INTO circle_membership.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2028-06-20')`, [julien])
+    await su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2028-06-20')`, [julien])
     assert.equal(await may(julien, 'commit', '2028-06-20'), true, 'the next gérante holds the role from the day hers ends')
     assert.equal(await may(julien, 'commit', '2028-06-19'), false)
   } finally {
     await su.query('ROLLBACK')
   }
   await assert.rejects(
-    su.query(`INSERT INTO circle_membership.tenure (circle, holder, role) VALUES ('web', $1, 'finance')`, [julien]),
+    su.query(`INSERT INTO circle.tenure (circle, holder, role) VALUES ('web', $1, 'finance')`, [julien]),
     /the finance role is operations circle's, not web's/,
   )
 })
@@ -137,15 +137,15 @@ test('handing Web\'s lead from Yusuf to Léa keeps every mandate on the role and
   assert.deepEqual(
     out.map((d) => [d.op, d.state]),
     [
-      ['circle-membership:seat:remove', 'settled'],
-      ['circle-membership:seat:add', 'settled'],
+      ['circle:seat:remove', 'settled'],
+      ['circle:seat:add', 'settled'],
     ],
   )
 
   assert.deepEqual(
     await all(
       `SELECT holder, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until
-       FROM circle_membership.tenure WHERE role = 'lead' AND circle = 'web' ORDER BY id`,
+       FROM circle.tenure WHERE role = 'lead' AND circle = 'web' ORDER BY id`,
     ),
     [
       { holder: yusuf, since: null, until: '2026-10-31' },

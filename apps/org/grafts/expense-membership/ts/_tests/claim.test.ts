@@ -30,9 +30,9 @@ test('a claim is named for its claimant, an invited worker\'s as a member\'s, an
   assert.deepEqual(rows, [{ expense: 'ex-0001', name: 'Inès', decider_name: 'Amina' }])
 })
 
-test('no guard of this graft\'s is on the capture, and no trigger on the expenses', async () => {
+test('the graft\'s one guard is on the approval, a mandate\'s budget, none on the capture, and no trigger on the expenses', async () => {
   const guards = await db.query(`SELECT op FROM cella.guard WHERE owner = 'expense-membership'`)
-  assert.deepEqual(guards.rows, [])
+  assert.deepEqual(guards.rows, [{ op: 'expense:expense:approve' }])
   const triggers = await db.query(`SELECT tgname FROM pg_trigger WHERE tgrelid = 'expense.expense'::regclass AND NOT tgisinternal AND tgname = 'whose'`)
   assert.deepEqual(triggers.rows, [])
 })

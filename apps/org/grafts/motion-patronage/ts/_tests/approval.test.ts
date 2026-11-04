@@ -3,7 +3,7 @@
 // motion that moved to approve it, never another; a draft moved again is
 // approved by either motion moving to, and a proposal moving to approve
 // no draft is refused; both actions cite a motion. That the motion passed
-// is circle-membership-motion's, not migrated here. Run by `cella test
+// is membership-motion's, not migrated here. Run by `cella test
 // slice motion-patronage`.
 
 import { after, before, test } from 'node:test'

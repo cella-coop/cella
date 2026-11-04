@@ -91,7 +91,7 @@ export function meeting(read, fail) {
     }
   }
 
-  for (const s of read('graft.circle-meeting').setting ?? []) {
+  for (const s of read('graft.the meeting feat').setting ?? []) {
     if (!circles.has(s.circle)) {
       fail(`setting: no circle ${s.circle}`)
     }

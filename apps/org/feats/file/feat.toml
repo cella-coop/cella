@@ -2,4 +2,4 @@ name = "file"
 group = "platform"
 builtin = true
 rung = 1
-grafts = ["circle-file-membership", "expense-file", "file-membership", "employment-file"]
+grafts = ["expense-file", "file-membership", "employment-file"]

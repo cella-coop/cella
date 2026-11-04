@@ -12,7 +12,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -142,7 +142,7 @@ test('a collective mandate wider than the one it is issued under is refused as i
       as(camille),
     ),
   )
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-06')

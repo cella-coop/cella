@@ -64,7 +64,7 @@ END;
 -- applied on the verdict date. One who is or was a member does not apply.
 -- That they have worked a year is the employment-membership graft's
 -- guard, and that the write put the motion to admit them,
--- circle-membership-motion's.
+-- membership-motion's.
 CREATE FUNCTION membership.applies(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

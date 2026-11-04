@@ -1,4 +1,4 @@
--- The power each payslip write needs; the circle-membership graft's guard checks
+-- The power each payslip write needs; the membership feat's guard checks
 -- that the actor holds it. Wages are owed whatever their size, so none has
 -- a limit: preparing a run is finance's, approving it the gérante's, and
 -- paying it, the one way money leaves the bank for pay, finance's again.

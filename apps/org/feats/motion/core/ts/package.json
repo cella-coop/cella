@@ -12,6 +12,7 @@
     "@cella/org-actions": "workspace:*",
     "@cella/org-policy": "workspace:*",
     "@cella/org-ui": "workspace:*",
-    "svelte": "5.57.2"
+    "svelte": "5.57.2",
+    "@cella/org-circle": "workspace:*"
   }
 }

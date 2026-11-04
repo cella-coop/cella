@@ -30,3 +30,4 @@ export const slice: Slice = {
     },
   },
 }
+export * as circles from './circles.ts'

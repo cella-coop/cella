@@ -5,3 +5,4 @@ export { propose, proposing, vote, post, close, closing, adopt, adopting, end, e
 export { motion, motions, kinds, procedures, summaries } from '../drivers/motion.ts'
 export * as forms from './forms.ts'
 export { slice } from './slice.ts'
+export * as circles from './circles.ts'

@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -57,8 +57,8 @@ Logging, correcting and submitting are also the member's own
 (`timesheet.logs`, `timesheet.corrects`, `timesheet.submits`), and
 approving never is (`timesheet.approves`).
 `002-powers.sql` registers the powers in `cella.power`, and the
-`circle-membership` graft checks them; that a lead approves only the time
-of those seated in their circle is `circle-membership-timesheet`'s.
+membership feat checks them; that a lead approves only the time
+of those seated in their circle is `membership-timesheet`'s.
 `log-time` is every employee's right, held with no seat from the first
 day of their contract to its last, member or not: what a worker logs is
 their own, and a right opens no one else's time to read, as a seat's

@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -27,7 +27,7 @@ The app role may select, insert and update; the guards role may select.
 
 On an invoice's page the write is the action `charge`, apart from
 `client-invoice`'s `link` on the same page. `002-powers.sql` registers
-the power in `cella.power`, and the `circle-membership` graft checks it.
+the power in `cella.power`, and the membership feat checks it.
 
 ## Invariants
 

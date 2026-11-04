@@ -12,7 +12,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { profile } from '@cella/org-person/api'
 import { fixture, signer } from '@cella/org-sign'
-import { found } from '@cella/org-graft-circle-membership-motion/api'
+import { found } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { cella } from './cluster.ts'
 
@@ -71,14 +71,14 @@ test('a fresh scope is founded as a SCOP SARL in France by three founders, as th
   assert.equal(outcome.state, 'settled', outcome.reason)
   assert.equal(outcome.entry, 1)
   const first = await one<{ op: string; actor: string; form: string }>(`SELECT op, actor, cella.opened(1) ->> 'form' AS form FROM cella.log WHERE n = 1`)
-  assert.deepEqual(first, { op: 'circle-membership-motion:scope:found', actor: ines.address, form: 'scop-sarl-fr' })
+  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: ines.address, form: 'scop-sarl-fr' })
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 
   // Each founder sits in the assembly with a vote, as an active member
   // with a device.
   for (const f of founders) {
     const sat = await one<{ sits: boolean; devices: string }>(
-      `SELECT circle_membership.sits_in($1, 'ag', cella.verdict_date()) AS sits,
+      `SELECT membership.sits_in($1, 'ag', cella.verdict_date()) AS sits,
               (SELECT count(*) FROM person.device d WHERE d.address = $1 AND d.revoked IS NULL) AS devices`,
       [f.address],
     )

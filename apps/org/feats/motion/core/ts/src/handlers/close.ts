@@ -6,7 +6,7 @@ import type { Close, Closed } from '../models/motion.ts'
 const op = 'motion:motion:close'
 
 // The close as a write a graft may extend in its transaction, as
-// circle-membership-motion does with the admissions a passing close makes:
+// membership-motion does with the admissions a passing close makes:
 // closes the motion on the verdict date and fixes which stances made
 // it, those received before the close's receipt. Whether it may close is
 // the guard's, `motion.closes`.

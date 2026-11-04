@@ -2,4 +2,4 @@ name = "expense"
 group = "finance"
 builtin = false
 rung = 1
-grafts = ["circle-expense-membership", "expense-membership", "expense-project", "expense-transaction"]
+grafts = ["expense-membership", "expense-project", "expense-transaction"]

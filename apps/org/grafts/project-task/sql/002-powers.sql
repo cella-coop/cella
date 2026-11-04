@@ -1,5 +1,5 @@
 -- Filing a task under a project is editing the task, so it needs
--- edit-task; the circle-membership graft's guard checks that the actor holds
+-- edit-task; the membership feat's guard checks that the actor holds
 -- it.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('project-task:task:file', 'edit-task', NULL, 'project-task');

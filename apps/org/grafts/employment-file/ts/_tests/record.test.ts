@@ -2,7 +2,7 @@
 // the file and worker feats and this graft: a record filed about a
 // worker, of class payroll, opening to them and to who filed it; never
 // about someone the co-op does not employ. Who may file one is the
-// circle-membership graft's, by the hire-worker power, outside this slice.
+// membership feat's, by the hire-worker power, outside this slice.
 // Run by `cella test slice employment-file`.
 
 import { after, before, test } from 'node:test'

@@ -1,5 +1,6 @@
 // migrate: applies each node's SQL down the feat tree — a node's core
-// (core/sql/, then core/<lib>/sql/), then its feats, recursively, then its
+// (core/sql/, then core/<lib>/sql/, the notary's first and each library
+// after those its package depends on), then its feats, recursively, then its
 // grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
 // file. Applied files are recorded by their stable id (`migrations.mjs`)
 // with their hash in migration.applied. Until launch a migration is
@@ -12,8 +13,9 @@
 // `--slice <name>` applies one slice's part of the tree alone, for its
 // slice tests: the app's core and the cores of the feats a slice nests in,
 // then a feat's own tree, or a graft's feats, its lower-order grafts at or
-// below its node and itself. A slice whose SQL reaches past what
-// it may read fails to migrate here.
+// below its node and itself; a library of the app's core, `circle`, its
+// core alone. A slice whose SQL reaches past what it may read fails to
+// migrate here.
 //
 // Then the analytical contracts: each slice's `sql/analytics.sql`, its
 // views, is no migration and is applied whole after them, in tree order,
@@ -23,7 +25,8 @@
 // schema; the role reads nothing else. Each is then read as that role,
 // and a view it cannot read, or a column of a type that is not plain,
 // fails the run. The analytics port, org's core library, publishes one too,
-// in its own schema: `analytics.head`, the log's head.
+// in its own schema: `analytics.head`, the log's head; and so do core's
+// circles, in theirs.
 
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -59,7 +62,25 @@ const isNode = (dir) => existsSync(join(dir, 'feat.toml'))
 const order = (g) => g.split('-').length
 const byOrder = (grafts) => grafts.sort((a, b) => order(a) - order(b) || a.localeCompare(b))
 
-const core = (node) => [join(node, 'core', 'sql'), ...sorted(join(node, 'core')).map((lib) => join(node, 'core', lib, 'sql'))]
+// A core library's SQL calls the notary's, and the SQL of the libraries
+// its package depends on: `circle` reads `policy`'s register.
+const uses = (node, lib) => {
+  const pkg = join(node, 'core', lib, 'ts', 'package.json')
+  const deps = existsSync(pkg) ? Object.keys(JSON.parse(readFileSync(pkg, 'utf8')).dependencies ?? {}) : []
+  return deps.map((d) => d.match(/^@cella\/[a-z]+-([a-z]+)$/)?.[1]).filter((d) => d && d !== lib)
+}
+const core = (node) => {
+  const libs = sorted(join(node, 'core')).filter((lib) => isDir(join(node, 'core', lib)))
+  const out = []
+  const visit = (lib) => {
+    if (!out.includes(lib)) {
+      uses(node, lib).filter((d) => libs.includes(d)).forEach(visit)
+      out.push(lib)
+    }
+  }
+  ;[...libs.filter((lib) => lib === 'notary'), ...libs].forEach(visit)
+  return [join(node, 'core', 'sql'), ...out.map((lib) => join(node, 'core', lib, 'sql'))]
+}
 const feats = (node) => sorted(join(node, 'feats')).map((f) => join(node, 'feats', f)).filter(isNode)
 const grafts = (node) => byOrder(sorted(join(node, 'grafts')))
 
@@ -80,6 +101,9 @@ const held = (node) => [...grafts(node).map((g) => ({ g, node })), ...feats(node
 // the slice nests in, then the slice's own SQL and what it reads. Null when
 // the app has no slice of that name.
 const part = (app, name) => {
+  if (isDir(join(app, 'core', name))) {
+    return core(app)
+  }
   const feat = below(app).find((f) => basename(f) === name)
   if (feat) {
     return [...core(app), ...nest(app, feat).flatMap(core), ...tree(feat)]
@@ -118,7 +142,7 @@ const hashOf = (sql) => createHash('sha256').update(sql).digest('hex')
 // A slice publishes one, in a feat's core/sql/ or a graft's sql/, and so
 // does the analytics port, org's core library, for the log's head.
 const contracts = dirs
-  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/analytics)\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
+  .filter((dir) => /\/(feats\/[^/]+\/core|grafts\/[^/]+|apps\/[^/]+\/core\/(analytics|circle))\/sql$/.test(dir) && existsSync(join(dir, CONTRACT)))
   .map((dir) => join(dir, CONTRACT))
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })

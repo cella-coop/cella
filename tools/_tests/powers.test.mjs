@@ -50,7 +50,7 @@ async function check(sql) {
     }
     writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
     for (const [owner, text] of Object.entries(sql)) {
-      const dir = owner.includes('-') ? join('apps/org/grafts', owner, 'sql') : join('apps/org/feats', owner, 'core/sql')
+      const dir = owner.startsWith('core/') ? join('apps/org', owner, 'sql') : owner.includes('-') ? join('apps/org/grafts', owner, 'sql') : join('apps/org/feats', owner, 'core/sql')
       mkdirSync(join(repo, dir), { recursive: true })
       writeFileSync(join(repo, dir, '001.sql'), text)
     }
@@ -84,7 +84,7 @@ test('only a feat registers the keyring, and nothing else in cella is written', 
   assert.match(log.errors.join('\n'), /writes cella.receipt: a feat writes cella.\* only to register its guards, its powers, its personal columns, the keyring or who reads/)
 })
 
-test('who reads a feat is registered by literal rows: its powers by the feat or a graft joining it, the authority and reaches by a graft', async () => {
+test('who reads a feat is registered by literal rows: its powers by the feat or a graft joining it, the authority by a feat or a graft, reaches by a graft', async () => {
   const reading = (what, owner) => `INSERT INTO cella.reading (what, key, power, owner) VALUES ('${what}', NULL, 'issue-invoice', '${owner}');`
   const own = await check({ invoice: reading('invoice', 'invoice'), 'invoice-member': reading('member', 'invoice-member') })
   assert.deepEqual(own.errors, [])
@@ -97,8 +97,11 @@ test('who reads a feat is registered by literal rows: its powers by the feat or 
 
   const authority = `INSERT INTO cella.authority (fn, owner) VALUES ('circle_member.may(text, text, bigint, date)', 'circle-member');`
   assert.deepEqual((await check({ 'circle-member': authority })).errors, [])
+  // The feat that says whose seat counts, as membership does, holds it.
   const byFeat = await check({ member: `INSERT INTO cella.authority (fn, owner) VALUES ('member.may(text, text, bigint, date)', 'member');` })
-  assert.match(byFeat.errors.join('\n'), /registers cella.authority: only a graft opens a feat's rows to more readers, not feat member/)
+  assert.deepEqual(byFeat.errors, [])
+  const queriedAuthority = await check({ member: `INSERT INTO cella.authority (fn, owner) SELECT 'member.may(text, text, bigint, date)', 'member';` })
+  assert.match(queriedAuthority.errors.join('\n'), /registers cella.authority from a query: each is a literal row/)
 
   const reach = (what, owner) => `INSERT INTO cella.reach (what, fn, owner) VALUES ('${what}', 'invoice_member.reaches(text, text)', '${owner}');`
   assert.deepEqual((await check({ 'invoice-member': reach('invoice', 'invoice-member') })).errors, [])
@@ -135,6 +138,19 @@ test('a graft registers guards on ops of the feats it joins and of the lower-ord
   assert.match(higher.errors.join('\n'), /an op of circle-invoice-member, which circle-member neither joins nor builds on/)
 })
 
+test('core\'s circles are every slice\'s: a feat reads circle.* and guards core\'s ops, and the library registers its own ops\' powers', async () => {
+  const lib = `CREATE SCHEMA circle;
+CREATE TABLE circle.seat (circle text, member text);
+INSERT INTO cella.power (op, power, amount, owner) VALUES ('circle:circle:message', 'discuss', NULL, 'circle');`
+  const reads = `CREATE FUNCTION invoice.sits(payload jsonb) RETURNS text LANGUAGE sql STABLE RETURN (SELECT min(s.member) FROM circle.seat s);
+INSERT INTO cella.guard (op, fn, owner) VALUES ('circle:circle:message', 'invoice.sits(jsonb)', 'invoice');`
+  const both = await check({ 'core/circle': lib, invoice: reads })
+  assert.deepEqual(both.errors, [])
+  assert.deepEqual(both.powers, [row('circle:circle:message', 'discuss', null, 'circle')])
+  const policy = await check({ 'core/circle': `CREATE SCHEMA circle;\nCREATE VIEW circle.v AS SELECT 1 AS one FROM policy.policy;` })
+  assert.match(policy.errors.join('\n'), /policy is outside/, 'a core library reads the libraries its package depends on, and none here')
+})
+
 test('an op with neither a power nor a check is refused: nothing is allowed by omission', () => {
   const none = covered([op('invoice:invoice:send')], { guards: [], cites: [] })
   assert.match(none[0], /invoice:invoice:send names neither a power nor a check: no action is allowed by omission/)
@@ -150,7 +166,7 @@ test('a declared check is backed by SQL: a guard on the op', () => {
 })
 
 test('a stance is no check: check roll is refused, with a guard on the op or without one, and a stance names vote', () => {
-  const roll = covered([op('motion:motion:vote', null, null, 'roll')], { guards: [{ op: 'motion:motion:vote', owner: 'circle-membership-motion' }], cites: [] })
+  const roll = covered([op('motion:motion:vote', null, null, 'roll')], { guards: [{ op: 'motion:motion:vote', owner: 'membership-motion' }], cites: [] })
   assert.match(roll[0], /motion:motion:vote checks roll, which is no check: a stance needs the power its procedure gives the seats on the roll, so name it, vote, and list it in motion.stance_power/)
   const both = covered([op('motion:motion:vote', 'vote', null, 'roll')], { guards: [], cites: [] })
   assert.match(both[0], /motion:motion:vote checks roll, which is no check/)
@@ -233,7 +249,7 @@ test('the SQL check collects the literal guard and cites rows, each cite with it
 })
 
 test('a seat is no check: an action a seat allows names the participant\'s power, and check seat is refused', () => {
-  const seat = covered([op('motion:motion:propose', null, null, 'seat')], { guards: [{ op: 'motion:motion:propose', owner: 'circle-membership-motion' }], cites: [] })
+  const seat = covered([op('motion:motion:propose', null, null, 'seat')], { guards: [{ op: 'motion:motion:propose', owner: 'membership-motion' }], cites: [] })
   assert.match(seat[0], /motion:motion:propose checks seat, which is no check: .* name the power, as propose or discuss/)
   const both = covered([op('motion:motion:propose', 'propose', null, 'seat')], { guards: [], cites: [] })
   assert.match(both[0], /motion:motion:propose checks seat, which is no check/)
@@ -261,5 +277,5 @@ test('a power no mandate, collective mandate or right a fixture adopts grants is
 
   const stance = op('motion:stance:give', 'vote')
   assert.deepEqual(granted([stance], grants, [{ op: 'motion:stance:give', power: 'vote', owner: 'motion' }]), [])
-  assert.deepEqual(granted([op('circle-membership-motion:scope:found', null, null, 'first')], grants), [])
+  assert.deepEqual(granted([op('membership-motion:scope:found', null, null, 'first')], grants), [])
 })

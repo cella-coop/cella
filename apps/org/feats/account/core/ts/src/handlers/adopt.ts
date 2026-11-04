@@ -10,7 +10,7 @@ const op = 'account:terms:adopt' satisfies keyof typeof actions
 // carries it once the adoption settles. The guards decide:
 // `account.adopts` that the terms are what the rule marks and repay an
 // exit within five years, the account-motion graft's that the motion
-// adopted the rule, and circle-membership-motion's that it passed.
+// adopted the rule, and membership-motion's that it passed.
 // Adopted terms never change.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
   return write(deps, {

@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -16,7 +16,7 @@ adds.
 | `POST /api/membership/invite` | confluent | a fact; two invitations do no harm |
 | `POST /api/membership/link` | confluent | a fact; two links do no harm, and the first taken up ends them all |
 | `POST /api/membership/accept` | ordered | enrols the invitee's first device, ordered against revoke as any enrolment |
-| `membership:member:apply` | confluent | an employee asks to join by their own right; a fact, once to a person, made by circle-membership-motion's `apply` with the motion that puts it to the assembly |
+| `membership:member:apply` | confluent | an employee asks to join by their own right; a fact, once to a person, made by membership-motion's `apply` with the motion that puts it to the assembly |
 | `POST /api/membership/admit` | ordered | changes who votes |
 | `POST /api/membership/suspend` | ordered | changes who votes |
 | `POST /api/membership/withdraw` | ordered | a member leaves by their own right; their capital's freeze and withdrawal follow it |
@@ -89,7 +89,7 @@ label is the invitee's wording and stays out.
 
 - `membership.invites`, on `membership:member:invite`: the write invited the member, on the verdict date.
 - `membership.carries`, on `membership:member:invite`: the link its payload names, if any, is the member's, made by this write.
-- `membership.applies`, on `membership:member:apply`: the applicant is the actor, and the write left them invited, having applied on the verdict date; one who is a member, or was, does not apply. That they have worked a year is the `employment-membership` graft's guard on the same action, and that the write put the motion to admit them, `circle-membership-motion`'s.
+- `membership.applies`, on `membership:member:apply`: the applicant is the actor, and the write left them invited, having applied on the verdict date; one who is a member, or was, does not apply. That they have worked a year is the `employment-membership` graft's guard on the same action, and that the write put the motion to admit them, `membership-motion`'s.
 - `membership.links`, on `membership:member:link`: the member is invited and has not taken up their invitation, and the link was made by this write.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
@@ -97,7 +97,7 @@ label is the invitee's wording and stays out.
 - `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date.
 - `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
-Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `circle-membership-motion`'s.
+Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `membership-motion`'s.
 
 ## Handlers
 
@@ -108,7 +108,7 @@ Whether the cited motion of an admission, a suspension or an exclusion asks it i
   when the person is new. A link that is not 32 bytes in hex is refused
   before it reaches the notary.
 - `applying`, the application as a write, which only
-  `circle-membership-motion`'s `apply` runs, in the transaction that puts
+  `membership-motion`'s `apply` runs, in the transaction that puts
   the motion to admit the applicant: invites the applicant on the
   verdict date, holding nothing, or marks the invitation they hold
   already, and records the day they applied; submits `{ member, applied
@@ -129,7 +129,7 @@ Whether the cited motion of an admission, a suspension or an exclusion asks it i
   before the notary.
 - `admit` (ordered), and `admitting`, its state alone, which the close of the deciding motion runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, motion }`.
 - `withdraw` (ordered): the member leaves by their own right, signing it themselves: sets the status `exited` and its day; submits `{ member }`, citing no motion. Someone withdrawing another is refused by the guards, and a member who left withdrawing again before the notary.
-- `suspend`, `exclude` (ordered): set the status and its day; submit `{ member, motion }`. `circle-membership-motion` carries them out when the motion that asks them passes.
+- `suspend`, `exclude` (ordered): set the status and its day; submit `{ member, motion }`. `membership-motion` carries them out when the motion that asks them passes.
 - `crediting`, inside another write's transaction: adds shares to what an active member holds, and refuses a member who is not. It is no action of its own: the write that runs it and its guards decide how many, as `account-membership-patronage-transaction`'s `employ` adds the shares an associate's part of the work share buys.
 - `erase` (ordered): a person who has left erases their own personal data by their right, signing it themselves: submits `{ member, erasure }`, citing no motion, the erasure of every class of their personal data, which the notary carries out as it settles: their name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. Someone erasing another, or a member who has not left, is refused by the guards.
 
@@ -148,6 +148,89 @@ close carries out as to one made from a page, and the close reports each
 admission it made, so they follow it too. No trigger on `member` does
 it.
 
+## Seats
+
+Whether a seat counts on a day, and so who may use a power: core's
+circles hold the seats and the mandates
+([circle](../../../../core/circle/index.md#seats)), and whether a seat
+counts is this feat's to say, since the assembly's asks an active
+membership. Its SQL is `010-may.sql` to `015-rights.sql`; its part of
+the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
+
+- `membership.counts(person, circle, day)` (`014-counts.sql`): whether a
+  seat counts on a day: in the assembly, where the person is active
+  (`membership.active`); in any other circle, where the person is one
+  the co-op knows (`person.known`) and this feat has not suspended them
+  or let them go. A worker who is no member, invited or never, holds a
+  seat in their working circle; a suspended member's seats grant nothing
+  until the suspension is lifted.
+- `membership.sits_in(person, circle, day)`: they hold a seat in the
+  circle on the day, and it counts; the guards that know the circle an
+  action concerns ask it.
+- `membership.may(actor, power, cents, day)`: the actor holds, on the
+  day, a seat that counts, whose role, or the participant role every
+  seat holds, has a mandate in force for the power, not revoked by the
+  day, within its `limit` when the write carries an amount. A `budget`
+  is not checked: it needs the spend over its period tracked. It is the
+  authority every read asks (`cella.authority`, `013-authority.sql`):
+  on the verdict date it says whether the reader holds a power a feat
+  names as reading its rows in `cella.reading`
+  ([the pattern](../../../../../../_corpus/doc/architecture.md#sql)), and
+  it finds no right.
+- `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
+  the actor holds the power by a right, with no seat: a right in force
+  in `circle.right`, on every person, member or employee, within its
+  `limit`, where person's core says the actor is one of them on the day
+  (`person.holds`). A right lets each act on what is their own, which
+  the feat's guard checks, so it opens no one else's rows to read
+  ([rights](../../../../core/circle/index.md#rights)).
+- `membership.empowered`, on every action in `cella.power`: the actor
+  may use the action's power on the verdict date, by a seat (`may`) or
+  by a right (`entitled`), for the amount the payload names in the
+  action's `amount` field. Each feat and core registers the power its
+  actions need in `cella.power`; this feat attaches its guard to every
+  op listed, then and later, as `membership-motion` attaches its own to
+  `motion.cites`. A write with no power, or whose power is in
+  `motion.cites`, a collective mandate's, gets no such guard.
+- `membership.over(actor, power, about, day)`: the actor holds the
+  power through a seat in force whose role has a mandate in force for it
+  whose scope covers the circle `about`: a mandate marking no scope
+  covers every circle and what belongs to none (`about` null); one on a
+  circle (`{scope: web}`) that circle alone; one on `own` the circle of
+  the seat it is held by, so a lead's covers their own circle and no
+  other. Circles never nest, so a power held in one circle reaches no
+  other by where it sits. It checks no limit and whether the seat
+  counts, which `may` does for every write; the grafts that know what a
+  write concerns, `membership-project` a project's circle,
+  `membership-timesheet` a worker's seats and `meeting-membership` a
+  meeting's circle, narrow `may` with it.
+- `membership.sits`, on `circle:circle:message` (`011-sits.sql`): the
+  actor holds a seat that counts in the circle on the verdict date,
+  where the participant's `discuss` is held.
+
+Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
+until 20 June 2028, and acts alone under its mandates while it runs.
+Julien issues invoices, records payments, posts entries, closes
+periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
+holds only the `member` role in the assembly, so she edits clients and
+documents and does none of these; Camille's `commit` mandate, up to
+20 000 €, is not needed by any write yet. A suspended member holds no
+seat's mandate. Inès, invited and employed, no member yet, sits in Web
+since her hire: she holds Web's participant mandates there, proposing
+and discussing in Web, and none of the assembly's; beside them, a
+person's rights and an employee's. Paul, gone, holds a person's alone.
+
+In the shell, `membership/seats` adds a circle's seats to its page, one
+row per person with every role they hold in it, and how many sit in it
+to the list and its gallery cards; and to a person's page their seats
+and the powers they hold through them, each power by its plain name
+and its policy's sentence, the mandates `membership.may` would grant
+before any limit is spent, and to the list the circles they sit in;
+under Joining, whether they sit in the assembly and in a working
+circle; and under Own and decide, what they decide read back as
+sentences: where they sit, how each of those circles decides, and the
+mandates they act by, each as its policy reads, its limit in it.
+
 ## Grafts
 
 - `membership-motion`
@@ -164,6 +247,13 @@ enrol is refused, and the right one enrols the device by no device, once;
 a new link is for someone invited who has not taken it up; an admission
 of someone holding no device is refused and leaves nothing, and one of
 someone who took it up enrols nothing more.
+Its inviter acts by a mandate of a seat that counts, and the invitee
+takes it up by a person's right, as `membership.empowered` asks.
+`counts.test.ts`, `over.test.ts` and `rights.test.ts`: a seat counts in
+the assembly for an active member and elsewhere for anyone known whom
+membership has not suspended or let go; a mandate's scope covers its
+circle, its holder's own or the whole co-op; and a right is held by
+whoever person's core says is one of its people, with no seat.
 
 ## Shell
 
@@ -178,22 +268,22 @@ the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,
 through `accept`; proposing their admission,
-suspension or exclusion is `circle-membership-motion`'s. A member's own
+suspension or exclusion is `membership-motion`'s. A member's own
 page offers them Withdraw, which asks them to confirm and signs
 `withdraw`; no one else's page offers it. Once they have left, their own
 page offers them Erase my data instead, which says what the law keeps,
-asks them to confirm and signs `erase`. Seats and powers are
-`circle-membership`'s.
+asks them to confirm and signs `erase`. Seats and powers are this
+feat's `membership/seats` ([seats](#seats)).
 
 The page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and
 then admitted, and a device that signs; the admission once a probation
 ends (`employment-membership-motion`); the texts to read
-(`document-membership`); the circles (`circle-membership`); and the
+(`document-membership`); the circles ([seats](#seats)); and the
 capital (`account-membership`). Own and decide reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
 from the statutes' terms (`account-membership`); and what they decide,
-from their seats and mandates (`circle-membership`). Each slice writes its
+from their seats and mandates ([seats](#seats)). Each slice writes its
 sentences from its own guards and parameters, so the page says what the
 guards say. For a person who is no member, both say what joining would be.
 

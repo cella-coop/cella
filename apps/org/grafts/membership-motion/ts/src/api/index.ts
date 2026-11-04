@@ -18,3 +18,6 @@ export const slice: Slice = {
     inbox: { rows: mentions },
   },
 }
+export * as circles from './circles.ts'
+export { apply, appointing, carried, close, found, propose, put, roll, stances, standing, turnout } from './circles.ts'
+export type { Admitted, Applied, Founded, Founding } from './circles.ts'

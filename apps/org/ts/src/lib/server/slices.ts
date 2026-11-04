@@ -17,9 +17,9 @@ import { slice as timesheet } from '@cella/org-timesheet/api'
 import { slice as employment } from '@cella/org-employment/api'
 import { slice as file } from '@cella/org-file/api'
 import { slice as imports } from '@cella/org-import/api'
-import { slice as circleMembership } from '@cella/org-graft-circle-membership/api'
-import { slice as circleMotion } from '@cella/org-graft-circle-motion/api'
-import { slice as circleMembershipMotion } from '@cella/org-graft-circle-membership-motion/api'
+import { seats as membershipSeats } from '@cella/org-membership/api'
+import { circles as motionCircles } from '@cella/org-motion/api'
+import { circles as membershipMotionCircles } from '@cella/org-graft-membership-motion/api'
 import { slice as membershipMotion } from '@cella/org-graft-membership-motion/api'
 import { slice as documentMotion } from '@cella/org-graft-document-motion/api'
 import { slice as clientInvoice } from '@cella/org-graft-client-invoice/api'
@@ -52,8 +52,8 @@ import { slice as billTransaction } from '@cella/org-graft-bill-transaction/api'
 import { slice as payslipTimesheet } from '@cella/org-graft-payslip-timesheet/api'
 import { slice as payslipTransaction } from '@cella/org-graft-payslip-transaction/api'
 import { slice as meeting } from '@cella/org-meeting/api'
-import { slice as circleMeeting } from '@cella/org-graft-circle-meeting/api'
-import { slice as circleMeetingMembership } from '@cella/org-graft-circle-meeting-membership/api'
+import { circles as meetingCircles } from '@cella/org-meeting/api'
+import { circles as meetingMembershipCircles } from '@cella/org-graft-meeting-membership/api'
 import { slice as meetingMotion } from '@cella/org-graft-meeting-motion/api'
 import { slice as documentMeeting } from '@cella/org-graft-document-meeting/api'
 import { slice as meetingMembership } from '@cella/org-graft-meeting-membership/api'
@@ -62,14 +62,12 @@ import { slice as documentMembership } from '@cella/org-graft-document-membershi
 import { slice as employmentMembership } from '@cella/org-graft-employment-membership/api'
 import { slice as employmentPayslip } from '@cella/org-graft-employment-payslip/api'
 import { slice as employmentTimesheet } from '@cella/org-graft-employment-timesheet/api'
-import { slice as circleMembershipTimesheet } from '@cella/org-graft-circle-membership-timesheet/api'
-import { slice as circleExpenseMembership } from '@cella/org-graft-circle-expense-membership/api'
-import { slice as circleMembershipPayslip } from '@cella/org-graft-circle-membership-payslip/api'
+import { slice as membershipTimesheet } from '@cella/org-graft-membership-timesheet/api'
+import { slice as membershipPayslip } from '@cella/org-graft-membership-payslip/api'
 import { slice as employmentProjectTimesheet } from '@cella/org-graft-employment-project-timesheet/api'
 import { slice as employmentFile } from '@cella/org-graft-employment-file/api'
 import { slice as fileMembership } from '@cella/org-graft-file-membership/api'
 import { slice as expenseFile } from '@cella/org-graft-expense-file/api'
-import { slice as circleFileMembership } from '@cella/org-graft-circle-file-membership/api'
 import { kinds, run } from './import.ts'
 import { port } from './analytics.ts'
 
@@ -111,9 +109,9 @@ export const slices: Slice[] = [
   payslip,
   reporting(port),
   log,
-  circleMembership,
-  circleMotion,
-  circleMembershipMotion,
+  membershipSeats.slice,
+  motionCircles.slice,
+  membershipMotionCircles.slice,
   membershipMotion,
   documentMotion,
   clientInvoice,
@@ -141,24 +139,22 @@ export const slices: Slice[] = [
   billTransaction,
   payslipTimesheet,
   payslipTransaction,
-  circleMeeting,
+  meetingCircles.slice,
   meetingMotion,
   documentMeeting,
   meetingMembership,
-  circleMeetingMembership,
+  meetingMembershipCircles.slice,
   employmentMembership,
   employmentPayslip,
   employmentTimesheet,
   documentMembership,
   employmentMembershipMotion,
-  circleMembershipTimesheet,
-  circleExpenseMembership,
-  circleMembershipPayslip,
+  membershipTimesheet,
+  membershipPayslip,
   employmentProjectTimesheet,
   employmentFile,
   fileMembership,
   expenseFile,
-  circleFileMembership,
   root,
 ]
 
@@ -180,7 +176,9 @@ for (const s of slices) {
 
 // A graft extends only the collections of the feats it joins and of the
 // feats they nest in, and a nested feat those of the feats it nests in;
-// the root may join any.
+// any slice those of core, which every feat builds on; the root may join
+// any. A slice in parts names each `<slice>/<part>`, and each part
+// reaches what its slice does.
 const within = new Map(slices.flatMap((s) => (s.within ? [[s.name, s.within] as const] : [])))
 const outer = (feat: string): string[] => {
   const up = within.get(feat)
@@ -192,8 +190,8 @@ for (const s of slices) {
     if (!mounted) {
       throw new Error(`${s.name} extends ${name}, which no slice owns`)
     }
-    const reach = s.name.split('-').flatMap((f) => [f, ...outer(f)])
-    if (s !== root && !reach.includes(mounted.owner.name)) {
+    const reach = s.name.split('/')[0].split('-').flatMap((f) => [f, ...outer(f)])
+    if (s !== root && !mounted.owner.core && !reach.includes(mounted.owner.name)) {
       throw new Error(`${s.name} extends ${name}, ${mounted.owner.name}'s, which it does not join`)
     }
     for (const write of Object.keys(extension.actions ?? {})) {

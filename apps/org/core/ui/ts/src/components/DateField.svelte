@@ -19,6 +19,7 @@
     () => value,
     (iso) => (value = iso),
   )
+  let textInput: HTMLInputElement
 
   function open(e: MouseEvent) {
     const picker = (e.currentTarget as HTMLElement).previousElementSibling as HTMLInputElement
@@ -33,16 +34,23 @@
 <span class="date">
   <input
     {id}
+    bind:this={textInput}
     type="text"
     inputmode="numeric"
     autocomplete="off"
     placeholder={dayPattern}
     {required}
     value={day.shown}
-    oninput={(e) => e.currentTarget.setCustomValidity(day.type(e.currentTarget.value))}
+    oninput={(e) => {
+      day.type(e.currentTarget.value)
+      e.currentTarget.setCustomValidity(day.complaint)
+    }}
   />
   <input type="hidden" {name} {value} />
-  <input class="picker" type="date" tabindex="-1" aria-hidden="true" {value} onchange={(e) => day.pick(e.currentTarget.value)} />
+  <input class="picker" type="date" tabindex="-1" aria-hidden="true" {value} onchange={(e) => {
+    day.pick(e.currentTarget.value)
+    textInput.setCustomValidity(day.complaint)
+  }} />
   <button type="button" class="pick" aria-label="Choose a day" onclick={open}><Icon icon={CalendarBlank} /></button>
 </span>
 

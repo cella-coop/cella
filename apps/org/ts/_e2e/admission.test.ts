@@ -15,7 +15,7 @@ import { close } from '@cella/org-graft-membership-motion/api'
 import { add } from '@cella/org-circle/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
-import { scope, sign } from './lanterne.ts'
+import { reader, scope, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -32,7 +32,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -146,7 +146,7 @@ test('seated in the assembly, Inès edits a document from the phone she took up 
   const from = doc.version()
   edits.create(doc, undefined, 0, 'paragraph', {}, [{ text: 'Welcome, Inès.' }])
   doc.commit()
-  const phone: Deps = { db: app, actor: ines, sign: signer(scope, ines, fixture(ines, 'phone')) }
+  const phone: Deps = { db: reader(app, ines), actor: ines, sign: signer(scope, ines, fixture(ines, 'phone')) }
   const edited = await edit({ document: 'internal-rules', update: doc.export({ mode: 'update', from }) }, phone)
   assert.equal(edited.state, 'settled')
   assert.equal(edited.state === 'settled' && edited.entry, 5)

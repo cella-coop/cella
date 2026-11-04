@@ -1,6 +1,6 @@
-import type { Db } from '@cella/org-db'
-import { people } from '@cella/org-person/api'
+import { devices, person } from '@cella/org-person/api'
 import { CELLA_DEV } from '$app/env/private'
+import { using } from './db.ts'
 import { own } from './fixture.ts'
 
 // DEV ONLY. The dev server's sign-in page offers the fixture members:
@@ -11,18 +11,21 @@ import { own } from './fixture.ts'
 
 export const dev = CELLA_DEV
 
-// Who the dev server's sign-in page offers: everyone the co-op knows with
-// a fixture device in force, and that device's label.
-export async function fixtures(db: Db): Promise<{ address: string; name: string; label: string }[]> {
+// Who the dev server's sign-in page offers: everyone with a fixture
+// device in force, and that device's label, by name. The keyring reads
+// for anyone; each person's name is read as them, since no one signed in
+// reads anyone's record and everyone reads their own.
+export async function fixtures(): Promise<{ address: string; name: string; label: string }[]> {
   if (!dev) {
     return []
   }
+  const addresses = [...new Set((await using(null, (db) => devices(db))).map((d) => d.address))]
   const out = []
-  for (const m of await people(db)) {
-    const d = await own(db, m.address)
-    if (d) {
-      out.push({ address: m.address, name: m.name, label: d.label })
+  for (const address of addresses) {
+    const found = await using(address, async (db) => ({ p: await person(db, address), d: await own(db, address) }))
+    if (found.p && found.d) {
+      out.push({ address, name: found.p.name, label: found.d.label })
     }
   }
-  return out
+  return out.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
 }

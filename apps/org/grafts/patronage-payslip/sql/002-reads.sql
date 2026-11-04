@@ -9,4 +9,4 @@ SELECT d.id AS distribution, v.worker AS member, v.quantity AS basis, v.cents AS
 FROM patronage.distribution d
 CROSS JOIN LATERAL patronage_payslip.division(d.id) v
 WHERE v.basis = 'salary'
-  AND ((SELECT cella.sees('patronage')) OR v.worker = cella.reader() OR cella.reaches('patronage', v.worker));
+  AND ((SELECT cella.sees('patronage')) OR d.circle = ANY ((SELECT cella.circles('patronage'))::text[]) OR v.worker = cella.reader() OR cella.reaches('patronage', v.worker));

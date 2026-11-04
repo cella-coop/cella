@@ -3,6 +3,7 @@
 
 import { readFileSync } from 'node:fs'
 import { parse } from 'smol-toml'
+import type { Db } from '@cella/org-db'
 import { fixture, signer, type Device, type Signer } from '@cella/org-sign'
 
 const dir = new URL('../../fixtures/lanterne/', import.meta.url)
@@ -28,3 +29,16 @@ export function device(address: string, label?: string): Promise<Device> {
 
 // Signs as `actor` from one of their devices, or from `of`'s.
 export const sign = (actor: string, label?: string, of = actor): Signer => signer(scope, actor, device(of, label))
+
+// A connection that reads as `actor`, as the shell's `using` hands a
+// handler one: `cella.actor` set before each statement, so the row-level
+// policies read the circles their mandates cover. A transaction's own
+// statements go as they are, so a rollback still ends an aborted one.
+export const reader = (db: Db, actor: string): Db => ({
+  query: async <R = Record<string, unknown>>(text: string, values?: unknown[]) => {
+    if (!/^\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)\b/i.test(text)) {
+      await db.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
+    }
+    return db.query<R>(text, values)
+  },
+})

@@ -48,6 +48,28 @@ BEGIN ATOMIC
   );
 END;
 
+-- The circles a power's mandates cover follow the same seats: any seat
+-- that counts, its own role's mandates and the participant's.
+CREATE OR REPLACE FUNCTION membership.covered(actor text, power text, day date) RETURNS text[]
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT ARRAY(
+    SELECT DISTINCT c.id
+    FROM circle.seat p
+    JOIN circle.mandate m ON m.grantee = p.role OR m.grantee = 'participant'
+    JOIN circle.circle c ON circle.covers(m.scope, p.circle, c.id)
+    WHERE p.member = covered.actor
+      AND membership.counts(p.member, p.circle, covered.day)
+      AND m.power = covered.power
+      AND (p.since IS NULL OR p.since <= covered.day)
+      AND (p.until IS NULL OR p.until > covered.day)
+      AND (m."from" IS NULL OR m."from" <= covered.day)
+      AND (m.until IS NULL OR m.until > covered.day)
+      AND (m.revoked IS NULL OR m.revoked > covered.day)
+    ORDER BY c.id
+  );
+END;
+
 CREATE OR REPLACE FUNCTION membership.sits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

@@ -23,7 +23,7 @@ import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
 import { submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 import { reading as analytics } from './port.ts'
 
@@ -46,7 +46,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The app's connection reading as `actor`, as the server reads for the
@@ -356,11 +356,12 @@ test('Inès corrects the hours she booked too high from the entry\'s page, and t
 test('Chloé proposes and discusses a motion in the assembly by her participant role; Thomas, with no seat in Marketing, may not propose there, and Inès, seated in Web, proposes in Web and not in the assembly', async () => {
   const chloe = at('chloe')
   // The founding motion grants the participant role every circle has its
-  // two mandates, each a policy of the assembly.
+  // two mandates to take part, each a policy of the assembly, and two to
+  // read, its own circle's records and the assembly's.
   const granted = await all<{ power: string; circle: string }>(
     `SELECT m.power, r.circle FROM circle.mandate m JOIN circle.role r ON r.id = m.grantee WHERE m.grantee = 'participant' AND m.revoked IS NULL ORDER BY m.power`,
   )
-  assert.deepEqual(granted, [{ power: 'discuss', circle: '*' }, { power: 'propose', circle: '*' }])
+  assert.deepEqual(granted, [{ power: 'discuss', circle: '*' }, { power: 'propose', circle: '*' }, { power: 'read', circle: '*' }, { power: 'read', circle: '*' }])
   // Chloé sits in the assembly as a member and in Marketing with no role:
   // each seat brings its circle's participant role.
   const proposed = settled(

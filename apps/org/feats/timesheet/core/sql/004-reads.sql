@@ -1,6 +1,7 @@
--- Who reads time: a member their own entries and months; whoever approves
--- time, prepares the pay runs or distributes the surplus, which divides by
--- the hours worked, everyone's. A write's transaction sees every row, as
+-- Who reads time, in place of core's row-level policy, which `read` would
+-- open: a member their own entries and months; whoever approves time,
+-- prepares the pay runs or distributes the surplus, which divides by the
+-- hours worked, those of the circles their mandates cover. A write's transaction sees every row, as
 -- its guards do.
 INSERT INTO cella.reading (what, key, power, owner) VALUES
   ('timesheet', NULL, 'approve-time', 'timesheet'),
@@ -10,8 +11,10 @@ INSERT INTO cella.reading (what, key, power, owner) VALUES
 ALTER TABLE timesheet.entry ENABLE ROW LEVEL SECURITY;
 ALTER TABLE timesheet.period ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY reads ON timesheet.entry FOR SELECT TO cella_app USING ((SELECT cella.sees('timesheet')) OR member = cella.reader() OR cella.reaches('timesheet', member));
-CREATE POLICY reads ON timesheet.period FOR SELECT TO cella_app USING ((SELECT cella.sees('timesheet')) OR member = cella.reader() OR cella.reaches('timesheet', member));
+DROP POLICY circle ON timesheet.entry;
+CREATE POLICY reads ON timesheet.entry FOR SELECT TO cella_app USING ((SELECT cella.sees('timesheet')) OR circle = ANY ((SELECT cella.circles('timesheet'))::text[]) OR member = cella.reader() OR cella.reaches('timesheet', member));
+DROP POLICY circle ON timesheet.period;
+CREATE POLICY reads ON timesheet.period FOR SELECT TO cella_app USING ((SELECT cella.sees('timesheet')) OR circle = ANY ((SELECT cella.circles('timesheet'))::text[]) OR member = cella.reader() OR cella.reaches('timesheet', member));
 
 CREATE POLICY guards ON timesheet.entry FOR SELECT TO cella_guards USING (true);
 CREATE POLICY guards ON timesheet.period FOR SELECT TO cella_guards USING (true);

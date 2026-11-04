@@ -106,7 +106,7 @@ approved and paid once, its payslips fixed from its approval; the ratio.
 
 ## Reads
 
-Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads all of them; no one signed in reads any. A write's transaction reads every row, as the guards do.
+Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own salaries and payslips and the runs they are paid in; whoever holds `prepare-payroll`, `approve-payroll` or `pay-payroll` reads those of the circles their mandate covers, the whole co-op's at Lanterne; `read` opens none of it, since the feat's own policy replaces core's; no one signed in reads any. A write's transaction reads every row, as the guards do.
 
 ## Shell
 

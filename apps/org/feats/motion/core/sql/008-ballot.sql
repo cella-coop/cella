@@ -28,13 +28,15 @@ ALTER TABLE motion.vote
   DROP CONSTRAINT vote_stance_check,
   ADD CONSTRAINT vote_stance_check CHECK (stance IN ('for', 'against', 'abstain', 'consent', 'object', 'redacted'));
 
--- Who reads a stance: every member an open ballot's; a secret ballot's,
+-- Who reads a stance: an open ballot's, whoever reads the motion's circle,
+-- as core's row-level policy, which this one replaces, would; a secret ballot's,
 -- its member alone, under no power. A write's transaction and the guards
 -- role read every stance.
 ALTER TABLE motion.vote ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY circle ON motion.vote;
 CREATE POLICY reads ON motion.vote FOR SELECT TO cella_app
-  USING ((SELECT cella.writing()) OR member = cella.reader() OR NOT motion.secret(motion));
+  USING ((SELECT cella.writing()) OR member = cella.reader() OR (NOT motion.secret(motion) AND circle = ANY ((SELECT circle.reads('{motion}'))::text[])));
 CREATE POLICY guards ON motion.vote FOR SELECT TO cella_guards USING (true);
 CREATE POLICY writes ON motion.vote FOR INSERT TO cella_app WITH CHECK (true);
 

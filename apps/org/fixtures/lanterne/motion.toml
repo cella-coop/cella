@@ -365,13 +365,27 @@ args = { kind = "rule", wording = "At least {reserve_share: 15 % | more is stric
 kind = "policy"
 args = { kind = "right", wording = "Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership", protected = "extraordinary", takes = "scop-sarl-fr:withdraw-membership" }
 
-# The right to apply, the last of the founding motion: an employee who
+# The right to apply: an employee who
 # has worked a year asks to join by their own action, which puts their
 # admission to the assembly, and the assembly must rule on it.
 # Protected as every right is.
 [[motion.action]]
 kind = "policy"
 args = { kind = "right", wording = "Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on", protected = "extraordinary", takes = "scop-sarl-fr:apply-membership" }
+
+# Reading, the last of the founding motion: every seat reads its own
+# circle's records and the assembly's, the whole co-op's, so a member of
+# Marketing reads Marketing's and the books, and not Web's, and Inès, in
+# Web alone, reads Web's and the statutes she would join under. A mandate
+# for a power that reads a feat's rows reads them by its scope beside
+# them. They are Lanterne's own, no default of the form.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of its {scope: own} circle" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of the {scope: ag} circle, the whole co-op's" }
 
 [[motion]]
 id = "m-2026-006"

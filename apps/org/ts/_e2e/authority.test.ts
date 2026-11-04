@@ -17,7 +17,7 @@ import { add, update } from '@cella/org-client/api'
 import { comment } from '@cella/org-document/api'
 import type { Deps } from '@cella/org-db'
 import { generate, plain, signer, type Device, type Proof } from '@cella/org-sign'
-import { device, scope, sign } from './lanterne.ts'
+import { device, reader, scope, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -35,9 +35,9 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string, label?: string): Deps => ({ db: app, actor, sign: sign(actor, label) })
+const as = (actor: string, label?: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor, label) })
 // Hands the notary a proof made beforehand, as a server relaying a request.
-const relay = (actor: string, proof: Proof): Deps => ({ db: app, actor, sign: async () => proof })
+const relay = (actor: string, proof: Proof): Deps => ({ db: reader(app, actor), actor, sign: async () => proof })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -145,7 +145,7 @@ test('a forged signature, a replayed nonce, a swapped payload and a revoked devi
   const signed = await sign(julien)(op, plain(small))
   assert.match(reason(await post(paying(60_00, 'Supplier: stamps'), relay(julien, signed))), /the signature does not verify/)
 
-  const stranger = await post(small, { db: app, actor: hugo, sign: sign(hugo, undefined, chloe) })
+  const stranger = await post(small, { db: reader(app, hugo), actor: hugo, sign: sign(hugo, undefined, chloe) })
   assert.match(reason(stranger), /chloe@lanterne\.example's laptop signs for chloe@lanterne\.example, not for hugo@lanterne\.example/)
 
   const old = await vote({ motion: 'm-2026-012', member: hugo, stance: 'consent' }, as(hugo, 'old laptop'))
@@ -216,7 +216,7 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
 
   // Inès is invited, not a member: she signs from the laptop her hire
   // enrolled, and holds no mandate.
-  const outsider = { db: app, actor: ines, sign: sign(ines) }
+  const outsider = { db: reader(app, ines), actor: ines, sign: sign(ines) }
   assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-client/)
   assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /ines@lanterne\.example holds no mandate for edit-document/)
   assert.equal(await head(), before)
@@ -234,7 +234,7 @@ test('Chloé enrols a phone, signed by her laptop, and it signs her writes', asy
   )
   assert.deepEqual(row, { by: (await device(chloe)).key, enrolled: '2026-10-24' })
 
-  const fromPhone = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
+  const fromPhone = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: reader(app, chloe), actor: chloe, sign: signer(scope, chloe, phone) })
   assert.equal(fromPhone.state, 'settled')
 })
 
@@ -243,7 +243,7 @@ test('an enrolment signed by another member\'s device is refused', async () => {
   const stray = await generate(chloe)
   const forOther = await enrol({ address: chloe, label: 'tablet', key: stray.key }, as(hugo))
   assert.match(reason(forOther), /hugo@lanterne\.example may not enrol a device for chloe@lanterne\.example/)
-  const borrowed = await enrol({ address: chloe, label: 'tablet', key: stray.key }, { db: app, actor: chloe, sign: sign(chloe, undefined, hugo) })
+  const borrowed = await enrol({ address: chloe, label: 'tablet', key: stray.key }, { db: reader(app, chloe), actor: chloe, sign: sign(chloe, undefined, hugo) })
   assert.match(reason(borrowed), /hugo@lanterne\.example's laptop signs for hugo@lanterne\.example, not for chloe@lanterne\.example/)
   assert.equal(await head(), before)
   assert.equal((await all('SELECT FROM person.device WHERE key = decode($1, \'hex\')', [stray.key])).length, 0)
@@ -252,7 +252,7 @@ test('an enrolment signed by another member\'s device is refused', async () => {
 test('Chloé revokes her phone from her laptop, and the phone signs nothing after', async () => {
   const revoked = await revoke({ key: phone.key }, as(chloe))
   assert.equal(revoked.state, 'settled')
-  const late = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: app, actor: chloe, sign: signer(scope, chloe, phone) })
+  const late = await vote({ motion: 'm-2026-012', member: chloe, stance: 'consent' }, { db: reader(app, chloe), actor: chloe, sign: signer(scope, chloe, phone) })
   assert.match(reason(late), /chloe@lanterne\.example's phone was revoked on 2026-10-24/)
 })
 

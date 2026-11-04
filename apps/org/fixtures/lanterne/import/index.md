@@ -19,11 +19,11 @@ guards refuse beside the ones they take:
 - `invoices.csv`: two invoices to issue for Atelier Ondine and Vélo
   Solidaire, the first of two lines, one with no client and one for
   Maison Ferrand with no address billed.
-- `toggl.csv`: Inès's Toggl detailed report: her time on Ferrand, the
-  co-op's own and Clairval, a row of Thomas's and a project the co-op does
+- `toggl.csv`: Inès's Toggl detailed report: her time on the Halles' shop,
+  the co-op's own and Clairval, all Web's, her circle's, a row of Thomas's and a project the co-op does
   not hold.
-- `harvest.csv`: Harvest's detailed time report, two rows of Inès's and one
-  of Malik's.
+- `harvest.csv`: Harvest's detailed time report, two rows of Inès's, on Web's
+  work and the co-op's own, and one of Malik's, which she may not log.
 - `projects.csv`: two projects, and a row with no title.
 - `tasks.csv`: Asana's task export: two tasks for Ferrand's packaging, one
   done before the switch, one in no project and one in a project the co-op

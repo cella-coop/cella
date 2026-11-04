@@ -21,7 +21,7 @@ import { spawnSync } from 'node:child_process'
 import pg from 'pg'
 import type { Deps } from '@cella/org-db'
 import { imported } from '../src/lib/server/import.ts'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -34,7 +34,7 @@ const ines = 'ines@lanterne.example'
 
 const dir = new URL('../../fixtures/lanterne/import/', import.meta.url)
 const sample = (name: string) => new Uint8Array(readFileSync(new URL(name, dir)))
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const run = (kind: string, name: string, actor: string, dry = false) => imported(as(actor), kind, name, sample(name), dry)
@@ -121,14 +121,14 @@ test('Inès brings her own time from Toggl and Harvest; others\' rows are refuse
   const booked = await all<{ day: string; minutes: number; project: string | null }>(
     `SELECT to_char(e.day, 'YYYY-MM-DD') AS day, e.minutes, b.project FROM timesheet.entry e
      LEFT JOIN project_timesheet.booking b ON b.entry = e.id
-     WHERE e.member = $1 AND e.note IN ('Dieline checks', 'Team meeting', 'Accessibility audit', 'Colour proofs', 'Expenses') ORDER BY e.day`,
+     WHERE e.member = $1 AND e.note IN ('Basket checks', 'Team meeting', 'Accessibility audit', 'Basket proofs', 'Expenses') ORDER BY e.day`,
     [ines],
   )
   assert.deepEqual(booked, [
-    { day: '2026-10-19', minutes: 210, project: 'ferrand-packaging' },
+    { day: '2026-10-19', minutes: 210, project: 'halles-shop' },
     { day: '2026-10-20', minutes: 60, project: null },
     { day: '2026-10-21', minutes: 195, project: 'clairval-site' },
-    { day: '2026-10-22', minutes: 150, project: 'ferrand-packaging' },
+    { day: '2026-10-22', minutes: 150, project: 'halles-shop' },
     { day: '2026-10-23', minutes: 45, project: null },
   ])
 })

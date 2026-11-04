@@ -45,12 +45,7 @@ export async function invitation(db: Db, secret: string): Promise<{ member: stri
     return null
   }
   const { rows } = await db.query<{ member: string; name: string }>(
-    `SELECT m.address AS member, p.name
-     FROM membership.link l
-     JOIN membership.member m ON m.address = l.member AND m.status = 'invited'
-     JOIN person.person p ON p.address = m.address
-     WHERE l.digest = sha256(decode($1, 'hex'))
-       AND NOT EXISTS (SELECT FROM membership.invitation i WHERE i.member = m.address)`,
+    `SELECT member, name FROM membership.invited(decode($1, 'hex'))`,
     [secret],
   )
   return rows[0] ?? null

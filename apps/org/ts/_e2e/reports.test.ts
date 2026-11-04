@@ -16,7 +16,7 @@ import { approve } from '@cella/org-graft-expense-transaction/api'
 import { custom, draw, margins, save, spans, statement } from '@cella/org-report/api'
 import type { Rubric, Statement } from '@cella/org-report/models'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { reading, type Reading } from './port.ts'
 import { Shell } from './serve.ts'
 
@@ -28,7 +28,7 @@ let shell: Reading
 const hugo = 'hugo@lanterne.example'
 const camille = 'camille@lanterne.example'
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The books' own sheet by rubric over a span; the balance sheet's up to

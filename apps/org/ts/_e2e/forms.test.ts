@@ -16,7 +16,7 @@ import pg from 'pg'
 import { circles, motion as detail, vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { react } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
@@ -33,7 +33,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? (out.reason ?? '') : '')

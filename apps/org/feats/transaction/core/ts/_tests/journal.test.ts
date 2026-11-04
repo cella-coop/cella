@@ -133,7 +133,11 @@ test('as the app role, whoever keeps the books reads every entry and line; a gra
      LANGUAGE sql STABLE RETURN actor = 'julien@lanterne.example' AND power = 'record-entry'`,
   )
   await db.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await db.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
+  await db.query(
+    `CREATE FUNCTION mandate.covered(actor text, power text, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN CASE WHEN mandate.may(actor, power, NULL, NULL, day) THEN ARRAY(SELECT id FROM circle.circle) ELSE '{}' END`,
+  )
+  await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
   await db.query(`CREATE FUNCTION mandate.holds(code text, reader text) RETURNS boolean LANGUAGE sql STABLE RETURN code = '101302' AND reader = 'chloe@lanterne.example'`)
   await db.query(`INSERT INTO cella.reach (what, fn, owner) VALUES ('transaction', 'mandate.holds(text, text)', 'test')`)
   const { id } = await post([{ account: '512', side: 'debit', cents: 500_00 }, { account: '101302', side: 'credit', cents: 500_00 }])

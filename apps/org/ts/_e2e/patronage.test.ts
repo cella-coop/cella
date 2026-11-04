@@ -31,7 +31,7 @@ import { employ, employed, figures, owed } from '@cella/org-graft-account-member
 import { vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -52,7 +52,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The app's connection reading as `actor`, as the server reads for the

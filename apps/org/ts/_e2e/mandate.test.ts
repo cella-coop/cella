@@ -17,7 +17,7 @@ import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import { log } from '@cella/org-timesheet/api'
 import { pay } from '@cella/org-transaction/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -35,7 +35,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? (out.reason ?? '') : '')
@@ -73,7 +73,7 @@ test('Lanterne\'s mandates are policies of the assembly, adopted by its founding
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE r.kind = 'mandate' AND r.circle = 'ag' AND r.motion = 'm-2021-001')::int AS adopted
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy`,
     ),
-    { mandates: 49, adopted: 49 },
+    { mandates: 51, adopted: 51 },
   )
   assert.deepEqual(
     await one(

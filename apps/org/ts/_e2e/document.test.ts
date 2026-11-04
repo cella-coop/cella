@@ -15,7 +15,7 @@ import { vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
 import { slice } from '@cella/org-graft-document-motion/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -31,7 +31,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
+const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -74,7 +74,7 @@ test('the seed carries the documents over: internal-rules@3 is adopted, the card
   assert.equal(await adopted('internal-rules'), 'internal-rules@3')
   assert.equal(await adopted(card), undefined)
   const v2 = await one<{ canonical: string; hash: string }>(`SELECT canonical, encode(hash, 'hex') AS hash FROM document.version WHERE id = 'rate-card-2027@2'`)
-  const now = await draft(app, card)
+  const now = await draft(reader(app, malik), card)
   assert.equal(jcs(now), v2.canonical)
   assert.equal(hash(await synced(9n)), v2.hash, 'the browser previews the hash the database gave')
   const asked = await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document_motion.adoption WHERE motion = 'm-2026-011'`)
@@ -108,7 +108,7 @@ test('two editors\' concurrent Loro updates merge to one document', async () => 
   assert.deepEqual([a.entry, b.entry], [2, 3])
   assert.match(b.value.digest, /^[0-9a-f]{64}$/)
 
-  const merged = jcs(await draft(app, card))
+  const merged = jcs(await draft(reader(app, malik), card))
   assert.match(merged, /"Standard: 580 €"/)
   assert.match(merged, /Retainers renewed before 1 March 2027 keep their 2026 rate\./)
   assert.doesNotMatch(merged, /560 €/)
@@ -217,6 +217,7 @@ test('a second adoption naming a stale base is refused, and uses no verdict numb
 })
 
 test('a new motion proposes adopting a version picked from the versions; one that does not exist is refused', async () => {
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
   const offered = (await motions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === 'internal-rules@3' && /, version 3$/.test(v.label)))
   const action = (version: string) => ({ circle: 'ag', title: `Adopt ${version}`, procedure: 'consent', deadline: '2026-12-31', body: '', actions: [{ kind: 'adopt', args: { version } }] })
@@ -234,6 +235,7 @@ test('a new motion proposes adopting a version picked from the versions; one tha
 
 test('minutes are adopted as any document is: the assembly adopts its June minutes, picked from the versions', async () => {
   const minutes = 'minutes-ag-2026-06-20'
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [camille])
   const offered = (await motions(app)) as { versions: { value: string; label: string }[] }
   assert.ok(offered.versions.some((v) => v.value === `${minutes}@1`))
   const proposed = await propose(

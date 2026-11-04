@@ -1,5 +1,5 @@
 User,Email,Client,Project,Task,Description,Billable,Start date,Start time,End date,End time,Duration,Tags,Amount ()
-Inès Haddad,ines@lanterne.example,Maison Ferrand,"Maison Ferrand, packaging",,Dieline checks,Yes,2026-10-19,09:00:00,2026-10-19,12:30:00,03:30:00,,
+Inès Haddad,ines@lanterne.example,Les Halles Paysannes,"Les Halles Paysannes, online shop",,Basket checks,Yes,2026-10-19,09:00:00,2026-10-19,12:30:00,03:30:00,,
 Inès Haddad,ines@lanterne.example,,,,Team meeting,No,2026-10-20,10:00:00,2026-10-20,11:00:00,01:00:00,,
 Inès Haddad,ines@lanterne.example,Ville de Clairval,"Ville de Clairval, town website",,Accessibility audit,Yes,2026-10-21,14:00:00,2026-10-21,17:15:00,03:15:00,,
 Thomas Nguyen,thomas@lanterne.example,Ville de Clairval,"Ville de Clairval, town website",,Templates,Yes,2026-10-21,09:00:00,2026-10-21,13:00:00,04:00:00,,

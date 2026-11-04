@@ -3,6 +3,7 @@
 -- (`account`'s readers). A write's transaction sees every credit.
 ALTER TABLE account_membership_patronage_transaction.credit ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY reads ON account_membership_patronage_transaction.credit FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR member = cella.reader() OR cella.reaches('account', member));
+DROP POLICY circle ON account_membership_patronage_transaction.credit;
+CREATE POLICY reads ON account_membership_patronage_transaction.credit FOR SELECT TO cella_app USING ((SELECT cella.sees('account')) OR circle = ANY ((SELECT cella.circles('account'))::text[]) OR member = cella.reader() OR cella.reaches('account', member));
 CREATE POLICY guards ON account_membership_patronage_transaction.credit FOR SELECT TO cella_guards USING (true);
 CREATE POLICY writes ON account_membership_patronage_transaction.credit FOR INSERT TO cella_app WITH CHECK (true);

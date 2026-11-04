@@ -188,7 +188,7 @@ since 30 November 2025, a person's alone.
 
 A right lets each act on what is their own: the feat's guard that the
 record is theirs stays, and a right is never the authority a read asks
-(`membership.may`), so it opens no one else's rows. It reaches the
+(`membership.covered`), so it opens no one else's rows. It reaches the
 whole co-op, is issued under no mandate, and no mandate is issued under
 it.
 
@@ -210,6 +210,33 @@ it.
 | employee | `log-time` | logging, correcting and submitting their own time, booked to a project or not (`timesheet:entry:log`, `:entry:correct`, `:period:submit`) |
 | employee | `claim-expense` | claiming an expense and submitting it, attaching its receipt and filing it on a project (`expense:expense:capture`, `:submit`, `expense-file:expense:attach`, `expense-project:expense:rebill`) |
 | employee | `apply-membership` | applying to join once employed a year, which puts their admission to the assembly in the same write, and opening their candidacy, which follows it (`membership:member:apply`, `employment-membership:candidacy:open`); held to their own application by the membership feat's guard, and to a year's employment by employment-membership's |
+
+## Reading
+
+Reading follows the mandates: a person reads a record only by a mandate
+whose scope covers its owning circle. Reading is the read group,
+`read`, a power no action needs: a mandate for it lets its holder read
+every record its scope covers, as `{scope: own}` on the participant
+role lets every participant read their own circle's records. A power a
+feat names as reading its rows in `cella.reading` reads them too, by
+its scope, as Expense's `approve-expense` lets Web's lead read Web's
+expenses and the gérante's, on the whole co-op, every circle's. What
+the law gives every member to read, the year's accounts and the
+activity report, needs no mandate, and a person reads what is theirs,
+their profile, membership, contract and claims, their pay, time and
+capital, by a row-level policy of the table it is in beside core's.
+
+Core keeps it in the database (`009-reads.sql`). `circle.scoped`, an
+event trigger, puts on each table a feat or a graft makes that names an
+owning circle the row-level policy `circle`, for the app role, and lets
+the guards role read the whole: a row reads where its circle is among
+those its reader reads in, `circle.reads(feats)`, the circles a mandate
+of theirs for `read` covers and those a power the feats name covers
+(`cella.circles`, whose authority is the membership feat's), asked
+once per query; a write's transaction reads the whole
+(`cella.sees`). A table a person's data is in drops it for its own,
+which `read` opens nothing of
+([architecture](../../../../_corpus/doc/architecture.md#sql)).
 
 ## Schema
 

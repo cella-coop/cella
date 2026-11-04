@@ -25,7 +25,7 @@ import { enrol, profile } from '@cella/org-person/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import { write, type Deps } from '@cella/org-db'
 import { fixture, generate, signer } from '@cella/org-sign'
-import { scope, sign } from './lanterne.ts'
+import { reader, scope, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -48,7 +48,7 @@ async function on(date: string) {
 }
 
 const as = (actor: string, label?: string): Deps => ({
-  db: app,
+  db: reader(app, actor),
   actor,
   sign: actor === bastien ? signer(scope, bastien, fixture(bastien, label ?? 'laptop')) : sign(actor),
 })
@@ -154,7 +154,7 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   await su.query('SET cella.unbound = on')
   await su.query(`INSERT INTO person.device (key, address, label, enrolled) VALUES (decode($1, 'hex'), $2, 'laptop', '2021-03-01')`, [laptop.key, paul])
   await su.query('SET cella.unbound = off')
-  const asPaul = { db: app, actor: paul, sign: signer(scope, paul, laptop) }
+  const asPaul = { db: reader(app, paul), actor: paul, sign: signer(scope, paul, laptop) }
   const late = await log({ member: paul, day: '2025-11-28', minutes: 60, billable: false }, asPaul)
   assert.equal(late.state, 'refused')
   assert.match(reason(late), /paul@lanterne\.example holds no mandate for log-time/)

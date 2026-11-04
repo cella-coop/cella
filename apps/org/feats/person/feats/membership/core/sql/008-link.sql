@@ -101,3 +101,19 @@ CREATE TRIGGER signs AFTER UPDATE OF status ON membership.member
 
 GRANT SELECT, INSERT ON membership.link TO cella_app;
 GRANT SELECT ON membership.link TO cella_guards;
+
+-- Whom a link invites, while they have not taken it up: read by the
+-- link's secret, the one key to it, before anyone is signed in, so it
+-- reads past the row-level policies as its owner and answers only for
+-- the secret it is given.
+CREATE FUNCTION membership.invited(secret bytea) RETURNS TABLE (member text, name text)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT m.address, p.name
+  FROM membership.link l
+  JOIN membership.member m ON m.address = l.member AND m.status = 'invited'
+  JOIN person.person p ON p.address = m.address
+  WHERE l.digest = sha256(invited.secret)
+    AND NOT EXISTS (SELECT FROM membership.invitation i WHERE i.member = m.address);
+END;

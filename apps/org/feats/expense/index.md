@@ -103,6 +103,16 @@ sweep` redacts them, the one change a submitted expense takes
 - `expense.reimburses`, on `expense:expense:reimburse`: reimbursed by this
   write, for its total.
 
+## Reads
+
+An expense reads by core's row-level policy, by its owning circle
+([reading](../../core/circle/index.md#reading)): whoever holds `read`
+over its circle, and whoever holds `approve-expense` or
+`reimburse-expense` over it (`sql/004-reads.sql`), since what a mandate
+acts on its holder reads. At Lanterne Chloé, in Marketing, reads
+Marketing's and the assembly's expenses and not Web's; the gérante and
+finance, whose mandates cover the whole co-op, read every one.
+
 ## Handlers
 
 `capture`, `submit` and `refuse`, and the specs `approving` and

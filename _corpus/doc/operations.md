@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 # Operations
@@ -137,11 +137,23 @@ new vault key file, the notary's key file as the previous one, then
 `cella backup <dir> [--url URL]`, on the database's host as a user who
 reads its key files, writes a new owner-only directory: the database as
 `pg_dump --format=custom` writes it, the notary's and the vault's key
-files, and a manifest of the database's name, the extension's version,
-the log's head when the backup began, and the settings the database and
-its roles carry, which a dump leaves out. Run it nightly from a timer and
-copy the directory off the host. It holds the keys in the clear: keep it
-as the keys are kept ([trust](trust.md#current-limits)).
+files, the previous vault key's where `cella.vault_key_previous` is set,
+and a manifest of the database's name, the extension's version, the
+log's head and the settings the database and its roles carry, which a
+dump leaves out. Run it nightly from a timer and copy the directory off
+the host. It holds the keys in the clear: keep it as the keys are kept
+([trust](trust.md#current-limits)).
+
+Everything a backup holds is read at one point of the log, so writes
+need not stop for it. It opens a repeatable-read transaction, reads the
+head, the settings and the key files' paths in it, exports its snapshot
+and has `pg_dump --snapshot` dump that snapshot, so the dump holds
+exactly the manifest's head. It reads the key files while the
+transaction is open, and the key settings once more after the dump; if a
+path changed while it ran, a rotation was under way, and it refuses and
+removes the directory rather than keep a backup whose keys may not open
+its dump. Taken between a vault rotation's steps 2 and 4, it holds both
+vault keys, and its restore opens every vault key under either.
 
 A nightly dump loses up to a day. To lose less, archive the cluster's
 write-ahead log as well, as [Postgres documents
@@ -159,15 +171,20 @@ backup, into a new database on the dev cluster or into an empty one at
 extension at the version backed up; restore with the build that made the
 backup, then [upgrade](#upgrades). It writes each key file where the
 cluster's settings say, if it is missing, and refuses if a different key
-is already there; makes the roles and the settings; loads the dump; then
-checks that the log verifies, that it holds the backup's head, and that
-every entry opens from the vault.
+is already there; a backup that holds the previous vault key needs
+`cella.vault_key_previous` set as well, and the rotation is finished
+after it with `cella vault rewrap`. It makes the roles and the settings;
+loads the dump; then checks that the log verifies, that its head is the
+backup's, and that every entry opens from the vault.
 
 The restore is rehearsed by `cella test e2e restore` on every test run:
 members write, personal data among it, the scope is backed up, and a
 throwaway cluster whose key files do not exist yet restores it, with
 every table's rows, the head and the vault as they were, and takes the
-next write under the same key.
+next write under the same key. It rehearses as well a backup taken in
+the middle of a vault rotation, before `cella vault rewrap`, whose
+restore opens every entry, and one during which the notary's key path
+changes, which refuses.
 
 ## Upgrades
 

@@ -3,7 +3,7 @@
 // at paths of its own, which a rehearsal fills or leaves for a restore to
 // write. It never touches the dev cluster, and goes when stopped.
 
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -70,13 +70,29 @@ export async function cluster(): Promise<Cluster> {
   }
 }
 
-// Runs this cella, as a host runs it, and returns what it printed.
-export function cella(args: string[], env: Record<string, string> = {}): string {
-  const bin = process.env.CELLA_BIN
-  if (!bin) {
+const bin = () => {
+  const path = process.env.CELLA_BIN
+  if (!path) {
     throw new Error('CELLA_BIN is not set: run the scenario through `cella test e2e`')
   }
-  return execFileSync(bin, args, { cwd: repo, env: { ...process.env, ...env }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+  return path
+}
+
+// Runs this cella, as a host runs it, and returns what it printed.
+export function cella(args: string[], env: Record<string, string> = {}): string {
+  return execFileSync(bin(), args, { cwd: repo, env: { ...process.env, ...env }, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] })
+}
+
+// Starts this cella, for a test that acts while it runs: its exit code
+// and what it said on standard error, once it is done.
+export function started(args: string[]): Promise<{ code: number | null; err: string }> {
+  const child = spawn(bin(), args, { cwd: repo, stdio: ['ignore', 'ignore', 'pipe'] })
+  let err = ''
+  child.stderr.on('data', (d: Buffer) => (err += d.toString()))
+  return new Promise((done, fail) => {
+    child.on('error', fail)
+    child.on('close', (code) => done({ code, err }))
+  })
 }
 
 // The roles a scope's grants name, as its first migration makes them.

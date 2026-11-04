@@ -45,10 +45,9 @@ repository works only on the org app, `apps/org/`. Read
   feat's published write from its handler, reacts through `on` and
   refuses through a guard, and never inserts, updates, deletes or puts a
   trigger on a feat's or a lower-order graft's table. A nested feat
-  writes its parent the same way. `cella check feats` refuses any such
-  write that `apps/org/foreign.list`, the shrinking list of exceptions
-  that predate the rule, does not name. Never add a line to that list:
-  move the write instead ([writes stay
+  writes its parent the same way; a feat its extenders fill publishes a
+  register they call. `cella check feats` refuses every such write, with
+  no list of exceptions ([writes stay
   home](_corpus/doc/architecture.md#writes-stay-home)).
 - **Until launch, migrations are rewritten in place.** No scope is live:
   a change edits the migration that makes what it changes, and every

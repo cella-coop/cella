@@ -1,8 +1,7 @@
 // The feat check's foreign writes: a feat's or a graft's SQL and
 // TypeScript write and trigger only on its own schema's tables (and
 // register in cella.*); any other write its migrations leave standing is
-// refused unless the app's foreign.list names it, and a listed write that
-// is gone is refused too.
+// refused, with no list of exceptions to name it.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -10,7 +9,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { checkSql } from '../sql-check.mjs'
-import { ratchet, scanTs } from '../writes.mjs'
+import { refuse, scanTs } from '../writes.mjs'
 
 // A throwaway tree with three feats and the SQL files given for each
 // owner, a graft by its hyphenated name; each file is `NNN.sql`. Answers
@@ -130,13 +129,18 @@ test('a slice\'s TypeScript that writes another\'s table is found, its own and i
   }
 })
 
-test('a foreign write the list does not name is refused, and so is a listed one that is gone', () => {
-  const found = [{ owner: 'invoice-member', what: 'trigger whose on invoice.invoice', path: 'apps/org/grafts/invoice-member/sql/001.sql' }]
-  assert.deepEqual(ratchet(found, ['invoice-member: trigger whose on invoice.invoice'], 'apps/org'), [])
-  assert.match(ratchet(found, [], 'apps/org')[0], /^apps\/org\/grafts\/invoice-member\/sql\/001.sql: invoice-member trigger whose on invoice.invoice, a table it does not own: a slice writes only its own schema/)
-  assert.deepEqual(ratchet([], ['invoice-member: trigger whose on invoice.invoice'], 'apps/org'), [
-    'apps/org/foreign.list: invoice-member: trigger whose on invoice.invoice is gone: strike it from the list',
+test('a graft\'s trigger on a feat\'s table and its insert into one are refused, with no list to name them', async () => {
+  const { errors, found } = await check({
+    'invoice-member': [`${table}
+CREATE TRIGGER whose BEFORE INSERT ON invoice.invoice FOR EACH ROW EXECUTE FUNCTION invoice_member.whose();
+INSERT INTO invoice.line (invoice, cents) VALUES (NULL, 100);`],
+  })
+  assert.deepEqual(errors, [])
+  assert.deepEqual(refuse(found.foreign), [
+    'apps/org/grafts/invoice-member/sql/001.sql: invoice-member trigger whose on invoice.invoice, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat\'s published write',
+    'apps/org/grafts/invoice-member/sql/001.sql: invoice-member 001.sql writes invoice.line, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat\'s published write',
   ])
+  assert.deepEqual(refuse([]), [])
 })
 
 test('a graft registers with the motion feat through its register functions, and an insert into the register is a foreign write', async () => {
@@ -154,7 +158,7 @@ SELECT motion.register_cite_guard('member_motion.carried(jsonb)', 'member-motion
 INSERT INTO motion.cites (op, owner) VALUES ('member:member:admit', 'member-motion');`],
   })
   assert.deepEqual(inserted, ['member-motion: 001.sql writes motion.carries', 'member-motion: 001.sql writes motion.cites'])
-  const refused = ratchet(inserted.map((what) => ({ owner: 'member-motion', what: what.split(': ')[1], path: 'apps/org/grafts/member-motion/sql/001.sql' })), [], 'apps/org')
+  const refused = refuse(inserted.map((what) => ({ owner: 'member-motion', what: what.split(': ')[1], path: 'apps/org/grafts/member-motion/sql/001.sql' })))
   assert.equal(refused.length, 2)
   assert.match(refused[0], /member-motion 001.sql writes motion.carries, a table it does not own/)
 })

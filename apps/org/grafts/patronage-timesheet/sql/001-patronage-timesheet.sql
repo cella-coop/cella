@@ -17,10 +17,11 @@ END;
 
 -- The portion of a distribution's work share that divides by time worked,
 -- split in proportion to each worker's approved minutes that year by
--- `cella.allocate`, so the parts add up to it to the cent; a part of
--- nothing has no row.
+-- `cella.allocate`, so the parts add up to it to the cent, each on the
+-- basis `hours` with its minutes for quantity; a part of nothing has no
+-- row.
 CREATE FUNCTION patronage_timesheet.division(ref text)
-RETURNS TABLE (worker text, minutes bigint, cents bigint)
+RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   WITH worked AS (
@@ -33,23 +34,12 @@ BEGIN ATOMIC
     SELECT CASE WHEN patronage.portion(ref, 'hours') > 0 AND EXISTS (SELECT FROM worked)
       THEN cella.allocate(cella.amount(patronage.portion(ref, 'hours')), (SELECT array_agg(w.minutes ORDER BY w.n) FROM worked w)) END AS hours
   )
-  SELECT w.member, w.minutes, s.hours[w.n] FROM worked w CROSS JOIN split s WHERE s.hours[w.n] > 0;
+  SELECT w.member, 'hours', w.minutes, s.hours[w.n] FROM worked w CROSS JOIN split s WHERE s.hours[w.n] > 0;
 END;
 
--- When a distribution is approved, in that write, its parts by time
--- worked are made, whichever write approves it.
-CREATE FUNCTION patronage_timesheet.parts() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF OLD.approved IS NULL AND NEW.approved IS NOT NULL THEN
-    INSERT INTO patronage.part (distribution, worker, basis, quantity, amount)
-    SELECT NEW.id, v.worker, 'hours', v.minutes, cella.amount(v.cents) FROM patronage_timesheet.division(NEW.id) v;
-  END IF;
-  RETURN NULL;
-END
-$$;
-
-CREATE TRIGGER parts_by_time AFTER UPDATE OF approved ON patronage.distribution
-  FOR EACH ROW EXECUTE FUNCTION patronage_timesheet.parts();
+-- The division of time worked, which the patronage feat asks when a
+-- distribution is approved and whose parts it makes in that write.
+SELECT patronage.register_division('hours', 'patronage_timesheet.division(text)');
 
 -- patronage:distribution:approve — the distribution's parts by time
 -- worked are exactly its portion divided by the workers' approved minutes
@@ -59,13 +49,13 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN EXISTS (
-      (SELECT v.worker, v.minutes, v.cents FROM patronage_timesheet.division(d.id) v)
+      (SELECT v.worker, v.quantity, v.cents FROM patronage_timesheet.division(d.id) v)
       EXCEPT ALL
       (SELECT p.worker, p.quantity, cella.cents(p.amount) FROM patronage.part p WHERE p.distribution = d.id AND p.basis = 'hours')
     ) OR EXISTS (
       (SELECT p.worker, p.quantity, cella.cents(p.amount) FROM patronage.part p WHERE p.distribution = d.id AND p.basis = 'hours')
       EXCEPT ALL
-      (SELECT v.worker, v.minutes, v.cents FROM patronage_timesheet.division(d.id) v)
+      (SELECT v.worker, v.quantity, v.cents FROM patronage_timesheet.division(d.id) v)
     ) THEN d.id || '''s parts by time worked are not its portion divided by the minutes approved in ' || d.year
   END
   FROM (SELECT payload ->> 'distribution' AS distribution) x

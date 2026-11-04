@@ -61,20 +61,10 @@ BEGIN ATOMIC
   SELECT x.member, 'equal', 1::bigint, s.equal[x.n] FROM employed x CROSS JOIN split s WHERE s.equal[x.n] > 0;
 END;
 
--- When a distribution is approved, in that write, its parts by pay and in
--- equal parts are made, whichever write approves it.
-CREATE FUNCTION patronage_payslip.parts() RETURNS trigger LANGUAGE plpgsql AS $$
-BEGIN
-  IF OLD.approved IS NULL AND NEW.approved IS NOT NULL THEN
-    INSERT INTO patronage.part (distribution, worker, basis, quantity, amount)
-    SELECT NEW.id, v.worker, v.basis, v.quantity, cella.amount(v.cents) FROM patronage_payslip.division(NEW.id) v;
-  END IF;
-  RETURN NULL;
-END
-$$;
-
-CREATE TRIGGER parts_by_pay AFTER UPDATE OF approved ON patronage.distribution
-  FOR EACH ROW EXECUTE FUNCTION patronage_payslip.parts();
+-- The division of pay and of equal parts, which the patronage feat asks
+-- when a distribution is approved and whose parts it makes in that write.
+SELECT patronage.register_division('salary', 'patronage_payslip.division(text)');
+SELECT patronage.register_division('equal', 'patronage_payslip.division(text)');
 
 -- patronage:distribution:approve — the distribution's parts by pay and in
 -- equal parts are exactly its portions divided among the workers with a

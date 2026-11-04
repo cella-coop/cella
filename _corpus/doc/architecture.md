@@ -140,7 +140,7 @@ through `tools/powers.mjs` that the power each action's label names in
 action with no power declares a check its SQL backs
 ([actions](#actions)), and
 through `tools/writes.mjs` that no feat or graft writes a table it does
-not own beyond the app's listed exceptions ([writes stay
+not own, with no exceptions ([writes stay
 home](#writes-stay-home)).
 `cella test tools` holds their negative tests.
 
@@ -271,12 +271,10 @@ such write and trigger that the owner's migrations leave standing. A
 later file that drops the trigger, or drops or replaces the function,
 takes it away, and a slice may drop its own trigger on another's table.
 `tools/writes.mjs` scans each feat's and graft's TypeScript, its tests
-aside, for SQL that writes a table outside its schema. Both are held to
-the app's `foreign.list`, which lists the exceptions that predate
-the rule (2026-10-29). The check refuses an exception the list does not
-name, and also a listed line whose write is gone, so the list only
-shrinks. Each exception moves to its owner by its migration, rewritten
-in place, a handler and its feat's published write. A write no tool can see, such as
+aside, for SQL that writes a table outside its schema. The check
+refuses every such write and trigger; there are no exceptions, the
+last of those that predated the rule having moved to their owners'
+registers and published writes. A write no tool can see, such as
 SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
 is left to review.
 
@@ -369,8 +367,7 @@ created, and a function altered, only in the owner's own schema, but
 core's on every record table, which a slice whose table holds a
 person's data drops for its own. It
 also refuses a write or a trigger on a table outside the owner's schema
-and `cella.*`, beyond the exceptions the app's `foreign.list` still
-names ([writes stay home](#writes-stay-home)). A slice may drop a
+and `cella.*` ([writes stay home](#writes-stay-home)). A slice may drop a
 trigger of its own on another's table.
 
 Reading follows the mandates. Every record table is under row-level

@@ -15,6 +15,13 @@ const db = new pg.Client()
 const rows = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows as R[]
 const guard = async (fn: string, payload: object) => (await db.query<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).rows[0].r
 
+// Approves a split as the patronage feat's approve does: on the verdict
+// date, its parts made in that write by the divisions registered.
+async function approveSplit(id: string) {
+  await db.query('UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = $1', [id])
+  await db.query('SELECT patronage.divide($1)', [id])
+}
+
 async function draft(id: string, year: number, work: number) {
   await db.query(`INSERT INTO patronage.distribution (id, year, surplus, basis) VALUES ($1, $2, cella.amount($3), 'mix')`, [id, year, work * 2])
   await db.query(`INSERT INTO patronage.share (distribution, kind, percent, amount) VALUES ($1, 'work', 50, cella.amount($2)), ($1, 'legal', 50, cella.amount($2))`, [id, work])
@@ -95,7 +102,7 @@ test('a worker paid from 2 to 30 March and one hired on 15 December each have an
       { worker: 'ana@x', basis: 'salary', quantity: '3600000', cents: '600000' },
       { worker: 'ben@x', basis: 'salary', quantity: '900000', cents: '150000' },
     ])
-    await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
+    await approveSplit('2025')
     assert.deepEqual(await rows(`SELECT worker, basis, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2025' AND worker IN ('fay@x', 'zoe@x') ORDER BY worker`), [
       { worker: 'fay@x', basis: 'equal', cents: '62500' },
       { worker: 'zoe@x', basis: 'equal', cents: '62500' },
@@ -108,7 +115,7 @@ test('a worker paid from 2 to 30 March and one hired on 15 December each have an
 })
 
 test('approving makes the parts in that write, which both guards take', async () => {
-  await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
+  await approveSplit('2025')
   assert.deepEqual(await rows(`SELECT worker, basis, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2025' ORDER BY basis, worker`), [
     { worker: 'ana@x', basis: 'equal', cents: '125000' },
     { worker: 'ben@x', basis: 'equal', cents: '125000' },

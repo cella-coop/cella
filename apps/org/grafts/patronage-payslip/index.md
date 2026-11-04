@@ -27,9 +27,11 @@ art. 33, 3°, gives the share to every employee). Declared by `patronage`.
   or not it was in force on a month's first day, so one hired on 15
   December, or paid from 2 to 30 March, has an equal part and none by
   pay. No salary is 0 €: an amount is positive.
-- `parts_by_pay`, a trigger after a distribution is approved, in that
-  write, whichever makes it: it inserts the division into
-  `patronage.part`.
+- its division, registered by its migration for the bases `salary` and
+  `equal` through the patronage feat's `patronage.register_division`,
+  which the feat's approve asks and whose answer it inserts into
+  `patronage.part` itself; the graft writes no part and puts no trigger
+  on `patronage.distribution`.
 - `work_share`: each worker's part by pay as it divides now, which the
   distribution's page shows until it is approved.
 

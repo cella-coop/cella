@@ -10,6 +10,12 @@ SELECT motion.register_cite('circle:seat:remove', 'seat-member', 'membership-mot
 SELECT motion.register_carries('seat', 'Seat a member', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle:seat:add', 'membership-motion');
 SELECT motion.register_carries('unseat', 'End a seat', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "member", "label": "Address", "type": "text"}, {"name": "role", "label": "Role", "type": "text", "optional": true}]', 'circle:seat:remove', 'membership-motion');
 
+-- A circle a motion creates, carried out by core's circle:circle:create
+-- under the collective mandate `create-circle`: its id, name and purpose.
+-- A later `seat` of the same motion may name it.
+SELECT motion.register_cite('circle:circle:create', 'create-circle', 'membership-motion');
+SELECT motion.register_carries('circle', 'Create a circle', '[{"name": "id", "label": "Id", "type": "text"}, {"name": "name", "label": "Name", "type": "text"}, {"name": "purpose", "label": "Purpose", "type": "text", "optional": true}]', 'circle:circle:create', 'membership-motion');
+
 -- The seats motions give and end: an admission seats the member in the
 -- motion's circle as `member`; a `seat` or `unseat` action names its
 -- circle, member and role, none for a plain seat.
@@ -76,3 +82,30 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:seat:remove', 'membership_motion.unseats(jsonb)', 'membership-motion');
 
 GRANT SELECT ON membership_motion.seating TO cella_app, cella_guards;
+
+-- circle:circle:create — the circle the write made is one the cited
+-- motion creates, by its id, name and purpose, and its entry names the
+-- default bundle in force on the verdict date (`circle.bundle`), the
+-- mandates its members and its roles hold there from that day.
+CREATE FUNCTION membership_motion.creates(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN c.id IS NULL THEN 'no circle ' || coalesce(p.circle, 'is named')
+    WHEN c.assembly THEN c.id || ' is the assembly, which the founding makes'
+    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
+    WHEN NOT EXISTS (
+      SELECT FROM motion.action m
+      WHERE m.motion = d.id AND m.kind = 'circle' AND m.args ->> 'id' = c.id
+        AND m.args ->> 'name' = c.name AND coalesce(m.args ->> 'purpose', '') = c.purpose
+    ) THEN d.id || ' does not create ' || c.id || ' as ' || c.name
+    WHEN p.bundle IS DISTINCT FROM to_jsonb(circle.bundle(cella.verdict_date()))
+      THEN 'the creation of ' || c.id || ' names no bundle but the one in force on its verdict date'
+  END
+  FROM (SELECT payload ->> 'circle' AS circle, payload ->> 'motion' AS motion, payload -> 'bundle' AS bundle) p
+  LEFT JOIN circle.circle c ON c.id = p.circle
+  LEFT JOIN motion.motion d ON d.id = p.motion;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('circle:circle:create', 'membership_motion.creates(jsonb)', 'membership-motion');

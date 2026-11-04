@@ -92,6 +92,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `approve-distribution` | mandate | the assembly approves a year's distribution | loi n° 47-1775 art. 8; loi n° 78-763 art. 33 |
 | `adopt-document` | mandate | the assembly adopts a document's version | cella |
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
+| `create-circle` | mandate | the assembly creates a circle, by motion, which holds the default bundle from that day | cella |
 | `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |
 | `keep-devices` | right, protected | every person enrols and revokes their own devices | cella |

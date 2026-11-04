@@ -2,9 +2,12 @@ import { confluent, ordered, type Actions } from '@cella/org-actions'
 
 // A mandate has no action of its own: it is granted and revoked as its
 // policy is adopted and ended, the motion feat's actions, which the motion
-// feat extends with core's `granting` and `revoking`. No action places a
-// circle: circles never nest.
+// feat extends with core's `granting` and `revoking`. Creating a circle
+// places it nowhere: circles never nest.
 export const actions = {
+  // a new circle, by the motion it cites, holding the default bundle from
+  // that day; ordered, since the same motion's later actions seat people in it
+  'circle:circle:create': ordered({ power: 'create-circle' }),
   // the circle's channel, for those seated in it
   'circle:circle:message': confluent({ power: 'discuss' }),
   // who holds which role; a seat is given by the motion it cites, such

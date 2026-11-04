@@ -109,6 +109,41 @@ same power, found as the policy is adopted, so a motion of coordination
 granting Web's lead `approve-expense` grants it under coordination's own
 `approve-expense`. A mandate the assembly issues has no parent.
 
+## The default bundle
+
+A new circle comes with its default mandate bundle: its members read its
+records and its roles act on them from the day it is created, with no
+further motion. The bundle is every mandate in force on the roles every
+circle has (`*`): the participant's, which every seat in a circle holds
+there, and those of the lead, the secretary and any other `*` role a
+co-op defines. Each is a mandate policy of the assembly like any other,
+its values copied into `circle.mandate` as it is adopted, never parsed
+from its wording, so the bundle is a template each co-op changes by
+motion of the assembly: adopting a mandate on a `*` role adds to it,
+ending or replacing one takes from it.
+
+```text
+The {role: participant} role holds {power: read}, to read the records of its {scope: own} circle
+The {role: lead} role holds {power: manage-project}, to start and run the projects of its {scope: own} circle
+```
+
+A mandate on a `*` role scoped `{scope: own}` covers, for each holder,
+the circle they hold the role in, so one mandate reaches every circle,
+the new one among them, the day someone sits there. Creating a circle
+issues the bundle in force on its verdict date: the creation's entry
+names each mandate in it (`circle.bundle(day)`), so the log says what a
+circle was created with. A later change to the template reaches every
+circle, those created before it too, since they hold the same mandates.
+A role made for one circle holds only what a motion grants it.
+
+**Open books** is one mandate of the assembly, no part of the bundle:
+`The {role: member} role holds {power: read}, to read every circle's
+records`, marking no scope, so whoever holds the member role, every
+active member, seated in the assembly, reads every circle's records
+([reading](#reading)). A co-op that keeps its books closed adopts none,
+and its members read their own circles' records and what the law gives
+them.
+
 ## Collective mandates
 
 A mandate on a role is individual: whoever holds that role by a tenure
@@ -133,6 +168,7 @@ each action is carried out ([motion](../../feats/motion/index.md#circles)).
 | `approve-distribution` | approving a year's distribution (`patronage:distribution:approve`), and the posting and the parts employed that follow (`patronage:distribution:distribute`, `patronage:part:employ`) |
 | `adopt-document` | adopting a document's version (`document:document:adopt`) |
 | `seat-member` | giving and ending a seat (`circle:seat:add`, `:remove`) |
+| `create-circle` | creating a circle (`circle:circle:create`) |
 
 Whom a circle's motion decides about is `motion.decides`, and
 never where a circle sits, since none nests: the assembly decides about
@@ -220,8 +256,10 @@ every record its scope covers, as `{scope: own}` on the participant
 role lets every participant read their own circle's records. A power a
 feat names as reading its rows in `cella.reading` reads them too, by
 its scope, as Expense's `approve-expense` lets Web's lead read Web's
-expenses and the gérante's, on the whole co-op, every circle's. What
-the law gives every member to read, the year's accounts and the
+expenses and the gérante's, on the whole co-op, every circle's. Open books, where a
+co-op adopts it, is a mandate for `read` on the member role marking no
+scope, so every member reads every circle's records ([the default
+bundle](#the-default-bundle)). What the law gives every member to read, the year's accounts and the
 activity report, needs no mandate, and a person reads what is theirs,
 their profile, membership, contract and claims, their pay, time and
 capital, by a row-level policy of the table it is in beside core's.
@@ -262,7 +300,9 @@ raising SQLSTATE `09000`. The app role and the guards role,
 and rights. A mandate is in force on a day from its `from`,
 before its `until` and before its `revoked`; `circle.holds(circle,
 power, day)` asks whether a circle holds a collective mandate in force
-for a power on a day, one whose grantee is the circle.
+for a power on a day, one whose grantee is the circle, and
+`circle.bundle(day)` names the default bundle on a day: every mandate
+in force then on a role every circle has (`*`), by id.
 
 ## Seats
 
@@ -362,7 +402,7 @@ tenure changes who holds the role, never what it holds.
 
 | Thing | States |
 |---|---|
-| circle | active → dissolved |
+| circle | created, by a motion, with the default bundle in force that day → dissolved |
 | mandate | granted, as its policy is adopted → revoked, as its policy ends or is replaced, or as a mandate it is issued under is revoked, or expired at `until` |
 | right | given, as its policy is adopted → revoked, as its policy ends, or expired at `until` |
 | tenure | held → ended; a handover ends one and begins the next, and ends no mandate |
@@ -372,6 +412,7 @@ tenure changes who holds the role, never what it holds.
 
 | Action | Label | Why |
 |---|---|---|
+| `POST /api/circle/create` | ordered | a new circle, by motion |
 | `POST /api/circle/message` | confluent | the circle's channel |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
 | `POST /api/circle/seat.remove` | ordered | who holds which role |
@@ -379,11 +420,17 @@ tenure changes who holds the role, never what it holds.
 A mandate has no action of its own: it is granted and revoked by the
 motion feat's `motion:policy:adopt` and `motion:policy:end`, both
 ordered, which the motion feat extends with core's `granting` and
-`revoking`. No action places a circle: circles never nest.
+`revoking`. Creating a circle places it nowhere: circles never nest.
 
 - A mandate's grant and revocation change what a role may do. A
   revocation takes effect at its receipt: a write received after it is
   refused; a share already granted runs out on its own.
+- **create** makes a circle, by the motion it cites: its id, name and
+  purpose, deciding by consent until a motion changes its procedure,
+  beside every other and inside none. It commits the circle and the
+  default bundle in force on the verdict date (`circle.bundle`), so its
+  members read its records and its roles act on them from that day.
+  Ordered, since the same motion's later actions seat people in it.
 - **message** posts to the channel. Messages merge in any order; it has
   no handler yet.
 - **seat.add** and **seat.remove** begin and end a tenure, where they
@@ -400,9 +447,18 @@ ordered, which the motion feat extends with core's `granting` and
 | Action | Power or check | Lanterne |
 |---|---|---|
 | a mandate policy adopted or ended | `adopt-policy` or `end-policy`, collective mandates: the cited motion adopts or ends it, and carried | the assembly or coordination, by motion |
+| create | `create-circle`, a collective mandate: the motion it cites creates this circle | the assembly, by motion |
 | message | `discuss`, held in the circle | the circle's participants |
 | seat.add | `seat-member`, a collective mandate: the motion it cites gives this seat | the assembly, admitting a member; coordination, seating one in a working circle, and the assembly in coordination or itself |
 | seat.remove | `seat-member`, a collective mandate: the motion it cites ends this seat | as seat.add |
+
+A circle is created by the motion it cites, a `circle` action of a
+motion of a circle holding `create-circle`: the guard that judges it is
+membership-motion's, which joins the motion, that the cited motion
+creates this circle with the name and purpose it gives, and that the
+entry names the bundle in force that day. The same motion may seat
+people in it by its later actions, whose proposal reads the circle an
+earlier action creates as one there is.
 
 A seat is given and ended by the motion it cites: the guards that judge
 it are membership-motion's, which joins the motion, that the cited
@@ -456,6 +512,10 @@ the message's circle that counts.
   (`circle.revoke`); each returns the mandate, or none for a right or a
   policy of another kind, and every mandate it revoked, the one ended or
   replaced first, which the motion feat submits.
+- `create` (ordered): inserts the circle, by the id, name and purpose
+  the cited motion gives, and commits them with the motion and the
+  bundle in force on the verdict date. The membership-motion graft
+  carries it out as a passing motion's `circle` action.
 - `add` (ordered), and `seating`, its state alone, which a passing
   close runs in its own transaction for each member it admits: inserts
   a tenure of the role it names, or a membership of the circle where it
@@ -570,6 +630,8 @@ co-op, so the gérante's `manage-project` and the treasurer's
 `approve-time` cover every circle's, and finance pays a Web supplier
 as it pays any.
 | Participant (every seat, in its circle) | `propose`, `discuss` | — |
+| Participant | `read` | its own circle; and the assembly's |
+| Member | `read`, open books | — |
 
 The gérante, the treasurer, finance, a circle's lead and a circle's
 secretary are each held by one person at a time (`holders` 1); the
@@ -580,7 +642,7 @@ their tenure, and Camille sits there as a member.
 
 | Circle, by motion | Power |
 |---|---|
-| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member` |
+| Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle` |
 | Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member` |
 
 | Right, given by the form | Power |
@@ -595,6 +657,14 @@ each mandate among them is a root, the assembly its issuer. So
 coordination, which holds no mandate for a role's power, grants a
 working circle's role none until the assembly grants it one to issue
 under.
+Lanterne's default bundle is what the founding motion grants the
+participant, lead and secretary roles, so a circle the assembly creates
+has its members read its records, its lead run its projects, approve
+its time and schedule its meetings, and its secretary keep its minutes,
+from the day it is created. Lanterne keeps open books: the founding
+motion grants the member role `read` on every circle's records, so a
+member of Brand reads Web's expenses, while Inès, employed and seated
+in Web alone, reads Web's and the assembly's, and not Marketing's.
 So the working circles carry no action by motion: a motion of Web
 decides by its text alone, and one carrying an action is refused at its
 proposal until a circle holding one grants Web a collective mandate for

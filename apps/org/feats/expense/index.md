@@ -109,9 +109,10 @@ An expense reads by core's row-level policy, by its owning circle
 ([reading](../../core/circle/index.md#reading)): whoever holds `read`
 over its circle, and whoever holds `approve-expense` or
 `reimburse-expense` over it (`sql/004-reads.sql`), since what a mandate
-acts on its holder reads. At Lanterne Chloé, in Marketing, reads
-Marketing's and the assembly's expenses and not Web's; the gérante and
-finance, whose mandates cover the whole co-op, read every one.
+acts on its holder reads. At Lanterne Inès, in Web and no member, reads
+Web's and the assembly's expenses and not Marketing's; every member,
+by open books, and the gérante and finance, whose mandates cover the
+whole co-op, read every one.
 
 ## Handlers
 

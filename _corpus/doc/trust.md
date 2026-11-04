@@ -223,8 +223,9 @@ sequenceDiagram
   on seats that count (`membership.covered`). Ownership grants nothing,
   and a seat in a circle nothing without a mandate: Lanterne's
   participants hold `read` on their own circle and on the assembly, so
-  Chloé, in Marketing, reads Marketing's expenses and the assembly's,
-  and not Web's. Each
+  Inès, in Web and no member, reads Web's expenses and the assembly's,
+  and not Marketing's, while every member reads every circle's by open
+  books, `read` on the member role. Each
   table holding a person's pay, time, capital, personal files or a
   capital account's lines has a row-level policy of its own in place
   of core's, which `read` opens nothing of. The person reads their own

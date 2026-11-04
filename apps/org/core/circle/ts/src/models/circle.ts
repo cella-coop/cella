@@ -59,3 +59,19 @@ export interface Detail extends Circle {
   roles: Role[]
   mandates: Mandate[]
 }
+
+// A circle to create, by the motion that creates it, which the write
+// cites.
+export interface Create {
+  id: string
+  name: string
+  purpose: string
+  motion: string
+}
+
+// The circle created and the default bundle it holds from its first day:
+// the mandates on the roles every circle has, in force that day, by id.
+export interface Created {
+  circle: string
+  bundle: number[]
+}

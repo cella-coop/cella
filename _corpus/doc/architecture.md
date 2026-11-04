@@ -874,8 +874,10 @@ power, which no action needs, lets its holder read every record its
 scope covers, and one for a power a feat names as reading its rows
 those of that feat's, so Web's lead reads Web's time and not Brand's
 ([SQL](#sql)). Lanterne's participants hold `read` on their own circle
-and on the assembly, so a member of Marketing reads Marketing's records
-and the assembly's, the whole co-op's, and not Web's.
+and on the assembly, so a seat in Marketing reads Marketing's records
+and the assembly's, the whole co-op's, and not Web's, unless it is a
+member's: Lanterne keeps open books, `read` on the member role over
+every circle.
 
 **Each mandate is issued under a parent mandate and is narrower than
 it.** Its issuer is the circle whose motion adopted its policy, and its
@@ -1172,7 +1174,15 @@ circle's, and a right policy's right, power and limit into
 `circle.right`, which `membership.entitled` reads, through the motion feat, whose adoption
 and ending of a policy are the motion feat's with core's copy
 in the same write
-([mandates](../../apps/org/core/circle/index.md#mandates)).
+([mandates](../../apps/org/core/circle/index.md#mandates)). A new
+circle's default mandate bundle is read from the same rows: the mandate
+policies of the assembly on the roles every circle has (`*`), whose
+members read their circle's records and whose roles act on them by
+`{scope: own}`, so a co-op changes the template by adopting and ending
+such policies, and a circle created by motion holds the bundle in force
+that day, which its creation's entry names. Open books is one mandate
+policy of the assembly, `read` on the member role with no scope
+([the default bundle](../../apps/org/core/circle/index.md#the-default-bundle)).
 
 A rule whose values are named for a feat, as `account_minimum`, is that
 feat's to read, and marks every value the feat reads of it. The capital's

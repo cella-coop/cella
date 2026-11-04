@@ -57,6 +57,9 @@ SELECT policy.offer('scop-sarl-fr', 'adopt-document', 'mandate',
 SELECT policy.offer('scop-sarl-fr', 'seat-member', 'mandate',
   'The {circle: ag} circle holds {power: seat-member}, to give and end seats, by motion',
   NULL, 'extraordinary', NULL);
+SELECT policy.offer('scop-sarl-fr', 'create-circle', 'mandate',
+  'The {circle: ag} circle holds {power: create-circle}, to create a circle, by motion',
+  NULL, NULL, NULL);
 SELECT policy.offer('scop-sarl-fr', 'withdraw-membership', 'right',
   'Every {right: person} holds {power: withdraw-membership}, to withdraw their own membership',
   NULL, 'extraordinary', 'Code de commerce art. L231-6');

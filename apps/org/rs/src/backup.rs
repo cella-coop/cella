@@ -1,15 +1,17 @@
 //! A scope's backup and its restore. A backup is a directory: the database
-//! as `pg_dump` writes it, the notary's and the vault's key files, and a
-//! manifest naming the database, the extension's version, the log's head
-//! when it began and the settings the database and its roles carry, which
-//! a dump leaves out. A restore makes the database again from it, puts the
+//! as `pg_dump` writes it, the notary's and the vault's key files, the
+//! previous vault key's during a rotation, and a manifest naming the
+//! database, the extension's version, the log's head and the settings the
+//! database and its roles carry, which a dump leaves out, all read at one
+//! point of the log. A restore makes the database again from it, puts the
 //! key files where the cluster reads them, and checks what it restored:
-//! the log verifies, it holds the backup's head, and every entry opens.
+//! the log verifies, its head is the backup's, and every entry opens.
 
 use std::fs;
+use std::io::{BufRead, BufReader, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 use crate::data;
 use crate::db::Dev;
@@ -21,6 +23,7 @@ const DUMP: &str = "db.dump";
 const MANIFEST: &str = "manifest";
 const NOTARY: &str = "notary.key";
 const VAULT: &str = "vault.key";
+const PREVIOUS: &str = "vault.previous.key";
 
 /// What a backup says of the database it holds.
 struct Manifest {
@@ -96,7 +99,8 @@ fn io(path: &Path) -> impl Fn(std::io::Error) -> Fail + '_ {
 }
 
 /// Backs a database up into `dir`, which it creates, owner-only. Run it on
-/// the database's host, as a user who reads the key files.
+/// the database's host, as a user who reads the key files. A backup that
+/// fails, or during which a key setting changed, leaves no directory.
 pub fn backup(repo: &Repo, dir: &Path, url: Option<&str>) -> Result {
     let dev = Dev::new(repo);
     let db = match url {
@@ -107,41 +111,58 @@ pub fn backup(repo: &Repo, dir: &Path, url: Option<&str>) -> Result {
         }
     };
     fs::create_dir(dir).map_err(|e| Fail::new(format!("{}: {e}; a backup goes to a new directory", dir.display())))?;
-    fs::set_permissions(dir, fs::Permissions::from_mode(0o700)).map_err(io(dir))?;
+    let made = fs::set_permissions(dir, fs::Permissions::from_mode(0o700)).map_err(io(dir)).and_then(|()| back_up(&dev, &db, dir));
+    if made.is_err() {
+        let _ = fs::remove_dir_all(dir);
+    }
+    made
+}
 
-    let facts = psql(
-        &dev,
-        &db,
+/// The paths of the notary's key, the vault's and the vault's previous,
+/// `-` where unset, as a select list.
+const KEYS: &str = "coalesce(nullif(current_setting('cella.key_file', true), ''), '-'),
+                coalesce(nullif(current_setting('cella.vault_key_file', true), ''), '-'),
+                coalesce(nullif(current_setting('cella.vault_key_previous', true), ''), '-')";
+
+fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
+    // One repeatable-read transaction reads the head, the settings and the
+    // key paths and exports its snapshot, which pg_dump dumps; it stays open
+    // until the key files are read and the dump has taken it.
+    let mut at = Snapshot::open(dev, db)?;
+    let facts = at.row(&format!(
         "SELECT current_database(), (SELECT extversion FROM pg_extension WHERE extname = 'cella'),
                 coalesce((SELECT n FROM cella.head), 0), coalesce((SELECT encode(hash, 'hex') FROM cella.head), '-'),
-                coalesce(nullif(current_setting('cella.key_file', true), ''), '-'),
-                coalesce(nullif(current_setting('cella.vault_key_file', true), ''), '-')",
-    )?;
+                {KEYS};"
+    ))?;
     let f: Vec<&str> = facts.split('\t').collect();
-    let [database, version, head, hash, notary, vault] = f[..] else {
+    let [database, version, head, hash, notary, vault, previous] = f[..] else {
         return Err(Fail::new(format!("unexpected answer about the database: {facts}")));
     };
-    let settings = psql(
-        &dev,
-        &db,
+    let settings = at.rows(
         "SELECT coalesce(r.rolname, '-'), s
          FROM pg_db_role_setting d LEFT JOIN pg_roles r ON r.oid = d.setrole, unnest(d.setconfig) s
          WHERE d.setdatabase = (SELECT oid FROM pg_database WHERE datname = current_database())
-         ORDER BY 1, 2",
+         ORDER BY 1, 2;",
     )?;
+    let snapshot = at.row("SELECT pg_export_snapshot();")?;
     let manifest = Manifest {
         database: database.to_owned(),
         version: version.to_owned(),
         head: head.parse().map_err(|_| Fail::new(format!("the head is not a number: {head}")))?,
         hash: hash.to_owned(),
         settings: settings
-            .lines()
+            .iter()
             .filter_map(|l| l.split_once('\t'))
             .map(|(r, s)| (if r == "-" { String::new() } else { r.to_owned() }, s.to_owned()))
             .collect(),
     };
 
-    for (setting, path, name) in [("cella.key_file", notary, NOTARY), ("cella.vault_key_file", vault, VAULT)] {
+    let keys =
+        [("cella.key_file", notary, NOTARY), ("cella.vault_key_file", vault, VAULT), ("cella.vault_key_previous", previous, PREVIOUS)];
+    for (setting, path, name) in keys {
+        if path == "-" && name == PREVIOUS {
+            continue;
+        }
         if path == "-" {
             return Err(Fail::new(format!("the cluster sets no {setting}, so there is no key to back up")));
         }
@@ -149,16 +170,96 @@ pub fn backup(repo: &Repo, dir: &Path, url: Option<&str>) -> Result {
             .map_err(|e| Fail::new(format!("{setting} {path}: {e}; back up on the database's host, as a user who reads its key files")))?;
         key::write(&dir.join(name), &bytes)?;
     }
-    let mut dump = db.cmd(&dev, "pg_dump")?;
-    dump.args(["--format=custom", "--file"]).arg(dir.join(DUMP));
+    let mut dump = db.cmd(dev, "pg_dump")?;
+    dump.args(["--format=custom", "--snapshot", &snapshot, "--file"]).arg(dir.join(DUMP));
     Steps::read(&mut dump)?;
+    at.close()?;
+
+    // A key path that moved while the backup ran is a rotation under way,
+    // and the keys it read may not open what it dumped.
+    let now = psql(dev, db, &format!("SELECT {KEYS}"))?;
+    for ((setting, before, _), now) in keys.iter().zip(now.split('\t')) {
+        if *before != now {
+            return Err(Fail::new(format!(
+                "{setting} moved from {before} to {now} while the backup ran: a rotation is under way, so back up again once it is done"
+            )));
+        }
+    }
     let path = dir.join(MANIFEST);
     fs::write(&path, manifest.write()).map_err(io(&path))?;
     println!(
-        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys, the manifest; keep it as you keep the keys",
-        dir.display()
+        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys{}, the manifest; keep it as you keep the keys",
+        dir.display(),
+        if previous == "-" { "" } else { ", the previous vault key" }
     );
     Ok(())
+}
+
+/// A psql session holding one repeatable-read, read-only transaction open,
+/// each query's rows read back as it answers them.
+struct Snapshot {
+    child: Child,
+    input: ChildStdin,
+    output: BufReader<ChildStdout>,
+}
+
+/// The row a session's query is followed by, which marks where its rows end.
+const END: &str = "-- end of rows --";
+
+impl Snapshot {
+    fn open(dev: &Dev, db: &Target) -> Result<Self> {
+        let mut cmd = db.cmd(dev, "psql")?;
+        cmd.args(["-X", "-q", "-t", "-A", "-F", "\t", "-v", "ON_ERROR_STOP=1"]);
+        cmd.stdin(Stdio::piped()).stdout(Stdio::piped());
+        let mut child = cmd.spawn().map_err(|e| Fail::new(format!("psql: {e}")))?;
+        let (Some(input), Some(output)) = (child.stdin.take(), child.stdout.take()) else {
+            return Err(Fail::new("psql: no pipe to its session"));
+        };
+        let mut at = Self { child, input, output: BufReader::new(output) };
+        at.send("BEGIN ISOLATION LEVEL REPEATABLE READ, READ ONLY;")?;
+        Ok(at)
+    }
+
+    fn send(&mut self, sql: &str) -> Result {
+        writeln!(self.input, "{sql}").and_then(|()| self.input.flush()).map_err(|e| Fail::new(format!("psql: {e}")))
+    }
+
+    /// A query's rows, up to the marker sent after it. psql gone, it has
+    /// said why on standard error.
+    fn rows(&mut self, sql: &str) -> Result<Vec<String>> {
+        self.send(sql)?;
+        self.send(&format!("SELECT '{END}';"))?;
+        let mut rows = Vec::new();
+        loop {
+            let mut line = String::new();
+            if self.output.read_line(&mut line).map_err(|e| Fail::new(format!("psql: {e}")))? == 0 {
+                let _ = self.child.wait();
+                return Err(Fail::new("psql left the backup's transaction"));
+            }
+            match line.trim_end_matches('\n') {
+                END => return Ok(rows),
+                row => rows.push(row.to_owned()),
+            }
+        }
+    }
+
+    fn row(&mut self, sql: &str) -> Result<String> {
+        let mut rows = self.rows(sql)?;
+        if rows.len() != 1 {
+            return Err(Fail::new(format!("{} rows where one was expected, from {sql}", rows.len())));
+        }
+        Ok(rows.remove(0))
+    }
+
+    fn close(mut self) -> Result {
+        self.send("COMMIT;")?;
+        drop(self.input);
+        let status = self.child.wait().map_err(|e| Fail::new(format!("psql: {e}")))?;
+        if !status.success() {
+            return Err(Fail::new(format!("psql left the backup's transaction: {status}")));
+        }
+        Ok(())
+    }
 }
 
 /// Restores a backup into a new database on the dev cluster, or into an
@@ -185,13 +286,13 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     let facts = psql(
         &dev,
         &db,
-        "SELECT coalesce((SELECT default_version FROM pg_available_extensions WHERE name = 'cella'), '-'),
-                EXISTS (SELECT FROM pg_namespace WHERE nspname = 'cella'),
-                coalesce(nullif(current_setting('cella.key_file', true), ''), '-'),
-                coalesce(nullif(current_setting('cella.vault_key_file', true), ''), '-')",
+        &format!(
+            "SELECT coalesce((SELECT default_version FROM pg_available_extensions WHERE name = 'cella'), '-'),
+                    EXISTS (SELECT FROM pg_namespace WHERE nspname = 'cella'), {KEYS}"
+        ),
     )?;
     let f: Vec<&str> = facts.split('\t').collect();
-    let [version, taken, notary, vault] = f[..] else {
+    let [version, taken, notary, vault, previous] = f[..] else {
         return Err(Fail::new(format!("unexpected answer about the cluster: {facts}")));
     };
     if version != manifest.version {
@@ -203,11 +304,24 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     if taken == "t" {
         return Err(Fail::new("the database already holds a scope; a restore goes into an empty one"));
     }
-    for (setting, path, name) in [("cella.key_file", notary, NOTARY), ("cella.vault_key_file", vault, VAULT)] {
+    // A backup taken during a vault rotation holds the previous key too,
+    // which opens the vault keys not yet sealed under the new one.
+    let rotating = dir.join(PREVIOUS).exists();
+    if rotating && previous == "-" {
+        return Err(Fail::new(
+            "the backup was taken during a vault rotation and holds the previous vault key, and the cluster sets no cella.vault_key_previous: point it where that key goes, restore, then `cella vault rewrap`",
+        ));
+    }
+    let keys =
+        [("cella.key_file", notary, NOTARY), ("cella.vault_key_file", vault, VAULT), ("cella.vault_key_previous", previous, PREVIOUS)];
+    for (setting, path, name) in keys {
+        if name == PREVIOUS && !rotating {
+            continue;
+        }
+        let from = dir.join(name);
         if path == "-" {
             return Err(Fail::new(format!("the cluster sets no {setting}: point it where the key goes, then restore")));
         }
-        let from = dir.join(name);
         let backed = fs::read(&from).map_err(io(&from))?;
         let target = Path::new(path);
         match fs::read(target) {
@@ -256,12 +370,9 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     let checked = psql(
         &dev,
         &db,
-        &format!(
-            "SELECT cella.verify_log(), coalesce((SELECT n FROM cella.head), 0),
-                    coalesce((SELECT encode(hash, 'hex') FROM cella.log WHERE n = {n}), ''),
-                    (SELECT count(cella.opened(n)) FROM cella.log), (SELECT count(*) FROM cella.log)",
-            n = manifest.head
-        ),
+        "SELECT cella.verify_log(), coalesce((SELECT n FROM cella.head), 0),
+                coalesce((SELECT encode(hash, 'hex') FROM cella.head), '-'),
+                (SELECT count(cella.opened(n)) FROM cella.log), (SELECT count(*) FROM cella.log)",
     )?;
     let f: Vec<&str> = checked.split('\t').collect();
     let [verified, head, hash, opened, entries] = f[..] else {
@@ -270,8 +381,11 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     if verified != "t" {
         return Err(Fail::new("the restored log does not verify"));
     }
-    if manifest.head > 0 && hash != manifest.hash {
-        return Err(Fail::new(format!("the restored log does not hold the backup's head, entry {}", manifest.head)));
+    if head != manifest.head.to_string() || hash != manifest.hash {
+        return Err(Fail::new(format!(
+            "the restored log's head is entry {head}, and the backup's is entry {}: the dump and the manifest disagree",
+            manifest.head
+        )));
     }
     if opened != entries {
         return Err(Fail::new(format!("{opened} of {entries} entries open from the vault")));

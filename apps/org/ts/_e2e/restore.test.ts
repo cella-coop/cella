@@ -2,9 +2,12 @@
 // personal data among it, and `cella backup` backs the scope up; then a
 // new host, a cluster of its own whose key files do not exist yet, takes
 // it with `cella restore`. The key files are written where it reads them,
-// the log verifies and holds the backup's head, every entry opens from the
-// vault, every table holds what it held, and the next write continues the
-// chain under the same key. Run by `cella test e2e restore`.
+// the log verifies at the backup's head, every entry opens from the vault,
+// every table holds what it held, and the next write continues the chain
+// under the same key. A backup during which the notary's key path moves
+// refuses, and one taken in the middle of a vault rotation holds both
+// vault keys and restores with every entry opening. Run by `cella test e2e
+// restore`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -15,7 +18,7 @@ import pg from 'pg'
 import { profile } from '@cella/org-person/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
-import { cella, cluster, type Cluster } from './cluster.ts'
+import { cella, cluster, started, type Cluster } from './cluster.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -85,6 +88,7 @@ test('members write, personal data among it, and the scope is backed up whole, i
   )
   assert.deepEqual(readFileSync(join(backup, 'notary.key')), readFileSync(keys.notary))
   assert.deepEqual(readFileSync(join(backup, 'vault.key')), readFileSync(keys.vault))
+  assert.equal(existsSync(join(backup, 'vault.previous.key')), false)
   assert.throws(() => cella(['backup', backup], { CELLA_DB: su.database ?? '' }), /a backup goes to a new directory/)
 })
 
@@ -125,4 +129,71 @@ test('the restored scope takes the next write, chained to the last one under the
   const signers = (await check.query<{ id: number; since: string }>('SELECT id, since FROM cella.signer')).rows
   assert.deepEqual(signers.map((s) => [s.id, Number(s.since)]), [[1, 1]])
   await check.end()
+})
+
+test('a backup during which the notary key path moves refuses, and leaves no directory', async () => {
+  const during = join(scratch, 'during')
+  // A table locked whole holds pg_dump at its start, after the backup has
+  // read its manifest and its keys, while the key path moves.
+  const lock = await host.client('lanterne')
+  const watch = await host.client('lanterne')
+  let ran!: ReturnType<typeof started>
+  try {
+    await lock.query('BEGIN')
+    await lock.query('LOCK TABLE cella.receipt IN ACCESS EXCLUSIVE MODE')
+    ran = started(['backup', during, '--url', host.url('lanterne')])
+    for (let waited = 0; ; waited += 100) {
+      const dumping = await one<{ n: string }>(
+        watch,
+        `SELECT count(*) AS n FROM pg_stat_activity WHERE application_name = 'pg_dump' AND wait_event_type = 'Lock'`,
+      )
+      if (Number(dumping.n) > 0) break
+      assert.ok(waited < 30000, 'pg_dump never waited on the lock')
+      await new Promise((r) => setTimeout(r, 100))
+    }
+    await host.set('cella.key_file', join(host.dir, 'keys/notary.next.key'))
+  } finally {
+    await lock.query('COMMIT')
+    await lock.end()
+    await watch.end()
+  }
+  const { code, err } = await ran
+  await host.set('cella.key_file', null)
+  assert.notEqual(code, 0)
+  assert.match(err, /cella\.key_file moved from .* while the backup ran: a rotation is under way/)
+  assert.equal(existsSync(during), false)
+})
+
+test('a backup taken between a vault rotation\'s steps 2 and 3 holds both vault keys, and its restore opens every entry', async () => {
+  const next = join(host.dir, 'keys/vault.next.key')
+  cella(['key', 'init', '--vault', next])
+  await host.set('cella.vault_key_previous', host.keys.vault)
+  await host.set('cella.vault_key_file', next)
+
+  const rotating = join(scratch, 'rotating')
+  const said = cella(['backup', rotating, '--url', host.url('lanterne')])
+  assert.match(said, new RegExp(`at entry ${written + 1} .*the previous vault key`))
+  assert.deepEqual(readFileSync(join(rotating, 'vault.key')), readFileSync(next))
+  assert.deepEqual(readFileSync(join(rotating, 'vault.previous.key')), readFileSync(host.keys.vault))
+
+  // A third host, whose key files do not exist yet, restores it once it
+  // names where the previous vault key goes.
+  const third = await cluster()
+  try {
+    const pgsu = await third.client('postgres')
+    await pgsu.query('CREATE DATABASE lanterne')
+    await pgsu.end()
+    assert.throws(() => cella(['restore', rotating, '--url', third.url('lanterne')]), /sets no cella\.vault_key_previous/)
+    const previous = join(third.dir, 'keys/vault.previous.key')
+    await third.set('cella.vault_key_previous', previous)
+    const restored = cella(['restore', rotating, '--url', third.url('lanterne')])
+    assert.match(restored, new RegExp(`${written + 1} entries, entry ${written + 1} as backed up; every entry opens`))
+    assert.deepEqual(readFileSync(third.keys.vault), readFileSync(next))
+    assert.deepEqual(readFileSync(previous), readFileSync(host.keys.vault))
+    const c = await third.client('lanterne')
+    assert.match(JSON.stringify((await one<{ o: unknown }>(c, 'SELECT cella.opened($1) AS o', [written])).o), /julien@petit\.example/)
+    await c.end()
+  } finally {
+    third.stop()
+  }
 })

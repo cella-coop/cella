@@ -11,7 +11,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { record } from '@cella/org-import/api'
-import { found } from '@cella/org-graft-circle-membership-motion/api'
+import { found } from '@cella/org-graft-membership-motion/api'
 import type { Db, Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -55,7 +55,7 @@ after(async () => {
 test('the seed founds Lanterne as the log\'s first entry, and every table a feat or a graft made is registered', async () => {
   assert.equal(await head(), 1)
   const first = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = 1')
-  assert.deepEqual(first, { op: 'circle-membership-motion:scope:found', actor: camille })
+  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: camille })
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const tables = await one<{ made: string; registered: string; triggered: string }>(
     `SELECT count(*) AS made,

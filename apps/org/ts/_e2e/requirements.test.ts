@@ -12,7 +12,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { post, vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -45,7 +45,7 @@ type Action = { kind: string; args: Record<string, string> }
 async function consented(circle: string, title: string, actions: Action[], by: string, from: string, deadline: string) {
   await on(from)
   const { motion } = settled(await propose({ circle, title, procedure: 'consent', deadline, body: '', actions }, as(by)))
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   return motion
@@ -107,7 +107,7 @@ test('coordination grants Web adopt-policy under its own, by a procedure the ass
   assert.deepEqual(granted.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
   assert.deepEqual(
     await one(
-      `SELECT m.issuer, p.grantee AS parent, m.procedure, circle_motion.asks_of(m.id) AS asks
+      `SELECT m.issuer, p.grantee AS parent, m.procedure, motion.asks_of(m.id) AS asks
        FROM circle.mandate m JOIN circle.mandate p ON p.id = m.parent WHERE m.grantee = 'web' AND m.power = 'adopt-policy'`,
     ),
     { issuer: 'coordination', parent: 'coordination', procedure: 'heard', asks: 'heard' },
@@ -116,8 +116,8 @@ test('coordination grants Web adopt-policy under its own, by a procedure the ass
 
 test('a motion of Web is decided by what its mandate\'s chain asks, whatever its proposal names', async () => {
   webber = (await one<{ member: string }>(
-    `SELECT s AS member FROM circle_membership.seated('web', '2026-11-16') s
-     WHERE s NOT IN (SELECT circle_membership.seated('coordination', '2026-11-16')) ORDER BY s LIMIT 1`,
+    `SELECT s AS member FROM circle.seated('web', '2026-11-16') s
+     WHERE s NOT IN (SELECT circle.seated('coordination', '2026-11-16')) ORDER BY s LIMIT 1`,
   )).member
   const rule = { kind: 'policy', args: { kind: 'rule', wording: 'Web reviews every change before it ships' } }
   webMotion = await consented('web', 'Every change is reviewed', [rule], webber, '2026-11-16', '2026-11-23')
@@ -132,7 +132,7 @@ test('its close is refused until someone of coordination has spoken on it; a wor
   settled(await post({ motion: webMotion, member: webber, reply: null, body: 'All of us agree.' }, as(webber)))
   const early = await close({ motion: webMotion }, as(webber))
   assert.match(reason(early), new RegExp(`${webMotion} is decided by heard, which consults coordination: it closes once someone seated in coordination has said something on it`))
-  assert.ok(!(await all<{ s: string }>(`SELECT s FROM circle_membership.seated('web', '2026-11-23') s`)).some((r) => r.s === camille))
+  assert.ok(!(await all<{ s: string }>(`SELECT s FROM circle.seated('web', '2026-11-23') s`)).some((r) => r.s === camille))
   settled(await post({ motion: webMotion, member: camille, reply: null, body: 'Coordination is glad of it.' }, as(camille)))
   settled(await close({ motion: webMotion }, as(webber)))
   const out = await carried(webMotion, as(webber))
@@ -157,7 +157,7 @@ test('a mandate issued under a chain asking two thirds asks none looser; one ask
   assert.match(out[0].reason ?? '', /asks majority, looser than two-thirds, which the chain of mandate \d+ it is issued under asks/)
   assert.match(out[1].reason ?? '', /asks consent, looser than two-thirds/)
   const { id } = await one<{ id: string }>(`SELECT id FROM circle.mandate WHERE grantee = 'web-lead' AND power = 'approve-expense' AND revoked IS NULL`)
-  assert.deepEqual(await one('SELECT circle_motion.asks_of($1) AS asks', [id]), { asks: 'two-thirds' })
+  assert.deepEqual(await one('SELECT motion.asks_of($1) AS asks', [id]), { asks: 'two-thirds' })
 })
 
 test('the log verifies', async () => {

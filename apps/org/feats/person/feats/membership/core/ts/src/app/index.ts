@@ -58,3 +58,4 @@ export const app: App = {
     },
   },
 }
+export * as seats from './seats.ts'

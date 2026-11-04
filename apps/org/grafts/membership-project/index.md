@@ -1,12 +1,12 @@
 +++
 title = "membership-project"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
 an amount for the project, on suppliers, print or photography. Shares add
-up per member, and together never exceed the budget. Declared by
-`project`.
+up per member, and together never exceed the budget; and which projects
+a power covers ([circles](#circles)). Declared by `project`.
 
 ## Schema
 
@@ -40,7 +40,7 @@ The graft also attaches `membership_project.covers` to
 granted from it, which is why setting a budget is ordered.
 
 `002-powers.sql` registers the power in `cella.power`, and the
-`circle-membership` graft checks it.
+membership feat checks it.
 
 ## Invariants
 
@@ -69,6 +69,27 @@ one; to a person's page, the shares they hold.
 
 A share of 13 000 € from Ferrand's budget, 12 000 € of which is left, is
 refused.
+
+## Circles
+
+Which projects a power covers: a lead runs their own circle's projects,
+since what a project write concerns is its circle (`004-runs.sql`).
+
+- `membership_project.runs`, on `project:project:create`,
+  `project:milestone:add`, `project:milestone:complete`,
+  `project:project:budget`, `project:project:archive` and
+  `membership-project:project:share`: the actor holds the action's power
+  (`manage-project`, `set-budget`) by a mandate whose scope covers the
+  project's circle, through `membership.over`; a project of no circle is
+  the whole co-op's, run by a mandate on the whole co-op. A project the
+  payload does not name, or that does not exist, is left to its own
+  feat's guards.
+
+In Lanterne, Hugo, Brand's lead, budgets Ferrand's packaging, Brand's;
+Yusuf, Web's, the Halles shop, and is refused Brand's, since the lead's
+mandates are on their own circle; Camille, whose gérante mandates are on
+the whole co-op, any project. Its tests are the membership feat's of
+`over`, and the `work` and `governance` scenarios.
 
 ## Analytics
 

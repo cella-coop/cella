@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -122,7 +122,7 @@ it. A worker who was never a member is not erased yet.
 `003-powers.sql` registers each action's power, so none is allowed by
 omission: the four a person takes on what is their own need a power
 every person's right grants ([rights](../circle/index.md#rights)),
-checked by `circle-membership`'s guard, and this feat's guards check
+checked by the membership feat's guard, and this feat's guards check
 what they keep is theirs.
 
 ## Schema
@@ -237,11 +237,11 @@ The `inbox` collection is what waits on the acting person, at the head of
 the sidebar with its count, each row linking to where it is done. This
 feat keeps it and adds nothing of its own; each slice that knows a kind
 adds its rows (`rows`): an invitation to take up (`membership`), a stance
-to take on an open motion (`circle-membership-motion`), a mention not
+to take on an open motion (`membership-motion`), a mention not
 yet answered (`membership-motion`), a meeting to say whether they will
-come to (`circle-meeting-membership`), time, expenses and pay runs to
-approve or pay (`circle-membership-timesheet`, `circle-expense-membership`,
-`circle-membership-payslip`). An ask is a row of its kind, what it says,
+come to (`meeting-membership`), time, expenses and pay runs to
+approve or pay (`membership-timesheet`, `expense-membership`,
+`membership-payslip`). An ask is a row of its kind, what it says,
 what it concerns, since when and by when (`models/inbox.ts`); it leaves
 the inbox when what it waits for is done, read again each time, and
 nothing of it is stored.

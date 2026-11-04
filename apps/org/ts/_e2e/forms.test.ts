@@ -13,9 +13,8 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { motion as detail, vote } from '@cella/org-motion/api'
-import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
-import { proposing } from '@cella/org-graft-circle-motion/api'
+import { circles, motion as detail, vote } from '@cella/org-motion/api'
+import { close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 import { react } from '../src/lib/server/slices.ts'
@@ -76,7 +75,7 @@ after(async () => {
 })
 
 test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its statutes leave none', async () => {
-  const page = await proposing(app, 'ag')
+  const page = await circles.proposing(app, 'ag')
   assert.ok(page)
   const taking = page.policies.filter((p) => p.takes)
   assert.equal(taking.length, 34)
@@ -156,7 +155,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
       ['scop-sarl-fr:work-share', 'SCOP SARL, France', `${motion}/2`, 'At least 25 % of each year\'s surplus goes to all the employees as the work share'],
     ],
   )
-  const circle = await proposing(app, 'ag')
+  const circle = await circles.proposing(app, 'ag')
   assert.deepEqual(circle?.departures.map((d) => [d.id, d.standing, d.leftBy]), [
     ['scop-sarl-fr:suspend-member', 'left', `${motion}/1`],
     ['scop-sarl-fr:work-share', 'left', `${motion}/2`],
@@ -191,7 +190,7 @@ test('a later update of the form marks a default taken as updated, restores none
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM policy.in_force('ag', '2026-11-21') WHERE takes IN ('scop-sarl-fr:suspend-member', 'scop-sarl-fr:work-share')`)).n, 0)
   assert.equal((await one<{ revoked: boolean }>(`SELECT revoked IS NOT NULL AS revoked FROM circle.mandate WHERE policy = 'm-2021-001/48'`)).revoked, true)
   assert.equal((await statutes()).version, before.version)
-  const page = await proposing(app, 'ag')
+  const page = await circles.proposing(app, 'ag')
   assert.equal(page?.policies.find((p) => p.id === 'm-2021-001/47')?.outdated, true)
   assert.deepEqual(page?.departures.map((d) => d.id), ['scop-sarl-fr:suspend-member', 'scop-sarl-fr:work-share'])
 

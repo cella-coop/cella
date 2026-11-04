@@ -30,8 +30,12 @@ repository works only on the org app, `apps/org/`. Read
   that needs another graft's data lives in the graft joining all its feats.
 - **Each feat and each graft owns a Postgres schema**, its SQL in a `sql/`
   directory beside its core package. A feat's SQL references only its own
-  schema and `cella.*`; a graft's, its own, those of the feats it joins and
-  those of its lower-order grafts. It creates and grants only in its own.
+  schema, `cella.*` and core's circles, `circle.*`; a graft's, its own,
+  those of the feats it joins, those of its lower-order grafts and
+  `circle.*`. It creates and grants only in its own.
+- **Circles, roles, tenures and mandates are core**, as groups are in
+  standard RBAC: `apps/org/core/circle`, never a feat, and no graft joins
+  a circle ([circles are core](_corpus/doc/architecture.md#circles-are-core)).
 - **Architecture rules are enforced by tooling** wherever a tool can see
   them: `cella check feats` checks packages, imports, ops and every `sql/`
   file. A rule a tool cannot check says so in its doc.

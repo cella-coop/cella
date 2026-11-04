@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -150,7 +150,7 @@ circle whose motion carries it, or every member, by a right
 
 `002-powers.sql` registers period.close's, draw's and capital.spread's powers in `cella.power`, `004-capital.sql` own.freeze's and own.withdraw's,
 `006-terms.sql` capital.pay's and capital.repay's, and `010-period.sql`
-period.open's; the `circle-membership` graft checks them.
+period.open's; the membership feat checks them.
 
 ## Invariants
 

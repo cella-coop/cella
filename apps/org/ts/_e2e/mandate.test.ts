@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import { log } from '@cella/org-timesheet/api'
 import { pay } from '@cella/org-transaction/api'
 import type { Deps } from '@cella/org-db'
@@ -151,7 +151,7 @@ test('Julien\'s finance role and coordination each hold their mandates through a
       { id: 'finance', kind: 'role', powers: ['close-period', 'pay-supplier'] },
     ],
   )
-  assert.deepEqual(await all(`SELECT circle FROM circle_membership.seat WHERE member = $1 AND role = 'finance' AND until IS NULL`, [julien]), [{ circle: 'operations' }])
+  assert.deepEqual(await all(`SELECT circle FROM circle.seat WHERE member = $1 AND role = 'finance' AND until IS NULL`, [julien]), [{ circle: 'operations' }])
   assert.equal(
     (await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate m WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = m.grantee AND g.kind IN ('circle', 'role'))`)).n,
     0,
@@ -196,8 +196,8 @@ test('every employee still logs their time by right, no mandate: the right is th
   )
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.mandate WHERE power = 'log-time'`)).n, 0)
   const employees = await all<{ address: string; entitled: boolean; may: boolean }>(
-    `SELECT w.address, circle_membership.entitled(w.address, 'log-time', NULL, '2026-12-19') AS entitled,
-            circle_membership.may(w.address, 'log-time', NULL, '2026-12-19') AS may
+    `SELECT w.address, membership.entitled(w.address, 'log-time', NULL, '2026-12-19') AS entitled,
+            membership.may(w.address, 'log-time', NULL, '2026-12-19') AS may
      FROM employment.worker w WHERE employment.employed(w.address, '2026-12-19') ORDER BY w.address`,
   )
   assert.ok(employees.length > 0)

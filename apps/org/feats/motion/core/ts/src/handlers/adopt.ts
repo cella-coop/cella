@@ -5,7 +5,7 @@ import type { actions } from '../models/actions.ts'
 import type { Adopt, Adopted, End, Ended } from '../models/motion.ts'
 
 // The adoption of the policy a passed motion carries, as a write a graft
-// may extend in its transaction, as circle-motion does with the mandate a
+// may extend in its transaction, as the motion feat does with the mandate a
 // mandate policy grants: the register keeps it in the motion's circle with
 // its wordings and its values, from the day the action names, or the
 // verdict date, whichever is later, and its entry commits to the hash of
@@ -58,7 +58,7 @@ export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof a
 }
 
 // The end of the policy a passed motion's action `n` names, as a write a
-// graft may extend, as circle-motion does with the mandate an ended
+// graft may extend, as the motion feat does with the mandate an ended
 // mandate policy revokes: the register ends it on the verdict date, by
 // that action. `motion.ends` holds it to what the motion carries.
 export function ending(input: End): Write<Ended> {

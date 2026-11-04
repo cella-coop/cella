@@ -24,8 +24,10 @@ export async function founding(db, { scope, founders, day, root = 'ag', keep = (
       device: founders.map((f) => ({ address: f.address, label: f.label, enrolled: day })),
     },
     membership: { member: founders.map((f) => ({ address: f.address, status: 'active', since: day, shares: 1, invited: day })) },
-    circle: { circle: [{ id: root, name: 'Assembly', assembly: true, purpose: 'every member, one vote' }] },
-    'graft.circle-membership': { member: founders.map((f) => ({ circle: root, person: f.address, since: day })) },
+    circle: {
+      circle: [{ id: root, name: 'Assembly', assembly: true, purpose: 'every member, one vote' }],
+      member: founders.map((f) => ({ circle: root, person: f.address, since: day })),
+    },
     motion: {
       motion: [
         {

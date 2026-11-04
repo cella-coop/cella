@@ -1,4 +1,4 @@
--- The power each bill write needs; the circle-membership graft's guard
+-- The power each bill write needs; the membership feat's guard
 -- checks that the actor holds it. Approving and paying are capped by the
 -- mandate's limit for the bill's total; money leaves the bank under
 -- pay-supplier, the power a payment without a bill needs too.

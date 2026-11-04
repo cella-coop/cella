@@ -189,7 +189,9 @@ fn tests(repo: &Repo) -> Result<Vec<(Kind, PathBuf)>> {
 
 /// A file under `<app>/feats/<feat>/…/_tests/` or `<app>/grafts/<graft>/…/_tests/`
 /// tests that slice, the innermost one for a nested feat; one under
-/// `<app>/ts/_e2e/` is an e2e scenario.
+/// `<app>/core/<lib>/ts/_tests/` tests that library of the app's core on
+/// the core alone, as `circle`'s do; one under `<app>/ts/_e2e/` is an e2e
+/// scenario.
 fn classify(rel: &Path) -> Option<Kind> {
     let parts: Vec<&str> = rel
         .components()
@@ -202,13 +204,15 @@ fn classify(rel: &Path) -> Option<Kind> {
     let slice = parts.windows(2).filter(|w| w[0] == "feats" || w[0] == "grafts").map(|w| w[1]).next_back();
     match (*dir, slice) {
         ("_tests", Some(s)) => Some(Kind::Slice(s.to_owned())),
+        ("_tests", None) if parts.len() == 7 && parts[2] == "core" && parts[4] == "ts" => Some(Kind::Slice(parts[3].to_owned())),
         ("_e2e", None) if parts.len() == 5 && parts[2] == "ts" => Some(Kind::E2e),
         _ => None,
     }
 }
 
 /// Every slice that publishes an analytical contract, by name: a feat's
-/// `core/sql/analytics.sql` or a graft's `sql/analytics.sql`.
+/// `core/sql/analytics.sql`, a graft's `sql/analytics.sql`, or a core
+/// library's but the analytics port's, `core/<lib>/sql/analytics.sql`.
 fn contracts(repo: &Repo) -> Vec<String> {
     let mut files = Vec::new();
     walk(&repo.root.join("apps"), &mut files, &|p| p.ends_with("sql/analytics.sql"));
@@ -232,6 +236,7 @@ fn contract(rel: &Path) -> Option<String> {
     match parts.as_slice() {
         [.., "feats", feat, "core", "sql", "analytics.sql"] => Some((*feat).to_owned()),
         [.., "grafts", graft, "sql", "analytics.sql"] => Some((*graft).to_owned()),
+        ["apps", _, "core", lib, "sql", "analytics.sql"] if *lib != "analytics" => Some((*lib).to_owned()),
         _ => None,
     }
 }
@@ -294,7 +299,8 @@ mod tests {
     #[test]
     fn a_test_file_is_placed_by_where_it_sits() {
         assert_eq!(kind("apps/org/feats/transaction/core/ts/_tests/journal.test.ts").as_deref(), Some("slice transaction"));
-        assert_eq!(kind("apps/org/grafts/circle-membership/ts/_tests/may.test.ts").as_deref(), Some("slice circle-membership"));
+        assert_eq!(kind("apps/org/grafts/membership-motion/ts/_tests/procedure.test.ts").as_deref(), Some("slice membership-motion"));
+        assert_eq!(kind("apps/org/core/circle/ts/_tests/mandate.test.ts").as_deref(), Some("slice circle"));
         assert_eq!(kind("apps/org/feats/a/feats/b/core/ts/_tests/x.test.ts").as_deref(), Some("slice b"));
         assert_eq!(kind("apps/org/ts/_e2e/admission.test.ts").as_deref(), Some("e2e"));
     }
@@ -304,7 +310,8 @@ mod tests {
         assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/analytics.sql")).as_deref(), Some("account"));
         assert_eq!(contract(Path::new("apps/org/feats/person/feats/membership/core/sql/analytics.sql")).as_deref(), Some("membership"));
         assert_eq!(contract(Path::new("apps/org/grafts/account-transaction/sql/analytics.sql")).as_deref(), Some("account-transaction"));
-        assert_eq!(contract(Path::new("apps/org/core/notary/sql/analytics.sql")), None);
+        assert_eq!(contract(Path::new("apps/org/core/circle/sql/analytics.sql")).as_deref(), Some("circle"));
+        assert_eq!(contract(Path::new("apps/org/core/analytics/sql/analytics.sql")), None);
         assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/001-account.sql")), None);
     }
 
@@ -312,7 +319,7 @@ mod tests {
     fn a_test_file_elsewhere_is_refused() {
         assert_eq!(kind("apps/org/ts/_tests/admission.test.ts"), None);
         assert_eq!(kind("apps/org/feats/transaction/core/ts/_e2e/x.test.ts"), None);
-        assert_eq!(kind("apps/org/core/db/ts/_tests/x.test.ts"), None);
+        assert_eq!(kind("apps/org/core/db/_tests/x.test.ts"), None);
         assert_eq!(kind("apps/org/feats/transaction/core/ts/src/x.test.ts"), None);
     }
 }

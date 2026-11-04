@@ -3,7 +3,7 @@ import type { Attended } from '../models/attendance.ts'
 
 // The graft's client side: how many came to each meeting, and on a
 // member's page the meetings they were marked at. Who was expected and
-// the attendance block are circle-meeting-membership's, which knows the
+// the attendance block are meeting-membership's, which knows the
 // seats.
 export const app: App = {
   name: 'meeting-membership',
@@ -19,3 +19,4 @@ export const app: App = {
     },
   },
 }
+export * as circles from './circles.ts'

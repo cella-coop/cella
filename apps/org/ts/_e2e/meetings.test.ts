@@ -57,9 +57,9 @@ test('the seed holds Lanterne\'s meetings: the June assembly, coordination every
             (SELECT count(*) FROM document_meeting.minutes) AS minutes`,
   )
   assert.deepEqual(counts, { meetings: '10', held: '8', marks: '46', tabled: '7', minutes: '1' })
-  const june = await one('SELECT seats, present, needed FROM circle_meeting_membership.quorum WHERE meeting = $1', ['ag-2026-06-20'])
+  const june = await one('SELECT seats, present, needed FROM meeting_membership.quorum WHERE meeting = $1', ['ag-2026-06-20'])
   assert.deepEqual(june, { seats: 10, present: 10, needed: 5 })
-  const guests = await all<{ member: string }>('SELECT member FROM circle_meeting_membership.roll WHERE NOT seated')
+  const guests = await all<{ member: string }>('SELECT member FROM meeting_membership.roll WHERE NOT seated')
   assert.deepEqual(guests, [{ member: at('lea') }], 'Léa came to coordination as a guest')
 })
 
@@ -162,7 +162,7 @@ test('on 2 November Malik holds it, which fixes its agenda and who came', async 
   assert.equal(julienHere.state, 'settled', julienHere.reason)
   const held = await shell.act(`/meetings/${meeting}`, 'hold', {}, malik)
   assert.deepEqual([held.op, held.state], ['meeting:meeting:hold', 'settled'], held.reason)
-  assert.deepEqual(await one('SELECT seats, present, needed FROM circle_meeting_membership.quorum WHERE meeting = $1', [meeting]), { seats: 5, present: 4, needed: 3 })
+  assert.deepEqual(await one('SELECT seats, present, needed FROM meeting_membership.quorum WHERE meeting = $1', [meeting]), { seats: 5, present: 4, needed: 3 })
   const late = await shell.act(`/meetings/${meeting}`, 'item', { title: 'Any other business' }, camille)
   assert.equal(late.state, 'refused')
   assert.match(late.reason ?? '', /coordination-2026-11-02 was held on 2026-11-02: its agenda is fixed/)

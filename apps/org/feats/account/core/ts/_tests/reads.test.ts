@@ -1,7 +1,7 @@
 // Who reads a capital account, as the app role reads it, on a database
 // holding only the app's core and this feat: its holder, and whoever holds
 // a power that reads capital; every other account, anyone. The authority
-// is a stub here, as circle-membership registers the real one. Run by
+// is a stub here, as the membership feat registers the real one. Run by
 // `cella test slice account`.
 
 import { after, before, test } from 'node:test'

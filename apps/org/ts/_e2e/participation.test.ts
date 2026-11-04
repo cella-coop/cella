@@ -20,7 +20,7 @@ import pg from 'pg'
 import { post, procedures, vote } from '@cella/org-motion/api'
 import { terms, type Post } from '@cella/org-motion/models'
 import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
-import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { close, propose } from '@cella/org-graft-membership-motion/api'
 import { submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
@@ -61,8 +61,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
-const turnout = async (d: string) => one('SELECT counted, given, quorate FROM circle_membership_motion.turnout($1)', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
+const turnout = async (d: string) => one('SELECT counted, given, quorate FROM membership_motion.turnout($1)', [d])
 // A page as text, its tags gone.
 const read = async (path: string, actor?: string) => {
   const { status, text } = await shell.page(path, actor)

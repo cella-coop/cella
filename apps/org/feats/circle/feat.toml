@@ -1,5 +1,0 @@
-name = "circle"
-group = "governance"
-builtin = true
-rung = 1
-grafts = ["circle-membership", "circle-motion", "circle-membership-project", "circle-membership-timesheet"]

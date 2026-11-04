@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -116,6 +116,12 @@ never shown, though the shell handles it. How slices mount is in
 
 ## Feats
 
+Circles, roles, tenures and mandates are core, as groups are in standard
+RBAC: `core/circle`, which every feat builds on, holds the circles, their
+roles, the seats read from their members and the tenures of each role,
+and the mandates and rights, and their page in the sidebar
+([circle](core/circle/index.md)).
+
 Org's feats sit under `feats/`; `person` holds two of its own, `membership`
 and `employment`, under `person/feats/`, which inherit its core: a person
 is a member if they hold a membership and a worker if they hold an
@@ -124,10 +130,9 @@ employment, and the grafts that join a person's role name the child.
 | Feat | Group | Rung | What |
 |---|---|---|---|
 | `person` | governance | 1 | everyone the co-op knows, by the address they sign with, and their devices; its feats below |
-| `person/membership` | governance | 1 | a person's membership, invited to exited |
+| `person/membership` | governance | 1 | a person's membership, invited to exited; whether a seat counts, and so who may use a power |
 | `person/employment` | work | 1 | a person's employment, member or not, and their contract |
-| `circle` | governance | 1 | nested units, seats, roles and mandates |
-| `motion` | governance | 1 | proposals, votes, computed outcomes |
+| `motion` | governance | 1 | proposals, votes, computed outcomes; mandates granted and revoked by motion, and whom a circle's motion decides about |
 | `document` | governance | 1 | drafts, versions and adoption |
 | `account` | finance | 1 | the chart of accounts, capital accounts, reserves and funds, their periods and balances, the statutes' capital terms, the statements' rubrics and the spans they are drawn for |
 | `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
@@ -140,7 +145,7 @@ employment, and the grafts that join a person's role name the child.
 | `expense` | finance | 1 | capture, approve within a budget, reimburse |
 | `payslip` | finance | 1 | salaries, monthly pay runs and payslips |
 | `report` | finance | 1 | saved reports read through the analytics port: the financial statements, the project margins, the federation figures and a member's own |
-| `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled |
+| `meeting` | governance | 1 | circles' meetings, their agendas, held or cancelled; how a circle meets |
 | `file` | platform | 1 | the files the co-op keeps, named by their BLAKE3 |
 | `import` | platform | 1 | files brought in from other tools, and what each line came to |
 | `person/contact` | governance | later | someone the co-op deals with who is neither a member nor a worker |
@@ -168,22 +173,18 @@ and admit a member by vote (ordered).
 | `account-membership` | who holds each capital account, the share's value from the statutes' terms, draw limits and the freeze on exit; the capital joining asks, and what a member owns, read back from the terms |
 | `account-patronage` | a year's split approved only once its books are closed |
 | `account-transaction` | a transaction's lines post to accounts, never into a closed period; the income statement and the balance sheet; the books carried over from a FEC |
-| `circle-membership-motion` | a motion's roll, who was seated in its circle when it was proposed as its procedure says, and who may veto it, whether it passes on it, and what a passing one does to members and seats |
-| `circle-motion` | nesting circles and granting and revoking mandates by motion |
-| `circle-expense-membership` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement |
-| `circle-file-membership` | who opens a personal file by a power over what it records |
-| `circle-meeting-membership` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it |
-| `circle-meeting` | a meeting's circle, and how a circle meets: its quorum, and whether its minutes are adopted |
-| `circle-membership-payslip` | the pay runs waiting on a member to approve or pay them |
-| `circle-membership-project` | a lead runs their own circle's projects |
-| `circle-membership-timesheet` | a lead approves their own circle's time; the months waiting on a member's approval |
-| `circle-membership` | seats: who holds which role in which circle, and how far a power reaches; the circles joining asks, and what a member decides, read back from their seats |
+| `membership-motion` | a motion's roll, who was seated in its circle when it was proposed as its procedure says, and who may veto it, whether it passes on it, and what a passing one does to members and seats; admission, suspension and exclusion by a motion |
+| `expense-membership` | a mandate's budget, spent by the expenses its holder approves; the expenses waiting on a member's approval or reimbursement; whose an expense is |
+| `file-membership` | who opens a personal file by a power over what it records; a member's records on their own file |
+| `meeting-membership` | who is expected at a meeting, its quorum, who may draw up its agenda, schedule, hold and record it; who came to a meeting: present, excused or absent |
+| `membership-payslip` | the pay runs waiting on a member to approve or pay them |
+| `membership-project` | a lead runs their own circle's projects; shares of a project's budget, never beyond it |
+| `membership-timesheet` | a lead approves their own circle's time; the months waiting on a member's approval; no time of a member suspended or gone, and a member's months |
 | `client-invoice` | who an invoice bills |
 | `client-project` | whom a project is for |
 | `document-motion` | adoption of a document version by a motion |
 | `employment-membership-motion` | a candidate's admission, proposed from their candidacy once their probation is over |
 | `meeting-motion` | the motions a meeting's agenda tables, and where each stands |
-| `membership-motion` | admission, suspension and exclusion by a motion |
 | `motion-patronage` | a year's distribution and the motion that approves its split; the work share's terms and the motion that adopts them |
 | `document-meeting` | a meeting's minutes, written as a document |
 | `document-membership` | who has read the co-op's adopted texts |
@@ -193,16 +194,11 @@ and admit a member by vote (ordered).
 | `employment-timesheet` | whose time an entry is, a worker's within their employment, and logging it by that employment |
 | `expense-file` | an expense's receipts, one carried by its claim |
 | `expense-invoice-project-timesheet` | retired: a project's margin is a report; its migrations stay until launch, the second dropping what the first made |
-| `expense-membership` | whose an expense is |
 | `expense-project` | the project an expense is billed on to |
 | `expense-transaction` | an expense's approval and reimbursement post transactions |
-| `file-membership` | a member's records on their own file |
 | `invoice-project` | which project an invoice bills, and what each project invoiced |
 | `invoice-transaction` | an invoice, its payments and its void post transactions |
-| `meeting-membership` | who came to a meeting: present, excused or absent |
-| `membership-project` | shares of a project's budget, never beyond it |
 | `membership-task` | who does a task |
-| `membership-timesheet` | no time of a member suspended or gone, and a member's months |
 | `patronage-payslip` | a surplus's work share divided by pay and in equal parts |
 | `patronage-timesheet` | a surplus's work share divided by time worked |
 | `patronage-transaction` | a year's split posted from its result, the legal reserve's floor |

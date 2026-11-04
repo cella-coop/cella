@@ -1,6 +1,6 @@
 +++
 title = "employment-membership-motion"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 A candidate's admission, once their probation is over: the proposal to
@@ -8,9 +8,9 @@ the assembly, filled in from their candidacy. Declared by the `worker`
 feat. It joins motion, member and worker, reading `membership-motion`
 (the motions that move to admit someone) and `employment-membership` (the
 candidacy) beneath it, and writes nothing: the proposal it fills in is
-circle-membership-motion's, put to the assembly from the person's page.
+membership-motion's, put to the assembly from the person's page.
 An employee who applies by right puts their own: the application,
-circle-membership-motion's `apply`, puts the motion to admit them in its
+membership-motion's `apply`, puts the motion to admit them in its
 write, so their admission reads that motion and no proposal is due while
 it is open.
 
@@ -36,7 +36,7 @@ On an invited candidate's member page, under Joining: while a motion
 moves to admit them, which one and until when; once their probation is
 over and none does, the proposal to admit them, its shares the ones they
 pledged, its deadline two weeks on and its reasons written from their
-hire and probation, posted to circle-membership-motion's `propose`.
+hire and probation, posted to membership-motion's `propose`.
 
 ## Lanterne
 

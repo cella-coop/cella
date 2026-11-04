@@ -12,7 +12,7 @@ import pg from 'pg'
 import { adopt, comment, draft, edit, version } from '@cella/org-document/api'
 import { canonical, createDoc, edits, hash, jcs, order, text, type Frontier } from '@cella/org-document/models'
 import { vote } from '@cella/org-motion/api'
-import { close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { close, propose } from '@cella/org-graft-membership-motion/api'
 import { slice } from '@cella/org-graft-document-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
@@ -36,7 +36,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
 const adopted = async (d: string) => (await one<{ version: string } | undefined>('SELECT version FROM document.adopted WHERE document = $1', [d]))?.version
 const motions = (db: pg.Client) => slice.extends?.motions.about?.(db) ?? Promise.resolve({})
 const hashOf = async (v: string) => (await one<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document.version WHERE id = $1`, [v])).hash
@@ -203,7 +203,7 @@ test('once Malik consents and m-2026-011 closes, only content hashing as it name
   assert.deepEqual(done.value, { document: card, version: 'rate-card-2027@2', hash: v2, adopted: '2026-11-09', receipt: done.value.receipt })
   assert.equal(await adopted(card), 'rate-card-2027@2')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [done.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership-motion', 'circle-motion', 'document', 'document', 'document-motion'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['document', 'document', 'document-motion', 'membership-motion', 'motion'])
 })
 
 test('a second adoption naming a stale base is refused, and uses no verdict number', async () => {
@@ -243,7 +243,7 @@ test('minutes are adopted as any document is: the assembly adopts its June minut
   assert.equal(proposed.state, 'settled', reason(proposed))
   const motion = (proposed as { value: { motion: string } }).value.motion
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
+    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
     [motion],
   )
   for (const { member } of roll) {

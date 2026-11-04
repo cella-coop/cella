@@ -57,7 +57,7 @@ export async function submit(input: Act, deps: Deps): Out<'expense:expense:submi
 
 // Approves a submitted expense, spending the approver's budget for the
 // month. The expense-transaction graft wraps it with the entry charging
-// it, and the circle-expense-membership graft checks the budget.
+// it, and the expense-membership graft checks the budget.
 export const approving = (input: Act, actor: string): Write<Acted> => ({
   op: 'expense:expense:approve' satisfies Action,
   request: input,

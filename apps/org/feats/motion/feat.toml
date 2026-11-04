@@ -2,4 +2,4 @@ name = "motion"
 group = "governance"
 builtin = true
 rung = 1
-grafts = ["circle-membership-motion"]
+grafts = []

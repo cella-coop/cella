@@ -10,7 +10,7 @@ const events = (p: Path | null): Event[] => (p?.probation ? [{ at: p.probation, 
 // The graft's client side: each person's stage on their way to membership,
 // a hidden column to filter by; on their page, the path they took and
 // their probation in the activity. The application is
-// circle-membership-motion's.
+// membership-motion's.
 export const app: App = {
   name: 'employment-membership',
   extends: {

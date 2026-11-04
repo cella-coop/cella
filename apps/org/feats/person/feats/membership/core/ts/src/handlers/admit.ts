@@ -22,7 +22,7 @@ export async function admitting(tx: Db, input: Admit): Promise<Admitted> {
 // The admission as a write of its own, citing the motion. The guards on
 // this op decide: `membership.admitted` that the write did so, the
 // membership-motion graft's that the cited motion admits, and
-// circle-membership-motion's that it closed and passed on its roll.
+// membership-motion's that it closed and passed on its roll.
 export async function admit(input: Admit, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Admitted>> {
   const w: Write<Admitted> = {
     op,

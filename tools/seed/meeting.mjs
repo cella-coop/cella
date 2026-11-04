@@ -1,6 +1,6 @@
 // seed, meetings: loads a mock co-op's meetings with their agendas into
 // the meeting schema, and its grafts' rows: how each circle meets
-// (circle-meeting), who came (meeting-membership), the motions agenda
+// (the meeting feat), who came (meeting-membership), the motions agenda
 // items table (meeting-motion) and the minutes' documents
 // (document-meeting). Circles, members, motions and documents load
 // first. A held meeting is loaded scheduled, its agenda and its marks put
@@ -10,8 +10,8 @@
 const stamp = (d) => new Date(d).toISOString().slice(0, 16).replace('T', ' ')
 
 export async function meetings(db, read, day) {
-  for (const s of read('graft.circle-meeting').setting ?? []) {
-    await db.query('INSERT INTO circle_meeting.setting (circle, quorum, adopts) VALUES ($1, $2, $3)', [s.circle, s.quorum ?? 50, s.adopts ?? false])
+  for (const s of read('meeting').setting ?? []) {
+    await db.query('INSERT INTO meeting.setting (circle, quorum, adopts) VALUES ($1, $2, $3)', [s.circle, s.quorum ?? 50, s.adopts ?? false])
   }
 
   const list = read('meeting').meeting ?? []

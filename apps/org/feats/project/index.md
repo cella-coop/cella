@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -34,7 +34,7 @@ Setting a budget is ordered because a share spends it: a budget lowered
 while a share is granted could leave the shares above it, which the
 `membership-project` graft's guard refuses. Every other write commutes.
 `002-powers.sql` registers each power in `cella.power`, and the
-`circle-membership` graft checks it.
+membership feat checks it.
 
 ## Powers
 

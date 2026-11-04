@@ -52,7 +52,7 @@ const check = (name) => {
   }
 
   const circles = ids(circle.circle)
-  // The participant role is built in: the circle feat's migration makes it.
+  // The participant role is built in: core's migration makes it.
   const roles = new Set([...ids(circle.role), 'participant'])
   // Circles never nest: none names a parent, and one only is the assembly.
   for (const c of circle.circle ?? []) {
@@ -187,7 +187,7 @@ const check = (name) => {
   // A circle's member is a person or a role; a tenure is a person's, of a
   // role in its own circle, or in any for a `*` role, and no more of them
   // overlap in a circle than the role's holders allow
-  const sitting = read('graft.circle-membership')
+  const sitting = read('circle')
   for (const m of sitting.member ?? []) {
     has(circles, m.circle, 'circle', 'member')
     if (!m.person === !m.role) {

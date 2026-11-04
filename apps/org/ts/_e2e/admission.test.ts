@@ -11,8 +11,8 @@ import { vote } from '@cella/org-motion/api'
 import { edit } from '@cella/org-document/api'
 import { createDoc, edits } from '@cella/org-document/models'
 import { admit } from '@cella/org-membership/api'
-import { close } from '@cella/org-graft-circle-membership-motion/api'
-import { add } from '@cella/org-graft-circle-membership/api'
+import { close } from '@cella/org-graft-membership-motion/api'
+import { add } from '@cella/org-circle/api'
 import type { Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
 import { scope, sign } from './lanterne.ts'
@@ -36,7 +36,7 @@ const as = (actor: string): Deps => ({ db: app, actor, sign: sign(actor) })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
 const status = async (m: string) => one<{ status: string; since: string | null; shares: number }>(
   `SELECT status, to_char(since, 'YYYY-MM-DD') AS since, shares FROM membership.member WHERE address = $1`,
   [m],
@@ -108,7 +108,7 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
 
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
   const sits = await one<{ circle: string; role: string; since: string }>(
-    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle_membership.seat WHERE member = $1 AND circle = 'ag'`,
+    `SELECT circle, role, to_char(since, 'YYYY-MM-DD') AS since FROM circle.seat WHERE member = $1 AND circle = 'ag'`,
     [ines],
   )
   assert.deepEqual(sits, { circle: 'ag', role: 'member', since: '2026-10-31' })
@@ -120,7 +120,7 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
 
   const entry = await one<{ op: string; guards: { owner: string }[] }>('SELECT op, guards FROM cella.log WHERE n = 4')
   assert.equal(entry.op, 'motion:motion:close')
-  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['circle-membership', 'circle-membership-motion', 'membership-motion', 'motion'])
+  assert.deepEqual([...new Set(entry.guards.map((r) => r.owner))].sort(), ['membership', 'membership-motion', 'motion'])
 
   const late = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')
@@ -162,7 +162,10 @@ test('m-2026-011, which Malik blocks, closes admitting no one, and admitting und
   const since = (await status(ines)).since
   const refused = await admit({ member: ines, shares: 40, motion: 'm-2026-011' }, as(camille))
   assert.equal(refused.state, 'refused')
-  assert.match(refused.state === 'refused' ? refused.reason : '', /m-2026-011 does not pass by consent/)
+  // Two guards refuse it and the first by owner speaks: the membership
+  // feat's, since Inès is a member already, before membership-motion's,
+  // that m-2026-011 does not pass by consent.
+  assert.match(refused.state === 'refused' ? refused.reason : '', /ines@lanterne.example was not admitted by this write/)
   assert.deepEqual(await status(ines), { status: 'active', since, shares: 20 })
 
   const log = await one<{ count: string; max: string }>('SELECT count(*), max(n) FROM cella.log')

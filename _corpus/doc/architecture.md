@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 # Architecture
@@ -16,23 +16,17 @@ layers inside each package and the write labels and feat rulings of
 
 ```mermaid
 flowchart BT
-  core["apps/org/core: actions, crypto, log, keystore, …"]
+  core["apps/org/core: actions, circle, crypto, log, keystore, …"]
   person["feats/person/core"]
   membership["feats/person/feats/membership/core"]
   motion["feats/motion/core"]
-  circle["feats/circle/core"]
   graft["grafts/membership-motion"]
-  three["grafts/circle-membership-motion"]
   root["apps/org/ts: the shell"]
   person --> core
   membership --> person
   motion --> core
-  circle --> core
   graft --> membership
   graft --> motion
-  three --> graft
-  three --> circle
-  root --> three
   root --> graft
   root --> membership
   root --> motion
@@ -43,7 +37,9 @@ A node is a directory with a `feat.toml`. It holds:
 - `core/` — what the feat is, and the libraries its children and grafts
   build on, one package each (`core/<lib>/rs`, `core/<lib>/ts`). The app's
   core is its shared library layer: `actions` (labels, permissions,
-  outcomes), `crypto`, `log`, `keystore`, `guards` (the pure guard primitives), `notary`
+  outcomes), `circle` (the circles, their roles, tenures, seats and
+  mandates, [circles are core](#circles-are-core)), `crypto`, `log`,
+  `keystore`, `guards` (the pure guard primitives), `notary`
   (the `cella` Postgres extension over them), `db` (an action's transaction),
   `sign` (a device's signature on an action), `vat` (a document's lines,
   their amounts and VAT, which invoices and bills share), `analytics`
@@ -88,6 +84,26 @@ A feat's name is unique in its app, at any depth, since it names its
 schema and the grafts that join it; `cella check feats` refuses a second
 one.
 
+### Circles are core
+
+Circles, roles, tenures and mandates are core, as groups are in standard
+RBAC: every feat builds on them, so none is a feat. `apps/org/core/circle`
+is a library of org's core with SQL, a shell slice and actions of its
+own: the circles and their roles, the grantees, mandates and rights, and
+the members of each circle and the tenures of each role, with the seats
+read from them. Its tables are in the `circle` schema, which every feat's
+and graft's SQL may reference as it references `cella.*`; its actions,
+`circle:circle:message`, `circle:seat:add` and `circle:seat:remove`, are
+named for it and declared in its `models/actions.ts` as a feat's are,
+and any slice may guard them. It knows no feat: whether a seat counts on
+a day is the membership feat's to say, so who may use a power,
+`membership.may`, and the authority every read asks are that feat's
+([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
+A feat that reads circles reads core, as the motion feat reads a
+motion's circle and the meeting feat a meeting's, and a graft that
+joined the circles to a feat dissolved into that feat or into the graft
+of the feats it joined: no graft joins `circle`.
+
 The notary is not a feat but a layer under every feat: the `cella`
 Postgres extension, a package of org's core (`apps/org/core/notary/rs`),
 which every feat's SQL calls and every write passes through. It holds no
@@ -99,7 +115,7 @@ its database to another host, which arrives at rung 6
 
 | A package in | may depend on |
 |---|---|
-| a feat's core | the other packages of its own core; its ancestors' cores, a nested feat's parent's among them |
+| a feat's core | the other packages of its own core; its ancestors' cores, a nested feat's parent's among them, and so org's core's circles |
 | a graft | the cores of the feats it joins and of their ancestors, its node's among them; the grafts at or below its node that join a proper subset of its feats ([graft order](#graft-order)) |
 | a node's root | its own and its ancestors' cores, the cores and roots of the feats below it, the grafts at or below it |
 
@@ -164,8 +180,7 @@ A graft's order is the number of feats it joins. A graft that joins N
 feats may read, in code and in SQL, the feats it joins, the cores below
 them, and the grafts at or below its node that join a proper subset of its
 feats, as `employment-membership-motion` reads `person`'s
-`employment-membership`:
-`circle-membership-motion` reads `circle-membership` and `membership-motion`.
+`employment-membership`.
 Nothing else: no graft of equal or higher order, and no graft that joins a
 feat it does not. Relationships compose upward, so a higher graft builds on
 lower ones and no lower graft ever depends on one above it. Migrations run
@@ -174,7 +189,7 @@ graft at a nested node is in before the graft above that reads it.
 
 A relationship that needs another graft's data therefore lives in the
 graft that joins all the feats involved. A motion's roll needs seats
-(circle and member) and the motion, so it is `circle-membership-motion`'s,
+(core's, counting by membership) and the motion, so it is `membership-motion`'s,
 and so is everything that counts the roll. A lower graft that needs what a
 higher one decides declares it through a feat they share: a graft that
 cites a motion lists its action in `motion.cites`, and the graft that
@@ -202,7 +217,7 @@ only to register ([SQL](#sql)).
 What follows a passed motion is its carried actions, never a trigger.
 Each is its owner's published action, a write of its own after the
 close, signed by whoever closed the motion, citing it, and judged by its
-own guards: `circle-membership-motion` carries out a suspension or an
+own guards: `membership-motion` carries out a suspension or an
 exclusion through the membership feat's, and the graft that knows what
 follows an admission or an exit reacts to it through `on`.
 `account-membership` freezes a departed member's capital accounts
@@ -241,8 +256,8 @@ that covers every action listed is registered by
 `motion.register_cite_guard`, which attaches it to every action listed
 so far, and `motion.register_cite` attaches each guard so registered to
 the action it lists, whichever migrated first, so no graft puts a
-trigger on the register: `circle-membership-motion`'s, that the motion
-passed on its roll, and `circle-motion`'s, that the motion's circle
+trigger on the register: `membership-motion`'s, that the motion
+passed on its roll, and the motion feat's own, that the motion's circle
 holds a collective mandate for the action's power. `cella check feats`
 reads each call's literal action and power as it reads a literal row.
 
@@ -296,9 +311,9 @@ motion. Custom feats are how cella is extended.
 
 | SQL in | may reference |
 |---|---|
-| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core library's own schema, named for it (`analytics`, `policy`) |
-| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; the policy register but its wording; the catalog |
-| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; the policy register but its wording; the catalog |
+| a node's core | `cella.*`; the notary's `vault.*`; the catalog; a core library's own schema, named for it (`analytics`, `policy`, `circle`), and those of the core libraries its package depends on (`circle` reads `policy`) |
+| a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
+| a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
 
 A graft's schema holds the junction, with keys into each feat's tables; no
 foreign key crosses a feat. `feat-check` enforces these boundaries by
@@ -308,11 +323,11 @@ that creates, alters, indexes, drops or grants outside its own schema;
 holds a foreign key out of it; reads a policy's wording
 (`policy.wording`, [policies](#policies)); writes `cella.*` other than to register,
 under its own name, its guards on its own actions, those of the feats it
-joins and those of the lower-order grafts it builds on, the power each of
+joins, those of the lower-order grafts it builds on and core's circles', the power each of
 its own actions needs as a literal row, the powers that read the rows of its
-own feat or of the feats it joins (`cella.reading`), a feat only the
-keyring, or a graft only the authority that says who holds a power
-(`cella.authority`) and what opens a joined feat's rows to more readers
+own feat or of the feats it joins (`cella.reading`), the authority that
+says who holds a power (`cella.authority`), a feat only the keyring, or
+a graft only what opens a joined feat's rows to more readers
 (`cella.reach`), each a literal row; sets
 `search_path` other than a function's to the catalog; reads the clock or
 randomness; or hides statements in a `DO` block. A row-level policy is
@@ -344,8 +359,10 @@ compiled to WASM.
 
 ### Migrations
 
-Migrations cascade down the feat tree: a node's core first, then its feats,
-then its grafts, recursively, each versioned. They are plain SQL, and the
+Migrations cascade down the feat tree: a node's core first, the
+notary's library first and each library after those its package
+depends on, as `circle` after `policy`, then its feats, then its grafts,
+recursively, each versioned. They are plain SQL, and the
 TypeScript types are generated from the schema; seedling's Drizzle, where
 TypeScript owns the schema, is dropped. The generator is not chosen.
 
@@ -441,7 +458,9 @@ catch what the SQL check cannot see.
 SQL logic is tested in the database. pgTAP tests and Lanterne's
 conformance suite, its cases and their expected verdicts, are gates
 alongside `cella check`; neither is wired in yet. A slice is a feat or a
-graft, and node tests come in two kinds, placed by where they sit; a test
+graft, or for its tests a library of the app's core that has them, as
+`circle` does, migrated with the app's core alone; node tests come in
+two kinds, placed by where they sit; a test
 file anywhere else fails `cella test`:
 
 - a **slice test** tests exactly one slice, from its package's `_tests/`.
@@ -560,13 +579,19 @@ to whom its guard or an extension's `allows` opens them; `/sign-in`,
 membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
 which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
 collections and from reports. A collection's owner is a feat,
-or the log, a core library. A graft extends only a collection of a feat it
+or a core library, the log or the circles. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,
-as membership and employment extend person's people; the root may join
+as membership and employment extend person's people; any slice extends
+core's, which every feat builds on, as the membership feat adds a
+circle's seats to its page (`core` on the circles' `Slice`); the root may join
 two feats no graft joins, as it puts on the
 work collections' cards fields from several grafts, pins the home's
 widgets until a viewer pins their own, and runs an import across the
-slices that read its kind. A form posts its files with its fields, and an
+slices that read its kind. A package may mount its slice in parts, each
+named `<slice>/<part>` and reaching what its slice does, as a feat a
+graft of the circles dissolved into keeps what that graft added beside
+its own: `motion/circles`, exported as `circles` beside `slice` and
+`app`. A form posts its files with its fields, and an
 action reads them whole (`Form.file`). The registry refuses a
 collection owned twice, an extension of a feat a slice neither joins nor
 nests in, and two extensions replacing one write. An extension's write replaces the
@@ -688,7 +713,9 @@ unless a procedure says so.
 
 Every action is `POST /api/<feat>/<verb>` and maps to one permission, its
 id `<feat>:<entity>:<verb>`, declared in the feat's `models/actions.ts`
-with its label:
+with its label; core's circles declare theirs the same way, named for
+the library (`circle:seat:add`), and `cella check feats` holds them to
+the same rules:
 
 ```ts
 export const actions = {
@@ -705,7 +732,7 @@ what it needs, and the payload field its
 amount is in when a mandate's limit caps it:
 `confluent({ power: 'pay-supplier', amount: 'amount' })`. The source of
 truth is the row the feat's SQL registers in `cella.power`, which the
-`circle-membership` graft's guard reads, or for an action a motion
+membership feat's guard reads, or for an action a motion
 carries the row in `motion.cites`, or for a stance the row in
 `motion.stance_power`; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference, and any
@@ -721,10 +748,10 @@ role in another. The participant's mandates cover proposing and discussing:
 `discuss`, to post on a motion's deliberation, in the circle's channel
 and on its meetings' agendas. They are mandates like any other, policies
 the assembly adopts, since `participant` is a role every circle has
-(`*`). `circle_membership.may` finds them on any seat the actor holds,
-and the guard of the graft that knows which circle the action concerns
+(`*`). `membership.may` finds them on any seat the actor holds,
+and the guard of the slice that knows which circle the action concerns
 narrows them to a seat in that circle
-([circle](../../apps/org/feats/circle/index.md#the-participant-role)).
+([circle](../../apps/org/core/circle/index.md#the-participant-role)).
 
 **A mandate is individual or collective.** An individual mandate is on
 a role, and whoever holds a seat with that role uses it. A collective
@@ -733,7 +760,7 @@ circle: an action a passed motion carries (an admission, an adoption, a
 seat) needs the power its collective mandate grants, which
 the action's graft registers with it in `motion.cites` by
 `motion.register_cite` rather than in `cella.power`, so no seat's
-mandate allows it. `circle-motion` checks it twice: when the motion is
+mandate allows it. The motion feat checks it twice: when the motion is
 proposed, that its circle holds a collective mandate for the power of
 every action it carries (`motion.carries` names the action that carries
 out each kind), and on the verdict date of each write citing the motion,
@@ -751,19 +778,19 @@ decides about every circle, and any other circle about every circle but
 itself and the assembly, a circle's own seats and powers being
 another's to decide, while what it may grant is what it holds to issue
 under and what it may revoke what it issued, or what was issued under
-that ([circle-motion](../../apps/org/grafts/circle-motion/index.md#guards)).
+that ([motion](../../apps/org/feats/motion/index.md#circles)).
 
 **A mandate's scope is a condition on its permission**: the resources it
 covers, never a place in a tree. A mandate policy may mark it, a circle
 (`{scope: web}`, Web's projects, meetings and time) or the circle its
 holder holds the role in (`{scope: own}`), and one that marks none
 covers the whole co-op; it is copied into `circle.mandate.scope` with
-the rest. `circle_membership.over(actor, power, about, day)` reads it
+the rest. `membership.over(actor, power, about, day)` reads it
 against the circle a record belongs to: Web's lead, whose mandates are
 on their own circle, runs Web's projects and is refused Brand's, and
 the gérante's, on the whole co-op, cover every circle's records and
 those of no circle
-([circle-membership](../../apps/org/grafts/circle-membership/index.md#guards)).
+([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
 
 **Each mandate is issued under a parent mandate and is narrower than
 it.** Its issuer is the circle whose motion adopted its policy, and its
@@ -778,8 +805,8 @@ the founding motion's first from the legal form. `circle.narrows`
 refuses a grant its issuer holds nothing to issue under, or one wider
 than its parent, and an end that leaves a mandate issued under one
 that no longer stands
-([circle](../../apps/org/feats/circle/index.md#authority)), and
-`circle_motion.passes_down` one stating a procedure looser than the one
+([circle](../../apps/org/core/circle/index.md#authority)), and
+`motion.passes_down` one stating a procedure looser than the one
 its parent's chain asks ([requirements](#policies)).
 
 **A mandate's grantee is one circle or one role**, by one key: every
@@ -788,7 +815,7 @@ circle's core that a mandate's `grantee` references, so circles and
 roles share one namespace of ids. A person never holds a mandate
 directly: they hold a role by a tenure, and the role holds the mandate, so
 `circle.mandate_flaw` refuses a mandate policy that names a person
-([circle](../../apps/org/feats/circle/index.md#entities)).
+([circle](../../apps/org/core/circle/index.md#entities)).
 
 **A right is no mandate**: it is a power the legal form gives every
 person, every member or every employee as such (`{right: member}`),
@@ -801,11 +828,11 @@ day)` asks the function each kind registers by `person.register_right`,
 `person` itself the known people, `membership` the active members by
 `membership.active`, `employment` those employed by
 `employment.employed`, so person's core knows none of its children by
-name. `circle-membership`'s guard on every op with a power takes a
-right, found by `circle_membership.entitled`, as it takes a mandate on
+name. The membership feat's guard on every op with a power takes a
+right, found by `membership.entitled`, as it takes a mandate on
 the actor's seats, so a person with no seat holds their rights all the
 same. A right lets each act on what is their own, and so is never the
-authority a read asks (`circle_membership.may`): holding `keep-profile`
+authority a read asks (`membership.may`): holding `keep-profile`
 opens no one else's profile, nor `log-time` another's time. A right is
 adopted with the statutes and reaches the whole co-op: no mandate is
 issued under it.
@@ -822,23 +849,23 @@ spreads what they owe (`spread-capital`), marks their attendance
 (`mark-attendance`) and saves a report (`save-report`); an employee
 logs, corrects and submits their own time (`log-time`), on a project or
 not, and claims their expenses (`claim-expense`)
-([circle](../../apps/org/feats/circle/index.md#rights)).
+([circle](../../apps/org/core/circle/index.md#rights)).
 
 **A person holds a role by a tenure, and a role that is a member of a
 circle seats whoever holds it.** A circle's members are people and
 roles, and a tenure is a person's time in a role, from a day until a
 day, no more of them at once in a circle than the role's `holders`;
 each holder acts alone under the role's mandates. A seat is read from
-the two, never stored (`circle_membership.seat`): a person sits in a
+the two, never stored (`circle.seat`): a person sits in a
 circle as its member, by a tenure of one of its roles, or by a tenure
 of a role that is its member (the double link). So a handover, one
 tenure ending as the next begins, moves every seat the role brings to
 the new holder and ends no mandate
-([circle-membership](../../apps/org/grafts/circle-membership/index.md#schema)).
+([circle](../../apps/org/core/circle/index.md#seats)).
 
 **Any person may hold a seat.** A seat is a person's place in a circle,
 member of the co-op or not, and only the assembly's seats ask an active membership:
-`circle_membership.counts(person, circle, day)` says whether a seat
+`membership.counts(person, circle, day)` says whether a seat
 counts on a day, in the assembly where membership says the person is
 active, in any other circle unless membership has suspended them or let
 them go. A worker who is no member sits in their working circle, by a
@@ -846,7 +873,7 @@ motion of a circle holding `seat-member` as any seat is given, and holds that
 circle's mandates there, its participant's among them. A seat is how
 someone takes part in a circle; what is their own is still a right's,
 so a worker logs their time by their employment wherever they sit
-([circle-membership](../../apps/org/grafts/circle-membership/index.md)).
+([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).
 
 **Who may vote or veto is the procedure's.** A motion's roll is what
 its procedure says: by default the people seated in its circle on the
@@ -857,21 +884,21 @@ the roles whose seats vote (`{voters: lead}`) and those that may veto
 the seats of the motion's own circle alone. A stance needs `vote`, the
 power a procedure gives the seats on the roll and no mandate grants: the
 motion feat registers it in `motion.stance_power`, and
-`circle-membership-motion`'s guard `on_roll` judges it, the actor on the
+`membership-motion`'s guard `on_roll` judges it, the actor on the
 roll and their seat counting on the verdict date
-(`circle_membership.counts`), so a worker who is no member votes in
+(`membership.counts`), so a worker who is no member votes in
 their working circle and not in the assembly. A stance against, or an
 objection, by someone on the roll in a veto role is a veto, and the
 motion does not pass whatever the count. Delegates, people chosen to
 vote for others at a higher level, are part of a procedure's
 configuration and not built
-([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md)).
+([membership-motion](../../apps/org/grafts/membership-motion/index.md)).
 
 No action is allowed by omission: every action declares the power it
 needs. The one that cannot is the log's first entry, the founding
-(`circle-membership-motion:scope:found`), which founds the co-op once,
+(`membership-motion:scope:found`), which founds the co-op once,
 before any mandate is adopted: it declares the check `first` instead,
-backed by `circle-membership-motion`'s guard registered on it in
+backed by `membership-motion`'s guard registered on it in
 `cella.guard`: the log is empty, the form it names is one cella offers
 and the one its policies take, and the state it writes is a root that
 can decide, one assembly deciding by a procedure a policy in force
@@ -887,8 +914,8 @@ collective mandates grant, and `cella check feats` refuses `check:
 'decided'`. A power is backed by SQL: an individual mandate's or a
 right's by a row in `cella.power`; a collective mandate's by a row in
 `motion.cites`, to which `motion.register_cite` attaches
-`circle-membership-motion`'s guard, that the motion passed on its roll,
-and `circle-motion`'s, that its circle holds the power; and the voting
+`membership-motion`'s guard, that the motion passed on its roll,
+and the motion feat's, that its circle holds the power; and the voting
 power by a row in `motion.stance_power`.
 
 `cella check feats` refuses, each with a negative test in
@@ -1013,13 +1040,13 @@ the procedure protecting each policy it replaces or ends. It is decided
 by the one of them as strict as all the others, or by its circle's
 procedure where none asks one, whatever its proposal names; one whose
 requirements no one of them meets, as consent beside a majority, is
-refused (`circle_motion.required`,
-[circle-motion](../../apps/org/grafts/circle-motion/index.md#guards)).
+refused (`motion.required`,
+[motion](../../apps/org/feats/motion/index.md#circles)).
 A procedure may consult a circle (`{consult: coordination}`): a motion
 decided by it closes only once someone seated in that circle has said
 something on its deliberation, where the consulted circle's seats speak
 as its own do
-([circle-membership-motion](../../apps/org/grafts/circle-membership-motion/index.md#guards)).
+([membership-motion](../../apps/org/grafts/membership-motion/index.md#guards)).
 
 **A legal form supplies default policies** ([legal forms](forms.md)). A
 form, a SCOP SARL in France first, is a set of ready-made policies the
@@ -1054,13 +1081,13 @@ method, share, quorum and ballot are copied by the motion feat into
 procedures a scope starts with, consent, majority, two thirds and
 election, are built in, and name the policy that adopts them once their
 scope's root does. A mandate policy's grantee, a role or a circle, power, limit
-or budget and procedure are copied by the circle feat into `circle.mandate`, which
-`circle_membership.may` reads for a role's and `circle-motion` for a
+or budget and procedure are copied by core into `circle.mandate`, which
+`membership.may` reads for a role's and the motion feat for a
 circle's, and a right policy's right, power and limit into
-`circle.right`, which `circle_membership.entitled` reads, through `circle-motion`, whose adoption
-and ending of a policy are the motion feat's with the circle feat's copy
+`circle.right`, which `membership.entitled` reads, through the motion feat, whose adoption
+and ending of a policy are the motion feat's with core's copy
 in the same write
-([mandates](../../apps/org/feats/circle/index.md#mandates)).
+([mandates](../../apps/org/core/circle/index.md#mandates)).
 
 A rule whose values are named for a feat, as `account_minimum`, is that
 feat's to read, and marks every value the feat reads of it. The capital's
@@ -1104,7 +1131,7 @@ Minutes, contracts and letters stay ordinary documents, edited and
 adopted as their own text.
 
 A circle's page lists its policies in force, each as its legal wording
-reads, with the motion that adopted it and its days (`circle-motion`).
+reads, with the motion that adopted it and its days (the motion feat).
 A row-level policy, which says which rows a reader sees
 ([SQL](#sql)), is always called that, and is never a policy.
 

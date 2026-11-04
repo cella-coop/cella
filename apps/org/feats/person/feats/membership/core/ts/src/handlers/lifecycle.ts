@@ -52,7 +52,7 @@ export async function invite(input: Invite, deps: Deps): Out<'membership:member:
 // invitation they hold already, and records the day they applied, once.
 // Someone who is or was a member, or has applied already, is refused
 // before the notary. It is a write only
-// circle-membership-motion's `apply` runs, in the transaction that puts
+// membership-motion's `apply` runs, in the transaction that puts
 // the motion to admit them: `membership.applies` checks the write made
 // the row, and that graft's guard that it put the motion.
 export function applying(input: Apply): Write<Applied> {
@@ -161,7 +161,7 @@ export async function accept(input: Accept, deps: Deps): Out<'membership:member:
 // withdrawal, the member's own, citing none. The status moves only along
 // its lifecycle (`membership.moves`); `membership.ends` checks the write
 // moved it, the membership-motion graft's guard that the cited motion
-// asks it, circle-membership-motion's that it carried; and
+// asks it, membership-motion's that it carried; and
 // `membership.withdraws` that a withdrawal is the actor's own.
 // An exit is the hook the books hang on: once it settles, a graft joining
 // the books reacts to `membership:member:exclude` with a write of its own,

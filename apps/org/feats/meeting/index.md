@@ -1,12 +1,12 @@
 +++
 title = "Meeting"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
 meeting was held. A meeting belongs to a circle, named by its id with no
 foreign key, as a project names its circle; who is expected and who came
-are the grafts' (`circle-meeting-membership`, `meeting-membership`), the
+are the grafts' (`meeting-membership`, `meeting-membership`), the
 motions an agenda tables `meeting-motion`'s, and the minutes, a
 document, `document-meeting`'s.
 
@@ -57,10 +57,10 @@ document, `document-meeting`'s.
 | item.add, .move, .remove | `discuss`, held in the meeting's circle | the circle's participants |
 | hold, minute | `keep-minutes` | a circle's secretary or its lead |
 
-`002-powers.sql` registers the powers; `circle-membership` checks the actor
-holds them and `circle-meeting-membership` that they reach the meeting's
+`002-powers.sql` registers the powers; the membership feat checks the actor
+holds them and `meeting-membership` that they reach the meeting's
 circle; the agenda's writes need the participant's `discuss`, which
-`circle_meeting_membership.sits` holds to a seat in the meeting's circle.
+`meeting_membership.sits` holds to a seat in the meeting's circle.
 
 ## Invariants
 
@@ -69,10 +69,11 @@ The meeting feat owns:
 - a meeting held or cancelled stays so; only its minutes' day may still
   be set, and a cancelled meeting has none;
 - the agenda changes only while its meeting is scheduled;
-- a meeting is held on or after its day.
+- a meeting is held on or after its day;
+- a meeting is of a circle core holds, and a setting of one too.
 
-What it does not own: that the circle exists (`circle-meeting`), who is
-expected and whether the meeting is quorate (`circle-meeting-membership`),
+What it does not own: who is
+expected and whether the meeting is quorate (`meeting-membership`),
 who came (`meeting-membership`), what motion an item tables
 (`meeting-motion`) and the minutes' text (`document-meeting`).
 
@@ -85,6 +86,30 @@ its items and refuses one once it is held, so an edit and a concurrent
 hold are serialised, as a time entry and its month's approval are. The
 triggers raise SQLSTATE `09000`. The app role may select, insert and
 update, and delete items; the guards role, `cella_guards`, may select.
+
+## Circles
+
+A meeting names its circle as text, and the feat checks it is one of
+core's circles and keeps how each circle meets (`003-circle.sql`, and
+in the shell `meeting/circles`, `api/circles.ts` and `app/circles.ts`).
+Who is expected, the circle's seats, is `meeting-membership`'s, since
+whether a seat counts is the membership feat's.
+
+- `meeting.setting`, by circle: its `quorum`, the share of its seats a
+  meeting needs present, in percent, and `adopts`, whether its minutes
+  bind only once adopted by motion. A circle with no row needs half its
+  seats and keeps its minutes as written. A trigger refuses a setting of
+  no circle. The app role and the guards role may select; settings are
+  seeded, as nothing writes them yet.
+- `meeting.meets`, on `meeting:meeting:schedule`: the meeting's circle
+  exists.
+- In the shell, on a meeting's page its circle, linked, and its quorum
+  and how its minutes bind; on a circle's, its next meeting, its quorum,
+  how its minutes bind and its latest meetings.
+
+Lanterne: the assembly needs half its members and adopts its minutes by
+motion, at its next session; coordination needs half its seats and
+keeps its minutes as written.
 
 ## Guards
 
@@ -123,7 +148,8 @@ the header's writes.
 
 - Slice tests (`core/ts/_tests/`): a held meeting's agenda fixed, a
   scheduled one's moving, a settled meeting staying so, a cancelled one
-  without minutes, and the hold and cancel guards, no hold before the day.
+  without minutes, and the hold and cancel guards, no hold before the day;
+  a setting's circle and bounds, and `meeting.meets` (`setting.test.ts`).
 - `_e2e/meetings.test.ts`: Lanterne's meetings seeded; Camille schedules
   coordination, its members add and reorder its agenda and table the
   rate card, mark themselves, Malik records others and may not record

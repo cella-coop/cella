@@ -1,5 +1,5 @@
 -- The power each person write needs. Keeping one's profile and devices is
--- every person's right: the circle-membership graft's guard checks the
+-- every person's right: the membership feat's guard checks the
 -- actor holds it, and person.own_profile, person.forgets, person.enrols
 -- and person.revokes that what they keep is their own. Recovery from
 -- guardian shares is not built, and registers its power when it is.

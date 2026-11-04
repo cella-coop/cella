@@ -5,3 +5,4 @@ export { accept, admit, admitting, applying, crediting, erase, exclude, invite, 
 export { first, invitation, links, member, memberships } from '../drivers/member.ts'
 export { inbox } from '../drivers/inbox.ts'
 export { slice } from './slice.ts'
+export * as seats from './seats.ts'

@@ -3,7 +3,7 @@
 // of the account feat's values is refused unless they make sound terms
 // replacing those that govern, and one ending a rule terms copy is
 // refused; copying terms cites the motion that adopted the rule, never
-// another. That the motion passed is circle-membership-motion's, not
+// another. That the motion passed is membership-motion's, not
 // migrated here. Run by `cella test slice account-motion`.
 
 import { after, before, test } from 'node:test'

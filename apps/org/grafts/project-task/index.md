@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -26,7 +26,7 @@ The app role may select, insert and update; the guards role may select.
 | `task:task:create`, on a project's page | confluent | `edit-task` | the task feat's creation and the filing, in one transaction under its verdict |
 
 `002-powers.sql` registers the power in `cella.power`, and the
-`circle-membership` graft checks it.
+membership feat checks it.
 
 ## Invariants
 

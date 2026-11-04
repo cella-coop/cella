@@ -42,7 +42,7 @@ export function terms(p: Procedure): string {
 }
 
 // A motion as the feat reads it. Its outcome is never stored: the
-// circle-membership-motion graft computes it from the stances on its roll.
+// membership-motion graft computes it from the stances on its roll.
 export interface Motion {
   id: string
   circle: string

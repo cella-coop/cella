@@ -38,6 +38,24 @@ importers:
         specifier: 2.0.0-r.1
         version: 2.0.0-r.1
 
+  apps/org/core/circle/ts:
+    dependencies:
+      '@cella/org-actions':
+        specifier: workspace:*
+        version: link:../../actions/ts
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../db/ts
+      '@cella/org-policy':
+        specifier: workspace:*
+        version: link:../../policy/ts
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../ui/ts
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/core/db/ts:
     dependencies:
       '@cella/org-actions':
@@ -125,24 +143,6 @@ importers:
       '@cella/org-vat':
         specifier: workspace:*
         version: link:../../../../core/vat/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
-  apps/org/feats/circle/core/ts:
-    dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../../core/actions/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../../core/db/ts
-      '@cella/org-policy':
-        specifier: workspace:*
-        version: link:../../../../core/policy/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../../core/ui/ts
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -273,6 +273,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -288,6 +291,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -369,12 +375,18 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../../../core/db/ts
       '@cella/org-person':
         specifier: workspace:*
         version: link:../../../../core/ts
+      '@cella/org-policy':
+        specifier: workspace:*
+        version: link:../../../../../../core/policy/ts
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../../../../../../core/sign/ts
@@ -664,171 +676,6 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/circle-expense-membership/ts:
-    dependencies:
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-person':
-        specifier: workspace:*
-        version: link:../../../feats/person/core/ts
-
-  apps/org/grafts/circle-file-membership/ts:
-    dependencies:
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-
-  apps/org/grafts/circle-meeting-membership/ts:
-    dependencies:
-      '@cella/org-circle':
-        specifier: workspace:*
-        version: link:../../../feats/circle/core/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-meeting':
-        specifier: workspace:*
-        version: link:../../../feats/meeting/core/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-person':
-        specifier: workspace:*
-        version: link:../../../feats/person/core/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../core/ui/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
-  apps/org/grafts/circle-meeting/ts:
-    dependencies:
-      '@cella/org-circle':
-        specifier: workspace:*
-        version: link:../../../feats/circle/core/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-meeting':
-        specifier: workspace:*
-        version: link:../../../feats/meeting/core/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../core/ui/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
-  apps/org/grafts/circle-membership-motion/ts:
-    dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../core/actions/ts
-      '@cella/org-circle':
-        specifier: workspace:*
-        version: link:../../../feats/circle/core/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-graft-circle-membership':
-        specifier: workspace:*
-        version: link:../../circle-membership/ts
-      '@cella/org-graft-circle-motion':
-        specifier: workspace:*
-        version: link:../../circle-motion/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-motion':
-        specifier: workspace:*
-        version: link:../../../feats/motion/core/ts
-      '@cella/org-person':
-        specifier: workspace:*
-        version: link:../../../feats/person/core/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../core/ui/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
-  apps/org/grafts/circle-membership-payslip/ts:
-    dependencies:
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-person':
-        specifier: workspace:*
-        version: link:../../../feats/person/core/ts
-
-  apps/org/grafts/circle-membership-timesheet/ts:
-    dependencies:
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-person':
-        specifier: workspace:*
-        version: link:../../../feats/person/core/ts
-
-  apps/org/grafts/circle-membership/ts:
-    dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../core/actions/ts
-      '@cella/org-circle':
-        specifier: workspace:*
-        version: link:../../../feats/circle/core/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-membership':
-        specifier: workspace:*
-        version: link:../../../feats/person/feats/membership/core/ts
-      '@cella/org-policy':
-        specifier: workspace:*
-        version: link:../../../core/policy/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../core/ui/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
-  apps/org/grafts/circle-motion/ts:
-    dependencies:
-      '@cella/org-actions':
-        specifier: workspace:*
-        version: link:../../../core/actions/ts
-      '@cella/org-circle':
-        specifier: workspace:*
-        version: link:../../../feats/circle/core/ts
-      '@cella/org-db':
-        specifier: workspace:*
-        version: link:../../../core/db/ts
-      '@cella/org-motion':
-        specifier: workspace:*
-        version: link:../../../feats/motion/core/ts
-      '@cella/org-policy':
-        specifier: workspace:*
-        version: link:../../../core/policy/ts
-      '@cella/org-ui':
-        specifier: workspace:*
-        version: link:../../../core/ui/ts
-      svelte:
-        specifier: 5.57.2
-        version: 5.57.2
-
   apps/org/grafts/client-invoice/ts:
     dependencies:
       '@cella/org-actions':
@@ -1082,6 +929,9 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
+      '@cella/org-person':
+        specifier: workspace:*
+        version: link:../../../feats/person/core/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1203,6 +1053,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1212,6 +1065,9 @@ importers:
       '@cella/org-membership':
         specifier: workspace:*
         version: link:../../../feats/person/feats/membership/core/ts
+      '@cella/org-person':
+        specifier: workspace:*
+        version: link:../../../feats/person/core/ts
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../core/ui/ts
@@ -1245,6 +1101,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1263,6 +1122,18 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+
+  apps/org/grafts/membership-payslip/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-membership':
+        specifier: workspace:*
+        version: link:../../../feats/person/feats/membership/core/ts
+      '@cella/org-person':
+        specifier: workspace:*
+        version: link:../../../feats/person/core/ts
 
   apps/org/grafts/membership-project/ts:
     dependencies:
@@ -1305,6 +1176,18 @@ importers:
       svelte:
         specifier: 5.57.2
         version: 5.57.2
+
+  apps/org/grafts/membership-timesheet/ts:
+    dependencies:
+      '@cella/org-db':
+        specifier: workspace:*
+        version: link:../../../core/db/ts
+      '@cella/org-membership':
+        specifier: workspace:*
+        version: link:../../../feats/person/feats/membership/core/ts
+      '@cella/org-person':
+        specifier: workspace:*
+        version: link:../../../feats/person/core/ts
 
   apps/org/grafts/motion-patronage/ts:
     dependencies:
@@ -1478,7 +1361,7 @@ importers:
         version: link:../feats/bill/core/ts
       '@cella/org-circle':
         specifier: workspace:*
-        version: link:../feats/circle/core/ts
+        version: link:../core/circle/ts
       '@cella/org-client':
         specifier: workspace:*
         version: link:../feats/client/core/ts
@@ -1521,33 +1404,6 @@ importers:
       '@cella/org-graft-bill-transaction':
         specifier: workspace:*
         version: link:../grafts/bill-transaction/ts
-      '@cella/org-graft-circle-expense-membership':
-        specifier: workspace:*
-        version: link:../grafts/circle-expense-membership/ts
-      '@cella/org-graft-circle-file-membership':
-        specifier: workspace:*
-        version: link:../grafts/circle-file-membership/ts
-      '@cella/org-graft-circle-meeting':
-        specifier: workspace:*
-        version: link:../grafts/circle-meeting/ts
-      '@cella/org-graft-circle-meeting-membership':
-        specifier: workspace:*
-        version: link:../grafts/circle-meeting-membership/ts
-      '@cella/org-graft-circle-membership':
-        specifier: workspace:*
-        version: link:../grafts/circle-membership/ts
-      '@cella/org-graft-circle-membership-motion':
-        specifier: workspace:*
-        version: link:../grafts/circle-membership-motion/ts
-      '@cella/org-graft-circle-membership-payslip':
-        specifier: workspace:*
-        version: link:../grafts/circle-membership-payslip/ts
-      '@cella/org-graft-circle-membership-timesheet':
-        specifier: workspace:*
-        version: link:../grafts/circle-membership-timesheet/ts
-      '@cella/org-graft-circle-motion':
-        specifier: workspace:*
-        version: link:../grafts/circle-motion/ts
       '@cella/org-graft-client-invoice':
         specifier: workspace:*
         version: link:../grafts/client-invoice/ts
@@ -1611,12 +1467,18 @@ importers:
       '@cella/org-graft-membership-motion':
         specifier: workspace:*
         version: link:../grafts/membership-motion/ts
+      '@cella/org-graft-membership-payslip':
+        specifier: workspace:*
+        version: link:../grafts/membership-payslip/ts
       '@cella/org-graft-membership-project':
         specifier: workspace:*
         version: link:../grafts/membership-project/ts
       '@cella/org-graft-membership-task':
         specifier: workspace:*
         version: link:../grafts/membership-task/ts
+      '@cella/org-graft-membership-timesheet':
+        specifier: workspace:*
+        version: link:../grafts/membership-timesheet/ts
       '@cella/org-graft-motion-patronage':
         specifier: workspace:*
         version: link:../grafts/motion-patronage/ts

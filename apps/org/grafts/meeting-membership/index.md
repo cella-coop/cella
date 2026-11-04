@@ -1,10 +1,11 @@
 +++
 title = "meeting-membership"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
-Who came to a meeting. Declared by the `meeting` feat. Who was expected,
-the circle's seats, is `circle-meeting-membership`'s.
+Who came to a meeting, who was expected, the circle's seats on its day,
+and whether it was quorate ([circles](#circles)). Declared by the
+`meeting` feat.
 
 ## Schema
 
@@ -27,17 +28,69 @@ the guards role, `cella_guards`, may select.
   `meeting_membership.marks` that it is theirs. A member not seated in the meeting's circle may
   mark themselves, and comes as a guest, counted in no quorum.
 - **record** is the minutes' keeper's, for anyone expected: it needs
-  `keep-minutes`, which `circle-meeting-membership` checks reaches the
+  `keep-minutes`, which `meeting-membership` checks reaches the
   meeting's circle, and refuses for a member not seated there.
 
 ## Shell
 
-The meeting's page posts both, from `circle-meeting-membership`'s attendance
+The meeting's page posts both, from `meeting-membership`'s attendance
 block; the collection carries how many were present; a person's page
 lists the meetings they were marked at.
 
 Slice tests: a mark as a register, fixed once held, only an active
 member's, and the self guard.
+
+## Circles
+
+Who is expected at a meeting, whether it is quorate, and who may act on
+it: it reads core's seats, the membership feat for whether a seat
+counts and what a power covers, the meeting feat for the quorum, and
+this graft's marks (`003-roll.sql` and `004-seated.sql`, and in the
+shell `meeting-membership/circles`, `api/circles.ts` and
+`app/circles.ts`). It adds no table.
+
+- `meeting_membership.roll`: for each meeting, the members seated in
+  its circle on its day, with their marks, then the members marked who
+  are not seated there, its guests.
+- `meeting_membership.quorum`: each meeting's seats, the seated
+  members present and how many must be, the circle's share of its seats
+  rounded up. Guests count for nothing.
+
+### Guards of the roll
+
+- `meeting_membership.sits`, on `meeting:item:add`, `:move` and
+  `:remove`: the actor holds a seat that counts in the meeting's circle
+  on the verdict date (`membership.sits_in`): the participant's `discuss`, which
+  `membership.may` finds on any seat, is held there.
+- `meeting_membership.reaches`, on `meeting:meeting:schedule`,
+  `:hold`, `:cancel` and `:minute` and on
+  `meeting-membership:attendance:record`: the actor holds the action's power over
+  the meeting's circle (`membership.over`): a lead's, scoped to their own
+  circle, covers it alone, and the gérante's, on the whole co-op, every circle.
+- `meeting_membership.records`, on `meeting-membership:attendance:record`:
+  the member recorded is seated in the meeting's circle on its day; any
+  other member marks themselves, as a guest.
+
+Quorum is a reading, not a refusal: a meeting held without it is held,
+and reads as inquorate; what it decides is the motions' own guards.
+
+### The roll in the shell
+
+On a meeting's page whether it is quorate, and under its agenda the
+attendance block: the roll, the acting member marking themselves and,
+when their `keep-minutes` covers the circle, recording anyone expected.
+In the acting member's inbox, each meeting still scheduled, from today,
+that they are expected at and have not marked themselves for.
+
+### The roll in Lanterne
+
+Malik, coordination's secretary, records its attendance; he may not
+record Thomas, who holds no seat there. Camille schedules coordination's
+meetings and the assembly's from the assembly; Yusuf, Web's lead,
+schedules Web's and no other's.
+
+Slice tests: the roll on a meeting's day, the quorum, the keeper's guard
+and the seat guard.
 
 ## Analytics
 

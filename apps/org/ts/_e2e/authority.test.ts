@@ -10,7 +10,7 @@ import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
 import { pay, post } from '@cella/org-transaction/api'
 import { close as closing, vote } from '@cella/org-motion/api'
-import { close } from '@cella/org-graft-circle-membership-motion/api'
+import { close } from '@cella/org-graft-membership-motion/api'
 import { profile } from '@cella/org-person/api'
 import { enrol, revoke } from '@cella/org-person/api'
 import { add, update } from '@cella/org-client/api'
@@ -42,7 +42,7 @@ const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sq
 const one = async <R>(sql: string, values: unknown[] = []) => (await all<R>(sql, values))[0]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
 const reason = (out: { state: string; reason?: string }) => (out.state === 'refused' ? out.reason ?? '' : '')
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
 const verifies = async () => (await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v
 
 const paying = (cents: number, label = 'Supplier: print proofs') => ({
@@ -86,7 +86,7 @@ test('Julien issues F-2026-0056 under his issue-invoice mandate, and it settles'
   assert.equal(issued.state, 'settled')
   assert.equal(issued.state === 'settled' && issued.value.invoice, 'F-2026-0056')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [issued.state === 'settled' && issued.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership', 'invoice', 'invoice-transaction'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice-transaction', 'membership'])
 })
 
 test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no number', async () => {
@@ -193,7 +193,7 @@ test('every active member edits clients and documents through the member role\'s
   const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
   assert.equal(noted.state, 'settled')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['circle-membership'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['membership'])
   const remarked = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Agreed.' }, as(hugo))
   assert.equal(remarked.state, 'settled')
 })
@@ -267,7 +267,7 @@ test('a closed motion\'s outcome stays fixed when a member is suspended after', 
   const closed = await close({ motion: 'm-2026-011' }, as(camille))
   assert.equal(closed.state, 'settled')
   assert.equal(await passes('m-2026-011'), false, 'Malik objects')
-  const counted = await all<{ member: string }>(`SELECT member FROM circle_membership_motion.counted WHERE motion = 'm-2026-011' ORDER BY member`)
+  const counted = await all<{ member: string }>(`SELECT member FROM membership_motion.counted WHERE motion = 'm-2026-011' ORDER BY member`)
   assert.equal(counted.length, 5)
 
   // Suspending the objector would let the others' consents pass it, were
@@ -277,7 +277,7 @@ test('a closed motion\'s outcome stays fixed when a member is suspended after', 
     `SELECT cella.consent(v.member, v.stance, v.receipt) AS p
      FROM motion.vote v
      JOIN motion.motion d ON d.id = v.motion
-     JOIN circle_membership_motion.roll r ON r.motion = v.motion AND r.member = v.member
+     JOIN membership_motion.roll r ON r.motion = v.motion AND r.member = v.member
      JOIN membership.member m ON m.address = v.member AND m.status = 'active'
      WHERE v.motion = 'm-2026-011' AND v.receipt < d.cutoff`,
   )

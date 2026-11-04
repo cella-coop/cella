@@ -10,7 +10,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, put } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, put } from '@cella/org-graft-membership-motion/api'
 import { erase as eraseClient, update } from '@cella/org-client/api'
 import { capture } from '@cella/org-expense/api'
 import { log as logTime } from '@cella/org-timesheet/api'
@@ -54,7 +54,7 @@ async function excluded(from: string, until: string) {
   await on(from)
   const proposed = settled(await put({ kind: 'exclude', args: { member: chloe }, deadline: until, body: '' }, as(camille))).value as { motion: string }
   const roll = await all<{ member: string }>(
-    `SELECT r.member FROM circle_membership_motion.roll r JOIN membership.member m ON m.address = r.member
+    `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
      WHERE r.motion = $1 AND m.status = 'active'`,
     [proposed.motion],
   )

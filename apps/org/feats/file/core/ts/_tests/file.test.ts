@@ -16,7 +16,7 @@ const db = new pg.Client()
 
 // Who reads, on the app's role as the server connects: the rows a query
 // returns read as `actor`, or as no one. A stub authority stands in for
-// circle-membership's, which says who holds a power.
+// the membership feat's, which says who holds a power.
 const app = new pg.Client({ user: 'cella_app' })
 const reading = async (actor: string | null, sql: string, values: unknown[] = []) => {
   await app.query(`SELECT set_config('cella.actor', $1, false)`, [actor ?? ''])

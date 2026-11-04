@@ -1,5 +1,5 @@
 // seed: founds a mock co-op from its fixture's directory, as the log's
-// first entry, the founding (the import feat's `circle-membership-motion:scope:found`), which
+// first entry, the founding (the import feat's `membership-motion:scope:found`), which
 // carries the state the mock co-op held before its log with it
 // (`seed/found.mjs`).
 // It connects to DATABASE_URL if set, otherwise by the PG* variables.

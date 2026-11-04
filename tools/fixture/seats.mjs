@@ -1,5 +1,5 @@
 // fixture seats: where each person sits in a mock co-op, read from its
-// circles' members and its tenures as `circle_membership.seat` reads
+// circles' members and its tenures as `circle.seat` reads
 // them: a person member with no role, a tenure in its circle with its
 // role, and a tenure of a role that is a member of a circle there with no
 // role, for the days the two overlap.
@@ -7,7 +7,7 @@
 const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function seats(read) {
-  const { member = [], tenure = [] } = read('graft.circle-membership')
+  const { member = [], tenure = [] } = read('circle')
   const later = (a, b) => (!a ? b : !b ? a : a > b ? a : b)
   const sooner = (a, b) => (!a ? b : !b ? a : a < b ? a : b)
   return [

@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -29,7 +29,7 @@ employment governs: `employment-payslip` (whose pay is),
 `employment-file` (their employment records), `employment-membership` (the
 candidacy and the path to membership) and `employment-membership-motion`
 (the admission once the probation is over). An employee applies to join
-through `circle-membership-motion`, which puts their admission to the
+through `membership-motion`, which puts their admission to the
 assembly; `employment-membership` holds the application to a year's
 employment and opens the candidacy that follows it.
 
@@ -64,7 +64,7 @@ shell are not built; the salary is the `payslip` feat's.
 | hire | `hire-worker`, no limit | Camille, as gérante |
 
 `002-powers.sql` registers it in `cella.power`, and the
-`circle-membership` graft checks it. What a hire costs is the salary's,
+membership feat checks it. What a hire costs is the salary's,
 which the `payslip` feat holds, so the power has no limit.
 
 ## Guards

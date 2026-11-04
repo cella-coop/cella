@@ -284,14 +284,17 @@ for (const dir of byName.values()) {
 // A feat's or graft's actions are declared in its `models/actions.ts` and
 // nowhere else: no other file imports a label or the `Actions` type, and
 // no `models/ops.ts` is left. Each action is its own,
-// `<feat>:<entity>:<verb>`.
+// `<feat>:<entity>:<verb>`. A library of the app's core that has actions,
+// as `circle` does, is held to the same, its actions named for it.
+const acts = (dir) => existsSync(join(repo, dir, 'src', 'models', 'actions.ts'))
+const appCore = (p) => p?.kind === 'core' && !parentOf(p.node)
 const labels = /import\s+(?:type\s+)?\{([^}]*)\}\s*from\s*['"]@cella\/org-actions['"]/g
 const declares = (text) =>
   [...text.matchAll(labels)].some(([, names]) =>
     names.split(',').some((n) => ['confluent', 'bounded', 'ordered', 'Actions'].includes(n.replace(/^\s*type\s+/, '').trim())))
 for (const dir of byName.values()) {
   const p = place(dir)
-  if (!p || (p.kind === 'core' && !parentOf(p.node))) {
+  if (!p || (appCore(p) && !acts(dir))) {
     continue
   }
   const own = join(dir, 'src', 'models', 'actions.ts')
@@ -305,7 +308,7 @@ for (const dir of byName.values()) {
   if (!existsSync(join(repo, own))) {
     continue
   }
-  const name = p.kind === 'graft' ? p.name : basename(p.node)
+  const name = p.kind === 'graft' ? p.name : appCore(p) ? basename(dirname(dir)) : basename(p.node)
   for (const [, action] of readFileSync(join(repo, own), 'utf8').matchAll(/^\s*'([^']+)':/gm)) {
     if (action.split(':').length !== 3 || action.split(':')[0] !== name) {
       fail(`${own}: ${action} is not an action of ${name}, <${name}>:<entity>:<verb>`)
@@ -320,6 +323,13 @@ if (sql) {
     const gdir = join(repo, node, 'grafts')
     for (const g of existsSync(gdir) ? readdirSync(gdir) : []) {
       known.add(schemaName(g))
+    }
+    // A core library's schema, which its SQL names: org's circle.
+    const cdir = join(repo, node, 'core')
+    for (const l of existsSync(cdir) ? readdirSync(cdir) : []) {
+      if (existsSync(join(cdir, l, 'sql'))) {
+        known.add(l)
+      }
     }
   }
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
@@ -338,10 +348,11 @@ if (sql) {
     const mine = found.foreign.filter((f) => f.path.startsWith(app + '/'))
     errors.push(...ratchet(mine, listed(repo, app), app))
   }
-  // A feat's or graft's ops, not the app core's own types.
+  // A feat's or graft's ops, and those of a core library that has
+  // actions, not the app core's own types.
   const owned = [...byName.values()].filter((d) => {
     const p = place(d)
-    return p && !(p.kind === 'core' && !parentOf(p.node))
+    return p && !(appCore(p) && !acts(d))
   })
   const ops = await declared(repo, owned)
   errors.push(...agree(ops, found.powers, found.cites, found.stances), ...covered(ops, found))

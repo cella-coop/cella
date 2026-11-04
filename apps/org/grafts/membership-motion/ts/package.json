@@ -13,6 +13,7 @@
     "@cella/org-motion": "workspace:*",
     "@cella/org-membership": "workspace:*",
     "@cella/org-person": "workspace:*",
-    "svelte": "5.57.2"
+    "svelte": "5.57.2",
+    "@cella/org-circle": "workspace:*"
   }
 }

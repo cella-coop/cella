@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -21,7 +21,7 @@ the guards role may select.
 | `membership-task:task:assign` | confluent | `edit-task` | the assignee is a register: the last writer wins; none unassigns |
 
 `002-powers.sql` registers the power in `cella.power`, and the
-`circle-membership` graft checks it.
+membership feat checks it.
 
 ## Invariants
 

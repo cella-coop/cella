@@ -8,7 +8,7 @@ type Action = keyof typeof actions
 // Marks a member present, excused or absent, the last mark winning, on
 // the verdict date, as the actor. `mark` is a member's own, which
 // `meeting_membership.marks` checks; `record` is the minutes' keeper's for
-// anyone expected, which circle-meeting-membership checks. The graft's
+// anyone expected, which meeting-membership checks. The graft's
 // trigger refuses a meeting already held and anyone not an active member.
 function marking<O extends Action>(op: O) {
   return (input: Attend, deps: Deps): Promise<Outcome<(typeof actions)[O], Attend>> => {

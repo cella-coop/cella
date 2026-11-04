@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 # Trust
@@ -45,8 +45,8 @@ may be `Refused` as well as `Settled`; only an ordered action may also be
 An action a passed motion carries is an attempt like any other. Once
 the close settles, each is a write of its own, in the order proposed,
 signed by the member who closed the motion, by their device, citing it,
-and judged by its own guards, by `circle-membership-motion`'s that
-the motion it cites closed and passed, and by `circle-motion`'s that
+and judged by its own guards, by `membership-motion`'s that
+the motion it cites closed and passed, and by the motion feat's that
 the motion's circle holds, on the verdict date, a collective mandate
 for the action's power; what follows a carried action,
 such as the freeze and the withdrawal of capital that follow an exit,
@@ -138,7 +138,7 @@ sequenceDiagram
   are the notary's own. What a co-op is when its log begins comes in as
   a write too: the founding, below.
 - **The first entry founds the co-op.** One write, the founding
-  (`circle-membership-motion:scope:found`), settles on an empty log alone, so a scope is
+  (`membership-motion:scope:found`), settles on an empty log alone, so a scope is
   founded once and a second founding is refused. It names the legal
   form the co-op chose, one cella offers, and brings in its founders, as
   persons with their devices and their memberships; the assembly,
@@ -170,10 +170,16 @@ sequenceDiagram
   every feat, not a feat, and has no writes of its own; moving it is moving
   the database to another host, which arrives at rung 6
   ([ratchet](ratchet.md#moving-a-notary)).
+- **Circles, roles, tenures and mandates are core**, as groups are in
+  standard RBAC: every feat builds on them, and the notary knows none of
+  them. Whether a seat counts on a day is the membership feat's to say,
+  so the guard on every power is that feat's
+  ([architecture](architecture.md#circles-are-core)).
 - **Who may write is checked by a guard like any other.** Each op that needs a power
-  names it in `cella.power`, registered by its feat; the `circle-membership`
-  graft attaches a guard to every such op that the actor holds, on the
-  verdict date, a seat whose role has a mandate granting the power, within
+  names it in `cella.power`, registered by its feat or by core's circles;
+  the membership feat, which says whether a seat counts, attaches a guard
+  to every such op that the actor holds, on the verdict date, a seat
+  (core's, read from the circles' members and the roles' tenures) whose role has a mandate granting the power, within
   its limit for the write's amount, or a right granting it: every person,
   every member or every employee, as person's core says the actor is one
   that day. What is the actor's own (a profile, a device, their time, a
@@ -181,12 +187,12 @@ sequenceDiagram
   theirs; a right opens no one else's rows to read. A write a passed motion carries (an
   admission, an adoption, a seat) names its power in `motion.cites`
   instead, registered by the graft that cites the motion, and needs a
-  collective mandate: `circle-motion` attaches a guard to every such op
+  collective mandate: the motion feat attaches a guard to every such op
   that the cited motion's circle holds, on the verdict date, a mandate
   on the circle itself granting the power, as it checked when the
   motion was proposed. A stance needs `vote`, the power a motion's
   procedure gives the seats on its roll, in `motion.stance_power`:
-  `circle-membership-motion`'s guard holds it to someone on the roll
+  `membership-motion`'s guard holds it to someone on the roll
   whose seat counts on the verdict date. The one write with no power is
   the log's first entry, the founding, since no policy is adopted
   before it: its label declares the check `first` and a guard
@@ -197,7 +203,7 @@ sequenceDiagram
   `payslip:run.pay` and `account:capital.repay` under their power, and
   `account.draw` within the member's own draw limit. A mandate's budget, a total over a month or a
   year, is checked by the graft that sees what spends it:
-  `circle-expense-membership` sums an approver's approvals.
+  `expense-membership` sums an approver's approvals.
 - **Who may read is a row-level policy in the database.** Every
   connection the server hands out reads as the session's person: it sets `cella.actor`
   from the session before any query, and `write` sets it again for its
@@ -205,13 +211,13 @@ sequenceDiagram
   capital, personal files or a capital account's lines keeps row-level
   security for the app role. The person reads their own rows. A feat
   names in `cella.reading` the powers that read all of them, as its actions
-  name theirs in `cella.power`, and the `circle-membership` graft, as
+  name theirs in `cella.power`, and the membership feat, as
   `cella.authority`, says who holds a power on the verdict date: the
   payroll powers read pay, `approve-time` time, the books' and capital's
   powers capital. A graft that knows whose a row is opens it further
   (`cella.reach`): `account-transaction` opens the lines on the co-op's
   own accounts to every member and a capital account's to its holder, and
-  `circle-file-membership` a class of personal files to the powers over
+  `file-membership` a class of personal files to the powers over
   what they record. No one signed in reads none of it. A stance on a
   secret ballot is read by its member alone, under no power; a
   motion's tally, read by everyone, stays sealed until its close
@@ -243,7 +249,7 @@ guards crate, which also compiles to WASM for browsers, devices and auditors:
 - the action being judged: `cella.action()`, its id, `cella.actor()` and
   `cella.device()`;
   whether the actor may use a power is not a primitive but the
-  `circle-membership` graft's composed guard, `circle_membership.may(actor, power,
+  membership feat's composed guard, `membership.may(actor, power,
   cents, day)`, since only that graft sees both mandates and seats;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;

@@ -13,7 +13,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -42,8 +42,8 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   assert.equal(out.state, 'settled', reason(out))
   return out.value as T
 }
-const passes = async (d: string) => (await one<{ p: boolean }>('SELECT circle_membership_motion.passes($1) AS p', [d])).p
-const roll = (d: string) => all<{ member: string; veto: boolean }>('SELECT member, veto FROM circle_membership_motion.roll WHERE motion = $1 ORDER BY member', [d])
+const passes = async (d: string) => (await one<{ p: boolean }>('SELECT membership_motion.passes($1) AS p', [d])).p
+const roll = (d: string) => all<{ member: string; veto: boolean }>('SELECT member, veto FROM membership_motion.roll WHERE motion = $1 ORDER BY member', [d])
 
 // A motion of a circle's text alone acts under no mandate, so the circle's
 // procedure decides it: the host stages that procedure, as only a

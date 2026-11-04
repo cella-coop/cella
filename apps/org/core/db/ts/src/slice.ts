@@ -207,10 +207,16 @@ export interface Importer {
 // what it adds to the collections of the feats it joins or nests in, its reactions,
 // and the kinds of file it imports.
 export interface Slice {
+  // The feat's or graft's name, or `<name>/<part>` for one part of a
+  // slice mounted in parts, as a feat a graft of the circles dissolved
+  // into keeps what the graft added beside its own: `motion/circles`.
   name: string
   // The feat a nested feat nests in, whose collections it extends as a
   // graft extends those of the feats it joins: membership's is person.
   within?: string
+  // A library of the app's core, whose collections any slice may extend,
+  // since every feat builds on core: the circles.
+  core?: boolean
   collections?: Record<string, Collection>
   extends?: Record<string, Extension>
   on?: Partial<Record<Permission, Reaction>>

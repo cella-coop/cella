@@ -56,7 +56,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
   ('account:own:withdraw', 'account.owns(jsonb)', 'account');
 
 -- Each is the member's own right's, `withdraw-membership`, which the
--- circle-membership graft's guard checks the actor holds.
+-- membership feat's guard checks the actor holds.
 INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('account:own:freeze', 'withdraw-membership', NULL, 'account'),
   ('account:own:withdraw', 'withdraw-membership', NULL, 'account');

@@ -10,9 +10,8 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { adopt, vote } from '@cella/org-motion/api'
-import { proposing } from '@cella/org-graft-circle-motion/api'
-import { carried, close, propose } from '@cella/org-graft-circle-membership-motion/api'
+import { adopt, circles, vote } from '@cella/org-motion/api'
+import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { sign } from './lanterne.ts'
 
@@ -82,7 +81,7 @@ test('the assembly proposes the solidarity rate as a rule, and every member cons
     ),
   )
   motion = proposed.motion
-  for (const { member } of await all<{ member: string }>('SELECT member FROM circle_membership_motion.roll WHERE motion = $1', [motion])) {
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
 })
@@ -123,7 +122,7 @@ test('carried again, the adoption is refused: a policy is adopted once', async (
 })
 
 test('the assembly\'s page lists the policy in force, as it reads, with its motion and its days', async () => {
-  const page = await proposing(app, 'ag')
+  const page = await circles.proposing(app, 'ag')
   assert.deepEqual(
     page?.policies.filter((p) => p.kind === 'rule' && p.motion === motion).map((p) => ({ id: p.id, sentence: p.sentence, motion: p.motion, applies: p.applies, ends: p.ends, values: p.values })),
     [
@@ -137,7 +136,7 @@ test('the assembly\'s page lists the policy in force, as it reads, with its moti
       },
     ],
   )
-  assert.deepEqual((await proposing(app, 'coordination'))?.policies, [], 'a policy is its circle\'s')
+  assert.deepEqual((await circles.proposing(app, 'coordination'))?.policies, [], 'a policy is its circle\'s')
 })
 
 test('the log verifies', async () => {

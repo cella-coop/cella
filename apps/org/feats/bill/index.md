@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -61,8 +61,8 @@ over this feat's `approving` and `paying` specs.
 | approve | `approve-bill`, within the mandate's limit for the bill's total | Camille, as gérante, up to 5 000 € a bill |
 | pay | `pay-supplier`, within the mandate's limit for the bill's total | Julien, as finance, up to 3 000 € |
 
-`002-powers.sql` registers them in `cella.power`; the `circle-membership`
-graft checks the power and the limit.
+`002-powers.sql` registers them in `cella.power`; the membership
+feat checks the power and the limit.
 
 ## Invariants
 

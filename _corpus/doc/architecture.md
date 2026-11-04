@@ -258,8 +258,13 @@ so far, and `motion.register_cite` attaches each guard so registered to
 the action it lists, whichever migrated first, so no graft puts a
 trigger on the register: `membership-motion`'s, that the motion
 passed on its roll, and the motion feat's own, that the motion's circle
-holds a collective mandate for the action's power. `cella check feats`
-reads each call's literal action and power as it reads a literal row.
+holds a collective mandate for the action's power. The journal's line
+checks are registered the same way: `account-transaction` registers
+that a line's account exists and its period is open by
+`transaction.register_line_check`, and the transaction feat's own
+trigger runs every check registered before each line is inserted, so
+no graft puts a trigger on the journal. `cella check feats` reads each
+call's literal action and power as it reads a literal row.
 
 `cella check feats` checks this. `tools/sql-check.mjs` collects every
 such write and trigger that the owner's migrations leave standing. A

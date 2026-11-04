@@ -145,3 +145,19 @@ test('as the app role, whoever keeps the books reads every entry and line; a gra
   assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT id FROM transaction.entry'), [{ id }], 'she reads the entry that holds a line opened to her')
   assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT entry, account FROM transaction.line'), [{ entry: id, account: '101302' }], 'and that line alone')
 })
+
+test('a check an extender registers runs on every line posted, and refuses the line it raises on', async () => {
+  await db.query(`CREATE SCHEMA extender`)
+  await db.query(
+    `CREATE FUNCTION extender.no_666(line transaction.line) RETURNS void LANGUAGE plpgsql AS $$
+     BEGIN
+       IF line.account = '666' THEN
+         RAISE EXCEPTION '% posts to 666', line.entry USING ERRCODE = 'triggered_action_exception';
+       END IF;
+     END $$`,
+  )
+  await db.query(`SELECT transaction.register_line_check('extender.no_666(transaction.line)', 'test')`)
+  const refused = await post([{ account: '666', side: 'debit', cents: 1_00 }, { account: '512', side: 'credit', cents: 1_00 }])
+  assert.match(refused.refused ?? '', /je-\d+ posts to 666/)
+  assert.ok((await post(rent)).id, 'a line the check passes posts')
+})

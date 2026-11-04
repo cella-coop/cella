@@ -2,36 +2,36 @@ CREATE SCHEMA account_transaction;
 
 -- Every line posts to an account of the chart, and no entry posts into a
 -- closed period, whichever write posts it: a transaction's own, or an
--- invoice's through invoice-transaction. The period row is read FOR SHARE
--- and `account:period:close` updates it, so a post and a concurrent close
--- are serialised: the close waits for the post, or the post sees the close.
-CREATE FUNCTION account_transaction.posts() RETURNS trigger LANGUAGE plpgsql AS $$
+-- invoice's through invoice-transaction. It is a line check, registered
+-- with the transaction feat, whose own trigger runs it before each line is
+-- inserted. The period row is read FOR SHARE and `account:period:close`
+-- updates it, so a post and a concurrent close are serialised: the close
+-- waits for the post, or the post sees the close.
+CREATE FUNCTION account_transaction.posts(line transaction.line) RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
   day date;
   period text;
   closed date;
 BEGIN
-  IF NOT EXISTS (SELECT FROM account.account a WHERE a.code = NEW.account) THEN
-    RAISE EXCEPTION '% posts to %, which is no account', NEW.entry, NEW.account
+  IF NOT EXISTS (SELECT FROM account.account a WHERE a.code = line.account) THEN
+    RAISE EXCEPTION '% posts to %, which is no account', line.entry, line.account
       USING ERRCODE = 'triggered_action_exception';
   END IF;
-  SELECT e.date INTO day FROM transaction.entry e WHERE e.id = NEW.entry;
+  SELECT e.date INTO day FROM transaction.entry e WHERE e.id = line.entry;
   period := to_char(day, 'YYYY-MM');
   SELECT p.closed INTO closed FROM account.period p WHERE p.month = period FOR SHARE;
   IF NOT FOUND THEN
-    RAISE EXCEPTION '% is dated %, in no period of the books', NEW.entry, day
+    RAISE EXCEPTION '% is dated %, in no period of the books', line.entry, day
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF closed IS NOT NULL THEN
-    RAISE EXCEPTION '% is closed: % cannot post into it', period, NEW.entry
+    RAISE EXCEPTION '% is closed: % cannot post into it', period, line.entry
       USING ERRCODE = 'triggered_action_exception';
   END IF;
-  RETURN NEW;
 END
 $$;
 
-CREATE TRIGGER posts BEFORE INSERT ON transaction.line
-  FOR EACH ROW EXECUTE FUNCTION account_transaction.posts();
+SELECT transaction.register_line_check('account_transaction.posts(transaction.line)', 'account-transaction');
 
 -- The trial balance: each account's debits and credits from the journal,
 -- in cents; `balance` is signed, debit positive.

@@ -6,6 +6,7 @@
     "feat-check": "node tools/feat-check.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@types/node": "^24.19.2",
     "@types/pg": "^8.23.1",
     "libpg-query": "18.2.0",

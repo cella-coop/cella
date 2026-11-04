@@ -18,7 +18,9 @@
     wide = false,
     button = false,
   }: {
-    // The trigger's name for assistive technology.
+    // What the trigger opens: the popover's name, and the trigger's
+    // description beside the name its visible text gives it, so a voice
+    // naming what it sees reaches it.
     label: string
     trigger: Snippet
     children: Snippet
@@ -67,8 +69,9 @@
   }
 </script>
 
-<button class="trigger" class:button popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-label={label} style:anchor-name="--{id}">
+<button class="trigger" class:button popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
   {@render trigger()}
+  <span id="{id}-about" hidden>{label}</span>
 </button>
 <div
   {id}

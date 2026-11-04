@@ -78,7 +78,9 @@ The theme is light, dark or the system's, a cookie the server writes into
   outside close it and focus returns to the trigger; anchored by CSS
   anchor positioning and flipped to stay in the viewport, placed by
   `models/place.ts` where a browser lacks it; as a menu it focuses its
-  checked or first item and moves with the arrows, Home and End. The ui
+  checked or first item and moves with the arrows, Home and End. Its
+  trigger is named by what it shows, so a voice naming it reaches it,
+  and its `label`, which names the popover, describes the trigger. The ui
   check refuses a layer floated by hand (`position: absolute` with a
   `z-index`) anywhere else.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
@@ -320,6 +322,29 @@ pins until a viewer makes their own, JSON in the address (`w`) as a
 collection's are. The View card lists them in order, dragged into place
 or removed, and edits one collection's with `Widgets` (`c` in the
 address), `repin` putting them back where the first of them stood.
+
+## Accessibility
+
+The `a11y` e2e scenario (`apps/org/ts/_e2e/a11y.test.ts`) scans, with
+axe-core through Playwright, the sign-in page and, signed in as
+Camille on Lanterne, the home, every collection the sidebar mounts in
+its default view, the first item each lists and its form open on
+New, in light and in dark, on Chromium, Firefox and WebKit. A
+violation of impact serious or critical fails it. What it found when
+it was added is fixed in the component that draws it, never in one
+page; a violation whose fix would change the design system's look (a
+token's colour, the navigation, the layout at narrow widths) waits for
+the operator's design session, listed in the scenario by its axe rule
+and the page it is on, so the list only shrinks and a new violation of
+that rule elsewhere still fails. It lists none.
+
+What it holds the components to: a popover's trigger is named by its
+visible text, the co-op's mark and the account's initials hidden from
+assistive technology; a list of errors is a list inside its live
+region, never a list made one; and a region that scrolls with nothing
+in it the keyboard reaches, the page frame's content or a table's
+strip, is a tab stop named for its page or its section while it
+scrolls, so the arrows scroll it (`scroller` in `models/keys.ts`).
 
 ## Types
 

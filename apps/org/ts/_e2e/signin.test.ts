@@ -105,7 +105,7 @@ for (const [name, launch] of browsers()) {
         const renamed = await one<{ op: string; device: string }>(`SELECT op, encode(device, 'hex') AS device FROM cella.receipt WHERE actor = $1 ORDER BY n DESC LIMIT 1`, [sam])
         assert.deepEqual(renamed, { op: 'person:person:profile', device: device.key }, 'the write was signed in the browser by its device')
 
-        await page.getByRole('button', { name: /^Account: / }).click()
+        await page.getByRole('button', { name: /^Sam Petit-Roux/ }).click()
         await page.getByRole('button', { name: 'Sign out' }).click()
         await page.waitForURL(`${base}/sign-in`)
         await page.waitForLoadState('networkidle')

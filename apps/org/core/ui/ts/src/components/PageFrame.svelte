@@ -4,6 +4,7 @@
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
   import type { Panel, Tone } from '../models/view.ts'
   import { useShell } from '../hooks/useShell.ts'
+  import { scroller } from '../models/keys.ts'
   import Badge from './Badge.svelte'
   import Icon from './Icon.svelte'
 
@@ -98,7 +99,7 @@
     {/if}
   </header>
 
-  <div class="content">
+  <div class="content" {@attach scroller(title)}>
     {#if subtitle}<p class="subtitle">{subtitle}</p>{/if}
     {@render children()}
   </div>

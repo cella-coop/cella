@@ -51,3 +51,35 @@ export const focused =
       }
     }
   }
+
+const focusable = 'a[href], button, input, select, textarea, summary, [contenteditable="true"], [tabindex]:not([tabindex="-1"])'
+
+// A region that scrolls is in the tab order, named `label`, while it
+// scrolls and holds nothing the keyboard can reach, so the arrows scroll
+// it; otherwise it is left as it was. Read again whenever its size or
+// what it holds changes.
+export const scroller =
+  (label: string): Attachment<HTMLElement> =>
+  (node) => {
+    const read = () => {
+      const scrolls = node.scrollHeight > node.clientHeight || node.scrollWidth > node.clientWidth
+      if (scrolls && !node.querySelector(focusable)) {
+        node.tabIndex = 0
+        node.setAttribute('role', 'region')
+        node.setAttribute('aria-label', label)
+      } else if (node.hasAttribute('tabindex')) {
+        node.removeAttribute('tabindex')
+        node.removeAttribute('role')
+        node.removeAttribute('aria-label')
+      }
+    }
+    read()
+    const sized = new ResizeObserver(read)
+    sized.observe(node)
+    const changed = new MutationObserver(read)
+    changed.observe(node, { childList: true, subtree: true })
+    return () => {
+      sized.disconnect()
+      changed.disconnect()
+    }
+  }

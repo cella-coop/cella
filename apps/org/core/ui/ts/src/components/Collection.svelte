@@ -358,9 +358,11 @@
   {/snippet}
 
   {#if errors.length}
-    <ul class="errors" role="status">
-      {#each errors as e (e)}<li>{e}</li>{/each}
-    </ul>
+    <div role="status">
+      <ul class="errors">
+        {#each errors as e (e)}<li>{e}</li>{/each}
+      </ul>
+    </div>
   {/if}
 
   {#if state.creating}

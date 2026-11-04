@@ -77,24 +77,18 @@ refused.
 
 ## Circles
 
-Which projects a power covers: a lead runs their own circle's projects,
-since what a project write concerns is its circle (`004-runs.sql`).
-
-- `membership_project.runs`, on `project:project:create`,
-  `project:milestone:add`, `project:milestone:complete`,
-  `project:project:budget`, `project:project:archive` and
-  `membership-project:project:share`: the actor holds the action's power
-  (`manage-project`, `set-budget`) by a mandate whose scope covers the
-  project's circle, through `membership.over`; a project of no circle is
-  the whole co-op's, run by a mandate on the whole co-op. A project the
-  payload does not name, or that does not exist, is left to its own
-  feat's guards.
+Which projects a power covers is the project's owning circle, and the
+membership feat's one guard reads it
+([membership](../../feats/person/feats/membership/index.md#seats)): a
+share's payload names its project's circle, as the project feat's own
+writes do, so a lead grants shares of their own circle's projects by a
+mandate on `own`, and no slice checks a project's circle again.
 
 In Lanterne, Hugo, Brand's lead, budgets Ferrand's packaging, Brand's;
 Yusuf, Web's, the Halles shop, and is refused Brand's, since the lead's
 mandates are on their own circle; Camille, whose gérante mandates are on
 the whole co-op, any project. Its tests are the membership feat's of
-`over`, and the `work` and `governance` scenarios.
+`may`, and the `work` and `governance` scenarios.
 
 ## Analytics
 

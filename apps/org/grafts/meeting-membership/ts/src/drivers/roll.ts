@@ -17,7 +17,7 @@ export async function onMeeting(db: Db, meeting: string, actor: string | null): 
   )
   const { rows } = await db.query<Quorum>('SELECT seats, present, needed FROM meeting_membership.quorum WHERE meeting = $1', [meeting])
   const keeps = actor
-    ? (await db.query<{ keeps: boolean }>(`SELECT membership.over($1, 'keep-minutes', $2, cella.verdict_date()) AS keeps`, [actor, found.rows[0].circle])).rows[0].keeps
+    ? (await db.query<{ keeps: boolean }>(`SELECT membership.may($1, 'keep-minutes', NULL, $2, cella.verdict_date()) AS keeps`, [actor, found.rows[0].circle])).rows[0].keeps
     : false
   return { roll, quorum: rows[0] ?? { seats: 0, present: 0, needed: 0 }, open: found.rows[0].open, actor, keeps }
 }

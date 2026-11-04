@@ -45,10 +45,14 @@ export interface Log {
   minutes: number
   billable: boolean
   note?: string
+  // The circle the time is worked for, its owning circle; the root's where
+  // none is named. A month takes the circle of its first entry.
+  circle?: string
 }
 
 export interface Logged {
   entry: string
+  circle: string
   member: string
   day: string
   minutes: number
@@ -78,5 +82,8 @@ export interface Submitted extends Period {
 }
 
 export interface Approved extends Period {
+  // The month's owning circle, which the guard reads the approve-time
+  // mandate's scope against.
+  circle: string
   approved: string
 }

@@ -1,11 +1,14 @@
--- Whether a member may use a power on a day: they are active and hold a
--- seat whose role has a mandate in force granting it, within its limit for
--- `cents` when the write carries an amount. A revoked mandate grants
--- nothing from the day it was revoked, its policy's end: a revocation on
--- the verdict date counts from its receipt. A mandate's budget, a total
--- over a period, is not checked: it needs spend tracking that is not
--- built.
-CREATE FUNCTION membership.may(actor text, power text, cents bigint, day date) RETURNS boolean
+-- Whether a member may use a power over a record of the circle `about` on
+-- a day: they are active and hold a seat whose role has a mandate in
+-- force granting it, whose scope covers the record's owning circle
+-- (`circle.covers`), within its limit for `cents` when the write carries
+-- an amount. Ownership grants nothing by itself, and a seat in the circle
+-- nothing without a mandate; `about` null asks of no record, as reading
+-- does until it follows the mandates. A revoked mandate grants nothing
+-- from the day it was revoked, its policy's end: a revocation on the
+-- verdict date counts from its receipt. A mandate's budget, a total over
+-- a period, is not checked: it needs spend tracking that is not built.
+CREATE FUNCTION membership.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
@@ -15,6 +18,7 @@ BEGIN ATOMIC
     WHERE p.member = may.actor
       AND mm.status = 'active'
       AND m.power = may.power
+      AND circle.covers(m.scope, p.circle, may.about)
       AND (p.since IS NULL OR p.since <= may.day)
       AND (p.until IS NULL OR p.until > may.day)
       AND (m."from" IS NULL OR m."from" <= may.day)
@@ -25,18 +29,21 @@ BEGIN ATOMIC
 END;
 
 -- Every op with a power in cella.power — the actor holds it on the verdict
--- date, within the mandate's limit for the amount the payload names.
+-- date over the record the write concerns, whose owning circle its payload
+-- names (`circle`, the root's where it names none), within the mandate's
+-- limit for the amount the payload names.
 CREATE FUNCTION membership.empowered(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN w.amount IS NOT NULL AND w.cents IS NULL THEN w.op || ' names its amount in ' || w.amount || ', which the payload lacks'
-    WHEN NOT membership.may(cella.actor(), w.power, w.cents, cella.verdict_date()) THEN
+    WHEN NOT membership.may(cella.actor(), w.power, w.cents, w.about, cella.verdict_date()) THEN
       cella.actor() || ' holds no mandate for ' || w.power
         || coalesce(' up to ' || cella.amount(w.cents)::text || ' €', '')
   END
   FROM (
-    SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents
+    SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents,
+      coalesce(payload ->> 'circle', circle.assembly()) AS about
     FROM cella.power p
     WHERE p.op = cella.action()
   ) w;

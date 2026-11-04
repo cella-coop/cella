@@ -47,6 +47,9 @@ export interface Create {
 
 export interface Created {
   project: string
+  // Its owning circle, which the guard reads a mandate's scope against;
+  // so too below.
+  circle: string
   started: string
 }
 
@@ -58,6 +61,7 @@ export interface Add {
 
 export interface Added {
   project: string
+  circle: string
   n: number
 }
 
@@ -68,6 +72,7 @@ export interface Complete {
 
 export interface Completed {
   project: string
+  circle: string
   n: number
   completed: string
 }
@@ -84,5 +89,10 @@ export interface Archive {
 
 export interface Archived {
   project: string
+  circle: string
   archived: string | null
+}
+
+export interface Budgeted extends Budget {
+  circle: string
 }

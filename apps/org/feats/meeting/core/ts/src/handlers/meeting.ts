@@ -106,15 +106,15 @@ function settle(op: 'meeting:meeting:hold' | 'meeting:meeting:cancel', status: '
       op,
       request: input,
       state: async (tx) => {
-        const { rows } = await tx.query<{ settled: string }>(
+        const { rows } = await tx.query<{ settled: string; circle: string }>(
           `UPDATE meeting.meeting SET status = $2, settled = cella.verdict_date()
-           WHERE id = $1 RETURNING to_char(settled, 'YYYY-MM-DD') AS settled`,
+           WHERE id = $1 RETURNING to_char(settled, 'YYYY-MM-DD') AS settled, circle`,
           [input.meeting, status],
         )
         if (!rows[0]) {
           throw new Error(`no meeting ${input.meeting}`)
         }
-        return { meeting: input.meeting, status, settled: rows[0].settled }
+        return { meeting: input.meeting, circle: rows[0].circle, status, settled: rows[0].settled }
       },
       payload: (v) => ({ ...v }),
     })
@@ -130,15 +130,15 @@ export const minuting = (input: Minute): Write<Minuted> => ({
   op: 'meeting:meeting:minute' satisfies Action,
   request: input,
   state: async (tx) => {
-    const { rows } = await tx.query<{ minuted: string }>(
+    const { rows } = await tx.query<{ minuted: string; circle: string }>(
       `UPDATE meeting.meeting SET minuted = coalesce(minuted, cella.verdict_date())
-       WHERE id = $1 RETURNING to_char(minuted, 'YYYY-MM-DD') AS minuted`,
+       WHERE id = $1 RETURNING to_char(minuted, 'YYYY-MM-DD') AS minuted, circle`,
       [input.meeting],
     )
     if (!rows[0]) {
       throw new Error(`no meeting ${input.meeting}`)
     }
-    return { meeting: input.meeting, minuted: rows[0].minuted }
+    return { meeting: input.meeting, circle: rows[0].circle, minuted: rows[0].minuted }
   },
   payload: (v) => ({ ...v }),
 })

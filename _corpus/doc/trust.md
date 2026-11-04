@@ -179,10 +179,15 @@ sequenceDiagram
   names it in `cella.power`, registered by its feat or by core's circles;
   the membership feat, which says whether a seat counts, attaches a guard
   to every such op that the actor holds, on the verdict date, a seat
-  (core's, read from the circles' members and the roles' tenures) whose role has a mandate granting the power, within
-  its limit for the write's amount, or a right granting it: every person,
+  (core's, read from the circles' members and the roles' tenures) whose role has a mandate granting the power,
+  whose scope covers the owning circle of the record the write's
+  payload names, the root's where it names none, within its limit for
+  the write's amount, or a right granting it, which reaches the whole
+  co-op: every person,
   every member or every employee, as person's core says the actor is one
-  that day. What is the actor's own (a profile, a device, their time, a
+  that day. It is the one guard that reads a permission's scope; a
+  record's owning circle grants nothing by itself, and a seat in it
+  nothing without a mandate. What is the actor's own (a profile, a device, their time, a
   claim) needs a right's power, and the feat's guard that the record is
   theirs; a right opens no one else's rows to read. A write a passed motion carries (an
   admission, an adoption, a seat) names its power in `motion.cites`
@@ -250,7 +255,8 @@ guards crate, which also compiles to WASM for browsers, devices and auditors:
   `cella.device()`;
   whether the actor may use a power is not a primitive but the
   membership feat's composed guard, `membership.may(actor, power,
-  cents, day)`, since only that graft sees both mandates and seats;
+  cents, about, day)`, since only that feat sees both mandates and
+  whether a seat counts, over a record of the circle `about`;
 - trigger functions that feats and grafts attach: entries balance, periods
   are open;
 - time: `cella.verdict_date()`, never `now()`;

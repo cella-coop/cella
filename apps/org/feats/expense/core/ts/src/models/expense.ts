@@ -62,6 +62,8 @@ export interface Act {
 // A motion on an expense, or its reimbursement, for its whole amount.
 export interface Acted {
   expense: string
+  // Its owning circle, which the guard reads a mandate's scope against.
+  circle: string
   amount: number
   day: string
 }

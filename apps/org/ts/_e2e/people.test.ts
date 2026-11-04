@@ -100,7 +100,7 @@ test('Inès, seated in Web and no member, logs her own time and books it to a We
     [ines],
   )
   assert.deepEqual(counts, [{ circle: 'ag', counts: false }, { circle: 'web', counts: true }], 'her seat counts in Web; one in the assembly would not')
-  assert.equal((await one<{ may: boolean }>(`SELECT membership.may($1, 'discuss', NULL, '2026-10-24') AS may`, [ines])).may, true, 'she holds Web\'s participant mandates')
+  assert.equal((await one<{ may: boolean }>(`SELECT membership.may($1, 'discuss', NULL, NULL, '2026-10-24') AS may`, [ines])).may, true, 'she holds Web\'s participant mandates')
   const logged = settled(await log({ member: ines, day: '2026-10-24', minutes: 120, billable: false, note: 'Release notes' }, as(ines)))
   assert.equal(logged.minutes, 120)
   const booked = settled(await book({ member: ines, day: '2026-10-24', minutes: 60, billable: true, project: 'halles-shop' }, as(ines)))

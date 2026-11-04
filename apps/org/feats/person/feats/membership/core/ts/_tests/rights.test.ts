@@ -15,7 +15,7 @@ const ines = 'ines@rights'
 const paul = 'paul@rights'
 
 const holds = async (actor: string, power: string, day = '2026-10-24') =>
-  (await db.query<{ m: boolean }>('SELECT membership.may($1, $2, NULL, $3) OR membership.entitled($1, $2, NULL, $3) AS m', [actor, power, day])).rows[0].m
+  (await db.query<{ m: boolean }>('SELECT membership.may($1, $2, NULL, NULL, $3) OR membership.entitled($1, $2, NULL, $3) AS m', [actor, power, day])).rows[0].m
 
 before(async () => {
   await db.connect()
@@ -60,5 +60,5 @@ test('a right nobody registered is held by no one, and a right grants only its p
 
 test('a right is never the authority reads ask: it lets each act on their own, and opens no one else\'s rows', async () => {
   assert.equal((await db.query(`SELECT membership.entitled($1, 'keep-profile', NULL, '2026-10-24') AS m`, [amina])).rows[0].m, true)
-  assert.equal((await db.query(`SELECT membership.may($1, 'keep-profile', NULL, '2026-10-24') AS m`, [amina])).rows[0].m, false)
+  assert.equal((await db.query(`SELECT membership.may($1, 'keep-profile', NULL, NULL, '2026-10-24') AS m`, [amina])).rows[0].m, false)
 })

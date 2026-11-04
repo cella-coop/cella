@@ -35,11 +35,11 @@ before(async () => {
   await su.query('COMMIT')
   await su.query(`CREATE SCHEMA mandate`)
   await su.query(
-    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, day date) RETURNS boolean
+    `CREATE FUNCTION mandate.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
      LANGUAGE sql STABLE RETURN actor = '${julien}' AND power = 'distribute-surplus'`,
   )
   await su.query(`GRANT USAGE ON SCHEMA mandate TO cella_app`)
-  await su.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, date)', 'test')`)
+  await su.query(`INSERT INTO cella.authority (fn, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'test')`)
 })
 
 after(async () => {

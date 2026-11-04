@@ -172,14 +172,25 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
 - `membership.sits_in(person, circle, day)`: they hold a seat in the
   circle on the day, and it counts; the guards that know the circle an
   action concerns ask it.
-- `membership.may(actor, power, cents, day)`: the actor holds, on the
-  day, a seat that counts, whose role, or the participant role every
-  seat holds, has a mandate in force for the power, not revoked by the
-  day, within its `limit` when the write carries an amount. A `budget`
-  is not checked: it needs the spend over its period tracked. It is the
-  authority every read asks (`cella.authority`, `013-authority.sql`):
-  on the verdict date it says whether the reader holds a power a feat
-  names as reading its rows in `cella.reading`
+- `membership.may(actor, power, cents, about, day)`: the actor holds,
+  on the day, a seat that counts, whose role, or the participant role
+  every seat holds, has a mandate in force for the power, not revoked
+  by the day, whose scope covers `about`, the owning circle of the
+  record a write concerns (`circle.covers`, [core's
+  scope](../../../../core/circle/index.md#mandates)), within its `limit`
+  when the write carries an amount. A mandate marking no scope covers
+  every circle's records; one on a circle (`{scope: web}`) that
+  circle's alone; one on `own` those of the circle of the seat it is
+  held by, so a lead's covers their own circle and no other. Circles
+  never nest, so a power held in one circle reaches no other by where
+  it sits; the record's circle grants nothing by itself, and a seat in
+  it nothing without a mandate. `about` null asks of no record and any
+  mandate for the power answers it, as reading asks until it follows
+  the mandates. A `budget` is not checked: it needs the spend over its
+  period tracked. It is the authority every read asks
+  (`cella.authority`, `013-authority.sql`): on the verdict date it says
+  whether the reader holds a power a feat names as reading its rows in
+  `cella.reading`
   ([the pattern](../../../../../../_corpus/doc/architecture.md#sql)), and
   it finds no right.
 - `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
@@ -188,27 +199,24 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   `limit`, where person's core says the actor is one of them on the day
   (`person.holds`). A right lets each act on what is their own, which
   the feat's guard checks, so it opens no one else's rows to read
-  ([rights](../../../../core/circle/index.md#rights)).
-- `membership.empowered`, on every action in `cella.power`: the actor
-  may use the action's power on the verdict date, by a seat (`may`) or
-  by a right (`entitled`), for the amount the payload names in the
-  action's `amount` field. Each feat and core registers the power its
+  ([rights](../../../../core/circle/index.md#rights)). A right reaches
+  the whole co-op.
+- `membership.empowered`, on every action in `cella.power`, the one
+  guard that reads a permission's scope: the actor may use the action's
+  power on the verdict date over the record the write concerns, by a
+  seat's mandate covering its circle (`may`) or by a right
+  (`entitled`), for the amount the payload names in the action's
+  `amount` field. The payload names the record's owning circle,
+  `circle`, as its handler reads it from the record or writes it there,
+  and one naming none concerns the root's, the assembly's. Refused, it
+  says whether the actor holds the power by no mandate covering that
+  circle or by none at all. Each feat and core registers the power its
   actions need in `cella.power`; this feat attaches its guard to every
   op listed, then and later, as `membership-motion` attaches its own to
   `motion.cites`. A write with no power, or whose power is in
-  `motion.cites`, a collective mandate's, gets no such guard.
-- `membership.over(actor, power, about, day)`: the actor holds the
-  power through a seat in force whose role has a mandate in force for it
-  whose scope covers the circle `about`: a mandate marking no scope
-  covers every circle and what belongs to none (`about` null); one on a
-  circle (`{scope: web}`) that circle alone; one on `own` the circle of
-  the seat it is held by, so a lead's covers their own circle and no
-  other. Circles never nest, so a power held in one circle reaches no
-  other by where it sits. It checks no limit and whether the seat
-  counts, which `may` does for every write; the grafts that know what a
-  write concerns, `membership-project` a project's circle,
-  `membership-timesheet` a worker's seats and `meeting-membership` a
-  meeting's circle, narrow `may` with it.
+  `motion.cites`, a collective mandate's, gets no such guard. No slice
+  checks a scope again: a project's, a month's and a meeting's circle
+  are read here, from the payload their writes name.
 - `membership.sits`, on `circle:circle:message` (`011-sits.sql`): the
   actor holds a seat that counts in the circle on the verdict date,
   where the participant's `discuss` is held.
@@ -254,10 +262,11 @@ of someone holding no device is refused and leaves nothing, and one of
 someone who took it up enrols nothing more.
 Its inviter acts by a mandate of a seat that counts, and the invitee
 takes it up by a person's right, as `membership.empowered` asks.
-`counts.test.ts`, `over.test.ts` and `rights.test.ts`: a seat counts in
+`counts.test.ts`, `may.test.ts` and `rights.test.ts`: a seat counts in
 the assembly for an active member and elsewhere for anyone known whom
-membership has not suspended or let go; a mandate's scope covers its
-circle, its holder's own or the whole co-op; and a right is held by
+membership has not suspended or let go; a mandate's scope covers the
+records of its circle, its holder's own or the whole co-op, and a seat
+with no mandate covers none; and a right is held by
 whoever person's core says is one of its people, with no seat.
 
 ## Shell

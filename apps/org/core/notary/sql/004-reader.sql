@@ -17,7 +17,8 @@ RETURN coalesce(current_setting('cella.writing', true), '') = 'on';
 
 -- The registries of who reads what, registered as literal rows: the one
 -- function that says whether a member holds a power on a day, `(actor,
--- power, cents, day) → boolean`, a graft's; the powers that read a feat's
+-- power, cents, about, day) → boolean`, over a record of the circle
+-- `about` or, null, of none, a feat's; the powers that read a feat's
 -- rows, `key` narrowing one to the rows the feat passes it, such as a
 -- file's class; and the functions a graft registers to open a feat's rows
 -- it joins to more readers, `(key, reader) → boolean`.
@@ -56,7 +57,7 @@ BEGIN
   IF f IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
     RETURN false;
   END IF;
-  EXECUTE format('SELECT %s($1, $2, NULL::bigint, $3)', f::oid::regproc)
+  EXECUTE format('SELECT %s($1, $2, NULL::bigint, NULL::text, $3)', f::oid::regproc)
     INTO ok USING cella.reader(), may.power, cella.verdict_date();
   RETURN coalesce(ok, false);
 END

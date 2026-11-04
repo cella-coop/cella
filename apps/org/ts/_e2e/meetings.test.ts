@@ -96,7 +96,7 @@ test('Camille schedules coordination for 2 November; Yusuf, whose power reaches 
   assert.equal((await one<{ at: string }>(`SELECT to_char(at, 'YYYY-MM-DD HH24:MI') AS at FROM meeting.meeting WHERE id = $1`, [meeting])).at, '2026-11-02 10:00')
   const yusufs = await shell.act('/meetings', 'schedule', fields, yusuf)
   assert.equal(yusufs.state, 'refused')
-  assert.match(yusufs.reason ?? '', /yusuf@lanterne.example holds schedule-meeting over no circle that holds coordination-2026-11-02/)
+  assert.match(yusufs.reason ?? '', /yusuf@lanterne.example holds schedule-meeting by no mandate covering coordination's records/)
   const web = await shell.act('/meetings', 'schedule', { ...fields, circle: 'web', title: 'Web' }, yusuf)
   assert.equal(web.state, 'settled', web.reason)
   // A meeting's circle is its owning circle, a key into core's circles:
@@ -152,7 +152,7 @@ test('members mark themselves; Malik, its secretary, records the others and may 
   assert.equal(guest.state, 'settled', guest.reason)
   const camilles = await shell.act(`/meetings/${meeting}`, 'record', { member: julien, status: 'present' }, camille)
   assert.equal(camilles.state, 'refused')
-  assert.match(camilles.reason ?? '', /camille@lanterne.example holds keep-minutes over no circle that holds coordination-2026-11-02/)
+  assert.match(camilles.reason ?? '', /camille@lanterne.example holds no mandate for keep-minutes/)
   const early = await shell.act(`/meetings/${meeting}`, 'hold', {}, malik)
   assert.equal(early.state, 'refused')
   assert.match(early.reason ?? '', /coordination-2026-11-02 meets on 2026-11-02: it is not held before/)

@@ -99,9 +99,11 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM meeting.item i JOIN meeting.meeting m ON m.id = i.meeting WHERE i.circle <> m.circle'), [{ n: 0 }])
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM motion.vote v JOIN motion.motion m ON m.id = v.motion WHERE v.circle <> m.circle'), [{ n: 0 }])
   // The books, pay and membership are the whole co-op's.
-  for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'client.client', 'timesheet.entry']) {
+  for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'client.client']) {
     assert.deepEqual(await all(`SELECT DISTINCT circle FROM ${table}`), [{ circle: 'ag' }], table)
   }
+  // Time is the circle's it is worked for, and a month its first entry's.
+  assert.deepEqual(await all(`SELECT DISTINCT circle FROM timesheet.period WHERE member = 'thomas@lanterne.example'`), [{ circle: 'web' }])
 })
 
 test('a write names the circle it names, the root where it names none, and never one that does not exist', async () => {

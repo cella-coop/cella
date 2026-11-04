@@ -15,11 +15,12 @@ export const logging = (input: Log): Write<Logged> => ({
   op: 'timesheet:entry:log' satisfies Action,
   request: input,
   state: async (tx) => {
-    const { rows } = await tx.query<{ id: string }>(
-      'INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, $2, $3, $4, $5) RETURNING id::text AS id',
-      [input.member, input.day, input.minutes, input.billable, input.note ?? ''],
+    const { rows } = await tx.query<{ id: string; circle: string }>(
+      `INSERT INTO timesheet.entry (member, day, minutes, billable, note, circle)
+       VALUES ($1, $2, $3, $4, $5, coalesce($6, circle.assembly())) RETURNING id::text AS id, circle`,
+      [input.member, input.day, input.minutes, input.billable, input.note ?? '', input.circle ?? null],
     )
-    return { entry: rows[0].id, member: input.member, day: input.day, minutes: input.minutes, billable: input.billable }
+    return { entry: rows[0].id, circle: rows[0].circle, member: input.member, day: input.day, minutes: input.minutes, billable: input.billable }
   },
   // The note is the member's own words and stays out; the minutes are
   // personal, so the log keeps their commitment and the vault the minutes.
@@ -88,12 +89,12 @@ export async function approve(input: Period, deps: Deps): Out<'timesheet:period:
     op: 'timesheet:period:approve' satisfies Action,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ approved: string }>(
+      const { rows } = await tx.query<{ approved: string; circle: string }>(
         `UPDATE timesheet.period SET approved = cella.verdict_date(), approver = $3 WHERE member = $1 AND month = $2
-         RETURNING to_char(approved, 'YYYY-MM-DD') AS approved`,
+         RETURNING to_char(approved, 'YYYY-MM-DD') AS approved, circle`,
         [input.member, input.month, deps.actor],
       )
-      return { ...input, approved: rows[0]?.approved ?? '' }
+      return { ...input, circle: rows[0]?.circle ?? '', approved: rows[0]?.approved ?? '' }
     },
     payload: (v) => ({ ...v }),
   })

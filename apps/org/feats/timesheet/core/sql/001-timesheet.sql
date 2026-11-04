@@ -41,15 +41,16 @@ LANGUAGE sql IMMUTABLE
 RETURN (to_date(month || '-01', 'YYYY-MM-DD') + interval '1 month')::date;
 
 -- No entry goes into an approved period. The period row is made if the
--- entry is its first, then read FOR SHARE, and `timesheet:period:approve`
--- updates it, so a log and a concurrent approval are serialised: the
--- approval waits for the log, or the log sees the approval.
+-- entry is its first, in the circle the entry names, then read FOR SHARE,
+-- and `timesheet:period:approve` updates it, so a log and a concurrent
+-- approval are serialised: the approval waits for the log, or the log
+-- sees the approval.
 CREATE FUNCTION timesheet.open_period() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   period text := timesheet.month_of(NEW.day);
   approved date;
 BEGIN
-  INSERT INTO timesheet.period (member, month) VALUES (NEW.member, period) ON CONFLICT DO NOTHING;
+  INSERT INTO timesheet.period (circle, member, month) VALUES (NEW.circle, NEW.member, period) ON CONFLICT DO NOTHING;
   SELECT p.approved INTO approved FROM timesheet.period p WHERE p.member = NEW.member AND p.month = period FOR SHARE;
   IF approved IS NOT NULL THEN
     RAISE EXCEPTION '%''s % was approved on %: it takes no new entries', NEW.member, period, approved

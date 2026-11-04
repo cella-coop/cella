@@ -86,8 +86,9 @@ export async function work(db, read, day) {
   for (const r of time.run ?? []) {
     for (const d of weekdays(day(r.from), day(r.to))) {
       const { rows } = await db.query(
-        'INSERT INTO timesheet.entry (member, day, minutes, billable, note) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-        [r.member, d, Math.round(r.hours * 60), r.billable ?? true, r.note ?? ''],
+        `INSERT INTO timesheet.entry (member, day, minutes, billable, note, circle)
+         VALUES ($1, $2, $3, $4, $5, coalesce($6, circle.assembly())) RETURNING id`,
+        [r.member, d, Math.round(r.hours * 60), r.billable ?? true, r.note ?? '', r.circle ?? null],
       )
       if (projectOf.has(r.id)) {
         await db.query('INSERT INTO project_timesheet.booking (entry, project) VALUES ($1, $2)', [rows[0].id, projectOf.get(r.id)])

@@ -101,6 +101,12 @@ Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
+An entry names the circle its time is worked for (`circle` in its log),
+and a month is made in the circle of its first entry, so a month of
+Web's is Web's. Every write on a month, its approval among them, names
+the month's circle in its payload, which the membership feat's guard
+reads a mandate's scope against: a lead approves their own circle's
+months ([membership](../person/feats/membership/index.md#seats)).
 
 ## Reads
 

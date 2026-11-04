@@ -87,8 +87,7 @@ test('the minutes\' keeper records only those expected; anyone else marks themse
   )
 })
 
-test('outside a write there is no actor: no seat for the agenda, no power over the meeting', async () => {
+test('outside a write there is no actor: no seat for the agenda', async () => {
   assert.equal(await guard('sits', { meeting: 'brand-2026-10-26' }), 'an agenda is drawn up by a member of its circle, and this write has no actor')
   assert.equal(await guard('sits', { meeting: 'nowhere' }), 'no meeting nowhere')
-  assert.equal(await guard('reaches', { meeting: 'nowhere' }), null, 'a meeting that does not exist is its feat\'s to refuse')
 })

@@ -67,6 +67,7 @@ test('every table of a feat or a graft names its owning circle, never null, keye
     'motion.cites',
     'motion.procedure',
     'motion.stance_power',
+    'payslip_transaction.payment_lines',
     'person.rights',
     'report.drawn',
     'transaction.journal',

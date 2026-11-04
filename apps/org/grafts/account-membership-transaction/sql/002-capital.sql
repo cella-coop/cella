@@ -30,6 +30,17 @@ CREATE TABLE account_membership_transaction.paid (
 
 CREATE INDEX ON account_membership_transaction.paid (member);
 
+-- Records a payment in its entry posted: this graft's published write of
+-- `paid`, by which a graft above records one in the write that posts it,
+-- as an instalment withheld from a member's pay, and never inserts the
+-- row itself.
+CREATE FUNCTION account_membership_transaction.pay_in(entry text, member text, amount cella.amount, via text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO account_membership_transaction.paid (entry, member, amount, via)
+  VALUES (pay_in.entry, pay_in.member, pay_in.amount, pay_in.via);
+END;
+
 -- Each subscription: what it cost, what is paid, what the exit cancelled
 -- and what is left to pay.
 CREATE VIEW account_membership_transaction.called AS

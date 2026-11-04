@@ -23,7 +23,10 @@ event is `carried`.
 ## Schema
 
 `payslip_transaction` (`sql/`): `posting`, the entry, the run's month and
-the event; `lines(month, event)`.
+the event; `lines(month, event)`; `payment_lines`, the register of what
+the grafts above add to a run's payment, filled by
+`register_payment_lines(lines, keeps, owner)`, this graft's published
+register, and read by `added(month)` and `keep(month, entry)`.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
@@ -46,7 +49,14 @@ assembly's, unless the write that makes it names another.
 
 `approve` and `pay` wrap the payslip feat's specs: the run's state, then
 the entry through the transaction feat's `record`, then the posting, then
-`cella.submit` once.
+`cella.submit` once. `pay`'s entry carries, beside the event's own lines,
+those `added(month)` answers: the lines of each function a graft above
+registered, a function of the run's month answering lines, in the order
+of their owners and names. Once the entry is posted, `pay` calls
+`keep(month, entry)`, which runs each registrant's `keeps`, a function of
+the month and the entry, by which the graft records in its own schema
+what it keeps of its lines. This graft knows none of them by name, and
+no graft above puts a trigger on `posting`.
 
 ## Shell
 

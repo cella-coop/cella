@@ -37,3 +37,59 @@ BEGIN ATOMIC
   LEFT JOIN payslip_transaction.posting p ON p.month = ref AND p.event = unposted.event
   LEFT JOIN transaction.entry e ON e.id = p.entry;
 END;
+
+-- What the grafts above add to a run's payment, as they register it: for
+-- each, a function of the run's month answering the lines its entry also
+-- carries, `(text) → TABLE (account text, side text, cents bigint)`, and
+-- one of the month and the posted entry, `(text, text) → void`, by which
+-- the graft records in its own schema what it keeps of them. This graft
+-- knows none of them by name, and no graft above puts a trigger on
+-- `posting`.
+CREATE TABLE payslip_transaction.payment_lines (
+  lines regprocedure PRIMARY KEY,
+  keeps regprocedure NOT NULL,
+  owner text NOT NULL
+);
+
+-- Registers what a graft adds to a run's payment. A graft's migration
+-- calls it, and never inserts the row itself.
+CREATE FUNCTION payslip_transaction.register_payment_lines(lines regprocedure, keeps regprocedure, owner text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO payslip_transaction.payment_lines (lines, keeps, owner)
+  VALUES (register_payment_lines.lines, register_payment_lines.keeps, register_payment_lines.owner);
+END;
+
+REVOKE EXECUTE ON FUNCTION payslip_transaction.register_payment_lines(regprocedure, regprocedure, text) FROM PUBLIC;
+
+-- The lines a run's payment carries beside its own: each registered
+-- function's, in the order of their owners and names, so the order is the
+-- same in every scope.
+CREATE FUNCTION payslip_transaction.added(month text)
+RETURNS TABLE (account text, side text, cents bigint)
+LANGUAGE plpgsql STABLE AS $$
+DECLARE
+  f regprocedure;
+BEGIN
+  FOR f IN SELECT p.lines FROM payslip_transaction.payment_lines p ORDER BY p.owner, p.lines::text LOOP
+    RETURN QUERY EXECUTE format('SELECT x.account, x.side, x.cents FROM %s($1) x', f::oid::regproc) USING month;
+  END LOOP;
+END
+$$;
+
+-- Once a run's payment is posted, in the write that pays it, each
+-- registrant records what it keeps of the lines it added.
+CREATE FUNCTION payslip_transaction.keep(month text, entry text) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  f regprocedure;
+BEGIN
+  FOR f IN SELECT p.keeps FROM payslip_transaction.payment_lines p ORDER BY p.owner, p.lines::text LOOP
+    EXECUTE format('SELECT %s($1, $2)', f::oid::regproc) USING month, entry;
+  END LOOP;
+END
+$$;
+
+GRANT SELECT ON payslip_transaction.payment_lines TO cella_app, cella_guards;
+
+COMMENT ON TABLE payslip_transaction.payment_lines IS 'registry: what the grafts above add to a run''s payment, as they register it';

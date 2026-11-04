@@ -30,6 +30,28 @@ async function run(month: string, generated: string, paid: string) {
   await db.query(`UPDATE payslip.run SET approved = $2, approver = 'camille@lanterne.example', paid = $2 WHERE month = $1`, [month, paid])
 }
 
+// Stands in for payslip-transaction's pay write, in an open transaction:
+// the payment's entry carries the run's own lines, those the grafts above
+// registered, `payslip_transaction.added`, and any `extra`; it is linked
+// in `posting`, and each graft above keeps what it added.
+async function paying(month: string, date: string, extra: [string, string, number][] = []) {
+  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ($1, $2) RETURNING id`, [date, `Payroll paid, ${month}`])
+  const entry = rows[0].id
+  await db.query(
+    `INSERT INTO transaction.line (entry, n, account, side, amount)
+     SELECT $1, row_number() OVER (ORDER BY x.k, x.o), x.account, x.side, cella.amount(x.cents)
+     FROM (
+       SELECT 1 AS k, l.o, l.account, l.side, l.cents FROM payslip_transaction.lines($2, 'payment') WITH ORDINALITY l (account, side, cents, o)
+       UNION ALL SELECT 2, a.o, a.account, a.side, a.cents FROM payslip_transaction.added($2) WITH ORDINALITY a (account, side, cents, o)
+       UNION ALL SELECT 3, e.o, e.account, e.side, e.cents FROM ROWS FROM (jsonb_to_recordset($3::jsonb) AS (account text, side text, cents bigint)) WITH ORDINALITY e (account, side, cents, o)
+     ) x`,
+    [entry, month, JSON.stringify(extra.map(([account, side, cents]) => ({ account, side, cents })))],
+  )
+  await db.query(`INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, $2, 'payment')`, [entry, month])
+  await db.query('SELECT payslip_transaction.keep($1, $2)', [month, entry])
+  return entry
+}
+
 before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-11-30'`)
@@ -99,14 +121,7 @@ test('paying November\'s run withholds one instalment in its own entry: the bank
     { member: ines, account: '101301', cents: '10000' },
   ])
   await db.query('BEGIN')
-  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ('2026-12-01', 'Payroll paid, 2026-11') RETURNING id`)
-  const entry = rows[0].id
-  await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, row_number() OVER (), l.account, l.side, cella.amount(l.cents) FROM payslip_transaction.lines('2026-11', 'payment') l`,
-    [entry],
-  )
-  await db.query(`INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, '2026-11', 'payment')`, [entry])
+  const entry = await paying('2026-11', '2026-12-01')
   await db.query('COMMIT')
 
   assert.deepEqual((await lines(entry)).slice(3), [
@@ -139,32 +154,18 @@ test('an instalment is never more than she still owes, and lines that credit the
 
   await db.query(`SET cella.clock = '2026-12-31'`)
   await db.query('BEGIN')
-  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ('2026-12-31', 'Payroll paid, 2026-12') RETURNING id`)
-  const entry = rows[0].id
-  await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, row_number() OVER (), l.account, l.side, cella.amount(l.cents) FROM payslip_transaction.lines('2026-12', 'payment') l
-     UNION ALL SELECT $1, 10, '512', 'credit', cella.amount(100) UNION ALL SELECT $1, 11, '641', 'debit', cella.amount(100)`,
-    [entry],
-  )
-  await db.query(`INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, '2026-12', 'payment')`, [entry])
+  await paying('2026-12', '2026-12-31', [['512', 'credit', 100], ['641', 'debit', 100]])
   assert.match((await guard('payslip_transaction.paid', { month: '2026-12' })) ?? '', /posts more than 2026-12's payment, and not in balance away from its own accounts and the bank/)
   assert.match((await guard('account_membership_payslip_transaction.deducted', { month: '2026-12' })) ?? '', /does not post what 2026-12's pay withheld/)
   await db.query('ROLLBACK')
 })
 
-// A month's run paid, in one transaction: its payment's entry, its lines,
-// and the posting that links it, which withholds what is due.
+// A month's run paid, in one transaction, as the pay write pays it, which
+// withholds what is due.
 async function pay(month: string, date: string) {
   await db.query(`SET cella.clock = '${date}'`)
   await db.query('BEGIN')
-  const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ($1, $2) RETURNING id`, [date, `Payroll paid, ${month}`])
-  await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, row_number() OVER (), l.account, l.side, cella.amount(l.cents) FROM payslip_transaction.lines($2, 'payment') l`,
-    [rows[0].id, month],
-  )
-  await db.query(`INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, $2, 'payment')`, [rows[0].id, month])
+  await paying(month, date)
   await db.query('COMMIT')
 }
 
@@ -223,4 +224,16 @@ test('a net pay below her instalment withholds in exactly the plan\'s count of m
   assert.equal(await guard('account_membership_payslip_transaction.deducted', { month: '2027-03' }), null)
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM account_membership_payslip_transaction.withheld WHERE month = '2027-03'`)).n, '0')
   assert.equal(await unpaid(), 60000 - 2 * Number(net), 'what is left is still owed, paid in through the bank')
+})
+
+test('the graft adds to a run\'s payment by payslip-transaction\'s register, and puts no trigger on its posting', async () => {
+  assert.deepEqual((await db.query(`SELECT lines::text, keeps::text, owner FROM payslip_transaction.payment_lines`)).rows, [
+    {
+      lines: 'account_membership_payslip_transaction.withholds(text)',
+      keeps: 'account_membership_payslip_transaction.keeps(text,text)',
+      owner: 'account-membership-payslip-transaction',
+    },
+  ])
+  assert.deepEqual((await db.query(`SELECT t.tgname FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid WHERE t.tgrelid = 'payslip_transaction.posting'::regclass AND p.pronamespace = 'account_membership_payslip_transaction'::regnamespace`)).rows, [])
+  assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.added('2027-03')`)).rows, [], 'a month with nothing due adds no line')
 })

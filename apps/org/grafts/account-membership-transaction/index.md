@@ -22,7 +22,11 @@ it builds on `account-membership` and `account-transaction`. Declared by
   whether it came from the bank or was withheld from pay;
   `paying(account, cents)`, the lines a payment in posts: `512` debited
   and `4562` credited, and `1012` debited and the associate's account
-  credited, what it pays moving to their paid-up capital.
+  credited, what it pays moving to their paid-up capital;
+  `pay_in(entry, member, amount, via)`, its published write of a
+  payment in, by which a graft above records one its entry posted, as
+  `account-membership-payslip-transaction` records what a run's pay
+  withheld.
 - `withdrawal`: each departed associate's withdrawal, its entry, once;
   `holds(member)`, whether a withdrawal has anything to do: terms govern
   the verdict date, nothing is drawn up for them yet, and their capital

@@ -29,12 +29,20 @@ and on `payslip-transaction`, whose payment it adds lines to. Declared by
   instalment never stretches a plan past its count; once its last is
   withheld the plan withholds nothing more, and what is left is owed as
   any called capital is, paid in through the bank (`account:capital:pay`).
-- `withholds`, a trigger after a run's payment is linked, in the write that
-  pays the run: each instalment due is withheld, posted as lines of the
+- `withholds(month)`, the lines a run's payment also carries, and
+  `keeps(month, entry)`, which this graft's migration registers by
+  `payslip-transaction`'s `payslip_transaction.register_payment_lines`,
+  so the pay write asks for the lines before it records the payment's
+  entry: each instalment due is withheld, posted as lines of the
   payment's own entry, since a write posts one, as a payment in through
   the bank, `512` debited and `4562` credited, which nets what the bank
   pays the associate, and `1012` debited and their capital account
-  credited; and it is recorded as paid in through their pay.
+  credited. Once the entry is posted the pay write calls `keeps`, which
+  records each in `withheld`, this graft's own, and as paid in through
+  their pay by `account-membership-transaction`'s published `pay_in`,
+  its own code writing its own `paid`; this graft writes no journal line
+  and no row of a lower-order graft itself, and puts no trigger on
+  `payslip_transaction.posting`.
 
 The app role may select, insert and update a plan, and insert what is
 withheld; the guards role may select.

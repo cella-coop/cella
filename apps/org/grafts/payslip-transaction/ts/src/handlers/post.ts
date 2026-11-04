@@ -8,11 +8,13 @@ import type { Line } from '@cella/org-transaction/models'
 type Event = 'accrual' | 'payment'
 
 // Posts what a run's event puts in the books: the lines are
-// `payslip_transaction.lines`, asked of the database, recorded through
-// the transaction feat and linked in `posting`. The accrual is dated the
-// run's last day, so it lands in the month the pay is for; the payment
-// the day it was paid. A run the write did not move posts nothing, and
-// the feat's guard refuses it.
+// `payslip_transaction.lines`, asked of the database, and on a payment
+// those the grafts above registered beside them, `payslip_transaction.added`;
+// recorded through the transaction feat and linked in `posting`, after
+// which each graft above keeps what it added, `payslip_transaction.keep`.
+// The accrual is dated the run's last day, so it lands in the month the
+// pay is for; the payment the day it was paid. A run the write did not
+// move posts nothing, and the feat's guard refuses it.
 async function posted(tx: Db, v: Ran, event: Event): Promise<string | null> {
   if (!v.day) {
     return null
@@ -22,11 +24,18 @@ async function posted(tx: Db, v: Ran, event: Event): Promise<string | null> {
      FROM payslip_transaction.lines($1, $2) l`,
     [v.month, event],
   )
-  const lines = rows.map((r) => ({ account: r.account, side: r.side, cents: Number(r.cents) }))
+  const added =
+    event === 'payment'
+      ? (await tx.query<{ account: string; side: Line['side']; cents: string }>('SELECT account, side, cents FROM payslip_transaction.added($1)', [v.month])).rows
+      : []
+  const lines = [...rows, ...added].map((r) => ({ account: r.account, side: r.side, cents: Number(r.cents) }))
   const date = event === 'accrual' ? (rows[0]?.day ?? v.day) : v.day
   const label = event === 'accrual' ? `Payroll, ${v.month}` : `Payroll paid, ${v.month}`
   const { entry } = await record(tx, { date, label, lines })
   await tx.query('INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, $2, $3)', [entry, v.month, event])
+  if (event === 'payment') {
+    await tx.query('SELECT payslip_transaction.keep($1, $2)', [v.month, entry])
+  }
   return entry
 }
 

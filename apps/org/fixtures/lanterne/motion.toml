@@ -373,12 +373,20 @@ args = { kind = "right", wording = "Every {right: person} holds {power: withdraw
 kind = "policy"
 args = { kind = "right", wording = "Every {right: employee} holds {power: apply-membership}, to apply to join once they have worked a year, which the assembly must rule on", protected = "extraordinary", takes = "scop-sarl-fr:apply-membership" }
 
+# How a circle is made: the assembly creates one by motion, and it holds
+# the default bundle from that day, the mandates on the participant, lead
+# and secretary roles, which every circle has.
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: ag} circle holds {power: create-circle}, to create a circle, by motion", takes = "scop-sarl-fr:create-circle" }
+
 # Reading, the last of the founding motion: every seat reads its own
-# circle's records and the assembly's, the whole co-op's, so a member of
-# Marketing reads Marketing's and the books, and not Web's, and Inès, in
-# Web alone, reads Web's and the statutes she would join under. A mandate
-# for a power that reads a feat's rows reads them by its scope beside
-# them. They are Lanterne's own, no default of the form.
+# circle's records and the assembly's, the whole co-op's, and Lanterne
+# keeps open books, so every member reads every circle's records, and
+# Inès, employed, no member and in Web alone, reads Web's and the
+# statutes she would join under, and not Marketing's. A mandate for a
+# power that reads a feat's rows reads them by its scope beside them.
+# They are Lanterne's own, no default of the form.
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of its {scope: own} circle" }
@@ -386,6 +394,10 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 [[motion.action]]
 kind = "policy"
 args = { kind = "mandate", wording = "The {role: participant} role holds {power: read}, to read the records of the {scope: ag} circle, the whole co-op's" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: member} role holds {power: read}, to read every circle's records" }
 
 [[motion]]
 id = "m-2026-006"

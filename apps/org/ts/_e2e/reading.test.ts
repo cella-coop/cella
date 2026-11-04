@@ -1,7 +1,8 @@
 // The reading scenario, end to end on a seeded Lanterne, through the built
 // shell outside dev mode, each page read as a signed-in member: reading
-// follows the mandates, so Chloé, in Marketing, reads Marketing's
-// expenses and not Web's, and Web's lead Web's time alone; Chloé, a
+// follows the mandates, so Inès, in Web and no member, reads Web's
+// expenses and not Marketing's, Chloé, a member, every circle's by open
+// books, and Web's lead Web's time alone; Chloé, a
 // designer holding no power over pay or the books, reads her own pay and
 // capital and no colleague's; Julien, in finance, reads everyone's; what
 // sums the whole, the statements, an entry's amount and a share the 2025
@@ -23,6 +24,7 @@ let app: pg.Client
 
 const camille = 'camille@lanterne.example'
 const chloe = 'chloe@lanterne.example'
+const ines = 'ines@lanterne.example'
 const julien = 'julien@lanterne.example'
 const lea = 'lea@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
@@ -65,15 +67,21 @@ test('a worker reads their own payslips and no colleague\'s; finance reads every
   assert.equal((await page(`/payslips/2026-09~${camille}`, julien)).status, 200)
 })
 
-test('reading follows the mandates: Chloé reads Marketing\'s expenses and her own pay, and not Web\'s expenses or Yusuf\'s pay', async () => {
+test('reading follows the mandates: Inès reads Web\'s expenses and not Marketing\'s, Chloé every circle\'s by open books, and her own pay and not Yusuf\'s', async () => {
+  const scoped = await page('/expenses', ines)
+  assert.equal(scoped.status, 200)
+  assert.ok(scoped.text.includes('ex-0002'), 'Inès, in Web, reads Web\'s expense by read on her own circle')
+  assert.ok(scoped.text.includes('ex-0004'), 'and the assembly\'s, the whole co-op\'s')
+  assert.ok(!scoped.text.includes('ex-0003'), 'and not Marketing\'s: no member, she holds no open books')
+  assert.equal((await page('/expenses/ex-0003', ines)).status, 404, 'Marketing\'s expense is none to her')
+  assert.deepEqual(await reading(ines, `SELECT id FROM expense.expense WHERE circle = 'marketing'`), [], 'and a direct query as the app role reads none of Marketing\'s')
+
   const expenses = await page('/expenses', chloe)
-  assert.equal(expenses.status, 200)
-  assert.ok(expenses.text.includes('ex-0003'), 'Chloé, in Marketing, reads Marketing\'s expense by read on her own circle')
-  assert.ok(expenses.text.includes('ex-0004'), 'and the assembly\'s, the whole co-op\'s, seated there as a member')
-  assert.ok(!expenses.text.includes('ex-0002'), 'and not Web\'s')
-  assert.equal((await page('/expenses/ex-0002', chloe)).status, 404, 'Web\'s expense is none to her')
+  for (const id of ['ex-0002', 'ex-0003', 'ex-0004']) {
+    assert.ok(expenses.text.includes(id), `Chloé, a member, reads ${id} by open books`)
+  }
+  assert.equal((await page('/expenses/ex-0002', chloe)).status, 200, 'Web\'s expense among them')
   assert.equal((await page('/expenses/ex-0002', camille)).status, 200, 'the gérante, approving every circle\'s expenses, reads it')
-  assert.deepEqual(await reading(chloe, `SELECT id FROM expense.expense WHERE circle = 'web'`), [], 'and a direct query as the app role reads none of Web\'s')
 
   const pay = await page('/payslips', chloe)
   assert.ok(pay.text.includes(`2026-09~${chloe}`) && !pay.text.includes(`~${yusuf}`), 'she reads her own pay and not Yusuf\'s')

@@ -19,6 +19,7 @@ const shell = new Shell(su)
 const thomas = 'thomas@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
 const hugo = 'hugo@lanterne.example'
+const ines = 'ines@lanterne.example'
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const lane = (html: string, name: string) => html.split(`data-drop-list="${name}"`)[1]?.split('data-drop-list=')[0] ?? ''
@@ -67,11 +68,13 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
-  // An invoice is the whole co-op's and reads for every member; the project
-  // it charges is its circle's, so Thomas, in Web, reads no Brand title on it.
-  const brands = await shell.page('/invoices/F-2026-0052', thomas)
+  // An invoice is the whole co-op's and reads for every seat; the project
+  // it charges is its circle's, so Inès, in Web and no member, reads no
+  // Brand title on it, while Thomas, a member, reads it by open books.
+  const brands = await shell.page('/invoices/F-2026-0052', ines)
   assert.equal(brands.status, 200)
-  assert.ok(!brands.text.includes('Maison Ferrand, packaging'), 'a Brand project\'s title is none to Thomas')
+  assert.ok(!brands.text.includes('Maison Ferrand, packaging'), 'a Brand project\'s title is none to Inès')
+  assert.ok((await shell.page('/invoices/F-2026-0052', thomas)).text.includes('Maison Ferrand, packaging'), 'Thomas reads it by open books')
   assert.ok((await shell.page('/invoices/F-2026-0052', hugo)).text.includes('Maison Ferrand, packaging'), 'and Brand\'s lead reads it')
   const time = await shell.page('/timesheets', thomas)
   assert.ok(!time.text.includes('Books, invoicing, payroll and contracts'), 'Thomas reads his own time, not Julien\'s')

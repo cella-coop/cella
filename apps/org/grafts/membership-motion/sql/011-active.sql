@@ -68,12 +68,15 @@ BEGIN ATOMIC
   LEFT JOIN circle.circle c ON c.id = d.circle;
 END;
 
+-- A seat names a circle there is, or one an earlier `circle` action of
+-- the same motion creates; a circle created names an id in lower case
+-- that no circle or role has, and a name.
 CREATE OR REPLACE FUNCTION membership_motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
-      WHEN c.id IS NULL THEN 'no circle ' || coalesce(g.circle, 'is named')
+      WHEN c.id IS NULL AND NOT g.made THEN 'no circle ' || coalesce(g.circle, 'is named')
       WHEN g.kind = 'seat' AND NOT membership.counts(g.member, g.circle, cella.verdict_date())
         THEN coalesce(g.member, 'no one') || ' may not sit in ' || g.circle || ': '
           || CASE WHEN c.assembly THEN 'its seats are its active members''' ELSE 'no person the co-op knows, or one membership suspended or let go' END
@@ -84,16 +87,30 @@ BEGIN ATOMIC
         SELECT FROM circle.seat o
         WHERE o.circle = g.circle AND o.member = g.member AND o.role IS NOT DISTINCT FROM g.role AND o.until IS NULL
       ) THEN coalesce(g.member, 'no one') || ' holds no such seat in ' || g.circle
-      WHEN NOT motion.decides(d.circle, g.circle)
+      WHEN NOT motion.decides(d.circle, g.circle) AND NOT g.made
         THEN d.circle || ' may not decide who sits in ' || g.circle
     END AS r
     FROM (
-      SELECT m.motion, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'member' AS member, m.args ->> 'role' AS role
+      SELECT m.motion, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'member' AS member, m.args ->> 'role' AS role,
+             EXISTS (
+               SELECT FROM motion.action o
+               WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'circle' AND o.args ->> 'id' = m.args ->> 'circle'
+             ) AS made
       FROM motion.action m
       WHERE m.motion = payload ->> 'motion' AND m.kind IN ('seat', 'unseat')
     ) g
     JOIN motion.motion d ON d.id = g.motion
     LEFT JOIN circle.circle c ON c.id = g.circle
+    UNION ALL
+    SELECT CASE
+      WHEN coalesce(m.args ->> 'id', '') !~ '^[a-z][a-z0-9-]*$'
+        THEN 'a circle is created with an id in lower case, as design, not ' || coalesce(m.args ->> 'id', 'none')
+      WHEN EXISTS (SELECT FROM circle.grantee x WHERE x.id = m.args ->> 'id')
+        THEN 'a circle or a role ' || (m.args ->> 'id') || ' is there already'
+      WHEN coalesce(m.args ->> 'name', '') !~ '\S' THEN 'a circle is created with a name'
+    END
+    FROM motion.action m
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'circle'
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;

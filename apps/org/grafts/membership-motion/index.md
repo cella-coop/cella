@@ -159,7 +159,7 @@ as entry 1.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`.
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -215,7 +215,9 @@ she is on no roll of the assembly's.
   given or ended is the motion of a circle that may decide about it,
   never itself but for the assembly (`motion.decides`), and names for a role of that circle, or as
   a plain seat, an active member in the assembly and elsewhere any
-  person whom membership has not suspended or let go; or a seat held. Which circle admits, suspends and lets
+  person whom membership has not suspended or let go; or a seat held. A
+  seat names a circle there is, or one an earlier `circle` action of the
+  same motion creates. Which circle admits, suspends and lets
   members go is no rule of this graft's: it is the one holding the
   collective mandate for it, the motion feat's guard `empowers`, and in
   Lanterne that is the assembly alone.
@@ -237,8 +239,11 @@ she is on no roll of the assembly's.
   seat is one the cited motion gives (`seating`), to a person whose seat
   counts there (`membership.counts`), from the verdict date, where they held no such seat. `unseats`, on
   `:remove`: the seat ended on the verdict date, and the cited motion
-  ends it. A slice may register guards on core's actions, as on its
-  feats'.
+  ends it. `membership_motion.creates`, on `circle:circle:create`: the
+  circle the write made is one the cited motion creates, by its id, name
+  and purpose, and the payload names the bundle in force on the verdict
+  date (`circle.bundle`). A slice may register guards on core's actions,
+  as on its feats'.
 - `membership_motion.settles`, on `motion:motion:close`: a
   passing close admitted everyone the motion admits, each seated by
   `seats` as a seat of its own would be; a close that does not pass
@@ -301,7 +306,8 @@ she is on no roll of the assembly's.
   signed as the member who closed it and judged again by its guards: a
   suspension or an exclusion
   (membership feat),
-  a seat given or ended (core's `add` and `remove`), a policy
+  a circle created (core's `create`), a seat given or ended (core's
+  `add` and `remove`), a policy
   adopted or ended, a mandate's with it (the motion feat's circles' `adopt` and
   `end`, which extend the motion feat's), whose request names the
   motion's action, `n`, so the writes that react to an adoption, a rule's

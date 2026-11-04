@@ -1,8 +1,8 @@
 // The graft's write, reads and slice, which the shell mounts: an
 // associate's instalments from their pay, on their page, and spreading
 // what they owe from there; and what a payslip's pay withheld, on the
-// payslip's page. Withholding an instalment is this graft's trigger, in
-// the write that pays a run.
+// payslip's page. Withholding an instalment is this graft's lines and
+// what it keeps of them, registered with the write that pays a run.
 import { action, type Form, type Slice } from '@cella/org-db'
 import { spread } from '../handlers/spread.ts'
 import { plan, withheld } from '../drivers/plan.ts'

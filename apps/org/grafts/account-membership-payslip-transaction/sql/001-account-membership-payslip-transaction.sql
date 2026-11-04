@@ -52,41 +52,42 @@ BEGIN ATOMIC
   ORDER BY c.account;
 END;
 
--- When a run is paid, in that write, each instalment due is withheld from
--- the pay: posted as lines of the payment's own entry, since a write
+-- The lines a run's payment also carries: each instalment due withheld
+-- from the pay, posted as lines of the payment's own entry, since a write
 -- posts one, as a payment in through the bank, 512 debited and 4562
 -- credited, which nets what the bank pays the associate, and 1012
--- debited and their capital account credited; and recorded as paid in
--- through their pay.
-CREATE FUNCTION account_membership_payslip_transaction.withholds() RETURNS trigger LANGUAGE plpgsql AS $$
-DECLARE
-  last integer;
-BEGIN
-  IF NEW.event <> 'payment' THEN
-    RETURN NULL;
-  END IF;
-  INSERT INTO account_membership_payslip_transaction.withheld (month, member, amount, entry)
-  SELECT NEW.month, d.member, cella.amount(d.cents), NEW.entry
-  FROM account_membership_payslip_transaction.due(NEW.month) d WHERE d.cents > 0;
-  SELECT max(l.n) INTO last FROM transaction.line l WHERE l.entry = NEW.entry;
-  INSERT INTO transaction.line (entry, n, account, side, amount)
-  SELECT NEW.entry, last + row_number() OVER (ORDER BY c.account, x.n), x.account, x.side, cella.amount(x.cents)
-  FROM account_membership_payslip_transaction.withheld w
-  JOIN account_membership_transaction.called c ON c.member = w.member
-  CROSS JOIN LATERAL (
-    SELECT p.account, p.side, p.cents, row_number() OVER () AS n
-    FROM account_membership_transaction.paying(c.account, cella.cents(w.amount)) p
-  ) x
-  WHERE w.month = NEW.month;
-  INSERT INTO account_membership_transaction.paid (entry, member, amount, via)
-  SELECT NEW.entry, w.member, w.amount, 'pay'
-  FROM account_membership_payslip_transaction.withheld w WHERE w.month = NEW.month;
-  RETURN NULL;
-END
-$$;
+-- debited and their capital account credited. Registered with
+-- payslip-transaction, whose pay write asks for them.
+CREATE FUNCTION account_membership_payslip_transaction.withholds(month text)
+RETURNS TABLE (account text, side text, cents bigint)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT p.account, p.side, p.cents
+  FROM account_membership_payslip_transaction.due(withholds.month) d
+  CROSS JOIN LATERAL account_membership_transaction.paying(d.account, d.cents) WITH ORDINALITY p (account, side, cents, n)
+  WHERE d.cents > 0
+  ORDER BY d.account, p.n;
+END;
 
-CREATE TRIGGER withholds AFTER INSERT ON payslip_transaction.posting
-  FOR EACH ROW EXECUTE FUNCTION account_membership_payslip_transaction.withholds();
+-- Once the payment's entry is posted, in the write that pays the run,
+-- each instalment it withheld is recorded in this graft's own withheld,
+-- and as paid in through their pay by account-membership-transaction's
+-- published pay_in.
+CREATE FUNCTION account_membership_payslip_transaction.keeps(month text, entry text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO account_membership_payslip_transaction.withheld (month, member, amount, entry)
+  SELECT keeps.month, d.member, cella.amount(d.cents), keeps.entry
+  FROM account_membership_payslip_transaction.due(keeps.month) d WHERE d.cents > 0;
+  SELECT account_membership_transaction.pay_in(keeps.entry, w.member, w.amount, 'pay')
+  FROM account_membership_payslip_transaction.withheld w WHERE w.month = keeps.month;
+END;
+
+SELECT payslip_transaction.register_payment_lines(
+  'account_membership_payslip_transaction.withholds(text)',
+  'account_membership_payslip_transaction.keeps(text, text)',
+  'account-membership-payslip-transaction'
+);
 
 -- payslip:run:pay — the payment withheld exactly each instalment due, and
 -- its entry posts exactly those beyond the run's own lines.

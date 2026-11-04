@@ -30,3 +30,5 @@ END;
 
 GRANT USAGE ON SCHEMA file_membership TO cella_app, cella_guards;
 GRANT SELECT ON file_membership.opener TO cella_app, cella_guards;
+
+COMMENT ON TABLE file_membership.opener IS 'registry: the powers that open each class of file';

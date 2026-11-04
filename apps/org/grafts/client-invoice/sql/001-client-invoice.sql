@@ -3,6 +3,7 @@ CREATE SCHEMA client_invoice;
 -- Which client an invoice bills. An invoice without a row here is
 -- unbilled, not invalid; it still carries the name it bills as text.
 CREATE TABLE client_invoice.billing (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   invoice text PRIMARY KEY,
   client text NOT NULL
 );

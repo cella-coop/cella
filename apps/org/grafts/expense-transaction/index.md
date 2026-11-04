@@ -1,6 +1,6 @@
 +++
 title = "expense-transaction"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 An expense's approval and its reimbursement post balanced entries, in the
@@ -21,6 +21,11 @@ For a French SCOP's chart:
 `expense_transaction` (`sql/`): `posting`, the entry, the expense and the
 event, one of each per expense; `lines(expense, event)`, the lines an
 event posts, which the handlers ask the database for.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Guards
 

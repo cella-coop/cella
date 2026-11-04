@@ -38,22 +38,22 @@ const lines = [
   { description: 'Delivery', quantity: '1', unit_price: 2550, vat_rate: 550 },
   { description: 'Tax-free postage', quantity: '3', unit_price: 199, vat_rate: 0 },
 ]
-const record = (reference: string) =>
+const record = (reference: string, circle: string | null = null) =>
   db.query<{ id: string; net: string; vat: string; total: string }>(
     `WITH lines AS (${priced('$2')}),
      sums AS (SELECT sum(amount)::bigint AS net, sum(vat)::bigint AS vat FROM lines),
      made AS (
-       INSERT INTO bill.bill (supplier, reference, issued, due, label, category, net, vat, total, recorded, recorder)
+       INSERT INTO bill.bill (supplier, reference, issued, due, label, category, net, vat, total, recorded, recorder, circle)
        SELECT 'Imprimerie du Parc', $1, '2026-10-16', '2026-11-15', 'Paper stock', '606',
-              cella.amount(net), cella.amount(vat), cella.amount(net + vat), '2026-10-24', $3
+              cella.amount(net), cella.amount(vat), cella.amount(net + vat), '2026-10-24', $3, coalesce($4, circle.assembly())
        FROM sums RETURNING *
      ),
      lined AS (
-       INSERT INTO bill.line (bill, n, description, quantity, unit_price, amount, vat_rate)
-       SELECT made.id, n, description, quantity, cella.amount(unit_price), cella.amount(amount), vat_rate FROM made, lines
+       INSERT INTO bill.line (bill, circle, n, description, quantity, unit_price, amount, vat_rate)
+       SELECT made.id, made.circle, n, description, quantity, cella.amount(unit_price), cella.amount(amount), vat_rate FROM made, lines
      )
      SELECT id, cella.cents(net) AS net, cella.cents(vat) AS vat, cella.cents(total) AS total FROM made`,
-    [reference, JSON.stringify(lines), julien],
+    [reference, JSON.stringify(lines), julien, circle],
   )
 
 before(async () => {
@@ -132,4 +132,16 @@ test('the guards refuse a write that did not do what it says, and an approval by
   assert.equal(await guard('pays', { bill: 'bi-0001', amount: 147287 }), null)
   assert.equal(await guard('pays', { bill: 'bi-0001', amount: 147000 }), 'bi-0001 comes to 147287 cents, not 147000')
   await refused(() => db.query(`UPDATE bill.bill SET status = 'paid', paid = '2026-10-25' WHERE id = 'bi-0001'`), /bi-0001 is paid already/)
+})
+
+// Last, since what it numbers is not rolled back.
+test('a bill is owned by the circle it names, the root where it names none, and its lines by its own', async () => {
+  const owners = async (id: string) =>
+    (await db.query('SELECT DISTINCT b.circle, l.circle AS line FROM bill.bill b JOIN bill.line l ON l.bill = b.id WHERE b.id = $1', [id])).rows
+  await db.query('BEGIN')
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('brand', 'Brand')`)
+  assert.deepEqual(await owners((await record('FA-ROOT')).rows[0].id), [{ circle: 'ag', line: 'ag' }])
+  assert.deepEqual(await owners((await record('FA-BRAND', 'brand')).rows[0].id), [{ circle: 'brand', line: 'brand' }])
+  await assert.rejects(record('FA-WBE', 'wbe'), /bill_circle_fkey/)
+  await db.query('ROLLBACK')
 })

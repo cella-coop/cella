@@ -315,12 +315,36 @@ motion. Custom feats are how cella is extended.
 | a feat's schema | its own schema; the schemas of the feats it nests in; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
 | a graft's schema | its own schema; the schemas of the feats it joins and of the feats they nest in; the schemas of its lower-order grafts, at or below its node; `cella.*`; core's circles, `circle.*`; the policy register but its wording; the catalog |
 
+Every record names its **owning circle**: each table of a feat or a graft
+has a `circle` column, text, never null, a foreign key into core's
+circle table, `circle text NOT NULL DEFAULT circle.assembly() REFERENCES
+circle.circle`. Data is scoped by circle, as in an ERP: a record that is
+a circle's work names that circle, as a project names the circle that
+runs it and an expense the one it was spent for, and a record that is
+the whole co-op's, the books, pay, membership, invoices and clients and
+every record no circle runs, is the root's, the assembly's, which a
+write naming no circle names. An unknown circle is impossible, since the
+key refuses it, and so is a record of no circle. Ownership grants
+nothing by itself: it is the label a permission's scope is read against,
+and a seat in the circle gives no access to its records. A record's
+parts within its feat, a project's milestones, a meeting's agenda, a
+motion's stances, actions and messages, a document's updates, versions,
+comments and adoptions and a bill's lines, are in its circle: the feat's
+trigger copies it into each as it is made. A graft's row is the root's
+unless its write names a circle. No circle is read live from another
+feat's record or from an author's seats. A table its migrations fill,
+the same in every scope, such as `motion.cites` or `account.rubric`, is
+a registry and names none: it is commented `'registry: why'`.
+`feat-check` refuses a table that is neither.
+
 A graft's schema holds the junction, with keys into each feat's tables; no
-foreign key crosses a feat. `feat-check` enforces these boundaries by
+foreign key crosses a feat, and the one key out of a schema is a
+record's owning circle. `feat-check` enforces these boundaries by
 parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
-holds a foreign key out of it; reads a policy's wording
+holds a foreign key out of it but its owning circle's; names no owning
+circle in a table that is no registry; reads a policy's wording
 (`policy.wording`, [policies](#policies)); writes `cella.*` other than to register,
 under its own name, its guards on its own actions, those of the feats it
 joins, those of the lower-order grafts it builds on and core's circles', the power each of

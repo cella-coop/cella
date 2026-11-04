@@ -25,7 +25,7 @@ export async function work(db, read, day) {
   for (const p of projects) {
     await db.query(
       `INSERT INTO project.project (id, title, circle, summary, started, due, budget)
-       VALUES ($1, $2, $3, $4, $5, $6, cella.amount($7))`,
+       VALUES ($1, $2, coalesce($3, circle.assembly()), $4, $5, $6, cella.amount($7))`,
       [p.id, p.title, p.circle ?? null, p.summary ?? '', day(p.started), day(p.due), p.budget ?? null],
     )
     for (const [i, m] of (p.milestone ?? []).entries()) {

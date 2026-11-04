@@ -3,6 +3,7 @@
 -- that enrols it among the person's devices. The label is the invitee's
 -- own wording and stays out of the log.
 CREATE TABLE membership.invitation (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   key bytea NOT NULL UNIQUE CHECK (length(key) = 32),
   label text NOT NULL CHECK (label <> '')

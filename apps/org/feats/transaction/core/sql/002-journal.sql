@@ -37,3 +37,5 @@ ALTER TABLE transaction.entry ALTER COLUMN id DROP DEFAULT;
 DROP SEQUENCE transaction.entry_no;
 
 GRANT SELECT ON transaction.journal TO cella_app, cella_guards;
+
+COMMENT ON TABLE transaction.journal IS 'registry: the journal''s counter, one row';

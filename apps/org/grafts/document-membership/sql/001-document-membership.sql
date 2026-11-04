@@ -5,6 +5,7 @@ CREATE SCHEMA document_membership;
 -- named by id and the member by address, with no foreign key into either
 -- feat. A member reads a version once; a later version is read anew.
 CREATE TABLE document_membership.reading (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   version text NOT NULL,
   member text NOT NULL,
   read date NOT NULL,

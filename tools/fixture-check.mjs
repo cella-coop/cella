@@ -1,7 +1,8 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
 // every surplus distribution splits the whole surplus, every link a graft holds
 // resolves, every device and every membership and employment is a person's,
-// every vote and seat a member's, the books agree with the invoices,
+// every vote and seat a member's, every record's owning circle one the
+// co-op has, the books agree with the invoices,
 // and every document version is an outline of blocks the document model
 // takes, whose embeds name what exists and whose comments quote text one of
 // its blocks holds.
@@ -128,6 +129,16 @@ const check = (name) => {
     has(circles, d.circle, 'circle', `motion ${d.id}`)
     for (const v of d.vote ?? []) {
       known(v.member, `vote on ${d.id}`)
+    }
+  }
+
+  // Every record that names its owning circle names one the co-op has;
+  // one that names none is the root's.
+  for (const [file, key] of [['project', 'project'], ['meeting', 'meeting'], ['expense', 'expense'], ['bill', 'bill'], ['document', 'document']]) {
+    for (const r of read(file)[key] ?? []) {
+      if (r.circle !== undefined) {
+        has(circles, r.circle, 'circle', `${key} ${r.id}`)
+      }
     }
   }
 

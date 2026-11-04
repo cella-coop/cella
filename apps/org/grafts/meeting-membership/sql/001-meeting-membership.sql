@@ -5,6 +5,7 @@ CREATE SCHEMA meeting_membership;
 -- member with no row was not marked. Who was expected, the circle's
 -- seats, is meeting-membership's.
 CREATE TABLE meeting_membership.attendance (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   meeting text NOT NULL,
   member text NOT NULL,
   status text NOT NULL CHECK (status IN ('present', 'excused', 'absent')),

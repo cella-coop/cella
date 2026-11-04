@@ -12,6 +12,11 @@ travail, art. L3243-4), member or not. Declared by `file`.
 `employment_file` (`sql/`): `record`, a worker and a file, each by address or
 id, a file kept once.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Actions
 
 `employment-file:worker:attach` (confluent, `hire-worker`): whoever hires

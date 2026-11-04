@@ -5,6 +5,7 @@ CREATE SCHEMA person;
 -- whether they work for the co-op employment's; a person holds neither
 -- until one of them says so.
 CREATE TABLE person.person (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   address text PRIMARY KEY,
   name text NOT NULL,
   email text,

@@ -6,6 +6,7 @@ CREATE SCHEMA patronage_transaction;
 -- reserve (1061), the development fund, an indivisible reserve (1068),
 -- and the interest on capital to what the members are owed (457).
 CREATE TABLE patronage_transaction.distribution (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   distribution text PRIMARY KEY,
   entry text NOT NULL UNIQUE
 );

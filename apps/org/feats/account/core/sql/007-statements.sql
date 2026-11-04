@@ -142,3 +142,5 @@ SELECT CASE kind WHEN 'month' THEN to_char(since, 'YYYY-MM') WHEN 'quarter' THEN
 FROM grouped;
 
 GRANT SELECT ON account.rubric, account.report TO cella_app, cella_guards;
+
+COMMENT ON TABLE account.rubric IS 'registry: the rubrics of the statements, the legal form''s';

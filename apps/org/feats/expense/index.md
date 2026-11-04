@@ -74,6 +74,13 @@ approver's budget, which needs their seats and mandates
 `09000`; `expense.total(expense)`. The app role may select, insert and
 update; the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`expense.expense.circle` is the circle the expense was spent for, which
+its capture names.
+
 ## Personal data
 
 What the member wrote of an expense and the text of its receipt are

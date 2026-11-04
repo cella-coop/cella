@@ -218,6 +218,16 @@ changes only by being resolved. The triggers raise SQLSTATE `09000`. The
 app role may select, and insert updates, versions, comments and
 adoptions; the guards role, `cella_guards`, may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`document.document.circle` is the circle the document is owned by, which
+its creation names; its updates, versions and adoptions are in its
+circle and a comment in its version's, which `document.in_its_circle`
+copies into each as it is made. `document.generated.circle` is the
+circle whose policies it reads, which it names always.
+
 ## Guards
 
 - `document.adopts`, on `document:document:adopt`: the write's adoption

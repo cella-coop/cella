@@ -101,6 +101,15 @@ up to the net and the VAT; `bill.moves` keeps the lifecycle, a bill's
 figures and its lines. The app role may select, insert and update; the
 guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`bill.bill.circle` is the circle whose purchase the bill is, which its
+record names; its lines are in its circle, which `bill.in_its_circle`
+copies into each as it is made, and a line made in the statement that
+makes its bill names it itself.
+
 ## Guards
 
 - `bill.records`, on `bill:bill:record`: the bill was recorded on the

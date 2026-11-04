@@ -75,6 +75,11 @@ a person's name: a person among the clients is `a person, line 4`.
 `import` (`core/sql/`): `import.run`, numbered from `import.number`. The
 app role may select and insert; the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Tests
 
 `core/ts/_tests/run.test.ts` (`cella test slice import`): a run recorded

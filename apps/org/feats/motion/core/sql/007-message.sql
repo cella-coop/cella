@@ -40,6 +40,7 @@ END;
 -- The mentions and the links are the text's: the table generates them, so
 -- no row names one its text does not give, whatever its writer names.
 CREATE TABLE motion.message (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   receipt bigint PRIMARY KEY,
   motion text NOT NULL REFERENCES motion.motion,
   member text NOT NULL,
@@ -96,3 +97,21 @@ INSERT INTO cella.power (op, power, amount, owner) VALUES
   ('motion:motion:propose', 'propose', NULL, 'motion'),
   ('motion:motion:close', 'propose', NULL, 'motion'),
   ('motion:message:post', 'discuss', NULL, 'motion');
+
+-- A stance, an action and a message are in their motion's circle, copied
+-- as each is made.
+CREATE FUNCTION motion.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.circle := coalesce((SELECT m.circle FROM motion.motion m WHERE m.id = NEW.motion), NEW.circle);
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON motion.vote
+  FOR EACH ROW EXECUTE FUNCTION motion.in_its_circle();
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON motion.action
+  FOR EACH ROW EXECUTE FUNCTION motion.in_its_circle();
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON motion.message
+  FOR EACH ROW EXECUTE FUNCTION motion.in_its_circle();

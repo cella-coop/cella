@@ -5,6 +5,7 @@ CREATE SCHEMA file_membership;
 -- profile about them, kept once. Both by id, with no foreign key
 -- into either feat.
 CREATE TABLE file_membership.record (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text NOT NULL,
   file text NOT NULL UNIQUE,
   PRIMARY KEY (member, file)

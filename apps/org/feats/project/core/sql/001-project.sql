@@ -8,7 +8,7 @@ CREATE SCHEMA project;
 CREATE TABLE project.project (
   id text PRIMARY KEY CHECK (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
   title text NOT NULL CHECK (title <> ''),
-  circle text,
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   summary text NOT NULL DEFAULT '',
   started date NOT NULL,
   due date,
@@ -19,6 +19,7 @@ CREATE TABLE project.project (
 -- A milestone: a phase or a deliverable, numbered within its project in
 -- the order it was added, complete from the day it was completed.
 CREATE TABLE project.milestone (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   project text NOT NULL REFERENCES project.project,
   n integer NOT NULL CHECK (n > 0),
   title text NOT NULL CHECK (title <> ''),
@@ -90,3 +91,14 @@ GRANT USAGE ON SCHEMA project TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON project.project, project.milestone TO cella_app;
 GRANT SELECT ON project.progress TO cella_app;
 GRANT SELECT ON project.project, project.milestone, project.progress TO cella_guards;
+
+-- A milestone is in its project's circle, copied as it is made.
+CREATE FUNCTION project.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.circle := coalesce((SELECT p.circle FROM project.project p WHERE p.id = NEW.project), NEW.circle);
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON project.milestone
+  FOR EACH ROW EXECUTE FUNCTION project.in_its_circle();

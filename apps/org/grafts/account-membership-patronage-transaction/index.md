@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -32,6 +32,11 @@ out by the writes that follow it, and what it still owes after them is
 paid in cash, through a write of its own, not built.
 
 The app role may select and insert; the guards role may select.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

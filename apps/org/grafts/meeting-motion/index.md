@@ -1,6 +1,6 @@
 +++
 title = "meeting-motion"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Motions on an agenda: an item that tables a motion, and where the
@@ -16,6 +16,11 @@ coordination before its assembly votes. A trigger refuses an item not on
 its meeting's agenda and a motion that does not exist. An item removed
 leaves its row, which the reads no longer find. The app role may select
 and insert; the guards role, `cella_guards`, may select.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

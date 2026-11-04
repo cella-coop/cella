@@ -6,20 +6,21 @@ import type { Act, Acted, Capture, Captured } from '../models/expense.ts'
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
-// Captures a member's expense as a draft. `expense.captures` checks it is
+// Captures a member's expense as a draft, in the circle it names, or the
+// root's. `expense.captures` checks it is
 // the actor's own and spent on a day that has come; the expense-membership
 // graft's trigger that the actor is an active member.
 export const capturing = (input: Capture): Write<Captured> => ({
   op: 'expense:expense:capture' satisfies Action,
   request: input,
   state: async (tx) => {
-    const { rows } = await tx.query<{ id: string; total: string }>(
-      `INSERT INTO expense.expense AS e (member, day, label, category, net, vat, receipt)
-       VALUES ($1, $2, $3, $4, cella.amount($5), cella.amount($6), $7)
-       RETURNING e.id, expense.total(e) AS total`,
-      [input.member, input.day, input.label, input.category, input.net, input.vat, input.receipt],
+    const { rows } = await tx.query<{ id: string; circle: string; total: string }>(
+      `INSERT INTO expense.expense AS e (member, day, label, category, net, vat, receipt, circle)
+       VALUES ($1, $2, $3, $4, cella.amount($5), cella.amount($6), $7, coalesce($8, circle.assembly()))
+       RETURNING e.id, e.circle, expense.total(e) AS total`,
+      [input.member, input.day, input.label, input.category, input.net, input.vat, input.receipt, input.circle ?? null],
     )
-    return { expense: rows[0].id, member: input.member, day: input.day, category: input.category, amount: Number(rows[0].total) }
+    return { expense: rows[0].id, circle: rows[0].circle, member: input.member, day: input.day, category: input.category, amount: Number(rows[0].total) }
   },
   // The label and the receipt are the member's own: the log commits to
   // them, and the vault keeps them.

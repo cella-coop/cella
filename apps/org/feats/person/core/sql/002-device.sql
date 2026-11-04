@@ -3,6 +3,7 @@
 -- device that signed its enrolment. A revoked device stays, so what it
 -- signed before still reads back.
 CREATE TABLE person.device (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   key bytea PRIMARY KEY CHECK (length(key) = 32),
   address text NOT NULL,
   label text NOT NULL,

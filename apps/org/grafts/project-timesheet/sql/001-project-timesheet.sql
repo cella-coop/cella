@@ -3,6 +3,7 @@ CREATE SCHEMA project_timesheet;
 -- Which project an entry's time is for. An entry with no row here is the
 -- co-op's own time, not invalid.
 CREATE TABLE project_timesheet.booking (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry bigint PRIMARY KEY,
   project text NOT NULL
 );
@@ -14,6 +15,7 @@ CREATE INDEX ON project_timesheet.booking (project);
 -- coordination with the rate card; a rate per project or per client is
 -- not built.
 CREATE TABLE project_timesheet.rate (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   since date PRIMARY KEY,
   hourly cella.amount NOT NULL
 );

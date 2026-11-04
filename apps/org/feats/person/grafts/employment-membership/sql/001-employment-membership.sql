@@ -6,6 +6,7 @@ CREATE SCHEMA employment_membership;
 -- application runs from the hire to the day before it. The worker is
 -- named by address, with no foreign key into either feat.
 CREATE TABLE employment_membership.candidacy (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   worker text PRIMARY KEY,
   "from" date NOT NULL,
   "to" date NOT NULL,

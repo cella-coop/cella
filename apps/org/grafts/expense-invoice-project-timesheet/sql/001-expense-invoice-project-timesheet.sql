@@ -5,6 +5,7 @@ CREATE SCHEMA expense_invoice_project_timesheet;
 -- than `margin` percent after its costs. A parameter, seeded with the
 -- co-op's figures; a threshold per project is not built.
 CREATE TABLE expense_invoice_project_timesheet.threshold (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   since date PRIMARY KEY,
   burn numeric NOT NULL CHECK (burn > 0),
   margin numeric NOT NULL CHECK (margin < 100)

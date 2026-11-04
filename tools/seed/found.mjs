@@ -1,8 +1,9 @@
 // seed, found: founds a co-op from a fixture, as the log's first entry,
 // the founding (the import feat's `membership-motion:scope:found`), which the first
 // device the fixture enrols in force signs, as its founder seated in the
-// root: the scope's address, people, their memberships, employments and
-// candidacies, their devices, circles and roles, seats, motions with their
+// root: the scope's address, its circles and roles, which every record
+// names one of, people, their memberships, employments and candidacies,
+// their devices, seats, motions with their
 // stances and what they decide, the policies the closed ones adopted, the
 // founding motion's among them, the mandates among them copied into the
 // circles' mandates, invitations' first devices, documents with their
@@ -80,6 +81,28 @@ export async function seed(db, read, { from, dir }) {
   const deps = { db, actor: carrier.address, sign: signer(scope.address, carrier.address, fixture(carrier.address, carrier.label)) }
   let said = ''
   async function load() {
+    // The circles and their roles first: every record names its owning
+    // circle, the root's where it names none.
+    const structure = read('circle')
+    for (const c of structure.circle ?? []) {
+      await db.query('INSERT INTO circle.circle (id, name, assembly, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
+        c.id,
+        c.name,
+        c.assembly ?? false,
+        c.purpose ?? '',
+        c.procedure ?? 'consent',
+      ])
+    }
+    for (const r of structure.role ?? []) {
+      await db.query('INSERT INTO circle.role (id, circle, name, duty, holders) VALUES ($1, $2, $3, $4, $5)', [
+        r.id,
+        r.circle,
+        r.name,
+        r.duty ?? '',
+        r.holders ?? null,
+      ])
+    }
+
     // Everyone the co-op knows, then the memberships they hold.
     const people = read('person').person ?? []
     for (const p of people) {
@@ -123,26 +146,6 @@ export async function seed(db, read, { from, dir }) {
         day(c.from),
         day(c.to),
         c.shares,
-      ])
-    }
-
-    const structure = read('circle')
-    for (const c of structure.circle ?? []) {
-      await db.query('INSERT INTO circle.circle (id, name, assembly, purpose, procedure) VALUES ($1, $2, $3, $4, $5)', [
-        c.id,
-        c.name,
-        c.assembly ?? false,
-        c.purpose ?? '',
-        c.procedure ?? 'consent',
-      ])
-    }
-    for (const r of structure.role ?? []) {
-      await db.query('INSERT INTO circle.role (id, circle, name, duty, holders) VALUES ($1, $2, $3, $4, $5)', [
-        r.id,
-        r.circle,
-        r.name,
-        r.duty ?? '',
-        r.holders ?? null,
       ])
     }
 
@@ -208,7 +211,7 @@ export async function seed(db, read, { from, dir }) {
     const documents = read('document')
     let versions = 0
     for (const d of documents.document ?? []) {
-      await db.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [d.id, d.title])
+      await db.query('INSERT INTO document.document (id, title, circle) VALUES ($1, $2, coalesce($3, circle.assembly()))', [d.id, d.title, d.circle ?? null])
       const loro = createDoc(1n)
       for (const v of d.version ?? []) {
         const from = loro.version()
@@ -224,12 +227,13 @@ export async function seed(db, read, { from, dir }) {
         )
         versions++
       }
-      // A document generated from a circle's policies, as the statutes are,
-      // is carried over with its template and generated at each day its
-      // circle's policies changed, from those in force that day, patched
-      // onto the version before and adopted that day, as the document
-      // feat's `generate` does once a motion adopts or ends one.
-      if (d.circle) {
+      // A document generated from its circle's policies, one with a
+      // template, as the statutes are, is carried over with its template
+      // and generated at each day its circle's policies changed, from
+      // those in force that day, patched onto the version before and
+      // adopted that day, as the document feat's `generate` does once a
+      // motion adopts or ends one.
+      if (d.template) {
         const template = outline(d.template ?? [], `${d.id}'s template`)
         await db.query('INSERT INTO document.generated (document, circle, template) VALUES ($1, $2, $3)', [d.id, d.circle, JSON.stringify(template)])
         const { rows: days } = await db.query(

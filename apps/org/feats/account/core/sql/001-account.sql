@@ -4,6 +4,7 @@ CREATE SCHEMA account;
 -- stored, it is summed from the journal through the account-transaction
 -- graft.
 CREATE TABLE account.account (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   code text PRIMARY KEY CHECK (code ~ '^[0-9]+$'),
   label text NOT NULL,
   kind text NOT NULL CHECK (kind IN ('asset', 'liability', 'equity', 'income', 'expense')),
@@ -15,6 +16,7 @@ CREATE TABLE account.account (
 
 -- A month of the books, open until closed, never reopened.
 CREATE TABLE account.period (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   month text PRIMARY KEY CHECK (month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'),
   closed date
 );

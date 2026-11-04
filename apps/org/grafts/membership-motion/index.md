@@ -17,6 +17,11 @@ feat's `motion.action`, of the kinds this graft registers by
 names and, for an admission, the shares as a whole number. The app role
 and the guards role, `cella_guards`, may select it.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Guards
 
 - `membership_motion.asks`, on `motion:motion:propose`: each action of

@@ -24,6 +24,11 @@ a power covers ([circles](#circles)). Declared by `project`.
 
 The app role may select and insert; the guards role may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Actions
 
 | Action | Label | Power | Why |

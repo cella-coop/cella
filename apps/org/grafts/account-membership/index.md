@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -31,6 +31,11 @@ member may draw, and the freeze when a member leaves. Declared by
   freezes only when it does.
 
 The app role and the guards role may select.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

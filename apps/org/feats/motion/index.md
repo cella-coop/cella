@@ -168,6 +168,16 @@ A motion is decided by open or secret ballot, fixed as it is proposed: its proce
 
 `motion.cites` lists the actions that cite a motion, each with the power a collective mandate of the motion's circle grants it: each settles only once the motion its payload names has closed and passed, and only where its circle holds that power. A graft that joins this feat to an action's feat registers it from its migration by `motion.register_cite(action, power, owner)`, and this feat registers its own adoption and ending of a policy, `motion:policy:adopt` with `adopt-policy` and `motion:policy:end` with `end-policy`, the same way. An action so listed is in no `cella.power`, so no seat's mandate allows it. A graft covers every action listed with its guard (`membership-motion` that the motion passed on its roll, and this feat's own `mandated` that its circle holds the power): it registers the guard by `motion.register_cite_guard(fn, owner)`, kept in `motion.cite_guard`, which attaches it in `cella.guard` to every action listed so far, and `register_cite` attaches every guard so kept to the action it lists, so a guard covers the actions registered before it and after, and no graft puts a trigger on the register. A graft's migration calls these functions and never inserts into the registers itself; only a migration may call them. The app role and the guards role may select the registers.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`motion.motion.circle` is the circle that decides; its stances, actions
+and messages are in its circle, which `motion.in_its_circle` copies into
+each as it is made. `motion.cites`, `motion.cite_guard`,
+`motion.stance_power`, `motion.carries` and `motion.procedure` are
+registries and name none.
+
 ## Guards
 
 - `motion.proposes`, on `motion:motion:propose`: the write proposed the motion on the verdict date, open until a later deadline, with as many actions as its payload names. `motion.balloted`, on the same action: its ballot is the one the payload names. That each action applies is the guard of the graft registering its kind; that the actor sits in the circle, `membership-motion`'s.

@@ -3,6 +3,7 @@ CREATE SCHEMA membership_task;
 -- Who does a task. A task with no row here is unassigned, not invalid; a
 -- task has one assignee, and the last assignment wins.
 CREATE TABLE membership_task.assignment (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   task text PRIMARY KEY,
   member text NOT NULL
 );

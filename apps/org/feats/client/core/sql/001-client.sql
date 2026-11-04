@@ -5,6 +5,7 @@ CREATE SCHEMA client;
 -- personal data: the log commits to which fields a write changed, never to
 -- their values.
 CREATE TABLE client.client (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
   kind text NOT NULL DEFAULT 'company' CHECK (kind IN ('company', 'person')),
   name text NOT NULL,

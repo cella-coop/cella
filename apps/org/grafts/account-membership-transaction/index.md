@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -48,6 +48,11 @@ books. Once a former member's clock runs out `cella vault sweep` redacts
 it to NULL. A repayment's amount is logged as given: it falls due after
 its member has left, perhaps after their erasure, which refuses any
 later value of their class, and the exit drew it up from the books.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

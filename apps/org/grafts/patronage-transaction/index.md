@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -25,6 +25,11 @@ Declared by `patronage`.
 
 The app role may select and insert a distribution's entry; the guards
 role may select.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Guards
 

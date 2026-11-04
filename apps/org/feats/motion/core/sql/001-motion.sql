@@ -2,7 +2,7 @@ CREATE SCHEMA motion;
 
 CREATE TABLE motion.motion (
   id text PRIMARY KEY,
-  circle text NOT NULL,
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   title text NOT NULL,
   method text NOT NULL CHECK (method IN ('consent', 'majority')),
   proposed date NOT NULL,
@@ -17,6 +17,7 @@ CREATE TABLE motion.motion (
 -- A stance, ordered by its receipt; `at` is the day the member gives and
 -- orders nothing.
 CREATE TABLE motion.vote (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   receipt bigint PRIMARY KEY,
   motion text NOT NULL REFERENCES motion.motion,
   member text NOT NULL,

@@ -8,7 +8,7 @@ CREATE SCHEMA meeting;
 -- scheduled before the records began.
 CREATE TABLE meeting.meeting (
   id text PRIMARY KEY CHECK (id ~ '^[a-z0-9]+(-[a-z0-9]+)*$'),
-  circle text NOT NULL,
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   title text NOT NULL CHECK (title <> ''),
   at timestamp NOT NULL,
   place text NOT NULL DEFAULT '',
@@ -27,6 +27,7 @@ CREATE INDEX ON meeting.meeting (circle, at);
 -- sets its own position between its new neighbours', so two moves of
 -- different items never touch the same row.
 CREATE TABLE meeting.item (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   meeting text NOT NULL REFERENCES meeting.meeting,
   pos double precision NOT NULL,
@@ -116,3 +117,14 @@ GRANT USAGE ON SCHEMA meeting TO cella_app, cella_guards;
 GRANT SELECT, INSERT, UPDATE ON meeting.meeting TO cella_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON meeting.item TO cella_app;
 GRANT SELECT ON meeting.meeting, meeting.item TO cella_guards;
+
+-- An agenda item is in its meeting's circle, copied as it is made.
+CREATE FUNCTION meeting.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.circle := coalesce((SELECT m.circle FROM meeting.meeting m WHERE m.id = NEW.meeting), NEW.circle);
+  RETURN NEW;
+END
+$$;
+
+CREATE TRIGGER in_its_circle BEFORE INSERT ON meeting.item
+  FOR EACH ROW EXECUTE FUNCTION meeting.in_its_circle();

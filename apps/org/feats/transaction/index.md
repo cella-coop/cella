@@ -118,6 +118,12 @@ update or delete: the journal is permanent. A third numbers each entry
 The app role may select and insert; the guards role, `cella_guards`, may
 select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`transaction.journal`, the counter, is a registry and names none.
+
 ## Guards
 
 - `transaction.corrects`, on `transaction:transaction:adjust`: the entry

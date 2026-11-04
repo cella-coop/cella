@@ -3,6 +3,7 @@ CREATE SCHEMA account_membership_transaction;
 -- What a member subscribed on joining: their capital account, the shares
 -- and the entry that posted them.
 CREATE TABLE account_membership_transaction.subscription (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   account text NOT NULL UNIQUE,
   shares integer NOT NULL CHECK (shares > 0),
@@ -11,6 +12,7 @@ CREATE TABLE account_membership_transaction.subscription (
 
 -- What a member drew on their account, and the entry that paid it.
 CREATE TABLE account_membership_transaction.draw (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text PRIMARY KEY,
   member text NOT NULL,
   amount cella.amount NOT NULL

@@ -75,6 +75,11 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
   `member`, by `person.register_right`
   ([rights](../../../circle/index.md#rights)).
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../../../_corpus/doc/architecture.md#sql)): the root's,
+the assembly's, unless the write that makes it names another.
+
 ## Personal data
 
 A membership holds none of its own: the name and contact details it shows

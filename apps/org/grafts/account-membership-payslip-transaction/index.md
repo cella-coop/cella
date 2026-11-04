@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-03
+updated = 2026-11-04
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -44,6 +44,11 @@ registered by the member's address (`sql/003-salted.sql`): a spread's
 payload commits to them, and the vault keeps them, so the log's digest
 confirms no guess at what a colleague owes. Once a former member's
 clock runs out `cella vault sweep` redacts them to NULL.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

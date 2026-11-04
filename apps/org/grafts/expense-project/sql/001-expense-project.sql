@@ -4,6 +4,7 @@ CREATE SCHEMA expense_project;
 -- Both sides are referenced by id, with no foreign key into either feat;
 -- an expense under no project is the co-op's own.
 CREATE TABLE expense_project.rebill (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   expense text PRIMARY KEY,
   project text NOT NULL
 );

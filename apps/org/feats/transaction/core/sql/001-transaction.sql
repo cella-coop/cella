@@ -6,6 +6,7 @@ CREATE SEQUENCE transaction.entry_no;
 -- entries posted through the notary; an entry carried over from before the
 -- log has none.
 CREATE TABLE transaction.entry (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 'je-' || lpad(nextval('transaction.entry_no')::text, 4, '0'),
   date date NOT NULL,
   label text NOT NULL,
@@ -18,6 +19,7 @@ CREATE INDEX ON transaction.entry (corrects);
 -- A line debits or credits one account, named by its code, by one positive
 -- amount. Which accounts exist is the account-transaction graft's.
 CREATE TABLE transaction.line (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text NOT NULL REFERENCES transaction.entry,
   n integer NOT NULL CHECK (n > 0),
   account text NOT NULL,

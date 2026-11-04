@@ -74,11 +74,15 @@ export interface Incoming {
   label: string
   category: string
   lines: Line[]
+  // The circle whose purchase it is, by id; the root's, the assembly's,
+  // when none is named.
+  circle?: string | null
 }
 
 // The bill as recorded, amounts in cents.
 export interface Recorded {
   bill: string
+  circle: string
   net: number
   vat: number | null
   total: number

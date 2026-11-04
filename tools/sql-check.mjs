@@ -22,7 +22,11 @@
 //
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
-//   - holds no foreign key out of its own schema;
+//   - holds no foreign key out of its own schema, but its owning circle's
+//     into core's circle table;
+//   - names its owning circle in every table, `circle`, text, never null,
+//     a foreign key into circle.circle, unless the table is a registry
+//     its migrations fill, commented 'registry: why' (`unowned`);
 //   - writes cella.* only to register, under its own name: its guards, on
 //     ops of its own feat, of the feats it joins, of the lower-order
 //     grafts it builds on or of core's circles (cella.guard); the power
@@ -255,6 +259,37 @@ export function undeclared(found) {
     .map((c) => `${c.path}: ${c.key} may hold personal data: register it in cella.personal, or comment it 'not personal: why'`)
 }
 
+// Core's circle table, the one table outside its own schema a feat's or
+// a graft's table may hold a foreign key into: the record's owning
+// circle.
+const circleTable = (rv) => rv?.schemaname === 'circle' && rv?.relname === 'circle'
+
+// Whether a table's columns name its owning circle: `circle`, text, never
+// null, a foreign key into core's circle table, by the column or by a
+// constraint of the table.
+function owning(defs) {
+  const col = (defs ?? []).map((d) => d.ColumnDef).find((c) => c?.colname === 'circle')
+  if (!col || strings(col.typeName?.names).at(-1) !== 'text') {
+    return false
+  }
+  const kinds = (col.constraints ?? []).map((c) => c.Constraint)
+  const required = kinds.some((c) => c?.contype === 'CONSTR_NOTNULL' || c?.contype === 'CONSTR_PRIMARY')
+  const keyed =
+    kinds.some((c) => c?.contype === 'CONSTR_FOREIGN' && circleTable(c.pktable)) ||
+    (defs ?? []).some((d) => d.Constraint?.contype === 'CONSTR_FOREIGN' && circleTable(d.Constraint.pktable) && strings(d.Constraint.fk_attrs).join() === 'circle')
+  return required && keyed
+}
+
+// The tables of a feat or a graft that name no owning circle and are no
+// registry, a table its migrations fill, the same in every scope, which
+// is commented 'registry: why'.
+export function unowned(found) {
+  const registries = found.registries ?? new Set()
+  return (found.tables ?? [])
+    .filter((t) => !t.owned && !registries.has(t.key))
+    .map((t) => `${t.path}: ${t.key} names no owning circle: give it circle text NOT NULL REFERENCES circle.circle, or comment it 'registry: why'`)
+}
+
 // The motion feat's register of the ops that cite a motion, whose
 // rows mark an op as carried by a motion, with the power a collective
 // mandate of its circle grants it: the grafts that judge a cited write
@@ -309,9 +344,14 @@ function statement(type, b, o, s, fail, owned, named, found) {
       owned(b.relation.schemaname, `creates ${named(b.relation)}`)
       if (o.kind !== 'core') {
         columns(b.relation, b.tableElts, found.at, found)
+        // A partition is its parent's: the parent names its circle.
+        if (!b.partbound) {
+          ;(found.tables ??= []).push({ key: named(b.relation), path: found.at, owned: owning(b.tableElts) })
+        }
       }
       walk(b, (_, n) => {
-        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && n.Constraint.pktable?.schemaname !== b.relation.schemaname) {
+        const into = n.Constraint?.pktable
+        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && into?.schemaname !== b.relation.schemaname && !circleTable(into)) {
           fail(`${named(b.relation)} holds a foreign key into ${named(n.Constraint.pktable)}: no foreign key crosses a feat`)
         }
       })
@@ -341,6 +381,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
       }
       break
     case 'CommentStmt':
+      if (b.objtype === 'OBJECT_TABLE' && /^registry: ./.test(b.comment ?? '')) {
+        const parts = strings(b.object?.List?.items)
+        owned(parts[0], `comments on ${parts.join('.')}`)
+        ;(found.registries ??= new Set()).add(parts.join('.'))
+      }
       if (b.objtype === 'OBJECT_COLUMN') {
         const parts = strings(b.object?.List?.items)
         owned(parts[0], `comments on ${parts.join('.')}`)

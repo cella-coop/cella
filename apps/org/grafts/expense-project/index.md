@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-11-02
+updated = 2026-11-04
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -11,6 +11,11 @@ expense under no project is the co-op's own. Declared by `expense`.
 `expense_project` (`sql/`): `rebill`, an expense and its project, each by
 id; `spent`, what each project's members spent for it, approved and
 pending.
+
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
 
 ## Actions
 

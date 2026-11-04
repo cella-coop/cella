@@ -6,6 +6,7 @@ CREATE SCHEMA meeting_motion;
 -- several meetings, as one is discussed in coordination before its
 -- assembly votes.
 CREATE TABLE meeting_motion.tabled (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   item bigint PRIMARY KEY,
   meeting text NOT NULL,
   motion text NOT NULL

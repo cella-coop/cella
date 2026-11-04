@@ -6,6 +6,7 @@
 -- since a link is a fact and two do no harm; the first taken up ends them
 -- all.
 CREATE TABLE membership.link (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   digest bytea PRIMARY KEY CHECK (length(digest) = 32),
   member text NOT NULL REFERENCES membership.member (address),
   made date NOT NULL

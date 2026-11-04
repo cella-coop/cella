@@ -97,6 +97,11 @@ The app role may select and insert entries, update their minutes, and
 update periods; the guards role may select. A month's `entries` counts
 those with time in them.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Reads
 
 Who reads time is a row-level policy (`sql/004-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a member reads their own entries, months and sheets; whoever holds `approve-time`, `prepare-payroll` or `distribute-surplus` reads everyone's; no one signed in reads any. `timesheet.sheet` reads as its reader. A write's transaction reads every row.

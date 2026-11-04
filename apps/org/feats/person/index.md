@@ -153,6 +153,12 @@ The children's SQL reads this schema, as a graft's reads the feats it
 joins: membership enrols the device an invitation's acceptance makes, and employment
 the one a hire carries.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`person.rights` is a registry and names none.
+
 ## Personal data
 
 `004-personal.sql` registers in `cella.personal`, by the person's address:

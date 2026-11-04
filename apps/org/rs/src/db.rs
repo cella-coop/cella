@@ -82,6 +82,12 @@ impl<'a> Dev<'a> {
             let mut unbind = self.on(db, "psql");
             unbind.args(["-qc", &format!("ALTER DATABASE {db} SET cella.unbound = on")]);
             cmds.push(unbind);
+            // Every record names its owning circle, the root's where its
+            // write names none: the slice's database holds the root, as a
+            // founded scope does.
+            let mut root = self.on(db, "psql");
+            root.args(["-qc", "INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true)"]);
+            cmds.push(root);
         }
         if let Some(dir) = fixture {
             let mut seed = self.on(db, "node");

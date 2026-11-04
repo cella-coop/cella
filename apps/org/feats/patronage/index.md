@@ -196,6 +196,11 @@ Triggers raise SQLSTATE `09000`. The app role may select, insert parts and
 terms, set a distribution's `approved` and `distributed`;
 the guards role, `cella_guards`, may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Personal data
 
 A part's quantity and amount are what a worker was paid or worked and

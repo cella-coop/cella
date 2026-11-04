@@ -89,6 +89,11 @@ select, insert and update; the guards role, `cella_guards`, may select.
 `client.erases`, on `client:client:erase`: the client is a person, and
 the write erased their contact data and nothing else.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+
 ## Handlers
 
 `add`, `update` and `archive` (confluent) set the given fields from a

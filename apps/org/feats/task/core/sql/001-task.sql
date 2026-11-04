@@ -7,6 +7,7 @@ CREATE SEQUENCE task.number;
 -- wins it. Who does it and what project it is in are the membership-task and
 -- project-task grafts'.
 CREATE TABLE task.task (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 't-' || nextval('task.number'),
   title text NOT NULL CHECK (title <> ''),
   status text NOT NULL DEFAULT 'todo' CHECK (status IN ('backlog', 'todo', 'doing', 'done')),

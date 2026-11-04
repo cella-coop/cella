@@ -9,7 +9,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { agree, covered, granted, mandates } from '../powers.mjs'
-import { checkSql, undeclared } from '../sql-check.mjs'
+import { checkSql, undeclared, unowned } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
 const op = (o, power = null, amount = null, check = null) => ({ op: o, power, amount, check, file })
@@ -278,4 +278,21 @@ test('a power no mandate, collective mandate or right a fixture adopts grants is
   const stance = op('motion:stance:give', 'vote')
   assert.deepEqual(granted([stance], grants, [{ op: 'motion:stance:give', power: 'vote', owner: 'motion' }]), [])
   assert.deepEqual(granted([op('membership-motion:scope:found', null, null, 'first')], grants), [])
+})
+
+test('every table of a feat or a graft names its owning circle, keyed into core\'s circles, or is a registry', async () => {
+  const owned = 'CREATE TABLE invoice.invoice (circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle, id text PRIMARY KEY);'
+  const ok = await check({ 'core/circle': 'CREATE SCHEMA circle; CREATE TABLE circle.circle (id text PRIMARY KEY);', invoice: owned })
+  assert.deepEqual([ok.errors, unowned(ok.found)], [[], []])
+  const bare = await check({ invoice: 'CREATE TABLE invoice.invoice (id text PRIMARY KEY); CREATE TABLE invoice.part PARTITION OF invoice.invoice FOR VALUES IN (\'x\');' })
+  assert.deepEqual(unowned(bare.found), [
+    "apps/org/feats/invoice/core/sql/001.sql: invoice.invoice names no owning circle: give it circle text NOT NULL REFERENCES circle.circle, or comment it 'registry: why'",
+  ])
+  const loose = await check({ invoice: 'CREATE TABLE invoice.invoice (circle text REFERENCES circle.circle, id text PRIMARY KEY);' })
+  assert.equal(unowned(loose.found).length, 1, 'a circle that may be null names no owner')
+  const registry = await check({ invoice: `CREATE TABLE invoice.kind (id text PRIMARY KEY); COMMENT ON TABLE invoice.kind IS 'registry: the kinds, the same in every scope';` })
+  assert.deepEqual(unowned(registry.found), [])
+  const foreign = await check({ invoice: 'CREATE TABLE invoice.invoice (circle text NOT NULL REFERENCES circle.circle, member text REFERENCES member.member);' })
+  assert.match(foreign.errors.join('\n'), /holds a foreign key into member.member: no foreign key crosses a feat/)
+  assert.doesNotMatch(foreign.errors.join('\n'), /into circle.circle/)
 })

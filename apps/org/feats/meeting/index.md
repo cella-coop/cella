@@ -70,7 +70,8 @@ The meeting feat owns:
   be set, and a cancelled meeting has none;
 - the agenda changes only while its meeting is scheduled;
 - a meeting is held on or after its day;
-- a meeting is of a circle core holds, and a setting of one too.
+- a meeting is of a circle core holds, and a setting of one too, each by
+  a foreign key into core's circle table.
 
 What it does not own: who is
 expected and whether the meeting is quorate (`meeting-membership`),
@@ -87,10 +88,19 @@ hold are serialised, as a time entry and its month's approval are. The
 triggers raise SQLSTATE `09000`. The app role may select, insert and
 update, and delete items; the guards role, `cella_guards`, may select.
 
+Every record names its owning circle, `circle`, a foreign key into
+core's circles ([owning
+circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
+assembly's, unless the write that makes it names another.
+`meeting.meeting.circle` is the circle that meets; its agenda items are
+in its circle, which `meeting.in_its_circle` copies into each as it is
+made. `meeting.setting` is keyed by its circle.
+
 ## Circles
 
-A meeting names its circle as text, and the feat checks it is one of
-core's circles and keeps how each circle meets (`003-circle.sql`, and
+A meeting names its circle, its owning circle, by a foreign key into
+core's circles, so a meeting of no circle is impossible, and the feat
+keeps how each circle meets (`003-circle.sql`, and
 in the shell `meeting/circles`, `api/circles.ts` and `app/circles.ts`).
 Who is expected, the circle's seats, is `meeting-membership`'s, since
 whether a seat counts is the membership feat's.
@@ -98,11 +108,9 @@ whether a seat counts is the membership feat's.
 - `meeting.setting`, by circle: its `quorum`, the share of its seats a
   meeting needs present, in percent, and `adopts`, whether its minutes
   bind only once adopted by motion. A circle with no row needs half its
-  seats and keeps its minutes as written. A trigger refuses a setting of
-  no circle. The app role and the guards role may select; settings are
+  seats and keeps its minutes as written. Its circle is a foreign key into
+  core's circles. The app role and the guards role may select; settings are
   seeded, as nothing writes them yet.
-- `meeting.meets`, on `meeting:meeting:schedule`: the meeting's circle
-  exists.
 - In the shell, on a meeting's page its circle, linked, and its quorum
   and how its minutes bind; on a circle's, its next meeting, its quorum,
   how its minutes bind and its latest meetings.
@@ -149,7 +157,8 @@ the header's writes.
 - Slice tests (`core/ts/_tests/`): a held meeting's agenda fixed, a
   scheduled one's moving, a settled meeting staying so, a cancelled one
   without minutes, and the hold and cancel guards, no hold before the day;
-  a setting's circle and bounds, and `meeting.meets` (`setting.test.ts`).
+  a setting's circle and bounds, and a meeting of no circle refused
+  (`setting.test.ts`).
 - `_e2e/meetings.test.ts`: Lanterne's meetings seeded; Camille schedules
   coordination, its members add and reorder its agenda and table the
   rate card, mark themselves, Malik records others and may not record

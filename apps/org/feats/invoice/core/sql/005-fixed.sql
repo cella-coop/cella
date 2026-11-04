@@ -1,7 +1,8 @@
 -- The seller as an invoice names it (code de commerce, art. R123-237; CGI,
 -- annexe II, art. 242 nonies A, I, 2°): the scope's settings when the
 -- invoice issues, `cella.scope_legal_name` and beside it, a setting not
--- made being null.
+-- made being null; `invoice.identified` refuses an issue without any but
+-- the capital, and the VAT number where no line carries VAT.
 CREATE FUNCTION invoice.seller() RETURNS jsonb LANGUAGE sql STABLE
 RETURN jsonb_build_object(
   'name', nullif(current_setting('cella.scope_legal_name', true), ''),

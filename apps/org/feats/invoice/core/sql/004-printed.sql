@@ -1,6 +1,6 @@
 -- What an invoice prints beyond its name and figures (code de commerce,
 -- art. L441-9): the address it bills, as issued, its lines separated by
--- newlines. An invoice issued before it was kept has none.
+-- newlines, never blank: `invoice.identified` refuses an issue without it.
 ALTER TABLE invoice.invoice ADD COLUMN bill_address text;
 
 -- The address billed is issued with the rest and never changes either.

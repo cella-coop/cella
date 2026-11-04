@@ -11,7 +11,8 @@ const op = 'invoice:invoice:issue' satisfies keyof typeof actions
 // VAT core library's `priced`, as a bill's are, each line's VAT rate sent
 // in hundredths of a percent, and the seller kept as the scope's settings
 // name it then (`invoice.seller`). The guards on the op decide: `invoice.numbered`, that the number follows the
-// last with no gap, and any graft's on the op.
+// last with no gap; `invoice.identified`, that the invoice names its buyer,
+// their address and its seller's mentions; and any graft's on the op.
 export const issuing = (input: Issue): Write<Issued> => ({
   op,
   request: input,
@@ -23,7 +24,7 @@ export const issuing = (input: Issue): Write<Issued> => ({
        made AS (
          INSERT INTO invoice.invoice (id, series, number, issued, due, bill_to, bill_address, label, net, vat, total)
          SELECT invoice.number_id($1, spent.number), $1, spent.number, cella.verdict_date(),
-                coalesce($4::date, cella.verdict_date() + 30), $2, nullif(btrim($6), ''), $3,
+                coalesce($4::date, cella.verdict_date() + 30), $2, $6, $3,
                 cella.amount(sums.net), CASE WHEN sums.vat > 0 THEN cella.amount(sums.vat) END,
                 cella.amount(sums.net + sums.vat)
          FROM spent, sums
@@ -38,7 +39,7 @@ export const issuing = (input: Issue): Write<Issued> => ({
        SELECT id, to_char(issued, 'YYYY-MM-DD') AS issued, cella.cents(net) AS net, cella.cents(vat) AS vat,
               cella.cents(total) AS total
        FROM made`,
-      [input.series, input.bill_to, input.label, input.due ?? null, JSON.stringify(input.lines), input.bill_address ?? null],
+      [input.series, input.bill_to, input.label, input.due ?? null, JSON.stringify(input.lines), input.bill_address],
     )
     const r = rows[0]
     return {

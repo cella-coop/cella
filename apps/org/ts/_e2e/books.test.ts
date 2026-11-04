@@ -84,6 +84,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   const issued = await issue({
     series: 'F-2026',
     bill_to: 'Maison Ferrand',
+    bill_address: '16 avenue Jean-Jaurès\n93500 Pantin',
     label: 'Packaging, range of six: print preparation',
     lines: [
       { description: 'Print preparation, days', quantity: '2.5', unit_price: 520_00, vat_rate: 2000 },
@@ -102,7 +103,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
     { account: '44571', side: 'credit', cents: 296_00 },
   ])
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = 2')
-  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice-transaction', 'membership'])
+  assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice', 'invoice-transaction', 'membership'])
 
   const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
@@ -110,7 +111,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
 })
 
 test('a gap or a reused number is refused, and uses no verdict number', async () => {
-  const draft = { series: 'F-2026', bill_to: 'Atelier Ondine', label: 'Shop upkeep', lines: [{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }] }
+  const draft = { series: 'F-2026', bill_to: 'Atelier Ondine', bill_address: '11 rue Kléber\n93100 Montreuil', label: 'Shop upkeep', lines: [{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }] }
 
   await su.query(`UPDATE invoice.series SET next = 58 WHERE name = 'F-2026'`)
   const gap = await issue(draft, as(julien))

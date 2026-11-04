@@ -1,6 +1,6 @@
 +++
 title = "Lanterne's imports"
-updated = 2026-11-01
+updated = 2026-11-04
 +++
 
 Sample files from the tools a co-op leaves when it moves to cella, one for
@@ -17,7 +17,8 @@ guards refuse beside the ones they take:
   Atelier Ondine's invoice balance; the fees entry does not, and 2025's
   opening entry falls in no period of the books.
 - `invoices.csv`: two invoices to issue for Atelier Ondine and Vélo
-  Solidaire, the first of two lines, and one with no client.
+  Solidaire, the first of two lines, one with no client and one for
+  Maison Ferrand with no address billed.
 - `toggl.csv`: Inès's Toggl detailed report: her time on Ferrand, the
   co-op's own and Clairval, a row of Thomas's and a project the co-op does
   not hold.

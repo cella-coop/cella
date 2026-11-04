@@ -108,8 +108,8 @@ arrives at rung 3.
   right at rung 2 ends, and a number past it needs a fresh grant, which
   is ordered.
 - `invoice.invoice`: as issued, the name billed (`bill_to`) and its
-  address (`bill_address`, its lines separated by newlines; none on an
-  invoice issued before it was kept), the seller's mentions (`seller`,
+  address (`bill_address`, its lines separated by newlines, never
+  empty), the seller's mentions (`seller`,
   kept as `invoice.seller()` reads them when it issues), `net`, `vat`
   and `total` as `cella.amount` (a NULL `vat` is an invoice without
   VAT), unique by series and number; `sent`, `voided` and `reason` are
@@ -152,6 +152,13 @@ assembly's, unless the write that makes it names another.
 - `invoice.numbered`, on `invoice:invoice:issue`: the write issued the
   invoice on the verdict date, with the series' last number, the one after
   the number before it (no gap) and not dated before it.
+- `invoice.identified`, on `invoice:invoice:issue`: the invoice issued
+  names whom it bills and their address, and its seller's legal name,
+  form, seat, SIREN and registry, and its VAT number where a line
+  carries VAT, none of them blank. A scope whose settings lack one
+  issues no invoice until a host sets it, and the refusal names what is
+  missing; an issued invoice is corrected only by a void, so a missing
+  mention is kept out here or not at all.
 - `invoice.voids`, on `invoice:invoice:void`: the write voided the invoice
   on the verdict date, and no payment exists; a paid invoice is not voided,
   and the void uses no verdict number.
@@ -219,8 +226,10 @@ The seller's mentions close every page, with its number; a voided
 invoice is marked "ANNULÉE" and its date. Payments are not printed: the
 PDF is the invoice as issued, its seller too: the mentions are kept with
 the invoice when it issues, so a seat that moves later never alters the
-PDF of an invoice issued before. A setting a host had not made is left
-out, so a scope without its SIREN prints none.
+PDF of an invoice issued before. Every mention of the seller and the
+buyer in the table is on every PDF, since `invoice.identified` issues
+no invoice without them; only the capital, printed where it is fixed,
+may be absent.
 
 Not printed yet:
 

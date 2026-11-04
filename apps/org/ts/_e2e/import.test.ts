@@ -97,9 +97,10 @@ test('Julien carries October over from the old books: two entries posted, the re
   assert.equal(paid.n, 1)
 })
 
-test('Julien issues the spreadsheet\'s invoices, numbered in the series and posted; one with no client is refused', async () => {
+test('Julien issues the spreadsheet\'s invoices, numbered in the series and posted; one with no client and one with no address are refused', async () => {
   const { lines } = await run('invoices', 'invoices.csv', julien)
-  assert.deepEqual(states(lines), { 2: 'settled', 4: 'settled', 5: 'failed' })
+  assert.deepEqual(states(lines), { 2: 'settled', 4: 'settled', 5: 'failed', 6: 'refused' })
+  assert.match(lines[3].done.reason ?? '', /F-2026-0058 does not issue without the address it bills/)
   const issued = await all<{ id: string; bill_to: string; total: string }>(
     `SELECT i.id, i.bill_to, cella.cents(i.total)::text AS total FROM invoice.invoice i WHERE i.bill_to IN ('Atelier Ondine', 'Vélo Solidaire') AND i.issued = '2026-10-24' ORDER BY i.id`,
   )
@@ -156,7 +157,7 @@ test('every run is recorded, and `cella import` runs the same import from the co
   const runs = await all<{ kind: string; dry: boolean; settled: number; refused: number }>('SELECT kind, dry, settled, refused FROM import.run ORDER BY id')
   assert.deepEqual(
     runs.map((r) => `${r.kind}${r.dry ? ' (dry)' : ''} ${r.settled}/${r.refused}`),
-    ['members (dry) 2/1', 'members 2/1', 'fec 2/2', 'invoices 2/1', 'toggl 3/2', 'harvest 2/1', 'clients 3/1', 'projects 2/1', 'tasks 3/2'],
+    ['members (dry) 2/1', 'members 2/1', 'fec 2/2', 'invoices 2/2', 'toggl 3/2', 'harvest 2/1', 'clients 3/1', 'projects 2/1', 'tasks 3/2'],
   )
   const tool = new URL('../../../../tools/import.mjs', import.meta.url).pathname
   const out = spawnSync(process.execPath, [tool, 'projects', new URL('projects.csv', dir).pathname, camille, '--dry-run'], { encoding: 'utf8', env: process.env })

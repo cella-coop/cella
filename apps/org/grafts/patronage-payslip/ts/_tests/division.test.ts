@@ -1,7 +1,8 @@
 // The work share divided by pay and in equal parts, on a database holding
 // the app's core, the patronage and payslip feats and this graft: a mix of
-// the two divides each portion among those paid that year, to the cent,
-// a worker who left counting only the months before;
+// the two divides the pay portion among those paid that year and the
+// equal portion among all with a salary in it, one hired on 15 December
+// too, to the cent, a worker who left counting only the months before;
 // approving makes the parts in that write, and the guard takes them, and
 // refuses parts that are no longer what the year's pay gives. Run by
 // `cella test slice patronage-payslip`.
@@ -78,6 +79,34 @@ test('a worker who left on 30 November counts eleven months, and one who left th
   }
 })
 
+test('a worker paid from 2 to 30 March and one hired on 15 December each have an equal part and none by pay', async () => {
+  await db.query('BEGIN')
+  try {
+    // Zoe is paid 1 000 € from 2 to 30 March 2025; Fay 2 000 € from 15 December.
+    await db.query(
+      `INSERT INTO payslip.salary (member, "from", until, gross) VALUES
+         ('zoe@x', '2025-03-02', '2025-03-30', cella.amount(100000)), ('fay@x', '2025-12-15', NULL, cella.amount(200000))`,
+    )
+    assert.deepEqual(await rows(`SELECT worker, basis, quantity, cents FROM patronage_payslip.division('2025') ORDER BY basis, worker`), [
+      { worker: 'ana@x', basis: 'equal', quantity: '1', cents: '62500' },
+      { worker: 'ben@x', basis: 'equal', quantity: '1', cents: '62500' },
+      { worker: 'fay@x', basis: 'equal', quantity: '1', cents: '62500' },
+      { worker: 'zoe@x', basis: 'equal', quantity: '1', cents: '62500' },
+      { worker: 'ana@x', basis: 'salary', quantity: '3600000', cents: '600000' },
+      { worker: 'ben@x', basis: 'salary', quantity: '900000', cents: '150000' },
+    ])
+    await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
+    assert.deepEqual(await rows(`SELECT worker, basis, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2025' AND worker IN ('fay@x', 'zoe@x') ORDER BY worker`), [
+      { worker: 'fay@x', basis: 'equal', cents: '62500' },
+      { worker: 'zoe@x', basis: 'equal', cents: '62500' },
+    ])
+    assert.equal(await guard('patronage_payslip.divides', { distribution: '2025' }), null)
+    assert.equal(await guard('patronage.divides', { distribution: '2025' }), null)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
 test('approving makes the parts in that write, which both guards take', async () => {
   await db.query(`UPDATE patronage.distribution SET approved = cella.verdict_date() WHERE id = '2025'`)
   assert.deepEqual(await rows(`SELECT worker, basis, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2025' ORDER BY basis, worker`), [
@@ -92,5 +121,5 @@ test('approving makes the parts in that write, which both guards take', async ()
 
 test('parts no longer what the year\'s pay gives are refused', async () => {
   await db.query(`INSERT INTO payslip.salary (member, "from", gross) VALUES ('cleo@x', '2025-12-01', cella.amount(200000))`)
-  assert.equal(await guard('patronage_payslip.divides', { distribution: '2025' }), '2025\'s parts by pay and in equal parts are not its work share divided among those paid in 2025')
+  assert.equal(await guard('patronage_payslip.divides', { distribution: '2025' }), '2025\'s parts by pay and in equal parts are not its work share divided among those with a salary in 2025')
 })

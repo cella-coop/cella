@@ -1,5 +1,5 @@
 import { error, fail, type Actions } from '@sveltejs/kit'
-import { done as made, type Done } from '@cella/org-db'
+import { done as made, lent, type Done } from '@cella/org-db'
 import { scope } from '@cella/org-log/api'
 import { accept, invitation } from '@cella/org-membership/api'
 import { using } from '#lib/server/db.ts'
@@ -45,16 +45,14 @@ export const actions = {
         return refused('this invitation link is taken up already, or is no one’s')
       }
       const input = { member: invited.member, secret, key, label: String(data.get('label') ?? '') }
-      run = relay(owner, { scope: address, actor: invited.member, device: key }, (sign) =>
-        using(null, async (db) => {
-          try {
-            const done = made('membership:member:accept', await accept(input, { db, actor: invited.member, sign }))
-            return done.state === 'settled' ? { done } : fail(422, { done })
-          } catch (e) {
-            return refused(reason(e))
-          }
-        }),
-      )
+      run = relay(owner, { scope: address, actor: invited.member, device: key }, async (sign) => {
+        try {
+          const done = made('membership:member:accept', await accept(input, { ...lent((fn) => using(null, fn)), actor: invited.member, sign }))
+          return done.state === 'settled' ? { done } : fail(422, { done })
+        } catch (e) {
+          return refused(reason(e))
+        }
+      })
     }
     const out = await step(run)
     if (out && typeof out === 'object' && 'done' in out && (out.done as Done).state === 'settled') {

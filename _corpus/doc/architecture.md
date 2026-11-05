@@ -672,7 +672,15 @@ action runs as a relay (`lib/server/relay.ts`), and each time a handler
 signs, the post is answered with what to sign; the browser signs it
 (`post` in `@cella/org-ui`) and posts the proof back to the run, which
 goes on to its next signature, a reaction's, or to its outcome
-([trust](trust.md#keys-and-addresses)). The server holds no member's key,
+([trust](trust.md#keys-and-addresses)). A run holds no connection while
+it waits on a signature: a handler's reads each borrow one for their
+statement alone, and `write` asks for the signature with none held, then
+borrows one for its transaction (begin, state, submit, commit, release);
+each reaction does the same for its own signature. Nothing read before
+the signature is trusted at commit: the guards run in SQL inside the
+transaction and the notary checks the signature, the keyring and the
+nonce under its head lock, so a state changed in between is refused,
+never committed stale ([trust](trust.md#one-server)). The server holds no member's key,
 in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
 Until `POST /api/<feat>/<verb>` is served, these form actions are the

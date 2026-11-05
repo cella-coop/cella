@@ -45,7 +45,7 @@ export const actions = {
         return refused('this invitation link is taken up already, or is no one’s')
       }
       const input = { member: invited.member, secret, key, label: String(data.get('label') ?? '') }
-      run = relay(owner, { scope: address, actor: invited.member, device: key }, async (sign) => {
+      const started = relay(owner, { scope: address, actor: invited.member, device: key }, async (sign) => {
         try {
           const done = made('membership:member:accept', await accept(input, { ...lent((fn) => using(null, fn)), actor: invited.member, sign }))
           return done.state === 'settled' ? { done } : fail(422, { done })
@@ -53,6 +53,10 @@ export const actions = {
           return refused(reason(e))
         }
       })
+      if (typeof started === 'string') {
+        return refused(started)
+      }
+      run = started
     }
     const out = await step(run)
     if (out && typeof out === 'object' && 'done' in out && (out.done as Done).state === 'settled') {

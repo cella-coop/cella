@@ -40,9 +40,10 @@ export function reason(e: unknown): string {
 // One write from a page: the action the collection's slices name, run as
 // the signed-in member and signed by their device through the relay, then
 // the reactions to it if it settled. A refusal or a failure is a 4xx, so
-// the form keeps what was typed. The run holds no connection while it
-// waits on a signature: its reads borrow one each, and each write one for
-// its transaction once it is signed. The post that starts it, and each post
+// the form keeps what was typed; a write past the relay's caps fails
+// before it starts, a 429. The run holds no connection while it waits on
+// a signature: its reads borrow one each, and each write one for its
+// transaction once it is signed. The post that starts it, and each post
 // carrying a proof back, is answered with the run's next step: what the
 // device is to sign, or the outcome.
 export async function perform(event: RequestEvent, collection: string, name: string, id?: string) {
@@ -65,22 +66,24 @@ export async function perform(event: RequestEvent, collection: string, name: str
   if (!address) {
     return fail(503, { done: { op: write.op, state: 'failed', reason: 'the database names no scope', then: [] } satisfies Done })
   }
-  return step(
-    relay(owner, { scope: address, actor: s.actor, device: s.device }, async (sign) => {
-      const deps = { ...lent((fn) => using(s.actor, fn)), actor: s.actor, sign }
-      let result: Awaited<ReturnType<typeof write.run>>
-      try {
-        result = await write.run(form, deps, id)
-      } catch (e) {
-        return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
-      }
-      const { done, request } = result
-      if (done.state === 'settled') {
-        done.then.push(...(await react(write.op, request, deps)))
-      }
-      return done.state === 'refused' ? fail(422, { done }) : { done }
-    }),
-  )
+  const started = relay(owner, { scope: address, actor: s.actor, device: s.device }, async (sign) => {
+    const deps = { ...lent((fn) => using(s.actor, fn)), actor: s.actor, sign }
+    let result: Awaited<ReturnType<typeof write.run>>
+    try {
+      result = await write.run(form, deps, id)
+    } catch (e) {
+      return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
+    }
+    const { done, request } = result
+    if (done.state === 'settled') {
+      done.then.push(...(await react(write.op, request, deps)))
+    }
+    return done.state === 'refused' ? fail(422, { done }) : { done }
+  })
+  if (typeof started === 'string') {
+    return fail(429, { done: { op: write.op, state: 'failed', reason: started, then: [] } satisfies Done })
+  }
+  return step(started)
 }
 
 // A proof the browser posts back to the run it answers, which goes on to

@@ -268,24 +268,29 @@ BEGIN ATOMIC
 END;
 
 -- Why the assembly would not keep a collective `adopt-policy` mandate
--- with no `until` once the policies `ending` end and the mandate
--- policies `adopting` are adopted, or null when it would: it keeps one
--- it holds, never revoked, whose policy is none of `ending`, or one of
--- `adopting`, each the values its policy marks and its `until`, if any,
--- granting it with none. Through it the assembly grants itself again any
--- power it ended. The reason names the last such mandate it holds, the
--- one the write or the motion ends.
+-- in force on the verdict date with no `until` once the policies
+-- `ending` end and the mandate policies `adopting` are adopted, or null
+-- when it would: it keeps one it holds, never revoked, whose `from` is on
+-- or before the verdict date and whose policy is none of `ending`, or one
+-- of `adopting`, each the values its policy marks and its `from` and
+-- `until`, if any, granting it with no `until` and no `from` after the
+-- verdict date. One that applies only from a later day keeps nothing
+-- until then, so a replacement leaves no day without one. Through it the
+-- assembly grants itself again any power it ended. The reason names the
+-- last such mandate in force it holds, the one the write or the motion
+-- ends.
 CREATE FUNCTION circle.sovereignty(ending text[], adopting jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT circle.assembly() || ' would lose its power to adopt policies: '
-    || coalesce('mandate ' || l.id || ' of ' || l.policy || ' is its last collective adopt-policy mandate with no until',
-         'it holds no collective adopt-policy mandate with no until')
-    || '; adopting another with no until in its place, in the same motion and before ending it, keeps it'
+    || coalesce('mandate ' || l.id || ' of ' || l.policy || ' is its last collective adopt-policy mandate in force with no until',
+         'it holds no collective adopt-policy mandate in force with no until')
+    || '; adopting another with no from and no until in its place, in the same motion and before ending it, keeps it'
   FROM (SELECT) x
   LEFT JOIN LATERAL (
     SELECT m.id, m.policy FROM circle.mandate m
     WHERE m.grantee = circle.assembly() AND m.power = 'adopt-policy' AND m.until IS NULL
+      AND (m."from" IS NULL OR m."from" <= cella.verdict_date())
     ORDER BY m.policy = ANY (coalesce(sovereignty.ending, '{}')) DESC, m.revoked DESC NULLS FIRST, m.id DESC
     LIMIT 1
   ) l ON true
@@ -293,12 +298,14 @@ BEGIN ATOMIC
       SELECT FROM circle.mandate m
       WHERE m.grantee = circle.assembly() AND m.power = 'adopt-policy'
         AND m.until IS NULL AND m.revoked IS NULL
+        AND (m."from" IS NULL OR m."from" <= cella.verdict_date())
         AND m.policy <> ALL (coalesce(sovereignty.ending, '{}'))
     )
     AND NOT EXISTS (
       SELECT FROM jsonb_array_elements(coalesce(sovereignty.adopting, '[]')) a
       WHERE a ->> 'circle' = circle.assembly() AND a ->> 'power' = 'adopt-policy'
         AND nullif(a ->> 'until', '') IS NULL
+        AND (nullif(a ->> 'from', '') IS NULL OR (a ->> 'from')::date <= cella.verdict_date())
     );
 END;
 

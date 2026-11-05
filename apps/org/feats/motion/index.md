@@ -250,10 +250,11 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   that issued a mandate it is issued under, the assembly on every chain.
   And the policies the motion adopts, replaces and ends leave the
   assembly, once it is carried out, a collective `adopt-policy` mandate
-  with no `until` (`circle.sovereignty`), judged at each action that
-  ends or replaces one with the actions before it: a motion ending the
-  last is refused at its proposal, and one adopting another in its
-  place first passes.
+  in force on the verdict date with no `until` (`circle.sovereignty`),
+  judged at each action that ends or replaces one with the actions
+  before it: a motion ending the last is refused at its proposal, and
+  so is one adopting in its place one that applies only from a later
+  day, while one adopting another in force in its place first passes.
 - `motion.empowers`, on `motion:motion:propose`: the motion's
   circle holds, on the verdict date, a collective mandate
   (`circle.holds`) for the power of every action the motion carries:
@@ -291,8 +292,8 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   and `circle.narrows` on both that every mandate standing is a root
   the assembly issued or is issued under a parent its issuer holds,
   and is narrower than it, and `circle.sovereign` on both that the
-  assembly still keeps a collective `adopt-policy` mandate with no
-  `until`. So a motion of coordination grants a
+  assembly still keeps a collective `adopt-policy` mandate in force
+  on the verdict date with no `until`. So a motion of coordination grants a
   working circle's role a mandate only under one coordination holds for
   the power, within its cap and its term. And `motion.passes_down`
   on adoption, as the feat that knows both mandates and procedures:

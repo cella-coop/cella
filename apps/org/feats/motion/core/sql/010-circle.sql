@@ -99,8 +99,9 @@ END;
 -- And each end or replacement of a policy granting the assembly a
 -- collective `adopt-policy` mandate with no `until`
 -- (`circle.sovereign_by`) leaves it, with the actions before it, still
--- keeping one (`circle.sovereignty`): another adopted earlier in the
--- motion with no `until`, or one it holds that the motion does not end.
+-- keeping one in force on the verdict date (`circle.sovereignty`):
+-- another adopted earlier in the motion with no `from` and no `until`,
+-- or one in force it holds that the motion does not end.
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -144,7 +145,7 @@ BEGIN ATOMIC
       ARRAY(SELECT coalesce(o.args ->> 'policy', o.args ->> 'replaces') FROM motion.action o
             WHERE o.motion = m.motion AND o.n <= m.n
               AND ((o.kind = 'end' AND o.args ? 'policy') OR (o.kind = 'policy' AND nullif(o.args ->> 'replaces', '') IS NOT NULL))),
-      (SELECT coalesce(jsonb_agg(motion.marked(o.args ->> 'wording') || jsonb_build_object('until', o.args ->> 'until')), '[]')
+      (SELECT coalesce(jsonb_agg(motion.marked(o.args ->> 'wording') || jsonb_build_object('from', o.args ->> 'from', 'until', o.args ->> 'until')), '[]')
        FROM motion.action o
        WHERE o.motion = m.motion AND o.n <= m.n AND o.kind = 'policy' AND o.args ->> 'kind' = 'mandate')
     )
@@ -161,7 +162,8 @@ END;
 -- mandate policy's mandate is copied and revoked with it, and that every
 -- mandate standing is still a root the assembly issued or issued under a
 -- parent its issuer holds, and narrower than it, and that the assembly
--- still keeps a collective `adopt-policy` mandate with no `until`.
+-- still keeps a collective `adopt-policy` mandate in force with no
+-- `until`.
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'motion.circle_asks(jsonb)', 'motion'),
   ('motion:policy:adopt', 'circle.grants(jsonb)', 'motion'),

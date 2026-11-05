@@ -41,6 +41,19 @@ mod tests {
     const SALT: &str = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
     const NONCE: &str = "0123456789abcdef0123456789abcdef";
 
+    /// Takes the tests' lock shared, as every test opens: it waits while
+    /// one runs [`alone`], and lets go as its transaction rolls back.
+    fn beside() {
+        Spi::run("SELECT pg_advisory_xact_lock_shared(hashtext('cella test notary'))").expect("the tests' lock, shared");
+    }
+
+    /// Takes the tests' lock exclusive, as a test that drops what the others
+    /// read opens: it waits for every test begun [`beside`] it, and none
+    /// begins until it rolls back.
+    fn alone() {
+        Spi::run("SELECT pg_advisory_xact_lock(hashtext('cella test notary'))").expect("the tests' lock, exclusive");
+    }
+
     /// A member's device, from a TEST-ONLY seed.
     fn device(seed: u8) -> SigningKey {
         SigningKey::from_bytes(&[seed; 32])
@@ -149,6 +162,7 @@ $f$;
 
     #[pg_test]
     fn a_signed_write_settles_and_keeps_what_was_signed() {
+        beside();
         scope();
         let receipt = settle(100);
         assert_eq!(head(), 1);
@@ -167,6 +181,7 @@ $f$;
 
     #[pg_test]
     fn the_salt_and_signed_are_the_owners() {
+        beside();
         scope();
         let public = |what: &str| {
             Spi::get_one_with_args::<bool>("SELECT has_column_privilege('public', 'cella.receipt', $1, 'SELECT')", &[what.into()])
@@ -180,12 +195,14 @@ $f$;
 
     #[pg_test]
     fn an_unsigned_write_is_refused() {
+        beside();
         scope();
         refused(&json!({ "cents": 100 }), JULIEN, &json!({}), "is not signed");
     }
 
     #[pg_test]
     fn a_signature_by_another_key_is_refused() {
+        beside();
         scope();
         let request = json!({ "cents": 100 });
         let mut forged = signed(&device(3), JULIEN, &request, NONCE);
@@ -195,6 +212,7 @@ $f$;
 
     #[pg_test]
     fn a_request_swapped_under_its_signature_is_refused() {
+        beside();
         scope();
         let mut swapped = signed(&device(1), JULIEN, &json!({ "cents": 100 }), NONCE);
         swapped["request"] = json!({ "cents": 900 });
@@ -203,6 +221,7 @@ $f$;
 
     #[pg_test]
     fn a_signature_names_its_scope_op_and_actor() {
+        beside();
         scope();
         let request = json!({ "cents": 100 });
         let elsewhere = signed_in("other.example", &device(1), OP, JULIEN, &request, NONCE);
@@ -214,6 +233,7 @@ $f$;
 
     #[pg_test]
     fn a_payload_restates_the_request_or_is_refused() {
+        beside();
         scope();
         let request = json!({ "cents": 100, "note": "lunch" });
         let s = signed(&device(1), JULIEN, &request, NONCE);
@@ -224,6 +244,7 @@ $f$;
 
     #[pg_test]
     fn a_nonce_counts_once() {
+        beside();
         scope();
         settle(100);
         // The next write is another transaction's, which begins afresh.
@@ -246,6 +267,7 @@ $f$;
 
     #[pg_test]
     fn a_write_not_begun_is_refused() {
+        beside();
         scope();
         let request = json!({ "cents": 100 });
         let error = submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
@@ -255,6 +277,7 @@ $f$;
 
     #[pg_test]
     fn a_verdict_settles_only_the_write_begun() {
+        beside();
         scope();
         let request = json!({ "cents": 100 });
         let camille = hex(&device(2).verifying_key().to_bytes());
@@ -268,6 +291,7 @@ $f$;
 
     #[pg_test]
     fn a_state_table_takes_rows_only_inside_a_write() {
+        beside();
         scope();
         Spi::run("CREATE TABLE t.thing (n integer); INSERT INTO t.thing VALUES (1)").expect("a table");
         assert_eq!(Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("registered"), Some(true));
@@ -294,6 +318,7 @@ $f$;
 
     #[pg_test]
     fn the_keyring_says_which_devices_are_current() {
+        beside();
         scope();
         let request = json!({ "cents": 100 });
         refused(&request, JULIEN, &signed(&device(3), JULIEN, &request, NONCE), "the device is not a current key of julien");
@@ -304,6 +329,7 @@ $f$;
 
     #[pg_test]
     fn no_keyring_no_write() {
+        beside();
         scope();
         Spi::run("DELETE FROM cella.keyring").expect("no keyring");
         let request = json!({ "cents": 100 });
@@ -313,6 +339,7 @@ $f$;
 
     #[pg_test]
     fn a_rule_refuses_with_its_reason() {
+        beside();
         scope();
         Spi::run(
             "CREATE FUNCTION t.small(payload jsonb) RETURNS text LANGUAGE sql STABLE AS $f$
@@ -337,11 +364,12 @@ $f$;
         Spi::get_one::<String>("SELECT extversion FROM pg_extension WHERE extname = 'cella'").expect("the version")
     }
 
-    /// Runs alone: it drops the extension every other test reads, installs
+    /// It drops the extension every other test reads, so it runs alone; it installs
     /// each earlier version with a guard whose SQL body calls `cella.op()`,
     /// and updates it to the current one, where the guard reads the action.
     #[pg_test]
     fn each_earlier_version_upgrades_in_place_and_keeps_the_guards_that_call_it() {
+        alone();
         let current = version();
         for earlier in EARLIER {
             Spi::run(&format!(
@@ -372,6 +400,7 @@ ALTER EXTENSION cella UPDATE;"
 
     #[pg_test]
     fn the_chain_breaks_where_it_is_tampered_with() {
+        beside();
         scope();
         settle(100);
         assert!(verifies());
@@ -460,6 +489,7 @@ ALTER EXTENSION cella UPDATE;"
 
     #[pg_test]
     fn an_entry_chains_on_the_one_before() {
+        beside();
         scope();
         settle(100);
         entry_after(first_hash());
@@ -468,6 +498,7 @@ ALTER EXTENSION cella UPDATE;"
 
     #[pg_test]
     fn an_entry_chained_elsewhere_breaks_the_log() {
+        beside();
         scope();
         settle(100);
         entry_after(log::GENESIS);
@@ -483,6 +514,7 @@ ALTER EXTENSION cella UPDATE;"
 
     #[pg_test]
     fn the_verdict_date_is_the_scope_s_day() {
+        beside();
         // Kiritimati and Baker Island are 26 hours apart: their days never
         // agree, so the date the notary reads is the zone's it was given.
         Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true)").expect("the zone");
@@ -493,6 +525,7 @@ ALTER EXTENSION cella UPDATE;"
 
     #[pg_test]
     fn a_fixed_clock_is_the_verdict_date_in_any_zone() {
+        beside();
         Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true), set_config('cella.clock', '2026-10-25', true)").expect("the zone and the clock");
         let date = Spi::get_one::<String>("SELECT cella.verdict_date()::text").expect("the verdict date");
         assert_eq!(date.as_deref(), Some("2026-10-25"));

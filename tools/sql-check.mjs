@@ -35,7 +35,9 @@
 //     powers that read the rows of its own feat or of the feats it joins
 //     (cella.reading); the authority that says who holds a power
 //     (cella.authority); and, a graft only, the functions that open the
-//     rows of the feats it joins to more readers (cella.reach);
+//     rows of the feats it joins to more readers (cella.reach); and,
+//     by a call of literals, the fold of each action that writes its
+//     schema, a function in it (cella.lets_fold);
 //   - never sets search_path but on a function, to the catalog;
 //   - never reads the clock or randomness, since guards read
 //     cella.verdict_date(), and has no DO block, which this check cannot
@@ -765,6 +767,10 @@ function registersBy(call, o, fail, found) {
     follows(call, o, fail, found)
     return
   }
+  if (f === 'cella.lets_fold') {
+    folds(call, o, fail, found)
+    return
+  }
   if (!registerFns[f]) {
     return
   }
@@ -796,6 +802,33 @@ function follows(call, o, fail, found) {
     fail(`registers by cella.lets_follow as ${owner}, not as itself, ${o.name}`)
   }
   found.follows.push({ cause, op, owner: o.name, required: required?.boolval === true })
+}
+
+// `cella.lets_fold(op, version, fn, owner)`: how an action's entry
+// applies to the state of the slice registering it, under its own name,
+// by a function in its own schema, each argument a literal, so feat-check
+// sees every action's fold (architecture.md, "Folds").
+function folds(call, o, fail, found) {
+  const args = call.args ?? []
+  const [op, fn, owner] = [args[0], args[2], args[3]].map((a) => a?.A_Const?.sval?.sval)
+  const version = args[1]?.A_Const?.ival?.ival
+  if (args.length !== 4 || [op, fn, owner, version].includes(undefined)) {
+    fail('calls cella.lets_fold with an argument that is no literal, which the check cannot see')
+    return
+  }
+  // A core library registers as itself, by its schema's name.
+  const name = o.name ?? o.lib
+  if (!name) {
+    fail('registers a fold from the app core outside a library, whose schema no fold is in')
+    return
+  }
+  if (owner !== name) {
+    fail(`registers by cella.lets_fold as ${owner}, not as itself, ${name}`)
+  }
+  if (fn.split('.')[0] !== schemaOf(name)) {
+    fail(`registers the fold ${fn} of ${op}: a fold is a function in its owner's own schema, ${schemaOf(name)}`)
+  }
+  ;(found.folds ??= []).push({ op, version, fn, owner: name })
 }
 
 function statement(type, b, o, s, fail, owned, named, found) {

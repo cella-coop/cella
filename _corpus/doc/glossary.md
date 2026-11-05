@@ -51,9 +51,10 @@ updated = 2026-11-06
 | **nonce** | the single-use random value in an action's signature, so the signature counts once |
 | **keyring** | the one function that says whether a device is a current key of an address: the `person` feat's, called by the notary before any guard |
 | **verdict** | the notary's signed ruling on an ordered action, Settled or Refused, committed with its state change |
-| **log** | the scope's hash-chained, signed record of every accepted action, which proves the state's history and is never replayed to rebuild it |
+| **log** | the scope's hash-chained, signed record of every accepted action, which proves the state's history and folds into its non-personal state; a scope is restored from its backup, never by folding its log |
 | **founding** | the log's first entry, which settles on an empty log alone and founds the co-op (`membership-motion:scope:found`), signed by a founder seated in its assembly: its legal form, its founders as persons with their devices and memberships, the assembly with each founder seated in it, and the assembly's founding motion, which adopts the first policies from the form's defaults, the procedure the root decides by among them; a mock co-op's founding carries the state it held before its log too. Every later entry passes the guards those policies set |
-| **fold** | computing an outcome deterministically from the log's signed entries; folding the whole state from the log is a pawl the [ratchet](ratchet.md#the-pawls) keeps, not built |
+| **fold** | computing from the log's signed entries, deterministically: an outcome from its votes, or the scope's non-personal state from an empty database, each action saying how its entry applies; personal values stay commitments, their values in the vault. A pawl the [ratchet](ratchet.md#the-pawls) keeps, proved by folding Lanterne's year |
+| **checkpoint** | the hash of a scope's non-personal state at an entry of its log, which the fold records every so many entries, so a verification, a move or a witness starts there, never from the first entry ([trust](trust.md#one-server)) |
 | **primitive** | a `cella.*` type, aggregate or function, written in Rust and released by us |
 | **composed guard** | a `LANGUAGE sql` function over the primitives, in the declared subset, adopted by motion |
 | **power** | a developer's label for what an action needs, such as `issue-invoice`: each action's is registered in `cella.power`, or for an action a motion carries in `motion.cites`, and a mandate names the power it grants |

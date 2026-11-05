@@ -165,14 +165,31 @@ sequenceDiagram
   write leaves no gap. The log is hash-chained (BLAKE3) and signed
   (Ed25519), so anyone holding it checks that no entry was changed,
   dropped or reordered, and computes an outcome again from its signed
-  votes. It is checked, never replayed: no code folds the state from it,
-  the founding logs how many rows of each kind it carried and never the
-  rows, and personal values are commitments, so a scope comes back from
-  its backup and its keys ([operations](operations.md)), and the log
-  proves the history of what came back. A Merkle tree over the log (RFC 9162), giving
-  inclusion and consistency proofs, is not built: it arrives with
-  federation, when a scope must let another check its copy without
-  replaying the whole log.
+  votes. It folds, too: each action says how its entry applies to the
+  state before it, so the log folded entry by entry into an empty
+  database rebuilds the scope's non-personal state exactly, every row of
+  every feat and graft, the founding's carried rows among them. The fold
+  rebuilds structure, never personal values: a personal value is a
+  commitment in the log and its value stays in the vault, so a folded
+  scope holds each commitment and opens none. The fold streams the log,
+  its memory bounded whatever the log's length. Each action's fold is
+  versioned as a guard is: an entry folds by the version in force when it
+  was written, so two engines at different versions fold one log to the
+  same state. Every so many entries the fold records a checkpoint, the
+  hash of the non-personal state at that entry, so a verification, a move
+  to another host or a witness starts from a trusted checkpoint, never
+  from the first entry. `cella test e2e fold` runs Lanterne's year, folds
+  its log into a fresh database and compares the two, which must match
+  exactly, so a write that changes state its entry does not carry fails
+  the day it is written; its scale tier folds a generated scope of ten
+  million entries and fails on memory that grows with the log or a
+  re-fold from the latest checkpoint over its bound. A scope still comes
+  back from its backup and its keys ([operations](operations.md)), never
+  by folding its log, and the log proves the history of what came back.
+  A Merkle tree over the log (RFC 9162), giving inclusion and consistency
+  proofs, is not built: it arrives with federation, when a scope must let
+  another check its copy without replaying the whole log, its signed tree
+  heads naming the checkpoints' state hashes at the entries they cover.
 - **State changes only inside a write.** The handler opens its
   transaction with `cella.begin(op, actor, device)` before any state, and
   `submit` settles only the write begun, by the same action, actor and

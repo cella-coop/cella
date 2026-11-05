@@ -1,6 +1,6 @@
 +++
 title = "Ratchet"
-updated = 2026-11-01
+updated = 2026-11-06
 +++
 
 # Ratchet
@@ -26,7 +26,13 @@ A rung holds only if the design keeps the catches later rungs need. They
 cost little now and a rewrite later, so rung 1 keeps all of them:
 
 - a label on every write, in the type;
-- a hash-chained audit log of every accepted write, with a deterministic fold;
+- a hash-chained audit log of every accepted write, with a deterministic fold:
+  the log folded into an empty database rebuilds the scope's non-personal
+  state exactly, in memory its length never grows, each action's fold
+  versioned as a guard is, and from a checkpoint's state hash as well as
+  from the first entry; a test folds Lanterne's year to prove it, and a
+  generated scope of ten million entries to prove it scales
+  ([trust](trust.md#one-server));
 - member device keys;
 - personal data out of the log, behind single-use salted commitments;
 - double-entry books;
@@ -43,7 +49,11 @@ by the server (bounded; device series wait for rung 2), and admit a member by
 vote (ordered).
 
 Not in the pilot: the offline queue, statutory exports, the native client,
-federation, Merkle proofs for peers and end-to-end encryption.
+federation, Merkle proofs for peers and end-to-end encryption. Nor is
+folding confluent writes in parallel, which their labels allow, or
+witnesses; nothing the fold builds now precludes any of them: a scope
+grows to tens of thousands of members over decades, about ten million
+entries, and a federation grows by adding scopes.
 
 ## Moving a notary
 

@@ -235,3 +235,27 @@ SELECT motion.register_cite(lower('member:member:exit'), 'end-membership', 'memb
     'apps/org/grafts/member-motion/sql/001.sql: calls motion.register_cite with an argument that is no literal string, which the check cannot see',
   ])
 })
+
+test("a slice registers the folds of the actions that write its schema, as itself, by a function of its own", async () => {
+  const { errors, found } = await check({
+    'invoice-member': [`${table}
+CREATE FUNCTION invoice_member.fold_link(entry jsonb) RETURNS void LANGUAGE sql AS $$ SELECT $$;
+SELECT cella.lets_fold('invoice:invoice:issue', 1, 'invoice_member.fold_link(jsonb)', 'invoice-member');`],
+  })
+  assert.deepEqual(errors, [])
+  assert.deepEqual(found.folds, [{ op: 'invoice:invoice:issue', version: 1, fn: 'invoice_member.fold_link(jsonb)', owner: 'invoice-member' }])
+})
+
+test("a fold registered as another, out of its own schema or not by literals is refused", async () => {
+  const { errors } = await check({
+    'invoice-member': [`${table}
+SELECT cella.lets_fold('invoice:invoice:issue', 1, 'invoice_member.fold_link(jsonb)', 'member-motion');
+SELECT cella.lets_fold('invoice:invoice:issue', 2, 'invoice.fold_issue(jsonb)', 'invoice-member');
+SELECT cella.lets_fold('invoice:invoice:issue', 3, 'invoice_member.' || 'fold(jsonb)', 'invoice-member');`],
+  })
+  assert.deepEqual(errors.map((e) => e.replace(/^.*?: /, '')), [
+    'registers by cella.lets_fold as member-motion, not as itself, invoice-member',
+    "registers the fold invoice.fold_issue(jsonb) of invoice:invoice:issue: a fold is a function in its owner's own schema, invoice_member",
+    'calls cella.lets_fold with an argument that is no literal, which the check cannot see',
+  ])
+})

@@ -344,6 +344,10 @@ for (const dir of byName.values()) {
   }
 }
 
+// The actions with no fold yet, and how many actions there are.
+const unfolded = []
+let actionCount = 0
+
 if (sql) {
   const known = new Set(['cella'])
   for (const node of nodes) {
@@ -381,6 +385,11 @@ if (sql) {
   })
   const ops = await declared(repo, owned)
   errors.push(...agree(ops, found.powers, found.cites, found.stances), ...covered(ops, found))
+  // Every action's fold: each action with none is listed, and counted on
+  // the summary (architecture.md, "Folds").
+  const folding = new Set((found.folds ?? []).map((f) => f.op))
+  unfolded.push(...ops.map((o) => o.op).filter((op) => !folding.has(op)).sort())
+  actionCount = ops.length
   // The mandates each app's fixtures adopt, which every power must be
   // among.
   const { parse } = await import('smol-toml')
@@ -417,4 +426,8 @@ if (errors.length) {
   console.error(errors.map((e) => `feat check: ${e}`).join('\n'))
   process.exit(1)
 }
-console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length + sites.length} outside it`)
+for (const op of unfolded) {
+  console.log(`feat check: ${op} has no fold`)
+}
+const folded = sql ? `, ${actionCount - unfolded.length} of ${actionCount} actions fold` : ''
+console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length + sites.length} outside it${folded}`)

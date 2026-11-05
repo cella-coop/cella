@@ -107,7 +107,7 @@ test('the catalog is the views the slices publish, with their plain types and pe
     ORDER BY 1`)
   assert.deepEqual(Object.keys(catalog).sort(), granted.map((g) => g.view))
   assert.ok(Object.keys(catalog).length >= 50)
-  assert.deepEqual(catalog['person.people'], { address: { type: 'text', personal: false }, name: { type: 'text', personal: true } })
+  assert.deepEqual(catalog['person.people'], { address: { type: 'text', personal: false }, circle: { type: 'text', personal: false }, name: { type: 'text', personal: true } })
   assert.equal(catalog['account_transaction.movements'].debit.type, 'bigint')
   assert.ok(!Object.keys(catalog).some((v) => v.startsWith('analytics.')), 'the head stamps a run; no report reads it')
 })

@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -69,4 +69,4 @@ entries a payslip's run posted on its page.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `payslip_transaction.postings` to the analytics shell: which entry posted which month's payroll, and on what event.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `payslip_transaction.postings` to the analytics shell: which entry posted which month's payroll, and on what event. It is scoped by `circle`, the circle that owns each row.

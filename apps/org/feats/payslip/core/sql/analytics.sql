@@ -11,3 +11,4 @@ SELECT p.month, count(*)::bigint AS payslips, coalesce(sum(p.minutes), 0)::bigin
 FROM payslip.payslip p
 LEFT JOIN payslip.run r ON r.month = p.month
 GROUP BY p.month;
+COMMENT ON VIEW payslip.months IS 'audience: shared by month';

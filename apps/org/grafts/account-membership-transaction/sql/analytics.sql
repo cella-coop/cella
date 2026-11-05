@@ -18,3 +18,4 @@ FROM (
   FROM account_membership_transaction.repayment r JOIN transaction.entry e ON e.id = r.entry
 ) x
 GROUP BY x.month;
+COMMENT ON VIEW account_membership_transaction.capital_months IS 'audience: shared by month';

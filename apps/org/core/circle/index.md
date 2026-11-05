@@ -678,4 +678,4 @@ it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/circle/sql/analytics.sql`, the one a core library publishes beside the analytics port's, publishes `circle.circles`, `circle.roles`, `circle.mandates`, `circle.rights` and `circle.seats` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their issuers, their parents, their limits and budgets, the rights the form gives, and who holds which role in which circle, and when.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/circle/sql/analytics.sql`, the one a core library publishes beside the analytics port's, publishes `circle.circles`, `circle.roles`, `circle.mandates`, `circle.rights` and `circle.seats` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their issuers, their parents, their limits and budgets, the rights the form gives, and who holds which role in which circle, and when. Each is shared by `id`.

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -185,4 +185,4 @@ Paul left on 30 November 2025: his 1 500 € is owed him in `4567`, repaid
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_transaction.capital_months` to the analytics shell: what the members subscribed, paid in, drew and were repaid, summed over every member, by month of the entry that posted it.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_transaction.capital_months` to the analytics shell: what the members subscribed, paid in, drew and were repaid, summed over every member, by month of the entry that posted it. It is shared by `month`.

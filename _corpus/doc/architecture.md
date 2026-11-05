@@ -542,19 +542,56 @@ view shares what its slice agrees to share and no more:
 - from a table under row-level security, or a view over one, only sums
   over its rows, grouped by no column that says whose a row is (one its
   row-level policy compares with `cella.reader()` or opens by
-  `cella.reaches()`) unless that column is shown and declared; or the
-  rows its row-level policy opens to everyone, kept by the view's own
-  `col IS NULL`. So the payroll is
+  `cella.reaches()`) unless that column is shown and declared; or, in a
+  scoped view, the rows core's policy `circle` keeps by their circle,
+  and of a table whose policy is its own only the rows it opens by their
+  circle alone, kept by the view's own `col IS NULL`, as `account.chart`
+  keeps the accounts no one holds. So the payroll is
   shared as each month's sums, and a capital account's lines are summed
   into its parent's code.
 
+Every view a contract publishes declares its **audience** in its
+comment, one of two:
+
+- **scoped**, `audience: scoped by <column>`: one row per record, each
+  carrying in that column the circle that owns it, and, where a row is a
+  person's, `and <column>` names the column that says whose. A report
+  reads a scoped view only through its reader: the rows of the circles
+  their mandates cover for `read` or for a power the slice's feat names
+  in `cella.reading`, the row-level policies' own test, and the rows
+  that are their own ([the port](../../apps/org/core/analytics/index.md#the-reader)).
+  Every view that shows the rows of a record a circle owns is scoped, and
+  so is a sum kept per record, as a bill's VAT by rate is.
+- **shared**, `audience: shared by <columns>`: only sums and counts,
+  grouped by the columns it names and no finer. It is the whole co-op's
+  figure, read by every reader, and a report filters it by no field
+  below that grain. It sums at its own top level, each key of its
+  `GROUP BY` a column it shows and names, as `payslip.months` sums by
+  `month`; or it shows the rows of a view that sums so, each key of that
+  view's grouping shown and named, as `expense_project.totals` shows
+  `expense_project.spent` by `project`; or the rows of a table no circle
+  owns, a registry's or core's circles', by the columns that key them,
+  as `account.rubrics` shows the rubrics by `id`. The log's head, one
+  row, names none: `audience: shared`.
+
+A report's audience is the strictest of its parts: one that reads a
+scoped view is scoped, whatever shared view it joins.
+
 `cella check feats` enforces this: `tools/sql-check.mjs` refuses in a
 contract anything but views in the slice's own schema and comments on
-them, a `security_invoker` view, an undeclared personal column, a
-secured table's rows, a sum by whose a row is undeclared, a contract in
+them, a `security_invoker` view, a view that declares no audience or
+names a column it does not show, a scoped view that sums or whose
+circle column is no record's owning circle, a scoped view that shows a
+column saying whose a row is and does not name it, a shared view that
+shows the rows of a record a circle owns or groups by a column it does
+not name, an undeclared personal column, a secured table's rows beyond
+those above, a sum by whose a row is undeclared, a contract in
 a core but the port's, and any grant to `cella_analytics` anywhere in the
 tree. What a column is carries
-through a slice's own views. A function a view calls runs as the role,
+through a slice's own views. Whether a shared view's grouping is a
+record's own key, so that each of its sums is one record's, the check
+cannot see: the slice classes such a view scoped, and review reads it.
+A function a view calls runs as the role,
 not as the view's owner, so one that reads a table fails the role and
 one that asks who reads sees no one: a contract reads tables and plain
 views, never a `security_invoker` view or a function over them, and

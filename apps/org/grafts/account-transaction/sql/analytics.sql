@@ -12,5 +12,6 @@ FROM transaction.line l
 JOIN transaction.entry e ON e.id = l.entry
 JOIN account.account a ON a.code = l.account
 GROUP BY CASE WHEN a.holder IS NULL THEN a.code ELSE a.parent END, e.date;
+COMMENT ON VIEW account_transaction.movements IS 'audience: shared by code, day';
 
 COMMENT ON COLUMN account_transaction.movements.code IS 'not personal: a held account is summed into its parent''s code';

@@ -3,40 +3,46 @@
 -- terms. A capital account is a member's, so the chart shows only the
 -- accounts no one holds; what the held ones sum to is account-transaction's.
 CREATE VIEW account.chart AS
-SELECT a.code, a.label, a.kind, a.parent, a.cash, a.frozen
+SELECT a.code, a.label, a.kind, a.parent, a.cash, a.frozen, a.circle
 FROM account.account a
 WHERE a.holder IS NULL;
+COMMENT ON VIEW account.chart IS 'audience: scoped by circle';
 
 COMMENT ON COLUMN account.chart.label IS 'not personal: only a held account''s label names its holder, and the chart shows none';
 
 CREATE VIEW account.periods AS
-SELECT p.month, p.closed, to_date(p.month, 'YYYY-MM') AS since, account.period_end(p.month) - 1 AS until
+SELECT p.month, p.closed, to_date(p.month, 'YYYY-MM') AS since, account.period_end(p.month) - 1 AS until, p.circle
 FROM account.period p;
+COMMENT ON VIEW account.periods IS 'audience: scoped by circle';
 
 CREATE VIEW account.rubrics AS
 SELECT r.id, r.sheet, r.n, r.kind, r.label, r.side, r.prefixes, r.adds, r.subtracts
 FROM account.rubric r;
+COMMENT ON VIEW account.rubrics IS 'audience: shared by id';
 
 CREATE VIEW account.capital_terms AS
-SELECT t.id, t.policy, t."from", cella.cents(t.share) AS share, t.minimum, t.instalments, t.delay, t.repayments, t.adopted
+SELECT t.id, t.policy, t."from", cella.cents(t.share) AS share, t.minimum, t.instalments, t.delay, t.repayments, t.adopted, t.circle
 FROM account.terms t;
+COMMENT ON VIEW account.capital_terms IS 'audience: scoped by circle';
 
 -- The statements' spans: each month, quarter and year the books hold, with
 -- its days and the span of the same length before it.
 CREATE VIEW account.spans AS
 SELECT r.id, r.kind, r.since, r.until, r.before, r.before_since, r.before_until, r.closed
 FROM account.report r;
+COMMENT ON VIEW account.spans IS 'audience: shared by kind, since';
 
 -- Where each account no one holds is presented on each sheet: the line
 -- whose prefix of its code is the longest, as `rubric_of` places it. A held
 -- account is summed into its parent's code, which is placed here.
 CREATE VIEW account.placements AS
-SELECT DISTINCT ON (r.sheet, a.code) r.sheet, a.code, r.id AS rubric
+SELECT DISTINCT ON (r.sheet, a.code) r.sheet, a.code, r.id AS rubric, a.circle
 FROM account.account a
 JOIN account.rubric r ON r.kind = 'line'
 CROSS JOIN LATERAL unnest(r.prefixes) p(prefix)
 WHERE a.holder IS NULL AND a.code LIKE p.prefix || '%'
 ORDER BY r.sheet, a.code, length(p.prefix) DESC;
+COMMENT ON VIEW account.placements IS 'audience: scoped by circle';
 
 -- Each total of a sheet expanded down to its lines, as `statement`
 -- expands it: a total is the sum of each line times its sign.
@@ -55,3 +61,4 @@ SELECT e.sheet, e.total, e.part AS line, sum(e.sign)::integer AS sign
 FROM expanded e
 JOIN account.rubric r ON r.id = e.part AND r.kind = 'line'
 GROUP BY e.sheet, e.total, e.part;
+COMMENT ON VIEW account.totals IS 'audience: shared by sheet, total, line';

@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -83,4 +83,4 @@ Ferrand's 13 760 € of its 14 000 €.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `project_timesheet.months`, `project_timesheet.rates` and `project_timesheet.costs` to the analytics shell: each project's time by month in minutes, summed over every member, with what its billable time spent at the billing rate and what all of it cost at the cost rate, in exact cents, which a report rounds once over the months it sums; and both rates by the day they apply from. An entry is its member's, so no row is one member's time. `project_timesheet.forecasts` is each project's burn on the scope's day, as `forecast` reads it: what its billable time spent and all its time cost, the share of its budget spent, how far through its span it is and its spend at completion, with the day.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `project_timesheet.months`, `project_timesheet.rates` and `project_timesheet.costs` to the analytics shell: each project's time by month in minutes, summed over every member, with what its billable time spent at the billing rate and what all of it cost at the cost rate, in exact cents, which a report rounds once over the months it sums; and both rates by the day they apply from. An entry is its member's, so no row is one member's time. `project_timesheet.forecasts` is each project's burn on the scope's day, as `forecast` reads it: what its billable time spent and all its time cost, the share of its budget spent, how far through its span it is and its spend at completion, with the day. `project_timesheet.rates` and `project_timesheet.costs` are scoped by `circle`, the circle that owns each rate; `project_timesheet.months` is shared by `project` and `month`, and `project_timesheet.forecasts` by `project`.

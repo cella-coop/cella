@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -261,4 +261,4 @@ not verified.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is client-invoice's.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is client-invoice's. All three are scoped by `circle`, the circle that owns the invoice or the payment.

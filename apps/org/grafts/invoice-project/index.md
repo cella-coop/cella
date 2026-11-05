@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -54,4 +54,4 @@ Solidaire's voided invoice and its reissue at the solidarity rate.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_project.charges` to the analytics shell: which project each invoice charges; and `invoice_project.totals`, what each project invoiced, net of VAT and of its voided invoices.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_project.charges` to the analytics shell: which project each invoice charges; and `invoice_project.totals`, what each project invoiced, net of VAT and of its voided invoices. `invoice_project.charges` is scoped by `circle`, the circle that owns each row, and `invoice_project.totals` is shared by `project`.

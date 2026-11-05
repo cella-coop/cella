@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -143,4 +143,4 @@ draft.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `expense.expenses` to the analytics shell: each expense, whose it is, its category, figures and lifecycle. Its label and receipt are personal and are not shared.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `expense.expenses` to the analytics shell: each expense, whose it is, its category, figures and lifecycle. Its label and receipt are personal and are not shared. It is scoped by `circle`, the circle that owns the expense, and by `member`, whose claim it is.

@@ -11,3 +11,4 @@ SELECT to_char(e.date, 'YYYY-MM') AS month,
 FROM transaction.entry e
 JOIN transaction.line l ON l.entry = e.id
 GROUP BY to_char(e.date, 'YYYY-MM');
+COMMENT ON VIEW transaction.months IS 'audience: shared by month';

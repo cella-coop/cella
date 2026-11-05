@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Who came to a meeting, who was expected, the circle's seats on its day,
@@ -102,4 +102,4 @@ and the seat guard.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `meeting_membership.attendance_marked` to the analytics shell: who attended each meeting, as marked.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `meeting_membership.attendance_marked` to the analytics shell: who attended each meeting, as marked. It is scoped by `circle`, the circle that owns each row.

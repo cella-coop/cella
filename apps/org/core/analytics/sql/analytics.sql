@@ -5,3 +5,4 @@
 CREATE VIEW analytics.head AS
 SELECT h.n, encode(h.hash, 'hex') AS hash
 FROM cella.head h;
+COMMENT ON VIEW analytics.head IS 'audience: shared';

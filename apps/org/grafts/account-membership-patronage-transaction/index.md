@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -115,4 +115,4 @@ blocked until 1 June 2031, and leave 14 130 € to pay in cash.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_patronage_transaction.credits` to the analytics shell: what each distribution credited to the members' capital, summed over every member, and the last day its shares are blocked until; and `account_membership_patronage_transaction.posted`, what each distribution's entry and the credits that follow it posted, account by account, a member's capital account summed into its parent's code, which the `report` feat's federation figures read.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_patronage_transaction.credits` to the analytics shell: what each distribution credited to the members' capital, summed over every member, and the last day its shares are blocked until; and `account_membership_patronage_transaction.posted`, what each distribution's entry and the credits that follow it posted, account by account, a member's capital account summed into its parent's code, which the `report` feat's federation figures read. Both are shared: `credits` by `distribution`, and `posted` by `distribution` and `code`.

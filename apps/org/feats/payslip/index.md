@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -128,4 +128,4 @@ run's, so October's run holds eleven payslips, 28 200 € gross.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `payslip.months` to the analytics shell: each month's payroll summed over every payslip, and its run's days. A payslip is its member's, so no row is one member's pay.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `payslip.months` to the analytics shell: each month's payroll summed over every payslip, and its run's days. A payslip is its member's, so no row is one member's pay. It is shared by `month`.

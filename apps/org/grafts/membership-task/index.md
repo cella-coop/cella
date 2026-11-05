@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -50,4 +50,4 @@ to the October close and the overdue Mauve invoice.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_task.assignments` to the analytics shell: who each task is assigned to.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `membership_task.assignments` to the analytics shell: who each task is assigned to. It is scoped by `circle`, the circle that owns each row.

@@ -1,6 +1,6 @@
 +++
 title = "client-invoice"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Who an invoice bills. An invoice without a link is unbilled, not invalid;
@@ -51,4 +51,4 @@ bill it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_invoice.billings` to the analytics shell: which client each invoice is billed to.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_invoice.billings` to the analytics shell: which client each invoice is billed to. It is scoped by `circle`, the circle that owns each row.

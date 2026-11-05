@@ -59,7 +59,16 @@
 //     sums: the view aggregates at its top level and groups by no column
 //     a policy compares with cella.reader(), but where that column is
 //     shown and commented personal.
-// A view any slice makes over a secured table is secured in turn. What a
+// Each view declares its audience in its comment:
+//   - 'audience: scoped by <circle>[ and <whose>]': one row per record,
+//     never a sum, its circle column a record's owning circle, and the
+//     column that says whose a row is named where it is shown;
+//   - 'audience: shared[ by <columns>]': sums grouped by exactly the
+//     columns it names, at its top level or in a view it shows the rows
+//     of, or the rows of tables no circle owns. It shows no row of a
+//     record a circle owns.
+// A view any slice makes over a secured table is secured in turn, and one
+// over a table that names its owning circle is owned in turn. What a
 // view reads through a function runs as the role, and is caught when
 // cella migrate reads each view as it, or by review.
 // No core publishes a contract but the analytics port, org's core library
@@ -474,7 +483,14 @@ function statement(type, b, o, s, fail, owned, named, found) {
         columns(b.relation, b.tableElts, found.at, found)
         // A partition is its parent's: the parent names its circle.
         if (!b.partbound) {
-          ;(found.tables ??= []).push({ key: named(b.relation), path: found.at, owned: owning(b.tableElts) })
+          const key = named(b.relation)
+          ;(found.tables ??= []).push({ key, path: found.at, owned: owning(b.tableElts) })
+          // A table that names its owning circle is under core's
+          // row-level policy: its rows are a circle's records.
+          if (owning(b.tableElts)) {
+            found.owned.add(key)
+            found.circles.add(`${key}.circle`)
+          }
         }
       }
       walk(b, (_, n) => {
@@ -493,6 +509,16 @@ function statement(type, b, o, s, fail, owned, named, found) {
       // secured in turn, for a contract that reads it.
       if (read(b.query).some((t) => found.secured.has(t))) {
         found.secured.add(named(b.view))
+      }
+      // So is a view over a circle's records, and a view that sums keeps
+      // its grain, for a shared view that shows its rows.
+      if (read(b.query).some((t) => found.owned.has(t))) {
+        found.owned.add(named(b.view))
+      }
+      const { names, selects } = shape(b)
+      const grains = selects.map((q) => grouping(q, names))
+      if (grains.every((g) => g.sums && !g.loose.length)) {
+        found.summed.set(named(b.view), new Set(grains.flatMap((g) => g.keys)))
       }
       carry(b, found)
       break
@@ -847,8 +873,71 @@ function carry(v, found) {
       if (cols.some((c) => found.personal.includes(c) || found.carried.has(c))) {
         found.carried.add(`${view}.${names[i]}`)
       }
+      if (t.ResTarget.val?.ColumnRef && cols.some((c) => found.circles.has(c))) {
+        found.circles.add(`${view}.${names[i]}`)
+      }
     })
   }
+}
+
+// A column reference or an expression as the parser reads it, wherever
+// it stands in the text.
+const bare = (n) => JSON.stringify(n, (k, x) => (k === 'location' ? undefined : x))
+
+// Whether a select sums its rows, and by what: the names of the columns
+// that show its GROUP BY keys, and the keys it shows no column of.
+function grouping(q, names) {
+  const targets = (q.targetList ?? []).map((t) => bare(t.ResTarget.val))
+  const keys = []
+  const loose = []
+  for (const g of q.groupClause ?? []) {
+    const f = strings(g.ColumnRef?.fields)
+    let i = targets.indexOf(bare(g))
+    if (i < 0 && f.length === 1) {
+      i = names.indexOf(f[0])
+    }
+    if (i < 0) {
+      loose.push(g)
+    } else {
+      keys.push(names[i])
+    }
+  }
+  const sums = (q.groupClause ?? []).length > 0 || (q.targetList ?? []).some((t) => summing(t.ResTarget.val))
+  return { sums, keys, loose }
+}
+
+// Whether an expression sums the rows of its own select: an aggregate
+// outside any subquery in it.
+function summing(n) {
+  let hit = false
+  const visit = (key, x) => {
+    if (hit || key === 'SubLink') {
+      return
+    }
+    if (key === 'FuncCall' && aggregate(x)) {
+      hit = true
+    } else if (Array.isArray(x)) {
+      x.forEach((y) => visit(key, y))
+    } else if (x && typeof x === 'object') {
+      for (const [k, y] of Object.entries(x)) {
+        visit(k, y)
+      }
+    }
+  }
+  visit(null, n)
+  return hit
+}
+
+// A view's audience, from its comment: scoped by its circle column and
+// the column that says whose a row is, or shared by the columns it sums by.
+const AUDIENCE = /^audience: (scoped|shared)(?: by ([a-z_][a-z0-9_]*(?:(?:, | and )[a-z_][a-z0-9_]*)*))?(?=$|[.;:] )/
+function audience(comment) {
+  const m = AUDIENCE.exec(comment ?? '')
+  if (!m) {
+    return null
+  }
+  const by = m[2] ? m[2].split(/, | and /) : []
+  return m[1] === 'scoped' ? { scoped: true, by, circle: by[0], whose: by[1], extra: by.slice(2) } : { scoped: false, by }
 }
 
 function contract(tree, o, fail, found) {
@@ -864,13 +953,18 @@ function contract(tree, o, fail, found) {
       }
     }
   }
-  // The view columns the contract declares, personal or not.
+  // The view columns the contract declares, personal or not, and each
+  // view's audience.
   const declared = new Set()
+  const audiences = new Map()
   for (const { stmt } of tree.stmts ?? []) {
     const [type, b] = Object.entries(stmt)[0]
     if (type === 'CommentStmt' && ['OBJECT_COLUMN', 'OBJECT_VIEW'].includes(b.objtype)) {
       if (b.objtype === 'OBJECT_COLUMN' && /^(not )?personal: ./.test(b.comment ?? '')) {
         declared.add(strings(b.object?.List?.items).join('.'))
+      }
+      if (b.objtype === 'OBJECT_VIEW') {
+        audiences.set(strings(b.object?.List?.items).join('.'), audience(b.comment))
       }
     } else if (type !== 'ViewStmt') {
       fail(`holds ${type.replace(/Stmt$/, '')}: an analytical contract holds only views and comments on them`)
@@ -886,6 +980,19 @@ function contract(tree, o, fail, found) {
     if ((v.options ?? []).some((d) => d.DefElem?.defname === 'security_invoker')) {
       fail(`${view} is security_invoker: a contract's view reads as its owner, so cella_analytics needs no grant on a table`)
     }
+    const aud = audiences.get(view)
+    if (!aud) {
+      fail(`${view} declares no audience: comment it 'audience: scoped by <circle column>' or 'audience: shared by <columns>'`)
+    } else {
+      for (const c of aud.by.filter((c) => !names.includes(c))) {
+        fail(`${view} names ${c} in its audience, which it does not show`)
+      }
+      if (aud.scoped) {
+        scoped(view, aud, names, selects, resolve, fail, found)
+      } else {
+        shared(view, aud, names, selects, resolve, fail, found)
+      }
+    }
     for (const q of selects) {
       q.targetList?.forEach((t, i) => {
         const shown = refs(t.ResTarget.val, true).flatMap(resolve).filter(personal)
@@ -897,10 +1004,9 @@ function contract(tree, o, fail, found) {
       if (!secured.length) {
         continue
       }
-      const sums = (q.groupClause ?? []).length > 0 ||
-        (q.targetList ?? []).some((t) => refs(t.ResTarget.val).length > refs(t.ResTarget.val, true).length || JSON.stringify(t).includes('"agg_star":true'))
-      // The rows a policy opens to every reader, kept by `col IS NULL` in
-      // the view's own test.
+      const { sums } = grouping(q, names)
+      // The rows a policy opens by their circle alone, kept by `col IS
+      // NULL` in the view's own test.
       const kept = new Set()
       const tests = q.whereClause?.BoolExpr?.boolop === 'AND_EXPR' ? q.whereClause.BoolExpr.args : [q.whereClause]
       for (const t of tests) {
@@ -910,7 +1016,7 @@ function contract(tree, o, fail, found) {
       }
       const shut = secured.filter((t) => !kept.has(t))
       if (!sums && shut.length) {
-        fail(`${view} shows the rows of ${shut[0]}, which is under row-level security: a contract shows its rows only as sums, or those its policy opens to everyone`)
+        fail(`${view} shows the rows of ${shut[0]}, which is under row-level security: a contract shows its rows only as sums, or those its policy opens by their circle alone, kept by 'col IS NULL'`)
       }
       for (const g of q.groupClause ?? []) {
         const whose = refs(g).flatMap(resolve).find((c) => found.readers.has(c))
@@ -920,6 +1026,66 @@ function contract(tree, o, fail, found) {
         const i = (q.targetList ?? []).findIndex((t) => refs(t.ResTarget.val, true).flatMap(resolve).includes(whose))
         if (i < 0 || !declared.has(`${view}.${names[i]}`)) {
           fail(`${view} sums by ${whose}, which says whose a row is: show it as a column commented 'personal: why' or 'not personal: why', or sum over everyone`)
+        }
+      }
+    }
+  }
+}
+
+// A scoped view shows one row per record, each with the circle that owns
+// it, and names the column that says whose a row is wherever it shows one.
+function scoped(view, aud, names, selects, resolve, fail, found) {
+  if (aud.extra.length) {
+    fail(`${view} names ${aud.extra.join(', ')} past its circle and whose: 'audience: scoped by <circle> and <whose>'`)
+  }
+  const says = (t) => refs(t.ResTarget.val, true).flatMap(resolve).some((c) => found.readers.has(c))
+  for (const q of selects) {
+    if (grouping(q, names).sums) {
+      fail(`${view} is scoped and sums: a scoped view shows one row per record, and a sum is shared`)
+    }
+    const circle = q.targetList?.[names.indexOf(aud.circle)]?.ResTarget.val?.ColumnRef
+    if (names.includes(aud.circle) && !(circle && resolve(circle).some((c) => found.circles.has(c)))) {
+      fail(`${view}.${aud.circle} is no record's owning circle: a scoped view shows the circle column of the records it shows`)
+    }
+    q.targetList?.forEach((t, i) => {
+      if (names[i] === aud.whose) {
+        if (!says(t)) {
+          fail(`${view}.${names[i]} does not say whose a row is: no row-level policy opens its rows by it`)
+        }
+      } else if (says(t)) {
+        fail(`${view}.${names[i]} says whose a row is: name it, 'audience: scoped by ${aud.circle} and ${names[i]}'`)
+      }
+    })
+  }
+}
+
+// A shared view sums by exactly the columns it names, at its top level or
+// in a view whose rows it shows, and shows no row of a circle's records.
+function shared(view, aud, names, selects, resolve, fail, found) {
+  for (const q of selects) {
+    const g = grouping(q, names)
+    if (g.sums) {
+      for (const k of g.loose) {
+        fail(`${view} groups by ${strings(k.ColumnRef?.fields).join('.') || 'an expression'}, which it does not show: a shared view groups by the columns it names, and no finer`)
+      }
+      for (const k of g.keys.filter((k) => !aud.by.includes(k))) {
+        fail(`${view} groups by ${k}, which its audience does not name: 'audience: shared by ${g.keys.join(', ')}'`)
+      }
+      for (const n of aud.by.filter((n) => names.includes(n) && !g.keys.includes(n))) {
+        fail(`${view} names ${n} in its audience and does not group by it`)
+      }
+      continue
+    }
+    for (const t of new Set(read(q).filter((t) => found.owned.has(t)))) {
+      const grain = found.summed.get(t)
+      if (!grain) {
+        fail(`${view} shows the rows of ${t}, which are a circle's records: declare it 'audience: scoped by <circle column>', or sum them`)
+        continue
+      }
+      for (const k of grain) {
+        const i = (q.targetList ?? []).findIndex((x) => x.ResTarget.val?.ColumnRef && resolve(x.ResTarget.val.ColumnRef).includes(`${t}.${k}`))
+        if (i < 0 || !aud.by.includes(names[i])) {
+          fail(`${view} shows ${t}, which sums by ${k}: show it and name it, 'audience: shared by <columns>'`)
         }
       }
     }
@@ -958,6 +1124,9 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
   found.readers ??= new Set()
   found.open ??= new Set()
   found.carried ??= new Set()
+  found.owned ??= new Set()
+  found.circles ??= new Set()
+  found.summed ??= new Map()
   for (const o of owners(repo, apps)) {
     const s = scope(o)
     // What the owner's migrations leave writing or triggering on a table

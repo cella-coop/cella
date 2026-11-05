@@ -206,4 +206,4 @@ invoiced less 172 hours at 23,64 €.
 
 Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts),
 `core/sql/analytics.sql`, publishes the thresholds as `report.thresholds`,
-which the margins read.
+which the margins read. It is scoped by `circle`, the circle that owns the threshold.

@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -63,4 +63,4 @@ closing October's books, are in none.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `project_task.filings` to the analytics shell: which project, and which of its milestones, each task is filed under.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `project_task.filings` to the analytics shell: which project, and which of its milestones, each task is filed under. It is scoped by `circle`, the circle that owns each row.

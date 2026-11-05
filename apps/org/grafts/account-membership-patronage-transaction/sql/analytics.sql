@@ -7,6 +7,7 @@ SELECT c.distribution, count(*)::bigint AS members, coalesce(sum(c.shares), 0)::
        coalesce(sum(cella.cents(c.amount)), 0)::bigint AS amount, max(c.until) AS until
 FROM account_membership_patronage_transaction.credit c
 GROUP BY c.distribution;
+COMMENT ON VIEW account_membership_patronage_transaction.credits IS 'audience: shared by distribution';
 
 -- What each distribution's entry and the credits that follow it posted,
 -- by account: a member's capital account is summed into its parent's
@@ -23,5 +24,6 @@ FROM (
 JOIN transaction.line l ON l.entry = x.entry
 JOIN account.account a ON a.code = l.account
 GROUP BY x.distribution, CASE WHEN a.holder IS NULL THEN a.code ELSE a.parent END;
+COMMENT ON VIEW account_membership_patronage_transaction.posted IS 'audience: shared by distribution, code';
 
 COMMENT ON COLUMN account_membership_patronage_transaction.posted.code IS 'not personal: a held account is summed into its parent''s code';

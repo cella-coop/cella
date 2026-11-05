@@ -60,6 +60,12 @@ repository works only on the org app, `apps/org/`. Read
   ([operations](_corpus/doc/operations.md#upgrades)).
 - **SQL is the source of truth for guards.** Never re-implement a guard in
   TypeScript; never call `now()` in a guard, read `cella.verdict_date()`.
+- **A guard refuses as early as it can and says what would fix it.**
+  Where a write's terms are known before it is made, as a motion's at
+  its proposal, the same SQL judges them then and again when it is
+  made; a refusal names what is wrong and what would fix it, with the
+  values it read, and never a person in a reason the log keeps
+  ([early and actionable](_corpus/doc/architecture.md#early-and-actionable)).
 - **A guard reads a policy's values from the reading feat's columns,
   never parses its wording.** A policy is a sentence a circle adopted by
   motion, its values marked in it once; the feat that reads a kind of

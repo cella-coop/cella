@@ -384,6 +384,22 @@ every guard that attaches to an ordered write, those of the feat and of the
 grafts it touches; it holds no guards of its own beyond the primitives. How
 guards are composed and adopted is in [trust](trust.md#guards).
 
+### Early and actionable
+
+Consistency is enforced always: no write commits a state a guard would
+refuse. And a guard protects members from a failure as early as it can,
+and tells them how to mitigate it:
+
+- **As early as its terms are known.** Where what a write will need is
+  known before it is made, the guard that judges it runs then too, by
+  the same SQL function, never a copy, and again when the write is made:
+  a motion's terms are checked when it is proposed and again at its
+  close, so a member learns at the proposal what the close would refuse.
+- **Actionable.** A refusal's reason says what is wrong and what would
+  fix it, with the values it read: the statutes' minimum and the shares
+  asked, or the closed month and the first open one; never only that
+  the write was refused. A reason the log keeps names no person.
+
 ## SQL
 
 Each feat and each graft owns a Postgres schema and the SQL in it: tables,

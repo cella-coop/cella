@@ -1109,7 +1109,11 @@ than its parent, the same power, a cap no wider, a scope no wider (any
 under one on the whole co-op, under one on a circle that circle alone),
 a term no longer and a procedure no looser;
 the assembly holds every power inherently, so what it issues is a root,
-the founding motion's first from the legal form. `circle.narrows`
+the founding motion's first from the legal form. It uses a power by
+motion only under a collective mandate of its own, as every circle
+does, and always keeps one for `adopt-policy` with no `until`, which no
+write ends, so it may grant itself again any power it ended
+(`circle.sovereign`). `circle.narrows`
 refuses a grant its issuer holds nothing to issue under, or one wider
 than its parent, and an end that leaves a mandate issued under one
 that no longer stands

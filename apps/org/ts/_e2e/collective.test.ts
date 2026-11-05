@@ -6,7 +6,13 @@
 // proposal; the assembly ends coordination's `adopt-document`, and
 // coordination's next adoption is refused; and a collective mandate
 // coordination issues wider than the one it holds is refused as it is
-// adopted, by `circle.narrows`. Run by `cella test e2e collective`.
+// adopted, by `circle.narrows`. The assembly keeps a collective
+// `adopt-policy` with no `until`: a motion ending its last, replacing it
+// with one that lapses, or ending it before adopting another is refused
+// at its proposal, and of two motions each ending one of two, the end
+// carried out second is refused as it is written (`circle.sovereign`);
+// through it, it grants itself again an `end-policy` it let lapse. Run by
+// `cella test e2e collective`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -153,4 +159,88 @@ test('a collective mandate wider than the one it is issued under is refused as i
   assert.deepEqual(await all(`SELECT m.grantee AS circle, cella.cents(m."limit")::int AS "limit" FROM circle.mandate m JOIN circle.grantee g ON g.id = m.grantee WHERE m.power = 'set-budget' AND g.kind = 'circle'`), [
     { circle: 'coordination', limit: 1000000 },
   ])
+})
+
+// A motion of the assembly put, voted for by its whole roll and carried
+// out on its deadline, whatever procedure its requirements fix.
+async function carriedOut(title: string, actions: { kind: string; args: Record<string, string> }[], from: string, deadline: string) {
+  await on(from)
+  const { motion } = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
+  const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
+  }
+  await on(deadline)
+  settled(await close({ motion }, as(camille)))
+  return { motion, out: await carried(motion, as(camille)) }
+}
+
+const adopts = async () =>
+  (await all<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'ag' AND power = 'adopt-policy' AND until IS NULL AND revoked IS NULL ORDER BY id`)).map((m) => m.policy)
+const adoptPolicy = (extra: Record<string, string> = {}) => ({
+  kind: 'policy',
+  args: { kind: 'mandate', wording: 'The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes\' among them, by motion', ...extra },
+})
+const lose = /ag would lose its power to adopt policies: mandate \d+ of m-2021-001\/51 is its last collective adopt-policy mandate with no until; adopting another with no until in its place, in the same motion and before ending it, keeps it/
+
+test('the assembly may not end its last collective adopt-policy, nor replace it with one that lapses, nor end it before adopting another: each is refused at its proposal', async () => {
+  await on('2026-12-06')
+  assert.deepEqual(await adopts(), ['m-2021-001/51'])
+  const put = async (actions: { kind: string; args: Record<string, string> }[]) =>
+    reason(await propose({ circle: 'ag', title: 'The assembly adopts no policy', procedure: 'consent', deadline: '2026-12-20', body: '', actions }, as(camille)))
+  assert.match(await put([{ kind: 'end', args: { policy: 'm-2021-001/51' } }]), lose)
+  assert.match(await put([adoptPolicy({ replaces: 'm-2021-001/51', until: '2027-12-31' })]), lose)
+  assert.match(await put([{ kind: 'end', args: { policy: 'm-2021-001/51' } }, adoptPolicy()]), lose)
+})
+
+test('a motion replacing the assembly\'s adopt-policy with one with no until carries, and the assembly holds the new one', async () => {
+  const { out } = await carriedOut('The assembly restates its power to adopt policies', [adoptPolicy({ replaces: 'm-2021-001/51' })], '2026-12-06', '2026-12-20')
+  assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  const [now] = await adopts()
+  assert.notEqual(now, 'm-2021-001/51')
+  assert.equal(await holds('ag', 'adopt-policy', '2026-12-20'), true)
+})
+
+test('the assembly lets its end-policy lapse at an until, and a later motion of it grants itself end-policy again', async () => {
+  const { policy } = await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'ag' AND power = 'end-policy' AND revoked IS NULL`)
+  const endPolicy = 'The {circle: ag} circle holds {power: end-policy}, to end policies, by motion'
+  const { out: lapsing } = await carriedOut(
+    'The assembly ends policies until 10 January',
+    [{ kind: 'policy', args: { kind: 'mandate', wording: endPolicy, replaces: policy, until: '2027-01-10' } }],
+    '2026-12-20',
+    '2027-01-03',
+  )
+  assert.deepEqual(lapsing.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  assert.equal(await holds('ag', 'end-policy', '2027-01-09'), true)
+  assert.equal(await holds('ag', 'end-policy', '2027-01-10'), false)
+  const { out: again } = await carriedOut('The assembly ends policies again', [{ kind: 'policy', args: { kind: 'mandate', wording: endPolicy } }], '2027-01-10', '2027-01-24')
+  assert.deepEqual(again.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  assert.equal(await holds('ag', 'end-policy', '2027-01-24'), true)
+})
+
+test('two motions each ending one of the assembly\'s two adopt-policy mandates pass their proposals, and the end carried out second is refused as it is written', async () => {
+  const { out } = await carriedOut('The assembly holds a second power to adopt policies', [adoptPolicy()], '2027-01-24', '2027-02-07')
+  assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  const [first, second] = await adopts()
+  await on('2027-02-07')
+  const put = async (policy: string) => {
+    const { motion } = settled(
+      await propose({ circle: 'ag', title: `End ${policy}`, procedure: 'consent', deadline: '2027-02-21', body: '', actions: [{ kind: 'end', args: { policy } }] }, as(camille)),
+    )
+    const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
+    for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+      settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
+    }
+    return motion
+  }
+  const ending = [await put(first), await put(second)]
+  await on('2027-02-21')
+  const outs = []
+  for (const motion of ending) {
+    settled(await close({ motion }, as(camille)))
+    outs.push(await carried(motion, as(camille)))
+  }
+  assert.deepEqual(outs.map((o) => o.map((d) => [d.op, d.state])), [[['motion:policy:end', 'settled']], [['motion:policy:end', 'refused']]])
+  assert.match(outs[1][0].reason ?? '', new RegExp(`ag would lose its power to adopt policies: mandate \\d+ of ${second} is its last collective adopt-policy mandate with no until`))
+  assert.deepEqual(await adopts(), [second])
 })

@@ -313,7 +313,8 @@ before its `until` and before its `revoked`; `circle.holds(circle,
 power, day)` asks whether a circle holds a collective mandate in force
 for a power on a day, one whose grantee is the circle,
 `circle.sovereignty(ending, adopting)` why the assembly would not keep
-one for `adopt-policy` with no `until` once the policies `ending` end
+one for `adopt-policy` in force on the verdict date with no `until`
+once the policies `ending` end
 and the mandates `adopting` are granted ([authority](#authority)), and
 `circle.bundle(day)` names the default bundle on a day: every mandate
 in force then on a role every circle has (`*`), by id.
@@ -379,12 +380,15 @@ motion, it needs a collective mandate of its own, as every circle does,
 so ending its `suspend-member` stops it suspending members. Through its
 `adopt-policy` it grants itself again any power it ended, so that one
 it always keeps: `circle.sovereignty` says why the assembly would hold
-no collective `adopt-policy` mandate with no `until`, never revoked,
-once a write or a motion is carried out, and `circle.sovereign`, on
+no collective `adopt-policy` mandate in force on the verdict date, with
+no `until` and never revoked, once a write or a motion is carried out,
+one whose `from` is a later day keeping nothing until then, so a
+replacement leaves no day without one; and `circle.sovereign`, on
 every write that adopts, replaces or ends a policy, refuses one that
 ends or replaces a policy granting such a mandate (`circle.sovereign_by`)
 and leaves it without one. A motion of the assembly ending its last such mandate,
-or replacing it with one that lapses, is refused at its proposal, the
+or replacing it with one that lapses or that applies only from a later
+day, is refused at its proposal and again as it is written, the
 refusal saying that the assembly would lose the power to adopt policies
 and that adopting another in its place, in the same motion, keeps it.
 

@@ -11,8 +11,12 @@
 // with one that lapses, or ending it before adopting another is refused
 // at its proposal, and of two motions each ending one of two, the end
 // carried out second is refused as it is written (`circle.sovereign`);
-// through it, it grants itself again an `end-policy` it let lapse. Run by
-// `cella test e2e collective`.
+// through it, it grants itself again an `end-policy` it let lapse. One
+// that applies only from a later day keeps nothing until then: a motion
+// ending its only one in force beside adopting such a one is refused at
+// its proposal, and the end is refused as it is written once the other
+// in force has gone, while a replacement in force at once carries. Run
+// by `cella test e2e collective`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -181,7 +185,7 @@ const adoptPolicy = (extra: Record<string, string> = {}) => ({
   kind: 'policy',
   args: { kind: 'mandate', wording: 'The {circle: ag} circle holds {power: adopt-policy}, to adopt policies, the statutes\' among them, by motion', ...extra },
 })
-const lose = /ag would lose its power to adopt policies: mandate \d+ of m-2021-001\/51 is its last collective adopt-policy mandate with no until; adopting another with no until in its place, in the same motion and before ending it, keeps it/
+const lose = /ag would lose its power to adopt policies: mandate \d+ of m-2021-001\/51 is its last collective adopt-policy mandate in force with no until; adopting another with no from and no until in its place, in the same motion and before ending it, keeps it/
 
 test('the assembly may not end its last collective adopt-policy, nor replace it with one that lapses, nor end it before adopting another: each is refused at its proposal', async () => {
   await on('2026-12-06')
@@ -241,6 +245,54 @@ test('two motions each ending one of the assembly\'s two adopt-policy mandates p
     outs.push(await carried(motion, as(camille)))
   }
   assert.deepEqual(outs.map((o) => o.map((d) => [d.op, d.state])), [[['motion:policy:end', 'settled']], [['motion:policy:end', 'refused']]])
-  assert.match(outs[1][0].reason ?? '', new RegExp(`ag would lose its power to adopt policies: mandate \\d+ of ${second} is its last collective adopt-policy mandate with no until`))
+  assert.match(outs[1][0].reason ?? '', new RegExp(`ag would lose its power to adopt policies: mandate \\d+ of ${second} is its last collective adopt-policy mandate in force with no until`))
   assert.deepEqual(await adopts(), [second])
+})
+
+// A motion of the assembly put and voted for by its whole roll, closed
+// and carried out later.
+const voted = async (title: string, actions: { kind: string; args: Record<string, string> }[], deadline: string) => {
+  const { motion } = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille)))
+  const { method } = await one<{ method: string }>('SELECT method FROM motion.motion WHERE id = $1', [motion])
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [motion])) {
+    settled(await vote({ motion, member, stance: method === 'consent' ? 'consent' : 'for' }, as(member)))
+  }
+  return motion
+}
+
+test('a motion of the assembly adopting an adopt-policy that applies only from a later day, and ending or replacing its only one in force, is refused at its proposal', async () => {
+  await on('2027-02-21')
+  const [only] = await adopts()
+  const put = async (actions: { kind: string; args: Record<string, string> }[]) =>
+    reason(await propose({ circle: 'ag', title: 'The assembly adopts policies from June', procedure: 'consent', deadline: '2027-03-07', body: '', actions }, as(camille)))
+  const later = new RegExp(
+    `ag would lose its power to adopt policies: mandate \\d+ of ${only} is its last collective adopt-policy mandate in force with no until; adopting another with no from and no until in its place`,
+  )
+  assert.match(await put([adoptPolicy({ from: '2027-06-01' }), { kind: 'end', args: { policy: only } }]), later)
+  assert.match(await put([adoptPolicy({ replaces: only, from: '2027-06-01' })]), later)
+})
+
+test('an end leaving the assembly only an adopt-policy that applies from a later day is refused as it is written, and one whose replacement is in force on the verdict date carries', async () => {
+  const { out } = await carriedOut('The assembly holds a second power to adopt policies again', [adoptPolicy()], '2027-02-21', '2027-03-07')
+  assert.deepEqual(out.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  const [first, second] = await adopts()
+  // Each passes its proposal: the other's mandate stays in force.
+  await on('2027-03-07')
+  const late = await voted('The assembly adopts policies from June', [adoptPolicy({ from: '2027-06-01' }), { kind: 'end', args: { policy: first } }], '2027-03-28')
+  const early = await voted(`End ${second}`, [{ kind: 'end', args: { policy: second } }], '2027-03-21')
+  await on('2027-03-21')
+  settled(await close({ motion: early }, as(camille)))
+  assert.deepEqual((await carried(early, as(camille))).map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:end', 'settled', '']])
+  await on('2027-03-28')
+  settled(await close({ motion: late }, as(camille)))
+  const outs = await carried(late, as(camille))
+  assert.deepEqual(outs.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled'], ['motion:policy:end', 'refused']])
+  assert.match(outs[1].reason ?? '', new RegExp(`ag would lose its power to adopt policies: mandate \\d+ of ${first} is its last collective adopt-policy mandate in force with no until`))
+  const [still, june] = await adopts()
+  assert.equal(still, first)
+  assert.equal((await one<{ from: string }>(`SELECT to_char("from", 'YYYY-MM-DD') AS from FROM circle.mandate WHERE policy = $1`, [june])).from, '2027-06-01')
+  const { out: now } = await carriedOut('The assembly restates its power to adopt policies at once', [adoptPolicy(), { kind: 'end', args: { policy: first } }], '2027-03-28', '2027-04-11')
+  assert.deepEqual(now.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', ''], ['motion:policy:end', 'settled', '']])
+  assert.equal(await holds('ag', 'adopt-policy', '2027-04-11'), true)
+  assert.equal((await adopts()).includes(first), false)
 })

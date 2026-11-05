@@ -112,8 +112,8 @@ export async function seed(db, read, { from, dir }) {
     const members = read('membership').member ?? []
     for (const m of members) {
       await db.query(
-        'INSERT INTO membership.member (address, status, since, shares, invited, exited) VALUES ($1, $2, $3, $4, $5, $6)',
-        [m.address, m.status, day(m.since), m.shares, day(m.invited), day(m.exited)],
+        'INSERT INTO membership.member (address, status, since, shares, invited, exited, exit) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+        [m.address, m.status, day(m.since), m.shares, day(m.invited), day(m.exited), m.exit ?? null],
       )
     }
 

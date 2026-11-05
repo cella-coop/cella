@@ -265,7 +265,7 @@ has left restricts it until `cella vault sweep` redacts it.
   `account:own:freeze` too.
 - `account.owns`, on `account:own:freeze` and `account:own:withdraw`:
   the holder, or the member, the payload names is the actor. That they
-  left is the grafts' guards'.
+  left by their own withdrawal is the grafts' guards'.
 
 ## Handlers
 

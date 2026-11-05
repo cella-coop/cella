@@ -39,7 +39,7 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('account:account:freeze', 'accou
 -- account:own:freeze, account:own:withdraw — the same freeze and
 -- withdrawal of capital as the member's own, once they withdrew by their
 -- right: the holder, or the member, the payload names is the actor. That
--- they left is the grafts' guards'.
+-- they left by their own withdrawal is the grafts' guards'.
 CREATE FUNCTION account.owns(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC

@@ -6,8 +6,9 @@
 // closed month; a payment in moves what it pays to their account, never
 // beyond what they owe; a draw is refused beyond the limit; and one who
 // leaves has their capital withdrawn by the write that follows the exit,
-// moved to what is owed them and their repayments drawn up, once, each
-// paid once, in its turn and not before its day. Run by `cella test slice
+// moved to what is owed them and their repayments drawn up on the terms
+// of the day they exited, once, each paid once, in its turn and not
+// before its day. Run by `cella test slice
 // account-membership-transaction`.
 
 import { after, before, test } from 'node:test'
@@ -185,7 +186,7 @@ test('Hugo\'s capital account holds 600 €, twelve shares a past year\'s work s
   assert.deepEqual(await lines(rows[0].id), [{ account: '424', side: 'debit', cents: '60000' }, { account: '101301', side: 'credit', cents: '60000' }])
 })
 test('a member who leaves has their capital withdrawn by the write that follows: moved to 4567, and repaid as the statutes say', async () => {
-  await db.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [hugo])
+  await db.query(`UPDATE membership.member SET status = 'exited', exited = cella.verdict_date(), exit = 'excluded' WHERE address = $1`, [hugo])
   assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101301'`)).frozen, false, 'no trigger freezes an exit')
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM transaction.line WHERE account = '4567'`)).n, '0', 'nor withdraws it')
   await db.query('BEGIN')
@@ -210,13 +211,25 @@ test('a member who leaves has their capital withdrawn by the write that follows:
   assert.equal((await one<{ holds: boolean }>('SELECT account_membership_transaction.holds($1) AS holds', [hugo])).holds, false, 'nothing is left to withdraw')
 })
 
-test('one who leaves owing has the rest of their subscription cancelled; one still a member withdraws nothing', async () => {
+test('one who leaves owing has the rest of their subscription cancelled, repaid on the terms of the day they exited; one still a member withdraws nothing', async () => {
   const active = await one<{ r: string }>('SELECT account_membership_transaction.withdraws($1) AS r', [{ member: ines, entry: 'je-9999' }])
   assert.match(active.r, /ines@lanterne.example is active: only the capital of a member who left is withdrawn/)
-  await db.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [ines])
+  // She exits on 15 October, and terms of two repayments are adopted
+  // after it, before her withdrawal settles.
+  await db.query(`UPDATE membership.member SET status = 'exited', exited = '2026-10-15', exit = 'excluded' WHERE address = $1`, [ines])
+  await db.query(
+    `INSERT INTO account.terms (id, policy, "from", share, minimum, instalments, delay, repayments, adopted)
+     VALUES ('t-2026', 't-2026', '2026-10-20', cella.amount(5000), 20, 10, 6, 2, '2026-10-20')`,
+  )
   const { value, r } = await judged(withdrawing({ member: ines, motion: 'm-2026-014' }), 'account_membership_transaction.withdraws')
   assert.equal(r, null)
   await db.query('COMMIT')
+  const drawn = (await db.query(`SELECT n, to_char(due, 'YYYY-MM-DD') AS due FROM account_membership_transaction.repayment WHERE member = $1 ORDER BY n`, [ines])).rows
+  assert.deepEqual(drawn, [
+    { n: 1, due: '2027-10-15' },
+    { n: 2, due: '2028-10-15' },
+    { n: 3, due: '2029-10-15' },
+  ], 'the three of the terms governing her exit, not the two adopted since')
   assert.deepEqual(await lines(value.entry), [
     { account: '101302', side: 'debit', cents: '40000' },
     { account: '4567', side: 'credit', cents: '40000' },

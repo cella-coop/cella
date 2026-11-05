@@ -208,14 +208,14 @@ CREATE TABLE account_membership_transaction.withdrawal (
 );
 
 -- Whether the withdrawal that follows a member's exit has anything to do:
--- terms govern the verdict date, nothing is drawn up for them yet, and
+-- terms govern the day they exited, nothing is drawn up for them yet, and
 -- their capital accounts hold something or they owe some of their
 -- subscription. It runs as its owner, since whoever closed the motion may
 -- read no colleague's capital, and says no more than whether.
 CREATE FUNCTION account_membership_transaction.holds(member text) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  SELECT account.capital_for(cella.verdict_date()) IS NOT NULL
+  SELECT account.capital_for((SELECT m.exited FROM membership.member m WHERE m.address = holds.member)) IS NOT NULL
     AND NOT EXISTS (SELECT FROM account_membership_transaction.withdrawal w WHERE w.member = holds.member)
     AND NOT EXISTS (SELECT FROM account_membership_transaction.repayment r WHERE r.member = holds.member)
     AND (
@@ -232,19 +232,24 @@ REVOKE EXECUTE ON FUNCTION account_membership_transaction.holds(text) FROM PUBLI
 GRANT EXECUTE ON FUNCTION account_membership_transaction.holds(text) TO cella_app;
 
 -- account:capital:withdraw, account:own:withdraw — an associate who left has their capital
--- withdrawn, by the write that follows their exit: this write made their
+-- withdrawn, by the write that follows their exit, and as their own only
+-- where they withdrew by their right, so an excluded associate's capital
+-- moves only through the motion that excluded them: this write made their
 -- one withdrawal; their capital accounts hold nothing after it, what they
 -- held credited to 4567; what they had not paid is cancelled, 1012 debited
 -- and 4562 credited by what the subscription records cancelled; the entry
 -- posts nothing else; and its repayments add up to what it credits 4567,
--- as many as the terms governing the exit say.
+-- as many as the terms governing the day they exited say, whatever day
+-- the withdrawal settles.
 CREATE FUNCTION account_membership_transaction.withdraws(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN m.address IS NULL THEN coalesce(x.member, 'no one') || ' is no member'
     WHEN m.status <> 'exited' THEN m.address || ' is ' || m.status || ': only the capital of a member who left is withdrawn'
-    WHEN t.id IS NULL THEN 'no terms govern an exit on ' || cella.verdict_date()
+    WHEN cella.action() = 'account:own:withdraw' AND m.exit IS DISTINCT FROM 'withdrew'
+      THEN 'the member left by exclusion, not by their own withdrawal: their capital is withdrawn by account:capital:withdraw, citing the motion that excluded them'
+    WHEN t.id IS NULL THEN 'no terms govern an exit on ' || m.exited
     WHEN w.member IS NULL OR w.entry IS DISTINCT FROM x.entry THEN coalesce(x.entry, 'the entry') || ' is not ' || m.address || '''s withdrawal'
     WHEN EXISTS (
       SELECT FROM account.account a WHERE a.holder = m.address AND a.parent = '1013' AND coalesce((
@@ -262,7 +267,7 @@ BEGIN ATOMIC
   END
   FROM (SELECT payload ->> 'member' AS member, payload ->> 'entry' AS entry) x
   LEFT JOIN membership.member m ON m.address = x.member
-  LEFT JOIN account.terms t ON t.id = account.capital_for(cella.verdict_date())
+  LEFT JOIN account.terms t ON t.id = account.capital_for(m.exited)
   LEFT JOIN account_membership_transaction.withdrawal w ON w.member = x.member
   LEFT JOIN account_membership_transaction.subscription s ON s.member = x.member
   CROSS JOIN LATERAL (

@@ -1,4 +1,4 @@
-# Each member: where their membership stands; who they are is person.toml's. Seats in
+# Each member: where their membership stands, and how a former one left; who they are is person.toml's. Seats in
 # circles are core's (circle.toml); admission votes the membership-motion's.
 
 [[member]]
@@ -77,6 +77,7 @@ role = "art director, until 30 November 2025"
 status = "exited"
 since = 2021-03-01
 exited = 2025-11-30
+exit = "withdrew"
 shares = 30
 
 [[member]]

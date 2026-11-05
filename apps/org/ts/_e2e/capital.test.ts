@@ -9,13 +9,17 @@
 // first is refused before its day and by anyone without the power, then
 // paid once on it. Malik's exclusion, which the assembly carries, is followed
 // by the freeze and the withdrawal of his capital, each an effect citing it,
-// its actor Camille. Amina withdraws by her own right, and her own freeze
-// and withdrawal of her capital follow as its effects, hers; no one withdraws
-// another, nor excludes a member without the assembly's motion. The
-// assembly then adopts new capital terms, a rule of
-// at least ten shares at 25 € replacing the founding one, whose values are
-// copied into the terms by the effect that follows the adoption; a rule
-// whose value says no way is stricter is refused when proposed. Nadia's
+// its actor Camille; neither he nor Yusuf, whose exclusion is made alone,
+// freezes or withdraws his capital as his own, before the exclusion's
+// freeze and withdrawal or after them. Amina withdraws by her own right,
+// and her own freeze and withdrawal of her capital follow as its effects,
+// hers; no one withdraws another, nor excludes a member without the
+// assembly's motion. The assembly then adopts new capital terms, a rule of
+// at least ten shares at 25 € in four repayments replacing the founding
+// one, whose values are copied into the terms by the effect that follows
+// the adoption; a rule whose value says no way is stricter is refused when
+// proposed. Hugo, who withdrew alone before they were adopted, withdraws
+// his capital after, on the founding terms of the day he exited. Nadia's
 // admission with 8 shares is refused when it is proposed, its reason the
 // minimum, the rule and the shares asked; put with 10 while the assembly
 // raises the minimum to 12, it is forgone at its close with her
@@ -31,7 +35,8 @@ import pg from 'pg'
 import { close, propose, put } from '@cella/org-graft-membership-motion/api'
 import { vote } from '@cella/org-motion/api'
 import { accept, exclude, invite, withdraw } from '@cella/org-membership/api'
-import { called, pay, repay } from '@cella/org-graft-account-membership-transaction/api'
+import { called, pay, repay, withdraw as withdrawCapital, withdrawOwn } from '@cella/org-graft-account-membership-transaction/api'
+import { freeze, freezeOwn } from '@cella/org-account/api'
 import { plan, spread, withheld } from '@cella/org-graft-account-membership-payslip-transaction/api'
 import { generate } from '@cella/org-graft-payslip-timesheet/api'
 import { approve as approveRun, pay as payRun } from '@cella/org-graft-payslip-transaction/api'
@@ -54,6 +59,7 @@ const paul = 'paul@lanterne.example'
 const nadia = 'nadia@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 const malik = 'malik@lanterne.example'
+const yusuf = 'yusuf@lanterne.example'
 const amina = 'amina@lanterne.example'
 // The capital's terms the founding assembly adopted, as the rule
 // m-2021-001/43.
@@ -74,6 +80,9 @@ async function on(date: string) {
 // Inès signs from the laptop her hire enrolled, and Nadia from the one
 // her invitation enrolls.
 const as = (actor: string): Deps => reacting({ db: reader(app, actor), actor, sign: actor === ines || actor === nadia ? signer(scope, actor, fixture(actor, 'laptop')) : sign(actor) })
+// The same deps with no reactions: a write alone, none of its effects
+// following it, as an action made directly is.
+const alone = (actor: string): Deps => ({ ...as(actor), react: undefined })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The app's connection reading as `actor`, as the server reads for the
@@ -233,9 +242,9 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
 })
 
 // A motion of the assembly asking `kind` of `args`, put on `from`: every
-// active member on its roll consents, it closes on `until`, and what its
-// close carries follows it, signed by Camille, who closes it.
-async function decided(kind: 'admit' | 'exclude', args: Record<string, string | number>, from: string, until: string) {
+// active member on its roll consents, and it closes on `until`, signed by
+// Camille, who closes it; it carries what it passed unless not `carries`.
+async function passed(kind: 'admit' | 'exclude', args: Record<string, string | number>, from: string, until: string, carries = true) {
   await on(from)
   const proposed = settled(await put({ kind, args, deadline: until, body: '' }, as(camille))) as { motion: string }
   const roll = await all<{ member: string }>(
@@ -247,12 +256,21 @@ async function decided(kind: 'admit' | 'exclude', args: Record<string, string | 
     settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on(until)
-  const closed = await close({ motion: proposed.motion }, as(camille))
+  const closed = await close({ motion: proposed.motion }, carries ? as(camille) : alone(camille))
   settled(closed)
-  return done('motion:motion:close', closed).then
+  return { motion: proposed.motion, closed }
 }
 
-test('an exclusion the assembly carries is followed by the freeze and the withdrawal of the capital, each an effect citing it, its actor Camille', async () => {
+// The same motion, and what its close carries following it, each an
+// effect of it, its actor Camille.
+async function decided(kind: 'admit' | 'exclude', args: Record<string, string | number>, from: string, until: string) {
+  return done('motion:motion:close', (await passed(kind, args, from, until)).closed).then
+}
+
+// What an excluded member's own freeze and own withdrawal are refused.
+const own = /^the (holder|member) left by exclusion, not by their own withdrawal: their capital is (frozen by account:account:freeze|withdrawn by account:capital:withdraw), citing the motion that excluded them$/
+
+test('an exclusion the assembly carries is followed by the freeze and the withdrawal of the capital, each an effect citing it, its actor Camille; the excluded member\'s own are refused', async () => {
   const before = await balance('101308')
   assert.ok(before < 0, 'Malik\'s account holds his capital')
   const then = await decided('exclude', { member: malik }, '2026-12-01', '2026-12-08')
@@ -274,6 +292,27 @@ test('an exclusion the assembly carries is followed by the freeze and the withdr
       [3, '2029-12-08'],
     ],
   })
+  // After them, nothing of his is left to freeze or withdraw as his own.
+  assert.match(reason(await freezeOwn({ holder: malik }, as(malik))), /the freeze names other accounts than those malik@lanterne\.example holds/)
+  await assert.rejects(withdrawOwn({ member: malik }, as(malik)), /malik@lanterne\.example holds and owes no capital to withdraw/)
+  await balanced()
+})
+
+test('an excluded member neither freezes nor withdraws their capital as their own before the exclusion\'s follow-ups: Yusuf\'s moves only through the motion that excluded him', async () => {
+  const before = await balance('101302')
+  assert.ok(before < 0, 'Yusuf\'s account holds his capital')
+  // The motion passes, and its exclusion is made alone, its effects not
+  // following it.
+  const { motion } = await passed('exclude', { member: yusuf }, '2026-12-02', '2026-12-08', false)
+  settled(await exclude({ member: yusuf, motion }, alone(camille)))
+  assert.equal((await one<{ exit: string }>('SELECT exit FROM membership.member WHERE address = $1', [yusuf])).exit, 'excluded')
+  assert.match(reason(await freezeOwn({ holder: yusuf }, alone(yusuf))), own)
+  assert.match(reason(await withdrawOwn({ member: yusuf }, alone(yusuf))), own)
+  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE code = '101302'`)).frozen, false)
+  assert.equal(await balance('101302'), before, 'his capital stays where it was')
+  settled(await freeze({ holder: yusuf, motion }, alone(camille)))
+  settled(await withdrawCapital({ member: yusuf, motion }, alone(camille)))
+  assert.equal(await balance('101302'), 0, 'the freeze and the withdrawal citing the motion move it to 4567')
   await balanced()
 })
 
@@ -303,8 +342,12 @@ test('Amina withdraws by her own right, followed by her own freeze and withdrawa
       [3, '2029-12-09'],
     ],
   })
+  assert.equal((await one<{ exit: string }>('SELECT exit FROM membership.member WHERE address = $1', [amina])).exit, 'withdrew')
   // Gone, she withdraws no more.
   await assert.rejects(withdraw({ member: amina }, as(amina)), /amina@lanterne\.example is no member, or is exited already/)
+  // Hugo withdraws the same day, alone; his own freeze and withdrawal
+  // follow only once later terms are adopted.
+  settled(await withdraw({ member: hugo }, alone(hugo)))
   await balanced()
 })
 
@@ -312,7 +355,7 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
   const wording = (minimum: string) =>
     `A share is worth {account_share: 25 € | more is stricter}. Each associate subscribes at least {account_minimum: ${minimum}} shares, ` +
     'and may pay them in at most {account_instalments: 10 | less is stricter} monthly instalments. An associate who leaves is repaid their shares ' +
-    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 3 | more is stricter} yearly repayments'
+    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 4 | more is stricter} yearly repayments'
   const rule = (args: Record<string, string>) =>
     propose(
       { circle: 'ag', title: 'Adopt new capital terms', procedure: 'consent', deadline: '2026-12-15', body: '', actions: [{ kind: 'policy', args: { kind: 'rule', ...args } }] },
@@ -351,11 +394,30 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
   assert.equal((await one<{ ends: string }>(`SELECT to_char(ends, 'YYYY-MM-DD') AS ends FROM policy.policy WHERE id = $1`, [founding])).ends, '2026-12-15')
   assert.equal(
     (await one<{ s: string }>('SELECT policy.sentence(w.legal) AS s FROM policy.wording w WHERE w.policy = $1', [t.policy])).s,
-    'A share is worth 25 €. Each associate subscribes at least 10 shares, and may pay them in at most 10 monthly instalments. An associate who leaves is repaid their shares at their nominal value from 12 months after the exit, in 3 yearly repayments',
+    'A share is worth 25 €. Each associate subscribes at least 10 shares, and may pay them in at most 10 monthly instalments. An associate who leaves is repaid their shares at their nominal value from 12 months after the exit, in 4 yearly repayments',
   )
   newTerms = t.policy
   termsMotion = motion
   generatedAt = then[0].then[0].entry ?? 0
+})
+
+test('an own withdrawal settled after later terms were adopted draws its repayments on the terms of the day the member exited', async () => {
+  await on('2026-12-16')
+  assert.equal((await one<{ t: string }>(`SELECT account.capital_for('2026-12-16') AS t`)).t, `${termsMotion}-1`, 'the new terms govern the day it settles')
+  const before = await balance('101303')
+  assert.ok(before < 0, 'Hugo\'s account holds his capital')
+  settled(await freezeOwn({ holder: hugo }, alone(hugo)))
+  settled(await withdrawOwn({ member: hugo }, alone(hugo)))
+  const c = await called(await reading(julien), hugo)
+  assert.deepEqual({ owed: c.owed, repayments: c.repayments.map((r) => [r.n, r.due]) }, {
+    owed: -before,
+    repayments: [
+      [1, '2027-12-09'],
+      [2, '2028-12-09'],
+      [3, '2029-12-09'],
+    ],
+  }, 'three repayments from the day he exited, as the founding terms say, not the four of the terms adopted since')
+  await balanced()
 })
 
 // A version's lines, as the database reads its text.
@@ -438,7 +500,7 @@ test('the close judges the terms again: Nadia, put sound with 10 shares while th
   const wording =
     'A share is worth {account_share: 25 € | more is stricter}. Each associate subscribes at least {account_minimum: 12 | more is stricter} shares, ' +
     'and may pay them in at most {account_instalments: 10 | less is stricter} monthly instalments. An associate who leaves is repaid their shares ' +
-    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 3 | more is stricter} yearly repayments'
+    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 4 | more is stricter} yearly repayments'
   const raising = settled(await propose(
     { circle: 'ag', title: 'Raise the minimum to 12 shares', procedure: 'consent', deadline: '2026-12-21', body: '', actions: [{ kind: 'policy', args: { kind: 'rule', wording, replaces: newTerms } }] },
     as(camille),

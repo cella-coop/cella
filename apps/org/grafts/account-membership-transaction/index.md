@@ -145,10 +145,13 @@ trigger on `membership.member` does it.
   and this guard refuses it with that reason, never the journal's.
 - `account_membership_transaction.withdraws`, on
   `account:capital:withdraw` and `account:own:withdraw`: the member has
-  left; this write made their
+  left, and on `account:own:withdraw` left by their own withdrawal
+  (`exit` is `withdrew`), so an excluded associate's capital moves only
+  through the motion that excluded them; this write made their
   one withdrawal; their capital accounts hold nothing after it; and its
   repayments add up to what the entry credits `4567`, as many as the
-  terms governing the exit say. That nothing posts into a closed month is
+  terms governing the day they exited say, whatever day the withdrawal
+  settles. That nothing posts into a closed month is
   `account-transaction`'s guard on every entry.
 
 At rung 1 the guard runs under the log's head lock, so two draws of one
@@ -163,11 +166,18 @@ subscribes an admission or withdraws an exit, so neither alone posts;
 draws add up against the limit, and a draw not the actor's own is
 refused; a withdrawal moves what an associate held to `4567`, draws up
 its repayments and cancels what was not paid, once, and is refused for
-a member who has not left; a subscription under the statutes' minimum,
-or into a closed month, is refused; a payment in moves what it pays to the
-member's account, and one beyond what they owe or not exactly the
-payment is refused; a repayment is refused before its day, out of its
-turn, for the wrong amount or twice, and never changes once paid.
+a member who has not left, and draws up repayments on the terms of the
+day they exited even where later terms were adopted since; a
+subscription under the statutes' minimum, or into a closed month, is
+refused; a payment in moves what it pays to the member's account, and
+one beyond what they owe or not exactly the payment is refused; a
+repayment is refused before its day, out of its turn, for the wrong
+amount or twice, and never changes once paid. A guard reads the action
+it judges only while the notary judges it, so an associate's own
+withdrawal, refused for one excluded before the exclusion's withdrawal
+and after it, and drawn on the exit day's terms when it settles after
+later ones were adopted, is the capital scenario's (`cella test e2e
+capital`).
 
 ## Reads
 

@@ -388,7 +388,12 @@ dragging an open motion into Passed or Rejected is the close, posted
 as its button posts it, the database deciding which column it lands in,
 and a refused close leaves the card open. On a motion's page, the
 outcome sits in its Overview, the roll and the stance form in its
-Stances tab; the writes a close carried out show as what followed it.
+Stances tab; the writes a close carried out show as what followed it
+in the outcome its post returns, and from then on in the motion feat's
+list of the close's effects on its Overview, an admission and the
+subscription it requires among them: a subscription refused at the
+close shows forgone with its reason, under the admission it forgoes,
+itself forgone with its own, which names the refusal it follows.
 
 In the acting person's inbox, each open motion whose roll they are on,
 their seat counting, that they have given no stance on, by its deadline, linking to

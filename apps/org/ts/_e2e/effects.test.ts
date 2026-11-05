@@ -11,12 +11,15 @@
 // was proposed, closes once the assembly has raised the minimum to 30:
 // her subscription is refused and forgoes her admission and seat with it,
 // both forgone under the close in the outcome its post returns, naming no
-// one, and no one is admitted without their capital. A motion suspending
-// Chloé and Sofia, closed after Chloé's suspension, forgoes hers with its
+// one, and no one is admitted without their capital; on her motion's
+// page, in every browser, the admission shows forgone under the close
+// with its reason, over the subscription, forgone with its own; `SHOTS`
+// names where its screenshots go. A motion suspending Chloé and Sofia, closed after Chloé's suspension, forgoes hers with its
 // reason and carries Sofia's, the close standing. Run by `cella test e2e
 // effects`.
 
 import { after, before, test } from 'node:test'
+import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { propose } from '@cella/org-graft-membership-motion/api'
@@ -26,10 +29,12 @@ import type { Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
 import { reacting } from '../src/lib/server/slices.ts'
+import { browsers, serve, signIn } from './browser.ts'
 import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
+const shots = process.env.SHOTS ?? '/tmp/cella-effects-shots'
 let app: pg.Client | undefined
 
 const camille = 'camille@lanterne.example'
@@ -199,6 +204,48 @@ test('Yara\'s subscription, refused at the close by the terms raised since her m
   assert.equal(await count('SELECT count(*) AS n FROM circle.seat WHERE member = $1', [yara]), 0, 'nor seated')
   assert.equal(await count('SELECT count(*) AS n FROM account.account WHERE holder = $1', [yara]), 0, 'and holds no capital account')
   assert.equal(await verified(), true)
+})
+
+test('Yara\'s motion\'s page shows under its close her admission forgone with its reason, over her subscription forgone with its own, on every browser, in light and in dark', async () => {
+  const cutoff = (await one<{ cutoff: string }>('SELECT cutoff FROM motion.motion WHERE id = $1', [motions.yara])).cutoff
+  const close = Number((await one<{ n: string }>(`SELECT n FROM cella.log WHERE receipt = $1 AND op = 'motion:motion:close'`, [cutoff])).n)
+  const [, admission, subscription] = await logged(close)
+  const label = (await one<{ label: string }>(`SELECT label FROM motion.carries WHERE op = 'membership:member:admit' ORDER BY kind LIMIT 1`)).label
+  const shown = [
+    [label, 'membership:member:admit', 'forgone', `the close, entry ${close}`, String(close + 1)],
+    ['account:capital:subscribe', 'account:capital:subscribe', 'forgone', `${label}, entry ${close + 1}`, String(close + 2)],
+  ]
+  const notes = [
+    `${label}, entry ${close + 1}, forgone: ${admission.reason}.`,
+    `account:capital:subscribe, entry ${close + 2}, forgone: ${subscription.reason}.`,
+  ]
+  mkdirSync(shots, { recursive: true })
+  for (const [engine, launch] of browsers()) {
+    const browser = await launch()
+    const dev = await serve()
+    try {
+      for (const scheme of ['light', 'dark'] as const) {
+        const context = await browser.newContext({ viewport: { width: 1440, height: 960 }, colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
+        await signIn(context, dev.base, camille)
+        const page = await context.newPage()
+        const errors: string[] = []
+        page.on('pageerror', (e) => errors.push(e.message))
+        await page.goto(`${dev.base}/motions/${motions.yara}`)
+        await page.waitForLoadState('networkidle')
+        const section = page.locator('section', { has: page.getByRole('heading', { name: /^Effects of the close/ }) })
+        const rows = await section.locator('tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent?.trim() ?? '')))
+        assert.deepEqual(rows, shown, `${engine}, ${scheme}: each effect under the close, forgone, with the entry it follows`)
+        assert.deepEqual(await section.locator('p.note').allTextContents(), notes, `${engine}, ${scheme}: each forgone effect's reason`)
+        await section.scrollIntoViewIfNeeded()
+        await page.screenshot({ path: `${shots}/forgone-${engine}-${scheme}.png`, fullPage: true })
+        assert.deepEqual(errors, [], 'the page threw nothing')
+        await context.close()
+      }
+    } finally {
+      await browser.close()
+      await dev.stop()
+    }
+  }
 })
 
 test('a motion suspending Chloé, suspended since, and Sofia forgoes Chloé\'s suspension with its reason and carries Sofia\'s, the close standing', async () => {

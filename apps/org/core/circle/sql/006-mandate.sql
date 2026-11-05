@@ -120,9 +120,134 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
+-- What is wrong with open books' disclosure rule, by its marks as
+-- written, each name with its literal and the way it says is stricter
+-- (`{"disclosure_contributors": {"literal": "5", "stricter": "more"}}`),
+-- and the circle adopting it, or null: null too for a rule marking none
+-- of the three. It is the assembly's, and marks the fewest people a
+-- total may count, a whole number from 2 to 200, more stricter; the most
+-- one may put in, a share from 20 % to 100 %, and the most two may, from
+-- 40 % to 100 % and no less than one's, each less stricter; and nothing
+-- else.
+CREATE FUNCTION circle.disclosure_flaw(marks jsonb, issuer text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN NOT EXISTS (SELECT FROM jsonb_object_keys(coalesce(marks, '{}')) k WHERE k LIKE 'disclosure\_%') THEN NULL
+    WHEN issuer IS DISTINCT FROM circle.assembly()
+      THEN 'open books'' disclosure rule is the assembly''s: only a motion of the assembly adopts it'
+    WHEN x.other IS NOT NULL
+      THEN 'a disclosure rule marks disclosure_contributors, disclosure_largest and disclosure_two, and nothing else, not ' || x.other
+    WHEN NOT (marks ? 'disclosure_contributors' AND marks ? 'disclosure_largest' AND marks ? 'disclosure_two')
+      THEN 'a disclosure rule marks all three of disclosure_contributors, disclosure_largest and disclosure_two'
+    WHEN v.contributors IS NULL OR v.contributors <> trunc(v.contributors) OR v.contributors NOT BETWEEN 2 AND 200
+      THEN 'disclosure_contributors is the fewest people a total may count, a whole number from 2 to 200, as 5, not ' || (marks #>> '{disclosure_contributors,literal}')
+    WHEN marks #>> '{disclosure_contributors,stricter}' IS DISTINCT FROM 'more'
+      THEN 'more people is stricter: {disclosure_contributors: ' || (marks #>> '{disclosure_contributors,literal}') || ' | more is stricter}'
+    WHEN v.largest IS NULL OR v.largest NOT BETWEEN 20 AND 100
+      THEN 'disclosure_largest is the most of a total one person may put in, a share from 20 % to 100 %, as 50 %, not ' || (marks #>> '{disclosure_largest,literal}')
+    WHEN marks #>> '{disclosure_largest,stricter}' IS DISTINCT FROM 'less'
+      THEN 'a smaller share is stricter: {disclosure_largest: ' || (marks #>> '{disclosure_largest,literal}') || ' | less is stricter}'
+    WHEN v.two IS NULL OR v.two NOT BETWEEN 40 AND 100
+      THEN 'disclosure_two is the most of a total two people may put in, a share from 40 % to 100 %, as 80 %, not ' || (marks #>> '{disclosure_two,literal}')
+    WHEN marks #>> '{disclosure_two,stricter}' IS DISTINCT FROM 'less'
+      THEN 'a smaller share is stricter: {disclosure_two: ' || (marks #>> '{disclosure_two,literal}') || ' | less is stricter}'
+    WHEN v.two < v.largest
+      THEN 'two people put in at least what one does: disclosure_two, ' || (marks #>> '{disclosure_two,literal}')
+        || ', is no less than disclosure_largest, ' || (marks #>> '{disclosure_largest,literal}')
+  END
+  FROM (
+    SELECT (SELECT (t.value #>> '{}')::numeric FROM policy.typed('disclosure_contributors', marks #>> '{disclosure_contributors,literal}') t WHERE t.type = 'number') AS contributors,
+           (SELECT (t.value #>> '{}')::numeric FROM policy.typed('disclosure_largest', marks #>> '{disclosure_largest,literal}') t WHERE t.type = 'share') AS largest,
+           (SELECT (t.value #>> '{}')::numeric FROM policy.typed('disclosure_two', marks #>> '{disclosure_two,literal}') t WHERE t.type = 'share') AS two
+  ) v,
+  LATERAL (
+    SELECT (SELECT k FROM jsonb_object_keys(coalesce(marks, '{}')) k
+            WHERE k NOT IN ('disclosure_contributors', 'disclosure_largest', 'disclosure_two') ORDER BY k LIMIT 1) AS other
+  ) x;
+END;
+
+-- A policy's marks as `circle.disclosure_flaw` reads them, from the
+-- register.
+CREATE FUNCTION circle.marks_of(ref text) RETURNS jsonb
+LANGUAGE sql STABLE
+RETURN (SELECT jsonb_object_agg(v.name, jsonb_build_object('literal', v.literal, 'stricter', v.stricter))
+        FROM policy.value v WHERE v.policy = ref);
+
+-- A disclosure rule's values as the register types them, and its days;
+-- no row for a policy that marks none of them.
+CREATE FUNCTION circle.disclosure_of(ref text) RETURNS TABLE (contributors integer, largest numeric, two numeric, "from" date, until date)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT max((v.value #>> '{}')::numeric) FILTER (WHERE v.name = 'disclosure_contributors')::integer,
+         max((v.value #>> '{}')::numeric) FILTER (WHERE v.name = 'disclosure_largest'),
+         max((v.value #>> '{}')::numeric) FILTER (WHERE v.name = 'disclosure_two'),
+         p.applies, p.ends
+  FROM policy.policy p
+  JOIN policy.value v ON v.policy = p.id
+  WHERE p.id = disclosure_of.ref AND p.kind = 'rule' AND v.type IN ('number', 'share')
+  GROUP BY p.id, p.applies, p.ends
+  HAVING bool_or(v.name LIKE 'disclosure\_%');
+END;
+
+-- Copies open books' disclosure rule into `circle.disclosure` in the
+-- write that adopts it, and revokes the values of the policy it replaces
+-- the day it applies, whatever it is. Returns the row it made, or null
+-- for a policy that marks no disclosure value; a rule whose values are
+-- unsound is refused (SQLSTATE 09000).
+CREATE FUNCTION circle.disclosure_from(ref text) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE
+  wrong text;
+  made bigint;
+BEGIN
+  UPDATE circle.disclosure o SET revoked = p.applies
+  FROM policy.policy p
+  WHERE p.id = ref AND o.policy = p.replaces AND o.revoked IS NULL;
+  IF NOT EXISTS (SELECT FROM policy.policy p WHERE p.id = ref AND p.kind = 'rule')
+    OR NOT EXISTS (SELECT FROM policy.value v WHERE v.policy = ref AND v.name LIKE 'disclosure\_%') THEN
+    RETURN NULL;
+  END IF;
+  wrong := circle.disclosure_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref));
+  IF wrong IS NOT NULL THEN
+    RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  INSERT INTO circle.disclosure (policy, contributors, largest, two, "from", until)
+  SELECT ref, d.contributors, d.largest, d.two, d."from", d.until
+  FROM circle.disclosure_of(ref) d
+  RETURNING id INTO made;
+  RETURN made;
+END
+$$;
+
+-- Revokes the disclosure values of a rule that ended, on the day it
+-- ended, in the write that ends it.
+CREATE FUNCTION circle.disclosure_ended(ref text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE circle.disclosure d SET revoked = p.ends
+  FROM policy.policy p
+  WHERE p.id = disclosure_ended.ref AND d.policy = p.id AND p.ends IS NOT NULL AND d.revoked IS NULL;
+END;
+
+-- Open books' disclosure values in force on a day: the latest rule
+-- applying then, none where no rule stands.
+CREATE FUNCTION circle.disclosed(day date) RETURNS TABLE (policy text, contributors integer, largest numeric, two numeric)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT d.policy, d.contributors, d.largest, d.two
+  FROM circle.disclosure d
+  WHERE d."from" <= disclosed.day
+    AND (d.until IS NULL OR d.until > disclosed.day)
+    AND (d.revoked IS NULL OR d.revoked > disclosed.day)
+  ORDER BY d."from" DESC, d.id DESC
+  LIMIT 1;
+END;
+
 -- Copies a mandate policy's values into the mandate they grant, with its
 -- issuer and the mandate it is issued under, or a
--- right policy's into the right, in the write that adopts it, and revokes
+-- right policy's into the right, and a disclosure rule's into open books
+-- (`circle.disclosure_from`), in the write that adopts it, and revokes
 -- the mandate or the right of the policy it replaces the day it applies,
 -- with every mandate issued under that mandate (`circle.revoke`).
 -- Returns the mandate, or null for a right or a policy of another kind,
@@ -137,6 +262,7 @@ DECLARE
   made bigint;
   gone bigint[] := '{}';
 BEGIN
+  PERFORM circle.disclosure_from(ref);
   SELECT p.kind INTO k FROM policy.policy p WHERE p.id = ref AND p.kind IN ('mandate', 'right');
   IF k IS NULL THEN
     RETURN QUERY SELECT NULL::bigint, gone;
@@ -170,8 +296,8 @@ BEGIN
 END
 $$;
 
--- Revokes the mandate or the right of a policy that ended, on the day it
--- ended, in the write that ends it, and with the mandate every mandate
+-- Revokes the mandate, the right or the disclosure values of a policy
+-- that ended, on the day it ended, in the write that ends it, and with the mandate every mandate
 -- issued under it (`circle.revoke`). Returns the mandate, or null, and
 -- the mandates it revoked, the policy's first.
 CREATE FUNCTION circle.mandate_ended(ref text) RETURNS TABLE (mandate bigint, revoked bigint[])
@@ -180,6 +306,7 @@ DECLARE
   made bigint;
   gone bigint[];
 BEGIN
+  PERFORM circle.disclosure_ended(ref);
   UPDATE circle.right r SET revoked = p.ends
   FROM policy.policy p
   WHERE p.id = ref AND r.policy = p.id AND p.kind = 'right' AND p.ends IS NOT NULL AND r.revoked IS NULL;
@@ -220,8 +347,16 @@ BEGIN ATOMIC
       WHERE (g."right", g.power, cella.cents(g."limit"), g."from", g.until)
         IS NOT DISTINCT FROM (v."right", v.power, v."limit", v."from", v.until)
     ) THEN 'right ' || g.id || ' is not what ' || r.id || ' marks'
+    WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle.disclosure_of(r.id)) AND NOT EXISTS (
+      SELECT FROM circle.disclosure_of(r.id) v
+      JOIN circle.disclosure s ON s.policy = r.id
+      WHERE (s.contributors, s.largest, s.two, s."from", s.until) IS NOT DISTINCT FROM (v.contributors, v.largest, v.two, v."from", v.until)
+    ) THEN r.id || ' sets no disclosure values open books reads: its values are copied as it is adopted'
+    WHEN EXISTS (SELECT FROM circle.disclosure s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle.disclosure_of(r.id))
+      THEN r.id || ' marks no disclosure value, and sets some'
     WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND (o.revoked IS NULL OR o.revoked > r.applies))
       OR EXISTS (SELECT FROM circle.right o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
+      OR EXISTS (SELECT FROM circle.disclosure o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       THEN 'what ' || r.replaces || ' granted is not revoked the day ' || r.id || ' applies'
     ELSE (SELECT circle.outlives(o.id, r.applies) FROM circle.mandate o WHERE o.policy = r.replaces)
   END
@@ -242,7 +377,9 @@ BEGIN ATOMIC
      FROM circle.mandate m WHERE m.policy = r.id AND r.kind = 'mandate' AND (m.revoked IS NULL OR m.revoked > r.ends)),
     (SELECT circle.outlives(m.id, r.ends) FROM circle.mandate m WHERE m.policy = r.id AND r.kind = 'mandate'),
     (SELECT 'right ' || g.id || ' of ' || r.id || ' is not revoked the day it ends'
-     FROM circle.right g WHERE g.policy = r.id AND r.kind = 'right' AND g.revoked IS DISTINCT FROM r.ends)
+     FROM circle.right g WHERE g.policy = r.id AND r.kind = 'right' AND g.revoked IS DISTINCT FROM r.ends),
+    (SELECT 'the disclosure values of ' || r.id || ' are not revoked the day it ends'
+     FROM circle.disclosure s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
   )
   FROM policy.policy r
   WHERE r.id = payload ->> 'policy';

@@ -1,4 +1,4 @@
-import { MAX_ROWS, type Catalog, type Column, type Filter, type Reader, type Report, type Type, type Value } from './report.ts'
+import { MAX_ROWS, type Catalog, type Column, type Disclosure, type Filter, type Reader, type Report, type Type, type Value } from './report.ts'
 
 // A report the port refuses, with every reason it found.
 export class Invalid extends Error {
@@ -48,6 +48,8 @@ export function check(report: Report, catalog: Catalog, saved = false): string[]
     }
     if (!Object.hasOwn(catalog, view)) {
       reasons.push(`${view} is no view the slices publish`)
+    } else if (catalog[view].audience.kind === 'contributions') {
+      reasons.push(`${view} is the contributions to ${(catalog[view].audience as { of: string }).of}, which only the port reads, to withhold a cell`)
     }
   }
   const personal = new Set(report.personal ?? [])
@@ -182,6 +184,22 @@ export function check(report: Report, catalog: Catalog, saved = false): string[]
       reasons.push(`${as} (${view}) is scoped: the reader's circles in it are not given`)
     }
   }
+  // A counted view's run, its reader with the circles their powers over
+  // its contributions' feat cover, and open books' disclosure values.
+  for (const [as, view] of saved ? [] : views) {
+    const by = counter(catalog, view)
+    if (!by) {
+      continue
+    }
+    const opens = reader?.opens?.[by.feat] ?? []
+    if (!reader) {
+      reasons.push(`${as} (${view}) is counted: a report reading it names its reader`)
+    } else if (!reader.opens || typeof reader.opens !== 'object' || !Array.isArray(opens) || !opens.every((c) => typeof c === 'string')) {
+      reasons.push(`${as} (${view}) is counted: the circles the reader's powers over ${by.feat} cover are not given`)
+    } else if (reader.disclosure === undefined || (reader.disclosure !== null && !disclosure(reader.disclosure))) {
+      reasons.push(`${as} (${view}) is counted: open books' disclosure values are not given, null where no rule stands`)
+    }
+  }
 
   // How it orders them: by what it shows.
   const shown = new Set([...fields, ...measures.map(([n]) => n)])
@@ -210,6 +228,24 @@ export function check(report: Report, catalog: Catalog, saved = false): string[]
     }
   }
   return [...new Set(reasons)]
+}
+
+// The contributions view that counts a shared view, and the feat whose
+// powers read its rows; none for a view no contributions count.
+export function counter(catalog: Catalog, view: string): { view: string; feat: string } | null {
+  for (const [name, v] of Object.entries(catalog)) {
+    if (v.audience.kind === 'contributions' && v.audience.of === view && catalog[view]?.audience.kind === 'shared') {
+      return { view: name, feat: v.audience.feat }
+    }
+  }
+  return null
+}
+
+// Whether disclosure values are sound: a whole number of people, and two
+// shares in percent, the second no less than the first.
+function disclosure(d: Disclosure): boolean {
+  const share = (x: unknown) => typeof x === 'number' && Number.isFinite(x) && x >= 0 && x <= 100
+  return typeof d === 'object' && Number.isInteger(d.contributors) && d.contributors >= 1 && share(d.largest) && share(d.two) && d.largest <= d.two
 }
 
 function filter(f: Filter, c: Column | null, reasons: string[]) {
@@ -268,7 +304,7 @@ function fits(v: Value | Value[] | undefined, kind: Kind, type: Type): boolean {
 // meets it. Every name in it is the catalog's, quoted, and every value a
 // literal of its column's type, checked first: the shell's protocol carries
 // no bound parameters.
-export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: string; limit: number } {
+export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: string; limit: number; withheld: string | null } {
   const reasons = check(report, catalog)
   if (reasons.length) {
     throw new Invalid(reasons)
@@ -298,18 +334,60 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
     return either.length ? `(${either.join(' OR ')})` : 'FALSE'
   }
   const views = Object.entries(report.from)
+  // The cells of a counted view its reader may not read: those whose every
+  // contribution is neither theirs nor in a circle their powers over its
+  // feat cover, and that open books does not share, by its contributions,
+  // each person's part counted by its size. Where no rule stands, it
+  // shares none.
+  const withheld = (view: string): string | null => {
+    const by = counter(catalog, view)
+    if (!by) {
+      return null
+    }
+    const keys = (catalog[view].audience as { by: string[] }).by.map(quote).join(', ')
+    const reader = report.reader as Reader
+    const opens = reader.opens?.[by.feat] ?? []
+    const own = [
+      reader.person !== null ? `"person" = ${text(reader.person)}` : '',
+      opens.length ? `"circle" IN (${opens.map(text).join(', ')})` : '',
+    ].filter(Boolean)
+    const d = reader.disclosure
+    const shared = d
+      ? `(_c.n >= ${d.contributors} AND _c.total > 0 AND _c.largest * 100 <= ${d.largest} * _c.total AND (_c.largest + _c.second) * 100 <= ${d.two} * _c.total)`
+      : 'FALSE'
+    return [
+      `SELECT ${keys} FROM (`,
+      `SELECT ${keys}, count(*) AS n, sum(_p.a) AS total, max(_p.a) AS largest, coalesce(sum(_p.a) FILTER (WHERE _p.r = 2), 0) AS second, bool_and(_p.own) AS own`,
+      `FROM (SELECT ${keys}, sum(abs("amount")) AS a, bool_and(coalesce(${own.length ? own.join(' OR ') : 'FALSE'}, FALSE)) AS own,`,
+      `row_number() OVER (PARTITION BY ${keys} ORDER BY sum(abs("amount")) DESC, "person") AS r`,
+      `FROM ${table(by.view)} GROUP BY ${keys}, "person") AS _p GROUP BY ${keys}) AS _c`,
+      `WHERE NOT (_c.own OR ${shared})`,
+    ].join(' ')
+  }
+  // A view as the report reads it: a counted one without the cells its
+  // reader may not read, left out before the report joins, filters or
+  // sums, so no total it shows is had less a withheld cell.
+  const source = (view: string): string => {
+    const cells = withheld(view)
+    if (!cells) {
+      return table(view)
+    }
+    const keys = (catalog[view].audience as { by: string[] }).by
+    const meets = keys.map((k) => `_w.${quote(k)} IS NOT DISTINCT FROM _v.${quote(k)}`).join(' AND ')
+    return `(SELECT _v.* FROM ${table(view)} AS _v WHERE NOT EXISTS (SELECT 1 FROM (${cells}) AS _w WHERE ${meets}))`
+  }
   const joins = report.join ?? []
   const from = views
     .map(([as, view], i) => {
       if (i === 0) {
-        return `${table(view)} AS ${quote(as)}`
+        return `${source(view)} AS ${quote(as)}`
       }
       const before = new Set(views.slice(0, i).map(([a]) => a))
       const on = joins
         .filter(([a, b]) => (a.startsWith(`${as}.`) && before.has(b.split('.')[0])) || (b.startsWith(`${as}.`) && before.has(a.split('.')[0])))
         .map(([a, b]) => `${ref(a)} = ${ref(b)}`)
         .concat(kept(as, view) ?? [])
-      return `${report.outer?.includes(as) ? 'LEFT JOIN' : 'JOIN'} ${table(view)} AS ${quote(as)} ON ${on.join(' AND ')}`
+      return `${report.outer?.includes(as) ? 'LEFT JOIN' : 'JOIN'} ${source(view)} AS ${quote(as)} ON ${on.join(' AND ')}`
     })
     .join(' ')
   const fields = report.fields ?? []
@@ -344,7 +422,12 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
   ]
     .filter(Boolean)
     .join(' ')
-  return { sql, limit }
+  const counted = views.map(([, view]) => withheld(view)).filter((c): c is string => c !== null)
+  return {
+    sql,
+    limit,
+    withheld: counted.length ? `SELECT ${counted.map((c) => `(SELECT count(*) FROM (${c}) AS _w)`).join(' + ')} AS n` : null,
+  }
 }
 
 // A checked value as a literal of its column's type.

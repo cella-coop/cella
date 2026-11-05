@@ -112,6 +112,25 @@ CREATE TABLE circle.right (
 
 CREATE INDEX ON circle.right (power);
 
+-- Open books' disclosure values: what of a shared total of members' own
+-- figures every member reads, copied from the assembly's rule that marks
+-- them as it is adopted (`circle.disclosure_from`), on its policy's days.
+-- `contributors` is the fewest people a cell may count, `largest` the
+-- most of it one may put in and `two` the most two may, in percent;
+-- `revoked`, the day its rule ended or was replaced.
+CREATE TABLE circle.disclosure (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  policy text NOT NULL UNIQUE,
+  contributors integer NOT NULL CHECK (contributors BETWEEN 2 AND 200),
+  largest numeric NOT NULL CHECK (largest BETWEEN 20 AND 100),
+  two numeric NOT NULL CHECK (two BETWEEN 40 AND 100),
+  "from" date NOT NULL,
+  until date,
+  revoked date,
+  CHECK (largest <= two),
+  CHECK (until IS NULL OR "from" < until)
+);
+
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 

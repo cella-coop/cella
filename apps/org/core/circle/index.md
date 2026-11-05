@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -142,7 +142,9 @@ records`, marking no scope, so whoever holds the member role, every
 active member, seated in the assembly, reads every circle's records
 ([reading](#reading)). A co-op that keeps its books closed adopts none,
 and its members read their own circles' records and what the law gives
-them.
+them. What every member reads of the totals of members' own figures,
+their pay, time, capital, work share and expenses, is open books'
+disclosure rule ([below](#open-books)).
 
 ## Collective mandates
 
@@ -287,11 +289,58 @@ is a superuser: a `SECURITY DEFINER`
 function that filters its rows by its reader asks it in place of
 `cella.sees`, which there answers for the function's owner.
 
+## Open books
+
+What a co-op shares with every member of the totals of members' own
+figures is its choice by motion: a rule of the assembly marking three
+disclosure values, by name, each with the way it is stricter, as
+Lanterne's reads:
+
+```text
+Open books shares a total of members' own figures with every member where at least {disclosure_contributors: 5 | more is stricter} people put into it, none of them more than {disclosure_largest: 50 % | less is stricter} of it and no two more than {disclosure_two: 80 % | less is stricter}
+```
+
+- `disclosure_contributors`, a number from 2 to 200: the fewest
+  distinct people a total may count. At two, each of the two works out
+  the other's exact amount; five is a precaution, not a promise.
+- `disclosure_largest`, a share from 20 % to 100 %: the most of a total
+  one person may put in. 100 % turns the check off.
+- `disclosure_two`, a share from 40 % to 100 %, never below
+  `disclosure_largest`: the most two people may put in together. At
+  80 % it holds every total the p% rule holds at p = 10 %.
+
+The defaults are those [the disclosure study](../../../../_corpus/review/2026-11-05/disclosure.md)
+recommends; the contract fixes none. Core copies them into
+`circle.disclosure` in the write that adopts the rule, as it copies a
+mandate's values, and ends them with it: `circle.disclosure_from` and
+`circle.disclosure_ended`, which `circle.mandate_from` and
+`circle.mandate_ended` call, so `granting` and `revoking` carry them
+([handlers](#handlers)). A rule marking any of the three is the
+disclosure rule: it marks all three and nothing else, only the
+assembly adopts it, and one that does not is refused as its motion is
+proposed and again as it is adopted, saying what is wrong
+(`circle.disclosure_flaw`). A later rule replaces it the day it
+applies. `circle.disclosed(day)` reads the values in force on a day,
+none where no rule stands.
+
+The analytics port reads them for each run that reads a counted view, a
+shared total of members' figures
+([analytical contracts](../../../../_corpus/doc/architecture.md#analytical-contracts)),
+and withholds from its reader each cell they could not read every row
+of, where fewer people than the first value are in it, or one or two of
+them put in more than the others allow, or it sums to nothing
+([what is withheld](../analytics/index.md#what-is-withheld)). A reader
+always reads the cells whose every row is theirs or is in a circle a
+power of theirs over the feat's rows covers. Where no disclosure rule
+stands, every other cell is withheld: a co-op that adopts none shares
+no such total beyond its readers' own rights.
+
 ## Schema
 
 `circle` (`core/circle/sql/`): `circle.circle`, `circle.role`,
 `circle.grantee`, `circle.mandate` and `circle.right`, as in the
-entities above; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
+entities above, and `circle.disclosure`, open books' values by the rule
+that marks them, on its days until it is revoked; a role's `holders` is a positive count or none. Every circle and every role is a grantee, its row made
 by a trigger as the circle or the role is, so a circle and a role never
 share an id and a mandate's `grantee` is one foreign key, as its
 `issuer` is; its `parent` is a mandate, so the mandates form a forest
@@ -517,11 +566,13 @@ the message's circle that counts.
   policy say, and a right policy its right; the mandate or the right of the policy
   it replaces is revoked by the day it applies, and with that mandate
   every mandate issued under it (`circle.outlives`, the first still
-  standing, as a reason); and no policy of another kind has one.
+  standing, as a reason); and no policy of another kind has one; a
+  disclosure rule has its values in `circle.disclosure`, and those of the
+  rule it replaces are revoked the day it applies.
 - `circle.revokes`, which the motion feat attaches to `motion:policy:end`:
-  the mandate or the right of a policy the write ended is revoked by the
-  verdict date, and with the mandate every mandate issued under it, down
-  its provenance tree (`circle.outlives`).
+  the mandate, the right or the disclosure values of a policy the write
+  ended are revoked by the verdict date, and with the mandate every
+  mandate issued under it, down its provenance tree (`circle.outlives`).
 - `circle.narrows`, which the motion feat attaches to both: after the
   write, every mandate standing on the verdict date, in force or yet to
   be, is a root the assembly issued, or is issued under a parent its
@@ -538,7 +589,8 @@ the message's circle that counts.
 - `granting(tx, policy)` and `revoking(tx, policy)`, the state of a write
   the motion feat extends: copy a mandate policy's values into `circle.mandate`,
   with its issuer, the policy's circle, and its parent,
-  or a right policy's into `circle.right`, and revoke those of an ended
+  a right policy's into `circle.right`, or a disclosure rule's into
+  `circle.disclosure`, and revoke those of an ended
   one and of the one a new policy replaces, by `circle.mandate_from` and
   `circle.mandate_ended`, the mandate with every mandate issued under it
   (`circle.revoke`); each returns the mandate, or none for a right or a
@@ -696,7 +748,11 @@ its time and schedule its meetings, and its secretary keep its minutes,
 from the day it is created. Lanterne keeps open books: the founding
 motion grants the member role `read` on every circle's records, so a
 member of Brand reads Web's expenses, while Inès, employed and seated
-in Web alone, reads Web's and the assembly's, and not Marketing's.
+in Web alone, reads Web's and the assembly's, and not Marketing's. Its
+disclosure rule is the founding motion's last, with the defaults above,
+so a member reads a month's payroll or a project's time only where at
+least five people are in it and no one or two make most of it, unless
+a power of theirs reads every row of it.
 So the working circles carry no action by motion: a motion of Web
 decides by its text alone, and one carrying an action is refused at its
 proposal until a circle holding one grants Web a collective mandate for
@@ -704,4 +760,4 @@ it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/circle/sql/analytics.sql`, the one a core library publishes beside the analytics port's, publishes `circle.circles`, `circle.roles`, `circle.mandates`, `circle.rights` and `circle.seats` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their issuers, their parents, their limits and budgets, the rights the form gives, and who holds which role in which circle, and when. Each is shared by `id`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/circle/sql/analytics.sql`, the one a core library publishes beside the analytics port's, publishes `circle.circles`, `circle.roles`, `circle.mandates`, `circle.rights`, `circle.disclosures` and `circle.seats` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their issuers, their parents, their limits and budgets, the rights the form gives, open books' disclosure values by the rule that set them, and who holds which role in which circle, and when. Each is shared by `id`.

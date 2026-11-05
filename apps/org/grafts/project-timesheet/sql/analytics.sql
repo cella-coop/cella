@@ -55,3 +55,22 @@ LEFT JOIN (
 ) t ON t.project = p.id
 GROUP BY p.id;
 COMMENT ON VIEW project_timesheet.forecasts IS 'audience: shared by project';
+
+-- Each person's time on each project, by month and over its life, which
+-- the port reads to withhold a cell too few people or one or two of them
+-- make, and no report reads.
+CREATE VIEW project_timesheet.months_contributions AS
+SELECT b.project, to_char(e.day, 'YYYY-MM') AS month, e.member AS person, e.circle, coalesce(sum(e.minutes), 0)::bigint AS amount
+FROM project_timesheet.booking b
+JOIN timesheet.entry e ON e.id = b.entry
+GROUP BY b.project, to_char(e.day, 'YYYY-MM'), e.member, e.circle;
+COMMENT ON VIEW project_timesheet.months_contributions IS 'audience: contributions to project_timesheet.months, read by timesheet';
+COMMENT ON COLUMN project_timesheet.months_contributions.person IS 'personal: whose time it is, which only the port reads';
+
+CREATE VIEW project_timesheet.forecasts_contributions AS
+SELECT b.project, e.member AS person, e.circle, coalesce(sum(e.minutes), 0)::bigint AS amount
+FROM project_timesheet.booking b
+JOIN timesheet.entry e ON e.id = b.entry
+GROUP BY b.project, e.member, e.circle;
+COMMENT ON VIEW project_timesheet.forecasts_contributions IS 'audience: contributions to project_timesheet.forecasts, read by timesheet';
+COMMENT ON COLUMN project_timesheet.forecasts_contributions.person IS 'personal: whose time it is, which only the port reads';

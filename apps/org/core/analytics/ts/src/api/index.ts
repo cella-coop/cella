@@ -49,13 +49,19 @@ const CATALOG = `
 const quote = (s: string) => `'${s.replaceAll("'", "''")}'`
 
 // A view's audience from its comment's first words: `audience: scoped by
-// <column>`, with `and <column>` where a row is a person's, or `audience:
-// shared by <column>, …`; null where it declares neither.
+// <column>`, with `and <column>` where a row is a person's, `audience:
+// shared by <column>, …`, or `audience: contributions to <view>, read by
+// <feat>`; null where it declares none.
 const NAMES = '[a-z_][a-z0-9_]*'
 const SCOPED = new RegExp(`^audience: scoped by (${NAMES})(?: and (${NAMES}))?\\b`)
 const SHARED = new RegExp(`^audience: shared(?: by (${NAMES}(?:, ${NAMES})*))?\\b`)
+const CONTRIBUTIONS = new RegExp(`^audience: contributions to (${NAMES}\\.${NAMES}), read by ([a-z][a-z0-9-]*)\\b`)
 
 export function audience(comment: string): Audience | null {
+  const contributions = CONTRIBUTIONS.exec(comment)
+  if (contributions) {
+    return { kind: 'contributions', of: contributions[1], feat: contributions[2] }
+  }
   const scoped = SCOPED.exec(comment)
   if (scoped) {
     return { kind: 'scoped', circle: scoped[1], whose: scoped[2] ?? null }
@@ -132,8 +138,9 @@ export async function shell(options: Options): Promise<Analytics & { close: () =
       session(async (c): Promise<Result> => {
         const [h] = (await c.runAndReadAll('SELECT n, hash FROM scope.analytics.head')).getRowObjectsJson() as { n: string; hash: string }[]
         const head: Head = h ? { n: Number(h.n), hash: h.hash } : { n: 0, hash: null }
-        const { sql, limit } = compile(report, await catalogOf(c))
+        const { sql, limit, withheld } = compile(report, await catalogOf(c))
         const read = await c.runAndReadAll(sql)
+        const [w] = withheld ? ((await c.runAndReadAll(withheld)).getRowObjectsJson() as { n: string | number }[]) : [{ n: 0 }]
         const columns = read.columnNames().map((name, i) => ({ name, type: read.columnTypes()[i].toString() }))
         const rows = (read.getRowObjectsJson() as Record<string, Value>[]).map((row) => {
           for (const { name, type } of columns) {
@@ -144,7 +151,7 @@ export async function shell(options: Options): Promise<Analytics & { close: () =
           }
           return row
         })
-        return { head, columns, rows: rows.slice(0, limit), more: rows.length > limit }
+        return { head, columns, rows: rows.slice(0, limit), more: rows.length > limit, withheld: Number(w.n) }
       }),
     close: () => instance.closeSync(),
   }

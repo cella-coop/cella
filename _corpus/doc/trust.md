@@ -117,7 +117,12 @@ sequenceDiagram
   handler opens it and begins its write, writes the state, calls
   `cella.submit` last and commits once. It opens it only once the
   member's device has signed, on a connection borrowed for the
-  transaction alone, so a write waiting on a person holds none. What the
+  transaction alone, so a write waiting on a person holds none. Two of
+  the server's eight connections are kept for reading sessions, the
+  session read every request makes first, a proof's post among them,
+  and the sign-in's; every other borrow shares the other six, so however
+  many pages and writes hold those, a person still signs in and a
+  device's proof still reaches the run it answers in time. What the
   handler read before the signature binds nothing: the guards read again
   inside the transaction, and `submit` checks the signature, the keyring
   and the nonce under the head lock, so a state changed in between is

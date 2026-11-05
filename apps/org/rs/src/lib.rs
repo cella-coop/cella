@@ -30,7 +30,9 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Ext { command: Ext::Build } => db::ext_build(&Repo::find()?, &steps).map(|_| ()),
         Command::Migrate { url } => data::migrate(&Repo::find()?, &steps, url.as_deref()),
         Command::Backup { dir, url } => backup::backup(&Repo::find()?, &dir, url.as_deref()),
-        Command::Restore { dir, db, url } => backup::restore(&Repo::find()?, &steps, &dir, db.as_deref(), url.as_deref()),
+        Command::Restore { dir, db, url, erasures } => {
+            backup::restore(&Repo::find()?, &steps, &dir, db.as_deref(), url.as_deref(), erasures.as_deref())
+        }
         Command::Seed { fixture, url } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref()),
         Command::Import { kind, file, actor, dry_run, url } => {
             data::import(&Repo::find()?, &steps, &data::Import { kind: &kind, file: &file, actor: &actor, dry: dry_run }, url.as_deref())

@@ -357,8 +357,16 @@ $f$;
     }
 
     /// Each earlier version the notary ships, which `cella test notary`
-    /// stages beside the current one.
-    const EARLIER: [&str; 5] = ["0.1.0-alpha", "0.2.0", "0.3.0", "0.4.0", "0.5.0"];
+    /// stages beside the current one, and the function its guards read the
+    /// action through: `cella.op()` before 0.6.0.
+    const EARLIER: [(&str, &str); 6] = [
+        ("0.1.0-alpha", "op"),
+        ("0.2.0", "op"),
+        ("0.3.0", "op"),
+        ("0.4.0", "op"),
+        ("0.5.0", "op"),
+        ("0.6.0", "action"),
+    ];
 
     fn version() -> Option<String> {
         Spi::get_one::<String>("SELECT extversion FROM pg_extension WHERE extname = 'cella'").expect("the version")
@@ -366,12 +374,13 @@ $f$;
 
     /// It drops the extension every other test reads, so it runs alone; it installs
     /// each earlier version with a guard whose SQL body calls `cella.op()`,
-    /// and updates it to the current one, where the guard reads the action.
+    /// or `cella.action()` from 0.6.0, and updates it to the current one,
+    /// where the guard reads the action.
     #[pg_test]
     fn each_earlier_version_upgrades_in_place_and_keeps_the_guards_that_call_it() {
         alone();
         let current = version();
-        for earlier in EARLIER {
+        for (earlier, reads) in EARLIER {
             Spi::run(&format!(
                 r"
 SELECT set_config('cella.scope', '{SCOPE}', true);
@@ -381,7 +390,7 @@ CREATE EXTENSION cella VERSION '{earlier}';
 CREATE SCHEMA old;
 CREATE FUNCTION old.judging(payload jsonb) RETURNS text LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT 'judging ' || cella.op();
+  SELECT 'judging ' || cella.{reads}();
 END;
 ALTER EXTENSION cella UPDATE;"
             ))
@@ -404,7 +413,8 @@ ALTER EXTENSION cella UPDATE;"
         scope();
         settle(100);
         assert!(verifies());
-        let breaks = |tamper: &str| Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()]).expect("a tamper") == Some(true);
+        let breaks =
+            |tamper: &str| Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()]).expect("a tamper") == Some(true);
         for tamper in [
             "UPDATE cella.log SET op = 'test:thing:drop'",
             "UPDATE cella.log SET date = '2026-10-26'",
@@ -442,8 +452,16 @@ ALTER EXTENSION cella UPDATE;"
             time: "2026-10-25T12:00:00.000000Z".into(),
         };
         let receipt_hash = receipt.hash();
-        let entry =
-            Entry { n: 2, op: OP.into(), actor: JULIEN.into(), date: "2026-10-25".into(), payload, receipt: receipt.n, receipt_hash, guards: vec![] };
+        let entry = Entry {
+            n: 2,
+            op: OP.into(),
+            actor: JULIEN.into(),
+            date: "2026-10-25".into(),
+            payload,
+            receipt: receipt.n,
+            receipt_hash,
+            guards: vec![],
+        };
         let hash = log::hash(&prev, &entry).expect("a hash");
         Spi::run_with_args(
             "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
@@ -526,8 +544,94 @@ ALTER EXTENSION cella UPDATE;"
     #[pg_test]
     fn a_fixed_clock_is_the_verdict_date_in_any_zone() {
         beside();
-        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true), set_config('cella.clock', '2026-10-25', true)").expect("the zone and the clock");
+        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true), set_config('cella.clock', '2026-10-25', true)")
+            .expect("the zone and the clock");
         let date = Spi::get_one::<String>("SELECT cella.verdict_date()::text").expect("the verdict date");
         assert_eq!(date.as_deref(), Some("2026-10-25"));
+    }
+
+    /// A subject's vault keys of a class, `(year, restricted)` by year: no
+    /// key opens here, so the test seals none.
+    fn keys(subject: &str, class: &str) -> Vec<(i32, Option<String>)> {
+        Spi::connect(|c| {
+            c.select(
+                "SELECT year, restricted::text FROM vault.key WHERE subject = $1 AND class = $2 ORDER BY year",
+                None,
+                &[subject.into(), class.into()],
+            )
+            .expect("the keys")
+            .map(|r| (r.get::<i32>(1).expect("year").expect("a year"), r.get::<String>(2).expect("restricted")))
+            .collect()
+        })
+    }
+
+    fn tombstone(subject: &str, class: &str) -> Option<(Option<i64>, String, bool)> {
+        Spi::connect(|c| {
+            let rows = c
+                .select(
+                    "SELECT receipt, date::text, restricted FROM vault.erased WHERE subject = $1 AND class = $2",
+                    None,
+                    &[subject.into(), class.into()],
+                )
+                .expect("the tombstone");
+            rows.into_iter().next().map(|r| {
+                (
+                    r.get::<i64>(1).expect("receipt"),
+                    r.get::<String>(2).expect("date").expect("a date"),
+                    r.get::<bool>(3).expect("restricted").expect("restricted"),
+                )
+            })
+        })
+    }
+
+    fn reerase(list: &Value) -> i64 {
+        Spi::get_one_with_args::<i64>("SELECT cella.vault_reerase($1)", &[JsonB(list.clone()).into()])
+            .expect("the re-erasure")
+            .expect("a count")
+    }
+
+    /// A list as `cella backup` writes it, its erasures after the
+    /// restored head: Ana's contact erased, Ben's payroll restricted.
+    #[pg_test]
+    fn a_restore_carries_out_each_erasure_its_vault_lacks_once() {
+        beside();
+        Spi::run(
+            r"INSERT INTO vault.key (subject, class, year, sealed) VALUES
+                ('ana', 'contact', 2025, '\x00'), ('ana', 'contact', 2026, '\x00'), ('ana', 'profile', 2026, '\x00'),
+                ('ben', 'payroll', 2020, '\x00'), ('ben', 'payroll', 2025, '\x00')",
+        )
+        .expect("the keys");
+        let list = json!({ "head": 9, "erasures": [
+            { "subject": "ana", "class": "contact", "date": "2026-10-25", "receipt": 12, "restricted": false },
+            { "subject": "ben", "class": "payroll", "date": "2026-10-25", "receipt": 14, "restricted": true },
+        ] });
+        assert_eq!(reerase(&list), 2);
+        assert_eq!(keys("ana", "contact"), vec![]);
+        assert_eq!(keys("ana", "profile"), vec![(2026, None)], "a class the list does not name is kept");
+        assert_eq!(tombstone("ana", "contact"), Some((None, "2026-10-25".into(), false)));
+        // Restricted, not erased: the key past its clock on the erasure's
+        // date goes, and the one the law still keeps is restricted.
+        assert_eq!(keys("ben", "payroll"), vec![(2025, Some("2026-10-25".into()))]);
+        assert_eq!(tombstone("ben", "payroll"), Some((None, "2026-10-25".into(), true)));
+        assert_eq!(reerase(&list), 0, "run again, it carries out none");
+        assert_eq!(keys("ben", "payroll"), vec![(2025, Some("2026-10-25".into()))]);
+
+        // A newer list, after the sweep carried Ben's payroll out in full.
+        let swept = json!({ "head": 11, "erasures": [
+            { "subject": "ben", "class": "payroll", "date": "2026-10-25", "receipt": 14, "restricted": false },
+        ] });
+        assert_eq!(reerase(&swept), 1);
+        assert_eq!(keys("ben", "payroll"), vec![]);
+        assert_eq!(tombstone("ben", "payroll"), Some((None, "2026-10-25".into(), false)));
+        assert_eq!(reerase(&swept), 0);
+    }
+
+    #[pg_test]
+    fn a_list_naming_no_retention_class_is_refused() {
+        beside();
+        scope();
+        let list = json!({ "erasures": [{ "subject": "ana", "class": "diary", "date": "2026-10-25", "restricted": false }] });
+        let error = tries(&format!("SELECT cella.vault_reerase('{list}')")).expect("a refusal");
+        assert!(error.contains("no retention class diary, which the list's erasure of ana names"), "{error}");
     }
 }

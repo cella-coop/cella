@@ -73,6 +73,10 @@ pub enum Command {
         /// An empty database on another cluster, such as a new host's, to restore into
         #[arg(long, value_name = "URL")]
         url: Option<String>,
+
+        /// The newest erasures the host keeps, a later backup's directory or its erasures.json, carried out again before the database opens; by default the backup's own
+        #[arg(long, value_name = "PATH")]
+        erasures: Option<PathBuf>,
     },
 
     /// Load a mock co-op from apps/org/fixtures

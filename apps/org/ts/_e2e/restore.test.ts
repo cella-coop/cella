@@ -6,7 +6,9 @@
 // every table holds what it held, and the next write continues the chain
 // under the same key. A backup during which the notary's key path moves
 // refuses, and one taken in the middle of a vault rotation holds both
-// vault keys and restores with every entry opening. Run by `cella test e2e
+// vault keys and restores with every entry opening. A backup taken before
+// a former member erases their data, restored with a later backup's
+// erasures, opens none of it and refuses it again. Run by `cella test e2e
 // restore`.
 
 import { after, before, test } from 'node:test'
@@ -16,8 +18,11 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import pg from 'pg'
 import { profile } from '@cella/org-person/api'
+import { erase } from '@cella/org-membership/api'
+import { vote } from '@cella/org-motion/api'
+import { carried, close, put } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
-import { sign } from './lanterne.ts'
+import { reader, sign } from './lanterne.ts'
 import { cella, cluster, started, type Cluster } from './cluster.ts'
 
 const su = new pg.Client()
@@ -28,6 +33,8 @@ const backup = join(scratch, 'lanterne')
 
 const hugo = 'hugo@lanterne.example'
 const julien = 'julien@lanterne.example'
+const camille = 'camille@lanterne.example'
+const chloe = 'chloe@lanterne.example'
 
 const as = (db: pg.Client, actor: string): Deps => ({ db, actor, sign: sign(actor) })
 const one = async <R>(c: pg.Client, sql: string, values: unknown[] = []) => (await c.query(sql, values)).rows[0] as R
@@ -75,11 +82,11 @@ test('members write, personal data among it, and the scope is backed up whole, i
 
   const said = cella(['backup', backup], { CELLA_DB: su.database ?? '' })
   assert.match(said, new RegExp(`backed up ${su.database} at entry ${written}`))
-  for (const f of ['db.dump', 'notary.key', 'vault.key', 'manifest']) {
+  for (const f of ['db.dump', 'notary.key', 'vault.key', 'erasures.json', 'manifest']) {
     assert.ok(existsSync(join(backup, f)), f)
   }
   const manifest = readFileSync(join(backup, 'manifest'), 'utf8')
-  assert.match(manifest, /^version 0\.6\.0$/m)
+  assert.match(manifest, /^version 0\.7\.0$/m)
   assert.match(manifest, /^setting - cella\.scope=lanterne\.example$/m)
   assert.match(manifest, new RegExp(`^head ${written} [0-9a-f]{64}$`, 'm'))
   const keys = await one<{ notary: string; vault: string }>(
@@ -99,7 +106,7 @@ test('a new host restores it: its key files written, the log verified at the hea
   assert.equal(existsSync(host.keys.notary), false)
 
   const said = cella(['restore', backup, '--url', host.url('lanterne')])
-  assert.match(said, new RegExp(`the log verifies, ${written} entries, entry ${written} as backed up; every entry opens`))
+  assert.match(said, new RegExp(`the log verifies, ${written} entries, entry ${written} as backed up; 0 erasures made since carried out again; every entry opens`))
   assert.deepEqual(readFileSync(host.keys.notary), readFileSync(join(backup, 'notary.key')))
   assert.deepEqual(readFileSync(host.keys.vault), readFileSync(join(backup, 'vault.key')))
 
@@ -187,7 +194,7 @@ test('a backup taken between a vault rotation\'s steps 2 and 3 holds both vault 
     const previous = join(third.dir, 'keys/vault.previous.key')
     await third.set('cella.vault_key_previous', previous)
     const restored = cella(['restore', rotating, '--url', third.url('lanterne')])
-    assert.match(restored, new RegExp(`${written + 1} entries, entry ${written + 1} as backed up; every entry opens`))
+    assert.match(restored, new RegExp(`${written + 1} entries, entry ${written + 1} as backed up; 0 erasures made since carried out again; every entry opens`))
     assert.deepEqual(readFileSync(third.keys.vault), readFileSync(next))
     assert.deepEqual(readFileSync(previous), readFileSync(host.keys.vault))
     const c = await third.client('lanterne')
@@ -195,5 +202,102 @@ test('a backup taken between a vault rotation\'s steps 2 and 3 holds both vault 
     await c.end()
   } finally {
     third.stop()
+  }
+})
+
+// The clock the app's role reads, from a new session of it.
+async function on(date: string) {
+  await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
+  await app.end()
+  app = new pg.Client({ user: 'cella_app' })
+  await app.connect()
+}
+
+// A member excluded by the assembly: every active member on its roll
+// consents, and it closes on its deadline and is carried out.
+async function excluded(member: string, until: string) {
+  const by = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
+  const proposed = await put({ kind: 'exclude', args: { member }, deadline: until, body: '' }, by(camille))
+  assert.equal(proposed.state, 'settled', proposed.state === 'refused' ? proposed.reason : '')
+  const { motion } = (proposed as { value: { motion: string } }).value
+  const roll = (
+    await su.query<{ member: string }>(
+      `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+       WHERE r.motion = $1 AND m.status = 'active'`,
+      [motion],
+    )
+  ).rows
+  for (const { member: voter } of roll) {
+    settled(await vote({ motion, member: voter, stance: 'consent' }, by(voter)))
+  }
+  await on(until)
+  settled(await close({ motion }, by(camille)))
+  const exit = await carried(motion, by(camille))
+  assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exclude', 'settled']])
+}
+
+test('a backup taken before an erasure, restored with a later backup\'s erasures, brings no one erased back', async () => {
+  // Chloé gives her contact details, and the scope is backed up; then she
+  // is excluded, erases her personal data, and it is backed up again.
+  const given = settled(await profile({ person: chloe, email: 'chloe@moreau.example', phone: '+33 7 00 00 00 04' }, as(app, chloe)))
+  const earlier = join(scratch, 'earlier')
+  cella(['backup', earlier], { CELLA_DB: su.database ?? '' })
+  type List = { scope: string; head: number; erasures: { subject: string; class: string; date: string; receipt: number | null; restricted: boolean }[] }
+  const read = (dir: string) => JSON.parse(readFileSync(join(dir, 'erasures.json'), 'utf8')) as List
+  assert.deepEqual([read(earlier).scope, read(earlier).head], ['lanterne.example', given])
+  assert.equal(read(earlier).erasures.some((e) => e.subject === chloe), false)
+
+  await excluded(chloe, '2026-11-07')
+  await on('2026-11-08')
+  const erasure = settled(await erase({ member: chloe }, as(app, chloe)))
+  const later = join(scratch, 'later')
+  cella(['backup', later], { CELLA_DB: su.database ?? '' })
+  const tombstones = (
+    await su.query<{ class: string; date: string; receipt: number; restricted: boolean }>(
+      'SELECT class, date::text AS date, receipt::int AS receipt, restricted FROM vault.erased WHERE subject = $1 ORDER BY class',
+      [chloe],
+    )
+  ).rows
+  assert.equal(tombstones.length, 5, 'every class of hers is erased or restricted')
+  assert.deepEqual(
+    read(later).erasures.filter((e) => e.subject === chloe),
+    tombstones.map((t) => ({ subject: chloe, class: t.class, date: t.date, receipt: t.receipt, restricted: t.restricted })),
+  )
+  assert.doesNotMatch(readFileSync(join(later, 'erasures.json'), 'utf8'), /moreau/i, 'the list holds nothing personal')
+
+  const fourth = await cluster()
+  try {
+    const pgsu = await fourth.client('postgres')
+    await pgsu.query('CREATE DATABASE lanterne')
+    await pgsu.end()
+    // A list older than the backup misses the erasures its dump holds.
+    assert.throws(
+      () => cella(['restore', later, '--url', fourth.url('lanterne'), '--erasures', earlier]),
+      new RegExp(`were read at entry ${given}, before this backup's entry ${erasure}`),
+    )
+    const said = cella(['restore', earlier, '--url', fourth.url('lanterne'), '--erasures', later])
+    assert.match(said, new RegExp(`entry ${given} as backed up; 5 erasures made since carried out again; every entry opens, or folds as its erasure left it`))
+
+    const c = await fourth.client('lanterne')
+    const opened = (await one<{ o: { values: Record<string, unknown> } }>(c, 'SELECT cella.opened($1) AS o', [given])).o
+    assert.deepEqual([opened.values.email, opened.values.phone], ['redacted', 'redacted'])
+    assert.deepEqual(
+      await one(c, 'SELECT name, email, phone FROM person.person WHERE address = $1', [chloe]),
+      { name: 'redacted', email: 'redacted', phone: 'redacted' },
+    )
+    assert.deepEqual(
+      (await c.query('SELECT class, date::text AS date, restricted, receipt FROM vault.erased WHERE subject = $1 ORDER BY class', [chloe])).rows,
+      tombstones.map((t) => ({ ...t, receipt: null })),
+    )
+    await c.end()
+
+    // The app's role connects once the restore is done, and erasure wins.
+    const restored = await fourth.client('lanterne', 'cella_app')
+    const late = await profile({ person: chloe, phone: '+33 7 00 00 00 05' }, as(restored, chloe))
+    assert.equal(late.state, 'refused')
+    assert.match(late.state === 'refused' ? late.reason : '', /chloe@lanterne\.example's contact data was erased on 2026-11-08: erasure wins/)
+    await restored.end()
+  } finally {
+    fourth.stop()
   }
 })

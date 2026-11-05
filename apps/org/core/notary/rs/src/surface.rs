@@ -32,6 +32,7 @@
 //! | `cella.redacting()` | function | whether the notary is redacting, for a feat's trigger that keeps a row fixed |
 //! | `cella.vault_sweep()` | function, a superuser's | restricted data erased once its clock runs out |
 //! | `cella.vault_rewrap()` | function, a superuser's | every vault key sealed under the current wrap key, those under the previous one moved |
+//! | `cella.vault_reerase(erasures)` | function, a superuser's | each erasure of a backup's list the restored vault lacks, carried out again |
 
 use crate::{notary, vault};
 use cella_guards::{Amount as Cents, Tally};
@@ -602,7 +603,7 @@ CREATE TABLE vault.secret (
 CREATE TABLE vault.erased (
     subject text NOT NULL,
     class text NOT NULL REFERENCES cella.retention,
-    receipt bigint NOT NULL,
+    receipt bigint,
     date date NOT NULL,
     restricted boolean NOT NULL,
     PRIMARY KEY (subject, class)
@@ -675,4 +676,24 @@ REVOKE EXECUTE ON FUNCTION cella.vault_rewrap() FROM PUBLIC;
 ",
     name = "vault_rewrap_owner",
     requires = [vault_rewrap],
+);
+
+/// Carries out again each erasure of a list, as `cella backup` writes it,
+/// that the vault holds no tombstone for, or holds still restricted where
+/// the list's was carried out in full: as the erasure did, under its date,
+/// its tombstone naming no entry. Returns how many it carried out; run
+/// again, none. A superuser's, run by `cella restore` before the database
+/// opens to the app.
+#[pg_extern(volatile, security_definer)]
+#[search_path(pg_catalog, pg_temp)]
+fn vault_reerase(erasures: JsonB) -> i64 {
+    vault::reerase(&erasures.0)
+}
+
+extension_sql!(
+    r"
+REVOKE EXECUTE ON FUNCTION cella.vault_reerase(jsonb) FROM PUBLIC;
+",
+    name = "vault_reerase_owner",
+    requires = [vault_reerase],
 );

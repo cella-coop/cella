@@ -1,11 +1,13 @@
 //! A scope's backup and its restore. A backup is a directory: the database
 //! as `pg_dump` writes it, the notary's and the vault's key files, the
-//! previous vault key's during a rotation, and a manifest naming the
-//! database, the extension's version, the log's head and the settings the
-//! database and its roles carry, which a dump leaves out, all read at one
-//! point of the log. A restore makes the database again from it, puts the
-//! key files where the cluster reads them, and checks what it restored:
-//! the log verifies, its head is the backup's, and every entry opens.
+//! previous vault key's during a rotation, the scope's erasures, and a
+//! manifest naming the database, the extension's version, the log's head
+//! and the settings the database and its roles carry, which a dump leaves
+//! out, all read at one point of the log. A restore makes the database
+//! again from it, puts the key files where the cluster reads them, carries
+//! out again every erasure made since that the newest list it is given
+//! holds, and checks what it restored: the log verifies, its head is the
+//! backup's, and every entry opens, or folds as its erasure left it.
 
 use std::fs;
 use std::io::{BufRead, BufReader, Write};
@@ -24,6 +26,18 @@ const MANIFEST: &str = "manifest";
 const NOTARY: &str = "notary.key";
 const VAULT: &str = "vault.key";
 const PREVIOUS: &str = "vault.previous.key";
+const ERASURES: &str = "erasures.json";
+
+/// The scope's erasures as `erasures.json` holds them, one JSON line: the
+/// scope, the head they were read at, and every tombstone of
+/// `vault.erased`, its subject, class, date, receipt and whether it is
+/// restricted, and nothing personal.
+const ERASED: &str = "SELECT json_build_object(
+           'scope', current_setting('cella.scope', true),
+           'head', coalesce((SELECT n FROM cella.head), 0),
+           'erasures', coalesce((SELECT json_agg(json_build_object(
+               'subject', subject, 'class', class, 'date', date::text, 'receipt', receipt, 'restricted', restricted)
+             ORDER BY subject, class) FROM vault.erased), '[]'));";
 
 /// What a backup says of the database it holds.
 struct Manifest {
@@ -144,6 +158,7 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
          WHERE d.setdatabase = (SELECT oid FROM pg_database WHERE datname = current_database())
          ORDER BY 1, 2;",
     )?;
+    let erasures = at.row(ERASED)?;
     let snapshot = at.row("SELECT pg_export_snapshot();")?;
     let manifest = Manifest {
         database: database.to_owned(),
@@ -186,9 +201,11 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
         }
     }
     let path = dir.join(MANIFEST);
+    let list = dir.join(ERASURES);
+    fs::write(&list, format!("{erasures}\n")).map_err(io(&list))?;
     fs::write(&path, manifest.write()).map_err(io(&path))?;
     println!(
-        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys{}, the manifest; keep it as you keep the keys",
+        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys{}, the erasures, the manifest; keep it as you keep the keys",
         dir.display(),
         if previous == "-" { "" } else { ", the previous vault key" }
     );
@@ -265,11 +282,24 @@ impl Snapshot {
 /// Restores a backup into a new database on the dev cluster, or into an
 /// empty one at `url`. The cluster must install the extension at the
 /// version backed up; its key files are written from the backup where
-/// they are missing and must match it where they are not.
-pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: Option<&str>) -> Result {
+/// they are missing and must match it where they are not. Before the
+/// database opens to any role but a superuser, it carries out again the
+/// erasures of the newest list it is given, `erasures` naming a later
+/// backup's directory or its `erasures.json`, the backup's own where none
+/// is named.
+pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: Option<&str>, erasures: Option<&Path>) -> Result {
     let path = dir.join(MANIFEST);
     let text = fs::read_to_string(&path).map_err(io(&path))?;
     let manifest = Manifest::read(&text).ok_or_else(|| Fail::new(format!("{} is not a cella backup's manifest", path.display())))?;
+    let own = dir.join(ERASURES);
+    let given = match erasures {
+        Some(p) if p.is_dir() => p.join(ERASURES),
+        Some(p) => p.to_owned(),
+        None => own.clone(),
+    };
+    let list = fs::read_to_string(&given).map_err(io(&given))?;
+    let list = list.trim();
+    let own_list = fs::read_to_string(&own).map_err(io(&own))?;
     let dev = Dev::new(repo);
     let db = match url {
         Some(url) => Target::Url(url),
@@ -288,13 +318,35 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
         &db,
         &format!(
             "SELECT coalesce((SELECT default_version FROM pg_available_extensions WHERE name = 'cella'), '-'),
-                    EXISTS (SELECT FROM pg_namespace WHERE nspname = 'cella'), {KEYS}"
+                    EXISTS (SELECT FROM pg_namespace WHERE nspname = 'cella'),
+                    (SELECT datconnlimit FROM pg_database WHERE datname = current_database()), {KEYS},
+                    coalesce(o.l ->> 'scope', '-'), coalesce(g.l ->> 'scope', '-'), g.l ->> 'head'
+             FROM (SELECT {}::jsonb AS l) o, (SELECT {}::jsonb AS l) g",
+            literal(own_list.trim()),
+            literal(list)
         ),
     )?;
     let f: Vec<&str> = facts.split('\t').collect();
-    let [version, taken, notary, vault, previous] = f[..] else {
+    let [version, taken, limit, notary, vault, previous, own_scope, given_scope, given_head] = f[..] else {
         return Err(Fail::new(format!("unexpected answer about the cluster: {facts}")));
     };
+    let limit: i64 = limit.parse().map_err(|_| Fail::new(format!("the database's connection limit is not a number: {limit}")))?;
+    // The erasures a restore re-applies are the scope's, read no earlier
+    // than its dump: an older list misses the erasures the dump holds.
+    if given_scope != own_scope {
+        return Err(Fail::new(format!(
+            "the erasures at {} are of scope {given_scope}, and the backup is of {own_scope}: give the erasures of a later backup of the same scope",
+            given.display()
+        )));
+    }
+    let given_head: i64 = given_head.parse().map_err(|_| Fail::new(format!("{} says no head it was read at", given.display())))?;
+    if given_head < manifest.head {
+        return Err(Fail::new(format!(
+            "the erasures at {} were read at entry {given_head}, before this backup's entry {}: give a later backup's, or none to take the backup's own",
+            given.display(),
+            manifest.head
+        )));
+    }
     if version != manifest.version {
         return Err(Fail::new(format!(
             "the backup is of cella {}, and this cluster installs {version}: restore with the build that made it, then migrate",
@@ -336,10 +388,14 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
         }
     }
 
-    // The roles the scope's grants name, then the settings a dump leaves
-    // out, both before the dump so its grants and the checks find them.
+    // No role but a superuser connects until the erasures made since the
+    // backup are carried out again and the checks pass: a connection limit
+    // of none binds every other role. Then the roles the scope's grants
+    // name, and the settings a dump leaves out, both before the dump so its
+    // grants and the checks find them.
     let mut prepare = String::from(
-        "DO $$ BEGIN
+        "DO $$ BEGIN EXECUTE format('ALTER DATABASE %I CONNECTION LIMIT 0', current_database()); END $$;
+         DO $$ BEGIN
            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_app') THEN CREATE ROLE cella_app LOGIN; END IF;
            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'cella_guards') THEN
              CREATE ROLE cella_guards NOLOGIN NOSUPERUSER NOBYPASSRLS NOINHERIT;
@@ -367,6 +423,10 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     load.args(["--no-owner", "--exit-on-error", "--single-transaction"]).arg(dir.join(DUMP));
     steps.run("pg_restore", &mut [load], quiet)?;
 
+    // The dump holds every vault key erased since it was taken: each such
+    // erasure the newest list holds is carried out again.
+    let again = psql(&dev, &db, &format!("SELECT cella.vault_reerase({}::jsonb)", literal(list)))?;
+
     let checked = psql(
         &dev,
         &db,
@@ -390,11 +450,15 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     if opened != entries {
         return Err(Fail::new(format!("{opened} of {entries} entries open from the vault")));
     }
+    psql(&dev, &db, &format!("DO $$ BEGIN EXECUTE format('ALTER DATABASE %I CONNECTION LIMIT {limit}', current_database()); END $$;"))?;
     let name = match &db {
         Target::Dev(name) => name.clone(),
         Target::Url(_) => manifest.database.clone(),
     };
-    println!("restored {name}: the log verifies, {head} entries, entry {} as backed up; every entry opens", manifest.head);
+    println!(
+        "restored {name}: the log verifies, {head} entries, entry {} as backed up; {again} erasures made since carried out again; every entry opens, or folds as its erasure left it",
+        manifest.head
+    );
     Ok(())
 }
 

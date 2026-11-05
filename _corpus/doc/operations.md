@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 # Operations
@@ -138,10 +138,13 @@ new vault key file, the notary's key file as the previous one, then
 reads its key files, writes a new owner-only directory: the database as
 `pg_dump --format=custom` writes it, the notary's and the vault's key
 files, the previous vault key's where `cella.vault_key_previous` is set,
-and a manifest of the database's name, the extension's version, the
-log's head and the settings the database and its roles carry, which a
-dump leaves out. Run it nightly from a timer and copy the directory off
-the host. It holds the keys in the clear: keep it as the keys are kept
+the scope's erasures, and a manifest of the database's name, the
+extension's version, the log's head and the settings the database and
+its roles carry, which a dump leaves out. The erasures, `erasures.json`,
+are every tombstone of `vault.erased`: its subject, its class, its date,
+its receipt's number and whether the class is restricted, and nothing
+personal. Run it nightly from a timer and copy the directory off the
+host. It holds the keys in the clear: keep it as the keys are kept
 ([trust](trust.md#current-limits)).
 
 Everything a backup holds is read at one point of the log, so writes
@@ -155,27 +158,33 @@ removes the directory rather than keep a backup whose keys may not open
 its dump. Taken between a vault rotation's steps 2 and 4, it holds both
 vault keys, and its restore opens every vault key under either.
 
-A nightly dump loses up to a day. To lose less, archive the cluster's
-write-ahead log as well, as [Postgres documents
-it](https://www.postgresql.org/docs/18/continuous-archiving.html):
-`wal_level = replica`, `archive_mode = on` and an `archive_command` that
-copies each segment off the host and fails rather than overwrite one,
-with a base backup (`pg_basebackup`) taken weekly. A point-in-time
-recovery restores the base backup and replays the archive up to a
-`recovery_target_time`; it restores the whole cluster, never the key
-files, which come from the latest `cella backup`.
+What a scope is promised is what its nightly backups give: a restore
+loses at most the day since the last one. A point-in-time recovery from
+the cluster's archived write-ahead log is not supported: nothing yet
+gives it the vault key a restore point before a rotation needs, nor
+rehearses it.
 
-`cella restore <dir> [--db NAME | --url URL]` makes the scope again from a
-backup, into a new database on the dev cluster or into an empty one at
-`--url`, such as a new host's. It refuses unless the cluster installs the
-extension at the version backed up; restore with the build that made the
-backup, then [upgrade](#upgrades). It writes each key file where the
-cluster's settings say, if it is missing, and refuses if a different key
-is already there; a backup that holds the previous vault key needs
-`cella.vault_key_previous` set as well, and the rotation is finished
-after it with `cella vault rewrap`. It makes the roles and the settings;
-loads the dump; then checks that the log verifies, that its head is the
-backup's, and that every entry opens from the vault.
+`cella restore <dir> [--db NAME | --url URL] [--erasures PATH]` makes the
+scope again from a backup, into a new database on the dev cluster or
+into an empty one at `--url`, such as a new host's. It refuses unless
+the cluster installs the extension at the version backed up; restore
+with the build that made the backup, then [upgrade](#upgrades). It
+writes each key file where the cluster's settings say, if it is missing,
+and refuses if a different key is already there; a backup that holds
+the previous vault key needs `cella.vault_key_previous` set as well, and
+the rotation is finished after it with `cella vault rewrap`. It makes
+the roles and the settings and loads the dump. Then, before the
+database opens to the app's role, it re-applies the newest list of
+erasures it is given, `--erasures` naming a later backup's directory or
+its `erasures.json`, the backup's own where none is named, and refuses
+a list older than the backup's own, or another scope's: every erasure the restored vault
+lacks is carried out again by `cella.vault_reerase`, as the erasure
+did, so a person erased after the backup stays erased. Last it checks
+that the log verifies, that its head is the backup's, and that every
+entry opens from the vault, or folds to `redacted` or `restricted` as
+its erasure left it. Restore with the newest erasures the host keeps:
+an older backup's dump holds every vault key erased since it was
+taken.
 
 The restore is rehearsed by `cella test e2e restore` on every test run:
 members write, personal data among it, the scope is backed up, and a
@@ -184,7 +193,12 @@ every table's rows, the head and the vault as they were, and takes the
 next write under the same key. It rehearses as well a backup taken in
 the middle of a vault rotation, before `cella vault rewrap`, whose
 restore opens every entry, and one during which the notary's key path
-changes, which refuses.
+changes, which refuses. And it rehearses an erasure after a backup: a
+former member's personal data is backed up, they erase it, the scope is
+backed up again, and the first backup restored with the second's
+erasures opens none of that data, folds every entry of it to
+`redacted`, refuses a later value of the erased class, and keeps the
+former member's tombstone with the class and the date it was erased on.
 
 ## Upgrades
 

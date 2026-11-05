@@ -540,7 +540,11 @@ erased until their legal clock runs out.
   refuses any later value of an erased class (EDPB guidelines 02/2025 on
   processing personal data through blockchain technologies: erasure
   must remain possible, so the ledger holds no personal data, only what
-  cannot be linked once its key is gone).
+  cannot be linked once its key is gone). A restore keeps it: every backup
+  carries the scope's tombstones, and a restore re-applies the newest list
+  it is given before the database opens, so a backup taken before an
+  erasure brings no one erased back
+  ([operations](operations.md#backups)).
 
 ## The analytics role
 
@@ -673,6 +677,12 @@ What the build does not yet do, and what lifts each:
   host keeps backups as it keeps the keys
   ([operations](operations.md#backups)). Sealing a backup to the scope's
   guardians lifts this.
+- **A restore loses up to a day, and the erasures of that day.** A scope
+  is restored from its last nightly backup, so the writes since it are
+  lost, and an erasure among them is in no list of erasures the restore
+  is given: the person's data that backup holds comes back, until they
+  ask again. Restoring to a point in time from the archived write-ahead
+  log, which replays every erasure up to that point, lifts both.
 - **`cella import` signs with the fixture devices too.** It imports as a
   member through their TEST-ONLY fixture key, as the dev server signs, so
   it imports into the mock co-ops alone; a member's own device signing the

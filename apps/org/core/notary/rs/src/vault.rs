@@ -137,12 +137,15 @@ fn class_of(c: &SpiClient<'_>, field: &str) -> String {
 fn commit(c: &mut SpiClient<'_>, p: &Personal, receipt: i64, year: i32) -> Value {
     let class = class_of(c, &p.field);
     let erased = spi(c.select(
-        "SELECT receipt FROM vault.erased WHERE subject = $1 AND class = $2",
+        "SELECT receipt, date::text FROM vault.erased WHERE subject = $1 AND class = $2",
         Some(1),
         &[p.subject.clone().into(), class.clone().into()],
     ));
-    if let Some(at) = first::<i64>(erased) {
-        refuse(format!("{}'s {class} data was erased at receipt {at}: erasure wins", p.subject), "refused before any guard");
+    if !erased.is_empty() {
+        // A tombstone a restore wrote again names no receipt, only its day.
+        let (at, on) = spi(erased.first().get_two::<i64, String>());
+        let when = at.map_or_else(|| format!("on {}", on.unwrap_or_default()), |n| format!("at receipt {n}"));
+        refuse(format!("{}'s {class} data was erased {when}: erasure wins", p.subject), "refused before any guard");
     }
     let (key, _) = data_key(c, &p.subject, &class, year, true).expect("made");
     let salt = random::<32>();
@@ -175,9 +178,7 @@ fn commit(c: &mut SpiClient<'_>, p: &Personal, receipt: i64, year: i32) -> Value
 /// `sweep` finds its clock out, then erased the same way. Either way a
 /// tombstone refuses the subject's class any later value.
 fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) -> Value {
-    let known: Vec<(String, i32, bool)> = spi(c.select("SELECT class, years, restricted FROM cella.retention ORDER BY class", None, &[]))
-        .map(|r| (spi(r.get::<String>(1)).unwrap_or_default(), spi(r.get::<i32>(2)).unwrap_or_default(), spi(r.get::<bool>(3)).unwrap_or(true)))
-        .collect();
+    let known = retention(c);
     let wanted: BTreeSet<String> = match &e.classes {
         Some(list) => list.iter().cloned().collect(),
         None => known.iter().map(|(k, _, _)| k.clone()).collect(),
@@ -187,30 +188,92 @@ fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) 
     }
     let (mut erased, mut restricted) = (Vec::new(), Vec::new());
     for (class, years, kept) in known.into_iter().filter(|(k, _, _)| wanted.contains(k)) {
-        let subject = e.subject.clone();
-        if kept {
-            spi(c.update(
-                "DELETE FROM vault.key WHERE subject = $1 AND class = $2 AND year + $3 + 1 <= $4",
-                None,
-                &[subject.clone().into(), class.clone().into(), years.into(), year.into()],
-            ));
-            // The read models may hold this year's data, whose clock has
-            // not begun: the class stays, restricted, until `sweep`.
-            spi(c.update(
-                "UPDATE vault.key SET restricted = $3::date WHERE subject = $1 AND class = $2 AND restricted IS NULL",
-                None,
-                &[subject.clone().into(), class.clone().into(), date.into()],
-            ));
-            tombstone(c, &subject, &class, receipt, date, true);
-            restricted.push(class);
-            continue;
-        }
-        spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.clone().into(), class.clone().into()]));
-        redact(c, &subject, &class);
-        tombstone(c, &subject, &class, receipt, date, false);
-        erased.push(class);
+        erase_class(c, &e.subject, &class, years, kept, Some(receipt), date, year);
+        if kept { restricted.push(class) } else { erased.push(class) }
     }
     json!({ vault::ERASURE: { "subject": e.subject, "erased": erased, "restricted": restricted } })
+}
+
+/// The retention classes: each one's clock in years, and whether the law
+/// keeps it.
+fn retention(c: &SpiClient<'_>) -> Vec<(String, i32, bool)> {
+    spi(c.select("SELECT class, years, restricted FROM cella.retention ORDER BY class", None, &[]))
+        .map(|r| {
+            (spi(r.get::<String>(1)).unwrap_or_default(), spi(r.get::<i32>(2)).unwrap_or_default(), spi(r.get::<bool>(3)).unwrap_or(true))
+        })
+        .collect()
+}
+
+/// Erases one class of a subject's on `date`, of year `year`: restricted
+/// where `restrict`, its keys past their clock deleted and the rest marked
+/// restricted, else in full, its keys and sealed values deleted and its
+/// columns redacted; then the tombstone, naming the erasure's receipt.
+#[allow(clippy::too_many_arguments)]
+fn erase_class(c: &mut SpiClient<'_>, subject: &str, class: &str, years: i32, restrict: bool, receipt: Option<i64>, date: &str, year: i32) {
+    if restrict {
+        spi(c.update(
+            "DELETE FROM vault.key WHERE subject = $1 AND class = $2 AND year + $3 + 1 <= $4",
+            None,
+            &[subject.into(), class.into(), years.into(), year.into()],
+        ));
+        // The read models may hold this year's data, whose clock has
+        // not begun: the class stays, restricted, until `sweep`.
+        spi(c.update(
+            "UPDATE vault.key SET restricted = $3::date WHERE subject = $1 AND class = $2 AND restricted IS NULL",
+            None,
+            &[subject.into(), class.into(), date.into()],
+        ));
+    } else {
+        spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.into(), class.into()]));
+        redact(c, subject, class);
+    }
+    tombstone(c, subject, class, receipt, date, restrict);
+}
+
+/// Carries out again each erasure of a list, as `cella backup` writes it,
+/// that the vault lacks: one it holds no tombstone for, or holds
+/// restricted where the list's was carried out in full since, by the
+/// sweep. Each is carried out as its erasure was, on its date and of its
+/// year, restricted only where the list's is and the law keeps the class;
+/// its tombstone names no receipt, since the entry that made it is past
+/// the restored head. Holds the head's lock. Returns how many it carried
+/// out; run again, none.
+pub fn reerase(list: &Value) -> i64 {
+    let Some(items) = list.get("erasures").and_then(Value::as_array) else {
+        fail("cella: a list of erasures is an object whose `erasures` is an array, as cella backup writes it");
+    };
+    Spi::connect_mut(|c| {
+        lock_head(c);
+        let known = retention(c);
+        let mut done = 0;
+        for item in items {
+            let text =
+                |k: &str| item.get(k).and_then(Value::as_str).unwrap_or_else(|| fail(format!("cella: an erasure without its {k}: {item}")));
+            let (subject, class, date) = (text("subject"), text("class"), text("date"));
+            let listed = item
+                .get("restricted")
+                .and_then(Value::as_bool)
+                .unwrap_or_else(|| fail(format!("cella: an erasure without its restricted: {item}")));
+            let year: i32 = date.get(..4).and_then(|y| y.parse().ok()).unwrap_or_else(|| fail(format!("cella: an erasure's date {date}")));
+            let Some((_, years, kept)) = known.iter().find(|(k, _, _)| k == class) else {
+                fail(format!("cella: no retention class {class}, which the list's erasure of {subject} names"));
+            };
+            let restrict = *kept && listed;
+            let held = spi(c.select(
+                "SELECT restricted FROM vault.erased WHERE subject = $1 AND class = $2",
+                Some(1),
+                &[subject.into(), class.into()],
+            ));
+            match first::<bool>(held) {
+                Some(false) => continue,
+                Some(true) if restrict => continue,
+                _ => {}
+            }
+            erase_class(c, subject, class, *years, restrict, None, date, year);
+            done += 1;
+        }
+        done
+    })
 }
 
 thread_local! {
@@ -238,10 +301,11 @@ fn redact(c: &mut SpiClient<'_>, subject: &str, class: &str) {
     spi(c.update("SELECT cella.redact($1, $2)", None, &[subject.into(), class.into()]));
 }
 
-fn tombstone(c: &mut SpiClient<'_>, subject: &str, class: &str, receipt: i64, date: &str, restricted: bool) {
+fn tombstone(c: &mut SpiClient<'_>, subject: &str, class: &str, receipt: Option<i64>, date: &str, restricted: bool) {
     spi(c.update(
         "INSERT INTO vault.erased (subject, class, receipt, date, restricted) VALUES ($1, $2, $3, $4::date, $5)
-         ON CONFLICT (subject, class) DO UPDATE SET receipt = $3, date = $4::date, restricted = vault.erased.restricted AND $5",
+         ON CONFLICT (subject, class) DO UPDATE
+         SET receipt = coalesce($3, vault.erased.receipt), date = $4::date, restricted = vault.erased.restricted AND $5",
         None,
         &[subject.into(), class.into(), receipt.into(), date.into(), restricted.into()],
     ));
@@ -312,7 +376,13 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
             None,
             &[year.into()],
         ))
-        .map(|r| (spi(r.get::<String>(1)).unwrap_or_default(), spi(r.get::<String>(2)).unwrap_or_default(), spi(r.get::<i32>(3)).unwrap_or_default()))
+        .map(|r| {
+            (
+                spi(r.get::<String>(1)).unwrap_or_default(),
+                spi(r.get::<String>(2)).unwrap_or_default(),
+                spi(r.get::<i32>(3)).unwrap_or_default(),
+            )
+        })
         .collect();
         let due: Vec<(String, String)> = spi(c.select(
             "SELECT e.subject, e.class FROM vault.erased e JOIN cella.retention r ON r.class = e.class
@@ -347,7 +417,11 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
                     &[subject.clone().into(), class.clone().into()],
                 ));
                 destroyed += first::<i64>(left).unwrap_or(0);
-                spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.clone().into(), class.clone().into()]));
+                spi(c.update(
+                    "DELETE FROM vault.key WHERE subject = $1 AND class = $2",
+                    None,
+                    &[subject.clone().into(), class.clone().into()],
+                ));
                 redact(c, &subject, &class);
                 spi(c.update(
                     "UPDATE vault.erased SET restricted = false WHERE subject = $1 AND class = $2",

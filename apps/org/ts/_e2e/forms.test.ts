@@ -6,9 +6,11 @@
 // proposed; an ordinary assembly's motion ending one default and
 // replacing another with Lanterne's own marks each left, by its action,
 // on the motion's page, the circle's and in the statutes generated anew;
-// and a later update of the form marks a default taken as updated,
-// restores none left and changes no policy, its new wording taken only by
-// a motion. Run by `cella test e2e forms`.
+// one taking a default with its friendly wording padded or left empty
+// stands taken, and the circle's page marks it Default; and a later
+// update of the form marks a default taken as updated, restores none
+// left and changes no policy, its new wording taken only by a motion.
+// Run by `cella test e2e forms`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -60,6 +62,8 @@ const standing = async () =>
   )
 
 const workShare = "At least {work_share: 25 % | more is stricter} of each year's surplus goes to all the employees as the work share"
+const reserves = "At least {reserve_share: 15 % | more is stricter} of each year's surplus goes to the reserves"
+const excluding = 'The {circle: ag} circle holds {power: exclude-member}, to exclude a member, by motion'
 const admitting = 'The {circle: ag} circle holds {power: admit-member}, to admit members, by motion'
 
 let leaving = ''
@@ -169,6 +173,60 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   assert.ok(lines.includes(`Leaves the SCOP SARL, France default, by ${motion}/2: At least 25 % of each year's surplus goes to all the employees as the work share.`))
   assert.ok(lines.includes('At least 40 % of each year\'s surplus goes to all the employees as the work share'))
   assert.ok(!lines.includes('These statutes leave none of their legal form\'s defaults.'))
+})
+
+test('a policy taking a default with its friendly wording padded or left empty stands taken, and the circle\'s page marks it Default', async () => {
+  const { motion } = settled(
+    await propose(
+      {
+        circle: 'ag',
+        title: 'The reserves and exclusion, as the form words them',
+        deadline: '2026-11-28',
+        body: '',
+        actions: [
+          { kind: 'policy', args: { kind: 'rule', wording: reserves, friendly: '  At least 15 % of the surplus is kept in reserve.  ', takes: 'scop-sarl-fr:reserves', replaces: 'm-2021-001/73' } },
+          { kind: 'policy', args: { kind: 'mandate', wording: excluding, friendly: '', takes: 'scop-sarl-fr:exclude-member', replaces: 'm-2021-001/49' } },
+        ],
+      },
+      as(camille),
+    ),
+  )
+  for (const member of assembly) settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+  await on('2026-11-28')
+  settled(await close({ motion }, as(camille)))
+  const then = await react('motion:motion:close', { motion }, as(camille))
+  const states = (ds: typeof then): string[] => ds.flatMap((d) => [`${d.op} ${d.state} ${d.reason ?? ''}`.trim(), ...states(d.then)])
+  assert.ok(states(then).every((s) => s.includes(' settled')), states(then).join('\n'))
+
+  // Each is hashed as its wordings are kept, the default's hash.
+  assert.deepEqual(
+    await all(
+      `SELECT p.id, w.friendly, p.hash = d.hash AS as_default, p.hash = policy.hash(w.legal, w.friendly) AS as_kept
+       FROM policy.policy p JOIN policy.wording w ON w.policy = p.id JOIN policy.default d ON d.id = p.takes
+       WHERE p.motion = $1 ORDER BY p.id`,
+      [motion],
+    ),
+    [
+      { id: `${motion}/1`, friendly: 'At least 15 % of the surplus is kept in reserve.', as_default: true, as_kept: true },
+      { id: `${motion}/2`, friendly: null, as_default: true, as_kept: true },
+    ],
+  )
+  assert.deepEqual(
+    await all(`SELECT id, standing, policy FROM policy.standing('ag', '2026-11-28') WHERE id IN ('scop-sarl-fr:reserves', 'scop-sarl-fr:exclude-member') ORDER BY id`),
+    [
+      { id: 'scop-sarl-fr:exclude-member', standing: 'taken', policy: `${motion}/2` },
+      { id: 'scop-sarl-fr:reserves', standing: 'taken', policy: `${motion}/1` },
+    ],
+  )
+  // The circle's page marks each Default, never Default since updated.
+  const circle = await circles.proposing(app, 'ag')
+  assert.deepEqual(
+    circle?.policies.filter((p) => p.motion === motion).map((p) => [p.id, p.takes, p.outdated]),
+    [
+      [`${motion}/1`, 'scop-sarl-fr:reserves', false],
+      [`${motion}/2`, 'scop-sarl-fr:exclude-member', false],
+    ],
+  )
 })
 
 test('a later update of the form marks a default taken as updated, restores none left, and its new wording is taken only by a motion', async () => {

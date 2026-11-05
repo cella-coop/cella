@@ -25,47 +25,54 @@ LANGUAGE sql STABLE
 RETURN EXISTS (SELECT FROM circle.seated(sits_in.circle, sits_in.day) s WHERE s = sits_in.person)
   AND membership.counts(sits_in.person, sits_in.circle, sits_in.day);
 
--- A power is held, and a circle's channel kept, by a seat that counts.
--- Every seat holds its circle's participant role beside its own, so the
--- participant's mandates are found on any seat; the guard that knows the
+-- The mandates in force a person holds on a day by their seats, each
+-- with the circle of the seat it is held by: on every seat that counts
+-- and has begun and not ended, its role's and the participant role's,
+-- which every seat holds beside its own, so a seat with no role still
+-- holds the participant's, once for each circle the person sits in. It
+-- is the one place the seats and the mandates are joined: `may` and
+-- `covered` ask it, and a person's page lists it.
+CREATE FUNCTION membership.holds(person text, day date) RETURNS TABLE (mandate bigint, circle text)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT DISTINCT m.id, p.circle
+  FROM circle.seat p
+  JOIN circle.mandate m ON m.grantee = p.role OR m.grantee = 'participant'
+  WHERE p.member = holds.person
+    AND membership.counts(p.member, p.circle, holds.day)
+    AND (p.since IS NULL OR p.since <= holds.day)
+    AND (p.until IS NULL OR p.until > holds.day)
+    AND (m."from" IS NULL OR m."from" <= holds.day)
+    AND (m.until IS NULL OR m.until > holds.day)
+    AND (m.revoked IS NULL OR m.revoked > holds.day);
+END;
+
+-- A power is held, and a circle's channel kept, by a mandate the person
+-- holds (`holds`) whose scope covers the record from its seat's circle:
+-- the participant's are found on any seat, and the guard that knows the
 -- circle a write concerns holds them to a seat there (`sits`).
 CREATE OR REPLACE FUNCTION membership.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
-    SELECT FROM circle.seat p
-    JOIN circle.mandate m ON m.grantee = p.role OR m.grantee = 'participant'
-    WHERE p.member = may.actor
-      AND membership.counts(p.member, p.circle, may.day)
-      AND m.power = may.power
-      AND circle.covers(m.scope, p.circle, may.about)
-      AND (p.since IS NULL OR p.since <= may.day)
-      AND (p.until IS NULL OR p.until > may.day)
-      AND (m."from" IS NULL OR m."from" <= may.day)
-      AND (m.until IS NULL OR m.until > may.day)
-      AND (m.revoked IS NULL OR m.revoked > may.day)
+    SELECT FROM membership.holds(may.actor, may.day) h
+    JOIN circle.mandate m ON m.id = h.mandate
+    WHERE m.power = may.power
+      AND circle.covers(m.scope, h.circle, may.about)
       AND (m."limit" IS NULL OR may.cents IS NULL OR may.cents <= cella.cents(m."limit"))
   );
 END;
 
--- The circles a power's mandates cover follow the same seats: any seat
--- that counts, its own role's mandates and the participant's.
+-- The circles a power's mandates cover follow the same mandates.
 CREATE OR REPLACE FUNCTION membership.covered(actor text, power text, day date) RETURNS text[]
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT ARRAY(
     SELECT DISTINCT c.id
-    FROM circle.seat p
-    JOIN circle.mandate m ON m.grantee = p.role OR m.grantee = 'participant'
-    JOIN circle.circle c ON circle.covers(m.scope, p.circle, c.id)
-    WHERE p.member = covered.actor
-      AND membership.counts(p.member, p.circle, covered.day)
-      AND m.power = covered.power
-      AND (p.since IS NULL OR p.since <= covered.day)
-      AND (p.until IS NULL OR p.until > covered.day)
-      AND (m."from" IS NULL OR m."from" <= covered.day)
-      AND (m.until IS NULL OR m.until > covered.day)
-      AND (m.revoked IS NULL OR m.revoked > covered.day)
+    FROM membership.holds(covered.actor, covered.day) h
+    JOIN circle.mandate m ON m.id = h.mandate
+    JOIN circle.circle c ON circle.covers(m.scope, h.circle, c.id)
+    WHERE m.power = covered.power
     ORDER BY c.id
   );
 END;

@@ -111,7 +111,13 @@ sequenceDiagram
   signed votes, and anyone holding the log can compute it again.
 - **The verdict and its state change commit in one transaction.** The
   handler opens it and begins its write, writes the state, calls
-  `cella.submit` last and commits once. A refusal raises inside `submit`
+  `cella.submit` last and commits once. It opens it only once the
+  member's device has signed, on a connection borrowed for the
+  transaction alone, so a write waiting on a person holds none. What the
+  handler read before the signature binds nothing: the guards read again
+  inside the transaction, and `submit` checks the signature, the keyring
+  and the nonce under the head lock, so a state changed in between is
+  refused, never committed stale. A refusal raises inside `submit`
   (SQLSTATE `09000`), so the transaction cannot commit it: both roll back
   and no number is used. `submit` holds the log's head lock until
   commit, so calling it last keeps ordered writes from queueing behind slow
@@ -618,8 +624,8 @@ What the build does not yet do, and what lifts each:
   digest, and the journal's receipt still names who drew an amount. The
   log read by role lifts this.
 - **A write's run lives in one server process.** It waits for each
-  signature up to a minute, holding a database connection, and goes with
-  the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
+  signature up to a minute, holding no database connection while it
+  waits, and goes with the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
   names the key, as `cella serve` does.
 - **The analytics shell knows no reader.** Its token opens every
   published view, declared personal columns among them, to whoever holds

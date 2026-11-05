@@ -1,5 +1,5 @@
 import { error, fail, type RequestEvent } from '@sveltejs/kit'
-import type { Done, Form, Upload } from '@cella/org-db'
+import { lent, type Done, type Form, type Upload } from '@cella/org-db'
 import { scope } from '@cella/org-log/api'
 import { using } from './db.ts'
 import { answered, proof, relay, type Ask } from './relay.ts'
@@ -40,7 +40,9 @@ export function reason(e: unknown): string {
 // One write from a page: the action the collection's slices name, run as
 // the signed-in member and signed by their device through the relay, then
 // the reactions to it if it settled. A refusal or a failure is a 4xx, so
-// the form keeps what was typed. The post that starts it, and each post
+// the form keeps what was typed. The run holds no connection while it
+// waits on a signature: its reads borrow one each, and each write one for
+// its transaction once it is signed. The post that starts it, and each post
 // carrying a proof back, is answered with the run's next step: what the
 // device is to sign, or the outcome.
 export async function perform(event: RequestEvent, collection: string, name: string, id?: string) {
@@ -64,22 +66,20 @@ export async function perform(event: RequestEvent, collection: string, name: str
     return fail(503, { done: { op: write.op, state: 'failed', reason: 'the database names no scope', then: [] } satisfies Done })
   }
   return step(
-    relay(owner, { scope: address, actor: s.actor, device: s.device }, (sign) =>
-      using(s.actor, async (db) => {
-        const deps = { db, actor: s.actor, sign }
-        let result: Awaited<ReturnType<typeof write.run>>
-        try {
-          result = await write.run(form, deps, id)
-        } catch (e) {
-          return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
-        }
-        const { done, request } = result
-        if (done.state === 'settled') {
-          done.then.push(...(await react(write.op, request, deps)))
-        }
-        return done.state === 'refused' ? fail(422, { done }) : { done }
-      }),
-    ),
+    relay(owner, { scope: address, actor: s.actor, device: s.device }, async (sign) => {
+      const deps = { ...lent((fn) => using(s.actor, fn)), actor: s.actor, sign }
+      let result: Awaited<ReturnType<typeof write.run>>
+      try {
+        result = await write.run(form, deps, id)
+      } catch (e) {
+        return fail(400, { done: { op: write.op, state: 'failed', reason: reason(e), then: [] } satisfies Done })
+      }
+      const { done, request } = result
+      if (done.state === 'settled') {
+        done.then.push(...(await react(write.op, request, deps)))
+      }
+      return done.state === 'refused' ? fail(422, { done }) : { done }
+    }),
   )
 }
 

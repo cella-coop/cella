@@ -1,4 +1,4 @@
-import type { Db, Deps } from './index.ts'
+import type { Borrow, Db, Deps } from './index.ts'
 import { done, type Done, type Imported } from './slice.ts'
 
 // What one record of an imported file came to: the line it was read
@@ -17,13 +17,20 @@ const undone = (db: Db): Db => ({
   query: <R>(text: string, values?: unknown[]) => db.query<R>(text.trim() === 'COMMIT' ? 'ROLLBACK' : text, values),
 })
 
+// The deps of a dry run: every connection its writes' transactions run
+// on, lent or held, rolls back where it would commit.
+const undoing = (deps: Deps): Deps => {
+  const { borrow } = deps
+  return { ...deps, db: undone(deps.db), ...(borrow ? { borrow: ((fn) => borrow((db) => fn(undone(db)))) as Borrow } : {}) }
+}
+
 // Runs an imported file's records as writes, in the file's order, as the
 // importing member: each settles, or is refused with the guard's reason,
 // alone. A dry run makes each write and undoes it, so it says what would
 // be created and what refused, each line judged on the co-op as it
 // stands; a settled line names no entry, since none stays.
 export async function importing(records: Imported[], deps: Deps, dry: boolean): Promise<Line[]> {
-  const db = dry ? undone(deps.db) : deps.db
+  const as = dry ? undoing(deps) : deps
   const lines: Line[] = []
   for (const r of records) {
     const line = { line: r.line, label: r.label }
@@ -32,7 +39,7 @@ export async function importing(records: Imported[], deps: Deps, dry: boolean): 
       continue
     }
     try {
-      const made = done(r.op, await r.run({ ...deps, db }))
+      const made = done(r.op, await r.run(as))
       lines.push({ ...line, done: dry ? { ...made, entry: undefined } : made })
     } catch (e) {
       lines.push({ ...line, done: { op: r.op, state: 'failed', reason: (e as Error).message, then: [] } })

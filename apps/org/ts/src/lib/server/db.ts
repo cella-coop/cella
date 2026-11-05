@@ -3,11 +3,12 @@ import { DATABASE_URL } from '$app/env/private'
 import type { Db } from '@cella/org-db'
 
 // The app's connections, as the app role: it reads the feats' schemas and
-// submits writes; it never writes the log itself. Each request holds one
-// connection, which a write's transaction needs. Whatever role the URL
-// logs in as, such as the owner `cella serve --prod` migrates with, every
-// connection acts as `cella_app`, so the row-level policies hold: an
-// owner or a superuser would read past them.
+// submits writes; it never writes the log itself. A request borrows a
+// connection for each read and each write's transaction, and holds none
+// while a write waits on its signer (`lent` in `@cella/org-db`). Whatever
+// role the URL logs in as, such as the owner `cella serve --prod`
+// migrates with, every connection acts as `cella_app`, so the row-level
+// policies hold: an owner or a superuser would read past them.
 const pool = new pg.Pool({ connectionString: DATABASE_URL, user: DATABASE_URL ? undefined : 'cella_app', max: 8 })
 
 const reads = `SELECT set_config('role', 'cella_app', false), set_config('cella.actor', $1, false)`

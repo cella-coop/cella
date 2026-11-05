@@ -3,7 +3,8 @@
 // of the account feat's values is refused unless they make sound terms
 // replacing those that govern, and one ending a rule terms copy is
 // refused; copying terms cites the motion that adopted the rule, never
-// another. That the motion passed is membership-motion's, not
+// another; a capital write cites a motion that admitted or excluded its
+// own member. That the motion passed is membership-motion's, not
 // migrated here. Run by `cella test slice account-motion`.
 
 import { after, before, test } from 'node:test'
@@ -60,4 +61,34 @@ test('copying terms cites the motion that adopted the rule, never another', asyn
 
 test('the op cites a motion, so the roll\'s guard attaches to it', async () => {
   assert.deepEqual((await db.query(`SELECT owner FROM motion.cites WHERE op = 'account:terms:adopt'`)).rows, [{ owner: 'account-motion' }])
+})
+
+test('a subscription, a withdrawal or a freeze cites a motion that admitted or excluded its own member, never another\'s', async () => {
+  // The kinds membership-motion registers, not migrated here.
+  await db.query(`SELECT motion.register_carries('admit', 'Admit a member', '[]', 'membership:member:admit', 'membership-motion')`)
+  await db.query(`SELECT motion.register_carries('exclude', 'Exclude a member', '[]', 'membership:member:exclude', 'membership-motion')`)
+  await decide('m-6')
+  await move('m-6', 1, { member: 'ada@lanterne.coop', shares: 20 }, 'admit')
+  await decide('m-7')
+  await move('m-7', 1, { member: 'bo@lanterne.coop' }, 'exclude')
+
+  assert.equal(await guard('account_motion.admits', { motion: 'm-6', member: 'ada@lanterne.coop' }), null)
+  assert.equal(await guard('account_motion.admits', { motion: 'm-6', member: 'cy@lanterne.coop' }), 'm-6 does not admit cy@lanterne.coop')
+  assert.equal(await guard('account_motion.admits', { motion: 'm-7', member: 'bo@lanterne.coop' }), 'm-7 does not admit bo@lanterne.coop', 'an exclusion admits no one')
+  assert.equal(await guard('account_motion.admits', { motion: 'm-9', member: 'ada@lanterne.coop' }), 'no motion m-9')
+
+  assert.equal(await guard('account_motion.excludes', { motion: 'm-7', member: 'bo@lanterne.coop' }), null)
+  assert.equal(await guard('account_motion.excludes', { motion: 'm-7', holder: 'bo@lanterne.coop' }), null)
+  assert.equal(await guard('account_motion.excludes', { motion: 'm-7', member: 'cy@lanterne.coop' }), 'm-7 does not exclude cy@lanterne.coop')
+  assert.equal(await guard('account_motion.excludes', { motion: 'm-7', holder: 'cy@lanterne.coop' }), 'm-7 does not exclude cy@lanterne.coop')
+  assert.equal(await guard('account_motion.excludes', { motion: 'm-6', holder: 'ada@lanterne.coop' }), 'm-6 does not exclude ada@lanterne.coop', 'an admission excludes no one')
+
+  const guards = (await db.query<{ op: string; fn: string }>(
+    `SELECT op, fn::text FROM cella.guard WHERE owner = 'account-motion' AND op IN ('account:capital:subscribe', 'account:capital:withdraw', 'account:account:freeze') ORDER BY op`,
+  )).rows
+  assert.deepEqual(guards, [
+    { op: 'account:account:freeze', fn: 'account_motion.excludes(jsonb)' },
+    { op: 'account:capital:subscribe', fn: 'account_motion.admits(jsonb)' },
+    { op: 'account:capital:withdraw', fn: 'account_motion.excludes(jsonb)' },
+  ])
 })

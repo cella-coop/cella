@@ -138,7 +138,7 @@ test('m-2026-012 admits Inès, and the subscription it carries, signed by Camill
   )
   const logged = await one<{ op: string; actor: string; guards: { owner: string }[] }>('SELECT op, actor, guards FROM cella.log WHERE n = $1', [then[0].then[0].entry])
   assert.deepEqual({ op: logged.op, actor: logged.actor }, { op: 'account:capital:subscribe', actor: camille })
-  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'membership-motion', 'motion'])
+  assert.deepEqual([...new Set(logged.guards.map((g) => g.owner))].sort(), ['account-membership-transaction', 'account-motion', 'membership-motion', 'motion'])
   const s = await one<{ account: string; entry: string }>('SELECT account, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.equal(s.account, '101312')
   assert.deepEqual(await lines(s.entry), [

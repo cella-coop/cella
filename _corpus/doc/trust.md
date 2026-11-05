@@ -48,7 +48,11 @@ signed by the member who closed the motion, by their device, citing it,
 and judged by its own guards, by `membership-motion`'s that
 the motion it cites closed and passed, and by the motion feat's that
 the motion's circle holds, on the verdict date, a collective mandate
-for the action's power; what follows a carried action,
+for the action's power. The graft that registers a cited action binds it
+to its subject where the motion's own action names one: a subscription,
+a withdrawal or a freeze of capital is accepted only on a motion that
+admitted or excluded the member it names, as terms are copied only from
+the rule their motion adopted. What follows a carried action,
 such as the freeze and the withdrawal of capital that follow an exit,
 is a write after it the same way. Each has its own log entry. A
 motion's admissions alone settle inside its close, with the seats they

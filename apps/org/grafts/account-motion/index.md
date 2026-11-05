@@ -1,6 +1,6 @@
 +++
 title = "account-motion"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The statutes' capital terms, a rule the members adopt by motion, and the
@@ -22,11 +22,11 @@ which this graft reads.
   `account:capital:withdraw`, with the powers their motion's own action
   needs, `exclude-member`, `admit-member` and `exclude-member`, so each
   settles only once the motion it cites closed and passed, and its
-  circle holds the power. Whether that motion admitted or excluded the
-  member it names is not checked: no graft joins account, membership and
-  motion; the guards of `account-membership` and
-  `account-membership-transaction` check that the member was admitted or
-  has left.
+  circle holds the power; `account_motion.admits` and
+  `account_motion.excludes` hold each to the member the motion admitted
+  or excluded. That the member is active or
+  has left is the guards' of `account-membership` and
+  `account-membership-transaction`.
 
 The app role and the guards role may use the schema.
 
@@ -40,6 +40,16 @@ The app role and the guards role may use the schema.
   would end is one terms copy, since terms are replaced, never ended.
 - `account_motion.adopts`, on `account:terms:adopt`: the cited motion
   adopted the rule the terms copy.
+- `account_motion.admits`, on `account:capital:subscribe`: the cited
+  motion carries an action admitting the member who subscribes, read
+  from the motion feat's `motion.action`, its kind and its `member`;
+  one that admitted someone else is refused, `<motion> does not admit
+  <member>`.
+- `account_motion.excludes`, on `account:capital:withdraw` and
+  `account:account:freeze`: the cited motion carries an action
+  excluding the member whose capital is withdrawn, or the `holder`
+  whose accounts are frozen; one that excluded someone else is refused,
+  `<motion> does not exclude <member>`.
 
 ## Reaction
 
@@ -55,7 +65,9 @@ action, `n`, so the reaction reads the policy it adopted.
 `ts/_tests/terms.test.ts` (`cella test slice account-motion`): a
 proposal adopts a capital rule only as sound terms, replacing those that
 govern, and ends none; copying terms cites the motion that adopted the
-rule, never another; the action cites a motion. The e2e scenario
+rule, never another; the action cites a motion; a subscription, a
+withdrawal or a freeze cites a motion that admitted or excluded its own
+member, never another's. The e2e scenario
 `capital` adopts new terms by motion and refuses a subscription under
 them.
 

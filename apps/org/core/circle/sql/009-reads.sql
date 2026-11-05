@@ -20,13 +20,23 @@ RETURN ARRAY(
   ORDER BY c
 );
 
--- Every table a feat or a graft makes that names its owning circle is
--- under row-level security for the app role as it is made: the policy
--- `circle` lets a reader see a row of a circle they read in, the feats
--- whose table it is read from its schema's name, a graft's each feat it
--- joins; a write's transaction sees the whole (`cella.sees`), and the
--- guards role reads the whole. A table a person's data is in drops
--- `circle` for a policy of its own, which `read` opens nothing of.
+-- The schemas of core and the notary, whose tables no slice makes.
+CREATE FUNCTION circle.cored(schema text) RETURNS boolean
+LANGUAGE sql IMMUTABLE
+RETURN schema IN ('cella', 'vault', 'migration', 'public', 'information_schema', 'circle', 'policy', 'analytics')
+  OR schema LIKE 'pg\_%';
+
+-- Every table a feat or a graft makes is under row-level security as it
+-- is made, enabled and forced, so its owner too is under its policies
+-- unless it is a superuser, whom Postgres exempts from every one. A table
+-- that names its owning circle takes the policy `circle`, which lets a
+-- reader see a row of a circle they read in, the feats whose table it is
+-- read from its schema's name, a graft's each feat it joins; a write's
+-- transaction sees the whole (`cella.sees`), and the guards role reads
+-- the whole. A table a person's data is in drops `circle` for a policy of
+-- its own, which `read` opens nothing of. A table that names none is a
+-- registry, the same in every scope (`feat-check` refuses any other), and
+-- takes the policy `registry`, which every reader reads.
 CREATE FUNCTION circle.scoped() RETURNS event_trigger LANGUAGE plpgsql
 SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
@@ -36,20 +46,23 @@ BEGIN
     SELECT DISTINCT d.objid::regclass AS t, d.schema_name AS s
     FROM pg_event_trigger_ddl_commands() d
     WHERE d.object_type = 'table' AND NOT d.in_extension
-      AND d.schema_name NOT IN ('cella', 'vault', 'migration', 'public', 'information_schema', 'circle', 'policy', 'analytics')
-      AND d.schema_name NOT LIKE 'pg\_%'
-      AND EXISTS (
-        SELECT FROM pg_attribute a
-        WHERE a.attrelid = d.objid AND a.attname = 'circle' AND a.attnum > 0 AND NOT a.attisdropped
-      )
-      AND NOT EXISTS (SELECT FROM pg_policy p WHERE p.polrelid = d.objid AND p.polname = 'circle')
+      AND NOT circle.cored(d.schema_name)
+      AND NOT EXISTS (SELECT FROM pg_policy p WHERE p.polrelid = d.objid AND p.polname IN ('circle', 'registry'))
   LOOP
-    EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY', made.t);
-    EXECUTE format(
-      'CREATE POLICY circle ON %s TO cella_app USING ((SELECT cella.sees(%L)) OR circle = ANY ((SELECT circle.reads(%L))::text[])) WITH CHECK (true)',
-      made.t, made.s, string_to_array(made.s, '_')
-    );
-    EXECUTE format('CREATE POLICY circle_guards ON %s FOR SELECT TO cella_guards USING (true)', made.t);
+    EXECUTE format('ALTER TABLE %s ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY', made.t);
+    IF EXISTS (
+      SELECT FROM pg_attribute a
+      WHERE a.attrelid = made.t AND a.attname = 'circle' AND a.attnum > 0 AND NOT a.attisdropped
+    ) THEN
+      EXECUTE format(
+        'CREATE POLICY circle ON %s TO cella_app USING ((SELECT cella.sees(%L)) OR circle = ANY ((SELECT circle.reads(%L))::text[])) WITH CHECK (true)',
+        made.t, made.s, string_to_array(made.s, '_')
+      );
+      EXECUTE format('CREATE POLICY circle_guards ON %s FOR SELECT TO cella_guards USING (true)', made.t);
+    ELSE
+      EXECUTE format('CREATE POLICY registry ON %s TO cella_app USING (true) WITH CHECK (true)', made.t);
+      EXECUTE format('CREATE POLICY registry_guards ON %s FOR SELECT TO cella_guards USING (true)', made.t);
+    END IF;
   END LOOP;
 END
 $$;
@@ -58,3 +71,28 @@ REVOKE EXECUTE ON FUNCTION circle.scoped() FROM PUBLIC;
 CREATE EVENT TRIGGER scoped ON ddl_command_end
   WHEN TAG IN ('CREATE TABLE')
   EXECUTE FUNCTION circle.scoped();
+
+-- The tables of the feats and the grafts that escape the reading rule:
+-- each not under row-level security, enabled and forced, or with no
+-- policy by which the app role reads it. `cella migrate` fails a run that
+-- leaves any.
+CREATE FUNCTION circle.unsecured() RETURNS SETOF text
+LANGUAGE sql STABLE
+SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT c.oid::regclass::text || CASE
+      WHEN NOT c.relrowsecurity THEN ' is not under row-level security'
+      WHEN NOT c.relforcerowsecurity THEN ' does not force row-level security'
+      ELSE ' has no policy the app role reads by'
+    END
+  FROM pg_class c
+  JOIN pg_namespace n ON n.oid = c.relnamespace
+  WHERE c.relkind IN ('r', 'p') AND NOT circle.cored(n.nspname)
+    AND NOT EXISTS (SELECT FROM pg_depend d WHERE d.objid = c.oid AND d.deptype = 'e')
+    AND (NOT c.relrowsecurity OR NOT c.relforcerowsecurity OR NOT EXISTS (
+      SELECT FROM pg_policy p
+      WHERE p.polrelid = c.oid AND p.polpermissive AND p.polcmd IN ('r', '*')
+        AND (p.polroles = '{0}' OR (SELECT oid FROM pg_roles WHERE rolname = 'cella_app') = ANY (p.polroles))
+    ))
+  ORDER BY 1;
+END;

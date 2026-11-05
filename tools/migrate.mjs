@@ -28,6 +28,10 @@
 // in its own schema: `analytics.head`, the log's head; and so do core's
 // circles, in theirs.
 //
+// Then every table a feat or a graft makes is read for the reading rule:
+// a run that leaves one not under row-level security, enabled and forced,
+// or with no policy the app role reads it by, fails (`circle.unsecured`).
+//
 // The run is one transaction, from the drop to the last read as the role:
 // a migration or a contract that fails rolls it all back, so the database
 // keeps the migrations it had and the views published before, and the
@@ -228,6 +232,15 @@ if (republish) {
     await publish()
   } catch (e) {
     await fail(e.message)
+  }
+}
+// Every table a feat or a graft makes is under row-level security,
+// forced, with a policy the app role reads it by, as core's circles make
+// it: a run that leaves one escaping fails.
+if ((await db.query(`SELECT to_regprocedure('circle.unsecured()') AS f`)).rows[0].f) {
+  const unsecured = (await db.query('SELECT circle.unsecured() AS t')).rows.map((r) => r.t)
+  if (unsecured.length) {
+    await fail(unsecured.join('\nmigrate: '))
   }
 }
 try {

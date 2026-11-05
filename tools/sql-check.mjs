@@ -45,6 +45,11 @@
 //     collected (`found.foreign`) and refused (writes.mjs).
 //   - grants nothing to cella_analytics, which `cella migrate` grants
 //     only the views the slices publish.
+//   - never disables nor unforces row-level security, which core's
+//     circles put every table under as it is made; reads a table that
+//     drops core's policy `circle` by a policy of its own; and makes no
+//     policy that reads but by a known pattern (`pattern`), or one
+//     opening rows to every reader commented 'shared: why' (`unread`).
 // A slice's analytical contract, its sql/analytics.sql, holds only views
 // in its own schema and comments on them. A view reads as its owner, never
 // security_invoker, so the role needs no grant on a table, and it shares:
@@ -289,6 +294,130 @@ export function unowned(found) {
     .map((t) => `${t.path}: ${t.key} names no owning circle: give it circle text NOT NULL REFERENCES circle.circle, or comment it 'registry: why'`)
 }
 
+// A row-level policy a slice makes, by its table and name: whether it
+// reads (FOR SELECT or ALL, permissive), whether it is the guards role's
+// alone, and whether its test is of a known pattern.
+function policy(b, s, found) {
+  const table = `${b.table.schemaname}.${b.table.relname}`
+  const roles = (b.roles ?? []).map((r) => (r.RoleSpec?.roletype === 'ROLESPEC_PUBLIC' ? 'public' : r.RoleSpec?.rolename))
+  const map = (found.policies ??= new Map()).get(table) ?? new Map()
+  found.policies.set(table, map)
+  map.set(b.policy_name, {
+    name: b.policy_name,
+    path: found.at,
+    reads: ['all', 'select'].includes(b.cmd_name) && b.permissive === true,
+    guards: roles.length > 0 && roles.every((r) => r === 'cella_guards'),
+    known: b.qual ? pattern(b.qual, s, found) : false,
+  })
+}
+
+// Whether a policy's test is of a known pattern (architecture.md,
+// "Reading"): an OR of the terms below, each opening no more than a
+// mandate, the reader's own row or a graft's reach does. An AND reads no
+// more than any of its parts, so it is known where one part is.
+//   (SELECT cella.sees('<feat>'))           a write's transaction
+//   (SELECT cella.writing())                the same, on a secret ballot
+//   circle = ANY ((SELECT cella.circles('<feat>'))::text[])
+//   circle = ANY ((SELECT circle.reads('{<feat>,…}'))::text[])
+//   <column> = cella.reader()               the reader's own rows, or
+//   cella.reader() IN (<column>, …)         those of any of its columns
+//   cella.reaches('<feat>', <column>)       a graft's reach
+//   EXISTS (SELECT FROM <its own table> …)  a row of a table of its own,
+//                                           read under that table's policy
+// where '<feat>' is the slice's own name or, a graft's, a feat it joins.
+function pattern(qual, s, found) {
+  const names = new Set([s.own, ...s.feats])
+  const lit = (n) => n?.A_Const?.sval?.sval
+  const call = (n) => (n?.FuncCall ? { fn: strings(n.FuncCall.funcname).join('.'), args: n.FuncCall.args ?? [] } : null)
+  const asked = (n) => {
+    const q = n?.SubLink?.subLinkType === 'EXPR_SUBLINK' ? n.SubLink.subselect?.SelectStmt : null
+    return q && !q.fromClause && q.targetList?.length === 1 ? call(q.targetList[0].ResTarget?.val) : null
+  }
+  const column = (n, name) => {
+    const f = strings(n?.ColumnRef?.fields)
+    return f.length > 0 && (!name || f.at(-1) === name)
+  }
+  const reader = (n) => call(n)?.fn === 'cella.reader' && call(n).args.length === 0
+  const own = new Set((found.tables ?? []).filter((t) => t.key.split('.')[0] === s.own).map((t) => t.key))
+  const term = (n) => {
+    const bool = n?.BoolExpr
+    if (bool?.boolop === 'OR_EXPR') {
+      return bool.args.every(term)
+    }
+    if (bool?.boolop === 'AND_EXPR') {
+      return bool.args.some(term)
+    }
+    const a = asked(n)
+    if (a?.fn === 'cella.sees' && a.args.length === 1 && names.has(lit(a.args[0]))) {
+      return true
+    }
+    if (a?.fn === 'cella.writing' && a.args.length === 0) {
+      return true
+    }
+    const e = n?.A_Expr
+    if (e?.kind === 'AEXPR_OP_ANY' && strings(e.name).join() === '=' && column(e.lexpr, 'circle')) {
+      const r = asked(e.rexpr?.TypeCast?.arg)
+      const feats = (lit(r?.args[0]) ?? '').match(/^\{(.+)\}$/)?.[1].split(',') ?? []
+      if (r?.fn === 'cella.circles' && r.args.length === 1 && names.has(lit(r.args[0]))) {
+        return true
+      }
+      if (r?.fn === 'circle.reads' && r.args.length === 1 && feats.length && feats.every((f) => names.has(f))) {
+        return true
+      }
+    }
+    if (e?.kind === 'AEXPR_OP' && strings(e.name).join() === '=' && ((column(e.lexpr) && reader(e.rexpr)) || (reader(e.lexpr) && column(e.rexpr)))) {
+      return true
+    }
+    if (e?.kind === 'AEXPR_IN' && strings(e.name).join() === '=' && reader(e.lexpr) && (e.rexpr?.List?.items ?? []).every((x) => column(x))) {
+      return true
+    }
+    const c = call(n)
+    if (c?.fn === 'cella.reaches' && c.args.length === 2 && names.has(lit(c.args[0])) && column(c.args[1])) {
+      return true
+    }
+    if (n?.SubLink?.subLinkType === 'EXISTS_SUBLINK') {
+      let plain = true
+      walk(n.SubLink.subselect, (key, x) => {
+        if (key === 'RangeVar' && !own.has(`${x.schemaname}.${x.relname}`)) {
+          plain = false
+        }
+        if ((key === 'FuncCall' && strings(x.funcname).join('.') !== 'cella.reader') || key === 'RangeFunction' || key === 'SubLink') {
+          plain = false
+        }
+      })
+      return plain
+    }
+    return false
+  }
+  return term(qual)
+}
+
+// The tables of a feat or a graft that no reader reads by a policy of a
+// known pattern, and the policies that read by none (architecture.md,
+// "Reading"). Core's circles put each table under row-level security,
+// forced, as it is made: a table naming its owning circle under the
+// policy `circle`, which a slice may drop for its own, and a registry
+// under `registry`, which every reader reads. A slice's policy that reads
+// is of a known pattern, or opens rows to every reader and is commented
+// 'shared: why'; the guards role's reads the whole.
+export function unread(found) {
+  const registries = found.registries ?? new Set()
+  const out = []
+  for (const t of found.tables ?? []) {
+    if (!t.owned && !registries.has(t.key)) {
+      continue
+    }
+    const own = [...(found.policies?.get(t.key)?.values() ?? [])].filter((p) => p.reads && !p.guards)
+    for (const p of own.filter((p) => !p.known && !p.shared)) {
+      out.push(`${p.path}: the policy ${p.name} on ${t.key} reads by no known pattern: read by the owning circle, the reader's own row, a graft's reach or a row of its own table, or comment it 'shared: why'`)
+    }
+    if (t.owned && found.uncircled?.has(t.key) && own.length === 0) {
+      out.push(`${t.path}: ${t.key} drops core's policy circle and has no read policy of its own: give it the personal row's (architecture.md, "Reading")`)
+    }
+  }
+  return out
+}
+
 // The motion feat's register of the ops that cite a motion, whose
 // rows mark an op as carried by a motion, with the power a collective
 // mandate of its circle grants it: the grafts that judge a cited write
@@ -375,6 +504,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
         found.secured.add(named(b.relation))
       }
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
+        for (const c of (b.cmds ?? []).map((x) => x.AlterTableCmd?.subtype).filter((x) => ['AT_DisableRowSecurity', 'AT_NoForceRowSecurity'].includes(x))) {
+          fail(`${c === 'AT_DisableRowSecurity' ? 'disables' : 'unforces'} row-level security on ${named(b.relation)}: every table a slice makes is under it, forced, as core's circles make it`)
+        }
+      }
+      if (type === 'AlterTableStmt' && o.kind !== 'core') {
         const added = (b.cmds ?? []).map((c) => c.AlterTableCmd).filter((c) => c?.subtype === 'AT_AddColumn').map((c) => c.def)
         columns(b.relation, added, found.at, found)
       }
@@ -384,6 +518,14 @@ function statement(type, b, o, s, fail, owned, named, found) {
         const parts = strings(b.object?.List?.items)
         owned(parts[0], `comments on ${parts.join('.')}`)
         ;(found.registries ??= new Set()).add(parts.join('.'))
+      }
+      if (b.objtype === 'OBJECT_POLICY' && /^shared: ./.test(b.comment ?? '')) {
+        const parts = strings(b.object?.List?.items)
+        owned(parts[0], `comments on the policy ${parts[2]} on ${parts.slice(0, 2).join('.')}`)
+        const p = found.policies?.get(parts.slice(0, 2).join('.'))?.get(parts[2])
+        if (p) {
+          p.shared = true
+        }
       }
       if (b.objtype === 'OBJECT_COLUMN') {
         const parts = strings(b.object?.List?.items)
@@ -410,6 +552,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
     }
     case 'CreatePolicyStmt':
       owned(b.table.schemaname, `creates the policy ${b.policy_name} on ${named(b.table)}`)
+      if (o.kind !== 'core') {
+        policy(b, s, found)
+      }
       for (const col of readers(b.qual)) {
         found.readers.add(`${named(b.table)}.${col}`)
       }
@@ -419,6 +564,15 @@ function statement(type, b, o, s, fail, owned, named, found) {
           found.open.add(`${named(b.table)}.${strings(n.arg.ColumnRef.fields).at(-1)}`)
         }
       })
+      break
+    case 'AlterPolicyStmt':
+      owned(b.table.schemaname, `alters the policy ${b.policy_name} on ${named(b.table)}`)
+      if (o.kind !== 'core' && b.qual) {
+        const p = found.policies?.get(named(b.table))?.get(b.policy_name)
+        if (p) {
+          p.known = pattern(b.qual, s, found)
+        }
+      }
       break
     case 'AlterFunctionStmt': {
       const f = strings(b.func?.objname)
@@ -449,6 +603,13 @@ function statement(type, b, o, s, fail, owned, named, found) {
           continue
         }
         owned(parts.length > 1 ? parts[0] : parts[0] ?? null, `drops ${parts.join('.')}`)
+        if (b.removeType === 'OBJECT_POLICY' && o.kind !== 'core') {
+          const table = parts.slice(0, 2).join('.')
+          found.policies?.get(table)?.delete(parts[2])
+          if (parts[2] === 'circle') {
+            ;(found.uncircled ??= new Set()).add(table)
+          }
+        }
       }
       break
     case 'GrantStmt':

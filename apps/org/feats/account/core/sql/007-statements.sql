@@ -130,16 +130,16 @@ spans AS (
   SELECT 'quarter', date_trunc('quarter', first)::date, interval '3 months', closed FROM months
   UNION ALL
   SELECT 'year', date_trunc('year', first)::date, interval '1 year', closed FROM months
-),
-grouped AS (
-  SELECT kind, since, length, bool_and(closed IS NOT NULL) AS closed FROM spans GROUP BY kind, since, length
 )
+-- A span's length is its kind's, so it is grouped by its kind and its
+-- first day alone.
 SELECT CASE kind WHEN 'month' THEN to_char(since, 'YYYY-MM') WHEN 'quarter' THEN to_char(since, 'YYYY-"Q"Q') ELSE to_char(since, 'YYYY') END AS id,
-       kind, since, (since + length)::date - 1 AS until,
-       CASE kind WHEN 'month' THEN to_char(since - length, 'YYYY-MM') WHEN 'quarter' THEN to_char(since - length, 'YYYY-"Q"Q') ELSE to_char(since - length, 'YYYY') END AS before,
-       (since - length)::date AS before_since, since - 1 AS before_until,
-       closed
-FROM grouped;
+       kind, since, (since + max(length))::date - 1 AS until,
+       CASE kind WHEN 'month' THEN to_char(since - max(length), 'YYYY-MM') WHEN 'quarter' THEN to_char(since - max(length), 'YYYY-"Q"Q') ELSE to_char(since - max(length), 'YYYY') END AS before,
+       (since - max(length))::date AS before_since, since - 1 AS before_until,
+       bool_and(closed IS NOT NULL) AS closed
+FROM spans
+GROUP BY kind, since;
 
 GRANT SELECT ON account.rubric, account.report TO cella_app, cella_guards;
 

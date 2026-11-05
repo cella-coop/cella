@@ -1,6 +1,6 @@
 +++
 title = "Client"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The organisations and people the co-op works for: its CRM. Companies and
@@ -142,4 +142,4 @@ client's form matters to the rate card.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `client.clients` to the analytics shell: each client, by kind and status. A client may be a person, whose name erasure redacts; their contact details are not shared.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `client.clients` to the analytics shell: each client, by kind and status. A client may be a person, whose name erasure redacts; their contact details are not shared. It is scoped by `circle`, the circle that owns the client.

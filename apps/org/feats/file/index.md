@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -113,4 +113,4 @@ on their October expenses ([the fixture](../../fixtures/lanterne/index.md)).
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `file.classes` to the analytics shell: how many files each class keeps and their size. A file is personal data whole, so only these sums are shared.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `file.classes` to the analytics shell: how many files each class keeps and their size. A file is personal data whole, so only these sums are shared. It is shared by `class`.

@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -114,4 +114,4 @@ Eight projects, one for each piece of work its clients commissioned:
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `project.projects` and `project.milestones` to the analytics shell: each project with its circle, days and budget, and its milestones.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `project.projects` and `project.milestones` to the analytics shell: each project with its circle, days and budget, and its milestones. Both are scoped by `circle`, the circle that owns the project or the milestone.

@@ -1,10 +1,12 @@
 -- The invoice-project graft's analytical contract: which project each
 -- invoice charges.
 CREATE VIEW invoice_project.charges AS
-SELECT c.invoice, c.project
+SELECT c.invoice, c.project, c.circle
 FROM invoice_project.charge c;
+COMMENT ON VIEW invoice_project.charges IS 'audience: scoped by circle';
 
 -- What each project invoiced, net of VAT and of its voided invoices.
 CREATE VIEW invoice_project.totals AS
 SELECT i.project, i.net
 FROM invoice_project.invoiced i;
+COMMENT ON VIEW invoice_project.totals IS 'audience: shared by project';

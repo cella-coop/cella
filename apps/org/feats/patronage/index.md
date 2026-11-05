@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -300,4 +300,4 @@ document.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `patronage.distributions`, `patronage.shares`, `patronage.terms_adopted` and `patronage.parts` to the analytics shell: each distribution and its split, the terms adopted, and each distribution's parts summed by basis. A worker's part is theirs, so no row is one worker's.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `patronage.distributions`, `patronage.shares`, `patronage.terms_adopted` and `patronage.parts` to the analytics shell: each distribution and its split, the terms adopted, and each distribution's parts summed by basis. A worker's part is theirs, so no row is one worker's. `patronage.distributions`, `patronage.shares` and `patronage.terms_adopted` are scoped by `circle`, the circle that owns each row, and `patronage.parts` is shared by `distribution` and `basis`.

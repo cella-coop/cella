@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -382,4 +382,4 @@ a motion's page.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `document.documents` to the analytics shell: each document, how many versions it has, when it was last saved and adopted.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `document.documents` to the analytics shell: each document, how many versions it has, when it was last saved and adopted. It is scoped by `circle`, the circle that owns the document.

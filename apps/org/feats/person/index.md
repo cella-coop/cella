@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -268,4 +268,4 @@ nothing of it is stored.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `person.people` to the analytics shell: each person by address, with their name, which erasure redacts. Contact details are not shared.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `person.people` to the analytics shell: each person by address, with their name, which erasure redacts. Contact details are not shared. It is scoped by `circle`, the circle that owns the person's row, and by `address`, whose row it is.

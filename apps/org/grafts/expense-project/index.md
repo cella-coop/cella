@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -41,4 +41,4 @@ Thomas's train to Clairval's site, Chloé's coffee to Nuvola's retainer.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_project.rebills` to the analytics shell: which project each expense is rebilled to; and `expense_project.totals`, each project's expenses, approved and reimbursed or still pending, in cents.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `expense_project.rebills` to the analytics shell: which project each expense is rebilled to; and `expense_project.totals`, each project's expenses, approved and reimbursed or still pending, in cents. `expense_project.rebills` is scoped by `circle`, the circle that owns each row, and `expense_project.totals` is shared by `project`.

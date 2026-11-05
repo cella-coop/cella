@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -87,4 +87,4 @@ October close.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `task.tasks` to the analytics shell: each task, its status, priority and days.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `task.tasks` to the analytics shell: each task, its status, priority and days. It is scoped by `circle`, the circle that owns the task.

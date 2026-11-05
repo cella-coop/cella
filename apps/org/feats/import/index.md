@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -103,4 +103,4 @@ file of each kind.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `import.runs` to the analytics shell: each run, its kind and day, and how many of its records settled and were refused.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `import.runs` to the analytics shell: each run, its kind and day, and how many of its records settled and were refused. It is scoped by `circle`, the circle that owns the run.

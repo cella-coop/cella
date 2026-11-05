@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -157,4 +157,4 @@ rent for October, 900 € and 180 €.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `bill.bills` and `bill.taxes` to the analytics shell: each supplier's bill with its figures and lifecycle, and its VAT by rate.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `bill.bills` and `bill.taxes` to the analytics shell: each supplier's bill with its figures and lifecycle, and its VAT by rate. Both are scoped by `circle`, the circle that owns the bill.

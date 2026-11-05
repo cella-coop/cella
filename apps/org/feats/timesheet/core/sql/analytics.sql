@@ -8,3 +8,4 @@ SELECT to_char(e.day, 'YYYY-MM') AS month, count(*)::bigint AS entries,
        coalesce(sum(e.minutes) FILTER (WHERE e.billable), 0)::bigint AS billable
 FROM timesheet.entry e
 GROUP BY to_char(e.day, 'YYYY-MM');
+COMMENT ON VIEW timesheet.months IS 'audience: shared by month';

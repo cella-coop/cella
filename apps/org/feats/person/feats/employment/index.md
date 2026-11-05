@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -146,4 +146,4 @@ and not yet a member.
 
 ## Analytics
 
-Its [analytical contract](../../../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `employment.workers` to the analytics shell: each worker's job, contract and days, by address; their name is the person feat's.
+Its [analytical contract](../../../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `employment.workers` to the analytics shell: each worker's job, contract and days, by address; their name is the person feat's. It is scoped by `circle`, the circle that owns the worker's row, and by `address`, whose row it is.

@@ -15,14 +15,17 @@ JOIN timesheet.entry e ON e.id = b.entry
 LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.rate x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) r ON true
 LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.cost x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) c ON true
 GROUP BY b.project, to_char(e.day, 'YYYY-MM');
+COMMENT ON VIEW project_timesheet.months IS 'audience: shared by project, month';
 
 CREATE VIEW project_timesheet.rates AS
-SELECT r.since, cella.cents(r.hourly) AS hourly
+SELECT r.since, cella.cents(r.hourly) AS hourly, r.circle
 FROM project_timesheet.rate r;
+COMMENT ON VIEW project_timesheet.rates IS 'audience: scoped by circle';
 
 CREATE VIEW project_timesheet.costs AS
-SELECT c.since, cella.cents(c.hourly) AS hourly
+SELECT c.since, cella.cents(c.hourly) AS hourly, c.circle
 FROM project_timesheet.cost c;
+COMMENT ON VIEW project_timesheet.costs IS 'audience: scoped by circle';
 
 -- Each project's burn on the scope's day, as `forecast` reads it: what its
 -- billable time spent at the billing rate and all its time cost at the
@@ -34,10 +37,10 @@ SELECT p.id AS project, cella.verdict_date() AS day, cella.cents(p.budget)::bigi
        coalesce(round(sum(t.hours * t.cost)), 0)::bigint AS cost,
        CASE WHEN cella.cents(p.budget) > 0
             THEN round(100.0 * coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0) / cella.cents(p.budget), 1) END AS burn,
-       project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()) AS elapsed,
-       CASE WHEN project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()) > 0
+       project_timesheet.elapsed(p.started, p.due, p.archived, bool_and(g.milestones > 0 AND g.completed = g.milestones), cella.verdict_date()) AS elapsed,
+       CASE WHEN project_timesheet.elapsed(p.started, p.due, p.archived, bool_and(g.milestones > 0 AND g.completed = g.milestones), cella.verdict_date()) > 0
             THEN round(coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0)
-                       / project_timesheet.elapsed(p.started, p.due, p.archived, g.milestones > 0 AND g.completed = g.milestones, cella.verdict_date()))::bigint END AS forecast
+                       / project_timesheet.elapsed(p.started, p.due, p.archived, bool_and(g.milestones > 0 AND g.completed = g.milestones), cella.verdict_date()))::bigint END AS forecast
 FROM project.project p
 JOIN project.progress g ON g.id = p.id
 LEFT JOIN (
@@ -47,4 +50,5 @@ LEFT JOIN (
   LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.rate x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) r ON true
   LEFT JOIN LATERAL (SELECT cella.cents(x.hourly) AS hourly FROM project_timesheet.cost x WHERE x.since <= e.day ORDER BY x.since DESC LIMIT 1) c ON true
 ) t ON t.project = p.id
-GROUP BY p.id, g.milestones, g.completed;
+GROUP BY p.id;
+COMMENT ON VIEW project_timesheet.forecasts IS 'audience: shared by project';

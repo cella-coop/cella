@@ -1,6 +1,6 @@
 +++
 title = "client-project"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Whom a project is for. A project without a link is the co-op's own, not
@@ -45,4 +45,4 @@ and so on.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_project.commissions` to the analytics shell: which client commissioned each project.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `client_project.commissions` to the analytics shell: which client commissioned each project. It is scoped by `circle`, the circle that owns each row.

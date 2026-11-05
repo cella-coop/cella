@@ -142,7 +142,7 @@ $$;
 -- The log's form, the payload with commitments in place of personal
 -- values, is the owner's: every other column stays everyone's.
 REVOKE SELECT ON cella.log FROM PUBLIC;
-GRANT SELECT (n, op, actor, date, payload, receipt, guards, prev, hash, sig) ON cella.log TO PUBLIC;
+GRANT SELECT (n, op, actor, date, payload, receipt, guards, prev, hash, sig, cause, cause_hash, settled) ON cella.log TO PUBLIC;
 
 -- An entry's payload, its commitments opened, for the reader who may read
 -- it: who wrote it, the person every commitment in it is about, or a holder
@@ -154,7 +154,11 @@ SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
   e record;
 BEGIN
-  SELECT l.op, l.actor, l.receipt INTO e FROM cella.log l WHERE l.n = disclosed.n;
+  -- An effect has no receipt: its commitments are its decision's, the
+  -- last entry before it with one, since a write's entries are consecutive.
+  SELECT l.op, l.actor,
+         coalesce(l.receipt, (SELECT d.receipt FROM cella.log d WHERE d.n < l.n AND d.receipt IS NOT NULL ORDER BY d.n DESC LIMIT 1)) AS receipt
+  INTO e FROM cella.log l WHERE l.n = disclosed.n;
   IF NOT FOUND OR cella.reader() IS NULL THEN
     RETURN NULL;
   END IF;

@@ -7,7 +7,7 @@
 use crate::vault;
 use crate::{CLOCK, KEY_FILE, SCOPE, TIMEZONE, UNBOUND};
 use cella_guards::hex::{hex, unhex};
-use cella_guards::log::{self, Chain, Entry, Guard, Key, Receipt, Signer};
+use cella_guards::log::{self, Basis, Chain, DEEPEST, Entry, Follows, Guard, Key, Receipt, Signer, Unfollowed, Written};
 use cella_guards::sign::{self, Request};
 use pgrx::prelude::*;
 use pgrx::spi::SpiClient;
@@ -20,6 +20,8 @@ thread_local! {
     static KEY: RefCell<Option<(String, Key)>> = const { RefCell::new(None) };
     static RECEIPT: RefCell<Option<(i64, String)>> = const { RefCell::new(None) };
     static WRITE: RefCell<Option<Context>> = const { RefCell::new(None) };
+    static WRITTEN: RefCell<Vec<(Written, pg_sys::SubTransactionId)>> = const { RefCell::new(Vec::new()) };
+    static FOLLOWS: RefCell<Vec<Follows>> = const { RefCell::new(Vec::new()) };
 }
 
 pub(crate) fn fail(msg: impl Into<String>) -> ! {
@@ -169,13 +171,16 @@ fn signer(c: &mut SpiClient<'_>, n: i64) -> i32 {
     first::<i32>(added).unwrap_or_else(|| fail("cella: the key file's key was not registered"))
 }
 
-/// The action `submit` is judging, for the guards to read through
-/// `cella.action()`, `cella.actor()` and `cella.device()`.
+/// The action `submit` or `follow` is judging, for the guards to read
+/// through `cella.action()`, `cella.actor()`, `cella.device()` and
+/// `cella.cause()`: an effect has no device, its actor is its decision's,
+/// and it names the entry it follows.
 #[derive(Clone)]
 struct Context {
     op: String,
     actor: String,
-    device: [u8; 32],
+    device: Option<[u8; 32]>,
+    cause: Option<i64>,
 }
 
 /// Holds the context while a write is judged, and clears it on return and
@@ -228,16 +233,17 @@ pub fn begin(op: &str, actor: &str, device: &[u8]) {
     if let Some(open) = begun() {
         refuse(format!("{op} is begun in a transaction that opened {} already: one write, one transaction", open.op), at_begin());
     }
-    let write = Context { op: op.into(), actor: actor.into(), device };
+    let write = Context { op: op.into(), actor: actor.into(), device: Some(device), cause: None };
     BEGUN.with(|b| *b.borrow_mut() = Some(Begun { write, sub: subtransaction(), settled: None }));
     register_xact_callback(PgXactCallbackEvent::PreCommit, settled);
     register_xact_callback(PgXactCallbackEvent::PrePrepare, settled);
     for end in [PgXactCallbackEvent::Commit, PgXactCallbackEvent::Abort, PgXactCallbackEvent::Prepare] {
         register_xact_callback(end, forget_begun);
     }
-    // A released savepoint hands the begin and the verdict to its parent;
-    // one rolled back undoes them.
+    // A released savepoint hands the begin, the verdict and the entries
+    // appended in it to its parent; one rolled back undoes them.
     register_subxact_callback(PgSubXactCallbackEvent::CommitSub, |sub, parent| {
+        WRITTEN.with(|w| w.borrow_mut().iter_mut().filter(|(_, s)| *s == sub).for_each(|(_, s)| *s = parent));
         BEGUN.with(|b| {
             if let Some(b) = b.borrow_mut().as_mut() {
                 if b.sub == sub {
@@ -250,6 +256,7 @@ pub fn begin(op: &str, actor: &str, device: &[u8]) {
         });
     });
     register_subxact_callback(PgSubXactCallbackEvent::AbortSub, |sub, _| {
+        WRITTEN.with(|w| w.borrow_mut().retain(|(_, s)| *s != sub));
         BEGUN.with(|b| {
             let mut held = b.borrow_mut();
             if held.as_ref().is_some_and(|b| b.sub == sub) {
@@ -272,16 +279,52 @@ fn settle() {
 
 pub(crate) fn forget_begun() {
     BEGUN.with(|b| b.borrow_mut().take());
+    WRITTEN.with(|w| w.borrow_mut().clear());
+    FOLLOWS.with(|f| f.borrow_mut().clear());
+}
+
+/// The entries this transaction appended and stands to commit.
+fn written() -> Vec<Written> {
+    WRITTEN.with(|w| w.borrow().iter().map(|(e, _)| e.clone()).collect())
+}
+
+/// Keeps entry `e` as this subtransaction's, with the effects
+/// `cella.follows` lets follow its op, which judge what cites it.
+fn wrote(c: &SpiClient<'_>, e: Written) {
+    if !FOLLOWS.with(|f| f.borrow().iter().any(|f| f.cause == e.op)) {
+        let rows = spi(c.select("SELECT op, required, since FROM cella.follows WHERE cause = $1", None, &[e.op.clone().into()]));
+        let rows: Vec<Follows> = rows
+            .map(|row| Follows {
+                cause: e.op.clone(),
+                op: spi(row.get::<String>(1)).unwrap_or_default(),
+                required: spi(row.get::<bool>(2)) == Some(true),
+                since: spi(row.get::<i64>(3)).unwrap_or_default(),
+            })
+            .collect();
+        FOLLOWS.with(|f| f.borrow_mut().extend(rows));
+    }
+    WRITTEN.with(|w| w.borrow_mut().push((e, subtransaction())));
 }
 
 /// Before a begun transaction commits: it appended its verdict, or it
 /// rolls back. A handler that skips `submit`, or a savepoint that rolled
-/// the verdict back, commits nothing.
+/// the verdict back, commits nothing; nor does a write in which a settled
+/// entry lacks a settled effect it requires.
 fn settled() {
     let unsettled = BEGUN.with(|b| b.borrow().as_ref().filter(|b| b.settled.is_none()).map(|b| b.write.clone()));
     if let Some(open) = unsettled {
         refuse(
             format!("{} by {} was never submitted: a write's state commits only with its verdict", open.op, open.actor),
+            "refused at commit by the notary",
+        );
+    }
+    let (write, follows) = (written(), FOLLOWS.with(|f| f.borrow().clone()));
+    if let Some((e, op)) = log::lacking(&write, &follows) {
+        refuse(
+            format!(
+                "{}, entry {}, settles without {op}, which it requires: forgo it with the effect refused, or refuse the write",
+                e.op, e.n
+            ),
             "refused at commit by the notary",
         );
     }
@@ -313,7 +356,11 @@ pub fn actor() -> Option<String> {
 }
 
 pub fn device() -> Option<Vec<u8>> {
-    context().map(|c| c.device.to_vec())
+    context().and_then(|c| c.device).map(|d| d.to_vec())
+}
+
+pub fn cause() -> Option<i64> {
+    context().and_then(|c| c.cause)
 }
 
 struct Registered {
@@ -454,10 +501,9 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
     // The verdict settles the write the transaction began, and no other.
     match begun() {
         None => refuse(format!("{op} was not begun: a write opens with cella.begin(op, actor, device) before its state"), at_ingress()),
-        Some(open) if open.op != op || open.actor != actor || open.device != s.device => refuse(
-            format!("{op} by {actor} is not the write this transaction began, {} by {}", open.op, open.actor),
-            at_ingress(),
-        ),
+        Some(open) if open.op != op || open.actor != actor || open.device != Some(s.device) => {
+            refuse(format!("{op} by {actor} is not the write this transaction began, {} by {}", open.op, open.actor), at_ingress())
+        }
         Some(_) => {}
     }
     let scope = scope();
@@ -476,7 +522,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         let after = |by: &str| format!("{op} refused by {by} after verdict {}", n - 1);
 
         let role = guards_role(c);
-        let _during = During::enter(Context { op: op.into(), actor: actor.into(), device: s.device });
+        let _during = During::enter(Context { op: op.into(), actor: actor.into(), device: Some(s.device), cause: None });
 
         // Under the head lock, so a revocation or a use of the same nonce
         // that committed first is seen.
@@ -505,18 +551,7 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
         let form = vault::logged(c, &payload.0, number, &date);
         let digest = log::payload_digest(&form).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
 
-        let registered = guards(c, op);
-        for r in &registered {
-            let arg = JsonB(form.clone());
-            let reason = {
-                let _as = AsGuards::enter(role);
-                let rows = spi(c.select(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
-                first::<String>(rows)
-            };
-            if let Some(reason) = reason {
-                refuse(reason, after(&format!("{} ({})", r.function, r.owner)));
-            }
-        }
+        let registered = judge(c, role, op, &form, &after);
 
         let receipt = Receipt {
             n: number,
@@ -553,47 +588,187 @@ pub fn submit(op: &str, payload: &JsonB, actor: &str, envelope: &JsonB) -> i64 {
             ],
         ));
 
-        let guards: Vec<Guard> = registered
-            .iter()
-            .map(|r| Guard { owner: r.owner.clone(), function: r.function.clone(), text: log::guard_digest(&r.body) })
-            .collect();
-        let entry = Entry { n, op: op.into(), actor: actor.into(), date: date.clone(), payload: digest, receipt: number, receipt_hash, guards };
-        let hash = log::hash(&prev, &entry).unwrap_or_else(|e| fail(format!("cella: {e}")));
-        let sig = with_key(|k| k.sign(&hash));
-
-        for (r, guard) in registered.iter().zip(&entry.guards) {
-            spi(c.update(
-                "INSERT INTO cella.guard_text (hash, fn, body) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
-                None,
-                &[guard.text.to_vec().into(), r.function.clone().into(), r.body.clone().into()],
-            ));
-        }
-        let listed: Vec<Value> = entry
-            .guards
-            .iter()
-            .map(|r| json!({ "owner": r.owner, "function": r.function, "text": hex(&r.text) }))
-            .collect();
-        spi(c.update(
-            "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, guards, prev, hash, sig, key)
-             VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11, $12)",
-            None,
-            &[
-                n.into(),
-                op.into(),
-                actor.into(),
-                date.into(),
-                digest.to_vec().into(),
-                JsonB(form).into(),
-                number.into(),
-                JsonB(Value::Array(listed)).into(),
-                prev.to_vec().into(),
-                hash.to_vec().into(),
-                sig.to_vec().into(),
-                key.into(),
-            ],
-        ));
-        spi(c.update("UPDATE cella.head SET n = $1, hash = $2", None, &[n.into(), hash.to_vec().into()]));
+        let basis = Basis::Receipt { n: number, hash: receipt_hash };
+        let hash = append(c, Appended { n, prev, op, actor, date: &date, digest, form, basis, registered: &registered, key });
+        wrote(c, Written { n, op: op.into(), hash, cause: None, settled: true, depth: 0 });
         settle();
+        n
+    })
+}
+
+/// Runs every guard registered for `op` on the logged payload, as the
+/// guards role, refusing with the first reason one gives; returns them.
+fn judge(c: &SpiClient<'_>, role: pg_sys::Oid, op: &str, form: &Value, after: &dyn Fn(&str) -> String) -> Vec<Registered> {
+    let registered = guards(c, op);
+    for r in &registered {
+        let arg = JsonB(form.clone());
+        let reason = {
+            let _as = AsGuards::enter(role);
+            let rows = spi(c.select(&format!("SELECT {}($1)", r.call), Some(1), &[arg.into()]));
+            first::<String>(rows)
+        };
+        if let Some(reason) = reason {
+            refuse(reason, after(&format!("{} ({})", r.function, r.owner)));
+        }
+    }
+    registered
+}
+
+/// An entry to append: what its hash covers, its logged payload and the
+/// guards that judged it.
+struct Appended<'a> {
+    n: i64,
+    prev: [u8; 32],
+    op: &'a str,
+    actor: &'a str,
+    date: &'a str,
+    digest: [u8; 32],
+    form: Value,
+    basis: Basis,
+    registered: &'a [Registered],
+    key: i32,
+}
+
+/// Hashes, signs and appends an entry under the head's lock, keeping the
+/// texts of its guards, and moves the head to it; returns its hash.
+fn append(c: &mut SpiClient<'_>, a: Appended<'_>) -> [u8; 32] {
+    let guards: Vec<Guard> = a
+        .registered
+        .iter()
+        .map(|r| Guard { owner: r.owner.clone(), function: r.function.clone(), text: log::guard_digest(&r.body) })
+        .collect();
+    let entry = Entry { n: a.n, op: a.op.into(), actor: a.actor.into(), date: a.date.into(), payload: a.digest, basis: a.basis, guards };
+    let hash = log::hash(&a.prev, &entry).unwrap_or_else(|e| fail(format!("cella: {e}")));
+    let sig = with_key(|k| k.sign(&hash));
+
+    for (r, guard) in a.registered.iter().zip(&entry.guards) {
+        spi(c.update(
+            "INSERT INTO cella.guard_text (hash, fn, body) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING",
+            None,
+            &[guard.text.to_vec().into(), r.function.clone().into(), r.body.clone().into()],
+        ));
+    }
+    let listed: Vec<Value> =
+        entry.guards.iter().map(|r| json!({ "owner": r.owner, "function": r.function, "text": hex(&r.text) })).collect();
+    let (receipt, cause, cause_hash, settled) = match &entry.basis {
+        Basis::Receipt { n, .. } => (Some(*n), None, None, true),
+        Basis::Cause { n, hash, settled } => (None, Some(*n), Some(hash.to_vec()), *settled),
+    };
+    spi(c.update(
+        "INSERT INTO cella.log (n, op, actor, date, payload, form, receipt, guards, prev, hash, sig, key, cause, cause_hash, settled)
+         VALUES ($1, $2, $3, $4::date, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)",
+        None,
+        &[
+            a.n.into(),
+            a.op.into(),
+            a.actor.into(),
+            a.date.into(),
+            a.digest.to_vec().into(),
+            JsonB(a.form).into(),
+            receipt.into(),
+            JsonB(Value::Array(listed)).into(),
+            a.prev.to_vec().into(),
+            hash.to_vec().into(),
+            sig.to_vec().into(),
+            a.key.into(),
+            cause.into(),
+            cause_hash.into(),
+            settled.into(),
+        ],
+    ));
+    spi(c.update("UPDATE cella.head SET n = $1, hash = $2", None, &[a.n.into(), hash.to_vec().into()]));
+    hash
+}
+
+/// The entry `op` would follow, its hash, and the depth the effect would
+/// stand at, or a refusal saying why it may not: the entry is this
+/// write's, settled where the effect settles, fewer than five effects from
+/// its decision, and `cella.follows` lets `op` follow it.
+fn cited(op: &str, cause: i64, settles: bool, after: &str) -> ([u8; 32], u8) {
+    let (write, follows) = (written(), FOLLOWS.with(|f| f.borrow().clone()));
+    match log::may_follow(&write, &follows, op, cause, settles) {
+        Ok((c, depth)) => (c.hash, depth),
+        Err(why) => {
+            let of = write.iter().find(|w| w.n == cause).map_or_else(String::new, |w| w.op.clone());
+            refuse(
+                match why {
+                    Unfollowed::Elsewhere => {
+                        format!("{op} cites entry {cause}, which this write did not append: an effect follows an entry of its own write")
+                    }
+                    Unfollowed::Forgone => {
+                        format!("{op} cites entry {cause}, {of}, which was forgone: a settled effect follows a settled entry")
+                    }
+                    Unfollowed::Deep => {
+                        format!("{op} would be {} effects from its decision: a write goes {DEEPEST} deep at most", DEEPEST + 1)
+                    }
+                    Unfollowed::Unregistered => {
+                        format!("{op} may not follow {of}: cella.follows registers no such effect")
+                    }
+                },
+                after.to_string(),
+            )
+        }
+    }
+}
+
+/// Appends an effect of the write this transaction began: an entry with no
+/// signature of its own, on the authority of entry `cause`, which the
+/// transaction appended and whose op `cella.follows` lets `op` follow.
+/// Its guards run as `submit`'s do, with its decision's actor, no device
+/// and `cella.cause()` set; a refusal raises 09000, so the handler rolls
+/// back to its savepoint and calls `forgo`.
+pub fn follow(op: &str, payload: &JsonB, cause: i64) -> i64 {
+    let open = begun().unwrap_or_else(|| {
+        refuse(
+            format!("{op} follows no write: an effect is appended in the transaction of the decision it follows"),
+            format!("{op} refused at ingress, before any guard"),
+        )
+    });
+    let date = iso(verdict_date());
+    Spi::connect_mut(|c| {
+        let (last, prev) = lock_head(c);
+        let n = last + 1;
+        let after = |by: &str| format!("{op} refused by {by} after verdict {last}");
+        let (hash, depth) = cited(op, cause, true, &after("the notary"));
+        let role = guards_role(c);
+        let _during = During::enter(Context { op: op.into(), actor: open.actor.clone(), device: None, cause: Some(cause) });
+        // Its personal values are committed to under its decision's receipt.
+        let (number, _) = taken();
+        let form = vault::logged(c, &payload.0, number, &date);
+        let digest = log::payload_digest(&form).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
+        let registered = judge(c, role, op, &form, &after);
+        let key = signer(c, n);
+        let basis = Basis::Cause { n: cause, hash, settled: true };
+        let actor = &open.actor;
+        let hash = append(c, Appended { n, prev, op, actor, date: &date, digest, form, basis, registered: &registered, key });
+        wrote(c, Written { n, op: op.into(), hash, cause: Some(cause), settled: true, depth });
+        n
+    })
+}
+
+/// Records an effect forgone: one its guards refused, after its savepoint
+/// rolled back, or one forgone with a required effect refused. An entry
+/// citing `cause`, an entry this transaction appended, settled or forgone,
+/// its logged payload the reason, and no guard.
+pub fn forgo(op: &str, cause: i64, reason: &str) -> i64 {
+    let at = || format!("{op} refused by the notary, before it was forgone");
+    let open =
+        begun().unwrap_or_else(|| refuse(format!("{op} follows no write: an effect is forgone in the transaction of its decision"), at()));
+    if reason.trim().is_empty() {
+        refuse(format!("{op} is forgone with no reason: a forgone effect says why, and what would let it settle"), at());
+    }
+    let date = iso(verdict_date());
+    Spi::connect_mut(|c| {
+        let (last, prev) = lock_head(c);
+        let n = last + 1;
+        let (hash, depth) = cited(op, cause, false, &at());
+        let form = json!({ "reason": reason });
+        let digest = log::payload_digest(&form).unwrap_or_else(|e| fail(format!("cella: payload: {e}")));
+        let key = signer(c, n);
+        let basis = Basis::Cause { n: cause, hash, settled: false };
+        let actor = &open.actor;
+        let hash = append(c, Appended { n, prev, op, actor, date: &date, digest, form, basis, registered: &[], key });
+        wrote(c, Written { n, op: op.into(), hash, cause: Some(cause), settled: false, depth });
         n
     })
 }
@@ -645,7 +820,7 @@ pub fn verify_log() -> bool {
     let scope = scope();
     Spi::connect(|c| {
         let mut chain = match Chain::new(&signers(c)) {
-            Ok(chain) => chain,
+            Ok(chain) => chain.following(follows(c)),
             Err(e) => {
                 warning!("cella: the signers are out of order: {e}");
                 return false;
@@ -654,21 +829,23 @@ pub fn verify_log() -> bool {
         let rows = spi(c.select(
             "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.guards, l.prev, l.hash, l.sig, l.receipt,
                     r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
-                    l.key, r.key
+                    l.key, r.key, l.cause, l.cause_hash, l.settled
              FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
              ORDER BY l.n",
             None,
             &[],
         ));
         let mut last = log::GENESIS.to_vec();
+        let mut decisions = 0;
         for row in rows {
             let n = spi(row.get::<i64>(1)).unwrap_or_default();
             let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
             let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
             let guards = spi(row.get::<JsonB>(6)).and_then(|j| listed_guards(&j.0));
-            let receipt = (|| {
+            // A decision names its receipt; an effect, the entry it follows.
+            let receipt = spi(row.get::<i64>(10)).map(|number| {
                 Some(Receipt {
-                    n: spi(row.get::<i64>(10))?,
+                    n: number,
                     op: spi(row.get::<String>(11))?,
                     actor: spi(row.get::<String>(12))?,
                     device: bytes(13).try_into().ok()?,
@@ -678,11 +855,15 @@ pub fn verify_log() -> bool {
                     payload: bytes(17).try_into().ok()?,
                     time: spi(row.get::<String>(18))?,
                 })
-            })();
-            let receipt_hash: Option<[u8; 32]> = bytes(19).try_into().ok();
-            let (Some(payload), Some(guards), Some(receipt), Some(receipt_hash)) = (bytes(5).try_into().ok(), guards, receipt, receipt_hash)
-            else {
-                warning!("cella: log broken at {n}: unreadable entry, or no receipt");
+            });
+            let basis = match &receipt {
+                Some(r) => r.as_ref().and_then(|r| Some(Basis::Receipt { n: r.n, hash: bytes(19).try_into().ok()? })),
+                None => (|| {
+                    Some(Basis::Cause { n: spi(row.get::<i64>(24))?, hash: bytes(25).try_into().ok()?, settled: spi(row.get::<bool>(26))? })
+                })(),
+            };
+            let (Some(payload), Some(guards), Some(basis)) = (bytes(5).try_into().ok(), guards, basis) else {
+                warning!("cella: log broken at {n}: unreadable entry, or neither a receipt nor a cause");
                 return false;
             };
             // What the log keeps of the payload, commitments in place of
@@ -693,23 +874,21 @@ pub fn verify_log() -> bool {
                 warning!("cella: log broken at {n}: the logged payload does not hash to the entry's digest");
                 return false;
             }
-            let entry = Entry {
-                n,
-                op: text(2),
-                actor: text(3),
-                date: text(4),
-                payload,
-                receipt: receipt.n,
-                receipt_hash,
-                guards,
-            };
-            let (Some(key), Some(receipt_key)) = (spi(row.get::<i32>(22)), spi(row.get::<i32>(23))) else {
+            let entry = Entry { n, op: text(2), actor: text(3), date: text(4), payload, basis, guards };
+            let Some(key) = spi(row.get::<i32>(22)) else {
                 warning!("cella: log broken at {n}: no signer named");
                 return false;
             };
-            if let Err(b) = chain.check_receipt(&scope, &entry, receipt_key, &receipt, &receipt_hash, &bytes(20)) {
-                warning!("cella: log broken at {}: {}", b.n, b.why);
-                return false;
+            if let Some(Some(receipt)) = &receipt {
+                let Some(receipt_key) = spi(row.get::<i32>(23)) else {
+                    warning!("cella: log broken at {n}: no signer named");
+                    return false;
+                };
+                if let Err(b) = chain.check_receipt(&scope, &entry, receipt_key, receipt, &bytes(19), &bytes(20)) {
+                    warning!("cella: log broken at {}: {}", b.n, b.why);
+                    return false;
+                }
+                decisions += 1;
             }
             let hash = bytes(8);
             if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
@@ -717,6 +896,10 @@ pub fn verify_log() -> bool {
                 return false;
             }
             last = hash;
+        }
+        if let Err(b) = chain.finish() {
+            warning!("cella: log broken at {}: {}", b.n, b.why);
+            return false;
         }
         // No head row is a log no write has reached yet.
         let head = spi(c.select("SELECT n, hash FROM cella.head", Some(1), &[]));
@@ -726,10 +909,22 @@ pub fn verify_log() -> bool {
             return false;
         }
         let receipts = spi(spi(c.select("SELECT count(*) FROM cella.receipt", Some(1), &[])).first().get_one::<i64>());
-        if receipts != Some(chain.len()) {
+        if receipts != Some(decisions) {
             warning!("cella: a receipt names no verdict");
             return false;
         }
         true
     })
+}
+
+/// Which op may follow which as its effect, as `cella.follows` holds it.
+fn follows(c: &SpiClient<'_>) -> Vec<Follows> {
+    let rows = spi(c.select("SELECT cause, op, required, since FROM cella.follows", None, &[]));
+    rows.map(|row| Follows {
+        cause: spi(row.get::<String>(1)).unwrap_or_default(),
+        op: spi(row.get::<String>(2)).unwrap_or_default(),
+        required: spi(row.get::<bool>(3)) == Some(true),
+        since: spi(row.get::<i64>(4)).unwrap_or_default(),
+    })
+    .collect()
 }

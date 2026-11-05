@@ -5,7 +5,7 @@ updated = 2026-11-05
 
 The `cella` Postgres extension (pgrx, Postgres 18): the notary and the guard primitives as SQL, in schema `cella`. Every item is a thin wrapper over `cella-guards` (`core/guards/rs`) with no logic of its own, and the whole SQL surface is declared in one file, `rs/src/surface.rs`, whose header lists it; `rs/src/notary.rs` is the SPI plumbing `submit` and `verify_log` need.
 
-The notary is the scope's office for every action, and a layer under every feat rather than a feat: it holds no collection and has no actions of its own. It signs a receipt when an actor's attempt arrives, runs the guards that attach to it, then signs a numbered verdict; it never decides an outcome, which is computed from the signed votes and can be computed again by anyone holding the log. Moving a scope's notary is moving its database to another host, a rung-6 concern ([ratchet](../../../../_corpus/doc/ratchet.md#moving-a-notary)); peers, other scopes' notaries, arrive with federation at rung 5.
+The notary is the scope's office for every action, and a layer under every feat rather than a feat: it holds no collection and has no actions of its own. It signs a receipt when an actor's attempt arrives, runs the guards that attach to it, then signs a numbered verdict, and appends after it, in the same transaction, the effects that decision carries, each an entry citing it ([below](#effects)); it never decides an outcome, which is computed from the signed votes and can be computed again by anyone holding the log. Moving a scope's notary is moving its database to another host, a rung-6 concern ([ratchet](../../../../_corpus/doc/ratchet.md#moving-a-notary)); peers, other scopes' notaries, arrive with federation at rung 5.
 
 ## Surface
 
@@ -20,13 +20,16 @@ The notary is the scope's office for every action, and a layer under every feat 
 | `cella.receipt()` | the transaction's receipt number: one write, one receipt, taken at first use from a sequence; a rolled-back write leaves a gap here, never in the log |
 | `cella.begin(op, actor, device)` | opens a write, after `BEGIN` and before its state: the transaction may write the registered state tables, and commits only with the verdict `submit` appends for the same action, actor and device ([below](#bound)); one per transaction |
 | `cella.submit(op, payload, actor, signed)` | checks that the transaction began this write, the member's signature, that the payload restates the request, the device and the nonce, runs the action's guards, signs the receipt and appends a numbered, signed entry; returns `(verdict, state, reason)` |
-| `cella.action()`, `cella.actor()`, `cella.device()` | the action `submit` is judging, its id, its actor and their device, for guards to read; NULL outside it |
+| `cella.follow(op, payload, cause)` | appends an effect: an entry with no signature of its own, on the authority of entry `cause`, which this transaction appended and whose op `cella.follows` lets `op` follow; runs the op's guards as `submit` does; returns `(verdict, state, reason)` ([below](#effects)) |
+| `cella.forgo(op, cause, why)` | records an effect its guards refused, or one forgone with a required effect refused, after its savepoint rolled back: an entry citing `cause`, an entry this transaction appended, settled or forgone, recorded forgone, its logged payload `{"reason": why}`; returns `(verdict, 'forgone', why)` |
+| `cella.cause()` | the number of the entry the effect `follow` is judging cites; NULL outside it |
+| `cella.action()`, `cella.actor()`, `cella.device()` | the action `submit` or `follow` is judging, its id, its actor and their device, for guards to read; NULL outside it, and the device NULL for an effect, whose actor is its decision's |
 | `cella.signed(n, request)` | whether a request is what receipt `n`'s member signed: salted with the salt the receipt keeps, its digest is the one their signature names; NULL for no such receipt or one from before 0.3.0; the owner's |
 | `cella.verify_log()` | rechecks the chain, every receipt, every signature, the member's and the notary's, each under the key in office at its entry as `cella.signer` keeps it, and the head; it never reads the key file, so a log verifies after its key is rotated or lost |
 | `cella.notary_key()` | the public key of `cella.key_file`, which signs the next entry |
 | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | the log, its head row and its signed receipts |
 | `cella.signer` | every key the notary has signed with: its id, its public key and `since`, the first entry it signed; each receipt and entry names its signer by `key` |
-| `cella.guard`, `cella.guard_text`, `cella.keyring`, `cella.power` | the registries: guards per action and their texts, the keyring, the power each action needs |
+| `cella.guard`, `cella.guard_text`, `cella.keyring`, `cella.power`, `cella.follows` | the registries: guards per action and their texts, the keyring, the power each action needs, and which op may follow which as its effect, `(cause, op, owner, required, since)`, each row registered by the feat or graft that carries or reacts through `cella.lets_follow(cause, op, owner, required)`, a superuser's, from its migration, `required` saying the cause stands only with the effect from entry `since` on, the first after the row was registered or its requirement changed ([below](#required-effects)) |
 | `cella.state`, `cella.notarise(tab)`, `cella.notarised()` | the registered state tables, `(schema, tab)`; registering one, a superuser's, which installs on it the notary's trigger; and the trigger, which refuses a row no begun transaction writes ([below](#bound)) |
 | `cella.retention`, `cella.personal` | the retention classes, each with its clock in years, whether the law keeps it (restricted) and its basis; and the columns holding personal data, `(schema, tab, col, class, subject, owner)`, each registered by the feat or graft owning the table, `subject` naming the column that says whose it is. A trigger refuses a column that does not exist or that erasure could not redact: NOT NULL and neither text nor JSON |
 | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | the vault ([below](#the-vault)); only the owner reads it, but `vault.erased`, which everyone may read |
@@ -67,11 +70,80 @@ A guard is a `STABLE` function `(payload jsonb) → text` that sees the transact
 
 On a refusal, at any step, `submit` raises SQLSTATE `09000` (`triggered_action_exception`) with the reason as the message, so the transaction cannot commit: the state and the verdict roll back together, the verdict number is not used and the nonce is not spent. Feats' triggers raise the same code, so a handler maps `09000` to `Refused`. The rows `submit` returns are therefore always `settled`.
 
-Each receipt holds its number, the action, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived, hashed with BLAKE3 and signed. Beside them, outside the hash, it keeps the salt of the request, which the digest it hashes is taken with: given the salt, `cella.signed(n, request)` says whether a request is what the member signed, so what a member signed can be checked against the payload later wherever the payload restates it. The salt is the owner's alone, since anyone else could confirm a guess of the request with it, and so is `signed`; a receipt taken before 0.3.0 kept none. Each entry holds its number, op, actor, verdict date, the digest of the logged payload, its receipt's number and hash, and each deciding guard's owner, signature and text digest; the text itself goes to `cella.guard_text`. Entries are hashed over the previous hash and signed with Ed25519. Beside them, `cella.log.form` keeps the logged payload, personal values replaced by commitments, which no code folds the state from; `verify_log` checks that it hashes to the entry's digest.
+Each receipt holds its number, the action, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived, hashed with BLAKE3 and signed. Beside them, outside the hash, it keeps the salt of the request, which the digest it hashes is taken with: given the salt, `cella.signed(n, request)` says whether a request is what the member signed, so what a member signed can be checked against the payload later wherever the payload restates it. The salt is the owner's alone, since anyone else could confirm a guess of the request with it, and so is `signed`; a receipt taken before 0.3.0 kept none. Each entry holds its number, op, actor, verdict date, the digest of the logged payload, its receipt's number and hash, or for an effect its cause's number and hash and whether it settled or was forgone, and each deciding guard's owner, signature and text digest; the text itself goes to `cella.guard_text`. Entries are hashed over the previous hash and signed with Ed25519. Beside them, `cella.log.form` keeps the logged payload, personal values replaced by commitments, which no code folds the state from; `verify_log` checks that it hashes to the entry's digest.
+
+## Effects
+
+A decision is the one write in its transaction a member signed: what it
+carries and what reacts to it are its effects, written in the same
+transaction after its `submit`, each an entry of its own with no
+signature of its own. A handler writes an effect's state and calls
+`cella.follow(op, payload, cause)` last, as it calls `submit` for a
+decision. `follow`:
+
+1. checks that `cause` is an entry this transaction appended, the
+   decision's or an earlier effect's; the transaction holds the head's
+   lock from the decision's `submit`, so a write's entries are
+   consecutive in the log;
+2. checks that `cella.follows` lets `op` follow `cause`'s op, and that
+   `cause` is fewer than five effects from its decision;
+3. takes the payload out of personal data, its commitments kept under
+   the decision's receipt, which `cella.disclosed` reads for an effect,
+   and runs every guard registered for `op`, as
+   `submit` does, with `cella.cause()` set, the actor that of the
+   decision, and no device;
+4. signs and appends an entry naming its cause by number and hash in
+   place of a receipt, hashed under a domain of its own
+   ([signatures](../../../../_corpus/doc/signatures.md)), so an effect
+   never reads as a decision.
+
+An effect citing no entry, an entry of another transaction, or a cause
+its op may not follow is refused, as a refused guard is, with SQLSTATE
+`09000`. The handler runs each effect in a savepoint: on a refusal it
+rolls back to it and calls `cella.forgo(op, cause, why)`, which
+appends an entry recording the effect refused, its logged payload the
+guard's reason, and runs no guard; the decision and the other effects stand. A write's transaction
+commits whole or not at all: a decision never commits without its
+effects, each settled or forgone.
+
+### Required effects
+
+An effect may be required by its cause: a `cella.follows` row marked
+`required` says the cause stands only with the effect, as an admission
+stands only with the subscription of the capital the statutes ask. A
+required effect refused forgoes its cause with it: the handler rolls
+back to the cause's savepoint, which holds every effect after it, and
+forgoes the cause and each of those effects, each with its reason, the
+cause's naming the required effect refused and why; a forgone cause
+that is itself required forgoes its own cause the same way. A row binds
+from entry `since`, the first after `cella.lets_follow` registered it or
+changed whether it is required, so a requirement registered later never
+breaks a write logged before it. The
+decision and its other effects stand. A decision whose own required
+effect is refused is refused whole, as by a guard. At commit the notary
+refuses a write holding a settled entry without a settled effect for
+each op its `required` rows name, so no state commits inconsistent.
+
+A forgone entry's reason is in the log, so it names the action by its
+op and its cause and gives the values its guard read and what would
+have let it settle, the statutes' minimum and the shares asked, or the
+closed month and the open one, and never a person.
+
+An auditor holding the log checks an effect without trusting the
+server: its cause is an earlier entry of the same write, a settled one,
+and it names what the effect does: the close of a motion that passed,
+which anyone computes again from its signed votes, and the action's
+number, which the motion's proposing entry names; or the write a
+reaction follows, under a `cella.follows` row letting the effect's op
+follow it. `verify_log` checks that every effect's cause is an entry
+of its own write, settled for a settled effect, fewer than five effects
+from its decision, under a `cella.follows` row letting its op follow
+its cause's, and that no settled entry lacks a settled effect a row
+requires of it.
 
 ## Bound
 
-A write's state lands only inside a transaction `cella.begin` opened and `cella.submit` settled. `begin(op, actor, device)` opens it, once per transaction, before any state: a second is refused, and `submit` refuses a write not begun or begun as another op, actor or device. Until the transaction ends, it may write the registered state tables; at commit (and at `PREPARE TRANSACTION`) it is refused unless its verdict was appended, so a handler that skips `submit` commits nothing. Both follow savepoints: one rolled back past the begin undoes it, and one rolled back past the verdict undoes the verdict, so the commit is refused; a released one hands both to its parent.
+A write's state lands only inside a transaction `cella.begin` opened and `cella.submit` settled, its effects' state with it. `begin(op, actor, device)` opens it, once per transaction, before any state: a second is refused, and `submit` refuses a write not begun or begun as another op, actor or device. Until the transaction ends, it may write the registered state tables; at commit (and at `PREPARE TRANSACTION`) it is refused unless its verdict was appended, so a handler that skips `submit` commits nothing. Both follow savepoints: one rolled back past the begin undoes it, and one rolled back past the verdict undoes the verdict, so the commit is refused; a released one hands both to its parent.
 
 `cella.state (schema, tab)` lists the registered state tables. `cella.notarise(tab)`, a superuser's, registers one and installs on it the notary's trigger, `cella.notarised()`: a constraint trigger after every inserted, updated or deleted row, and one before a truncate, each refusing with SQLSTATE `09000` unless the transaction is begun, the notary is redacting ([the vault](#the-vault)), which `vault_sweep` does outside any write, or `cella.unbound` is set. A partition takes its row trigger from its table. The org core registers every table a feat or a graft makes, as it is made, by an event trigger (`sql/007-notarised.sql`): every table outside `cella`, `vault`, `migration`, `public`, the catalog and the temporary schemas. A table is named in `cella.state`, not referenced, so a dump keeps the list, and restores the triggers with its tables.
 
@@ -120,9 +192,9 @@ The library is loaded through `shared_preload_libraries` so its settings exist b
 
 `cella ext build` packages it with `cargo pgrx package` into `.data/ext`; Postgres 18's `extension_control_path` and `dynamic_library_path` load it there, since the Nix store is read-only. The devshell provides cargo-pgrx, `pg_config`, the server headers and bindgen's libclang flags, so `cargo check --workspace` builds it too.
 
-The extension's version is its own, `version` in `rs/Cargo.toml` (0.7.0), and changes with every change to its SQL. `rs/sql/` keeps each earlier version's install script, as pgrx generated it, and the upgrade script from it, `cella--<from>--<to>.sql`, written by hand; `cella ext build` stages them all beside the generated one, since pgrx stages only the upgrade scripts and an earlier version installs from its own; an org migration appended to `sql/` then runs `ALTER EXTENSION cella UPDATE`, so a database keeps its log, its receipts and its vault through every change of the notary, never `DROP EXTENSION` ([operations](../../../../_corpus/doc/operations.md#upgrades)). An upgrade script never drops a function a guard may call: a guard whose body is SQL-standard (`BEGIN ATOMIC`) holds what it calls by its oid, so Postgres refuses the drop. It renames the function instead, which keeps its oid and so every body that calls it, and rebinds it to the new library's symbol with `CREATE OR REPLACE`, as `cella--0.5.0--0.6.0.sql` does with `cella.op()`, now `cella.action()`. A fresh install makes no head row, so a dump of the head restores into one.
+The extension's version is its own, `version` in `rs/Cargo.toml` (0.8.0), and changes with every change to its SQL. `rs/sql/` keeps each earlier version's install script, as pgrx generated it, and the upgrade script from it, `cella--<from>--<to>.sql`, written by hand; `cella ext build` stages them all beside the generated one, since pgrx stages only the upgrade scripts and an earlier version installs from its own; an org migration appended to `sql/` then runs `ALTER EXTENSION cella UPDATE`, so a database keeps its log, its receipts and its vault through every change of the notary, never `DROP EXTENSION` ([operations](../../../../_corpus/doc/operations.md#upgrades)). An upgrade script never drops a function a guard may call: a guard whose body is SQL-standard (`BEGIN ATOMIC`) holds what it calls by its oid, so Postgres refuses the drop. It renames the function instead, which keeps its oid and so every body that calls it, and rebinds it to the new library's symbol with `CREATE OR REPLACE`, as `cella--0.5.0--0.6.0.sql` does with `cella.op()`, now `cella.action()`. A fresh install makes no head row, so a dump of the head restores into one.
 
-`sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-guards-role.sql` creates `cella_guards` and keeps `submit` and `receipt` to the app; `sql/003-vault.sql` keeps `opened` to the app and the sweep to a superuser; `sql/005-signers.sql` updates a database made before 0.2.0 in place and makes the head row of a new one; `sql/006-salts.sql` updates one made before 0.3.0; `sql/007-notarised.sql` updates one made before 0.4.0, keeps `begin` to the app and registers every table a feat or a graft makes as a state table ([above](#bound)); `sql/009-guards.sql` updates one made before 0.5.0, when guards were called rules; `sql/010-actions.sql` updates one made before 0.6.0, when `cella.action()` was `cella.op()`; `sql/011-reerase.sql` updates one made before 0.7.0, when every tombstone named its entry and no restore carried an erasure out again. The extension keeps `vault_rewrap`, `vault_reerase` and `signed` to their owner itself.
+`sql/001-cella.sql` creates the extension and the app's role, `cella_app`; `sql/002-guards-role.sql` creates `cella_guards` and keeps `submit` and `receipt` to the app; `sql/003-vault.sql` keeps `opened` to the app and the sweep to a superuser; `sql/005-signers.sql` updates a database made before 0.2.0 in place and makes the head row of a new one; `sql/006-salts.sql` updates one made before 0.3.0; `sql/007-notarised.sql` updates one made before 0.4.0, keeps `begin` to the app and registers every table a feat or a graft makes as a state table ([above](#bound)); `sql/009-guards.sql` updates one made before 0.5.0, when guards were called rules; `sql/010-actions.sql` updates one made before 0.6.0, when `cella.action()` was `cella.op()`; `sql/011-reerase.sql` updates one made before 0.7.0, when every tombstone named its entry and no restore carried an erasure out again; `sql/012-effects.sql` updates one made before 0.8.0, when no entry was an effect, and keeps `follow` and `forgo` to the app, as `submit` is. The extension keeps `vault_rewrap`, `vault_reerase` and `signed` to their owner itself.
 
 ## Tests
 

@@ -92,7 +92,7 @@ sequenceDiagram
   A-->>D: Settled or Refused
 ```
 
-- **The member signs every write on their device** (WebCrypto Ed25519):
+- **The member signs every decision on their device** (WebCrypto Ed25519):
   a domain-separated message naming the scope, the action, the actor, the
   device, the digest of the request and a single-use nonce
   ([signatures](signatures.md)). `submit` checks it before any guard runs:
@@ -104,6 +104,22 @@ sequenceDiagram
   no verdict number is used. Each receipt keeps the request's salt for
   the owner, so what a member signed can be checked against the payload
   later.
+- **An effect's authority is the entry it cites, never a signature of
+  its own.** What a decision carries and what reacts to it are effects,
+  written in the decision's transaction after its `submit`, each its own
+  entry, which names the entry it follows by number and hash in place of
+  a receipt. The notary appends one only when the entry it cites was
+  appended by the same transaction and `cella.follows` lets its op
+  follow that entry's, and runs its guards as for any write
+  ([the notary](../../apps/org/core/notary/index.md#effects)). An effect
+  its cause requires, refused, forgoes the cause with it, each recorded
+  with its reason, and the notary refuses a commit in which a settled
+  entry lacks a settled effect it requires
+  ([required effects](../../apps/org/core/notary/index.md#required-effects)).
+  An auditor checks it from the log alone: the cited entry exists, is of
+  the same write and settled, and names the action, a passed motion's
+  close and the action's number, or the write a reaction follows; and no
+  settled entry lacks an effect it requires.
 - **Only the extension's functions may write the log.** No client, script or
   psql session can append to it any other way. Each settled write has one
   receipt, numbered as it arrives, which the notary signs with the member's

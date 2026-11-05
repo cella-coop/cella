@@ -27,7 +27,7 @@ fn op() -> Option<String> {
 mod tests {
     use super::NOTARY_SEED;
     use cella_guards::hex::hex;
-    use cella_guards::log::{self, Entry, Key, Receipt};
+    use cella_guards::log::{self, Basis, Entry, Key, Receipt};
     use cella_guards::sign::{self, Request};
     use ed25519_dalek::{Signer, SigningKey};
     use pgrx::JsonB;
@@ -359,13 +359,14 @@ $f$;
     /// Each earlier version the notary ships, which `cella test notary`
     /// stages beside the current one, and the function its guards read the
     /// action through: `cella.op()` before 0.6.0.
-    const EARLIER: [(&str, &str); 6] = [
+    const EARLIER: [(&str, &str); 7] = [
         ("0.1.0-alpha", "op"),
         ("0.2.0", "op"),
         ("0.3.0", "op"),
         ("0.4.0", "op"),
         ("0.5.0", "op"),
         ("0.6.0", "action"),
+        ("0.7.0", "action"),
     ];
 
     fn version() -> Option<String> {
@@ -396,6 +397,11 @@ ALTER EXTENSION cella UPDATE;"
             ))
             .expect("the upgrade");
             assert_eq!(version(), current, "{earlier} upgrades to the current version");
+            let effects = Spi::get_one::<bool>(
+                "SELECT to_regclass('cella.follows') IS NOT NULL AND to_regprocedure('cella.follow(text, jsonb, bigint)') IS NOT NULL
+                    AND EXISTS (SELECT FROM pg_constraint WHERE conname = 'log_basis' AND conrelid = 'cella.log'::regclass)",
+            );
+            assert_eq!(effects.expect("the effects"), Some(true), "{earlier} upgrades to a log that takes effects");
             scope();
             Spi::run(
                 "GRANT USAGE ON SCHEMA old TO cella_guards;
@@ -430,6 +436,192 @@ ALTER EXTENSION cella UPDATE;"
         assert!(verifies(), "each tamper rolled back");
     }
 
+    const CARRY: &str = "test:thing:carry";
+    const PAY: &str = "test:thing:pay";
+
+    /// The test scope with effects: a carry follows a make or a carry, and
+    /// a pay follows a carry, which stands only with it; `t.pays` refuses
+    /// a pay over 100 cents, naming the entry it follows and what would
+    /// let it settle; `t.follows` appends an effect in a savepoint,
+    /// answering the error it raised, if any.
+    fn effects() {
+        scope();
+        Spi::run(&format!(
+            r"
+SELECT cella.lets_follow('{OP}', '{CARRY}', 't'), cella.lets_follow('{CARRY}', '{CARRY}', 't'),
+       cella.lets_follow('{CARRY}', '{PAY}', 't', true);
+CREATE FUNCTION t.pays(payload jsonb) RETURNS text LANGUAGE sql STABLE AS $f$
+  SELECT CASE WHEN (payload->>'cents')::int > 100
+    THEN cella.action() || ' of ' || (payload->>'cents') || ' cents after entry ' || cella.cause() || ' is over the 100 it may: pay 100 or less' END
+$f$;
+INSERT INTO cella.guard (op, fn, owner) VALUES ('{PAY}', 't.pays(jsonb)', 't');
+CREATE FUNCTION t.follows(op text, payload jsonb, cause bigint) RETURNS text LANGUAGE plpgsql AS $f$
+BEGIN
+  PERFORM cella.follow(op, payload, cause);
+  RETURN NULL;
+EXCEPTION WHEN OTHERS THEN
+  RETURN SQLSTATE || ' ' || SQLERRM;
+END
+$f$;"
+        ))
+        .expect("the effects");
+    }
+
+    /// Appends an effect of `cents`; `None` when it settles, else the error.
+    fn follows(op: &str, cents: i64, cause: i64) -> Option<String> {
+        Spi::get_one_with_args::<String>(
+            "SELECT t.follows($1, $2, $3)",
+            &[op.into(), JsonB(json!({ "cents": cents })).into(), cause.into()],
+        )
+        .expect("a follow")
+    }
+
+    fn forgoes(op: &str, cause: i64, why: &str) -> i64 {
+        Spi::get_one_with_args::<i64>("SELECT verdict FROM cella.forgo($1, $2, $3)", &[op.into(), cause.into(), why.into()])
+            .expect("a forgo")
+            .expect("its entry")
+    }
+
+    /// Every entry: its number, op, the entry it follows and whether it settled.
+    fn entries() -> Vec<(i64, String, Option<i64>, bool)> {
+        Spi::connect(|c| {
+            c.select("SELECT n, op, cause, settled FROM cella.log ORDER BY n", None, &[])
+                .expect("the log")
+                .map(|r| {
+                    (
+                        r.get::<i64>(1).expect("n").expect("n"),
+                        r.get::<String>(2).expect("op").expect("op"),
+                        r.get::<i64>(3).expect("cause"),
+                        r.get::<bool>(4).expect("settled").expect("settled"),
+                    )
+                })
+                .collect()
+        })
+    }
+
+    fn refusal(error: Option<String>, why: &str) {
+        let error = error.expect("a refusal");
+        assert!(error.starts_with("09000 "), "not a refusal: {error}");
+        assert!(error.contains(why), "refused for another reason: {error}");
+    }
+
+    #[pg_test]
+    fn an_effect_follows_only_an_entry_its_own_write_appended() {
+        beside();
+        effects();
+        refusal(follows(CARRY, 100, 1), "test:thing:carry follows no write");
+        settle(100);
+        entry_after(first_hash());
+        refusal(follows(CARRY, 100, 2), "test:thing:carry cites entry 2, which this write did not append");
+        refusal(follows(CARRY, 100, 99), "test:thing:carry cites entry 99, which this write did not append");
+        refusal(follows(PAY, 100, 1), "test:thing:pay may not follow test:thing:make: cella.follows registers no such effect");
+        assert_eq!(head(), 2, "a refused effect takes no number");
+    }
+
+    #[pg_test]
+    fn an_effect_settles_with_its_decision_and_names_it() {
+        beside();
+        effects();
+        settle(100);
+        assert_eq!(follows(CARRY, 100, 1), None);
+        assert_eq!(follows(PAY, 100, 2), None);
+        assert_eq!(entries(), [(1, OP.into(), None, true), (2, CARRY.into(), Some(1), true), (3, PAY.into(), Some(2), true)]);
+        let effect = Spi::get_two::<String, i64>("SELECT actor, receipt FROM cella.log WHERE n = 2").expect("entry 2");
+        assert_eq!(effect, (Some(JULIEN.into()), None), "an effect is its decision's actor's, with no receipt");
+        let receipts = Spi::get_one::<i64>("SELECT count(*) FROM cella.receipt").expect("the receipts");
+        assert_eq!(receipts, Some(1), "one signature, one decision");
+        assert!(verifies());
+    }
+
+    #[pg_test]
+    fn a_write_goes_five_effects_deep() {
+        beside();
+        effects();
+        settle(100);
+        for cause in 1..=5 {
+            assert_eq!(follows(CARRY, 100, cause), None, "effect {cause} deep");
+        }
+        refusal(follows(CARRY, 100, 6), "test:thing:carry would be 6 effects from its decision: a write goes 5 deep at most");
+        assert_eq!(head(), 6);
+    }
+
+    #[pg_test]
+    fn a_refused_effect_is_forgone_and_the_rest_stand() {
+        beside();
+        effects();
+        settle(100);
+        assert_eq!(follows(CARRY, 100, 1), None);
+        assert_eq!(follows(CARRY, 100, 1), None);
+        assert_eq!(follows(PAY, 100, 3), None);
+        // The pay after entry 2 is refused, rolled back to its savepoint:
+        // its carry, which stands only with it, is forgone with it.
+        let why = "test:thing:pay of 150 cents after entry 2 is over the 100 it may: pay 100 or less";
+        refusal(follows(PAY, 150, 2), why);
+        assert_eq!(head(), 4);
+        // As a handler does: the carry and its pay in the carry's
+        // savepoint; the pay refused, the savepoint rolled back, and both
+        // forgone, the carry first.
+        Spi::run(&format!(
+            r#"
+DO $$
+DECLARE carry bigint;
+BEGIN
+  BEGIN
+    SELECT verdict INTO carry FROM cella.follow('{CARRY}', '{{"cents": 100}}', 1);
+    PERFORM cella.follow('{PAY}', '{{"cents": 150}}', carry);
+  EXCEPTION WHEN SQLSTATE '09000' THEN
+    SELECT verdict INTO carry FROM cella.forgo('{CARRY}', 1, '{CARRY} forgone with what it requires: ' || SQLERRM);
+    PERFORM cella.forgo('{PAY}', carry, SQLERRM);
+  END;
+END $$"#
+        ))
+        .expect("the carry forgone with its pay");
+        refusal(follows(PAY, 100, 5), "test:thing:pay cites entry 5, test:thing:carry, which was forgone");
+        assert_eq!(
+            entries(),
+            [
+                (1, OP.into(), None, true),
+                (2, CARRY.into(), Some(1), true),
+                (3, CARRY.into(), Some(1), true),
+                (4, PAY.into(), Some(3), true),
+                (5, CARRY.into(), Some(1), false),
+                (6, PAY.into(), Some(5), false),
+            ]
+        );
+        let reason = Spi::get_one::<String>("SELECT form->>'reason' FROM cella.log WHERE n = 6").expect("its reason");
+        assert_eq!(reason.as_deref(), Some("test:thing:pay of 150 cents after entry 5 is over the 100 it may: pay 100 or less"));
+        let blank = Spi::get_one_with_args::<String>("SELECT t.tries($1)", &[format!("SELECT cella.forgo('{PAY}', 3, ' ')").into()]);
+        refusal(blank.expect("a try"), "is forgone with no reason");
+        // Entry 2 lacks the pay it requires, so this write would not
+        // commit (`cella test e2e notarised` commits one); the log walks
+        // it the same way.
+        assert!(!verifies());
+        forgoes(PAY, 2, why);
+        assert!(!verifies(), "a forgone pay does not stand for the one its carry requires");
+    }
+
+    #[pg_test]
+    fn an_effect_s_cause_is_part_of_its_hash() {
+        beside();
+        effects();
+        settle(100);
+        assert_eq!(follows(CARRY, 100, 1), None);
+        assert_eq!(follows(PAY, 100, 2), None);
+        assert!(verifies());
+        let breaks =
+            |tamper: &str| Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()]).expect("a tamper") == Some(true);
+        for tamper in [
+            "UPDATE cella.log SET cause_hash = (SELECT hash FROM cella.log WHERE n = 1) WHERE n = 3",
+            "UPDATE cella.log SET cause = 1, cause_hash = (SELECT hash FROM cella.log WHERE n = 1) WHERE n = 3",
+            "UPDATE cella.log SET settled = false WHERE n = 3",
+            "DELETE FROM cella.follows WHERE op = 'test:thing:pay'",
+            "UPDATE cella.follows SET required = true WHERE op = 'test:thing:carry'",
+        ] {
+            assert!(breaks(tamper), "the log verified after: {tamper}");
+        }
+        assert!(verifies(), "each tamper rolled back");
+    }
+
     /// Entry 2 made by hand as `submit` makes one, under the notary's key
     /// in office, chained to entry 1 by `prev`.
     fn entry_after(prev: [u8; 32]) {
@@ -458,8 +650,7 @@ ALTER EXTENSION cella UPDATE;"
             actor: JULIEN.into(),
             date: "2026-10-25".into(),
             payload,
-            receipt: receipt.n,
-            receipt_hash,
+            basis: Basis::Receipt { n: receipt.n, hash: receipt_hash },
             guards: vec![],
         };
         let hash = log::hash(&prev, &entry).expect("a hash");

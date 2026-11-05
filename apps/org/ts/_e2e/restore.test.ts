@@ -86,7 +86,8 @@ test('members write, personal data among it, and the scope is backed up whole, i
     assert.ok(existsSync(join(backup, f)), f)
   }
   const manifest = readFileSync(join(backup, 'manifest'), 'utf8')
-  assert.match(manifest, /^version 0\.7\.0$/m)
+  const installed = await one<{ v: string }>(su, `SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)
+  assert.ok(manifest.split('\n').includes(`version ${installed.v}`), `the manifest names the installed version, ${installed.v}`)
   assert.match(manifest, /^setting - cella\.scope=lanterne\.example$/m)
   assert.match(manifest, new RegExp(`^head ${written} [0-9a-f]{64}$`, 'm'))
   const keys = await one<{ notary: string; vault: string }>(

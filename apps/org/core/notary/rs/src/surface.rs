@@ -17,13 +17,16 @@
 //! | `cella.receipt()` | function | the transaction's receipt number |
 //! | `cella.begin(op, actor, device)` | function | opens a write: the transaction may write the registered state tables and commits only with its verdict |
 //! | `cella.submit(op, payload, actor, signed)` | function | checks the write was begun, the member's signature, that the payload restates the request where it carries the same field, the device and the nonce, runs the op's guards, signs the receipt and appends the verdict |
+//! | `cella.follow(op, payload, cause)` | function | appends an effect of the write begun, on the authority of an entry it appended, `log::may_follow`, and runs the op's guards |
+//! | `cella.forgo(op, cause, why)` | function | records an effect forgone, citing an entry the write appended |
+//! | `cella.cause()` | function | the entry the effect being judged follows, for guards |
 //! | `cella.action()`, `cella.actor()`, `cella.device()` | functions | the action being judged, for guards |
-//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it |
+//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it, and each write's effects |
 //! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
 //! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
 //! | `cella.signer` | table | every key the notary has signed with, by id, and the first entry each signed |
-//! | `cella.guard`, `cella.guard_text`, `cella.keyring`, `cella.power` | tables | the registries: guards per op, the keyring, the power each op needs |
+//! | `cella.guard`, `cella.guard_text`, `cella.keyring`, `cella.power`, `cella.follows`, `cella.lets_follow(cause, op, owner, required)` | tables, function | the registries: guards per op, the keyring, the power each op needs, which op may follow which as its effect and whether its cause requires it |
 //! | `cella.state`, `cella.notarise(tab)`, `cella.notarised()` | table, function, trigger | the registered state tables, each refusing a row no begun transaction writes |
 //! | `cella.retention`, `cella.personal` | tables | the retention classes and their clocks; the columns holding personal data, each feat's own |
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
@@ -297,12 +300,17 @@ CREATE TABLE cella.log (
     date date NOT NULL,
     payload bytea NOT NULL,
     form jsonb NOT NULL,
-    receipt bigint NOT NULL UNIQUE REFERENCES cella.receipt,
+    receipt bigint UNIQUE REFERENCES cella.receipt,
     guards jsonb NOT NULL,
     prev bytea NOT NULL,
     hash bytea NOT NULL,
     sig bytea NOT NULL,
-    key integer NOT NULL REFERENCES cella.signer
+    key integer NOT NULL REFERENCES cella.signer,
+    cause bigint REFERENCES cella.log,
+    cause_hash bytea,
+    settled boolean NOT NULL DEFAULT true,
+    CONSTRAINT log_basis CHECK (CASE WHEN cause IS NULL THEN receipt IS NOT NULL AND cause_hash IS NULL AND settled
+                                     ELSE receipt IS NULL AND cause < n AND length(cause_hash) = 32 END)
 );
 CREATE TABLE cella.guard (
     op text NOT NULL,
@@ -452,11 +460,83 @@ fn actor() -> Option<String> {
 }
 
 /// The public key of the device that signed the write being judged; NULL
-/// outside `submit`.
+/// outside `submit`, and for an effect, which no device signs.
 #[pg_extern(stable)]
 fn device() -> Option<Vec<u8>> {
     notary::device()
 }
+
+/// The entry the effect being judged follows; NULL outside `follow`.
+#[pg_extern(stable)]
+fn cause() -> Option<i64> {
+    notary::cause()
+}
+
+/// Appends an effect of the write this transaction began, after its
+/// `submit`: an entry with no signature of its own, on the authority of
+/// entry `cause`, which this transaction appended, settled, fewer than five
+/// effects from its decision, and whose op `cella.follows` lets `op`
+/// follow. Runs the op's guards as `submit` does, with the decision's
+/// actor and no device, and appends an entry naming its cause by number
+/// and hash. A refusal raises SQLSTATE 09000 with its reason: the handler
+/// rolls back to the effect's savepoint and calls `forgo`.
+#[pg_extern(volatile, security_definer)]
+#[search_path(pg_catalog, pg_temp)]
+fn follow(
+    op: &str,
+    payload: JsonB,
+    cause: i64,
+) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
+    let n = notary::follow(op, &payload, cause);
+    TableIterator::once((n, "settled".to_string(), None))
+}
+
+/// Records an effect forgone, after its savepoint rolled back: refused by
+/// its guards, or forgone with an effect it requires. An entry citing
+/// `cause`, which this transaction appended, settled or forgone, recorded
+/// forgone with `why`, which the log keeps: it names no person.
+#[pg_extern(volatile, security_definer)]
+#[search_path(pg_catalog, pg_temp)]
+fn forgo(
+    op: &str,
+    cause: i64,
+    why: &str,
+) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
+    let n = notary::forgo(op, cause, why);
+    TableIterator::once((n, "forgone".to_string(), Some(why.to_string())))
+}
+
+// Which op may follow which as its effect: each row registered by the
+// feat or graft that carries or reacts, from its migration, `required`
+// saying the cause stands only with the effect, from entry `since` on, the
+// first after the row was registered or its requirement changed.
+
+extension_sql!(
+    r"
+CREATE TABLE cella.follows (
+    cause text NOT NULL,
+    op text NOT NULL,
+    owner text NOT NULL,
+    required boolean NOT NULL DEFAULT false,
+    since bigint NOT NULL CHECK (since > 0),
+    PRIMARY KEY (cause, op)
+);
+CREATE FUNCTION cella.lets_follow(cause text, op text, owner text, required boolean DEFAULT false) RETURNS void
+LANGUAGE sql SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  INSERT INTO cella.follows (cause, op, owner, required, since)
+  VALUES (lets_follow.cause, lets_follow.op, lets_follow.owner, lets_follow.required, coalesce((SELECT h.n FROM cella.head h), 0) + 1)
+  ON CONFLICT ON CONSTRAINT follows_pkey DO UPDATE SET owner = excluded.owner, required = excluded.required,
+    since = CASE WHEN follows.required = excluded.required THEN follows.since ELSE excluded.since END;
+END;
+REVOKE ALL ON cella.follows FROM PUBLIC;
+GRANT SELECT ON cella.follows TO PUBLIC;
+REVOKE EXECUTE ON FUNCTION cella.lets_follow(text, text, text, boolean) FROM PUBLIC;
+SELECT pg_catalog.pg_extension_config_dump('cella.follows', '');
+",
+    name = "follows",
+    requires = ["notary_tables"],
+);
 
 /// Recomputes the chain from the first entry and checks every signature
 /// against the key in office at its entry, as `cella.signer` keeps it, and

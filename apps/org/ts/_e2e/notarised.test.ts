@@ -4,8 +4,9 @@
 // every table a feat or a graft made is registered. A psql insert, as the
 // app or as a superuser, is refused; a handler that skips submit, or rolls
 // its verdict back to a savepoint, commits nothing; a verdict settles only
-// the write begun; and only a superuser unbinds. Run by `cella test e2e
-// notarised`.
+// the write begun; a decision commits with its effects and never without
+// one it requires, and an effect cites only its own write; and only a
+// superuser unbinds. Run by `cella test e2e notarised`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -155,6 +156,44 @@ test('a verdict settles only the write begun, and one write is one transaction',
     )
   } finally {
     await app.query('ROLLBACK')
+  }
+})
+
+test('a decision commits with its effects, each citing its own write, and never without one it requires', async () => {
+  const note = 'test:run:note'
+  await su.query(`SELECT cella.lets_follow('import:run:record', $1, 'e2e', true)`, [note])
+  try {
+    const before = await head()
+    await app.query('BEGIN')
+    const lacking = await recording(app)
+    await lacking.submit()
+    await assert.rejects(app.query('COMMIT'), /import:run:record, entry \d+, settles without test:run:note, which it requires/)
+    assert.equal(await head(), before)
+
+    await app.query('BEGIN')
+    const w = await recording(app)
+    await w.submit()
+    await app.query('SELECT cella.follow($1, $2, $3)', [note, { lines: 0 }, before + 1])
+    await app.query('COMMIT')
+    assert.equal(await head(), before + 2)
+    const effect = await one('SELECT cause, receipt, settled FROM cella.log WHERE n = $1', [before + 2])
+    assert.deepEqual(effect, { cause: String(before + 1), receipt: null, settled: true })
+    assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
+
+    // An entry another transaction appended authorises nothing.
+    await app.query('BEGIN')
+    try {
+      await (await recording(app)).submit()
+      await assert.rejects(
+        app.query('SELECT cella.follow($1, $2, $3)', [note, { lines: 0 }, before + 1]),
+        new RegExp(`test:run:note cites entry ${before + 1}, which this write did not append`),
+      )
+    } finally {
+      await app.query('ROLLBACK')
+    }
+    assert.equal(await head(), before + 2)
+  } finally {
+    await su.query(`DELETE FROM cella.follows WHERE owner = 'e2e'`)
   }
 })
 

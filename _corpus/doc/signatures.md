@@ -1,6 +1,6 @@
 +++
 title = "Signatures"
-updated = 2026-11-01
+updated = 2026-11-05
 +++
 
 # Signatures
@@ -18,6 +18,7 @@ type is added here before it is signed anywhere.
 | action | an actor's device, Ed25519 | `cella org 2026-10 write`, the message's first line | the scope, the action's id, the actor, the device's key, the salted request's digest, and a single-use nonce | `cella.submit` before any guard; `cella.verify_log` again |
 | receipt | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 receipt`, the BLAKE3 derive-key context of the signed hash | its number, the action's id, the actor, the device, the nonce, the request's digest, the member's signature, the payload's digest and the time it arrived; the request's salt sits beside it, outside the hash, which holds the digest it salts | `cella.verify_log` |
 | log entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-10 log entry`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the action's id, the actor, the verdict date, the payload's digest, its receipt's number and hash, and each deciding guard | `cella.verify_log` |
+| effect entry | the scope's notary key in office, Ed25519, named by its id in `cella.signer` | `cella org 2026-11 log effect`, the BLAKE3 derive-key context of the signed hash | the previous entry's hash, its number, the action's id, its decision's actor, the verdict date, the payload's digest, the number and hash of the entry it follows, whether it settled or was forgone, and each deciding guard | `cella.verify_log` |
 | session opening | a member's device, Ed25519 | `cella org 2026-10 session`, the message's first line | the scope, the actor, the device's key and the server's single-use challenge | the shell's server, `opens` in `lib/server/session.ts`, before it keeps a session |
 
 ### An action
@@ -100,6 +101,14 @@ signed by the device, in the browser.
 entry, which names the receipt by number and hash, so a verdict cannot be
 moved to another receipt and a receipt cannot be moved to another action.
 The receipt's time orders nothing; receipt numbers order stances.
+
+An effect, what a decision carries or what reacts to it, has no receipt
+and no member's signature: its entry names, in a receipt's place, the
+entry it follows by number and hash, an earlier entry of the same write,
+so an effect cannot be moved to another decision, and is hashed under a
+context of its own, so it never reads as a decision's entry. One member's signature
+is one decision, and its effects cite it
+([the notary](../../apps/org/core/notary/index.md#effects)).
 
 ## Digests
 

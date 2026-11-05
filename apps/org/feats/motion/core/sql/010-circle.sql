@@ -96,6 +96,11 @@ END;
 -- an issuer, the one that issued it or one that issued a mandate it is
 -- issued under, the assembly on every chain; for the end of a right's,
 -- the assembly. A procedure policy consults, if any, a circle there is.
+-- And each end or replacement of a policy granting the assembly a
+-- collective `adopt-policy` mandate with no `until`
+-- (`circle.sovereign_by`) leaves it, with the actions before it, still
+-- keeping one (`circle.sovereignty`): another adopted earlier in the
+-- motion with no `until`, or one it holds that the motion does not end.
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -134,6 +139,18 @@ BEGIN ATOMIC
     CROSS JOIN LATERAL (SELECT btrim(motion.marked(m.args ->> 'wording') ->> 'consult') AS consult) c
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'procedure'
       AND c.consult IS NOT NULL AND NOT EXISTS (SELECT FROM circle.circle o WHERE o.id = c.consult)
+    UNION ALL
+    SELECT circle.sovereignty(
+      ARRAY(SELECT coalesce(o.args ->> 'policy', o.args ->> 'replaces') FROM motion.action o
+            WHERE o.motion = m.motion AND o.n <= m.n
+              AND ((o.kind = 'end' AND o.args ? 'policy') OR (o.kind = 'policy' AND nullif(o.args ->> 'replaces', '') IS NOT NULL))),
+      (SELECT coalesce(jsonb_agg(motion.marked(o.args ->> 'wording') || jsonb_build_object('until', o.args ->> 'until')), '[]')
+       FROM motion.action o
+       WHERE o.motion = m.motion AND o.n <= m.n AND o.kind = 'policy' AND o.args ->> 'kind' = 'mandate')
+    )
+    FROM motion.action m
+    WHERE m.motion = payload ->> 'motion'
+      AND circle.sovereign_by(CASE m.kind WHEN 'end' THEN m.args ->> 'policy' WHEN 'policy' THEN nullif(m.args ->> 'replaces', '') END)
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;
@@ -143,13 +160,16 @@ END;
 -- guards that a
 -- mandate policy's mandate is copied and revoked with it, and that every
 -- mandate standing is still a root the assembly issued or issued under a
--- parent its issuer holds, and narrower than it.
+-- parent its issuer holds, and narrower than it, and that the assembly
+-- still keeps a collective `adopt-policy` mandate with no `until`.
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'motion.circle_asks(jsonb)', 'motion'),
   ('motion:policy:adopt', 'circle.grants(jsonb)', 'motion'),
   ('motion:policy:adopt', 'circle.narrows(jsonb)', 'motion'),
   ('motion:policy:end', 'circle.revokes(jsonb)', 'motion'),
-  ('motion:policy:end', 'circle.narrows(jsonb)', 'motion');
+  ('motion:policy:end', 'circle.narrows(jsonb)', 'motion'),
+  ('motion:policy:adopt', 'circle.sovereign(jsonb)', 'motion'),
+  ('motion:policy:end', 'circle.sovereign(jsonb)', 'motion');
 
 GRANT USAGE ON SCHEMA motion TO cella_app, cella_guards;
 GRANT SELECT ON motion.circle_action TO cella_app, cella_guards;

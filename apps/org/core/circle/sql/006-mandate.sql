@@ -266,3 +266,67 @@ BEGIN ATOMIC
       AND (m.revoked IS NULL OR m.revoked > holds.day)
   );
 END;
+
+-- Why the assembly would not keep a collective `adopt-policy` mandate
+-- with no `until` once the policies `ending` end and the mandate
+-- policies `adopting` are adopted, or null when it would: it keeps one
+-- it holds, never revoked, whose policy is none of `ending`, or one of
+-- `adopting`, each the values its policy marks and its `until`, if any,
+-- granting it with none. Through it the assembly grants itself again any
+-- power it ended. The reason names the last such mandate it holds, the
+-- one the write or the motion ends.
+CREATE FUNCTION circle.sovereignty(ending text[], adopting jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT circle.assembly() || ' would lose its power to adopt policies: '
+    || coalesce('mandate ' || l.id || ' of ' || l.policy || ' is its last collective adopt-policy mandate with no until',
+         'it holds no collective adopt-policy mandate with no until')
+    || '; adopting another with no until in its place, in the same motion and before ending it, keeps it'
+  FROM (SELECT) x
+  LEFT JOIN LATERAL (
+    SELECT m.id, m.policy FROM circle.mandate m
+    WHERE m.grantee = circle.assembly() AND m.power = 'adopt-policy' AND m.until IS NULL
+    ORDER BY m.policy = ANY (coalesce(sovereignty.ending, '{}')) DESC, m.revoked DESC NULLS FIRST, m.id DESC
+    LIMIT 1
+  ) l ON true
+  WHERE NOT EXISTS (
+      SELECT FROM circle.mandate m
+      WHERE m.grantee = circle.assembly() AND m.power = 'adopt-policy'
+        AND m.until IS NULL AND m.revoked IS NULL
+        AND m.policy <> ALL (coalesce(sovereignty.ending, '{}'))
+    )
+    AND NOT EXISTS (
+      SELECT FROM jsonb_array_elements(coalesce(sovereignty.adopting, '[]')) a
+      WHERE a ->> 'circle' = circle.assembly() AND a ->> 'power' = 'adopt-policy'
+        AND nullif(a ->> 'until', '') IS NULL
+    );
+END;
+
+-- Whether the policy `ref` grants the assembly a collective
+-- `adopt-policy` mandate with no `until` that stands on the verdict
+-- date, revoked by no earlier day: one whose end or replacement
+-- `circle.sovereignty` judges.
+CREATE FUNCTION circle.sovereign_by(ref text) RETURNS boolean
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT EXISTS (
+    SELECT FROM circle.mandate m
+    WHERE m.policy = sovereign_by.ref
+      AND m.grantee = circle.assembly() AND m.power = 'adopt-policy' AND m.until IS NULL
+      AND (m.revoked IS NULL OR m.revoked >= cella.verdict_date())
+  );
+END;
+
+-- motion:policy:adopt and motion:policy:end, which the motion feat
+-- attaches it to — a write that ends, or adopts a policy replacing, one
+-- that grants the assembly a collective `adopt-policy` mandate with no
+-- `until` (`circle.sovereign_by`) leaves it still keeping one
+-- (`circle.sovereignty`).
+CREATE FUNCTION circle.sovereign(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT circle.sovereignty('{}', '[]')
+  FROM policy.policy p
+  WHERE p.id = payload ->> 'policy'
+    AND (circle.sovereign_by(p.id) OR circle.sovereign_by(p.replaces));
+END;

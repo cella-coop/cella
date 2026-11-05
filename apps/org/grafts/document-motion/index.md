@@ -67,7 +67,8 @@ policy is of, as the statutes are from the assembly's, is generated
 anew by the document feat's `generate`, a write of its own signed by
 whoever signed the adoption or the ending and citing the motion, from
 the policies in force on the day the adopted policy applies or the ended
-one ends (`handlers/generate.ts`). A policy of a circle no document is
+one ends, or on the day the adopted version reads where that is later
+(`handlers/generate.ts`). A policy of a circle no document is
 generated from makes no write. The request names the motion's action,
 `n`, so the reaction reads the policy it adopted or ended.
 

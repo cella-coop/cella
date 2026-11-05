@@ -22,6 +22,7 @@ at each adoption ([generated documents](#generated-documents)).
 | comment | `version`, `author`, `at`, `quote`, `anchor`, `text`, `resolved` | on the text it quotes, anchored by Loro cursors |
 | adoption | `receipt`, `version`, `base`, `adopted` | makes a version binding, naming the one it replaces |
 | generated | `document`, `circle`, `template` | a document generated from a circle's policies, around its template |
+| generation | `document`, `version`, `motion`, `day` | what a generated version cites and the day it reads; a motion is cited by no version but the adopted one and those after it |
 
 ## The model
 
@@ -103,7 +104,14 @@ one of them is followed by `generate`, which patches the generated
 blocks onto the draft, saves the result as the next version and adopts
 it, in one write whose log entry commits to the version's hash: the
 document is frozen at each adoption, and every earlier version still
-reads. An edit, a version or an adoption by hand is refused; a comment is
+reads. Each generated version keeps the motion it cites and the day it
+reads, and a generation never goes back: it cites a motion no version
+of the document but the adopted one cites, so a motion's several
+changes generate one version each in a row and an earlier motion is
+never cited again once a later one's version is adopted, and reads the later of the day that motion's
+change applies and the day the adopted version reads, so a policy
+adopted to apply before a change the document already reads lands in
+the version that reads them both. An edit, a version or an adoption by hand is refused; a comment is
 not. A generated document is carried over with its template, as the
 seed carries Lanterne's statutes; no action creates one or changes its
 template yet.
@@ -154,7 +162,8 @@ draft, and the next adoption names a later version.
   do not refuse it: the members voted on the version, not the draft.
 - **generate** generates a generated document from its circle's policies
   in force on the day a motion's adoption or ending of one of them
-  applies, and the defaults of its form the circle left by then, saves it as the next version and adopts it, naming the
+  applies, or on the day the adopted version reads where that is later,
+  and the defaults of its form the circle left by then, saves it as the next version and adopts it, naming the
   adopted version it replaces, as adopt does. It cites the motion. The
   log commits to the version's hash.
 
@@ -182,7 +191,12 @@ The document feat owns:
   names; two adoptions from the same base cannot both settle;
 - a generated document's version reads every policy of its circle in
   force on its day and no other of its policies, and it changes by no
-  hand.
+  hand;
+- a generated document's versions cite a motion only in a row, and
+  their days only move forward: a motion cited by a version before the
+  adopted one, or a day earlier than the adopted version's, is refused,
+  the refusal naming the version that cites it or the day that version
+  reads.
 
 What it does not own: that the cited motion asks for this content (the
 `document-motion` graft's), that it closed and passed on its roll
@@ -212,11 +226,18 @@ adopting motion names its circle).
 - `document.generated` (`004-generated.sql`): a generated document, the
   circle whose policies it reads, and its template, a JSON array of
   fragments; it never changes.
+- `document.generation` (`004-generated.sql`): what each generated version
+  cites and reads, one row for each motion it cites: the version, the
+  motion and the day whose policies it reads; it never changes. A version `generate` makes cites one motion; one the
+  seed carries over cites each motion whose change it first reads.
+  `document.reads(base, day)` is the day a generation from `base` reads:
+  the later of `day` and the day `base` reads.
 
 Updates, versions and adoptions never change, by trigger; a comment
 changes only by being resolved. The triggers raise SQLSTATE `09000`. The
 app role may select, and insert updates, versions, comments and
-adoptions; the guards role, `cella_guards`, may select.
+adoptions; the guards role, `cella_guards`, may select. The app inserts a
+generation as `generate` makes its version.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
@@ -236,10 +257,13 @@ circle whose policies it reads, which it names always.
   A second adoption from the same base is refused; edits to the draft
   never refuse one. It judges `document:document:generate` too.
 - `document.generates`, on `document:document:generate`: the document is
-  generated, the cited motion adopted a policy of its circle applying on
-  the write's day or ended one that day, and the version reads, each as
-  a line as it reads (`policy.says`), every policy of the circle in force
-  that day and no other of its policies.
+  generated; no version of it but the adopted one cites the motion, or
+  the refusal names the one that does; the cited motion adopted a policy of its
+  circle applying on the write's day or ended one that day; the version
+  reads the day `document.reads` gives from the version it replaces, and
+  one earlier is refused, naming the day that version reads; and it
+  reads, each as a line as it reads (`policy.says`), every policy of the
+  circle in force on the day it reads and no other of its policies.
 - `document.handmade`, on `document:document:edit`, `:version` and
   `:adopt`: the document is not generated.
 
@@ -264,11 +288,13 @@ circle whose policies it reads, which it names always.
   motion, receipt }`; the cited motion is an id this feat does not
   resolve.
 - `generate` (ordered, `base: 'adopted'`), and `generating`, its write:
-  reads the template and the circle's policies in force on the day, in
-  their order, generates the blocks (`models/generated.ts`), patches them
+  reads the template and the circle's policies in force on the day
+  `document.reads` gives from the adopted version, in their order,
+  generates the blocks (`models/generated.ts`), patches them
   onto the merged draft and appends what changed as an update by the
   actor, saves the snapshot as the next version and adopts it on the
-  verdict date, from the adopted version before it; it submits
+  verdict date, from the adopted version before it, inserting the
+  generation that cites the motion and that day; it submits
   `{ document, version, hash, base, adopted, receipt, motion, day }`.
 - `draft(db, document)`: the merged draft's canonical form, for reading.
 
@@ -349,6 +375,15 @@ a motion's page.
   sentence where the founding one read, its hash in its log entry and
   recomputed from the version; the earlier version still reads, and an
   edit, a version or an adoption of the statutes by hand is refused.
+- `_e2e/generated.test.ts`: a generation never goes back: after
+  `statutes@3`, the founding motion and its day cited again are refused
+  naming `statutes@1`, which cites it; a motion's two changes, ending
+  a policy and adopting another, generate a version each (`forms`); a rule adopted to apply on 20 December after one adopted to
+  apply on 1 January generates a version reading 1 January, and so both,
+  and the January motion, cited again once that version is adopted, is
+  refused;
+  a motion whose generation never ran, cited later by hand, reads the
+  adopted version's day.
 - `_e2e/editor.test.ts`: the editor in Chromium, Firefox and WebKit
   (nixpkgs' Playwright browsers), two tabs syncing through the shell:
   typing, Enter and Backspace across blocks, shortcuts, the slash menu and

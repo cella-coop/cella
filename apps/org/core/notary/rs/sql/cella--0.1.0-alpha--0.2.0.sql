@@ -5,7 +5,8 @@
 -- loaded; the log, its receipts and the vault stay as they are.
 
 -- The key that signed the log so far is the key file's: the upgrade runs
--- with the key that signed it, and refuses if the log then fails to verify.
+-- with the key that signed it, and refuses if the log then fails to verify;
+-- an empty log has nothing to verify.
 CREATE TABLE cella.signer (
     id integer PRIMARY KEY CHECK (id > 0),
     public bytea NOT NULL UNIQUE CHECK (length(public) = 32),
@@ -26,8 +27,10 @@ ALTER TABLE cella.log ALTER COLUMN key SET NOT NULL;
 
 DO $$
 BEGIN
-  IF NOT cella.verify_log() THEN
-    RAISE EXCEPTION 'cella 0.2.0: the log does not verify under cella.key_file''s key; upgrade with the key that signed it';
+  IF EXISTS (SELECT FROM cella.log) THEN
+    IF NOT cella.verify_log() THEN
+      RAISE EXCEPTION 'cella 0.2.0: the log does not verify under cella.key_file''s key; upgrade with the key that signed it';
+    END IF;
   END IF;
 END
 $$;

@@ -139,6 +139,40 @@ test('the assembly\'s page lists the policy in force, as it reads, with its moti
   assert.deepEqual((await circles.proposing(app, 'coordination'))?.policies, [], 'a policy is its circle\'s')
 })
 
+test('a motion closed so late its policies would end on or before the day they apply passes, and adopts neither', async () => {
+  const proposed = settled(
+    await propose(
+      {
+        circle: 'ag',
+        title: 'Remote work',
+        procedure: 'consent',
+        deadline: '2026-11-28',
+        body: '',
+        actions: [
+          { kind: 'policy', args: { kind: 'rule', wording: 'Remote work is two days a week', until: '2026-12-01' } },
+          { kind: 'policy', args: { kind: 'rule', wording: 'Remote work is three days a week', until: '2026-11-30' } },
+        ],
+      },
+      as(camille),
+    ),
+  )
+  const late = proposed.motion
+  for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [late])) {
+    settled(await vote({ motion: late, member, stance: 'consent' }, as(member)))
+  }
+  await on('2026-12-01')
+  settled(await close({ motion: late }, as(camille)))
+  const out = await carried(late, as(camille))
+  assert.deepEqual(out.map((d) => [d.op, d.state]), [
+    ['motion:policy:adopt', 'refused'],
+    ['motion:policy:adopt', 'refused'],
+  ])
+  assert.match(out[0].reason ?? '', new RegExp(`${late}/1 would end on 2026-12-01, not after 2026-12-01, the day it applies`))
+  assert.match(out[1].reason ?? '', new RegExp(`${late}/2 would end on 2026-11-30, not after 2026-12-01, the day it applies`))
+  assert.notEqual((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [late])).closed, null, 'the close stands')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM policy.policy WHERE motion = $1', [late])).n, '0')
+})
+
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })

@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -29,7 +29,10 @@ reads it.
   motion and its number there (`m-2026-013/1`); its circle, its kind
   (`mandate`, `right`, `rule` or `procedure`), the BLAKE3 of its wordings
   (`policy.hash`), the day it was adopted, the day it applies from, the
-  day it ends, if any, the policy it replaces, and the action that ended
+  day it ends, if any, after the day it applies where its adoption sets
+  it, since it binds until the day before it ends (`policy.in_force`),
+  or the day a motion ends or replaces it, which may be that day, the
+  policy it replaces, and the action that ended
   it (`ended_by`, `m-2026-020/1`), if a motion did; and, for a protected
   policy, the procedure by which alone it is replaced or ended
   (`protected`), by its name, as the motion feat names it, since the
@@ -71,7 +74,9 @@ Its functions:
   replaces, protected, takes)`: a write, inside the write of the action
   that adopts the policy; `protected`, the procedure that alone changes
   it, and `takes`, the default it takes, may be left out. It refuses a
-  wording flawed for its kind, a policy adopted already, a replacement of
+  wording flawed for its kind, a policy adopted already, an end not after
+  the day it applies, so the register keeps no policy that is never in
+  force, a replacement of
   a policy not in force in that circle and kind, a default it does not
   read and is not protected as (`policy.takes_flaw`), and a default a
   policy in force there takes already, unless this one replaces it

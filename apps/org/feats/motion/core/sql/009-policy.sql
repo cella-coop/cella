@@ -208,8 +208,9 @@ END;
 
 -- motion:motion:propose — each policy the motion would adopt is of a
 -- kind, worded soundly for its kind (`policy.flaw`), a rule's ordered
--- values each saying which way is stricter, its days in order and none before
--- the motion's deadline, and replaces, if it names one, a policy of the
+-- values each saying which way is stricter, its days none before the
+-- motion's deadline and its end after the day it would apply were the
+-- motion closed then, and replaces, if it names one, a policy of the
 -- motion's circle and kind in force and not protected from it
 -- (`motion.protection_flaw`), takes, if it names one, a default it is
 -- worded and protected as (`policy.takes_flaw`) that no policy in force
@@ -232,8 +233,9 @@ BEGIN ATOMIC
         THEN 'a policy''s days are written YYYY-MM-DD'
       WHEN (m.args ->> 'from')::date < d.deadline
         THEN 'a policy applies at the earliest from ' || to_char(d.deadline, 'YYYY-MM-DD') || ', when ' || d.id || ' may close'
-      WHEN (m.args ->> 'until')::date < coalesce((m.args ->> 'from')::date, d.deadline)
-        THEN 'a policy ends after it applies'
+      WHEN (m.args ->> 'until')::date <= coalesce((m.args ->> 'from')::date, d.deadline)
+        THEN 'a policy ends after the day it applies, ' || to_char(coalesce((m.args ->> 'from')::date, d.deadline), 'YYYY-MM-DD')
+          || ' were ' || d.id || ' closed at its deadline'
       WHEN m.args ? 'replaces' AND NOT EXISTS (
         SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f
         WHERE f.id = m.args ->> 'replaces' AND f.kind = m.args ->> 'kind'
@@ -280,8 +282,8 @@ END;
 -- motion's action carries: of its circle, of that kind, worded as the
 -- motion names it (by the hash of its wordings, never by reading them
 -- back), applying from the day the action names, or the verdict date,
--- whichever is later, and until the day it names; a policy it
--- replaces ends that day; it is protected as the action names, and the
+-- whichever is later, and until the day it names, which is after that
+-- however late the motion closed; a policy it replaces ends that day; it is protected as the action names, and the
 -- policy it replaces is not protected from the motion; it takes the
 -- default the action names, worded and protected as that default reads;
 -- the entry commits to its hash; and a procedure
@@ -292,6 +294,10 @@ BEGIN ATOMIC
   SELECT CASE
     WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
     WHEN m.kind IS DISTINCT FROM 'policy' THEN d.id || ' adopts no policy as its action ' || coalesce(p.n::text, '?')
+    WHEN (m.args ->> 'until')::date <= greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date())
+      THEN d.id || '/' || m.n || ' would end on ' || (m.args ->> 'until') || ', not after '
+        || to_char(greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date()), 'YYYY-MM-DD')
+        || ', the day it applies: a policy ends after the day it applies'
     WHEN r.id IS NULL OR r.id IS DISTINCT FROM p.policy THEN d.id || ' adopted no policy ' || coalesce(p.policy, '') || ' by this write'
     WHEN r.circle <> d.circle OR r.kind <> m.args ->> 'kind' OR r.motion <> d.id OR r.n <> m.n
       OR r.hash <> policy.hash(m.args ->> 'wording', nullif(btrim(m.args ->> 'friendly'), ''))

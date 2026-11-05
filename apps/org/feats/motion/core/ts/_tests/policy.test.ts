@@ -186,6 +186,39 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '2026-11-14' })) ?? '', /applies at the earliest from 2026-11-21/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '1 December' })) ?? '', /written YYYY-MM-DD/)
   assert.match((await asks({ kind: 'rule', wording: 'x', replaces: 'm-2026-001/1' })) ?? '', /no rule of ag in force is m-2026-001\/1/)
+  // It ends after the day it would apply were the motion closed at its
+  // deadline: its from, or else the deadline; on that day is refused too.
+  assert.equal(await asks({ kind: 'rule', wording: 'x', from: '2026-11-25', until: '2026-11-26' }), null)
+  assert.match((await asks({ kind: 'rule', wording: 'x', from: '2026-11-25', until: '2026-11-25' })) ?? '', /a policy ends after the day it applies, 2026-11-25 were m-2026-014 closed at its deadline/)
+  assert.match((await asks({ kind: 'rule', wording: 'x', until: '2026-11-21' })) ?? '', /a policy ends after the day it applies, 2026-11-21/)
+  assert.match((await asks({ kind: 'rule', wording: 'x', until: '2026-11-20' })) ?? '', /a policy ends after the day it applies, 2026-11-21/)
+  assert.equal(await asks({ kind: 'rule', wording: 'x', until: '2026-11-22' }), null)
+})
+
+test('a policy ends only after the day it applies, however late its motion closes', async () => {
+  const adopts = async (payload: object) => (await db.query<{ r: string | null }>('SELECT motion.adopts($1) AS r', [payload])).rows[0].r
+  await db.query('BEGIN')
+  try {
+    // Proposed with an end after its deadline, the motion closes four days
+    // late: the policy would apply on the verdict date, on or after its end.
+    await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES
+      ('m-2026-014', 3, 'policy', '{"kind": "rule", "wording": "Remote work is two days a week", "until": "2026-11-25"}'),
+      ('m-2026-014', 4, 'policy', '{"kind": "rule", "wording": "Remote work is three days a week", "until": "2026-11-24"}')`)
+    await db.query(`SET LOCAL cella.clock = '2026-11-25'`)
+    await refused(`SELECT policy.adopt('ag', 'rule', 'Remote work is two days a week', NULL, 'm-2026-014', 3, '2026-11-25', '2026-11-25', NULL)`, [],
+      /m-2026-014\/3 would end on 2026-11-25, not after 2026-11-25, the day it applies: a policy ends after the day it applies/)
+    await refused(`SELECT policy.adopt('ag', 'rule', 'Remote work is three days a week', NULL, 'm-2026-014', 4, '2026-11-25', '2026-11-24', NULL)`, [],
+      /m-2026-014\/4 would end on 2026-11-24, not after 2026-11-25/)
+    assert.match((await adopts({ motion: 'm-2026-014', n: 3, policy: 'm-2026-014/3' })) ?? '', /m-2026-014\/3 would end on 2026-11-25, not after 2026-11-25, the day it applies/)
+    assert.match((await adopts({ motion: 'm-2026-014', n: 4, policy: 'm-2026-014/4' })) ?? '', /m-2026-014\/4 would end on 2026-11-24, not after 2026-11-25/)
+    assert.deepEqual((await db.query('SELECT id FROM policy.policy')).rows, [], 'the register keeps no policy never in force')
+    // A day later than it applies, it is adopted, and in force until the day before it ends.
+    await db.query(`SELECT policy.adopt('ag', 'rule', 'Remote work is two days a week', NULL, 'm-2026-014', 3, '2026-11-25', '2026-11-26', NULL)`)
+    assert.deepEqual((await db.query(`SELECT id FROM policy.in_force('ag', '2026-11-25')`)).rows, [{ id: 'm-2026-014/3' }])
+    assert.deepEqual((await db.query(`SELECT id FROM policy.in_force('ag', '2026-11-26')`)).rows, [])
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })
 
 test('an adoption is the policy its motion carries, worded as the motion names it', async () => {

@@ -29,7 +29,7 @@ export const saving = (input: Save, actor: string): Write<Stored> => ({
 // the port would refuse is refused with every reason, and never saved.
 export async function save(port: Analytics, input: Save, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Stored>> {
   const { chart, ...report } = input.definition
-  const reasons = check(report, await port.catalog())
+  const reasons = check(report, await port.catalog(), true)
   const shown = [...(report.fields ?? []), ...Object.keys(report.measures ?? {})]
   for (const [what, field] of chart ? Object.entries(chart) : []) {
     if (!shown.includes(field)) {

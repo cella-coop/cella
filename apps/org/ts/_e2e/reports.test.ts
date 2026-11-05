@@ -16,6 +16,7 @@ import { approve } from '@cella/org-graft-expense-transaction/api'
 import { custom, draw, margins, save, spans, statement } from '@cella/org-report/api'
 import type { Rubric, Statement } from '@cella/org-report/models'
 import type { Deps } from '@cella/org-db'
+import { scoped } from '@cella/org-analytics'
 import { reader, sign } from './lanterne.ts'
 import { reading, type Reading } from './port.ts'
 import { Shell } from './serve.ts'
@@ -49,7 +50,9 @@ async function trial() {
 }
 
 const figure = (rs: Rubric[], id: string, i = 0) => rs.find((r) => r.id === id)?.amounts[i] ?? null
-const port = () => shell.analytics
+// The port as Camille, a member who reads every circle by open books,
+// reads it, as the server hands it to her pages.
+const port = () => scoped(shell.analytics, reader(app, camille))
 
 // A page as text, its tags gone.
 const read = async (path: string, actor: string) => {

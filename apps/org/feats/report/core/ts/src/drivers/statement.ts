@@ -41,18 +41,20 @@ export async function statement(port: Analytics, sheet: Sheet, span: Span): Prom
     measures: { debit: { fn: 'sum', of: 'm.debit' }, credit: { fn: 'sum', of: 'm.credit' } },
     where: [{ field: 'p.sheet', op: '=', value: sheet }, { field: 'm.day', op: '<=', value: span.until }, ...(from ? [{ field: 'm.day', op: '>=' as const, value: from }] : [])],
   })
-  const shape = await port.run({
+  // The rubrics are shared by id, so a report filters them by nothing
+  // else: the sheet's are kept here.
+  const registry = await port.run({
     from: { r: 'account.rubrics' },
-    fields: ['r.id', 'r.n', 'r.kind', 'r.label', 'r.side'],
-    where: [{ field: 'r.sheet', op: '=', value: sheet }],
+    fields: ['r.id', 'r.sheet', 'r.n', 'r.kind', 'r.label', 'r.side'],
     order: ['r.n'],
   })
+  const shape = registry.rows.filter((r) => r['r.sheet'] === sheet)
   const expands = await port.run({
     from: { t: 'account.totals' },
     fields: ['t.total', 't.line', 't.sign'],
     where: [{ field: 't.sheet', op: '=', value: sheet }],
   })
-  const side = new Map(shape.rows.map((r) => [r['r.id'] as string, r['r.side'] as string | null]))
+  const side = new Map(shape.map((r) => [r['r.id'] as string, r['r.side'] as string | null]))
   // Which column a month falls in: the span's, the span's before, or none.
   const columns = [span, { since: span.before_since, until: span.before_until }]
   const within = (month: string, c: { since: string; until: string }) =>
@@ -77,7 +79,7 @@ export async function statement(port: Analytics, sheet: Sheet, span: Span): Prom
   for (const t of expands.rows) {
     parts.set(t['t.total'] as string, [...(parts.get(t['t.total'] as string) ?? []), { line: t['t.line'] as string, sign: Number(t['t.sign']) }])
   }
-  const rubrics = shape.rows.flatMap((r): Rubric[] => {
+  const rubrics = shape.flatMap((r): Rubric[] => {
     const id = r['r.id'] as string
     const kind = r['r.kind'] as Rubric['kind']
     const label = r['r.label'] as string

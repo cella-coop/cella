@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import pg from 'pg'
 import { DuckDBInstance } from '@duckdb/node-api'
-import { check, Invalid, type Analytics, type Catalog, type Report } from '@cella/org-analytics'
+import { check, compile, Invalid, scoped, type Analytics, type Catalog, type Report } from '@cella/org-analytics'
 import { shell } from '@cella/org-analytics/api'
 import { profile } from '@cella/org-person/api'
 import type { Deps } from '@cella/org-db'
@@ -35,7 +35,10 @@ const su = new pg.Client()
 let app: pg.Client
 let analytics: Analytics & { close: () => void }
 let catalog: Catalog
+// The port as Camille, a member who reads every circle by open books.
+let camilles: Analytics
 const hugo = 'hugo@lanterne.example'
+const camille = 'camille@lanterne.example'
 const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 
 before(async () => {
@@ -47,6 +50,7 @@ before(async () => {
   const token = readFileSync(join(repo, '.data/analytics', port, 'token'), 'utf8')
   analytics = await shell({ url, token, extensions })
   catalog = await analytics.catalog()
+  camilles = scoped(analytics, reader(app, camille))
 })
 
 after(async () => {
@@ -107,8 +111,12 @@ test('the catalog is the views the slices publish, with their plain types and pe
     ORDER BY 1`)
   assert.deepEqual(Object.keys(catalog).sort(), granted.map((g) => g.view))
   assert.ok(Object.keys(catalog).length >= 50)
-  assert.deepEqual(catalog['person.people'], { address: { type: 'text', personal: false }, circle: { type: 'text', personal: false }, name: { type: 'text', personal: true } })
-  assert.equal(catalog['account_transaction.movements'].debit.type, 'bigint')
+  assert.deepEqual(catalog['person.people'], {
+    audience: { kind: 'scoped', circle: 'circle', whose: 'address' },
+    columns: { address: { type: 'text', personal: false }, circle: { type: 'text', personal: false }, name: { type: 'text', personal: true } },
+  })
+  assert.deepEqual(catalog['account_transaction.movements'].audience, { kind: 'shared', by: ['code', 'day'] })
+  assert.equal(catalog['account_transaction.movements'].columns.debit.type, 'bigint')
   assert.ok(!Object.keys(catalog).some((v) => v.startsWith('analytics.')), 'the head stamps a run; no report reads it')
 })
 
@@ -124,7 +132,7 @@ test('a report joins slices in the shell and reconciles with the books to the ce
   assert.equal(String(books.rows[0].credit), sums.credit)
   assert.equal(books.rows[0].debit, books.rows[0].credit, 'the books balance')
 
-  const time = await analytics.run({
+  const time = await camilles.run({
     from: { p: 'project.projects', m: 'project_timesheet.months' },
     join: [['m.project', 'p.id']],
     fields: ['p.title'],
@@ -139,13 +147,13 @@ test('a report joins slices in the shell and reconciles with the books to the ce
   assert.deepEqual(time.rows.map((r) => [r['p.title'], String(r.minutes)]), expected.map((r) => [r.title, r.minutes]))
   assert.equal(time.more, false)
 
-  const two = await analytics.run({ from: { p: 'project.projects' }, fields: ['p.title'], order: ['p.title'], limit: 2 })
+  const two = await camilles.run({ from: { p: 'project.projects' }, fields: ['p.title'], order: ['p.title'], limit: 2 })
   assert.equal(two.rows.length, 2)
   assert.equal(two.more, true)
   // A value is a literal of its column's type, never SQL.
-  const odd = await analytics.run({ from: { p: 'project.projects' }, fields: ['p.title'], where: [{ field: 'p.title', op: '=', value: "x' OR '1'='1" }] })
+  const odd = await camilles.run({ from: { p: 'project.projects' }, fields: ['p.title'], where: [{ field: 'p.title', op: '=', value: "x' OR '1'='1" }] })
   assert.deepEqual(odd.rows, [])
-  const runs = await Promise.all([1, 2, 3, 4, 5].map(() => analytics.run({ from: { p: 'project.projects' }, measures: { n: { fn: 'count' } } })))
+  const runs = await Promise.all([1, 2, 3, 4, 5].map(() => camilles.run({ from: { p: 'project.projects' }, measures: { n: { fn: 'count' } } })))
   assert.ok(runs.every((r) => r.rows[0].n === runs[0].rows[0].n && r.head.n === Number(head.n)))
 })
 
@@ -176,13 +184,13 @@ test('a run reads one snapshot: a write landing meanwhile moves neither its rows
   await c.run('DISCONNECT')
   c.closeSync()
   instance.closeSync()
-  const after = await analytics.run({ from: { x: 'person.people' }, fields: ['x.name'], where: [{ field: 'x.address', op: '=', value: hugo }], personal: ['x.name'] })
+  const after = await camilles.run({ from: { x: 'person.people' }, fields: ['x.name'], where: [{ field: 'x.address', op: '=', value: hugo }], personal: ['x.name'] })
   assert.equal(after.head.n, before.n + 1)
   assert.deepEqual(after.rows, [{ 'x.name': 'Hugo L. (renamed)' }])
 })
 
 test('the port refuses a report that reads past the catalog, with every reason, before the shell sees it', async () => {
-  const shown = Object.entries(catalog).flatMap(([view, cols]) => Object.entries(cols).filter(([, c]) => c.type === 'jsonb' || c.type === 'text[]').map(([col]) => [view, col]))[0]
+  const shown = Object.entries(catalog).flatMap(([view, v]) => Object.entries(v.columns).filter(([, c]) => c.type === 'jsonb' || c.type === 'text[]').map(([col]) => [view, col]))[0]
   const bad: [Report, RegExp][] = [
     [{ from: {}, fields: [] }, /at least one view/],
     [{ from: { l: 'transaction.line' }, fields: ['l.amount'] }, /transaction.line is no view the slices publish/],
@@ -212,8 +220,17 @@ test('the port refuses a report that reads past the catalog, with every reason, 
     [{ from: { x: 'person.people' }, measures: { n: { fn: 'count', of: 'x.name' } } }, /x.name is personal/],
     [{ from: { x: 'person.people' }, fields: ['x.address'], where: [{ field: 'x.name', op: '=', value: 'Hugo' }] }, /x.name is personal/],
     [{ from: { x: 'person.people' }, fields: ['x.address'], personal: ['x.address'] }, /personal x.address: no personal column/],
+    [{ from: { p: 'project.projects' }, fields: ['p.title'] }, /p \(project\.projects\) is scoped: a report reading it names its reader/],
+    [
+      { from: { m: 'account_transaction.movements', p: 'project.projects' }, join: [['p.id', 'm.code']], fields: ['p.title'], reader: { person: null, circles: { 'account_transaction.movements': [] } } },
+      /p \(project\.projects\) is scoped: the reader's circles in it are not given/,
+    ],
+    [
+      { from: { m: 'account_transaction.movements' }, measures: { n: { fn: 'count' } }, where: [{ field: 'm.debit', op: '>', value: 0 }] },
+      /filter m\.debit: account_transaction\.movements is shared by code, day, and no report filters it finer/,
+    ],
   ]
-  const flag = Object.entries(catalog).flatMap(([view, cols]) => Object.entries(cols).filter(([, c]) => c.type === 'boolean').map(([col]) => [view, col]))[0]
+  const flag = Object.entries(catalog).flatMap(([view, v]) => Object.entries(v.columns).filter(([, c]) => c.type === 'boolean').map(([col]) => [view, col]))[0]
   assert.ok(flag, 'a view shares a flag')
   bad.push([{ from: { f: flag[0] }, measures: { s: { fn: 'max', of: `f.${flag[1]}` } } }, /has no order/])
   bad.push([{ from: { f: flag[0] }, measures: { n: { fn: 'count' } }, where: [{ field: `f.${flag[1]}`, op: '<', value: true }] }, /a boolean is equal or not/])
@@ -227,7 +244,42 @@ test('the port refuses a report that reads past the catalog, with every reason, 
     await assert.rejects(analytics.run(report), (e: unknown) => e instanceof Invalid && e.reasons.some((r) => why.test(r)))
   }
   // Every reason at once, not the first alone.
-  assert.equal(check({ from: { p: 'project.projects' }, fields: ['p.secret'], limit: 0, order: ['x'] }, catalog).length, 3)
+  assert.equal(check({ from: { p: 'project.projects' }, fields: ['p.secret'], limit: 0, order: ['x'] }, catalog, true).length, 3)
   // What is declared reads.
-  assert.deepEqual(check({ from: { x: 'person.people' }, fields: ['x.name'], personal: ['x.name'] }, catalog), [])
+  assert.deepEqual(check({ from: { x: 'person.people' }, fields: ['x.name'], personal: ['x.name'] }, catalog, true), [])
+  assert.deepEqual(check({ from: { x: 'person.people' }, fields: ['x.name'], personal: ['x.name'], reader: { person: hugo, circles: { 'person.people': [] } } }, catalog), [])
+  // A saved definition names no reader: whoever runs it reads it.
+  assert.deepEqual(check({ from: { x: 'person.people' }, fields: ['x.address'], reader: { person: hugo, circles: {} } }, catalog, true), [
+    'a saved report names no reader: whoever runs it reads it',
+  ])
+})
+
+test('a report reads a scoped view for its reader alone: the rows of the circles they read it in, and their own', async () => {
+  const titles = async (reader: Report['reader']) =>
+    (await analytics.run({ from: { p: 'project.projects' }, fields: ['p.title'], order: ['p.title'], reader })).rows.map((r) => r['p.title'])
+  const web = await rows<{ title: string }>(`SELECT title FROM project.projects WHERE circle = 'web' ORDER BY title`)
+  assert.ok(web.length > 0)
+  assert.deepEqual(await titles({ person: hugo, circles: { 'project.projects': ['web'] } }), web.map((r) => r.title))
+  assert.deepEqual(await titles({ person: hugo, circles: { 'project.projects': [] } }), [], 'a reader whose mandates cover nothing reads no row')
+  const own = await analytics.run({ from: { x: 'person.people' }, fields: ['x.address'], reader: { person: hugo, circles: { 'person.people': [] } } })
+  assert.deepEqual(own.rows, [{ 'x.address': hugo }], 'and their own row, whatever circle it is of')
+
+  // A view joined outer keeps its rows to the reader in the join that
+  // meets it, so the view before it keeps its own.
+  const { sql } = compile(
+    {
+      from: { p: 'project.projects', m: 'project.milestones' },
+      join: [['m.project', 'p.id']],
+      outer: ['m'],
+      fields: ['p.title', 'm.title'],
+      reader: { person: null, circles: { 'project.projects': ['web'], 'project.milestones': [] } },
+    },
+    catalog,
+  )
+  assert.match(sql, /LEFT JOIN \S+ AS "m" ON "m"\."project" = "p"\."id" AND FALSE WHERE \("p"\."circle" IN \('web'\)\)/)
+
+  // The server asks Postgres which circles: Camille's are every circle's.
+  const circles = (await rows<{ circle: string }>('SELECT DISTINCT circle FROM project.projects ORDER BY circle')).map((r) => r.circle)
+  const all = await camilles.run({ from: { p: 'project.projects' }, fields: ['p.circle'], measures: { n: { fn: 'count' } }, order: ['p.circle'] })
+  assert.deepEqual(all.rows.map((r) => r['p.circle']), circles)
 })

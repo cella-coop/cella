@@ -26,6 +26,7 @@ import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
 import { react } from '../src/lib/server/slices.ts'
 import { federation } from '@cella/org-report/api'
+import { scoped } from '@cella/org-analytics'
 import { reading as analytics } from './port.ts'
 import { employ, employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { vote } from '@cella/org-motion/api'
@@ -239,7 +240,9 @@ test('the report feat\'s federation figures, read through the analytics shell, a
   const f = Object.fromEntries((await figures(await reading(chloe), '2025')).map((x) => [x.id, Number(x.value) || x.value]))
   const shell = await analytics(su, 40, '2026-11-02')
   try {
-    const { federation: r } = await federation(shell.analytics, 2025)
+    // Read as Camille, a member who reads every circle by open books, as
+    // the server hands the port to her pages.
+    const { federation: r } = await federation(scoped(shell.analytics, reader(app, camille)), 2025)
     assert.ok(r)
     assert.deepEqual([r.year, r.distributed, r.surplus], [2025, '2026-11-02', f.surplus])
     assert.deepEqual(Object.fromEntries(r.shares.map((s) => [s.kind, s.amount])), { legal: f.legal, development: f.development, work: f.work, interest: f.interest })

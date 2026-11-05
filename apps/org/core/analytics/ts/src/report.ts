@@ -27,9 +27,20 @@ export interface Column {
   personal: boolean
 }
 
+// Whom a view's rows are for, as its contract's comment declares: a
+// scoped view's rows are each a record's, `circle` its owning circle and
+// `whose`, where a row is a person's, the column saying whose; a shared
+// view's are sums and counts grouped `by` its columns and no finer.
+export type Audience = { kind: 'scoped'; circle: string; whose: string | null } | { kind: 'shared'; by: string[] }
+
+export interface View {
+  audience: Audience
+  columns: Record<string, Column>
+}
+
 // What the analytics shell reads: each view the slices publish, by its
-// qualified name ('project.projects'), and its columns by name.
-export type Catalog = Record<string, Record<string, Column>>
+// qualified name ('project.projects').
+export type Catalog = Record<string, View>
 
 // What sums a measure, over the rows its report's fields group.
 export interface Measure {
@@ -70,6 +81,17 @@ export interface Report {
   // The personal fields the report reads, each declared: one shown,
   // joined, filtered, grouped or measured without it is refused.
   personal?: string[]
+  // Whom it reads for, where it reads a scoped view: the server gives it
+  // at each run, and a saved definition never names one.
+  reader?: Reader
+}
+
+// The reader a report reads a scoped view for: the person, null where no
+// one is signed in, and for each scoped view, by its qualified name, the
+// owning circles whose rows their mandates open to them.
+export interface Reader {
+  person: string | null
+  circles: Record<string, string[]>
 }
 
 // The log's head a run read: its every view as of that entry.

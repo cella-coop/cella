@@ -480,7 +480,10 @@ erased until their legal clock runs out.
   that opens rows to every reader is declared, with its why. A table of
   pay, time, capital, files or a capital account's lines replaces core's
   policy with the personal row's, which `read` opens nothing of
-  ([reading](architecture.md#reading)).
+  ([reading](architecture.md#reading)). A test generated for every feat
+  and graft reads each of its tables, views and definer functions as a
+  person signed in with no mandate, on a seeded Lanterne, and sees
+  nothing but what is declared shared ([tests](architecture.md#tests)).
 - **A secret ballot's stances.** A stance on a secret ballot is logged
   as a commitment, its member the subject, so the log says who gave a
   stance and when, as every entry names its actor, and never which; an
@@ -632,7 +635,16 @@ What the build does not yet do, and what lifts each:
   secret its caller holds; that a declared share's why is true, that the powers a feat names in
   `cella.reading` are the right ones and that a graft's reach opens no
   more than it says are left to review
-  ([reading](architecture.md#reading)).
+  ([reading](architecture.md#reading)). The denial test proves on rows
+  only what Lanterne seeds: a table it leaves empty, such as a payroll
+  plan's or a capital call's, is named unproven, not passed.
+- **Core's circles and policies are every reader's.** The circles, their
+  roles, mandates, rights, members and tenures, and the register of the
+  policies a circle adopted, are under no row-level policy: whoever is
+  signed in reads who sits where and holds what, and the policies'
+  wording, member or not. The denial test reads only feats and grafts. A
+  row-level policy on core's tables, by the circle's own reads, lifts
+  this.
 - **The log says who wrote what.** Every member reads each entry's op,
   actor, date and receipt, and its payload's digest. Pay, time and
   capital are committed to with a salt the vault keeps, so their digests

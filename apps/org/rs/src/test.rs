@@ -67,10 +67,13 @@ fn notary(repo: &Repo, steps: &Steps) -> Result {
     steps.run("notary", &mut [cmd], passed)
 }
 
-/// The node tools' own tests, `tools/_tests/*.test.mjs`; no database.
+/// The node tools' own tests, `tools/_tests/*.test.mjs`, on the dev
+/// cluster by the PG* variables: migrate's make a database of their own.
 fn tools(repo: &Repo, steps: &Steps) -> Result {
+    let dev = Dev::new(repo);
+    dev.up()?;
     repo.install(steps)?;
-    let mut test = repo.cmd("node");
+    let mut test = dev.on("postgres", "node");
     test.arg("--test");
     if !steps.verbose {
         test.arg("--test-reporter=tap");

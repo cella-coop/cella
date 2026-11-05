@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 # Architecture
@@ -473,7 +473,10 @@ contract whole in tree order, grants `cella_analytics` SELECT on each
 view the contract made and USAGE on its schema, then reads every view as
 that role and fails the run on a view it cannot read or a column of a
 type that is not plain. The role is granted nothing else
-([trust](trust.md#the-analytics-role)).
+([trust](trust.md#the-analytics-role)). A run is one transaction, from
+the drop to the last read as the role: a migration or a contract that
+fails rolls it all back, so the database keeps the migrations it had and
+the views published before, and the role reads them as it did.
 
 A view reads as its owner, so the role needs no grant on a table, and a
 view shares what its slice agrees to share and no more:

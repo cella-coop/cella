@@ -1,8 +1,8 @@
 // migrate: applies each node's SQL down the feat tree — a node's core
 // (core/sql/, then core/<lib>/sql/, the notary's first and each library
 // after those its package depends on), then its feats, recursively, then its
-// grafts, lowest order first — each directory's NNN-*.sql files in order, one transaction per
-// file. Applied files are recorded by their stable id (`migrations.mjs`)
+// grafts, lowest order first — each directory's NNN-*.sql files in order.
+// Applied files are recorded by their stable id (`migrations.mjs`)
 // with their hash in migration.applied. Until launch a migration is
 // rewritten in place and every database rebuilt, so a database that
 // applied a file since edited is refused before anything runs, with the
@@ -27,6 +27,11 @@
 // fails the run. The analytics port, org's core library, publishes one too,
 // in its own schema: `analytics.head`, the log's head; and so do core's
 // circles, in theirs.
+//
+// The run is one transaction, from the drop to the last read as the role:
+// a migration or a contract that fails rolls it all back, so the database
+// keeps the migrations it had and the views published before, and the
+// role reads them as it did.
 
 import { createHash } from 'node:crypto'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
@@ -147,6 +152,14 @@ const contracts = dirs
 
 const db = new pg.Client({ connectionString: process.env.DATABASE_URL })
 await db.connect()
+// Rolls the run back and fails it.
+const fail = async (message) => {
+  await db.query('ROLLBACK')
+  console.error(`migrate: ${message}`)
+  await db.end()
+  process.exit(1)
+}
+await db.query('BEGIN')
 await db.query(`
   CREATE SCHEMA IF NOT EXISTS migration;
   CREATE TABLE IF NOT EXISTS migration.applied (
@@ -157,23 +170,17 @@ await db.query(`
 // A database that recorded its migrations by path moves to their ids.
 const byPath = await db.query(`SELECT FROM information_schema.columns WHERE table_schema = 'migration' AND table_name = 'applied' AND column_name = 'path'`)
 if (byPath.rowCount) {
-  await db.query('BEGIN')
   await db.query('ALTER TABLE migration.applied RENAME COLUMN path TO id')
   for (const { id } of (await db.query('SELECT id FROM migration.applied')).rows) {
     await db.query('UPDATE migration.applied SET id = $1 WHERE id = $2', [idOf(id), id])
   }
-  await db.query('COMMIT')
   console.log('migrate: the applied set moved from paths to ids')
 }
 await db.query('CREATE TABLE IF NOT EXISTS migration.contract (one boolean PRIMARY KEY DEFAULT true CHECK (one), hash text NOT NULL)')
 const applied = new Map((await db.query('SELECT id, hash FROM migration.applied')).rows.map((r) => [r.id, r.hash]))
 const refused = edited(applied, files.map((f) => ({ path: relative(repo, f), id: idOf(relative(repo, f)), hash: hashOf(readFileSync(f, 'utf8')) })), { whole: !slice })
 if (refused.length) {
-  for (const e of refused) {
-    console.error(`migrate: ${e}`)
-  }
-  await db.end()
-  process.exit(1)
+  await fail(refused.join('\nmigrate: '))
 }
 
 // What this run's contracts hash to, by id and text, and whether they are
@@ -205,17 +212,13 @@ for (const file of files) {
     continue
   }
   try {
-    await db.query('BEGIN')
     // A migration changes the schema and its registries, a superuser's
     // act, not a write: the notary's trigger lets its rows through.
     await db.query('SET LOCAL cella.unbound = on')
     await db.query(sql)
     await db.query('INSERT INTO migration.applied (id, hash) VALUES ($1, $2)', [id, hash])
-    await db.query('COMMIT')
   } catch (e) {
-    await db.query('ROLLBACK')
-    console.error(`migrate: ${path}: ${e.message}`)
-    process.exit(1)
+    await fail(`${path}: ${e.message}`)
   }
   console.log(`migrate: ${path}`)
   ran++
@@ -224,18 +227,20 @@ if (republish) {
   try {
     await publish()
   } catch (e) {
-    await db.query('ROLLBACK')
-    console.error(`migrate: ${e.message}`)
-    process.exit(1)
+    await fail(e.message)
   }
+}
+try {
+  await db.query('COMMIT')
+} catch (e) {
+  await fail(e.message)
 }
 await db.end()
 console.log(`migrate: ${ran} applied, ${files.length - ran} already in ${db.database}${slice ? `, slice ${slice}` : ''}`)
 
-// Applies every contract in one transaction, grants each view it makes,
-// and reads each as the role, as the analytics shell will.
+// Applies every contract, grants each view it makes, and reads each as
+// the role, as the analytics shell will.
 async function publish() {
-  await db.query('BEGIN')
   const made = async (schema) => (await db.query(`
     SELECT format('%I.%I', n.nspname, c.relname) AS view
     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -275,7 +280,6 @@ async function publish() {
   }
   await db.query('DELETE FROM migration.contract')
   await db.query('INSERT INTO migration.contract (hash) VALUES ($1)', [published])
-  await db.query('COMMIT')
   if (contracts.length) {
     console.log(`migrate: ${contracts.length} analytical contracts, ${views.length} views granted to ${ROLE}`)
   }

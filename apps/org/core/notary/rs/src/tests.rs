@@ -15,6 +15,14 @@ pub const NOTARY_SEED: [u8; 32] = [7; 32];
 #[cfg(test)]
 pub const VAULT_KEY: [u8; 32] = [9; 32];
 
+/// `cella.op()`, as every version before 0.6.0 binds it: the earlier
+/// library's symbol, which the test build alone keeps so that each earlier
+/// version installs on it. It declares no SQL of its own.
+#[pg_extern(stable, sql = false)]
+fn op() -> Option<String> {
+    crate::notary::action()
+}
+
 #[pg_schema]
 mod tests {
     use super::NOTARY_SEED;
@@ -319,6 +327,47 @@ $f$;
         let guards = Spi::get_one::<String>("SELECT guards->0->>'function' FROM cella.log WHERE n = 1").expect("the entry's guards");
         assert_eq!(guards.as_deref(), Some("t.small(jsonb)"));
         assert!(verifies());
+    }
+
+    /// Each earlier version the notary ships, which `cella test notary`
+    /// stages beside the current one.
+    const EARLIER: [&str; 5] = ["0.1.0-alpha", "0.2.0", "0.3.0", "0.4.0", "0.5.0"];
+
+    fn version() -> Option<String> {
+        Spi::get_one::<String>("SELECT extversion FROM pg_extension WHERE extname = 'cella'").expect("the version")
+    }
+
+    /// Runs alone: it drops the extension every other test reads, installs
+    /// each earlier version with a guard whose SQL body calls `cella.op()`,
+    /// and updates it to the current one, where the guard reads the action.
+    #[pg_test]
+    fn each_earlier_version_upgrades_in_place_and_keeps_the_guards_that_call_it() {
+        let current = version();
+        for earlier in EARLIER {
+            Spi::run(&format!(
+                r"
+SELECT set_config('cella.scope', '{SCOPE}', true);
+DROP SCHEMA IF EXISTS t, old CASCADE;
+DROP EXTENSION cella CASCADE;
+CREATE EXTENSION cella VERSION '{earlier}';
+CREATE SCHEMA old;
+CREATE FUNCTION old.judging(payload jsonb) RETURNS text LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT 'judging ' || cella.op();
+END;
+ALTER EXTENSION cella UPDATE;"
+            ))
+            .expect("the upgrade");
+            assert_eq!(version(), current, "{earlier} upgrades to the current version");
+            scope();
+            Spi::run(
+                "GRANT USAGE ON SCHEMA old TO cella_guards;
+                 INSERT INTO cella.guard (op, fn, owner) VALUES ('test:thing:make', 'old.judging(jsonb)', 'old');",
+            )
+            .expect("the guard");
+            let request = json!({ "cents": 100 });
+            refused(&request, JULIEN, &signed(&device(1), JULIEN, &request, NONCE), "judging test:thing:make");
+        }
     }
 
     #[pg_test]

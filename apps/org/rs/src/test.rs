@@ -40,12 +40,24 @@ fn rust(repo: &Repo, steps: &Steps, name: &str, package: &str) -> Result {
 /// pgrx installs the extension where `pg_config` says; the Nix store is
 /// read-only, so it is handed a `pg_config` naming a share and a lib
 /// directory under `.data/notary-test`, which the cluster loads from as
-/// the dev cluster does. A target directory of its own keeps its
-/// `pg_config` from rebuilding the workspace's bindings.
+/// the dev cluster does. Every script in the notary's `rs/sql/` is staged
+/// beside the one pgrx installs, as `cella ext build` stages them, so the
+/// tests install each earlier version and upgrade it. A target directory
+/// of its own keeps its `pg_config` from rebuilding the workspace's
+/// bindings.
 fn notary(repo: &Repo, steps: &Steps) -> Result {
     let dir = repo.data().join("notary-test");
     let home = dir.join("pgrx");
     fs::create_dir_all(&home).map_err(|e| Fail::new(format!("{}: {e}", home.display())))?;
+    let share = dir.join("share/extension");
+    fs::create_dir_all(&share).map_err(|e| Fail::new(format!("{}: {e}", share.display())))?;
+    let scripts = repo.root.join("apps/org/core/notary/rs/sql");
+    for script in fs::read_dir(&scripts).map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))? {
+        let from = script.map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))?.path();
+        if let Some(name) = from.file_name() {
+            fs::copy(&from, share.join(name)).map_err(|e| Fail::new(format!("{}: {e}", from.display())))?;
+        }
+    }
     let wrapper = dir.join("pg_config");
     let script = format!(
         "#!/bin/sh\ncase \"$1\" in\n  --sharedir) echo '{share}' ;;\n  --pkglibdir) echo '{lib}' ;;\n  *) exec '{real}' \"$@\" ;;\nesac\n",

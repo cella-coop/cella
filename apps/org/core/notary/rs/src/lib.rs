@@ -18,15 +18,43 @@ mod vault;
 /// pgrx's test harness, which `cella test notary` runs: the cluster loads
 /// the extension from `CELLA_NOTARY_TEST`, outside the read-only store, as
 /// the dev cluster does, and signs with the TEST-ONLY keys written there.
+/// The tests share one database, each in its own session: a test whose doc
+/// starts with [`pg_test::ALONE`] runs with no other beside it.
 #[cfg(test)]
 pub mod pg_test {
+    use std::any::Any;
+    use std::cell::RefCell;
     use std::path::PathBuf;
+    use std::sync::{PoisonError, RwLock};
+
+    /// What the doc of a test that runs alone starts with, as one that
+    /// drops the extension every other test reads, whose locks would
+    /// deadlock with theirs.
+    pub const ALONE: &str = "Runs alone:";
+
+    /// Held exclusively by a test that runs alone and shared by every
+    /// other, from its setup until its thread ends.
+    static TESTS: RwLock<()> = RwLock::new(());
+
+    thread_local! {
+        static HELD: RefCell<Option<Box<dyn Any>>> = const { RefCell::new(None) };
+    }
 
     fn dir() -> PathBuf {
         std::env::var_os("CELLA_NOTARY_TEST").map_or_else(|| panic!("CELLA_NOTARY_TEST is not set: run `cella test notary`"), PathBuf::from)
     }
 
-    pub fn setup(_options: Vec<&str>) {
+    pub fn setup(options: Vec<&str>) {
+        let alone = options.iter().any(|o| o.contains(ALONE));
+        HELD.with(|held| {
+            held.borrow_mut().take();
+            let guard: Box<dyn Any> = if alone {
+                Box::new(TESTS.write().unwrap_or_else(PoisonError::into_inner))
+            } else {
+                Box::new(TESTS.read().unwrap_or_else(PoisonError::into_inner))
+            };
+            *held.borrow_mut() = Some(guard);
+        });
         let dir = dir();
         std::fs::create_dir_all(&dir).expect("the test directory");
         std::fs::write(dir.join("notary.key"), crate::tests::NOTARY_SEED).expect("the notary's key file");

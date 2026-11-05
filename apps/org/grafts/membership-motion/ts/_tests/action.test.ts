@@ -60,7 +60,10 @@ test('a suspension or an exclusion cites a motion that asks it of that member', 
   assert.equal(await guard('ends', { motion: 'nowhere', member: 'chloe@lanterne.example' }), 'no motion nowhere')
 })
 
-test('a close admits only whom the motion asks to admit', async () => {
-  assert.equal(await guard('closes', { motion: 'm-3', admitted: [] }), null)
-  assert.equal(await guard('closes', { motion: 'm-3', admitted: [{ member: 'chloe@lanterne.example' }] }), 'm-3 does not admit chloe@lanterne.example')
+test('an admission a close carries seats the member it admits', async () => {
+  assert.equal(
+    await guard('closes', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20 }),
+    "m-1 admits a member this write seats nowhere: an admission seats its member in the motion's circle",
+  )
+  assert.equal(await guard('closes', { motion: 'm-1', member: 'ines@lanterne.example', shares: 20, seat: 0 }), "m-1 admits a member this write seats nowhere: an admission seats its member in the motion's circle")
 })

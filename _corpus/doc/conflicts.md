@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 # Conflicts
@@ -598,7 +598,7 @@ pay; the `account` feat for the statutes' clauses.
 |---|---|---|---|
 | `account.draw` vs `membership.exit` | the draw stands, within the limit | refused: the account is frozen | a departing member empties their account |
 | `account.draw` vs `account.draw`, one member | both, if the limit covers both | both, if it covers both | the limit is overdrawn |
-| `membership.admit` vs `account.period.close` of its month | the subscription posts in the month | the admission settles; the subscription is refused, the month closed | an admission refused by the books |
+| `membership.admit` vs `account.period.close` of its month | the subscription posts in the month | the close settles; the admission and its subscription are forgone, the month closed | a member admitted without their capital |
 | `account.capital.pay` vs `account.capital.pay`, one member | both, if what is owed covers both | both, if it covers both | a subscription paid beyond what it cost |
 | `account.capital.pay` vs `membership.exit` | the payment stands; the exit cancels the rest | refused: the exit cancelled what was owed | money taken on a cancelled subscription |
 | `payslip:run.pay` vs `account.capital.spread` | the instalment at the old plan | at the new one | none: the payment reads the plan that stands |
@@ -609,9 +609,11 @@ The draw is bounded on the member's limit, a right granted in advance;
 the exit is ordered and a draw needs an active member, so no draw
 settles between the exit and the freeze that follows it. A frozen
 account never thaws; what it held moves to 4567 by the withdrawal that
-follows the exit and is repaid from there. Subscribing never holds an
-admission back: a subscription under the statutes' minimum, or into a
-closed month, is refused after the admission settles, saying why. A payment in is a deposit, so it is confluent; at rung 2 two
+follows the exit and is repaid from there. An admission requires its
+subscription: a subscription under the statutes' minimum, or into a
+closed month, is refused in the close's transaction and forgoes the
+admission with it, each saying why, while the close and the motion's
+other effects stand. A payment in is a deposit, so it is confluent; at rung 2 two
 offline payments could pass what is owed, which the server's guard
 refuses today and which then needs a late-write guard, as an invoice's
 overpayment has. A repayment is ordered: it is paid once, and after the

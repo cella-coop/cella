@@ -27,8 +27,10 @@ export function subscribing(input: Subscribe): Write<Subscribed> {
         [input.member],
       )
       const m = rows[0]
+      // Nothing prices their shares: nothing is written, and the guard
+      // refuses, saying what is missing.
       if (!m || m.value === null || m.shares === 0) {
-        throw new Error(`${input.member} has no shares a share's value prices`)
+        return { member: input.member, account: '', shares: m?.shares ?? 0, amount: 0, entry: '' }
       }
       const cents = m.shares * Number(m.value)
       const account = await holding(tx, { holder: input.member, parent: '1013', label: `Capital — ${m.name}` })
@@ -56,21 +58,11 @@ export async function subscribe(input: Subscribe, deps: Deps): Promise<Outcome<(
 }
 
 // What follows an admission, whichever write admits: the member's
-// subscription, a write of its own signed by whoever signed the
-// admission and citing the motion that admitted them. Where no adopted
-// terms value a share on the verdict date, the member holds none or the
-// chart has no 1013, nothing is subscribed and no write is made.
+// subscription, an effect in the admission's transaction citing it, and
+// one the admission requires, so a subscription refused forgoes the
+// admission with it. Where no adopted terms value a share on the verdict
+// date, the subscription writes nothing and its guard refuses it.
 export async function subscribed(request: unknown, deps: Deps): Promise<Done[]> {
   const { member, motion } = request as { member: string; motion: string }
-  const { rows } = await deps.db.query<{ priced: boolean }>(
-    `SELECT account_membership.value(cella.verdict_date()) IS NOT NULL
-            AND EXISTS (SELECT FROM membership.member m WHERE m.address = $1 AND m.shares > 0)
-            AND EXISTS (SELECT FROM account.account a WHERE a.code = '1013') AS priced`,
-    [member],
-  )
-  if (!rows[0]?.priced) {
-    return []
-  }
-  const input = { member, motion }
-  return [done(op, await subscribe(input, deps), [], input)]
+  return [done(op, await subscribe({ member, motion }, deps))]
 }

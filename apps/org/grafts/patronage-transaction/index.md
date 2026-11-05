@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -60,9 +60,9 @@ approved the split, and `motion-patronage`'s guards check it.
 
 ## Reactions
 
-- To `patronage:distribution:approve`: `distribute`, a write of its own
-  after the approval, signed by whoever signed it and citing its motion,
-  and judged by its own guards. A refused one leaves the split approved
+- To `patronage:distribution:approve`: `distribute`, an effect citing
+  the approval in its transaction, its actor whoever signed it, citing its motion,
+  and judged by its own guards. A refused one is forgone, leaving the split approved
   and undistributed, and says why, as when the verdict date's month is
   not open; the Distribute button then posts it, citing the same motion.
 

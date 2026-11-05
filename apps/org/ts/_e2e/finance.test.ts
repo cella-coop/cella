@@ -19,8 +19,8 @@ import { approve as approveTime, log as logTime, submit as submitTime } from '@c
 import { draw } from '@cella/org-graft-account-membership-transaction/api'
 import { approve as approveSplit } from '@cella/org-patronage/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
-import { react } from '../src/lib/server/slices.ts'
-import type { Deps } from '@cella/org-db'
+import { reacting } from '../src/lib/server/slices.ts'
+import { done as made, type Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
@@ -238,7 +238,7 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
   assert.equal(wrong.state, 'refused')
   assert.match(reason(wrong), /m-2026-011 does not approve 2025|m-2026-011 is not closed/)
 
-  const approved = await approveSplit({ distribution: '2025', motion: 'm-2026-006' }, as(julien))
+  const approved = await approveSplit({ distribution: '2025', motion: 'm-2026-006' }, reacting(as(julien)))
   assert.equal(approved.state, 'settled', reason(approved))
   const judged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [approved.state === 'settled' && approved.entry])
   assert.deepEqual(
@@ -246,10 +246,10 @@ test('the 2025 surplus is approved by m-2026-006, then distributed, and posts th
     ['account-patronage', 'membership-motion', 'motion', 'motion-patronage', 'patronage', 'patronage-payslip', 'patronage-timesheet', 'patronage-transaction'],
   )
 
-  // The distribution follows the approval as a write of its own, signed by
-  // Julien, who approved it, and the credits of shares follow it, which
+  // The distribution follows the approval as an effect in its transaction,
+  // its actor Julien, who approved it, and the credits of shares follow it, which
   // the patronage scenario reads.
-  const then = await react('patronage:distribution:approve', { distribution: '2025', motion: 'm-2026-006' }, as(julien))
+  const then = made('patronage:distribution:approve', approved).then
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
   assert.deepEqual([...new Set(then[0].then.map((d) => `${d.op} ${d.state}`))], ['patronage:part:employ settled'])
   const done = await one<{ entry: string }>(`SELECT entry FROM patronage_transaction.distribution WHERE distribution = '2025'`)

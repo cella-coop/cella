@@ -1,6 +1,6 @@
 +++
 title = "motion-patronage"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 A year's distribution and the motion of the assembly that approves its
@@ -56,9 +56,9 @@ assembly's, unless the write that makes it names another.
 
 ## Reaction
 
-On `motion:policy:adopt`, once the adoption settles: a rule whose values
+On `motion:policy:adopt`, in the adoption's transaction: a rule whose values
 are named for the patronage feat is copied into terms by the patronage
-feat's `adopt`, a write of its own signed by whoever signed the adoption
+feat's `adopt`, an effect citing the adoption, its actor whoever signed it,
 and citing the motion (`handlers/terms.ts`). Any other policy is copied
 nothing, and no write is made.
 

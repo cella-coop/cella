@@ -3,18 +3,20 @@ CREATE SCHEMA transaction;
 CREATE SEQUENCE transaction.entry_no;
 
 -- An entry of the journal, permanent once posted. `receipt` orders the
--- entries posted through the notary; an entry carried over from before the
--- log has none.
+-- entries posted through the notary, those of one write, as an approval's
+-- distribution and the credits that follow it, by their numbers; an entry
+-- carried over from before the log has none.
 CREATE TABLE transaction.entry (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY DEFAULT 'je-' || lpad(nextval('transaction.entry_no')::text, 4, '0'),
   date date NOT NULL,
   label text NOT NULL,
   corrects text REFERENCES transaction.entry,
-  receipt bigint UNIQUE
+  receipt bigint
 );
 
 CREATE INDEX ON transaction.entry (corrects);
+CREATE INDEX ON transaction.entry (receipt);
 
 -- A line debits or credits one account, named by its code, by one positive
 -- amount. Which accounts exist is the account-transaction graft's.

@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -17,10 +17,10 @@ at each adoption ([generated documents](#generated-documents)).
 | Entity | Fields | Notes |
 |---|---|---|
 | document | `id`, `title` | its binding version is its latest adoption's |
-| update | `receipt`, `author`, `at`, `bytes` | a Loro update; the draft is their merge |
+| update | `n`, `receipt`, `author`, `at`, `bytes` | a Loro update; the draft is their merge |
 | version | `id`, `saved`, `snapshot`, `canonical`, `hash`, `plain`, `frontier`, `vv` | the document at a Loro frontier; `id` is `<document>@<n>` |
 | comment | `version`, `author`, `at`, `quote`, `anchor`, `text`, `resolved` | on the text it quotes, anchored by Loro cursors |
-| adoption | `receipt`, `version`, `base`, `adopted` | makes a version binding, naming the one it replaces |
+| adoption | `n`, `receipt`, `version`, `base`, `adopted` | makes a version binding, naming the one it replaces |
 | generated | `document`, `circle`, `template` | a document generated from a circle's policies, around its template |
 | generation | `document`, `version`, `motion`, `day` | what a generated version cites and the day it reads; a motion is cited by no version but the adopted one and those after it |
 
@@ -209,8 +209,9 @@ adopting motion names its circle).
 `document` (`core/sql/`):
 
 - `document.document`: id and title.
-- `document.update`: the draft's Loro updates, by receipt, with author and
-  day; one carried over from before the log has no author. The draft is
+- `document.update`: the draft's Loro updates, numbered by `n` and
+  ordered by receipt, then `n`, since one write may append several, as a
+  close whose effects generate a document twice; with author and day; one carried over from before the log has no author. The draft is
   their merge, which Loro reaches in any order.
 - `document.version`: `<document>@<n>`, numbered next in its document by a
   trigger under a lock on the document (a carried-over version names its
@@ -221,8 +222,9 @@ adopting motion names its circle).
 - `document.comment`: a version, author, day, quote, anchor (`{ block,
   from, to }`, the cursors in base64), text and whether it is resolved.
   A trigger refuses a quote the version's text does not hold.
-- `document.adoption`: an adoption by receipt: the version, its base and
-  the day it was adopted. `document.adopted` is each document's latest. It reads as its reader.
+- `document.adoption`: an adoption, numbered by `n`, at its write's
+  receipt: the version, its base and the day it was adopted, ordered by
+  receipt, then `n`. `document.adopted` is each document's latest. It reads as its reader.
 - `document.generated` (`004-generated.sql`): a generated document, the
   circle whose policies it reads, and its template, a JSON array of
   fragments; it never changes.

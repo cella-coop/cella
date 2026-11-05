@@ -8,7 +8,7 @@ import type { Frontier } from '../models/document.ts'
 // in any order to the same document, so receipt order is only for reading.
 export async function merged(db: Db, document: string): Promise<LoroDoc> {
   const { rows } = await db.query<{ bytes: Uint8Array }>(
-    'SELECT bytes FROM document.update WHERE document = $1 ORDER BY receipt',
+    'SELECT bytes FROM document.update WHERE document = $1 ORDER BY receipt, n',
     [document],
   )
   const doc = createDoc()

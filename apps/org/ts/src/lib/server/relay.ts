@@ -9,7 +9,8 @@ import { CELLA_PATIENCE, CELLA_PENDING } from '$app/env/private'
 // op, the request made plain, and the scope, actor and device the
 // signature names. The browser signs it with the device it keeps and
 // posts the proof back to the same action, naming the run; the run goes
-// on to its next signature, a reaction's, or to its outcome. A run is its
+// on to its outcome, the decision and its effects committed together, since
+// a reaction asks for no signature of its own. A run is its
 // owner's alone, and gives up when a proof does not come in time. A run
 // is pending from its start to its outcome: a person has at most `EACH`
 // pending, counted by actor across their devices and sessions, and the

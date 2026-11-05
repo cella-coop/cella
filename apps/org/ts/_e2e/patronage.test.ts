@@ -3,8 +3,9 @@
 // approved by m-2026-006, and in that one write its work share divides
 // among the ten members by what each was paid in 2025, as the statutes'
 // terms say; the distribution follows the approval, and the credit of
-// each associate's shares the distribution, each a write of its own
-// signed by Camille, who approved it: half of each part buys whole
+// each associate's shares the distribution, each an effect in the
+// approval's transaction citing what it follows, its actor Camille,
+// who approved it: half of each part buys whole
 // shares, blocked five years, and the rest is owed in cash. The parts,
 // the shares, the cash and the books reconcile to the cent; each member
 // reads their own statement, and finance the year's return. Then the
@@ -24,14 +25,14 @@ import pg from 'pg'
 import { adopt, approve, draft, statement, statements } from '@cella/org-patronage/api'
 import { close as closePeriod, open } from '@cella/org-account/api'
 import { distribute } from '@cella/org-graft-patronage-transaction/api'
-import { react } from '../src/lib/server/slices.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 import { federation } from '@cella/org-report/api'
 import { scoped } from '@cella/org-analytics'
 import { reading as analytics } from './port.ts'
 import { employ, employed, figures, owed } from '@cella/org-graft-account-membership-patronage-transaction/api'
 import { vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
-import type { Deps } from '@cella/org-db'
+import { done as made, type Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
@@ -78,6 +79,8 @@ type Part = { worker: string; quantity: string; cents: string }
 let parts: Part[] = []
 let before2025: Map<string, { shares: number; capital: number }>
 let capital2025 = 0
+// The 2025 approval's outcome, with the effects its transaction committed.
+let approved2025: Parameters<typeof made>[1]
 
 before(async () => {
   await su.connect()
@@ -104,9 +107,10 @@ test('before the approval, no statement is drawn, and the work share would divid
   )
 })
 
-test('approving 2025 divides the work share by pay, to the cent, in the same write, and is not yet distributed', async () => {
+test('approving 2025 divides the work share by pay, to the cent, in the same write', async () => {
   await on('2026-11-02')
-  const done = await approve({ distribution: '2025', motion: 'm-2026-006' }, as(camille))
+  const done = await approve({ distribution: '2025', motion: 'm-2026-006' }, reacting(as(camille)))
+  approved2025 = done
   settled(done)
 
   parts = await all<Part>(
@@ -124,20 +128,28 @@ test('approving 2025 divides the work share by pay, to the cent, in the same wri
   assert.equal(camilles?.quantity, String(3_000_00 * 12))
   assert.deepEqual(await one(`SELECT count(*)::int AS n FROM patronage.part WHERE distribution = '2025' AND basis <> 'salary'`), { n: 0 })
 
-  assert.equal(await employed(await reading(julien), `2025:${camille}`), null, 'nothing is credited before the distribution')
-  assert.deepEqual(await figures(await reading(julien), '2025'), [], 'the return waits for the distribution')
-  assert.equal(await balance('120'), -61_400_00, 'the result still waits in 120')
 })
 
-test('the distribution and the credits of shares follow the approval, each a write of its own signed by Camille, who approved it', async () => {
+test('the distribution and the credits of shares follow the approval in its transaction, each an effect citing what it follows, its actor Camille, who approved it', async () => {
   assert.deepEqual(await all(`SELECT tgname FROM pg_trigger WHERE tgname = 'employs'`), [], 'no trigger credits a distribution')
-  const then = await react('patronage:distribution:approve', { distribution: '2025', motion: 'm-2026-006' }, as(camille))
+  const then = made('patronage:distribution:approve', approved2025).then
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
   const credits = then[0].then
   assert.equal(credits.length, 10, 'one credit an associate')
   for (const c of credits) {
     assert.equal(`${c.op} ${c.state}`, 'patronage:part:employ settled', c.reason)
   }
+  // One commit: the approval, its posting, then the credits, consecutive
+  // in the log, each citing what it follows.
+  const approval = approved2025.state === 'settled' ? approved2025.entry : 0
+  assert.deepEqual(
+    await all<{ op: string; cause: string | null }>('SELECT op, cause FROM cella.log WHERE n BETWEEN $1 AND $2 ORDER BY n', [approval, approval + 11]),
+    [
+      { op: 'patronage:distribution:approve', cause: null },
+      { op: 'patronage:distribution:distribute', cause: String(approval) },
+      ...credits.map(() => ({ op: 'patronage:part:employ', cause: String(approval + 1) })),
+    ],
+  )
   const logged = await all<{ op: string; actor: string; owners: string[] }>(
     `SELECT op, actor, ARRAY(SELECT DISTINCT g ->> 'owner' FROM jsonb_array_elements(guards) g ORDER BY 1) AS owners
      FROM cella.log WHERE n = ANY($1::bigint[]) ORDER BY n`,
@@ -283,8 +295,9 @@ test('the assembly adopts a rule mixing pay and time from 2027, and its values a
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-16')
-  settled(await close({ motion }, as(camille)))
-  const then = await react('motion:motion:close', { motion }, as(camille))
+  const closed = await close({ motion }, reacting(as(camille)))
+  settled(closed)
+  const then = made('motion:motion:close', closed).then
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
     [['motion:policy:adopt', 'settled', [['document:document:generate', 'settled'], ['patronage:terms:adopt', 'settled']]]],
@@ -353,18 +366,19 @@ test('the second year runs with no fixture SQL: finance opens 2027, closes 2026 
   settled(await close({ motion }, as(camille)))
   const old = await approve({ distribution: '2026', motion: 'm-2026-006' }, as(camille))
   assert.match(reason(old), /m-2026-006 does not approve 2026/)
-  settled(await approve({ distribution: '2026', motion }, as(camille)))
+  const approved = await approve({ distribution: '2026', motion }, reacting(as(camille)))
+  settled(approved)
   const shared = await one<{ n: number; cents: number }>(
     `SELECT count(*)::int AS n, sum(cella.cents(amount))::int AS cents FROM patronage.part WHERE distribution = '2026' AND basis = 'salary'`,
   )
   assert.equal(shared.cents, 22_500_00, 'the parts add up to the work share')
   assert.ok(shared.n >= 10)
   const redraft = await draft({ year: 2026, surplus: 60_000_00, work: 45_00, legal: 15_00, development: 39_50, interest: 50 }, as(julien))
-  assert.match(reason(redraft), /the 2026 surplus was approved on 2027-01-29/)
+  assert.match(reason(redraft), /the 2026 surplus was distributed on 2027-01-29/)
 
   // Camille closed the motion and approved the split: the distribution
-  // and each credit of shares follow, each signed by her.
-  const then = await react('patronage:distribution:approve', { distribution: '2026', motion }, as(camille))
+  // and each credit of shares follow as its effects, her its actor.
+  const then = made('patronage:distribution:approve', approved).then
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['patronage:distribution:distribute', 'settled']])
   assert.ok(then[0].then.length > 0)
   for (const c of then[0].then) {

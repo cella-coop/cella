@@ -1,23 +1,23 @@
 // The capital scenario, end to end on a seeded Lanterne, through the
 // handlers: the statutes value a share at 50 € and set how it is paid in
 // and out. m-2026-012 admits Inès, and the subscription its close carries,
-// signed by Camille, who closed it, calls her 20 shares, 1 000 € owed;
+// an effect of it, its actor Camille, who closed it, calls her 20 shares, 1 000 € owed;
 // she spreads it over the ten monthly instalments the statutes allow, and
 // November's run, once paid, withholds the first from her pay in its own
 // entry. Paul, who left in
 // November 2025, is owed his 1 500 € in three yearly repayments: the
 // first is refused before its day and by anyone without the power, then
 // paid once on it. Malik's exclusion, which the assembly carries, is followed
-// by the freeze and the withdrawal of his capital, each its own write
-// signed by Camille. Amina withdraws by her own right, and her own freeze
-// and withdrawal of her capital follow, signed by her; no one withdraws
+// by the freeze and the withdrawal of his capital, each an effect citing it,
+// its actor Camille. Amina withdraws by her own right, and her own freeze
+// and withdrawal of her capital follow as its effects, hers; no one withdraws
 // another, nor excludes a member without the assembly's motion. The
 // assembly then adopts new capital terms, a rule of
 // at least ten shares at 25 € replacing the founding one, whose values are
-// copied into the terms by the write that follows the adoption; a rule
-// whose value says no way is stricter is refused when proposed. Nadia,
-// admitted with 8 shares, stays admitted and is refused her subscription
-// with the rule's sentence. The statutes, the assembly's policies in
+// copied into the terms by the effect that follows the adoption; a rule
+// whose value says no way is stricter is refused when proposed. Nadia's
+// admission with 8 shares is forgone with her subscription, which the rule's
+// sentence refuses, the close standing. The statutes, the assembly's policies in
 // order, are generated anew once the new terms are adopted, their sentence
 // where the founding one read, and adopted under the same motion; the
 // version before still reads, and no hand edits them. The books balance
@@ -36,10 +36,10 @@ import { approve as approveRun, pay as payRun } from '@cella/org-graft-payslip-t
 import { approve as approveTime, log, submit as submitTime } from '@cella/org-timesheet/api'
 import { adopt, edit, merged, version } from '@cella/org-document/api'
 import { createDoc, edits, hash, order } from '@cella/org-document/models'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
-import { react } from '../src/lib/server/slices.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -71,7 +71,7 @@ async function on(date: string) {
 
 // Inès signs from the laptop her hire enrolled, and Nadia from the one
 // her invitation enrolls.
-const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: actor === ines || actor === nadia ? signer(scope, actor, fixture(actor, 'laptop')) : sign(actor) })
+const as = (actor: string): Deps => reacting({ db: reader(app, actor), actor, sign: actor === ines || actor === nadia ? signer(scope, actor, fixture(actor, 'laptop')) : sign(actor) })
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 
 // The app's connection reading as `actor`, as the server reads for the
@@ -126,12 +126,11 @@ test('the statutes value a share at 50 €, and Paul, who left, is owed his 1 50
   await balanced()
 })
 
-test('m-2026-012 admits Inès, and the subscription it carries, signed by Camille who closed it, calls her 20 shares: 1 000 € owed', async () => {
+test('m-2026-012 admits Inès, and the subscription that follows, an effect of the admission whose actor is Camille who closed it, calls her 20 shares: 1 000 € owed', async () => {
   await on('2026-10-31')
   const closed = await close({ motion: 'm-2026-012' }, as(camille))
   assert.equal(closed.state, 'settled', reason(closed))
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM account_membership_transaction.subscription WHERE member = $1', [ines])).n, '0', 'the close itself subscribes nothing')
-  const then = await react('motion:motion:close', { motion: 'm-2026-012' }, as(camille))
+  const then = done('motion:motion:close', closed).then
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
     [['membership:member:admit', 'settled', [['account:capital:subscribe', 'settled']]]],
@@ -246,11 +245,12 @@ async function decided(kind: 'admit' | 'exclude', args: Record<string, string | 
     settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on(until)
-  settled(await close({ motion: proposed.motion }, as(camille)))
-  return react('motion:motion:close', { motion: proposed.motion }, as(camille))
+  const closed = await close({ motion: proposed.motion }, as(camille))
+  settled(closed)
+  return done('motion:motion:close', closed).then
 }
 
-test('an exclusion the assembly carries is followed by the freeze and the withdrawal of the capital, each its own write signed by Camille', async () => {
+test('an exclusion the assembly carries is followed by the freeze and the withdrawal of the capital, each an effect citing it, its actor Camille', async () => {
   const before = await balance('101308')
   assert.ok(before < 0, 'Malik\'s account holds his capital')
   const then = await decided('exclude', { member: malik }, '2026-12-01', '2026-12-08')
@@ -275,7 +275,7 @@ test('an exclusion the assembly carries is followed by the freeze and the withdr
   await balanced()
 })
 
-test('Amina withdraws by her own right, followed by her own freeze and withdrawal of her capital, each signed by her; no one withdraws another, nor excludes without the assembly\'s motion', async () => {
+test('Amina withdraws by her own right, followed by her own freeze and withdrawal of her capital, each an effect of it, hers; no one withdraws another, nor excludes without the assembly\'s motion', async () => {
   await on('2026-12-09')
   assert.match(reason(await withdraw({ member: amina }, as(julien))), /julien@lanterne\.example may not withdraw amina@lanterne\.example's membership: only their own/)
   assert.match(reason(await exclude({ member: amina, motion: 'm-2026-999' }, as(camille))), /no motion m-2026-999/)
@@ -285,7 +285,7 @@ test('Amina withdraws by her own right, followed by her own freeze and withdrawa
   const left = await withdraw({ member: amina }, as(amina))
   settled(left)
   assert.equal((await one<{ cites: boolean }>(`SELECT form ? 'motion' AS cites FROM cella.log WHERE n = $1`, [(left as { entry: number }).entry])).cites, false, 'a withdrawal cites no motion')
-  const then = await react('membership:member:withdraw', { member: amina }, as(amina))
+  const then = done('membership:member:withdraw', left).then
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['account:own:freeze', 'settled'], ['account:own:withdraw', 'settled']])
   for (const t of then) {
     assert.equal((await one<{ actor: string }>('SELECT actor FROM cella.log WHERE n = $1', [t.entry])).actor, amina)
@@ -332,8 +332,9 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-15')
-  settled(await close({ motion }, as(camille)))
-  const then = await react('motion:motion:close', { motion }, as(camille))
+  const closed = await close({ motion }, as(camille))
+  settled(closed)
+  const then = done('motion:motion:close', closed).then
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state])]),
     [['motion:policy:adopt', 'settled', [['document:document:generate', 'settled'], ['account:terms:adopt', 'settled']]]],
@@ -406,24 +407,39 @@ test('no hand edits the statutes, saves a version of them or adopts one', async 
   assert.equal((await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version, 'statutes@3')
 })
 
-test('an admission whose subscription its guard refuses stays an admission: Nadia, admitted with 8 shares, is refused her subscription with the rule\'s sentence', async () => {
+test('an admission requires its subscription: Nadia, admitted with 8 shares, is refused her subscription with the rule\'s sentence, which forgoes her admission and seat with it, the close standing', async () => {
   await on('2026-12-15')
   const secret = random()
   settled(await invite({ address: nadia, name: 'Nadia Benali', link: await sha256(secret) }, as(thomas)))
   settled(await accept({ member: nadia, secret, key: (await fixture(nadia, 'laptop')).key, label: 'laptop' }, as(nadia)))
+  const before = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
   const then = await decided('admit', { member: nadia, shares: 8 }, '2026-12-15', '2026-12-22')
-  assert.deepEqual(then.map((d) => [d.op, d.state]), [['membership:member:admit', 'settled']])
-  const refused = then[0].then[0]
-  assert.equal(refused.op, 'account:capital:subscribe')
-  assert.equal(refused.state, 'refused')
-  assert.equal(
-    refused.reason,
-    'nadia@lanterne.example subscribes 8 shares: "' +
-      (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s +
-      '"',
-  )
+  const [admission] = then
+  assert.deepEqual([then.length, admission.op, admission.state, admission.forgone], [1, 'membership:member:admit', 'refused', true])
+  const [refused] = admission.then
+  assert.deepEqual([refused.op, refused.state, refused.forgone], ['account:capital:subscribe', 'refused', true])
+  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
+  assert.equal(refused.reason, `nadia@lanterne.example subscribes 8 shares: "${sentence}"`)
+  assert.equal(admission.reason, `membership:member:admit is forgone with account:capital:subscribe, which it requires: ${refused.reason}`)
   assert.match(refused.reason ?? '', /Each associate subscribes at least 10 shares/)
-  assert.equal((await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [nadia])).status, 'active')
+  // The close, then the admission and the subscription, each forgone
+  // with its reason in the log, citing what it follows.
+  const close = await one<{ n: string }>(`SELECT max(n) AS n FROM cella.log WHERE op = 'motion:motion:close'`)
+  assert.deepEqual(
+    await all<{ op: string; cause: string | null; settled: boolean; reason: string | null }>(
+      `SELECT op, cause, settled, form ->> 'reason' AS reason FROM cella.log WHERE n >= $1 ORDER BY n`,
+      [close.n],
+    ),
+    [
+      { op: 'motion:motion:close', cause: null, settled: true, reason: null },
+      { op: 'membership:member:admit', cause: close.n, settled: false, reason: admission.reason },
+      { op: 'account:capital:subscribe', cause: String(Number(close.n) + 1), settled: false, reason: refused.reason },
+    ],
+  )
+  assert.ok(Number(close.n) > before)
+  assert.equal((await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [nadia])).status, 'invited', 'no one is admitted without the capital the statutes ask')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM circle.seat WHERE member = $1', [nadia])).n, '0', 'nor seated')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM account.account WHERE holder = $1', [nadia])).n, '0', 'and holds no capital account')
+  assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   await balanced()
 })

@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -150,12 +150,13 @@ member's capital, which is the books', not this feat's. Each sets the
 status and its day in its own transaction, and its request names the
 member and the motion, the shares too for an admission, and no motion
 for a withdrawal: a graft joining `membership` to the books reacts to
-the settled op in its slice's `on` with a write of its own, citing the
-same motion, or for a withdrawal signed by the member as their own, as
+the settled op in its slice's `on` with an effect in its transaction,
+citing the same motion, or for a withdrawal the member's own, as
 `account-membership` freezes the member's capital accounts and
-`account-membership-transaction` subscribes and withdraws their capital. The shell runs the reactions to the writes a
-close carries out as to one made from a page, and the close reports each
-admission it made, so they follow it too. No trigger on `member` does
+`account-membership-transaction` subscribes and withdraws their capital. `write` runs the reactions to the writes a
+close carries out, its admissions among them, in the close's transaction,
+as to one made from a page, and an admission stands only with its
+subscription. No trigger on `member` does
 it.
 
 ## Seats

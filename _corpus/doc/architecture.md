@@ -203,8 +203,8 @@ SQL on its own tables. A graft reads the feats it joins and its
 lower-order grafts, and writes only its own schema. It changes a feat
 only by calling that feat's published write from its handler, inside
 the one `write`, as `invoice-transaction` calls `record()` from
-`@cella/org-transaction/api`. It reacts to a feat's settled write
-through its server slice's `on`, and it refuses a feat's action by a guard
+`@cella/org-transaction/api`. It reacts to a feat's write through its
+server slice's `on`, inside that write's transaction, and it refuses a feat's action by a guard
 on it in `cella.guard`, which the notary runs. It never uses a
 trigger on the feat's table for either. What a graft would only copy
 from a feat's row it reads by a view in its own schema, as
@@ -215,16 +215,16 @@ outside its own schema, or makes a trigger on one; it writes `cella.*`
 only to register ([SQL](#sql)).
 
 What follows a passed motion is its carried actions, never a trigger.
-Each is its owner's published action, a write of its own after the
-close, signed by whoever closed the motion, citing it, and judged by its
-own guards: `membership-motion` carries out a suspension or an
+Each is its owner's published action, run in the close's transaction as
+an effect citing the close and the action's number, its actor whoever
+closed the motion, and judged by its own guards: `membership-motion` carries out a suspension or an
 exclusion through the membership feat's, and the graft that knows what
 follows an admission or an exit reacts to it through `on`.
 `account-membership` freezes a departed member's capital accounts
 through the account feat's `freeze`; `account-membership-transaction`
 subscribes a member admitted, their account opened by the account
-feat's `holding` and their shares called through `record()`, and
-withdraws a departed associate's capital. A member who withdraws by
+feat's `holding` and their shares called through `record()`, an effect
+the admission requires, and withdraws a departed associate's capital. A member who withdraws by
 their own right cites no motion: what follows their withdrawal is
 signed by them and is theirs by the same right, so the account feat
 publishes its freeze and its capital's withdrawal twice, once citing
@@ -234,14 +234,23 @@ the assembly's motion is followed the same way: `patronage-transaction`
 posts it through `distribute`, and
 `account-membership-patronage-transaction` credits each associate the
 shares their part buys through `employ`, posted through `record()` and
-added to what they hold by the membership feat's `crediting`, each
-signed by whoever signed the approval and citing its motion. The shell
-runs the reactions to each write a reaction makes, so a close carries an
-exit and the exit its freeze and withdrawal, and an approval its posting
-and the posting its credits, each settled before the next. A write is one
-transaction with one verdict, so a carried action refused leaves the
-close and every action before it settled, and says why
-([trust](trust.md#three-kinds-of-action)).
+added to what they hold by the membership feat's `crediting`, each an
+effect of the approval, its actor whoever signed it. `write` runs the
+reactions to each write a reaction makes in the same transaction, five
+deep at most, so a close carries an exit and the exit its freeze and
+withdrawal, and an approval its posting and the posting its credits,
+each an effect citing what it follows (`cella.follow`), and the member
+signs only the decision. Each effect runs in a savepoint: a refused one
+is rolled back and recorded as forgone, and the close and every other
+effect stand ([trust](trust.md#three-kinds-of-action)). An effect its
+cause requires, refused, forgoes its cause with it, each recorded with
+its reason, as a refused subscription forgoes the admission it follows
+([required effects](../../apps/org/core/notary/index.md#required-effects)).
+The whole commits or none of it does, so nothing is left half done and
+nothing waits to be retried. The slice that carries or reacts registers
+each op it lets follow another in `cella.follows`, from its migration,
+as it registers its guards, and marks it `required` where its cause
+stands only with it.
 
 A feat that keeps a register its extenders fill owns it the same way.
 The extenders register through a function the feat publishes, and that
@@ -807,8 +816,9 @@ two halves of one **slice**, matched by name:
   circles a new motion may be put in, writes, and whether it opens an
   item's bytes its owner keeps closed (`allows`), as a power over
   expenses opens a receipt; and reactions to
-  other slices' settled writes (`on`), such as carrying out what a
-  passed motion carries once its close settles; and the kinds of file
+  other slices' writes (`on`), each run in the transaction of the write
+  it follows as an effect citing it, such as carrying out what a passed
+  motion carries in its close's; and the kinds of file
   it imports from other tools (`imports`), each record read as one of its
   own writes, which the root runs as the importing member and records in
   the import feat.
@@ -882,12 +892,13 @@ item of another circle's is none to them, a 404. A write is signed in the browse
 action runs as a relay (`lib/server/relay.ts`), and each time a handler
 signs, the post is answered with what to sign; the browser signs it
 (`post` in `@cella/org-ui`) and posts the proof back to the run, which
-goes on to its next signature, a reaction's, or to its outcome
+goes on to its outcome, the decision and its effects committed together:
+a reaction asks for no signature
 ([trust](trust.md#keys-and-addresses)). A run holds no connection while
 it waits on a signature: a handler's reads each borrow one for their
 statement alone, and `write` asks for the signature with none held, then
-borrows one for its transaction (begin, state, submit, commit, release);
-each reaction does the same for its own signature. Nothing read before
+borrows one for its transaction (begin, state, submit, its effects,
+commit, release). Nothing read before
 the signature is trusted at commit: the guards run in SQL inside the
 transaction and the notary checks the signature, the keyring and the
 nonce under its head lock, so a state changed in between is refused,

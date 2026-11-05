@@ -1,7 +1,8 @@
 // The governance scenario, end to end on a seeded Lanterne, through the
 // handlers: Malik invites a friend by a link, which she takes up on her
 // laptop, enrolling it; the assembly admits her and the close seats her
-// in the same verdict, or refuses all of it; a suspension by motion stops a
+// and subscribes her in its transaction, each an effect citing the one it
+// follows; a suspension by motion stops a
 // member's writes; circles never nest, so no motion nests one; a
 // mandate is granted by motion, a policy copied into its mandate, put to
 // a circle holding a mandate it is no wider than and issued under it,
@@ -14,12 +15,13 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { circles, propose as proposeAlone, vote } from '@cella/org-motion/api'
 import type { circles as circleMotions } from '@cella/org-motion/models'
-import { carried, close, propose, put } from '@cella/org-graft-membership-motion/api'
+import { close, propose, put } from '@cella/org-graft-membership-motion/api'
 import { accept, invite, link as link_ } from '@cella/org-membership/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps } from '@cella/org-db'
 import { fixture, random, sha256, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -43,7 +45,7 @@ async function on(date: string) {
 }
 
 const as = (actor: string): Deps =>
-  actor === nadia ? { db: reader(app, actor), actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: reader(app, actor), actor, sign: sign(actor) }
+  reacting(actor === nadia ? { db: reader(app, actor), actor, sign: signer(scope, nadia, fixture(nadia, 'laptop')) } : { db: reader(app, actor), actor, sign: sign(actor) })
 // What a circle's page proposes about it, put as the shell puts it.
 const putCircle = async (m: circleMotions.Put, deps: Deps) => propose(await circles.putting(m, deps.db), deps)
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
@@ -55,6 +57,13 @@ const settled = <T>(out: { state: string; value?: T; reason?: string }): T => {
   return out.value as T
 }
 const status = async (m: string) => (await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [m]))?.status
+// A motion closed by Camille, and what its close carried in its
+// transaction.
+const closing = async (motion: string) => {
+  const outcome = await close({ motion }, as(camille))
+  settled(outcome)
+  return done('motion:motion:close', outcome).then
+}
 
 // Every member on a motion's roll consents.
 async function consented(motion: string) {
@@ -145,24 +154,22 @@ test('only the assembly admits, the one circle holding the collective admit-memb
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM motion.vote WHERE motion = $1', [admission])).n, '10')
 })
 
-test('a close whose seat is refused refuses the whole close: no admission, no device, no verdict', async () => {
+test('the close admits Nadia and seats her in the assembly, an effect in its transaction, and her subscription an effect of the admission; she signs from the laptop she took up her invitation on', async () => {
   await on('2026-11-07')
-  await su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'member', '2026-11-01')`, [nadia])
   const before = await head()
-  const refused = await close({ motion: admission }, as(camille))
-  assert.match(reason(refused), /nadia@lanterne\.example already sits in ag as member/)
-  assert.equal(await head(), before)
-  assert.equal(await status(nadia), 'invited')
-  assert.equal((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [admission])).closed, null)
-  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM person.device WHERE address = $1', [nadia])).n, '1', 'her laptop, enrolled when she took up the invitation, is all she holds')
-  await su.query(`DELETE FROM circle.tenure WHERE holder = $1`, [nadia])
-})
-
-test('the close admits Nadia and seats her in the assembly, in one verdict; she signs from the laptop she took up her invitation on', async () => {
-  const before = await head()
-  const closed = settled(await close({ motion: admission }, as(camille)))
-  assert.deepEqual(closed.admitted.map((a) => [a.member, a.shares]), [[nadia, 20]])
-  assert.equal(await head(), before + 1, 'one log entry')
+  const outcome = await close({ motion: admission }, as(camille))
+  settled(outcome)
+  const [admitted] = done('motion:motion:close', outcome).then
+  assert.deepEqual([admitted.op, admitted.state, admitted.then.map((d) => [d.op, d.state])], ['membership:member:admit', 'settled', [['account:capital:subscribe', 'settled']]])
+  assert.equal(await head(), before + 3, 'the close and its effects, consecutive in the log')
+  assert.deepEqual(
+    await all<{ op: string; cause: string | null }>('SELECT op, cause FROM cella.log WHERE n > $1 ORDER BY n', [before]),
+    [
+      { op: 'motion:motion:close', cause: null },
+      { op: 'membership:member:admit', cause: String(before + 1) },
+      { op: 'account:capital:subscribe', cause: String(before + 2) },
+    ],
+  )
   assert.equal(await status(nadia), 'active')
   // Closed, the secret ballot's tally opens to every member.
   assert.deepEqual(
@@ -183,12 +190,13 @@ test('the close admits Nadia and seats her in the assembly, in one verdict; she 
   assert.match(reason(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia))), /nadia@lanterne\.example holds no mandate for log-time/)
 })
 
-test('Chloé suspended by the assembly\'s motion: carried out after the close, her writes are refused', async () => {
+test('Chloé suspended by the assembly\'s motion: carried out in the close\'s transaction, her writes are refused', async () => {
   const proposed = settled(await put({ kind: 'suspend', args: { member: chloe }, deadline: '2026-11-14', body: '' }, as(camille)))
   await consented(proposed.motion)
   await on('2026-11-14')
-  settled(await close({ motion: proposed.motion }, as(camille)))
-  const then = await carried(proposed.motion, as(camille))
+  const outcome = await close({ motion: proposed.motion }, as(camille))
+  settled(outcome)
+  const then = done('motion:motion:close', outcome).then
   assert.deepEqual(then.map((d) => [d.op, d.state]), [['membership:member:suspend', 'settled']])
   assert.equal(await status(chloe), 'suspended')
 
@@ -241,8 +249,7 @@ test('coordination grants the finance role send-quote by motion, under the send-
     settled(await vote({ motion: issuing.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-11-28')
-  settled(await close({ motion: issuing.motion }, as(camille)))
-  assert.deepEqual((await carried(issuing.motion, as(camille))).map((d) => [d.op, d.state]), [
+  assert.deepEqual((await closing(issuing.motion)).map((d) => [d.op, d.state]), [
     ['motion:policy:adopt', 'settled'],
     ['motion:policy:adopt', 'settled'],
   ])
@@ -259,8 +266,7 @@ test('coordination grants the finance role send-quote by motion, under the send-
     settled(await vote({ motion: proposed.motion, member: m, stance: 'consent' }, as(m)))
   }
   await on('2026-12-05')
-  settled(await close({ motion: proposed.motion }, as(camille)))
-  assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
+  assert.deepEqual((await closing(proposed.motion)).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
   assert.equal(
     (await one<{ parent: string }>(`SELECT p.grantee AS parent FROM circle.mandate m JOIN circle.mandate p ON p.id = m.parent WHERE m.grantee = 'finance' AND m.power = 'send-quote'`)).parent,
     'coordination',
@@ -304,8 +310,7 @@ test('a grant no circle holds a mandate to issue under is put to the assembly: c
     settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
   }
   await on('2026-12-08')
-  settled(await close({ motion: proposed.motion }, as(camille)))
-  assert.deepEqual((await carried(proposed.motion, as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
+  assert.deepEqual((await closing(proposed.motion)).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
   assert.deepEqual(
     await one(`SELECT issuer, parent, cella.cents("limit")::int AS "limit" FROM circle.mandate WHERE grantee = 'finance' AND power = 'approve-expense'`),
     { issuer: 'ag', parent: null, limit: 300000 },

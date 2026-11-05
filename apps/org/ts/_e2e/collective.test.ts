@@ -23,8 +23,9 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
 import { carried, close, propose } from '@cella/org-graft-membership-motion/api'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -111,8 +112,9 @@ test('the same admission put in Web is refused at its proposal, Web holding no c
 
 test('the assembly\'s m-2026-012 admits Inès under its collective admit-member, and seats her', async () => {
   await on('2026-10-31')
-  const done = settled(await close({ motion: 'm-2026-012' }, as(camille)))
-  assert.deepEqual(done.admitted.map((a) => a.member), [ines])
+  const closed = await close({ motion: 'm-2026-012' }, reacting(as(camille)))
+  settled(closed)
+  assert.deepEqual(done('motion:motion:close', closed).then.map((d) => [d.op, d.state]), [['membership:member:admit', 'settled']])
   assert.deepEqual(await one(`SELECT status FROM membership.member WHERE address = $1`, [ines]), { status: 'active' })
 })
 

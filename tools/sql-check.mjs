@@ -673,6 +673,10 @@ const registerFns = { 'motion.register_carries': 5, 'motion.register_cite': 3, '
 
 function registersBy(call, o, fail, found) {
   const f = strings(call.funcname).join('.')
+  if (f === 'cella.lets_follow') {
+    follows(call, o, fail, found)
+    return
+  }
   if (!registerFns[f]) {
     return
   }
@@ -687,6 +691,23 @@ function registersBy(call, o, fail, found) {
   if (f === 'motion.register_cite') {
     found.cites.push({ op: args[0], power: args[1], owner: o.name })
   }
+}
+
+// `cella.lets_follow(cause, op, owner[, required])`: which op a slice's
+// reaction writes as an effect of which, registered under its own name,
+// each argument a literal, so feat-check sees every `on` registered.
+function follows(call, o, fail, found) {
+  const args = call.args ?? []
+  const [cause, op, owner] = args.slice(0, 3).map((a) => a.A_Const?.sval?.sval)
+  const required = args[3]?.A_Const?.boolval
+  if (args.length < 3 || args.length > 4 || [cause, op, owner].includes(undefined) || (args.length === 4 && !required)) {
+    fail('calls cella.lets_follow with an argument that is no literal, which the check cannot see')
+    return
+  }
+  if (owner !== o.name) {
+    fail(`registers by cella.lets_follow as ${owner}, not as itself, ${o.name}`)
+  }
+  found.follows.push({ cause, op, owner: o.name, required: required?.boolval === true })
 }
 
 function statement(type, b, o, s, fail, owned, named, found) {
@@ -1382,6 +1403,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
   found.readers ??= new Set()
   found.open ??= new Set()
   found.carried ??= new Set()
+  found.follows ??= []
   found.owned ??= new Set()
   found.circles ??= new Set()
   found.summed ??= new Map()

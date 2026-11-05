@@ -98,7 +98,7 @@ export async function withdrawn(request: unknown, deps: Deps): Promise<Done[]> {
     return []
   }
   const input = { member, motion }
-  return [done('account:capital:withdraw', await withdraw(input, deps), [], input)]
+  return [done('account:capital:withdraw', await withdraw(input, deps))]
 }
 
 export async function withdrawnOwn(request: unknown, deps: Deps): Promise<Done[]> {
@@ -107,5 +107,5 @@ export async function withdrawnOwn(request: unknown, deps: Deps): Promise<Done[]
     return []
   }
   const input = { member }
-  return [done('account:own:withdraw', await withdrawOwn(input, deps), [], input)]
+  return [done('account:own:withdraw', await withdrawOwn(input, deps))]
 }

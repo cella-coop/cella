@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -97,18 +97,20 @@ withdraws their own capital, citing none.
 
 ## Reactions
 
-What follows an admission or an exit is a write of its own after it,
-signed by whoever signed that write: the member who closed the motion
+What follows an admission or an exit is an effect in its transaction,
+citing it, its actor whoever signed that write: the member who closed the motion
 that carried it, citing the same motion, or the member who withdrew, as
 their own; and judged by its own guards; a
-refused one leaves the admission or the exit settled and says why
+refused one is forgone and says why, and leaves the exit settled, while
+the admission, which requires its subscription, is forgone with it
 ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). No
 trigger on `membership.member` does it.
 
 - To `membership:member:admit`, whichever write admits, the close of
-  the motion that admits included: `subscribe`. Where no adopted terms
-  value a share on the verdict date, or the member holds none, nothing
-  is subscribed and no write is made.
+  the motion that admits included: `subscribe`, an effect the admission
+  requires (`cella.follows`). Where no adopted terms value a share on the
+  verdict date, it writes nothing and its guard refuses it, forgoing the
+  admission.
 - To `membership:member:exclude`: `withdraw`; to
   `membership:member:withdraw`: `withdrawOwn`, the same withdrawal as
   `account:own:withdraw`. Where no terms govern the
@@ -178,8 +180,8 @@ and, on their own page, the draw form, unless their account is frozen.
 ## Lanterne
 
 The members' capital was carried over on 1 July. Inès subscribes her 20
-shares, 1 000 €, called by the subscription m-2026-012 carries once it admits her, signed
-by Camille, who closed it, and paid from her pay.
+shares, 1 000 €, called by the subscription that follows her admission in m-2026-012's
+close, its actor Camille, who closed it, and paid from her pay.
 Paul left on 30 November 2025: his 1 500 € is owed him in `4567`, repaid
 500 € a year on 30 November 2026, 2027 and 2028.
 

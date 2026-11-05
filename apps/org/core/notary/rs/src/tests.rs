@@ -12,7 +12,6 @@ use pgrx::prelude::*;
 pub const NOTARY_SEED: [u8; 32] = [7; 32];
 
 /// The vault's TEST-ONLY key.
-#[cfg(test)]
 pub const VAULT_KEY: [u8; 32] = [9; 32];
 
 /// `cella.op()`, as every version before 0.6.0 binds it: the earlier
@@ -29,6 +28,7 @@ mod tests {
     use cella_guards::hex::hex;
     use cella_guards::log::{self, Basis, Entry, Key, Receipt};
     use cella_guards::sign::{self, Request};
+    use cella_guards::vault;
     use ed25519_dalek::{Signer, SigningKey};
     use pgrx::JsonB;
     use pgrx::prelude::*;
@@ -359,7 +359,7 @@ $f$;
     /// Each earlier version the notary ships, which `cella test notary`
     /// stages beside the current one, and the function its guards read the
     /// action through: `cella.op()` before 0.6.0.
-    const EARLIER: [(&str, &str); 7] = [
+    const EARLIER: [(&str, &str); 8] = [
         ("0.1.0-alpha", "op"),
         ("0.2.0", "op"),
         ("0.3.0", "op"),
@@ -367,6 +367,7 @@ $f$;
         ("0.5.0", "op"),
         ("0.6.0", "action"),
         ("0.7.0", "action"),
+        ("0.8.0", "action"),
     ];
 
     fn version() -> Option<String> {
@@ -787,9 +788,10 @@ END $$"#
     fn a_restore_carries_out_each_erasure_its_vault_lacks_once() {
         beside();
         Spi::run(
-            r"INSERT INTO vault.key (subject, class, year, sealed) VALUES
-                ('ana', 'contact', 2025, '\x00'), ('ana', 'contact', 2026, '\x00'), ('ana', 'profile', 2026, '\x00'),
-                ('ben', 'payroll', 2020, '\x00'), ('ben', 'payroll', 2025, '\x00')",
+            r"INSERT INTO vault.key (subject, class, year, sealed, wrap)
+              SELECT subject, class, year, '\x00', decode(repeat('00', 32), 'hex') FROM (VALUES
+                ('ana', 'contact', 2025), ('ana', 'contact', 2026), ('ana', 'profile', 2026),
+                ('ben', 'payroll', 2020), ('ben', 'payroll', 2025)) k (subject, class, year)",
         )
         .expect("the keys");
         let list = json!({ "head": 9, "erasures": [
@@ -824,5 +826,104 @@ END $$"#
         let list = json!({ "erasures": [{ "subject": "ana", "class": "diary", "date": "2026-10-25", "restricted": false }] });
         let error = tries(&format!("SELECT cella.vault_reerase('{list}')")).expect("a refusal");
         assert!(error.contains("no retention class diary, which the list's erasure of ana names"), "{error}");
+    }
+
+    /// The id of the wrap key the TEST-ONLY vault key derives, in hex.
+    fn wrap_id() -> String {
+        hex(&vault::wrap_id(&vault::wrap_key(&super::VAULT_KEY)))
+    }
+
+    /// `t.person`, whose email is Julien's contact data, registered as
+    /// personal.
+    fn personal() {
+        Spi::run(
+            "CREATE TABLE t.person (address text NOT NULL, email text);
+             INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES ('t', 'person', 'email', 'contact', 'address', 't');",
+        )
+        .expect("the personal field");
+    }
+
+    /// Julien's email, written as entry 1 and sealed in the vault.
+    fn give_email() {
+        let request = json!({ "cents": 100 });
+        let payload = json!({ "cents": 100, "email": { "$personal": { "field": "t.person.email", "subject": JULIEN, "value": "julien@petit.example" } } });
+        assert_eq!(attempt(&payload, JULIEN, &signed(&device(1), JULIEN, &request, NONCE)), None);
+    }
+
+    fn opened_email() -> Option<String> {
+        Spi::get_one::<String>("SELECT cella.opened(1) ->> 'email'").expect("the entry, opened")
+    }
+
+    #[pg_test]
+    fn a_vault_key_names_the_wrap_key_that_sealed_it_and_one_naming_another_is_refused_with_its_id() {
+        beside();
+        scope();
+        personal();
+        give_email();
+        let named = Spi::get_one::<String>("SELECT string_agg(DISTINCT encode(wrap, 'hex'), ',') FROM vault.key").expect("the wrap ids");
+        assert_eq!(named, Some(wrap_id()), "the key is named by the current wrap key's id");
+        assert_ne!(named, Some(hex(&vault::wrap_key(&super::VAULT_KEY))), "never by the key itself");
+        assert_eq!(opened_email().as_deref(), Some("julien@petit.example"));
+
+        let other = "ab".repeat(32);
+        Spi::run(&format!("UPDATE vault.key SET wrap = decode('{other}', 'hex')")).expect("another id");
+        let error = tries("SELECT cella.opened(1)").expect("a refusal");
+        assert!(
+            error.contains(&format!(
+                "is sealed under the wrap key {other}, which neither cella.vault_key_file nor cella.vault_key_previous derives"
+            )),
+            "{error}"
+        );
+    }
+
+    #[pg_test]
+    fn rewrap_moves_no_key_already_naming_the_current_wrap_key() {
+        beside();
+        scope();
+        personal();
+        give_email();
+        assert_eq!(Spi::get_one::<i64>("SELECT cella.vault_rewrap()").expect("the rewrap"), Some(0));
+        assert_eq!(opened_email().as_deref(), Some("julien@petit.example"));
+    }
+
+    /// It drops the extension every other test reads, so it runs alone: a
+    /// vault key 0.8.0 sealed names no wrap key, and the upgrade names the
+    /// one that opens it; one that opens under no key file fails the
+    /// upgrade, naming it.
+    #[pg_test]
+    fn the_upgrade_to_0_9_0_names_each_vault_key_s_wrap_key() {
+        alone();
+        let current = version();
+        let at_0_8_0 = |sealed: &[u8]| {
+            Spi::run(
+                "DROP SCHEMA IF EXISTS t, old CASCADE;
+                 DROP EXTENSION cella CASCADE;
+                 CREATE EXTENSION cella VERSION '0.8.0';",
+            )
+            .expect("0.8.0");
+            Spi::run_with_args(
+                "INSERT INTO vault.key (subject, class, year, sealed) VALUES ($1, 'contact', 2026, $2)",
+                &[JULIEN.into(), sealed.to_vec().into()],
+            )
+            .expect("a key 0.8.0 sealed");
+        };
+        let key = [5u8; 32];
+        let sealed =
+            vault::seal(&vault::wrap_key(&super::VAULT_KEY), &[3; vault::NONCE], &crate::vault::key_aad(JULIEN, "contact", 2026), &key)
+                .expect("sealed");
+        at_0_8_0(&sealed);
+        Spi::run("ALTER EXTENSION cella UPDATE").expect("the upgrade");
+        assert_eq!(version(), current);
+        let named = Spi::get_one::<String>("SELECT encode(wrap, 'hex') FROM vault.key").expect("the wrap id");
+        assert_eq!(named, Some(wrap_id()));
+        let nullable =
+            Spi::get_one::<bool>("SELECT NOT attnotnull FROM pg_attribute WHERE attrelid = 'vault.key'::regclass AND attname = 'wrap'")
+                .expect("the column");
+        assert_eq!(nullable, Some(false), "every key names its wrap key from 0.9.0");
+
+        at_0_8_0(b"opens under no key");
+        scope();
+        let error = tries("ALTER EXTENSION cella UPDATE").expect("a refusal");
+        assert!(error.contains(&format!("the key of {JULIEN}'s contact from 2026 opens under neither")), "{error}");
     }
 }

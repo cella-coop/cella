@@ -6,14 +6,17 @@
 // every table holds what it held, and the next write continues the chain
 // under the same key. A backup during which the notary's key path moves
 // refuses, and one taken in the middle of a vault rotation holds both
-// vault keys and restores with every entry opening. A backup taken before
+// vault keys and restores with every entry opening. One taken after the
+// rotation is done keeps the old key and names both wrap keys' ids, and
+// one whose vault names a key file it does not hold refuses, saying that
+// key's id. A backup taken before
 // a former member erases their data, restored with a later backup's
 // erasures, opens none of it and refuses it again. Run by `cella test e2e
 // restore`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import pg from 'pg'
@@ -88,6 +91,7 @@ test('members write, personal data among it, and the scope is backed up whole, i
   const manifest = readFileSync(join(backup, 'manifest'), 'utf8')
   const installed = await one<{ v: string }>(su, `SELECT extversion AS v FROM pg_extension WHERE extname = 'cella'`)
   assert.ok(manifest.split('\n').includes(`version ${installed.v}`), `the manifest names the installed version, ${installed.v}`)
+  assert.match(manifest, /^wrap vault\.key [0-9a-f]{64}$/m)
   assert.match(manifest, /^setting - cella\.scope=lanterne\.example$/m)
   assert.match(manifest, new RegExp(`^head ${written} [0-9a-f]{64}$`, 'm'))
   const keys = await one<{ notary: string; vault: string }>(
@@ -203,6 +207,70 @@ test('a backup taken between a vault rotation\'s steps 2 and 3 holds both vault 
     await c.end()
   } finally {
     third.stop()
+  }
+})
+
+// The id of the wrap key a backup's manifest gives one of its vault key files.
+function wrapOf(dir: string, file: string) {
+  const line = readFileSync(join(dir, 'manifest'), 'utf8').match(new RegExp(`^wrap ${file.replace(/\./g, '\\.')} ([0-9a-f]{64})$`, 'm'))
+  assert.ok(line, `the manifest names the wrap id of ${file}`)
+  return line[1]
+}
+
+test('a backup taken after a completed vault rotation keeps the old key, whose wrap id its manifest names', async () => {
+  const rotating = join(scratch, 'rotating')
+  const [old, current] = [wrapOf(rotating, 'vault.previous.key'), wrapOf(rotating, 'vault.key')]
+  assert.notEqual(old, current)
+
+  // Step 3: every vault key is sealed again under the new wrap key, and names it.
+  const c = await host.client('lanterne')
+  const named = async () =>
+    (await c.query<{ id: string; n: string }>(`SELECT encode(wrap, 'hex') AS id, count(*) AS n FROM vault.key GROUP BY 1 ORDER BY 1`)).rows.map(
+      (r) => [r.id, Number(r.n)] as [string, number],
+    )
+  const sealed = await named()
+  assert.deepEqual(sealed.map(([id]) => id), [old], 'until the rewrap, every vault key names the old wrap key')
+  const moved = Number((await one<{ n: string }>(c, 'SELECT cella.vault_rewrap() AS n')).n)
+  assert.equal(moved, sealed[0][1])
+  assert.deepEqual(await named(), [[current, moved]])
+  await c.end()
+
+  // Step 4: the old key file leaves cella.vault_key_previous for cella.vault_keys_kept.
+  await host.set('cella.vault_key_previous', null)
+  await host.set('cella.vault_keys_kept', host.keys.vault)
+  const rotated = join(scratch, 'rotated')
+  assert.match(cella(['backup', rotated, '--url', host.url('lanterne')]), /, the vault key kept from an earlier rotation,/)
+  assert.equal(existsSync(join(rotated, 'vault.previous.key')), false)
+  assert.deepEqual(readFileSync(join(rotated, 'vault.kept.1.key')), readFileSync(host.keys.vault))
+  assert.deepEqual([wrapOf(rotated, 'vault.key'), wrapOf(rotated, 'vault.kept.1.key')], [current, old])
+
+  const fifth = await cluster()
+  try {
+    const pgsu = await fifth.client('postgres')
+    await pgsu.query('CREATE DATABASE lacking')
+    await pgsu.query('CREATE DATABASE lanterne')
+    await pgsu.end()
+    // The mid-rotation backup without its previous key file: its vault
+    // names a wrap key none of its key files derives, and says which.
+    const lacking = join(scratch, 'lacking')
+    cpSync(rotating, lacking, { recursive: true })
+    rmSync(join(lacking, 'vault.previous.key'))
+    assert.throws(
+      () => cella(['restore', lacking, '--url', fifth.url('lacking')]),
+      new RegExp(`seals ${moved} vault keys under the wrap key ${old}, which none of the backup's key files derives`),
+    )
+
+    // The backup after the rotation puts its kept key where the cluster keeps one.
+    assert.throws(() => cella(['restore', rotated, '--url', fifth.url('lanterne')]), /cella\.vault_keys_kept names no free path for vault\.kept\.1\.key/)
+    const kept = join(fifth.dir, 'keys/vault.kept.key')
+    await fifth.set('cella.vault_keys_kept', kept)
+    assert.match(cella(['restore', rotated, '--url', fifth.url('lanterne')]), /0 erasures made since carried out again; every entry opens/)
+    assert.deepEqual(readFileSync(kept), readFileSync(host.keys.vault))
+    const r = await fifth.client('lanterne')
+    assert.match(JSON.stringify((await one<{ o: unknown }>(r, 'SELECT cella.opened($1) AS o', [written])).o), /julien@petit\.example/)
+    await r.end()
+  } finally {
+    fifth.stop()
   }
 })
 

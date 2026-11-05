@@ -75,6 +75,11 @@ pub(crate) static VAULT_KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Opt
 /// sealed under it until `cella.vault_rewrap()` has moved it.
 pub(crate) static VAULT_KEY_PREVIOUS: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
 
+/// The vault key files of earlier rotations, comma-separated, kept until
+/// no restore point older than their rotation is kept: the notary never
+/// opens under them, and `cella backup` carries each.
+pub(crate) static VAULT_KEYS_KEPT: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+
 /// A fixed verdict date, for fixtures and tests; unset, the notary reads
 /// its clock once per transaction.
 pub(crate) static CLOCK: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
@@ -116,6 +121,14 @@ pub extern "C-unwind" fn _PG_init() {
         c"The vault's key file before a rotation",
         c"set in postgresql.conf until cella.vault_rewrap() has moved every key",
         &VAULT_KEY_PREVIOUS,
+        GucContext::Sighup,
+        GucFlags::SUPERUSER_ONLY,
+    );
+    GucRegistry::define_string_guc(
+        c"cella.vault_keys_kept",
+        c"The vault's key files of earlier rotations, comma-separated",
+        c"set in postgresql.conf until no restore point older than their rotation is kept; never opened under, carried by cella backup",
+        &VAULT_KEYS_KEPT,
         GucContext::Sighup,
         GucFlags::SUPERUSER_ONLY,
     );

@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 # Operations
@@ -100,8 +100,9 @@ The scope has two keys, kept apart so that either rotates alone
   signed, and each entry names its own, so the log verifies from what
   the database stores: a rotated or lost key file loses nothing already
   signed.
-- **The vault's key** derives the wrap key that seals every vault key.
-  Without it the vault opens nothing; losing it erases every personal
+- **The vault's key** derives the wrap key that seals every vault key,
+  and each vault key names the wrap key that sealed it by an id, never
+  the key. Without it the vault opens nothing; losing it erases every personal
   value the vault holds, as if each subject had asked.
 
 To rotate the notary's key:
@@ -124,8 +125,11 @@ To rotate the vault's key:
    still opens, under either.
 3. `cella vault rewrap` seals every vault key under the new one and says
    how many moved; run again, it moves none.
-4. Unset `cella.vault_key_previous`, reload, and destroy the old file
-   once no backup that needs it is kept.
+4. Unset `cella.vault_key_previous`, add the old file to
+   `cella.vault_keys_kept`, and reload. Keep it there until no restore
+   point older than step 3 is kept: no backup taken before it, and no
+   base backup or archived segment of the write-ahead log from before it.
+   Then drop it from `cella.vault_keys_kept`, reload, and destroy it.
 
 A database from before the notary's 0.2.0, whose vault keys are sealed
 under a wrap key derived from the notary's seed, moves the same way: a
@@ -137,10 +141,13 @@ new vault key file, the notary's key file as the previous one, then
 `cella backup <dir> [--url URL]`, on the database's host as a user who
 reads its key files, writes a new owner-only directory: the database as
 `pg_dump --format=custom` writes it, the notary's and the vault's key
-files, the previous vault key's where `cella.vault_key_previous` is set,
-the scope's erasures, and a manifest of the database's name, the
-extension's version, the log's head and the settings the database and
-its roles carry, which a dump leaves out. The erasures, `erasures.json`,
+files, the previous vault key's where `cella.vault_key_previous` is set
+and each kept in `cella.vault_keys_kept`, the scope's erasures, and a
+manifest of the database's name, the extension's version, the log's
+head, each vault key file's wrap id and the settings the database and
+its roles carry, which a dump leaves out. So a backup holds every wrap
+key still kept, and a restore point older than the last rotation finds
+its key in any backup taken since. The erasures, `erasures.json`,
 are every tombstone of `vault.erased`: its subject, its class, its date,
 its receipt's number and whether the class is restricted, and nothing
 personal. Run it nightly from a timer and copy the directory off the
@@ -160,9 +167,9 @@ vault keys, and its restore opens every vault key under either.
 
 What a scope is promised is what its nightly backups give: a restore
 loses at most the day since the last one. A point-in-time recovery from
-the cluster's archived write-ahead log is not supported: nothing yet
-gives it the vault key a restore point before a rotation needs, nor
-rehearses it.
+the cluster's archived write-ahead log is not supported: no command
+restores to a point, re-applies the erasures after it, nor rehearses
+it.
 
 `cella restore <dir> [--db NAME | --url URL] [--erasures PATH]` makes the
 scope again from a backup, into a new database on the dev cluster or
@@ -172,8 +179,13 @@ with the build that made the backup, then [upgrade](#upgrades). It
 writes each key file where the cluster's settings say, if it is missing,
 and refuses if a different key is already there; a backup that holds
 the previous vault key needs `cella.vault_key_previous` set as well, and
-the rotation is finished after it with `cella vault rewrap`. It makes
-the roles and the settings and loads the dump. Then, before the
+the rotation is finished after it with `cella vault rewrap`; one that
+keeps vault keys of earlier rotations writes each into a path of the
+cluster's `cella.vault_keys_kept` that holds it or is free, and refuses,
+naming its wrap id, where none is. It makes the roles and the settings and loads the dump, and refuses if a vault
+key in it names a wrap key none of the backup's key files derives,
+saying the id it lacks and how many vault keys it seals, rather than
+fail on the first entry that will not open. Then, before the
 database opens to the app's role, it re-applies the newest list of
 erasures it is given, `--erasures` naming a later backup's directory or
 its `erasures.json`, the backup's own where none is named, and refuses
@@ -193,7 +205,10 @@ every table's rows, the head and the vault as they were, and takes the
 next write under the same key. It rehearses as well a backup taken in
 the middle of a vault rotation, before `cella vault rewrap`, whose
 restore opens every entry, and one during which the notary's key path
-changes, which refuses. And it rehearses an erasure after a backup: a
+changes, which refuses. It rehearses a backup taken after a completed
+rotation, whose manifest names both wrap ids and whose key files
+include the kept one, and a backup whose vault names a key file it does
+not hold, which refuses naming that key's id. And it rehearses an erasure after a backup: a
 former member's personal data is backed up, they erase it, the scope is
 backed up again, and the first backup restored with the second's
 erasures opens none of that data, folds every entry of it to

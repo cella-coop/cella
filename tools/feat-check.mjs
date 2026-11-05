@@ -35,7 +35,7 @@
 import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
-import { checkSql, placed, schemaName, undeclared, unowned, unread, definers } from './sql-check.mjs'
+import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
 import { agree, covered, declared, granted, mandates } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { refuse, scanTs } from './writes.mjs'
@@ -333,7 +333,7 @@ if (sql) {
     }
   }
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
-  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found), ...unread(found), ...definers(found))
+  errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found), ...unread(found), ...definers(found), ...unshared(found))
   // What a feat's or a graft's TypeScript writes outside its own schema,
   // refused with what its SQL does there.
   for (const dir of byName.values()) {

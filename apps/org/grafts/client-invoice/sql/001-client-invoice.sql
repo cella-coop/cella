@@ -29,7 +29,7 @@ CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON client_invoice.billing
 -- What each client owes and is owed, in cents, from its invoices' standing:
 -- `credit` is what the co-op owes back, from overpayments and payments on
 -- voided invoices.
-CREATE VIEW client_invoice.standing AS
+CREATE VIEW client_invoice.standing WITH (security_invoker = true) AS
 SELECT c.id AS client, c.name,
        coalesce(sum(s.owed), 0)::bigint AS owed,
        coalesce(sum(s.credit), 0)::bigint AS credit

@@ -11,7 +11,7 @@ SELECT motion.register_carries('exclude', 'Exclude a member', '[{"name": "member
 -- admission, the shares as a whole number or none. The motion is named
 -- by id and the member by address, with no foreign key into either feat;
 -- the guards resolve them.
-CREATE VIEW membership_motion.action AS
+CREATE VIEW membership_motion.action WITH (security_invoker = true) AS
 SELECT m.motion, m.n, m.kind, m.args ->> 'member' AS member,
        CASE WHEN m.args ->> 'shares' ~ '^[0-9]{1,9}$' THEN (m.args ->> 'shares')::integer END AS shares
 FROM motion.action m

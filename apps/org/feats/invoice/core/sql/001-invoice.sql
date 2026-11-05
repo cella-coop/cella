@@ -160,7 +160,7 @@ CREATE TRIGGER stays_issued BEFORE UPDATE OR DELETE ON invoice.line
 -- Where each invoice stands, read from its payments, in cents. A payment
 -- beyond the total is not refused: the excess is a credit owed to the
 -- client. On a voided invoice everything paid is owed back.
-CREATE VIEW invoice.standing AS
+CREATE VIEW invoice.standing WITH (security_invoker = true) AS
 SELECT i.id, i.bill_to, i.due, cella.cents(i.total) AS total, coalesce(p.paid, 0) AS paid,
   CASE WHEN i.voided IS NOT NULL THEN 0
        ELSE greatest(cella.cents(i.total) - coalesce(p.paid, 0), 0) END AS owed,

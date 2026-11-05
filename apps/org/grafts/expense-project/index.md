@@ -10,7 +10,7 @@ expense under no project is the co-op's own. Declared by `expense`.
 
 `expense_project` (`sql/`): `rebill`, an expense and its project, each by
 id; `spent`, what each project's members spent for it, approved and
-pending.
+pending. `spent` sums every expense filed on a project for every reader, declared `audience: shared by project`.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning

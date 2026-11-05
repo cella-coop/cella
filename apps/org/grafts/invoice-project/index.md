@@ -15,7 +15,7 @@ is not invalid; it still says what it bills in its label. Declared by
   foreign key into either feat. A trigger refuses an invoice or a project
   that does not exist (SQLSTATE `09000`).
 - `invoice_project.invoiced`: what each project invoiced, net of VAT, its
-  voided invoices left out, in cents.
+  voided invoices left out, in cents. It sums every invoice charged to a project for every reader, declared `audience: shared by project`.
 
 The app role may select, insert and update; the guards role may select.
 

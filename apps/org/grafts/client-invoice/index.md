@@ -15,7 +15,7 @@ it still carries the name it bills as text.
   that does not exist (SQLSTATE `09000`).
 - `client_invoice.standing`: what each client owes and is owed, in cents,
   summed from `invoice.standing`. `credit` is what the co-op owes back:
-  Vélo Solidaire's overpayment on F-2026-0051 shows here.
+  Vélo Solidaire's overpayment on F-2026-0051 shows here. It reads as its reader, so it shows only the records its reader reads.
 
 The app role may select, insert and update; the guards role, `cella_guards`,
 may select.

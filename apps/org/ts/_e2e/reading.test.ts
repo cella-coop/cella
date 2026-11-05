@@ -10,8 +10,10 @@
 // values in the log open to them, never to a colleague; what a function
 // reading as its owner returns, a share that divides the whole or a
 // motion's count, is kept to whoever reads it, so Inès and Paul, who
-// left, read nothing of a record another circle owns through one; a
-// saved report reads for whoever runs it, through the analytics shell;
+// left, read nothing of a record another circle owns through one, nor
+// through a view the app reads, which reads as its reader, an expense's
+// claim or a document's adoption among them; a saved report reads for
+// whoever runs it, through the analytics shell;
 // and a server logging in as the superuser reads as the app role all the
 // same. Run by `cella test e2e reading`.
 
@@ -162,6 +164,21 @@ test('what sums the whole is the same whoever reads it: the statements, an entry
   const amount = `SELECT transaction.amount('je-0001') AS a`
   assert.deepEqual(await reading(chloe, amount), await reading(julien, amount), 'the opening entry\'s amount counts the lines she may not read')
 
+  // What each project burnt, spent and invoiced sums every entry, expense
+  // and invoice on it, whoever reads it: Chloé's time on a project is a
+  // part of it, never the whole.
+  for (const sql of [
+    'SELECT project, hours, billable, spent, cost FROM project_timesheet.burn ORDER BY project',
+    'SELECT project, expenses, approved, pending FROM expense_project.spent ORDER BY project',
+    'SELECT project, net FROM invoice_project.invoiced ORDER BY project',
+  ]) {
+    const whole = await reading(julien, sql)
+    assert.ok(whole.length > 0, sql)
+    for (const member of [chloe, ines]) {
+      assert.deepEqual(await reading(member, sql), whole, `${member} reads the same as Julien: ${sql}`)
+    }
+  }
+
   // The 2025 surplus, not yet approved: what its work share would give
   // each worker by pay.
   const shares = `SELECT member, amount FROM patronage_payslip.work_share WHERE distribution = '2025' ORDER BY member`
@@ -194,10 +211,54 @@ test('a function reading as its owner keeps its rows to whoever reads them: Inè
   const [counted] = await reading(chloe, tally)
   assert.ok(Number(counted.counted) > 0, 'Chloé, a member, reads it by open books')
 
+  // The motion that moves to admit someone: to whom it names, and to the
+  // readers of its circle's motions.
+  const admitting = `SELECT member, motion FROM employment_membership_motion.admitting()`
+  assert.deepEqual(await reading(ines, admitting), [{ member: ines, motion: 'm-2026-012' }], 'Inès, seated in no assembly, reads the motion to admit her, and no one else\'s')
+  assert.deepEqual(await reading(paul, admitting), [], 'Paul reads none')
+
   // Who a distributed split credits: none to whoever reads no distribution.
   for (const member of [ines, paul]) {
     assert.deepEqual(await reading(member, `SELECT member FROM account_membership_patronage_transaction.employable('2025')`), [])
   }
+  await app.query(`SELECT set_config('cella.actor', '', false)`)
+})
+
+test('a view the app reads reads as its reader: Inès, in Web and no member, and Paul, who left, read nothing through one of a record another circle owns', async () => {
+  // An expense's claim: who claimed it and who decided it.
+  const claims = async (member: string) => (await reading(member, 'SELECT expense FROM expense_membership.claim ORDER BY expense')).map((r) => r.expense)
+  assert.deepEqual(await claims(ines), ['ex-0002', 'ex-0004'], 'Inès reads the claims on Web\'s and the assembly\'s expenses, and not Brand\'s or Marketing\'s')
+  assert.deepEqual(await claims(paul), [], 'Paul reads none')
+  assert.deepEqual(await claims(chloe), ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004'], 'Chloé, a member, reads every one by open books')
+
+  // A document's adoption: Coordination's rate card, adopted by its motion.
+  const adoption = `SELECT motion, version, hash FROM document_motion.adoption WHERE motion = 'm-2026-011'`
+  for (const member of [ines, paul]) {
+    assert.deepEqual(await reading(member, adoption), [], `${member} reads neither the version nor the hash Coordination's motion adopts`)
+  }
+  assert.equal((await reading(chloe, adoption)).length, 1, 'where Chloé reads it')
+
+  // What a motion of Coordination's carries, read through each view over
+  // its actions.
+  for (const view of ['motion.circle_action', 'membership_motion.action', 'membership_motion.seating', 'motion_patronage.approval']) {
+    assert.deepEqual(await reading(ines, `SELECT motion FROM ${view} WHERE motion = 'm-2026-011'`), [], `Inès reads nothing of Coordination's motion through ${view}`)
+  }
+
+  // Every other view the app reads as its reader: Paul reads no circle's
+  // records through any, only his own path and the reports every scope is
+  // drawn with.
+  const views = [
+    'bill.taxed', 'client_invoice.standing', 'document.adopted', 'document_membership.texts', 'document_motion.adoption',
+    'employment_membership_motion.admission', 'expense_membership.claim', 'invoice.standing', 'invoice.taxed',
+    'meeting_membership.quorum', 'meeting_membership.roll', 'membership_motion.action', 'membership_motion.mention',
+    'membership_motion.seating', 'membership_project.pot', 'motion.circle_action', 'motion_patronage.approval',
+    'project.progress', 'project_task.count',
+  ]
+  for (const view of views) {
+    assert.deepEqual(await reading(paul, `SELECT * FROM ${view}`), [], `Paul reads nothing through ${view}`)
+  }
+  assert.deepEqual((await reading(paul, 'SELECT address FROM employment_membership.path')).map((r) => r.address), [paul], 'Paul reads his own path alone')
+  assert.deepEqual(await reading(paul, `SELECT id FROM report.listed WHERE kind = 'custom'`), [], 'and no report a member saved')
   await app.query(`SELECT set_config('cella.actor', '', false)`)
 })
 

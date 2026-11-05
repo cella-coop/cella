@@ -52,7 +52,7 @@ CREATE TRIGGER within BEFORE INSERT ON membership_project.share
 
 -- What each project's budget has shared out, and what is left of it, in
 -- cents.
-CREATE VIEW membership_project.pot AS
+CREATE VIEW membership_project.pot WITH (security_invoker = true) AS
 SELECT p.id AS project, cella.cents(p.budget) AS budget,
        coalesce(sum(cella.cents(s.amount)), 0)::bigint AS shared,
        (cella.cents(p.budget) - coalesce(sum(cella.cents(s.amount)), 0))::bigint AS remaining

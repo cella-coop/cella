@@ -217,7 +217,7 @@ its balance, as a bank overdraft is among the debts.
   whole numbers, repaid within five years. `account.terms_from(ref)`
   copies a rule's values into terms, or refuses them (SQLSTATE `09000`).- `account.rubric`: the statements' rubrics, seeded with the PCG's;
   `rubric_of(sheet, code)` the line an account is presented in.
-- `account.report`: the spans of the books, each with the span before it.
+- `account.report`: the spans of the books, each with the span before it. It is the same for every reader, declared `audience: shared by kind, since`.
 - `account.kind_of(code)`: the kind of account a code's class makes it, by
   the PCG's list of accounts (art. 932-1); an account opened by a write is
   of this kind.

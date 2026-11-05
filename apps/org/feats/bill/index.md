@@ -94,7 +94,7 @@ waits on a contact feat.
   (`cella.line_amount`) and VAT rate, a percent with two decimals.
 - `bill.taxed`: each bill's VAT by rate, the net of its lines at the rate
   and the tax on it in cents (`cella.line_vat`), adding up to the bill's
-  `vat`.
+  `vat`. It reads as its reader, so it shows only the records its reader reads.
 
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net and the VAT; `bill.moves` keeps the lifecycle, a bill's

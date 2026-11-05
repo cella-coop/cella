@@ -14,7 +14,7 @@ CREATE TABLE document_membership.reading (
 
 -- The texts each member is to read: every document's binding version, its
 -- latest adoption, with the day they read it, or none.
-CREATE VIEW document_membership.texts AS
+CREATE VIEW document_membership.texts WITH (security_invoker = true) AS
 SELECT m.address AS member, d.id AS document, d.title, a.version, a.adopted, r.read
 FROM membership.member m
 CROSS JOIN document.adopted a

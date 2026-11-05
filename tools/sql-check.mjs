@@ -54,7 +54,12 @@
 //     declared, 'audience: shared by <columns>: why' or 'audience: keyed
 //     by <argument>: why', and keeps a declared one to the shared-total
 //     rules: it sums, or filters its rows by its reader's test, or a keyed
-//     one matches them by its argument's digest (`definers`).
+//     one matches them by its argument's digest (`definers`);
+//   - makes no view that reads as its owner, beside its contract, unless
+//     it is declared 'audience: shared by <columns>: why' or 'audience:
+//     shared: why' and keeps it: it sums by exactly the columns it names
+//     and none that says whose a row is, or filters its rows by its
+//     reader's test; every other view is security_invoker (`unshared`).
 // A slice's analytical contract, its sql/analytics.sql, holds only views
 // in its own schema and comments on them. A view reads as its owner, never
 // security_invoker, so the role needs no grant on a table, and it shares:
@@ -579,6 +584,66 @@ export function definers(found) {
   return out
 }
 
+// Whether a view's options make it read as its reader: WITH
+// (security_invoker = true), or the option bare.
+function invoker(options) {
+  const arg = (options ?? []).find((d) => d.DefElem?.defname === 'security_invoker')?.DefElem.arg
+  if (!(options ?? []).some((d) => d.DefElem?.defname === 'security_invoker')) {
+    return false
+  }
+  const v = arg?.Boolean?.boolval ?? arg?.String?.sval ?? arg?.Integer?.ival ?? arg?.A_Const?.boolval?.boolval ?? true
+  return v === true || v === 1 || ['true', 'on', 'yes', '1'].includes(String(v).toLowerCase())
+}
+
+// The views of a feat's or a graft's migrations that read as their owner,
+// past every row-level policy, and are not declared shared, or whose
+// declaration their query does not keep (architecture.md, "SQL"). A view
+// reads as its reader, WITH (security_invoker = true), unless its comment
+// declares it shared, 'audience: shared by <columns>: why' or 'audience:
+// shared: why', and then each arm of its query keeps its rows by its
+// reader's test in its WHERE (`pattern`), a share that needs the whole to
+// divide; or it sums, by exactly the columns it names and no finer, or
+// shows the rows of a view that sums so, as a contract's shared view
+// does (`shared`), and shows outside a sum, and groups by, no column that
+// says whose a row is nor a personal one. Whether its grouping is a
+// record's own key, so that each sum is one record's, the check cannot
+// see: such a view reads as its reader, and review reads it.
+export function unshared(found) {
+  const out = []
+  const personal = (c) => found.personal?.includes(c) || found.carried?.has(c)
+  const conjuncts = (q) => (q.whereClause?.BoolExpr?.boolop === 'AND_EXPR' ? q.whereClause.BoolExpr.args : q.whereClause ? [q.whereClause] : [])
+  for (const v of found.views?.values() ?? []) {
+    if (v.invoker) {
+      continue
+    }
+    const aud = /^audience: shared(?: by [^:]+)?: \S/.test(v.comment ?? '') ? audience(v.comment) : null
+    if (!aud || aud.scoped) {
+      out.push(`${v.path}: ${v.name} reads as its owner, past every row-level policy: make it WITH (security_invoker = true), or comment it 'audience: shared by <columns>: why' where it sums the whole (architecture.md, "SQL")`)
+      continue
+    }
+    const fail = (msg) => out.push(`${v.path}: ${msg}`)
+    const { view, names, selects, resolve } = shape(v.stmt)
+    for (const c of aud.by.filter((c) => !names.includes(c))) {
+      fail(`${view} names ${c} in its audience, which it does not show`)
+    }
+    if (selects.every((q) => conjuncts(q).some((t) => pattern(t, v.scope, found)))) {
+      continue
+    }
+    shared(view, aud, names, selects, resolve, fail, found)
+    for (const q of selects) {
+      const whose = [
+        ...(q.targetList ?? []).flatMap((t) => refs(t.ResTarget.val, true)),
+        ...(q.groupClause ?? []).flatMap((g) => refs(g)),
+      ].flatMap(resolve).find((c) => found.readers?.has(c) || personal(c))
+      if (whose) {
+        fail(`${view} is declared shared, but shows or groups by ${whose}, which says whose a row is or is personal: sum over everyone, keep only the rows its reader reads by a test of a known pattern in its WHERE, or make it WITH (security_invoker = true)`)
+        break
+      }
+    }
+  }
+  return out
+}
+
 // The motion feat's register of the ops that cite a motion, whose
 // rows mark an op as carried by a motion, with the power a collective
 // mandate of its circle grants it: the grafts that judge a cited write
@@ -674,6 +739,13 @@ function statement(type, b, o, s, fail, owned, named, found) {
         found.summed.set(named(b.view), new Set(grains.flatMap((g) => g.keys)))
       }
       carry(b, found)
+      // A view a slice's migrations make, beside its contract: whether it
+      // reads as its reader, and its comment, which outlives a CREATE OR
+      // REPLACE as the view does; the replacement's options are its own.
+      if (o.kind !== 'core' && !found.at.endsWith(`/${CONTRACT}`)) {
+        const view = named(b.view)
+        ;(found.views ??= new Map()).set(view, { name: view, path: found.at, scope: s, stmt: b, invoker: invoker(b.options), comment: found.views.get(view)?.comment ?? null })
+      }
       break
     }
     case 'IndexStmt':
@@ -685,6 +757,18 @@ function statement(type, b, o, s, fail, owned, named, found) {
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
         for (const c of (b.cmds ?? []).map((x) => x.AlterTableCmd?.subtype).filter((x) => ['AT_DisableRowSecurity', 'AT_NoForceRowSecurity'].includes(x))) {
           fail(`${c === 'AT_DisableRowSecurity' ? 'disables' : 'unforces'} row-level security on ${named(b.relation)}: every table a slice makes is under it, forced, as core's circles make it`)
+        }
+      }
+      if (type === 'AlterTableStmt' && found.views?.has(named(b.relation))) {
+        const v = found.views.get(named(b.relation))
+        for (const c of (b.cmds ?? []).map((x) => x.AlterTableCmd)) {
+          const options = (c?.def?.List?.items ?? []).filter((d) => d.DefElem?.defname === 'security_invoker')
+          if (c?.subtype === 'AT_SetRelOptions' && options.length) {
+            v.invoker = invoker(options)
+          }
+          if (c?.subtype === 'AT_ResetRelOptions' && options.length) {
+            v.invoker = false
+          }
         }
       }
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
@@ -705,6 +789,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
         if (p) {
           p.shared = true
         }
+      }
+      if (b.objtype === 'OBJECT_VIEW' && found.views?.has(strings(b.object?.List?.items).join('.'))) {
+        found.views.get(strings(b.object.List.items).join('.')).comment = b.comment ?? null
       }
       if (b.objtype === 'OBJECT_FUNCTION') {
         const fn = found.functions?.get(strings(b.object?.ObjectWithArgs?.objname).join('.'))

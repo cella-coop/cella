@@ -32,7 +32,7 @@ CREATE TABLE report.report (
 
 -- Every report the collection lists: those the feat draws, then the
 -- members' own, of kind `custom`.
-CREATE VIEW report.listed AS
+CREATE VIEW report.listed WITH (security_invoker = true) AS
   SELECT d.id, d.title, d.caption, d.kind, NULL::json AS definition, NULL::text AS owner, NULL::date AS saved FROM report.drawn d
   UNION ALL
   SELECT r.id, r.title, r.caption, 'custom', r.definition, r.owner, r.saved FROM report.report r;

@@ -57,10 +57,10 @@ shell `meeting-membership/circles`, `api/circles.ts` and
 
 - `meeting_membership.roll`: for each meeting, the members seated in
   its circle on its day, with their marks, then the members marked who
-  are not seated there, its guests.
+  are not seated there, its guests. It reads as its reader.
 - `meeting_membership.quorum`: each meeting's seats, the seated
   members present and how many must be, the circle's share of its seats
-  rounded up. Guests count for nothing.
+  rounded up. Guests count for nothing. It reads as its reader.
 
 ### Guards of the roll
 

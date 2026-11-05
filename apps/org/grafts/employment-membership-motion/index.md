@@ -1,6 +1,6 @@
 +++
 title = "employment-membership-motion"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 A candidate's admission, once their probation is over: the proposal to
@@ -21,7 +21,12 @@ each candidate, employee or invited, with their probation and pledge,
 the latest motion moving to admit them, open ones first, and whether a
 proposal is due: their probation is over, they are invited, and no open
 motion moves to admit them. The app role and the guards role may
-select.
+select. It reads as its reader, and finds the motion through
+`employment_membership_motion.admitting()`, which runs as its owner over
+every motion that moves to admit someone and keeps each one for whom it
+names and for the readers of its circle's motions. So a candidate seated
+nowhere, in no circle that reads the assembly's motions, still reads the
+motion that moves to admit them.
 
 ## Tests
 

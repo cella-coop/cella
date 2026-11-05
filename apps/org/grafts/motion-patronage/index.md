@@ -1,6 +1,6 @@
 +++
 title = "motion-patronage"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 A year's distribution and the motion of the assembly that approves its
@@ -15,7 +15,7 @@ Declared by `patronage`.
 - `motion_patronage.approval`: each distribution and the motions
   moving to approve it, a view of the actions of the `distribution` kind.
   A draft moved again, after a motion that failed, has both; approving
-  it cites the one that passed.
+  it cites the one that passed. It reads as its reader.
 - the `distribution` kind of action, "Approve a year's distribution",
   registered by `motion.register_carries`, with the drafted distributions as its
   options (`distributions`).

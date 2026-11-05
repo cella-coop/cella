@@ -1,6 +1,6 @@
 +++
 title = "employment-membership"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The way from employee to member: a worker's candidacy, the probation
@@ -29,7 +29,7 @@ the employer neither.
 - `employment_membership.path`: every person who is a worker or a member,
   by name, with their hire, their probation and pledge, their invitation, application, admission and exit,
   and their stage: `employee`, `candidate`, `invited`, `member` (active
-  or suspended) or `gone`.
+  or suspended) or `gone`. It reads as its reader.
 
 The app role may select and insert candidacies; the guards role may
 select.

@@ -216,7 +216,7 @@ of this feat's own kinds, `policy` and `end`.
 mandate policy, the circle of the role it marks, or the circle it marks
 for a collective mandate; for an end, the circle of the ended policy's
 mandate. A role every working circle has (`*`) is the assembly's, and
-so is a right.
+so is a right. It reads as its reader, so it shows the actions of the motions its reader reads.
 
 ### Guards of the circles
 

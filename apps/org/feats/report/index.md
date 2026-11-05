@@ -152,7 +152,7 @@ reasons and never saved, then upserts the actor's report.
 - `report.drawn`: the four reports the feat draws itself, a registry its
   migration fills.
 - `report.report`: the members' own reports.
-- `report.listed`: both, as the collection lists them.
+- `report.listed`: both, as the collection lists them. It reads as its reader.
 - `report.threshold`: the watch's thresholds by the day they apply from.
 - `report.saves(payload)`: the save's guard.
 

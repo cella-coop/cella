@@ -9,7 +9,7 @@
 -- mandate's role, or the circle that is its grantee. A role every working
 -- circle has (`*`) is the assembly's to grant, and so is a right, which
 -- reaches every circle: neither names one.
-CREATE VIEW motion.circle_action AS
+CREATE VIEW motion.circle_action WITH (security_invoker = true) AS
 SELECT m.motion, m.n, m.kind, m.args,
        CASE m.kind
          WHEN 'policy' THEN coalesce(

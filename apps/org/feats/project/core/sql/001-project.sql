@@ -61,7 +61,7 @@ CREATE TRIGGER live BEFORE INSERT OR UPDATE ON project.milestone
 
 -- A project's progress: its milestones, how many are complete, and the
 -- next one open.
-CREATE VIEW project.progress AS
+CREATE VIEW project.progress WITH (security_invoker = true) AS
 SELECT p.id,
        count(m.n)::integer AS milestones,
        (count(m.n) FILTER (WHERE m.completed IS NOT NULL))::integer AS completed,

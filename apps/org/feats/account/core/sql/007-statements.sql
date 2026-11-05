@@ -140,6 +140,7 @@ SELECT CASE kind WHEN 'month' THEN to_char(since, 'YYYY-MM') WHEN 'quarter' THEN
        bool_and(closed IS NOT NULL) AS closed
 FROM spans
 GROUP BY kind, since;
+COMMENT ON VIEW account.report IS 'audience: shared by kind, since: the spans the statements are drawn for, whether each is closed, summed over every period of the books, the same for every reader as the statements are';
 
 GRANT SELECT ON account.rubric, account.report TO cella_app, cella_guards;
 

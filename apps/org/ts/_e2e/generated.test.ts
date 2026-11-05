@@ -8,7 +8,11 @@
 // January one; the January motion, cited again once that version is
 // adopted, is refused. A motion whose
 // generation never ran, cited later by hand, reads the adopted version's
-// day too. Run by `cella test e2e generated`.
+// day too. A motion that ends a rule and adopts another generates a
+// version for each, in a row, both citing it, the second reading both
+// changes; and a motion's second change, cited once another motion's
+// version is adopted after its first, is refused, naming the version its
+// first change made. Run by `cella test e2e generated`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -47,15 +51,12 @@ const says = async (policy: string) => (await one<{ s: string }>('SELECT policy.
 const cites = (version: string) =>
   all<{ motion: string; day: string }>(`SELECT motion, to_char(day, 'YYYY-MM-DD') AS day FROM document.generation WHERE version = $1 ORDER BY motion`, [version])
 
-// The assembly decides a rule to apply from `from`, every member of its
-// roll consenting, closed on `deadline`.
-async function decided(wording: string, from: string, deadline: string): Promise<string> {
-  const motion = settled(
-    await propose(
-      { circle: 'ag', title: wording, procedure: 'consent', deadline, body: '', actions: [{ kind: 'policy', args: { kind: 'rule', wording, from } }] },
-      as(camille),
-    ),
-  ).motion
+type Action = { kind: string; args: Record<string, string> }
+
+// The assembly decides a motion's actions, every member of its roll
+// consenting, closed on `deadline`.
+async function motioned(title: string, actions: Action[], deadline: string): Promise<string> {
+  const motion = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille))).motion
   for (const { member } of await all<{ member: string }>(
     `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
     [motion],
@@ -67,6 +68,13 @@ async function decided(wording: string, from: string, deadline: string): Promise
   return motion
 }
 
+// The assembly decides a rule to apply from `from`.
+const decided = (wording: string, from: string, deadline: string) =>
+  motioned(wording, [{ kind: 'policy', args: { kind: 'rule', wording, from } }], deadline)
+
+const applies = async (policy: string) =>
+  (await one<{ day: string }>(`SELECT to_char(applies, 'YYYY-MM-DD') AS day FROM policy.policy WHERE id = $1`, [policy])).day
+
 // The reactions to its close: the adoption, and the statutes generated.
 async function carried(motion: string) {
   const then = await react('motion:motion:close', { motion }, as(camille))
@@ -77,6 +85,7 @@ async function carried(motion: string) {
 }
 
 let january = ''
+let later = ''
 
 before(async () => {
   await su.connect()
@@ -125,7 +134,7 @@ test('a rule adopted after it to apply on 20 December generates a version readin
 })
 
 test('a motion whose generation never ran, cited later by hand, reads the adopted version\'s day', async () => {
-  const later = await decided('The gérante reports to the assembly each quarter', '2026-12-22', '2026-12-21')
+  later = await decided('The gérante reports to the assembly each quarter', '2026-12-22', '2026-12-21')
   settled(await adopt({ motion: later, n: 1 }, as(camille)))
   assert.equal(await adopted(), 'statutes@4')
   settled(await generate({ document: 'statutes', motion: later, day: '2026-12-22' }, as(camille)))
@@ -135,4 +144,58 @@ test('a motion whose generation never ran, cited later by hand, reads the adopte
   for (const p of [`${january}/1`, `${later}/1`]) {
     assert.ok(lines.includes(await says(p)), `statutes@5 reads ${p}`)
   }
+})
+
+test('a motion that ends a rule and adopts another generates a version for each in a row, both citing it, the second reading both changes', async () => {
+  const minutes = 'Each circle publishes its minutes to every member within a week'
+  // The quarterly rule is in force from 22 December, so only then ended.
+  await on('2026-12-22')
+  const both = await motioned(
+    'The quarterly report gives way to published minutes',
+    [
+      { kind: 'end', args: { policy: `${later}/1` } },
+      { kind: 'policy', args: { kind: 'rule', wording: minutes } },
+    ],
+    '2026-12-28',
+  )
+  const then = await react('motion:motion:close', { motion: both }, as(camille))
+  assert.deepEqual(
+    then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state, t.reason ?? ''])]),
+    [
+      ['motion:policy:end', 'settled', [['document:document:generate', 'settled', '']]],
+      ['motion:policy:adopt', 'settled', [['document:document:generate', 'settled', '']]],
+    ],
+  )
+  assert.equal(await adopted(), 'statutes@7')
+  assert.deepEqual(await cites('statutes@6'), [{ motion: both, day: '2027-01-01' }])
+  assert.deepEqual(await cites('statutes@7'), [{ motion: both, day: '2027-01-01' }])
+  // The close's changes both settle before either generation runs, so the
+  // second version is generated from the first, and reads both changes.
+  assert.equal((await one<{ base: string }>(`SELECT base FROM document.adoption WHERE version = 'statutes@7'`)).base, 'statutes@6')
+  const second = await linesOf('statutes@7')
+  assert.ok(!second.includes(await says(`${later}/1`)), 'statutes@7 reads the end')
+  assert.ok(second.includes(await says(`${both}/2`)), 'and the adoption')
+  assert.ok(second.includes(await says(`${january}/1`)), 'and the January rule still')
+})
+
+test('a motion\'s second change, cited once another motion\'s version is adopted after its first, is refused naming the version its first change made', async () => {
+  const two = await motioned(
+    'Two rules for the archive',
+    [
+      { kind: 'policy', args: { kind: 'rule', wording: 'The archive keeps every adopted text for as long as the co-op stands' } },
+      { kind: 'policy', args: { kind: 'rule', wording: 'Any member may read the archive on request' } },
+    ],
+    '2027-01-04',
+  )
+  settled(await adopt({ motion: two, n: 1 }, as(camille)))
+  settled(await generate({ document: 'statutes', motion: two, day: await applies(`${two}/1`) }, as(camille)))
+  assert.equal(await adopted(), 'statutes@8')
+  assert.deepEqual(await cites('statutes@8'), [{ motion: two, day: '2027-01-04' }])
+  await carried(await decided('The assembly meets at least twice a year', '2027-01-06', '2027-01-06'))
+  assert.equal(await adopted(), 'statutes@9')
+  settled(await adopt({ motion: two, n: 2 }, as(camille)))
+  const late = await generate({ document: 'statutes', motion: two, day: await applies(`${two}/2`) }, as(camille))
+  assert.match(reason(late), new RegExp(`statutes@8 cites ${two}, and statutes@9 is adopted since: a generation cites a motion that changed the policies after it`))
+  assert.equal(await adopted(), 'statutes@9')
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM document.version WHERE document = 'statutes'`)).n, '9')
 })

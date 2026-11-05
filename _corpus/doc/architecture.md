@@ -667,7 +667,14 @@ borrows (`using(actor, …)` in `lib/server/db.ts`, `lending` in
 which sets the app role and `cella.actor` from the session for itself
 alone (`set_config(…, true)`) before any query, so both clear themselves
 as it commits or rolls back, and the connection goes back to the pool
-reading as no one with no query to reset it. So the database's
+reading as no one with no query to reset it. The shell holds eight
+connections, two of them kept for reading sessions: the session read
+`hooks.server.ts` makes first on every request, a proof's post among
+them, and the sign-in's challenge and answer (`/session`) borrow from a
+pool of two that nothing else takes (`reading` in `lib/server/db.ts`),
+and every other borrow from a pool of the other six, so pages and
+writes that hold all six keep no one from signing in and no proof from
+reaching its run. So the database's
 row-level policies, not the shell, decide what a page shows
 ([trust](trust.md#one-server)): a collection lists the records of the
 circles its reader reads in, by their mandates ([SQL](#sql)), and an

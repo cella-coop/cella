@@ -1,5 +1,5 @@
 import type { Handle } from '@sveltejs/kit/hooks'
-import { using } from '#lib/server/db.ts'
+import { reading } from '#lib/server/db.ts'
 import { read } from '#lib/server/session.ts'
 
 const themes = ['light', 'dark', 'system'] as const
@@ -8,12 +8,13 @@ const themes = ['light', 'dark', 'system'] as const
 // session, an invitation's link, and the theme.
 const open = (path: string) => path === '/sign-in' || path === '/session' || path === '/theme' || path.startsWith('/join/')
 
-// Who is signed in, from the session's cookie, and the theme, from its
-// own; the theme is written into the page so it renders right before any
-// script runs. Every other route needs a session: a page asked for
-// without one goes to the sign-in page, and anything else is refused.
+// Who is signed in, from the session's cookie, read on a connection kept
+// for reading sessions (`reading`), and the theme, from its own; the
+// theme is written into the page so it renders right before any script
+// runs. Every other route needs a session: a page asked for without one
+// goes to the sign-in page, and anything else is refused.
 export const handle: Handle = async ({ event, resolve }) => {
-  event.locals.session = await using(null, (db) => read(db, event.cookies))
+  event.locals.session = await reading(null, (db) => read(db, event.cookies))
   event.locals.actor = event.locals.session?.actor ?? null
   const theme = event.cookies.get('cella-theme')
   event.locals.theme = themes.find((t) => t === theme) ?? 'system'

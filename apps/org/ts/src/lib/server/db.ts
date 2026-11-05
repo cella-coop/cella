@@ -8,11 +8,24 @@ import { lending } from '@cella/org-db'
 // while a write waits on its signer (`lent` in `@cella/org-db`). Whatever
 // role the URL logs in as, such as the owner `cella serve --prod`
 // migrates with, every borrow acts as `cella_app`, so the row-level
-// policies hold: an owner or a superuser would read past them.
-const pool = new pg.Pool({ connectionString: DATABASE_URL, user: DATABASE_URL ? undefined : 'cella_app', max: 8 })
+// policies hold: an owner or a superuser would read past them. Each
+// pool names its connections, as `pg_stat_activity` shows them.
+const connections = (max: number, application_name: string) =>
+  new pg.Pool({ connectionString: DATABASE_URL, user: DATABASE_URL ? undefined : 'cella_app', max, application_name })
+
+// Eight connections: six for pages and writes, and two kept for reading
+// sessions, which nothing else takes, so pages and writes holding all six
+// keep no one from signing in and no proof from reaching its run.
+const pool = connections(6, 'cella')
+const sessions = connections(2, 'cella sessions')
 
 // One connection, in a transaction of its own, as `cella_app`, reading for
 // `actor`, the signed-in person, or for no one: both set for the
 // transaction alone before any query, so every row-level policy reads as
 // them, and cleared as it ends, so it goes back reading as no one.
 export const using = lending(pool, 'cella_app')
+
+// One of the two connections kept for reading sessions, lent as `using`
+// lends: for the session read every request makes first, and the
+// sign-in's challenge and answer, and for nothing else.
+export const reading = lending(sessions, 'cella_app')

@@ -1,4 +1,4 @@
-import type { Borrow, Db, Deps } from './index.ts'
+import { holding, type Borrow, type Db, type Deps } from './index.ts'
 import { done, type Done, type Imported } from './slice.ts'
 
 // What one record of an imported file came to: the line it was read
@@ -9,19 +9,30 @@ export interface Line {
   done: Done
 }
 
-// A connection on which each write's transaction is rolled back where it
-// would commit: a dry run's write meets its guards and the notary as it
-// would, and leaves nothing. The notary takes one receipt for a
-// transaction, so each write needs its own, and none sees another's.
-const undone = (db: Db): Db => ({
-  query: <R>(text: string, values?: unknown[]) => db.query<R>(text.trim() === 'COMMIT' ? 'ROLLBACK' : text, values),
-})
+// What a dry run's borrow came to, thrown out of it so it rolls back.
+class Undone {
+  readonly value: unknown
+  constructor(value: unknown) {
+    this.value = value
+  }
+}
 
-// The deps of a dry run: every connection its writes' transactions run
-// on, lent or held, rolls back where it would commit.
+// The deps of a dry run: every transaction its writes run in, lent or
+// held, rolls back where it would commit, so a write meets its guards and
+// the notary as it would and leaves nothing. The notary takes one receipt
+// for a transaction, so each write needs its own, and none sees another's.
 const undoing = (deps: Deps): Deps => {
-  const { borrow } = deps
-  return { ...deps, db: undone(deps.db), ...(borrow ? { borrow: ((fn) => borrow((db) => fn(undone(db)))) as Borrow } : {}) }
+  const borrow = deps.borrow ?? holding(deps.db)
+  const undone: Borrow = <T>(fn: (db: Db) => Promise<T>) =>
+    borrow(async (db) => {
+      throw new Undone(await fn(db))
+    }).catch((e: unknown) => {
+      if (e instanceof Undone) {
+        return e.value as T
+      }
+      throw e
+    })
+  return { ...deps, borrow: undone }
 }
 
 // Runs an imported file's records as writes, in the file's order, as the

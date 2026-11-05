@@ -30,8 +30,8 @@ export function device(address: string, label?: string): Promise<Device> {
 // Signs as `actor` from one of their devices, or from `of`'s.
 export const sign = (actor: string, label?: string, of = actor): Signer => signer(scope, actor, device(of, label))
 
-// A connection that reads as `actor`, as the shell's `using` hands a
-// handler one: `cella.actor` set before each statement, so the row-level
+// A connection held throughout that reads as `actor`, as a borrow of the
+// shell's `using` does: `cella.actor` set before each statement, so the row-level
 // policies read the circles their mandates cover. A transaction's own
 // statements go as they are, so a rollback still ends an aborted one.
 export const reader = (db: Db, actor: string): Db => ({

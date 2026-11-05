@@ -221,9 +221,12 @@ sequenceDiagram
   year, is checked by the graft that sees what spends it:
   `expense-membership` sums an approver's approvals.
 - **Who may read is a row-level policy in the database.** Every
-  connection the server hands out reads as the session's person: it sets `cella.actor`
-  from the session before any query, and `write` sets it again for its
-  transaction (`cella.reader()`). Reading follows the mandates: every
+  connection the server lends reads as the session's person: each borrow
+  is a transaction that sets `cella.actor` from the session for itself
+  alone before any query, so it clears itself at commit or rollback and
+  no connection goes back to the pool reading as anyone; a write's
+  transaction is its borrow's, and `write` sets the actor again in it
+  with `cella.writing` (`cella.reader()`). Reading follows the mandates: every
   record table keeps row-level security for the app role, core's
   row-level policy by its owning circle, and a person reads a record
   only by a mandate whose scope covers that circle, for `read`, the

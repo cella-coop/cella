@@ -4,14 +4,16 @@
 // pool's one connection is free, a read gets through it and Camille's
 // write settles on it; and what Yusuf's handler read before he signed
 // binds nothing, since the guard reads again inside his transaction and
-// refuses a milestone on the project Camille archived meanwhile. Run by
+// refuses a milestone on the project Camille archived meanwhile. A
+// borrow's reader is its transaction's alone: the connection goes back
+// reading as no one, after a borrow that threw too. Run by
 // `cella test e2e waiting`.
 
 import { after, afterEach, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { add, archive } from '@cella/org-project/api'
-import { lent, type Borrow, type Deps } from '@cella/org-db'
+import { lending, lent, type Borrow, type Deps } from '@cella/org-db'
 import type { Signer } from '@cella/org-sign'
 import { sign } from './lanterne.ts'
 
@@ -20,22 +22,28 @@ const pool = new pg.Pool({ user: 'cella_app', max: 1 })
 const yusuf = 'yusuf@lanterne.example'
 const camille = 'camille@lanterne.example'
 
-// One connection of the pool, reading as `actor`, as the shell's `using`
-// lends one.
+// The pool's borrows, as the shell's `using` makes them.
+const lend = lending(pool, 'cella_app')
+
+// One connection of the pool, reading as `actor`.
 const using =
-  (actor: string): Borrow =>
-  async (fn) => {
-    const client = await pool.connect()
-    try {
-      await client.query(`SELECT set_config('cella.actor', $1, false)`, [actor])
-      return await fn(client)
-    } finally {
-      await client.query(`SELECT set_config('cella.actor', '', false)`)
-      client.release()
-    }
-  }
+  (actor: string | null): Borrow =>
+  (fn) =>
+    lend(actor, fn)
 
 const as = (actor: string, signs: Signer = sign(actor)): Deps => ({ ...lent(using(actor)), actor, sign: signs })
+
+// Who the pool's one connection reads as between borrows, asked outside
+// any transaction, and which backend it is.
+async function idle() {
+  const client = await pool.connect()
+  try {
+    const { rows } = await client.query<{ reader: string | null; pid: number }>(`SELECT current_setting('cella.actor', true) AS reader, pg_backend_pid() AS pid`)
+    return rows[0]
+  } finally {
+    client.release()
+  }
+}
 
 // The pool's connections lent out now.
 const out = () => pool.totalCount - pool.idleCount
@@ -117,5 +125,40 @@ test('a project archived while a milestone waits on its signature refuses the mi
   assert.match(added.state === 'refused' ? added.reason : '', /halles-shop was archived on/)
   const { rows } = await su.query<{ n: string }>(`SELECT count(*) AS n FROM project.milestone WHERE project = 'halles-shop' AND title = 'Handover call'`)
   assert.equal(rows[0].n, '0', 'the refused milestone left nothing')
+  assert.equal(out(), 0)
+})
+
+test('a borrow reads as its reader, and the connection goes back reading as no one', async () => {
+  const before = await idle()
+  const read = await using(yusuf)((db) =>
+    db.query<{ reader: string; role: string }>(`SELECT current_setting('cella.actor') AS reader, current_user AS role`),
+  )
+  assert.deepEqual(read.rows[0], { reader: yusuf, role: 'cella_app' }, 'the borrow reads as Yusuf, as the app role')
+  const back = await idle()
+  assert.equal(back.pid, before.pid, 'the same connection, kept')
+  assert.ok(!back.reader, 'back in the pool, it reads as no one')
+  const anyone = await using(null)((db) => db.query<{ reader: string }>(`SELECT current_setting('cella.actor') AS reader`))
+  assert.equal(anyone.rows[0].reader, '', 'the next borrow for no one reads as no one')
+  assert.equal(out(), 0)
+})
+
+test('a borrow that threw rolls back and leaves no reader on its connection', async () => {
+  const before = await idle()
+  await assert.rejects(
+    using(camille)(async (db) => {
+      await db.query(`SELECT current_setting('cella.actor')`)
+      throw new Error('the handler failed')
+    }),
+    /the handler failed/,
+  )
+  await assert.rejects(
+    using(camille)((db) => db.query(`SELECT 1/0`)),
+    /division by zero/,
+  )
+  const back = await idle()
+  assert.equal(back.pid, before.pid, 'the same connection, kept: rolling back needs no reset')
+  assert.ok(!back.reader, 'back in the pool, it reads as no one')
+  const anyone = await using(null)((db) => db.query<{ reader: string }>(`SELECT current_setting('cella.actor') AS reader`))
+  assert.equal(anyone.rows[0].reader, '', 'the next borrow for no one reads as no one')
   assert.equal(out(), 0)
 })

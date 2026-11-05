@@ -803,7 +803,15 @@ each reaction does the same for its own signature. Nothing read before
 the signature is trusted at commit: the guards run in SQL inside the
 transaction and the notary checks the signature, the keyring and the
 nonce under its head lock, so a state changed in between is refused,
-never committed stale ([trust](trust.md#one-server)). The server holds no member's key,
+never committed stale ([trust](trust.md#one-server)). A run waits
+`CELLA_PATIENCE` seconds for each signature, sixty unset, and is
+pending from the post that starts it to its outcome. A person has at
+most three runs pending, counted by actor across their devices and
+sessions, and the server at most `CELLA_PENDING` of everyone's, 64
+unset: a post that would start one more is answered with the write
+failed, saying to wait for the writes already started or to try again
+shortly, as any failed write is, and a run frees its place as it
+settles, fails or gives up. The server holds no member's key,
 in dev mode or not; dev mode (`cella serve`) only offers the fixture
 members on the sign-in page, whose TEST-ONLY keys the browser derives.
 Until `POST /api/<feat>/<verb>` is served, these form actions are the

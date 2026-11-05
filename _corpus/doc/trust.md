@@ -635,9 +635,14 @@ What the build does not yet do, and what lifts each:
   digest, and the journal's receipt still names who drew an amount. The
   log read by role lifts this.
 - **A write's run lives in one server process.** It waits for each
-  signature up to a minute, holding no database connection while it
-  waits, and goes with the process; sessions outlive a restart only when `CELLA_SESSION_KEY_FILE`
-  names the key, as `cella serve` does.
+  signature up to a minute (`CELLA_PATIENCE`), holding no database
+  connection while it waits, and goes with the process; sessions outlive
+  a restart only when `CELLA_SESSION_KEY_FILE` names the key, as `cella
+  serve` does. A person has at most three runs pending, across their
+  devices and sessions, and the server at most `CELLA_PENDING`, 64
+  unset, so neither one person's abandoned writes nor a crowd's grow the
+  process without bound; a write past either is failed, never queued,
+  and a run frees its place as it ends.
 - **The analytics shell knows no reader.** Its token opens every
   published view, declared personal columns among them, to whoever holds
   it; the org app's server holds it, and the port, in the server, is

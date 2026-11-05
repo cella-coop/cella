@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import type { Json, Proof, Signer } from '@cella/org-sign'
+import { CELLA_PATIENCE, CELLA_PENDING } from '$app/env/private'
 
 // A write the member's device signs, relayed: the server never holds a
 // member's key, so a write from a page runs here while the browser signs.
@@ -9,7 +10,11 @@ import type { Json, Proof, Signer } from '@cella/org-sign'
 // signature names. The browser signs it with the device it keeps and
 // posts the proof back to the same action, naming the run; the run goes
 // on to its next signature, a reaction's, or to its outcome. A run is its
-// owner's alone, and gives up when a proof does not come in time.
+// owner's alone, and gives up when a proof does not come in time. A run
+// is pending from its start to its outcome: a person has at most `EACH`
+// pending, counted by actor across their devices and sessions, and the
+// server at most `CELLA_PENDING` of everyone's, so a run past either is
+// refused before it starts, never queued.
 
 // What a device is asked to sign.
 export interface Ask {
@@ -24,7 +29,10 @@ export interface Ask {
 type Step<R> = { ask: Ask } | { result: R } | { error: unknown }
 
 // How long a run waits for each signature.
-const PATIENCE = 60 * 1000
+const PATIENCE = CELLA_PATIENCE * 1000
+
+// How many runs one person may have pending.
+const EACH = 3
 
 const runs = new Map<string, Run<unknown>>()
 
@@ -86,9 +94,25 @@ class Run<R> {
   }
 }
 
+// Why a run for `actor` may not start now, if it may not.
+function full(actor: string): string | null {
+  if ([...runs.values()].filter((r) => r.signs.actor === actor).length >= EACH) {
+    return `you have ${EACH} writes waiting on your signature; sign them or wait for them to end, then try again`
+  }
+  if (runs.size >= CELLA_PENDING) {
+    return 'the server has as many writes waiting on a signature as it takes; try again shortly'
+  }
+  return null
+}
+
 // Starts a run of `work`, signing as `signs` through the device; `owner`
-// names who may answer it, such as the session that asked.
-export function relay<R>(owner: string, signs: Run<R>['signs'], work: (sign: Signer) => Promise<R>): Run<R> {
+// names who may answer it, such as the session that asked. A run past a
+// cap does not start: it is why, as the page may say it.
+export function relay<R>(owner: string, signs: Run<R>['signs'], work: (sign: Signer) => Promise<R>): Run<R> | string {
+  const refused = full(signs.actor)
+  if (refused) {
+    return refused
+  }
   const run = new Run<R>(owner, signs)
   runs.set(run.id, run as Run<unknown>)
   work(run.sign).then(

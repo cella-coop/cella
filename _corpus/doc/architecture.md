@@ -351,7 +351,10 @@ columns it names, and by none that says whose a row is, nor filters
 its rows by its reader's test (`unshared`).
 `cella migrate` reads the database it migrated and
 fails a run that leaves a slice's table not enabled and forced, or with
-no policy the app role reads it by (`circle.unsecured`).
+no policy the app role reads it by (`circle.unsecured`). And `cella test
+e2e denial` reads every feat and graft as no one, generated for each
+with no file of its own ([tests](#tests)): what the check reads in the
+SQL, it proves on rows.
 
 Forcing binds a table's owner only when the owner is no superuser:
 Postgres exempts a superuser from every row-level policy, forced or not,
@@ -693,6 +696,27 @@ file anywhere else fails `cella test`:
 
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.
+
+Every feat and graft has a denial test, generated, which no slice opts
+into or out of (`cella test e2e denial`, run by every `cella test`): on
+the database migrated whole and seeded with Lanterne, so each table has
+rows to deny, a person signed in who holds no mandate and is no member
+reads every table, view and row-returning `SECURITY DEFINER` function
+each slice makes, and sees no row but those it declares shared
+([reading](#reading)): a registry's, a policy's commented `shared`, a
+view's or a function's declared `audience: shared`, and a view's that
+reads as its reader through one of those, which the test names. A
+function keyed by a secret is called with one no one holds and returns
+nothing; one that runs as its owner and is declared neither fails. The
+slices are read from the tree and their objects from the database, so a
+slice added later is read with no file of its own, and the test fails a
+slice whose schema the database lacks, unless its migrations drop it, a
+retired graft's, and a schema no slice owns but the notary's, the
+migrations' and core's. The analytics port's schema is read as a
+slice's; core's circles and its register of policies are every reader's
+([trust](trust.md#current-limits)). A table or a view Lanterne leaves
+empty denies nothing, and the test names it unproven rather than
+passing it.
 
 Two scenarios prove that a write waiting on its signer keeps no one
 else waiting ([the shell](#the-shell)), through the built shell as a

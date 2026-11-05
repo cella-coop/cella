@@ -378,7 +378,10 @@ a motion's page.
 - `_e2e/generated.test.ts`: a generation never goes back: after
   `statutes@3`, the founding motion and its day cited again are refused
   naming `statutes@1`, which cites it; a motion's two changes, ending
-  a policy and adopting another, generate a version each (`forms`); a rule adopted to apply on 20 December after one adopted to
+  a policy and adopting another, generate a version each in a row, both
+  citing it, the second reading both changes (`forms`); a motion's second
+  change cited once another motion's version is adopted after its first
+  is refused, naming the version its first change made; a rule adopted to apply on 20 December after one adopted to
   apply on 1 January generates a version reading 1 January, and so both,
   and the January motion, cited again once that version is adopted, is
   refused;

@@ -21,16 +21,16 @@ export async function seats(db: Db, by: { circle?: string; member?: string }): P
   return rows
 }
 
-// The mandates a member holds through the seats they hold now: what
-// `membership.may` grants them, before any limit is spent.
+// The mandates a member holds on the verdict date, as `membership.holds`
+// gives them: what `membership.may` grants them, before any limit is
+// spent, the participant's once for each circle they sit in.
 export async function held(db: Db, member: string): Promise<Held[]> {
   const { rows } = await db.query<Omit<Held, 'sentence'>>(
-    `SELECT DISTINCT ON (md.power, md.id) md.id::text AS id, md.power, md.policy, cella.cents(md."limit") AS "limit", md.grantee AS role, p.circle, c.name AS "circleName"
-     FROM circle.seat p
-     JOIN circle.mandate md ON md.grantee = p.role
-     JOIN circle.circle c ON c.id = p.circle
-     WHERE p.member = $1 AND p.until IS NULL AND (md.revoked IS NULL OR md.revoked > cella.verdict_date()) AND md.until IS NULL
-     ORDER BY md.power, md.id`,
+    `SELECT md.id || '@' || h.circle AS id, md.power, md.policy, cella.cents(md."limit") AS "limit", md.grantee AS role, h.circle, c.name AS "circleName"
+     FROM membership.holds($1, cella.verdict_date()) h
+     JOIN circle.mandate md ON md.id = h.mandate
+     JOIN circle.circle c ON c.id = h.circle
+     ORDER BY md.power, c.name, md.id`,
     [member],
   )
   // Each mandate reads as its policy's sentence, from the register.

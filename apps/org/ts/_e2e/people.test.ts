@@ -238,6 +238,27 @@ test('Inès\'s member page lists what joining asks of her and reads back what sh
   }
 })
 
+test('a member\'s page lists every mandate may grants them: Inès\'s the participant\'s in Web and none of the assembly\'s, Chloé\'s the assembly\'s beside her member role\'s', async () => {
+  const theirs = await tab(ines, 'overview', ines)
+  for (const says of ['Powers held', 'Propose', 'Discuss', 'participant in Web']) {
+    assert.ok(theirs.includes(says), `Inès's page says ${says}`)
+  }
+  assert.ok(!theirs.includes('in Assemblée générale'), 'she sits nowhere but Web')
+  const chloes = await tab('chloe@lanterne.example', 'overview', camille)
+  for (const says of ['participant in Assemblée générale', 'member in Assemblée générale', 'participant in Marketing']) {
+    assert.ok(chloes.includes(says), `Chloé's page says ${says}`)
+  }
+  // For every person and power, may answers on the day exactly where
+  // holds lists a mandate for the power.
+  const asked = await all<{ address: string; power: string; may: boolean; holds: boolean }>(
+    `SELECT p.address, w.power, membership.may(p.address, w.power, NULL, NULL, '2026-10-24') AS may,
+       EXISTS (SELECT FROM membership.holds(p.address, '2026-10-24') h JOIN circle.mandate m ON m.id = h.mandate WHERE m.power = w.power) AS holds
+     FROM person.person p CROSS JOIN (SELECT DISTINCT power FROM circle.mandate) w`,
+  )
+  assert.deepEqual(asked.filter((a) => a.may !== a.holds), [])
+  assert.ok(asked.filter((a) => a.may).length > 0)
+})
+
 test('Inès marks the internal rules and the statutes read, her own reading and no one else\'s', async () => {
   const forLea = await shell.act(`/people/lea@lanterne.example`, 'read', { version: 'internal-rules@3' }, ines)
   assert.match(forLea.reason ?? '', /ines@lanterne\.example may mark only their own reading/)

@@ -193,6 +193,15 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   mandate for the power answers it, as a key's reach and the log's
   disclosure ask. A `budget` is not checked: it needs the spend over its
   period tracked.
+- `membership.holds(person, day)` (`014-counts.sql`): the mandates in
+  force the person holds on the day by their seats, each with the circle
+  of the seat it is held by: on every seat that counts and has begun and
+  not ended, its role's and the participant role's every seat holds, so
+  a seat with no role still holds the participant's, and each of those
+  once for every circle the person sits in. It is the one place the
+  seats and mandates are joined: `may` and `covered` ask it, and a
+  person's page lists it, so nothing lists a mandate `may` would not
+  grant, or leaves out one it would.
 - `membership.covered(actor, power, day)` (`013-authority.sql`): the
   owning circles whose records the actor's mandates for the power cover
   on the day, by the same seats and mandates as `may`: every circle for
@@ -247,8 +256,11 @@ In the shell, `membership/seats` adds a circle's seats to its page, one
 row per person with every role they hold in it, and how many sit in it
 to the list and its gallery cards; and to a person's page their seats
 and the powers they hold through them, each power by its plain name
-and its policy's sentence, the mandates `membership.may` would grant
-before any limit is spent, and to the list the circles they sit in;
+and its policy's sentence, the mandates `membership.holds` gives on
+the verdict date, which `membership.may` would grant before any limit
+is spent: the participant's `propose` and `discuss` in each circle they
+sit in, Inès's in Web, beside their roles', and none of a suspended
+member's; and to the list the circles they sit in;
 under Joining, whether they sit in the assembly and in a working
 circle; and under Own and decide, what they decide read back as
 sentences: where they sit, how each of those circles decides, and the

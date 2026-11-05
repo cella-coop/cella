@@ -83,3 +83,51 @@ GRANT SELECT, INSERT ON motion.action TO cella_app;
 GRANT SELECT ON motion.action TO cella_guards;
 
 COMMENT ON TABLE motion.carries IS 'registry: the kinds of action a motion carries, as the grafts register them';
+
+-- The actions of other feats that put a motion in their own write, as
+-- an application puts the motion to admit its applicant, each registered
+-- by the graft that composes it; and the guards judging what a motion
+-- asks however it is put, each attached to motion:motion:propose and to
+-- every action listed, whichever came first, so neither graft needs to
+-- know the other. Such a guard reads the motion its payload's `motion`
+-- names.
+CREATE TABLE motion.puts (
+  op text PRIMARY KEY CHECK (op ~ '^[a-z][a-z-]*:[a-z][a-z-]*:[a-z][a-z-]*$'),
+  owner text NOT NULL
+);
+
+CREATE TABLE motion.ask_guard (
+  fn regprocedure PRIMARY KEY,
+  owner text NOT NULL
+);
+
+-- Lists an action as putting a motion, and attaches to it every guard
+-- registered as judging what a motion asks. A graft's migration calls
+-- it, and never inserts into motion.puts itself.
+CREATE FUNCTION motion.register_put(action text, owner text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO motion.puts (op, owner) VALUES (register_put.action, register_put.owner);
+  INSERT INTO cella.guard (op, fn, owner)
+  SELECT register_put.action, g.fn, g.owner FROM motion.ask_guard g;
+END;
+
+-- Registers a guard judging what a motion asks, and attaches it to
+-- motion:motion:propose and to each action listed as putting one so far;
+-- motion.register_put attaches it to each listed after.
+CREATE FUNCTION motion.register_ask_guard(fn regprocedure, owner text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  INSERT INTO motion.ask_guard (fn, owner) VALUES (register_ask_guard.fn, register_ask_guard.owner);
+  INSERT INTO cella.guard (op, fn, owner)
+  SELECT o.op, register_ask_guard.fn, register_ask_guard.owner
+  FROM (SELECT 'motion:motion:propose' AS op UNION ALL SELECT p.op FROM motion.puts p) o;
+END;
+
+REVOKE EXECUTE ON FUNCTION motion.register_put(text, text), motion.register_ask_guard(regprocedure, text) FROM PUBLIC;
+
+GRANT SELECT ON motion.puts, motion.ask_guard TO cella_app, cella_guards;
+
+COMMENT ON TABLE motion.puts IS 'registry: the actions of other feats that put a motion in their own write, as the grafts register them';
+
+COMMENT ON TABLE motion.ask_guard IS 'registry: the guards judging what a motion asks however it is put, as the grafts register them';

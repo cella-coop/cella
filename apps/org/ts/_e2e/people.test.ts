@@ -320,6 +320,10 @@ test('a year on, Bastien applies by his right: his candidacy opens, and the moti
   await on('2027-11-02')
   const forHim = await apply({ member: bastien, shares: 20, deadline: '2027-11-16', body: '' }, as(thomas))
   assert.match(reason(forHim), /thomas@lanterne\.example may not apply for bastien@lanterne\.example: only for themselves/)
+  // Asking fewer shares than the statutes do, his application is refused
+  // at once, saying what would fix it, and he applies again.
+  const fewer = await apply({ member: bastien, shares: 10, deadline: '2027-11-16', body: '' }, as(bastien))
+  assert.match(reason(fewer), /^10 shares are fewer than the 20 the capital's terms ask, by m-\d{4}-\d{3}\/\d+ \(".+"\): ask at least 20 shares$/)
   const own = await shell.page(`/people/${bastien}`, bastien)
   assert.ok(own.text.includes('Apply to join'), 'his own page offers the application')
   assert.ok(own.text.includes('value="2027-11-16"'), 'its motion two weeks on')

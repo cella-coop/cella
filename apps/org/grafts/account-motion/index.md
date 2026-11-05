@@ -47,6 +47,22 @@ The app role and the guards role may use the schema.
   copy, since terms are replaced, never ended. At the close the motion
   feat's `motion.adopts` judges the replacement again, since another
   motion may have replaced the same terms while this one was open.
+- `account_motion.subscribes`, on `motion:motion:propose` and
+  `membership:member:apply`, registered by the motion feat's
+  `motion.register_ask_guard`, which attaches it to every action that
+  puts a motion: each admission the motion asks, read from
+  the motion feat's `motion.action`, is one whose subscription would
+  settle if the motion closed the day it is proposed
+  (`account.subscribe_flaw` for its shares on that day). A motion's terms
+  are checked as early as they can be: a proposal or an application
+  asking 10 shares under a minimum of 20 is refused at once, its reason
+  saying the statutes' minimum, the rule that sets it and the shares
+  asked, so the member who proposes it corrects the shares and proposes
+  again; one dated into a closed month is refused saying the month and
+  the first open one. The close checks the same terms again, by the
+  subscription's own guard, since a month may close or the terms change
+  while the motion is open; refused then, the subscription forgoes the
+  admission with it ([membership-motion](../membership-motion/index.md)).
 - `account_motion.adopts`, on `account:terms:adopt`: the cited motion
   adopted the rule the terms copy.
 - `account_motion.admits`, on `account:capital:subscribe`: the cited

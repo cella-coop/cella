@@ -33,3 +33,7 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('membership:member:apply', 'membership_motion.puts(jsonb)', 'membership-motion');
+
+-- The application puts a motion, so every guard judging what a motion
+-- asks judges it too.
+SELECT motion.register_put('membership:member:apply', 'membership-motion');

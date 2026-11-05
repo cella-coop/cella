@@ -54,3 +54,25 @@ INSERT INTO cella.guard (op, fn, owner) VALUES ('account:terms:adopt', 'account_
 SELECT motion.register_cite('account:terms:adopt', 'adopt-policy', 'account-motion');
 
 GRANT USAGE ON SCHEMA account_motion TO cella_app, cella_guards;
+
+-- motion:motion:propose, and every action that puts a motion — each
+-- admission the motion asks is one whose subscription would settle were
+-- the motion closed on the verdict date: `account.subscribe_flaw` for its
+-- shares that day, the same check the subscription's own guard makes at
+-- the close. So a motion that could only forgo its admission is refused
+-- when it is proposed, its reason saying what would fix it. That the
+-- shares are a whole number is membership-motion's `asks`.
+CREATE FUNCTION account_motion.subscribes(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT f FROM (
+    SELECT account.subscribe_flaw((m.args ->> 'shares')::integer, cella.verdict_date()) AS f, m.n
+    FROM motion.action m
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'admit' AND m.args ->> 'shares' ~ '^[0-9]{1,9}$'
+  ) x
+  WHERE f IS NOT NULL
+  ORDER BY n
+  LIMIT 1;
+END;
+
+SELECT motion.register_ask_guard('account_motion.subscribes(jsonb)', 'account-motion');

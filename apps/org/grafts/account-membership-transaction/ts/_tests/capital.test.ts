@@ -79,15 +79,19 @@ test('no trigger subscribes an admission: admitted alone, Inès holds no account
   await db.query('ROLLBACK')
 })
 
-test('the statutes ask at least 20 shares, and nothing posts into a closed month: either subscription is refused', async () => {
+test('the statutes ask at least 20 shares, and nothing posts into a closed month: either subscription writes nothing and is refused, saying what would fix it and naming no one', async () => {
   await db.query('BEGIN')
   await db.query(`UPDATE membership.member SET status = 'active', since = '2026-10-31', shares = 10 WHERE address = $1`, [ines])
   await db.query('SAVEPOINT admitted')
   const fewer = await judged(subscribing({ member: ines, motion: 'm-2026-012' }), 'account_membership_transaction.subscribes')
-  assert.match(fewer.r ?? '', /ines@lanterne.example subscribes 10 shares: t-2021 ask at least 20/)
+  assert.equal(fewer.r, '10 shares are fewer than the 20 the capital\'s terms ask, by t-2021: ask at least 20 shares')
+  assert.equal(fewer.value.entry, '', 'nothing is written')
   await db.query('ROLLBACK TO SAVEPOINT admitted')
+  await db.query(`UPDATE membership.member SET shares = 20 WHERE address = $1`, [ines])
   await db.query(`UPDATE account.period SET closed = '2026-10-31' WHERE month = '2026-10'`)
-  await assert.rejects(subscribing({ member: ines, motion: 'm-2026-012' }).state(db, {} as never), /2026-10 is closed: je-0001 cannot post into it/)
+  const closed = await judged(subscribing({ member: ines, motion: 'm-2026-012' }), 'account_membership_transaction.subscribes')
+  assert.equal(closed.r, '2026-10 is closed, so nothing subscribed on 2026-10-31 posts into it: the first open month is 2026-11')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM transaction.entry')).n, '0', 'nothing is written')
   await db.query('ROLLBACK')
 })
 
@@ -105,7 +109,7 @@ test('admitted, Inès subscribes her 20 shares by the write that follows: her ac
   assert.deepEqual(c, { subscribed: '100000', account: '101302', frozen: false })
   assert.deepEqual(await one('SELECT amount, paid, unpaid FROM account_membership_transaction.called WHERE member = $1', [ines]), { amount: '100000', paid: '0', unpaid: '100000' })
   const again = await one<{ r: string }>('SELECT account_membership_transaction.subscribes($1) AS r', [{ member: ines, account: '101303', entry: 'je-0002' }])
-  assert.match(again.r, /je-0002 is not ines@lanterne.example's subscription/)
+  assert.equal(again.r, 'je-0002 is not the member\'s subscription')
 })
 
 test('a payment in moves what it pays from 1012 to her account; beyond what she owes, or not exactly the payment, it is refused', async () => {

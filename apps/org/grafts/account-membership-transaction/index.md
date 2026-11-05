@@ -133,11 +133,16 @@ trigger on `membership.member` does it.
   before it is paid, and the entry is exactly it, `4567` debited and
   `512` credited.
 - `account_membership_transaction.subscribes`, on
-  `account:capital:subscribe`: the member is active and holds shares, at
-  least the minimum of the terms governing the verdict date, which value
-  a share; this write made their one subscription, of exactly their
-  shares at that value, on a capital account under `1013` they hold; and
-  the entry is exactly it, `4562` debited and `1012` credited.
+  `account:capital:subscribe`: the member is active and holds shares that
+  `account.subscribe_flaw` finds sound on the verdict date, at least the
+  minimum of the terms governing it, which value a share, its month
+  open; this write made their one subscription, of exactly their shares
+  at that value, on a capital account under `1013` they hold; and the
+  entry is exactly it, `4562` debited and `1012` credited. Its reasons
+  say what would let it settle and name no person, since a subscription
+  refused at a close is forgone and its reason kept in the log. Where
+  `subscribe_flaw` finds the terms unsound, `subscribing` writes nothing
+  and this guard refuses it with that reason, never the journal's.
 - `account_membership_transaction.withdraws`, on
   `account:capital:withdraw` and `account:own:withdraw`: the member has
   left; this write made their

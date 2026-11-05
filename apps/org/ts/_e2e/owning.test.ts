@@ -62,10 +62,12 @@ test('every table of a feat or a graft names its owning circle, never null, keye
   assert.deepEqual(registries, [
     'account.rubric',
     'file_membership.opener',
+    'motion.ask_guard',
     'motion.carries',
     'motion.cite_guard',
     'motion.cites',
     'motion.procedure',
+    'motion.puts',
     'motion.stance_power',
     'patronage.division',
     'payslip_transaction.payment_lines',

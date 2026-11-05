@@ -4,7 +4,8 @@
 // replacing the latest, and one ending a rule terms copy is
 // refused; copying terms cites the motion that adopted the rule, never
 // another; a capital write cites a motion that admitted or excluded its
-// own member. That the motion passed is membership-motion's, not
+// own member; a motion admitting shares the terms would refuse is refused
+// when proposed. That the motion passed is membership-motion's, not
 // migrated here. Run by `cella test slice account-motion`.
 
 import { after, before, test } from 'node:test'
@@ -130,4 +131,45 @@ test('a subscription, a withdrawal or a freeze cites a motion that admitted or e
     { op: 'account:capital:subscribe', fn: 'account_motion.admits(jsonb)' },
     { op: 'account:capital:withdraw', fn: 'account_motion.excludes(jsonb)' },
   ])
+})
+
+test('a motion admitting fewer shares than the statutes ask, or into a closed month, is refused when it is proposed, saying what would fix it', async () => {
+  // Each day under its own verdict, the motion asking `shares`, in a
+  // transaction rolled back.
+  const judged = async (day: string, shares: number, closed = false) => {
+    await db.query('BEGIN')
+    try {
+      await db.query(`SELECT set_config('cella.clock', $1, true)`, [day])
+      await decide('m-10')
+      await move('m-10', 1, { member: 'ines@lanterne.coop', shares }, 'admit')
+      if (closed) {
+        await db.query(`INSERT INTO account.period (month, closed) VALUES ('2026-10', '2026-11-02'), ('2026-11', '2026-12-01'), ('2026-12', NULL)`)
+      }
+      return await guard('account_motion.subscribes', { motion: 'm-10' })
+    } finally {
+      await db.query('ROLLBACK')
+    }
+  }
+  const { says } = (await db.query<{ says: string }>(`SELECT policy.says('m-1/1') AS says`)).rows[0]
+  const fewer = await judged('2026-11-20', 10)
+  assert.equal(fewer, `10 shares are fewer than the 20 the capital's terms ask, by m-1/1 ("${says}"): ask at least 20 shares`)
+  assert.doesNotMatch(fewer ?? '', /@/, 'the reason names no person')
+  assert.equal(await judged('2026-11-20', 20), null)
+  assert.equal(await judged('2026-11-20', 20, true), '2026-11 is closed, so nothing subscribed on 2026-11-20 posts into it: the first open month is 2026-12')
+  assert.equal(await judged('2026-12-02', 20, true), null)
+  assert.equal(await judged('2026-10-20', 20), 'no adopted terms value a share on 2026-10-20: the members adopt the capital\'s terms by motion first')
+})
+
+test('the check of an admission\'s terms covers the proposal and every action that puts a motion, registered before it or after', async () => {
+  const ops = async () =>
+    (await db.query<{ op: string }>(`SELECT op FROM cella.guard WHERE fn = 'account_motion.subscribes(jsonb)'::regprocedure ORDER BY op`)).rows.map((r) => r.op)
+  assert.deepEqual(await ops(), ['motion:motion:propose'])
+  await db.query('BEGIN')
+  try {
+    // membership-motion's application, not migrated here.
+    await db.query(`SELECT motion.register_put('membership:member:apply', 'membership-motion')`)
+    assert.deepEqual(await ops(), ['membership:member:apply', 'motion:motion:propose'])
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })

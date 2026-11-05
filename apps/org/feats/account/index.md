@@ -215,7 +215,16 @@ its balance, as a bank overdraft is among the debts.
   it marks a value of this feat's; and what is wrong with the terms they
   would make, or null: all five marked, the share an amount, the others
   whole numbers, repaid within five years. `account.terms_from(ref)`
-  copies a rule's values into terms, or refuses them (SQLSTATE `09000`).- `account.rubric`: the statements' rubrics, seeded with the PCG's;
+  copies a rule's values into terms, or refuses them (SQLSTATE `09000`).
+- `account.subscribe_flaw(shares, day)`: what is wrong with subscribing
+  that many shares on that day, or null: no terms govern it, saying the
+  members adopt them by motion first; fewer than the minimum of the
+  terms governing it, saying the minimum, the rule that sets it and the
+  shares asked; or its month closed, saying the month and the first open
+  one. It names no person, so a reason it gives may enter the log. Both
+  guards that judge a subscription's terms call it, the subscription's
+  own and the proposal's (`account-motion`), so they are written once.
+- `account.rubric`: the statements' rubrics, seeded with the PCG's;
   `rubric_of(sheet, code)` the line an account is presented in.
 - `account.report`: the spans of the books, each with the span before it. It is the same for every reader, declared `audience: shared by kind, since`.
 - `account.kind_of(code)`: the kind of account a code's class makes it, by

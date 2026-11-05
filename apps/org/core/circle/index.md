@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -265,8 +265,9 @@ their profile, membership, contract and claims, their pay, time and
 capital, by a row-level policy of the table it is in beside core's.
 
 Core keeps it in the database (`009-reads.sql`). `circle.scoped`, an
-event trigger, puts on each table a feat or a graft makes that names an
-owning circle the row-level policy `circle`, for the app role, and lets
+event trigger, puts each table a feat or a graft makes under row-level
+security, enabled and forced, as it is made. One that names an owning
+circle takes the row-level policy `circle`, for the app role, and lets
 the guards role read the whole: a row reads where its circle is among
 those its reader reads in, `circle.reads(feats)`, the circles a mandate
 of theirs for `read` covers and those a power the feats name covers
@@ -274,7 +275,12 @@ of theirs for `read` covers and those a power the feats name covers
 once per query; a write's transaction reads the whole
 (`cella.sees`). A table a person's data is in drops it for its own,
 which `read` opens nothing of
-([architecture](../../../../_corpus/doc/architecture.md#sql)).
+([architecture](../../../../_corpus/doc/architecture.md#sql)). One that
+names none is a registry, the same in every scope, and takes the policy
+`registry`, which every reader reads. `circle.unsecured()` names each
+table of a slice not enabled and forced, or with no policy the app role
+reads it by, and `cella migrate` fails a run that leaves any
+([reading](../../../../_corpus/doc/architecture.md#reading)).
 
 ## Schema
 

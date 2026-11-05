@@ -91,3 +91,4 @@ COMMENT ON COLUMN person.device.address IS 'not personal: the holder''s pseudony
 -- keyring, signed in or not, as a session's device is checked before
 -- anyone reads; beside core's row-level policy, which reads the rest.
 CREATE POLICY keyring ON person.device FOR SELECT TO cella_app USING (true);
+COMMENT ON POLICY keyring ON person.device IS 'shared: a device''s key checks a signature before anyone reads, so the keyring is every reader''s, its addresses pseudonymous';

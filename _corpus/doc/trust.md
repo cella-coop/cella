@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 # Trust
@@ -452,6 +452,14 @@ erased until their legal clock runs out.
   commitment, never the value ([signatures](signatures.md#digests)). The
   request the member signs is hashed with a fresh salt of its own, so its
   digest in the receipt confirms no guess either.
+- **Who reads a row is its table's policy.** Every table a slice makes
+  is under row-level security, enabled and forced, and every policy that
+  reads it is of a pattern the check knows: the owning circle's, the
+  reader's own row, a graft's reach, or a row of a table of its own; one
+  that opens rows to every reader is declared, with its why. A table of
+  pay, time, capital, files or a capital account's lines replaces core's
+  policy with the personal row's, which `read` opens nothing of
+  ([reading](architecture.md#reading)).
 - **A secret ballot's stances.** A stance on a secret ballot is logged
   as a commitment, its member the subject, so the log says who gave a
   stance and when, as every entry names its actor, and never which; an
@@ -587,6 +595,15 @@ What the build does not yet do, and what lifts each:
   rows shows the sum of those its reader reads, but for the statements,
   an entry's amount, the burn, the divisions and the return to the
   federation, which sum the whole.
+- **The tables' owner reads past their policies.** Forced row-level
+  security binds a table's owner, but Postgres exempts a superuser from
+  every policy, and the cluster's superuser runs the migrations and owns
+  what they make, so a view that reads as its owner and a `SECURITY
+  DEFINER` function read every row. A tool checks the tables' policies;
+  that a declared share's why is true, that the powers a feat names in
+  `cella.reading` are the right ones and that a graft's reach opens no
+  more than it says are left to review
+  ([reading](architecture.md#reading)).
 - **A view that reads as its owner reads every circle's rows.** Core's
   row-level policy keeps every record table, but a slice's view that is
   not `security_invoker`, such as a document's adoption or an expense's

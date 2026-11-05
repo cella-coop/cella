@@ -278,6 +278,59 @@ registers and published writes. A write no tool can see, such as
 SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
 is left to review.
 
+### Reading
+
+Reading follows the mandates ([SQL](#sql)), and every table a slice
+makes is held to it by tooling, never by hand:
+
+- **Every table is under row-level security, enabled and forced, as it
+  is made.** Core's circles do it (`circle.scoped`): a table that names
+  its owning circle takes the policy `circle`; a registry, which names
+  none and holds the same rows in every scope, takes `registry`, which
+  every reader reads; the guards role reads the whole of each. A slice
+  never disables nor unforces it.
+- **Every policy a slice makes that reads is of a known pattern.** A
+  permissive policy for `SELECT` or `ALL`, but the guards role's, is an
+  OR of terms that each open no more than a mandate, the reader's own
+  row or a graft's reach does: a write's transaction, `(SELECT
+  cella.sees('<feat>'))`, or on a secret ballot `(SELECT
+  cella.writing())`; the circles a power its feats name covers,
+  `circle = ANY ((SELECT cella.circles('<feat>'))::text[])`, or those
+  the reader reads in, `circle.reads('{<feat>}')`; the reader's own row,
+  `<column> = cella.reader()` or `cella.reader() IN (<column>, …)`; a
+  graft's reach, `cella.reaches('<feat>', <column>)`; or a row of a
+  table of its own, `EXISTS (SELECT FROM <its table> …)`, read under
+  that table's policy, as a journal entry reads wherever one of its lines
+  does. Each `<feat>` is the slice's own or, a graft's, a feat it joins,
+  and an AND reads no more than any of its parts, so it is known where
+  one part is. The personal row's pattern ([SQL](#sql)) is the commonest.
+  A table that drops `circle` reads by a policy of its own.
+- **A policy that opens rows to every reader is declared,** commented
+  `'shared: why'`, as the keyring's is: a device's key checks a
+  signature before anyone reads, so `person.device` is every reader's.
+
+`cella check feats` refuses each statically: `tools/sql-check.mjs`
+reads every policy a slice's migrations leave standing, and refuses a
+table that disables or unforces row-level security, one that drops
+`circle` for no policy of its own, and a policy of no known pattern not
+declared shared. `cella migrate` reads the database it migrated and
+fails a run that leaves a slice's table not enabled and forced, or with
+no policy the app role reads it by (`circle.unsecured`).
+
+Forcing binds a table's owner only when the owner is no superuser:
+Postgres exempts a superuser from every row-level policy, forced or not,
+and the migrations run as the cluster's superuser, which owns every
+table, view and function they make. So a view that reads as its owner
+and a `SECURITY DEFINER` function read every row, past these policies:
+they are the owner-rights paths ([trust](trust.md#current-limits)).
+
+What no tool checks, and review does: that a declared share's why is
+true; that the powers a feat names in `cella.reading`, which its
+policies ask through `cella.circles`, are the ones that should read its
+rows; that a graft's `cella.reach` opens no more than it says; SQL built
+at run time; and a server that reads past the port, since the host sets
+the reader ([trust](trust.md#current-limits)).
+
 ## Guards
 
 A guard lives at the lowest level that owns it: in a feat if it concerns
@@ -371,7 +424,8 @@ and `cella.*` ([writes stay home](#writes-stay-home)). A slice may drop a
 trigger of its own on another's table.
 
 Reading follows the mandates. Every record table is under row-level
-security for the app role, by its owning circle: core's circles put a
+security for the app role, forced, by its owning circle
+([reading](#reading)): core's circles put a
 row-level policy, `circle`, on each table of a feat or a graft that
 names one, as it is made (`circle.scoped`, `core/circle/sql/009-reads.sql`),
 which lets a reader see a row whose circle is among those they read

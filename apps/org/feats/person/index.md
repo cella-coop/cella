@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -51,7 +51,8 @@ to join is the same person, not a second one.
 
 Device keys are Ed25519, generated on the device with WebCrypto; the
 private key never leaves it. The devices are the keyring that checks every
-signature, so every reader reads them, signed in or not, beside core's
+signature, so every reader reads them, signed in or not, by a policy
+declared shared (`'shared: why'`), beside core's
 row-level policy, which reads every other person record by its circle
 ([reading](../../core/circle/index.md#reading)). The scope's own key, at the root, is Ed25519
 too: the notary signs receipts and log entries with it, read from a file

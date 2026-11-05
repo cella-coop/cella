@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 # Trust
@@ -70,7 +70,10 @@ admitted without the capital the statutes ask, and the outcome says
 what would fix it. The transaction commits whole or not at all, so a
 restart or an abandoned signature never leaves a decision committed
 without its effects, and the notary refuses a commit that settles an
-effect without one it requires.
+effect without one it requires. A scenario kills the server between a
+close and what it carries, and between an admission and its
+subscription, and finds nothing of either committed, the motion still
+open to close ([tests](architecture.md#tests)).
 
 ## One server
 

@@ -104,7 +104,7 @@ label is the invitee's wording and stays out.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
 - `membership.withdraws`, on `membership:member:withdraw`: the member is the actor, and the write left them exited on the verdict date; the lifecycle lets only an active or a suspended member exit.
-- `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date.
+- `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date. A carried one refused is forgone in the log with its reason, so the reason names no one: the member's status and the day it began.
 - `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
 Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `membership-motion`'s.

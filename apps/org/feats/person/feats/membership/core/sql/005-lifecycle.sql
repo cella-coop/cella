@@ -25,17 +25,23 @@ END;
 -- membership:member:suspend, membership:member:exclude — the write left
 -- the member suspended, or exited, on the verdict date. That the cited
 -- motion asks it is the membership-motion graft's guard on the same ops.
+-- A carried one refused is forgone in the log with its reason, so the
+-- reason names no one: the member's status and its day.
 CREATE FUNCTION membership.ends(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN m.address IS NULL THEN 'no member ' || coalesce(p.address, 'is named')
+    WHEN m.address IS NULL THEN CASE WHEN p.address IS NULL THEN 'no member is named' ELSE 'the member named is not one of the co-op''s' END
     WHEN split_part(cella.action(), ':', 3) = 'suspend'
       AND (m.status <> 'suspended' OR m.suspended IS DISTINCT FROM cella.verdict_date())
-      THEN m.address || ' was not suspended by this write'
+      THEN 'this write suspended no one: the member is ' || m.status
+        || coalesce(' since ' || to_char(CASE m.status WHEN 'suspended' THEN m.suspended WHEN 'exited' THEN m.exited END, 'YYYY-MM-DD'), '')
+        || ', and only an active member is suspended'
     WHEN split_part(cella.action(), ':', 3) = 'exclude'
       AND (m.status <> 'exited' OR m.exited IS DISTINCT FROM cella.verdict_date())
-      THEN m.address || ' was not excluded by this write'
+      THEN 'this write excluded no one: the member is ' || m.status
+        || coalesce(' since ' || to_char(CASE m.status WHEN 'exited' THEN m.exited END, 'YYYY-MM-DD'), '')
+        || ', and only an active or suspended member is excluded'
   END
   FROM (SELECT payload ->> 'member' AS address) p
   LEFT JOIN membership.member m ON m.address = p.address;

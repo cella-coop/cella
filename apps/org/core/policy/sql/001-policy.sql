@@ -56,6 +56,9 @@ CREATE TABLE policy.policy (
   hash bytea NOT NULL,
   adopted date NOT NULL,
   applies date NOT NULL,
+  -- After the day it applies where its adoption sets it (`policy.adopt`
+  -- refuses one that is not); the day a motion ends or replaces it, which
+  -- may be that day.
   ends date CHECK (ends >= applies),
   replaces text UNIQUE REFERENCES policy.policy,
   -- The action that ended it, `m-2026-020/1`, if a motion did.
@@ -338,9 +341,11 @@ END;
 -- applies, perhaps until a day, perhaps replacing a policy of the same
 -- circle and kind, which ends the day this one applies, perhaps
 -- protected by the procedure that alone changes it, perhaps taking a
--- default. A flawed wording, a replacement of a policy not in force there,
--- a default it is not worded and protected as, or one a policy in force
--- it does not replace takes already, is refused (SQLSTATE 09000). It
+-- default. A flawed wording, an end not after the day it applies, since
+-- it binds until the day before it ends (`policy.in_force`), a
+-- replacement of a policy not in force there, a default it is not worded
+-- and protected as, or one a policy in force it does not replace takes
+-- already, is refused (SQLSTATE 09000). It
 -- runs with its owner's rights, since nothing else writes the register,
 -- and only the app may call it; the notary's trigger refuses its rows
 -- outside a write.
@@ -361,6 +366,11 @@ BEGIN
   END IF;
   IF EXISTS (SELECT FROM policy.policy p WHERE p.id = made) THEN
     RAISE EXCEPTION '% is adopted already', made USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF adopt.until <= adopt.applies THEN
+    RAISE EXCEPTION '% would end on %, not after %, the day it applies: a policy ends after the day it applies',
+      made, to_char(adopt.until, 'YYYY-MM-DD'), to_char(adopt.applies, 'YYYY-MM-DD')
+      USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF adopt.replaces IS NOT NULL THEN
     SELECT * INTO prior FROM policy.policy p WHERE p.id = adopt.replaces;

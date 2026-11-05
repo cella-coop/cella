@@ -8,7 +8,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { DuckDBInstance, type DuckDBConnection } from '@duckdb/node-api'
 import { compile } from '../check.ts'
-import type { Analytics, Catalog, Head, Result, Type, Value } from '../report.ts'
+import type { Analytics, Audience, Catalog, Head, Result, Type, Value } from '../report.ts'
 
 export interface Options {
   // Where the shell serves, `quack:localhost:54343`.
@@ -31,10 +31,13 @@ export function fromEnv(env: Record<string, string | undefined> = process.env): 
 }
 
 // The views the role reads and their columns, from the scope's catalog as
-// the role sees it: a view it may not read is no view of the catalog. The
+// the role sees it, each with the audience its comment declares: a view it
+// may not read, or one that declares no audience, is no view of the
+// catalog. The
 // notary's head, which stamps each run, is no view a report reads.
 const CATALOG = `
-  SELECT n.nspname || '.' || c.relname AS view, a.attname AS name, format_type(a.atttypid, NULL) AS type,
+  SELECT n.nspname || '.' || c.relname AS view, coalesce(obj_description(c.oid, 'pg_class'), '') AS audience,
+         a.attname AS name, format_type(a.atttypid, NULL) AS type,
          coalesce(col_description(c.oid, a.attnum) ~ '^personal:', false) AS personal
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
@@ -44,6 +47,22 @@ const CATALOG = `
   ORDER BY 1, a.attnum`
 
 const quote = (s: string) => `'${s.replaceAll("'", "''")}'`
+
+// A view's audience from its comment's first words: `audience: scoped by
+// <column>`, with `and <column>` where a row is a person's, or `audience:
+// shared by <column>, …`; null where it declares neither.
+const NAMES = '[a-z_][a-z0-9_]*'
+const SCOPED = new RegExp(`^audience: scoped by (${NAMES})(?: and (${NAMES}))?\\b`)
+const SHARED = new RegExp(`^audience: shared(?: by (${NAMES}(?:, ${NAMES})*))?\\b`)
+
+export function audience(comment: string): Audience | null {
+  const scoped = SCOPED.exec(comment)
+  if (scoped) {
+    return { kind: 'scoped', circle: scoped[1], whose: scoped[2] ?? null }
+  }
+  const shared = SHARED.exec(comment)
+  return shared ? { kind: 'shared', by: shared[1]?.split(', ') ?? [] } : null
+}
 
 // What each run of a DuckDB integer type reads as: a number while it is
 // one exactly, else its digits.
@@ -91,14 +110,18 @@ export async function shell(options: Options): Promise<Analytics & { close: () =
   const catalogOf = async (c: DuckDBConnection): Promise<Catalog> => {
     const rows = (await c.runAndReadAll(`SELECT * FROM postgres_query('scope', ${quote(CATALOG)})`)).getRowObjectsJson() as {
       view: string
+      audience: string
       name: string
       type: Type
       personal: boolean
     }[]
     const catalog: Catalog = {}
     for (const r of rows) {
-      catalog[r.view] ??= {}
-      catalog[r.view][r.name] = { type: r.type, personal: r.personal }
+      const declared = audience(r.audience)
+      if (declared) {
+        catalog[r.view] ??= { audience: declared, columns: {} }
+        catalog[r.view].columns[r.name] = { type: r.type, personal: r.personal }
+      }
     }
     return catalog
   }

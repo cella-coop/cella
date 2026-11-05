@@ -566,7 +566,12 @@ views, and nothing else on the host.
 A page reads it only through the port, which takes a report, never SQL,
 checks every view, field, join and value against the catalog of what the
 role reads, and refuses a personal field the report does not declare
-([the port](../../apps/org/core/analytics/index.md#the-check)). Each run
+([the port](../../apps/org/core/analytics/index.md#the-check)). A report on a scoped view
+reads for its reader alone: the server asks Postgres which circles the
+reader's mandates cover, by the row-level policies' own test, and the
+port filters the view to those circles' rows and the reader's own, and
+refuses a report on a scoped view that names no reader
+([the reader](../../apps/org/core/analytics/index.md#the-reader)). Each run
 reads on one snapshot, its Postgres transaction repeatable read, and is
 stamped with the log's head it read: the port's `analytics.head`, the
 entry's number and hash, is the role's only reach into the notary.
@@ -635,9 +640,10 @@ What the build does not yet do, and what lifts each:
   names the key, as `cella serve` does.
 - **The analytics shell knows no reader.** Its token opens every
   published view, declared personal columns among them, to whoever holds
-  it; the org app's server holds it and decides whom a report's rows are
-  shown to. The port passing the reader through to the views, so a
-  member's statement reads only their own lines, lifts this.
+  it; the org app's server holds it, and the port, in the server, is
+  what filters a scoped view to its reader. A host or a bug in the
+  server that skips the port reads every circle's rows; the analytics
+  role reading as the reader lifts this.
 - **A backup carries its keys.** `cella backup` writes the notary's and
   the vault's key files beside the dump, owner-only but not encrypted, so
   whoever holds a backup can open the vault and sign as the notary; a

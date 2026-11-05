@@ -1,6 +1,6 @@
 // The feat's public write, its reads, and its slice, which the shell
 // mounts, made with the analytics port the server hands it at assembly.
-import type { Analytics } from '@cella/org-analytics'
+import { scoped, type Analytics } from '@cella/org-analytics'
 import { action, type Slice } from '@cella/org-db'
 import type { Saved } from '../models/report.ts'
 import { save } from '../handlers/index.ts'
@@ -46,7 +46,7 @@ export function reporting(port: Analytics): Slice {
     collections: {
       reports: {
         list: listing,
-        item: (db, id, query) => draw(port, db, id, query),
+        item: (db, id, query) => draw(scoped(port, db), db, id, query),
         index: async (db) => (await reports(db)).map((r) => ({ id: r.id, title: r.title, sub: r.kind })),
         actions: {
           save: action(

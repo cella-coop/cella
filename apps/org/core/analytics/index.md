@@ -1,6 +1,6 @@
 +++
 title = "Analytics"
-updated = 2026-10-30
+updated = 2026-11-05
 +++
 
 The analytics port (`@cella/org-analytics`): what a report asks of the
@@ -9,7 +9,8 @@ publish, and the shell's implementation of it
 ([architecture](../../../../_corpus/doc/architecture.md#the-analytics-shell)).
 A feat or a page hands the port a report and never SQL; the shell runs
 it, read-only, on one snapshot of the scope, and stamps the result with
-the log's head it read.
+the log's head it read. A report that reads a scoped view names its
+reader, and reads only the rows they may.
 
 ## A report
 
@@ -33,6 +34,8 @@ the log's head it read.
 - `order`, by fields shown or measures, `-` before one descending, and
   `limit`, at most `MAX_ROWS` (10 000), the default.
 - `personal`, every personal field the report reads, declared.
+- `reader`, where it reads a scoped view, the circles its reader reads it
+  in and the reader themselves ([the reader](#the-reader)).
 
 A run returns the `head` it read (the log's entry number and hash, 0 and
 null before the first write), the columns with their DuckDB types, the
@@ -42,10 +45,12 @@ exact decimal, a date and a time as text.
 
 ## The check
 
-`check(report, catalog)` (`src/check.ts`) returns every reason the
+`check(report, catalog, saved)` (`src/check.ts`) returns every reason the
 catalog refuses a report, none when it may run, and `compile` throws
 `Invalid` with them. The catalog is each view the analytics role may
-read and its columns, each with its type and whether its contract
+read, with the audience its comment declares, scoped or shared (one that
+declares neither is none of it), and its
+columns, each with its type and whether its contract
 comments it `personal:`. A report is refused when it:
 
 - reads a view the catalog does not hold, such as a slice's own table,
@@ -60,13 +65,36 @@ comments it `personal:`. A report is refused when it:
   a flag by its order; a document or a list is never compared;
 - orders by what it does not show, or asks for no row or past `MAX_ROWS`;
 - reads a personal field, shown, joined, filtered, grouped or measured,
-  that `personal` does not declare, or declares one that is not personal.
+  that `personal` does not declare, or declares one that is not personal;
+- reads a scoped view, or joins one, with no `reader`, or filters a
+  shared view by a field below the grain it declares, any but those it
+  is shared by. A saved definition, which whoever runs it reads, is
+  checked with `saved` and names no reader.
 
 `compile(report, catalog)` makes the checked report one SQL statement
 over the shell's attach of the scope (`scope.<schema>.<view>`): every name
 the catalog's, quoted, and every value a literal of its column's type,
 since the shell's protocol carries no bound parameters. It fetches one
 row past the limit, so the run knows there are more.
+
+## The reader
+
+A report that reads a scoped view reads it for one reader
+([audiences](../../../../_corpus/doc/architecture.md#analytical-contracts)).
+The org app's server asks Postgres, as that reader, which circles their
+mandates cover for each scoped view's slice, by the test its row-level
+policies take (`circle.reads`), and hands the port the circles and the
+reader: `scoped(port, db)` (`src/reader.ts`) is the port as the reader
+of the request's connection reads it, each run asking first, and the
+server hands every page and pin that one. `compile` filters each scoped
+view to the rows whose circle column is one of those circles, or, where
+the view names whose a row is, whose person is the reader, in the join
+that meets it, so a view joined `outer` keeps the rows before it, and
+the report reads what the app shows them and no more; a reader whose
+mandates cover nothing reads no row. A
+report with no `reader` that reads a scoped view is refused before the
+shell sees it, so no page and no feat runs one without a reader. A
+shared view is read whole by every reader.
 
 ## The shell's implementation
 
@@ -100,4 +128,9 @@ that a report reconciles with the books to the cent and with the
 projects' time, and is stamped with the head; that a write landing in a
 run's transaction moves neither its rows nor its head; and that the port
 refuses each kind of report above with its reason, before the shell sees
-it.
+it, and reads a scoped view for its reader alone: the rows of the
+circles they read it in and their own, and none where they read in no
+circle. The e2e scenario `reading` runs a saved custom report over a scoped
+view as Lanterne's readers: Inès, in Web and no member, reads Web's and
+the assembly's rows and no other circle's, and a person whose mandate
+to read went reads none of them.

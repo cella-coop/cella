@@ -1,4 +1,4 @@
-import { MAX_ROWS, type Catalog, type Column, type Filter, type Report, type Type, type Value } from './report.ts'
+import { MAX_ROWS, type Catalog, type Column, type Filter, type Reader, type Report, type Type, type Value } from './report.ts'
 
 // A report the port refuses, with every reason it found.
 export class Invalid extends Error {
@@ -34,8 +34,9 @@ const MAX_IN = 1000
 
 const quote = (name: string) => `"${name.replaceAll('"', '""')}"`
 
-// Every reason the catalog refuses a report, none when it may run.
-export function check(report: Report, catalog: Catalog): string[] {
+// Every reason the catalog refuses a report, none when it may run; a
+// `saved` definition, which whoever runs it reads for, names no reader.
+export function check(report: Report, catalog: Catalog, saved = false): string[] {
   const reasons: string[] = []
   const views = Object.entries(report.from ?? {})
   if (!views.length) {
@@ -60,7 +61,7 @@ export function check(report: Report, catalog: Catalog): string[] {
       reasons.push(`${use} ${field}: no view of the report is named ${at > 0 ? as : field}`)
       return null
     }
-    const columns = catalog[view]
+    const columns = catalog[view]?.columns
     if (!columns) {
       return null
     }
@@ -151,9 +152,35 @@ export function check(report: Report, catalog: Catalog): string[] {
     }
   }
 
-  // Which rows it reads.
+  // Which rows it reads: a shared view by no field below its grain.
   for (const f of report.where ?? []) {
     filter(f, column(f.field, 'filter'), reasons)
+    const at = f.field.indexOf('.')
+    const audience = at > 0 && Object.hasOwn(report.from, f.field.slice(0, at)) ? catalog[report.from[f.field.slice(0, at)]]?.audience : undefined
+    if (audience?.kind === 'shared' && !audience.by.includes(f.field.slice(at + 1))) {
+      reasons.push(`filter ${f.field}: ${report.from[f.field.slice(0, at)]} is shared by ${audience.by.join(', ') || 'nothing'}, and no report filters it finer`)
+    }
+  }
+
+  // Whom it reads for: a run of a scoped view, its reader and the circles
+  // they read it in; a saved definition, no one.
+  const reader = report.reader
+  if (saved && reader !== undefined) {
+    reasons.push('a saved report names no reader: whoever runs it reads it')
+  }
+  if (!saved && reader !== undefined && !(reader && (reader.person === null || typeof reader.person === 'string') && reader.circles && typeof reader.circles === 'object')) {
+    reasons.push('a reader is a person, or null, and the circles they read each scoped view in')
+  }
+  for (const [as, view] of saved ? [] : views) {
+    if (catalog[view]?.audience.kind !== 'scoped') {
+      continue
+    }
+    const circles = reader?.circles?.[view]
+    if (!reader) {
+      reasons.push(`${as} (${view}) is scoped: a report reading it names its reader`)
+    } else if (!Array.isArray(circles) || !circles.every((c) => typeof c === 'string')) {
+      reasons.push(`${as} (${view}) is scoped: the reader's circles in it are not given`)
+    }
   }
 
   // How it orders them: by what it shows.
@@ -172,13 +199,13 @@ export function check(report: Report, catalog: Catalog): string[] {
   // Whom it reads about: every personal field declared, and only those.
   for (const field of touched) {
     const [as, name] = [field.slice(0, field.indexOf('.')), field.slice(field.indexOf('.') + 1)]
-    if (catalog[report.from[as]]?.[name]?.personal && !personal.has(field)) {
+    if (catalog[report.from[as]]?.columns[name]?.personal && !personal.has(field)) {
       reasons.push(`${field} is personal: a report reading it declares it in personal`)
     }
   }
   for (const field of personal) {
     const [as, name] = [field.slice(0, field.indexOf('.')), field.slice(field.indexOf('.') + 1)]
-    if (!catalog[report.from[as]]?.[name]?.personal) {
+    if (!catalog[report.from[as]]?.columns[name]?.personal) {
       reasons.push(`personal ${field}: no personal column the report reads`)
     }
   }
@@ -237,7 +264,8 @@ function fits(v: Value | Value[] | undefined, kind: Kind, type: Type): boolean {
 
 // A checked report as one statement over the shell's attach of the scope,
 // `db`, and the rows it returns, as it fetches one past them to know there
-// are more. Every name in it is the catalog's, quoted, and every value a
+// are more, each scoped view kept to its reader's rows, in the join that
+// meets it. Every name in it is the catalog's, quoted, and every value a
 // literal of its column's type, checked first: the shell's protocol carries
 // no bound parameters.
 export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: string; limit: number } {
@@ -247,13 +275,28 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
   }
   const typeOf = (field: string) => {
     const at = field.indexOf('.')
-    return catalog[report.from[field.slice(0, at)]][field.slice(at + 1)].type
+    return catalog[report.from[field.slice(0, at)]].columns[field.slice(at + 1)].type
   }
   const ref = (field: string) => {
     const at = field.indexOf('.')
     return `${quote(field.slice(0, at))}.${quote(field.slice(at + 1))}`
   }
   const table = (view: string) => `${quote(db)}.${view.split('.').map(quote).join('.')}`
+  // The rows of a scoped view its reader reads: those of the circles they
+  // read it in, and those that are theirs; none where neither is given.
+  const kept = (as: string, view: string): string | null => {
+    const audience = catalog[view].audience
+    if (audience.kind !== 'scoped') {
+      return null
+    }
+    const reader = report.reader as Reader
+    const circles = reader.circles[view]
+    const either = [
+      circles.length ? `${quote(as)}.${quote(audience.circle)} IN (${circles.map(text).join(', ')})` : '',
+      audience.whose && reader.person !== null ? `${quote(as)}.${quote(audience.whose)} = ${text(reader.person)}` : '',
+    ].filter(Boolean)
+    return either.length ? `(${either.join(' OR ')})` : 'FALSE'
+  }
   const views = Object.entries(report.from)
   const joins = report.join ?? []
   const from = views
@@ -265,6 +308,7 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
       const on = joins
         .filter(([a, b]) => (a.startsWith(`${as}.`) && before.has(b.split('.')[0])) || (b.startsWith(`${as}.`) && before.has(a.split('.')[0])))
         .map(([a, b]) => `${ref(a)} = ${ref(b)}`)
+        .concat(kept(as, view) ?? [])
       return `${report.outer?.includes(as) ? 'LEFT JOIN' : 'JOIN'} ${table(view)} AS ${quote(as)} ON ${on.join(' AND ')}`
     })
     .join(' ')
@@ -274,7 +318,7 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
     ...fields.map((f) => `${ref(f)} AS ${quote(f)}`),
     ...measures.map(([name, m]) => `${m.fn}(${m.of ? ref(m.of) : '*'}) AS ${quote(name)}`),
   ]
-  const where = (report.where ?? []).map((f) => {
+  const filters = (report.where ?? []).map((f) => {
     if (f.op === 'null') {
       return `${ref(f.field)} IS NULL`
     }
@@ -286,6 +330,8 @@ export function compile(report: Report, catalog: Catalog, db = 'scope'): { sql: 
     }
     return `${ref(f.field)} ${f.op} ${literal(f.value as Value, typeOf(f.field))}`
   })
+  const first = kept(...views[0])
+  const where = first ? [first, ...filters] : filters
   const limit = report.limit ?? MAX_ROWS
   const order = (report.order ?? []).map((o) => (o.startsWith('-') ? `${quote(o.slice(1))} DESC` : quote(o)))
   const sql = [

@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -107,7 +107,13 @@ join, its fields, filters, measures and order
 ([a report](../../core/analytics/index.md#a-report)), and, to chart it,
 `chart`: the field its bars run over and the measure or field they
 measure. Its page runs it and draws its rows as a table and its chart;
-what the port refuses it shows with every reason.
+what the port refuses it shows with every reason. It runs for whoever
+opens it, never for whoever saved it: where it reads a scoped view, the
+server hands the port that reader and their circles
+([the reader](../../core/analytics/index.md#the-reader)), so two members
+running one report each read the rows their own mandates open. Saving
+one checks it against the catalog; reading its rows is the run's
+reader's alone.
 
 ## Lifecycle
 

@@ -10,20 +10,25 @@
 // values in the log open to them, never to a colleague; what a function
 // reading as its owner returns, a share that divides the whole or a
 // motion's count, is kept to whoever reads it, so Inès and Paul, who
-// left, read nothing of a record another circle owns through one; and a
-// server logging in as the superuser reads as the app role all the same.
-// Run by `cella test e2e reading`.
+// left, read nothing of a record another circle owns through one; a
+// saved report reads for whoever runs it, through the analytics shell;
+// and a server logging in as the superuser reads as the app role all the
+// same. Run by `cella test e2e reading`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { profile } from '@cella/org-person/api'
+import { scoped } from '@cella/org-analytics'
+import { custom, save } from '@cella/org-report/api'
+import { reading as opened, type Reading } from './port.ts'
 import { Shell } from './serve.ts'
 import { reader, sign } from './lanterne.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
 let app: pg.Client
+let analytics: Reading
 
 const camille = 'camille@lanterne.example'
 const chloe = 'chloe@lanterne.example'
@@ -46,7 +51,8 @@ const reading = async (actor: string, sql: string, values: unknown[] = []) => {
 
 before(async () => {
   await su.connect()
-  await shell.start('2026-10-24')
+  analytics = await opened(su, 40, '2026-10-24')
+  await shell.start('2026-10-24', analytics.env)
   app = new pg.Client({ user: 'cella_app' })
   await app.connect()
 })
@@ -54,6 +60,7 @@ before(async () => {
 after(async () => {
   await app.end()
   await shell.stop()
+  analytics?.stop()
   await su.end()
 })
 
@@ -103,6 +110,27 @@ test('reading follows the mandates: Inès reads Web\'s expenses and not Marketin
   assert.deepEqual(time, [{ circle: 'web' }], 'Yusuf reads his circle\'s time and no other\'s')
   const everyone = await reading(julien, 'SELECT DISTINCT circle FROM timesheet.entry ORDER BY circle')
   assert.ok(everyone.length > 1, 'the Treasurer, approving everyone\'s, reads every circle\'s')
+})
+
+test('a saved report reads for whoever runs it: Inès reads Web\'s and the assembly\'s expenses through it, and Paul, whose seat went, none', async () => {
+  const definition = { from: { e: 'expense.expenses' }, fields: ['e.id', 'e.circle'], order: ['e.id'] }
+  const saved = await save(analytics.analytics, { id: 'expenses-by-id', title: 'Expenses by id', caption: '', definition }, { db: reader(app, chloe), actor: chloe, sign: sign(chloe) })
+  assert.equal(saved.state, 'settled', saved.state === 'refused' ? saved.reason : '')
+
+  const hers = await page('/reports/expenses-by-id', chloe)
+  assert.equal(hers.status, 200)
+  for (const id of ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004']) {
+    assert.ok(hers.text.includes(id), `Chloé, a member, reads ${id} through her report by open books`)
+  }
+  const web = await page('/reports/expenses-by-id', ines)
+  assert.equal(web.status, 200)
+  assert.ok(web.text.includes('ex-0002') && web.text.includes('ex-0004'), 'Inès reads Web\'s and the assembly\'s through Chloé\'s report')
+  assert.ok(!web.text.includes('ex-0001') && !web.text.includes('ex-0003'), 'and not Brand\'s or Marketing\'s, as on the expenses\' page')
+  // Paul exited, and his seat in the assembly went with his device: the
+  // port the server hands a page, run as him, reads none of it.
+  const run = async (actor: string) => (await custom(scoped(analytics.analytics, reader(app, actor)), definition)).custom.result.rows
+  assert.deepEqual(await run(paul), [], 'Paul, whose seat in the assembly went when he exited, reads none')
+  assert.ok((await run(chloe)).length >= 4, 'where Chloé reads every one')
 })
 
 test('a worker reads their own capital account and its lines, and no colleague\'s; finance reads every one', async () => {

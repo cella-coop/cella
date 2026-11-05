@@ -2,6 +2,7 @@ import { values } from '@cella/org-db'
 import { fields, pins as check, type Field } from '@cella/org-ui/models'
 import { using } from '#lib/server/db.ts'
 import { run, tally } from '#lib/server/reads.ts'
+import { scoped } from '@cella/org-analytics'
 import { port } from '#lib/server/analytics.ts'
 import { rows as reported } from '@cella/org-report/api'
 import { mounted, source } from '#lib/server/slices.ts'
@@ -40,7 +41,7 @@ export const load: PageServerLoad = async ({ url, locals }) => {
       const r = report(p.collection)
       if (r) {
         const id = p.collection.slice('reports/'.length)
-        read.set(id, read.get(id) ?? reported(port, id))
+        read.set(id, read.get(id) ?? reported(scoped(port, db), id))
         try {
           const rows = await read.get(id)
           results.push({ ...tally(rows ?? [], p, known(p.collection) ?? []), from: { label: r.title, href: `/reports/${id}` } })

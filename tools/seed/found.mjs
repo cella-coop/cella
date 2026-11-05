@@ -230,9 +230,10 @@ export async function seed(db, read, { from, dir }) {
       // A document generated from its circle's policies, one with a
       // template, as the statutes are, is carried over with its template
       // and generated at each day its circle's policies changed, from
-      // those in force that day, patched onto the version before and
-      // adopted that day, as the document feat's `generate` does once a
-      // motion adopts or ends one.
+      // those in force that day, patched onto the version before, citing
+      // each motion whose change it first reads and the day, and adopted
+      // that day, as the document feat's `generate` does once a motion
+      // adopts or ends one.
       if (d.template) {
         const template = outline(d.template ?? [], `${d.id}'s template`)
         await db.query('INSERT INTO document.generated (document, circle, template) VALUES ($1, $2, $3)', [d.id, d.circle, JSON.stringify(template)])
@@ -254,6 +255,15 @@ export async function seed(db, read, { from, dir }) {
           const { rows } = await db.query(
             'INSERT INTO document.version (document, saved, snapshot, frontier, vv) VALUES ($1, $2, $3, $4, $5) RETURNING id',
             [d.id, on, loro.export({ mode: 'snapshot' }), JSON.stringify(loro.frontiers()), JSON.stringify(Object.fromEntries(loro.version().toJSON()))],
+          )
+          await db.query(
+            `INSERT INTO document.generation (document, version, motion, day)
+             SELECT $1, $2, m, $4 FROM (
+               SELECT motion AS m FROM policy.policy WHERE circle = $3 AND adopted = $4
+               UNION SELECT split_part(ended_by, '/', 1) FROM policy.policy WHERE circle = $3 AND ends = $4 AND ended_by IS NOT NULL
+             ) x
+             WHERE NOT EXISTS (SELECT FROM document.generation g WHERE g.document = $1 AND g.motion = x.m)`,
+            [d.id, rows[0].id, d.circle, on],
           )
           await db.query(
             `INSERT INTO document.adoption (receipt, document, version, base, adopted)

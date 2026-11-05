@@ -190,6 +190,40 @@ BEGIN ATOMIC
   WHERE r.id = protection_flaw.ref AND r.protected IS NOT NULL AND NOT motion.as_strict(d.procedure, r.protected);
 END;
 
+-- What keeps a policy of `circle` and `kind` applying from `day` from
+-- replacing the policy `ref`, or null: `ref` is replaced already by a
+-- policy other than `made`, the replacement's own id, and the reason
+-- names that one and the day it applies, the one to replace instead; or
+-- `ref` is no policy of that circle and kind in force on `day`, the end
+-- `made` gave it aside, and the reason says the day it applies from or
+-- ended on. `motion.asks` judges a proposal by it on the day the policy
+-- would apply were the motion closed at its deadline, `motion.adopts` an
+-- adoption on the day it applies, and the adoption's write asks it before
+-- it writes the register, so a replacement settled while the motion was
+-- open refuses the action with this reason, never an exception.
+CREATE FUNCTION motion.replacement_flaw(circle text, kind text, ref text, day date, made text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT coalesce(
+    (SELECT q.id || ' replaces ' || q.replaces || ' already, from ' || to_char(q.applies, 'YYYY-MM-DD')
+       || ': a policy replacing it now replaces ' || q.id || ' and applies on or after that day'
+     FROM policy.policy q
+     WHERE q.replaces = replacement_flaw.ref AND q.id IS DISTINCT FROM replacement_flaw.made),
+    (SELECT 'no ' || replacement_flaw.kind || ' of ' || replacement_flaw.circle || ' in force on '
+       || to_char(replacement_flaw.day, 'YYYY-MM-DD') || ' is ' || replacement_flaw.ref
+       || coalesce(CASE
+         WHEN o.circle <> replacement_flaw.circle OR o.kind <> replacement_flaw.kind THEN NULL
+         WHEN o.applies > replacement_flaw.day THEN ': it applies from ' || to_char(o.applies, 'YYYY-MM-DD')
+         ELSE ': it ended on ' || to_char(o.ends, 'YYYY-MM-DD') END, '')
+     FROM (SELECT) x
+     LEFT JOIN policy.policy o ON o.id = replacement_flaw.ref
+     WHERE replacement_flaw.ref IS NOT NULL AND NOT coalesce(
+       o.circle = replacement_flaw.circle AND o.kind = replacement_flaw.kind AND o.applies <= replacement_flaw.day
+       AND (o.ends IS NULL OR o.ends > replacement_flaw.day
+         OR EXISTS (SELECT FROM policy.policy r WHERE r.id = replacement_flaw.made AND r.replaces = o.id)), false))
+  );
+END;
+
 -- motion:motion:propose — the procedure a motion is put to is built in,
 -- or made by a policy in force on the verdict date: one ended, or applying
 -- only later, puts no motion.
@@ -211,7 +245,8 @@ END;
 -- values each saying which way is stricter, its days none before the
 -- motion's deadline and its end after the day it would apply were the
 -- motion closed then, and replaces, if it names one, a policy of the
--- motion's circle and kind in force and not protected from it
+-- motion's circle and kind in force that day and replaced by no other
+-- (`motion.replacement_flaw`), not protected from it
 -- (`motion.protection_flaw`), takes, if it names one, a default it is
 -- worded and protected as (`policy.takes_flaw`) that no policy in force
 -- it does not replace takes already, and is protected, if it names one, by a
@@ -236,10 +271,8 @@ BEGIN ATOMIC
       WHEN (m.args ->> 'until')::date <= coalesce((m.args ->> 'from')::date, d.deadline)
         THEN 'a policy ends after the day it applies, ' || to_char(coalesce((m.args ->> 'from')::date, d.deadline), 'YYYY-MM-DD')
           || ' were ' || d.id || ' closed at its deadline'
-      WHEN m.args ? 'replaces' AND NOT EXISTS (
-        SELECT FROM policy.in_force(d.circle, cella.verdict_date()) f
-        WHERE f.id = m.args ->> 'replaces' AND f.kind = m.args ->> 'kind'
-      ) THEN 'no ' || (m.args ->> 'kind') || ' of ' || d.circle || ' in force is ' || (m.args ->> 'replaces')
+      WHEN motion.replacement_flaw(d.circle, m.args ->> 'kind', nullif(m.args ->> 'replaces', ''), coalesce((m.args ->> 'from')::date, d.deadline), NULL) IS NOT NULL
+        THEN motion.replacement_flaw(d.circle, m.args ->> 'kind', nullif(m.args ->> 'replaces', ''), coalesce((m.args ->> 'from')::date, d.deadline), NULL)
       WHEN m.args ? 'replaces' AND motion.protection_flaw(m.args ->> 'replaces', d.id) IS NOT NULL
         THEN motion.protection_flaw(m.args ->> 'replaces', d.id)
       WHEN policy.takes_flaw(nullif(m.args ->> 'takes', ''), m.args ->> 'kind', m.args ->> 'wording', m.args ->> 'friendly', m.args ->> 'protected') IS NOT NULL
@@ -283,7 +316,9 @@ END;
 -- motion names it (by the hash of its wordings, never by reading them
 -- back), applying from the day the action names, or the verdict date,
 -- whichever is later, and until the day it names, which is after that
--- however late the motion closed; a policy it replaces ends that day; it is protected as the action names, and the
+-- however late the motion closed; a policy it replaces is in force that
+-- day and replaced by no other (`motion.replacement_flaw`), and ends that
+-- day; it is protected as the action names, and the
 -- policy it replaces is not protected from the motion; it takes the
 -- default the action names, worded and protected as that default reads;
 -- the entry commits to its hash; and a procedure
@@ -298,7 +333,12 @@ BEGIN ATOMIC
       THEN d.id || '/' || m.n || ' would end on ' || (m.args ->> 'until') || ', not after '
         || to_char(greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date()), 'YYYY-MM-DD')
         || ', the day it applies: a policy ends after the day it applies'
-    WHEN r.id IS NULL OR r.id IS DISTINCT FROM p.policy THEN d.id || ' adopted no policy ' || coalesce(p.policy, '') || ' by this write'
+    WHEN motion.replacement_flaw(d.circle, m.args ->> 'kind', nullif(m.args ->> 'replaces', ''),
+        greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date()), d.id || '/' || m.n) IS NOT NULL
+      THEN d.id || '/' || m.n || ' does not replace ' || (m.args ->> 'replaces') || ': '
+        || motion.replacement_flaw(d.circle, m.args ->> 'kind', nullif(m.args ->> 'replaces', ''),
+          greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date()), d.id || '/' || m.n)
+    WHEN r.id IS NULL OR r.id IS DISTINCT FROM p.policy THEN d.id || ' adopted no policy '|| coalesce(p.policy, '') || ' by this write'
     WHEN r.circle <> d.circle OR r.kind <> m.args ->> 'kind' OR r.motion <> d.id OR r.n <> m.n
       OR r.hash <> policy.hash(m.args ->> 'wording', nullif(btrim(m.args ->> 'friendly'), ''))
       THEN r.id || ' is not the policy ' || d.id || ' adopts'

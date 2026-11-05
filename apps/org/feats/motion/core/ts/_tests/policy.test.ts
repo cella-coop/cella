@@ -185,7 +185,7 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   assert.match((await asks({ kind: 'custom', wording: 'x' })) ?? '', /a policy is a mandate, a right, a rule or a procedure, not custom/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '2026-11-14' })) ?? '', /applies at the earliest from 2026-11-21/)
   assert.match((await asks({ kind: 'rule', wording: 'x', from: '1 December' })) ?? '', /written YYYY-MM-DD/)
-  assert.match((await asks({ kind: 'rule', wording: 'x', replaces: 'm-2026-001/1' })) ?? '', /no rule of ag in force is m-2026-001\/1/)
+  assert.match((await asks({ kind: 'rule', wording: 'x', replaces: 'm-2026-001/1' })) ?? '', /no rule of ag in force on 2026-11-21 is m-2026-001\/1$/)
   // It ends after the day it would apply were the motion closed at its
   // deadline: its from, or else the deadline; on that day is refused too.
   assert.equal(await asks({ kind: 'rule', wording: 'x', from: '2026-11-25', until: '2026-11-26' }), null)
@@ -193,6 +193,62 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   assert.match((await asks({ kind: 'rule', wording: 'x', until: '2026-11-21' })) ?? '', /a policy ends after the day it applies, 2026-11-21/)
   assert.match((await asks({ kind: 'rule', wording: 'x', until: '2026-11-20' })) ?? '', /a policy ends after the day it applies, 2026-11-21/)
   assert.equal(await asks({ kind: 'rule', wording: 'x', until: '2026-11-22' }), null)
+})
+
+test('a policy replaces only the one in force the day it would apply, and replaced by no other', async () => {
+  const asks = async (args: object) => {
+    await db.query(`UPDATE motion.action SET args = $1 WHERE motion = 'm-2026-016'`, [args])
+    return (await db.query<{ r: string | null }>(`SELECT motion.asks('{"motion": "m-2026-016"}') AS r`)).rows[0].r
+  }
+  const adopts = async (payload: object) => (await db.query<{ r: string | null }>('SELECT motion.adopts($1) AS r', [payload])).rows[0].r
+  const remote = (days: number) => `Remote work is at most {days: ${days} | less is stricter} days a week`
+  await db.query('BEGIN')
+  try {
+    // A applies today; B, adopted today, replaces it from 1 January.
+    await adopt(solidarity, 1)
+    await adopt('Associations pay the solidarity rate, {rate: 25 % | less is stricter} below the rate card', 2, { replaces: 'm-2026-014/1', applies: '2027-01-01' })
+    await db.query(
+      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
+         ('m-2026-016', 'ag', 'Remote work', 'consent', 'consent', '2026-11-21', '2026-11-28'),
+         ('m-2026-017', 'ag', 'Remote work, again', 'consent', 'consent', '2026-11-21', '2026-11-28')`,
+    )
+    await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-016', 1, 'policy', '{}'), ('m-2026-017', 1, 'policy', '{}')`)
+
+    // A rule replacing A, from its deadline or from June, is told to replace B.
+    const already = /^m-2026-014\/2 replaces m-2026-014\/1 already, from 2027-01-01: a policy replacing it now replaces m-2026-014\/2 and applies on or after that day$/
+    assert.match((await asks({ kind: 'rule', wording: solidarity, replaces: 'm-2026-014/1' })) ?? '', already)
+    assert.match((await asks({ kind: 'rule', wording: solidarity, replaces: 'm-2026-014/1', from: '2027-06-01' })) ?? '', already)
+    // Replacing B, from its day or later, it is accepted; before it, B is not yet in force.
+    assert.equal(await asks({ kind: 'rule', wording: solidarity, replaces: 'm-2026-014/2', from: '2027-01-01' }), null)
+    assert.equal(await asks({ kind: 'rule', wording: solidarity, replaces: 'm-2026-014/2', from: '2027-03-01' }), null)
+    assert.match(
+      (await asks({ kind: 'rule', wording: solidarity, replaces: 'm-2026-014/2', from: '2026-12-01' })) ?? '',
+      /^no rule of ag in force on 2026-12-01 is m-2026-014\/2: it applies from 2027-01-01$/,
+    )
+    assert.match((await asks({ kind: 'mandate', wording: solidarity, replaces: 'm-2026-014/2', from: '2027-01-01' })) ?? '', /^no mandate of ag in force on 2027-01-01 is m-2026-014\/2$/)
+
+    // Two motions replace B: the first to close adopts; the second's
+    // adoption is refused by the guard, naming the first's policy.
+    await db.query(`UPDATE motion.action SET args = $1 WHERE motion IN ('m-2026-016', 'm-2026-017')`, [
+      { kind: 'rule', wording: remote(2), replaces: 'm-2026-014/2', from: '2027-02-01' },
+    ])
+    await db.query(`SET LOCAL cella.clock = '2026-11-28'`)
+    assert.equal(await adopts({ motion: 'm-2026-017', n: 1, policy: '' }), 'm-2026-017 adopted no policy  by this write')
+    await db.query(`SELECT policy.adopt('ag', 'rule', $1, NULL, 'm-2026-016', 1, '2027-02-01', NULL, 'm-2026-014/2')`, [remote(2)])
+    const hash = (await db.query<{ h: string }>(`SELECT encode(policy.hash($1, NULL), 'hex') AS h`, [remote(2)])).rows[0].h
+    assert.equal(await adopts({ motion: 'm-2026-016', n: 1, policy: 'm-2026-016/1', hash }), null, 'its own replacement is no other')
+    assert.equal(
+      await adopts({ motion: 'm-2026-017', n: 1, policy: '' }),
+      'm-2026-017/1 does not replace m-2026-014/2: m-2026-016/1 replaces m-2026-014/2 already, from 2027-02-01: a policy replacing it now replaces m-2026-016/1 and applies on or after that day',
+    )
+    assert.equal(
+      (await db.query<{ f: string | null }>(`SELECT motion.replacement_flaw('ag', 'rule', 'm-2026-014/2', '2027-02-01', 'm-2026-017/1') AS f`)).rows[0].f,
+      'm-2026-016/1 replaces m-2026-014/2 already, from 2027-02-01: a policy replacing it now replaces m-2026-016/1 and applies on or after that day',
+      'the write asks the same SQL before it writes the register',
+    )
+  } finally {
+    await db.query('ROLLBACK')
+  }
 })
 
 test('a policy ends only after the day it applies, however late its motion closes', async () => {

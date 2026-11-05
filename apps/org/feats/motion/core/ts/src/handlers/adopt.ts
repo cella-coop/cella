@@ -30,6 +30,19 @@ export function adopting(input: Adopt): Write<Adopted> {
       }
       const { args, today } = found
       const applies = args.from && args.from > today ? args.from : today
+      // A policy another motion replaced while this one was open is not
+      // the register's to replace again: the write adopts nothing, and
+      // `motion.adopts` refuses it with the same SQL's reason.
+      const flawed = await tx.query<{ flaw: string | null }>('SELECT motion.replacement_flaw($1, $2, $3, $4::date, $5) AS flaw', [
+        found.circle,
+        args.kind,
+        args.replaces || null,
+        applies,
+        `${input.motion}/${input.n}`,
+      ])
+      if (flawed.rows[0].flaw) {
+        return { policy: '', motion: input.motion, n: input.n, applies, hash: '' }
+      }
       const policy = await register.adopting(tx, {
         circle: found.circle,
         kind: args.kind as register.Kind,

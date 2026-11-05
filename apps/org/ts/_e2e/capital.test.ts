@@ -320,7 +320,7 @@ test('the assembly adopts capital terms of at least ten shares at 25 €, a rule
   const undirected = await rule({ wording: wording('10'), replaces: founding })
   assert.match(reason(undirected), /account_minimum is 10: a rule's value says which way is stricter, as \{account_minimum: 10 \| more is stricter\}/)
   const unplaced = await rule({ wording: wording('10 | more is stricter') })
-  assert.match(reason(unplaced), new RegExp(`the capital's terms replace those that govern, ${founding}`))
+  assert.match(reason(unplaced), new RegExp(`the capital's terms replace the latest, ${founding}, which apply from 2021-03-01`))
 
   const motion = settled(await rule({ wording: wording('10 | more is stricter'), replaces: founding })).motion
   const roll = await all<{ member: string }>(

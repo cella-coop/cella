@@ -2,9 +2,10 @@ CREATE SCHEMA account_motion;
 
 -- motion:motion:propose — each rule the motion would adopt that marks a
 -- value of the account feat's is sound capital terms
--- (`account.terms_flaw`) and replaces the rule of the terms that govern,
--- if any; and no policy it would end is one terms copy, since terms are
--- replaced, never ended.
+-- (`account.terms_flaw`) and replaces the rule of the latest terms, those
+-- whose rule applies latest, if any, never the terms that govern while
+-- later ones wait; and no policy it would end is one terms copy, since
+-- terms are replaced, never ended.
 CREATE FUNCTION account_motion.asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -13,10 +14,11 @@ BEGIN ATOMIC
       WHEN account.terms_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
         THEN account.terms_flaw(motion.marked(m.args ->> 'wording'))
       WHEN g.policy IS NOT NULL AND m.args ->> 'replaces' IS DISTINCT FROM g.policy
-        THEN 'the capital''s terms replace those that govern, ' || g.policy
+        THEN 'the capital''s terms replace the latest, ' || g.policy || ', which apply from ' || to_char(g."from", 'YYYY-MM-DD')
+          || ': a rule replacing them names them and applies on or after that day'
     END AS r
     FROM motion.action m
-    LEFT JOIN account.terms g ON g.id = account.capital_for(cella.verdict_date())
+    LEFT JOIN LATERAL (SELECT t.policy, t."from" FROM account.terms t ORDER BY t."from" DESC, t.adopted DESC, t.id DESC LIMIT 1) g ON true
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
       AND account.reads(motion.marked(m.args ->> 'wording'))
     UNION ALL

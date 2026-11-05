@@ -34,7 +34,13 @@ BEGIN ATOMIC
     SELECT CASE WHEN patronage.portion(ref, 'hours') > 0 AND EXISTS (SELECT FROM worked)
       THEN cella.allocate(cella.amount(patronage.portion(ref, 'hours')), (SELECT array_agg(w.minutes ORDER BY w.n) FROM worked w)) END AS hours
   )
-  SELECT w.member, 'hours', w.minutes, s.hours[w.n] FROM worked w CROSS JOIN split s WHERE s.hours[w.n] > 0;
+  -- Each part for whoever reads it: its worker, a reader of time in the
+  -- distribution's circle, a graft's reach and a write, which divides
+  -- the whole.
+  SELECT w.member, 'hours', w.minutes, s.hours[w.n]
+  FROM worked w CROSS JOIN split s, patronage.distribution d
+  WHERE s.hours[w.n] > 0 AND d.id = ref
+    AND ((SELECT circle.whole()) OR d.circle = ANY ((SELECT cella.circles('patronage'))::text[]) OR w.member = cella.reader() OR cella.reaches('patronage', w.member));
 END;
 
 -- The division of time worked, which the patronage feat asks when a

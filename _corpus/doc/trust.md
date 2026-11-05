@@ -599,8 +599,11 @@ What the build does not yet do, and what lifts each:
   security binds a table's owner, but Postgres exempts a superuser from
   every policy, and the cluster's superuser runs the migrations and owns
   what they make, so a view that reads as its owner and a `SECURITY
-  DEFINER` function read every row. A tool checks the tables' policies;
-  that a declared share's why is true, that the powers a feat names in
+  DEFINER` function read every row. A tool checks the tables' policies,
+  and refuses a definer function that returns rows unless it is
+  declared shared, summing the whole or filtering its rows by its
+  reader's test, or keyed by a secret its caller holds; that a declared
+  share's why is true, that the powers a feat names in
   `cella.reading` are the right ones and that a graft's reach opens no
   more than it says are left to review
   ([reading](architecture.md#reading)).

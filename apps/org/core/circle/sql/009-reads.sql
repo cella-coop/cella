@@ -20,6 +20,21 @@ RETURN ARRAY(
   ORDER BY c
 );
 
+-- Whether the session reads the whole: a write's transaction, or a
+-- session whose role, the one it set or else its login, is a superuser or
+-- bypasses row-level security. It asks the session's role, never the
+-- current user, so a SECURITY DEFINER function asks it of its caller,
+-- where `cella.sees`, asking the current user, answers for the
+-- function's owner; and a server that logs in as the owner and sets the
+-- role `cella_app` reads as the app. A definer function that filters
+-- its rows by its reader's test reads it in place of `cella.sees`, as
+-- `(SELECT circle.whole())`.
+CREATE FUNCTION circle.whole() RETURNS boolean
+LANGUAGE sql STABLE
+RETURN cella.writing()
+  OR (SELECT r.rolsuper OR r.rolbypassrls FROM pg_catalog.pg_roles r
+      WHERE r.rolname = coalesce(nullif(current_setting('role'), 'none'), session_user));
+
 -- The schemas of core and the notary, whose tables no slice makes.
 CREATE FUNCTION circle.cored(schema text) RETURNS boolean
 LANGUAGE sql IMMUTABLE

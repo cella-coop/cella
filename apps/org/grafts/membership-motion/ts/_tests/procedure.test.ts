@@ -4,7 +4,8 @@
 // a quorum of those counted, an abstention taking part; who counts while
 // a motion is open, and at its close; `fixed`, which refuses a proposal
 // that did not fix its roll, and `counts`, a close that did not count it;
-// and a secret ballot's tally, sealed to the app until its close. Run by
+// and a secret ballot's tally, sealed to the app until its close and to
+// whoever reads no motion of its circle. Run by
 // `cella test slice membership-motion`.
 
 import { after, before, test } from 'node:test'
@@ -123,7 +124,7 @@ test('a proposal that did not fix its roll is refused; fixed, it is not', async 
   assert.equal(await fixed('m-2026-107'), null)
 })
 
-test('a secret ballot\'s tally is sealed to the app until its close, and a redacted stance counts as none given', async () => {
+test('a secret ballot\'s tally is sealed to the app until its close, and to whoever does not read the motion, and a redacted stance counts as none given', async () => {
   await db.query(
     `INSERT INTO motion.motion (id, circle, title, method, procedure, ballot, proposed, deadline)
      VALUES ('m-2026-106', 'ag', 'm-2026-106', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
@@ -132,22 +133,25 @@ test('a secret ballot\'s tally is sealed to the app until its close, and a redac
   await vote('m-2026-106', 'camille', 'for')
   await vote('m-2026-106', 'yusuf', 'for')
   await vote('m-2026-106', 'hugo', 'against')
-  // What the app reads of it, for camille.
-  const tally = async () => {
+  // What the app reads of it, for camille, who holds no mandate here and
+  // so reads no motion of ag, or in a write's transaction, which reads
+  // the whole.
+  const tally = async (writing = false) => {
     await db.query('BEGIN')
     try {
       await db.query('SET LOCAL ROLE cella_app')
-      await db.query(`SELECT set_config('cella.actor', $1, true)`, [at('camille')])
+      await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', $2, true)`, [at('camille'), writing ? 'on' : ''])
       return (await db.query('SELECT passes, counted, given, quorate FROM membership_motion.tally($1)', ['m-2026-106'])).rows[0]
     } finally {
       await db.query('ROLLBACK')
     }
   }
-  assert.deepEqual(await tally(), { passes: null, counted: null, given: null, quorate: null })
+  assert.deepEqual(await tally(true), { passes: null, counted: null, given: null, quorate: null })
   assert.equal(await passes('m-2026-106'), true)
   await db.query(`UPDATE motion.motion SET closed = '2026-11-03', cutoff = $2 WHERE id = $1`, ['m-2026-106', ++receipt])
   await db.query('SELECT membership_motion.count($1)', ['m-2026-106'])
-  assert.deepEqual(await tally(), { passes: true, counted: 10, given: 3, quorate: true })
+  assert.deepEqual(await tally(true), { passes: true, counted: 10, given: 3, quorate: true })
+  assert.deepEqual(await tally(), { passes: null, counted: null, given: null, quorate: null }, 'closed, it is still none to a reader who reads no motion of ag')
   await db.query(`UPDATE motion.vote SET stance = 'redacted' WHERE motion = $1 AND member = $2`, ['m-2026-106', at('yusuf')])
   assert.deepEqual(await turnout('m-2026-106'), { counted: 10, given: 2, quorate: true })
   assert.equal(await passes('m-2026-106'), false)

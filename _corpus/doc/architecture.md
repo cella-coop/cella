@@ -308,12 +308,38 @@ makes is held to it by tooling, never by hand:
 - **A policy that opens rows to every reader is declared,** commented
   `'shared: why'`, as the keyring's is: a device's key checks a
   signature before anyone reads, so `person.device` is every reader's.
+- **A `SECURITY DEFINER` function that returns rows is declared,** or
+  reads as its invoker. One that returns a table, a set, a record or a
+  composite reads as its owner, past every policy, so its comment says
+  who it is for, in the form a view's does: `'audience: shared by
+  <columns>: why'`, the columns its rows are grouped by, or `'audience:
+  shared: why'`. A declared one keeps the shared-total rules in one of
+  two ways. It **sums**: what it returns shows, outside a sum or a
+  count, no column that says whose a row is nor one that is personal,
+  and groups by none, each column it names one it returns or takes, as
+  the federation's figures of a distributed year are the co-op's. Or it
+  **filters**: a share that needs the whole to divide, or a figure of
+  one record, keeps only the rows its reader may read by its query's own
+  test, of the known pattern above, as `patronage_payslip.division`
+  keeps a worker's part for the worker, their circle's readers and a
+  write. In a definer function `cella.sees` answers for the owner, a
+  superuser, and a table of its own reads past its policy, so its test
+  reads `(SELECT circle.whole())` in their place, which asks the
+  role the session set, or else its login. A function its caller reaches only by a secret it
+  holds, before anyone is signed in, is `'audience: keyed by <argument>:
+  why'`, and matches its rows by that argument's digest, as an
+  invitation's link does. A definer function that returns a scalar, as
+  a capital account's `holds` does, says no more than whether and takes
+  no declaration; a guard is never a definer ([trust](trust.md#guards)).
 
 `cella check feats` refuses each statically: `tools/sql-check.mjs`
 reads every policy a slice's migrations leave standing, and refuses a
 table that disables or unforces row-level security, one that drops
 `circle` for no policy of its own, and a policy of no known pattern not
-declared shared. `cella migrate` reads the database it migrated and
+declared shared; and a definer function that returns rows and is not
+declared, one declared shared that neither sums nor filters, and one
+declared keyed that matches its rows by no digest of its argument.
+`cella migrate` reads the database it migrated and
 fails a run that leaves a slice's table not enabled and forced, or with
 no policy the app role reads it by (`circle.unsecured`).
 
@@ -322,10 +348,11 @@ Postgres exempts a superuser from every row-level policy, forced or not,
 and the migrations run as the cluster's superuser, which owns every
 table, view and function they make. So a view that reads as its owner
 and a `SECURITY DEFINER` function read every row, past these policies:
-they are the owner-rights paths ([trust](trust.md#current-limits)).
+they are the owner-rights paths, each declared or reading as its reader
+([trust](trust.md#current-limits)).
 
 What no tool checks, and review does: that a declared share's why is
-true; that the powers a feat names in `cella.reading`, which its
+true, a definer function's as a view's; that the powers a feat names in `cella.reading`, which its
 policies ask through `cella.circles`, are the ones that should read its
 rows; that a graft's `cella.reach` opens no more than it says; SQL built
 at run time; and a server that reads past the port, since the host sets
@@ -456,7 +483,8 @@ reads, as the statements' rubrics and a project's burn are, or a share
 that needs the whole to divide, which filters its rows by the same test
 instead. A stance on a secret ballot is the one row no power opens: its
 row-level policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
-and a motion's tally sums it as its owner, sealed until the close.
+and a motion's tally sums it as its owner, sealed until the close,
+for those who read the motion ([reading](#reading)).
 
 SQL is the source of truth for guards. TypeScript calls them and never
 re-implements one; the browser may preview a guard through the primitives

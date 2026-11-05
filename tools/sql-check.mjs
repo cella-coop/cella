@@ -49,7 +49,12 @@
 //     circles put every table under as it is made; reads a table that
 //     drops core's policy `circle` by a policy of its own; and makes no
 //     policy that reads but by a known pattern (`pattern`), or one
-//     opening rows to every reader commented 'shared: why' (`unread`).
+//     opening rows to every reader commented 'shared: why' (`unread`);
+//   - makes no SECURITY DEFINER function returning rows that is not
+//     declared, 'audience: shared by <columns>: why' or 'audience: keyed
+//     by <argument>: why', and keeps a declared one to the shared-total
+//     rules: it sums, or filters its rows by its reader's test, or a keyed
+//     one matches them by its argument's digest (`definers`).
 // A slice's analytical contract, its sql/analytics.sql, holds only views
 // in its own schema and comments on them. A view reads as its owner, never
 // security_invoker, so the role needs no grant on a table, and it shares:
@@ -325,7 +330,11 @@ function policy(b, s, found) {
 //   EXISTS (SELECT FROM <its own table> …)  a row of a table of its own,
 //                                           read under that table's policy
 // where '<feat>' is the slice's own name or, a graft's, a feat it joins.
-function pattern(qual, s, found) {
+// In a definer function, which reads as its owner, a superuser,
+// cella.sees answers for the owner and a table of its own reads past its
+// policy: there the test reads (SELECT circle.whole()), which asks the
+// session's login, in their place.
+function pattern(qual, s, found, definer = false) {
   const names = new Set([s.own, ...s.feats])
   const lit = (n) => n?.A_Const?.sval?.sval
   const call = (n) => (n?.FuncCall ? { fn: strings(n.FuncCall.funcname).join('.'), args: n.FuncCall.args ?? [] } : null)
@@ -348,7 +357,10 @@ function pattern(qual, s, found) {
       return bool.args.some(term)
     }
     const a = asked(n)
-    if (a?.fn === 'cella.sees' && a.args.length === 1 && names.has(lit(a.args[0]))) {
+    if (!definer && a?.fn === 'cella.sees' && a.args.length === 1 && names.has(lit(a.args[0]))) {
+      return true
+    }
+    if (definer && a?.fn === 'circle.whole' && a.args.length === 0) {
       return true
     }
     if (a?.fn === 'cella.writing' && a.args.length === 0) {
@@ -375,7 +387,7 @@ function pattern(qual, s, found) {
     if (c?.fn === 'cella.reaches' && c.args.length === 2 && names.has(lit(c.args[0])) && column(c.args[1])) {
       return true
     }
-    if (n?.SubLink?.subLinkType === 'EXISTS_SUBLINK') {
+    if (!definer && n?.SubLink?.subLinkType === 'EXISTS_SUBLINK') {
       let plain = true
       walk(n.SubLink.subselect, (key, x) => {
         if (key === 'RangeVar' && !own.has(`${x.schemaname}.${x.relname}`)) {
@@ -413,6 +425,146 @@ export function unread(found) {
     }
     if (t.owned && found.uncircled?.has(t.key) && own.length === 0) {
       out.push(`${t.path}: ${t.key} drops core's policy circle and has no read policy of its own: give it the personal row's (architecture.md, "Reading")`)
+    }
+  }
+  return out
+}
+
+// A function a slice makes, by name: whether it runs as its owner and
+// returns rows, a table, a set, a record or a composite, what it takes
+// and returns, the query it returns, and its comment. A later CREATE OR
+// REPLACE makes it anew; ALTER FUNCTION … SECURITY changes how it runs.
+function made(b, name, s, found) {
+  const opt = (k) => b.options?.find((x) => x.DefElem.defname === k)?.DefElem.arg
+  const params = (b.parameters ?? []).map((p) => p.FunctionParameter)
+  const outs = params.filter((p) => ['FUNC_PARAM_OUT', 'FUNC_PARAM_INOUT', 'FUNC_PARAM_TABLE'].includes(p.mode))
+  const type = strings(b.returnType?.names)
+  const relation = type.length > 1 && type[0] !== 'pg_catalog' && ((found.composites?.has(type.join('.')) ?? false) || (found.tables ?? []).some((t) => t.key === type.join('.')))
+  const rows = b.returnType?.setof === true || params.some((p) => p.mode === 'FUNC_PARAM_TABLE') || outs.length > 1 || type.at(-1) === 'record' || relation
+  const atomic = b.sql_body?.List?.items?.[0]?.List?.items
+  ;(found.functions ??= new Map()).set(name, {
+    name,
+    path: found.at,
+    scope: s,
+    definer: opt('security')?.Boolean?.boolval === true,
+    rows,
+    lang: opt('language')?.String?.sval,
+    takes: params.filter((p) => !['FUNC_PARAM_OUT', 'FUNC_PARAM_TABLE'].includes(p.mode)).map((p) => p.name),
+    returns: outs.map((p) => p.name),
+    body: atomic ? { stmts: atomic.map((stmt) => ({ stmt })) } : strings(opt('as')?.List?.items)[0] ?? null,
+    // Its comment outlives a CREATE OR REPLACE, as the function does.
+    comment: found.functions?.get(name)?.comment ?? null,
+  })
+}
+
+// The columns an expression shows: every one but those inside a sum or a
+// count, and of a scalar subquery only what it returns.
+function shown(n) {
+  const out = []
+  const visit = (key, x) => {
+    if (key === 'ColumnRef') {
+      out.push(x)
+      return
+    }
+    if (key === 'FuncCall' && aggregate(x)) {
+      return
+    }
+    if (key === 'SubLink') {
+      const arms = (q) => (q?.op && q.op !== 'SETOP_NONE' ? [...arms(q.larg), ...arms(q.rarg)] : [q])
+      arms(x.subselect?.SelectStmt).forEach((q) => visit(null, q?.targetList))
+      return
+    }
+    if (Array.isArray(x)) {
+      x.forEach((y) => visit(key, y))
+    } else if (x && typeof x === 'object') {
+      for (const [k, y] of Object.entries(x)) {
+        visit(k, y)
+      }
+    }
+  }
+  visit(null, n)
+  return out
+}
+
+// The SECURITY DEFINER functions of a feat or a graft that return rows
+// and are not declared, or whose declaration their query does not keep
+// (architecture.md, "Reading"). Such a function reads as its owner, past
+// every policy, so it is declared in its comment:
+//   'audience: shared by <columns>: why', or 'audience: shared: why'
+//     it sums, showing outside a sum no column that says whose a row is
+//     nor a personal one, grouped by none, each column it names one it
+//     returns or takes; or it filters, each arm of its query keeping in
+//     its WHERE a test of a known pattern (`pattern`, as a definer);
+//   'audience: keyed by <argument>: why'
+//     it matches its rows by that argument's digest, a secret its caller
+//     holds, as an invitation's link does.
+export function definers(found) {
+  const out = []
+  const personal = (c) => found.personal?.includes(c) || found.carried?.has(c)
+  for (const f of found.functions?.values() ?? []) {
+    if (!f.definer || !f.rows) {
+      continue
+    }
+    const m = (f.comment ?? '').match(/^audience: (shared|keyed)(?: by ([^:]+))?: \S/)
+    if (!m) {
+      out.push(`${f.path}: ${f.name} runs as its owner and returns rows, past every policy: make it SECURITY INVOKER, or comment it 'audience: shared by <columns>: why' or 'audience: keyed by <argument>: why' (architecture.md, "Reading")`)
+      continue
+    }
+    const [, kind, by] = m
+    const named = (by ?? '').split(',').map((c) => c.trim()).filter(Boolean)
+    let tree = null
+    try {
+      tree = typeof f.body === 'string' && f.lang === 'sql' ? found.parse(f.body) : f.lang === 'sql' ? f.body : null
+    } catch {
+      tree = null
+    }
+    const query = [...(tree?.stmts ?? [])].reverse().find((x) => x.stmt.SelectStmt)?.stmt.SelectStmt
+    if (!query) {
+      out.push(`${f.path}: ${f.name} is declared ${kind}, but returns no query the check reads: write it LANGUAGE sql`)
+      continue
+    }
+    const arms = (q) => (q?.op && q.op !== 'SETOP_NONE' ? [...arms(q.larg), ...arms(q.rarg)] : [q])
+    const conjuncts = (q) => (q.whereClause?.BoolExpr?.boolop === 'AND_EXPR' ? q.whereClause.BoolExpr.args : q.whereClause ? [q.whereClause] : [])
+    if (kind === 'keyed') {
+      const key = named.length === 1 && f.takes.includes(named[0]) ? named[0] : null
+      const digest = (n) => {
+        const c = n?.FuncCall
+        return c && ['sha256', 'digest'].includes(strings(c.funcname).at(-1)) && strings(c.args?.[0]?.ColumnRef?.fields).at(-1) === key
+      }
+      const matched = (q) => conjuncts(q).some((t) => t.A_Expr?.kind === 'AEXPR_OP' && strings(t.A_Expr.name).join() === '=' && (digest(t.A_Expr.lexpr) || digest(t.A_Expr.rexpr)))
+      if (!key) {
+        out.push(`${f.path}: ${f.name} is declared keyed by ${by ?? 'nothing'}, which is not one argument it takes`)
+      } else if (!arms(query).every(matched)) {
+        out.push(`${f.path}: ${f.name} is declared keyed by ${key}, but matches its rows by no digest of it: compare a column with sha256(${key})`)
+      }
+      continue
+    }
+    for (const c of named.filter((c) => !f.returns.includes(c) && !f.takes.includes(c))) {
+      out.push(`${f.path}: ${f.name} is declared shared by ${c}, which it neither returns nor takes`)
+    }
+    if (arms(query).every((q) => conjuncts(q).some((t) => pattern(t, f.scope, found, true)))) {
+      continue
+    }
+    const tables = new Map()
+    walk(query, (key, n) => {
+      if (key === 'RangeVar' && n.schemaname) {
+        tables.set(n.alias?.aliasname ?? n.relname, `${n.schemaname}.${n.relname}`)
+      }
+    })
+    const resolve = (ref) => {
+      const p = strings(ref.fields)
+      const t = p.length >= 2 ? tables.get(p.at(-2)) : null
+      return t ? [`${t}.${p.at(-1)}`] : p.length === 1 ? [...new Set(tables.values())].map((x) => `${x}.${p[0]}`) : []
+    }
+    for (const q of arms(query)) {
+      const whose = [
+        ...(q.targetList ?? []).flatMap((t) => shown(t.ResTarget.val)),
+        ...(q.groupClause ?? []).flatMap((g) => refs(g)),
+      ].flatMap(resolve).find((c) => found.readers?.has(c) || personal(c))
+      if (whose) {
+        out.push(`${f.path}: ${f.name} is declared shared, but shows ${whose}, which says whose a row is or is personal, outside a sum: sum it, or keep only the rows its reader reads by a test of a known pattern in its WHERE, (SELECT circle.whole()) for cella.sees (architecture.md, "Reading")`)
+        break
+      }
     }
   }
   return out
@@ -489,6 +641,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
       break
     case 'ViewStmt': {
       owned(b.view.schemaname, `creates ${named(b.view)}`)
+      ;(found.composites ??= new Set()).add(named(b.view))
       // A view over a table under row-level security hides it: it is
       // secured in turn, for a contract that reads it.
       if (read(b.query).some((t) => found.secured.has(t))) {
@@ -527,6 +680,12 @@ function statement(type, b, o, s, fail, owned, named, found) {
           p.shared = true
         }
       }
+      if (b.objtype === 'OBJECT_FUNCTION') {
+        const fn = found.functions?.get(strings(b.object?.ObjectWithArgs?.objname).join('.'))
+        if (fn) {
+          fn.comment = b.comment ?? null
+        }
+      }
       if (b.objtype === 'OBJECT_COLUMN') {
         const parts = strings(b.object?.List?.items)
         owned(parts[0], `comments on ${parts.join('.')}`)
@@ -538,6 +697,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'CreateFunctionStmt': {
       const f = strings(b.funcname)
       owned(f.length > 1 ? f[0] : null, `creates ${f.join('.')}`)
+      if (o.kind !== 'core') {
+        made(b, f.join('.'), s, found)
+      }
       for (const o2 of b.options ?? []) {
         const set = o2.DefElem.defname === 'set' ? o2.DefElem.arg.VariableSetStmt : null
         if (set?.name === 'search_path') {
@@ -578,6 +740,10 @@ function statement(type, b, o, s, fail, owned, named, found) {
       const f = strings(b.func?.objname)
       owned(f.length > 1 ? f[0] : null, `alters ${f.join('.')}`)
       for (const a of b.actions ?? []) {
+        const fn = found.functions?.get(f.join('.'))
+        if (a.DefElem.defname === 'security' && fn) {
+          fn.definer = a.DefElem.arg?.Boolean?.boolval === true
+        }
         const set = a.DefElem.defname === 'set' ? a.DefElem.arg.VariableSetStmt : null
         if (set?.name === 'search_path' && (set.args ?? []).some((v) => !catalog.has(v.A_Const?.sval?.sval))) {
           fail(`${f.join('.')} sets search_path beyond the catalog: only the catalog, and every name qualified`)
@@ -587,6 +753,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
     }
     case 'CompositeTypeStmt':
       owned(b.typevar.schemaname, `creates the type ${named(b.typevar)}`)
+      ;(found.composites ??= new Set()).add(named(b.typevar))
       break
     case 'CreateEnumStmt':
     case 'DefineStmt': {
@@ -603,6 +770,9 @@ function statement(type, b, o, s, fail, owned, named, found) {
           continue
         }
         owned(parts.length > 1 ? parts[0] : parts[0] ?? null, `drops ${parts.join('.')}`)
+        if (b.removeType === 'OBJECT_FUNCTION') {
+          found.functions?.delete(parts.join('.'))
+        }
         if (b.removeType === 'OBJECT_POLICY' && o.kind !== 'core') {
           const table = parts.slice(0, 2).join('.')
           found.policies?.get(table)?.delete(parts[2])
@@ -952,6 +1122,7 @@ function plpgsql(lib, fn) {
 export async function checkSql(repo, apps, known, found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }) {
   const lib = await import('libpg-query')
   await lib.loadModule?.()
+  found.parse = lib.parseSync
   const errors = []
   found.foreign ??= []
   found.secured ??= new Set()

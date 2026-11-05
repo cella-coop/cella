@@ -1,6 +1,6 @@
 +++
 title = "patronage-payslip"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 How a surplus's work share divides among the workers by pay and in equal
@@ -53,7 +53,7 @@ guards take; parts no longer what the year's pay gives are refused.
 
 ## Reads
 
-`work_share` shows each worker's share to the worker and to whoever holds `distribute-surplus`; `division` runs as its owner over every salary, so each share it shows is the one the approval makes, whoever reads it (`sql/002-reads.sql`).
+`work_share` shows each worker's share to the worker and to whoever holds `distribute-surplus`; `division` runs as its owner over every salary, so each share it shows is the one the approval makes, whoever reads it, and keeps of them only the parts its reader reads, by the personal row's test, so called alone it shows no more than `work_share`; it is declared `audience: shared` (`sql/002-reads.sql`, [reading](../../../../_corpus/doc/architecture.md#reading)).
 
 ## Shell
 

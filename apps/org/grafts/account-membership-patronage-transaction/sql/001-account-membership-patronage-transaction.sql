@@ -21,7 +21,8 @@ CREATE TABLE account_membership_patronage_transaction.credit (
 -- are not credited yet, in the order of their capital accounts: whom the
 -- writes that follow the distribution credit. It runs as its owner, since
 -- whoever approved the split may read no colleague's part, and says no
--- more than who.
+-- more than who, and that only to whoever reads the distribution in its
+-- circle and to a write.
 CREATE FUNCTION account_membership_patronage_transaction.employable(ref text)
 RETURNS TABLE (member text)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
@@ -30,12 +31,14 @@ BEGIN ATOMIC
   FROM account_membership_patronage.split p
   JOIN patronage.distribution d ON d.id = p.distribution AND d.distributed IS NOT NULL
   WHERE p.distribution = ref AND p.shares > 0
+    AND ((SELECT circle.whole()) OR d.circle = ANY ((SELECT circle.reads('{patronage}'))::text[]))
     AND NOT EXISTS (SELECT FROM account_membership_patronage_transaction.credit c WHERE c.distribution = ref AND c.member = p.worker)
   ORDER BY (SELECT min(a.code) FROM account.account a WHERE a.holder = p.worker AND a.parent = '1013' AND NOT a.frozen), p.worker;
 END;
 
 REVOKE EXECUTE ON FUNCTION account_membership_patronage_transaction.employable(text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION account_membership_patronage_transaction.employable(text) TO cella_app;
+COMMENT ON FUNCTION account_membership_patronage_transaction.employable(text) IS 'audience: shared by ref: who a distributed split credits, for whoever reads the distribution';
 
 -- patronage:part:employ — the member's part of the distribution buys
 -- shares, as account_membership_patronage.split gives on the verdict date;

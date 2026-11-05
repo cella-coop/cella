@@ -7,9 +7,12 @@
 // capital and no colleague's; Julien, in finance, reads everyone's; what
 // sums the whole, the statements, an entry's amount and a share the 2025
 // surplus would give, is the same whoever reads it; a member's personal
-// values in the log open to them, never to a colleague; and a server
-// logging in as the superuser reads as the app role all the same. Run by
-// `cella test e2e reading`.
+// values in the log open to them, never to a colleague; what a function
+// reading as its owner returns, a share that divides the whole or a
+// motion's count, is kept to whoever reads it, so Inès and Paul, who
+// left, read nothing of a record another circle owns through one; and a
+// server logging in as the superuser reads as the app role all the same.
+// Run by `cella test e2e reading`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -27,6 +30,7 @@ const chloe = 'chloe@lanterne.example'
 const ines = 'ines@lanterne.example'
 const julien = 'julien@lanterne.example'
 const lea = 'lea@lanterne.example'
+const paul = 'paul@lanterne.example'
 const yusuf = 'yusuf@lanterne.example'
 
 const page = async (path: string, actor: string) => {
@@ -136,6 +140,37 @@ test('what sums the whole is the same whoever reads it: the statements, an entry
   const everyone = await reading(julien, shares)
   assert.equal(everyone.length, 10, 'Julien, who distributes the surplus, reads every worker\'s share')
   assert.deepEqual(await reading(chloe, shares), everyone.filter((s) => s.member === chloe), 'Chloé reads her own, the same as Julien reads it')
+})
+
+test('a function reading as its owner keeps its rows to whoever reads them: Inès, in Web and no member, and Paul, who left, read nothing of another\'s', async () => {
+  // A share that needs the whole to divide: each worker's part of the 2025
+  // surplus, by pay and by time.
+  for (const fn of ['patronage_payslip.division', 'patronage_timesheet.division']) {
+    const sql = `SELECT DISTINCT worker FROM ${fn}('2025') ORDER BY worker`
+    for (const member of [ines, paul]) {
+      const read = (await reading(member, sql)).map((r) => r.worker)
+      assert.ok(read.every((w) => w === member), `${member} reads through ${fn} no part but their own: ${read.join(', ')}`)
+    }
+    const own = (await reading(chloe, sql)).map((r) => r.worker)
+    assert.ok(own.every((w) => w === chloe), `Chloé, holding no power over pay, reads through ${fn} her own part alone`)
+  }
+  const pay = await reading(julien, `SELECT DISTINCT worker FROM patronage_payslip.division('2025')`)
+  assert.equal(pay.length, 10, 'Julien, who distributes the surplus, reads every worker\'s part by pay')
+
+  // A motion's count, of Coordination's open motion on the rate card.
+  const tally = `SELECT passes, counted, given, quorate FROM membership_motion.tally('m-2026-011')`
+  for (const member of [ines, paul]) {
+    assert.deepEqual(await reading(member, tally), [{ passes: null, counted: null, given: null, quorate: null }], `${member} reads no count of Coordination's motion`)
+    assert.deepEqual(await reading(member, `SELECT id FROM motion.motion WHERE id = 'm-2026-011'`), [], 'as they read no motion of it')
+  }
+  const [counted] = await reading(chloe, tally)
+  assert.ok(Number(counted.counted) > 0, 'Chloé, a member, reads it by open books')
+
+  // Who a distributed split credits: none to whoever reads no distribution.
+  for (const member of [ines, paul]) {
+    assert.deepEqual(await reading(member, `SELECT member FROM account_membership_patronage_transaction.employable('2025')`), [])
+  }
+  await app.query(`SELECT set_config('cella.actor', '', false)`)
 })
 
 test('the log\'s form and the vault are closed to the app; an entry opens to the person it is about, never to a colleague', async () => {

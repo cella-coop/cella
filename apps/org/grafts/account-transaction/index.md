@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -101,7 +101,7 @@ up to it.
 
 ## Reads
 
-It says whose an account's lines are (`holds`, registered in `cella.reach` for `transaction`, `sql/005-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a line on an account no one holds reads for every member, one on a capital account for its holder and capital's readers. `balance` reads as its reader, each account whole where its lines are; `statement` and `agrees` run as their owner, so the statements by rubric and whether the trial balance agrees are the whole journal's for every member, while an account's `figures` read as its lines.
+It says whose an account's lines are (`holds`, registered in `cella.reach` for `transaction`, `sql/005-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)): a line on an account no one holds reads for every member, one on a capital account for its holder and capital's readers. `balance` reads as its reader, each account whole where its lines are; `statement` and `agrees` run as their owner, so the statements by rubric and whether the trial balance agrees are the whole journal's for every member, `statement` declared `audience: shared by sheet, id` ([reading](../../../../_corpus/doc/architecture.md#reading)), while an account's `figures` read as its lines.
 
 ## Shell
 

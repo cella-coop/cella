@@ -281,6 +281,11 @@ names none is a registry, the same in every scope, and takes the policy
 table of a slice not enabled and forced, or with no policy the app role
 reads it by, and `cella migrate` fails a run that leaves any
 ([reading](../../../../_corpus/doc/architecture.md#reading)).
+`circle.whole()` says whether the session reads the whole, a write's
+transaction or a session whose role, the one it set or else its login,
+is a superuser: a `SECURITY DEFINER`
+function that filters its rows by its reader asks it in place of
+`cella.sees`, which there answers for the function's owner.
 
 ## Schema
 

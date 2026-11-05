@@ -20,6 +20,17 @@ const hugo = 'hugo@lanterne.example'
 const one = async <R>(sql: string, values: unknown[] = []) => (await db.query(sql, values)).rows[0] as R
 const guard = async (fn: string, payload: object) => (await one<{ r: string | null }>(`SELECT ${fn}($1) AS r`, [payload])).r
 const employable = async () => (await db.query<{ member: string }>(`SELECT member FROM account_membership_patronage_transaction.employable('2025')`)).rows.map((r) => r.member)
+// The same, as the app reads it for `actor`, who holds no mandate here.
+const employableAs = async (actor: string) => {
+  await db.query('BEGIN')
+  try {
+    await db.query('SET LOCAL ROLE cella_app')
+    await db.query(`SELECT set_config('cella.actor', $1, true)`, [actor])
+    return (await db.query<{ member: string }>(`SELECT member FROM account_membership_patronage_transaction.employable('2025')`)).rows.map((r) => r.member)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+}
 const held = async () => (await one<{ shares: number }>('SELECT shares FROM membership.member WHERE address = $1', [hugo])).shares
 
 // An entry of the distribution's split, as patronage-transaction's handler
@@ -82,6 +93,7 @@ test('no trigger credits a distribution: its entry posts the split alone, and Hu
   assert.equal(await held(), shares)
   assert.equal(await guard('patronage_transaction.posted', { distribution: '2025' }), null)
   assert.deepEqual(await employable(), [hugo], 'a worker who is no associate is credited nothing')
+  assert.deepEqual(await employableAs(hugo), [], 'and the app reads no one of it for a reader who reads no distribution, not even themself')
 })
 
 test('the credit that follows employs half of Hugo\'s part in whole shares, in an entry of its own, and adds them to what he holds', async () => {

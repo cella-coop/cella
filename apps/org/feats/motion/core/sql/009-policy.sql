@@ -340,7 +340,7 @@ BEGIN ATOMIC
           greatest(coalesce((m.args ->> 'from')::date, cella.verdict_date()), cella.verdict_date()), d.id || '/' || m.n)
     WHEN r.id IS NULL OR r.id IS DISTINCT FROM p.policy THEN d.id || ' adopted no policy '|| coalesce(p.policy, '') || ' by this write'
     WHEN r.circle <> d.circle OR r.kind <> m.args ->> 'kind' OR r.motion <> d.id OR r.n <> m.n
-      OR r.hash <> policy.hash(m.args ->> 'wording', nullif(btrim(m.args ->> 'friendly'), ''))
+      OR r.hash <> policy.hash(m.args ->> 'wording', m.args ->> 'friendly')
       THEN r.id || ' is not the policy ' || d.id || ' adopts'
     WHEN encode(r.hash, 'hex') IS DISTINCT FROM p.hash THEN 'the entry does not commit to ' || r.id || '''s hash'
     WHEN r.adopted <> cella.verdict_date()

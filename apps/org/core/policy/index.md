@@ -68,7 +68,12 @@ Its functions:
   quote in the reason it refuses; it runs with its owner's rights, and
   the app role and the guards role may call it.
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
-  two as a JSON array.
+  two as a JSON array, the friendly wording trimmed and an empty one
+  none, as `policy.wording` keeps it. It is the one canonical form:
+  `policy.adopt`, `policy.offer` and `policy.takes_flaw` hash only
+  through it, so a policy hashes as the wordings it keeps, and one that
+  takes a default with its friendly wording padded or left empty stands
+  `taken`, never `updated`.
 - `policy.in_force(circle, day)`: a circle's policies applying on a day.
 - `policy.adopt(circle, kind, legal, friendly, motion, n, applies, until,
   replaces, protected, takes)`: a write, inside the write of the action

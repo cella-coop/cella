@@ -1,7 +1,8 @@
 // Policies, alone, on a database holding only the app's core and this
 // feat: the register in org's core reads the values a legal wording marks,
-// each once, refuses a wording that marks one twice, and is written only
-// through `policy.adopt` and ended through `policy.end`, whose wording no
+// each once, hashes a policy as its wordings are kept, refuses a
+// wording that marks one twice, and is written only through
+// `policy.adopt` and ended through `policy.end`, whose wording no
 // guard may read, and holds each ordered value of a rule to the way it
 // says is stricter; this feat's guards hold a proposal to a sound policy,
 // an adoption to the policy the motion carries and an end to the policy
@@ -293,6 +294,33 @@ test('an adoption is the policy its motion carries, worded as the motion names i
     // Worded otherwise than the motion carries: the hash differs.
     await db.query(`SELECT policy.adopt('ag', 'rule', 'Refused clients are named in the rate card', NULL, 'm-2026-014', 2, '2026-11-21', NULL, NULL)`)
     assert.match((await adopts({ motion: 'm-2026-014', n: 2, policy: 'm-2026-014/2' })) ?? '', /m-2026-014\/2 is not the policy m-2026-014 adopts/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a policy taking a default with its friendly wording padded or left empty stands taken, hashed as its wordings are kept', async () => {
+  const consent = 'By {procedure: consent}, a motion is decided by {method: consent}, with a quorum of {quorum: none}: it passes if no member on its roll objects at its close'
+  const twoThirds = 'By {procedure: two-thirds}, a motion is decided by a {method: majority} of {share: 2/3} of the votes cast, with a quorum of {quorum: none}'
+  const taking = (legal: string, friendly: string, n: number, takes: string) =>
+    db.query(`SELECT policy.adopt('ag', 'procedure', $1, $2, 'm-2026-014', $3, '2026-11-21', NULL, NULL, NULL, $4)`, [legal, friendly, n, takes])
+  await db.query('BEGIN')
+  try {
+    await taking(consent, '  A motion passes if no one objects.  ', 3, 'scop-sarl-fr:consent')
+    await taking(twoThirds, '', 4, 'scop-sarl-fr:two-thirds')
+    const kept = await db.query(
+      `SELECT p.id, w.friendly, p.hash = d.hash AS as_default, p.hash = policy.hash(w.legal, w.friendly) AS as_kept
+       FROM policy.policy p JOIN policy.wording w ON w.policy = p.id JOIN policy.default d ON d.id = p.takes ORDER BY p.id`,
+    )
+    assert.deepEqual(kept.rows, [
+      { id: 'm-2026-014/3', friendly: 'A motion passes if no one objects.', as_default: true, as_kept: true },
+      { id: 'm-2026-014/4', friendly: null, as_default: true, as_kept: true },
+    ])
+    const stands = await db.query(`SELECT id, standing FROM policy.standing('ag', '2026-11-21') WHERE policy IS NOT NULL ORDER BY id`)
+    assert.deepEqual(stands.rows, [
+      { id: 'scop-sarl-fr:consent', standing: 'taken' },
+      { id: 'scop-sarl-fr:two-thirds', standing: 'taken' },
+    ])
   } finally {
     await db.query('ROLLBACK')
   }

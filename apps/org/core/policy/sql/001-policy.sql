@@ -208,10 +208,12 @@ BEGIN ATOMIC
 END;
 
 -- What a motion adopts of a policy: the BLAKE3 of its wordings, legal
--- and friendly, as a JSON array.
+-- and friendly, as a JSON array, the friendly wording trimmed and an
+-- empty one none, as `policy.wording` keeps it. It is the one canonical
+-- form: every caller hashes through it and trims nothing itself.
 CREATE FUNCTION policy.hash(legal text, friendly text) RETURNS bytea
 LANGUAGE sql IMMUTABLE
-RETURN cella.digest(jsonb_build_array(legal, friendly)::text);
+RETURN cella.digest(jsonb_build_array(legal, nullif(btrim(friendly), ''))::text);
 
 -- The policies of a circle in force on a day: applying from it or
 -- before, and not ended by it.
@@ -251,7 +253,7 @@ BEGIN
   VALUES (made, offer.form, offer.key,
           coalesce((SELECT max(o.n) FROM policy.default o WHERE o.form = offer.form), 0) + 1,
           offer.kind, offer.legal, nullif(btrim(offer.friendly), ''),
-          policy.hash(offer.legal, nullif(btrim(offer.friendly), '')), offer.protected, offer.source)
+          policy.hash(offer.legal, offer.friendly), offer.protected, offer.source)
   ON CONFLICT (id) DO UPDATE SET kind = excluded.kind, legal = excluded.legal, friendly = excluded.friendly,
     hash = excluded.hash, protected = excluded.protected, source = excluded.source,
     reviewed = CASE WHEN d.hash = excluded.hash THEN d.reviewed END;
@@ -270,7 +272,7 @@ BEGIN ATOMIC
     WHEN takes_flaw.takes IS NULL THEN NULL
     WHEN d.id IS NULL THEN 'no legal form offers a default ' || takes_flaw.takes
     WHEN d.kind <> takes_flaw.kind THEN d.id || ' is a ' || d.kind || ', not a ' || coalesce(takes_flaw.kind, 'policy of no kind')
-    WHEN d.hash <> policy.hash(takes_flaw.legal, nullif(btrim(takes_flaw.friendly), ''))
+    WHEN d.hash <> policy.hash(takes_flaw.legal, takes_flaw.friendly)
       THEN 'a policy takes ' || d.id || ' worded as it reads: one worded otherwise takes no default'
     WHEN d.protected IS DISTINCT FROM nullif(takes_flaw.protected, '')
       THEN d.id || CASE WHEN d.protected IS NULL THEN ' is protected by no procedure'

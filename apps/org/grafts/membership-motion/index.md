@@ -15,7 +15,7 @@ feat's `motion.action`, of the kinds this graft registers by
 `motion.register_carries`, each with the action that carries it out: `admit` (`member`, `shares`), `suspend` and `exclude`
 (`member`). `membership_motion.action` reads them with the member each
 names and, for an admission, the shares as a whole number. The app role
-and the guards role, `cella_guards`, may select it.
+and the guards role, `cella_guards`, may select it. It reads as its reader, as `seating` and `mention` do.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning

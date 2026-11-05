@@ -20,7 +20,7 @@ CREATE TABLE employment_membership.candidacy (
 -- probation, invited, a member, gone. A worker with no membership is an
 -- employee or a candidate; a member with no employment was never employed
 -- by the co-op. One who applied is invited, from the day they applied.
-CREATE VIEW employment_membership.path AS
+CREATE VIEW employment_membership.path WITH (security_invoker = true) AS
 SELECT x.address, x.name,
        w.start AS hired, w.until AS left, c."from" AS probation, c."to" AS probation_end, c.shares AS pledged,
        m.invited, m.applied, m.since AS admitted, m.exited, m.status,

@@ -12,7 +12,7 @@ ALTER TABLE document_motion.adoption RENAME TO recorded;
 -- What a motion asks to adopt: a document's content, named by its
 -- canonical hash, and the version the proposer read it in. One row a
 -- action of the `adopt` kind that names a version.
-CREATE VIEW document_motion.adoption AS
+CREATE VIEW document_motion.adoption WITH (security_invoker = true) AS
 SELECT m.motion, v.document, v.id AS version, v.hash
 FROM motion.action m
 JOIN document.version v ON v.id = m.args ->> 'version'

@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -16,7 +16,7 @@ version) and the version the proposer read it in: a view of the actions
 of the `adopt` kind, each joined to the version it names. The action is
 the motion feat's row and a version never changes, so the graft reads
 both and keeps no copy. The app role and the guards role, `cella_guards`,
-may select.
+may select. It reads as its reader, so a reader who reads no motion of a circle reads none of the versions it adopted, nor their hashes.
 
 It registers the `adopt` kind with the motion feat (`sql/002-adopt.sql`):
 an action naming a version, which the New form picks from the versions

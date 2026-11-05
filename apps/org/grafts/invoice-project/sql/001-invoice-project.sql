@@ -32,6 +32,7 @@ SELECT c.project, coalesce(sum(cella.cents(i.net)) FILTER (WHERE i.voided IS NUL
 FROM invoice_project.charge c
 JOIN invoice.invoice i ON i.id = c.invoice
 GROUP BY c.project;
+COMMENT ON VIEW invoice_project.invoiced IS 'audience: shared by project: what each project invoiced, summed over every invoice charged to it, which its budget is read against';
 
 GRANT USAGE ON SCHEMA invoice_project TO cella_app, cella_guards;
 GRANT SELECT ON invoice_project.charge, invoice_project.invoiced TO cella_app, cella_guards;

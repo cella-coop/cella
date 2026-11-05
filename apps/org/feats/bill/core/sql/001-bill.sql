@@ -130,7 +130,7 @@ CREATE TRIGGER moves BEFORE UPDATE OR DELETE ON bill.line
 -- A bill's VAT by rate, in cents: the net of its lines at each rate and
 -- the tax on it, each line's rounded by `cella.line_vat`, so the rates add
 -- up to the bill's `vat`.
-CREATE VIEW bill.taxed AS
+CREATE VIEW bill.taxed WITH (security_invoker = true) AS
 SELECT l.bill, l.vat_rate AS rate,
        sum(cella.cents(l.amount))::bigint AS base,
        sum(cella.line_vat(cella.cents(l.amount), l.vat_rate))::bigint AS tax

@@ -74,7 +74,7 @@ CREATE TABLE document.adoption (
 CREATE INDEX ON document.adoption (document);
 
 -- Each document's binding version: its latest adoption.
-CREATE VIEW document.adopted AS
+CREATE VIEW document.adopted WITH (security_invoker = true) AS
   SELECT DISTINCT ON (a.document) a.document, a.version, a.adopted, a.receipt
   FROM document.adoption a
   ORDER BY a.document, a.receipt DESC;

@@ -11,7 +11,7 @@ BEGIN ATOMIC
 END;
 
 -- Who each message mentions, by the handles its text gives.
-CREATE VIEW membership_motion.mention AS
+CREATE VIEW membership_motion.mention WITH (security_invoker = true) AS
 SELECT x.receipt AS message, x.motion, x.member AS author, h.handle, membership_motion.named(h.handle) AS member, x.at
 FROM motion.message x
 CROSS JOIN LATERAL unnest(x.mentions) AS h(handle);

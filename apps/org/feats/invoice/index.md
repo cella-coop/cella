@@ -130,11 +130,11 @@ arrives at rung 3.
 - `invoice.standing`: each invoice's total, paid, `owed` and `credit` in
   cents, and its state (`unpaid`, `partial`, `paid`, `overpaid`,
   `voided`). The excess of a payment beyond the total is `credit`, owed
-  to the client; on a voided invoice everything paid is.
+  to the client; on a voided invoice everything paid is. It reads as its reader, so it shows only the records its reader reads.
 - `invoice.taxed`: each invoice's VAT by rate, the net of its lines at
   the rate and the tax on it in cents, each line's tax rounded by
   `cella.line_vat` as `issue` rounds it, so the rates add up to the
-  invoice's `vat`.
+  invoice's `vat`. It reads as its reader, so it shows only the records its reader reads.
 
 Triggers raise SQLSTATE `09000`: a deferred one checks that the lines add
 up to the net; another keeps an issued invoice and its lines unchanged,

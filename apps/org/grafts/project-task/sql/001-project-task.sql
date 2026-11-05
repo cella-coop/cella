@@ -41,7 +41,7 @@ CREATE TRIGGER resolves BEFORE INSERT OR UPDATE ON project_task.filing
   FOR EACH ROW EXECUTE FUNCTION project_task.resolves();
 
 -- Each project's tasks: how many, and how many are done.
-CREATE VIEW project_task.count AS
+CREATE VIEW project_task.count WITH (security_invoker = true) AS
 SELECT f.project, count(*)::integer AS tasks, (count(*) FILTER (WHERE t.status = 'done'))::integer AS done
 FROM project_task.filing f JOIN task.task t ON t.id = f.task
 GROUP BY f.project;

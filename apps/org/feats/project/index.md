@@ -65,7 +65,7 @@ watched, the `report` feat's project margins. Quotes and invoicing by milestone 
 `project` (`core/sql/`): `project.project`, `project.milestone` and
 `project.progress`, each project's milestones, how many are complete and
 the next open one. The app role may select, insert and update; the guards
-role may select.
+role may select. It reads as its reader.
 
 Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning

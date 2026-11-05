@@ -1,6 +1,6 @@
 +++
 title = "document-membership"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Who has read the co-op's texts: a member marks a document's binding
@@ -15,7 +15,7 @@ the `membership` feat.
   it, once each, with no foreign key into either feat.
 - `document_membership.texts`: for each member, every document's binding
   version, its latest adoption, and the day they read it, or none; a
-  later adoption asks a new reading.
+  later adoption asks a new reading. It reads as its reader, so it shows only the records its reader reads.
 
 The app role may select, insert and keep a reading's first day; the
 guards role may select.

@@ -12,3 +12,4 @@ FROM patronage.distribution d
 CROSS JOIN LATERAL patronage_payslip.division(d.id) v
 WHERE v.basis = 'salary'
   AND ((SELECT cella.sees('patronage')) OR d.circle = ANY ((SELECT cella.circles('patronage'))::text[]) OR v.worker = cella.reader() OR cella.reaches('patronage', v.worker));
+COMMENT ON VIEW patronage_payslip.work_share IS 'audience: shared: a share that needs every salary to divide, it keeps each worker''s for the readers their personal row opens it to';

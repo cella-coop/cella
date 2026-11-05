@@ -20,7 +20,7 @@ a power covers ([circles](#circles)). Declared by `project`.
   shares granted at once are counted one after the other, and a budget
   set meanwhile waits for them.
 - `membership_project.pot`: each project's budget, what was shared from it
-  and what remains, in cents.
+  and what remains, in cents. It reads as its reader.
 
 The app role may select and insert; the guards role may select.
 

@@ -252,7 +252,10 @@ sequenceDiagram
   (`cella.reach`): `account-transaction` opens the lines on the co-op's
   own accounts to every member and a capital account's to its holder, and
   `file-membership` a class of personal files to the powers over
-  what they record. No one signed in reads none of it. A stance on a
+  what they record. No one signed in reads none of it. A view the app reads
+  reads as its reader, so these policies hold through it, or is
+  declared shared and shows only what every member reads
+  ([SQL](architecture.md#sql)). A stance on a
   secret ballot is read by its member alone, under no power; a
   motion's tally, read by everyone, stays sealed until its close
   ([ballots](../../apps/org/feats/motion/index.md#ballots)). A write's
@@ -607,26 +610,20 @@ What the build does not yet do, and what lifts each:
   a colleague's capital paid in shows on the bank's line as an amount;
   an expense, an invoice and a draw's amount the same. A page that sums
   rows shows the sum of those its reader reads, but for the statements,
-  an entry's amount, the burn, the divisions and the return to the
-  federation, which sum the whole.
+  an entry's amount, a project's burn, spend and invoicing, the
+  divisions and the return to the federation, which sum the whole.
 - **The tables' owner reads past their policies.** Forced row-level
   security binds a table's owner, but Postgres exempts a superuser from
   every policy, and the cluster's superuser runs the migrations and owns
   what they make, so a view that reads as its owner and a `SECURITY
   DEFINER` function read every row. A tool checks the tables' policies,
-  and refuses a definer function that returns rows unless it is
-  declared shared, summing the whole or filtering its rows by its
-  reader's test, or keyed by a secret its caller holds; that a declared
-  share's why is true, that the powers a feat names in
+  and refuses a definer function that returns rows, and a view, unless
+  it reads as its reader or is declared shared, summing the whole or
+  filtering its rows by its reader's test, or a function keyed by a
+  secret its caller holds; that a declared share's why is true, that the powers a feat names in
   `cella.reading` are the right ones and that a graft's reach opens no
   more than it says are left to review
   ([reading](architecture.md#reading)).
-- **A view that reads as its owner reads every circle's rows.** Core's
-  row-level policy keeps every record table, but a slice's view that is
-  not `security_invoker`, such as a document's adoption or an expense's
-  claim beside it, reads past it, so a page that reads the view shows
-  what it adds of a record another circle owns. Every such view reading
-  as its reader, or summing the whole, lifts this.
 - **The log says who wrote what.** Every member reads each entry's op,
   actor, date and receipt, and its payload's digest. Pay, time and
   capital are committed to with a salt the vault keeps, so their digests

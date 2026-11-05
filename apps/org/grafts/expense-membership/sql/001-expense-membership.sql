@@ -6,7 +6,7 @@ CREATE SCHEMA expense_membership;
 -- own `expense.captures`'s, so this graft refuses none: it names them.
 
 -- Each expense with its claimant's name and its decider's.
-CREATE VIEW expense_membership.claim AS
+CREATE VIEW expense_membership.claim WITH (security_invoker = true) AS
 SELECT e.id AS expense, e.member, mp.name, e.decider, dp.name AS decider_name
 FROM expense.expense e
 JOIN person.person mp ON mp.address = e.member

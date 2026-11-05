@@ -338,7 +338,11 @@ table that disables or unforces row-level security, one that drops
 `circle` for no policy of its own, and a policy of no known pattern not
 declared shared; and a definer function that returns rows and is not
 declared, one declared shared that neither sums nor filters, and one
-declared keyed that matches its rows by no digest of its argument.
+declared keyed that matches its rows by no digest of its argument; and
+a view a slice's migrations leave reading as its owner that is not
+declared shared, or one declared shared that neither sums by the
+columns it names, and by none that says whose a row is, nor filters
+its rows by its reader's test (`unshared`).
 `cella migrate` reads the database it migrated and
 fails a run that leaves a slice's table not enabled and forced, or with
 no policy the app role reads it by (`circle.unsecured`).
@@ -477,11 +481,23 @@ whole. The pattern every such row-level policy takes, the power checks
 asked once per query:
 `USING ((SELECT cella.sees('<feat>')) OR circle = ANY ((SELECT
 cella.circles('<feat>'))::text[]) OR member = cella.reader() OR
-cella.reaches('<feat>', member))`. A view over such a table reads as its
-reader (`security_invoker`), unless what it shows is a sum every member
-reads, as the statements' rubrics and a project's burn are, or a share
-that needs the whole to divide, which filters its rows by the same test
-instead. A stance on a secret ballot is the one row no power opens: its
+cella.reaches('<feat>', member))`. Every view a slice's migrations
+make reads as its reader (`security_invoker`), unless it is declared
+shared in its comment, `'audience: shared by <columns>: why'` or
+`'audience: shared: why'`, as a definer function is, and keeps the
+same rules: what it shows is a sum every member reads, by the columns
+it names and none that says whose a row is, as the statements' spans
+and a project's burn are, or a share that needs the whole to divide,
+which filters its rows by the same test instead, as a worker's share of
+the surplus does. `cella check feats` refuses a view in a slice's
+migrations that reads as its owner and is not declared shared, so a
+view that joins a record another circle owns, such as an expense's
+claim or a document's adoption, reads as its reader and shows of that
+record what the reader may read; and so does a sum kept per record, a
+bill's VAT or an invoice's standing, which the check cannot tell from a
+shared total. A view reading as its reader is read so wherever it is
+read from, inside a view that reads as its owner too, so a shared view
+and a contract read the tables, never such a view. A stance on a secret ballot is the one row no power opens: its
 row-level policy reads `cella.writing()` in place of `sees` and asks no `reaches`,
 and a motion's tally sums it as its owner, sealed until the close,
 for those who read the motion ([reading](#reading)).

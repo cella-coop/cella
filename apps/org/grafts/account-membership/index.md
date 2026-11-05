@@ -1,6 +1,6 @@
 +++
 title = "account-membership"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 Members' capital accounts: who holds each, the value of a share, what each
@@ -71,7 +71,7 @@ open until the freeze.
 
 ## Reads
 
-A member's draw limit reads as their capital account does: for the member and for capital's readers (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). `capital` lists each member the same way, filtering its rows by that test, so a page shows a colleague's capital to no one but them and those readers.
+A member's draw limit reads as their capital account does: for the member and for capital's readers (`sql/003-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). `capital` lists each member the same way, filtering its rows by that test, so a page shows a colleague's capital to no one but them and those readers. It reads as its owner, since a share's value is the whole capital's, and is declared so, `audience: shared`, which `cella check feats` holds to that test.
 
 ## Shell
 

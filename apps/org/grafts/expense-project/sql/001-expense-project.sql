@@ -43,6 +43,7 @@ SELECT r.project, count(*)::integer AS expenses,
 FROM expense_project.rebill r
 JOIN expense.expense e ON e.id = r.expense
 GROUP BY r.project;
+COMMENT ON VIEW expense_project.spent IS 'audience: shared by project: what each project spent, summed over every expense filed on it, which its budget is read against';
 
 GRANT USAGE ON SCHEMA expense_project TO cella_app, cella_guards;
 GRANT SELECT ON expense_project.rebill, expense_project.spent TO cella_app, cella_guards;

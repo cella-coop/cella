@@ -18,15 +18,24 @@ FROM project_timesheet.booking b
 JOIN timesheet.entry e ON e.id = b.entry;
 
 -- Each project's time, and now what it cost the co-op: every hour, billable
--- or not, at the cost rate, in cents.
+-- or not, at the cost rate, in cents. It sums every entry booked on the
+-- project, so it reads the tables as `costed` does and never `costed`,
+-- which reads as its reader wherever it is read from.
 CREATE OR REPLACE VIEW project_timesheet.burn AS
 SELECT project,
        sum(hours)::numeric(8, 2) AS hours,
        coalesce(sum(hours) FILTER (WHERE billable), 0)::numeric(8, 2) AS billable,
        coalesce(round(sum(hours * hourly) FILTER (WHERE billable)), 0)::bigint AS spent,
        coalesce(round(sum(hours * cost)), 0)::bigint AS cost
-FROM project_timesheet.costed
+FROM (
+  SELECT b.project, e.minutes / 60.0 AS hours, e.billable,
+         (SELECT cella.cents(r.hourly) FROM project_timesheet.rate r WHERE r.since <= e.day ORDER BY r.since DESC LIMIT 1) AS hourly,
+         (SELECT cella.cents(c.hourly) FROM project_timesheet.cost c WHERE c.since <= e.day ORDER BY c.since DESC LIMIT 1) AS cost
+  FROM project_timesheet.booking b
+  JOIN timesheet.entry e ON e.id = b.entry
+) t
 GROUP BY project;
+COMMENT ON VIEW project_timesheet.burn IS 'audience: shared by project: each project''s time and what it cost, summed over the entries booked on it, which its budget is read against';
 
 -- How far through its span a project is on a day, from 0 on the day it
 -- starts to 1 on its due day, once archived or once every milestone is

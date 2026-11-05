@@ -62,7 +62,7 @@ it.
 
 ## Reads
 
-`costed` reads as its reader, each booked entry as its time does; `burn`, a project's time at the co-op's rates, sums the whole for every member (`sql/003-reads.sql`).
+`costed` reads as its reader, each booked entry as its time does; `burn`, a project's time at the co-op's rates, sums the whole for every member, declared `audience: shared by project`, and so reads the tables and never `costed`, whose rows a view over it reads as their reader too (`sql/002-cost.sql`, `sql/003-reads.sql`).
 
 ## Shell
 

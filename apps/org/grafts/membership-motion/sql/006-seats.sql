@@ -19,7 +19,7 @@ SELECT motion.register_carries('circle', 'Create a circle', '[{"name": "id", "la
 -- The seats motions give and end: an admission seats the member in the
 -- motion's circle as `member`; a `seat` or `unseat` action names its
 -- circle, member and role, none for a plain seat.
-CREATE VIEW membership_motion.seating AS
+CREATE VIEW membership_motion.seating WITH (security_invoker = true) AS
 SELECT m.motion, m.n, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'member' AS member, m.args ->> 'role' AS role
 FROM motion.action m
 WHERE m.kind IN ('seat', 'unseat')

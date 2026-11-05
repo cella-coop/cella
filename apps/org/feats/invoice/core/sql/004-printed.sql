@@ -35,7 +35,7 @@ $$;
 -- I, 10° bis): the net of its lines at each rate and the tax on it, each
 -- line's tax rounded to the cent as `issue` sums it, so the rates add up
 -- to the invoice's `vat`.
-CREATE VIEW invoice.taxed AS
+CREATE VIEW invoice.taxed WITH (security_invoker = true) AS
 SELECT l.invoice, l.vat_rate AS rate,
        sum(cella.cents(l.amount))::bigint AS base,
        sum(round(cella.cents(l.amount) * l.vat_rate / 100))::bigint AS tax

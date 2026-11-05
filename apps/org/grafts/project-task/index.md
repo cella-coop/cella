@@ -14,7 +14,7 @@ project stands alone, which is not invalid. Declared by `task`.
   one of its milestones, with no foreign key into either feat. A trigger
   refuses a task or a project that does not exist, a project that is
   archived, or a milestone the project does not have (SQLSTATE `09000`).
-- `project_task.count`: each project's tasks and how many are done.
+- `project_task.count`: each project's tasks and how many are done. It reads as its reader.
 
 The app role may select, insert and update; the guards role may select.
 

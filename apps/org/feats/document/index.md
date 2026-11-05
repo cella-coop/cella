@@ -208,7 +208,7 @@ adopting motion names its circle).
   from, to }`, the cursors in base64), text and whether it is resolved.
   A trigger refuses a quote the version's text does not hold.
 - `document.adoption`: an adoption by receipt: the version, its base and
-  the day it was adopted. `document.adopted` is each document's latest.
+  the day it was adopted. `document.adopted` is each document's latest. It reads as its reader.
 - `document.generated` (`004-generated.sql`): a generated document, the
   circle whose policies it reads, and its template, a JSON array of
   fragments; it never changes.

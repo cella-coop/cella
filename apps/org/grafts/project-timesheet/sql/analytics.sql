@@ -42,7 +42,10 @@ SELECT p.id AS project, cella.verdict_date() AS day, cella.cents(p.budget)::bigi
             THEN round(coalesce(round(sum(t.hours * t.hourly) FILTER (WHERE t.billable)), 0)
                        / project_timesheet.elapsed(p.started, p.due, p.archived, bool_and(g.milestones > 0 AND g.completed = g.milestones), cella.verdict_date()))::bigint END AS forecast
 FROM project.project p
-JOIN project.progress g ON g.id = p.id
+CROSS JOIN LATERAL (
+  SELECT count(*) AS milestones, count(*) FILTER (WHERE m.completed IS NOT NULL) AS completed
+  FROM project.milestone m WHERE m.project = p.id
+) g
 LEFT JOIN (
   SELECT b.project, e.minutes / 60.0 AS hours, e.billable, r.hourly, c.hourly AS cost
   FROM project_timesheet.booking b

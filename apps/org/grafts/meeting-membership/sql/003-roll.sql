@@ -1,7 +1,7 @@
 -- Who is expected at a meeting: the members seated in its circle on its
 -- day, each with their mark if they have one, and the members marked who
 -- are not seated there, who came as guests.
-CREATE VIEW meeting_membership.roll AS
+CREATE VIEW meeting_membership.roll WITH (security_invoker = true) AS
 SELECT m.id AS meeting, s.member, true AS seated, a.status
 FROM meeting.meeting m
 CROSS JOIN LATERAL circle.seated(m.circle, m.at::date) AS s(member)
@@ -15,7 +15,7 @@ WHERE NOT EXISTS (SELECT FROM circle.seated(m.circle, m.at::date) s WHERE s = a.
 -- Whether a meeting is quorate: its seats, the seated members present,
 -- and how many must be, the circle's share of its seats rounded up.
 -- Guests count for nothing.
-CREATE VIEW meeting_membership.quorum AS
+CREATE VIEW meeting_membership.quorum WITH (security_invoker = true) AS
 SELECT m.id AS meeting,
        count(r.member) FILTER (WHERE r.seated)::integer AS seats,
        count(r.member) FILTER (WHERE r.seated AND r.status = 'present')::integer AS present,

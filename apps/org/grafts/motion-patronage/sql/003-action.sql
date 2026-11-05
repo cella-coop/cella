@@ -10,7 +10,7 @@ ALTER TABLE motion_patronage.approval RENAME TO recorded_approval;
 -- The motions moving to approve a distribution: one row an action of the
 -- `distribution` kind. A draft moved again, after a motion that failed,
 -- has a row for each; approving it cites one that passed.
-CREATE VIEW motion_patronage.approval AS
+CREATE VIEW motion_patronage.approval WITH (security_invoker = true) AS
 SELECT m.args ->> 'distribution' AS distribution, m.motion
 FROM motion.action m
 WHERE m.kind = 'distribution';

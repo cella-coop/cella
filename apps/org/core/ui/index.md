@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-04
+updated = 2026-11-06
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -189,7 +189,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
   statement: headings, lines and ruled-off totals with a figure per
   column, a line opening on its accounts, each linking to its ledger),
-  `Cell`, `Stats`, `Badge`, `Person` (a person wherever one appears:
+  `Cell`, `Stats`, `Explained` (settings said in full: each its label
+  and what bounds it, its value now and the one proposed, a badge saying
+  how it bears, over a sentence saying what it means, which wraps and is
+  never cut off), `Badge`, `Person` (a person wherever one appears:
   their name, their address on hover; a column, property or event of the
   `person` kind is an address drawn so, from the names of the people the
   co-op knows, which the shell reads once for its pages), `Grid` (figures to type into, a row per

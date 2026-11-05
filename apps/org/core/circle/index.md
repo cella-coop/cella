@@ -335,6 +335,12 @@ power of theirs over the feat's rows covers. Where no disclosure rule
 stands, every other cell is withheld: a co-op that adopts none shares
 no such total beyond its readers' own rights.
 
+The assembly's page configures them: Open books, the motion feat's,
+shows the values in force, proposes new ones or the rule's end as a
+motion of the assembly, and says beside each value, as it is typed,
+whether it exposes personal data and why, in the disclosure study's
+words ([the circles in the shell](../../feats/motion/index.md#the-circles-in-the-shell)).
+
 ## Schema
 
 `circle` (`core/circle/sql/`): `circle.circle`, `circle.role`,

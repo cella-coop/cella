@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is a write of its own once the close settles, signed by whoever closed it and judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -333,7 +333,15 @@ a trigger on core's table
   `…, in its {scope: own} circle`);
   revoking one is proposing to end its policy, put to the circle that
   adopted it, since a policy is ended by its own circle: a mandate the
-  assembly adopted is the assembly's to end. It writes nothing: the circle
+  assembly adopted is the assembly's to end. Setting open books'
+  disclosure values is proposing the assembly's disclosure rule, its
+  legal wording Lanterne's with the three values marked as core reads
+  them ([open books](../../core/circle/index.md#open-books)), replacing
+  the rule in force, if any; withholding is proposing to end the rule in
+  force, so no total of members' own figures is shared beyond each
+  reader's own rights. Both are put to the assembly, whose rule it is;
+  the values are judged by `circle.disclosure_flaw` as the motion is
+  proposed, never here. It writes nothing: the circle
   page's `put` is `membership-motion`'s, which proposes it and
   fixes its roll in one write, as only the graft holding the roll can.
   The writes that carry a passing motion out are
@@ -357,6 +365,38 @@ where the circle left any, its Defaults left: each default of its form
 it left or never took, its sentence, its form, the motion's action that
 left it, linked, and the day (`departures`,
 [legal forms](../../../../_corpus/doc/forms.md)).
+
+On the assembly's page, Open books is where the co-op configures what
+it shares with every member of the totals of members' own figures,
+their pay, time, capital, work share and expenses (`disclosure`, read
+from `circle.disclosed` on the verdict date). It says whether a
+disclosure rule stands, since when and by which motion, linked, and
+shows one row per setting the
+[disclosure study](../../../../_corpus/review/2026-11-05/disclosure.md)
+recommends: whether such totals are shared at all, off unless a rule
+stands; the fewest people a total may count, 5 by default, from 2 to
+200; the most of a total one person may put in, 50 % by default, from
+20 % to 100 %; and the most two may, 80 % by default, from 40 % to
+100 %. Each row gives the value in force and the value proposed, and
+beside the value proposed the study's plain words on whether it
+exposes personal data and why, marked as it is typed, before anything
+is proposed (`exposure`, in the feat's `models/disclosure.ts`):
+**Exposes personal data** where a member can work out another's figure
+from the totals alone (sharing on, two people, a check turned off at
+100 %), **Weaker than the default** where it hides fewer totals than
+the study recommends (three or four people, a share above the
+default), and **A precaution, not a promise** for the default or
+stricter; no value is called safe or anonymous. Its last row is the
+rule no value turns off: the port withholds within each report, so no
+withheld cell is had by subtraction there, but checks no report against
+another view or period, so a member may still subtract one shared total
+from another, or use what they know outside the books. Below, its form proposes the three values as a
+motion of the assembly, with a deadline and why, prefilled with those
+in force or else the defaults, posted to the `put` membership-motion
+serves as `disclose`; and where a rule stands, a second proposes
+ending it, `withhold`. A refusal, a value outside its range among
+them, is the SQL's, saying what would fix it. No other circle's page
+shows Open books.
 
 ## Grafts
 

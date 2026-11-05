@@ -117,7 +117,8 @@ day their rule applies.
   what a passed motion carries once it admits or excludes a member, each
   a write of its own signed by whoever closed it: they cite the motion
   (`account-motion` registers them by `motion.register_cite`), and
-  settle only if it closed and passed. The freeze is this feat's own
+  settle only if it closed and passed and carried the admission or the
+  exclusion of the member whose capital or accounts they move. The freeze is this feat's own
   write, `account-membership` reacting to the exit with it; the
   subscription and the withdrawal post, so their handlers and guards are
   `account-membership-transaction`'s, reacting to the admission and the
@@ -182,7 +183,9 @@ What it does not own:
 - what of a worker's part of the work share buys shares:
   `account-membership-patronage`'s, and the shares credited:
   `account-membership-patronage-transaction`'s;
-- that the members decided the terms: `account-motion`'s;
+- that the members decided the terms, and that the motion a
+  subscription, a withdrawal or a freeze cites admitted or excluded its
+  member: `account-motion`'s;
 - the statements' figures, summed from the journal:
   `account-transaction`'s.
 

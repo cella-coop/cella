@@ -662,8 +662,12 @@ and an invitation's link needs a session, a person signed in on one of
 their current devices (`hooks.server.ts`, `lib/server/session.ts`): a
 page asked for without one goes to the sign-in, and anything else is
 refused. Every read is the session's person's: each connection the shell
-takes (`using(actor, …)` in `lib/server/db.ts`) sets `cella.actor` from the
-session before any query and clears it after, so the database's
+borrows (`using(actor, …)` in `lib/server/db.ts`, `lending` in
+`@cella/org-db`) runs what it is lent for in a transaction of its own,
+which sets the app role and `cella.actor` from the session for itself
+alone (`set_config(…, true)`) before any query, so both clear themselves
+as it commits or rolls back, and the connection goes back to the pool
+reading as no one with no query to reset it. So the database's
 row-level policies, not the shell, decide what a page shows
 ([trust](trust.md#one-server)): a collection lists the records of the
 circles its reader reads in, by their mandates ([SQL](#sql)), and an

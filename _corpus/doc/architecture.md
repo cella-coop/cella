@@ -756,8 +756,10 @@ fails with why and a report's page says so.
 
 In development `cella db start` starts the shell on the dev database at
 `CELLA_ANALYTICS_PORT` (54343) after the cluster, `cella db stop` stops
-it first, and `cella serve` starts it when it is stopped. A host runs it
-as a unit of its own beside Postgres
+it first, and `cella serve` starts it when it is stopped. A shell serves
+the one database it attaches: a start on a port whose shell attaches
+another is refused, so no start is answered from another scope's views
+and head. A host runs it as a unit of its own beside Postgres
 ([operations](operations.md#the-analytics-shell)).
 
 ## Actions

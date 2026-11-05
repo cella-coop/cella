@@ -24,8 +24,8 @@ const READY: Duration = Duration::from_secs(30);
 /// The analytics shell: a DuckDB 2.0 server per scope that attaches its
 /// database read-only as `cella_analytics` and serves it over quack on
 /// localhost, behind a token. Its state lives in `.data/analytics/<port>`:
-/// the token, the SQL it starts with and a client attaches with, its pid
-/// and its log.
+/// the token, the SQL it starts with and a client attaches with, what it
+/// attaches, its pid and its log.
 pub struct Shell<'a> {
     repo: &'a Repo,
     pub port: u16,
@@ -71,13 +71,33 @@ impl<'a> Shell<'a> {
         cmd.env("CELLA_ANALYTICS", self.url()).env("CELLA_ANALYTICS_TOKEN_FILE", self.token());
     }
 
-    /// Starts the shell on a database, unless it runs; waits until it
-    /// answers as `cella_analytics`, and stops it if it answers as any
-    /// other role.
+    /// What the running shell attaches, as its start recorded it, said
+    /// without a password.
+    fn attached(&self) -> String {
+        fs::read_to_string(self.dir.join("attach")).map_or_else(|_| "a database it did not record".to_owned(), |a| shown(&a))
+    }
+
+    /// Starts the shell on a database, or reuses the one that runs on its
+    /// port where it attaches that database and refuses where it attaches
+    /// any other; waits until it answers as `cella_analytics`, and stops
+    /// it if it answers as any other role.
     pub fn start(&self, target: &Target) -> Result {
+        let attach = match target {
+            Target::Dev(db) => format!("host=127.0.0.1 port={} dbname={db} user=cella_analytics", Dev::new(self.repo).port),
+            Target::Url(url) => (*url).to_owned(),
+        };
         if let Some(pid) = self.pid() {
-            println!("analytics shell runs already on {} (pid {pid})", self.url());
-            return Ok(());
+            if fs::read_to_string(self.dir.join("attach")).is_ok_and(|a| a == attach) {
+                println!("analytics shell runs already on {} (pid {pid}), attaching {}", self.url(), shown(&attach));
+                return Ok(());
+            }
+            return Err(Fail::new(format!(
+                "the analytics shell on {} (pid {pid}) attaches {}, not {}: stop it with `cella analytics stop --port {}`, or take another --port",
+                self.url(),
+                self.attached(),
+                shown(&attach),
+                self.port,
+            )));
         }
         let extensions = extensions()?;
         fs::DirBuilder::new().recursive(true).mode(0o700).create(&self.dir).map_err(io(&self.dir))?;
@@ -86,10 +106,6 @@ impl<'a> Shell<'a> {
             key::token(&token)?;
         }
         let secret = fs::read_to_string(&token).map_err(io(&token))?;
-        let attach = match target {
-            Target::Dev(db) => format!("host=127.0.0.1 port={} dbname={db} user=cella_analytics", Dev::new(self.repo).port),
-            Target::Url(url) => (*url).to_owned(),
-        };
         let load = |names: &[&str]| -> String {
             names.iter().map(|e| format!("LOAD {};\n", literal(&extensions.join(format!("{e}.duckdb_extension")).to_string_lossy()))).collect()
         };
@@ -116,6 +132,7 @@ impl<'a> Shell<'a> {
         );
         secret_file(&self.dir.join("serve.sql"), &serve)?;
         secret_file(&self.dir.join("client.sql"), &client)?;
+        secret_file(&self.dir.join("attach"), &attach)?;
         // The server reads its stdin until it ends: a fifo it holds open
         // for writing too never does, so it serves until stopped.
         let fifo = self.dir.join("stdin");
@@ -194,6 +211,7 @@ impl<'a> Shell<'a> {
             Steps::read(Command::new("kill").arg("-KILL").arg(pid.to_string()))?;
         }
         let _ = fs::remove_file(self.dir.join("pid"));
+        let _ = fs::remove_file(self.dir.join("attach"));
         println!("analytics shell on {} stopped", self.url());
         Ok(())
     }
@@ -216,7 +234,7 @@ pub fn run(repo: &Repo, command: Analytics) -> Result {
         Analytics::Status { port } => {
             let shell = Shell::new(repo, port);
             if let Some(pid) = shell.pid() {
-                println!("running on {} (pid {pid})", shell.url());
+                println!("running on {} (pid {pid}), attaching {}", shell.url(), shell.attached());
                 return Ok(());
             }
             println!("stopped");
@@ -254,6 +272,54 @@ fn extensions() -> Result<PathBuf> {
         .ok_or_else(|| Fail::new(format!("{root} holds no {}", EXTENSIONS.join(", "))))
 }
 
+/// What a shell attaches as it may be said: a URL without the password in
+/// its user info or its query, a keyword string without its `password`.
+fn shown(attach: &str) -> String {
+    if let Some((scheme, rest)) = attach.split_once("://") {
+        let (rest, query) = rest.split_once('?').map_or((rest, None), |(r, q)| (r, Some(q)));
+        let host = rest.find('/').unwrap_or(rest.len());
+        let rest = match rest[..host].rfind('@') {
+            Some(at) => format!("{}{}", rest[..at].split(':').next().unwrap_or_default(), &rest[at..]),
+            None => rest.to_owned(),
+        };
+        let query: Vec<&str> = query.into_iter().flat_map(|q| q.split('&')).filter(|p| !p.starts_with("password=")).collect();
+        return if query.is_empty() { format!("{scheme}://{rest}") } else { format!("{scheme}://{rest}?{}", query.join("&")) };
+    }
+    // Each `key = value`, a value quoted in single quotes with backslash
+    // escapes, or bare to the next space.
+    let s = attach.as_bytes();
+    let (mut kept, mut i) = (Vec::new(), 0);
+    while i < s.len() {
+        while i < s.len() && s[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        let start = i;
+        while i < s.len() && s[i] != b'=' && !s[i].is_ascii_whitespace() {
+            i += 1;
+        }
+        let key = &attach[start..i];
+        while i < s.len() && (s[i] == b'=' || s[i].is_ascii_whitespace()) {
+            i += 1;
+        }
+        if s.get(i) == Some(&b'\'') {
+            i += 1;
+            while i < s.len() && s[i] != b'\'' {
+                i += if s[i] == b'\\' { 2 } else { 1 };
+            }
+            i += 1;
+        } else {
+            while i < s.len() && !s[i].is_ascii_whitespace() {
+                i += 1;
+            }
+        }
+        i = i.min(s.len());
+        if !key.is_empty() && key != "password" {
+            kept.push(attach[start..i].trim_end());
+        }
+    }
+    kept.join(" ")
+}
+
 /// A SQL string literal.
 fn literal(s: &str) -> String {
     format!("'{}'", s.replace('\'', "''"))
@@ -267,4 +333,20 @@ fn secret_file(path: &Path, text: &str) -> Result {
 
 fn io(path: &Path) -> impl Fn(std::io::Error) -> Fail + '_ {
     move |e| Fail::new(format!("{}: {e}", path.display()))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::shown;
+
+    #[test]
+    fn what_a_shell_attaches_is_said_without_a_password() {
+        assert_eq!(shown("postgresql://cella_analytics:s3cret@db.example:5432/scope"), "postgresql://cella_analytics@db.example:5432/scope");
+        assert_eq!(shown("postgres://cella_analytics@db.example/scope?sslmode=require&password=s3cret"), "postgres://cella_analytics@db.example/scope?sslmode=require");
+        assert_eq!(shown("postgres://db.example/scope"), "postgres://db.example/scope");
+        let dev = "host=127.0.0.1 port=54342 dbname=cella user=cella_analytics";
+        assert_eq!(shown(dev), dev);
+        assert_eq!(shown("host=db password=s3cret dbname=scope"), "host=db dbname=scope");
+        assert_eq!(shown(r"host=db password = 's3 cr\'et' dbname=scope"), "host=db dbname=scope");
+    }
 }

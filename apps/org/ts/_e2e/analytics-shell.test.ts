@@ -80,6 +80,25 @@ test('cella analytics runs the shell read-only, as cella_analytics, and nothing 
   }
 })
 
+test('a running shell is reused on the database it attaches and refused for any other, untouched', () => {
+  const pid = () => readFileSync(join(repo, '.data/analytics', port, 'pid'), 'utf8')
+  const before = pid()
+  const status = cella('analytics', 'status')
+  assert.match(status.stdout, new RegExp(`attaching .*dbname=${db} `))
+  const again = cella('analytics', 'start', '--db', db)
+  assert.equal(again.status, 0, again.stderr)
+  assert.match(again.stdout, /runs already/)
+  const other = cella('analytics', 'start', '--db', `${db}_other`)
+  assert.notEqual(other.status, 0)
+  assert.match(other.stderr, new RegExp(`on ${url} .*attaches .*dbname=${db} .*not .*dbname=${db}_other .*analytics stop --port ${port}.*another --port`))
+  const elsewhere = cella('analytics', 'start', '--url', 'postgresql://cella_analytics:s3cret@db.example/scope')
+  assert.notEqual(elsewhere.status, 0)
+  assert.match(elsewhere.stderr, /not postgresql:\/\/cella_analytics@db\.example\/scope/)
+  assert.ok(!elsewhere.stderr.includes('s3cret'), 'a refusal never says a password')
+  assert.equal(pid(), before)
+  assert.equal(cella('analytics', 'status').status, 0)
+})
+
 test('the catalog is the views the slices publish, with their plain types and personal columns', async () => {
   const granted = await rows<{ view: string }>(`
     SELECT format('%s.%s', n.nspname, c.relname) AS view FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace

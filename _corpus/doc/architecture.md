@@ -1402,23 +1402,52 @@ folded entry by entry into an empty database rebuilds the scope's
 non-personal state ([trust](trust.md#one-server)). The entry is `{n,
 op, actor, date, cause, payload}`, its payload as the log keeps it, each
 personal value as its commitment, which the fold writes where the
-handler wrote the value. A fold writes only its own slice's schema, as
+handler wrote the value by `cella.commits`: it keeps the commitment in
+`cella.commitment` and writes the column as erasure leaves it,
+`redacted` where it is text or JSON and null elsewhere, since a folded
+scope opens no commitment. A fold writes only its own slice's schema, as
 its handler does, and reads nothing but the entry and what its slice's
 SQL may read. It takes every id, day and figure from the entry, never
 from a sequence, which a write rolled back leaves a gap in, nor from the
 clock: `cella.verdict_date()` reads the entry's date while it folds.
 Where it runs its handler's SQL, as core's circles run
-`circle.mandate_from` for a mandate policy adopted, it pins the ids the
-entry names and refuses a result other than the entry's, naming both.
+`circle.mandate_from` for a mandate policy adopted and the motion feat
+`policy.adopt`, it pins the ids the entry names and refuses a result
+other than the entry's, naming both; the triggers the handler's writes
+fire fire again. What a handler changes its entry carries, a value its
+own SQL does not derive from the state before it, such as a device's
+label or a close's cutoff, among it: a write that changes more than its
+entry says cannot fold, and its handler is fixed rather than its fold
+made to guess.
 
 A slice registers the fold of each action that writes its schema, its
 own and those of the slices it extends, from its migration by
 `cella.lets_fold(op, version, fn, owner)`, each argument a literal, the
 owner itself and the function in its own schema, which `cella check
 feats` holds as it holds `cella.lets_follow`. An entry's folds run in
-one order: the action's own slice's first, then the others by name, as
-its handler writes its own state before the slices extending it write
-theirs. A forgone entry changed nothing and folds by none.
+one order: the action's own slice's first, then core's and the feats',
+then the grafts', a graft joining fewer feats before one joining more,
+each by name, as a handler writes its own state before the slices
+extending it write theirs and a graft extends the slices it joins. A
+forgone entry changed nothing and folds by none. An entry whose payload
+erases, as the notary carried out each `$erasure` it keeps, folds it
+after its folds (`cella.fold_erasures`): each class it erased of its
+subject loses its commitments and its columns are redacted by
+`cella.redact`, as the vault loses its keys.
+
+The founding, the log's first entry, carries the state the scope held
+before its log: `cella.carry`, read inside its write once its state is
+in, gives every registered state table's rows by the table's name, each
+row without its generated columns, a decimal and a JSON value as their
+text, since a payload holds no float, and each personal value marked, so
+the log keeps its commitment and the vault its value; and the value each
+sequence of those schemas reached. Before the founding's folds,
+`cella.fold_carried` applies them as a replica loads a snapshot, with no
+trigger and no key checked, each table's rows in place of what the
+migrations wrote there, each personal value by its commitment, a number
+that takes no null as one, and each sequence at its value. So a folded
+founding holds every row the founding wrote, the roles and circles
+Lanterne begins with among them.
 
 A fold is versioned as a guard is: a changed fold is a new version,
 registered beside the old, which stays. `cella.fold (op, owner, version,
@@ -1436,17 +1465,22 @@ transaction, by `cella.fold_log`, as the superuser under
 a **checkpoint** in `cella.checkpoint`: the entry, its hash and the
 state hash, the BLAKE3 of the folded slices' rows in a canonical order,
 `cella.state_rows`: each table by name, its rows as JSON text sorted
-bytewise, a personal column as the newest commitment the log holds for
-it. A fold resumes from a checkpoint, whose state it hashes again first.
-A slice is **folded** when it registers a fold and every action it
-names, among those the scope registers and its log holds, has one
-(`cella.folded()`); the state hash and the compare read the folded
-slices and name the others. `cella check feats` lists every action with
-no fold and counts those with one. Core's circles fold every action of
-theirs and their part of a policy's adoption and end
-([circle](../../apps/org/core/circle/index.md#folds)); no other slice
-folds yet, and the founding, which writes the circles Lanterne begins
-with, folds none of them.
+bytewise without their generated columns, which their rows compute, a
+personal column as the newest commitment the vault holds for its field
+and subject, or in a folded scope the newest the fold applied, and as
+its value where neither holds one. A fold resumes from a checkpoint,
+whose state it hashes again first. A slice is **folded** when it
+registers a fold and every action it names, among those the scope
+registers and its log holds, has one (`cella.folded()`); the state hash
+and the compare read the folded slices and name the others. `cella
+check feats` lists every action with no fold and counts those with one.
+Folded now are core's circles and policy register, the person feat with
+its nested membership and employment, the graft between those two, and
+membership-motion's founding, close and the roll it counts; the motion
+feat folds a stance, a close and a policy's adoption and end, and not
+yet a proposal or a message, which keep their proposer's words out of
+the log, so a log that proposes a motion folds no further than its
+first stance on it.
 
 ## Policies
 

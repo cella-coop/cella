@@ -142,3 +142,20 @@ SELECT cella.lets_fold('circle:role:seat', 1, 'circle.fold_role_seat(jsonb)', 'c
 SELECT cella.lets_fold('circle:role:unseat', 1, 'circle.fold_role_unseat(jsonb)', 'circle');
 SELECT cella.lets_fold('motion:policy:adopt', 1, 'circle.fold_granting(jsonb)', 'circle');
 SELECT cella.lets_fold('motion:policy:end', 1, 'circle.fold_revoking(jsonb)', 'circle');
+
+-- membership:member:admit, as a carried motion admits: the member seated
+-- in the motion's circle as a member, by the seat id, circle and day its
+-- entry carries; an admission by no motion seats no one.
+CREATE FUNCTION circle.fold_admitting(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  IF (p ->> 'seat') IS NOT NULL THEN
+    INSERT INTO circle.tenure (id, circle, holder, role, since)
+    VALUES ((p ->> 'seat')::bigint, p ->> 'circle', p ->> 'member', 'member', (entry ->> 'date')::date);
+  END IF;
+END
+$$;
+
+SELECT cella.lets_fold('membership:member:admit', 1, 'circle.fold_admitting(jsonb)', 'circle');

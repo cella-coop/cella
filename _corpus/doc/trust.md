@@ -226,7 +226,9 @@ sequenceDiagram
   or a signer with no vote there, is refused, saying which, and leaves
   the log empty. A mock co-op's founding
   also carries the state it held before its log, as Lanterne's seed
-  does; a real co-op's books come in after it, by the import of each
+  does, and its entry carries every row of it, each personal value as
+  its commitment, so the fold rebuilds what it founded
+  ([folds](architecture.md#folds)); a real co-op's books come in after it, by the import of each
   kind under the importer's mandates. Every later entry passes the
   guards the founding's policies set: none is allowed because the
   founding allowed it. What a founding must carry is not yet ruled:

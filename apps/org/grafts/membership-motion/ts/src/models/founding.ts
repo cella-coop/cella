@@ -17,11 +17,14 @@ export interface Founding {
 }
 
 // A co-op as it was founded: the legal form it chose, its founding
-// motion, where the founding came from and how many rows of each kind it
-// wrote.
+// motion, where the founding came from, how many rows of each kind it
+// wrote, and the rows it carries: each state table's, by its name, a
+// personal value marked for the vault, and the value each sequence
+// reached (`cella.carry`).
 export interface Founded {
   form: string
   motion: string
   from: string
   founded: Record<string, number>
+  carried: { tables: { table: string; rows: Record<string, unknown>[] }[]; sequences: Record<string, number> }
 }

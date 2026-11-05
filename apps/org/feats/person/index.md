@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -169,7 +169,8 @@ assembly's, unless the write that makes it names another.
 ## Personal data
 
 `004-personal.sql` registers in `cella.personal`, by the person's address:
-the name, of class `profile`, and the email and phone, of class `contact`.
+the name, of class `profile`, and the email and phone, of class `contact`;
+and each device's label, its holder's wording, of class `profile`.
 The address itself is the pseudonym every entry names the person by,
 commented not personal, and so is a device's. A write carrying any of them
 marks it, so the log commits to it and the vault keeps it. The register of
@@ -192,6 +193,30 @@ employment's.
 - `person.revokes`, on `person:device:revoke`: the device is the actor's,
   and was revoked by this write.
 
+## Folds
+
+Each action that writes the feat's schema says how its entry applies to
+the state before it (`sql/007-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)), at version 1:
+
+- `person:device:enrol` (`person.fold_enrol`) inserts the device by the
+  key, address and label's commitment its entry carries, enrolled on the
+  entry's day by the device it names as `by`; an entry that enrolled
+  none, a key enrolled already, inserts none.
+- `person:device:revoke` (`person.fold_revoke`) revokes the device on
+  the entry's day, unless it was revoked already.
+- `person:person:profile` (`person.fold_profile`) writes each field its
+  entry names as its commitment.
+- `person:person:forget` (`person.fold_forget`) writes nothing: its
+  erasure folds as the notary carried it out.
+- `membership:member:invite` and `employment:worker:hire`
+  (`person.fold_entering`, `person.fold_hire`) enter a person new to the
+  scope by their name's commitment, an invitation's `name` or a hire's
+  `entered`; one the scope knew already is left as they were.
+- `membership:member:accept` and `employment:worker:hire`
+  (`person.fold_enrolling`) enrol a first device by its key and its
+  label's commitment, an acceptance's `device` or a hire's `label`, on
+  the entry's day, enrolled by no device.
+
 ## Handlers
 
 - `profile` (confluent): sets the person's given fields, name, email or
@@ -200,8 +225,8 @@ employment's.
 - `forget` (ordered): submits `{ person, erasure }`, the erasure of the
   person's own contact details.
 - `enrol` (ordered): inserts the device on the verdict date, enrolled by
-  the device that signed the write; submits `{ address, key, enrolled }`,
-  leaving the person's label out.
+  the device that signed the write; submits `{ address, key, label, by,
+  enrolled }`, the label as its commitment and `by` the signing device.
 - `revoke` (ordered): sets the device's `revoked` to the verdict date.
 - `entering`, no write of its own: what an invitation or a hire runs in
   its transaction to bring a person in, telling the child whether the

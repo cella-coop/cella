@@ -803,10 +803,15 @@ the state before it (`sql/011-folds.sql`,
   a mandate or a revocation other than the entry's. A right's, a
   disclosure's and a publication's ids are not in the entry, so they come from their
   sequences.
+- `membership:member:admit` (`circle.fold_admitting`), as a motion
+  carried admits, seats the member in the motion's circle as a member,
+  by the seat id and circle its entry carries, from the entry's day; an
+  admission that names no seat seats no one.
 
 The roles and the circles a scope begins with are the founding's, whose
-entry does not yet carry them, so a fold of Lanterne's log holds none of
-them and the compare names every circle table as differing.
+entry carries them with every other row it wrote, so a fold of
+Lanterne's log holds them from its first entry
+([folds](../../../../_corpus/doc/architecture.md#folds)).
 
 ## Invariants
 

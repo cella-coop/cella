@@ -12,7 +12,8 @@ type Action = keyof typeof actions
 // is the same person and keeps their name; someone new becomes a person.
 // The register of the staff copies the name, which is personal data: the
 // log commits to it and the vault keeps it. The payload commits to the
-// key; the label stays out. `employment.hires` checks the write made the
+// key, and to the device's label, and to the person's name where the hire
+// enters them new. `employment.hires` checks the write made the
 // row, and `employment.carries` that it enrolled the device.
 export function hiring(input: Hire): Write<Hired> {
   if (!contracts.includes(input.contract)) {
@@ -22,6 +23,9 @@ export function hiring(input: Hire): Write<Hired> {
   if (!/^[0-9a-f]{64}$/.test(key)) {
     throw new Error('a device key is 32 bytes in hex, as the worker’s device shows it')
   }
+  // Whether the hire enters a person new to the scope, whose name the
+  // entry then commits to as the person feat's too.
+  let fresh = false
   return {
     op: 'employment:worker:hire' satisfies Action,
     // The key as the payload restates it, so the member signs that.
@@ -31,7 +35,7 @@ export function hiring(input: Hire): Write<Hired> {
       if (taken.rowCount) {
         throw new Error(`${input.worker} is a worker's address already`)
       }
-      await entering(tx, { address: input.worker, name: input.name })
+      fresh = (await entering(tx, { address: input.worker, name: input.name })).new
       const { rows } = await tx.query<{ hired: string }>(
         `INSERT INTO employment.worker (address, name, job, contract, start, until, minutes, hired)
          VALUES ($1, $2, $3, $4, $5, $6, $7, cella.verdict_date()) RETURNING to_char(hired, 'YYYY-MM-DD') AS hired`,
@@ -49,7 +53,12 @@ export function hiring(input: Hire): Write<Hired> {
         key,
       }
     },
-    payload: (v) => ({ ...v, name: personal('employment.worker.name', input.worker, input.name) }),
+    payload: (v) => ({
+      ...v,
+      name: personal('employment.worker.name', input.worker, input.name),
+      label: personal('person.device.label', input.worker, input.label.trim()),
+      ...(fresh ? { entered: personal('person.person.name', input.worker, input.name) } : {}),
+    }),
   }
 }
 

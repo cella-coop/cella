@@ -1,13 +1,16 @@
 -- An invitation's first device: the public key the invitee's device made,
 -- and the label they gave it, carried from the invitation to the admission
 -- that enrols it among the person's devices. The label is the invitee's
--- own wording and stays out of the log.
+-- own wording, personal data of class `profile`: the log commits to it.
 CREATE TABLE membership.invitation (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text PRIMARY KEY,
   key bytea NOT NULL UNIQUE CHECK (length(key) = 32),
   label text NOT NULL CHECK (label <> '')
 );
+
+INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
+  ('membership', 'invitation', 'label', 'profile', 'member', 'membership');
 
 -- membership:member:invite — the invitation carries a first device: the key
 -- its payload names, which no device holds yet.

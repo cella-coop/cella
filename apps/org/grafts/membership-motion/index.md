@@ -54,6 +54,17 @@ withdrawal, and their erasure once they have left, are their own rights,
 no motion's, so neither is this
 graft's ([membership](../../feats/person/feats/membership/index.md)).
 
+## Folds
+
+The founding (`membership_motion.fold_found`, `sql/018-folds.sql`,
+[folds](../../../_corpus/doc/architecture.md#folds)) carries every row of the state the
+co-op held before its log, which the fold applies before it runs; a
+founding that carries none refuses to fold. A close
+(`membership_motion.fold_close`) counts the motion's roll, as its
+handler does once the motion feat's fold has closed it. An admission a
+carried motion makes names the circle and the seat its entry carries,
+which core's circles fold.
+
 ## Handlers
 
 None of its own: a close that admits, and the suspensions and exclusions a

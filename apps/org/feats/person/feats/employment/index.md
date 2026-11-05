@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -104,8 +104,16 @@ of the staff keeps it five years after they leave (Code du travail, art.
 R1221-26, not verified on Légifrance, which refuses the box). The person's
 own name is the person's, of class `profile`. The address is the
 pseudonym every entry names them by; the job and the contract are the
-co-op's. A hire's payload commits to the name and the key; the device's
-label stays out.
+co-op's. A hire's payload commits to the name, the key and the device's
+label, and to the person's name where the hire enters them new.
+
+## Folds
+
+`employment:worker:hire` (`employment.fold_hire`, `sql/006-folds.sql`,
+[folds](../../../../../../_corpus/doc/architecture.md#folds)) inserts the worker and their contract as
+the entry carries them, their name as its commitment, hired on the
+entry's day; the person feat folds the person it enters and the device
+it enrols.
 
 ## Handlers
 

@@ -17,6 +17,7 @@ import { fixture, signer } from '@cella/org-sign'
 import { found } from '@cella/org-graft-membership-motion/api'
 import type { Deps } from '@cella/org-db'
 import { cella } from './cluster.ts'
+import { folded, tables, unfold } from './fold.ts'
 
 const name = `${process.env.PGDATABASE ?? 'cella'}_founding`
 const scope = { address: 'atelier.example', name: 'Atelier', legal_name: 'Atelier SCOP SARL', legal_form: 'scop-sarl-fr', timezone: 'Europe/Paris' }
@@ -162,4 +163,17 @@ test('a second founding is refused', async () => {
   assert.equal(again.state, 'refused')
   assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 2 already/)
   assert.equal(await head(), 2)
+})
+
+test('the founding and the profile after it fold into a fresh database that matches it, every table of every slice', async () => {
+  try {
+    assert.match(folded(name), /matches .* row for row/)
+    const [source, fold] = [await tables(name), await tables(`${name}_fold`)]
+    for (const t of ['circle.circle', 'motion.vote', 'person.device', 'person.person', 'policy.policy']) {
+      assert.ok(source[t], `${t} holds the founding's rows`)
+    }
+    assert.deepEqual(fold, source)
+  } finally {
+    await unfold(name)
+  }
 })

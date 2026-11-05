@@ -149,7 +149,11 @@ export function accepting(input: Accept): Write<Accepted> {
       return { member: input.member, link: rows[0].link, key, accepted: accepted.rows[0].accepted }
     },
     // The label is the invitee's wording and stays out.
-    payload: (v) => ({ ...v }),
+    payload: (v) => ({
+      ...v,
+      label: personal('membership.invitation.label', input.member, label),
+      device: personal('person.device.label', input.member, label),
+    }),
   }
 }
 

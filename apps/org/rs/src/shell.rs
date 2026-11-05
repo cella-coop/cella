@@ -18,10 +18,7 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
         if !dev.running()? {
             dev.start(steps)?;
         }
-        let shell = Shell::new(repo, None);
-        if !shell.running() {
-            shell.start(&Target::Dev(&dev.db))?;
-        }
+        Shell::new(repo, None).start(&Target::Dev(&dev.db))?;
         let mut scope = dev.cmd("psql");
         scope.args(["-X", "-q", "-t", "-A", "-c", "SELECT current_setting('cella.scope', true)"]);
         data::migrate(repo, steps, None)?;

@@ -343,6 +343,16 @@ pub enum Test {
         /// A scenario's file name in apps/org/ts/_e2e without .test.ts, such as admission
         name: Option<String>,
     },
+    /// The fold's scale tier: Lanterne grown to a generated scope, folded in memory that does not grow with its log and re-folded from its latest checkpoint within its bound; slow, so no other target runs it; needs the dev cluster
+    Scale {
+        /// The members the scope grows to
+        #[arg(long, default_value_t = 10_000)]
+        members: usize,
+
+        /// The years it grows over, from 2027
+        #[arg(long, default_value_t = 20)]
+        years: u32,
+    },
 }
 
 #[derive(Subcommand)]

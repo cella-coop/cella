@@ -694,6 +694,17 @@ file anywhere else fails `cella test`:
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.
 
+Two scenarios prove that a write waiting on its signer keeps no one
+else waiting ([the shell](#the-shell)), through the built shell as a
+scope's server runs (`cella test e2e crowd`): ten people start a signed
+write at once and sign it through their devices only once all ten
+wait, and every one settles while another person keeps loading
+collection pages, each answered within three seconds; and a member
+starts three writes and abandons them unsigned, while other people's
+writes settle and their pages load within the same bound, the
+abandoned runs fail as their patience runs out, leaving nothing
+written, and the member's places are free again.
+
 ## Inside a package
 
 Seedling's layers, innermost first; imports point inward only.

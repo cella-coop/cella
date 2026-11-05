@@ -46,12 +46,16 @@ export interface Capture {
   circle?: string | null
 }
 
+// A claim as its entry keeps it: its id, circle, claimant, day and
+// category, and its figures in cents, before VAT, the VAT and the total.
 export interface Captured {
   expense: string
   circle: string
   member: string
   day: string
   category: string
+  net: number
+  vat: number | null
   amount: number
 }
 

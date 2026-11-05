@@ -1,6 +1,6 @@
 +++
 title = "expense-file"
-updated = 2026-11-04
+updated = 2026-11-07
 +++
 
 The receipts on an expense: files of class `expense-receipt` about its
@@ -34,12 +34,23 @@ its name and BLAKE3.
   about the actor, of class `expense-receipt`, and is attached to their
   own expense, neither refused nor reimbursed.
 
+## Folds
+
+A claim carrying its receipt and a receipt attached fold by
+`sql/002-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)),
+once the expense feat's fold has made the claim: the file its entry
+stored, by the file feat's fold of `storing`, as its handler stored it,
+its name and BLAKE3 as the commitments its payload keeps, then attached
+to the expense it names. A claim without one folds no receipt.
+
 ## Tests
 
 `ts/_tests/expense-file.test.ts` (`cella test slice expense-file`): a
 claim carrying its receipt, committed to in the log; a claim without one,
 and one attached later; a receipt refused on someone else's expense and on
-one reimbursed, leaving no file.
+one reimbursed, leaving no file. `ts/_tests/folds.test.ts`: a claim's
+receipt and one attached later fold stored, their name and bytes as
+erasure leaves them, and attached; a claim without one attaches nothing.
 
 ## Shell
 

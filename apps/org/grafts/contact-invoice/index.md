@@ -1,6 +1,6 @@
 +++
 title = "contact-invoice"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Who an invoice bills: a client, a contact holding the client role
@@ -39,6 +39,11 @@ assembly's, unless the write that makes it names another.
 
 - **link** links an invoice to a client, or moves the link; a contact
   that is no client is refused.
+
+## Folds
+
+A link folds by `sql/003-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+the invoice linked to the contact its entry names, or moved to it.
 
 ## Invariants
 

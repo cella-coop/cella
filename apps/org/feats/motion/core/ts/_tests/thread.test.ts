@@ -30,10 +30,10 @@ const post = (receipt: number, motion: string, reply: number | null, body = 'Agr
 before(async () => {
   await db.connect()
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-       ('m-2026-201', 'ag', 'Open', 'majority', 'majority', '2026-10-20', '2026-11-03'),
-       ('m-2026-202', 'ag', 'Other', 'majority', 'majority', '2026-10-20', '2026-11-03'),
-       ('m-2026-203', 'ag', 'Closed', 'majority', 'majority', '2026-10-01', '2026-10-15')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+       ('m-2026-201', 'ag', 'camille@lanterne.example', 'Open', 'majority', 'majority', '2026-10-20', '2026-11-03'),
+       ('m-2026-202', 'ag', 'camille@lanterne.example', 'Other', 'majority', 'majority', '2026-10-20', '2026-11-03'),
+       ('m-2026-203', 'ag', 'camille@lanterne.example', 'Closed', 'majority', 'majority', '2026-10-01', '2026-10-15')`,
   )
   await db.query(`UPDATE motion.motion SET closed = '2026-10-15', cutoff = 900 WHERE id = 'm-2026-203'`)
 })

@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -58,6 +58,16 @@ It registers `document:document:generate` by `motion.register_cite` too, with `a
 statutes' generation to a motion that closed and passed; that the motion
 adopted or ended a policy of the document's circle that day, and that
 the version reads its policies, are the document feat's guard.
+
+## Folds
+
+A proposal folds by `sql/007-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1. What a motion asks to adopt is
+its action, which the motion feat's fold writes and `adoption` reads, so
+this fold writes nothing: it checks each action to adopt names a version
+and no two name versions of one document, as `document_motion.asks`
+judged it when it was proposed, and refuses otherwise, saying what it
+found.
 
 ## Reaction
 

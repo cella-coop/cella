@@ -7,6 +7,7 @@
 // Web's own counting for nothing; and a mandate issued under a chain
 // asking two thirds may ask no looser procedure, while one asking none
 // is decided by the chain's. Run by `cella test e2e requirements`.
+// unfolded: it stages Web's lead role around the notary, which its logged writes then name, since no write makes a role yet
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

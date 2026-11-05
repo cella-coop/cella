@@ -152,23 +152,37 @@ test('Chloé erases her own data, by her right and no motion: her name at once; 
 })
 
 test('the sweep redacts what the law kept once its clock runs out: payroll after five years, receipts and books after ten', async () => {
-  await su.query(`SET cella.clock = '2031-12-31'`)
-  assert.deepEqual(await all('SELECT * FROM cella.vault_sweep()'), [])
-  await su.query(`SET cella.clock = '2032-01-01'`)
-  assert.deepEqual(await all('SELECT subject, class, redacted FROM cella.vault_sweep()'), [{ subject: chloe, class: 'payroll', redacted: true }])
-  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
-  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.salary WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
-  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND minutes IS NOT NULL`, [chloe])).n), 0, 'her time too, in months long approved')
-  assert.equal((await opened(time)).minutes, 'redacted')
-  await su.query(`SET cella.clock = '2037-01-01'`)
-  const swept = await all<{ subject: string; class: string; keys: string; redacted: boolean }>('SELECT * FROM cella.vault_sweep() ORDER BY class')
-  assert.deepEqual(swept.map((r) => [r.class, r.redacted]), [['books', true], ['expense-receipt', true]])
-  assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'redacted')
-  assert.equal((await one<{ label: string }>(`SELECT label FROM account.account WHERE holder = $1`, [chloe])).label, 'redacted')
-  assert.equal((await opened(receipt)).label, 'redacted')
-  assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM vault.key WHERE subject = $1`, [chloe])).n), 0)
-  assert.deepEqual(await erased(chloe), { books: false, contact: false, 'expense-receipt': false, profile: false, payroll: false })
-  await su.query('RESET cella.clock')
+  // A sweep is no write, and the log holds none: each runs on its day, in
+  // a transaction rolled back after, so the log folds into the state the
+  // scenario leaves (architecture.md, "Folds").
+  const dated = async (day: string, sweep: () => Promise<void>) => {
+    await su.query('BEGIN')
+    try {
+      await su.query(`SET LOCAL cella.clock = '${day}'`)
+      await sweep()
+    } finally {
+      await su.query('ROLLBACK')
+    }
+  }
+  await dated('2031-12-31', async () => {
+    assert.deepEqual(await all('SELECT * FROM cella.vault_sweep()'), [])
+  })
+  await dated('2032-01-01', async () => {
+    assert.deepEqual(await all('SELECT subject, class, redacted FROM cella.vault_sweep()'), [{ subject: chloe, class: 'payroll', redacted: true }])
+    assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
+    assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.salary WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n), 0)
+    assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND minutes IS NOT NULL`, [chloe])).n), 0, 'her time too, in months long approved')
+    assert.equal((await opened(time)).minutes, 'redacted')
+  })
+  await dated('2037-01-01', async () => {
+    const swept = await all<{ subject: string; class: string; keys: string; redacted: boolean }>('SELECT * FROM cella.vault_sweep() ORDER BY class')
+    assert.deepEqual(swept.map((r) => [r.class, r.redacted]), [['books', true], ['expense-receipt', true], ['payroll', true]])
+    assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'redacted')
+    assert.equal((await one<{ label: string }>(`SELECT label FROM account.account WHERE holder = $1`, [chloe])).label, 'redacted')
+    assert.equal((await opened(receipt)).label, 'redacted')
+    assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM vault.key WHERE subject = $1`, [chloe])).n), 0)
+    assert.deepEqual(await erased(chloe), { books: false, contact: false, 'expense-receipt': false, profile: false, payroll: false })
+  })
 })
 
 test('the log verifies', async () => {

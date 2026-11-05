@@ -1,6 +1,6 @@
 +++
 title = "motion-patronage"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 A year's distribution and the motion of the assembly that approves its
@@ -53,6 +53,16 @@ assembly's, unless the write that makes it names another.
   mandates of the motion's circle: `adopt-policy` for the terms adopted,
   `approve-distribution` for approving, the
   distribution and the credits of shares that follow an approval.
+
+## Folds
+
+A proposal folds by `sql/005-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1. What a motion asks to approve
+is its action, which the motion feat's fold writes and `approval` reads,
+so this fold writes nothing: it checks each action to approve a
+distribution names a draft not yet approved, as
+`motion_patronage.asks_to_approve` judged it when it was proposed, and
+refuses otherwise, saying what it found.
 
 ## Reaction
 

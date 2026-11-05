@@ -22,6 +22,8 @@ export async function record(input: Recording, deps: Deps): Promise<Outcome<(typ
       )
       return { run: rows[0].id, kind: input.kind, dry: input.dry, settled, refused }
     },
-    payload: (v) => ({ ...v }),
+    // The file's name and each line, which name records by id, address or
+    // title and never a person's name, so its entry folds to the run.
+    payload: (v) => ({ ...v, name: input.name, lines: input.lines }),
   })
 }

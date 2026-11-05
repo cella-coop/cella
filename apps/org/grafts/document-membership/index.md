@@ -1,6 +1,6 @@
 +++
 title = "document-membership"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Who has read the co-op's texts: a member marks a document's binding
@@ -36,6 +36,13 @@ assembly's, unless the write that makes it names another.
 - `document_membership.reads`, on `document-membership:version:read`: the
   reading is the actor's own, of a version that exists, marked on the
   verdict date.
+
+## Folds
+
+A reading folds by `sql/002-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1: the member's reading of the
+version on the entry's day; one marked already keeps its first day, as
+its handler keeps it.
 
 ## Tests
 

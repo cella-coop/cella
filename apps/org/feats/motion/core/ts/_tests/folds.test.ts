@@ -1,8 +1,10 @@
 // The motion feat's folds (`sql/013-folds.sql`), on a database holding
-// the app's core and this feat: a stance and a close as their entries
-// carry them, and an adoption by `policy.adopt` on the action's terms,
-// which refuses a policy or a hash other than its entry's. Run by `cella
-// test slice motion`.
+// the app's core and this feat: a proposal under the id its entry names,
+// its title and text as their commitments, and its actions in order; a
+// message as its entry carries it, its text as its commitment; a stance
+// and a close as their entries carry them; and an adoption by
+// `policy.adopt` on the action's terms, which refuses a policy or a hash
+// other than its entry's. Run by `cella test slice motion`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -21,7 +23,7 @@ before(async () => {
   await db.query('BEGIN')
   await db.query(`INSERT INTO circle.circle (id, name) SELECT 'ag', 'ag' WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = 'ag')`)
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, ballot, proposed, deadline) VALUES ('m-2026-190', 'ag', 'x', 'consent', 'consent', 'secret', '2026-11-07', '2026-11-21')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, ballot, proposed, deadline) VALUES ('m-2026-190', 'ag', 'camille@lanterne.example', 'x', 'consent', 'consent', 'secret', '2026-11-07', '2026-11-21')`,
   )
   await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-190', 1, 'policy', $1)`, [{ kind: 'procedure', wording: legal }])
 })
@@ -56,4 +58,32 @@ test('an adoption folds by policy.adopt to the policy and hash its entry names, 
   await db.query(`SET LOCAL cella.clock = '2026-11-21'`)
   await db.query('SELECT motion.fold_adopt($1)', [adopt(made.hash)])
   assert.deepEqual(await one(`SELECT id, method, policy FROM motion.procedure WHERE policy = $1`, [made.id]), { id: 'folded', method: 'majority', policy: made.id })
+})
+
+test('a proposal folds as its entry names it, by its actor on its day, its words as their commitments and its actions in order, and a message on it as its commitment', async () => {
+  const words = { $commit: 'ab'.repeat(32) }
+  await db.query('SELECT motion.fold_propose($1)', [
+    entry(5, 'motion:motion:propose', {
+      motion: 'm-2026-191', circle: 'ag', author: 'ag', procedure: 'majority', ballot: 'open', deadline: '2026-11-30',
+      title: words, body: words,
+      actions: [{ kind: 'policy', args: { kind: 'procedure', wording: legal } }, { kind: 'policy', args: { kind: 'procedure', wording: legal, friendly: 'Two thirds.' } }],
+    }, '2026-11-09'),
+  ])
+  assert.deepEqual(
+    await one(`SELECT circle, author, proposer, title, body, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed, to_char(deadline, 'YYYY-MM-DD') AS deadline FROM motion.motion WHERE id = 'm-2026-191'`),
+    { circle: 'ag', author: 'ag', proposer: camille, title: 'redacted', body: 'redacted', method: 'majority', procedure: 'majority', ballot: 'open', proposed: '2026-11-09', deadline: '2026-11-30' },
+  )
+  assert.deepEqual((await db.query(`SELECT n, args ->> 'friendly' AS friendly FROM motion.action WHERE motion = 'm-2026-191' ORDER BY n`)).rows, [{ n: 1, friendly: null }, { n: 2, friendly: 'Two thirds.' }])
+  assert.deepEqual((await db.query(`SELECT field FROM cella.commitment WHERE n = 5 AND subject = $1 ORDER BY field`, [camille])).rows, [{ field: 'motion.motion.body' }, { field: 'motion.motion.title' }])
+  await db.query('SELECT motion.fold_post($1)', [entry(6, 'motion:message:post', { motion: 'm-2026-191', member: camille, message: 44, body: words, mentions: [], links: [] }, '2026-11-10')])
+  assert.deepEqual(await one(`SELECT member, reply, body, to_char(at, 'YYYY-MM-DD') AS at FROM motion.message WHERE receipt = 44`), { member: camille, reply: null, body: 'redacted', at: '2026-11-10' })
+  await db.query('SAVEPOINT s')
+  try {
+    await assert.rejects(
+      db.query('SELECT motion.fold_post($1)', [entry(7, 'motion:message:post', { motion: 'm-2026-191', member: camille, message: 45, body: 'Agreed.' })]),
+      /entry 7 keeps the motion.message.body of camille@lanterne.example as "Agreed.", not as its commitment/,
+    )
+  } finally {
+    await db.query('ROLLBACK TO SAVEPOINT s')
+  }
 })

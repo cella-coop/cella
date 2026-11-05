@@ -166,6 +166,11 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   assert.deepEqual(held, [{ day: '2025-11-28', may: true }, { day: '2025-12-01', may: false }])
   const kept = await profile({ person: paul, email: 'paul@garnier.example' }, asPaul)
   assert.equal(kept.state, 'settled', reason(kept))
+  // Staged around the notary, the laptop goes again, so the log folds into
+  // the state the scenario leaves.
+  await su.query('SET cella.unbound = on')
+  await su.query(`DELETE FROM person.device WHERE key = decode($1, 'hex')`, [laptop.key])
+  await su.query('SET cella.unbound = off')
 })
 
 test('a hire needs the manager\'s power and carries a first device; Camille hires Bastien, who signs from his first day', async () => {

@@ -375,9 +375,10 @@ $$;
 REVOKE EXECUTE ON FUNCTION cella.state_rows(text[]) FROM PUBLIC;
 
 -- Each slice's schema among the registered state tables, whether it is
--- folded, and the actions of it with no fold: a slice is folded when it
--- registers a fold and every action of it, by the slice its id names,
--- among those the scope registers or its log holds, has one.
+-- folded, and the actions of it with no fold: a slice is folded when
+-- every action of it, by the slice its id names, among those the scope
+-- registers or its log holds, has a fold. A slice no action names, whose
+-- rows only a founding carries, is folded by the founding's carry.
 CREATE FUNCTION cella.folded() RETURNS TABLE (schema text, folded boolean, unfolded text[])
 LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
@@ -391,7 +392,7 @@ BEGIN ATOMIC
     SELECT DISTINCT s.schema FROM cella.state s
   )
   SELECT sl.schema,
-         EXISTS (SELECT FROM cella.fold f WHERE replace(f.owner, '-', '_') = sl.schema) AND u.ops IS NULL,
+         u.ops IS NULL,
          coalesce(u.ops, '{}')
   FROM slices sl
   LEFT JOIN LATERAL (

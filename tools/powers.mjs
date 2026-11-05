@@ -8,7 +8,9 @@
 // in the other, with the same amount field. No action is allowed by
 // omission: the one with no power, the log's first entry, declares the
 // check `first`, which SQL must back. And every power is one a co-op can
-// grant: a mandate a fixture adopts names it.
+// grant: a mandate a fixture adopts names it. Every action folds, too:
+// a slice's SQL registers how its entry applies to the state before it
+// (architecture.md, "Folds").
 
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
@@ -139,6 +141,18 @@ export function covered(ops, found) {
     }
   }
   return errors
+}
+
+// Where an action does not fold: no SQL registers a fold on it by
+// `cella.lets_fold`, so its entry would leave the log short of the state
+// it made. `folds` holds the literal rows the SQL registers, as
+// `found.folds`; a graft's fold on another slice's op counts for that op
+// as the op's own slice's does.
+export function unfolded(ops, folds) {
+  const folding = new Set(folds.map((f) => f.op))
+  return ops
+    .filter((o) => !folding.has(o.op))
+    .map((o) => `${o.file}: ${o.op} has no fold: register how its entry applies to the state before it, by cella.lets_fold in its slice's sql/`)
 }
 
 // The powers a fixture's co-op grants: every mandate and right among the

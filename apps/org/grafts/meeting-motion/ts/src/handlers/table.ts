@@ -20,6 +20,9 @@ export async function table(input: Table, deps: Deps): Promise<Settled<Put> | Re
       await tx.query('INSERT INTO meeting_motion.tabled (item, meeting, motion) VALUES ($1, $2, $3)', [added.item, added.meeting, motion])
       return { ...added, motion }
     },
-    payload: (v) => ({ ...w.payload(v), motion: v.motion }),
+    // An item titled as the motion keeps the blank title its member signed,
+    // and carries the one it took as `named`, which the meeting feat's
+    // fold reads.
+    payload: (v) => ({ ...w.payload(v), ...(item.title ? {} : { title: item.title, named: v.title }), motion: v.motion }),
   })
 }

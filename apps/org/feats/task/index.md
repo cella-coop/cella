@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -64,6 +64,20 @@ Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
+
+A task's title may name a person, so it is personal data of class
+`profile`, erased when asked, its subject the task, since no column
+names whose it is (`core/sql/004-personal.sql`): a write commits to it
+in the log, the vault keeps it, and the analytical contract shows it
+commented personal.
+
+## Folds
+
+Each action folds by `core/sql/005-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+a task created under the id its entry names, its title as its
+commitment, its priority, due day and status as its entry carries them,
+on the entry's day; a move to the status its entry names, reopening a
+done task; and a completion on the entry's day, keeping the first.
 
 ## Shell
 

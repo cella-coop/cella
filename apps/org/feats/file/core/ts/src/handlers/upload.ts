@@ -47,12 +47,14 @@ export function committed(stored: Stored, name: string): Record<string, unknown>
 }
 
 // Uploads a file of the co-op's own, which concerns no one. A personal
-// file comes in through the graft that attaches it.
+// file comes in through the graft that attaches it. Its bytes are no
+// one's, so the log keeps them, in base64 as the member signed them, and
+// its entry folds to the file.
 export const uploading = (input: Store, actor: string): Write<Stored> => ({
   op,
   request: request(input),
   state: (tx) => storing(tx, { ...input, class: 'none', subject: null }, actor),
-  payload: (v) => committed(v, input.name),
+  payload: (v) => ({ ...committed(v, input.name), bytes: request(input).bytes }),
 })
 
 export async function upload(input: Store, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Stored>> {

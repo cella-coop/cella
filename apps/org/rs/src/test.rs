@@ -3,6 +3,7 @@ use std::path::{Component, Path, PathBuf};
 
 use crate::cli::Test;
 use crate::db::Dev;
+use crate::fold;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
 use crate::shell;
@@ -10,6 +11,9 @@ use crate::shell;
 /// The database each slice test file and each e2e scenario runs on, fresh
 /// each time.
 const DB: &str = "cella_test";
+
+/// Where each e2e scenario's log is folded after it, and dropped.
+const FOLD: &str = "cella_test_fold";
 
 pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
     match only {
@@ -208,8 +212,45 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
             &mut [node_test(&dev, steps, &[file])],
             tap,
         )?;
+        // What the scenario wrote, folded from its log into a fresh
+        // database, matches it row for row, every slice folded, so a write
+        // whose entry carries less than it changed fails the day it is
+        // written (architecture.md, "Folds"); unless the scenario stages,
+        // around the notary, state its logged writes then build on, which
+        // no log can rebuild, and says so in an `// unfolded: <why>` line.
+        if let Some(why) = unfolded(file)? {
+            println!("{:<22} {why}", format!("unfolded e2e/{name}"));
+            continue;
+        }
+        let folded = fold::fold(
+            repo,
+            steps,
+            &fold::Fold {
+                source: DB,
+                into: FOLD,
+                to: None,
+                from: None,
+                every: fold::EVERY,
+                compare: true,
+            },
+        );
+        let mut drop = dev.on("postgres", "dropdb");
+        drop.args(["--if-exists", "--force", FOLD]);
+        steps.run(&format!("unfold e2e/{name}"), &mut [drop], quiet)?;
+        folded?;
     }
     Ok(())
+}
+
+/// Why a scenario's log does not fold, where its file says so in a line
+/// `// unfolded: <why>`.
+fn unfolded(file: &Path) -> Result<Option<String>> {
+    let text =
+        fs::read_to_string(file).map_err(|e| Fail::new(format!("{}: {e}", file.display())))?;
+    Ok(text
+        .lines()
+        .find_map(|l| l.strip_prefix("// unfolded: "))
+        .map(str::to_owned))
 }
 
 fn node_test(dev: &Dev, steps: &Steps, files: &[&PathBuf]) -> std::process::Command {

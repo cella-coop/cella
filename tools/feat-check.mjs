@@ -30,8 +30,9 @@
 // through writes.mjs that no feat or graft writes a table it does not own,
 // with no exceptions, and through
 // powers.mjs that the power each action's label names is the one its SQL
-// registers, that a mandate a fixture adopts grants it, and that an
-// action with no power declares a check its SQL backs.
+// registers, that a mandate a fixture adopts grants it, that an
+// action with no power declares a check its SQL backs, and that every
+// action folds.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -39,7 +40,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
-import { agree, covered, declared, granted, mandates } from './powers.mjs'
+import { agree, covered, declared, granted, mandates, unfolded } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { refuse, scanTs } from './writes.mjs'
 
@@ -346,8 +347,7 @@ for (const dir of byName.values()) {
   }
 }
 
-// The actions with no fold yet, and how many actions there are.
-const unfolded = []
+// How many actions there are, every one of which folds.
 let actionCount = 0
 
 if (sql) {
@@ -387,10 +387,9 @@ if (sql) {
   })
   const ops = await declared(repo, owned)
   errors.push(...agree(ops, found.powers, found.cites, found.stances), ...covered(ops, found))
-  // Every action's fold: each action with none is listed, and counted on
-  // the summary (architecture.md, "Folds").
-  const folding = new Set((found.folds ?? []).map((f) => f.op))
-  unfolded.push(...ops.map((o) => o.op).filter((op) => !folding.has(op)).sort())
+  // Every action's fold: one with none is refused, as one with no power
+  // is (architecture.md, "Folds").
+  errors.push(...unfolded(ops, found.folds ?? []))
   actionCount = ops.length
   // The mandates each app's fixtures adopt, which every power must be
   // among.
@@ -428,8 +427,5 @@ if (errors.length) {
   console.error(errors.map((e) => `feat check: ${e}`).join('\n'))
   process.exit(1)
 }
-for (const op of unfolded) {
-  console.log(`feat check: ${op} has no fold`)
-}
-const folded = sql ? `, ${actionCount - unfolded.length} of ${actionCount} actions fold` : ''
+const folded = sql ? `, all ${actionCount} actions fold` : ''
 console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length + sites.length} outside it${folded}`)

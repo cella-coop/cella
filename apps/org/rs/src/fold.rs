@@ -553,7 +553,8 @@ const SHOWN: usize = 3;
 /// Compares the source's folded slices with the fold's: equal state
 /// hashes match; otherwise each table that differs is read on both sides
 /// in its canonical order and merged, and the rows only one side holds are
-/// shown, a few of each.
+/// shown, a few of each. A slice not folded is one the compare cannot
+/// cover, so it fails too, naming it, even where every folded row matches.
 fn compare(dev: &Dev, f: &Fold<'_>, folded: &[(String, bool, String)]) -> Result {
     let schemas: Vec<&str> = folded
         .iter()
@@ -571,7 +572,7 @@ fn compare(dev: &Dev, f: &Fold<'_>, folded: &[(String, bool, String)]) -> Result
         String::new()
     } else {
         format!(
-            "; not folded yet, {} slices, their actions with no fold as `cella -v check feats` lists them: {}",
+            "; {} slices not folded, which the compare cannot cover: {}",
             unfolded.len(),
             unfolded.join(", ")
         )
@@ -584,7 +585,15 @@ fn compare(dev: &Dev, f: &Fold<'_>, folded: &[(String, bool, String)]) -> Result
             f.source,
             hex(&ours)
         );
-        return Ok(());
+        return if unfolded.is_empty() {
+            Ok(())
+        } else {
+            Err(Fail::new(format!(
+                "compare: {} slices are not folded, so the compare covers none of their rows: {}",
+                unfolded.len(),
+                unfolded.join(", ")
+            )))
+        };
     }
     let mut said = Vec::new();
     let names: std::collections::BTreeSet<&String> =

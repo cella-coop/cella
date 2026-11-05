@@ -1,6 +1,6 @@
 +++
 title = "file-membership"
-updated = 2026-11-04
+updated = 2026-11-07
 +++
 
 A member's records on file, such as their signed subscription form: files
@@ -50,6 +50,14 @@ them. `ts/_tests/opens.test.ts`: a power over expenses opens receipts
 and only receipts, one to hire employment records, and no seat nothing.
 In Lanterne, Julien, as finance, opens Sofia's receipt; Camille, as
 manager, Inès's contract; Thomas neither.
+
+## Folds
+
+An attachment folds by `file_membership.fold_attach` (`sql/004-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): the file stored about the
+member by the file feat's fold of `storing`, the write its handler
+calls (`file.fold_storing`), its name and bytes as the commitments its
+entry keeps, then kept on the member's file.
 
 ## Tests
 

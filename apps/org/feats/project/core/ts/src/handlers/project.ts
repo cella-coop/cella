@@ -37,7 +37,8 @@ export async function create(input: Create, deps: Deps): Out<'project:project:cr
       )
       return { project: id, circle: rows[0].circle, started: rows[0].started }
     },
-    payload: (v) => ({ ...v }),
+    // What it was started with, so its entry folds to it.
+    payload: (v) => ({ ...v, title: input.title, summary: input.summary ?? '', due: input.due || null }),
   })
 }
 
@@ -60,7 +61,8 @@ export async function add(input: Add, deps: Deps): Out<'project:milestone:add', 
       )
       return { project: input.project, circle: locked.rows[0].circle, n: rows[0].n }
     },
-    payload: (v) => ({ ...v }),
+    // Its title and due day, so its entry folds to it.
+    payload: (v) => ({ ...v, title: input.title, due: input.due || null }),
   })
 }
 

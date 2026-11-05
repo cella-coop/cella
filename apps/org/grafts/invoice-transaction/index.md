@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -50,11 +50,23 @@ assembly's, unless the write that makes it names another.
 Payments are confluent and carry no guard; that their entry lands in an
 open period is `account-transaction`'s trigger.
 
+## Folds
+
+The graft has no action of its own; it folds the invoice feat's issue,
+payment and void, on which its handler writes its schema, by
+`sql/002-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)), once the
+invoice feat's fold has issued, paid or voided the invoice: the entry
+each posted, its date, label and lines as its payload keeps them,
+posted again by the transaction feat's `transaction.fold_record`, and
+linked as the event it is, a payment's with its payment. A payment that
+merged posted nothing, and folds nothing.
+
 ## Handlers
 
 `issue`, `payment` and `annul` (the void) wrap the invoice feat's write
 specs: the invoice's state, then the entry through the transaction feat's
-`record`, then the posting, then `cella.submit` once. A refusal by any guard
+`record`, then the posting, then `cella.submit` once, the payload carrying the entry
+as the journal shows it (`logged`). A refusal by any guard
 or trigger rolls all of it back; the void of a paid invoice leaves no
 credit note behind.
 

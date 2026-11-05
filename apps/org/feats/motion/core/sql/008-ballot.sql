@@ -24,6 +24,15 @@ END;
 INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('motion', 'vote', 'stance', 'books', 'member', 'motion');
 
+-- A motion's title and text are its proposer's own words, and a
+-- message's text its member's: personal data of class `profile`, as a
+-- person's name is. The log commits to each and the vault keeps it, and
+-- erasing their writer redacts it.
+INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
+  ('motion', 'motion', 'title', 'profile', 'proposer', 'motion'),
+  ('motion', 'motion', 'body', 'profile', 'proposer', 'motion'),
+  ('motion', 'message', 'body', 'profile', 'member', 'motion');
+
 ALTER TABLE motion.vote
   DROP CONSTRAINT vote_stance_check,
   ADD CONSTRAINT vote_stance_check CHECK (stance IN ('for', 'against', 'abstain', 'consent', 'object', 'redacted'));

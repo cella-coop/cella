@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -32,6 +32,14 @@ assembly's, unless the write that makes it names another.
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it.
+
+## Folds
+
+Both writes fold by `sql/003-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+a filing as the task, project and milestone its entry names, filed again
+moving it; and a creation on a project's page, once the task feat's fold
+has made the task, as the project and milestone its entry carries beside
+the task's. A creation that names no project writes nothing here.
 
 ## Invariants
 

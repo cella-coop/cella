@@ -57,11 +57,16 @@ graft's ([membership](../../feats/person/feats/membership/index.md)).
 ## Folds
 
 The founding (`membership_motion.fold_found`, `sql/018-folds.sql`,
-[folds](../../../_corpus/doc/architecture.md#folds)) carries every row of the state the
-co-op held before its log, which the fold applies before it runs; a
+[folds](../../../../_corpus/doc/architecture.md#folds)) carries every row of the state
+the co-op held before its log, which the fold applies before it runs; a
 founding that carries none refuses to fold. A close
 (`membership_motion.fold_close`) counts the motion's roll, as its
-handler does once the motion feat's fold has closed it. An admission a
+handler does once the motion feat's fold has closed it. A proposal
+(`membership_motion.fold_propose`) fixes the motion's roll, as its
+handler does once the motion feat's fold has inserted the motion; an
+application (`membership_motion.fold_apply`) proposes the motion its
+entry carries by the motion feat's `motion.fold_proposal`, after the
+membership feat's fold has the applicant, and fixes its roll. An admission a
 carried motion makes names the circle and the seat its entry carries,
 which core's circles fold.
 

@@ -8,6 +8,7 @@
 // to Léa revokes no mandate; and the assembly ending coordination's
 // mandate revokes Web's lead's under it the same day, after which
 // Léa's approval is refused. Run by `cella test e2e provenance`.
+// unfolded: it stages Web's lead role around the notary, which its logged writes then name, since no write makes a role yet
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

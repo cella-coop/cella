@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -103,6 +103,18 @@ sweep` redacts them, the one change a submitted expense takes
 - `expense.reimburses`, on `expense:expense:reimburse`: reimbursed by this
   write, for its total.
 
+## Folds
+
+Each action folds by `core/sql/005-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)): a claim under
+the id and in the circle its entry names, its figures before VAT and
+its VAT as the entry keeps them, which must make the total it names,
+and its label and receipt as their commitments; a submission, a
+refusal, an approval and a reimbursement on their entries' days, a
+decision by the entry's actor. expense-transaction folds the entries an
+approval and a reimbursement post, expense-file a receipt a claim
+carries, expense-project the project an expense is filed under.
+
 ## Reads
 
 An expense reads by core's row-level policy, by its owning circle
@@ -124,7 +136,9 @@ whole co-op, read every one.
 `core/ts/_tests/expense.test.ts` (`cella test slice expense`): an expense
 is numbered and totalled, moves only along its lifecycle, keeps its
 figures once submitted, and the guards refuse a write that did not do what
-it says.
+it says. `core/ts/_tests/folds.test.ts`: a claim folds under its id, its
+label and receipt as their commitments, refusing figures that do not
+make its total, and moves along its lifecycle on its entries' days.
 
 ## Shell
 

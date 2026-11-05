@@ -15,6 +15,7 @@
 [[motion]]
 id = "m-2021-001"
 circle = "ag"
+proposer = "camille@lanterne.example"
 title = "Found Lanterne and adopt its statutes"
 procedure = "consent"
 proposed = 2021-02-15
@@ -433,6 +434,7 @@ at = 2021-03-01
 [[motion]]
 id = "m-2026-006"
 circle = "ag"
+proposer = "camille@lanterne.example"
 title = "Approve the 2025 accounts and allocate the surplus"
 procedure = "majority"
 proposed = 2026-06-01
@@ -502,6 +504,7 @@ at = 2026-06-20
 [[motion]]
 id = "m-2026-007"
 circle = "ag"
+proposer = "yusuf@lanterne.example"
 title = "Adopt the internal rules, version 3"
 procedure = "consent"
 proposed = 2026-06-01
@@ -590,6 +593,7 @@ at = 2026-06-20
 [[motion]]
 id = "m-2026-011"
 circle = "coordination"
+proposer = "camille@lanterne.example"
 title = "Raise the day rate for 2027"
 procedure = "consent"
 proposed = 2026-10-12
@@ -617,6 +621,7 @@ at = 2026-10-14
 [[motion]]
 id = "m-2026-012"
 circle = "ag"
+proposer = "ines@lanterne.example"
 title = "Admit Inès Haddad as a member"
 procedure = "consent"
 proposed = 2026-10-14

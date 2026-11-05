@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid
@@ -113,7 +113,11 @@ arrives at rung 3.
   kept as `invoice.seller()` reads them when it issues), `net`, `vat`
   and `total` as `cella.amount` (a NULL `vat` is an invoice without
   VAT), unique by series and number; `sent`, `voided` and `reason` are
-  set once.
+  set once. The name and address billed, which may be a person's, and
+  the reason, free text, are personal data of class `books`, kept ten
+  years as the books keep a mention, their subject the invoice itself,
+  since no column says whose they are (`009-billed.sql`); their clock
+  running out redacts them, the one change an issued invoice takes.
 - `invoice.line`: description, quantity (exact decimal), unit price,
   amount (quantity × unit price, rounded to the cent) and VAT rate, a
   percent with two decimals (5,50).
@@ -166,6 +170,22 @@ assembly's, unless the write that makes it names another.
 That issue and void post their entries is the `invoice-transaction`
 graft's guard on the same ops.
 
+## Folds
+
+Each action folds by `core/sql/010-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)): an issue
+spends the series' next number by the SQL its handler runs,
+`invoice.spend`, which must make the invoice its entry names, then
+issues it on its day as the entry keeps it: its series, due day, label,
+the seller's mentions as they were kept, its amounts and its lines, each
+quantity and VAT rate as their text, and the name and address billed as
+their commitments. A send marks it sent on the day its entry names,
+once, and never a voided one; a payment records the payment under the id
+its entry names, with its day, amount, method, the bank's reference and
+the receipt of its write, and one that merged adds nothing; a void
+voids it on its day, its reason as its commitment. The entry each posts
+folds by `invoice-transaction`'s folds.
+
 ## Handlers
 
 Each handler is also a write spec (`issuing`, `paying`, `voiding`) that a
@@ -176,12 +196,13 @@ graft composes with its own state into one write.
   by the [VAT core library](../../core/vat/index.md)'s `priced`, as a
   bill's are; each line's VAT rate comes in hundredths of a percent (550
   for 5,5 %), since a signed request holds integers only; the payload
-  holds the number and amounts, never the name or address billed.
+  holds the number, the amounts and what the fold issues again, the name
+  and address billed as their commitments.
 - `send` (confluent): sets `sent` once; a voided invoice is left unsent.
 - `payment` (confluent): records the payment with a receipt; a reference
   already recorded for the invoice merges and returns `merged`.
 - `annul`, the void write (ordered; `void` is a keyword): sets `voided`
-  and the reason; the reason stays out of the log.
+  and the reason; the payload holds the reason as its commitment.
 
 Issue and payment can still be refused at rung 1, by a gap or by a closed
 period, so their handlers return `Refused` beside `Settled` although their

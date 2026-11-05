@@ -17,6 +17,9 @@ use serde_json::{Value, json};
 
 const SCOPE: &str = "fold.example";
 const JULIEN: &str = "julien@fold.example";
+/// Every slice of the org app, each folded, as the compare lists them: a
+/// slice no action names, whose rows only a founding carries, among them.
+const EVERY_SLICE: &str = "account, account_membership, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, bill, bill_transaction, circle, contact, contact_invoice, contact_project, document, document_meeting, document_membership, document_motion, employment, employment_file, employment_membership, expense, expense_file, expense_invoice_project_timesheet, expense_project, expense_transaction, file, file_membership, import, invoice, invoice_project, invoice_transaction, meeting, meeting_membership, meeting_motion, membership, membership_motion, membership_project, membership_task, motion, motion_patronage, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, project, project_task, project_timesheet, report, task, timesheet, transaction";
 const SALT: &str = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
 
 fn port() -> String {
@@ -105,8 +108,9 @@ struct Scope {
 
 impl Scope {
     /// A database migrated whole and unseeded, at the scope's address, a
-    /// keyring over a device table of the test's own, and no guards on
-    /// core's circles' actions, whose motions the test does not write.
+    /// keyring over a device table of the test's own, which is no scope's
+    /// state and so no slice the compare reads, and no guards on core's
+    /// circles' actions, whose motions the test does not write.
     fn new(db: &str) -> Self {
         ok(&["db", "reset", "--db", db]);
         let key = SigningKey::from_bytes(&[3; 32]);
@@ -124,6 +128,7 @@ GRANT USAGE ON SCHEMA t TO cella_guards;
 GRANT SELECT ON t.device TO cella_guards;
 INSERT INTO t.device VALUES ('{JULIEN}', '\\x{}');
 UPDATE cella.keyring SET fn = 't.keyring(text, bytea)', owner = 't';
+DELETE FROM cella.state WHERE schema = 't';
 DELETE FROM cella.guard WHERE op LIKE 'circle:%';",
                 hex(&key.verifying_key().to_bytes())
             ),
@@ -296,7 +301,10 @@ fn a_log_folds_into_the_state_it_was_written_with() {
     let out = ok(&["fold", &src, "--into", &whole, "--every", "3", "--compare"]);
     assert!(out.contains("3 checkpoints"), "{out}");
     assert!(out.contains("its log verifies"), "{out}");
-    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
+    assert!(
+        out.contains(&format!("compare: {EVERY_SLICE} folded")),
+        "{out}"
+    );
     assert_eq!(
         psql(
             &whole,
@@ -403,7 +411,10 @@ $$;";
         "8",
         "--compare",
     ]);
-    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
+    assert!(
+        out.contains(&format!("compare: {EVERY_SLICE} folded")),
+        "{out}"
+    );
     assert_eq!(
         psql(
             &versions,
@@ -466,7 +477,10 @@ fn a_role_s_seat_in_another_circle_folds() {
     );
 
     let out = ok(&["fold", &src, "--into", &into, "--compare"]);
-    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
+    assert!(
+        out.contains(&format!("compare: {EVERY_SLICE} folded")),
+        "{out}"
+    );
     assert_eq!(
         psql(
             &into,

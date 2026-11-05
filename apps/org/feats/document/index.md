@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -280,13 +280,18 @@ circle whose policies it reads, which it names always.
   the draft's first update, by the creator, committing to its digest.
 - `edit` (confluent): checks the update imports onto the draft and leaves
   it with a canonical form (bytes that are not are thrown, not logged),
-  appends it with a receipt and commits to it in the log by its BLAKE3
-  digest.
+  appends it with a receipt and submits its BLAKE3 digest, its number
+  and its bytes in hex: a document's text is the co-op's, so the log
+  keeps it as it is.
 - `version` (confluent): merges the updates, snapshots the document at the
   given frontier or the latest, and saves it with its frontier and version
-  vector; the payload carries the hash the database computed.
+  vector; the payload carries the hash the database computed, and the
+  snapshot, frontier and version vector in hex.
 - `comment` (confluent): anchors the quote in the version's snapshot and
   adds the comment; refused at rung 1 if the quote is not in the version.
+  Submits the quote and the anchor as they are, and the text marked
+  personal: a comment is its author's words, personal data of class
+  `profile`, so the log keeps its commitment and the vault its value.
 - `adopt` (ordered, `base: 'adopted'`): records the adoption with a receipt
   on the verdict date and submits `{ document, version, hash, base,
   motion, receipt }`; the cited motion is an id this feat does not
@@ -320,6 +325,22 @@ edits already go up as signed writes through the form actions, so the
 stream only carries what settled, one way, over plain HTTP the shell
 already serves. The relay lives in the server process; a second process
 would relay through Postgres's `LISTEN` and `NOTIFY`.
+
+## Folds
+
+Each action folds by `core/sql/007-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1:
+a creation starts the document under its id, with its title and in its
+circle, and its opening update, by `document.fold_creating`, which
+document-meeting's minutes fold by too; an edit appends the update
+under its number and receipt, its bytes the entry's, refusing bytes
+whose digest is not the entry's; a version saves the entry's snapshot,
+frontier and version vector, refusing a snapshot that hashes otherwise;
+a comment adds the comment on the quote and anchor its entry carries,
+its text as its commitment, and `document.quotes` refuses a quote the
+folded version does not hold; an adoption records it from the base it
+names; a generation writes, in its order, the update where the draft
+changed, the version and its adoption, as the entry carries them.
 
 ## Shell
 
@@ -371,7 +392,9 @@ a motion's page.
   anchors; three peers converging over 300 seeded rounds of random
   concurrent edits; and the canonical form, the TypeScript one and the
   database's, byte for byte on 300 random documents, refusing the same
-  ones, with a version's generated columns and immutability.
+  ones, with a version's generated columns and immutability; and the
+  folds (`folds.test.ts`): a document started, edited, saved, commented
+  on and adopted, and a generation, each folded from its entry.
 - `_e2e/document.test.ts`: concurrent edits, versions named by hash,
   comments by cursor, adoption by hash under m-2026-011.
 - `_e2e/capital.test.ts`: once the assembly adopts new capital terms,

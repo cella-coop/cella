@@ -182,4 +182,12 @@ test('a page of fifty thousand time entries is read in SQL: a hundred rows drawn
   const tallies = (await shell.json(`/timesheets?where=${unbillable}`, julien)) as (number | null)[]
   assert.ok(typeof tallies[0] === 'number' && tallies[0] >= 16666, `a viewer's own view is counted on the server: ${tallies[0]}`)
   assert.equal(tallies[1], null, 'a view naming no field of the collection counts nothing')
+  // The load goes again, with the month it opened, so the log folds into
+  // the state the scenario leaves.
+  await su.query(`DELETE FROM timesheet.entry WHERE member = $1 AND note LIKE 'load %'`, [camille])
+  await su.query(
+    `DELETE FROM timesheet.period p WHERE p.member = $1 AND p.month = '2026-10' AND p.submitted IS NULL
+       AND NOT EXISTS (SELECT FROM timesheet.entry e WHERE e.member = p.member AND e.circle = p.circle AND timesheet.month_of(e.day) = p.month)`,
+    [camille],
+  )
 })

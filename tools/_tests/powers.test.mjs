@@ -1,14 +1,15 @@
 // The feat check's power rules: what an action's label in actions.ts says it needs
 // is what its feat registers in cella.power, or for an action a motion
 // carries what motion.cites lists it with, and only the op's own feat
-// registers it, and a mandate a fixture adopts grants it.
+// registers it, and a mandate a fixture adopts grants it; and every
+// action folds, by its own slice's fold or a graft's.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { agree, covered, granted, mandates } from '../powers.mjs'
+import { agree, covered, granted, mandates, unfolded } from '../powers.mjs'
 import { checkSql, undeclared, unowned } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
@@ -297,4 +298,16 @@ test('every table of a feat or a graft names its owning circle, keyed into core\
   assert.doesNotMatch(foreign.errors.join('\n'), /into circle.circle/)
   const party = await check({ motion: `CREATE TABLE motion.party (grantee text NOT NULL REFERENCES circle.grantee); COMMENT ON TABLE motion.party IS 'registry: a procedure''s parties';` })
   assert.deepEqual(party.errors, [], 'a grantee is the other key out of a schema')
+})
+
+test('an action with no fold is refused, and one a graft folds is not', async () => {
+  const ops = [op('invoice:invoice:issue', 'issue-invoice'), op('invoice:invoice:send')]
+  const { found } = await check({
+    invoice: `CREATE FUNCTION invoice.fold_issue(entry jsonb) RETURNS void LANGUAGE sql BEGIN ATOMIC SELECT 1; END;
+SELECT cella.lets_fold('invoice:invoice:issue', 1, 'invoice.fold_issue(jsonb)', 'invoice');`,
+  })
+  const [e, ...rest] = unfolded(ops, found.folds ?? [])
+  assert.deepEqual(rest, [])
+  assert.match(e, /invoice:invoice:send has no fold: register how its entry applies to the state before it, by cella.lets_fold/)
+  assert.deepEqual(unfolded(ops, [...found.folds, { op: 'invoice:invoice:send', version: 1, fn: 'invoice_member.fold_send(jsonb)', owner: 'invoice-member' }]), [])
 })

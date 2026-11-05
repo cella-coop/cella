@@ -117,6 +117,13 @@ for (const [name, launch] of browsers()) {
         await su.query(`UPDATE person.device SET revoked = '2026-10-24' WHERE key = decode($1, 'hex')`, [device.key])
         await visit('/people')
         assert.match(page.url(), /\/sign-in\?back=%2Fpeople$/, 'a revoked device\'s session opens nothing')
+        // Staged around the notary, the revocation is undone, skipping the
+        // trigger that keeps a revocation, so the log folds into the state
+        // the scenario leaves.
+        await su.query('BEGIN')
+        await su.query('SET LOCAL session_replication_role = replica')
+        await su.query(`UPDATE person.device SET revoked = NULL WHERE key = decode($1, 'hex')`, [device.key])
+        await su.query('COMMIT')
         assert.deepEqual(errors, [], 'the pages threw nothing')
       } finally {
         await browser.close()

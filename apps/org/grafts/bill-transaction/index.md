@@ -1,6 +1,6 @@
 +++
 title = "bill-transaction"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 A bill's approval and its payment post balanced entries, in the same
@@ -39,12 +39,23 @@ assembly's, unless the write that makes it names another.
 
 That the entry lands in an open period is `account-transaction`'s.
 
+## Folds
+
+The graft has no action of its own; it folds the bill feat's approval
+and payment, on which its handler writes its schema, by
+`sql/002-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)), once the
+bill feat's fold has moved the bill: the entry each posted, its date,
+label and lines as its payload keeps them, posted again by the
+transaction feat's `transaction.fold_record`, and linked as the charge
+or the payment.
+
 ## Handlers
 
 `approve` and `pay` wrap the bill feat's specs: the bill's state, then
 the entry through the transaction feat's `record`, then the posting,
-then `cella.submit` once. A refusal by any guard or trigger rolls all of
-it back.
+then `cella.submit` once, the payload carrying the entry as the
+journal shows it (`logged`). A refusal by any guard or trigger rolls
+all of it back.
 
 ## Shell
 

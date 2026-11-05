@@ -1,6 +1,6 @@
 +++
 title = "document-meeting"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 A meeting's minutes, written as a document in the block editor.
@@ -39,6 +39,15 @@ Minutes bind as written unless their circle adopts them by motion
 (the meeting feat's setting); then they are adopted as any document is,
 by `document-motion`'s adoption of a version by its hash, cited by a
 motion of the circle. This graft adds nothing to adoption.
+
+## Folds
+
+A minute folds by `sql/002-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1, after the meeting feat's
+fold of the same entry: the first time, the document the minutes are
+kept in, started by the document feat's `document.fold_creating` from
+the creation the entry carries, and the minutes tied to the meeting;
+after that the entry carries no creation, and the fold writes nothing.
 
 ## Shell
 

@@ -4,8 +4,11 @@ CREATE TABLE motion.motion (
   id text PRIMARY KEY,
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   -- The grantee it is proposed as: its circle, or a role its proposer
-  -- holds on the day. The person who proposed it is its entry's actor.
+  -- holds on the day.
   author text NOT NULL REFERENCES circle.grantee,
+  -- The person who proposed it, its entry's actor, whose words its title
+  -- and its text are (`008-ballot.sql`).
+  proposer text NOT NULL,
   title text NOT NULL,
   method text NOT NULL CHECK (method IN ('consent', 'majority')),
   proposed date NOT NULL,

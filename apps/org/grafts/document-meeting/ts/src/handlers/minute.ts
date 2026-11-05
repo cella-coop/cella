@@ -27,9 +27,12 @@ function opening(meeting: string, title: string, items: string[]): Fragment[] {
 // kept for them: the first time, the document is started, its draft
 // opening on the meeting's card and agenda as the actor's edit, and tied
 // to the meeting, in the same transaction under the same verdict; after
-// that, the minutes are the document already kept.
+// that, the minutes are the document already kept. The entry carries the
+// creation as the document feat's `creating` would log it, so its fold
+// starts the document as this write did.
 export async function minute(input: Minute, deps: Deps): Promise<Settled<Minuted> | Refused> {
   const w = minuting(input)
+  let created: Record<string, unknown> | null = null
   return write(deps, {
     op: w.op,
     request: input,
@@ -44,10 +47,12 @@ export async function minute(input: Minute, deps: Deps): Promise<Settled<Minuted
         throw new Error(`no meeting ${input.meeting}`)
       }
       const blocks = opening(m.id, m.title, m.agenda.map((i) => i.title))
-      const created = await creating({ id: `minutes-${m.id}`, title: `Minutes, ${m.title}`, blocks }, deps.actor).state(tx, proof)
-      await tx.query('INSERT INTO document_meeting.minutes (meeting, document) VALUES ($1, $2)', [m.id, created.document])
-      return { ...minuted, document: created.document, digest: created.digest }
+      const c = creating({ id: `minutes-${m.id}`, title: `Minutes, ${m.title}`, blocks }, deps.actor)
+      const started = await c.state(tx, proof)
+      created = c.payload(started)
+      await tx.query('INSERT INTO document_meeting.minutes (meeting, document) VALUES ($1, $2)', [m.id, started.document])
+      return { ...minuted, document: started.document, digest: started.digest }
     },
-    payload: (v) => ({ ...w.payload(v), document: v.document, digest: v.digest }),
+    payload: (v) => ({ ...w.payload(v), document: v.document, digest: v.digest, created }),
   })
 }

@@ -46,6 +46,8 @@ export async function within(input: Within, deps: Deps): Promise<Settled<Created
       await filing(tx, { task: made.task, project, milestone })
       return { ...made, project }
     },
-    payload: (v) => ({ ...w.payload(v), project: v.project }),
+    // Where the task was filed, which this graft's fold of the creation
+    // writes.
+    payload: (v) => ({ ...w.payload(v), project: v.project, milestone: milestone ?? null }),
   })
 }

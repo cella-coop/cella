@@ -61,9 +61,14 @@ export interface Add {
   minutes?: number
 }
 
+// The item as it was added, at the end of the agenda.
 export interface Added {
   meeting: string
   item: number
+  pos: number
+  title: string
+  presenter: string
+  minutes: number | null
 }
 
 // Moves an item to an index of the agenda as the mover read it.

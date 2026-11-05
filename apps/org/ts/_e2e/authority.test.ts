@@ -273,18 +273,24 @@ test('a closed motion\'s outcome stays fixed when a member is suspended after', 
   assert.equal(counted.length, 5)
 
   // Suspending the objector would let the others' consents pass it, were
-  // the roll read now rather than at the close.
+  // the roll read now rather than at the close. The suspension is staged
+  // around the notary, so it is undone after, and the log folds into the
+  // state the scenario leaves.
   await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [malik])
-  const now = await one<{ p: boolean }>(
-    `SELECT cella.consent(v.member, v.stance, v.receipt) AS p
-     FROM motion.vote v
-     JOIN motion.motion d ON d.id = v.motion
-     JOIN membership_motion.roll r ON r.motion = v.motion AND r.member = v.member
-     JOIN membership.member m ON m.address = v.member AND m.status = 'active'
-     WHERE v.motion = 'm-2026-011' AND v.receipt < d.cutoff`,
-  )
-  assert.equal(now.p, true, 'read now, Camille\'s consent alone would carry it')
-  assert.equal(await passes('m-2026-011'), false)
+  try {
+    const now = await one<{ p: boolean }>(
+      `SELECT cella.consent(v.member, v.stance, v.receipt) AS p
+       FROM motion.vote v
+       JOIN motion.motion d ON d.id = v.motion
+       JOIN membership_motion.roll r ON r.motion = v.motion AND r.member = v.member
+       JOIN membership.member m ON m.address = v.member AND m.status = 'active'
+       WHERE v.motion = 'm-2026-011' AND v.receipt < d.cutoff`,
+    )
+    assert.equal(now.p, true, 'read now, Camille\'s consent alone would carry it')
+    assert.equal(await passes('m-2026-011'), false)
+  } finally {
+    await su.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [malik])
+  }
 })
 
 test('every verdict names its signed receipt, and the log verifies them both', async () => {

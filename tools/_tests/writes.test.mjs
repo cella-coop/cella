@@ -107,7 +107,7 @@ END $$;`],
   assert.deepEqual(await foreign({ 'invoice-member': [pays, 'DROP FUNCTION invoice_member.pays() CASCADE;'] }), ['invoice-member: trigger pays on invoice.payment'])
 })
 
-test('a slice\'s TypeScript that writes another\'s table is found, its own and its tests not', () => {
+test('a slice\'s TypeScript that writes another\'s table is found, its own and its tests not', async () => {
   const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
   try {
     const dir = 'apps/org/grafts/payslip-timesheet/ts'
@@ -120,9 +120,71 @@ test('a slice\'s TypeScript that writes another\'s table is found, its own and i
       '// update payslip.payslip in prose is no write',
     ].join('\n'))
     writeFileSync(join(repo, dir, 'src/_tests/seed.ts'), 'await tx.query(`INSERT INTO payslip.payslip VALUES (1)`)')
-    assert.deepEqual(scanTs(repo, dir, 'payslip-timesheet', 'payslip_timesheet').map((f) => f.what), [
+    assert.deepEqual((await scanTs(repo, dir, 'payslip-timesheet', 'payslip_timesheet')).map((f) => f.what), [
       'src/handlers/generate.ts writes payslip.payslip',
       'src/handlers/generate.ts writes timesheet.entry',
+    ])
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
+})
+
+const verbs = {
+  insert: (table) => `INSERT INTO ${table} (id) VALUES ($1)`,
+  update: (table) => `UPDATE ${table} SET id = $1`,
+  delete: (table) => `DELETE FROM ${table} WHERE id = $1`,
+  merge: (table) => `MERGE INTO ${table} AS t USING (SELECT $1 AS id) AS s ON t.id = s.id WHEN MATCHED THEN DELETE`,
+  truncate: (table) => `TRUNCATE TABLE ${table}`,
+  trigger: (table) => `CREATE TRIGGER changed AFTER INSERT ON ${table} FOR EACH ROW EXECUTE FUNCTION own.changed()`,
+}
+
+// All six kinds of target must resolve through Postgres's rules for
+// unquoted lowercase, quoted names and mixed-case SQL keywords/names.
+for (const [verb, statement] of Object.entries(verbs)) {
+  for (const [spelling, table, format] of [
+    ['lowercase', 'transaction.line', (s) => s.toLowerCase()],
+    ['quoted', '"transaction"."line"', (s) => s],
+    ['mixed', 'TrAnSaCtIoN.LiNe', (s) => s.replace(/\b(insert|into|update|delete|from|merge|using|truncate|table|create|trigger|after|on|for|each|row|execute|function)\b/gi, (w) => w[0].toLowerCase() + w.slice(1).toUpperCase())],
+  ]) {
+    test(`${verb} with ${spelling} names a foreign table`, async () => {
+      const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
+      try {
+        const dir = 'apps/org/grafts/own-other/ts'
+        const src = join(repo, dir, 'src')
+        mkdirSync(src, { recursive: true })
+        const own = spelling === 'quoted' ? '"own_other"."line"' : 'own_other.line'
+        const notary = spelling === 'quoted' ? '"cella"."guard"' : 'cella.guard'
+        writeFileSync(join(src, 'handler.ts'), [table, own, notary].map((target) =>
+          `await tx.query(\`${format(statement(target))}\`)`,
+        ).join('\n'))
+        assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
+          `src/handler.ts ${verb === 'trigger' ? 'triggers on' : 'writes'} transaction.line`,
+        ])
+      } finally {
+        rmSync(repo, { recursive: true, force: true })
+      }
+    })
+  }
+}
+
+test('literals, interpolation, CTEs, comments and own tables', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
+  try {
+    const dir = 'apps/org/grafts/own-other/ts'
+    const src = join(repo, dir, 'src')
+    mkdirSync(src, { recursive: true })
+    writeFileSync(join(src, 'handler.ts'), [
+      'const sql = `WITH changed AS (DELETE FROM "transaction"."line" WHERE id = ${id} RETURNING id) SELECT * FROM changed`',
+      'const other = "UPDATE transaction.line SET id = 1"',
+      'const ok = `INSERT INTO "own_other"."line" VALUES (1); DELETE FROM cella.guard WHERE id = 1`',
+      '// `UPDATE transaction.line SET id = 1`',
+      'const prose = "Please UPDATE transaction.line for the report"',
+      'const dynamic = `UPDATE ${schema}.line SET id = 1`',
+      'const commented = `-- UPDATE transaction.line SET id = 1\nSELECT 1`',
+    ].join('\n'))
+    assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
+      'src/handler.ts writes transaction.line',
+      'src/handler.ts writes transaction.line',
     ])
   } finally {
     rmSync(repo, { recursive: true, force: true })

@@ -339,9 +339,9 @@ if (sql) {
   for (const dir of byName.values()) {
     const p = place(dir)
     if (p?.kind === 'graft') {
-      found.foreign.push(...scanTs(repo, dir, p.name, schemaName(p.name)))
+      found.foreign.push(...await scanTs(repo, dir, p.name, schemaName(p.name)))
     } else if (p?.kind === 'core' && parentOf(p.node)) {
-      found.foreign.push(...scanTs(repo, dir, basename(p.node), basename(p.node)))
+      found.foreign.push(...await scanTs(repo, dir, basename(p.node), basename(p.node)))
     }
   }
   errors.push(...refuse(found.foreign))

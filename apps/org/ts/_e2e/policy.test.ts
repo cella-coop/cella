@@ -4,8 +4,10 @@
 // marks a value twice is refused; once the motion passes and its close
 // carries it, the register keeps the policy with its motion, the day it
 // applies and its value once, the assembly's page lists it in force, and
-// its log entry commits to the wording's hash. Run by `cella test` on a
-// fresh database.
+// its log entry commits to the wording's hash; of two passed motions
+// replacing it, the first to close replaces it and the second's adoption
+// is refused, naming the first's, while its close stands. Run by `cella
+// test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -171,6 +173,43 @@ test('a motion closed so late its policies would end on or before the day they a
   assert.match(out[1].reason ?? '', new RegExp(`${late}/2 would end on 2026-11-30, not after 2026-12-01, the day it applies`))
   assert.notEqual((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [late])).closed, null, 'the close stands')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM policy.policy WHERE motion = $1', [late])).n, '0')
+})
+
+test('two passed motions replace the same policy: the first close replaces it, and the second stands with its adoption refused, naming the first\'s', async () => {
+  const replacing = async (rate: string) => {
+    const proposed = settled(
+      await propose(
+        {
+          circle: 'ag',
+          title: `The solidarity rate at ${rate}`,
+          procedure: 'consent',
+          deadline: '2026-12-12',
+          body: '',
+          actions: [{ kind: 'policy', args: { kind: 'rule', wording: legal.replace('20 %', rate), replaces: `${motion}/1` } }],
+        },
+        as(camille),
+      ),
+    )
+    for (const { member } of await all<{ member: string }>('SELECT member FROM membership_motion.roll WHERE motion = $1', [proposed.motion])) {
+      settled(await vote({ motion: proposed.motion, member, stance: 'consent' }, as(member)))
+    }
+    return proposed.motion
+  }
+  const first = await replacing('25 %')
+  const second = await replacing('30 %')
+  await on('2026-12-12')
+  settled(await close({ motion: first }, as(camille)))
+  assert.deepEqual((await carried(first, as(camille))).map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
+  settled(await close({ motion: second }, as(camille)))
+  const out = await carried(second, as(camille))
+  assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'refused']])
+  assert.match(out[0].reason ?? '', new RegExp(`${second}/1 does not replace ${motion}/1: ${first}/1 replaces ${motion}/1 already, from 2026-12-12`))
+  assert.notEqual((await one<{ closed: string | null }>('SELECT closed FROM motion.motion WHERE id = $1', [second])).closed, null, 'the close stands')
+  assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM policy.policy WHERE motion = $1', [second])).n, '0')
+  assert.deepEqual(
+    await one(`SELECT to_char(ends, 'YYYY-MM-DD') AS ends FROM policy.policy WHERE id = $1`, [`${motion}/1`]),
+    { ends: '2026-12-12' },
+  )
 })
 
 test('the log verifies', async () => {

@@ -36,8 +36,17 @@ The app role and the guards role may use the schema.
   would adopt that marks a value named `account_…` makes sound capital
   terms (`account.terms_flaw`: all five clauses marked, the share an
   amount, the others whole numbers, an exit repaid within five years),
-  and replaces the rule of the terms that govern, if any; and no policy it
-  would end is one terms copy, since terms are replaced, never ended.
+  and replaces the rule of the latest terms, those whose rule applies
+  latest, if any, as `motion_patronage.asks` does: while terms adopted
+  to apply on 1 January wait, a rule proposed in November replaces
+  those, never the terms that govern today, and applies on or after
+  their day, since the motion feat refuses to replace a policy not in
+  force the day the new one applies. Its reason names the terms to
+  replace and the day they apply, so the member who proposes it names
+  them and proposes again; and no policy it would end is one terms
+  copy, since terms are replaced, never ended. At the close the motion
+  feat's `motion.adopts` judges the replacement again, since another
+  motion may have replaced the same terms while this one was open.
 - `account_motion.adopts`, on `account:terms:adopt`: the cited motion
   adopted the rule the terms copy.
 - `account_motion.admits`, on `account:capital:subscribe`: the cited
@@ -63,9 +72,12 @@ action, `n`, so the reaction reads the policy it adopted.
 ## Tests
 
 `ts/_tests/terms.test.ts` (`cella test slice account-motion`): a
-proposal adopts a capital rule only as sound terms, replacing those that
-govern, and ends none; copying terms cites the motion that adopted the
-rule, never another; the action cites a motion; a subscription, a
+proposal adopts a capital rule only as sound terms, replacing the latest
+terms, and ends none; while terms still to apply wait, a rule naming
+those that govern is refused naming the waiting ones, and one naming
+those, applying from their day or later, is accepted, the capital
+governed by each on its days; copying terms cites the motion that
+adopted the rule, never another; the action cites a motion; a subscription, a
 withdrawal or a freeze cites a motion that admitted or excluded its own
 member, never another's. The e2e scenario
 `capital` adopts new terms by motion and refuses a subscription under

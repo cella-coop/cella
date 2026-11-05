@@ -2,8 +2,9 @@
 // form, as a fixture in memory for `found.mjs` to found: the founders,
 // each a person with one device, an active member since the founding day
 // and seated in the root circle, the form's assembly; and the root's
-// founding motion, which the founders decide by consent on that day and
-// which adopts the form's defaults in its order, each worded and
+// founding motion, which the scope names as its `founding`, which the
+// founders decide by consent on that day, each with a stance, and which
+// adopts the form's defaults in its order, each worded and
 // protected as it reads and taking it, the procedures among them. `keep`
 // chooses which defaults it adopts, every one by default. Each device's
 // key is the TEST-ONLY key derived from its address and label.
@@ -17,8 +18,9 @@ export async function founding(db, { scope, founders, day, root = 'ag', keep = (
     [scope.legal_form],
   )
   const year = day.slice(0, 4)
+  const motion = `m-${year}-001`
   const files = {
-    scope,
+    scope: { ...scope, founding: motion },
     person: {
       person: founders.map((f) => ({ address: f.address, name: f.name })),
       device: founders.map((f) => ({ address: f.address, label: f.label, enrolled: day })),
@@ -31,7 +33,7 @@ export async function founding(db, { scope, founders, day, root = 'ag', keep = (
     motion: {
       motion: [
         {
-          id: `m-${year}-001`,
+          id: motion,
           circle: root,
           title: `Found ${scope.name} and adopt its statutes`,
           procedure: 'consent',

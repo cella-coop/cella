@@ -162,7 +162,10 @@ assembly, and no one opens a candidacy for another.
   staff, each value saying which way is stricter, and the clients refused,
   which bind by their words alone.
 - **Legal form.** Lanterne is a SCOP SARL in France, and its founding
-  motion takes that form's defaults ([legal forms](../../../../_corpus/doc/forms.md)):
+  motion, `m-2021-001`, which `scope.toml` names as its `founding`, was
+  decided by its founders, the four members since 1 March 2021, each
+  seated in the assembly that day and consenting, Paul among them, whose
+  seat ended when he left. It takes that form's defaults ([legal forms](../../../../_corpus/doc/forms.md)):
   each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
   worded and protected as it reads. They are its six procedures, the
   participant's mandates (`/45`, `/46`), the assembly's collective

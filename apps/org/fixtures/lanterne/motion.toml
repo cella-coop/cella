@@ -408,6 +408,28 @@ args = { kind = "mandate", wording = "The {role: member} role holds {power: read
 kind = "policy"
 args = { kind = "rule", wording = "Open books shares a total of members' own figures with every member where at least {disclosure_contributors: 5 | more is stricter} people put into it, none of them more than {disclosure_largest: 50 % | less is stricter} of it and no two more than {disclosure_two: 80 % | less is stricter}" }
 
+# The founders decided it: the four members since 1 March 2021, each
+# seated in the assembly that day, consented, Paul among them.
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2021-03-01
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2021-03-01
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2021-03-01
+
+[[motion.vote]]
+member = "paul@lanterne.example"
+stance = "consent"
+at = 2021-03-01
+
 [[motion]]
 id = "m-2026-006"
 circle = "ag"

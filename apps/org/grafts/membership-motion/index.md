@@ -121,8 +121,10 @@ feat's imports under the importer's mandates
 
 The e2e scenario `founding` founds a fresh scope as a SCOP SARL in France
 by three founders, whose next write passes the guards its policies set,
-and refuses a founding with no procedure for its root, leaving the log
-empty, and a second founding; `notarised` finds Lanterne's seed founded
+and refuses, each leaving the log empty, a founding with no procedure
+for its root, one naming no founding motion, one whose motion a founder
+cast no stance on, one with a founder seated nowhere, and a second
+founding; `notarised` finds Lanterne's seed founded
 as entry 1.
 
 | Action | Label | Why |
@@ -277,11 +279,19 @@ she is on no roll of the assembly's.
   least one of them. Once the founding's state is written, the co-op can
   decide: there is one assembly; it decides by a procedure a policy
   in force there makes, which its founding motion adopted, never only a
-  procedure every scope starts with; and the signer sits in it with a
-  vote, their seat counting on the verdict date
-  (`membership.sits_in`) and, where the procedure names the roles
-  that vote, holding one. A founding with no procedure for its root is
-  refused, saying so, and leaves the log empty.
+  procedure every scope starts with. The founding names its founding
+  motion by its id, which is no personal data, and that motion is the
+  root's, closed, carried by the procedure it names as the roll counts
+  it, and the one that adopted every policy taking a default of the
+  form. Its founders are the members whose membership began by the day
+  it closed: each sits in the root with a vote that day, a seat
+  counting then (`membership.sits_in`) and, where the procedure names
+  the roles that vote, holding one; and each has a stance on the
+  motion, so its founders decided it. The signer is one of them, with a
+  vote on the verdict date. A founding with no procedure for its root,
+  naming no motion or one that fails any of these, or leaving a founder
+  unseated, is refused, saying which condition fails and what would fix
+  it, and leaves the log empty.
 
 ### Handlers of the roll
 

@@ -97,6 +97,13 @@ circle = "ag"
 holder = "hugo@lanterne.example"
 role = "member"
 
+# Paul, a founder, sat in the assembly until he left.
+[[tenure]]
+circle = "ag"
+holder = "paul@lanterne.example"
+role = "member"
+until = 2025-11-30
+
 [[tenure]]
 circle = "ag"
 holder = "julien@lanterne.example"

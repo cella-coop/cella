@@ -270,13 +270,19 @@ call's literal action and power as it reads a literal row.
 such write and trigger that the owner's migrations leave standing. A
 later file that drops the trigger, or drops or replaces the function,
 takes it away, and a slice may drop its own trigger on another's table.
-`tools/writes.mjs` scans each feat's and graft's TypeScript, its tests
-aside, for SQL that writes a table outside its schema. The check
-refuses every such write and trigger; there are no exceptions, the
-last of those that predated the rule having moved to their owners'
-registers and published writes. A write no tool can see, such as
-SQL built at run time (`EXECUTE`, or a string assembled in TypeScript),
-is left to review.
+`tools/writes.mjs` reads each feat's and graft's TypeScript, its tests
+aside, as Postgres would: every string and template literal that holds
+SQL is parsed with libpg_query, as `sql-check.mjs` parses migrations,
+each interpolation standing in as a parameter, and every statement
+that writes a table outside its schema, or puts a trigger on one, is
+found whatever its spelling: in capitals or not, its names quoted or
+not, inside a `WITH`. The check refuses every such write and trigger;
+there are no exceptions, the last of those that predated the rule
+having moved to their owners' registers and published writes. A write
+no tool can see is left to review: SQL built at run time (`EXECUTE`,
+or a statement whose table or verb a TypeScript string assembles from
+parts), and a target named without its schema, which the connection's
+search path resolves.
 
 ### Reading
 

@@ -1,6 +1,6 @@
 +++
 title = "patronage-timesheet"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 How a surplus's work share divides among the workers by time worked,
@@ -39,7 +39,7 @@ the approved time gives are refused.
 
 ## Reads
 
-`division` runs as its owner over everyone's approved time, so each share it gives is the one the approval makes, whoever reads it; `time_share` shows each worker's to the worker and to whoever holds `distribute-surplus` (`sql/002-reads.sql`).
+`division` runs as its owner over everyone's approved time, so each share it gives is the one the approval makes, whoever reads it, and keeps of them only the parts its reader reads, by the personal row's test, so called alone it shows no more than `time_share`, and is declared `audience: shared` ([reading](../../../../_corpus/doc/architecture.md#reading)); `time_share` shows each worker's to the worker and to whoever holds `distribute-surplus` (`sql/002-reads.sql`).
 
 ## Shell
 

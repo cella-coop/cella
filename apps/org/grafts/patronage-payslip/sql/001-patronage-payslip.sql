@@ -55,10 +55,19 @@ BEGIN ATOMIC
         THEN cella.allocate(cella.amount(patronage.portion(ref, 'salary')), (SELECT array_agg(p.cents ORDER BY p.n) FROM paid p)) END AS salary,
       CASE WHEN patronage.portion(ref, 'equal') > 0 AND EXISTS (SELECT FROM employed)
         THEN cella.allocate(cella.amount(patronage.portion(ref, 'equal')), (SELECT array_agg(1::bigint ORDER BY e.n) FROM employed e)) END AS equal
+  ),
+  parts AS (
+    SELECT x.member, 'salary' AS basis, x.cents AS quantity, s.salary[x.n] AS cents FROM paid x CROSS JOIN split s WHERE s.salary[x.n] > 0
+    UNION ALL
+    SELECT x.member, 'equal', 1::bigint, s.equal[x.n] FROM employed x CROSS JOIN split s WHERE s.equal[x.n] > 0
   )
-  SELECT x.member, 'salary', x.cents, s.salary[x.n] FROM paid x CROSS JOIN split s WHERE s.salary[x.n] > 0
-  UNION ALL
-  SELECT x.member, 'equal', 1::bigint, s.equal[x.n] FROM employed x CROSS JOIN split s WHERE s.equal[x.n] > 0;
+  -- Each part for whoever reads it: its worker, a reader of pay in the
+  -- distribution's circle, a graft's reach and a write, which divides
+  -- the whole.
+  SELECT p.member, p.basis, p.quantity, p.cents
+  FROM parts p, patronage.distribution d
+  WHERE d.id = ref
+    AND ((SELECT circle.whole()) OR d.circle = ANY ((SELECT cella.circles('patronage'))::text[]) OR p.member = cella.reader() OR cella.reaches('patronage', p.member));
 END;
 
 -- The division of pay and of equal parts, which the patronage feat asks

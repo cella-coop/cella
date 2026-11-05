@@ -117,3 +117,4 @@ BEGIN ATOMIC
   WHERE l.digest = sha256(invited.secret)
     AND NOT EXISTS (SELECT FROM membership.invitation i WHERE i.member = m.address);
 END;
+COMMENT ON FUNCTION membership.invited(bytea) IS 'audience: keyed by secret: whom a link invites, for whoever holds its secret';

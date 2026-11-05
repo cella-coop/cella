@@ -29,3 +29,5 @@ BEGIN ATOMIC
   FROM patronage.distribution a
   WHERE a.id = federation.ref AND a.distributed IS NOT NULL;
 END;
+
+COMMENT ON FUNCTION account_membership_patronage_transaction.federation(text) IS 'audience: shared by year: the co-op''s figures of a distributed year, counts and sums that name no one';

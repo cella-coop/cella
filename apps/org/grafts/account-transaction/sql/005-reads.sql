@@ -24,6 +24,7 @@ ALTER VIEW account_transaction.balance SET (security_invoker = true);
 -- reads: they sum the whole journal whoever reads them. The figures of a
 -- rubric's accounts read as their lines do.
 ALTER FUNCTION account_transaction.statement(text, date, date) SECURITY DEFINER SET search_path = pg_catalog, pg_temp;
+COMMENT ON FUNCTION account_transaction.statement(text, date, date) IS 'audience: shared by sheet, id: a sheet''s figures, rubric by rubric, summed over the whole journal';
 
 -- Whether the trial balance agrees, over the whole journal whoever reads
 -- it: a member who reads only some accounts' lines still learns whether

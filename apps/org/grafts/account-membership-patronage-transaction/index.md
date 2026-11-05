@@ -25,7 +25,9 @@ builds on `account-membership-patronage` for the split and
 - `employable(distribution)`: the associates whose part of a distributed
   split buys shares and who are not credited yet, in the order of their
   capital accounts. It runs as its owner, since whoever approved the
-  split may read no colleague's part, and says no more than who.
+  split may read no colleague's part, and says no more than who, and
+  that only to whoever reads the distribution in its circle and to a
+  write; it is declared `audience: shared by ref` ([reading](../../../../_corpus/doc/architecture.md#reading)).
 
 No trigger credits a distribution: what `424` owes in shares is paid
 out by the writes that follow it, and what it still owes after them is
@@ -85,7 +87,7 @@ capital account, or a second one for the same part, is refused.
 
 ## Reads
 
-A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). The year's return to the federation, `federation(distribution)` (`sql/003-return.sql`), runs as its owner: its counts and sums are the co-op's, whole for every reader, and name no one.
+A credit reads as the member's capital account does, for the member and capital's readers (`sql/002-reads.sql`, [the pattern](../../../../_corpus/doc/architecture.md#sql)). The year's return to the federation, `federation(distribution)` (`sql/003-return.sql`), runs as its owner: its counts and sums are the co-op's, whole for every reader, and name no one, so it is declared `audience: shared by year` ([reading](../../../../_corpus/doc/architecture.md#reading)).
 
 ## Shell
 

@@ -61,7 +61,9 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
   member may hold several; the first taken up ends them all. Whom a
   link invites is read by its secret before anyone signs in,
   `membership.invited(secret)`, which reads as its owner past the
-  row-level policies and answers only for the secret it is given.
+  row-level policies and answers only for the secret it is given,
+  matching the link by its digest: it is declared `audience: keyed by
+  secret` ([reading](../../../../../../_corpus/doc/architecture.md#reading)).
 - `membership.invitation`, an invitation taken up: the invitee's address,
   the public key of the first device it enrolled, the label they gave it
   and the day (`accepted`). One per member. `membership.signs`, a trigger

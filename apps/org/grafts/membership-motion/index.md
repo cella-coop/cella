@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-04
+updated = 2026-11-05
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -178,11 +178,14 @@ she is on no roll of the assembly's.
   stances received before its cutoff, but a redacted one; and `turnout(motion)`, how many
   count, how many of them gave a stance, an abstention taking part, and
   whether that meets its procedure's quorum.
-- `membership_motion.tally(motion)`: what every member reads of
-  a motion's count, whether it passes and its turnout, by `passes` and
+- `membership_motion.tally(motion)`: what a reader of the motion reads
+  of its count, whether it passes and its turnout, by `passes` and
   `turnout`; on a secret ballot ([ballots](../../feats/motion/index.md#ballots))
   sealed, every field null, until its close. It runs as its owner, since a
-  member reads no other's secret stance, and only the app role may call it.
+  member reads no other's secret stance, and only the app role may call it;
+  it keeps the count to whoever reads the motion in its circle and to a
+  write, every field null to anyone else, and is declared `audience:
+  shared by ref` ([reading](../../../../_corpus/doc/architecture.md#reading)).
 - `membership_motion.passes(motion)`: whether a motion passes by
   its procedure over those stances: its quorum met, and then by its method,
   `cella.consent`, or for a majority `cella.majority`, more for than

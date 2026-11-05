@@ -719,15 +719,23 @@ empty denies nothing, and the test names it unproven rather than
 passing it.
 
 Two scenarios prove that a write waiting on its signer keeps no one
-else waiting ([the shell](#the-shell)), through the built shell as a
-scope's server runs (`cella test e2e crowd`): ten people start a signed
+else waiting ([the shell](#the-shell)), through the built shell as
+`cella serve` runs it, its sign-in page offering the fixture members
+(`cella test e2e crowd`): ten people start a signed
 write at once and sign it through their devices only once all ten
 wait, and every one settles while another person keeps loading
 collection pages, each answered within three seconds; and a member
 starts three writes and abandons them unsigned, while other people's
 writes settle and their pages load within the same bound, the
 abandoned runs fail as their patience runs out, leaving nothing
-written, and the member's places are free again.
+written, and the member's places are free again. The scenarios drive
+the shell's server as a device does, posting what the browser posts;
+in each of the three browsers in turn, one of the ten instead renames
+themselves on their own page, signed by the browser's own key, and
+their write settles while the other nine wait, and the abandoning
+member, once their three runs wait, starts a fourth on their page,
+which shows it failed with the cap's reason, as any failed write
+shows.
 
 ## Inside a package
 

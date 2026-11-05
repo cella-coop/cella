@@ -22,7 +22,7 @@ export const saving = (input: Save, actor: string): Write<Stored> => ({
     )
     return { report: input.id }
   },
-  payload: (v) => ({ ...v, title: input.title }),
+  payload: (v) => ({ ...v, title: input.title, caption: input.caption, definition: input.definition }),
 })
 
 // Saves a custom report once the port's catalog allows its definition: one

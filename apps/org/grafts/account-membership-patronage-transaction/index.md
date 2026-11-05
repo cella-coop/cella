@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -74,6 +74,16 @@ that approved the split, which `motion-patronage` checks.
   credited by it, and no other line, so it touches no cash account. That
   the shares were added to what the member holds is not checked: the
   membership feat keeps no history of a member's shares to read it from.
+
+## Folds
+
+A part employed in shares folds by
+`account_membership_patronage_transaction.fold_employ`
+(`sql/005-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)): the entry
+by `transaction.fold_record`, the credit as its entry keeps it, and
+the shares it buys added to what the member holds by
+`membership.fold_credit`, as its handler calls `record` and
+`crediting`. Its payload keeps the credit and the entry for it.
 
 ## Tests
 

@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -84,6 +84,15 @@ an entry that does not balance or falls in no open period.
 
 The FEC is read by this graft's importer, `fec`, one carry for each
 entry, by its journal and number ([import](../../feats/import/index.md)).
+
+## Folds
+
+A carry folds by `account_transaction.fold_carry`
+(`sql/006-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)): the
+accounts the entry asked to open, by `account.fold_opening`, which
+opens those the chart lacked as `opening` did, then the entry as the
+journal keeps it, by `transaction.fold_record`. Its payload keeps the
+accounts asked for with their labels, beside those it opened.
 
 ## Handlers
 

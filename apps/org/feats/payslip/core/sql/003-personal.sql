@@ -1,9 +1,9 @@
 -- What of pay is personal data: a member's salary and each payslip's
--- figures, of class `payroll`, which the law keeps five years (Code du
--- travail, art. L3243-4). Erasing a member who has left restricts them;
--- once their clock runs out the sweep redacts them to NULL, so the
--- figures are nullable, and an approved run's payslips take that one
--- change.
+-- figures and minutes, of class `payroll`, which the law keeps five
+-- years (Code du travail, art. L3243-4). Erasing a member who has left
+-- restricts them; once their clock runs out the sweep redacts them to
+-- NULL, so the figures are nullable, and an approved run's payslips
+-- take that one change.
 ALTER TABLE payslip.salary ALTER COLUMN gross DROP NOT NULL;
 ALTER TABLE payslip.payslip
   ALTER COLUMN gross DROP NOT NULL,
@@ -16,7 +16,8 @@ INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('payslip', 'payslip', 'gross', 'payroll', 'member', 'payslip'),
   ('payslip', 'payslip', 'employee', 'payroll', 'member', 'payslip'),
   ('payslip', 'payslip', 'employer', 'payroll', 'member', 'payslip'),
-  ('payslip', 'payslip', 'net', 'payroll', 'member', 'payslip');
+  ('payslip', 'payslip', 'net', 'payroll', 'member', 'payslip'),
+  ('payslip', 'payslip', 'minutes', 'payroll', 'member', 'payslip');
 
 COMMENT ON COLUMN payslip.run.approver IS 'not personal: the approver''s pseudonymous address';
 

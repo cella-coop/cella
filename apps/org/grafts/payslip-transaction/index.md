@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -44,6 +44,14 @@ assembly's, unless the write that makes it names another.
   balance among themselves and credit neither the bank nor an account the
   event's own lines post to, and the graft that adds them checks they are
   exactly its own.
+
+## Folds
+
+A run's approval and its payment fold by `sql/003-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), once the payslip feat's fold has
+moved the run: the entry each posted, as its payload keeps it, linked as
+the event it is. What a graft above kept of a payment's lines its own
+fold of the payment rebuilds.
 
 ## Handlers
 

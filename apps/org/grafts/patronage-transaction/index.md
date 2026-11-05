@@ -1,6 +1,6 @@
 +++
 title = "patronage-transaction"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 A year's distribution in the books: distributing an approved split posts
@@ -50,6 +50,13 @@ assembly's, unless the write that makes it names another.
   terms govern, or terms with no rate, pay no interest. That the rate is
   within art. 14's ceiling, the TMO plus two points, is not checked: the
   TMO is not known here.
+
+## Folds
+
+A distribution folds by `patronage_transaction.fold_distribute`
+(`sql/004-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)), once the
+patronage feat's fold has distributed the split: the entry posting it,
+as its payload keeps it, linked to the distribution.
 
 ## Handlers
 

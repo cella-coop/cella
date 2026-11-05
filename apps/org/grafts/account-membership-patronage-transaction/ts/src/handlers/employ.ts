@@ -1,7 +1,8 @@
 import { done, write, type Deps, type Done, type Write } from '@cella/org-db'
 import type { actions } from '@cella/org-patronage/models'
 import { crediting } from '@cella/org-membership/api'
-import { record } from '@cella/org-transaction/api'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry } from '@cella/org-transaction/models'
 import type { Credited, Employ } from '../models/patronage.ts'
 
 const op = 'patronage:part:employ' satisfies keyof typeof actions
@@ -12,11 +13,14 @@ const op = 'patronage:part:employ' satisfies keyof typeof actions
 // owed) debited and their capital account under 1013 credited, recorded
 // as their credit, and added to what they hold by the membership feat's
 // `crediting`. Its payload names the distribution, the member, the entry
-// and the motion; `account_membership_patronage_transaction.employs` reads
-// the shares from the row this write made and decides, the patronage
-// feat's guard that the split is distributed, and motion-patronage's that
-// the motion approved it.
+// and the motion, and keeps the credit and the entry for its fold;
+// `account_membership_patronage_transaction.employs` reads the shares
+// from the row this write made and decides, the patronage feat's guard
+// that the split is distributed, and motion-patronage's that the motion
+// approved it.
 export function employing(input: Employ): Write<Credited> {
+  // The entry it posts, which its payload keeps for its fold.
+  let posting: Entry | null = null
   return {
     op,
     request: input,
@@ -40,14 +44,15 @@ export function employing(input: Employ): Write<Credited> {
         throw new Error(`${input.member}'s part of ${input.distribution} buys no shares`)
       }
       const cents = Number(p.capital)
-      const { entry } = await record(tx, {
+      posting = {
         date: p.day,
         label: `Work share ${p.year} employed in shares, ${p.account}`,
         lines: [
           { account: '424', side: 'debit', cents },
           { account: p.account, side: 'credit', cents },
         ],
-      })
+      }
+      const { entry } = await record(tx, posting)
       await tx.query(
         `INSERT INTO account_membership_patronage_transaction.credit (distribution, member, account, shares, amount, until, entry)
          VALUES ($1, $2, $3, $4, cella.amount($5), $6, $7)`,
@@ -56,7 +61,17 @@ export function employing(input: Employ): Write<Credited> {
       const holds = await crediting(tx, input.member, p.shares)
       return { ...input, account: p.account, shares: p.shares, amount: cents, until: p.until, entry, holds }
     },
-    payload: (v) => ({ distribution: v.distribution, member: v.member, entry: v.entry, motion: v.motion }),
+    payload: (v) => ({
+      distribution: v.distribution,
+      member: v.member,
+      entry: v.entry,
+      motion: v.motion,
+      account: v.account,
+      shares: v.shares,
+      amount: v.amount,
+      until: v.until,
+      ...(posting ? { posting: logged(posting) } : {}),
+    }),
   }
 }
 

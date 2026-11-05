@@ -422,18 +422,20 @@ fn copy(dev: &Dev, f: &Fold<'_>, at: i64, to: i64) -> Result {
 }
 
 /// Each slice's schema, whether it is folded, and its actions with no fold,
-/// as the source's registries and log say.
+/// as the source's registries and log say. The list, empty for a folded
+/// slice, comes between the two, since the output's last line loses its
+/// trailing tab.
 fn folded(dev: &Dev, db: &str) -> Result<Vec<(String, bool, String)>> {
     let rows = psql(
         dev,
         db,
-        "SELECT schema, folded, array_to_string(unfolded, ', ') FROM cella.folded()",
+        "SELECT schema, array_to_string(unfolded, ', '), folded FROM cella.folded()",
     )?;
     Ok(rows
         .lines()
         .filter_map(|l| {
             let c: Vec<&str> = l.split('\t').collect();
-            let [schema, folded, unfolded] = c[..] else {
+            let [schema, unfolded, folded] = c[..] else {
                 return None;
             };
             Some((schema.to_owned(), folded == "t", unfolded.to_owned()))

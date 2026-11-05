@@ -1,6 +1,6 @@
 +++
 title = "payslip-timesheet"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 A pay run from approved time: each payslip holds the minutes of its
@@ -23,6 +23,14 @@ member logged in a month, summed across circles.
 
 The approval a run waits for is ordered and fixes the month's entries, so
 the time a run reads never changes after.
+
+## Folds
+
+A run's preparation folds by `payslip_timesheet.fold_generate`
+(`sql/002-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)), once the
+payslip feat's fold has prepared it: the minutes each payslip was
+worked, as the commitments its entry keeps, since a folded scope's time
+entries hold none of the minutes they commit to.
 
 ## Handlers
 

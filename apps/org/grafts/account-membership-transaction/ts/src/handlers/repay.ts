@@ -1,7 +1,8 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '@cella/org-account/models'
-import { record } from '@cella/org-transaction/api'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry } from '@cella/org-transaction/models'
 import type { Repaid, Repay } from '../models/capital.ts'
 
 const op = 'account:capital:repay' satisfies keyof typeof actions
@@ -11,6 +12,8 @@ const op = 'account:capital:repay' satisfies keyof typeof actions
 // the repayment is paid. `account_membership_transaction.repays` decides: it
 // has fallen due, every one before it is paid, and it is paid once.
 export async function repay(input: Repay, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Repaid>> {
+  // The entry it posts, which its payload keeps for its fold.
+  let posting: Entry | null = null
   return write(deps, {
     op,
     request: input,
@@ -25,20 +28,21 @@ export async function repay(input: Repay, deps: Deps): Promise<Outcome<(typeof a
       if (cents === null) {
         return { ...input, amount: 0, entry: null }
       }
-      const { entry } = await record(tx, {
+      posting = {
         date: day,
         label: `Capital repaid, ${input.n}`,
         lines: [
           { account: '4567', side: 'debit', cents: Number(cents) },
           { account: '512', side: 'credit', cents: Number(cents) },
         ],
-      })
+      }
+      const { entry } = await record(tx, posting)
       await tx.query(
         'UPDATE account_membership_transaction.repayment SET entry = $3, paid = cella.verdict_date() WHERE member = $1 AND n = $2',
         [input.member, input.n, entry],
       )
       return { ...input, amount: Number(cents), entry }
     },
-    payload: (v) => ({ ...v }),
+    payload: (v) => ({ ...v, ...(posting ? { posting: logged(posting) } : {}) }),
   })
 }

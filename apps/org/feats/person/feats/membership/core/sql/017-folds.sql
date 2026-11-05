@@ -95,6 +95,17 @@ BEGIN
 END
 $$;
 
+-- What `crediting` wrote, in the write of an extender that credits
+-- shares, as account-membership-patronage-transaction's employing a
+-- part of the work share does: the shares the entry credits, added to
+-- what the member holds, as its handler adds them while they are active.
+CREATE FUNCTION membership.fold_credit(member text, shares integer) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE membership.member SET shares = membership.member.shares + fold_credit.shares
+  WHERE address = fold_credit.member AND membership.active(address, cella.verdict_date());
+END;
+
 SELECT cella.lets_fold('membership:member:invite', 1, 'membership.fold_invite(jsonb)', 'membership');
 SELECT cella.lets_fold('membership:member:apply', 1, 'membership.fold_apply(jsonb)', 'membership');
 SELECT cella.lets_fold('membership:member:link', 1, 'membership.fold_link(jsonb)', 'membership');

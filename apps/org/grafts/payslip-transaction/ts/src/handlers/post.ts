@@ -2,8 +2,8 @@ import type { Refused, Settled } from '@cella/org-actions'
 import { write, type Db, type Deps, type Write } from '@cella/org-db'
 import { approving, paying } from '@cella/org-payslip/api'
 import type { Ran, Run } from '@cella/org-payslip/models'
-import { record } from '@cella/org-transaction/api'
-import type { Line } from '@cella/org-transaction/models'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry, Line } from '@cella/org-transaction/models'
 
 type Event = 'accrual' | 'payment'
 
@@ -15,7 +15,7 @@ type Event = 'accrual' | 'payment'
 // The accrual is dated the run's last day, so it lands in the month the
 // pay is for; the payment the day it was paid. A run the write did not
 // move posts nothing, and the feat's guard refuses it.
-async function posted(tx: Db, v: Ran, event: Event): Promise<string | null> {
+async function posted(tx: Db, v: Ran, event: Event): Promise<{ entry: string; posting: Entry } | null> {
   if (!v.day) {
     return null
   }
@@ -31,23 +31,28 @@ async function posted(tx: Db, v: Ran, event: Event): Promise<string | null> {
   const lines = [...rows, ...added].map((r) => ({ account: r.account, side: r.side, cents: Number(r.cents) }))
   const date = event === 'accrual' ? (rows[0]?.day ?? v.day) : v.day
   const label = event === 'accrual' ? `Payroll, ${v.month}` : `Payroll paid, ${v.month}`
-  const { entry } = await record(tx, { date, label, lines })
+  const posting = { date, label, lines }
+  const { entry } = await record(tx, posting)
   await tx.query('INSERT INTO payslip_transaction.posting (entry, month, event) VALUES ($1, $2, $3)', [entry, v.month, event])
   if (event === 'payment') {
     await tx.query('SELECT payslip_transaction.keep($1, $2)', [v.month, entry])
   }
-  return entry
+  return { entry, posting }
 }
 
 function posting(w: Write<Ran>, event: Event): Write<Ran & { entry: string | null }> {
+  // The entry it posts, which its payload keeps for its fold.
+  let kept: Entry | null = null
   return {
     op: w.op,
     request: w.request,
     state: async (tx, proof) => {
       const value = await w.state(tx, proof)
-      return { ...value, entry: await posted(tx, value, event) }
+      const made = await posted(tx, value, event)
+      kept = made?.posting ?? null
+      return { ...value, entry: made?.entry ?? null }
     },
-    payload: (v) => ({ ...w.payload(v), entry: v.entry }),
+    payload: (v) => ({ ...w.payload(v), entry: v.entry, ...(kept ? { posting: logged(kept) } : {}) }),
   }
 }
 

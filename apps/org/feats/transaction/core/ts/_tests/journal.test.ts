@@ -1,11 +1,14 @@
 // The journal alone, on a database holding only the app's core and this
 // feat: entries balance, ids are gapless, nothing posted changes, a payment
-// is exactly one, and a correction names its base. Run by `cella test slice
-// transaction`.
+// is exactly one, and a correction names its base; and each write's
+// payload folds into the journal it wrote (`sql/009-folds.sql`). Run by
+// `cella test slice transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import type { Write } from '@cella/org-db'
+import { adjusting, paying, posting } from '@cella/org-transaction/api'
 
 const db = new pg.Client()
 
@@ -218,4 +221,43 @@ test('a check overloaded under its name runs the overload registered: a line pos
   assert.ok((await post(rent)).id, 'a line the check passes posts')
   const refused = await post([{ account: '777', side: 'debit', cents: 1_00 }, { account: '512', side: 'credit', cents: 1_00 }])
   assert.match(refused.refused ?? '', /je-\d+ posts to 777/)
+})
+
+// The journal's rows, as JSON text, sorted, without the receipt, which a
+// fold reads from the log.
+const journal = async () =>
+  (
+    await db.query<{ r: string[] }>(
+      `SELECT ARRAY(SELECT (to_jsonb(e) - 'receipt')::text FROM transaction.entry e ORDER BY 1)
+              || ARRAY(SELECT to_jsonb(l)::text FROM transaction.line l ORDER BY 1)
+              || ARRAY(SELECT to_jsonb(j)::text FROM transaction.journal j) AS r`,
+    )
+  ).rows[0].r
+
+// The write's state, then, in its place, its payload folded as entry `n`:
+// both leave the same journal, and neither stays.
+async function folds<T>(w: Write<T>, n: number) {
+  await db.query('BEGIN')
+  const payload = w.payload(await w.state(db, {} as never))
+  const written = await journal()
+  await db.query('ROLLBACK')
+  await db.query('BEGIN')
+  try {
+    await db.query('SELECT transaction.fold_post($1)', [{ n, op: w.op, actor: 'julien@lanterne.example', date: '2026-10-24', cause: null, payload }])
+    assert.deepEqual(await journal(), written)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+}
+
+test('a post, a payment to a supplier and a correction fold into the journal each wrote', async () => {
+  const supplies = { date: '2026-10-24', label: 'Supplies', lines: [{ account: '606', side: 'debit' as const, cents: 12_00 }, { account: '401', side: 'credit' as const, cents: 12_00 }] }
+  await folds(posting(supplies), 1)
+  await folds(paying({ date: '2026-10-24', label: 'Paper', cents: 80_00 }), 2)
+  const corrected = (await db.query<{ id: string }>('SELECT id FROM transaction.entry ORDER BY id LIMIT 1')).rows[0].id
+  await folds(adjusting({ corrects: corrected, base: null, entry: { ...supplies, label: 'Supplies, corrected', lines: supplies.lines.map((l) => ({ ...l, side: l.side === 'debit' ? 'credit' : 'debit' })) } }), 3)
+  await assert.rejects(
+    db.query('SELECT transaction.fold_post($1)', [{ n: 4, op: 'transaction:transaction:post', actor: 'julien@lanterne.example', date: '2026-10-24', cause: null, payload: { entry: 'je-9999', date: '2026-10-24', lines: [] } }]),
+    /entry 4 keeps no label and lines for je-9999/,
+  )
 })

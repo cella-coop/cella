@@ -296,7 +296,7 @@ fn a_log_folds_into_the_state_it_was_written_with() {
     let out = ok(&["fold", &src, "--into", &whole, "--every", "3", "--compare"]);
     assert!(out.contains("3 checkpoints"), "{out}");
     assert!(out.contains("its log verifies"), "{out}");
-    assert!(out.contains("compare: circle, employment, employment_membership, membership, membership_motion, person, policy folded"), "{out}");
+    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
     assert_eq!(
         psql(
             &whole,
@@ -403,7 +403,7 @@ $$;";
         "8",
         "--compare",
     ]);
-    assert!(out.contains("compare: circle, employment, employment_membership, membership, membership_motion, person, policy folded"), "{out}");
+    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
     assert_eq!(
         psql(
             &versions,
@@ -466,7 +466,7 @@ fn a_role_s_seat_in_another_circle_folds() {
     );
 
     let out = ok(&["fold", &src, "--into", &into, "--compare"]);
-    assert!(out.contains("compare: circle, employment, employment_membership, membership, membership_motion, person, policy folded"), "{out}");
+    assert!(out.contains("compare: account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded"), "{out}");
     assert_eq!(
         psql(
             &into,

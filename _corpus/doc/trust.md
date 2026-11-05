@@ -553,17 +553,20 @@ erased until their legal clock runs out.
   ballot it takes, and a proposal may name the other
   ([ballots](../../apps/org/feats/motion/index.md#ballots)).
 - **Pay, time and capital.** A time entry's minutes, as it is logged and
-  as it is corrected; each payslip's figures, in the payload of the run
-  that prepares them; and the amount of a capital payment in and of a
-  draw, and a spread's instalment, are logged as commitments,
-  their member the subject. So an entry's digest confirms no guess at a
-  colleague's pay, time or capital, and the vault opens the figure to
-  whoever `cella.disclosed` lets read it. A guard reads such a figure from
+  as it is corrected, and its note; each payslip's figures and minutes, in
+  the payload of the run that prepares them; each worker's part of a
+  year's work share, in the payload that approves it; and the amount of
+  a capital payment in and of a draw, and a spread's instalment, are
+  logged as commitments, their member the subject. So an entry's digest
+  confirms no guess at a colleague's pay, time or capital, and the vault
+  opens the figure to whoever `cella.disclosed` lets read it. A guard reads such a figure from
   the row its write made, since the commitment is all the payload gives
   it; that the two hold the same figure is the handler's to keep, and
   the vault shows it to an audit. The books stay every member's: the
   journal still shows a payment's amount on the bank's line, and the
-  register of members who holds how many shares
+  write that posts it keeps the entry's lines in its payload, as the
+  journal shows them, so its fold posts it again; and the register of
+  members who holds how many shares
   ([current limits](#current-limits)).
 - **The keys.** A vault key is 32 random bytes per subject, class and
   year, sealed (XChaCha20-Poly1305) under a wrap key derived from the
@@ -739,8 +742,11 @@ What the build does not yet do, and what lifts each:
   capital are committed to with a salt the vault keeps, so their digests
   confirm no guess; a payload with no value marked personal, such as an
   invoice's or a period's close, is confirmed by guessing it against its
-  digest, and the journal's receipt still names who drew an amount. The
-  log read by role lifts this.
+  digest, and the journal's receipt still names who drew an amount. A
+  write that posts keeps its entry's lines in its payload, as the journal
+  shows them, so its fold posts them again: a draw's or a payment in's
+  bank line shows its amount in the log as in the books, whatever the
+  commitment beside it. The log read by role lifts this.
 - **A write's run lives in one server process.** It waits for each
   signature up to a minute (`CELLA_PATIENCE`), holding no database
   connection while it waits, and goes with the process; sessions outlive

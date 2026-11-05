@@ -1405,11 +1405,15 @@ personal value as its commitment, which the fold writes where the
 handler wrote the value by `cella.commits`: it keeps the commitment in
 `cella.commitment` and writes the column as erasure leaves it,
 `redacted` where it is text or JSON and null elsewhere, since a folded
-scope opens no commitment. A fold writes only its own slice's schema, as
-its handler does, and reads nothing but the entry and what its slice's
-SQL may read. It takes every id, day and figure from the entry, never
-from a sequence, which a write rolled back leaves a gap in, nor from the
-clock: `cella.verdict_date()` reads the entry's date while it folds.
+scope opens no commitment; a number a trigger takes no null in, as a
+time entry's minutes, as one, the least it holds. A fold writes only its
+own slice's schema, as its handler does, and another slice's only by the
+fold that slice publishes of the write its handler called, as
+`transaction.fold_record` posts the entry `record` posted; it reads
+nothing but the entry and what its slice's SQL may read. It takes every
+id, day and figure from the entry, never from a sequence, which a write
+rolled back leaves a gap in, nor from the clock: `cella.verdict_date()`
+reads the entry's date while it folds.
 Where it runs its handler's SQL, as core's circles run
 `circle.mandate_from` for a mandate policy adopted and the motion feat
 `policy.adopt`, it pins the ids the entry names and refuses a result
@@ -1476,11 +1480,16 @@ and the compare read the folded slices and name the others. `cella
 check feats` lists every action with no fold and counts those with one.
 Folded now are core's circles and policy register, the person feat with
 its nested membership and employment, the graft between those two, and
-membership-motion's founding, close and the roll it counts; the motion
-feat folds a stance, a close and a policy's adoption and end, and not
-yet a proposal or a message, which keep their proposer's words out of
-the log, so a log that proposes a motion folds no further than its
-first stance on it.
+membership-motion's founding, close and the roll it counts; the books
+and pay, the account, transaction, patronage, payslip, timesheet and
+report feats and every graft whose feats are all among them or the
+person feats, but motion-patronage, whose approval a proposal writes,
+and account-membership, which only a founding carries rows into; every
+write that posts carries its entry as the journal shows it, its date,
+its label and its lines (`logged`). The motion feat folds a stance, a
+close and a policy's adoption and end, and not yet a proposal or a
+message, which keep their proposer's words out of the log, so a log that
+proposes a motion folds no further than its first stance on it.
 
 ## Policies
 

@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -25,13 +25,14 @@ entries to new time and Brand's month stays open.
 A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.
-The note is the member's own words and stays out of the log.
-An entry's minutes are personal data of class `payroll`, registered by
-the member's address (`006-salted.sql`): a log and a correction commit
-to them, and the vault keeps them, so the log's digest confirms no
-guess at a colleague's time. Erasing a member who has left restricts
-them; once their clock runs out `cella vault sweep` redacts them to
-NULL, the one change an approved month's entries take
+The note is the member's own words, personal data of class `payroll`
+as their minutes are (`003-personal.sql`): a log commits to it, and the
+vault keeps it. An entry's minutes are personal data of class
+`payroll`, registered by the member's address (`006-salted.sql`): a log
+and a correction commit to them, and the vault keeps them, so the log's
+digest confirms no guess at a colleague's time. Erasing a member who
+has left restricts them; once their clock runs out `cella vault sweep`
+redacts them to NULL, the one change an approved month's entries take
 (`cella.redacting()`), and every sum passes them over.
 
 ## Actions
@@ -118,6 +119,17 @@ which the membership feat's guard reads a mandate's scope against: a
 lead approves their own circle's months and is refused another's, the
 refusal naming the circle
 ([membership](../person/feats/membership/index.md#seats)).
+
+## Folds
+
+Each action folds by `sql/007-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+an entry under the id the entry names, its note and its minutes as their
+commitments, the feat's trigger making the member's month as it did. An
+entry is logged with its time, so its minutes fold as one, the least an
+entry holds, as a carried number that takes no null does. A correction
+keeps the commitment to the minutes it brought the entry to; a month
+folds submitted, keeping its first day, and approved by the entry's
+actor, on their entries' days.
 
 ## Reads
 

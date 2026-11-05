@@ -3,7 +3,8 @@
 // the assembly, and a mandate keeps its grant and is a root the assembly
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
-// under it. Run by `cella test slice circle`.
+// under it; and a role's holder cap counts its holders on each day. Run
+// by `cella test slice circle`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -168,6 +169,37 @@ test('a mandate\'s chain reads from its root, the assembly\'s, down to itself', 
       { id: down[0].id, grantee: 'maker', issuer: 'coordination', depth: 1 },
     ])
     await refused(`UPDATE circle.mandate SET parent = NULL WHERE id = ${down[0].id}`, /keeps its grant/)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+test('a role\'s holder cap counts the holders on each day, never every tenure a new one overlaps', async () => {
+  const past = async (sql: string, values: unknown[], says: RegExp) => {
+    await db.query('SAVEPOINT past')
+    await assert.rejects(db.query(sql, values), (e: Error & { code?: string }) => {
+      assert.equal(e.code, '09000', e.message)
+      assert.match(e.message, says)
+      return true
+    })
+    await db.query('ROLLBACK TO SAVEPOINT past')
+  }
+  const tenure = `INSERT INTO circle.tenure (holder, role, circle, since, until) VALUES ($1, 'scribe', 'brand', $2, $3) RETURNING id`
+  await db.query('BEGIN')
+  try {
+    await db.query(`INSERT INTO circle.role (id, circle, name, holders) VALUES ('scribe', 'brand', 'Scribe', 2)`)
+    const ana = (await db.query<{ id: string }>(tenure, ['ana@example.org', '2026-01-01', '2026-03-01'])).rows[0].id
+    await db.query(tenure, ['ben@example.org', '2026-03-01', '2026-05-01'])
+    // Two at most on any day: the two before it run on different days.
+    await db.query(tenure, ['cleo@example.org', '2026-01-01', '2026-05-01'])
+    await past(tenure, ['dan@example.org', '2026-02-01', '2026-03-01'],
+      /the scribe role is held by 2 at most in brand, and this tenure would make 3 holders on 2026-02-01; a later since, or an earlier end/)
+    // An update of until is judged as an insert is.
+    await past(`UPDATE circle.tenure SET until = '2026-04-01' WHERE id = $1`, [ana], /would make 3 holders on 2026-03-01/)
+    // An open since or until is read as unbounded.
+    await db.query(tenure, ['eve@example.org', null, '2025-06-01'])
+    await db.query(tenure, ['fay@example.org', null, '2025-06-01'])
+    await past(tenure, ['gus@example.org', null, null], /would make 3 holders before the records began/)
   } finally {
     await db.query('ROLLBACK')
   }

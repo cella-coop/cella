@@ -194,8 +194,9 @@ test('a policy taking a default with its friendly wording padded or left empty s
   )
   for (const member of assembly) settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   await on('2026-11-28')
-  settled(await close({ motion }, as(camille)))
-  const then = await react('motion:motion:close', { motion }, as(camille))
+  const closed = await close({ motion }, reacting(as(camille)))
+  settled(closed)
+  const then = done('motion:motion:close', closed).then
   const states = (ds: typeof then): string[] => ds.flatMap((d) => [`${d.op} ${d.state} ${d.reason ?? ''}`.trim(), ...states(d.then)])
   assert.ok(states(then).every((s) => s.includes(' settled')), states(then).join('\n'))
 

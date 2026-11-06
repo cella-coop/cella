@@ -6,11 +6,11 @@ import type { Approved, Correct, Corrected, Log, Logged, Period, Submitted } fro
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
 
-// Logs an entry. The feat's trigger makes the member's period if it is
-// the month's first and refuses one into an approved period;
-// `timesheet.logs` that it is the actor's own time, on a day that has
-// come. A graft that files the entry under something of its own, as a
-// project, runs this in its own write.
+// Logs an entry. The feat's trigger makes the member's period in the
+// entry's circle if it is the month's first there, and refuses one into
+// an approved period; `timesheet.logs` that it is the actor's own time,
+// on a day that has come. A graft that files the entry under something of
+// its own, as a project, runs this in its own write.
 export const logging = (input: Log): Write<Logged> => ({
   op: 'timesheet:entry:log' satisfies Action,
   request: input,
@@ -57,19 +57,20 @@ export async function correct(input: Correct, deps: Deps): Out<'timesheet:entry:
   return write(deps, correcting(input))
 }
 
-// Submits a member's month on the verdict date; submitting again keeps
-// the first day. `timesheet.submits` checks it is the actor's own and has
-// time in it. A graft that submits it under a write of its own, as
+// Submits a member's month in a circle on the verdict date; submitting
+// again keeps the first day. `timesheet.submits` checks it is the actor's
+// own and has time of that circle in it; their month of another circle
+// stays as it stands. A graft that submits it under a write of its own, as
 // employment-timesheet does by the worker's employment, runs this.
 export const submitting = (input: Period): Write<Submitted> => ({
   op: 'timesheet:period:submit' satisfies Action,
   request: input,
   state: async (tx) => {
     const { rows } = await tx.query<{ submitted: string }>(
-      `INSERT INTO timesheet.period (member, month, submitted) VALUES ($1, $2, cella.verdict_date())
-       ON CONFLICT (member, month) DO UPDATE SET submitted = coalesce(timesheet.period.submitted, excluded.submitted)
+      `INSERT INTO timesheet.period (member, month, circle, submitted) VALUES ($1, $2, $3, cella.verdict_date())
+       ON CONFLICT (member, month, circle) DO UPDATE SET submitted = coalesce(timesheet.period.submitted, excluded.submitted)
        RETURNING to_char(submitted, 'YYYY-MM-DD') AS submitted`,
-      [input.member, input.month],
+      [input.member, input.month, input.circle],
     )
     return { ...input, submitted: rows[0].submitted }
   },
@@ -80,21 +81,23 @@ export async function submit(input: Period, deps: Deps): Out<'timesheet:period:s
   return write(deps, submitting(input))
 }
 
-// Approves a submitted month on the verdict date, closing it to new
-// entries: the update takes the period's row, so a log into it waits for
-// the approval or is refused after it. `timesheet.approves` checks it
-// was submitted, its month is over and the approver is not its member.
+// Approves a member's submitted month in a circle on the verdict date,
+// closing it to new entries of that circle: the update takes the period's
+// row, so a log into it waits for the approval or is refused after it.
+// The payload names the circle, whose scope the approve-time mandate must
+// cover. `timesheet.approves` checks it was submitted, its month is over
+// and the approver is not its member.
 export async function approve(input: Period, deps: Deps): Out<'timesheet:period:approve', Approved> {
   return write(deps, {
     op: 'timesheet:period:approve' satisfies Action,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ approved: string; circle: string }>(
-        `UPDATE timesheet.period SET approved = cella.verdict_date(), approver = $3 WHERE member = $1 AND month = $2
-         RETURNING to_char(approved, 'YYYY-MM-DD') AS approved, circle`,
-        [input.member, input.month, deps.actor],
+      const { rows } = await tx.query<{ approved: string }>(
+        `UPDATE timesheet.period SET approved = cella.verdict_date(), approver = $4 WHERE member = $1 AND month = $2 AND circle = $3
+         RETURNING to_char(approved, 'YYYY-MM-DD') AS approved`,
+        [input.member, input.month, input.circle, deps.actor],
       )
-      return { ...input, circle: rows[0]?.circle ?? '', approved: rows[0]?.approved ?? '' }
+      return { ...input, approved: rows[0]?.approved ?? '' }
     },
     payload: (v) => ({ ...v }),
   })

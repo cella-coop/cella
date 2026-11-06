@@ -6,12 +6,13 @@ import type { Month, Months } from '../models/sheet.ts'
 export const whose = `SELECT e.id::text AS id, wp.name AS who
   FROM timesheet.entry e JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = e.member`
 
-// A worker's months, the latest first, as `actor` sees them.
+// A worker's months, the latest first and each circle's in turn, as
+// `actor` sees them; each keyed by its month and circle, `YYYY-MM/<circle>`.
 export async function months(db: Db, worker: string, actor: string | null): Promise<Months> {
   const { rows } = await db.query<Month>(
-    `SELECT month AS id, member, month, hours::float8 AS hours, billable::float8 AS billable, entries, state,
+    `SELECT month || '/' || circle AS id, circle, member, month, hours::float8 AS hours, billable::float8 AS billable, entries, state,
             to_char(submitted, 'YYYY-MM-DD') AS submitted, to_char(approved, 'YYYY-MM-DD') AS approved, approver, approver_name
-     FROM employment_timesheet.sheet WHERE member = $1 ORDER BY month DESC`,
+     FROM employment_timesheet.sheet WHERE member = $1 ORDER BY month DESC, circle`,
     [worker],
   )
   return { months: rows, own: actor === worker, acting: actor !== null }

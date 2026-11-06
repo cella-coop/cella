@@ -107,7 +107,7 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
   for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'client.client']) {
     assert.deepEqual(await all(`SELECT DISTINCT circle FROM ${table}`), [{ circle: 'ag' }], table)
   }
-  // Time is the circle's it is worked for, and a month its first entry's.
+  // Time is the circle's it is worked for, and a month holds one circle's.
   assert.deepEqual(await all(`SELECT DISTINCT circle FROM timesheet.period WHERE member = 'thomas@lanterne.example'`), [{ circle: 'web' }])
 })
 

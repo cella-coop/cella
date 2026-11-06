@@ -17,10 +17,10 @@ $$;
 CREATE TRIGGER worker BEFORE INSERT ON timesheet.entry
   FOR EACH ROW EXECUTE FUNCTION employment_timesheet.whose();
 
--- Each worker's months, by name: their hours and where each stands, and
--- who approved it.
+-- Each worker's months, by name, one for each circle they worked for:
+-- their hours and where each stands, and who approved it.
 CREATE VIEW employment_timesheet.sheet AS
-SELECT s.member, wp.name, s.month, s.hours, s.billable, s.entries, s.state, s.submitted, s.approved,
+SELECT s.member, wp.name, s.month, s.circle, s.hours, s.billable, s.entries, s.state, s.submitted, s.approved,
        s.approver, ap.name AS approver_name
 FROM timesheet.sheet s
 JOIN (employment.worker w JOIN person.person wp ON wp.address = w.address) ON w.address = s.member

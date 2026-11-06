@@ -29,15 +29,15 @@ BEGIN
   IF cella.redacting() THEN
     RETURN NEW;
   END IF;
-  IF (NEW.id, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.member, OLD.day, OLD.billable, OLD.note)
+  IF (NEW.id, NEW.circle, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.circle, OLD.member, OLD.day, OLD.billable, OLD.note)
     OR NEW.minutes IS NULL OR NEW.minutes > OLD.minutes THEN
     RAISE EXCEPTION 'entry % is corrected only by lowering its time', OLD.id
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   SELECT p.approved INTO approved FROM timesheet.period p
-  WHERE p.member = OLD.member AND p.month = timesheet.month_of(OLD.day) FOR SHARE;
+  WHERE p.member = OLD.member AND p.month = timesheet.month_of(OLD.day) AND p.circle = OLD.circle FOR SHARE;
   IF approved IS NOT NULL THEN
-    RAISE EXCEPTION '%''s % was approved on %: its entries stand', OLD.member, timesheet.month_of(OLD.day), approved
+    RAISE EXCEPTION '%''s % in % was approved on %: its entries stand', OLD.member, timesheet.month_of(OLD.day), OLD.circle, approved
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;

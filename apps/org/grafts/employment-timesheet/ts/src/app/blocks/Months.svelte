@@ -2,13 +2,14 @@
   import { Field, Form, Section, Table, type Column } from '@cella/org-ui'
   import type { Month, Months } from '../../models/sheet.ts'
 
-  // A worker's timesheets, a month each: they submit their own open
-  // months, and someone else approves a submitted one, which closes it to
-  // new entries.
+  // A worker's timesheets, a month of each circle they worked for: they
+  // submit their own open months, and someone else approves a submitted
+  // one, which closes it to new entries of that circle.
   let { data }: { data: Months; id: string } = $props()
 
   const columns: Column<Month>[] = [
     { key: 'month', label: 'Month', kind: 'title', value: (m) => m.month },
+    { key: 'circle', label: 'Circle', value: (m) => m.circle },
     { key: 'hours', label: 'Hours', kind: 'number', value: (m) => m.hours },
     { key: 'billable', label: 'Billable', kind: 'number', value: (m) => m.billable },
     {
@@ -20,7 +21,8 @@
     },
     { key: 'approver', label: 'Approved by', value: (m) => m.approver_name },
   ]
-  const choices = (state: Month['state']) => data.months.filter((m) => m.state === state && m.entries > 0).map((m) => ({ value: m.month, label: m.month }))
+  const choices = (state: Month['state']) =>
+    data.months.filter((m) => m.state === state && m.entries > 0).map((m) => ({ value: m.id, label: `${m.month}, ${m.circle}` }))
   const open = $derived(choices('open'))
   const submitted = $derived(choices('submitted'))
 </script>

@@ -4,20 +4,24 @@ updated = 2026-11-06
 +++
 
 Time worked, by worker and day, member or not, and each worker's
-timesheet, a month of it, which they submit and someone else approves.
-Approved time is what payslips hold and a work share by time divides,
-and it is counted against projects' budgets.
+timesheet, a month of it in each circle they work for, which they submit
+and someone else approves. Approved time is what payslips hold and a
+work share by time divides, and it is counted against projects' budgets.
 
 ## Entities
 
 | Entity | Fields | Notes |
 |---|---|---|
-| entry | `id`, `member`, `day`, `minutes`, `billable`, `note` | the member's address; whole minutes, at most a day |
-| period | `member`, `month`, `submitted?`, `approved?`, `approver?` | `month` is `YYYY-MM` |
+| entry | `id`, `circle`, `member`, `day`, `minutes`, `billable`, `note` | the member's address; whole minutes, at most a day |
+| period | `circle`, `member`, `month`, `submitted?`, `approved?`, `approver?` | `month` is `YYYY-MM`; one per circle, member and month |
 
 A period is a **month**, not seedling's week: Lanterne's payroll, its
 books and its retainers run by the month, and the work share by time
 worked sums approved months (`patronage-timesheet`).
+A period is a member's month **in one circle**: time a member works for
+Web and for Brand in October is two months, Web's and Brand's, each
+submitted and approved apart, so approving Web's closes only Web's
+entries to new time and Brand's month stays open.
 A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.
@@ -74,9 +78,12 @@ member's, is `employment-timesheet`'s and `membership-timesheet`'s.
   is at most a day;
 - an entry changes only by lowering its time, to none at the least, and
   is the actor's own (`timesheet.lowers`, `timesheet.corrects`);
+- an entry's month is its circle's, the month of its circle, member and
+  day (`timesheet.open_period`);
 - no entry goes into an approved month, nor is corrected in one
   (`timesheet.open_period`, `timesheet.lowers`, SQLSTATE `09000`);
-- a month is submitted by its member and holds time (`timesheet.submits`);
+- a month is submitted by its member and holds time of its circle
+  (`timesheet.submits`);
 - a month is approved once it is over, only once submitted, by someone
   other than its member, and stays approved (`timesheet.approves`,
   `timesheet.stays_approved`).
@@ -92,7 +99,8 @@ approved its entries stand, and correcting one then is not built.
 ## Schema
 
 `timesheet` (`core/sql/`): `timesheet.entry`, `timesheet.period` and
-`timesheet.sheet`, each month's hours, billable hours, entries and state.
+`timesheet.sheet`, each month's hours, billable hours, entries and state,
+summed over the entries of its circle, member and month.
 The app role may select and insert entries, update their minutes, and
 update periods; the guards role may select. A month's `entries` counts
 those with time in them.
@@ -102,11 +110,14 @@ core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
 An entry names the circle its time is worked for (`circle` in its log),
-and a month is made in the circle of its first entry, so a month of
-Web's is Web's. Every write on a month, its approval among them, names
-the month's circle in its payload, which the membership feat's guard
-reads a mandate's scope against: a lead approves their own circle's
-months ([membership](../person/feats/membership/index.md#seats)).
+and its month is that circle's: the first entry of a member's month in a
+circle makes the month there, so a month of Web's holds Web's time and
+no other circle's. Every write on a month, its submission and its
+approval, names the month's circle in its request and its payload,
+which the membership feat's guard reads a mandate's scope against: a
+lead approves their own circle's months and is refused another's, the
+refusal naming the circle
+([membership](../person/feats/membership/index.md#seats)).
 
 ## Reads
 
@@ -124,14 +135,17 @@ hours typed into it, the feat's log, booked to the row's project by
 `project-timesheet`; the feat's own one-entry form, with a note, is what
 that replaces. An entry's page shows its worker's month and, in its
 header, lets its worker correct the entry's hours down while the month is not approved,
-and submits the month while open or approves it once submitted; a
-person's page lists their months with the same writes (`employment-timesheet`).
+and submits the entry's month, its circle's, while open or approves it
+once submitted; a person's page lists their months, a row for each
+circle's, with the same writes (`employment-timesheet`).
 
 ## Lanterne
 
 Timesheets began on 1 September 2026. Every worker logs seven hours a
 working day, the 35-hour week of the internal rules, under a third of it
 billable, in line with what the invoices bill at the 80 € hourly rate.
+Each works for one circle, so each has one month a month, which the
+fixture names with its circle as it names their entries'.
 September is submitted by everyone and approved: each lead approved their
 circle's, Julien in finance the leads and Inès, who is no member yet
 and sits in Web, and Camille as gérante Julien. Inès logs hers by her

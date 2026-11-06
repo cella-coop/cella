@@ -220,9 +220,9 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
   // submitted by a worker who is no member, on finance, who approve time.
   await su.query(`INSERT INTO payslip.run (month, generated) VALUES ('2026-10', '2026-10-24')`)
   await on('2026-11-02')
-  settled(await submit({ member: ines, month: '2026-10' }, as(ines)))
+  settled(await submit({ member: ines, month: '2026-10', circle: 'web' }, as(ines)))
   assert.ok((await read('/inbox', camille)).includes('Approve the 2026-10 pay run'))
-  assert.ok((await read('/inbox', julien)).includes("Approve 2026-10's time ines@lanterne.example"))
+  assert.ok((await read('/inbox', julien)).includes("Approve 2026-10's time in Web ines@lanterne.example"))
   await su.query(`DELETE FROM payslip.run WHERE month = '2026-10'`)
   await on('2026-10-24')
 })

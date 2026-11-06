@@ -1,6 +1,6 @@
 +++
 title = "patronage-timesheet"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 How a surplus's work share divides among the workers by time worked,
@@ -12,7 +12,9 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 `patronage_timesheet` (`sql/`):
 
 - `basis(year)`: the minutes each worker worked in a year, from the
-  entries of their approved months only.
+  entries of their approved months only: a month is a circle's, so time
+  worked for two circles counts each circle's once its month there is
+  approved, and the two sum.
 - `division(distribution)`: the portion of the work share the year's
   terms give time worked (`patronage.portion`), split by each worker's
   minutes with `cella.allocate`, so the parts add up to it to the cent.
@@ -35,7 +37,8 @@ BOI-BIC-PTP-10-30, § 280). Declared by `patronage`.
 `ts/_tests/division.test.ts` (`cella test slice patronage-timesheet`):
 the portion divides by the minutes of approved months in the year alone;
 approving makes the parts, which both guards take; parts no longer what
-the approved time gives are refused.
+the approved time gives are refused; a member's month in a second circle
+counts once it is approved.
 
 ## Reads
 

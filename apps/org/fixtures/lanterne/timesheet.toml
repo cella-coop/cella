@@ -5,8 +5,10 @@
 # a working day, the 35-hour week of the internal rules. Billable time is
 # what the invoices bill, at the rate in graft.project-timesheet.toml; which
 # project a run's time is for is that graft's. A run names the circle its
-# time is worked for, its owning circle, which its months take, so a
-# circle's lead approves them by a mandate on their own circle.
+# time is worked for, its owning circle, and a period names it too: a
+# member's month is one per circle, holding that circle's runs, so a
+# circle's lead approves it by a mandate on their own circle. Each worker
+# here works for one circle, so each has one month a month.
 #
 # September is submitted by everyone and approved: each circle's lead
 # approves their circle's members, Julien in finance the leads and Inès,
@@ -466,6 +468,7 @@ note = "Web circle: code reviews, internal tools and training"
 
 [[period]]
 member = "yusuf@lanterne.example"
+circle = "web"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
@@ -473,6 +476,7 @@ approver = "julien@lanterne.example"
 
 [[period]]
 member = "thomas@lanterne.example"
+circle = "web"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-02
@@ -480,6 +484,7 @@ approver = "yusuf@lanterne.example"
 
 [[period]]
 member = "amina@lanterne.example"
+circle = "web"
 month = "2026-09"
 submitted = 2026-10-02
 approved = 2026-10-02
@@ -487,6 +492,7 @@ approver = "yusuf@lanterne.example"
 
 [[period]]
 member = "lea@lanterne.example"
+circle = "web"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-02
@@ -494,6 +500,7 @@ approver = "yusuf@lanterne.example"
 
 [[period]]
 member = "hugo@lanterne.example"
+circle = "brand"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
@@ -501,6 +508,7 @@ approver = "julien@lanterne.example"
 
 [[period]]
 member = "sofia@lanterne.example"
+circle = "brand"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-01
@@ -508,6 +516,7 @@ approver = "hugo@lanterne.example"
 
 [[period]]
 member = "camille@lanterne.example"
+circle = "brand"
 month = "2026-09"
 submitted = 2026-10-02
 approved = 2026-10-05
@@ -515,6 +524,7 @@ approver = "hugo@lanterne.example"
 
 [[period]]
 member = "malik@lanterne.example"
+circle = "marketing"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
@@ -522,6 +532,7 @@ approver = "julien@lanterne.example"
 
 [[period]]
 member = "chloe@lanterne.example"
+circle = "marketing"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-01
@@ -529,6 +540,7 @@ approver = "malik@lanterne.example"
 
 [[period]]
 member = "julien@lanterne.example"
+circle = "operations"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05
@@ -536,6 +548,7 @@ approver = "camille@lanterne.example"
 
 [[period]]
 member = "ines@lanterne.example"
+circle = "web"
 month = "2026-09"
 submitted = 2026-10-01
 approved = 2026-10-05

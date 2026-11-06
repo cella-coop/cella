@@ -1,7 +1,8 @@
 CREATE SCHEMA patronage_timesheet;
 
 -- The minutes each worker worked in a year, from their approved months
--- only: the basis on which the portion of a surplus's work share that
+-- only, each circle's month holding only that circle's time, summed across
+-- circles: the basis on which the portion of a surplus's work share that
 -- divides by time worked divides (Code du travail, art. L3324-5;
 -- BOI-BIC-PTP-10-30, § 280).
 CREATE FUNCTION patronage_timesheet.basis(year integer)
@@ -10,7 +11,7 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT e.member, sum(e.minutes)::bigint
   FROM timesheet.entry e
-  JOIN timesheet.period p ON p.member = e.member AND p.month = timesheet.month_of(e.day)
+  JOIN timesheet.period p ON p.member = e.member AND p.month = timesheet.month_of(e.day) AND p.circle = e.circle
   WHERE p.approved IS NOT NULL AND e.day >= make_date(basis.year, 1, 1) AND e.day < make_date(basis.year + 1, 1, 1)
   GROUP BY e.member;
 END;

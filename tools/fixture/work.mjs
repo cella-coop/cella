@@ -126,11 +126,18 @@ export function work(read, fail) {
     }
   }
 
-  const months = new Set([...days.keys()].map((k) => k.slice(0, -3)))
+  // A month is a member's in one circle, the root's where none is named,
+  // and holds the runs of that circle.
+  const months = new Set()
+  for (const r of runs.values()) {
+    for (const d of weekdays(iso(r.from), iso(r.to))) {
+      months.add(`${r.member} ${r.circle ?? ''} ${d.slice(0, 7)}`)
+    }
+  }
   for (const p of time.period ?? []) {
     employed(p.member, `${p.month}-01`, `${p.month}-28`, `period ${p.month}`)
-    if (!months.has(`${p.member} ${p.month}`)) {
-      fail(`period ${p.member} ${p.month}: no time in it`)
+    if (!months.has(`${p.member} ${p.circle ?? ''} ${p.month}`)) {
+      fail(`period ${p.member} ${p.month}: no time of ${p.circle ?? 'the root'} in it`)
     }
     if (p.approved && !p.submitted) {
       fail(`period ${p.member} ${p.month}: approved, never submitted`)

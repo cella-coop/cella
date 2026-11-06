@@ -294,9 +294,9 @@ test('once m-2026-012 admits her, every step of joining is done, Web her working
 
 test('in November Inès submits her October by her employment and Julien approves it; Bastien logs his first day', async () => {
   await on('2026-11-02')
-  settled(await submit({ member: ines, month: '2026-10' }, as(ines)))
-  settled(await approve({ member: ines, month: '2026-10' }, as(julien)))
-  assert.equal((await one<{ state: string }>(`SELECT state FROM timesheet.sheet WHERE member = $1 AND month = '2026-10'`, [ines])).state, 'approved')
+  settled(await submit({ member: ines, month: '2026-10', circle: 'web' }, as(ines)))
+  settled(await approve({ member: ines, month: '2026-10', circle: 'web' }, as(julien)))
+  assert.equal((await one<{ state: string }>(`SELECT state FROM timesheet.sheet WHERE member = $1 AND month = '2026-10' AND circle = 'web'`, [ines])).state, 'approved')
   settled(await log({ member: bastien, day: '2026-11-02', minutes: 7 * 60, billable: false, note: 'First day' }, as(bastien)))
 })
 

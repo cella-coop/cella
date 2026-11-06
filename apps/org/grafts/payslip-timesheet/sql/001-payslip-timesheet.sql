@@ -9,26 +9,28 @@ RETURN (
 );
 
 -- payslip:run:generate — a run is prepared from approved time: every
--- payslip's member had their month approved, and the payslip holds its
--- minutes. A month still open or only submitted holds the run back, and
--- the approval it waits for is ordered, so the time a run reads never
+-- payslip's member had their month approved in every circle they worked
+-- for, and the payslip holds the minutes of all of them. A month still
+-- open or only submitted in any one circle holds the run back, and the
+-- approval it waits for is ordered, so the time a run reads never
 -- changes after.
 CREATE FUNCTION payslip_timesheet.timed(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN u.member IS NOT NULL
-      THEN u.member || '''s ' || x.month || ' is ' || coalesce(u.state, 'not logged') || ', not approved: the run waits for it'
+      THEN u.member || '''s ' || x.month || coalesce(' in ' || u.circle, '') || ' is ' || coalesce(u.state, 'not logged')
+        || ', not approved: the run waits for it'
     WHEN m.member IS NOT NULL
-      THEN m.member || '''s payslip for ' || x.month || ' does not hold the minutes of their approved month'
+      THEN m.member || '''s payslip for ' || x.month || ' does not hold the minutes of their approved months'
   END
   FROM (SELECT payload ->> 'month' AS month) x
   LEFT JOIN LATERAL (
-    SELECT p.member, s.state
+    SELECT p.member, s.circle, s.state
     FROM payslip.payslip p
     LEFT JOIN timesheet.sheet s ON s.member = p.member AND s.month = p.month
     WHERE p.month = x.month AND s.approved IS NULL
-    ORDER BY p.member
+    ORDER BY p.member, s.circle
     LIMIT 1
   ) u ON true
   LEFT JOIN LATERAL (

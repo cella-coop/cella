@@ -11,9 +11,11 @@ type Op = 'account:capital:withdraw' | 'account:own:withdraw'
 // what their capital accounts hold moves to 4567, owed them, what they
 // had not paid of their subscription is cancelled, 1012 debited and 4562
 // credited, and their repayments are drawn up as the statutes' clauses
-// governing the exit say, the capital divided evenly among them to the
-// cent. `account_membership_transaction.withdraws` decides: they left,
-// once, and the entry and the repayments are exactly that;
+// governing the day they exited say, whatever day it settles, the capital
+// divided evenly among them to the cent.
+// `account_membership_transaction.withdraws` decides: they left, by their
+// own withdrawal where it is their own, once, and the entry and the
+// repayments are exactly that;
 // account-transaction's guard, that the month is open.
 export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'): Write<Withdrawn> {
   return {
@@ -59,8 +61,10 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
         ? await tx.query(
             `INSERT INTO account_membership_transaction.repayment (member, n, due, amount)
              SELECT $1, r.n, r.due, cella.amount((cella.allocate(cella.amount($2), array_fill(1::bigint, ARRAY[t.repayments])))[r.n])
-             FROM account.repayments(account.capital_for(cella.verdict_date()), cella.verdict_date()) r
-             CROSS JOIN account.terms t WHERE t.id = account.capital_for(cella.verdict_date())`,
+             FROM membership.member m
+             CROSS JOIN LATERAL account.repayments(account.capital_for(m.exited), m.exited) r
+             JOIN account.terms t ON t.id = account.capital_for(m.exited)
+             WHERE m.address = $1`,
             [input.member, owed],
           )
         : { rowCount: 0 }

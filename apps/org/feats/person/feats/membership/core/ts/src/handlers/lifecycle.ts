@@ -173,15 +173,17 @@ function ending<O extends 'membership:member:suspend' | 'membership:member:exclu
 ): Write<Ended> {
   // The status a write leaves, and the column dating it, are one name.
   const status = op === 'membership:member:suspend' ? 'suspended' : 'exited'
+  // How an exited member left; a suspension leaves it none.
+  const exit = { 'membership:member:suspend': null, 'membership:member:exclude': 'excluded', 'membership:member:withdraw': 'withdrew' }[op]
   return {
     op,
     request: input,
     state: async (tx) => {
       const { rows } = await tx.query<{ on: string }>(
-        `UPDATE membership.member SET status = $2, ${status} = cella.verdict_date()
+        `UPDATE membership.member SET status = $2, ${status} = cella.verdict_date(), exit = $3
          WHERE address = $1 AND status <> $2
          RETURNING to_char(${status}, 'YYYY-MM-DD') AS on`,
-        [input.member, status],
+        [input.member, status, exit],
       )
       // A member who left withdrawing again is refused before the notary
       // rather than logged twice; a carried write moving no one is left to

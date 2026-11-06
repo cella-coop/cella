@@ -33,13 +33,17 @@ CREATE TRIGGER held BEFORE INSERT OR UPDATE OF holder ON account.account
 -- account:account:freeze, account:own:freeze — a member who leaves has
 -- their capital frozen until it is repaid, by the freeze that follows
 -- their exclusion or their withdrawal: the holder is a member who has
--- left, so no active member's capital is frozen.
+-- left, so no active member's capital is frozen; their own freeze, one who
+-- left by their own withdrawal, so an excluded member's capital is frozen
+-- only through the motion that excluded them.
 CREATE FUNCTION account_membership.freezes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN m.address IS NULL THEN coalesce(p.holder, 'no one') || ' is no member'
     WHEN m.status <> 'exited' THEN m.address || ' is ' || m.status || ': only the capital of a member who left is frozen'
+    WHEN cella.action() = 'account:own:freeze' AND m.exit IS DISTINCT FROM 'withdrew'
+      THEN 'the holder left by exclusion, not by their own withdrawal: their capital is frozen by account:account:freeze, citing the motion that excluded them'
   END
   FROM (SELECT payload ->> 'holder' AS holder) p
   LEFT JOIN membership.member m ON m.address = p.holder;

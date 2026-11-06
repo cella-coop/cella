@@ -50,7 +50,10 @@ are listed in `motion.cites`, with their powers, by the `membership-motion` graf
 
 - `membership.member`, one row per address, with status (`invited`,
   `active`, `suspended`, `exited`), `since` (admitted) and shares, and the
-  days it was `invited`, `applied`, `suspended` and `exited`. A trigger lets a status
+  days it was `invited`, `applied`, `suspended` and `exited`, and for an
+  exited member how they left, `exit`: `withdrew` by their own right or
+  `excluded` by a motion, set by the write that made them exited and
+  none before. A trigger lets a status
   move only along that lifecycle, raising SQLSTATE `09000` otherwise. The
   app role may select, insert and update; the guards role, `cella_guards`,
   may select.
@@ -103,8 +106,8 @@ label is the invitee's wording and stays out.
 - `membership.links`, on `membership:member:link`: the member is invited and has not taken up their invitation, and the link was made by this write.
 - `membership.accepts`, on `membership:member:accept`: the actor is whom the link invites, still invited; the invitation was taken up by this write, by the device it enrolled, which signed it (`cella.device()`): enrolled under their address, by no device, on the verdict date.
 - `membership.admitted`, on `membership:member:admit`: the write left the member active, since the verdict date, holding shares. The `membership-motion` graft runs it again for each member a motion's close admits.
-- `membership.withdraws`, on `membership:member:withdraw`: the member is the actor, and the write left them exited on the verdict date; the lifecycle lets only an active or a suspended member exit.
-- `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited, on the verdict date. A carried one refused is forgone in the log with its reason, so the reason names no one: the member's status and the day it began.
+- `membership.withdraws`, on `membership:member:withdraw`: the member is the actor, and the write left them exited on the verdict date, `exit` `withdrew`; the lifecycle lets only an active or a suspended member exit.
+- `membership.ends`, on `membership:member:suspend` and `:exclude`: the write left the member suspended, or exited with `exit` `excluded`, on the verdict date. A carried one refused is forgone in the log with its reason, so the reason names no one: the member's status and the day it began.
 - `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
 Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `membership-motion`'s.
@@ -138,8 +141,8 @@ Whether the cited motion of an admission, a suspension or an exclusion asks it i
   invitation taken up already or a device enrolled already is refused
   before the notary.
 - `admit` (ordered), and `admitting`, its state alone, which the close of the deciding motion runs in its own transaction: makes an invited member active since `cella.verdict_date()` with their shares; a member not invited is left as they are, for the guards to refuse. Submits `{ member, shares, motion }`.
-- `withdraw` (ordered): the member leaves by their own right, signing it themselves: sets the status `exited` and its day; submits `{ member }`, citing no motion. Someone withdrawing another is refused by the guards, and a member who left withdrawing again before the notary.
-- `suspend`, `exclude` (ordered): set the status and its day; submit `{ member, motion }`. `membership-motion` carries them out when the motion that asks them passes.
+- `withdraw` (ordered): the member leaves by their own right, signing it themselves: sets the status `exited`, its day and `exit` `withdrew`; submits `{ member }`, citing no motion. Someone withdrawing another is refused by the guards, and a member who left withdrawing again before the notary.
+- `suspend`, `exclude` (ordered): set the status and its day, and an exclusion `exit` `excluded`; submit `{ member, motion }`. `membership-motion` carries them out when the motion that asks them passes.
 - `crediting`, inside another write's transaction: adds shares to what an active member holds, and refuses a member who is not. It is no action of its own: the write that runs it and its guards decide how many, as `account-membership-patronage-transaction`'s `employ` adds the shares an associate's part of the work share buys.
 - `erase` (ordered): a person who has left erases their own personal data by their right, signing it themselves: submits `{ member, erasure }`, citing no motion, the erasure of every class of their personal data, which the notary carries out as it settles: their name and contact details deleted from the vault and redacted, payroll, receipts and the books restricted until their clocks run out. Someone erasing another, or a member who has not left, is refused by the guards.
 

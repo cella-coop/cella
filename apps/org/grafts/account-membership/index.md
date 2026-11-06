@@ -59,7 +59,10 @@ does moving a departing one's capital to what is owed them, so both are
 
 - `account_membership.freezes`, on `account:account:freeze` and
   `account:own:freeze`: the holder
-  is a member who has left, so no active member's capital is frozen.
+  is a member who has left, so no active member's capital is frozen; on
+  `account:own:freeze`, one who left by their own withdrawal (`exit` is
+  `withdrew`), so an excluded member's capital is frozen only through
+  the motion that excluded them.
 
 ## Tests
 
@@ -67,7 +70,11 @@ does moving a departing one's capital to what is owed them, so both are
 freeze settles for a member who left, every account they hold frozen
 and no other, and is refused for an active member; no trigger on
 `membership.member` freezes an account, so an exit alone leaves it
-open until the freeze.
+open until the freeze. A guard reads the action it judges only while
+the notary judges it, so the member's own freeze, which settles for one
+who withdrew and is refused for one excluded, before the exclusion's
+freeze or after it, is the capital scenario's (`cella test e2e
+capital`).
 
 ## Reads
 

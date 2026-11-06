@@ -76,7 +76,13 @@ repeats, now naming it. A motion is counted by those columns, never by
 the sentence. A procedure's terms are fixed once a motion is put to it,
 so a policy changing them names a new procedure and replaces the old
 policy, which ends; a procedure whose policy has ended, or applies only
-later, puts no motion.
+later, puts no motion. A motion's page reads the terms it is decided by
+from its procedure's row, by its name, whether or not its policy is in
+force now or its reader reads the register, which is the members'
+([circle](../../core/circle/index.md#who-reads-the-structure)): a seat
+that is no member reads the motions of the circles it reads in, and the
+terms they are decided by; the New form offers only the procedures it
+reads in force.
 
 Lanterne's six procedures are policies of the assembly, adopted by its
 founding motion, `m-2021-001`, which the seed carries in.

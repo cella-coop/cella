@@ -24,8 +24,8 @@ export interface Applied {
 // request carries the shares, so the candidacy that follows pledges them.
 export async function apply(input: Applying, deps: Deps): Promise<Settled<Applied> | Refused> {
   const { rows } = await deps.db.query<{ decider: string; name: string | null }>(
-    `SELECT d.id AS decider, (SELECT p.name FROM person.person p WHERE p.address = $1) AS name
-     FROM circle.circle d WHERE d.assembly`,
+    `SELECT d AS decider, (SELECT p.name FROM person.person p WHERE p.address = $1) AS name
+     FROM circle.assembly() d WHERE d IS NOT NULL`,
     [input.member],
   )
   const found = rows[0]

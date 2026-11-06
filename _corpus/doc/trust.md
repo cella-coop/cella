@@ -693,13 +693,15 @@ What the build does not yet do, and what lifts each:
   ([reading](architecture.md#reading)). The denial test proves on rows
   only what Lanterne seeds: a table it leaves empty, such as a payroll
   plan's or a capital call's, is named unproven, not passed.
-- **Core's circles and policies are every reader's.** The circles, their
-  roles, mandates, rights, members and tenures, and the register of the
-  policies a circle adopted, are under no row-level policy: whoever is
-  signed in reads who sits where and holds what, and the policies'
-  wording, member or not. The denial test reads only feats and grafts. A
-  row-level policy on core's tables, by the circle's own reads, lifts
-  this.
+- **A member of the scope is read from the seat alone.** Core's
+  structure is its members' ([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)):
+  a member holds the member role, seated in the assembly by a tenure
+  running on the verdict date. Core knows no feat, so it asks no
+  membership whether the seat counts: a suspended member whose tenure
+  of the member role stands reads the structure until a motion ends
+  it, though their seat grants no power. And core's analytical
+  contract shares the structure by id to the analytics shell, read as
+  its owner, as the shared-view rules allow.
 - **The log says who wrote what.** Every member reads each entry's op,
   actor, date and receipt, and its payload's digest. Pay, time and
   capital are committed to with a salt the vault keeps, so their digests

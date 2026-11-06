@@ -80,7 +80,7 @@ after(async () => {
 })
 
 test('Lanterne\'s policies show which are the SCOP SARL\'s defaults, and its statutes leave none', async () => {
-  const page = await circles.proposing(app, 'ag')
+  const page = await circles.proposing(reader(app, camille), 'ag')
   assert.ok(page)
   const taking = page.policies.filter((p) => p.takes)
   assert.equal(taking.length, 35)
@@ -156,7 +156,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   assert.deepEqual(s.get('scop-sarl-fr:work-share'), { id: 'scop-sarl-fr:work-share', standing: 'left', left_by: `${motion}/2`, left_on: '2026-11-21' })
   assert.equal([...s.values()].filter((d) => d.standing === 'taken').length, 33)
 
-  const page = await detail(app, motion)
+  const page = await detail(reader(app, camille), motion)
   assert.deepEqual(
     page?.leaves.map((l) => [l.id, l.form, l.action, l.sentence]),
     [
@@ -164,7 +164,7 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
       ['scop-sarl-fr:work-share', 'SCOP SARL, France', `${motion}/2`, 'At least 25 % of each year\'s surplus goes to all the employees as the work share'],
     ],
   )
-  const circle = await circles.proposing(app, 'ag')
+  const circle = await circles.proposing(reader(app, camille), 'ag')
   assert.deepEqual(circle?.departures.map((d) => [d.id, d.standing, d.leftBy]), [
     ['scop-sarl-fr:suspend-member', 'left', `${motion}/1`],
     ['scop-sarl-fr:work-share', 'left', `${motion}/2`],
@@ -205,7 +205,7 @@ test('a policy taking a default with its friendly wording padded or left empty s
     ],
   )
   // The circle's page marks each Default, never Default since updated.
-  const circle = await circles.proposing(app, 'ag')
+  const circle = await circles.proposing(reader(app, camille), 'ag')
   assert.deepEqual(
     circle?.policies.filter((p) => p.motion === motion && p.takes).map((p) => [p.id, p.takes, p.outdated]),
     [
@@ -234,7 +234,7 @@ test('a later update of the form marks a default taken as updated, restores none
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM policy.in_force('ag', '2026-11-21') WHERE takes IN ('scop-sarl-fr:suspend-member', 'scop-sarl-fr:work-share')`)).n, 0)
   assert.equal((await one<{ revoked: boolean }>(`SELECT revoked IS NOT NULL AS revoked FROM circle.mandate WHERE policy = 'm-2021-001/48'`)).revoked, true)
   assert.equal((await statutes()).version, before.version)
-  const page = await circles.proposing(app, 'ag')
+  const page = await circles.proposing(reader(app, camille), 'ag')
   assert.equal(page?.policies.find((p) => p.id === 'm-2021-001/47')?.outdated, true)
   assert.deepEqual(page?.departures.map((d) => d.id), ['scop-sarl-fr:suspend-member', 'scop-sarl-fr:work-share'])
 

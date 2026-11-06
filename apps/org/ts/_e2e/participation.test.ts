@@ -94,7 +94,7 @@ test('Lanterne decides by consent, majority, two thirds and election, and by its
     { id: 'two-thirds', method: 'majority', share_num: 2, share_den: 3, quorum_num: 0, quorum_den: 1 },
   ])
   // The New form offers each in words.
-  const offered = (await procedures(app)).map((p) => `${p.label}: ${terms(p)}`)
+  const offered = (await procedures(reader(app, camille))).map((p) => `${p.label}: ${terms(p)}`)
   assert.ok(offered.includes('Extraordinary assembly: 2 in 3 of votes cast, quorum 1 in 2'), offered.join('; '))
   assert.ok(offered.includes('Two thirds: 2 in 3 of votes cast'))
   assert.ok(offered.includes('Ordinary assembly: majority, quorum 1 in 4'))

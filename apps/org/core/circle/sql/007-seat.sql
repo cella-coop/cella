@@ -98,7 +98,7 @@ CREATE TRIGGER capped BEFORE INSERT OR UPDATE ON circle.tenure
 -- its circle with its role; and by a tenure of a role that is a member of
 -- a circle, there with no role, for the days the two overlap, so the
 -- role's mandates reach no further than they do. That last row has no id.
-CREATE VIEW circle.seat AS
+CREATE VIEW circle.seat WITH (security_invoker = true) AS
 SELECT m.id, m.circle, m.person AS member, NULL::text AS role, m.since, m.until
 FROM circle.member m
 WHERE m.person IS NOT NULL

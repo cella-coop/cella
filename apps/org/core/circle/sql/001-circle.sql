@@ -135,9 +135,11 @@ GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 
 -- The general assembly's id: the one circle marked so, or null before
--- the co-op is founded.
+-- the co-op is founded. It runs as its owner, so whoever applies to it
+-- learns its id, and nothing more of the structure.
 CREATE FUNCTION circle.assembly() RETURNS text
-LANGUAGE sql STABLE
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
   SELECT c.id FROM circle.circle c WHERE c.assembly;
 END;

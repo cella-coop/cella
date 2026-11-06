@@ -1,10 +1,13 @@
 import type { Policy, Standing } from '@cella/org-policy'
+import type { Disclosure } from './disclosure.ts'
 
 // What a circle's page proposes about it: a mandate granted to a role
-// by adopting its policy, a mandate revoked by ending its policy.
-export type Kind = 'grant' | 'revoke'
+// by adopting its policy, a mandate revoked by ending its policy; and,
+// on the assembly's page, open books' disclosure values set by adopting
+// its rule, or withheld by ending it.
+export type Kind = 'grant' | 'revoke' | 'disclose' | 'withhold'
 
-export const kinds: { value: Kind; label: string }[] = [
+export const kinds: { value: Exclude<Kind, 'disclose' | 'withhold'>; label: string }[] = [
   { value: 'grant', label: 'Grant a mandate to one of its roles' },
   { value: 'revoke', label: 'Revoke one of its mandates' },
 ]
@@ -36,6 +39,9 @@ export interface Proposing {
   // The defaults of its form it left, each with the motion's action that
   // left it, or never took.
   departures: Standing[]
+  // On the assembly's page, open books' disclosure rule in force; none
+  // on any other circle's.
+  disclosure: Disclosure | null
 }
 
 // A motion about a circle, carrying one action of these kinds, put

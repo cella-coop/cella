@@ -301,6 +301,30 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 
+test("the assembly's page says what open books shares and what each value exposes; a value out of range is refused saying why, and Camille proposes new values as a motion of the assembly replacing the rule in force", async () => {
+  const { text } = await page('/circles/ag')
+  for (const said of ['Open books', 'Fewest people in a total', 'A precaution, not a promise', 'Exposes personal data', 'Not checked']) {
+    assert.ok(text.includes(said), `the assembly's page says ${said}`)
+  }
+  assert.ok(!(await page('/circles/coordination')).text.includes('Open books'), "no other circle's page shows open books")
+  const values = (contributors: string) => ({ kind: 'disclose', 'arg.contributors': contributors, 'arg.largest': '40', 'arg.two': '70', deadline: '2026-11-14', body: '' })
+  const low = await act('/circles/ag', 'put', values('1'), camille)
+  assert.equal(low.state, 'refused')
+  assert.match(low.reason ?? '', /a whole number from 2 to 200, as 5, not 1/)
+  const proposed = await act('/circles/ag', 'put', values('7'), camille)
+  assert.equal(proposed.state, 'settled', proposed.reason)
+  const made = await one<{ circle: string; title: string; args: { kind: string; replaces: string; wording: string }; standing: string }>(
+    `SELECT d.circle, d.title, a.args, (SELECT policy FROM circle.disclosed('2026-10-31')) AS standing
+     FROM motion.motion d JOIN motion.action a ON a.motion = d.id
+     WHERE d.title LIKE 'Share totals%' ORDER BY d.id DESC LIMIT 1`,
+  )
+  assert.equal(made.circle, 'ag')
+  assert.equal(made.title, "Share totals of members' own figures where at least 7 people put in, none more than 40 % and no two more than 70 %")
+  assert.equal(made.args.kind, 'rule')
+  assert.equal(made.args.replaces, made.standing)
+  assert.ok(made.args.wording.includes('{disclosure_contributors: 7 | more is stricter}') && made.args.wording.includes('{disclosure_two: 70 % | less is stricter}'))
+})
+
 test('the log the shell wrote verifies, and its page says so', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')

@@ -1,6 +1,7 @@
 import type { Db } from '@cella/org-db'
 import { departures, inForce } from '@cella/org-policy'
 import type { Deciding, Proposing } from '../models/circles.ts'
+import type { Disclosure } from '../models/disclosure.ts'
 
 // Every circle, the assembly first and the others by name, with the
 // procedure its motions follow.
@@ -51,5 +52,27 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
     open: open.rows,
     policies: await inForce(db, circle),
     departures: await departures(db, circle),
+    disclosure: await disclosing(db, circle),
   }
+}
+
+// On the assembly's page, open books' disclosure rule in force on the
+// verdict date (`circle.disclosed`), with the motion that adopted it, or
+// none standing; on any other circle's, nothing.
+async function disclosing(db: Db, circle: string): Promise<Disclosure | null> {
+  const { rows } = await db.query<{ assembly: boolean; policy: string | null; motion: string | null; from: string | null; contributors: number | null; largest: number | null; two: number | null }>(
+    `SELECT c.assembly, d.policy, p.motion, to_char(p.applies, 'YYYY-MM-DD') AS "from",
+            d.contributors, d.largest::float8 AS largest, d.two::float8 AS two
+     FROM circle.circle c
+     LEFT JOIN circle.disclosed(cella.verdict_date()) d ON true
+     LEFT JOIN policy.policy p ON p.id = d.policy
+     WHERE c.id = $1`,
+    [circle],
+  )
+  const found = rows[0]
+  if (!found?.assembly) {
+    return null
+  }
+  const values = found.contributors === null || found.largest === null || found.two === null ? null : { contributors: found.contributors, largest: found.largest, two: found.two }
+  return { policy: found.policy, motion: found.motion, from: found.from, values }
 }

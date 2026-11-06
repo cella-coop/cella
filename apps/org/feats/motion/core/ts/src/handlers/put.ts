@@ -27,6 +27,23 @@ export function worded(args: Put['args']): string {
   return `The {role: ${args.role}} role holds {power: ${args.power}}${grants}${cap}${scope}`
 }
 
+// The legal wording of open books' disclosure rule a `disclose` proposes,
+// Lanterne's, each value marked once with the way it is stricter, as
+// core reads them (`circle.disclosure_flaw`): the fewest people a total
+// may count, and the most of it one person and two may put in.
+export function disclosed(args: Put['args']): string {
+  for (const [name, says] of [
+    ['contributors', 'the fewest people in a total'],
+    ['largest', 'the most one person may put in'],
+    ['two', 'the most two people may put in'],
+  ]) {
+    if (args[name] === undefined || args[name] === '') {
+      throw new Error(`say ${says}`)
+    }
+  }
+  return `Open books shares a total of members' own figures with every member where at least {disclosure_contributors: ${args.contributors} | more is stricter} people put into it, none of them more than {disclosure_largest: ${args.largest} % | less is stricter} of it and no two more than {disclosure_two: ${args.two} % | less is stricter}`
+}
+
 // A grant's values as `motion.decider` reads them: its power, its
 // limit and budget in cents, its period and its scope, none left blank.
 function granting(args: Put['args']) {
@@ -45,19 +62,23 @@ function granting(args: Put['args']) {
 // it, never by where it sits, since circles never nest: for a grant, a
 // circle holding `adopt-policy` and a mandate for the power granted that
 // the grant is no wider than, the one it issues the grant under, or else
-// the assembly (`motion.decider`); for the end of a
-// mandate's policy, the circle that adopted it, whose own it is. Granting
-// a mandate proposes its policy, revoking one ends its policy. The title
-// says what is decided; `motion.circle_asks` checks the action and that
-// circle's say over it. membership-motion puts it by the procedure
-// its requirements fix, fixing its roll in the same write.
+// the assembly (`motion.decider`); for the end of a policy, the circle
+// that adopted it, whose own it is; for open books' disclosure rule, the
+// assembly, whose rule it is. Granting a mandate proposes its policy,
+// revoking one ends its policy; disclosing proposes the rule, replacing
+// the one in force, and withholding ends that one. The title says what
+// is decided; `motion.circle_asks` checks the action and that circle's
+// say over it. membership-motion puts it by the procedure its
+// requirements fix, fixing its roll in the same write.
 export async function putting(input: Put, db: Db): Promise<Propose> {
-  const { rows } = await db.query<{ decider: string | null; name: string; role: string | null; mandate: string | null }>(
-    `SELECT CASE WHEN $2 = 'revoke' THEN (SELECT r.circle FROM policy.policy r WHERE r.id = $4)
+  const { rows } = await db.query<{ decider: string | null; name: string; role: string | null; mandate: string | null; standing: string | null }>(
+    `SELECT CASE WHEN $2 IN ('revoke', 'withhold') THEN (SELECT r.circle FROM policy.policy r WHERE r.id = $4)
+                 WHEN $2 = 'disclose' THEN circle.assembly()
                  ELSE motion.decider(c.id, ARRAY['adopt-policy', $5::jsonb ->> 'power'], cella.verdict_date(), $5::jsonb) END AS decider,
             c.name,
             (SELECT r.name FROM circle.role r WHERE r.id = $3) AS role,
-            (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $4) AS mandate
+            (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $4) AS mandate,
+            (SELECT d.policy FROM circle.disclosed(cella.verdict_date()) d) AS standing
      FROM circle.circle c
      WHERE c.id = $1`,
     [
@@ -72,19 +93,25 @@ export async function putting(input: Put, db: Db): Promise<Propose> {
   if (!found?.decider) {
     throw new Error(`no circle may decide to ${input.kind} in ${input.circle}`)
   }
-  const titles = {
-    grant: `Grant ${input.args.power} to ${found.role ?? input.args.role} in ${found.name}`,
-    revoke: `Revoke ${found.mandate ?? `the mandate of ${input.args.policy}`}`,
+  const { args } = input
+  const made: Record<Put['kind'], () => { title: string; action: Propose['actions'][number] }> = {
+    grant: () => ({
+      title: `Grant ${args.power} to ${found.role ?? args.role} in ${found.name}`,
+      action: { kind: 'policy', args: { kind: 'mandate', wording: worded(args) } },
+    }),
+    revoke: () => ({
+      title: `Revoke ${found.mandate ?? `the mandate of ${args.policy}`}`,
+      action: { kind: 'end', args: { policy: String(args.policy) } },
+    }),
+    disclose: () => ({
+      title: `Share totals of members' own figures where at least ${args.contributors} people put in, none more than ${args.largest} % and no two more than ${args.two} %`,
+      action: { kind: 'policy', args: { kind: 'rule', wording: disclosed(args), ...(found.standing ? { replaces: found.standing } : {}) } },
+    }),
+    withhold: () => ({
+      title: "Share no total of members' own figures beyond each reader's own rights",
+      action: { kind: 'end', args: { policy: String(args.policy) } },
+    }),
   }
-  const actions = {
-    grant: { kind: 'policy', args: { kind: 'mandate', wording: worded(input.args) } },
-    revoke: { kind: 'end', args: { policy: String(input.args.policy) } },
-  }
-  return {
-    circle: found.decider,
-    title: titles[input.kind],
-    deadline: input.deadline,
-    body: input.body,
-    actions: [actions[input.kind]],
-  }
+  const { title, action } = made[input.kind]()
+  return { circle: found.decider, title, deadline: input.deadline, body: input.body, actions: [action] }
 }

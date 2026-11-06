@@ -15,8 +15,10 @@ export { putting, worded } from '../handlers/put.ts'
 export { adopt, end } from '../handlers/policy.ts'
 
 // What a grant and a revocation ask for: a mandate is a policy, so its
-// form is this feat's, and `putting` words it.
-const asked: Record<'grant' | 'revoke', Arg[]> = {
+// form is this feat's, and `putting` words it. Setting open books'
+// disclosure values asks for the three; withholding them, for the rule
+// in force it ends.
+const asked: Record<Kind, Arg[]> = {
   grant: [
     { name: 'role', label: 'Role', type: 'text' },
     { name: 'power', label: 'Power', type: 'text' },
@@ -27,13 +29,19 @@ const asked: Record<'grant' | 'revoke', Arg[]> = {
     { name: 'scope', label: 'Covers', type: 'text', optional: true },
   ],
   revoke: [{ name: 'policy', label: 'Mandate', type: 'text' }],
+  disclose: [
+    { name: 'contributors', label: 'Fewest people in a total', type: 'number' },
+    { name: 'largest', label: 'Most one person may put in, %', type: 'number' },
+    { name: 'two', label: 'Most two people may put in, %', type: 'number' },
+  ],
+  withhold: [{ name: 'policy', label: 'Rule', type: 'text' }],
 }
 
 // A motion about the circle whose page it is, read as its kind declares
 // its arguments.
 export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   const kind = form.get('kind') as Kind
-  const fields = kind === 'grant' || kind === 'revoke' ? asked[kind] : undefined
+  const fields = Object.hasOwn(asked, kind) ? asked[kind] : undefined
   if (!fields) {
     throw new Error('choose what to propose')
   }

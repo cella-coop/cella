@@ -740,6 +740,20 @@ What the build does not yet do, and what lifts each:
   view's cells. A host or a bug in the server that skips the port reads
   every circle's rows and every person's part of a shared total; the
   analytics role reading as the reader lifts this.
+- **Suppression stops arithmetic within a report, not inference.** Open
+  books' disclosure values withhold a small or dominated cell, and the
+  cells that would give it back, inside each report a run reads; no run
+  checks its totals against another view's or another period's, so a
+  member who reads two reports over the same people, or the same report
+  before and after someone joins, may subtract one from the other. Nor
+  does any value stop inference from what a reader knows outside the
+  books, a colleague's pay or who left a team: a co-op that shares such
+  totals consents to that residual risk, which the assembly's Open books
+  page says beside every value it proposes
+  ([the circles in the shell](../../apps/org/feats/motion/index.md#the-circles-in-the-shell)).
+  A release checked as one set across related views and periods, as the
+  [disclosure study](../review/2026-11-05/disclosure.md) recommends,
+  lifts the first; nothing lifts the second.
 - **A backup carries its keys.** `cella backup` writes the notary's and
   the vault's key files beside the dump, owner-only but not encrypted, so
   whoever holds a backup can open the vault and sign as the notary; a

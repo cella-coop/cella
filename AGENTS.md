@@ -83,6 +83,14 @@ site hold no feat and write no SQL. Read
 - **A guard lives at the lowest level that owns it**: a feat, a graft, or a
   node's core only when it spans everything below.
 - **Personal data never enters the log.** Commit to it; keep it in the vault.
+- **The site's text is the operator's.** No agent writes
+  `apps/site/src/content/**`, by an edit, a script, a move or a rename:
+  the operator writes every word of it by hand. Agents write the site's
+  structure and its components. A
+  change that needs a word of the text changed says so in its entry's
+  Flag, and the operator writes it; `.claude/settings.json` refuses an
+  agent's edit there early
+  ([whose words](apps/site/index.md#whose-words)).
 - **A slice's UI is its own.** A feat mounts its collections in the shell
   through its `./api` and `./app` slices; a graft extends only the
   collections of the feats it joins. Blocks compose `@cella/org-ui` and

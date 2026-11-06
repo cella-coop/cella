@@ -13,7 +13,7 @@ import { close as closing, vote } from '@cella/org-motion/api'
 import { close } from '@cella/org-graft-membership-motion/api'
 import { profile } from '@cella/org-person/api'
 import { enrol, revoke } from '@cella/org-person/api'
-import { add, update } from '@cella/org-client/api'
+import { add, update } from '@cella/org-contact/api'
 import { comment } from '@cella/org-document/api'
 import type { Deps } from '@cella/org-db'
 import { generate, plain, signer, type Device, type Proof } from '@cella/org-sign'
@@ -191,7 +191,7 @@ test('a person edits their own profile, and no one else\'s', async () => {
   assert.equal((await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [chloe])).name, 'Chloé Moreau')
 })
 
-test('every active member edits clients and documents through the member role\'s mandates in the assembly', async () => {
+test('every active member edits contacts and documents through the member role\'s mandates in the assembly', async () => {
   const noted = await update({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe))
   assert.equal(noted.state, 'settled')
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = $1', [noted.state === 'settled' && noted.entry])
@@ -207,7 +207,7 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [thomas])
   try {
     const suspended = await update({ id: 'nuvola', fields: { note: 'Suspended' } }, as(thomas))
-    assert.match(reason(suspended), /thomas@lanterne\.example holds no mandate for edit-client/)
+    assert.match(reason(suspended), /thomas@lanterne\.example holds no mandate for edit-contact/)
     const silenced = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Suspended.' }, as(thomas))
     assert.match(reason(silenced), /thomas@lanterne\.example holds no mandate for edit-document/)
   } finally {
@@ -217,7 +217,7 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   // Inès is invited, not a member: she signs from the laptop her hire
   // enrolled, and holds no mandate.
   const outsider = { db: reader(app, ines), actor: ines, sign: sign(ines) }
-  assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-client/)
+  assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-contact/)
   assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /ines@lanterne\.example holds no mandate for edit-document/)
   assert.equal(await head(), before)
 })

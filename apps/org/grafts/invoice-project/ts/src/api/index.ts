@@ -16,7 +16,7 @@ export const slice: Slice = {
       list: projectOf,
       item: charged,
       actions: {
-        // Named apart from client-invoice's `link`, which the same page offers.
+        // Named apart from contact-invoice's `link`, which the same page offers.
         charge: action('invoice-project:invoice:link', (form, id) => ({ invoice: id ?? '', project: form.get('project') }), link),
       },
     },

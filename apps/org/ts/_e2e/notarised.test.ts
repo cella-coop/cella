@@ -25,7 +25,7 @@ const as = (db: Db = app): Deps => ({ db, actor: camille, sign: sign(camille) })
 
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-const clients = async () => Number((await one<{ n: string }>('SELECT count(*) AS n FROM client.client')).n)
+const contacts = async () => Number((await one<{ n: string }>('SELECT count(*) AS n FROM contact.contact')).n)
 const runs = async () => Number((await one<{ n: string }>('SELECT count(*) AS n FROM import.run')).n)
 
 // A write by hand, as a handler makes one: the run it records, its signed
@@ -78,8 +78,8 @@ test('the seed founds Lanterne as the log\'s first entry, and every table a feat
 
 test('a psql write is refused, as the app or as a superuser', async () => {
   for (const [db, sql] of [
-    [su, `INSERT INTO client.client (id, kind, name) VALUES ('cl-forged', 'company', 'Forged')`],
-    [su, `UPDATE client.client SET note = note || '.'`],
+    [su, `INSERT INTO contact.contact (id, kind, name) VALUES ('cl-forged', 'company', 'Forged')`],
+    [su, `UPDATE contact.contact SET note = note || '.'`],
     [su, `DELETE FROM document_membership.reading`],
     [su, 'TRUNCATE timesheet.entry CASCADE'],
     [app, `INSERT INTO import.run (kind, name, actor, day, dry, settled, refused, lines) VALUES ('members', 'x.csv', '${camille}', '2026-10-25', true, 0, 0, '[]')`],
@@ -90,7 +90,7 @@ test('a psql write is refused, as the app or as a superuser', async () => {
       return true
     })
   }
-  assert.equal(await clients(), 9)
+  assert.equal(await contacts(), 9)
 })
 
 test('a handler that skips submit commits nothing', async () => {
@@ -144,17 +144,17 @@ test('a verdict settles only the write begun, and one write is one transaction',
   await refused(submit, [camille, { request: {}, ...proof }], /import:run:record was not begun: a write opens with cella.begin/)
   await app.query('BEGIN')
   try {
-    await app.query(`SELECT cella.begin('client:client:add', $1, decode($2, 'hex'))`, [camille, proof.device])
-    await assert.rejects(app.query(submit, [camille, { request: {}, ...proof }]), /import:run:record by camille@lanterne.example is not the write this transaction began, client:client:add by camille/)
+    await app.query(`SELECT cella.begin('contact:contact:add', $1, decode($2, 'hex'))`, [camille, proof.device])
+    await assert.rejects(app.query(submit, [camille, { request: {}, ...proof }]), /import:run:record by camille@lanterne.example is not the write this transaction began, contact:contact:add by camille/)
   } finally {
     await app.query('ROLLBACK')
   }
   await app.query('BEGIN')
   try {
-    await app.query(`SELECT cella.begin('client:client:add', $1, decode($2, 'hex'))`, [camille, proof.device])
+    await app.query(`SELECT cella.begin('contact:contact:add', $1, decode($2, 'hex'))`, [camille, proof.device])
     await assert.rejects(
-      app.query(`SELECT cella.begin('client:client:add', $1, decode($2, 'hex'))`, [camille, proof.device]),
-      /opened client:client:add already: one write, one transaction/,
+      app.query(`SELECT cella.begin('contact:contact:add', $1, decode($2, 'hex'))`, [camille, proof.device]),
+      /opened contact:contact:add already: one write, one transaction/,
     )
   } finally {
     await app.query('ROLLBACK')
@@ -235,7 +235,7 @@ test('only a superuser unbinds', async () => {
   await assert.rejects(app.query('SET cella.unbound = on'), /permission denied to set parameter "cella.unbound"/)
   await su.query('BEGIN')
   await su.query('SET LOCAL cella.unbound = on')
-  await su.query(`INSERT INTO client.client (id, kind, name) VALUES ('cl-unbound', 'company', 'Unbound')`)
+  await su.query(`INSERT INTO contact.contact (id, kind, name) VALUES ('cl-unbound', 'company', 'Unbound')`)
   await su.query('ROLLBACK')
-  assert.equal(await clients(), 9)
+  assert.equal(await contacts(), 9)
 })

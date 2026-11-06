@@ -11,7 +11,7 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
 import { carried, close, put } from '@cella/org-graft-membership-motion/api'
-import { erase as eraseClient, update } from '@cella/org-client/api'
+import { erase as eraseContact, update } from '@cella/org-contact/api'
 import { capture } from '@cella/org-expense/api'
 import { log as logTime } from '@cella/org-timesheet/api'
 import { forget, profile } from '@cella/org-person/api'
@@ -76,17 +76,17 @@ after(async () => {
   await su.end()
 })
 
-test('only a holder of erase-personal-data erases a client: Julien may not, Camille may', async () => {
-  assert.match(reason(await eraseClient({ id: margaux }, as(julien))), /erase-personal-data/)
-  const done = settled(await eraseClient({ id: margaux }, as(camille)))
+test('only a holder of erase-personal-data erases a contact: Julien may not, Camille may', async () => {
+  assert.match(reason(await eraseContact({ id: margaux }, as(julien))), /erase-personal-data/)
+  const done = settled(await eraseContact({ id: margaux }, as(camille)))
   assert.deepEqual(
-    await one('SELECT name, email, phone, note, status FROM client.client WHERE id = $1', [margaux]),
+    await one('SELECT name, email, phone, note, status FROM contact.contact WHERE id = $1', [margaux]),
     { name: 'redacted', email: 'redacted', phone: 'redacted', note: 'redacted', status: 'archived' },
   )
   assert.deepEqual(await erased(margaux), { contact: false })
   assert.deepEqual((await opened(done.entry)).erasure, { $erasure: { subject: margaux, erased: ['contact'], restricted: [] } })
   // The company she worked for keeps its name.
-  assert.equal((await one<{ name: string }>(`SELECT name FROM client.client WHERE id = 'halles'`)).name, 'Les Halles Paysannes')
+  assert.equal((await one<{ name: string }>(`SELECT name FROM contact.contact WHERE id = 'halles'`)).name, 'Les Halles Paysannes')
 })
 
 test('erasure wins: a later update of Margaux\'s email is refused', async () => {

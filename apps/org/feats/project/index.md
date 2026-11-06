@@ -54,8 +54,8 @@ membership feat checks it.
 
 ## What it does not know
 
-Project knows no clients, tasks, members or time. Whom a project is for is
-`client-project`'s; its tasks, `project-task`'s; its time, what it spent
+Project knows no contacts, tasks, members or time. Whom a project is for is
+`contact-project`'s; its tasks, `project-task`'s; its time, what it spent
 of the budget and its spend at completion, `project-timesheet`'s; the
 shares of its budget, `membership-project`'s; its margin and whether it is
 watched, the `report` feat's project margins. Quotes and invoicing by milestone are not built.
@@ -81,7 +81,7 @@ projects alone ([membership](../person/feats/membership/index.md#seats)).
 
 ## Shell
 
-The `projects` collection opens as a gallery, each card naming its client,
+The `projects` collection opens as a gallery, each card naming its contact,
 its milestones done of all, its budget and what its time spent of it (the
 root picks these fields, which come from three slices). A project's page
 has three tabs: Overview, with its summary, its milestones (completing

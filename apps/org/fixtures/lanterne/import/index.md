@@ -9,7 +9,7 @@ guards refuse beside the ones they take:
 
 - `members.csv`: Nadia and Olivier, invited, each to be given a link from
   their page; Rose, whose row carries no address.
-- `clients.csv`: two companies and a person, and Maison Ferrand, a client
+- `contacts.csv`: two companies and a person, and Maison Ferrand, a contact
   already.
 - `fec-2026-10.txt`: October from the previous tool's books, a FEC with a
   bar between its fields. The rental account 6135 and the fees account 6226
@@ -17,7 +17,7 @@ guards refuse beside the ones they take:
   Atelier Ondine's invoice balance; the fees entry does not, and 2025's
   opening entry falls in no period of the books.
 - `invoices.csv`: two invoices to issue for Atelier Ondine and Vélo
-  Solidaire, the first of two lines, one with no client and one for
+  Solidaire, the first of two lines, one with no contact and one for
   Maison Ferrand with no address billed.
 - `toggl.csv`: Inès's Toggl detailed report: her time on the Halles' shop,
   the co-op's own and Clairval, all Web's, her circle's, a row of Thomas's and a project the co-op does

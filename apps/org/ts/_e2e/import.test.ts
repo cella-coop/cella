@@ -9,7 +9,7 @@
 // both are refused, and the trial balance still holds. He issues the
 // invoices the spreadsheet lists, numbered and posted. Inès brings her
 // own time from Toggl and Harvest, and others' rows are refused. Camille
-// brings clients, projects and Asana's tasks, a client held already and a
+// brings contacts, projects and Asana's tasks, a contact held already and a
 // task done before the switch left out. Every run is recorded with what
 // each line came to, and `cella import` runs the same import from the
 // command line. Run by `cella test e2e import`.
@@ -133,11 +133,11 @@ test('Inès brings her own time from Toggl and Harvest; others\' rows are refuse
   ])
 })
 
-test('Camille brings clients, projects and Asana\'s tasks, leaving out what is held already or done', async () => {
-  const clients = await run('clients', 'clients.csv', camille)
-  assert.deepEqual(states(clients.lines), { 2: 'settled', 3: 'settled', 4: 'settled', 5: 'failed' })
-  assert.match(clients.lines[3].done.reason ?? '', /holds this client already, as ferrand/)
-  assert.equal(clients.lines[2].label, 'a person, line 4')
+test('Camille brings contacts, projects and Asana\'s tasks, leaving out what is held already or done', async () => {
+  const contacts = await run('contacts', 'contacts.csv', camille)
+  assert.deepEqual(states(contacts.lines), { 2: 'settled', 3: 'settled', 4: 'settled', 5: 'failed' })
+  assert.match(contacts.lines[3].done.reason ?? '', /holds this contact already, as ferrand/)
+  assert.equal(contacts.lines[2].label, 'a person, line 4')
   const projects = await run('projects', 'projects.csv', camille)
   assert.deepEqual(states(projects.lines), { 2: 'settled', 3: 'settled', 4: 'failed' })
   const tasks = await run('tasks', 'tasks.csv', camille)
@@ -157,7 +157,7 @@ test('every run is recorded, and `cella import` runs the same import from the co
   const runs = await all<{ kind: string; dry: boolean; settled: number; refused: number }>('SELECT kind, dry, settled, refused FROM import.run ORDER BY id')
   assert.deepEqual(
     runs.map((r) => `${r.kind}${r.dry ? ' (dry)' : ''} ${r.settled}/${r.refused}`),
-    ['members (dry) 2/1', 'members 2/1', 'fec 2/2', 'invoices 2/2', 'toggl 3/2', 'harvest 2/1', 'clients 3/1', 'projects 2/1', 'tasks 3/2'],
+    ['members (dry) 2/1', 'members 2/1', 'fec 2/2', 'invoices 2/2', 'toggl 3/2', 'harvest 2/1', 'contacts 3/1', 'projects 2/1', 'tasks 3/2'],
   )
   const tool = new URL('../../../../tools/import.mjs', import.meta.url).pathname
   const out = spawnSync(process.execPath, [tool, 'projects', new URL('projects.csv', dir).pathname, camille, '--dry-run'], { encoding: 'utf8', env: process.env })

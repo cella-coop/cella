@@ -56,8 +56,8 @@ state is that of 24 October 2026.
 | `invoice.send` | confluent | right |
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
-| `client.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
-| `client.erase`, `membership.erase`, `person.forget` | ordered | right: a tombstone against every later value |
+| `contact.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
+| `contact.erase`, `membership.erase`, `person.forget` | ordered | right: a tombstone against every later value |
 | `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation is taken up by its link; erasure wins |
 | `membership.link` | confluent | right: links are facts; the first taken up ends them all |
 | `membership.accept` | ordered | right: it enrols a first device, ordered against revoke as `person.enrol` is ([membership](#membership-changes-are-decided)) |
@@ -71,8 +71,8 @@ state is that of 24 October 2026.
 | `membership-project:project.share` | bounded on the budget | right |
 | `task.create`, `.move`, `.complete` | confluent | right: field registers, the last writer wins |
 | `membership-task:task.assign`, `project-task:task.file` | confluent | right: registers |
-| `client-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client |
-| `client-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `client-invoice`'s |
+| `contact-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one contact |
+| `contact-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `contact-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |
 | `timesheet:period.approve` | ordered | right: it fixes which entries were approved ([time](#no-time-goes-into-an-approved-month)); **applied**: within what the approver's mandate covers ([scope](#a-mandate-covers-what-its-scope-names)); any person sits in a circle, member or not, so a worker who is no member is approved within their working circle; one whose seat counts nowhere, by any holder of the power |
@@ -499,16 +499,16 @@ is Web's; Yusuf may.
 
 ## Erasure wins
 
-Owner: the feat holding the data (`client`, `person`), with the vault.
+Owner: the feat holding the data (`contact`, `person`), with the vault.
 
 | Pair | A first | B first | Both confluent, last writer wins |
 |---|---|---|---|
-| erase a person vs `client.update` / `person.profile` | the update is erased | the update re-adds the data | personal data returns after erasure |
+| erase a person vs `contact.update` / `person.profile` | the update is erased | the update re-adds the data | personal data returns after erasure |
 
-Field registers with the last writer winning are right for `client` and
+Field registers with the last writer winning are right for `contact` and
 `person.profile`, except against erasure: an erasure is a tombstone that
 wins over every update, whichever arrives first. **Applied**:
-`client.erase`, `membership.erase` and `person.forget` are ordered, and the
+`contact.erase`, `membership.erase` and `person.forget` are ordered, and the
 notary, under the log's lock, refuses any later value of an erased
 subject's class (`vault.erased`); an update that settled first is erased
 with the rest. **Rung 2**: an update queued offline before the erasure
@@ -773,7 +773,7 @@ nothing.
 | `invoice.send` | idempotent; a send that races a void is followed by the void's credit note |
 | `decision.propose` | a fact; the roll and the motions are fixed when the server receives it, and the cutoff by `close` |
 | `membership.invite` | two invitations do no harm, unless they carry one device key, which is refused |
-| `client.add` | duplicates are merged by hand |
+| `contact.add` | duplicates are merged by hand |
 | `project.create`, `task.create` | facts; a project's slug taken twice is refused, a task's number is the server's |
 | `project:milestone.complete` | idempotent: the first day stands |
 | `timesheet:period.submit` | idempotent: the first day stands |
@@ -791,7 +791,7 @@ The matrix found writes no `actions.ts` declares:
 | `account.open` | ordered | account codes are unique in the scope |
 | `document.version` | confluent | adoption names versions nothing saves; **applied**, now declared |
 | `invoice.draft` | confluent | issue numbers a draft nothing creates |
-| erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `client.erase`, `membership.erase` and `.forget` |
+| erasing a person | ordered | the tombstone must be fixed in the log; **applied**, now `contact.erase`, `membership.erase` and `.forget` |
 | setting a draw limit or a salary | ordered | draws and pay runs spend and read what nothing writes but the seed |
 | a deduction for losses from a repayment | ordered | the repaid value is the nominal one less the losses the year's accounts show, which nothing reads |
 | opening a period | ordered | the fiscal year's months exist only as the seed made them; **applied**, now `account.period.open` |

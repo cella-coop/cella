@@ -76,9 +76,12 @@ their name, their contact details and their devices; a membership and an
 employment are what they may hold, each with its own days. Nested, the
 children inherit the parent's core, so each reads the person and neither
 knows the other, and a person's roles are derived: a member is a person
-who holds a membership, a worker one who holds an employment. A contact
-and an agent are later children of the same shape. What everything grafts
-onto belongs in the parent's core, not in a feat.
+who holds a membership, a worker one who holds an employment. An agent
+is a later child of the same shape. A contact, an organisation or a
+person the co-op deals with, is not one: most contacts are organisations,
+so `contact` is a top-level feat of its own, and a person among them is
+no person of the co-op. What everything grafts onto belongs in the
+parent's core, not in a feat.
 
 A feat's name is unique in its app, at any depth, since it names its
 schema and the grafts that join it; `cella check feats` refuses a second
@@ -167,7 +170,7 @@ graft that joins a nested feat reads its parent's core too, as the feat
 does: `membership-motion` reads the member's name from `person`.
 
 No foreign key crosses a feat boundary. A feat handles an unlinked entity
-gracefully: an invoice without a client is unbilled, not invalid. The graft
+gracefully: an invoice without a contact is unbilled, not invalid. The graft
 adds the link.
 
 A graft may also own actions on the relationship it holds, such as who
@@ -435,7 +438,7 @@ row-level policies, triggers and composed guards, which are plain
 `LANGUAGE sql` functions over the `cella.*` primitives. The SQL sits in a
 `sql/` directory beside the core package: `feats/<feat>/core/sql/`,
 `grafts/<graft>/sql/`. A schema takes its owner's name; a graft's hyphens
-become underscores, so `client-invoice` owns the schema `client_invoice`.
+become underscores, so `contact-invoice` owns the schema `contact_invoice`.
 
 A co-op's customisations are custom feats: a feat of its own, with its own
 schema, SQL and grafts, built on the same primitives and enabled by
@@ -453,7 +456,7 @@ circle table, `circle text NOT NULL DEFAULT circle.assembly() REFERENCES
 circle.circle`. Data is scoped by circle, as in an ERP: a record that is
 a circle's work names that circle, as a project names the circle that
 runs it and an expense the one it was spent for, and a record that is
-the whole co-op's, the books, pay, membership, invoices and clients and
+the whole co-op's, the books, pay, membership, invoices and contacts and
 every record no circle runs, is the root's, the assembly's, which a
 write naming no circle names. An unknown circle is impossible, since the
 key refuses it, and so is a record of no circle. Ownership grants

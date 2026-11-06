@@ -6,7 +6,7 @@ import { slice as membership } from '@cella/org-membership/api'
 import { slice as circle } from '@cella/org-circle/api'
 import { slice as motion } from '@cella/org-motion/api'
 import { slice as document } from '@cella/org-document/api'
-import { slice as client } from '@cella/org-client/api'
+import { slice as contact } from '@cella/org-contact/api'
 import { slice as invoice } from '@cella/org-invoice/api'
 import { slice as account } from '@cella/org-account/api'
 import { slice as patronage } from '@cella/org-patronage/api'
@@ -22,10 +22,10 @@ import { circles as motionCircles } from '@cella/org-motion/api'
 import { circles as membershipMotionCircles } from '@cella/org-graft-membership-motion/api'
 import { slice as membershipMotion } from '@cella/org-graft-membership-motion/api'
 import { slice as documentMotion } from '@cella/org-graft-document-motion/api'
-import { slice as clientInvoice } from '@cella/org-graft-client-invoice/api'
+import { slice as contactInvoice } from '@cella/org-graft-contact-invoice/api'
 import { slice as invoiceTransaction } from '@cella/org-graft-invoice-transaction/api'
 import { slice as accountTransaction } from '@cella/org-graft-account-transaction/api'
-import { slice as clientProject } from '@cella/org-graft-client-project/api'
+import { slice as contactProject } from '@cella/org-graft-contact-project/api'
 import { slice as invoiceProject } from '@cella/org-graft-invoice-project/api'
 import { slice as membershipProject } from '@cella/org-graft-membership-project/api'
 import { slice as membershipTask } from '@cella/org-graft-membership-task/api'
@@ -93,7 +93,7 @@ export const slices: Slice[] = [
   motion,
   document,
   meeting,
-  client,
+  contact,
   project,
   task,
   timesheet,
@@ -114,8 +114,8 @@ export const slices: Slice[] = [
   membershipMotionCircles.slice,
   membershipMotion,
   documentMotion,
-  clientInvoice,
-  clientProject,
+  contactInvoice,
+  contactProject,
   invoiceProject,
   membershipProject,
   membershipTask,

@@ -14,7 +14,7 @@ name, number and identifier here is invented.
 ## People and circles
 
 Every member sits in the general assembly, one member one vote, by a
-tenure of its `member` role, whose mandates let every member edit clients
+tenure of its `member` role, whose mandates let every member edit contacts
 and documents; and in one working circle, as its member or its lead.
 The lead role is a member of coordination, which meets weekly, so each
 circle's lead sits there by their tenure, and Camille sits there as a
@@ -246,7 +246,7 @@ assembly, and no one opens a candidacy for another.
 
 One file per feat and one per graft, so the mock keeps the same boundaries
 as the code: an invoice names whom it bills as text, and the link to the
-client record is the `client-invoice` graft's. Amounts are in cents, and a
+contact record is the `contact-invoice` graft's. Amounts are in cents, and a
 mandate is a policy whose power is an id. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
 link resolves and the books agree with the invoices; `tools/fixture/work.mjs`,

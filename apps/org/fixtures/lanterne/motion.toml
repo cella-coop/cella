@@ -54,7 +54,7 @@ args = { kind = "procedure", wording = "By the {label: extraordinary assembly}'s
 # feat's mandates as it is adopted.
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: member} role holds {power: edit-client}, to add and edit clients" }
+args = { kind = "mandate", wording = "The {role: member} role holds {power: edit-contact}, to add and edit contacts" }
 
 [[motion.action]]
 kind = "policy"
@@ -158,7 +158,7 @@ args = { kind = "mandate", wording = "The {role: manager} role holds {power: set
 
 [[motion.action]]
 kind = "policy"
-args = { kind = "mandate", wording = "The {role: manager} role holds {power: erase-personal-data}, to erase a person's data among the clients, when they ask" }
+args = { kind = "mandate", wording = "The {role: manager} role holds {power: erase-personal-data}, to erase a person's data among the contacts, when they ask" }
 
 [[motion.action]]
 kind = "policy"

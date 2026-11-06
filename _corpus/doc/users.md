@@ -75,7 +75,7 @@ What the first target needs that the org app does not do yet, by severity:
 
 - **Critical:** the work share's cash paid. A co-op brings what it had
   from the tools it leaves, each record through the signed write it would
-  take by hand, tried first in a dry run: members, clients, projects and
+  take by hand, tried first in a dry run: members, contacts, projects and
   tasks (Asana's export among them) from CSV, its books from the FEC, its
   invoices to issue, and each worker's own time from Toggl or Harvest;
   Notion's exports, whose columns are each database's own, and carrying
@@ -131,7 +131,7 @@ government](users/09-large-gov.md).
 |---|---|---|---|
 | Professional partnerships (law, audit, medicine) | 2–50 partners | `account`, `motion` | profit formulas with many factors; votes weighted by equity |
 | Producer and freelancer co-ops | 5–50 producers | `invoice`, `account` | patronage by volume traded; members are busy, governance light |
-| Freelancers | 1 | `invoice`, `client` | not member-governed; the on-ramp to forming a co-op |
+| Freelancers | 1 | `invoice`, `contact` | not member-governed; the on-ramp to forming a co-op |
 | Industrial worker co-ops | 50–250 | `account`, `motion` | shifts, safety, delegated governance |
 | Multi-stakeholder co-ops (SCIC) | 50–250 | `circle`, `motion` | colleges with weighted votes and their own patronage basis |
 | Agricultural co-ops | 50–250 | `account`, `invoice` | pool pricing, seasons, revolving capital |

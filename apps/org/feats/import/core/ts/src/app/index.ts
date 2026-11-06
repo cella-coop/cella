@@ -12,7 +12,7 @@ export const app: App = {
       view: {
         group: 'platform',
         title: 'Imports',
-        caption: 'Members, clients, the books, invoices, time, projects and tasks brought in from other tools',
+        caption: 'Members, contacts, the books, invoices, time, projects and tasks brought in from other tools',
         icon: icons.FileArrowUp,
         create: Create,
         columns: [

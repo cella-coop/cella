@@ -13,7 +13,7 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 
 export function work(read, fail) {
   const addresses = new Set((read('membership').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
-  const clients = new Set((read('client').client ?? []).map((c) => c.id))
+  const contacts = new Set((read('contact').contact ?? []).map((c) => c.id))
   const projects = new Map((read('project').project ?? []).map((p) => [p.id, p]))
   const tasks = new Map((read('task').task ?? []).map((t) => [t.id, t]))
   const time = read('timesheet')
@@ -51,17 +51,17 @@ export function work(read, fail) {
     }
   }
 
-  for (const c of read('graft.client-project').commission ?? []) {
+  for (const c of read('graft.contact-project').commission ?? []) {
     has(projects, c.project, 'project', 'commission')
-    if (!clients.has(c.client)) {
-      fail(`commission of ${c.project}: no client ${c.client}`)
+    if (!contacts.has(c.contact)) {
+      fail(`commission of ${c.project}: no contact ${c.contact}`)
     }
   }
 
   // An invoice bills a project of the client it bills.
   const invoices = new Set((read('invoice').invoice ?? []).map((i) => i.id))
-  const billed = new Map((read('graft.client-invoice').billing ?? []).map((b) => [b.invoice, b.client]))
-  const commissioned = new Map((read('graft.client-project').commission ?? []).map((c) => [c.project, c.client]))
+  const billed = new Map((read('graft.contact-invoice').billing ?? []).map((b) => [b.invoice, b.contact]))
+  const commissioned = new Map((read('graft.contact-project').commission ?? []).map((c) => [c.project, c.contact]))
   for (const c of read('graft.invoice-project').charge ?? []) {
     has(projects, c.project, 'project', `charge of ${c.invoice}`)
     if (!invoices.has(c.invoice)) {

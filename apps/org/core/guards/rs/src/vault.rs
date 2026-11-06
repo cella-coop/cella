@@ -255,11 +255,11 @@ mod tests {
     #[test]
     fn the_log_keeps_commitments_and_reads_gaps_as_redacted() {
         let payload = json!({
-            "client": "ana",
+            "contact": "ana",
             "fields": ["email", "phone"],
             "values": {
-                "email": {"$personal": {"field": "client.client.email", "subject": "ana", "value": "ana@example.org"}},
-                "phone": {"$personal": {"field": "client.client.phone", "subject": "ana", "value": "+33 1"}},
+                "email": {"$personal": {"field": "contact.contact.email", "subject": "ana", "value": "ana@example.org"}},
+                "phone": {"$personal": {"field": "contact.contact.phone", "subject": "ana", "value": "+33 1"}},
             },
         });
         let mut n = 0u8;
@@ -269,7 +269,7 @@ mod tests {
             Ok(committed(&commit(&[n; 32], &p.value)?))
         })
         .unwrap();
-        assert_eq!(form["client"], "ana");
+        assert_eq!(form["contact"], "ana");
         let email = commitment(&form["values"]["email"]).unwrap();
         assert!(opens(&email, &[1; 32], &json!("ana@example.org")));
         let read = opened(&form, &mut |c| (c == &email).then(|| json!("ana@example.org")));

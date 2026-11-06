@@ -153,7 +153,7 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/feats/client/core/ts:
+  apps/org/feats/contact/core/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
@@ -682,14 +682,14 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/client-invoice/ts:
+  apps/org/grafts/contact-invoice/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
-      '@cella/org-client':
+      '@cella/org-contact':
         specifier: workspace:*
-        version: link:../../../feats/client/core/ts
+        version: link:../../../feats/contact/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -703,14 +703,14 @@ importers:
         specifier: 5.57.2
         version: 5.57.2
 
-  apps/org/grafts/client-project/ts:
+  apps/org/grafts/contact-project/ts:
     dependencies:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
-      '@cella/org-client':
+      '@cella/org-contact':
         specifier: workspace:*
-        version: link:../../../feats/client/core/ts
+        version: link:../../../feats/contact/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1368,9 +1368,9 @@ importers:
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../core/circle/ts
-      '@cella/org-client':
+      '@cella/org-contact':
         specifier: workspace:*
-        version: link:../feats/client/core/ts
+        version: link:../feats/contact/core/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../core/db/ts
@@ -1410,12 +1410,12 @@ importers:
       '@cella/org-graft-bill-transaction':
         specifier: workspace:*
         version: link:../grafts/bill-transaction/ts
-      '@cella/org-graft-client-invoice':
+      '@cella/org-graft-contact-invoice':
         specifier: workspace:*
-        version: link:../grafts/client-invoice/ts
-      '@cella/org-graft-client-project':
+        version: link:../grafts/contact-invoice/ts
+      '@cella/org-graft-contact-project':
         specifier: workspace:*
-        version: link:../grafts/client-project/ts
+        version: link:../grafts/contact-project/ts
       '@cella/org-graft-document-meeting':
         specifier: workspace:*
         version: link:../grafts/document-meeting/ts

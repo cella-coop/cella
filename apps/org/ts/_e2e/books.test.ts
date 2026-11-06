@@ -10,7 +10,7 @@ import { readFileSync } from 'node:fs'
 import { parse } from 'smol-toml'
 import pg from 'pg'
 import { annul, issue, payment } from '@cella/org-graft-invoice-transaction/api'
-import { link } from '@cella/org-graft-client-invoice/api'
+import { link } from '@cella/org-graft-contact-invoice/api'
 import { send } from '@cella/org-invoice/api'
 import { adjust, post } from '@cella/org-transaction/api'
 import { close } from '@cella/org-account/api'
@@ -105,7 +105,7 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   const logged = await one<{ guards: { owner: string }[] }>('SELECT guards FROM cella.log WHERE n = 2')
   assert.deepEqual(logged.guards.map((r) => r.owner), ['invoice', 'invoice', 'invoice-transaction', 'membership'])
 
-  const linked = await link({ invoice: 'F-2026-0056', client: 'ferrand' }, as(julien))
+  const linked = await link({ invoice: 'F-2026-0056', contact: 'ferrand' }, as(julien))
   assert.equal(linked.state, 'settled')
   assert.equal(linked.entry, 3)
 })
@@ -145,7 +145,7 @@ test('an overpayment on 0051 leaves a credit owed to Vélo Solidaire rather than
   assert.equal(paid.state, 'settled')
   const s = await standing('F-2026-0051')
   assert.deepEqual([s.state, Number(s.owed), Number(s.credit)], ['overpaid', 0, 520_00])
-  const velo = await one<{ owed: string; credit: string }>(`SELECT owed, credit FROM client_invoice.standing WHERE client = 'velo'`)
+  const velo = await one<{ owed: string; credit: string }>(`SELECT owed, credit FROM contact_invoice.standing WHERE contact = 'velo'`)
   assert.deepEqual([Number(velo.owed), Number(velo.credit)], [0, 520_00])
 })
 

@@ -1,6 +1,6 @@
 -- The invoice feat's analytical contract: each invoice with its figures
 -- and standing, its VAT by rate, and its payments. Whom it is billed to is
--- client-invoice's. A contract reads tables, never `invoice.standing` or
+-- contact-invoice's. A contract reads tables, never `invoice.standing` or
 -- `invoice.taxed`, which read as their reader: the standing and the VAT
 -- are read here as there.
 CREATE VIEW invoice.invoices AS

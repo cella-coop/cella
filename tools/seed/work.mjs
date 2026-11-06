@@ -1,11 +1,11 @@
 // seed, work: loads a mock co-op's projects with their milestones,
 // budgets and shares, its tasks, and its timesheets into the project,
-// task and timesheet schemas and their grafts' (client-project,
+// task and timesheet schemas and their grafts' (contact-project,
 // invoice-project, membership-project, membership-task, project-task,
 // membership-timesheet, project-timesheet), and the report feat's margin
 // thresholds. Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
-// Members and clients load first; an archived project is archived after
+// Members and contacts load first; an archived project is archived after
 // its milestones are in, and periods are submitted and approved after
 // their entries are in.
 
@@ -36,8 +36,8 @@ export async function work(db, read, day) {
     }
   }
 
-  for (const c of read('graft.client-project').commission ?? []) {
-    await db.query('INSERT INTO client_project.commission (project, client) VALUES ($1, $2)', [c.project, c.client])
+  for (const c of read('graft.contact-project').commission ?? []) {
+    await db.query('INSERT INTO contact_project.commission (project, contact) VALUES ($1, $2)', [c.project, c.contact])
   }
   for (const c of read('graft.invoice-project').charge ?? []) {
     await db.query('INSERT INTO invoice_project.charge (invoice, project) VALUES ($1, $2)', [c.invoice, c.project])

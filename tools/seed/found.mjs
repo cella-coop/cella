@@ -9,7 +9,7 @@
 // mandates among them copied into the
 // circles' mandates, invitations' first devices, documents with their
 // versions, those generated from a circle's policies generated at each
-// day they changed, comments, adoptions and who read them, clients, the
+// day they changed, comments, adoptions and who read them, contacts, the
 // chart, periods and journal, invoices with their payments, files and
 // what holds them, and the grafts' links. Stances, document updates,
 // adoptions and payments take receipt numbers in file order, unsigned,
@@ -305,10 +305,10 @@ export async function seed(db, read, { from, dir }) {
       await db.query('INSERT INTO document_membership.reading (version, member, read) VALUES ($1, $2, $3)', [r.version, r.member, day(r.read)])
     }
 
-    const clients = read('client').client ?? []
-    for (const c of clients) {
+    const contacts = read('contact').contact ?? []
+    for (const c of contacts) {
       await db.query(
-        'INSERT INTO client.client (id, kind, name, form, note, email, phone, parent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+        'INSERT INTO contact.contact (id, kind, name, form, note, email, phone, parent) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
         [c.id, c.kind ?? 'company', c.name, c.form ?? null, c.note ?? '', c.email ?? null, c.phone ?? null, c.parent ?? null],
       )
     }
@@ -364,9 +364,9 @@ export async function seed(db, read, { from, dir }) {
       payments.set(i.id, ids)
     }
 
-    const billings = read('graft.client-invoice').billing ?? []
+    const billings = read('graft.contact-invoice').billing ?? []
     for (const b of billings) {
-      await db.query('INSERT INTO client_invoice.billing (invoice, client) VALUES ($1, $2)', [b.invoice, b.client])
+      await db.query('INSERT INTO contact_invoice.billing (invoice, contact) VALUES ($1, $2)', [b.invoice, b.contact])
     }
 
     const postings = read('graft.invoice-transaction').posting ?? []
@@ -395,11 +395,11 @@ export async function seed(db, read, { from, dir }) {
     said =
       `${people.length} people, ${members.length} members, ${workers.length} workers, ${candidacies.length} candidacies, ${devices.length} devices, ${seats.length} seats, ` +
       `${motions.length} motions, ${votes} stances, ` +
-      `${moved} actions, ${policies} policies, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${clients.length} clients, ${entries.length} entries, ${invoices.length} invoices, ` +
+      `${moved} actions, ${policies} policies, ${invited} invitations, ${versions} versions, ${adoptions.length} adoptions, ${readings.length} readings, ${contacts.length} contacts, ${entries.length} entries, ${invoices.length} invoices, ` +
       `${postings.length} postings, ${worked}, ${financed}, ${met}, ${filed}`
     return {
       people: people.length, members: members.length, workers: workers.length, devices: devices.length, seats: seats.length,
-      motions: motions.length, stances: votes, versions, clients: clients.length, entries: entries.length, invoices: invoices.length,
+      motions: motions.length, stances: votes, versions, contacts: contacts.length, entries: entries.length, invoices: invoices.length,
     }
   }
   const outcome = await found({ form: scope.legal_form, motion: scope.founding, from, load }, deps)

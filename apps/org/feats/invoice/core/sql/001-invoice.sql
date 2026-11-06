@@ -13,8 +13,8 @@ CREATE TABLE invoice.series (
   until integer CHECK (until > 0)
 );
 
--- What appears on the invoice as issued. The client record it bills is the
--- client-invoice graft's; `bill_to` is the name as printed. A NULL `vat`
+-- What appears on the invoice as issued. The contact record it bills is the
+-- contact-invoice graft's; `bill_to` is the name as printed. A NULL `vat`
 -- is an invoice without VAT.
 CREATE TABLE invoice.invoice (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,

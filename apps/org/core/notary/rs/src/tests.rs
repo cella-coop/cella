@@ -623,6 +623,49 @@ END $$"#
         assert!(verifies(), "each tamper rolled back");
     }
 
+    /// Entry 3, the pay a carry of entry 1 requires, rewritten to act for
+    /// `actor`, hashed and signed again under the notary's key in office,
+    /// as only a holder of that key could.
+    fn pay_resigned_for(actor: &str) {
+        let notary = Key::from_seed(&NOTARY_SEED).expect("the seed");
+        let one = |column: &str| {
+            Spi::get_one::<Vec<u8>>(&format!("SELECT {column} FROM cella.log WHERE n = 3")).expect("entry 3").expect("its bytes")
+        };
+        let guards = Spi::get_one::<JsonB>("SELECT guards FROM cella.log WHERE n = 3").expect("its guards").expect("a list");
+        let prev: [u8; 32] = one("prev").try_into().expect("32 bytes");
+        let entry = Entry {
+            n: 3,
+            op: PAY.into(),
+            actor: actor.into(),
+            date: "2026-10-25".into(),
+            payload: one("payload").try_into().expect("32 bytes"),
+            basis: Basis::Cause { n: 2, hash: one("cause_hash").try_into().expect("32 bytes"), settled: true },
+            guards: crate::notary::listed_guards(&guards.0).expect("its guards listed"),
+        };
+        let hash = log::hash(&prev, &entry).expect("a hash");
+        Spi::run_with_args(
+            "UPDATE cella.log SET actor = $1, hash = $2, sig = $3 WHERE n = 3",
+            &[actor.into(), hash.to_vec().into(), notary.sign(&hash).to_vec().into()],
+        )
+        .expect("entry 3 signed again");
+        Spi::run_with_args("UPDATE cella.head SET hash = $1", &[hash.to_vec().into()]).expect("the head");
+    }
+
+    #[pg_test]
+    fn an_effect_acts_only_for_its_decision_s_actor() {
+        beside();
+        effects();
+        settle(100);
+        assert_eq!(follows(CARRY, 100, 1), None);
+        assert_eq!(follows(PAY, 100, 2), None);
+        let actor = Spi::get_one::<String>("SELECT actor FROM cella.log WHERE n = 3").expect("entry 3");
+        assert_eq!(actor.as_deref(), Some(JULIEN), "follow acts for the decision's actor");
+        pay_resigned_for(JULIEN);
+        assert!(verifies(), "an effect signed again as it was verifies");
+        pay_resigned_for(CAMILLE);
+        assert!(!verifies(), "an effect acting for another than its decision's actor breaks the log");
+    }
+
     /// Entry 2 made by hand as `submit` makes one, under the notary's key
     /// in office, chained to entry 1 by `prev`.
     fn entry_after(prev: [u8; 32]) {

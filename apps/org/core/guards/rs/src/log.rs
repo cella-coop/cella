@@ -337,13 +337,16 @@ pub struct Signer {
 /// Walks a log from its first entry, checking numbering, links, hashes and
 /// signatures, each under the key in office at its number, and each write:
 /// a decision and the effects after it, each citing an entry of the same
-/// write as [`may_follow`] allows, and none lacking an effect it requires.
+/// write as [`may_follow`] allows and acting for the decision's actor, and
+/// none lacking an effect it requires.
 pub struct Chain {
     signers: Vec<(i32, i64, VerifyingKey)>,
     prev: [u8; 32],
     next: i64,
     follows: Vec<Follows>,
     write: Vec<Written>,
+    /// The actor of the decision that opened the write walked last.
+    actor: String,
 }
 
 impl Chain {
@@ -363,7 +366,7 @@ impl Chain {
             let public = VerifyingKey::from_bytes(&s.public).map_err(|e| Error::Key(e.to_string()))?;
             out.push((s.id, s.since, public));
         }
-        Ok(Self { signers: out, prev: GENESIS, next: 1, follows: Vec::new(), write: Vec::new() })
+        Ok(Self { signers: out, prev: GENESIS, next: 1, follows: Vec::new(), write: Vec::new(), actor: String::new() })
     }
 
     /// The chain, judging effects by `follows`, as `cella.follows` holds it.
@@ -389,6 +392,7 @@ impl Chain {
         let written = match &e.basis {
             Basis::Receipt { .. } => {
                 self.finish()?;
+                self.actor.clone_from(&e.actor);
                 Written { n: e.n, op: e.op.clone(), hash, cause: None, settled: true, depth: 0 }
             }
             Basis::Cause { n, hash: cited, settled } => {
@@ -396,6 +400,9 @@ impl Chain {
                 let (cause, depth) = may_follow(&self.write, &self.follows, &e.op, *n, *settled).map_err(|u| broken(u.why()))?;
                 if cause.hash != *cited {
                     return Err(broken("an effect names its cause by another hash"));
+                }
+                if e.actor != self.actor {
+                    return Err(broken("an effect acts for another actor than its decision's"));
                 }
                 Written { n: e.n, op: e.op.clone(), hash, cause: Some(*n), settled: *settled, depth }
             }
@@ -684,6 +691,11 @@ mod tests {
         moved[1].2 = hash(&moved[1].1, &moved[1].0).unwrap();
         moved[1].3 = key.sign(&moved[1].2);
         assert_eq!(walk(&moved), broken(2, "an effect names its cause by another hash"));
+        let mut impersonating = written(&[(CLOSE, None), (ADMIT, Some((1, true))), (SUBSCRIBE, Some((2, true)))]);
+        impersonating[2].0.actor = "mallory@lanterne.example".into();
+        impersonating[2].2 = hash(&impersonating[2].1, &impersonating[2].0).unwrap();
+        impersonating[2].3 = key.sign(&impersonating[2].2);
+        assert_eq!(walk(&impersonating), broken(3, "an effect acts for another actor than its decision's"));
         let unregistered = written(&[(CLOSE, None), (SUBSCRIBE, Some((1, true)))]);
         assert_eq!(walk(&unregistered), broken(2, "an effect's op may not follow its cause's"));
         let on_forgone = written(&[(CLOSE, None), (ADMIT, Some((1, false))), (SUBSCRIBE, Some((2, true)))]);

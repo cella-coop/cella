@@ -790,7 +790,7 @@ pub fn was_signed(n: i64, request: &Value) -> Option<bool> {
     Some(asked[..] == digest[..])
 }
 
-fn listed_guards(v: &Value) -> Option<Vec<Guard>> {
+pub(crate) fn listed_guards(v: &Value) -> Option<Vec<Guard>> {
     v.as_array()?
         .iter()
         .map(|r| {

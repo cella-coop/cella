@@ -30,11 +30,11 @@
 //! | `cella.state`, `cella.notarise(tab)`, `cella.notarised()` | table, function, trigger | the registered state tables, each refusing a row no begun transaction writes |
 //! | `cella.retention`, `cella.personal` | tables | the retention classes and their clocks; the columns holding personal data, each feat's own |
 //! | `cella.redact(subject, class)` | function, the owner's | redacts a subject's columns of a class in the read models |
-//! | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | tables, the owner's but `erased` | sealed keys, the salts and sealed values that open commitments, erasures, sweeps |
+//! | `vault.key`, `vault.secret`, `vault.erased`, `vault.swept` | tables, the owner's but `erased` | sealed keys, each naming its wrap key by id, the salts and sealed values that open commitments, erasures, sweeps |
 //! | `cella.opened(n)` | function | an entry's logged payload, its commitments opened from the vault |
 //! | `cella.redacting()` | function | whether the notary is redacting, for a feat's trigger that keeps a row fixed |
 //! | `cella.vault_sweep()` | function, a superuser's | restricted data erased once its clock runs out |
-//! | `cella.vault_rewrap()` | function, a superuser's | every vault key sealed under the current wrap key, those under the previous one moved |
+//! | `cella.vault_rewrap()` | function, a superuser's | every vault key sealed under the current wrap key, those naming the previous one moved and naming the current one |
 //! | `cella.vault_reerase(erasures)` | function, a superuser's | each erasure of a backup's list the restored vault lacks, carried out again |
 
 use crate::{notary, vault};
@@ -667,6 +667,7 @@ CREATE TABLE vault.key (
     year integer NOT NULL,
     sealed bytea NOT NULL,
     restricted date,
+    wrap bytea NOT NULL CHECK (length(wrap) = 32),
     PRIMARY KEY (subject, class, year)
 );
 CREATE TABLE vault.secret (
@@ -741,9 +742,10 @@ fn vault_sweep() -> TableIterator<'static, (name!(subject, String), name!(class,
 }
 
 /// Seals every vault key under the wrap key of `cella.vault_key_file`:
-/// each one that opens only under `cella.vault_key_previous` is opened with
-/// it and sealed again. Returns how many moved; then the previous file may
-/// be destroyed. A superuser's, run by `cella vault rewrap`.
+/// each one naming the wrap key of `cella.vault_key_previous` is opened with
+/// it, sealed again and names the current one. Returns how many moved; then
+/// the previous file moves to `cella.vault_keys_kept`. A superuser's, run by
+/// `cella vault rewrap`.
 #[pg_extern(volatile, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
 fn vault_rewrap() -> i64 {
@@ -777,3 +779,12 @@ REVOKE EXECUTE ON FUNCTION cella.vault_reerase(jsonb) FROM PUBLIC;
     name = "vault_reerase_owner",
     requires = [vault_reerase],
 );
+
+/// Names in each vault key a version before 0.9.0 sealed the wrap key
+/// that opens it, the current one or the previous one, and fails naming a
+/// key that opens under neither. Its symbol only: the upgrade script to
+/// 0.9.0 declares it, calls it once and drops it, so no install keeps it.
+#[pg_extern(volatile, sql = false)]
+fn vault_name_wraps() -> i64 {
+    vault::name_wraps()
+}

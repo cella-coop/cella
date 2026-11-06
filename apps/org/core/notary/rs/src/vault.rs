@@ -8,6 +8,7 @@
 
 use crate::notary::{fail, first, lock_head, refuse, setting, spi};
 use crate::{VAULT_KEY_FILE, VAULT_KEY_PREVIOUS};
+use cella_guards::hex::hex;
 use cella_guards::log::canonical;
 use cella_guards::vault::{self, Erase, Marked, NONCE, Personal};
 use pgrx::prelude::*;
@@ -17,12 +18,20 @@ use std::cell::{Cell, RefCell};
 use std::collections::{BTreeMap, BTreeSet};
 
 thread_local! {
-    static WRAPS: RefCell<BTreeMap<String, [u8; 32]>> = const { RefCell::new(BTreeMap::new()) };
+    static WRAPS: RefCell<BTreeMap<String, Wrap>> = const { RefCell::new(BTreeMap::new()) };
+}
+
+/// A wrap key derived from a vault key file, and its id, by which each
+/// vault key sealed under it names it.
+#[derive(Clone, Copy)]
+struct Wrap {
+    key: [u8; 32],
+    id: [u8; 32],
 }
 
 /// The wrap key derived from a vault key file, 32 random bytes kept apart
 /// from the notary's seed, read once per backend.
-fn wrap_of(guc: &str, path: String) -> [u8; 32] {
+fn wrap_of(guc: &str, path: String) -> Wrap {
     WRAPS.with(|cell| {
         if let Some(w) = cell.borrow().get(&path) {
             return *w;
@@ -31,38 +40,50 @@ fn wrap_of(guc: &str, path: String) -> [u8; 32] {
         if bytes.len() != 32 {
             fail(format!("{guc} {path}: a vault key is 32 bytes, got {}", bytes.len()));
         }
-        let wrap = vault::wrap_key(&bytes);
+        let key = vault::wrap_key(&bytes);
+        let wrap = Wrap { key, id: vault::wrap_id(&key) };
         cell.borrow_mut().insert(path, wrap);
         wrap
     })
 }
 
 /// The wrap key every vault key is sealed under, from `cella.vault_key_file`.
-fn wrap() -> [u8; 32] {
-    let path = setting(&VAULT_KEY_FILE)
-        .unwrap_or_else(|| fail("cella.vault_key_file is not set: the vault's own key, apart from the notary's"));
+fn wrap() -> Wrap {
+    let path =
+        setting(&VAULT_KEY_FILE).unwrap_or_else(|| fail("cella.vault_key_file is not set: the vault's own key, apart from the notary's"));
     wrap_of("cella.vault_key_file", path)
 }
 
 /// The wrap key before a rotation, from `cella.vault_key_previous`, if set.
-fn previous() -> Option<[u8; 32]> {
+fn previous() -> Option<Wrap> {
     setting(&VAULT_KEY_PREVIOUS).map(|path| wrap_of("cella.vault_key_previous", path))
 }
 
-/// A sealed vault key opened: under the current wrap key, else under the
-/// previous one while a rotation is under way; and whether it took the
-/// previous one.
-fn unwrap(subject: &str, class: &str, year: i32, sealed: &[u8]) -> ([u8; 32], bool) {
-    let aad = key_aad(subject, class, year);
-    let opened = vault::open(&wrap(), &aad, sealed)
-        .ok()
-        .map(|k| (k, false))
-        .or_else(|| previous().and_then(|w| vault::open(&w, &aad, sealed).ok()).map(|k| (k, true)));
-    let Some((plain, moved)) = opened else {
-        fail(format!(
-            "cella: the key of {subject}'s {class} from {year} opens under neither cella.vault_key_file nor cella.vault_key_previous"
-        ));
-    };
+/// The wrap key a sealed vault key names by its id: the current one, else
+/// the previous one while a rotation is under way, and whether it is the
+/// previous one. One naming neither is refused with the id, so a restore
+/// that lacks a key file says which.
+fn named(subject: &str, class: &str, year: i32, id: &[u8]) -> (Wrap, bool) {
+    let current = wrap();
+    if current.id == id {
+        return (current, false);
+    }
+    match previous() {
+        Some(p) if p.id == id => (p, true),
+        _ => fail(format!(
+            "cella: the key of {subject}'s {class} from {year} is sealed under the wrap key {}, which neither cella.vault_key_file nor cella.vault_key_previous derives: point cella.vault_key_previous at the vault key file of that id, which a backup's manifest names",
+            hex(id)
+        )),
+    }
+}
+
+/// A sealed vault key opened under the wrap key it names; and whether
+/// that is the previous one.
+fn unwrap(subject: &str, class: &str, year: i32, sealed: &[u8], id: &[u8]) -> ([u8; 32], bool) {
+    let (under, moved) = named(subject, class, year, id);
+    let plain = vault::open(&under.key, &key_aad(subject, class, year), sealed).unwrap_or_else(|_| {
+        fail(format!("cella: the key of {subject}'s {class} from {year} does not open under the wrap key {} it names", hex(id)))
+    });
     (plain.try_into().unwrap_or_else(|_| fail("cella: a vault key is 32 bytes")), moved)
 }
 
@@ -77,7 +98,7 @@ fn random<const N: usize>() -> [u8; N] {
     bytes
 }
 
-fn key_aad(subject: &str, class: &str, year: i32) -> Vec<u8> {
+pub(crate) fn key_aad(subject: &str, class: &str, year: i32) -> Vec<u8> {
     vault::bound(&[b"key", subject.as_bytes(), class.as_bytes(), &year.to_be_bytes()])
 }
 
@@ -87,10 +108,10 @@ fn secret_aad(commitment: &[u8; 32], subject: &str, class: &str, year: i32, fiel
 
 /// The key sealing a subject's values of a class from a year, and whether
 /// it is restricted: made on first use when `make`, sealed under the
-/// scope's wrap key.
+/// scope's wrap key, whose id it names.
 fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: bool) -> Option<([u8; 32], bool)> {
     let rows = spi(c.select(
-        "SELECT sealed, restricted IS NOT NULL FROM vault.key WHERE subject = $1 AND class = $2 AND year = $3",
+        "SELECT sealed, restricted IS NOT NULL, wrap FROM vault.key WHERE subject = $1 AND class = $2 AND year = $3",
         Some(1),
         &[subject.into(), class.into(), year.into()],
     ));
@@ -98,19 +119,21 @@ fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: 
         let row = rows.first();
         let sealed = spi(row.get::<Vec<u8>>(1)).unwrap_or_default();
         let restricted = spi(row.get::<bool>(2)).unwrap_or(false);
-        let (key, _) = unwrap(subject, class, year, &sealed);
+        let id = spi(row.get::<Vec<u8>>(3)).unwrap_or_default();
+        let (key, _) = unwrap(subject, class, year, &sealed, &id);
         return Some((key, restricted));
     }
     if !make {
         return None;
     }
     let key = random::<32>();
-    let sealed = vault::seal(&wrap(), &random::<NONCE>(), &key_aad(subject, class, year), &key)
-        .unwrap_or_else(|e| fail(format!("cella: {e}")));
+    let under = wrap();
+    let sealed =
+        vault::seal(&under.key, &random::<NONCE>(), &key_aad(subject, class, year), &key).unwrap_or_else(|e| fail(format!("cella: {e}")));
     spi(c.update(
-        "INSERT INTO vault.key (subject, class, year, sealed) VALUES ($1, $2, $3, $4)",
+        "INSERT INTO vault.key (subject, class, year, sealed, wrap) VALUES ($1, $2, $3, $4, $5)",
         None,
-        &[subject.into(), class.into(), year.into(), sealed.into()],
+        &[subject.into(), class.into(), year.into(), sealed.into(), under.id.to_vec().into()],
     ));
     Some((key, false))
 }
@@ -435,34 +458,74 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
     })
 }
 
-/// Seals every vault key under the current wrap key: each that opens only
-/// under the previous one is sealed again. Holds the head's lock, so no
-/// write makes a key meanwhile. Returns how many moved.
+/// A vault key as `vault.key` holds it: whose, of which class and year,
+/// sealed, and the id of the wrap key it names, empty where none is named.
+type SealedKey = (String, String, i32, Vec<u8>, Vec<u8>);
+
+/// The vault's keys, each with the id of the wrap key it names, in order.
+fn sealed_keys(c: &SpiClient<'_>) -> Vec<SealedKey> {
+    spi(c.select("SELECT subject, class, year, sealed, wrap FROM vault.key ORDER BY subject, class, year", None, &[]))
+        .map(|row| {
+            let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
+            let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
+            (text(1), text(2), spi(row.get::<i32>(3)).unwrap_or_default(), bytes(4), bytes(5))
+        })
+        .collect()
+}
+
+/// Seals every vault key under the current wrap key: each that names the
+/// previous one is sealed again, naming the current one. Holds the head's
+/// lock, so no write makes a key meanwhile. Returns how many moved.
 pub fn rewrap() -> i64 {
     Spi::connect_mut(|c| {
         lock_head(c);
-        let rows = spi(c.select("SELECT subject, class, year, sealed FROM vault.key ORDER BY subject, class, year", None, &[]));
-        let keys: Vec<(String, String, i32, Vec<u8>)> = rows
-            .map(|row| {
-                let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
-                (text(1), text(2), spi(row.get::<i32>(3)).unwrap_or_default(), spi(row.get::<Vec<u8>>(4)).unwrap_or_default())
-            })
-            .collect();
+        let under = wrap();
         let mut moved = 0;
-        for (subject, class, year, sealed) in keys {
-            let (key, old) = unwrap(&subject, &class, year, &sealed);
+        for (subject, class, year, sealed, id) in sealed_keys(c) {
+            let (key, old) = unwrap(&subject, &class, year, &sealed, &id);
             if !old {
                 continue;
             }
-            let resealed = vault::seal(&wrap(), &random::<NONCE>(), &key_aad(&subject, &class, year), &key)
+            let resealed = vault::seal(&under.key, &random::<NONCE>(), &key_aad(&subject, &class, year), &key)
                 .unwrap_or_else(|e| fail(format!("cella: {e}")));
             spi(c.update(
-                "UPDATE vault.key SET sealed = $4 WHERE subject = $1 AND class = $2 AND year = $3",
+                "UPDATE vault.key SET sealed = $4, wrap = $5 WHERE subject = $1 AND class = $2 AND year = $3",
                 None,
-                &[subject.into(), class.into(), year.into(), resealed.into()],
+                &[subject.into(), class.into(), year.into(), resealed.into(), under.id.to_vec().into()],
             ));
             moved += 1;
         }
         moved
+    })
+}
+
+/// Names, in each vault key a version before 0.9.0 sealed, the wrap key
+/// that opens it: the current one, else the previous one. One that opens
+/// under neither fails, naming it, and with it the upgrade that runs this.
+/// It runs after the upgrade's `ALTER TABLE`, whose lock holds every write
+/// off `vault.key` until the upgrade commits. Returns how many it named.
+pub fn name_wraps() -> i64 {
+    Spi::connect_mut(|c| {
+        let mut named = 0;
+        for (subject, class, year, sealed, id) in sealed_keys(c) {
+            if !id.is_empty() {
+                continue;
+            }
+            let aad = key_aad(&subject, &class, year);
+            let current = wrap();
+            let opens = |w: &Wrap| vault::open(&w.key, &aad, &sealed).is_ok();
+            let Some(under) = Some(current).filter(opens).or_else(|| previous().filter(opens)) else {
+                fail(format!(
+                    "cella: the key of {subject}'s {class} from {year} opens under neither cella.vault_key_file nor cella.vault_key_previous, so the upgrade cannot name its wrap key: point cella.vault_key_previous at the vault key file that sealed it"
+                ));
+            };
+            spi(c.update(
+                "UPDATE vault.key SET wrap = $4 WHERE subject = $1 AND class = $2 AND year = $3",
+                None,
+                &[subject.into(), class.into(), year.into(), under.id.to_vec().into()],
+            ));
+            named += 1;
+        }
+        named
     })
 }

@@ -25,6 +25,9 @@ pub const COMMITMENT: &str = "cella org 2026-10 personal commitment";
 /// The domain of the key that seals the vault's keys, derived from the
 /// scope's seed.
 pub const WRAP: &str = "cella org 2026-10 vault key";
+/// The domain of a wrap key's id, by which each vault key sealed under it
+/// names it.
+pub const WRAP_ID: &str = "cella org 2026-11 vault wrap id";
 
 pub const PERSONAL: &str = "$personal";
 pub const COMMIT: &str = "$commit";
@@ -80,6 +83,13 @@ pub fn opens(commitment: &[u8; 32], salt: &[u8; 32], value: &Value) -> bool {
 #[must_use]
 pub fn wrap_key(seed: &[u8]) -> [u8; 32] {
     blake3::derive_key(WRAP, seed)
+}
+
+/// A wrap key's id, the BLAKE3 of it under its own domain: what a sealed
+/// vault key names it by, never the key.
+#[must_use]
+pub fn wrap_id(wrap: &[u8; 32]) -> [u8; 32] {
+    blake3::derive_key(WRAP_ID, wrap)
 }
 
 /// Length-prefixed parts, bound to a sealed value as its associated data,
@@ -231,6 +241,15 @@ mod tests {
         assert_eq!(open(&key, &bound(&[b"bob", b"contact"]), &sealed), Err(Error::Sealed));
         assert_eq!(open(&[8; 32], &aad, &sealed), Err(Error::Sealed));
         assert_ne!(wrap_key(&[0; 32]), wrap_key(&[1; 32]));
+    }
+
+    #[test]
+    fn a_wrap_key_s_id_is_its_own_and_never_the_key() {
+        let (a, b) = (wrap_key(&[0; 32]), wrap_key(&[1; 32]));
+        assert_eq!(wrap_id(&a), wrap_id(&a));
+        assert_ne!(wrap_id(&a), wrap_id(&b));
+        assert_ne!(wrap_id(&a), a);
+        assert_ne!(wrap_id(&a), wrap_key(&a), "the id is under its own domain, not the wrap key's");
     }
 
     #[test]

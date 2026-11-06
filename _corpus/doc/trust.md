@@ -524,6 +524,9 @@ erased until their legal clock runs out.
   vault's own key file, kept apart from the notary's seed, so the
   database alone, without that file, opens nothing, and either key
   rotates without the other ([operations](operations.md#keys)).
+  Each vault key names the wrap key that sealed it, and a rotated wrap
+  key is kept, and carried by every backup, until no restore point older
+  than its rotation is kept, so a restore opens what it restores.
   Destroying a key makes every value it sealed unreadable.
 - **The classes and their clocks**, `cella.retention`: `profile`
   and `contact`, erased when asked; `payroll`, kept five years (Code du

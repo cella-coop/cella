@@ -1,10 +1,12 @@
 //! A scope's backup and its restore. A backup is a directory: the database
 //! as `pg_dump` writes it, the notary's and the vault's key files, the
-//! previous vault key's during a rotation, the scope's erasures, and a
-//! manifest naming the database, the extension's version, the log's head
-//! and the settings the database and its roles carry, which a dump leaves
+//! previous vault key's during a rotation and each kept from an earlier
+//! one, the scope's erasures, and a manifest naming the database, the
+//! extension's version, the log's head, each vault key file's wrap id and
+//! the settings the database and its roles carry, which a dump leaves
 //! out, all read at one point of the log. A restore makes the database
-//! again from it, puts the key files where the cluster reads them, carries
+//! again from it, puts the key files where the cluster reads them, refuses
+//! one whose vault names a wrap key none of its key files derives, carries
 //! out again every erasure made since that the newest list it is given
 //! holds, and checks what it restored: the log verifies, its head is the
 //! backup's, and every entry opens, or folds as its erasure left it.
@@ -14,6 +16,9 @@ use std::io::{BufRead, BufReader, Write};
 use std::os::unix::fs::PermissionsExt;
 use std::path::Path;
 use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
+
+use cella_guards::hex::hex;
+use cella_guards::vault;
 
 use crate::data;
 use crate::db::Dev;
@@ -26,6 +31,19 @@ const MANIFEST: &str = "manifest";
 const NOTARY: &str = "notary.key";
 const VAULT: &str = "vault.key";
 const PREVIOUS: &str = "vault.previous.key";
+const KEPT: &str = "vault.kept.";
+
+/// The file of a vault key kept from an earlier rotation, the `n`th of
+/// `cella.vault_keys_kept`, from 1.
+fn kept(n: usize) -> String {
+    format!("{KEPT}{n}.key")
+}
+
+/// The id of the wrap key a vault key file derives, as each vault key
+/// sealed under it names it, in hex.
+fn wrap_id(bytes: &[u8]) -> String {
+    hex(&vault::wrap_id(&vault::wrap_key(bytes)))
+}
 const ERASURES: &str = "erasures.json";
 
 /// The scope's erasures as `erasures.json` holds them, one JSON line: the
@@ -45,6 +63,9 @@ struct Manifest {
     version: String,
     head: i64,
     hash: String,
+    /// `(file, id)`: each vault key file the backup holds, and the id of
+    /// the wrap key it derives.
+    wraps: Vec<(String, String)>,
     /// `(role, name=value)`, the role empty for the database's own.
     settings: Vec<(String, String)>,
 }
@@ -53,6 +74,9 @@ impl Manifest {
     fn write(&self) -> String {
         let mut out = String::from("# cella backup: what `cella restore` reads beside the dump and the key files\n");
         out.push_str(&format!("database {}\nversion {}\nhead {} {}\n", self.database, self.version, self.head, self.hash));
+        for (file, id) in &self.wraps {
+            out.push_str(&format!("wrap {file} {id}\n"));
+        }
         for (role, setting) in &self.settings {
             out.push_str(&format!("setting {} {setting}\n", if role.is_empty() { "-" } else { role }));
         }
@@ -60,7 +84,8 @@ impl Manifest {
     }
 
     fn read(text: &str) -> Option<Self> {
-        let mut m = Self { database: String::new(), version: String::new(), head: 0, hash: String::new(), settings: Vec::new() };
+        let mut m =
+            Self { database: String::new(), version: String::new(), head: 0, hash: String::new(), wraps: Vec::new(), settings: Vec::new() };
         for line in text.lines().filter(|l| !l.starts_with('#') && !l.is_empty()) {
             let (word, rest) = line.split_once(' ')?;
             match word {
@@ -70,6 +95,10 @@ impl Manifest {
                     let (n, hash) = rest.split_once(' ')?;
                     m.head = n.parse().ok()?;
                     hash.clone_into(&mut m.hash);
+                }
+                "wrap" => {
+                    let (file, id) = rest.split_once(' ')?;
+                    m.wraps.push((file.to_owned(), id.to_owned()));
                 }
                 "setting" => {
                     let (role, setting) = rest.split_once(' ')?;
@@ -132,11 +161,20 @@ pub fn backup(repo: &Repo, dir: &Path, url: Option<&str>) -> Result {
     made
 }
 
-/// The paths of the notary's key, the vault's and the vault's previous,
-/// `-` where unset, as a select list.
+/// The paths of the notary's key, the vault's, the vault's previous and
+/// those it keeps, `-` where unset, as a select list.
 const KEYS: &str = "coalesce(nullif(current_setting('cella.key_file', true), ''), '-'),
                 coalesce(nullif(current_setting('cella.vault_key_file', true), ''), '-'),
-                coalesce(nullif(current_setting('cella.vault_key_previous', true), ''), '-')";
+                coalesce(nullif(current_setting('cella.vault_key_previous', true), ''), '-'),
+                coalesce(nullif(current_setting('cella.vault_keys_kept', true), ''), '-')";
+
+/// The paths `cella.vault_keys_kept` names, in order.
+fn kept_paths(setting: &str) -> Vec<&str> {
+    if setting == "-" {
+        return Vec::new();
+    }
+    setting.split(',').map(str::trim).filter(|p| !p.is_empty()).collect()
+}
 
 fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
     // One repeatable-read transaction reads the head, the settings and the
@@ -149,7 +187,7 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
                 {KEYS};"
     ))?;
     let f: Vec<&str> = facts.split('\t').collect();
-    let [database, version, head, hash, notary, vault, previous] = f[..] else {
+    let [database, version, head, hash, notary, vault, previous, kept_setting] = f[..] else {
         return Err(Fail::new(format!("unexpected answer about the database: {facts}")));
     };
     let settings = at.rows(
@@ -160,31 +198,41 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
     )?;
     let erasures = at.row(ERASED)?;
     let snapshot = at.row("SELECT pg_export_snapshot();")?;
+
+    let kept_files: Vec<(String, &str)> = kept_paths(kept_setting).into_iter().enumerate().map(|(i, p)| (kept(i + 1), p)).collect();
+    let mut keys = vec![
+        ("cella.key_file", notary, NOTARY.to_owned()),
+        ("cella.vault_key_file", vault, VAULT.to_owned()),
+        ("cella.vault_key_previous", previous, PREVIOUS.to_owned()),
+    ];
+    keys.extend(kept_files.iter().map(|(name, path)| ("cella.vault_keys_kept", *path, name.clone())));
+    let mut wraps = Vec::new();
+    for (setting, path, name) in &keys {
+        if *path == "-" && name == PREVIOUS {
+            continue;
+        }
+        if *path == "-" {
+            return Err(Fail::new(format!("the cluster sets no {setting}, so there is no key to back up")));
+        }
+        let bytes = fs::read(path)
+            .map_err(|e| Fail::new(format!("{setting} {path}: {e}; back up on the database's host, as a user who reads its key files")))?;
+        key::write(&dir.join(name), &bytes)?;
+        if name != NOTARY {
+            wraps.push((name.clone(), wrap_id(&bytes)));
+        }
+    }
     let manifest = Manifest {
         database: database.to_owned(),
         version: version.to_owned(),
         head: head.parse().map_err(|_| Fail::new(format!("the head is not a number: {head}")))?,
         hash: hash.to_owned(),
+        wraps,
         settings: settings
             .iter()
             .filter_map(|l| l.split_once('\t'))
             .map(|(r, s)| (if r == "-" { String::new() } else { r.to_owned() }, s.to_owned()))
             .collect(),
     };
-
-    let keys =
-        [("cella.key_file", notary, NOTARY), ("cella.vault_key_file", vault, VAULT), ("cella.vault_key_previous", previous, PREVIOUS)];
-    for (setting, path, name) in keys {
-        if path == "-" && name == PREVIOUS {
-            continue;
-        }
-        if path == "-" {
-            return Err(Fail::new(format!("the cluster sets no {setting}, so there is no key to back up")));
-        }
-        let bytes = fs::read(path)
-            .map_err(|e| Fail::new(format!("{setting} {path}: {e}; back up on the database's host, as a user who reads its key files")))?;
-        key::write(&dir.join(name), &bytes)?;
-    }
     let mut dump = db.cmd(dev, "pg_dump")?;
     dump.args(["--format=custom", "--snapshot", &snapshot, "--file"]).arg(dir.join(DUMP));
     Steps::read(&mut dump)?;
@@ -193,7 +241,13 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
     // A key path that moved while the backup ran is a rotation under way,
     // and the keys it read may not open what it dumped.
     let now = psql(dev, db, &format!("SELECT {KEYS}"))?;
-    for ((setting, before, _), now) in keys.iter().zip(now.split('\t')) {
+    let before = [
+        ("cella.key_file", notary),
+        ("cella.vault_key_file", vault),
+        ("cella.vault_key_previous", previous),
+        ("cella.vault_keys_kept", kept_setting),
+    ];
+    for ((setting, before), now) in before.iter().zip(now.split('\t')) {
         if *before != now {
             return Err(Fail::new(format!(
                 "{setting} moved from {before} to {now} while the backup ran: a rotation is under way, so back up again once it is done"
@@ -204,8 +258,13 @@ fn back_up(dev: &Dev, db: &Target, dir: &Path) -> Result {
     let list = dir.join(ERASURES);
     fs::write(&list, format!("{erasures}\n")).map_err(io(&list))?;
     fs::write(&path, manifest.write()).map_err(io(&path))?;
+    let kept_said = match kept_files.len() {
+        0 => String::new(),
+        1 => ", the vault key kept from an earlier rotation".to_owned(),
+        n => format!(", the {n} vault keys kept from earlier rotations"),
+    };
     println!(
-        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys{}, the erasures, the manifest; keep it as you keep the keys",
+        "backed up {database} at entry {head} into {}: the dump, the notary's and the vault's keys{}{kept_said}, the erasures, the manifest; keep it as you keep the keys",
         dir.display(),
         if previous == "-" { "" } else { ", the previous vault key" }
     );
@@ -327,7 +386,7 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
         ),
     )?;
     let f: Vec<&str> = facts.split('\t').collect();
-    let [version, taken, limit, notary, vault, previous, own_scope, given_scope, given_head] = f[..] else {
+    let [version, taken, limit, notary, vault, previous, kept_setting, own_scope, given_scope, given_head] = f[..] else {
         return Err(Fail::new(format!("unexpected answer about the cluster: {facts}")));
     };
     let limit: i64 = limit.parse().map_err(|_| Fail::new(format!("the database's connection limit is not a number: {limit}")))?;
@@ -387,6 +446,36 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
             Err(e) => return Err(Fail::new(format!("{setting} {path}: {e}"))),
         }
     }
+    // The vault keys kept from earlier rotations open no vault key of this
+    // backup's, but an older restore point's: each goes where the cluster
+    // keeps one, in a path already holding it or else the first one free.
+    let held = (1..).map(kept).take_while(|name| dir.join(name).exists()).collect::<Vec<_>>();
+    let paths = kept_paths(kept_setting);
+    for name in &held {
+        let from = dir.join(name);
+        let backed = fs::read(&from).map_err(io(&from))?;
+        let mut free = None;
+        let mut there = false;
+        for path in &paths {
+            match fs::read(path) {
+                Ok(bytes) if bytes == backed => there = true,
+                Ok(_) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => free = free.or(Some(*path)),
+                Err(e) => return Err(Fail::new(format!("cella.vault_keys_kept {path}: {e}"))),
+            }
+        }
+        match (there, free) {
+            (true, _) => {}
+            (false, Some(path)) => key::write(Path::new(path), &backed)?,
+            (false, None) => {
+                return Err(Fail::new(format!(
+                    "the backup keeps {} vault keys from earlier rotations, and cella.vault_keys_kept names no free path for {name}, the wrap key {}: add a path for it, then restore",
+                    held.len(),
+                    wrap_id(&backed)
+                )));
+            }
+        }
+    }
 
     // No role but a superuser connects until the erasures made since the
     // backup are carried out again and the checks pass: a connection limit
@@ -422,6 +511,26 @@ pub fn restore(repo: &Repo, steps: &Steps, dir: &Path, name: Option<&str>, url: 
     let mut load = db.cmd(&dev, "pg_restore")?;
     load.args(["--no-owner", "--exit-on-error", "--single-transaction"]).arg(dir.join(DUMP));
     steps.run("pg_restore", &mut [load], quiet)?;
+
+    // Each vault key names the wrap key that sealed it: one that none of
+    // the backup's key files derives would open nothing, so the restore
+    // says which key it lacks rather than fail on the first entry.
+    let mut derived = Vec::new();
+    for name in [VAULT, PREVIOUS].into_iter().map(str::to_owned).chain(held) {
+        let from = dir.join(&name);
+        if from.exists() {
+            derived.push(wrap_id(&fs::read(&from).map_err(io(&from))?));
+        }
+    }
+    let named = psql(&dev, &db, "SELECT encode(wrap, 'hex'), count(*) FROM vault.key GROUP BY 1 ORDER BY 1")?;
+    for line in named.lines().filter(|l| !l.is_empty()) {
+        let (id, count) = line.split_once('\t').ok_or_else(|| Fail::new(format!("unexpected answer about the vault: {line}")))?;
+        if !derived.iter().any(|d| d == id) {
+            return Err(Fail::new(format!(
+                "the restored vault seals {count} vault keys under the wrap key {id}, which none of the backup's key files derives: find the vault key file of that id, which an earlier backup's manifest names, and add it to the backup as {PREVIOUS}"
+            )));
+        }
+    }
 
     // The dump holds every vault key erased since it was taken: each such
     // erasure the newest list holds is carried out again.
@@ -469,7 +578,7 @@ fn literal(s: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::Manifest;
+    use super::{Manifest, kept};
 
     #[test]
     fn a_manifest_reads_back_as_written() {
@@ -478,6 +587,7 @@ mod tests {
             version: "0.2.0".into(),
             head: 30,
             hash: "ab".repeat(32),
+            wraps: vec![("vault.key".into(), "cd".repeat(32)), (kept(1), "ef".repeat(32))],
             settings: vec![
                 (String::new(), "cella.scope=lanterne.example".into()),
                 (String::new(), "cella.scope_legal_name=Lanterne SCOP SARL".into()),
@@ -487,6 +597,7 @@ mod tests {
         let back = Manifest::read(&m.write()).unwrap();
         assert_eq!((back.database.as_str(), back.version.as_str(), back.head), ("lanterne", "0.2.0", 30));
         assert_eq!(back.hash, m.hash);
+        assert_eq!(back.wraps, m.wraps);
         assert_eq!(back.settings, m.settings);
         assert!(Manifest::read("database x\nunknown y\n").is_none());
     }

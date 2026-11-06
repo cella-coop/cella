@@ -1,5 +1,6 @@
 import type { Permission, Refused, Settled } from '@cella/org-actions'
 import { plain, type Proof, type Signer } from '@cella/org-sign'
+import { forgone, outcomes, type Done } from './slice.ts'
 
 export * from './slice.ts'
 export * from './import.ts'
@@ -74,6 +75,24 @@ export interface Deps {
   actor: string
   // Signs the write's request as the actor's device; the notary checks it.
   sign: Signer
+  // The reactions to a write of `op`, every slice's, each run with the
+  // write's request: the shell's, which `write` runs in the write's
+  // transaction after its verdict, so each write they make is an effect
+  // citing it. Left out, as by a test of one slice, nothing reacts.
+  react?: (op: Permission, request: unknown, deps: Deps) => Promise<Done[]>
+  // Set while a write's transaction is open, for the reactions to it: a
+  // write made under it is an effect, not a decision of its own.
+  effect?: Effect
+}
+
+// Where an effect is written: the transaction of the decision it follows,
+// the entry it cites, how many effects from its decision that entry is,
+// and the decision's proof, which names the device that signed it.
+export interface Effect {
+  tx: Db
+  cause: number
+  depth: number
+  proof: Proof
 }
 
 export interface Write<T> {
@@ -116,17 +135,21 @@ export function lent(using: Borrow): Pick<Deps, 'db' | 'borrow'> {
 // One write, one transaction: signed first, as the member's device does
 // before sending, with no connection held, then the transaction of a
 // connection borrowed for it alone, begun with `cella.begin`, then the
-// state change, then `cella.submit` last, then the borrow commits. A state
-// table takes rows only in a begun transaction, and one commits only with
-// its verdict. A refusal raises inside submit, so the borrow rolls the
-// state and the verdict back together and the refusal uses no verdict
-// number.
+// state change, then `cella.submit`, then its effects, then the borrow
+// commits. A state table takes rows only in a begun transaction, and one
+// commits only with its verdict. A refusal raises inside submit, so the
+// borrow rolls the state and the verdict back together and the refusal
+// uses no verdict number. Inside a write's transaction (`deps.effect`), a
+// write is an effect of it instead, which no one signs (`effect`).
 export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Refused> {
+  if (deps.effect) {
+    return effect(deps, deps.effect, w)
+  }
   const request = plain(w.request)
   const proof = await deps.sign(w.op, request)
   const borrow = deps.borrow ?? holding(deps.db)
   try {
-    return await borrow((db) => transact(db, deps.actor, w, request, proof))
+    return await borrow((db) => transact(db, deps, w, request, proof))
   } catch (e) {
     if (code(e) !== REFUSED) {
       throw e
@@ -137,7 +160,8 @@ export async function write<T>(deps: Deps, w: Write<T>): Promise<Settled<T> | Re
   }
 }
 
-async function transact<T>(db: Db, actor: string, w: Write<T>, request: unknown, proof: Proof): Promise<Settled<T>> {
+async function transact<T>(db: Db, deps: Deps, w: Write<T>, request: unknown, proof: Proof): Promise<Settled<T>> {
+  const { actor } = deps
   // The transaction reads as the actor, and as a write's: its state
   // change sees the whole state, as the guards do.
   await db.query(`SELECT set_config('cella.actor', $1, true), set_config('cella.writing', 'on', true)`, [actor])
@@ -150,5 +174,103 @@ async function transact<T>(db: Db, actor: string, w: Write<T>, request: unknown,
     'SELECT verdict FROM cella.submit($1, $2, $3, $4)',
     [w.op, w.payload(value), actor, { request, ...proof }],
   )
-  return { state: 'settled', entry: Number(rows[0].verdict), value }
+  const entry = Number(rows[0].verdict)
+  const then = await reacting(deps, w.op, request, { tx: db, cause: entry, depth: 0, proof })
+  // A decision stands only with the effects it requires: one refused
+  // refuses it whole, as a guard would.
+  const lost = await lacking(db, w.op, then)
+  if (lost) {
+    throw Object.assign(new Error(`${w.op} needs ${lost.op}, which was refused: ${lost.reason}`), { code: REFUSED })
+  }
+  const settled: Settled<T> = { state: 'settled', entry, value }
+  outcomes.set(settled, then)
+  return settled
+}
+
+// The reactions to a write of `op` that settled as entry `e.cause`, run
+// in its transaction, each write they make an effect citing it; five
+// effects from the decision at most, as the notary allows.
+async function reacting(deps: Deps, op: Permission, request: unknown, e: Effect): Promise<Done[]> {
+  if (!deps.react || e.depth >= 5) {
+    return []
+  }
+  return deps.react(op, request, { ...deps, db: e.tx, borrow: undefined, effect: { ...e, depth: e.depth + 1 } })
+}
+
+// The first effect among `then` that `op` requires, by `cella.follows`,
+// and that was refused.
+async function lacking(tx: Db, op: Permission, then: Done[]): Promise<Done | undefined> {
+  const refused = then.filter((d) => d.state === 'refused')
+  if (!refused.length) {
+    return undefined
+  }
+  const { rows } = await tx.query<{ op: string }>('SELECT op FROM cella.follows WHERE cause = $1 AND required', [op])
+  return refused.find((d) => rows.some((r) => r.op === d.op))
+}
+
+// An effect: no signature, the decision's transaction, and a savepoint of
+// its own. Its state, then `cella.follow` citing its cause, then the
+// reactions to it, each an effect citing it. A refusal rolls it back to
+// its savepoint and records it forgone (`cella.forgo`) with the refusal's
+// reason, and the decision and the other effects stand. An effect it
+// requires refused rolls it back with every effect after it and forgoes
+// each, its own reason naming the refusal.
+async function effect<T>(deps: Deps, e: Effect, w: Write<T>): Promise<Settled<T> | Refused> {
+  const { tx } = e
+  const savepoint = `effect_${e.depth}`
+  const request = plain(w.request)
+  await tx.query(`SAVEPOINT ${savepoint}`)
+  let entry: number
+  let value: T
+  try {
+    // The decision made its checks immediate; an effect's own, such as an
+    // entry balancing, wait for its state, as a decision's do.
+    await tx.query('SET CONSTRAINTS ALL DEFERRED')
+    value = await w.state(tx, e.proof)
+    await tx.query('SET CONSTRAINTS ALL IMMEDIATE')
+    const { rows } = await tx.query<{ verdict: string }>('SELECT verdict FROM cella.follow($1, $2, $3)', [w.op, w.payload(value), e.cause])
+    entry = Number(rows[0].verdict)
+  } catch (err) {
+    if (code(err) !== REFUSED) {
+      throw err
+    }
+    await tx.query(`ROLLBACK TO SAVEPOINT ${savepoint}`)
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`)
+    return forgo(tx, w.op, e.cause, (err as Error).message)
+  }
+  const then = await reacting(deps, w.op, request, { ...e, cause: entry })
+  const lost = await lacking(tx, w.op, then)
+  if (lost) {
+    await tx.query(`ROLLBACK TO SAVEPOINT ${savepoint}`)
+    await tx.query(`RELEASE SAVEPOINT ${savepoint}`)
+    const why = `${w.op} is forgone with ${lost.op}, which it requires: ${lost.reason}`
+    const out = await forgo(tx, w.op, e.cause, why)
+    outcomes.set(out, await forgoing(tx, then, out.verdict, why))
+    return out
+  }
+  await tx.query(`RELEASE SAVEPOINT ${savepoint}`)
+  const settled: Settled<T> = { state: 'settled', entry, value }
+  outcomes.set(settled, then)
+  return settled
+}
+
+// An effect recorded forgone, citing `cause`; its verdict is the entry
+// that records it.
+async function forgo(tx: Db, op: Permission, cause: number, reason: string): Promise<Refused> {
+  const { rows } = await tx.query<{ verdict: string }>('SELECT verdict FROM cella.forgo($1, $2, $3)', [op, cause, reason])
+  const out: Refused = { state: 'refused', verdict: Number(rows[0].verdict), reason }
+  forgone.add(out)
+  return out
+}
+
+// The effects a forgone cause had, rolled back with it, each forgone again
+// citing the cause's forgone entry: a settled one with the cause's reason,
+// one already forgone with its own.
+async function forgoing(tx: Db, then: Done[], cause: number, why: string): Promise<Done[]> {
+  const out: Done[] = []
+  for (const d of then) {
+    const f = await forgo(tx, d.op, cause, d.state === 'refused' && d.reason ? d.reason : why)
+    out.push({ op: d.op, state: 'refused', entry: f.verdict, verdict: f.verdict, reason: f.reason, forgone: true, then: await forgoing(tx, d.then, f.verdict, why) })
+  }
+  return out
 }

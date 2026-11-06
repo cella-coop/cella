@@ -43,5 +43,5 @@ export async function distribute(input: Distribute, deps: Deps): Promise<Settled
 export async function distributed(request: unknown, deps: Deps): Promise<Done[]> {
   const { distribution, motion } = request as Distribute
   const input = { distribution, motion }
-  return [done('patronage:distribution:distribute', await distribute(input, deps), [], input)]
+  return [done('patronage:distribution:distribute', await distribute(input, deps))]
 }

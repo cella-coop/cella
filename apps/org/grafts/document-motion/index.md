@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -61,11 +61,11 @@ the version reads its policies, are the document feat's guard.
 
 ## Reaction
 
-On `motion:policy:adopt` and `motion:policy:end`, once the write
-settles: each document generated from the policies of the circle the
+On `motion:policy:adopt` and `motion:policy:end`, in the write's
+transaction: each document generated from the policies of the circle the
 policy is of, as the statutes are from the assembly's, is generated
-anew by the document feat's `generate`, a write of its own signed by
-whoever signed the adoption or the ending and citing the motion, from
+anew by the document feat's `generate`, an effect citing the adoption
+or the ending, its actor whoever signed it, and citing the motion, from
 the policies in force on the day the adopted policy applies or the ended
 one ends, or on the day the adopted version reads where that is later
 (`handlers/generate.ts`). A policy of a circle no document is

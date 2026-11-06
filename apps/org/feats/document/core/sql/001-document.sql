@@ -8,10 +8,13 @@ CREATE TABLE document.document (
 
 -- The draft's history: Loro updates, appended in receipt order and merged
 -- in any. The live text is their merge; the server keeps and relays them.
+-- One write may append several, as a close whose effects generate a
+-- document twice: `n` orders them within it.
 -- An update carried over from before the log has no author.
 CREATE TABLE document.update (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
-  receipt bigint PRIMARY KEY,
+  n bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  receipt bigint NOT NULL,
   document text NOT NULL REFERENCES document.document,
   author text,
   at date NOT NULL,
@@ -61,10 +64,13 @@ CREATE INDEX ON document.comment (version);
 
 -- An adoption makes a version the document's binding text. It names the
 -- adopted version it replaces, its base; `document.adopts` refuses it if
--- the adopted version moved since. Ordered by receipt.
+-- the adopted version moved since. Ordered by receipt, then by `n`, since
+-- one write may adopt twice, as a close whose effects generate a document
+-- twice.
 CREATE TABLE document.adoption (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
-  receipt bigint PRIMARY KEY,
+  n bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  receipt bigint NOT NULL,
   document text NOT NULL REFERENCES document.document,
   version text NOT NULL,
   base text,
@@ -77,7 +83,7 @@ CREATE INDEX ON document.adoption (document);
 CREATE VIEW document.adopted WITH (security_invoker = true) AS
   SELECT DISTINCT ON (a.document) a.document, a.version, a.adopted, a.receipt
   FROM document.adoption a
-  ORDER BY a.document, a.receipt DESC;
+  ORDER BY a.document, a.receipt DESC, a.n DESC;
 
 -- Numbers a version next in its document, under a lock on the document so
 -- two saves cannot take one number. A version carried over from before the
@@ -131,27 +137,33 @@ CREATE TRIGGER quotes BEFORE INSERT ON document.comment
 -- document:document:adopt — the write's adoption names a version of its
 -- document, later than the one it replaces, and its base is the version
 -- the latest adoption before it made binding: two adoptions from one base
--- cannot both settle. Edits to the draft never refuse it.
+-- cannot both settle. Edits to the draft never refuse it. A write's
+-- adoption is the one at its receipt of the document and version it
+-- names, since one write may adopt twice (`n`).
 CREATE FUNCTION document.adopts(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN a.receipt IS NULL THEN 'no adoption at receipt ' || coalesce(p.receipt::text, 'none')
-    WHEN a.document IS DISTINCT FROM p.document OR a.version IS DISTINCT FROM p.version
-      THEN 'the adoption at receipt ' || a.receipt || ' is not this write''s'
+    WHEN a.receipt IS NULL
+      THEN 'no adoption of ' || coalesce(p.version, 'a version') || ' at receipt ' || coalesce(p.receipt::text, 'none')
     WHEN v.id IS NULL THEN a.document || ' has no version ' || a.version
     WHEN latest.version IS DISTINCT FROM a.base
       THEN a.document || ' moved: its adopted version is ' || coalesce(latest.version, 'none') || ', not ' || coalesce(a.base, 'none')
     WHEN v.n <= latest.n THEN a.version || ' is not later than ' || latest.version
   END
   FROM (SELECT (payload ->> 'receipt')::bigint AS receipt, payload ->> 'document' AS document, payload ->> 'version' AS version) p
-  LEFT JOIN document.adoption a ON a.receipt = p.receipt
+  LEFT JOIN LATERAL (
+    SELECT x.receipt, x.n, x.document, x.version, x.base FROM document.adoption x
+    WHERE x.receipt = p.receipt AND x.document = p.document AND x.version = p.version
+    ORDER BY x.n DESC
+    LIMIT 1
+  ) a ON true
   LEFT JOIN document.version v ON v.id = a.version AND v.document = a.document
   LEFT JOIN LATERAL (
     SELECT b.version, bv.n FROM document.adoption b
     JOIN document.version bv ON bv.id = b.version
-    WHERE b.document = a.document AND b.receipt < a.receipt
-    ORDER BY b.receipt DESC
+    WHERE b.document = a.document AND (b.receipt, b.n) < (a.receipt, a.n)
+    ORDER BY b.receipt DESC, b.n DESC
     LIMIT 1
   ) latest ON true;
 END;

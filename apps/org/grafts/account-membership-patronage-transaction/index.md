@@ -1,11 +1,11 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The work share employed in the associates' capital: once a year's
 distribution posts, what each associate's part buys in shares is
-credited to their capital account, by a write of its own, and added to
+credited to their capital account, by an effect citing it, and added to
 the shares they hold; what each worker's part became, their own
 statements, and the year's return to the federation. It joins four
 feats because crediting a share needs the capital account (account), the
@@ -56,10 +56,10 @@ that approved the split, which `motion-patronage` checks.
 ## Reactions
 
 - To `patronage:distribution:distribute`: `employ`, once for each
-  associate `employable` names, in turn, each a write of its own after
-  the distribution, signed by whoever signed it, the member who approved
-  the split, and citing the same motion. A refused one leaves the
-  distribution and every credit before it settled, and says why; what
+  associate `employable` names, in turn, each an effect citing
+  the distribution in its transaction, its actor whoever signed the approval,
+  and citing the same motion. A refused one is forgone, leaving the
+  distribution and every other credit settled, and says why; what
   it would have bought stays owed in `424`. Where no associate's part
   buys a share, no write is made.
 

@@ -24,6 +24,7 @@ import { capture, submit as claim } from '@cella/org-expense/api'
 import { enrol, profile } from '@cella/org-person/api'
 import { approve, log, submit } from '@cella/org-timesheet/api'
 import { write, type Deps } from '@cella/org-db'
+import { reacting } from '../src/lib/server/slices.ts'
 import { fixture, generate, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
@@ -272,7 +273,7 @@ test('Inès marks the internal rules and the statutes read, her own reading and 
 
 test('once m-2026-012 admits her, every step of joining is done, Web her working circle since her hire, and her page reads back her shares, her seats and her powers', async () => {
   await on('2026-10-31')
-  settled(await close({ motion: 'm-2026-012' }, as(camille)))
+  settled(await close({ motion: 'm-2026-012' }, reacting(as(camille))))
   const joining = await tab(ines, 'joining', ines)
   assert.equal(joining.match(/to do/g), null, 'nothing is left to join')
   for (const says of ['20 shares of 50,00', 'phone, enrolled 1 Oct 2026 when the invitation was taken up', 'Assemblée générale', 'Web']) {

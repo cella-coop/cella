@@ -17,9 +17,9 @@ import assert from 'node:assert/strict'
 import pg from 'pg'
 import { circles, motion as detail, vote } from '@cella/org-motion/api'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { react } from '../src/lib/server/slices.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -140,8 +140,9 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   }
   await on('2026-11-21')
   const before = await statutes()
-  settled(await close({ motion }, as(camille)))
-  const then = await react('motion:motion:close', { motion }, as(camille))
+  const closed = await close({ motion }, reacting(as(camille)))
+  settled(closed)
+  const then = done('motion:motion:close', closed).then
   const states = (ds: typeof then): string[] => ds.flatMap((d) => [`${d.op} ${d.state} ${d.reason ?? ''}`.trim(), ...states(d.then)])
   assert.ok(states(then).every((s) => s.includes(' settled')), states(then).join('\n'))
   assert.ok(states(then).includes('document:document:generate settled'))

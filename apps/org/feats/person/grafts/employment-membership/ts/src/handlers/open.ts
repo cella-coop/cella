@@ -38,5 +38,5 @@ export async function open(input: Open, deps: Deps): Promise<Outcome<(typeof act
 export async function opened(request: unknown, deps: Deps): Promise<Done[]> {
   const { member, shares } = request as { member: string; shares: number }
   const input = { worker: member, shares }
-  return [done('employment-membership:candidacy:open', await open(input, deps), [], input)]
+  return [done('employment-membership:candidacy:open', await open(input, deps))]
 }

@@ -14,7 +14,8 @@ import * as forms from './forms.ts'
 
 export { apply, type Applied } from '../handlers/apply.ts'
 export { carried } from '../handlers/carried.ts'
-export { close, type Admitted } from '../handlers/close.ts'
+export { close } from '../handlers/close.ts'
+export type { Admitted } from '../handlers/carried.ts'
 export { found } from '../handlers/found.ts'
 export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
@@ -25,8 +26,9 @@ export { stances } from '../drivers/asks.ts'
 
 // A motion's roll and outcome on its page and its turnout in the list;
 // its proposal, replaced by one that fixes its roll in the same verdict,
-// and its close by one that admits and seats; and, once a close settles,
-// what else it decides, carried out. On a member's page, proposing their
+// and its close by one that counts its roll; and, in the close's
+// transaction, what it decides, carried out, its admissions among them.
+// On a member's page, proposing their
 // admission, suspension or exclusion, and on an employee's own, applying
 // to join; on a circle's, a seat in it, or what
 // the motion feat proposes about its powers.

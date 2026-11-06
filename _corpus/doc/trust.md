@@ -42,23 +42,35 @@ bounded action still meets its feat's triggers and guards, so its outcome
 may be `Refused` as well as `Settled`; only an ordered action may also be
 `Pending`.
 
-An action a passed motion carries is an attempt like any other. Once
-the close settles, each is a write of its own, in the order proposed,
-signed by the member who closed the motion, by their device, citing it,
-and judged by its own guards, by `membership-motion`'s that
-the motion it cites closed and passed, and by the motion feat's that
-the motion's circle holds, on the verdict date, a collective mandate
-for the action's power. The graft that registers a cited action binds it
-to its subject where the motion's own action names one: a subscription,
-a withdrawal or a freeze of capital is accepted only on a motion that
-admitted or excluded the member it names, as terms are copied only from
-the rule their motion adopted. What follows a carried action,
-such as the freeze and the withdrawal of capital that follow an exit,
-is a write after it the same way. Each has its own log entry. A
-motion's admissions alone settle inside its close, with the seats they
-give, and the subscription of each member admitted follows as an action
-of its own. A refused action is undone and says why, and what settled
-before it stays: the motion stays passed.
+A member signs a decision once, and what it carries is persisted with
+it. A close carries its effects in the same transaction: every action
+the motion passed is written in the close's transaction, in the order
+proposed, each an effect citing the close and the action's number, its
+actor the member who closed the motion, and judged by its own guards,
+by `membership-motion`'s that the motion it cites closed and passed,
+and by the motion feat's that the motion's circle holds, on the verdict
+date, a collective mandate for the action's power. The graft that
+registers a cited action binds it to its subject where the motion's own
+action names one: a subscription, a withdrawal or a freeze of capital
+is accepted only on a motion that admitted or excluded the member it
+names, as terms are copied only from the rule their motion adopted.
+What follows a carried action, such as the freeze and the withdrawal of capital that
+follow an exit, is an effect in the same transaction citing it, five
+deep at most. Each has its own log entry. A motion's admissions are
+effects of its close like its other actions, each with the seats it
+gives, and each requires the subscription of the member it admits, an
+effect citing it. What reacts to any other write, such as an approval's
+posting, is the same: an effect committed with the write it follows. A
+refused effect is rolled back to its savepoint and recorded as refused
+with its reason, and an effect that requires it is forgone with it, its
+own reason naming the refusal; the rest stand. So the motion stays
+passed, and an admission whose subscription is refused, as under the
+statutes' minimum or into a closed month, is forgone with it: no one is
+admitted without the capital the statutes ask, and the outcome says
+what would fix it. The transaction commits whole or not at all, so a
+restart or an abandoned signature never leaves a decision committed
+without its effects, and the notary refuses a commit that settles an
+effect without one it requires.
 
 ## One server
 
@@ -630,9 +642,9 @@ What the build does not yet do, and what lifts each:
   pilot trusts its host for both, as the ratchet's first rung does.
 
 - **The host serves the signing code and says what to sign.** The browser
-  signs the request the server asks it to, its own write's and each
-  reaction's, such as carrying out the suspension a passed motion carries
-  once its close settles, and shows none of it to the member; until the
+  signs the request the server asks it to, one per decision, the close
+  of a motion that carries a suspension among them, and shows none of it
+  to the member; until the
   native client (rung 4) nothing stops a host serving code that signs
   something else with the keys it serves code to.
 - **The host sets the reader.** The app role may set `cella.actor` and
@@ -710,13 +722,6 @@ What the build does not yet do, and what lifts each:
   write is checked everywhere; a budget only where a graft tracks the
   spend it caps, so far `approve-expense`'s. A budget over another power
   needs that power's spend summed by the graft that sees it.
-- **A carried action refused does not refuse its close.** A write is
-  one transaction with one verdict (`cella.begin` refuses a second), so
-  the actions a close carries settle after it, each on its own: an
-  admission whose subscription is refused, as under the statutes'
-  minimum or into a closed month, stays an admission, and the refusal
-  says why. A notary that settles a close and what it carries as one
-  batch of entries, all or none, lifts this.
 - **Confluent writes are single-entry log entries, not batches.** Each
   confluent write is submitted on its own and takes its own signed entry.
   Signed batches come with the offline queue at rung 2, which syncs a

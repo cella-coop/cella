@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -39,17 +39,17 @@ assembly's, unless the write that makes it names another.
   member whose address it is, or for a handle with no `@` whose address
   starts with it; a handle naming no one, or two, is refused.
   `membership_motion.mention` reads who each message mentions.
-- `membership_motion.closes`, on `motion:motion:close`: every member a
-  close admits, as its payload's `admitted` names them, is one the
-  motion asks to admit, holding the shares it asks, and was admitted by
-  the close (`membership.admitted`, the membership feat's guard, run for each).
+- `membership_motion.closes`, on `membership:member:admit` as an effect
+  of a close: the member it admits is one the motion asks to admit,
+  holding the shares it asks, and seated as the motion's circle asks
+  (`membership.admitted`, the membership feat's guard).
 
 The admission, suspension and exclusion cite their motion: this graft registers
 them by `motion.register_cite`, with their powers, `admit-member`,
 `suspend-member` and `exclude-member`,
 and this graft, which counts the roll, attaches its guard that it
-closed and passed; whether a close admits everyone it must, and seats
-them, is the roll's too ([circles](#circles)). A member's
+closed and passed; that each admission seats its member is the roll's
+too ([circles](#circles)). A member's
 withdrawal, and their erasure once they have left, are their own rights,
 no motion's, so neither is this
 graft's ([membership](../../feats/person/feats/membership/index.md)).
@@ -61,9 +61,9 @@ passing motion carries out, need the roll, so they are
 `membership-motion`'s. What follows each in the books, the member's capital
 subscribed, frozen and withdrawn, is the reaction of the grafts joining
 `membership` to the books (`account-membership`,
-`account-membership-transaction`), each a write of its own after the
-admission or the exclusion, citing the same motion; this graft never reads
-it.
+`account-membership-transaction`), each an effect citing the admission
+or the exclusion in the close's transaction, the subscription one the
+admission requires; this graft never reads it.
 
 ## Shell
 
@@ -247,10 +247,6 @@ she is on no roll of the assembly's.
   and purpose, and the payload names the bundle in force on the verdict
   date (`circle.bundle`). A slice may register guards on core's actions,
   as on its feats'.
-- `membership_motion.settles`, on `motion:motion:close`: a
-  passing close admitted everyone the motion admits, each seated by
-  `seats` as a seat of its own would be; a close that does not pass
-  admits no one.
 - `membership_motion.counts`, on `motion:motion:close`: those
   counted are exactly the people of the roll whose seat counts in its
   circle on the verdict date, so a close that did not count its roll, as the motion feat's own
@@ -297,31 +293,32 @@ she is on no roll of the assembly's.
   what the motion feat proposes about its powers, read by its
   `about` and made by its `putting`.
 - `close` (ordered), replacing the motion feat's in the shell: the
-  motion feat's `closing`, then `count`, then, when it passes on its
-  roll, for each member it admits the membership feat's `admitting` and
-  core's `seating`, all in one transaction under one verdict.
-  It submits the close with `admitted`, each member and their seat; the
-  guards of each slice judge it (`motion.closes`, `sits`, `counts`,
-  `settles`, `membership_motion.closes`), and a refused seat refuses the
-  whole close.
-- `carried(motion)`: on a settled close of a passing motion, carries
-  out its other actions in the order proposed, each its own decided write
-  signed as the member who closed it and judged again by its guards: a
-  suspension or an exclusion
+  motion feat's `closing`, then `count`, in one transaction under one
+  verdict; the guards of each slice judge it (`motion.closes`, `sits`,
+  `counts`). What it passed, its admissions among them,
+  `carried` writes in the same transaction.
+- `carried(motion)`: in the transaction of a passing motion's close, after
+  its `submit`, carries out its other actions in the order proposed, each
+  an effect citing the close and the action's number (`cella.follow`),
+  its actor the member who closed it, judged by its guards: an
+  admission, the membership feat's `admitting` with core's `seating`,
+  a refused seat refusing it; a suspension or an exclusion
   (membership feat),
   a circle created (core's `create`), a seat given or ended (core's
   `add` and `remove`), a policy
   adopted or ended, a mandate's with it (the motion feat's circles' `adopt` and
   `end`, which extend the motion feat's), whose request names the
   motion's action, `n`, so the writes that react to an adoption, a rule's
-  terms, read the policy it is. A refused one
-  leaves the motion passed and that action undone, as its outcome
-  says. The slice runs it as its reaction to `motion:motion:close`.
-  Before them it reports each admission the close made, as settled in
-  the close's entry with the request an admission of its own would
-  carry, so the writes that react to an admission, the subscription,
-  follow it as they follow one; the shell runs the reactions to each
-  write it reports.
+  terms, read the policy it is. A refused one is rolled back to its
+  savepoint and forgone, and leaves the motion passed and that action
+  undone, as its outcome says; the close commits with every effect,
+  settled or forgone, or not at all. The slice runs it as its reaction to `motion:motion:close`.
+  What reacts to an admission, the subscription, is an effect citing
+  it that the admission requires: refused, under the statutes' minimum
+  or into a closed month, it forgoes the admission and its seat with it,
+  each recorded with its reason, and the close and the motion's other
+  effects stand ([required
+  effects](../../core/notary/index.md#required-effects)).
 - `apply` (confluent), an employee's application by their own right
   (`apply-membership`), from their own page: in one transaction under one
   verdict, the membership feat's `applying`, which invites them, the

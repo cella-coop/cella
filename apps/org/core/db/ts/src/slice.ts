@@ -2,41 +2,49 @@ import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import type { Db, Deps } from './index.ts'
 import type { Read } from './read.ts'
 
-// What one write did, as the shell shows it: the op, its outcome, and the
-// writes that reacted to it, such as the admissions a passing close makes.
+// What one write did, as the shell shows it: the op, its outcome, and its
+// effects, the writes that reacted to it in its transaction, such as the
+// admissions a passing close carries.
 export interface Done {
   op: Permission
   // `failed` is a write that never reached a verdict: no device could sign
   // it, or the handler threw on input it could not take.
   state: 'settled' | 'pending' | 'refused' | 'failed'
-  // The log entry a settled write appended.
+  // The log entry a settled write appended, or the one recording an
+  // effect forgone.
   entry?: number
   // The last verdict a refusal was judged after.
   verdict?: number
   // The receipt a pending write holds.
   receipt?: number
   reason?: string
+  // An effect refused, rolled back to its savepoint and recorded forgone,
+  // while the decision it follows stands.
+  forgone?: boolean
   then: Done[]
-  // What a write a reaction made asked, which the reactions to its op
-  // read, so they follow it as they follow a write made from a page.
-  request?: unknown
   // The form's fields already written by a write of several that stopped
   // part-way, such as the cells of a week before its first refusal: the
   // form empties them, so trying again sends only the rest.
   spent?: string[]
 }
 
-// The handler's outcome, made plain for the page, and what the reactions
-// to it did; `request` is what a reaction to the op reads, kept on a
-// settled write a reaction made, so the reactions to it follow.
-export function done(op: Permission, outcome: Settled<unknown> | Pending | Refused, then: Done[] = [], request?: unknown): Done {
+// The effects `write` ran in the transaction of each outcome it returned,
+// and the outcomes that are effects forgone, which `done` reads.
+export const outcomes = new WeakMap<object, Done[]>()
+export const forgone = new WeakSet<object>()
+
+// The handler's outcome, made plain for the page, with its effects.
+export function done(op: Permission, outcome: Settled<unknown> | Pending | Refused, then: Done[] = []): Done {
+  const effects = [...(outcomes.get(outcome) ?? []), ...then]
   switch (outcome.state) {
     case 'settled':
-      return { op, state: 'settled', entry: outcome.entry, then, ...(request === undefined ? {} : { request }) }
+      return { op, state: 'settled', entry: outcome.entry, then: effects }
     case 'pending':
-      return { op, state: 'pending', receipt: outcome.receipt, then }
+      return { op, state: 'pending', receipt: outcome.receipt, then: effects }
     case 'refused':
-      return { op, state: 'refused', verdict: outcome.verdict, reason: outcome.reason, then }
+      return forgone.has(outcome)
+        ? { op, state: 'refused', entry: outcome.verdict, verdict: outcome.verdict, reason: outcome.reason, forgone: true, then: effects }
+        : { op, state: 'refused', verdict: outcome.verdict, reason: outcome.reason, then: effects }
   }
 }
 
@@ -177,9 +185,11 @@ export interface Extension {
   allows?(db: Db, id: string, actor: string | null): Promise<boolean>
 }
 
-// Runs after a settled write of the op, with its request: a slice's
-// subscription to another slice's event, such as admitting the members a
-// closed motion admits.
+// Runs in the transaction of a settled write of the op, after its
+// verdict, with its request: a slice's subscription to another slice's
+// write, such as carrying out what a passed motion carries. Each write it
+// makes is an effect citing the write it follows, which `cella.follows`
+// lets follow it.
 export type Reaction = (request: unknown, deps: Deps) => Promise<Done[]>
 
 // One record of a file being imported, as a write: the line it was read

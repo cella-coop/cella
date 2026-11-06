@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -114,8 +114,8 @@ day their rule applies.
   the one before it, and not before the day it falls due. It posts, so
   its handler and guard are `account-membership-transaction`'s.
 - **account.freeze**, **capital.subscribe** and **capital.withdraw** are
-  what a passed motion carries once it admits or excludes a member, each
-  a write of its own signed by whoever closed it: they cite the motion
+  what follows a passed motion's admission or exclusion of a member, each
+  an effect in the close's transaction, its actor whoever closed it: they cite the motion
   (`account-motion` registers them by `motion.register_cite`), and
   settle only if it closed and passed and carried the admission or the
   exclusion of the member whose capital or accounts they move. The freeze is this feat's own

@@ -21,7 +21,7 @@ export async function changed(request: unknown, deps: Deps): Promise<Done[]> {
   const out: Done[] = []
   for (const r of rows) {
     const input = { document: r.document, motion, day: r.day }
-    out.push(done('document:document:generate', await generate(input, deps), [], input))
+    out.push(done('document:document:generate', await generate(input, deps)))
   }
   return out
 }

@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -85,15 +85,15 @@ distribution is approved.
   parts (`patronage-payslip`, `patronage-timesheet`), and their guards
   check them.
 - **distribution.distribute** is ordered because the split is posted
-  once, after its approval. It follows the approval as a write of its
-  own, signed by whoever signed the approval and citing the same motion
+  once, after its approval. It follows the approval as an effect in its
+  transaction, citing it, its actor whoever signed the approval, and citing the same motion
   (`motion-patronage`), so it settles only if that motion closed, passed
   and approved this split. Its handler is `patronage-transaction`'s,
   which wraps this feat's `distributing` spec with the entry and reacts
   to the approval with it.
 - **part.employ** is ordered because a part buys shares once. It follows
-  the distribution as a write of its own for each associate whose part
-  buys some, signed and citing the motion as the distribution is. Its
+  the distribution as an effect citing it for each associate whose part
+  buys some, citing the motion as the distribution does. Its
   handler is `account-membership-patronage-transaction`'s, which posts
   the credit, records it and adds the shares to what the associate holds.
   A refused one leaves the distribution and every credit before it

@@ -332,7 +332,7 @@ if (sql) {
       }
     }
   }
-  const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
+  const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [], follows: [] }
   errors.push(...placed(repo, apps), ...await checkSql(repo, apps, known, found), ...undeclared(found), ...unowned(found), ...unread(found), ...definers(found), ...unshared(found))
   // What a feat's or a graft's TypeScript writes outside its own schema,
   // refused with what its SQL does there.
@@ -367,6 +367,22 @@ if (sql) {
     }
   }
   errors.push(...granted(ops, grants, found.stances))
+  // Each op a slice reacts to (`on`) is one a row of `cella.follows` its
+  // own SQL registers lets an effect follow: the notary refuses every
+  // effect no row lets follow its cause.
+  for (const dir of byName.values()) {
+    const p = place(dir)
+    const owner = p?.kind === 'graft' ? p.name : p?.kind === 'core' ? basename(p.node) : null
+    for (const file of owner ? sources(dir) : []) {
+      for (const [, body] of readFileSync(join(repo, file), 'utf8').matchAll(/\bon:\s*\{([^}]*)/g)) {
+        for (const [, cause] of body.matchAll(/'([a-z-]+:[a-z-]+:[a-z-]+)'\s*:/g)) {
+          if (!found.follows.some((f) => f.owner === owner && f.cause === cause)) {
+            fail(`${file}: reacts to ${cause}, which no cella.lets_follow of ${owner}'s lets an effect follow`)
+          }
+        }
+      }
+    }
+  }
 }
 
 if (errors.length) {

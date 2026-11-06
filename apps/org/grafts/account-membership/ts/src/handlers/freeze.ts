@@ -17,7 +17,7 @@ export async function frozen(request: unknown, deps: Deps): Promise<Done[]> {
     return []
   }
   const input = { holder: member, motion }
-  return [done('account:account:freeze', await freeze(input, deps), [], input)]
+  return [done('account:account:freeze', await freeze(input, deps))]
 }
 
 // What follows a withdrawal: the same freeze as the member's own, signed
@@ -28,5 +28,5 @@ export async function frozenOwn(request: unknown, deps: Deps): Promise<Done[]> {
     return []
   }
   const input = { holder: member }
-  return [done('account:own:freeze', await freezeOwn(input, deps), [], input)]
+  return [done('account:own:freeze', await freezeOwn(input, deps))]
 }

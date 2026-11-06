@@ -20,9 +20,9 @@ import pg from 'pg'
 import { close, propose } from '@cella/org-graft-membership-motion/api'
 import { adopt, vote } from '@cella/org-motion/api'
 import { generate } from '@cella/org-document/api'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps, type Done } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
-import { react } from '../src/lib/server/slices.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -54,8 +54,11 @@ const cites = (version: string) =>
 type Action = { kind: string; args: Record<string, string> }
 
 // The assembly decides a motion's actions, every member of its roll
-// consenting, closed on `deadline`.
-async function motioned(title: string, actions: Action[], deadline: string): Promise<string> {
+// consenting, closed on `deadline`, with what its close carries in its
+// transaction, unless `carry` is false, as for a motion whose generation
+// never ran.
+const closes = new Map<string, Done[]>()
+async function motioned(title: string, actions: Action[], deadline: string, carry = true): Promise<string> {
   const motion = settled(await propose({ circle: 'ag', title, procedure: 'consent', deadline, body: '', actions }, as(camille))).motion
   for (const { member } of await all<{ member: string }>(
     `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member WHERE r.motion = $1 AND m.status = 'active'`,
@@ -64,20 +67,22 @@ async function motioned(title: string, actions: Action[], deadline: string): Pro
     settled(await vote({ motion, member, stance: 'consent' }, as(member)))
   }
   await on(deadline)
-  settled(await close({ motion }, as(camille)))
+  const closed = await close({ motion }, carry ? reacting(as(camille)) : as(camille))
+  settled(closed)
+  closes.set(motion, done('motion:motion:close', closed).then)
   return motion
 }
 
 // The assembly decides a rule to apply from `from`.
-const decided = (wording: string, from: string, deadline: string) =>
-  motioned(wording, [{ kind: 'policy', args: { kind: 'rule', wording, from } }], deadline)
+const decided = (wording: string, from: string, deadline: string, carry = true) =>
+  motioned(wording, [{ kind: 'policy', args: { kind: 'rule', wording, from } }], deadline, carry)
 
 const applies = async (policy: string) =>
   (await one<{ day: string }>(`SELECT to_char(applies, 'YYYY-MM-DD') AS day FROM policy.policy WHERE id = $1`, [policy])).day
 
-// The reactions to its close: the adoption, and the statutes generated.
+// What its close carried: the adoption, and the statutes generated.
 async function carried(motion: string) {
-  const then = await react('motion:motion:close', { motion }, as(camille))
+  const then = closes.get(motion) ?? []
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state, t.reason ?? ''])]),
     [['motion:policy:adopt', 'settled', [['document:document:generate', 'settled', '']]]],
@@ -134,7 +139,7 @@ test('a rule adopted after it to apply on 20 December generates a version readin
 })
 
 test('a motion whose generation never ran, cited later by hand, reads the adopted version\'s day', async () => {
-  later = await decided('The gérante reports to the assembly each quarter', '2026-12-22', '2026-12-21')
+  later = await decided('The gérante reports to the assembly each quarter', '2026-12-22', '2026-12-21', false)
   settled(await adopt({ motion: later, n: 1 }, as(camille)))
   assert.equal(await adopted(), 'statutes@4')
   settled(await generate({ document: 'statutes', motion: later, day: '2026-12-22' }, as(camille)))
@@ -158,7 +163,7 @@ test('a motion that ends a rule and adopts another generates a version for each 
     ],
     '2026-12-28',
   )
-  const then = await react('motion:motion:close', { motion: both }, as(camille))
+  const then = closes.get(both) ?? []
   assert.deepEqual(
     then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state, t.reason ?? ''])]),
     [
@@ -186,6 +191,7 @@ test('a motion\'s second change, cited once another motion\'s version is adopted
       { kind: 'policy', args: { kind: 'rule', wording: 'Any member may read the archive on request' } },
     ],
     '2027-01-04',
+    false,
   )
   settled(await adopt({ motion: two, n: 1 }, as(camille)))
   settled(await generate({ document: 'statutes', motion: two, day: await applies(`${two}/1`) }, as(camille)))

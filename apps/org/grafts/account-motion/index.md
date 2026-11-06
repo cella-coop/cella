@@ -1,6 +1,6 @@
 +++
 title = "account-motion"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The statutes' capital terms, a rule the members adopt by motion, and the
@@ -62,9 +62,9 @@ The app role and the guards role may use the schema.
 
 ## Reaction
 
-On `motion:policy:adopt`, once the adoption settles: a rule whose values
+On `motion:policy:adopt`, in the adoption's transaction: a rule whose values
 are named for the account feat is copied into terms by the account
-feat's `adopt`, a write of its own signed by whoever signed the adoption
+feat's `adopt`, an effect citing the adoption, its actor whoever signed it,
 and citing the motion (`handlers/terms.ts`). Any other policy is copied
 nothing, and no write is made. The adoption's request names the motion's
 action, `n`, so the reaction reads the policy it adopted.

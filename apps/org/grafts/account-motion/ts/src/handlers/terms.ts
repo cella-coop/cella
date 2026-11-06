@@ -17,5 +17,5 @@ export async function adopted(request: unknown, deps: Deps): Promise<Done[]> {
     return []
   }
   const input = { policy, motion }
-  return [done('account:terms:adopt', await adopt(input, deps), [], input)]
+  return [done('account:terms:adopt', await adopt(input, deps))]
 }

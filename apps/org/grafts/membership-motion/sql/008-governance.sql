@@ -49,38 +49,23 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
--- motion:motion:close — a passing close admits, in its own
--- transaction, everyone the motion admits, and seats each in the
--- motion's circle as `member` (`seats`, as on a seat of its own); a
--- close that does not pass admits no one. Its payload's `admitted` names
--- each member and their seat. That each admission is one the motion
--- asks, with its shares, is membership-motion's guard on the close.
-CREATE FUNCTION membership_motion.settles(payload jsonb) RETURNS text
+-- membership:member:admit — an admission a close carries, an effect in
+-- the close's transaction, seats the member it admits in the motion's
+-- circle as `member`, as `seats` judges a seat of its own. That the
+-- motion asks it, with its shares, is `admits`; that the write admitted
+-- them, `membership.admitted`.
+CREATE FUNCTION membership_motion.closes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN d.id IS NULL OR d.closed IS NULL THEN NULL
-    WHEN coalesce(membership_motion.passes(d.id), false) THEN (
-      SELECT r FROM (
-        SELECT CASE
-          WHEN a.member IS NULL THEN d.id || ' passes, and its close does not admit ' || m.member
-          ELSE membership_motion.seats(jsonb_build_object('seat', a.seat, 'motion', d.id))
-        END AS r
-        FROM membership_motion.action m
-        LEFT JOIN jsonb_to_recordset(coalesce(payload -> 'admitted', '[]'::jsonb)) AS a(member text, seat bigint)
-          ON a.member = m.member
-        WHERE m.motion = d.id AND m.kind = 'admit'
-      ) x
-      WHERE r IS NOT NULL
-      LIMIT 1
-    )
-    WHEN jsonb_array_length(coalesce(payload -> 'admitted', '[]'::jsonb)) > 0
-      THEN d.id || ' does not pass, so its close admits no one'
+    WHEN s.id IS NULL OR s.member IS DISTINCT FROM payload ->> 'member'
+      THEN coalesce(payload ->> 'motion', 'no motion') || ' admits a member this write seats nowhere: an admission seats its member in the motion''s circle'
+    ELSE membership_motion.seats(jsonb_build_object('seat', s.id, 'motion', payload ->> 'motion'))
   END
-  FROM (SELECT payload ->> 'motion' AS id) p
-  LEFT JOIN motion.motion d ON d.id = p.id;
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat) p
+  LEFT JOIN circle.seat s ON s.id = p.seat;
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'membership_motion.circle_asks(jsonb)', 'membership-motion'),
-  ('motion:motion:close', 'membership_motion.settles(jsonb)', 'membership-motion');
+  ('membership:member:admit', 'membership_motion.closes(jsonb)', 'membership-motion');

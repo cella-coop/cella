@@ -1,6 +1,7 @@
 // The admission scenario, end to end on a seeded Lanterne: Inès Haddad is admitted
 // by the assembly's consent vote, through the cella extension, and in the
-// same verdict seated in the assembly; she edits documents from the phone
+// close's transaction seated in the assembly and subscribed, effects citing
+// it; she edits documents from the phone
 // on which she took up her invitation, which enrolled it, and her laptop
 // came with her hire. Run by `cella test` on a fresh database.
 
@@ -13,9 +14,10 @@ import { createDoc, edits } from '@cella/org-document/models'
 import { admit } from '@cella/org-membership/api'
 import { close } from '@cella/org-graft-membership-motion/api'
 import { add } from '@cella/org-circle/api'
-import type { Deps } from '@cella/org-db'
+import { done, type Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
+import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
 let app: pg.Client
@@ -32,7 +34,7 @@ async function on(date: string) {
   await app.connect()
 }
 
-const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
+const as = (actor: string): Deps => reacting({ db: reader(app, actor), actor, sign: sign(actor) })
 const one = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows[0] as R
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
 const head = async () => Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
@@ -98,13 +100,17 @@ test('the app role cannot write the log', async () => {
   await assert.rejects(app.query('DELETE FROM cella.guard'), /permission denied/)
 })
 
-test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and seats her in the assembly', async () => {
+test('m-2026-012 closes on 31 October and, in the same transaction, admits Inès and seats her in the assembly, an effect citing the close', async () => {
   await on('2026-10-31')
-  const done = await close({ motion: 'm-2026-012' }, as(camille))
-  assert.equal(done.state, 'settled')
-  assert.equal(done.state === 'settled' && done.entry, 4)
-  const seat = done.state === 'settled' ? done.value.admitted[0]?.seat : 0
-  assert.deepEqual(done.state === 'settled' && done.value.admitted, [{ member: ines, shares: 20, seat }])
+  const closed = await close({ motion: 'm-2026-012' }, as(camille))
+  assert.equal(closed.state, 'settled')
+  assert.equal(closed.state === 'settled' && closed.entry, 4)
+  const [admitted, ...rest] = done('motion:motion:close', closed).then
+  assert.deepEqual(rest, [])
+  assert.deepEqual([admitted.op, admitted.state, admitted.entry], ['membership:member:admit', 'settled', 5])
+  assert.deepEqual(admitted.then.map((d) => [d.op, d.state, d.entry]), [['account:capital:subscribe', 'settled', 6]])
+  const effect = await one<{ cause: string; receipt: string | null; form: { seat: number; member: string } }>('SELECT cause, receipt, form FROM cella.log WHERE n = 5')
+  assert.deepEqual([effect.cause, effect.receipt, effect.form.member], ['4', null, ines])
 
   assert.deepEqual(await status(ines), { status: 'active', since: '2026-10-31', shares: 20 })
   const sits = await one<{ circle: string; role: string; since: string }>(
@@ -125,7 +131,7 @@ test('m-2026-012 closes on 31 October and, in the same verdict, admits Inès and
   const late = await vote({ motion: 'm-2026-012', member: hugo, stance: 'object' }, as(hugo))
   assert.equal(late.state, 'refused', 'a confluent write may be refused at rung 1')
   assert.match(late.state === 'refused' ? late.reason : '', /m-2026-012 is closed/)
-  assert.equal(await head(), 4)
+  assert.equal(await head(), 6)
 })
 
 test('a seat no motion gives is refused: not twice, not one the motion does not name', async () => {
@@ -136,7 +142,7 @@ test('a seat no motion gives is refused: not twice, not one the motion does not 
   assert.match(other.state === 'refused' ? other.reason : '', /m-2026-012 does not seat malik@lanterne\.example in ag as member/)
   const open = await add({ circle: 'ag', member: ines, role: 'member', motion: 'm-2026-011' }, as(camille))
   assert.match(open.state === 'refused' ? open.reason : '', /m-2026-011 is not closed/)
-  assert.equal(await head(), 4)
+  assert.equal(await head(), 6)
 })
 
 test('seated in the assembly, Inès edits a document from the phone she took up her invitation on', async () => {
@@ -149,14 +155,14 @@ test('seated in the assembly, Inès edits a document from the phone she took up 
   const phone: Deps = { db: reader(app, ines), actor: ines, sign: signer(scope, ines, fixture(ines, 'phone')) }
   const edited = await edit({ document: 'internal-rules', update: doc.export({ mode: 'update', from }) }, phone)
   assert.equal(edited.state, 'settled')
-  assert.equal(edited.state === 'settled' && edited.entry, 5)
+  assert.equal(edited.state === 'settled' && edited.entry, 7)
 })
 
 test('m-2026-011, which Malik blocks, closes admitting no one, and admitting under it is refused', async () => {
   await on('2026-11-09')
-  const done = await close({ motion: 'm-2026-011' }, as(camille))
-  assert.equal(done.state, 'settled')
-  assert.deepEqual(done.state === 'settled' && done.value.admitted, [])
+  const closed = await close({ motion: 'm-2026-011' }, as(camille))
+  assert.equal(closed.state, 'settled')
+  assert.deepEqual(done('motion:motion:close', closed).then, [])
   assert.equal(await passes('m-2026-011'), false)
 
   const since = (await status(ines)).since
@@ -169,7 +175,7 @@ test('m-2026-011, which Malik blocks, closes admitting no one, and admitting und
   assert.deepEqual(await status(ines), { status: 'active', since, shares: 20 })
 
   const log = await one<{ count: string; max: string }>('SELECT count(*), max(n) FROM cella.log')
-  assert.deepEqual([Number(log.count), Number(log.max), await head()], [6, 6, 6])
+  assert.deepEqual([Number(log.count), Number(log.max), await head()], [8, 8, 8])
 })
 
 test('the log verifies, records its guards, and catches tampering', async () => {

@@ -43,7 +43,7 @@ export async function document(db: Db, id: string): Promise<Page | null> {
   )
   const updates = await db.query<Update>(
     `SELECT receipt::text AS id, receipt::int AS receipt, author, to_char(at, 'YYYY-MM-DD') AS at
-     FROM document.update WHERE document = $1 ORDER BY receipt DESC`,
+     FROM document.update WHERE document = $1 ORDER BY receipt DESC, n DESC`,
     [id],
   )
   const doc = await merged(db, id)

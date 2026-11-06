@@ -18,14 +18,20 @@ impl Repo {
         let here = env::current_dir().ok();
         let found = here.iter().flat_map(|d| d.ancestors()).find(|d| is_root(d));
         if let Some(root) = found {
-            return Ok(Self { root: root.to_path_buf() });
+            return Ok(Self {
+                root: root.to_path_buf(),
+            });
         }
         let built = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
         if is_root(&built) {
-            let root = built.canonicalize().map_err(|e| Fail::new(format!("{}: {e}", built.display())))?;
+            let root = built
+                .canonicalize()
+                .map_err(|e| Fail::new(format!("{}: {e}", built.display())))?;
             return Ok(Self { root });
         }
-        Err(Fail::new("no cella workspace here or above, nor where this binary was built"))
+        Err(Fail::new(
+            "no cella workspace here or above, nor where this binary was built",
+        ))
     }
 
     /// A command run from the workspace root.

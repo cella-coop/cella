@@ -40,12 +40,22 @@ fn random() -> Zeroizing<[u8; 32]> {
 pub fn write(path: &Path, bytes: &[u8]) -> Result {
     let fail = |e: std::io::Error| {
         if e.kind() == ErrorKind::AlreadyExists {
-            return Fail::new(format!("{} exists; a key is never overwritten", path.display()));
+            return Fail::new(format!(
+                "{} exists; a key is never overwritten",
+                path.display()
+            ));
         }
         Fail::new(format!("{}: {e}", path.display()))
     };
-    let mut file = OpenOptions::new().write(true).create_new(true).mode(0o600).open(path).map_err(fail)?;
-    file.write_all(bytes).and_then(|()| file.sync_all()).map_err(fail)
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .open(path)
+        .map_err(fail)?;
+    file.write_all(bytes)
+        .and_then(|()| file.sync_all())
+        .map_err(fail)
 }
 
 fn hex(bytes: &[u8]) -> String {

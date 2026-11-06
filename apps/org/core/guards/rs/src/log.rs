@@ -63,7 +63,14 @@ impl Receipt {
     /// The member's request as signed, in `scope`.
     #[must_use]
     pub fn request<'a>(&'a self, scope: &'a str) -> Request<'a> {
-        Request { scope, op: &self.op, actor: &self.actor, device: self.device, digest: self.request, nonce: &self.nonce }
+        Request {
+            scope,
+            op: &self.op,
+            actor: &self.actor,
+            device: self.device,
+            digest: self.request,
+            nonce: &self.nonce,
+        }
     }
 }
 
@@ -97,7 +104,11 @@ pub enum Basis {
     Receipt { n: i64, hash: [u8; 32] },
     /// The entry this effect follows, by number and hash, and whether the
     /// effect settled or was forgone.
-    Cause { n: i64, hash: [u8; 32], settled: bool },
+    Cause {
+        n: i64,
+        hash: [u8; 32],
+        settled: bool,
+    },
 }
 
 /// How many effects deep a write goes: an effect's cause is fewer than
@@ -165,7 +176,10 @@ pub fn may_follow<'a>(
     cause: i64,
     settles: bool,
 ) -> std::result::Result<(&'a Written, u8), Unfollowed> {
-    let c = write.iter().find(|w| w.n == cause).ok_or(Unfollowed::Elsewhere)?;
+    let c = write
+        .iter()
+        .find(|w| w.n == cause)
+        .ok_or(Unfollowed::Elsewhere)?;
     if settles && !c.settled {
         return Err(Unfollowed::Forgone);
     }
@@ -186,7 +200,11 @@ pub fn lacking<'a>(write: &'a [Written], follows: &'a [Follows]) -> Option<(&'a 
         follows
             .iter()
             .filter(|f| f.required && f.cause == w.op && w.n >= f.since)
-            .find(|f| !write.iter().any(|e| e.settled && e.cause == Some(w.n) && e.op == f.op))
+            .find(|f| {
+                !write
+                    .iter()
+                    .any(|e| e.settled && e.cause == Some(w.n) && e.op == f.op)
+            })
             .map(|f| (w, f.op.as_str()))
     })
 }
@@ -234,12 +252,18 @@ fn write(v: &Value, out: &mut String) -> Result<()> {
 
 pub fn payload_digest(v: &Value) -> Result<[u8; 32]> {
     let text = canonical(v)?;
-    Ok(*blake3::Hasher::new_derive_key(PAYLOAD).update(text.as_bytes()).finalize().as_bytes())
+    Ok(*blake3::Hasher::new_derive_key(PAYLOAD)
+        .update(text.as_bytes())
+        .finalize()
+        .as_bytes())
 }
 
 #[must_use]
 pub fn guard_digest(text: &str) -> [u8; 32] {
-    *blake3::Hasher::new_derive_key(GUARD).update(text.as_bytes()).finalize().as_bytes()
+    *blake3::Hasher::new_derive_key(GUARD)
+        .update(text.as_bytes())
+        .finalize()
+        .as_bytes()
 }
 
 fn check_date(d: &str) -> Result<()> {
@@ -253,7 +277,11 @@ fn check_date(d: &str) -> Result<()> {
         && digits(8..10)
         && (1..=12).contains(&((b[5] - b'0') * 10 + (b[6] - b'0')))
         && (1..=31).contains(&((b[8] - b'0') * 10 + (b[9] - b'0')));
-    if ok { Ok(()) } else { Err(Error::Date(d.to_string())) }
+    if ok {
+        Ok(())
+    } else {
+        Err(Error::Date(d.to_string()))
+    }
 }
 
 fn field(h: &mut blake3::Hasher, bytes: &[u8]) {
@@ -355,18 +383,33 @@ impl Chain {
     pub fn new(signers: &[Signer]) -> Result<Self> {
         let mut out = Vec::with_capacity(signers.len());
         for (i, s) in signers.iter().enumerate() {
-            let expected = i32::try_from(i + 1).map_err(|_| Error::Key("too many signers".into()))?;
+            let expected =
+                i32::try_from(i + 1).map_err(|_| Error::Key("too many signers".into()))?;
             if s.id != expected {
-                return Err(Error::Key(format!("signer {} where {expected} was due: ids run from 1 with no gap", s.id)));
+                return Err(Error::Key(format!(
+                    "signer {} where {expected} was due: ids run from 1 with no gap",
+                    s.id
+                )));
             }
             let after = out.last().map_or(0, |&(_, since, _)| since);
             if (i == 0 && s.since != 1) || s.since <= after {
-                return Err(Error::Key(format!("signer {} takes office at entry {}, which is not after its predecessor's", s.id, s.since)));
+                return Err(Error::Key(format!(
+                    "signer {} takes office at entry {}, which is not after its predecessor's",
+                    s.id, s.since
+                )));
             }
-            let public = VerifyingKey::from_bytes(&s.public).map_err(|e| Error::Key(e.to_string()))?;
+            let public =
+                VerifyingKey::from_bytes(&s.public).map_err(|e| Error::Key(e.to_string()))?;
             out.push((s.id, s.since, public));
         }
-        Ok(Self { signers: out, prev: GENESIS, next: 1, follows: Vec::new(), write: Vec::new(), actor: String::new() })
+        Ok(Self {
+            signers: out,
+            prev: GENESIS,
+            next: 1,
+            follows: Vec::new(),
+            write: Vec::new(),
+            actor: String::new(),
+        })
     }
 
     /// The chain, judging effects by `follows`, as `cella.follows` holds it.
@@ -382,7 +425,10 @@ impl Chain {
     pub fn finish(&mut self) -> std::result::Result<(), Broken> {
         let written = std::mem::take(&mut self.write);
         match lacking(&written, &self.follows) {
-            Some((w, _)) => Err(Broken { n: w.n, why: "a settled entry lacks an effect it requires" }),
+            Some((w, _)) => Err(Broken {
+                n: w.n,
+                why: "a settled entry lacks an effect it requires",
+            }),
             None => Ok(()),
         }
     }
@@ -393,18 +439,39 @@ impl Chain {
             Basis::Receipt { .. } => {
                 self.finish()?;
                 self.actor.clone_from(&e.actor);
-                Written { n: e.n, op: e.op.clone(), hash, cause: None, settled: true, depth: 0 }
+                Written {
+                    n: e.n,
+                    op: e.op.clone(),
+                    hash,
+                    cause: None,
+                    settled: true,
+                    depth: 0,
+                }
             }
-            Basis::Cause { n, hash: cited, settled } => {
+            Basis::Cause {
+                n,
+                hash: cited,
+                settled,
+            } => {
                 let broken = |why| Broken { n: e.n, why };
-                let (cause, depth) = may_follow(&self.write, &self.follows, &e.op, *n, *settled).map_err(|u| broken(u.why()))?;
+                let (cause, depth) = may_follow(&self.write, &self.follows, &e.op, *n, *settled)
+                    .map_err(|u| broken(u.why()))?;
                 if cause.hash != *cited {
                     return Err(broken("an effect names its cause by another hash"));
                 }
                 if e.actor != self.actor {
-                    return Err(broken("an effect acts for another actor than its decision's"));
+                    return Err(broken(
+                        "an effect acts for another actor than its decision's",
+                    ));
                 }
-                Written { n: e.n, op: e.op.clone(), hash, cause: Some(*n), settled: *settled, depth }
+                Written {
+                    n: e.n,
+                    op: e.op.clone(),
+                    hash,
+                    cause: Some(*n),
+                    settled: *settled,
+                    depth,
+                }
             }
         };
         self.write.push(written);
@@ -413,7 +480,12 @@ impl Chain {
 
     /// The key in office at entry `n`, if it is the one `key` names.
     fn signer(&self, n: i64, key: i32) -> std::result::Result<&VerifyingKey, &'static str> {
-        let (id, _, public) = self.signers.iter().rev().find(|&&(_, since, _)| since <= n).ok_or("no signer holds this entry")?;
+        let (id, _, public) = self
+            .signers
+            .iter()
+            .rev()
+            .find(|&&(_, since, _)| since <= n)
+            .ok_or("no signer holds this entry")?;
         if *id != key {
             return Err("signed by a key that was not in office");
         }
@@ -421,7 +493,14 @@ impl Chain {
     }
 
     /// Checks entry `e`, signed by the signer `key`.
-    pub fn check(&mut self, e: &Entry, key: i32, prev: &[u8], hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
+    pub fn check(
+        &mut self,
+        e: &Entry,
+        key: i32,
+        prev: &[u8],
+        hash: &[u8],
+        sig: &[u8],
+    ) -> std::result::Result<(), Broken> {
         let broken = |why| Broken { n: e.n, why };
         if e.n != self.next {
             return Err(broken("gap in numbering"));
@@ -448,7 +527,15 @@ impl Chain {
     /// hash, the notary's signature on it, the member's signature on the
     /// request in `scope`, and that it is the entry's: the same op, actor
     /// and payload.
-    pub fn check_receipt(&self, scope: &str, e: &Entry, key: i32, r: &Receipt, hash: &[u8], sig: &[u8]) -> std::result::Result<(), Broken> {
+    pub fn check_receipt(
+        &self,
+        scope: &str,
+        e: &Entry,
+        key: i32,
+        r: &Receipt,
+        hash: &[u8],
+        sig: &[u8],
+    ) -> std::result::Result<(), Broken> {
         let broken = |why| Broken { n: e.n, why };
         let want = r.hash();
         if e.basis != (Basis::Receipt { n: r.n, hash: want }) || hash != want {
@@ -491,8 +578,12 @@ mod tests {
             op: "membership:member:admit".into(),
             actor: "camille@lanterne.example".into(),
             date: "2026-10-31".into(),
-            payload: payload_digest(&json!({"member": "ines@lanterne.example", "shares": 20})).unwrap(),
-            basis: Basis::Receipt { n: n + 40, hash: [n.to_le_bytes()[0]; 32] },
+            payload: payload_digest(&json!({"member": "ines@lanterne.example", "shares": 20}))
+                .unwrap(),
+            basis: Basis::Receipt {
+                n: n + 40,
+                hash: [n.to_le_bytes()[0]; 32],
+            },
             guards: vec![Guard {
                 owner: "membership-motion".into(),
                 function: "membership_motion.admit(jsonb)".into(),
@@ -506,7 +597,10 @@ mod tests {
         let a = canonical(&json!({"b": 1, "a": [true, null, "x"]})).unwrap();
         assert_eq!(a, r#"{"a":[true,null,"x"],"b":1}"#);
         assert!(canonical(&json!({"x": 1.5})).is_err());
-        assert_eq!(payload_digest(&json!({"b": 1, "a": 2})), payload_digest(&json!({"a": 2, "b": 1})));
+        assert_eq!(
+            payload_digest(&json!({"b": 1, "a": 2})),
+            payload_digest(&json!({"a": 2, "b": 1}))
+        );
     }
 
     #[test]
@@ -530,23 +624,48 @@ mod tests {
         let (e, p, h, s) = &log[0];
         let mut forged = e.clone();
         forged.actor = "mallory@lanterne.example".into();
-        assert_eq!(chain.check(&forged, 1, p, h, s), Err(Broken { n: 1, why: "hash mismatch" }));
+        assert_eq!(
+            chain.check(&forged, 1, p, h, s),
+            Err(Broken {
+                n: 1,
+                why: "hash mismatch"
+            })
+        );
         let (e, p, h, s) = &log[1];
-        assert_eq!(chain.check(e, 1, p, h, s), Err(Broken { n: 2, why: "gap in numbering" }));
+        assert_eq!(
+            chain.check(e, 1, p, h, s),
+            Err(Broken {
+                n: 2,
+                why: "gap in numbering"
+            })
+        );
 
         let other = Key::from_seed(&[8; 32]).unwrap();
         let mut chain = Chain::new(&[signer(1, &other, 1)]).unwrap();
         let (e, p, h, s) = &log[0];
-        assert_eq!(chain.check(e, 1, p, h, s), Err(Broken { n: 1, why: "signature invalid" }));
+        assert_eq!(
+            chain.check(e, 1, p, h, s),
+            Err(Broken {
+                n: 1,
+                why: "signature invalid"
+            })
+        );
     }
 
     fn signer(id: i32, key: &Key, since: i64) -> Signer {
-        Signer { id, public: key.public(), since }
+        Signer {
+            id,
+            public: key.public(),
+            since,
+        }
     }
 
     #[test]
     fn a_rotated_key_signs_from_its_entry_and_the_retired_one_never_again() {
-        let (first, second) = (Key::from_seed(&[7; 32]).unwrap(), Key::from_seed(&[8; 32]).unwrap());
+        let (first, second) = (
+            Key::from_seed(&[7; 32]).unwrap(),
+            Key::from_seed(&[8; 32]).unwrap(),
+        );
         let mut log = Vec::new();
         let mut prev = GENESIS;
         for n in 1..=4 {
@@ -570,8 +689,20 @@ mod tests {
             chain.check(e, *id, p, h, s).unwrap();
         }
         let late = first.sign(h);
-        assert_eq!(chain.check(e, 1, p, h, &late), Err(Broken { n: 3, why: "signed by a key that was not in office" }));
-        assert_eq!(chain.check(e, 2, p, h, &late), Err(Broken { n: 3, why: "signature invalid" }));
+        assert_eq!(
+            chain.check(e, 1, p, h, &late),
+            Err(Broken {
+                n: 3,
+                why: "signed by a key that was not in office"
+            })
+        );
+        assert_eq!(
+            chain.check(e, 2, p, h, &late),
+            Err(Broken {
+                n: 3,
+                why: "signature invalid"
+            })
+        );
 
         assert!(Chain::new(&[signer(2, &first, 1)]).is_err());
         assert!(Chain::new(&[signer(1, &first, 2)]).is_err());
@@ -585,7 +716,11 @@ mod tests {
 
         let notary = Key::from_seed(&[7; 32]).unwrap();
         let device = SigningKey::from_bytes(&[9; 32]);
-        let request = request_digest(&json!({"member": "ines@lanterne.example", "shares": 20, "motion": "m-2026-012"}), &"ab".repeat(32)).unwrap();
+        let request = request_digest(
+            &json!({"member": "ines@lanterne.example", "shares": 20, "motion": "m-2026-012"}),
+            &"ab".repeat(32),
+        )
+        .unwrap();
         let mut r = Receipt {
             n: 41,
             op: "membership:member:admit".into(),
@@ -597,24 +732,47 @@ mod tests {
             payload: entry(1).payload,
             time: "2026-10-31T09:00:00.000000Z".into(),
         };
-        r.signature = device.sign(r.request("lanterne.example").message().unwrap().as_bytes()).to_bytes();
+        r.signature = device
+            .sign(r.request("lanterne.example").message().unwrap().as_bytes())
+            .to_bytes();
         let mut e = entry(1);
-        e.basis = Basis::Receipt { n: 41, hash: r.hash() };
+        e.basis = Basis::Receipt {
+            n: 41,
+            hash: r.hash(),
+        };
         let chain = Chain::new(&[signer(1, &notary, 1)]).unwrap();
         let sig = notary.sign(&r.hash());
-        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &sig), Ok(()));
+        assert_eq!(
+            chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &sig),
+            Ok(())
+        );
 
         let broken = |why| Err(Broken { n: 1, why });
-        assert_eq!(chain.check_receipt("other.example", &e, 1, &r, &r.hash(), &sig), broken("the member's signature does not verify"));
+        assert_eq!(
+            chain.check_receipt("other.example", &e, 1, &r, &r.hash(), &sig),
+            broken("the member's signature does not verify")
+        );
         let mut late = r.clone();
         late.time = "2026-11-01T09:00:00.000000Z".into();
-        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &late, &r.hash(), &sig), broken("receipt hash mismatch"));
+        assert_eq!(
+            chain.check_receipt("lanterne.example", &e, 1, &late, &r.hash(), &sig),
+            broken("receipt hash mismatch")
+        );
         let mut other = e.clone();
         other.op = "membership:member:exclude".into();
-        assert_eq!(chain.check_receipt("lanterne.example", &other, 1, &r, &r.hash(), &sig), broken("the receipt is another write's"));
+        assert_eq!(
+            chain.check_receipt("lanterne.example", &other, 1, &r, &r.hash(), &sig),
+            broken("the receipt is another write's")
+        );
         let forged = Key::from_seed(&[8; 32]).unwrap().sign(&r.hash());
-        assert_eq!(chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &forged), broken("receipt signature invalid"));
-        assert_eq!(chain.check_receipt("lanterne.example", &e, 2, &r, &r.hash(), &sig), broken("signed by a key that was not in office"));
+        assert_eq!(
+            chain.check_receipt("lanterne.example", &e, 1, &r, &r.hash(), &forged),
+            broken("receipt signature invalid")
+        );
+        assert_eq!(
+            chain.check_receipt("lanterne.example", &e, 2, &r, &r.hash(), &sig),
+            broken("signed by a key that was not in office")
+        );
     }
 
     const CLOSE: &str = "motion:motion:close";
@@ -623,9 +781,24 @@ mod tests {
 
     fn follows() -> Vec<Follows> {
         vec![
-            Follows { cause: CLOSE.into(), op: ADMIT.into(), required: false, since: 1 },
-            Follows { cause: ADMIT.into(), op: SUBSCRIBE.into(), required: true, since: 1 },
-            Follows { cause: SUBSCRIBE.into(), op: SUBSCRIBE.into(), required: false, since: 1 },
+            Follows {
+                cause: CLOSE.into(),
+                op: ADMIT.into(),
+                required: false,
+                since: 1,
+            },
+            Follows {
+                cause: ADMIT.into(),
+                op: SUBSCRIBE.into(),
+                required: true,
+                since: 1,
+            },
+            Follows {
+                cause: SUBSCRIBE.into(),
+                op: SUBSCRIBE.into(),
+                required: false,
+                since: 1,
+            },
         ]
     }
 
@@ -640,8 +813,14 @@ mod tests {
             let mut e = entry(i64::try_from(i).unwrap() + 1);
             e.op = (*op).into();
             if let Some((cause, settled)) = *effect {
-                let hash = log.get(usize::try_from(cause).unwrap() - 1).map_or([1; 32], |c| c.2);
-                e.basis = Basis::Cause { n: cause, hash, settled };
+                let hash = log
+                    .get(usize::try_from(cause).unwrap() - 1)
+                    .map_or([1; 32], |c| c.2);
+                e.basis = Basis::Cause {
+                    n: cause,
+                    hash,
+                    settled,
+                };
             }
             let h = hash(&prev, &e).unwrap();
             log.push((e, prev, h, key.sign(&h)));
@@ -652,7 +831,9 @@ mod tests {
 
     fn walk(log: &[(Entry, [u8; 32], [u8; 32], [u8; 64])]) -> std::result::Result<i64, Broken> {
         let key = Key::from_seed(&[7; 32]).unwrap();
-        let mut chain = Chain::new(&[signer(1, &key, 1)]).unwrap().following(follows());
+        let mut chain = Chain::new(&[signer(1, &key, 1)])
+            .unwrap()
+            .following(follows());
         for (e, p, h, s) in log {
             chain.check(e, 1, p, h, s)?;
         }
@@ -662,10 +843,19 @@ mod tests {
 
     #[test]
     fn a_decision_and_its_effects_verify_as_one_write() {
-        let log = written(&[(CLOSE, None), (ADMIT, Some((1, true))), (SUBSCRIBE, Some((2, true))), (CLOSE, None)]);
+        let log = written(&[
+            (CLOSE, None),
+            (ADMIT, Some((1, true))),
+            (SUBSCRIBE, Some((2, true))),
+            (CLOSE, None),
+        ]);
         assert_eq!(walk(&log), Ok(4));
         // A refused subscription forgoes the admission it follows.
-        let log = written(&[(CLOSE, None), (ADMIT, Some((1, false))), (SUBSCRIBE, Some((2, false)))]);
+        let log = written(&[
+            (CLOSE, None),
+            (ADMIT, Some((1, false))),
+            (SUBSCRIBE, Some((2, false))),
+        ]);
         assert_eq!(walk(&log), Ok(3));
     }
 
@@ -682,49 +872,117 @@ mod tests {
     fn an_effect_follows_only_an_entry_of_its_own_write() {
         let broken = |n, why| Err(Broken { n, why });
         let elsewhere = written(&[(CLOSE, None), (CLOSE, None), (ADMIT, Some((1, true)))]);
-        assert_eq!(walk(&elsewhere), broken(3, "an effect cites no entry of its own write"));
+        assert_eq!(
+            walk(&elsewhere),
+            broken(3, "an effect cites no entry of its own write")
+        );
         let first = written(&[(ADMIT, Some((1, true)))]);
-        assert_eq!(walk(&first), broken(1, "an effect cites no entry of its own write"));
+        assert_eq!(
+            walk(&first),
+            broken(1, "an effect cites no entry of its own write")
+        );
         let mut moved = written(&[(CLOSE, None), (ADMIT, Some((1, true)))]);
-        moved[1].0.basis = Basis::Cause { n: 1, hash: [3; 32], settled: true };
+        moved[1].0.basis = Basis::Cause {
+            n: 1,
+            hash: [3; 32],
+            settled: true,
+        };
         let key = Key::from_seed(&[7; 32]).unwrap();
         moved[1].2 = hash(&moved[1].1, &moved[1].0).unwrap();
         moved[1].3 = key.sign(&moved[1].2);
-        assert_eq!(walk(&moved), broken(2, "an effect names its cause by another hash"));
-        let mut impersonating = written(&[(CLOSE, None), (ADMIT, Some((1, true))), (SUBSCRIBE, Some((2, true)))]);
+        assert_eq!(
+            walk(&moved),
+            broken(2, "an effect names its cause by another hash")
+        );
+        let mut impersonating = written(&[
+            (CLOSE, None),
+            (ADMIT, Some((1, true))),
+            (SUBSCRIBE, Some((2, true))),
+        ]);
         impersonating[2].0.actor = "mallory@lanterne.example".into();
         impersonating[2].2 = hash(&impersonating[2].1, &impersonating[2].0).unwrap();
         impersonating[2].3 = key.sign(&impersonating[2].2);
-        assert_eq!(walk(&impersonating), broken(3, "an effect acts for another actor than its decision's"));
+        assert_eq!(
+            walk(&impersonating),
+            broken(3, "an effect acts for another actor than its decision's")
+        );
         let unregistered = written(&[(CLOSE, None), (SUBSCRIBE, Some((1, true)))]);
-        assert_eq!(walk(&unregistered), broken(2, "an effect's op may not follow its cause's"));
-        let on_forgone = written(&[(CLOSE, None), (ADMIT, Some((1, false))), (SUBSCRIBE, Some((2, true)))]);
-        assert_eq!(walk(&on_forgone), broken(3, "a settled effect cites a forgone entry"));
+        assert_eq!(
+            walk(&unregistered),
+            broken(2, "an effect's op may not follow its cause's")
+        );
+        let on_forgone = written(&[
+            (CLOSE, None),
+            (ADMIT, Some((1, false))),
+            (SUBSCRIBE, Some((2, true))),
+        ]);
+        assert_eq!(
+            walk(&on_forgone),
+            broken(3, "a settled effect cites a forgone entry")
+        );
     }
 
     #[test]
     fn a_write_goes_five_effects_deep() {
-        let mut rows = vec![(CLOSE, None), (ADMIT, Some((1, true))), (SUBSCRIBE, Some((2, true)))];
+        let mut rows = vec![
+            (CLOSE, None),
+            (ADMIT, Some((1, true))),
+            (SUBSCRIBE, Some((2, true))),
+        ];
         for n in 3..=5 {
             rows.push((SUBSCRIBE, Some((n, true))));
         }
         assert_eq!(walk(&written(&rows)), Ok(6));
         rows.push((SUBSCRIBE, Some((6, true))));
-        assert_eq!(walk(&written(&rows)), Err(Broken { n: 7, why: "an effect is deeper than a write goes" }));
+        assert_eq!(
+            walk(&written(&rows)),
+            Err(Broken {
+                n: 7,
+                why: "an effect is deeper than a write goes"
+            })
+        );
     }
 
     #[test]
     fn a_settled_entry_never_lacks_an_effect_it_requires() {
         let lacks = |rows: &[(&str, Option<(i64, bool)>)]| walk(&written(rows));
-        let broken = |n| Err(Broken { n, why: "a settled entry lacks an effect it requires" });
-        assert_eq!(lacks(&[(CLOSE, None), (ADMIT, Some((1, true))), (CLOSE, None)]), broken(2));
-        assert_eq!(lacks(&[(CLOSE, None), (ADMIT, Some((1, true))), (SUBSCRIBE, Some((2, false)))]), broken(2));
+        let broken = |n| {
+            Err(Broken {
+                n,
+                why: "a settled entry lacks an effect it requires",
+            })
+        };
+        assert_eq!(
+            lacks(&[(CLOSE, None), (ADMIT, Some((1, true))), (CLOSE, None)]),
+            broken(2)
+        );
+        assert_eq!(
+            lacks(&[
+                (CLOSE, None),
+                (ADMIT, Some((1, true))),
+                (SUBSCRIBE, Some((2, false)))
+            ]),
+            broken(2)
+        );
         assert_eq!(lacks(&[(ADMIT, None)]), broken(1));
         let follows = follows();
-        let write = [Written { n: 1, op: ADMIT.into(), hash: [0; 32], cause: None, settled: true, depth: 0 }];
-        assert_eq!(lacking(&write, &follows).map(|(w, op)| (w.n, op)), Some((1, SUBSCRIBE)));
+        let write = [Written {
+            n: 1,
+            op: ADMIT.into(),
+            hash: [0; 32],
+            cause: None,
+            settled: true,
+            depth: 0,
+        }];
+        assert_eq!(
+            lacking(&write, &follows).map(|(w, op)| (w.n, op)),
+            Some((1, SUBSCRIBE))
+        );
         // A requirement registered after an entry does not bind it.
-        let later: Vec<Follows> = follows.into_iter().map(|f| Follows { since: 2, ..f }).collect();
+        let later: Vec<Follows> = follows
+            .into_iter()
+            .map(|f| Follows { since: 2, ..f })
+            .collect();
         assert_eq!(lacking(&write, &later), None);
     }
 

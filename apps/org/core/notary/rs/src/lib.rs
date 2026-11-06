@@ -25,14 +25,19 @@ pub mod pg_test {
     use std::path::PathBuf;
 
     fn dir() -> PathBuf {
-        std::env::var_os("CELLA_NOTARY_TEST").map_or_else(|| panic!("CELLA_NOTARY_TEST is not set: run `cella test notary`"), PathBuf::from)
+        std::env::var_os("CELLA_NOTARY_TEST").map_or_else(
+            || panic!("CELLA_NOTARY_TEST is not set: run `cella test notary`"),
+            PathBuf::from,
+        )
     }
 
     pub fn setup(_options: Vec<&str>) {
         let dir = dir();
         std::fs::create_dir_all(&dir).expect("the test directory");
-        std::fs::write(dir.join("notary.key"), crate::tests::NOTARY_SEED).expect("the notary's key file");
-        std::fs::write(dir.join("vault.key"), crate::tests::VAULT_KEY).expect("the vault's key file");
+        std::fs::write(dir.join("notary.key"), crate::tests::NOTARY_SEED)
+            .expect("the notary's key file");
+        std::fs::write(dir.join("vault.key"), crate::tests::VAULT_KEY)
+            .expect("the vault's key file");
     }
 
     pub fn postgresql_conf_options() -> Vec<&'static str> {
@@ -56,9 +61,15 @@ pub mod pg_test {
     fn every_pg_test_takes_the_tests_lock() {
         for test in include_str!("tests.rs").split("#[pg_test").skip(1) {
             let (head, body) = test.split_once('{').expect("a test's body");
-            let name = head.split_once("fn ").map_or(head, |(_, n)| n).trim_end_matches(|c: char| c == '(' || c == ')' || c.is_whitespace());
+            let name = head
+                .split_once("fn ")
+                .map_or(head, |(_, n)| n)
+                .trim_end_matches(|c: char| c == '(' || c == ')' || c.is_whitespace());
             let body = body.trim_start();
-            assert!(body.starts_with("beside();") || body.starts_with("alone();"), "the test {name} opens without taking the tests' lock: begin it with `beside();`, or `alone();` if it drops what the others read");
+            assert!(
+                body.starts_with("beside();") || body.starts_with("alone();"),
+                "the test {name} opens without taking the tests' lock: begin it with `beside();`, or `alone();` if it drops what the others read"
+            );
         }
     }
 }
@@ -69,16 +80,19 @@ pub(crate) static KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CS
 /// The vault's own key, 32 random bytes in a file only the server reads,
 /// apart from the notary's seed: the wrap key sealing the vault's keys is
 /// derived from it.
-pub(crate) static VAULT_KEY_FILE: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+pub(crate) static VAULT_KEY_FILE: GucSetting<Option<CString>> =
+    GucSetting::<Option<CString>>::new(None);
 
 /// The vault key file before a rotation, read only to open what is still
 /// sealed under it until `cella.vault_rewrap()` has moved it.
-pub(crate) static VAULT_KEY_PREVIOUS: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+pub(crate) static VAULT_KEY_PREVIOUS: GucSetting<Option<CString>> =
+    GucSetting::<Option<CString>>::new(None);
 
 /// The vault key files of earlier rotations, comma-separated, kept until
 /// no restore point older than their rotation is kept: the notary never
 /// opens under them, and `cella backup` carries each.
-pub(crate) static VAULT_KEYS_KEPT: GucSetting<Option<CString>> = GucSetting::<Option<CString>>::new(None);
+pub(crate) static VAULT_KEYS_KEPT: GucSetting<Option<CString>> =
+    GucSetting::<Option<CString>>::new(None);
 
 /// A fixed verdict date, for fixtures and tests; unset, the notary reads
 /// its clock once per transaction.

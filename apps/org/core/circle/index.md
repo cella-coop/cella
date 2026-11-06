@@ -718,6 +718,12 @@ the state before it (`sql/011-folds.sql`,
   id a write rolled back took is never taken again.
 - `circle:seat:remove` (`circle.fold_seat_remove`) ends the seat its
   entry names on the entry's day; one naming no seat, `0`, ends none.
+- `circle:role:seat` (`circle.fold_role_seat`) inserts the membership
+  of the circle whose member is the role, by the seat id, circle and
+  role its entry carries, from the entry's day.
+- `circle:role:unseat` (`circle.fold_role_unseat`) ends the membership
+  its entry names on the entry's day; one naming no seat, `0`, ends
+  none.
 - `circle:circle:message` (`circle.fold_message`) has no handler, so no
   entry of it is logged, and its fold refuses one rather than change
   nothing.

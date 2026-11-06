@@ -44,14 +44,16 @@ mod tests {
     /// Takes the tests' lock shared, as every test opens: it waits while
     /// one runs [`alone`], and lets go as its transaction rolls back.
     fn beside() {
-        Spi::run("SELECT pg_advisory_xact_lock_shared(hashtext('cella test notary'))").expect("the tests' lock, shared");
+        Spi::run("SELECT pg_advisory_xact_lock_shared(hashtext('cella test notary'))")
+            .expect("the tests' lock, shared");
     }
 
     /// Takes the tests' lock exclusive, as a test that drops what the others
     /// read opens: it waits for every test begun [`beside`] it, and none
     /// begins until it rolls back.
     fn alone() {
-        Spi::run("SELECT pg_advisory_xact_lock(hashtext('cella test notary'))").expect("the tests' lock, exclusive");
+        Spi::run("SELECT pg_advisory_xact_lock(hashtext('cella test notary'))")
+            .expect("the tests' lock, exclusive");
     }
 
     /// A member's device, from a TEST-ONLY seed.
@@ -118,11 +120,27 @@ $f$;
 
     /// What a handler passes as `signed`: the request, signed by `key` as
     /// `actor`'s device in `scope`.
-    fn signed_in(scope: &str, key: &SigningKey, op: &str, actor: &str, request: &Value, nonce: &str) -> Value {
+    fn signed_in(
+        scope: &str,
+        key: &SigningKey,
+        op: &str,
+        actor: &str,
+        request: &Value,
+        nonce: &str,
+    ) -> Value {
         let digest = sign::request_digest(request, SALT).expect("a digest");
         let device = key.verifying_key().to_bytes();
-        let r = Request { scope, op, actor, device, digest, nonce };
-        let sig = key.sign(r.message().expect("a message").as_bytes()).to_bytes();
+        let r = Request {
+            scope,
+            op,
+            actor,
+            device,
+            digest,
+            nonce,
+        };
+        let sig = key
+            .sign(r.message().expect("a message").as_bytes())
+            .to_bytes();
         json!({ "request": request, "device": hex(&device), "salt": SALT, "nonce": nonce, "sig": hex(&sig) })
     }
 
@@ -134,7 +152,12 @@ $f$;
     fn attempt(payload: &Value, actor: &str, signed: &Value) -> Option<String> {
         Spi::get_one_with_args::<String>(
             "SELECT t.attempt($1, $2, $3, $4)",
-            &[OP.into(), JsonB(payload.clone()).into(), actor.into(), JsonB(signed.clone()).into()],
+            &[
+                OP.into(),
+                JsonB(payload.clone()).into(),
+                actor.into(),
+                JsonB(signed.clone()).into(),
+            ],
         )
         .expect("an attempt")
     }
@@ -147,17 +170,30 @@ $f$;
     }
 
     fn head() -> i64 {
-        Spi::get_one::<i64>("SELECT coalesce((SELECT n FROM cella.head), 0)").expect("the head").expect("a number")
+        Spi::get_one::<i64>("SELECT coalesce((SELECT n FROM cella.head), 0)")
+            .expect("the head")
+            .expect("a number")
     }
 
     fn verifies() -> bool {
-        Spi::get_one::<bool>("SELECT cella.verify_log()").expect("verify_log").expect("a verdict")
+        Spi::get_one::<bool>("SELECT cella.verify_log()")
+            .expect("verify_log")
+            .expect("a verdict")
     }
 
     fn settle(cents: i64) -> i64 {
         let request = json!({ "cents": cents });
-        assert_eq!(attempt(&request, JULIEN, &signed(&device(1), JULIEN, &request, NONCE)), None);
-        Spi::get_one::<i64>("SELECT receipt FROM cella.log WHERE n = 1").expect("the entry").expect("its receipt")
+        assert_eq!(
+            attempt(
+                &request,
+                JULIEN,
+                &signed(&device(1), JULIEN, &request, NONCE)
+            ),
+            None
+        );
+        Spi::get_one::<i64>("SELECT receipt FROM cella.log WHERE n = 1")
+            .expect("the entry")
+            .expect("its receipt")
     }
 
     #[pg_test]
@@ -167,12 +203,29 @@ $f$;
         let receipt = settle(100);
         assert_eq!(head(), 1);
         assert!(verifies());
-        let salt = Spi::get_one_with_args::<String>("SELECT salt FROM cella.receipt WHERE n = $1", &[receipt.into()]);
+        let salt = Spi::get_one_with_args::<String>(
+            "SELECT salt FROM cella.receipt WHERE n = $1",
+            &[receipt.into()],
+        );
         assert_eq!(salt.expect("the salt").as_deref(), Some(SALT));
-        let signer = Spi::get_one::<Vec<u8>>("SELECT public FROM cella.signer WHERE id = (SELECT key FROM cella.log WHERE n = 1)");
-        assert_eq!(signer.expect("the signer"), Some(Key::from_seed(&NOTARY_SEED).expect("the seed").public().to_vec()));
+        let signer = Spi::get_one::<Vec<u8>>(
+            "SELECT public FROM cella.signer WHERE id = (SELECT key FROM cella.log WHERE n = 1)",
+        );
+        assert_eq!(
+            signer.expect("the signer"),
+            Some(
+                Key::from_seed(&NOTARY_SEED)
+                    .expect("the seed")
+                    .public()
+                    .to_vec()
+            )
+        );
         let kept = |n: i64, request: Value| {
-            Spi::get_one_with_args::<bool>("SELECT cella.signed($1, $2)", &[n.into(), JsonB(request).into()]).expect("signed")
+            Spi::get_one_with_args::<bool>(
+                "SELECT cella.signed($1, $2)",
+                &[n.into(), JsonB(request).into()],
+            )
+            .expect("signed")
         };
         assert_eq!(kept(receipt, json!({ "cents": 100 })), Some(true));
         assert_eq!(kept(receipt, json!({ "cents": 101 })), Some(false));
@@ -184,12 +237,17 @@ $f$;
         beside();
         scope();
         let public = |what: &str| {
-            Spi::get_one_with_args::<bool>("SELECT has_column_privilege('public', 'cella.receipt', $1, 'SELECT')", &[what.into()])
-                .expect("a privilege")
+            Spi::get_one_with_args::<bool>(
+                "SELECT has_column_privilege('public', 'cella.receipt', $1, 'SELECT')",
+                &[what.into()],
+            )
+            .expect("a privilege")
         };
         assert_eq!(public("salt"), Some(false));
         assert_eq!(public("request"), Some(true));
-        let call = Spi::get_one::<bool>("SELECT has_function_privilege('public', 'cella.signed(bigint, jsonb)', 'EXECUTE')");
+        let call = Spi::get_one::<bool>(
+            "SELECT has_function_privilege('public', 'cella.signed(bigint, jsonb)', 'EXECUTE')",
+        );
         assert_eq!(call.expect("a privilege"), Some(false));
     }
 
@@ -197,7 +255,12 @@ $f$;
     fn an_unsigned_write_is_refused() {
         beside();
         scope();
-        refused(&json!({ "cents": 100 }), JULIEN, &json!({}), "is not signed");
+        refused(
+            &json!({ "cents": 100 }),
+            JULIEN,
+            &json!({}),
+            "is not signed",
+        );
     }
 
     #[pg_test]
@@ -216,7 +279,12 @@ $f$;
         scope();
         let mut swapped = signed(&device(1), JULIEN, &json!({ "cents": 100 }), NONCE);
         swapped["request"] = json!({ "cents": 900 });
-        refused(&json!({ "cents": 900 }), JULIEN, &swapped, "the signature does not verify");
+        refused(
+            &json!({ "cents": 900 }),
+            JULIEN,
+            &swapped,
+            "the signature does not verify",
+        );
     }
 
     #[pg_test]
@@ -225,10 +293,32 @@ $f$;
         scope();
         let request = json!({ "cents": 100 });
         let elsewhere = signed_in("other.example", &device(1), OP, JULIEN, &request, NONCE);
-        refused(&request, JULIEN, &elsewhere, "the signature does not verify");
-        let another_op = signed_in(SCOPE, &device(1), "test:thing:drop", JULIEN, &request, NONCE);
-        refused(&request, JULIEN, &another_op, "the signature does not verify");
-        refused(&request, CAMILLE, &signed(&device(1), JULIEN, &request, NONCE), "the signature does not verify");
+        refused(
+            &request,
+            JULIEN,
+            &elsewhere,
+            "the signature does not verify",
+        );
+        let another_op = signed_in(
+            SCOPE,
+            &device(1),
+            "test:thing:drop",
+            JULIEN,
+            &request,
+            NONCE,
+        );
+        refused(
+            &request,
+            JULIEN,
+            &another_op,
+            "the signature does not verify",
+        );
+        refused(
+            &request,
+            CAMILLE,
+            &signed(&device(1), JULIEN, &request, NONCE),
+            "the signature does not verify",
+        );
     }
 
     #[pg_test]
@@ -237,8 +327,16 @@ $f$;
         scope();
         let request = json!({ "cents": 100, "note": "lunch" });
         let s = signed(&device(1), JULIEN, &request, NONCE);
-        refused(&json!({ "cents": 900 }), JULIEN, &s, "the payload's cents is not what the member signed");
-        assert_eq!(attempt(&json!({ "cents": 100, "entry": "7" }), JULIEN, &s), None);
+        refused(
+            &json!({ "cents": 900 }),
+            JULIEN,
+            &s,
+            "the payload's cents is not what the member signed",
+        );
+        assert_eq!(
+            attempt(&json!({ "cents": 100, "entry": "7" }), JULIEN, &s),
+            None
+        );
         assert_eq!(head(), 1);
     }
 
@@ -250,8 +348,12 @@ $f$;
         // The next write is another transaction's, which begins afresh.
         crate::notary::forget_begun();
         let again = json!({ "cents": 200 });
-        let error = attempt(&again, JULIEN, &signed(&device(1), JULIEN, &again, NONCE)).expect("a refusal");
-        assert!(error.starts_with("09000 ") && error.contains("was already counted"), "{error}");
+        let error =
+            attempt(&again, JULIEN, &signed(&device(1), JULIEN, &again, NONCE)).expect("a refusal");
+        assert!(
+            error.starts_with("09000 ") && error.contains("was already counted"),
+            "{error}"
+        );
         assert_eq!(head(), 1);
     }
 
@@ -261,7 +363,8 @@ $f$;
     }
 
     fn submits(actor: &str, signed: &Value) -> Option<String> {
-        let submit = format!("SELECT cella.submit('{OP}', '{{\"cents\": 100}}', '{actor}', '{signed}')");
+        let submit =
+            format!("SELECT cella.submit('{OP}', '{{\"cents\": 100}}', '{actor}', '{signed}')");
         tries(&submit)
     }
 
@@ -270,8 +373,12 @@ $f$;
         beside();
         scope();
         let request = json!({ "cents": 100 });
-        let error = submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
-        assert!(error.starts_with("09000 ") && error.contains("was not begun"), "{error}");
+        let error =
+            submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
+        assert!(
+            error.starts_with("09000 ") && error.contains("was not begun"),
+            "{error}"
+        );
         assert_eq!(head(), 0);
     }
 
@@ -281,11 +388,24 @@ $f$;
         scope();
         let request = json!({ "cents": 100 });
         let camille = hex(&device(2).verifying_key().to_bytes());
-        Spi::run(&format!("SELECT cella.begin('{OP}', '{CAMILLE}', '\\x{camille}')")).expect("a begin");
-        let error = submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
-        assert!(error.contains("is not the write this transaction began, test:thing:make by camille"), "{error}");
-        let again = tries(&format!("SELECT cella.begin('{OP}', '{JULIEN}', '\\x{camille}')")).expect("a refusal");
-        assert!(again.starts_with("09000 ") && again.contains("opened test:thing:make already"), "{again}");
+        Spi::run(&format!(
+            "SELECT cella.begin('{OP}', '{CAMILLE}', '\\x{camille}')"
+        ))
+        .expect("a begin");
+        let error =
+            submits(JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("a refusal");
+        assert!(
+            error.contains("is not the write this transaction began, test:thing:make by camille"),
+            "{error}"
+        );
+        let again = tries(&format!(
+            "SELECT cella.begin('{OP}', '{JULIEN}', '\\x{camille}')"
+        ))
+        .expect("a refusal");
+        assert!(
+            again.starts_with("09000 ") && again.contains("opened test:thing:make already"),
+            "{again}"
+        );
         assert_eq!(head(), 0);
     }
 
@@ -293,27 +413,56 @@ $f$;
     fn a_state_table_takes_rows_only_inside_a_write() {
         beside();
         scope();
-        Spi::run("CREATE TABLE t.thing (n integer); INSERT INTO t.thing VALUES (1)").expect("a table");
-        assert_eq!(Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("registered"), Some(true));
-        assert_eq!(Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("once"), Some(false));
-        let listed = Spi::get_one::<bool>("SELECT EXISTS (SELECT FROM cella.state WHERE schema = 't' AND tab = 'thing')").expect("listed");
+        Spi::run("CREATE TABLE t.thing (n integer); INSERT INTO t.thing VALUES (1)")
+            .expect("a table");
+        assert_eq!(
+            Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("registered"),
+            Some(true)
+        );
+        assert_eq!(
+            Spi::get_one::<bool>("SELECT cella.notarise('t.thing')").expect("once"),
+            Some(false)
+        );
+        let listed = Spi::get_one::<bool>(
+            "SELECT EXISTS (SELECT FROM cella.state WHERE schema = 't' AND tab = 'thing')",
+        )
+        .expect("listed");
         assert_eq!(listed, Some(true));
-        for statement in ["INSERT INTO t.thing VALUES (2)", "UPDATE t.thing SET n = 3", "DELETE FROM t.thing", "TRUNCATE t.thing"] {
+        for statement in [
+            "INSERT INTO t.thing VALUES (2)",
+            "UPDATE t.thing SET n = 3",
+            "DELETE FROM t.thing",
+            "TRUNCATE t.thing",
+        ] {
             let error = tries(statement).expect("a refusal");
-            assert!(error.starts_with("09000 ") && error.contains("t.thing is written outside a write"), "{statement}: {error}");
+            assert!(
+                error.starts_with("09000 ") && error.contains("t.thing is written outside a write"),
+                "{statement}: {error}"
+            );
         }
         // A savepoint rolled back past the begin undoes it.
         let julien = hex(&device(1).verifying_key().to_bytes());
-        let undone = format!("DO $$ BEGIN PERFORM cella.begin('{OP}', '{JULIEN}', '\\x{julien}'); RAISE EXCEPTION 'undone'; END $$");
+        let undone = format!(
+            "DO $$ BEGIN PERFORM cella.begin('{OP}', '{JULIEN}', '\\x{julien}'); RAISE EXCEPTION 'undone'; END $$"
+        );
         assert!(tries(&undone).is_some_and(|e| e.contains("undone")));
-        assert!(tries("INSERT INTO t.thing VALUES (2)").is_some_and(|e| e.contains("written outside a write")));
+        assert!(
+            tries("INSERT INTO t.thing VALUES (2)")
+                .is_some_and(|e| e.contains("written outside a write"))
+        );
         // A superuser may unbind, as the migrations do.
         Spi::run("SET LOCAL cella.unbound = on").expect("unbound");
         assert_eq!(tries("INSERT INTO t.thing VALUES (2)"), None);
         Spi::run("SET LOCAL cella.unbound = off").expect("bound");
-        Spi::run(&format!("SELECT cella.begin('{OP}', '{JULIEN}', '\\x{julien}')")).expect("a begin");
+        Spi::run(&format!(
+            "SELECT cella.begin('{OP}', '{JULIEN}', '\\x{julien}')"
+        ))
+        .expect("a begin");
         assert_eq!(tries("INSERT INTO t.thing VALUES (3)"), None);
-        assert_eq!(Spi::get_one::<i64>("SELECT count(*) FROM t.thing").expect("the rows"), Some(3));
+        assert_eq!(
+            Spi::get_one::<i64>("SELECT count(*) FROM t.thing").expect("the rows"),
+            Some(3)
+        );
     }
 
     #[pg_test]
@@ -321,10 +470,26 @@ $f$;
         beside();
         scope();
         let request = json!({ "cents": 100 });
-        refused(&request, JULIEN, &signed(&device(3), JULIEN, &request, NONCE), "the device is not a current key of julien");
-        refused(&request, JULIEN, &signed(&device(2), JULIEN, &request, NONCE), "the device is not a current key of julien");
-        Spi::run("UPDATE t.device SET revoked = true WHERE actor = 'julien@test.example'").expect("a revocation");
-        refused(&request, JULIEN, &signed(&device(1), JULIEN, &request, NONCE), "the device is not a current key of julien");
+        refused(
+            &request,
+            JULIEN,
+            &signed(&device(3), JULIEN, &request, NONCE),
+            "the device is not a current key of julien",
+        );
+        refused(
+            &request,
+            JULIEN,
+            &signed(&device(2), JULIEN, &request, NONCE),
+            "the device is not a current key of julien",
+        );
+        Spi::run("UPDATE t.device SET revoked = true WHERE actor = 'julien@test.example'")
+            .expect("a revocation");
+        refused(
+            &request,
+            JULIEN,
+            &signed(&device(1), JULIEN, &request, NONCE),
+            "the device is not a current key of julien",
+        );
     }
 
     #[pg_test]
@@ -333,7 +498,12 @@ $f$;
         scope();
         Spi::run("DELETE FROM cella.keyring").expect("no keyring");
         let request = json!({ "cents": 100 });
-        let error = attempt(&request, JULIEN, &signed(&device(1), JULIEN, &request, NONCE)).expect("an error");
+        let error = attempt(
+            &request,
+            JULIEN,
+            &signed(&device(1), JULIEN, &request, NONCE),
+        )
+        .expect("an error");
         assert!(error.contains("no keyring is registered"), "{error}");
     }
 
@@ -349,9 +519,16 @@ $f$;
         )
         .expect("a guard");
         let big = json!({ "cents": 900 });
-        refused(&big, JULIEN, &signed(&device(1), JULIEN, &big, NONCE), "test:thing:make is over 500 cents");
+        refused(
+            &big,
+            JULIEN,
+            &signed(&device(1), JULIEN, &big, NONCE),
+            "test:thing:make is over 500 cents",
+        );
         settle(100);
-        let guards = Spi::get_one::<String>("SELECT guards->0->>'function' FROM cella.log WHERE n = 1").expect("the entry's guards");
+        let guards =
+            Spi::get_one::<String>("SELECT guards->0->>'function' FROM cella.log WHERE n = 1")
+                .expect("the entry's guards");
         assert_eq!(guards.as_deref(), Some("t.small(jsonb)"));
         assert!(verifies());
     }
@@ -371,7 +548,8 @@ $f$;
     ];
 
     fn version() -> Option<String> {
-        Spi::get_one::<String>("SELECT extversion FROM pg_extension WHERE extname = 'cella'").expect("the version")
+        Spi::get_one::<String>("SELECT extversion FROM pg_extension WHERE extname = 'cella'")
+            .expect("the version")
     }
 
     /// It drops the extension every other test reads, so it runs alone; it installs
@@ -397,12 +575,20 @@ END;
 ALTER EXTENSION cella UPDATE;"
             ))
             .expect("the upgrade");
-            assert_eq!(version(), current, "{earlier} upgrades to the current version");
+            assert_eq!(
+                version(),
+                current,
+                "{earlier} upgrades to the current version"
+            );
             let effects = Spi::get_one::<bool>(
                 "SELECT to_regclass('cella.follows') IS NOT NULL AND to_regprocedure('cella.follow(text, jsonb, bigint)') IS NOT NULL
                     AND EXISTS (SELECT FROM pg_constraint WHERE conname = 'log_basis' AND conrelid = 'cella.log'::regclass)",
             );
-            assert_eq!(effects.expect("the effects"), Some(true), "{earlier} upgrades to a log that takes effects");
+            assert_eq!(
+                effects.expect("the effects"),
+                Some(true),
+                "{earlier} upgrades to a log that takes effects"
+            );
             scope();
             Spi::run(
                 "GRANT USAGE ON SCHEMA old TO cella_guards;
@@ -410,7 +596,12 @@ ALTER EXTENSION cella UPDATE;"
             )
             .expect("the guard");
             let request = json!({ "cents": 100 });
-            refused(&request, JULIEN, &signed(&device(1), JULIEN, &request, NONCE), "judging test:thing:make");
+            refused(
+                &request,
+                JULIEN,
+                &signed(&device(1), JULIEN, &request, NONCE),
+                "judging test:thing:make",
+            );
         }
     }
 
@@ -420,8 +611,11 @@ ALTER EXTENSION cella UPDATE;"
         scope();
         settle(100);
         assert!(verifies());
-        let breaks =
-            |tamper: &str| Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()]).expect("a tamper") == Some(true);
+        let breaks = |tamper: &str| {
+            Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()])
+                .expect("a tamper")
+                == Some(true)
+        };
         for tamper in [
             "UPDATE cella.log SET op = 'test:thing:drop'",
             "UPDATE cella.log SET date = '2026-10-26'",
@@ -472,31 +666,42 @@ $f$;"
     fn follows(op: &str, cents: i64, cause: i64) -> Option<String> {
         Spi::get_one_with_args::<String>(
             "SELECT t.follows($1, $2, $3)",
-            &[op.into(), JsonB(json!({ "cents": cents })).into(), cause.into()],
+            &[
+                op.into(),
+                JsonB(json!({ "cents": cents })).into(),
+                cause.into(),
+            ],
         )
         .expect("a follow")
     }
 
     fn forgoes(op: &str, cause: i64, why: &str) -> i64 {
-        Spi::get_one_with_args::<i64>("SELECT verdict FROM cella.forgo($1, $2, $3)", &[op.into(), cause.into(), why.into()])
-            .expect("a forgo")
-            .expect("its entry")
+        Spi::get_one_with_args::<i64>(
+            "SELECT verdict FROM cella.forgo($1, $2, $3)",
+            &[op.into(), cause.into(), why.into()],
+        )
+        .expect("a forgo")
+        .expect("its entry")
     }
 
     /// Every entry: its number, op, the entry it follows and whether it settled.
     fn entries() -> Vec<(i64, String, Option<i64>, bool)> {
         Spi::connect(|c| {
-            c.select("SELECT n, op, cause, settled FROM cella.log ORDER BY n", None, &[])
-                .expect("the log")
-                .map(|r| {
-                    (
-                        r.get::<i64>(1).expect("n").expect("n"),
-                        r.get::<String>(2).expect("op").expect("op"),
-                        r.get::<i64>(3).expect("cause"),
-                        r.get::<bool>(4).expect("settled").expect("settled"),
-                    )
-                })
-                .collect()
+            c.select(
+                "SELECT n, op, cause, settled FROM cella.log ORDER BY n",
+                None,
+                &[],
+            )
+            .expect("the log")
+            .map(|r| {
+                (
+                    r.get::<i64>(1).expect("n").expect("n"),
+                    r.get::<String>(2).expect("op").expect("op"),
+                    r.get::<i64>(3).expect("cause"),
+                    r.get::<bool>(4).expect("settled").expect("settled"),
+                )
+            })
+            .collect()
         })
     }
 
@@ -513,9 +718,18 @@ $f$;"
         refusal(follows(CARRY, 100, 1), "test:thing:carry follows no write");
         settle(100);
         entry_after(first_hash());
-        refusal(follows(CARRY, 100, 2), "test:thing:carry cites entry 2, which this write did not append");
-        refusal(follows(CARRY, 100, 99), "test:thing:carry cites entry 99, which this write did not append");
-        refusal(follows(PAY, 100, 1), "test:thing:pay may not follow test:thing:make: cella.follows registers no such effect");
+        refusal(
+            follows(CARRY, 100, 2),
+            "test:thing:carry cites entry 2, which this write did not append",
+        );
+        refusal(
+            follows(CARRY, 100, 99),
+            "test:thing:carry cites entry 99, which this write did not append",
+        );
+        refusal(
+            follows(PAY, 100, 1),
+            "test:thing:pay may not follow test:thing:make: cella.follows registers no such effect",
+        );
         assert_eq!(head(), 2, "a refused effect takes no number");
     }
 
@@ -526,10 +740,24 @@ $f$;"
         settle(100);
         assert_eq!(follows(CARRY, 100, 1), None);
         assert_eq!(follows(PAY, 100, 2), None);
-        assert_eq!(entries(), [(1, OP.into(), None, true), (2, CARRY.into(), Some(1), true), (3, PAY.into(), Some(2), true)]);
-        let effect = Spi::get_two::<String, i64>("SELECT actor, receipt FROM cella.log WHERE n = 2").expect("entry 2");
-        assert_eq!(effect, (Some(JULIEN.into()), None), "an effect is its decision's actor's, with no receipt");
-        let receipts = Spi::get_one::<i64>("SELECT count(*) FROM cella.receipt").expect("the receipts");
+        assert_eq!(
+            entries(),
+            [
+                (1, OP.into(), None, true),
+                (2, CARRY.into(), Some(1), true),
+                (3, PAY.into(), Some(2), true)
+            ]
+        );
+        let effect =
+            Spi::get_two::<String, i64>("SELECT actor, receipt FROM cella.log WHERE n = 2")
+                .expect("entry 2");
+        assert_eq!(
+            effect,
+            (Some(JULIEN.into()), None),
+            "an effect is its decision's actor's, with no receipt"
+        );
+        let receipts =
+            Spi::get_one::<i64>("SELECT count(*) FROM cella.receipt").expect("the receipts");
         assert_eq!(receipts, Some(1), "one signature, one decision");
         assert!(verifies());
     }
@@ -542,7 +770,10 @@ $f$;"
         for cause in 1..=5 {
             assert_eq!(follows(CARRY, 100, cause), None, "effect {cause} deep");
         }
-        refusal(follows(CARRY, 100, 6), "test:thing:carry would be 6 effects from its decision: a write goes 5 deep at most");
+        refusal(
+            follows(CARRY, 100, 6),
+            "test:thing:carry would be 6 effects from its decision: a write goes 5 deep at most",
+        );
         assert_eq!(head(), 6);
     }
 
@@ -556,7 +787,8 @@ $f$;"
         assert_eq!(follows(PAY, 100, 3), None);
         // The pay after entry 2 is refused, rolled back to its savepoint:
         // its carry, which stands only with it, is forgone with it.
-        let why = "test:thing:pay of 150 cents after entry 2 is over the 100 it may: pay 100 or less";
+        let why =
+            "test:thing:pay of 150 cents after entry 2 is over the 100 it may: pay 100 or less";
         refusal(follows(PAY, 150, 2), why);
         assert_eq!(head(), 4);
         // As a handler does: the carry and its pay in the carry's
@@ -577,7 +809,10 @@ BEGIN
 END $$"#
         ))
         .expect("the carry forgone with its pay");
-        refusal(follows(PAY, 100, 5), "test:thing:pay cites entry 5, test:thing:carry, which was forgone");
+        refusal(
+            follows(PAY, 100, 5),
+            "test:thing:pay cites entry 5, test:thing:carry, which was forgone",
+        );
         assert_eq!(
             entries(),
             [
@@ -589,16 +824,28 @@ END $$"#
                 (6, PAY.into(), Some(5), false),
             ]
         );
-        let reason = Spi::get_one::<String>("SELECT form->>'reason' FROM cella.log WHERE n = 6").expect("its reason");
-        assert_eq!(reason.as_deref(), Some("test:thing:pay of 150 cents after entry 5 is over the 100 it may: pay 100 or less"));
-        let blank = Spi::get_one_with_args::<String>("SELECT t.tries($1)", &[format!("SELECT cella.forgo('{PAY}', 3, ' ')").into()]);
+        let reason = Spi::get_one::<String>("SELECT form->>'reason' FROM cella.log WHERE n = 6")
+            .expect("its reason");
+        assert_eq!(
+            reason.as_deref(),
+            Some(
+                "test:thing:pay of 150 cents after entry 5 is over the 100 it may: pay 100 or less"
+            )
+        );
+        let blank = Spi::get_one_with_args::<String>(
+            "SELECT t.tries($1)",
+            &[format!("SELECT cella.forgo('{PAY}', 3, ' ')").into()],
+        );
         refusal(blank.expect("a try"), "is forgone with no reason");
         // Entry 2 lacks the pay it requires, so this write would not
         // commit (`cella test e2e notarised` commits one); the log walks
         // it the same way.
         assert!(!verifies());
         forgoes(PAY, 2, why);
-        assert!(!verifies(), "a forgone pay does not stand for the one its carry requires");
+        assert!(
+            !verifies(),
+            "a forgone pay does not stand for the one its carry requires"
+        );
     }
 
     #[pg_test]
@@ -609,8 +856,11 @@ END $$"#
         assert_eq!(follows(CARRY, 100, 1), None);
         assert_eq!(follows(PAY, 100, 2), None);
         assert!(verifies());
-        let breaks =
-            |tamper: &str| Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()]).expect("a tamper") == Some(true);
+        let breaks = |tamper: &str| {
+            Spi::get_one_with_args::<bool>("SELECT t.breaks($1)", &[tamper.into()])
+                .expect("a tamper")
+                == Some(true)
+        };
         for tamper in [
             "UPDATE cella.log SET cause_hash = (SELECT hash FROM cella.log WHERE n = 1) WHERE n = 3",
             "UPDATE cella.log SET cause = 1, cause_hash = (SELECT hash FROM cella.log WHERE n = 1) WHERE n = 3",
@@ -629,9 +879,13 @@ END $$"#
     fn pay_resigned_for(actor: &str) {
         let notary = Key::from_seed(&NOTARY_SEED).expect("the seed");
         let one = |column: &str| {
-            Spi::get_one::<Vec<u8>>(&format!("SELECT {column} FROM cella.log WHERE n = 3")).expect("entry 3").expect("its bytes")
+            Spi::get_one::<Vec<u8>>(&format!("SELECT {column} FROM cella.log WHERE n = 3"))
+                .expect("entry 3")
+                .expect("its bytes")
         };
-        let guards = Spi::get_one::<JsonB>("SELECT guards FROM cella.log WHERE n = 3").expect("its guards").expect("a list");
+        let guards = Spi::get_one::<JsonB>("SELECT guards FROM cella.log WHERE n = 3")
+            .expect("its guards")
+            .expect("a list");
         let prev: [u8; 32] = one("prev").try_into().expect("32 bytes");
         let entry = Entry {
             n: 3,
@@ -639,16 +893,25 @@ END $$"#
             actor: actor.into(),
             date: "2026-10-25".into(),
             payload: one("payload").try_into().expect("32 bytes"),
-            basis: Basis::Cause { n: 2, hash: one("cause_hash").try_into().expect("32 bytes"), settled: true },
+            basis: Basis::Cause {
+                n: 2,
+                hash: one("cause_hash").try_into().expect("32 bytes"),
+                settled: true,
+            },
             guards: crate::notary::listed_guards(&guards.0).expect("its guards listed"),
         };
         let hash = log::hash(&prev, &entry).expect("a hash");
         Spi::run_with_args(
             "UPDATE cella.log SET actor = $1, hash = $2, sig = $3 WHERE n = 3",
-            &[actor.into(), hash.to_vec().into(), notary.sign(&hash).to_vec().into()],
+            &[
+                actor.into(),
+                hash.to_vec().into(),
+                notary.sign(&hash).to_vec().into(),
+            ],
         )
         .expect("entry 3 signed again");
-        Spi::run_with_args("UPDATE cella.head SET hash = $1", &[hash.to_vec().into()]).expect("the head");
+        Spi::run_with_args("UPDATE cella.head SET hash = $1", &[hash.to_vec().into()])
+            .expect("the head");
     }
 
     #[pg_test]
@@ -658,12 +921,20 @@ END $$"#
         settle(100);
         assert_eq!(follows(CARRY, 100, 1), None);
         assert_eq!(follows(PAY, 100, 2), None);
-        let actor = Spi::get_one::<String>("SELECT actor FROM cella.log WHERE n = 3").expect("entry 3");
-        assert_eq!(actor.as_deref(), Some(JULIEN), "follow acts for the decision's actor");
+        let actor =
+            Spi::get_one::<String>("SELECT actor FROM cella.log WHERE n = 3").expect("entry 3");
+        assert_eq!(
+            actor.as_deref(),
+            Some(JULIEN),
+            "follow acts for the decision's actor"
+        );
         pay_resigned_for(JULIEN);
         assert!(verifies(), "an effect signed again as it was verifies");
         pay_resigned_for(CAMILLE);
-        assert!(!verifies(), "an effect acting for another than its decision's actor breaks the log");
+        assert!(
+            !verifies(),
+            "an effect acting for another than its decision's actor breaks the log"
+        );
     }
 
     /// Entry 2 made by hand as `submit` makes one, under the notary's key
@@ -673,7 +944,10 @@ END $$"#
         let request = json!({ "cents": 200 });
         let nonce = "fedcba9876543210fedcba9876543210";
         let s = signed(&device(1), JULIEN, &request, nonce);
-        let sig: [u8; 64] = cella_guards::hex::unhex(s["sig"].as_str().expect("a sig")).expect("hex").try_into().expect("64 bytes");
+        let sig: [u8; 64] = cella_guards::hex::unhex(s["sig"].as_str().expect("a sig"))
+            .expect("hex")
+            .try_into()
+            .expect("64 bytes");
         let form = json!({ "cents": 200 });
         let payload = log::payload_digest(&form).expect("a digest");
         let receipt = Receipt {
@@ -694,7 +968,10 @@ END $$"#
             actor: JULIEN.into(),
             date: "2026-10-25".into(),
             payload,
-            basis: Basis::Receipt { n: receipt.n, hash: receipt_hash },
+            basis: Basis::Receipt {
+                n: receipt.n,
+                hash: receipt_hash,
+            },
             guards: vec![],
         };
         let hash = log::hash(&prev, &entry).expect("a hash");
@@ -732,11 +1009,17 @@ END $$"#
             ],
         )
         .expect("entry 2");
-        Spi::run_with_args("UPDATE cella.head SET n = 2, hash = $1", &[hash.to_vec().into()]).expect("the head");
+        Spi::run_with_args(
+            "UPDATE cella.head SET n = 2, hash = $1",
+            &[hash.to_vec().into()],
+        )
+        .expect("the head");
     }
 
     fn first_hash() -> [u8; 32] {
-        let hash = Spi::get_one::<Vec<u8>>("SELECT hash FROM cella.log WHERE n = 1").expect("entry 1").expect("its hash");
+        let hash = Spi::get_one::<Vec<u8>>("SELECT hash FROM cella.log WHERE n = 1")
+            .expect("entry 1")
+            .expect("its hash");
         hash.try_into().expect("32 bytes")
     }
 
@@ -760,9 +1043,12 @@ END $$"#
 
     /// The day in a zone, by the clock.
     fn day_in(zone: &str) -> pgrx::datum::Date {
-        Spi::get_one_with_args::<pgrx::datum::Date>("SELECT (clock_timestamp() AT TIME ZONE $1)::date", &[zone.into()])
-            .expect("the day")
-            .expect("a date")
+        Spi::get_one_with_args::<pgrx::datum::Date>(
+            "SELECT (clock_timestamp() AT TIME ZONE $1)::date",
+            &[zone.into()],
+        )
+        .expect("the day")
+        .expect("a date")
     }
 
     #[pg_test]
@@ -770,8 +1056,11 @@ END $$"#
         beside();
         // Kiritimati and Baker Island are 26 hours apart: their days never
         // agree, so the date the notary reads is the zone's it was given.
-        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true)").expect("the zone");
-        let date = Spi::get_one::<pgrx::datum::Date>("SELECT cella.verdict_date()").expect("the verdict date").expect("a date");
+        Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true)")
+            .expect("the zone");
+        let date = Spi::get_one::<pgrx::datum::Date>("SELECT cella.verdict_date()")
+            .expect("the verdict date")
+            .expect("a date");
         assert_eq!(date, day_in("Pacific/Kiritimati"));
         assert_ne!(date, day_in("Etc/GMT+12"));
     }
@@ -781,7 +1070,8 @@ END $$"#
         beside();
         Spi::run("SELECT set_config('cella.timezone', 'Pacific/Kiritimati', true), set_config('cella.clock', '2026-10-25', true)")
             .expect("the zone and the clock");
-        let date = Spi::get_one::<String>("SELECT cella.verdict_date()::text").expect("the verdict date");
+        let date =
+            Spi::get_one::<String>("SELECT cella.verdict_date()::text").expect("the verdict date");
         assert_eq!(date.as_deref(), Some("2026-10-25"));
     }
 
@@ -820,9 +1110,12 @@ END $$"#
     }
 
     fn reerase(list: &Value) -> i64 {
-        Spi::get_one_with_args::<i64>("SELECT cella.vault_reerase($1)", &[JsonB(list.clone()).into()])
-            .expect("the re-erasure")
-            .expect("a count")
+        Spi::get_one_with_args::<i64>(
+            "SELECT cella.vault_reerase($1)",
+            &[JsonB(list.clone()).into()],
+        )
+        .expect("the re-erasure")
+        .expect("a count")
     }
 
     /// A list as `cella backup` writes it, its erasures after the
@@ -843,14 +1136,30 @@ END $$"#
         ] });
         assert_eq!(reerase(&list), 2);
         assert_eq!(keys("ana", "contact"), vec![]);
-        assert_eq!(keys("ana", "profile"), vec![(2026, None)], "a class the list does not name is kept");
-        assert_eq!(tombstone("ana", "contact"), Some((None, "2026-10-25".into(), false)));
+        assert_eq!(
+            keys("ana", "profile"),
+            vec![(2026, None)],
+            "a class the list does not name is kept"
+        );
+        assert_eq!(
+            tombstone("ana", "contact"),
+            Some((None, "2026-10-25".into(), false))
+        );
         // Restricted, not erased: the key past its clock on the erasure's
         // date goes, and the one the law still keeps is restricted.
-        assert_eq!(keys("ben", "payroll"), vec![(2025, Some("2026-10-25".into()))]);
-        assert_eq!(tombstone("ben", "payroll"), Some((None, "2026-10-25".into(), true)));
+        assert_eq!(
+            keys("ben", "payroll"),
+            vec![(2025, Some("2026-10-25".into()))]
+        );
+        assert_eq!(
+            tombstone("ben", "payroll"),
+            Some((None, "2026-10-25".into(), true))
+        );
         assert_eq!(reerase(&list), 0, "run again, it carries out none");
-        assert_eq!(keys("ben", "payroll"), vec![(2025, Some("2026-10-25".into()))]);
+        assert_eq!(
+            keys("ben", "payroll"),
+            vec![(2025, Some("2026-10-25".into()))]
+        );
 
         // A newer list, after the sweep carried Ben's payroll out in full.
         let swept = json!({ "head": 11, "erasures": [
@@ -858,7 +1167,10 @@ END $$"#
         ] });
         assert_eq!(reerase(&swept), 1);
         assert_eq!(keys("ben", "payroll"), vec![]);
-        assert_eq!(tombstone("ben", "payroll"), Some((None, "2026-10-25".into(), false)));
+        assert_eq!(
+            tombstone("ben", "payroll"),
+            Some((None, "2026-10-25".into(), false))
+        );
         assert_eq!(reerase(&swept), 0);
     }
 
@@ -868,7 +1180,10 @@ END $$"#
         scope();
         let list = json!({ "erasures": [{ "subject": "ana", "class": "diary", "date": "2026-10-25", "restricted": false }] });
         let error = tries(&format!("SELECT cella.vault_reerase('{list}')")).expect("a refusal");
-        assert!(error.contains("no retention class diary, which the list's erasure of ana names"), "{error}");
+        assert!(
+            error.contains("no retention class diary, which the list's erasure of ana names"),
+            "{error}"
+        );
     }
 
     /// The id of the wrap key the TEST-ONLY vault key derives, in hex.
@@ -890,7 +1205,14 @@ END $$"#
     fn give_email() {
         let request = json!({ "cents": 100 });
         let payload = json!({ "cents": 100, "email": { "$personal": { "field": "t.person.email", "subject": JULIEN, "value": "julien@petit.example" } } });
-        assert_eq!(attempt(&payload, JULIEN, &signed(&device(1), JULIEN, &request, NONCE)), None);
+        assert_eq!(
+            attempt(
+                &payload,
+                JULIEN,
+                &signed(&device(1), JULIEN, &request, NONCE)
+            ),
+            None
+        );
     }
 
     fn opened_email() -> Option<String> {
@@ -898,18 +1220,33 @@ END $$"#
     }
 
     #[pg_test]
-    fn a_vault_key_names_the_wrap_key_that_sealed_it_and_one_naming_another_is_refused_with_its_id() {
+    fn a_vault_key_names_the_wrap_key_that_sealed_it_and_one_naming_another_is_refused_with_its_id()
+    {
         beside();
         scope();
         personal();
         give_email();
-        let named = Spi::get_one::<String>("SELECT string_agg(DISTINCT encode(wrap, 'hex'), ',') FROM vault.key").expect("the wrap ids");
-        assert_eq!(named, Some(wrap_id()), "the key is named by the current wrap key's id");
-        assert_ne!(named, Some(hex(&vault::wrap_key(&super::VAULT_KEY))), "never by the key itself");
+        let named = Spi::get_one::<String>(
+            "SELECT string_agg(DISTINCT encode(wrap, 'hex'), ',') FROM vault.key",
+        )
+        .expect("the wrap ids");
+        assert_eq!(
+            named,
+            Some(wrap_id()),
+            "the key is named by the current wrap key's id"
+        );
+        assert_ne!(
+            named,
+            Some(hex(&vault::wrap_key(&super::VAULT_KEY))),
+            "never by the key itself"
+        );
         assert_eq!(opened_email().as_deref(), Some("julien@petit.example"));
 
         let other = "ab".repeat(32);
-        Spi::run(&format!("UPDATE vault.key SET wrap = decode('{other}', 'hex')")).expect("another id");
+        Spi::run(&format!(
+            "UPDATE vault.key SET wrap = decode('{other}', 'hex')"
+        ))
+        .expect("another id");
         let error = tries("SELECT cella.opened(1)").expect("a refusal");
         assert!(
             error.contains(&format!(
@@ -925,7 +1262,10 @@ END $$"#
         scope();
         personal();
         give_email();
-        assert_eq!(Spi::get_one::<i64>("SELECT cella.vault_rewrap()").expect("the rewrap"), Some(0));
+        assert_eq!(
+            Spi::get_one::<i64>("SELECT cella.vault_rewrap()").expect("the rewrap"),
+            Some(0)
+        );
         assert_eq!(opened_email().as_deref(), Some("julien@petit.example"));
     }
 
@@ -951,22 +1291,36 @@ END $$"#
             .expect("a key 0.8.0 sealed");
         };
         let key = [5u8; 32];
-        let sealed =
-            vault::seal(&vault::wrap_key(&super::VAULT_KEY), &[3; vault::NONCE], &crate::vault::key_aad(JULIEN, "contact", 2026), &key)
-                .expect("sealed");
+        let sealed = vault::seal(
+            &vault::wrap_key(&super::VAULT_KEY),
+            &[3; vault::NONCE],
+            &crate::vault::key_aad(JULIEN, "contact", 2026),
+            &key,
+        )
+        .expect("sealed");
         at_0_8_0(&sealed);
         Spi::run("ALTER EXTENSION cella UPDATE").expect("the upgrade");
         assert_eq!(version(), current);
-        let named = Spi::get_one::<String>("SELECT encode(wrap, 'hex') FROM vault.key").expect("the wrap id");
+        let named = Spi::get_one::<String>("SELECT encode(wrap, 'hex') FROM vault.key")
+            .expect("the wrap id");
         assert_eq!(named, Some(wrap_id()));
         let nullable =
             Spi::get_one::<bool>("SELECT NOT attnotnull FROM pg_attribute WHERE attrelid = 'vault.key'::regclass AND attname = 'wrap'")
                 .expect("the column");
-        assert_eq!(nullable, Some(false), "every key names its wrap key from 0.9.0");
+        assert_eq!(
+            nullable,
+            Some(false),
+            "every key names its wrap key from 0.9.0"
+        );
 
         at_0_8_0(b"opens under no key");
         scope();
         let error = tries("ALTER EXTENSION cella UPDATE").expect("a refusal");
-        assert!(error.contains(&format!("the key of {JULIEN}'s contact from 2026 opens under neither")), "{error}");
+        assert!(
+            error.contains(&format!(
+                "the key of {JULIEN}'s contact from 2026 opens under neither"
+            )),
+            "{error}"
+        );
     }
 }

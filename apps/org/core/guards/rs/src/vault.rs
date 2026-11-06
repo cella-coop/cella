@@ -133,7 +133,9 @@ fn marker(map: &Map<String, Value>) -> Result<Option<Marked>> {
     if map.len() != 1 {
         return Err(bad("a marker is an object of one key"));
     }
-    let inner = map[key.as_str()].as_object().ok_or_else(|| bad("names an object"))?;
+    let inner = map[key.as_str()]
+        .as_object()
+        .ok_or_else(|| bad("names an object"))?;
     let text = |k: &str| -> Result<String> {
         inner
             .get(k)
@@ -144,22 +146,38 @@ fn marker(map: &Map<String, Value>) -> Result<Option<Marked>> {
     };
     match key.as_str() {
         PERSONAL => {
-            let value = inner.get("value").cloned().ok_or_else(|| bad("names its value"))?;
-            Ok(Some(Marked::Personal(Personal { field: text("field")?, subject: text("subject")?, value })))
+            let value = inner
+                .get("value")
+                .cloned()
+                .ok_or_else(|| bad("names its value"))?;
+            Ok(Some(Marked::Personal(Personal {
+                field: text("field")?,
+                subject: text("subject")?,
+                value,
+            })))
         }
         ERASE => {
             let classes = match inner.get("classes") {
                 None | Some(Value::Null) => None,
                 Some(Value::Array(c)) => Some(
                     c.iter()
-                        .map(|x| x.as_str().map(str::to_string).ok_or_else(|| bad("names its classes as text")))
+                        .map(|x| {
+                            x.as_str()
+                                .map(str::to_string)
+                                .ok_or_else(|| bad("names its classes as text"))
+                        })
                         .collect::<Result<Vec<_>>>()?,
                 ),
                 Some(_) => return Err(bad("names its classes as a list")),
             };
-            Ok(Some(Marked::Erase(Erase { subject: text("subject")?, classes })))
+            Ok(Some(Marked::Erase(Erase {
+                subject: text("subject")?,
+                classes,
+            })))
         }
-        _ => Err(bad("is reserved: a payload marks only $personal and $erase")),
+        _ => Err(bad(
+            "is reserved: a payload marks only $personal and $erase",
+        )),
     }
 }
 
@@ -167,7 +185,11 @@ fn marker(map: &Map<String, Value>) -> Result<Option<Marked>> {
 /// in canonical key order, by what `each` makes of it.
 pub fn logged(payload: &Value, each: &mut impl FnMut(Marked) -> Result<Value>) -> Result<Value> {
     match payload {
-        Value::Array(items) => items.iter().map(|v| logged(v, each)).collect::<Result<Vec<_>>>().map(Value::Array),
+        Value::Array(items) => items
+            .iter()
+            .map(|v| logged(v, each))
+            .collect::<Result<Vec<_>>>()
+            .map(Value::Array),
         Value::Object(map) => {
             if let Some(m) = marker(map)? {
                 return each(m);
@@ -194,7 +216,9 @@ pub fn committed(commitment: &[u8; 32]) -> Value {
 #[must_use]
 pub fn commitment(v: &Value) -> Option<[u8; 32]> {
     let map = v.as_object().filter(|m| m.len() == 1)?;
-    crate::hex::unhex(map.get(COMMIT)?.as_str()?)?.try_into().ok()
+    crate::hex::unhex(map.get(COMMIT)?.as_str()?)?
+        .try_into()
+        .ok()
 }
 
 /// The logged form with each commitment opened by `open`, or read as
@@ -205,7 +229,11 @@ pub fn opened(form: &Value, open: &mut impl FnMut(&[u8; 32]) -> Option<Value>) -
     }
     match form {
         Value::Array(items) => Value::Array(items.iter().map(|v| opened(v, open)).collect()),
-        Value::Object(map) => Value::Object(map.iter().map(|(k, v)| (k.clone(), opened(v, open))).collect()),
+        Value::Object(map) => Value::Object(
+            map.iter()
+                .map(|(k, v)| (k.clone(), opened(v, open)))
+                .collect(),
+        ),
         v => v.clone(),
     }
 }
@@ -229,7 +257,10 @@ mod tests {
         assert_ne!(a, commit(&[2; 32], &v).unwrap());
         assert!(opens(&a, &[1; 32], &v));
         assert!(!opens(&a, &[1; 32], &json!("bob@example.org")));
-        assert_ne!(a, crate::digest(&[[1; 32].as_slice(), b"\"ana@example.org\""].concat()));
+        assert_ne!(
+            a,
+            crate::digest(&[[1; 32].as_slice(), b"\"ana@example.org\""].concat())
+        );
     }
 
     #[test]
@@ -238,7 +269,10 @@ mod tests {
         let aad = bound(&[b"ana", b"contact"]);
         let sealed = seal(&key, &[3; NONCE], &aad, b"secret").unwrap();
         assert_eq!(open(&key, &aad, &sealed).unwrap(), b"secret");
-        assert_eq!(open(&key, &bound(&[b"bob", b"contact"]), &sealed), Err(Error::Sealed));
+        assert_eq!(
+            open(&key, &bound(&[b"bob", b"contact"]), &sealed),
+            Err(Error::Sealed)
+        );
         assert_eq!(open(&[8; 32], &aad, &sealed), Err(Error::Sealed));
         assert_ne!(wrap_key(&[0; 32]), wrap_key(&[1; 32]));
     }
@@ -249,7 +283,11 @@ mod tests {
         assert_eq!(wrap_id(&a), wrap_id(&a));
         assert_ne!(wrap_id(&a), wrap_id(&b));
         assert_ne!(wrap_id(&a), a);
-        assert_ne!(wrap_id(&a), wrap_key(&a), "the id is under its own domain, not the wrap key's");
+        assert_ne!(
+            wrap_id(&a),
+            wrap_key(&a),
+            "the id is under its own domain, not the wrap key's"
+        );
     }
 
     #[test]
@@ -272,7 +310,9 @@ mod tests {
         assert_eq!(form["contact"], "ana");
         let email = commitment(&form["values"]["email"]).unwrap();
         assert!(opens(&email, &[1; 32], &json!("ana@example.org")));
-        let read = opened(&form, &mut |c| (c == &email).then(|| json!("ana@example.org")));
+        let read = opened(&form, &mut |c| {
+            (c == &email).then(|| json!("ana@example.org"))
+        });
         assert_eq!(read["values"]["email"], "ana@example.org");
         assert_eq!(read["values"]["phone"], REDACTED);
     }
@@ -281,15 +321,36 @@ mod tests {
     fn markers_are_strict_and_other_dollar_keys_reserved() {
         let each = &mut |_| Ok(Value::Null);
         assert!(logged(&json!({"$commit": "00"}), each).is_err());
-        assert!(logged(&json!({"$personal": {"field": "a.b.c", "subject": "x"}}), each).is_err());
-        assert!(logged(&json!({"$personal": {"field": "a.b.c", "subject": "x", "value": 1}, "y": 2}), each).is_err());
+        assert!(
+            logged(
+                &json!({"$personal": {"field": "a.b.c", "subject": "x"}}),
+                each
+            )
+            .is_err()
+        );
+        assert!(
+            logged(
+                &json!({"$personal": {"field": "a.b.c", "subject": "x", "value": 1}, "y": 2}),
+                each
+            )
+            .is_err()
+        );
         let mut seen = None;
-        logged(&json!({"e": {"$erase": {"subject": "ana", "classes": ["contact"]}}}), &mut |m| {
-            seen = Some(m);
-            Ok(Value::Null)
-        })
+        logged(
+            &json!({"e": {"$erase": {"subject": "ana", "classes": ["contact"]}}}),
+            &mut |m| {
+                seen = Some(m);
+                Ok(Value::Null)
+            },
+        )
         .unwrap();
-        assert_eq!(seen, Some(Marked::Erase(Erase { subject: "ana".into(), classes: Some(vec!["contact".into()]) })));
+        assert_eq!(
+            seen,
+            Some(Marked::Erase(Erase {
+                subject: "ana".into(),
+                classes: Some(vec!["contact".into()])
+            }))
+        );
     }
 
     #[test]

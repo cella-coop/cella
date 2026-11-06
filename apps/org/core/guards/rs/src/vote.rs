@@ -91,14 +91,20 @@ impl Tally {
 
     fn only(&self, rule: &'static str, allowed: &[Stance]) -> Result<()> {
         match self.latest.values().find(|(_, s)| !allowed.contains(s)) {
-            Some((_, stance)) => Err(Error::Misplaced { stance: *stance, rule }),
+            Some((_, stance)) => Err(Error::Misplaced {
+                stance: *stance,
+                rule,
+            }),
             None => Ok(()),
         }
     }
 
     /// Passes when someone consents and no one objects.
     pub fn consent(&self) -> Result<bool> {
-        self.only("consent", &[Stance::Consent, Stance::Object, Stance::Abstain])?;
+        self.only(
+            "consent",
+            &[Stance::Consent, Stance::Object, Stance::Abstain],
+        )?;
         Ok(self.count(Stance::Object) == 0 && self.count(Stance::Consent) > 0)
     }
 
@@ -112,7 +118,10 @@ impl Tally {
     /// stances for and against are for, as two thirds of the votes cast do;
     /// abstentions count for neither.
     pub fn share(&self, num: i64, den: i64) -> Result<bool> {
-        self.only("a share of the votes", &[Stance::For, Stance::Against, Stance::Abstain])?;
+        self.only(
+            "a share of the votes",
+            &[Stance::For, Stance::Against, Stance::Abstain],
+        )?;
         if num <= 0 || den < num {
             return Err(Error::Share { num, den });
         }
@@ -190,7 +199,10 @@ mod tests {
     fn nobody_consenting_fails() {
         assert_eq!(Tally::default().consent(), Ok(false));
         assert_eq!(tally(&[("a", "abstain")]).consent(), Ok(false));
-        assert_eq!(tally(&[("a", "for"), ("b", "against")]).majority(), Ok(false));
+        assert_eq!(
+            tally(&[("a", "for"), ("b", "against")]).majority(),
+            Ok(false)
+        );
     }
 
     // Two thirds of the votes cast: six for and three against carry it, at
@@ -217,9 +229,18 @@ mod tests {
     fn a_share_needs_someone_for() {
         assert_eq!(Tally::default().share(2, 3), Ok(false));
         assert_eq!(tally(&[("a", "abstain")]).share(1, 2), Ok(false));
-        assert_eq!(tally(&[("a", "for"), ("b", "against")]).share(1, 2), Ok(true));
-        assert_eq!(tally(&[("a", "for"), ("b", "against")]).share(1, 1), Ok(false));
-        assert_eq!(tally(&[("a", "for"), ("b", "abstain")]).share(1, 1), Ok(true));
+        assert_eq!(
+            tally(&[("a", "for"), ("b", "against")]).share(1, 2),
+            Ok(true)
+        );
+        assert_eq!(
+            tally(&[("a", "for"), ("b", "against")]).share(1, 1),
+            Ok(false)
+        );
+        assert_eq!(
+            tally(&[("a", "for"), ("b", "abstain")]).share(1, 1),
+            Ok(true)
+        );
     }
 
     #[test]

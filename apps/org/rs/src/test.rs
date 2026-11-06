@@ -52,10 +52,15 @@ fn notary(repo: &Repo, steps: &Steps) -> Result {
     let share = dir.join("share/extension");
     fs::create_dir_all(&share).map_err(|e| Fail::new(format!("{}: {e}", share.display())))?;
     let scripts = repo.root.join("apps/org/core/notary/rs/sql");
-    for script in fs::read_dir(&scripts).map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))? {
-        let from = script.map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))?.path();
+    for script in
+        fs::read_dir(&scripts).map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))?
+    {
+        let from = script
+            .map_err(|e| Fail::new(format!("{}: {e}", scripts.display())))?
+            .path();
         if let Some(name) = from.file_name() {
-            fs::copy(&from, share.join(name)).map_err(|e| Fail::new(format!("{}: {e}", from.display())))?;
+            fs::copy(&from, share.join(name))
+                .map_err(|e| Fail::new(format!("{}: {e}", from.display())))?;
         }
     }
     let wrapper = dir.join("pg_config");
@@ -119,23 +124,47 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
         .collect();
     found.sort();
     let published = contracts(repo);
-    let mut names: Vec<&str> = found.iter().map(|(s, _)| s.as_str()).chain(published.iter().map(String::as_str)).collect();
+    let mut names: Vec<&str> = found
+        .iter()
+        .map(|(s, _)| s.as_str())
+        .chain(published.iter().map(String::as_str))
+        .collect();
     names.sort_unstable();
     names.dedup();
-    let chosen: Vec<&str> = names.iter().copied().filter(|n| only.is_none_or(|o| o == *n)).collect();
+    let chosen: Vec<&str> = names
+        .iter()
+        .copied()
+        .filter(|n| only.is_none_or(|o| o == *n))
+        .collect();
     if chosen.is_empty() {
-        return Err(Fail::new(format!("no slice tests for {}; slices with tests: {}", only.unwrap_or("any slice"), names.join(", "))));
+        return Err(Fail::new(format!(
+            "no slice tests for {}; slices with tests: {}",
+            only.unwrap_or("any slice"),
+            names.join(", ")
+        )));
     }
     let dev = Dev::new(repo);
     dev.up()?;
     repo.install(steps)?;
     for slice in chosen {
-        steps.run(&format!("db slice/{slice}"), &mut dev.renew(DB, Some(slice), None), quiet)?;
-        let files: Vec<&PathBuf> = found.iter().filter(|(s, _)| s == slice).map(|(_, f)| f).collect();
+        steps.run(
+            &format!("db slice/{slice}"),
+            &mut dev.renew(DB, Some(slice), None),
+            quiet,
+        )?;
+        let files: Vec<&PathBuf> = found
+            .iter()
+            .filter(|(s, _)| s == slice)
+            .map(|(_, f)| f)
+            .collect();
         if files.is_empty() {
             continue;
         }
-        steps.run(&format!("slice {slice}"), &mut [node_test(&dev, steps, &files)], tap)?;
+        steps.run(
+            &format!("slice {slice}"),
+            &mut [node_test(&dev, steps, &files)],
+            tap,
+        )?;
     }
     Ok(())
 }
@@ -143,13 +172,24 @@ fn slices(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
 /// Each e2e scenario's file on a database migrated whole and seeded with
 /// Lanterne, through the handlers on the dev cluster.
 fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
-    let mut files: Vec<PathBuf> = tests(repo)?.into_iter().filter(|(k, _)| matches!(k, Kind::E2e)).map(|(_, f)| f).collect();
+    let mut files: Vec<PathBuf> = tests(repo)?
+        .into_iter()
+        .filter(|(k, _)| matches!(k, Kind::E2e))
+        .map(|(_, f)| f)
+        .collect();
     files.sort();
     let named: Vec<(String, PathBuf)> = files.into_iter().map(|f| (stem(&f), f)).collect();
-    let chosen: Vec<&(String, PathBuf)> = named.iter().filter(|(n, _)| only.is_none_or(|o| o == n)).collect();
+    let chosen: Vec<&(String, PathBuf)> = named
+        .iter()
+        .filter(|(n, _)| only.is_none_or(|o| o == n))
+        .collect();
     if chosen.is_empty() {
         let known: Vec<&str> = named.iter().map(|(n, _)| n.as_str()).collect();
-        return Err(Fail::new(format!("no e2e scenario {}; there are: {}", only.unwrap_or(""), known.join(", "))));
+        return Err(Fail::new(format!(
+            "no e2e scenario {}; there are: {}",
+            only.unwrap_or(""),
+            known.join(", ")
+        )));
     }
     let dev = Dev::new(repo);
     dev.up()?;
@@ -158,8 +198,16 @@ fn e2e(repo: &Repo, steps: &Steps, only: Option<&str>) -> Result {
     shell::build(repo, steps)?;
     let lanterne = repo.root.join("apps/org/fixtures/lanterne");
     for (name, file) in chosen {
-        steps.run(&format!("db e2e/{name}"), &mut dev.renew(DB, None, Some(&lanterne)), quiet)?;
-        steps.run(&format!("e2e {name}"), &mut [node_test(&dev, steps, &[file])], tap)?;
+        steps.run(
+            &format!("db e2e/{name}"),
+            &mut dev.renew(DB, None, Some(&lanterne)),
+            quiet,
+        )?;
+        steps.run(
+            &format!("e2e {name}"),
+            &mut [node_test(&dev, steps, &[file])],
+            tap,
+        )?;
     }
     Ok(())
 }
@@ -216,10 +264,16 @@ fn classify(rel: &Path) -> Option<Kind> {
         })
         .collect();
     let dir = parts.get(parts.len().checked_sub(2)?)?;
-    let slice = parts.windows(2).filter(|w| w[0] == "feats" || w[0] == "grafts").map(|w| w[1]).next_back();
+    let slice = parts
+        .windows(2)
+        .filter(|w| w[0] == "feats" || w[0] == "grafts")
+        .map(|w| w[1])
+        .next_back();
     match (*dir, slice) {
         ("_tests", Some(s)) => Some(Kind::Slice(s.to_owned())),
-        ("_tests", None) if parts.len() == 7 && parts[2] == "core" && parts[4] == "ts" => Some(Kind::Slice(parts[3].to_owned())),
+        ("_tests", None) if parts.len() == 7 && parts[2] == "core" && parts[4] == "ts" => {
+            Some(Kind::Slice(parts[3].to_owned()))
+        }
         ("_e2e", None) if parts.len() == 5 && parts[2] == "ts" => Some(Kind::E2e),
         _ => None,
     }
@@ -230,7 +284,9 @@ fn classify(rel: &Path) -> Option<Kind> {
 /// library's but the analytics port's, `core/<lib>/sql/analytics.sql`.
 fn contracts(repo: &Repo) -> Vec<String> {
     let mut files = Vec::new();
-    walk(&repo.root.join("apps"), &mut files, &|p| p.ends_with("sql/analytics.sql"));
+    walk(&repo.root.join("apps"), &mut files, &|p| {
+        p.ends_with("sql/analytics.sql")
+    });
     let mut out: Vec<String> = files
         .iter()
         .filter_map(|f| contract(f.strip_prefix(&repo.root).unwrap_or(f)))
@@ -251,7 +307,9 @@ fn contract(rel: &Path) -> Option<String> {
     match parts.as_slice() {
         [.., "feats", feat, "core", "sql", "analytics.sql"] => Some((*feat).to_owned()),
         [.., "grafts", graft, "sql", "analytics.sql"] => Some((*graft).to_owned()),
-        ["apps", _, "core", lib, "sql", "analytics.sql"] if *lib != "analytics" => Some((*lib).to_owned()),
+        ["apps", _, "core", lib, "sql", "analytics.sql"] if *lib != "analytics" => {
+            Some((*lib).to_owned())
+        }
         _ => None,
     }
 }
@@ -278,7 +336,10 @@ fn walk(dir: &Path, out: &mut Vec<PathBuf>, keep: &dyn Fn(&Path) -> bool) {
 }
 
 fn stem(path: &Path) -> String {
-    let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+    let name = path
+        .file_name()
+        .map(|n| n.to_string_lossy().into_owned())
+        .unwrap_or_default();
     name.trim_end_matches(".test.ts").to_owned()
 }
 
@@ -296,7 +357,9 @@ fn passed(out: &str) -> Option<String> {
 }
 
 fn tap(out: &str) -> Option<String> {
-    out.lines().find_map(|l| l.strip_prefix("# pass ")).map(|n| format!("{n} passed"))
+    out.lines()
+        .find_map(|l| l.strip_prefix("# pass "))
+        .map(|n| format!("{n} passed"))
 }
 
 #[cfg(test)]
@@ -313,28 +376,73 @@ mod tests {
 
     #[test]
     fn a_test_file_is_placed_by_where_it_sits() {
-        assert_eq!(kind("apps/org/feats/transaction/core/ts/_tests/journal.test.ts").as_deref(), Some("slice transaction"));
-        assert_eq!(kind("apps/org/grafts/membership-motion/ts/_tests/procedure.test.ts").as_deref(), Some("slice membership-motion"));
-        assert_eq!(kind("apps/org/core/circle/ts/_tests/mandate.test.ts").as_deref(), Some("slice circle"));
-        assert_eq!(kind("apps/org/feats/a/feats/b/core/ts/_tests/x.test.ts").as_deref(), Some("slice b"));
-        assert_eq!(kind("apps/org/ts/_e2e/admission.test.ts").as_deref(), Some("e2e"));
+        assert_eq!(
+            kind("apps/org/feats/transaction/core/ts/_tests/journal.test.ts").as_deref(),
+            Some("slice transaction")
+        );
+        assert_eq!(
+            kind("apps/org/grafts/membership-motion/ts/_tests/procedure.test.ts").as_deref(),
+            Some("slice membership-motion")
+        );
+        assert_eq!(
+            kind("apps/org/core/circle/ts/_tests/mandate.test.ts").as_deref(),
+            Some("slice circle")
+        );
+        assert_eq!(
+            kind("apps/org/feats/a/feats/b/core/ts/_tests/x.test.ts").as_deref(),
+            Some("slice b")
+        );
+        assert_eq!(
+            kind("apps/org/ts/_e2e/admission.test.ts").as_deref(),
+            Some("e2e")
+        );
     }
 
     #[test]
     fn a_contract_is_its_slices_by_where_it_sits() {
-        assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/analytics.sql")).as_deref(), Some("account"));
-        assert_eq!(contract(Path::new("apps/org/feats/person/feats/membership/core/sql/analytics.sql")).as_deref(), Some("membership"));
-        assert_eq!(contract(Path::new("apps/org/grafts/account-transaction/sql/analytics.sql")).as_deref(), Some("account-transaction"));
-        assert_eq!(contract(Path::new("apps/org/core/circle/sql/analytics.sql")).as_deref(), Some("circle"));
-        assert_eq!(contract(Path::new("apps/org/core/analytics/sql/analytics.sql")), None);
-        assert_eq!(contract(Path::new("apps/org/feats/account/core/sql/001-account.sql")), None);
+        assert_eq!(
+            contract(Path::new("apps/org/feats/account/core/sql/analytics.sql")).as_deref(),
+            Some("account")
+        );
+        assert_eq!(
+            contract(Path::new(
+                "apps/org/feats/person/feats/membership/core/sql/analytics.sql"
+            ))
+            .as_deref(),
+            Some("membership")
+        );
+        assert_eq!(
+            contract(Path::new(
+                "apps/org/grafts/account-transaction/sql/analytics.sql"
+            ))
+            .as_deref(),
+            Some("account-transaction")
+        );
+        assert_eq!(
+            contract(Path::new("apps/org/core/circle/sql/analytics.sql")).as_deref(),
+            Some("circle")
+        );
+        assert_eq!(
+            contract(Path::new("apps/org/core/analytics/sql/analytics.sql")),
+            None
+        );
+        assert_eq!(
+            contract(Path::new("apps/org/feats/account/core/sql/001-account.sql")),
+            None
+        );
     }
 
     #[test]
     fn a_test_file_elsewhere_is_refused() {
         assert_eq!(kind("apps/org/ts/_tests/admission.test.ts"), None);
-        assert_eq!(kind("apps/org/feats/transaction/core/ts/_e2e/x.test.ts"), None);
+        assert_eq!(
+            kind("apps/org/feats/transaction/core/ts/_e2e/x.test.ts"),
+            None
+        );
         assert_eq!(kind("apps/org/core/db/_tests/x.test.ts"), None);
-        assert_eq!(kind("apps/org/feats/transaction/core/ts/src/x.test.ts"), None);
+        assert_eq!(
+            kind("apps/org/feats/transaction/core/ts/src/x.test.ts"),
+            None
+        );
     }
 }

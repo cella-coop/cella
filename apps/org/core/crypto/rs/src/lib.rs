@@ -23,7 +23,7 @@ pub mod kem_hybrid;
 pub mod shamir;
 pub mod signing_scheme;
 
-pub use identity::{public_id, verify_detached, Identity, SigScheme};
+pub use identity::{Identity, SigScheme, public_id, verify_detached};
 
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
@@ -267,7 +267,9 @@ mod tests {
         let kp = Keypair::generate();
         let msg = b"hello cella";
         let sig = kp.sign(msg);
-        kp.public_key().verify(msg, &sig).expect("fresh sig must verify");
+        kp.public_key()
+            .verify(msg, &sig)
+            .expect("fresh sig must verify");
     }
 
     #[test]
@@ -297,7 +299,9 @@ mod tests {
 
         let msg = b"same identity after roundtrip";
         let sig = reconstructed.sign(msg);
-        kp.public_key().verify(msg, &sig).expect("same-identity sig verifies");
+        kp.public_key()
+            .verify(msg, &sig)
+            .expect("same-identity sig verifies");
     }
 
     #[test]

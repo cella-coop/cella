@@ -35,7 +35,9 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
     let mut copy = repo.node("site-copy.mjs");
     copy.arg(repo.site_dir());
     steps.run("site copy", &mut [copy], last_line)?;
-    let out = repo.data().join(format!("site-check-{}", std::process::id()));
+    let out = repo
+        .data()
+        .join(format!("site-check-{}", std::process::id()));
     let mut check = astro(repo);
     check.arg("check");
     let mut build = astro(repo);
@@ -51,6 +53,8 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
 /// also keeps it from writing a config under a home that may be read-only.
 fn astro(repo: &Repo) -> Command {
     let mut cmd = Command::new("pnpm");
-    cmd.current_dir(repo.site_dir()).args(["exec", "astro"]).env("ASTRO_TELEMETRY_DISABLED", "1");
+    cmd.current_dir(repo.site_dir())
+        .args(["exec", "astro"])
+        .env("ASTRO_TELEMETRY_DISABLED", "1");
     cmd
 }

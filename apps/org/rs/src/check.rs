@@ -5,7 +5,20 @@ use crate::site;
 
 /// What a commit must pass, or one part of it; no database.
 pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Result {
-    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Brand, Part::Site, Part::Rust], |p| vec![p]);
+    let parts = part.map_or_else(
+        || {
+            vec![
+                Part::Feats,
+                Part::Fixtures,
+                Part::Types,
+                Part::Shell,
+                Part::Brand,
+                Part::Site,
+                Part::Rust,
+            ]
+        },
+        |p| vec![p],
+    );
     if parts.iter().any(|p| !matches!(p, Part::Rust)) {
         repo.install(steps)?;
     }
@@ -35,7 +48,13 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 let mut sync = repo.shell("svelte-kit");
                 sync.arg("sync");
                 let mut check = repo.shell("svelte-check");
-                check.args(["--tsconfig", "./tsconfig.json", "--fail-on-warnings", "--output", "machine"]);
+                check.args([
+                    "--tsconfig",
+                    "./tsconfig.json",
+                    "--fail-on-warnings",
+                    "--output",
+                    "machine",
+                ]);
                 steps.run("shell", &mut [sync, check], last_line)?;
             }
             Part::Brand => {
@@ -49,7 +68,17 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 check.args(["check", "--workspace", "--quiet"]);
                 steps.run("cargo check", &mut [check], quiet)?;
                 let mut clippy = repo.cmd("cargo");
-                clippy.args(["clippy", "--workspace", "--no-deps", "--quiet", "--", "-D", "warnings", "-A", "clippy::pedantic"]);
+                clippy.args([
+                    "clippy",
+                    "--workspace",
+                    "--no-deps",
+                    "--quiet",
+                    "--",
+                    "-D",
+                    "warnings",
+                    "-A",
+                    "clippy::pedantic",
+                ]);
                 steps.run("clippy", &mut [clippy], quiet)?;
             }
         }

@@ -24,10 +24,10 @@
 //! hybrid public key's wire form; senders fold the latest announcement
 //! per cell. Rotation = announce again.
 
-use cella_crypto::kem_hybrid::{
-    open_multi, seal_multi, HybridPublicKey, HybridSecretKey, KeyWrap, SealedMulti,
-};
 use cella_crypto::CryptoError;
+use cella_crypto::kem_hybrid::{
+    HybridPublicKey, HybridSecretKey, KeyWrap, SealedMulti, open_multi, seal_multi,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::{CellId, ClaimBody};
@@ -98,7 +98,11 @@ pub fn wrap_body(
         wraps: recipients
             .iter()
             .zip(sealed.wraps)
-            .map(|((cell, _), w)| WrapWire { recipient: *cell, kem: w.kem, wrapped: w.wrapped })
+            .map(|((cell, _), w)| WrapWire {
+                recipient: *cell,
+                kem: w.kem,
+                wrapped: w.wrapped,
+            })
             .collect(),
     };
     let mut content = Vec::new();
@@ -134,7 +138,10 @@ pub fn open_body(
         sealed: wire.sealed.clone(),
         wraps: Vec::new(),
     };
-    let key_wrap = KeyWrap { kem: wrap.kem.clone(), wrapped: wrap.wrapped.clone() };
+    let key_wrap = KeyWrap {
+        kem: wrap.kem.clone(),
+        wrapped: wrap.wrapped.clone(),
+    };
     let plain = open_multi(secret, &key_wrap, &sealed, aad)?;
     Ok((wire.inner_schema, plain))
 }
@@ -150,8 +157,8 @@ fn decode_wire(body: &ClaimBody) -> Result<EncryptedWire, EncryptedError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cella_crypto::kem_hybrid::hybrid_keygen;
     use cella_crypto::hash;
+    use cella_crypto::kem_hybrid::hybrid_keygen;
 
     fn cell(n: u8) -> CellId {
         CellId(hash(&[n]))
@@ -183,8 +190,7 @@ mod tests {
     fn non_recipient_and_wrong_key_fail() {
         let (pk_a, _) = hybrid_keygen().unwrap();
         let (_, sk_c) = hybrid_keygen().unwrap();
-        let body =
-            wrap_body("note::Private", b"secret", &[(cell(1), &pk_a)], b"").unwrap();
+        let body = wrap_body("note::Private", b"secret", &[(cell(1), &pk_a)], b"").unwrap();
         // Not addressed at all.
         assert!(matches!(
             open_body(&body, cell(3), &sk_c, b""),

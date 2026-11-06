@@ -19,8 +19,8 @@
 
 use zeroize::Zeroizing;
 
-use crate::signing_scheme::{verify_blob, MlDsa44, SigningScheme};
-use crate::{hash, CryptoError, Hash, Keypair, MULTISIG_ML_DSA_44};
+use crate::signing_scheme::{MlDsa44, SigningScheme, verify_blob};
+use crate::{CryptoError, Hash, Keypair, MULTISIG_ML_DSA_44, hash};
 
 /// The signature schemes an [`Identity`] can hold.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -194,18 +194,16 @@ pub fn public_id(public_form: &[u8]) -> Hash {
 /// Ed25519; anything else must be a matched pair of algorithm-prefixed
 /// blobs (routed through [`verify_blob`], which fails closed on unknown or
 /// mismatched algorithms). Mixed forms are an error, never a fall-through.
-pub fn verify_detached(
-    public_form: &[u8],
-    msg: &[u8],
-    sig: &[u8],
-) -> Result<(), CryptoError> {
+pub fn verify_detached(public_form: &[u8], msg: &[u8], sig: &[u8]) -> Result<(), CryptoError> {
     match (public_form.len(), sig.len()) {
         (32, 64) => {
-            let pk_arr: &[u8; 32] =
-                public_form.try_into().map_err(|_| CryptoError::MalformedPublicKey)?;
+            let pk_arr: &[u8; 32] = public_form
+                .try_into()
+                .map_err(|_| CryptoError::MalformedPublicKey)?;
             let pk = crate::PublicKey::from_bytes(pk_arr)?;
-            let sig_arr: &[u8; 64] =
-                sig.try_into().map_err(|_| CryptoError::MalformedSignature)?;
+            let sig_arr: &[u8; 64] = sig
+                .try_into()
+                .map_err(|_| CryptoError::MalformedSignature)?;
             let sig = crate::Signature::from_bytes(sig_arr)?;
             pk.verify(msg, &sig)
         }
@@ -245,7 +243,9 @@ mod tests {
     #[test]
     fn ed25519_form_ids_match_v0_fingerprints() {
         let id = Identity::generate_ed25519();
-        let Identity::Ed25519(kp) = &id else { unreachable!() };
+        let Identity::Ed25519(kp) = &id else {
+            unreachable!()
+        };
         assert_eq!(id.id(), kp.public_key().fingerprint());
     }
 

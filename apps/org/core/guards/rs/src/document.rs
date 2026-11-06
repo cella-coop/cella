@@ -14,7 +14,10 @@
 //! in the document feat does.
 
 use crate::{Error, Result};
-use loro::{Container, LoroDoc, LoroMap, LoroTree, LoroValue, TextDelta, TreeID, TreeParentId, ValueOrContainer};
+use loro::{
+    Container, LoroDoc, LoroMap, LoroTree, LoroValue, TextDelta, TreeID, TreeParentId,
+    ValueOrContainer,
+};
 use std::fmt::Write;
 
 /// The tree every document keeps its blocks in.
@@ -47,7 +50,9 @@ fn refuse(why: impl Into<String>) -> Error {
 /// operations it does not hold.
 pub fn load(bytes: &[u8]) -> Result<LoroDoc> {
     let doc = LoroDoc::new();
-    let status = doc.import(bytes).map_err(|e| refuse(format!("not a Loro document: {e}")))?;
+    let status = doc
+        .import(bytes)
+        .map_err(|e| refuse(format!("not a Loro document: {e}")))?;
     if status.pending.is_some() {
         return Err(refuse("the document depends on updates it does not hold"));
     }
@@ -81,7 +86,10 @@ pub fn plain(bytes: &[u8]) -> Result<String> {
     let doc = load(bytes)?;
     let tree = doc.get_tree(TREE);
     let mut lines = Vec::new();
-    let mut stack: Vec<TreeID> = children(&tree, TreeParentId::Root).into_iter().rev().collect();
+    let mut stack: Vec<TreeID> = children(&tree, TreeParentId::Root)
+        .into_iter()
+        .rev()
+        .collect();
     while let Some(id) = stack.pop() {
         let meta = meta(&tree, id)?;
         let (_, _, atomic) = kind(&meta)?;
@@ -98,7 +106,8 @@ fn children(tree: &LoroTree, parent: TreeParentId) -> Vec<TreeID> {
 }
 
 fn meta(tree: &LoroTree, id: TreeID) -> Result<LoroMap> {
-    tree.get_meta(id).map_err(|e| refuse(format!("block {id} has no data: {e}")))
+    tree.get_meta(id)
+        .map_err(|e| refuse(format!("block {id} has no data: {e}")))
 }
 
 // A block's type, its props and whether it is atomic; a block that names
@@ -128,7 +137,9 @@ fn block(tree: &LoroTree, id: TreeID, out: &mut String) -> Result<()> {
         match meta.get(key) {
             None => {}
             Some(ValueOrContainer::Value(v)) => fields.push((key, value(&v)?)),
-            Some(ValueOrContainer::Container(_)) => return Err(refuse(format!("prop {key} is a container"))),
+            Some(ValueOrContainer::Container(_)) => {
+                return Err(refuse(format!("prop {key} is a container")));
+            }
         }
     }
     fields.push(("type", string(name)));
@@ -143,8 +154,16 @@ fn block(tree: &LoroTree, id: TreeID, out: &mut String) -> Result<()> {
             } else {
                 let mut sorted = marks.clone();
                 sorted.sort_by(|a, b| a.0.cmp(b.0));
-                let m: Vec<String> = sorted.iter().map(|(k, v)| format!("{}:{v}", string(k))).collect();
-                let _ = write!(s, "{{\"marks\":{{{}}},\"text\":{}}}", m.join(","), string(text));
+                let m: Vec<String> = sorted
+                    .iter()
+                    .map(|(k, v)| format!("{}:{v}", string(k)))
+                    .collect();
+                let _ = write!(
+                    s,
+                    "{{\"marks\":{{{}}},\"text\":{}}}",
+                    m.join(","),
+                    string(text)
+                );
             }
         }
         s.push(']');
@@ -212,7 +231,9 @@ fn value(v: &LoroValue) -> Result<String> {
         LoroValue::String(s) => Ok(string(s)),
         LoroValue::I64(_) => Err(refuse("a number beyond the safe integers")),
         LoroValue::Double(_) => Err(refuse("a number that is not an integer")),
-        _ => Err(refuse("a value that is not null, a boolean, an integer or a string")),
+        _ => Err(refuse(
+            "a value that is not null, a boolean, an integer or a string",
+        )),
     }
 }
 
@@ -272,7 +293,11 @@ mod tests {
     fn writes_blocks_in_order_with_sorted_keys() {
         let d = doc();
         let h = node(&d, TreeParentId::Root, "heading", "Rate card");
-        d.get_tree(TREE).get_meta(h).unwrap().insert("level", 1).unwrap();
+        d.get_tree(TREE)
+            .get_meta(h)
+            .unwrap()
+            .insert("level", 1)
+            .unwrap();
         let b = node(&d, TreeParentId::Root, "bullet", "Day \"rate\"");
         node(&d, TreeParentId::Node(b), "paragraph", "560 €\n");
         node(&d, TreeParentId::Root, "divider", "ignored");
@@ -280,14 +305,19 @@ mod tests {
             canonical(&snapshot(&d)).unwrap(),
             r#"{"blocks":[{"level":1,"runs":[{"text":"Rate card"}],"type":"heading"},{"children":[{"runs":[{"text":"560 €\n"}],"type":"paragraph"}],"runs":[{"text":"Day \"rate\""}],"type":"bullet"},{"type":"divider"}],"v":1}"#
         );
-        assert_eq!(plain(&snapshot(&d)).unwrap(), "Rate card\nDay \"rate\"\n560 €\n");
+        assert_eq!(
+            plain(&snapshot(&d)).unwrap(),
+            "Rate card\nDay \"rate\"\n560 €\n"
+        );
     }
 
     #[test]
     fn marks_are_sorted_and_unset_marks_dropped() {
         let d = doc();
         let p = node(&d, TreeParentId::Root, "paragraph", "ab");
-        let Some(ValueOrContainer::Container(Container::Text(t))) = d.get_tree(TREE).get_meta(p).unwrap().get("text") else {
+        let Some(ValueOrContainer::Container(Container::Text(t))) =
+            d.get_tree(TREE).get_meta(p).unwrap().get("text")
+        else {
             panic!("no text")
         };
         t.mark(0..2, "link", "https://x").unwrap();
@@ -304,7 +334,11 @@ mod tests {
     fn refuses_what_has_no_spelling() {
         let d = doc();
         let h = node(&d, TreeParentId::Root, "heading", "x");
-        d.get_tree(TREE).get_meta(h).unwrap().insert("level", 1.5).unwrap();
+        d.get_tree(TREE)
+            .get_meta(h)
+            .unwrap()
+            .insert("level", 1.5)
+            .unwrap();
         assert!(canonical(&snapshot(&d)).is_err());
         let d = doc();
         node(&d, TreeParentId::Root, "table", "x");
@@ -317,11 +351,17 @@ mod tests {
         let d = doc();
         let bytes = snapshot(&d);
         assert_eq!(canonical(&bytes).unwrap(), r#"{"blocks":[],"v":1}"#);
-        assert_eq!(hash(&bytes).unwrap(), crate::digest(br#"{"blocks":[],"v":1}"#));
+        assert_eq!(
+            hash(&bytes).unwrap(),
+            crate::digest(br#"{"blocks":[],"v":1}"#)
+        );
     }
 
     #[test]
     fn strings_escape_as_json_stringify_does() {
-        assert_eq!(string("a\u{1}\u{7f}\u{2028}é\t"), "\"a\\u0001\u{7f}\u{2028}é\\t\"");
+        assert_eq!(
+            string("a\u{1}\u{7f}\u{2028}é\t"),
+            "\"a\\u0001\u{7f}\u{2028}é\\t\""
+        );
     }
 }

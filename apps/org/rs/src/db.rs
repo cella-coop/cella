@@ -59,7 +59,9 @@ impl<'a> Dev<'a> {
         if self.running()? {
             return Ok(());
         }
-        Err(Fail::new("the dev cluster is stopped; run `cella db start`"))
+        Err(Fail::new(
+            "the dev cluster is stopped; run `cella db start`",
+        ))
     }
 
     /// Drops a database if it exists, creates it and migrates it: the whole
@@ -80,7 +82,10 @@ impl<'a> Dev<'a> {
             // A slice's tests test its SQL below the notary, writing its
             // rows as they need them, so its database is unbound.
             let mut unbind = self.on(db, "psql");
-            unbind.args(["-qc", &format!("ALTER DATABASE {db} SET cella.unbound = on")]);
+            unbind.args([
+                "-qc",
+                &format!("ALTER DATABASE {db} SET cella.unbound = on"),
+            ]);
             cmds.push(unbind);
             // Every record names its owning circle, the root's where its
             // write names none: the slice's database holds the root, as a
@@ -103,9 +108,15 @@ impl<'a> Dev<'a> {
         let data = self.repo.data();
         if !pg.exists() {
             let mut initdb = self.repo.cmd("initdb");
-            initdb.arg("-D").arg(&pg).args(["-U", "postgres", "--auth=trust"]);
+            initdb
+                .arg("-D")
+                .arg(&pg)
+                .args(["-U", "postgres", "--auth=trust"]);
             steps.run("initdb", &mut [initdb], quiet)?;
-            let mut conf = OpenOptions::new().append(true).open(pg.join("postgresql.conf")).map_err(io(&pg))?;
+            let mut conf = OpenOptions::new()
+                .append(true)
+                .open(pg.join("postgresql.conf"))
+                .map_err(io(&pg))?;
             writeln!(conf, "include_if_exists = 'cella.conf'").map_err(io(&pg))?;
         }
         let key = data.join("notary.key");
@@ -122,7 +133,10 @@ impl<'a> Dev<'a> {
         // checkout's .data would pass the 107 bytes a socket's path may hold.
         let config = pg_config();
         let share = staged(&dir, &Steps::read(Command::new(&config).arg("--sharedir"))?);
-        let lib = staged(&dir, &Steps::read(Command::new(&config).arg("--pkglibdir"))?);
+        let lib = staged(
+            &dir,
+            &Steps::read(Command::new(&config).arg("--pkglibdir"))?,
+        );
         let conf = format!(
             "port = {port}\n\
              listen_addresses = '127.0.0.1'\n\
@@ -141,7 +155,11 @@ impl<'a> Dev<'a> {
         fs::write(pg.join("cella.conf"), conf).map_err(io(&pg))?;
         let verb = if self.running()? { "restart" } else { "start" };
         let mut ctl = self.repo.cmd("pg_ctl");
-        ctl.arg("-D").arg(&pg).arg("-l").arg(data.join("pg.log")).args(["-w", verb]);
+        ctl.arg("-D")
+            .arg(&pg)
+            .arg("-l")
+            .arg(data.join("pg.log"))
+            .args(["-w", verb]);
         steps.run(verb, &mut [ctl], quiet)?;
         let mut exists = self.on("postgres", "psql");
         exists.args(["-X", "-q", "-t", "-A", "-c"]).arg(format!(
@@ -156,7 +174,10 @@ impl<'a> Dev<'a> {
             // `cella_analytics`, a role the notary's migrations make.
             crate::data::migrate(self.repo, steps, None)?;
         }
-        println!("postgres 18 on 127.0.0.1:{}, database {}", self.port, self.db);
+        println!(
+            "postgres 18 on 127.0.0.1:{}, database {}",
+            self.port, self.db
+        );
         Ok(())
     }
 }
@@ -188,10 +209,17 @@ pub fn run(repo: &Repo, steps: &Steps, command: Db) -> Result {
         }
         Db::Reset { db, seed } => {
             dev.up()?;
-            let fixture = seed.as_deref().map(|f| data::fixture(repo, f)).transpose()?;
+            let fixture = seed
+                .as_deref()
+                .map(|f| data::fixture(repo, f))
+                .transpose()?;
             repo.install(steps)?;
             let db = db.unwrap_or_else(|| dev.db.clone());
-            steps.run(&format!("reset {db}"), &mut dev.renew(&db, None, fixture.as_deref()), last_line)
+            steps.run(
+                &format!("reset {db}"),
+                &mut dev.renew(&db, None, fixture.as_deref()),
+                last_line,
+            )
         }
         Db::Psql { args } => {
             dev.up()?;
@@ -216,7 +244,11 @@ pub fn ext_build(repo: &Repo, steps: &Steps) -> Result<PathBuf> {
         .arg("--out-dir")
         .arg(&dir);
     steps.run("ext", &mut [cmd], quiet)?;
-    let share = staged(&dir, &Steps::read(Command::new(pg_config()).arg("--sharedir"))?).join("extension");
+    let share = staged(
+        &dir,
+        &Steps::read(Command::new(pg_config()).arg("--sharedir"))?,
+    )
+    .join("extension");
     let scripts = repo.root.join("apps/org/core/notary/rs/sql");
     for script in fs::read_dir(&scripts).map_err(io(&scripts))? {
         let from = script.map_err(io(&scripts))?.path();

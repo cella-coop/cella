@@ -214,9 +214,18 @@ mod tests {
     #[test]
     fn invalid_thresholds_rejected() {
         let seed = sample_seed();
-        assert!(matches!(split(&seed, 0, 3), Err(CryptoError::InvalidThreshold)));
-        assert!(matches!(split(&seed, 4, 3), Err(CryptoError::InvalidThreshold)));
-        assert!(matches!(split(&seed, 1, 0), Err(CryptoError::InvalidThreshold)));
+        assert!(matches!(
+            split(&seed, 0, 3),
+            Err(CryptoError::InvalidThreshold)
+        ));
+        assert!(matches!(
+            split(&seed, 4, 3),
+            Err(CryptoError::InvalidThreshold)
+        ));
+        assert!(matches!(
+            split(&seed, 1, 0),
+            Err(CryptoError::InvalidThreshold)
+        ));
     }
 
     #[test]
@@ -233,6 +242,8 @@ mod tests {
 
         let msg = b"signed by the recovered identity";
         let sig = rebuilt.sign(msg);
-        kp.public_key().verify(msg, &sig).expect("recovered identity signs validly");
+        kp.public_key()
+            .verify(msg, &sig)
+            .expect("recovered identity signs validly");
     }
 }

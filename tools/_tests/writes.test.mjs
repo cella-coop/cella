@@ -191,6 +191,48 @@ test('literals, interpolation, CTEs, comments and own tables', async () => {
   }
 })
 
+test('unparseable interpolated writes, joined literals, and COPY FROM are checked, not prose or COPY TO', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-writes-ts-'))
+  try {
+    const dir = 'apps/org/grafts/own-other/ts'
+    const src = join(repo, dir, 'src')
+    mkdirSync(src, { recursive: true })
+    const sql = (table) => [
+      `\`UPDATE ${table} SET \${set} WHERE id = $1\``,
+      `\`INSERT INTO ${table} (\${columns}) VALUES (\${values})\``,
+      `"DELETE FROM " + "${table} WHERE id = $1"`,
+      `"UPDATE ${table}" + suffix`,
+      `\`COPY ${table} (id) FROM STDIN\``,
+    ]
+    writeFileSync(join(src, 'handler.ts'), [
+      ...sql('transaction.line'),
+      ...sql('own_other.line'),
+      ...sql('cella.guard'),
+      '`CoPy "transaction"."line" FROM STDIN`',
+      '`cOpY TrAnSaCtIoN.LiNe FROM STDIN`',
+      '`COPY transaction.line TO STDOUT`',
+      '`TRUNCATE TABLE own_other.line, transaction.line, cella.guard, transaction.extra ${tail}`',
+      '`MERGE INTO transaction.line USING ${source} ON true WHEN MATCHED THEN DELETE`',
+      '`CREATE TRIGGER changed AFTER INSERT ON transaction.line FOR EACH ROW ${body}`',
+      '`WITH changed AS (UPDATE transaction.line SET ${set}) SELECT 1`',
+      '"Please UPDATE transaction.line for the report"',
+      '`-- UPDATE transaction.line SET ${set}\nSELECT 1`',
+    ].map((s, i) => `const q${i} = ${s}`).join('\n'))
+    assert.deepEqual((await scanTs(repo, dir, 'own-other', 'own_other')).map((f) => f.what), [
+      ...Array(5).fill('src/handler.ts writes transaction.line'),
+      'src/handler.ts writes transaction.line',
+      'src/handler.ts writes transaction.line',
+      'src/handler.ts writes transaction.line',
+      'src/handler.ts writes transaction.extra',
+      'src/handler.ts writes transaction.line',
+      'src/handler.ts triggers on transaction.line',
+      'src/handler.ts writes transaction.line',
+    ])
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
+})
+
 test('a graft\'s trigger on a feat\'s table and its insert into one are refused, with no list to name them', async () => {
   const { errors, found } = await check({
     'invoice-member': [`${table}

@@ -21,6 +21,8 @@ function targets(tree) {
     for (const [kind, body] of Object.entries(node)) {
       if (['InsertStmt', 'UpdateStmt', 'DeleteStmt', 'MergeStmt'].includes(kind)) {
         out.push({ relation: body.relation, verb: 'writes' })
+      } else if (kind === 'CopyStmt' && body.is_from && body.relation) {
+        out.push({ relation: body.relation, verb: 'writes' })
       } else if (kind === 'TruncateStmt') {
         for (const item of body.relations ?? []) out.push({ relation: item.RangeVar, verb: 'writes' })
       } else if (kind === 'CreateTrigStmt') {
@@ -39,16 +41,33 @@ function literals(text, file) {
   const out = []
   const collect = (source) => {
     const visit = (node) => {
-      if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) {
-        out.push(node.text)
-      } else if (ts.isTemplateExpression(node)) {
-        let sql = node.head.text
-        for (const [index, span] of node.templateSpans.entries()) {
-          sql += `$${index + 1}${span.literal.text}`
+      // Treat a + chain as a single SQL candidate. A variable in the
+      // chain stands in as a parameter, just like a template span.
+      let parameter = 0
+      let literal = false
+      const render = (part) => {
+        if (ts.isBinaryExpression(part) && part.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+          return render(part.left) + render(part.right)
         }
-        out.push(sql)
+        if (ts.isStringLiteral(part) || ts.isNoSubstitutionTemplateLiteral(part)) {
+          literal = true
+          return part.text
+        }
+        if (ts.isTemplateExpression(part)) {
+          literal = true
+          return part.head.text + part.templateSpans.map((span) => `$${++parameter}${span.literal.text}`).join('')
+        }
+        return ` $${++parameter} `
       }
-      ts.forEachChild(node, visit)
+      if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.PlusToken) {
+        const sql = render(node)
+        if (literal) out.push(sql)
+        else ts.forEachChild(node, visit)
+      } else if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node) || ts.isTemplateExpression(node)) {
+        out.push(render(node))
+      } else {
+        ts.forEachChild(node, visit)
+      }
     }
     visit(ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS))
   }
@@ -56,6 +75,96 @@ function literals(text, file) {
     for (const match of text.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)) collect(match[1])
   } else {
     collect(text)
+  }
+  return out
+}
+
+// When an interpolation replaces SQL syntax rather than a value, the
+// parser cannot read the whole statement. Scan its tokens with Postgres's
+// own lexer instead: comments, string values and quoted identifiers retain
+// their SQL meanings. A verb must start a statement (or a CTE body), not
+// merely occur in a sentence about a table.
+function scannedTargets(sql) {
+  if (!sql.trim()) return []
+  let tokens
+  try {
+    tokens = pg.scanSync(sql).tokens
+  } catch {
+    // `$${n}` in TypeScript constructs a parameter marker; its
+    // standalone `$` is not itself valid SQL for Postgres's scanner.
+    try {
+      tokens = pg.scanSync(sql.replace(/\$\$\d+/g, ' $1 ')).tokens
+    } catch {
+      // An isolated prose fragment (including an unmatched apostrophe)
+      // has no complete statement for the SQL lexer to scan.
+      return []
+    }
+  }
+  const out = []
+  const word = (i) => tokens[i]?.text?.toUpperCase()
+  const identifier = (i) => {
+    const token = tokens[i]
+    if (!token || (token.tokenName !== 'IDENT' && ![1, 2, 3].includes(token.keywordKind))) return null
+    return token.text.startsWith('"') ? token.text.slice(1, -1).replaceAll('""', '"') : token.text.toLowerCase()
+  }
+  const target = (i, verb = 'writes') => {
+    const schema = identifier(i)
+    const name = identifier(i + 2)
+    if (schema && word(i + 1) === '.' && name) {
+      out.push({ relation: { schemaname: schema, relname: name }, verb })
+      return i + 3
+    }
+    return i
+  }
+  for (let i = 0; i < tokens.length; i++) {
+    if (i && ![';', '('].includes(word(i - 1))) continue
+    const verb = word(i)
+    if (verb === 'UPDATE' || verb === 'DELETE') {
+      let at = i + (verb === 'DELETE' ? 2 : 1)
+      if (verb === 'DELETE' && word(i + 1) !== 'FROM') continue
+      if (word(at) === 'ONLY') at++
+      target(at)
+    } else if (verb === 'INSERT' || verb === 'MERGE') {
+      if (word(i + 1) === 'INTO') target(i + 2)
+    } else if (verb === 'TRUNCATE') {
+      let at = i + 1
+      if (word(at) === 'TABLE') at++
+      do {
+        if (word(at) === 'ONLY') at++
+        const next = target(at)
+        if (next === at) break
+        at = next
+        if (word(at) === '*') at++
+        if (word(at) !== ',') break
+        at++
+      } while (at < tokens.length)
+    } else if (verb === 'COPY') {
+      let at = i + 1
+      if (word(at) === '(') continue // COPY (query) TO is not a write.
+      const start = at
+      // Check FROM after the optional column list, not inside it.
+      at += identifier(at) && word(at + 1) === '.' && identifier(at + 2) ? 3 : 0
+      if (word(at) === '(') {
+        let depth = 0
+        do {
+          if (word(at) === '(') depth++
+          if (word(at) === ')') depth--
+          at++
+        } while (depth && at < tokens.length)
+      }
+      if (word(at) === 'FROM') target(start)
+    } else if (verb === 'CREATE') {
+      let at = i + 1
+      if (word(at) === 'OR' && word(at + 1) === 'REPLACE') at += 2
+      if (word(at) === 'CONSTRAINT') at++
+      if (word(at) !== 'TRIGGER') continue
+      for (at++; at < tokens.length && word(at) !== ';'; at++) {
+        if (word(at) === 'ON') {
+          target(at + 1, 'triggers on')
+          break
+        }
+      }
+    }
   }
   return out
 }
@@ -84,14 +193,15 @@ export async function scanTs(repo, dir, owner, own) {
   const out = []
   for (const file of sources(join(repo, dir, 'src'))) {
     for (const sql of literals(readFileSync(file, 'utf8'), file)) {
-      let tree
+      let found
       try {
-        tree = pg.parseSync(sql)
+        found = targets(pg.parseSync(sql))
       } catch {
-        // Prose and fragments assembled at run time are not SQL statements.
-        continue
+        // Do not pass a literal merely because its SET, VALUES or column
+        // list could not be represented as a parameter by the parser.
+        found = scannedTargets(sql)
       }
-      for (const { relation, verb } of targets(tree)) {
+      for (const { relation, verb } of found) {
         const schema = relation?.schemaname
         if (schema && schema !== own && schema !== 'cella') {
           const at = relative(repo, file)

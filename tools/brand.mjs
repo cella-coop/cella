@@ -10,7 +10,7 @@ import { createRequire } from 'node:module'
 import { join } from 'node:path'
 import * as fontkit from 'fontkit'
 import woff2 from 'wawoff2'
-import { fontPackage, fontsCss, hues, iconSvg, lockupSvg, markSvg, name, resolve, starlightCss, tokensCss, tokensJson, wordmarkSvg } from '../packages/brand/src/index.ts'
+import { fontPackage, fontsCss, hues, iconSvg, lockupSvg, markSvg, name, printCss, resolve, starlightCss, tokensCss, tokensJson, wordmarkSvg } from '../packages/brand/src/index.ts'
 
 const args = process.argv.slice(2)
 const check = args.includes('--check')
@@ -60,6 +60,7 @@ const out = new Map([
   ['tokens.json', tokensJson(house)],
   ['fonts.css', fontsCss(house)],
   ['starlight.css', starlightCss()],
+  ['print.css', printCss(house)],
   ['mark.svg', svg(markSvg(house.mark, hs, 240))],
   ['favicon.svg', svg(markSvg(house.mark, hs, 16))],
   ['wordmark.svg', wordmarkSvg(outlines, house.mark)],

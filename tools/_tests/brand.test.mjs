@@ -11,7 +11,9 @@ import { spawnSync } from 'node:child_process'
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { grain, hues, markSvg, resolve, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
+import { createRequire } from 'node:module'
+import { grain, hues, markSvg, print, printCss, PRINT_INKS, printInk, printMarkup, PRINT_STYLES, PRINT_TONE, resolve, rgb8, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
+import { printFile } from '../../packages/brand/src/print-file.ts'
 
 const repo = new URL('../..', import.meta.url).pathname
 const brand = join(repo, 'packages/brand')
@@ -114,4 +116,74 @@ test('a face house.json names that the package does not depend on is refused', (
   } finally {
     rmSync(root, { recursive: true, force: true })
   }
+})
+
+// The print, held to the explorer's printInto(): one fixture picture and
+// what the explorer paints of it, captured in node from its src.html
+// (sha256 7fc005c3…98498e1cf8) with a canvas that copies the picture
+// through unscaled, for the house's halftone in three inks, at one and at
+// 1.5 device pixels, and for five other presets with rotate off.
+const printed = JSON.parse(fixture('explorer-print.json'))
+const picture = { width: printed.width, height: printed.height, data: Buffer.from(printed.input, 'base64') }
+const unit = (ink) => rgb8(printInk(house, ink)).map((v) => v / 255)
+
+test('house.json\'s print is the house style, and its tone the print\'s', () => {
+  const raw = JSON.parse(readFileSync(join(brand, 'house.json'), 'utf8'))
+  const { label, layers, ...style } = PRINT_STYLES.house
+  const camel = (s) => s.replace(/-(\w)/g, (_, c) => c.toUpperCase())
+  assert.equal(raw.printStyle, 'house')
+  assert.deepEqual({ ...raw.print, layers: raw.print.layers.filter((l) => l.ink !== 'off') }, { ...style, layers: layers.map((l) => ({ ...l, ink: camel(l.ink) })) })
+  assert.deepEqual(PRINT_TONE, { contrast: raw.dither.contrast, bright: raw.dither.bright, gamma: raw.dither.gamma })
+})
+
+test('a print\'s masks, laid on the paper in their inks, are what the explorer paints', () => {
+  const paper = unit('paper')
+  for (const c of printed.prints) {
+    const p = print(picture, { style: PRINT_STYLES[c.style], ink: c.ink, scale: c.scale })
+    const inks = p.masks.map((m) => unit(m.ink))
+    const want = Buffer.from(c.rgb, 'base64')
+    let worst = 0
+    for (let i = 0; i < p.width * p.height; i++) {
+      const rgb = [...paper]
+      p.masks.forEach((m, k) => {
+        const a = m.alpha[i] / 255
+        for (let j = 0; j < 3; j++) {
+          rgb[j] = p.over === 'multiply' ? rgb[j] * (1 - a + a * inks[k][j]) : rgb[j] + (inks[k][j] - rgb[j]) * a
+        }
+      })
+      rgb.forEach((v, j) => {
+        worst = Math.max(worst, Math.abs(v * 255 - want[i * 3 + j]))
+      })
+    }
+    assert.ok(worst <= 1, `${c.style}${c.ink ? ` in ${c.ink}` : ''} at ${c.scale}: ${worst.toFixed(2)} levels from the explorer`)
+    assert.ok(p.masks.some((m) => m.alpha.some((a) => a > 0)), `${c.style} inks something`)
+  }
+  assert.deepEqual(print(picture, { ink: 'info' }).masks.map((m) => m.ink), ['info-deep'], 'the house\'s one ink turns to the status asked')
+})
+
+test('a print read from a file gives the core\'s masks as PNGs', async () => {
+  const sharp = createRequire(join(brand, 'package.json'))('sharp')
+  const png = await sharp(picture.data, { raw: { width: picture.width, height: picture.height, channels: 4 } }).png().toBuffer()
+  const file = await printFile(png, { width: picture.width, ink: 'success' })
+  const core = print(picture, { ink: 'success' })
+  assert.deepEqual([file.width, file.height, file.over], [core.width, core.height, core.over])
+  for (const [k, m] of file.masks.entries()) {
+    assert.equal(m.png[25], 4, 'a grey and alpha PNG')
+    const { data, info } = await sharp(m.png).raw().toBuffer({ resolveWithObject: true })
+    assert.equal(m.ink, core.masks[k].ink)
+    assert.deepEqual(Uint8ClampedArray.from({ length: data.length / info.channels }, (_, i) => data[(i + 1) * info.channels - 1]), core.masks[k].alpha)
+  }
+})
+
+test('print.css holds the paper and every ink, and printMarkup lays them', () => {
+  const css = printCss(house)
+  for (const ink of PRINT_INKS) {
+    assert.match(css, new RegExp(`--print-${ink}: oklch\\(`), ink)
+  }
+  const p = print(picture, { style: PRINT_STYLES.poster })
+  assert.equal(printMarkup(p, ['a.png', 'b"c.png', 'd.png']), [
+    '<span style="--mask: url(&quot;a.png&quot;); --ink: var(--print-warning-fill)"></span>',
+    '<span style="--mask: url(&quot;b&quot;c.png&quot;); --ink: var(--print-accent-fill)"></span>',
+    '<span style="--mask: url(&quot;d.png&quot;); --ink: var(--print-text)"></span>',
+  ].join(''))
 })

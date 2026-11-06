@@ -4,17 +4,21 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./print-element": "./src/print-element.ts",
+    "./print-file": "./src/print-file.ts",
     "./tokens.css": "./tokens.css",
     "./tokens.json": "./tokens.json",
     "./fonts.css": "./fonts.css",
     "./starlight.css": "./starlight.css",
     "./house.json": "./house.json",
     "./icons/*": "./icons/*",
-    "./*.svg": "./*.svg"
+    "./*.svg": "./*.svg",
+    "./print.css": "./print.css"
   },
   "dependencies": {
     "@fontsource-variable/geist-mono": "5.3.0",
     "@fontsource-variable/inter": "5.3.0",
-    "@fontsource-variable/sen": "5.3.0"
+    "@fontsource-variable/sen": "5.3.0",
+    "sharp": "0.35.5"
   }
 }

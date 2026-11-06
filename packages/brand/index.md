@@ -45,6 +45,7 @@ from the explorer:
 - `wordmark.ts`, CELLA in Sen at weight 690, tracked -0.02em, from glyph
   outlines, and its lockups with the mark at 1.1 times its height, 0.16
   of it apart, beside it or above it;
+- `print.ts`, the print's core ([the print](#the-print));
 - `css.ts`, the files below written from the model.
 
 From them `cella brand` writes, at the package's root, and commits:
@@ -55,6 +56,7 @@ From them `cella brand` writes, at the package's root, and commits:
 | `tokens.json` | the same values for code: each shade and each role in both themes, as OKLCH and as hex, the hues, the type and the mark |
 | `fonts.css` | the three faces, Fontsource's variable builds, self-hosted: a bundler resolves each from the package's dependencies |
 | `starlight.css` | the roles mapped onto Starlight's `--sl-*`, so a docs shell needs no theme of its own |
+| `print.css` | the print's paper and inks, `--print-*`, and the rule that lays a print's masks ([the print](#the-print)) |
 | `mark.svg`, `favicon.svg` | the mark, drawn at 240 and at 16 |
 | `wordmark.svg`, `lockup.svg`, `lockup-stack.svg` | the name in outlines, and with the mark beside it and above it, the name in `currentColor` |
 | `icons/<name>.svg` | the icons `icons.json` lists, Phosphor's duotone (its carets bold), 256 square in `currentColor` |
@@ -83,6 +85,51 @@ Every role is declared on `:root` and on each `[data-theme]`, so a region
 can wear the other theme. A state is never told by colour alone: it keeps
 its icon and its word.
 
+## The print
+
+A picture wears the house's print, the five-ink halftone: the
+photograph as one to three ink separations, each covering the tones
+darker than its edge through a screen, laid on the paper. Its dot
+follows each pixel's lightness, so it is no CSS filter: the package
+computes it, and CSS colours it.
+
+`src/print.ts` is the core, ported from the explorer's `printInto()`,
+pure and touching no DOM, so it runs alike in node and the browser. It
+takes a picture's RGBA pixels at the size it is shown and a print style,
+and gives one alpha mask per ink, its coverage at each pixel, with the
+ink's name. The styles are the explorer's presets, `PRINT_STYLES`;
+`house` is house.json's `print`, the five-ink halftone: one ink, the
+tones under 0.5, an angled dot of cell 2.5 px at 23°, soft 1, multiplied
+on the paper, its ink turning through the five, `<status>-deep`, one
+status to a picture. The tone the explorer gives a picture first,
+contrast 0.15 on its luma, is house.json's `dither`, as `PRINT_TONE`.
+
+A print is a physical thing: its paper, the light panel, and its inks,
+each a shade of a tone, are the light theme's in either theme, as the
+explorer prints. `print.css`, written by `cella brand`, holds them as
+`--print-paper` and `--print-<ink>`, and the rule that wears a print: a
+`.cella-print`, or a `<cella-print>`, is the paper, and each mask a
+layer in its ink's colour, `mask-image` the mask and `mix-blend-mode`
+multiply, or normal for an opaque style. Multiplying the paper by each
+ink where it covers is the explorer's own sum, so a print the browser
+lays is the one the explorer paints. `printMarkup()` writes those
+layers.
+
+It is worn two ways:
+
+- **at build time, for a site**: `@cella/brand/print-file`'s
+  `printFile(src, { width, ink, style })` reads a picture with sharp at
+  the width it is shown, runs the core and gives each mask as a PNG.
+  The page holds the masks as files or `data:` URLs, and
+  `printMarkup()` the layers over them, so no script ships and the
+  colours stay CSS;
+- **at run time, for the app** (avatars, members' pictures, uploads):
+  importing `@cella/brand/print-element` defines `<cella-print src
+  print ink alt>`, framework-free, which draws its picture on a canvas
+  at its width and at most 1.5 device pixels, runs the same core and
+  lays the same masks. `print` names a style, `house` unset; `ink` a
+  status, the first ink's turn; `alt` its text, the element a `role=img`.
+
 ## The test
 
 `tools/_tests/brand.test.mjs` holds the port to the explorer: the mark
@@ -91,3 +138,19 @@ drawn for `house.json` at 240 and at 16 is the SVG the explorer's own
 `7fc005c3…98498e1cf8`) in `tools/_tests/brand/`, and the hues, the shades
 and the generated files are checked against the values the explorer
 computes.
+
+The print is held to the explorer the same way: one fixture picture,
+`explorer-print.json`, and what the explorer's `printInto()` paints of
+it for the house's halftone in three of its inks, at one and at 1.5
+device pixels, and for five other presets, their flat, grain and opaque
+screens, misregistration, tooth and smoothing among them. The core's
+masks, laid on the paper in their inks by the explorer's sum, are that
+paint to within one level in 255 at every pixel, so the port cannot
+drift.
+
+`tools/_tests/print-browser.test.mjs` lays it in Chromium, Firefox and
+WebKit: a `<cella-print>` of the fixture and two `.cella-print`s over
+`printFile()`'s PNGs, the poster's three multiplied inks and the screen
+print's opaque two, each within three levels in 255 of what the explorer
+paints at every pixel and under one on the mean, since a browser blends
+each layer in eight bits.

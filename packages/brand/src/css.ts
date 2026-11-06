@@ -1,13 +1,14 @@
 // The files the brand ships, written from the model: tokens.css and
-// tokens.json, fonts.css, starlight.css and the icons. tokens.css composes
-// the roles as the explorer's :root rules do, from shades the theme
-// mirrors, so dark mode is one variable and any element with a data-theme
-// wears that theme.
+// tokens.json, fonts.css, starlight.css, print.css and the icons.
+// tokens.css composes the roles as the explorer's :root rules do, from
+// shades the theme mirrors, so dark mode is one variable and any element
+// with a data-theme wears that theme.
 
 import { hex, type Oklch } from './color.ts'
 import { hues, inkAction, PENTAD, TONES, type Face, type House } from './house.ts'
 import { grain, SURFACES } from './paper.ts'
 import { compressed, inks, K, ROLES, role, rung, shades, sunkL, sunkRung, onActionL, type Role, type Theme } from './tones.ts'
+import { PRINT_INKS, printInk } from './print.ts'
 
 const n = (v: number, d = 4): string => String(+v.toFixed(d))
 const ok = ([l, c, h]: Oklch): string => `oklch(${n(l)} ${n(c)} ${n(h, 2)})`
@@ -196,3 +197,31 @@ export function starlightCss(): string {
 /** An icon of icons.json, 256 square, in currentColor. */
 export const iconSvg = (body: string): string =>
   `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" fill="currentColor" aria-hidden="true">${body}</svg>\n`
+
+/** The print's paper and inks, and the rule that lays a print: its
+    container the paper, each mask a layer in its ink. */
+export function printCss(house: House): string {
+  return [
+    HEADER,
+    '/* A print\'s paper and inks are the light theme\'s in either theme,',
+    '   since a print is a physical thing. */',
+    block(':root', PRINT_INKS.map((ink) => `--print-${ink}: ${ok(printInk(house, ink))};`)),
+    '/* Multiplying the paper by each ink where it covers is the explorer\'s',
+    '   own sum; an opaque style lays each ink over the last. */',
+    block(':is(cella-print, .cella-print)', [
+      'display: block;',
+      'position: relative;',
+      'overflow: hidden;',
+      'isolation: isolate;',
+      'background: var(--print-paper);',
+    ]),
+    block(':is(cella-print, .cella-print) > span', [
+      'position: absolute;',
+      'inset: 0;',
+      'background: var(--ink);',
+      'mask: var(--mask) center / 100% 100% no-repeat;',
+      'mix-blend-mode: multiply;',
+    ]),
+    block(':is(cella-print, .cella-print)[data-over=\'opaque\'] > span', ['mix-blend-mode: normal;']),
+  ].join('\n')
+}

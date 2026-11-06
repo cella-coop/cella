@@ -16,7 +16,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// What a commit must pass: feat check, fixture check, types, svelte-check, cargo check and clippy
+    /// What a commit must pass: feat check, fixture check, types, svelte-check, the brand check, cargo check and clippy
     Check {
         /// Run one part alone
         part: Option<Part>,
@@ -128,6 +128,9 @@ pub enum Command {
     /// Build the shell for production into apps/org/ts/build
     Build,
 
+    /// Write the brand's tokens, fonts, mark, wordmark and icons from packages/brand/house.json
+    Brand,
+
     /// The Rust and tool tests, then each slice's tests and the e2e scenarios on fresh databases
     Test {
         #[command(subcommand)]
@@ -163,6 +166,8 @@ pub enum Part {
     Types,
     /// svelte-check over the shell and every slice's client layers
     Shell,
+    /// The brand's generated files are what its house.json makes
+    Brand,
     /// cargo check and clippy over the workspace
     Rust,
 }

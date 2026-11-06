@@ -26,13 +26,16 @@ verdict into a log the members can audit.
 
 ## Layout
 
-This repository works only on the org app.
+This repository works on the org app and on the brand it wears.
 
 - `apps/org/` — the cooperative workspace: its core (`actions`, `crypto`, `log`, `keystore`,
   `guards`, `notary`, `db`), its feats and grafts, and its roots: `rs/`, the
   `cella` CLI, and `ts/`, which assembles the app.
+- `packages/brand/` — `@cella/brand`, the house style the app, a docs shell
+  and the site wear: its tokens, fonts, mark and wordmark, written by
+  `cella brand` from its `house.json` ([the brand](packages/brand/index.md)).
 - `tools/` — the node tools `cella` runs: the feat and fixture checks,
-  migrations and seeds.
+  migrations, seeds and the brand.
 - `_corpus/` — the repository's docs.
 
 ## Develop

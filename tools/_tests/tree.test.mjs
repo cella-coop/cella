@@ -96,6 +96,14 @@ test('a graft reads no core of a feat it does not join, nor a graft above its no
   assert.match(errors, /graft employment-membership .* may not depend on graft membership-motion/)
 })
 
+test('any package may depend on one outside the tree, the brand, which depends on none of the tree', () => {
+  const brand = (deps) => JSON.stringify({ name: '@t/brand', exports: { '.': './src/index.ts', './tokens.css': './tokens.css' }, dependencies: deps })
+  const ok = tree({ deps: { motion: ['brand'] }, files: { 'packages/brand/package.json': brand({}), 'packages/brand/tokens.css': ':root {}\n' } })
+  assert.equal(ok, '')
+  const errors = tree({ files: { 'packages/brand/package.json': brand({ '@t/motion': 'workspace:*' }) } })
+  assert.match(errors, /packages\/brand: depends on apps\/org\/feats\/motion\/core\/ts; a package outside the tree depends on no package of the repository/)
+})
+
 test('a feat\'s name is unique in its app, at any depth', () => {
   const errors = tree({ extra: [['apps/org/feats/motion/feats/membership', 'membership']] })
   assert.match(errors, /a feat's name is unique in its app/)

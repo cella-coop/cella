@@ -39,6 +39,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         }
         Command::Serve { port, prod, url } => shell::serve(&Repo::find()?, &steps, port, prod, url.as_deref()),
         Command::Build => shell::build(&Repo::find()?, &steps),
+        Command::Brand => check::brand(&Repo::find()?, &steps),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),
         Command::Vault { command: Vault::Sweep { url } } => data::sweep(&Repo::find()?, url.as_deref()),

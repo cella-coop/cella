@@ -14,6 +14,9 @@
 //                     roots of the feats below it, the grafts at or below
 //                     it
 //
+// A package in packages/, the brand, stands outside the tree: any package
+// may depend on it, and it depends on no package of the repository.
+//
 // A graft sits at the lowest node whose feats, at any depth, hold every
 // feat it joins, and never joins a feat with one nested in it: a child
 // inherits its parent's core. A feat's name is unique in its app, since it
@@ -134,11 +137,15 @@ const walk = (dir, out = []) => {
   return out
 }
 const dirs = existsSync(join(repo, 'apps')) ? walk('apps') : []
+// The packages outside the tree, one to a directory of packages/.
+const shared = existsSync(join(repo, 'packages'))
+  ? readdirSync(join(repo, 'packages')).map((n) => join('packages', n)).filter((d) => existsSync(join(repo, d, 'package.json')))
+  : []
 
 // Edges from each ecosystem's manifests.
 const edges = []
 const byName = new Map()
-for (const dir of dirs.filter((d) => existsSync(join(repo, d, 'package.json')))) {
+for (const dir of [...dirs.filter((d) => existsSync(join(repo, d, 'package.json'))), ...shared]) {
   byName.set(JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8')).name, dir)
 }
 for (const dir of byName.values()) {
@@ -166,6 +173,13 @@ for (const dir of dirs) {
   }
 }
 for (const [a, b] of edges) {
+  if (shared.includes(a)) {
+    fail(`${a}: depends on ${b}; a package outside the tree depends on no package of the repository`)
+    continue
+  }
+  if (shared.includes(b)) {
+    continue
+  }
   const from = place(a)
   const to = place(b)
   if (from && to && !allowed(from, to)) {
@@ -266,13 +280,14 @@ for (const dir of byName.values()) {
 // The client layers' rules: CSS only in the UI core, state and effects
 // only in hooks, no module-level mutable state, no server layer imported
 // by a client one, no legacy Svelte or SvelteKit form.
-errors.push(...checkUi(repo, [...byName.values()]))
+const onTree = [...byName.values()].filter((d) => !shared.includes(d))
+errors.push(...checkUi(repo, onTree))
 
 // A package's exports are its public surface: a library's `.`, a slice's
 // `./models`, `./api` (its writes, reads and server slice), `./bindings`
 // and `./app` (its client slice).
 const surface = new Set(['.', './models', './api', './bindings', './app'])
-for (const dir of byName.values()) {
+for (const dir of onTree) {
   const pkg = JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8'))
   for (const key of Object.keys(pkg.exports ?? {})) {
     if (!surface.has(key)) {
@@ -389,4 +404,4 @@ if (errors.length) {
   console.error(errors.map((e) => `feat check: ${e}`).join('\n'))
   process.exit(1)
 }
-console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree`)
+console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length} outside it`)

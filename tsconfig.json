@@ -9,7 +9,7 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true
   },
-  "include": ["apps/**/ts/src/**/*.ts", "apps/**/ts/_tests/**/*.ts", "apps/**/ts/_e2e/**/*.ts"],
+  "include": ["packages/*/src/**/*.ts", "apps/**/ts/src/**/*.ts", "apps/**/ts/_tests/**/*.ts", "apps/**/ts/_e2e/**/*.ts"],
   "exclude": [
     "**/node_modules/**",
     "apps/org/ts/src/**",

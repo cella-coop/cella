@@ -4,7 +4,7 @@ use crate::run::{Result, Steps, last_line, quiet};
 
 /// What a commit must pass, or one part of it; no database.
 pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Result {
-    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Rust], |p| vec![p]);
+    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Brand, Part::Rust], |p| vec![p]);
     if parts.iter().any(|p| !matches!(p, Part::Rust)) {
         repo.install(steps)?;
     }
@@ -37,6 +37,11 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 check.args(["--tsconfig", "./tsconfig.json", "--fail-on-warnings", "--output", "machine"]);
                 steps.run("shell", &mut [sync, check], last_line)?;
             }
+            Part::Brand => {
+                let mut cmd = repo.node("brand.mjs");
+                cmd.arg("--check").arg(&repo.root);
+                steps.run("brand", &mut [cmd], last_line)?;
+            }
             Part::Rust => {
                 let mut check = repo.cmd("cargo");
                 check.args(["check", "--workspace", "--quiet"]);
@@ -48,4 +53,12 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
         }
     }
     Ok(())
+}
+
+/// Writes the brand's generated files from its house.json.
+pub fn brand(repo: &Repo, steps: &Steps) -> Result {
+    repo.install(steps)?;
+    let mut cmd = repo.node("brand.mjs");
+    cmd.arg(&repo.root);
+    steps.run("brand", &mut [cmd], last_line)
 }

@@ -6,7 +6,7 @@ import { app as membership } from '@cella/org-membership/app'
 import { app as circle } from '@cella/org-circle/app'
 import { app as motion } from '@cella/org-motion/app'
 import { app as document } from '@cella/org-document/app'
-import { app as client } from '@cella/org-client/app'
+import { app as contact } from '@cella/org-contact/app'
 import { app as invoice } from '@cella/org-invoice/app'
 import { app as account } from '@cella/org-account/app'
 import { app as patronage } from '@cella/org-patronage/app'
@@ -22,10 +22,10 @@ import { circles as motionCircles } from '@cella/org-motion/app'
 import { circles as membershipMotionCircles } from '@cella/org-graft-membership-motion/app'
 import { app as membershipMotion } from '@cella/org-graft-membership-motion/app'
 import { app as documentMotion } from '@cella/org-graft-document-motion/app'
-import { app as clientInvoice } from '@cella/org-graft-client-invoice/app'
+import { app as contactInvoice } from '@cella/org-graft-contact-invoice/app'
 import { app as invoiceTransaction } from '@cella/org-graft-invoice-transaction/app'
 import { app as accountTransaction } from '@cella/org-graft-account-transaction/app'
-import { app as clientProject } from '@cella/org-graft-client-project/app'
+import { app as contactProject } from '@cella/org-graft-contact-project/app'
 import { app as invoiceProject } from '@cella/org-graft-invoice-project/app'
 import { app as membershipProject } from '@cella/org-graft-membership-project/app'
 import { app as membershipTask } from '@cella/org-graft-membership-task/app'
@@ -73,7 +73,7 @@ import { app as expenseFile } from '@cella/org-graft-expense-file/app'
 const root: App = {
   name: 'org',
   extends: {
-    projects: { look: { cards: ['client', 'progress', 'budget', 'used'] } },
+    projects: { look: { cards: ['contact', 'progress', 'budget', 'used'] } },
     tasks: { look: { cards: ['assignee', 'project', 'priority', 'due'] } },
   },
 }
@@ -85,7 +85,7 @@ export const apps: App[] = [
   motion,
   document,
   meeting,
-  client,
+  contact,
   project,
   task,
   timesheet,
@@ -108,8 +108,8 @@ export const apps: App[] = [
   membershipMotionCircles.app,
   membershipMotion,
   documentMotion,
-  clientInvoice,
-  clientProject,
+  contactInvoice,
+  contactProject,
   invoiceProject,
   membershipProject,
   membershipTask,

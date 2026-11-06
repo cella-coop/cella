@@ -1,0 +1,18 @@
+{
+  "name": "@cella/org-graft-contact-project",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./models": "./src/models/index.ts",
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-actions": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-contact": "workspace:*",
+    "@cella/org-project": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

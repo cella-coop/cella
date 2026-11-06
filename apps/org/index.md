@@ -30,7 +30,7 @@ and its reports, the cash, what clients owe, the projects' margins, the motions 
 and the meetings ahead until a viewer pins their own, and the Inbox,
 what waits on the acting person, its count beside it. Each feat's
 collection is a page in the sidebar: People, Circles, Motions, Documents
-and Meetings (governance); Clients, Projects, Tasks and Timesheets (work);
+and Meetings (governance); Contacts, Projects, Tasks and Timesheets (work);
 Invoices, Accounts, Periods, Allocations, Terms, Statements, Reports,
 Transactions, Expenses and Payslips (finance);
 Devices, Files, Imports and the Log (platform).
@@ -68,9 +68,9 @@ guard's reason:
   in the block editor;
 - a new invoice, numbered by the server and posted to the books; a
   payment, posted; a void, its credit note posted; marking it sent;
-  linking it to a client;
-- a member's own name, a client's note, closing a month;
-- a project, its milestones, its budget (ordered), its client and the
+  linking it to a contact;
+- a member's own name, a contact's note, closing a month;
+- a project, its milestones, its budget (ordered), its contact and the
   shares of its budget (bounded); a task, given to someone, filed under a
   project and moved across the board, a drop between columns being the
   move; time logged as the acting worker by their employment, member or
@@ -107,7 +107,7 @@ guard's reason:
   `/files/<id>/content` to whom it concerns, who uploaded it and whoever
   holds a power over what it records;
 - a file from another tool imported, or tried in a dry run first, from
-  the Imports page: members with their first devices, clients, the books
+  the Imports page: members with their first devices, contacts, the books
   from the FEC, invoices to issue, a worker's own time from Toggl or
   Harvest, projects and tasks, each line the write it would be by hand.
 At rung 1 an ordered write settles or is refused at once, so Pending is
@@ -138,7 +138,7 @@ employment, and the grafts that join a person's role name the child.
 | `patronage` | finance | 1 | the work share's terms, each year's distribution of its surplus, from draft to approved to distributed, and each worker's part and statement |
 | `transaction` | finance | 1 | the journal's balanced entries |
 | `invoice` | finance | 1 | issue, send, get paid |
-| `client` | work | 1 | contacts and companies |
+| `contact` | work | 1 | the organisations and people the co-op deals with |
 | `project` | work | 1 | initiatives, their milestones and budgets |
 | `task` | work | 1 | assignable work |
 | `timesheet` | work | 1 | time entries and members' months |
@@ -180,8 +180,8 @@ and admit a member by vote (ordered).
 | `membership-payslip` | the pay runs waiting on a member to approve or pay them |
 | `membership-project` | a lead runs their own circle's projects; shares of a project's budget, never beyond it |
 | `membership-timesheet` | a lead approves their own circle's time; the months waiting on a member's approval; no time of a member suspended or gone, and a member's months |
-| `client-invoice` | who an invoice bills |
-| `client-project` | whom a project is for |
+| `contact-invoice` | who an invoice bills |
+| `contact-project` | whom a project is for |
 | `document-motion` | adoption of a document version by a motion |
 | `employment-membership-motion` | a candidate's admission, proposed from their candidacy once their probation is over |
 | `meeting-motion` | the motions a meeting's agenda tables, and where each stands |

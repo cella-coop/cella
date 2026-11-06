@@ -248,7 +248,7 @@ Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.
 Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé
-holds only the `member` role in the assembly, so she edits clients and
+holds only the `member` role in the assembly, so she edits contacts and
 documents and does none of these; Camille's `commit` mandate, up to
 20 000 €, is not needed by any write yet. A suspended member holds no
 seat's mandate. Inès, invited and employed, no member yet, sits in Web

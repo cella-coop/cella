@@ -60,7 +60,7 @@ test('the work pages render, each collection in its own layout', async () => {
     ['/timesheets', 'Shop: VAT fixes'],
     ['/timesheets?view=dashboard', 'Hours by project'],
     [`/people/${yusuf}`, 'Timesheets'],
-    ['/clients/halles', 'Les Halles Paysannes, online shop'],
+    ['/contacts/halles', 'Les Halles Paysannes, online shop'],
     ['/invoices/F-2026-0054', 'Les Halles Paysannes, online shop'],
   ]
   for (const [path, says] of pages) {
@@ -80,7 +80,7 @@ test('the work pages render, each collection in its own layout', async () => {
   assert.ok(!time.text.includes('Books, invoicing, payroll and contracts'), 'Thomas reads his own time, not Julien\'s')
   const projects = await shell.page('/projects', thomas)
   assert.match(projects.text, /class="gallery[\s"]/, 'projects open as a gallery')
-  assert.ok(projects.text.includes('Les Halles Paysannes') && projects.text.includes('3 / 4'), 'a card names its client and its milestones')
+  assert.ok(projects.text.includes('Les Halles Paysannes') && projects.text.includes('3 / 4'), 'a card names its contact and its milestones')
   const tasks = await shell.page('/tasks', thomas)
   assert.match(tasks.text, /class="board[\s"]/, 'tasks open as a board')
   for (const l of ['backlog', 'todo', 'doing', 'done']) {

@@ -91,7 +91,7 @@ pub enum Command {
 
     /// Bring a file from another tool into the scope as a member, each record through its signed write; --dry-run undoes them all
     Import {
-        /// The kind of file: members, clients, fec, invoices, toggl, harvest, projects or tasks
+        /// The kind of file: members, contacts, fec, invoices, toggl, harvest, projects or tasks
         kind: String,
 
         /// The file to import

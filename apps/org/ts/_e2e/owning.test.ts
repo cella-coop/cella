@@ -104,7 +104,7 @@ test('Lanterne\'s records are owned as its fixtures place them', async () => {
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM meeting.item i JOIN meeting.meeting m ON m.id = i.meeting WHERE i.circle <> m.circle'), [{ n: 0 }])
   assert.deepEqual(await all('SELECT count(*)::int AS n FROM motion.vote v JOIN motion.motion m ON m.id = v.motion WHERE v.circle <> m.circle'), [{ n: 0 }])
   // The books, pay and membership are the whole co-op's.
-  for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'client.client']) {
+  for (const table of ['transaction.entry', 'transaction.line', 'invoice.invoice', 'payslip.payslip', 'membership.member', 'contact.contact']) {
     assert.deepEqual(await all(`SELECT DISTINCT circle FROM ${table}`), [{ circle: 'ag' }], table)
   }
   // Time is the circle's it is worked for, and a month holds one circle's.

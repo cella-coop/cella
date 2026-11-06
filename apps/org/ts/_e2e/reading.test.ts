@@ -248,7 +248,7 @@ test('a view the app reads reads as its reader: Inès, in Web and no member, and
   // records through any, only his own path and the reports every scope is
   // drawn with.
   const views = [
-    'bill.taxed', 'client_invoice.standing', 'document.adopted', 'document_membership.texts', 'document_motion.adoption',
+    'bill.taxed', 'contact_invoice.standing', 'document.adopted', 'document_membership.texts', 'document_motion.adoption',
     'employment_membership_motion.admission', 'expense_membership.claim', 'invoice.standing', 'invoice.taxed',
     'meeting_membership.quorum', 'meeting_membership.roll', 'membership_motion.action', 'membership_motion.mention',
     'membership_motion.seating', 'membership_project.pot', 'motion.circle_action', 'motion_patronage.approval',

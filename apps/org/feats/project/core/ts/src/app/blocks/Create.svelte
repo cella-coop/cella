@@ -3,7 +3,7 @@
   import type { Offered, Project } from '../../models/project.ts'
 
   // A new project, started on the verdict date; its id is its title's
-  // slug. Its budget, milestones and client are set on its page.
+  // slug. Its budget, milestones and contact are set on its page.
   let { about }: { rows: Project[]; about: Offered } = $props()
 </script>
 

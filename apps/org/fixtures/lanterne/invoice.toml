@@ -1,6 +1,6 @@
 # Invoices in the series F-2026, amounts in cents. An invoice carries the name
-# and address it bills, as issued; the link to the client record is the
-# client-invoice graft's.
+# and address it bills, as issued; the link to the contact record is the
+# contact-invoice graft's.
 
 series = "F-2026"
 next = 56

@@ -1,0 +1,33 @@
+# Which contact each project is for.
+
+[[commission]]
+project = "halles-shop"
+contact = "halles"
+
+[[commission]]
+project = "clairval-site"
+contact = "clairval"
+
+[[commission]]
+project = "nuvola-retainer"
+contact = "nuvola"
+
+[[commission]]
+project = "mauve-posters"
+contact = "mauve"
+
+[[commission]]
+project = "velo-identity"
+contact = "velo"
+
+[[commission]]
+project = "ferrand-packaging"
+contact = "ferrand"
+
+[[commission]]
+project = "terres-report"
+contact = "terres"
+
+[[commission]]
+project = "ondine-shop"
+contact = "ondine"

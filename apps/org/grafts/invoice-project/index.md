@@ -31,14 +31,14 @@ assembly's, unless the write that makes it names another.
 | `invoice-project:invoice:link` | confluent | `issue-invoice` | the last writer wins; an invoice bills one project's work |
 
 On an invoice's page the write is the action `charge`, apart from
-`client-invoice`'s `link` on the same page. `002-powers.sql` registers
+`contact-invoice`'s `link` on the same page. `002-powers.sql` registers
 the power in `cella.power`, and the membership feat checks it.
 
 ## Invariants
 
 - a charge's invoice and project exist.
 
-That the project is for the client the invoice bills joins three feats and
+That the project is for the contact the invoice bills joins three feats and
 is not checked in SQL; the fixture check holds Lanterne to it.
 
 ## Shell

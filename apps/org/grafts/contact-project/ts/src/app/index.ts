@@ -1,0 +1,26 @@
+import type { App } from '@cella/org-ui'
+import type { Commissioned, For } from '../models/commission.ts'
+import Contact from './blocks/Contact.svelte'
+import Projects from './blocks/Projects.svelte'
+
+// The graft's client side: whom a project is for and the form that links
+// it, and the projects a contact commissioned.
+export const app: App = {
+  name: 'contact-project',
+  extends: {
+    projects: {
+      columns: [{ key: 'contact', label: 'Contact', role: 'sub', value: (r: { contact?: string }) => r.contact }],
+      page: {
+        properties: (f: For) => [{ label: 'Contact', value: f.contact?.name ?? 'own', href: f.contact ? `/contacts/${f.contact.id}` : undefined }],
+        related: (f: For) => (f.contact ? [{ label: f.contact.name, sub: 'contact', href: `/contacts/${f.contact.id}` }] : []),
+        blocks: [Contact],
+      },
+    },
+    contacts: {
+      page: {
+        properties: (ps: Commissioned[]) => [{ label: 'Projects', value: ps.length, kind: 'number' }],
+        blocks: [Projects],
+      },
+    },
+  },
+}

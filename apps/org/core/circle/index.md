@@ -698,7 +698,7 @@ mandates the assembly issued it, not by a place above them.
 
 | Role | Power | Cap |
 |---|---|---|
-| Member (every member, in `ag`) | `edit-client`, `edit-document`, `edit-task`, `invite-member` | — |
+| Member (every member, in `ag`) | `edit-contact`, `edit-document`, `edit-task`, `invite-member` | — |
 | Gérante (Camille, in `ag`, 2024–2028) | `commit` | 20 000 € limit |
 | Gérante | `approve-expense` | 2 000 € limit |
 | Gérante | `set-budget` | 50 000 € limit |

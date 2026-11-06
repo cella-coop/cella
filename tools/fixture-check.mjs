@@ -33,7 +33,7 @@ const check = (name) => {
   const circle = read('circle')
   const motion = read('motion')
   const document = read('document')
-  const client = read('client')
+  const contact = read('contact')
   const invoice = read('invoice')
   const account = read('account')
   const patronage = read('patronage')
@@ -170,7 +170,7 @@ const check = (name) => {
     }
   }
 
-  const clients = ids(client.client)
+  const contacts = ids(contact.contact)
   const invoices = new Map((invoice.invoice ?? []).map((i) => [i.id, i]))
   const accounts = ids(account.account, 'code')
   const periods = ids(account.period, 'month')
@@ -246,9 +246,9 @@ const check = (name) => {
       fail(`adoption of ${a.version}: ${a.motion} has no action to adopt it`)
     }
   }
-  for (const b of read('graft.client-invoice').billing ?? []) {
+  for (const b of read('graft.contact-invoice').billing ?? []) {
     has(new Set(invoices.keys()), b.invoice, 'invoice', 'billing')
-    has(clients, b.client, 'client', 'billing')
+    has(contacts, b.contact, 'contact', 'billing')
   }
   for (const p of read('graft.invoice-transaction').posting ?? []) {
     has(new Set(invoices.keys()), p.invoice, 'invoice', 'posting')

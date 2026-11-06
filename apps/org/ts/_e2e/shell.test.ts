@@ -53,7 +53,7 @@ test('every main page renders on the seed', async () => {
     ['/invoices/F-2026-0044', 'Compagnie Mauve Horizon'],
     ['/bills', 'Imprimerie du Parc'],
     ['/bills/bi-0002', 'Studio rent, October'],
-    ['/clients', 'Vélo Solidaire'],
+    ['/contacts', 'Vélo Solidaire'],
     ['/accounts', 'Banque'],
     ['/accounts/512', 'Ledger'],
     ['/periods', '2026-10'],
@@ -268,7 +268,7 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   for (const mention of ['%PDF-1.4', '(N', ' F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
     assert.ok(printed.text.includes(mention), `the PDF prints ${mention}`)
   }
-  const linked = await act('/invoices/F-2026-0056', 'link', { client: 'velo' }, julien)
+  const linked = await act('/invoices/F-2026-0056', 'link', { contact: 'velo' }, julien)
   assert.equal(linked.state, 'settled')
 })
 

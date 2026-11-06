@@ -6,7 +6,7 @@ updated = 2026-11-05
 What the co-op bills: issue an invoice, send it, record what is paid
 against it, and void it when it is wrong. An invoice carries everything
 that must appear on it as issued, including the name and address it bills,
-as text; the link to a client record is the `client-invoice` graft's, the
+as text; the link to a contact record is the `contact-invoice` graft's, the
 project whose work it bills the `invoice-project` graft's, and the entries
 it posts are the `invoice-transaction` graft's.
 
@@ -86,13 +86,13 @@ The invoice feat owns the guards about its own collection:
 
 What it does not own:
 
-- whom the invoice bills as a client record: `client-invoice`;
+- whom the invoice bills as a contact record: `contact-invoice`;
 - that issue, payment and void post balanced entries into an open period:
   `invoice-transaction` and `account-transaction`.
 
 ## What it does not know
 
-Invoice knows no clients, transactions, accounts, projects or timesheets.
+Invoice knows no contacts, transactions, accounts, projects or timesheets.
 Which project an invoice bills is `invoice-project`'s; generating lines
 from billable time or milestones belongs to later grafts with `timesheet`
 and `project`; e-invoicing through an approved platform
@@ -198,7 +198,7 @@ page shows its lines and payments, marks it sent (`send`) and links its
 PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,
 amounts typed in euros and VAT rates in percent (`5,5`), so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
-that post them. Whom an invoice bills is `client-invoice`'s.
+that post them. Whom an invoice bills is `contact-invoice`'s.
 
 ## The PDF
 
@@ -261,4 +261,4 @@ not verified.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is client-invoice's. All three are scoped by `circle`, the circle that owns the invoice or the payment.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `invoice.invoices`, `invoice.taxes` and `invoice.payments` to the analytics shell: each invoice with its figures and standing, its VAT by rate, and its payments. Whom it is billed to is contact-invoice's. All three are scoped by `circle`, the circle that owns the invoice or the payment.

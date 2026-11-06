@@ -1,0 +1,61 @@
+# The organisations and people Lanterne deals with: the eight it works for,
+# and Margaux Roux, a person at Les Halles.
+
+[[contact]]
+id = "halles"
+name = "Les Halles Paysannes"
+form = "SCIC SA"
+note = "a network of farmers' shops; brand refresh and an online shop"
+
+# A person: Les Halles' contact for the shop, whose details are personal
+# data, of class contact.
+[[contact]]
+id = "halles-roux"
+kind = "person"
+parent = "halles"
+name = "Margaux Roux"
+email = "margaux.roux@halles-paysannes.example"
+phone = "+33 6 41 27 90 12"
+note = "runs the online shop; prefers mornings"
+
+[[contact]]
+id = "clairval"
+name = "Ville de Clairval"
+form = "commune"
+note = "the town website, rebuilt to RGAA accessibility; won by tender"
+
+[[contact]]
+id = "nuvola"
+name = "Nuvola Énergie"
+form = "SCIC SAS"
+note = "a citizen solar co-op; monthly marketing retainer"
+
+[[contact]]
+id = "mauve"
+name = "Compagnie Mauve Horizon"
+form = "association"
+note = "a theatre company; season posters and brochure"
+
+[[contact]]
+id = "velo"
+name = "Vélo Solidaire"
+form = "association"
+note = "a bike repair workshop; brand identity at the solidarity rate"
+
+[[contact]]
+id = "ferrand"
+name = "Maison Ferrand"
+form = "SARL"
+note = "an artisan bakery group; packaging design"
+
+[[contact]]
+id = "terres"
+name = "Fondation Terres Vives"
+form = "fondation"
+note = "a land-trust foundation; annual report and microsite"
+
+[[contact]]
+id = "ondine"
+name = "Atelier Ondine"
+form = "SAS"
+note = "a ceramics studio; online shop"

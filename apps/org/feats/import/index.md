@@ -16,7 +16,7 @@ owns a write is the one that knows its fields:
 | Kind | Read by | Each record | Formats |
 |---|---|---|---|
 | `members` | `membership` | an invitation, to be given its link from the member's page | CSV: address, name |
-| `clients` | `client` | a client added | CSV: name, kind, form, email, phone, tags, note |
+| `contacts` | `contact` | a contact added | CSV: name, kind, form, email, phone, tags, note |
 | `fec` | `account-transaction` | an entry carried over, opening the accounts it names | the FEC (Livre des procédures fiscales, art. A47 A-1) |
 | `invoices` | `invoice-transaction` | an invoice issued and posted | CSV: a row per line |
 | `toggl` | `employment-project-timesheet` | a worker's own time booked to a project, or the co-op's | Toggl Track's detailed report |
@@ -56,7 +56,7 @@ entries are carried over by the power `carry-books`.
 | run | `id`, `kind`, `name`, `actor`, `day`, `dry`, `settled`, `refused`, `lines` | `id` is `im-0001` and up; `lines` each a line's number, what it is, the action, its outcome, its entry or reason |
 
 What a line is names a record by its id, its address or its title, never
-a person's name: a person among the clients is `a person, line 4`.
+a person's name: a person among the contacts is `a person, line 4`.
 
 ## Actions
 

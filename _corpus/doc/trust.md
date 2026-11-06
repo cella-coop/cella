@@ -565,8 +565,8 @@ erased until their legal clock runs out.
 - **Erasure** is a write: `membership:member:erase`, a former member's
   own, by every person's right `erase-own-data`, for all their personal
   data, the person's profile with it; `person:person:forget`, the
-  person's own, for their optional contact fields; `client:client:erase`, under the
-  `erase-personal-data` power, for a person among the clients. No one
+  person's own, for their optional contact fields; `contact:contact:erase`, under the
+  `erase-personal-data` power, for a person among the contacts. No one
   erases another member, and no motion decides it: erasure is the
   person's right (GDPR art. 17), within the holds the law keeps, art.
   17(3)(b), a legal obligation, and (e), legal claims. So a member who

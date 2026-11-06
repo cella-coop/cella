@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -741,7 +741,7 @@ their tenure, and Camille sits there as a member.
 |---|---|
 | Every person | `keep-profile`, `keep-devices`, `upload-file`, `accept-invitation`, `file-record`, `mark-read`, `record-import`, `withdraw-membership`, `erase-own-data` |
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
-| Every employee | `log-time`, `claim-expense` |
+| Every employee | `log-time`, `claim-expense`, `apply-membership` |
 
 Each is a policy of the assembly, a mandate or a right, adopted with
 the statutes by the founding motion, m-2021-001, on 1 March 2021, and in force since;

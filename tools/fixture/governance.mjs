@@ -2,14 +2,14 @@
 // decided. An action names a kind a graft registers, and its arguments
 // resolve: a policy has a kind and its wording; a member to admit is
 // invited and subscribes shares, one to suspend or let go is a member; a
-// seat names a circle and a member; the links check a version to adopt
-// and a distribution to approve. Every
+// seat names a circle and a member, a role's seat a circle; the links
+// check a version to adopt and a distribution to approve. Every
 // invited member has taken up their invitation, with the first device it
 // enrolled, without which their admission is refused, and only they have.
 
 // The kinds the grafts register, and `policy` and `end`, which the motion
 // feat registers itself.
-const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'adopt', 'distribution', 'policy', 'end'])
+const kinds = new Set(['admit', 'suspend', 'exit', 'seat', 'unseat', 'seat-role', 'unseat-role', 'adopt', 'distribution', 'policy', 'end'])
 
 export function governance(read, fail) {
   const members = new Map((read('membership').member ?? []).map((m) => [m.address, m]))
@@ -30,7 +30,7 @@ export function governance(read, fail) {
       if (m.kind === 'policy' && (!['mandate', 'right', 'rule', 'procedure'].includes(a.kind) || !a.wording)) {
         fail(`${where}: a policy is a mandate, a right, a rule or a procedure, with its wording`)
       }
-      if (['seat', 'unseat'].includes(m.kind) && !circles.has(a.circle)) {
+      if (['seat', 'unseat', 'seat-role', 'unseat-role'].includes(m.kind) && !circles.has(a.circle)) {
         fail(`${where}: no circle ${a.circle}`)
       }
     }

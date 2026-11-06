@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Db, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Add, Added, Remove, Removed } from '../models/seat.ts'
+import type { Add, Added, Remove, Removed, RoleSeat } from '../models/seat.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -57,5 +57,46 @@ export async function remove(input: Remove, deps: Deps): Out<'circle:seat:remove
       return { seat: Number(rows[0]?.id ?? 0), until: rows[0]?.until ?? '' }
     },
     payload: (v) => ({ seat: v.seat, circle: input.circle, member: input.member, role: input.role, motion: input.motion }),
+  })
+}
+
+// Seats a role in another circle from the verdict date: a membership of
+// the circle whose member is the role, so whoever holds it sits there for
+// the days their tenure runs. Ordered and decided: the guards on the op
+// check that the motion it cites carried and that it seats this role
+// here.
+export async function seatRole(input: RoleSeat, deps: Deps): Out<'circle:role:seat', Added> {
+  return write(deps, {
+    op: 'circle:role:seat' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ id: string; since: string }>(
+        `INSERT INTO circle.member (circle, role, since)
+         VALUES ($1, $2, cella.verdict_date())
+         RETURNING id, to_char(since, 'YYYY-MM-DD') AS since`,
+        [input.circle, input.role],
+      )
+      return { seat: Number(rows[0].id), since: rows[0].since }
+    },
+    payload: (v) => ({ seat: v.seat, circle: input.circle, role: input.role, motion: input.motion }),
+  })
+}
+
+// Ends a role's seat in a circle on the verdict date, citing the motion
+// that ends it; every tenure of the role stands.
+export async function unseatRole(input: RoleSeat, deps: Deps): Out<'circle:role:unseat', Removed> {
+  return write(deps, {
+    op: 'circle:role:unseat' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ id: string; until: string }>(
+        `UPDATE circle.member SET until = cella.verdict_date()
+         WHERE circle = $1 AND role = $2 AND until IS NULL
+         RETURNING id, to_char(until, 'YYYY-MM-DD') AS until`,
+        [input.circle, input.role],
+      )
+      return { seat: Number(rows[0]?.id ?? 0), until: rows[0]?.until ?? '' }
+    },
+    payload: (v) => ({ seat: v.seat, circle: input.circle, role: input.role, motion: input.motion }),
   })
 }

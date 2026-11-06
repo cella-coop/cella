@@ -159,7 +159,7 @@ as entry 1.
 - `membership_motion.seating`: the seats motions give and end: an
   admission's, in the motion's circle as `member`, and those the
   `seat` and `unseat` actions name, kinds this graft registers by
-  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it.
+  `motion.register_carries` (`circle`, `member`, `role`, none for a plain seat), carried out by `circle:seat:add` and `:remove`, which it registers by `motion.register_cite` with their power, `seat-member`. The `seat-role` and `unseat-role` actions, which it registers too (`circle`, `role`), seat a role in another circle, so whoever holds it sits there, and end that seat, carried out by core's `circle:role:seat` and `:unseat` with the same power; they are no row of `seating`, which is people's seats. The `circle` action, which this graft registers too (`id`, `name`, `purpose`), creates a circle, carried out by core's `circle:circle:create` with its power, `create-circle`; a later `seat` of the same motion may name it.
 
 A roll fixed at the proposal is closer to a ballot list than one read at
 the close, and a member seated or admitted later does not vote on it.
@@ -237,7 +237,23 @@ she is on no roll of the assembly's.
   `motion.cites`; the motion feat covers the same list with `mandated`,
   that the motion's circle holds the power. A graft that cites a motion so never reads
   this one, and this one never names a feat it does not join. This graft
-  registers `circle:seat:add` and `:remove` itself, core's actions.
+  registers `circle:seat:add` and `:remove`, and `circle:role:seat` and
+  `:unseat`, itself, core's actions.
+- `membership_motion.role_asks`, on `motion:motion:propose`: a role
+  seated in a circle or unseated is the motion of a circle that may
+  decide who sits there (`motion.decides`), and its terms pass
+  `membership_motion.role_terms`, which judges them again as the seat is
+  written: the circle is one there is, or one an earlier `circle`
+  action of the same motion creates; the role is one there is, and not
+  the circle's own, whose holders sit there by their tenures; it sits
+  in the circle once; and an unseat names a seat the role holds there.
+  Each refusal names the role and the circle and what would fix it:
+  another circle, or ending the seat that runs first.
+- `membership_motion.seats_role`, on `circle:role:seat`: the seat is a
+  role's membership the write added from the verdict date, which the
+  cited motion gives, on the terms `role_terms` judges, the seat itself
+  aside. `unseats_role`, on `:unseat`: the role's seat ended on the
+  verdict date, and the cited motion ends it.
 - `membership_motion.seats`, on `circle:seat:add`: the
   seat is one the cited motion gives (`seating`), to a person whose seat
   counts there (`membership.counts`), from the verdict date, where they held no such seat. `unseats`, on
@@ -305,7 +321,8 @@ she is on no roll of the assembly's.
   a refused seat refusing it; a suspension or an exclusion
   (membership feat),
   a circle created (core's `create`), a seat given or ended (core's
-  `add` and `remove`), a policy
+  `add` and `remove`), a role seated in a circle or unseated (core's
+  `seatRole` and `unseatRole`), a policy
   adopted or ended, a mandate's with it (the motion feat's circles' `adopt` and
   `end`, which extend the motion feat's), whose request names the
   motion's action, `n`, so the writes that react to an adoption, a rule's

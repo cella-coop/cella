@@ -15,4 +15,10 @@ export const actions = {
   'circle:seat:add': ordered({ power: 'seat-member' }),
   // who holds which role; a seat is ended by the motion it cites
   'circle:seat:remove': ordered({ power: 'seat-member' }),
+  // where a role's holders sit: a role made a member of another circle
+  // by the motion it cites, so whoever holds it sits there
+  'circle:role:seat': ordered({ power: 'seat-member' }),
+  // a role's seat in another circle, ended by the motion it cites; every
+  // tenure of the role stands
+  'circle:role:unseat': ordered({ power: 'seat-member' }),
 } satisfies Actions

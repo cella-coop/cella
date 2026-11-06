@@ -8,3 +8,5 @@ SELECT cella.lets_follow('motion:motion:close', 'motion:policy:end', 'membership
 SELECT cella.lets_follow('motion:motion:close', 'circle:circle:create', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:seat:add', 'membership-motion');
 SELECT cella.lets_follow('motion:motion:close', 'circle:seat:remove', 'membership-motion');
+SELECT cella.lets_follow('motion:motion:close', 'circle:role:seat', 'membership-motion');
+SELECT cella.lets_follow('motion:motion:close', 'circle:role:unseat', 'membership-motion');

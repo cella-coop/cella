@@ -465,6 +465,11 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
   so it shows what the members and the tenures let them read.
 - `circle.seated(circle, day)`: the people seated in a circle on a day,
   from which the membership-motion graft fixes a motion's roll.
+- `sitting(db, person, from, until)` (`./api`): the circles a person
+  sits in on any day of a span, the assembly first, which a form offers
+  as the circles a record may be worked for, and `offering` (`./models`)
+  puts the one the record's own circle names first where they sit in
+  it, as the week of time offers a project's circle.
 
 The app role and the guards role may select, the app role what [the
 structure's reading](#who-reads-the-structure) lets it; the app role may insert a

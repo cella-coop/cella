@@ -1,6 +1,6 @@
 import type { Db, Read } from '@cella/org-db'
 import { sentences } from '@cella/org-policy'
-import type { Circle, Detail, Mandate, Role } from '../models/circle.ts'
+import type { Circle, Detail, Mandate, Role, Sat } from '../models/circle.ts'
 
 // Circles never nest, so they list the assembly first and the others by
 // name.
@@ -15,6 +15,21 @@ export const listing: Read = {
 // The circles, the assembly first and the others by name.
 export async function circles(db: Db): Promise<Circle[]> {
   const { rows } = await db.query<Circle>(`SELECT c.id, c.name, c.assembly, c.purpose, c.procedure FROM circle.circle c ORDER BY ${order}`)
+  return rows
+}
+
+// The circles a person sits in on any day from `from` to `until`, both
+// included, by any seat, the assembly first and the others by name.
+export async function sitting(db: Db, person: string, from: string, until: string): Promise<Sat[]> {
+  const { rows } = await db.query<Sat>(
+    `SELECT c.id, c.name FROM circle.circle c
+     WHERE EXISTS (
+       SELECT FROM circle.seat s WHERE s.circle = c.id AND s.member = $1
+         AND (s.since IS NULL OR s.since <= $3::date) AND (s.until IS NULL OR s.until > $2::date)
+     )
+     ORDER BY ${order}`,
+    [person, from, until],
+  )
   return rows
 }
 

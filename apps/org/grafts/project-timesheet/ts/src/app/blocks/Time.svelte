@@ -4,7 +4,7 @@
 
   // The project's time: its hours and what its billable hours spent of the
   // budget, who worked them, the latest entries, and logging time
-  // against it as the acting member.
+  // against it as the acting member, for the circle they name.
   let { data }: { data: Time; id: string } = $props()
 
   type Who = Time['members'][number]
@@ -41,6 +41,9 @@
       <Field label="Day" name="day" type="date" value={data.today} required />
       <Field label="Hours" name="hours" placeholder="7" required />
       <Field label="Kind" name="billable" options={kinds} value="billable" />
+      {#if data.circles.length}
+        <Field label="Circle" name="circle" options={data.circles.map((c) => ({ value: c.id, label: c.name }))} value={data.circles[0].id} />
+      {/if}
       <Field label="Note" name="note" />
     </Form>
   {/if}

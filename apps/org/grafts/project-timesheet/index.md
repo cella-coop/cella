@@ -71,7 +71,9 @@ the hours by project; to each project its hours and what they spent, a
 card field of the projects' gallery. On a project's page it adds the Time
 tab: the hours, billable hours and what they spent, the hours by member,
 the latest entries and logging time against the project as the acting
-member.
+member, for the circle they name among those they sit in that day, the
+project's offered first where they sit in it, so the entry goes into
+their month of that circle.
 
 ## Lanterne
 

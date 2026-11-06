@@ -219,7 +219,10 @@ The theme is light, dark or the system's, a cookie the server writes into
   `person` kind is an address drawn so, from the names of the people the
   co-op knows, which the shell reads once for its pages), `Grid` (figures to type into, a row per
   thing and a column per day, each cell showing what it holds and taking
-  what is added, with the totals; the arrows move between open cells),
+  what is added, with the totals; the arrows move between open cells;
+  `pick` gives each row a choice in a column after its label, the
+  first of its options chosen, as the circle a row's time is worked
+  for),
   `Button`, `Form` (a write, posting to a named form action, files and
   all, through `post`; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,

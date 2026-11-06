@@ -133,7 +133,12 @@ acting worker's week (`employment-project-timesheet`): a project to a row,
 the co-op's own time last, and a day to a column, each cell adding the
 hours typed into it, the feat's log, booked to the row's project by
 `project-timesheet`; the feat's own one-entry form, with a note, is what
-that replaces. An entry's page shows its worker's month and, in its
+that replaces. Each row names the circle its time is worked for, chosen
+by the worker among the circles they sit in, and its hours log in that
+circle's month: a project's row offers the project's circle first where
+the worker sits in it, and the co-op's own time the root's, so time
+logged from the shell lands in the month of the circle it was worked
+for and is approved by whoever holds `approve-time` over that circle. An entry's page shows its worker's month and, in its
 header, lets its worker correct the entry's hours down while the month is not approved,
 and submits the entry's month, its circle's, while open or approves it
 once submitted; a person's page lists their months, a row for each

@@ -187,4 +187,4 @@ Paul left on 30 November 2025: his 1 500 € is owed him in `4567`, repaid
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_transaction.capital_months` to the analytics shell: what the members subscribed, paid in, drew and were repaid, summed over every member, by month of the entry that posted it. It is shared by `month`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `account_membership_transaction.capital_months` to the analytics shell: what the members subscribed, paid in, drew and were repaid, summed over every member, by month of the entry that posted it. It is shared by `month`. Each month is counted: `account_membership_transaction.capital_months_contributions` holds each member's capital moves in it, read by account's powers, which only the port reads, to withhold a month from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)).

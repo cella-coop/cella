@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -139,4 +139,4 @@ right as every worker does. October is open.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `timesheet.months` to the analytics shell: each month's time in minutes, summed over every entry. An entry is its member's, so no row is one member's time. It is shared by `month`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `timesheet.months` to the analytics shell: each month's time in minutes, summed over every entry. An entry is its member's, so no row is one member's time. It is shared by `month`. Each month is counted: `timesheet.months_contributions` holds each person's minutes in it, which only the port reads, to withhold a month from a reader where open books does not share it ([what is withheld](../../core/analytics/index.md#what-is-withheld)).

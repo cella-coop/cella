@@ -1,7 +1,8 @@
 -- Core's circles' analytical contract: the circles, their roles, the
 -- mandates each grantee, a role or a circle, holds, with their issuers,
 -- their parents, their limits,
--- budgets and scopes, and the rights the legal form gives.
+-- budgets and scopes, the rights the legal form gives, and open books'
+-- disclosure values by the rule that set them.
 CREATE VIEW circle.circles AS
 SELECT c.id, c.name, c.assembly, c.procedure
 FROM circle.circle c;
@@ -23,6 +24,11 @@ CREATE VIEW circle.rights AS
 SELECT r.id, r."right", r.power, cella.cents(r."limit") AS "limit", r."from", r.until, r.revoked
 FROM circle.right r;
 COMMENT ON VIEW circle.rights IS 'audience: shared by id';
+
+CREATE VIEW circle.disclosures AS
+SELECT d.id, d.policy, d.contributors, d.largest, d.two, d."from", d.until, d.revoked
+FROM circle.disclosure d;
+COMMENT ON VIEW circle.disclosures IS 'audience: shared by id';
 
 -- Who holds which role in which circle, and when.
 CREATE VIEW circle.seats AS

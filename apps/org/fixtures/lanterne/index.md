@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-04
+updated = 2026-11-06
 +++
 
 # Lanterne
@@ -149,7 +149,13 @@ assembly, and no one opens a candidacy for another.
   floors on the surplus, `m-2021-001/72`, at least `{work_share: 25 % |
   more is stricter}` to all the employees, and `/75`, at least
   `{reserve_share: 15 % | more is stricter}` to the reserves, named for no
-  feat. The internal
+  feat. Its last, `m-2021-001/80`, is open books' disclosure rule, the
+  disclosure study's defaults, copied by core into `circle.disclosure`:
+  a total of members' own figures is shared with every member where at
+  least `{disclosure_contributors: 5 | more is stricter}` people put into
+  it, none more than `{disclosure_largest: 50 % | less is stricter}` and
+  no two more than `{disclosure_two: 80 % | less is stricter}`
+  ([open books](../../core/circle/index.md#open-books)). The internal
   rules' third version, adopted by m-2026-007 on 20 June 2026, holds five
   rules: the 35-hour week, at most three remote days, the pay ratio of at
   most 1.6, the solidarity rate for associations and co-ops under ten

@@ -1,6 +1,6 @@
 +++
 title = "Analytics"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The analytics port (`@cella/org-analytics`): what a report asks of the
@@ -10,7 +10,9 @@ publish, and the shell's implementation of it
 A feat or a page hands the port a report and never SQL; the shell runs
 it, read-only, on one snapshot of the scope, and stamps the result with
 the log's head it read. A report that reads a scoped view names its
-reader, and reads only the rows they may.
+reader, and reads only the rows they may; one that reads a counted view
+reads only the cells open books shares with them, and those they may
+read whole.
 
 ## A report
 
@@ -34,12 +36,16 @@ reader, and reads only the rows they may.
 - `order`, by fields shown or measures, `-` before one descending, and
   `limit`, at most `MAX_ROWS` (10 000), the default.
 - `personal`, every personal field the report reads, declared.
-- `reader`, where it reads a scoped view, the circles its reader reads it
-  in and the reader themselves ([the reader](#the-reader)).
+- `reader`, where it reads a scoped or a counted view, the circles its
+  reader reads it in and the reader themselves ([the reader](#the-reader)),
+  and, where it reads a counted view, the circles the powers of theirs
+  that read each feat's rows cover, and open books' disclosure values
+  ([what is withheld](#what-is-withheld)).
 
 A run returns the `head` it read (the log's entry number and hash, 0 and
 null before the first write), the columns with their DuckDB types, the
-rows, and `more` when there were more rows than it returned. A whole
+rows, `more` when there were more rows than it returned, and `withheld`,
+how many cells of the counted views it read it left out. A whole
 number reads as a number while it is one exactly, else as its digits; an
 exact decimal, a date and a time as text.
 
@@ -48,8 +54,9 @@ exact decimal, a date and a time as text.
 `check(report, catalog, saved)` (`src/check.ts`) returns every reason the
 catalog refuses a report, none when it may run, and `compile` throws
 `Invalid` with them. The catalog is each view the analytics role may
-read, with the audience its comment declares, scoped or shared (one that
-declares neither is none of it), and its
+read, with the audience its comment declares, scoped, shared or the
+contributions to a shared view, which make that view counted (one that
+declares none is none of it), and its
 columns, each with its type and whether its contract
 comments it `personal:`. A report is refused when it:
 
@@ -66,9 +73,11 @@ comments it `personal:`. A report is refused when it:
 - orders by what it does not show, or asks for no row or past `MAX_ROWS`;
 - reads a personal field, shown, joined, filtered, grouped or measured,
   that `personal` does not declare, or declares one that is not personal;
-- reads a scoped view, or joins one, with no `reader`, or filters a
-  shared view by a field below the grain it declares, any but those it
-  is shared by. A saved definition, which whoever runs it reads, is
+- reads a scoped or a counted view, or joins one, with no `reader`, or
+  a counted view with a reader that gives no circles by feat or no
+  disclosure values, none where no rule stands; reads a contributions
+  view, which only the port reads; or filters a shared view by a field
+  below the grain it declares, any but those it is shared by. A saved definition, which whoever runs it reads, is
   checked with `saved` and names no reader.
 
 `compile(report, catalog)` makes the checked report one SQL statement
@@ -94,7 +103,47 @@ the report reads what the app shows them and no more; a reader whose
 mandates cover nothing reads no row. A
 report with no `reader` that reads a scoped view is refused before the
 shell sees it, so no page and no feat runs one without a reader. A
-shared view is read whole by every reader.
+shared view is read whole by every reader, but for the cells of a
+counted one ([below](#what-is-withheld)).
+
+The same question, asked once, names for each feat the circles that
+powers of the reader's over its rows cover, `cella.circles(feat)`
+(`opens`), and open books' disclosure values in force on the verdict
+date, `circle.disclosed`, or none where no rule stands (`disclosure`).
+
+## What is withheld
+
+A counted view is a shared total of members' own figures, whose
+contributions its contract publishes
+([analytical contracts](../../../../_corpus/doc/architecture.md#analytical-contracts)).
+`compile` reads it as only the cells its reader may read: in place of
+the view, the rows of it whose cell is
+
+- the reader's own: every contribution to it is theirs, or is in a
+  circle `opens` names for the feat its contributions are read by, so
+  a reader sees what their own permission opens, unwithheld; or
+- shared by open books: at least `disclosure_contributors` people put
+  into it, its largest contribution is no more than `disclosure_largest`
+  of the whole, the two largest no more than `disclosure_two`, and the
+  whole is more than nothing, each contribution counted by its size.
+
+A cell with no contribution, a project no one has logged time on, is
+no one's figure and reads. Where no disclosure rule stands, only the
+reader's own cells read. Every other cell is left out before the report
+joins, filters or sums, so each total a report shows is the sum of the
+cells it may show: a margin is never the whole less a withheld cell,
+and no two reports differ by one. Each run counts the cells of each
+counted view it read that it left out, `withheld`, so a page can say a
+figure is missing; the contributions themselves, each person's part,
+never leave the shell.
+
+What it does not stop: one shared view differenced against another over
+the same people, as `timesheet.months` against
+`project_timesheet.months`, or a cell's value before and after a member
+joins or a correction lands, or what a reader knows from outside the
+books. `read` alone opens no contribution here, as it opens no one's
+pay, so a member who reads a circle's expenses by open books reads a
+withheld cell of `expense_project.totals` withheld.
 
 ## The shell's implementation
 
@@ -130,7 +179,10 @@ run's transaction moves neither its rows nor its head; and that the port
 refuses each kind of report above with its reason, before the shell sees
 it, and reads a scoped view for its reader alone: the rows of the
 circles they read it in and their own, and none where they read in no
-circle. The e2e scenario `reading` runs a saved custom report over a scoped
+circle; and withholds a counted view's cells below open books' values
+from a reader outside them, reads them to a reader whose powers read
+their rows, and leaves no withheld cell between a total and the same
+total less a cell. The e2e scenario `reading` runs a saved custom report over a scoped
 view as Lanterne's readers: Inès, in Web and no member, reads Web's and
 the assembly's rows and no other circle's, and a person whose mandate
 to read went reads none of them.

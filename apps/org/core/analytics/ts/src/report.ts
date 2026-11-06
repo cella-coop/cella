@@ -30,8 +30,14 @@ export interface Column {
 // Whom a view's rows are for, as its contract's comment declares: a
 // scoped view's rows are each a record's, `circle` its owning circle and
 // `whose`, where a row is a person's, the column saying whose; a shared
-// view's are sums and counts grouped `by` its columns and no finer.
-export type Audience = { kind: 'scoped'; circle: string; whose: string | null } | { kind: 'shared'; by: string[] }
+// view's are sums and counts grouped `by` its columns and no finer; a
+// contributions view's are each person's part of each cell of the shared
+// view it counts, `of`, whose rows `feat`'s powers read, which only the
+// port reads, to withhold a cell.
+export type Audience =
+  | { kind: 'scoped'; circle: string; whose: string | null }
+  | { kind: 'shared'; by: string[] }
+  | { kind: 'contributions'; of: string; feat: string }
 
 export interface View {
   audience: Audience
@@ -86,12 +92,25 @@ export interface Report {
   reader?: Reader
 }
 
-// The reader a report reads a scoped view for: the person, null where no
-// one is signed in, and for each scoped view, by its qualified name, the
-// owning circles whose rows their mandates open to them.
+// The reader a report reads a scoped or a counted view for: the person,
+// null where no one is signed in, and for each scoped view, by its
+// qualified name, the owning circles whose rows their mandates open to
+// them; and, for a counted view, the circles their powers over each
+// feat's rows cover, by feat, and open books' disclosure values, null
+// where no rule stands.
 export interface Reader {
   person: string | null
   circles: Record<string, string[]>
+  opens?: Record<string, string[]>
+  disclosure?: Disclosure | null
+}
+
+// Open books' disclosure values: the fewest people a cell of a counted
+// view counts, and the most of it, in percent, one and two of them put in.
+export interface Disclosure {
+  contributors: number
+  largest: number
+  two: number
 }
 
 // The log's head a run read: its every view as of that entry.
@@ -106,6 +125,8 @@ export interface Result {
   rows: Record<string, Value>[]
   // The report had more rows than it returned.
   more: boolean
+  // How many cells of the counted views it read it left out.
+  withheld: number
 }
 
 // The port a feat or a page calls; the shell's server implements it at

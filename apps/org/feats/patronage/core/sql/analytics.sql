@@ -22,3 +22,13 @@ SELECT p.distribution, p.basis, count(*)::bigint AS workers,
 FROM patronage.part p
 GROUP BY p.distribution, p.basis;
 COMMENT ON VIEW patronage.parts IS 'audience: shared by distribution, basis';
+
+-- Each worker's part of each distribution, by basis, which the port reads
+-- to withhold a basis too few workers or one or two of them take, and no
+-- report reads.
+CREATE VIEW patronage.parts_contributions AS
+SELECT p.distribution, p.basis, p.worker AS person, p.circle, coalesce(sum(cella.cents(p.amount)), 0)::bigint AS amount
+FROM patronage.part p
+GROUP BY p.distribution, p.basis, p.worker, p.circle;
+COMMENT ON VIEW patronage.parts_contributions IS 'audience: contributions to patronage.parts, read by patronage';
+COMMENT ON COLUMN patronage.parts_contributions.person IS 'personal: whose part it is, which only the port reads';

@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 # Architecture
@@ -655,6 +655,30 @@ comment, one of two:
 A report's audience is the strictest of its parts: one that reads a
 scoped view is scoped, whatever shared view it joins.
 
+A shared view that sums a person's figure, their pay, time, capital,
+work share or expenses, is **counted**: beside it the contract
+publishes its contributions, `audience: contributions to <view>, read by
+<feat>`, one row for each of the view's cells, each person and each
+circle their rows are in, showing the columns the view is shared by,
+`person`, commented personal, `circle`, the owning circle of their rows,
+and `amount`, what they put into the cell's measure, never below zero.
+No report reads a contributions view: the port reads it to withhold a
+cell of the view it counts from a reader who could not read every row in
+it, where too few people are in the cell or one or two of them make most
+of it, by the disclosure values open books holds
+([open books](../../apps/org/core/circle/index.md#open-books)). A
+withheld cell is left out before any report sums it, so a total over
+the view is the sum of the cells it shows, and no difference between
+two reports is a withheld cell ([the port](../../apps/org/core/analytics/index.md#what-is-withheld)).
+`payslip.months`, `timesheet.months`, `project_timesheet.months` and
+`.forecasts`, `patronage.parts`,
+`account_membership_patronage_transaction.credits`,
+`account_membership_transaction.capital_months` and
+`expense_project.totals` are counted. The journal's views,
+`account_transaction.movements` and what they sum, are not yet: whether
+the members' right to the accounts opens the books whatever open books
+says is the operator's to rule.
+
 `cella check feats` enforces this: `tools/sql-check.mjs` refuses in a
 contract anything but views in the slice's own schema and comments on
 them, a `security_invoker` view, a view that declares no audience or
@@ -662,13 +686,18 @@ names a column it does not show, a scoped view that sums or whose
 circle column is no record's owning circle, a scoped view that shows a
 column saying whose a row is and does not name it, a shared view that
 shows the rows of a record a circle owns or groups by a column it does
-not name, an undeclared personal column, a secured table's rows beyond
+not name, a contributions view that counts no shared view of its
+contract, or does not show and group by that view's columns, `person`
+and `circle`, and show `amount`, an undeclared personal column, a
+secured table's rows beyond
 those above, a sum by whose a row is undeclared, a contract in
 a core but the port's, and any grant to `cella_analytics` anywhere in the
 tree. What a column is carries
 through a slice's own views. Whether a shared view's grouping is a
 record's own key, so that each of its sums is one record's, the check
 cannot see: the slice classes such a view scoped, and review reads it.
+Nor can it see whether a shared view sums a person's figure, and so is
+counted: review reads that too.
 A function a view calls runs as the role,
 not as the view's owner, so one that reads a table fails the role and
 one that asks who reads sees no one: a contract reads tables and plain
@@ -1427,7 +1456,15 @@ members read their circle's records and whose roles act on them by
 such policies, and a circle created by motion holds the bundle in force
 that day, which its creation's entry names. Open books is one mandate
 policy of the assembly, `read` on the member role with no scope
-([the default bundle](../../apps/org/core/circle/index.md#the-default-bundle)).
+([the default bundle](../../apps/org/core/circle/index.md#the-default-bundle)),
+and one rule of the assembly marking its disclosure values,
+`disclosure_contributors`, `disclosure_largest` and `disclosure_two`,
+which core copies into `circle.disclosure` in the same write, as it does
+a mandate's, and the analytics port reads: what of the totals of
+members' figures every member reads, and what is withheld
+([open books](../../apps/org/core/circle/index.md#open-books)). No
+contract fixes those values; a co-op that adopts no such rule shares no
+such total beyond its readers' own rights.
 
 A rule whose values are named for a feat, as `account_minimum`, is that
 feat's to read, and marks every value the feat reads of it. The capital's

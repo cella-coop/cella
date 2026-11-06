@@ -399,6 +399,15 @@ args = { kind = "mandate", wording = "The {role: participant} role holds {power:
 kind = "policy"
 args = { kind = "mandate", wording = "The {role: member} role holds {power: read}, to read every circle's records" }
 
+# Open books' disclosure rule, with the disclosure study's defaults: a
+# total of members' own figures, a month's payroll or a project's time,
+# reads to every member only where at least five people put into it and
+# no one or two make most of it. Core copies its values into
+# circle.disclosure, which the analytics port reads.
+[[motion.action]]
+kind = "policy"
+args = { kind = "rule", wording = "Open books shares a total of members' own figures with every member where at least {disclosure_contributors: 5 | more is stricter} people put into it, none of them more than {disclosure_largest: 50 % | less is stricter} of it and no two more than {disclosure_two: 80 % | less is stricter}" }
+
 [[motion]]
 id = "m-2026-006"
 circle = "ag"

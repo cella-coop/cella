@@ -9,3 +9,12 @@ SELECT to_char(e.day, 'YYYY-MM') AS month, count(*)::bigint AS entries,
 FROM timesheet.entry e
 GROUP BY to_char(e.day, 'YYYY-MM');
 COMMENT ON VIEW timesheet.months IS 'audience: shared by month';
+
+-- Each person's time in each month, which the port reads to withhold a
+-- month too few people or one or two of them make, and no report reads.
+CREATE VIEW timesheet.months_contributions AS
+SELECT to_char(e.day, 'YYYY-MM') AS month, e.member AS person, e.circle, coalesce(sum(e.minutes), 0)::bigint AS amount
+FROM timesheet.entry e
+GROUP BY to_char(e.day, 'YYYY-MM'), e.member, e.circle;
+COMMENT ON VIEW timesheet.months_contributions IS 'audience: contributions to timesheet.months, read by timesheet';
+COMMENT ON COLUMN timesheet.months_contributions.person IS 'personal: whose time it is, which only the port reads';

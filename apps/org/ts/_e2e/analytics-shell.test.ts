@@ -283,3 +283,74 @@ test('a report reads a scoped view for its reader alone: the rows of the circles
   const all = await camilles.run({ from: { p: 'project.projects' }, fields: ['p.circle'], measures: { n: { fn: 'count' } }, order: ['p.circle'] })
   assert.deepEqual(all.rows.map((r) => r['p.circle']), circles)
 })
+
+test('a counted view withholds a cell below open books\' values from a reader outside it, reads it to its circle\'s readers, and no two reports differ by it', async () => {
+  // Marketing's time on the Nuvola retainer in September 2026 is Chloé's
+  // and Malik's alone, two people, fewer than the five Lanterne's
+  // disclosure rule asks.
+  const [cell] = await rows<{ n: number; minutes: string }>(`
+    SELECT count(*)::int AS n, (SELECT minutes::text FROM project_timesheet.months WHERE project = 'nuvola-retainer' AND month = '2026-09') AS minutes
+    FROM project_timesheet.months_contributions WHERE project = 'nuvola-retainer' AND month = '2026-09'`)
+  assert.equal(cell.n, 2)
+  assert.deepEqual(await rows('SELECT contributors, largest::int, two::int FROM circle.disclosed(cella.verdict_date())'), [{ contributors: 5, largest: 50, two: 80 }])
+  const month = (actor: string, where: Report['where'] = []) =>
+    scoped(analytics, reader(app, actor)).run({
+      from: { m: 'project_timesheet.months' },
+      fields: ['m.project'],
+      measures: { minutes: { fn: 'sum', of: 'm.minutes' } },
+      where: [{ field: 'm.month', op: '=', value: '2026-09' }, ...where],
+      order: ['m.project'],
+    })
+  const nuvola = (r: { rows: Record<string, unknown>[] }) => r.rows.find((x) => x['m.project'] === 'nuvola-retainer')
+
+  // Hugo, Brand's lead, is in no Marketing cell and reads no Marketing time.
+  const hugos = await month(hugo)
+  assert.equal(nuvola(hugos), undefined, 'withheld from a member outside it')
+  assert.ok(hugos.withheld > 0)
+  // Malik, Marketing's lead, reads its time by approve-time: it is his to read.
+  assert.equal(String(nuvola(await month('malik@lanterne.example'))?.minutes), cell.minutes, 'read whole by its circle\'s reader')
+  // Chloé is in it, and reads her own time, not Malik's: it is withheld.
+  assert.equal(nuvola(await month('chloe@lanterne.example')), undefined, 'a contributor reads no one else\'s part')
+  // Hugo's own cell, his time alone on Ferrand in October, is his.
+  const own = await scoped(analytics, reader(app, hugo)).run({
+    from: { m: 'project_timesheet.months' },
+    fields: ['m.project'],
+    where: [{ field: 'm.month', op: '=', value: '2026-10' }],
+  })
+  assert.ok(own.rows.some((r) => r['m.project'] === 'ferrand-packaging'), 'a reader\'s own cell reads')
+
+  // Differencing: the month's total less every project but Nuvola is no
+  // withheld cell, since the total sums only the cells Hugo may read.
+  const total = async (where: Report['where']) =>
+    Number(
+      (
+        await scoped(analytics, reader(app, hugo)).run({
+          from: { m: 'project_timesheet.months' },
+          measures: { minutes: { fn: 'sum', of: 'm.minutes' } },
+          where: [{ field: 'm.month', op: '=', value: '2026-09' }, ...(where ?? [])],
+        })
+      ).rows[0].minutes,
+    )
+  const whole = await total([])
+  const rest = await total([{ field: 'm.project', op: '<>', value: 'nuvola-retainer' }])
+  assert.equal(whole - rest, 0, 'the difference is no withheld cell')
+  const [truth] = await rows<{ d: string }>(`SELECT sum(minutes) FILTER (WHERE project = 'nuvola-retainer')::text AS d FROM project_timesheet.months WHERE month = '2026-09'`)
+  assert.ok(Number(truth.d) > 0, 'though the books hold one')
+
+  // With no disclosure rule, a reader reads only their own cells; and a
+  // counted view is read only with all of it given.
+  const bare = await analytics.run({
+    from: { m: 'project_timesheet.months' },
+    measures: { n: { fn: 'count' } },
+    reader: { person: null, circles: {}, opens: {}, disclosure: null },
+  })
+  assert.equal(bare.rows[0].n, 0)
+  const counted = { from: { m: 'project_timesheet.months' }, measures: { n: { fn: 'count' as const } } }
+  assert.match(check({ ...counted, reader: { person: hugo, circles: {} } }, catalog).join('; '), /m \(project_timesheet\.months\) is counted: the circles the reader's powers over timesheet cover are not given/)
+  assert.match(check({ ...counted, reader: { person: hugo, circles: {}, opens: {} } }, catalog).join('; '), /open books' disclosure values are not given/)
+  assert.match(check({ ...counted }, catalog).join('; '), /is counted: a report reading it names its reader/)
+  assert.match(
+    check({ from: { c: 'project_timesheet.months_contributions' }, measures: { n: { fn: 'count' } } }, catalog, true).join('; '),
+    /project_timesheet\.months_contributions is the contributions to project_timesheet\.months, which only the port reads/,
+  )
+})

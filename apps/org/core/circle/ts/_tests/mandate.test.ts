@@ -221,3 +221,51 @@ test('a right is a policy of its own kind, copied into circle.right with no gran
     await db.query('ROLLBACK')
   }
 })
+
+const books = (contributors: string, largest = '50 %', two = '80 %') =>
+  `Open books shares a total of members' own figures with every member where at least {disclosure_contributors: ${contributors} | more is stricter} people put into it, none of them more than {disclosure_largest: ${largest} | less is stricter} of it and no two more than {disclosure_two: ${two} | less is stricter}`
+const marks = (wording: string) =>
+  db
+    .query<{ m: object }>(
+      `SELECT jsonb_object_agg(p.name, jsonb_build_object('literal', p.literal, 'stricter', p.stricter)) AS m FROM policy.marks($1) p`,
+      [wording],
+    )
+    .then((r) => r.rows[0].m)
+const unsound = async (wording: string, issuer = 'ag') =>
+  (await db.query<{ r: string | null }>('SELECT circle.disclosure_flaw($1, $2) AS r', [await marks(wording), issuer])).rows[0].r
+
+test('open books\' disclosure rule is the assembly\'s, marks its three values soundly, and is copied as it is adopted and revoked as it is replaced', async () => {
+  await staged()
+  try {
+    assert.equal(await unsound(books('5')), null)
+    assert.equal(await unsound('Refused clients are named in the internal rules'), null, 'a rule marking none is no disclosure rule')
+    assert.match((await unsound(books('5'), 'web')) ?? '', /only a motion of the assembly adopts it/)
+    assert.match((await unsound(books('1'))) ?? '', /disclosure_contributors is the fewest people a total may count, a whole number from 2 to 200, as 5, not 1/)
+    assert.match((await unsound(books('5', '10 %'))) ?? '', /disclosure_largest is the most of a total one person may put in, a share from 20 % to 100 %/)
+    assert.match((await unsound(books('5', '60 %', '50 %'))) ?? '', /two people put in at least what one does: disclosure_two, 50 %, is no less than disclosure_largest, 60 %/)
+    assert.match((await unsound(books('5').replace('| more is stricter', '| less is stricter'))) ?? '', /more people is stricter/)
+    assert.match((await unsound('At least {disclosure_contributors: 5 | more is stricter} people')) ?? '', /marks all three/)
+    assert.match((await unsound(`${books('5')}, as {disclosure_noise: 2}`)) ?? '', /and nothing else, not disclosure_noise/)
+
+    const first = await adopt('rule', books('5'), 'm-2026-020', 1)
+    assert.match((await guard('grants', first)) ?? '', /sets no disclosure values open books reads/)
+    await db.query('SELECT circle.mandate_from($1)', [first])
+    assert.equal(await guard('grants', first), null)
+    const disclosed = async () =>
+      (await db.query('SELECT policy, contributors, largest::int AS largest, two::int AS two FROM circle.disclosed(cella.verdict_date())')).rows
+    assert.deepEqual(await disclosed(), [{ policy: first, contributors: 5, largest: 50, two: 80 }])
+
+    const second = await adopt('rule', books('7', '40 %', '60 %'), 'm-2026-020', 2, first)
+    await db.query('SELECT circle.mandate_from($1)', [second])
+    assert.equal(await guard('grants', second), null)
+    assert.deepEqual(await disclosed(), [{ policy: second, contributors: 7, largest: 40, two: 60 }])
+
+    await db.query(`SELECT policy.end($1, 'm-2026-021', 1)`, [second])
+    assert.match((await guard('revokes', second)) ?? '', /the disclosure values of .* are not revoked the day it ends/)
+    await db.query('SELECT circle.mandate_ended($1)', [second])
+    assert.equal(await guard('revokes', second), null)
+    assert.deepEqual(await disclosed(), [], 'with no rule standing, open books shares nothing')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

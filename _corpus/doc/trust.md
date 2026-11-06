@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 # Trust
@@ -598,8 +598,11 @@ a personal column only where the view declares it, which erasure redacts
 in its table and so in the view, and from a table under row-level
 security only sums over everyone or the rows its row-level policy opens to all.
 The role reads a declared personal column as it is, so whatever reads
-through the role decides whom it shows it to; the contracts share no
-figure that is one member's pay, time or capital.
+through the role decides whom it shows it to. No view a report reads
+shows a figure that is one member's pay, time or capital: a counted
+view's contributions do, each person's part of each cell, and the port
+alone reads them, inside the run, to withhold a cell, and no report
+reads them.
 
 The analytics shell is the role's one client
 ([architecture](architecture.md#the-analytics-shell)). It attaches the
@@ -621,7 +624,15 @@ reads for its reader alone: the server asks Postgres which circles the
 reader's mandates cover, by the row-level policies' own test, and the
 port filters the view to those circles' rows and the reader's own, and
 refuses a report on a scoped view that names no reader
-([the reader](../../apps/org/core/analytics/index.md#the-reader)). Each run
+([the reader](../../apps/org/core/analytics/index.md#the-reader)). A
+shared total of members' own figures is read only as the cells open
+books' disclosure values share with every member and those the reader's
+own permission opens, each other cell left out before the report sums
+it, so no total a run shows is had less a withheld cell
+([what is withheld](../../apps/org/core/analytics/index.md#what-is-withheld));
+suppression stops that arithmetic, not a difference across two views
+over the same people or across time, nor inference from what a reader
+knows outside the books. Each run
 reads on one snapshot, its Postgres transaction repeatable read, and is
 stamped with the log's head it read: the port's `analytics.head`, the
 entry's number and hash, is the role's only reach into the notary.
@@ -699,9 +710,10 @@ What the build does not yet do, and what lifts each:
 - **The analytics shell knows no reader.** Its token opens every
   published view, declared personal columns among them, to whoever holds
   it; the org app's server holds it, and the port, in the server, is
-  what filters a scoped view to its reader. A host or a bug in the
-  server that skips the port reads every circle's rows; the analytics
-  role reading as the reader lifts this.
+  what filters a scoped view to its reader and withholds a counted
+  view's cells. A host or a bug in the server that skips the port reads
+  every circle's rows and every person's part of a shared total; the
+  analytics role reading as the reader lifts this.
 - **A backup carries its keys.** `cella backup` writes the notary's and
   the vault's key files beside the dump, owner-only but not encrypted, so
   whoever holds a backup can open the vault and sign as the notary; a

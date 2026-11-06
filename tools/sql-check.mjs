@@ -76,7 +76,11 @@
 //   - 'audience: shared[ by <columns>]': sums grouped by exactly the
 //     columns it names, at its top level or in a view it shows the rows
 //     of, or the rows of tables no circle owns. It shows no row of a
-//     record a circle owns.
+//     record a circle owns;
+//   - 'audience: contributions to <view>, read by <feat>': each person's
+//     part of each cell of a shared view of the same contract, summed by
+//     the columns it is shared by, person, commented personal, and
+//     circle, with its amount, which only the port reads.
 // A view any slice makes over a secured table is secured in turn, and one
 // over a table that names its owning circle is owned in turn. What a
 // view reads through a function runs as the role, and is caught when
@@ -1207,9 +1211,16 @@ function summing(n) {
 }
 
 // A view's audience, from its comment: scoped by its circle column and
-// the column that says whose a row is, or shared by the columns it sums by.
+// the column that says whose a row is, or shared by the columns it sums by;
+// or the contributions to a shared view of its contract, each person's
+// part of each of its cells, read by a feat's powers.
+const CONTRIBUTIONS = /^audience: contributions to ([a-z_][a-z0-9_]*\.[a-z_][a-z0-9_]*), read by ([a-z][a-z0-9-]*)(?=$|[.;:] )/
 const AUDIENCE = /^audience: (scoped|shared)(?: by ([a-z_][a-z0-9_]*(?:(?:, | and )[a-z_][a-z0-9_]*)*))?(?=$|[.;:] )/
 function audience(comment) {
+  const c = CONTRIBUTIONS.exec(comment ?? '')
+  if (c) {
+    return { contributions: c[1], feat: c[2], by: [] }
+  }
   const m = AUDIENCE.exec(comment ?? '')
   if (!m) {
     return null
@@ -1234,12 +1245,16 @@ function contract(tree, o, fail, found) {
   // The view columns the contract declares, personal or not, and each
   // view's audience.
   const declared = new Set()
+  const personalColumns = new Set()
   const audiences = new Map()
   for (const { stmt } of tree.stmts ?? []) {
     const [type, b] = Object.entries(stmt)[0]
     if (type === 'CommentStmt' && ['OBJECT_COLUMN', 'OBJECT_VIEW'].includes(b.objtype)) {
       if (b.objtype === 'OBJECT_COLUMN' && /^(not )?personal: ./.test(b.comment ?? '')) {
         declared.add(strings(b.object?.List?.items).join('.'))
+        if (/^personal: ./.test(b.comment)) {
+          personalColumns.add(strings(b.object?.List?.items).join('.'))
+        }
       }
       if (b.objtype === 'OBJECT_VIEW') {
         audiences.set(strings(b.object?.List?.items).join('.'), audience(b.comment))
@@ -1265,7 +1280,9 @@ function contract(tree, o, fail, found) {
       for (const c of aud.by.filter((c) => !names.includes(c))) {
         fail(`${view} names ${c} in its audience, which it does not show`)
       }
-      if (aud.scoped) {
+      if (aud.contributions) {
+        contributions(view, aud, audiences.get(aud.contributions), names, selects, personalColumns, fail)
+      } else if (aud.scoped) {
         scoped(view, aud, names, selects, resolve, fail, found)
       } else {
         shared(view, aud, names, selects, resolve, fail, found)
@@ -1334,6 +1351,40 @@ function scoped(view, aud, names, selects, resolve, fail, found) {
         fail(`${view}.${names[i]} says whose a row is: name it, 'audience: scoped by ${aud.circle} and ${names[i]}'`)
       }
     })
+  }
+}
+
+// The contributions to a shared view count that view, one of the same
+// contract: they sum, by the columns it is shared by, `person` and
+// `circle`, each a column they show, `person` commented personal, and
+// show `amount`, what each person put into the cell.
+function contributions(view, aud, of, names, selects, declared, fail) {
+  if (!of || of.scoped || of.contributions) {
+    fail(`${view} counts ${aud.contributions}, which is no shared view of its contract: 'audience: contributions to <shared view>, read by <feat>'`)
+    return
+  }
+  const keys = [...of.by, 'person', 'circle']
+  for (const c of [...keys, 'amount'].filter((c) => !names.includes(c))) {
+    fail(`${view} does not show ${c}: contributions show the columns ${aud.contributions} is shared by, person, circle and amount`)
+  }
+  if (names.includes('person') && !declared.has(`${view}.person`)) {
+    fail(`${view}.person says whose a contribution is: comment it 'personal: why'`)
+  }
+  for (const q of selects) {
+    const g = grouping(q, names)
+    if (!g.sums) {
+      fail(`${view} does not sum: contributions are each person's part of a cell, summed by ${keys.join(', ')}`)
+      continue
+    }
+    for (const k of g.loose) {
+      fail(`${view} groups by ${strings(k.ColumnRef?.fields).join('.') || 'an expression'}, which it does not show: contributions group by ${keys.join(', ')}`)
+    }
+    for (const k of g.keys.filter((k) => !keys.includes(k))) {
+      fail(`${view} groups by ${k}: contributions group by ${keys.join(', ')}, and no finer`)
+    }
+    for (const k of keys.filter((k) => names.includes(k) && !g.keys.includes(k))) {
+      fail(`${view} does not group by ${k}: contributions group by ${keys.join(', ')}`)
+    }
   }
 }
 

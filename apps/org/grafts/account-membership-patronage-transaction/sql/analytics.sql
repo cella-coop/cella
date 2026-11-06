@@ -27,3 +27,13 @@ GROUP BY x.distribution, CASE WHEN a.holder IS NULL THEN a.code ELSE a.parent EN
 COMMENT ON VIEW account_membership_patronage_transaction.posted IS 'audience: shared by distribution, code';
 
 COMMENT ON COLUMN account_membership_patronage_transaction.posted.code IS 'not personal: a held account is summed into its parent''s code';
+
+-- Each member's credit from each distribution, which the port reads to
+-- withhold one too few members or one or two of them take, and no report
+-- reads.
+CREATE VIEW account_membership_patronage_transaction.credits_contributions AS
+SELECT c.distribution, c.member AS person, c.circle, coalesce(sum(cella.cents(c.amount)), 0)::bigint AS amount
+FROM account_membership_patronage_transaction.credit c
+GROUP BY c.distribution, c.member, c.circle;
+COMMENT ON VIEW account_membership_patronage_transaction.credits_contributions IS 'audience: contributions to account_membership_patronage_transaction.credits, read by account';
+COMMENT ON COLUMN account_membership_patronage_transaction.credits_contributions.person IS 'personal: whose capital it is, which only the port reads';

@@ -47,6 +47,11 @@ impl Repo {
         self.root.join("apps/org/ts")
     }
 
+    /// The landing site, an Astro site outside the feat tree.
+    pub fn site_dir(&self) -> PathBuf {
+        self.root.join("apps/site")
+    }
+
     /// A binary of the shell's npm dependencies, run from the shell's directory.
     pub fn shell(&self, bin: &str) -> Command {
         let mut cmd = Command::new("pnpm");

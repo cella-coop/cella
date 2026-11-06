@@ -1,0 +1,63 @@
+---
+// The site's one layout: the brand's faces and tokens, its favicon, and
+// the ground with its paper. It reads the brand's roles alone and names
+// no colour or face of its own.
+import '@cella/brand/fonts.css'
+import '@cella/brand/tokens.css'
+import favicon from '@cella/brand/favicon.svg?url'
+
+interface Props {
+  title: string
+  description: string
+}
+
+const { title, description } = Astro.props
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href={favicon} />
+    <title>{title}</title>
+  </head>
+  <body>
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    background-color: var(--ground);
+    background-image: var(--grain-ground);
+    background-blend-mode: var(--grain-blend);
+    color: var(--text);
+    font-family: var(--font-text);
+    font-weight: var(--fw-text);
+    font-variation-settings: var(--fvs-text);
+    font-size: var(--t-md);
+    line-height: var(--leading);
+  }
+
+  body {
+    margin: 0;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: var(--fw-display);
+    font-variation-settings: var(--fvs-display);
+    letter-spacing: var(--track-display);
+    line-height: 1.15;
+  }
+</style>

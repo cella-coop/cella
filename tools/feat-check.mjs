@@ -141,11 +141,16 @@ const dirs = existsSync(join(repo, 'apps')) ? walk('apps') : []
 const shared = existsSync(join(repo, 'packages'))
   ? readdirSync(join(repo, 'packages')).map((n) => join('packages', n)).filter((d) => existsSync(join(repo, d, 'package.json')))
   : []
+// The site: an app with its manifest at its root and no feat.toml, which
+// may depend on a package outside the tree alone, and on which none may.
+const sites = existsSync(join(repo, 'apps'))
+  ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter((d) => !isNode(d) && existsSync(join(repo, d, 'package.json')))
+  : []
 
 // Edges from each ecosystem's manifests.
 const edges = []
 const byName = new Map()
-for (const dir of [...dirs.filter((d) => existsSync(join(repo, d, 'package.json'))), ...shared]) {
+for (const dir of [...dirs.filter((d) => existsSync(join(repo, d, 'package.json'))), ...shared, ...sites]) {
   byName.set(JSON.parse(readFileSync(join(repo, dir, 'package.json'), 'utf8')).name, dir)
 }
 for (const dir of byName.values()) {
@@ -173,6 +178,14 @@ for (const dir of dirs) {
   }
 }
 for (const [a, b] of edges) {
+  if (sites.includes(b)) {
+    fail(`${a}: depends on ${b}; no package depends on the site`)
+    continue
+  }
+  if (sites.includes(a)) {
+    shared.includes(b) || fail(`${a}: depends on ${b}; the site depends on no package of the repository but one outside the tree`)
+    continue
+  }
   if (shared.includes(a)) {
     fail(`${a}: depends on ${b}; a package outside the tree depends on no package of the repository`)
     continue
@@ -254,7 +267,7 @@ for (const app of apps) {
 const sources = (dir, out = []) => {
   for (const name of readdirSync(join(repo, dir))) {
     const path = join(dir, name)
-    if (['node_modules', 'build', '.svelte-kit'].includes(name)) {
+    if (['node_modules', 'build', '.svelte-kit', 'dist', '.astro'].includes(name)) {
       continue
     }
     if (statSync(join(repo, path)).isDirectory()) {
@@ -280,7 +293,7 @@ for (const dir of byName.values()) {
 // The client layers' rules: CSS only in the UI core, state and effects
 // only in hooks, no module-level mutable state, no server layer imported
 // by a client one, no legacy Svelte or SvelteKit form.
-const onTree = [...byName.values()].filter((d) => !shared.includes(d))
+const onTree = [...byName.values()].filter((d) => !shared.includes(d) && !sites.includes(d))
 errors.push(...checkUi(repo, onTree))
 
 // A package's exports are its public surface: a library's `.`, a slice's
@@ -404,4 +417,4 @@ if (errors.length) {
   console.error(errors.map((e) => `feat check: ${e}`).join('\n'))
   process.exit(1)
 }
-console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length} outside it`)
+console.log(`feat check: ${dirs.length} packages, ${edges.length} edges, ${nodes.length} nodes, all on the tree, ${shared.length + sites.length} outside it`)

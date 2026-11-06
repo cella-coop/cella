@@ -57,8 +57,8 @@ after(async () => {
 
 test('the seed founds Lanterne as the log\'s first entry, and every table a feat or a graft made is registered', async () => {
   assert.equal(await head(), 1)
-  const first = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = 1')
-  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: camille })
+  const first = await one<{ op: string; actor: string; motion: string }>(`SELECT op, actor, cella.opened(1) ->> 'motion' AS motion FROM cella.log WHERE n = 1`)
+  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: camille, motion: 'm-2021-001' })
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const tables = await one<{ made: string; registered: string; triggered: string }>(
     `SELECT count(*) AS made,
@@ -71,7 +71,7 @@ test('the seed founds Lanterne as the log\'s first entry, and every table a feat
   )
   assert.ok(Number(tables.made) > 50, `${tables.made} tables`)
   assert.deepEqual(tables, { made: tables.made, registered: tables.made, triggered: tables.made })
-  const again = await found({ form: 'scop-sarl-fr', from: 'again', load: async () => ({}) }, as())
+  const again = await found({ form: 'scop-sarl-fr', motion: 'm-2021-001', from: 'again', load: async () => ({}) }, as())
   assert.equal(again.state, 'refused')
   assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 1 already/)
 })

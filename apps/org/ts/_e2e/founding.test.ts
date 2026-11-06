@@ -1,8 +1,10 @@
 // The founding, end to end on a fresh scope beside the seeded Lanterne: a
 // database migrated and empty, as a new co-op's is, founded as a SCOP SARL
 // in France by three founders, as the log's first entry. A founding with
-// no procedure for its root is refused first and leaves the log empty;
-// the founding settles, its founders seated in the assembly with a vote
+// no procedure for its root, one naming no founding motion, one whose
+// motion a founder gave no stance on and one with a founder seated
+// nowhere are refused first, each saying which and leaving the log
+// empty; the founding settles, its founders seated in the assembly with a vote
 // and every default of the form taken; a founder's next write passes the
 // guards its policies set; and a second founding is refused. Run by
 // `cella test e2e founding`.
@@ -66,16 +68,56 @@ test('a founding with no procedure for its root is refused, and leaves the log e
   assert.equal(Number((await one<{ n: string }>('SELECT count(*) AS n FROM person.person')).n), 0)
 })
 
+// A founding of the fixture `read` reads, with one file changed by `change`.
+const altered = (read: (file: string) => unknown, file: string, change: (v: unknown) => unknown) => (f: string) =>
+  f === file ? change(read(f)) : read(f)
+const mina = founders[2]
+
+for (const [what, file, change, reason] of [
+  [
+    'naming no founding motion',
+    'scope',
+    (s: Record<string, unknown>) => ({ ...s, founding: undefined }),
+    /the founding names no founding motion: it names the motion of ag that adopted the form's defaults/,
+  ],
+  [
+    'whose motion a founder gave no stance on',
+    'motion',
+    ({ motion }: { motion: { vote: { member: string }[] }[] }) => ({
+      motion: motion.map((d) => ({ ...d, vote: d.vote.filter((v) => v.member !== mina.address) })),
+    }),
+    /1 of the 3 founders gave no stance on m-2026-001: its founders decide their founding motion, each with a stance before it closes/,
+  ],
+  [
+    'with a founder seated nowhere',
+    'circle',
+    (c: { member: { person: string }[] }) => ({ ...c, member: c.member.filter((m) => m.person !== mina.address) }),
+    /1 of the 3 founders, the members whose membership began by 2026-10-01, had no seat with a vote in ag that day: seat every founder in the root, in a role that votes by consent/,
+  ],
+] as const) {
+  test(`a founding ${what} is refused, saying so, and leaves the log empty`, async () => {
+    const read = altered(await founding(su, { scope, founders, day }), file, change as (v: unknown) => unknown)
+    const { outcome } = await seed(su, read, { from: what })
+    assert.equal(outcome.state, 'refused')
+    assert.match(outcome.reason ?? '', reason)
+    assert.doesNotMatch(outcome.reason ?? '', /@atelier\.example/)
+    assert.equal(await head(), 0)
+    assert.equal(Number((await one<{ n: string }>('SELECT count(*) AS n FROM person.person')).n), 0)
+  })
+}
+
 test('a fresh scope is founded as a SCOP SARL in France by three founders, as the log\'s first entry', async () => {
   const { outcome } = await seed(su, await founding(su, { scope, founders, day }), { from: 'atelier' })
   assert.equal(outcome.state, 'settled', outcome.reason)
   assert.equal(outcome.entry, 1)
-  const first = await one<{ op: string; actor: string; form: string }>(`SELECT op, actor, cella.opened(1) ->> 'form' AS form FROM cella.log WHERE n = 1`)
-  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: ines.address, form: 'scop-sarl-fr' })
+  const first = await one<{ op: string; actor: string; form: string; motion: string }>(
+    `SELECT op, actor, cella.opened(1) ->> 'form' AS form, cella.opened(1) ->> 'motion' AS motion FROM cella.log WHERE n = 1`,
+  )
+  assert.deepEqual(first, { op: 'membership-motion:scope:found', actor: ines.address, form: 'scop-sarl-fr', motion: 'm-2026-001' })
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 
   // Each founder sits in the assembly with a vote, as an active member
-  // with a device.
+  // with a device, and gave the founding motion a stance.
   for (const f of founders) {
     const sat = await one<{ sits: boolean; devices: string }>(
       `SELECT membership.sits_in($1, 'ag', cella.verdict_date()) AS sits,
@@ -83,6 +125,13 @@ test('a fresh scope is founded as a SCOP SARL in France by three founders, as th
       [f.address],
     )
     assert.deepEqual(sat, { sits: true, devices: '1' }, f.address)
+  }
+  const founded = await su.query<{ member: string; seated: boolean; decided: boolean }>(
+    `SELECT member, seated, decided FROM membership_motion.founders('m-2026-001') ORDER BY member`,
+  )
+  assert.equal(founded.rows.length, 3)
+  for (const f of founded.rows) {
+    assert.deepEqual({ seated: f.seated, decided: f.decided }, { seated: true, decided: true }, f.member)
   }
   // The root decides by consent, a policy of its founding motion makes it,
   // and every default of the form is taken.
@@ -109,7 +158,7 @@ test('a founder\'s next write passes the guards the founding\'s policies set', a
 })
 
 test('a second founding is refused', async () => {
-  const again = await found({ form: 'scop-sarl-fr', from: 'again', load: async () => ({}) }, as(su))
+  const again = await found({ form: 'scop-sarl-fr', motion: 'm-2026-001', from: 'again', load: async () => ({}) }, as(su))
   assert.equal(again.state, 'refused')
   assert.match((again as { reason: string }).reason, /a co-op is founded once, as its log's first entry; the log holds 2 already/)
   assert.equal(await head(), 2)

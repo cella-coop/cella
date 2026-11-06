@@ -3,11 +3,13 @@
 # print; a SCOP's capital varies, so its form says so and `capital`, the
 # amount a fixed capital prints, is not set. `legal_form` is the legal
 # form it chose, as cella offers it (_corpus/doc/forms.md), which its
-# founding names and whose defaults its founding motion takes.
+# founding names and whose defaults its founding motion takes;
+# `founding` is that motion, which its founders decided.
 name = "Lanterne"
 legal_name = "Lanterne SCOP SARL"
 form = "SCOP SARL à capital variable"
 legal_form = "scop-sarl-fr"
+founding = "m-2021-001"
 address = "lanterne.example"
 siren = "000000000"
 rcs = "Bobigny"

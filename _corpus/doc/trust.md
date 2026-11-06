@@ -198,10 +198,16 @@ sequenceDiagram
   a default of that form and none of another's, among them the
   procedure the root decides by. Its guards hold it, once its state is
   written, to one assembly that decides by a procedure a policy in
-  force there makes, and to a signer who is a founder seated in the
-  root with a vote, enrolled by a device the founding brings. A
-  founding with no procedure for its root, or a signer with no vote
-  there, is refused, and leaves the log empty. A mock co-op's founding
+  force there makes; to every founder, each member whose membership
+  began by the day the founding motion closed, seated in the root with
+  a vote that day; to a founding motion, which the founding names,
+  closed in the root, carried by its procedure with a stance from every
+  founder, and adopting the policies that take the form's defaults; and
+  to a signer who is a founder, enrolled by a device the founding
+  brings. A founding with no procedure for its root, no founding
+  motion, a motion its founders did not decide, a founder with no seat,
+  or a signer with no vote there, is refused, saying which, and leaves
+  the log empty. A mock co-op's founding
   also carries the state it held before its log, as Lanterne's seed
   does; a real co-op's books come in after it, by the import of each
   kind under the importer's mandates. Every later entry passes the

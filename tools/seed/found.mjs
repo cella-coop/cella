@@ -5,7 +5,8 @@
 // names one of, people, their memberships, employments and candidacies,
 // their devices, seats, motions with their
 // stances and what they decide, the policies the closed ones adopted, the
-// founding motion's among them, the mandates among them copied into the
+// founding motion's among them (the scope's `founding` names it), the
+// mandates among them copied into the
 // circles' mandates, invitations' first devices, documents with their
 // versions, those generated from a circle's policies generated at each
 // day they changed, comments, adoptions and who read them, clients, the
@@ -70,10 +71,11 @@ export async function seed(db, read, { from, dir }) {
   }
 
   // The founding is one write, the log's first entry, which the first
-  // device the fixture enrols in force signs, as its founder: the import
-  // feat lets it settle only on an empty log, and membership-motion
-  // only with its signer seated in the root with a vote. Every row below
-  // is written inside it.
+  // device the fixture enrols in force signs, as its founder:
+  // membership-motion lets it settle only on an empty log, naming the
+  // scope's `founding`, the root's motion its founders, each seated
+  // there with a vote, decided, and with its signer one of them. Every
+  // row below is written inside it.
   const carrier = (read('person').device ?? []).find((d) => !d.revoked)
   if (!carrier) {
     throw new Error(`${from} enrols no device in force to sign its founding`)
@@ -400,6 +402,6 @@ export async function seed(db, read, { from, dir }) {
       motions: motions.length, stances: votes, versions, clients: clients.length, entries: entries.length, invoices: invoices.length,
     }
   }
-  const outcome = await found({ form: scope.legal_form, from, load }, deps)
+  const outcome = await found({ form: scope.legal_form, motion: scope.founding, from, load }, deps)
   return { outcome, said }
 }

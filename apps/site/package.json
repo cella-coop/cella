@@ -1,0 +1,13 @@
+{
+  "name": "@cella/site",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@cella/brand": "workspace:*",
+    "astro": "7.4.7"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "typescript": "6.0.3"
+  }
+}

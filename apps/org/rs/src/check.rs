@@ -1,10 +1,11 @@
 use crate::cli::Part;
 use crate::repo::Repo;
 use crate::run::{Result, Steps, last_line, quiet};
+use crate::site;
 
 /// What a commit must pass, or one part of it; no database.
 pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Result {
-    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Brand, Part::Rust], |p| vec![p]);
+    let parts = part.map_or_else(|| vec![Part::Feats, Part::Fixtures, Part::Types, Part::Shell, Part::Brand, Part::Site, Part::Rust], |p| vec![p]);
     if parts.iter().any(|p| !matches!(p, Part::Rust)) {
         repo.install(steps)?;
     }
@@ -42,6 +43,7 @@ pub fn run(repo: &Repo, steps: &Steps, part: Option<Part>, no_sql: bool) -> Resu
                 cmd.arg("--check").arg(&repo.root);
                 steps.run("brand", &mut [cmd], last_line)?;
             }
+            Part::Site => site::check(repo, steps)?,
             Part::Rust => {
                 let mut check = repo.cmd("cargo");
                 check.args(["check", "--workspace", "--quiet"]);

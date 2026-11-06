@@ -16,7 +16,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// What a commit must pass: feat check, fixture check, types, svelte-check, the brand check, cargo check and clippy
+    /// What a commit must pass: feat check, fixture check, types, svelte-check, the brand check, the site check, cargo check and clippy
     Check {
         /// Run one part alone
         part: Option<Part>,
@@ -131,6 +131,12 @@ pub enum Command {
     /// Write the brand's tokens, fonts, mark, wordmark and icons from packages/brand/house.json
     Brand,
 
+    /// The landing site in apps/site: its dev server, or its static build
+    Site {
+        #[command(subcommand)]
+        command: Site,
+    },
+
     /// The Rust and tool tests, then each slice's tests and the e2e scenarios on fresh databases
     Test {
         #[command(subcommand)]
@@ -168,6 +174,8 @@ pub enum Part {
     Shell,
     /// The brand's generated files are what its house.json makes
     Brand,
+    /// astro check over the landing site, then its build
+    Site,
     /// cargo check and clippy over the workspace
     Rust,
 }
@@ -243,6 +251,18 @@ pub enum Analytics {
         #[arg(long)]
         port: Option<u16>,
     },
+}
+
+#[derive(Subcommand)]
+pub enum Site {
+    /// Astro's dev server, reloading on every change, until stopped
+    Dev {
+        /// The port it listens on, on localhost
+        #[arg(long, default_value_t = 4321)]
+        port: u16,
+    },
+    /// Build the site static into apps/site/dist
+    Build,
 }
 
 #[derive(Subcommand)]

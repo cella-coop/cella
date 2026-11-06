@@ -104,6 +104,19 @@ test('any package may depend on one outside the tree, the brand, which depends o
   assert.match(errors, /packages\/brand: depends on apps\/org\/feats\/motion\/core\/ts; a package outside the tree depends on no package of the repository/)
 })
 
+test('the site depends on the brand alone, and no package depends on the site', () => {
+  const brand = JSON.stringify({ name: '@t/brand', exports: { '.': './src/index.ts' } })
+  const site = (deps) => JSON.stringify({ name: '@t/site', dependencies: deps })
+  const ok = tree({ files: { 'packages/brand/package.json': brand, 'apps/site/package.json': site({ '@t/brand': 'workspace:*' }) } })
+  assert.equal(ok, '')
+  const errors = tree({
+    deps: { person: ['site'] },
+    files: { 'packages/brand/package.json': brand, 'apps/site/package.json': site({ '@t/motion': 'workspace:*' }) },
+  })
+  assert.match(errors, /apps\/site: depends on apps\/org\/feats\/motion\/core\/ts; the site depends on no package of the repository but one outside the tree/)
+  assert.match(errors, /apps\/org\/feats\/person\/core\/ts: depends on apps\/site; no package depends on the site/)
+})
+
 test('a feat\'s name is unique in its app, at any depth', () => {
   const errors = tree({ extra: [['apps/org/feats/motion/feats/membership', 'membership']] })
   assert.match(errors, /a feat's name is unique in its app/)

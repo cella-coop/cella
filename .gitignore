@@ -5,3 +5,5 @@ result
 .pgrx/
 .svelte-kit/
 apps/org/ts/build/
+apps/site/dist/
+apps/site/.astro/

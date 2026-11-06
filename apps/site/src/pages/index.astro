@@ -1,0 +1,78 @@
+---
+// The landing page: the hero, then the sections, each an empty skeleton
+// whose content is the operator's to write.
+import lockup from '@cella/brand/lockup-stack.svg?raw'
+import Base from '../layouts/Base.astro'
+
+const sections = [
+  { id: 'what', heading: 'What cella is' },
+  { id: 'how', heading: 'How it works' },
+  { id: 'who', heading: 'Who it is for' },
+  { id: 'join', heading: 'Join' },
+]
+---
+
+<Base title="Cella" description="Cella, the cooperative workspace.">
+  <header class="hero">
+    <h1 class="lockup" set:html={lockup} />
+    <p class="line">The cooperative workspace.</p>
+  </header>
+  <main>
+    {
+      sections.map((s) => (
+        <section id={s.id} aria-labelledby={`${s.id}-heading`}>
+          <h2 id={`${s.id}-heading`}>{s.heading}</h2>
+          <p class="placeholder">To be written.</p>
+        </section>
+      ))
+    }
+  </main>
+</Base>
+
+<style>
+  .hero {
+    display: grid;
+    justify-items: center;
+    gap: 1.5rem;
+    padding: clamp(4rem, 14vh, 9rem) 1.5rem clamp(3rem, 10vh, 6rem);
+    text-align: center;
+  }
+
+  .lockup {
+    margin: 0;
+    color: var(--text);
+  }
+
+  .lockup :global(svg) {
+    display: block;
+    width: clamp(11rem, 40vw, 18rem);
+    height: auto;
+  }
+
+  .line {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: var(--t-xl);
+  }
+
+  main {
+    max-width: 44rem;
+    margin: 0 auto;
+    padding: 0 1.5rem 6rem;
+  }
+
+  section {
+    padding: 2.5rem 0;
+    border-top: 1px solid var(--line);
+  }
+
+  h2 {
+    margin: 0 0 0.75rem;
+    font-size: var(--t-2xl);
+  }
+
+  .placeholder {
+    margin: 0;
+    color: var(--text-subtle);
+  }
+</style>

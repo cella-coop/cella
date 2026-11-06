@@ -1,5 +1,9 @@
 packages:
   - "apps/**/ts"
+  - "apps/site"
   - "packages/*"
 minimumReleaseAgeExclude:
   - libpg-query@18.2.0
+  - "@astrojs/internal-helpers@0.13.1"
+  - "@astrojs/markdown-satteri@0.4.7"
+  - astro@7.4.7

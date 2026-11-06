@@ -647,6 +647,36 @@ the message's circle that counts.
   role and the motion it cites. The membership-motion graft carries
   them out as a passing motion's `seat-role` and `unseat-role` actions.
 
+## Folds
+
+Each action that writes core's circles says how its entry applies to
+the state before it (`sql/011-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)), at version 1:
+
+- `circle:circle:create` (`circle.fold_create`) inserts the circle by
+  the id, name and purpose its entry carries, and refuses where the
+  default bundle in force on the entry's day is not the one it names.
+- `circle:seat:add` (`circle.fold_seat_add`) inserts the seat by the id
+  its entry carries, from the entry's day: a tenure of the role it
+  names, or a membership of the circle where it names none, so a seat
+  id a write rolled back took is never taken again.
+- `circle:seat:remove` (`circle.fold_seat_remove`) ends the seat its
+  entry names on the entry's day; one naming no seat, `0`, ends none.
+- `circle:circle:message` (`circle.fold_message`) has no handler, so no
+  entry of it is logged, and its fold refuses one rather than change
+  nothing.
+- `motion:policy:adopt` and `motion:policy:end` (`circle.fold_granting`,
+  `circle.fold_revoking`), after the motion feat's own folds, run
+  `circle.mandate_from` or `circle.mandate_ended` on the policy register
+  as it then stands, the mandate's id pinned to the entry's, and refuse
+  a mandate or a revocation other than the entry's. A right's and a
+  disclosure's ids are not in the entry, so they come from their
+  sequences.
+
+The roles and the circles a scope begins with are the founding's, whose
+entry does not yet carry them, so a fold of Lanterne's log holds none of
+them and the compare names every circle table as differing.
+
 ## Invariants
 
 Core's circles own:

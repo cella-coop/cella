@@ -143,6 +143,32 @@ pub enum Command {
         only: Option<Test>,
     },
 
+    /// Fold a database's log into a fresh one migrated as the scope's, entry by entry, recording a checkpoint every so many entries; then its log verifies
+    Fold {
+        /// The database on the dev cluster whose log is folded
+        db: String,
+
+        /// The database to fold it into, made afresh unless --from resumes it
+        #[arg(long, value_name = "NAME")]
+        into: String,
+
+        /// The entry to stop at, the end of a write; by default the log's head
+        #[arg(long, value_name = "N")]
+        to: Option<i64>,
+
+        /// Resume the database folded into at its checkpoint at entry N, its state hashed again first
+        #[arg(long, value_name = "N")]
+        from: Option<i64>,
+
+        /// How many entries apart the checkpoints are, each at the end of a write
+        #[arg(long, value_name = "N", default_value_t = crate::fold::EVERY)]
+        every: i64,
+
+        /// Then compare the two databases' folded slices, by state hash and row for row
+        #[arg(long)]
+        compare: bool,
+    },
+
     /// The notary log
     Log {
         #[command(subcommand)]

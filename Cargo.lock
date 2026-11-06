@@ -415,9 +415,12 @@ dependencies = [
 name = "cella-cli"
 version = "0.1.0-alpha"
 dependencies = [
+ "blake3",
  "cella-guards",
  "clap",
+ "ed25519-dalek",
  "rand_core 0.6.4",
+ "serde_json",
  "zeroize",
 ]
 

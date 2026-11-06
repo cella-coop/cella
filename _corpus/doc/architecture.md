@@ -1367,6 +1367,61 @@ authorisation and logging hold for every state change but a
 superuser's ([trust](trust.md#one-server)). `write` in `@cella/org-db`
 begins, writes and submits, and a handler writes through it alone.
 
+### Folds
+
+Every action says how its entry applies to the state before it: its
+**fold**, beside its handler in its slice's `sql/`, a function of the
+entry alone, `<schema>.<name>(entry jsonb) RETURNS void`, so the log
+folded entry by entry into an empty database rebuilds the scope's
+non-personal state ([trust](trust.md#one-server)). The entry is `{n,
+op, actor, date, cause, payload}`, its payload as the log keeps it, each
+personal value as its commitment, which the fold writes where the
+handler wrote the value. A fold writes only its own slice's schema, as
+its handler does, and reads nothing but the entry and what its slice's
+SQL may read. It takes every id, day and figure from the entry, never
+from a sequence, which a write rolled back leaves a gap in, nor from the
+clock: `cella.verdict_date()` reads the entry's date while it folds.
+Where it runs its handler's SQL, as core's circles run
+`circle.mandate_from` for a mandate policy adopted, it pins the ids the
+entry names and refuses a result other than the entry's, naming both.
+
+A slice registers the fold of each action that writes its schema, its
+own and those of the slices it extends, from its migration by
+`cella.lets_fold(op, version, fn, owner)`, each argument a literal, the
+owner itself and the function in its own schema, which `cella check
+feats` holds as it holds `cella.lets_follow`. An entry's folds run in
+one order: the action's own slice's first, then the others by name, as
+its handler writes its own state before the slices extending it write
+theirs. A forgone entry changed nothing and folds by none.
+
+A fold is versioned as a guard is: a changed fold is a new version,
+registered beside the old, which stays. `cella.fold (op, owner, version,
+fn, since)` keeps each, `since` the first entry after it was registered,
+and an entry folds by each owner's version in force at its number, the
+newest whose `since` it has reached. So an entry written before a fold
+changed folds as it was written, and two engines at different versions
+fold one log to the same state; an engine lacking a version an entry is
+under refuses to fold it.
+
+`cella fold` folds a database's log into a fresh one migrated as the
+scope's ([the CLI](../../apps/org/rs/index.md)), one write per
+transaction, by `cella.fold_log`, as the superuser under
+`cella.unbound`. Every so many entries, at the end of a write, it records
+a **checkpoint** in `cella.checkpoint`: the entry, its hash and the
+state hash, the BLAKE3 of the folded slices' rows in a canonical order,
+`cella.state_rows`: each table by name, its rows as JSON text sorted
+bytewise, a personal column as the newest commitment the log holds for
+it. A fold resumes from a checkpoint, whose state it hashes again first.
+A slice is **folded** when it registers a fold and every action it
+names, among those the scope registers and its log holds, has one
+(`cella.folded()`); the state hash and the compare read the folded
+slices and name the others. `cella check feats` lists every action with
+no fold and counts those with one. Core's circles fold every action of
+theirs and their part of a policy's adoption and end
+([circle](../../apps/org/core/circle/index.md#folds)); no other slice
+folds yet, and the founding, which writes the circles Lanterne begins
+with, folds none of them.
+
 ## Policies
 
 A **policy** is one binding sentence a circle adopted by motion. It is of

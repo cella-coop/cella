@@ -9,6 +9,7 @@ mod check;
 pub mod cli;
 mod data;
 mod db;
+pub mod fold;
 mod key;
 mod repo;
 pub mod run;
@@ -43,6 +44,9 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
         Command::Brand => check::brand(&Repo::find()?, &steps),
         Command::Site { command } => site::run(&Repo::find()?, &steps, command),
         Command::Test { only } => test::run(&Repo::find()?, &steps, only),
+        Command::Fold { db, into, to, from, every, compare } => {
+            fold::fold(&Repo::find()?, &steps, &fold::Fold { source: &db, into: &into, to, from, every, compare })
+        }
         Command::Log { command: Log::Verify { url } } => data::verify(&Repo::find()?, url.as_deref()),
         Command::Vault { command: Vault::Sweep { url } } => data::sweep(&Repo::find()?, url.as_deref()),
         Command::Vault { command: Vault::Rewrap { url } } => data::rewrap(&Repo::find()?, url.as_deref()),

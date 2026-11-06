@@ -2,13 +2,15 @@
 // print.css and the core make, the <cella-print> element at run time and
 // a .cella-print over printFile()'s PNGs at build time, and each paints
 // the explorer's printInto() of the fixture picture (brand.test.mjs says
-// how it was captured). The element's TypeScript is served as the browser
-// asks for it, its types stripped. `BROWSERS` (comma-separated) narrows
+// how it was captured). A second page widens a <cella-print> printed
+// narrower and one laid out at zero width, and swaps a third's src for a
+// missing file. The element's TypeScript is served as the browser asks
+// for it, its types stripped. `BROWSERS` (comma-separated) narrows
 // the browsers run.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs'
 import { createRequire } from 'node:module'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -44,11 +46,19 @@ const page = `<!doctype html><link rel="stylesheet" href="/print.css"><style>bod
 ${await built('poster')}
 ${await built('screen')}
 <script type="module" src="/src/print-element.ts"></script>`
+const resizing = `<!doctype html><link rel="stylesheet" href="/print.css"><style>body { margin: 0 } body > * { margin: 0 0 8px }</style>
+<cella-print id="resized" src="${dataUrl(png)}" ink="error" style="width: ${width / 2}px"></cella-print>
+<div id="box" style="width: 0"><cella-print id="late" src="${dataUrl(png)}" ink="error"></cella-print></div>
+<cella-print id="swapped" src="${dataUrl(png)}" ink="error" style="width: ${width}px"></cella-print>
+<script type="module" src="/src/print-element.ts"></script>`
 
 async function serve(route) {
   const path = new URL(route.request().url()).pathname
-  if (path === '/') {
-    return route.fulfill({ contentType: 'text/html', body: page })
+  if (path === '/' || path === '/resizing') {
+    return route.fulfill({ contentType: 'text/html', body: path === '/' ? page : resizing })
+  }
+  if (!existsSync(join(brand, path))) {
+    return route.fulfill({ status: 404 })
   }
   const source = readFileSync(join(brand, path), 'utf8')
   if (path.endsWith('.ts')) {
@@ -57,6 +67,21 @@ async function serve(route) {
   }
   return route.fulfill({ contentType: 'text/css', body: source })
 }
+
+// The size of each mask a <cella-print> lays, and the url of its first.
+const masks = (tab, id) =>
+  tab.locator(`#${id}`).evaluate(async (el) => {
+    const urls = [...el.children].map((s) => s.style.getPropertyValue('--mask').trim().match(/^url\("(.*)"\)$/)[1])
+    const sizes = await Promise.all(
+      urls.map(async (url) => {
+        const img = new Image()
+        img.src = url
+        await img.decode()
+        return [img.naturalWidth, img.naturalHeight]
+      }),
+    )
+    return { first: urls[0], sizes }
+  })
 
 // How far a print the browser painted is from the explorer's, in levels
 // of 255: the worst channel and the mean.
@@ -87,6 +112,42 @@ for (const [name, launch] of Object.entries(engines).filter(([n]) => wanted.incl
         // a dot out of place is a hundred levels off
         assert.ok(worst <= 3 && mean < 1, `${name}, ${within}: worst ${worst}, mean ${mean.toFixed(3)} levels from the explorer`)
       }
+    } finally {
+      await browser.close()
+    }
+  })
+}
+
+for (const [name, launch] of Object.entries(engines).filter(([n]) => wanted.includes(n))) {
+  test(`${name} prints a <cella-print> again at its new width, and clears one whose picture fails`, async () => {
+    const browser = await launch()
+    try {
+      const tab = await browser.newPage({ viewport: { width: 200, height: 200 }, deviceScaleFactor: 1 })
+      await tab.route('http://brand.test/**', serve)
+      await tab.goto('http://brand.test/resizing')
+      await tab.waitForFunction(() => ['resized', 'swapped'].every((id) => document.getElementById(id).children.length === 1))
+      // laid out at zero width, it has printed nothing, not even at its
+      // picture's own width
+      assert.equal(await tab.locator('#late').evaluate((el) => el.children.length), 0, `${name}: a print at zero width has no layers`)
+
+      const narrow = await masks(tab, 'resized')
+      assert.deepEqual(narrow.sizes, [[width / 2, Math.round(height / 2)]], `${name}: the print's mask is at its shown width`)
+      await tab.locator('#resized').evaluate((el, w) => (el.style.width = `${w}px`), width)
+      await tab.locator('#box').evaluate((el, w) => (el.style.width = `${w}px`), width)
+      await tab.waitForFunction((old) => {
+        const mask = (id) => document.getElementById(id).firstElementChild?.style.getPropertyValue('--mask').trim()
+        return mask('resized') && mask('resized') !== `url("${old}")` && mask('late')
+      }, narrow.first)
+      for (const id of ['resized', 'late']) {
+        assert.deepEqual((await masks(tab, id)).sizes, [[width, height]], `${name}, #${id}: the masks are at the new width`)
+        const { worst, mean } = await distance(await tab.locator(`#${id}`).screenshot(), want('house', 'error'))
+        assert.ok(worst <= 3 && mean < 1, `${name}, #${id} widened: worst ${worst}, mean ${mean.toFixed(3)} levels from the explorer`)
+      }
+
+      await tab.locator('#swapped').evaluate((el) => el.setAttribute('src', '/missing.png'))
+      await tab.waitForFunction(() => document.getElementById('swapped').children.length === 0)
+      const left = await tab.locator('#swapped').evaluate((el) => [el.style.aspectRatio, el.dataset.over ?? null])
+      assert.deepEqual(left, ['', null], `${name}: a print whose picture failed keeps no shape and no over`)
     } finally {
       await browser.close()
     }

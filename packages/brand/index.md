@@ -129,6 +129,14 @@ It is worn two ways:
   at its width and at most 1.5 device pixels, runs the same core and
   lays the same masks. `print` names a style, `house` unset; `ink` a
   status, the first ink's turn; `alt` its text, the element a `role=img`.
+  It prints at the width it is shown: it observes its own size and
+  prints again when its width changes, so its dots stay the cell's size
+  at every width, and one laid out at zero width prints once it has a
+  width, never at its picture's. It shows nothing it no longer names:
+  when its `src` changes its layers go at once, and when the `src` goes,
+  or fails to load or decode, its layers, its aspect ratio and its
+  `data-over` are cleared, its `alt` kept as its label. A draw a later
+  one has overtaken is dropped.
 
 ## The test
 
@@ -153,4 +161,8 @@ WebKit: a `<cella-print>` of the fixture and two `.cella-print`s over
 `printFile()`'s PNGs, the poster's three multiplied inks and the screen
 print's opaque two, each within three levels in 255 of what the explorer
 paints at every pixel and under one on the mean, since a browser blends
-each layer in eight bits.
+each layer in eight bits. In each it widens a `<cella-print>` printed
+narrower, and one laid out at zero width, which has no layers until it
+has a width; each then has masks at its new width and paints the
+explorer's print within the same bounds. It swaps a third's `src` for a
+missing file, which leaves it with no layers.

@@ -309,16 +309,21 @@ takes it away, and a slice may drop its own trigger on another's table.
 `tools/writes.mjs` reads each feat's and graft's TypeScript, its tests
 aside, as Postgres would: every string and template literal that holds
 SQL is parsed with libpg_query, as `sql-check.mjs` parses migrations,
-each interpolation standing in as a parameter, and every statement
-that writes a table outside its schema, or puts a trigger on one, is
-found whatever its spelling: in capitals or not, its names quoted or
-not, inside a `WITH`. The check refuses every such write and trigger;
-there are no exceptions, the last of those that predated the rule
-having moved to their owners' registers and published writes. A write
-no tool can see is left to review: SQL built at run time (`EXECUTE`,
-or a statement whose table or verb a TypeScript string assembles from
-parts), and a target named without its schema, which the connection's
-search path resolves.
+each interpolation standing in as a parameter and literals joined by
+`+` read as one, and every statement that writes a table outside its
+schema, by `INSERT`, `UPDATE`, `DELETE`, `MERGE`, `TRUNCATE` or
+`COPY ... FROM`, or puts a trigger on one, is found whatever its
+spelling: in capitals or not, its names quoted or not, inside a
+`WITH`. A literal that does not parse whole, as one whose `SET`,
+`VALUES` or column list is interpolated, is not passed: it is read
+token by token with Postgres's scanner, and a write verb followed by a
+qualified target is found there just the same. The check refuses every
+such write and trigger; there are no exceptions, the last of those
+that predated the rule having moved to their owners' registers and
+published writes. A write no tool can see is left to review: SQL built
+at run time (`EXECUTE`, or a statement whose verb or table is itself
+an interpolation or a variable), and a target named without its
+schema, which the connection's search path resolves.
 
 ### Reading
 

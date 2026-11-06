@@ -370,7 +370,11 @@ makes is held to it by tooling, never by hand:
   role the session set, or else its login. A function its caller reaches only by a secret it
   holds, before anyone is signed in, is `'audience: keyed by <argument>:
   why'`, and matches its rows by that argument's digest, as an
-  invitation's link does. A definer function that returns a scalar, as
+  invitation's link does: each arm of its query compares, in its
+  `WHERE`, a column of a table it reads with `sha256(<argument>)`, so
+  a row answers only the secret whose digest it holds; a digest
+  compared with itself, with another expression or with another
+  argument's matches no row by its own and returns them all. A definer function that returns a scalar, as
   a capital account's `holds` does, says no more than whether and takes
   no declaration; a guard is never a definer ([trust](trust.md#guards)).
 
@@ -380,11 +384,18 @@ table that disables or unforces row-level security, one that drops
 `circle` for no policy of its own, and a policy of no known pattern not
 declared shared; and a definer function that returns rows and is not
 declared, one declared shared that neither sums nor filters, and one
-declared keyed that matches its rows by no digest of its argument; and
+declared keyed that compares no column of its rows with its argument's
+digest; and
 a view a slice's migrations leave reading as its owner that is not
 declared shared, or one declared shared that neither sums by the
 columns it names, and by none that says whose a row is, nor filters
-its rows by its reader's test (`unshared`).
+its rows by its reader's test (`unshared`). What a declared share
+shows, a view's or a definer function's, the check reads through the
+query that makes it: a `*` shows every column of what it reads, and a
+column of a `WITH` query or of a subquery in its `FROM` shows the
+columns that query shows, down to the tables they come from, so a
+column that says whose a row is or is personal is refused behind a
+`*` or a `WITH` as it is where it is named.
 `cella migrate` reads the database it migrated and
 fails a run that leaves a slice's table not enabled and forced, or with
 no policy the app role reads it by (`circle.unsecured`). And `cella test

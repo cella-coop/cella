@@ -54,12 +54,16 @@
 //     declared, 'audience: shared by <columns>: why' or 'audience: keyed
 //     by <argument>: why', and keeps a declared one to the shared-total
 //     rules: it sums, or filters its rows by its reader's test, or a keyed
-//     one matches them by its argument's digest (`definers`);
+//     one compares a column of its rows with its argument's digest
+//     (`definers`);
 //   - makes no view that reads as its owner, beside its contract, unless
 //     it is declared 'audience: shared by <columns>: why' or 'audience:
 //     shared: why' and keeps it: it sums by exactly the columns it names
 //     and none that says whose a row is, or filters its rows by its
 //     reader's test; every other view is security_invoker (`unshared`).
+//   What a declared share shows, a view's or a function's, is read through
+//   a `*`, a WITH query and a subquery in its FROM, down to their tables
+//   (`lineage`).
 // A slice's analytical contract, its sql/analytics.sql, holds only views
 // in its own schema and comments on them. A view reads as its owner, never
 // security_invoker, so the role needs no grant on a table, and it shares:
@@ -475,33 +479,105 @@ function made(b, name, s, found) {
   })
 }
 
-// The columns an expression shows: every one but those inside a sum or a
-// count, and of a scalar subquery only what it returns.
-function shown(n) {
-  const out = []
-  const visit = (key, x) => {
-    if (key === 'ColumnRef') {
-      out.push(x)
-      return
+// What each arm of a query shows, column by column, down to the tables
+// its columns come from (architecture.md, "Reading"): each column's name
+// and the `schema.table.column`s it shows outside a sum or a count, of a
+// scalar subquery only what that returns; and how a column reference
+// resolves in the arm. A `*` shows every column of what it reads, and a
+// column of a WITH query, of a subquery in its FROM or of a view a slice
+// makes shows the columns that query shows, so a column is read behind
+// them as it is where it is named.
+function lineage(stmt, found, ctes = new Map(), outer = new Map(), seen = new Set()) {
+  const arms = (q) => (q?.op && q.op !== 'SETOP_NONE' ? [...arms(q.larg), ...arms(q.rarg)] : [q])
+  const unknown = { names: null, col: () => [] }
+  // A query read as a relation: its columns' names, the aliases it is
+  // given first, and what each shows across its arms.
+  const derived = (q, aliases, ctes, outer, seen) => {
+    const shows = lineage(q, found, ctes, outer, seen).map((a) => a.columns)
+    const names = (shows[0] ?? []).map((c, i) => aliases?.[i] ?? c.name)
+    return { names, col: (n) => shows.flatMap((s) => s[names.indexOf(n)]?.cols ?? []) }
+  }
+  const relation = (key, seen) => {
+    const r = found.relations?.get(key)
+    if (!r?.view || seen.has(key)) {
+      return { names: r?.names ?? null, col: (n) => [`${key}.${n}`] }
     }
-    if (key === 'FuncCall' && aggregate(x)) {
-      return
+    const through = derived(r.view.query.SelectStmt, r.names, new Map(), new Map(), new Set([...seen, key]))
+    return { names: through.names, col: (n) => [`${key}.${n}`, ...through.col(n)] }
+  }
+  // The WITH queries a select reads, each seeing those before it.
+  const withs = (q, ctes) => {
+    const out = new Map(ctes)
+    for (const c of (q?.withClause?.ctes ?? []).map((x) => x.CommonTableExpr)) {
+      out.set(c.ctename, c.ctequery?.SelectStmt ? derived(c.ctequery.SelectStmt, strings(c.aliascolnames), out, outer, seen) : unknown)
     }
-    if (key === 'SubLink') {
-      const arms = (q) => (q?.op && q.op !== 'SETOP_NONE' ? [...arms(q.larg), ...arms(q.rarg)] : [q])
-      arms(x.subselect?.SelectStmt).forEach((q) => visit(null, q?.targetList))
-      return
-    }
-    if (Array.isArray(x)) {
-      x.forEach((y) => visit(key, y))
-    } else if (x && typeof x === 'object') {
-      for (const [k, y] of Object.entries(x)) {
-        visit(k, y)
+    return out
+  }
+  const scope = withs(stmt, ctes)
+  return arms(stmt).map((q) => {
+    const ctes = withs(q, scope)
+    const sources = new Map()
+    const from = (n) => {
+      if (n?.RangeVar) {
+        const rv = n.RangeVar
+        const src = rv.schemaname ? relation(`${rv.schemaname}.${rv.relname}`, seen) : ctes.get(rv.relname) ?? unknown
+        sources.set(rv.alias?.aliasname ?? rv.relname, src)
+      } else if (n?.RangeSubselect) {
+        const rs = n.RangeSubselect
+        const src = rs.subquery?.SelectStmt ? derived(rs.subquery.SelectStmt, strings(rs.alias?.colnames), ctes, new Map([...outer, ...sources]), seen) : unknown
+        sources.set(rs.alias?.aliasname ?? '', src)
+      } else if (n?.RangeFunction) {
+        sources.set(n.RangeFunction.alias?.aliasname ?? '', unknown)
+      } else if (n?.JoinExpr) {
+        from(n.JoinExpr.larg)
+        from(n.JoinExpr.rarg)
       }
     }
-  }
-  visit(null, n)
-  return out
+    ;(q?.fromClause ?? []).forEach(from)
+    const resolve = (ref) => {
+      const f = strings(ref.fields)
+      if (f.length >= 2) {
+        return (sources.get(f.at(-2)) ?? outer.get(f.at(-2)))?.col(f.at(-1)) ?? []
+      }
+      const here = [...sources.values()].flatMap((s) => s.col(f[0]))
+      return here.length || !f.length ? here : [...outer.values()].flatMap((s) => s.col(f[0]))
+    }
+    const expr = (n) => {
+      const out = []
+      const visit = (key, x) => {
+        if (key === 'ColumnRef') {
+          out.push(...resolve(x))
+        } else if (key === 'FuncCall' && aggregate(x)) {
+          return
+        } else if (key === 'SubLink') {
+          const inner = x.subselect?.SelectStmt
+          if (inner) {
+            out.push(...lineage(inner, found, ctes, new Map([...outer, ...sources]), seen).flatMap((a) => a.columns.flatMap((c) => c.cols)))
+          }
+        } else if (Array.isArray(x)) {
+          x.forEach((y) => visit(key, y))
+        } else if (x && typeof x === 'object') {
+          for (const [k, y] of Object.entries(x)) {
+            visit(k, y)
+          }
+        }
+      }
+      visit(null, n)
+      return out
+    }
+    const columns = (q?.targetList ?? []).flatMap((t) => {
+      const v = t.ResTarget.val
+      const fields = v?.ColumnRef?.fields ?? []
+      if (!fields.at(-1)?.A_Star) {
+        return [{ name: t.ResTarget.name ?? strings(fields).at(-1) ?? '?column?', cols: expr(v) }]
+      }
+      const f = strings(fields)
+      const of = f.length ? [sources.get(f.at(-1))].filter(Boolean) : [...sources.values()]
+      // A star over what the check knows no columns of shows what it can.
+      return of.flatMap((s) => (s.names ? s.names.map((n) => ({ name: n, cols: s.col(n) })) : [{ name: '*', cols: [] }]))
+    })
+    return { columns, resolve }
+  })
 }
 
 // The SECURITY DEFINER functions of a feat or a graft that return rows
@@ -515,7 +591,11 @@ function shown(n) {
 //     its WHERE a test of a known pattern (`pattern`, as a definer);
 //   'audience: keyed by <argument>: why'
 //     it matches its rows by that argument's digest, a secret its caller
-//     holds, as an invitation's link does.
+//     holds, as an invitation's link does: each arm of its query compares
+//     in its WHERE a column of a table it reads with sha256(<argument>),
+//     never the digest with itself, an expression or another argument.
+// What it shows it shows through a `*`, a WITH query and a subquery in
+// its FROM, read down to their tables (`lineage`).
 export function definers(found) {
   const out = []
   const personal = (c) => found.personal?.includes(c) || found.carried?.has(c)
@@ -549,11 +629,23 @@ export function definers(found) {
         const c = n?.FuncCall
         return c && ['sha256', 'digest'].includes(strings(c.funcname).at(-1)) && strings(c.args?.[0]?.ColumnRef?.fields).at(-1) === key
       }
-      const matched = (q) => conjuncts(q).some((t) => t.A_Expr?.kind === 'AEXPR_OP' && strings(t.A_Expr.name).join() === '=' && (digest(t.A_Expr.lexpr) || digest(t.A_Expr.rexpr)))
+      // A column of what the arm reads, never an argument by its name or
+      // by the function's.
+      const column = (n, resolve) => {
+        const p = strings(n?.ColumnRef?.fields)
+        const argument = p.length === 1 ? f.takes.includes(p[0]) : p.at(-2) === f.name.split('.').at(-1)
+        return p.length > 0 && !n.ColumnRef.fields.at(-1).A_Star && !argument && resolve(n.ColumnRef).length > 0
+      }
+      const matched = (q, resolve) =>
+        conjuncts(q).some((t) => {
+          const e = t.A_Expr
+          return e?.kind === 'AEXPR_OP' && strings(e.name).join() === '=' && ((digest(e.lexpr) && column(e.rexpr, resolve)) || (digest(e.rexpr) && column(e.lexpr, resolve)))
+        })
+      const read = lineage(query, found)
       if (!key) {
         out.push(`${f.path}: ${f.name} is declared keyed by ${by ?? 'nothing'}, which is not one argument it takes`)
-      } else if (!arms(query).every(matched)) {
-        out.push(`${f.path}: ${f.name} is declared keyed by ${key}, but matches its rows by no digest of it: compare a column with sha256(${key})`)
+      } else if (!arms(query).every((q, i) => matched(q, read[i].resolve))) {
+        out.push(`${f.path}: ${f.name} is declared keyed by ${key}, but compares no column of its rows with its digest: compare a column of a table it reads with sha256(${key}) in its WHERE`)
       }
       continue
     }
@@ -563,22 +655,12 @@ export function definers(found) {
     if (arms(query).every((q) => conjuncts(q).some((t) => pattern(t, f.scope, found, true)))) {
       continue
     }
-    const tables = new Map()
-    walk(query, (key, n) => {
-      if (key === 'RangeVar' && n.schemaname) {
-        tables.set(n.alias?.aliasname ?? n.relname, `${n.schemaname}.${n.relname}`)
-      }
-    })
-    const resolve = (ref) => {
-      const p = strings(ref.fields)
-      const t = p.length >= 2 ? tables.get(p.at(-2)) : null
-      return t ? [`${t}.${p.at(-1)}`] : p.length === 1 ? [...new Set(tables.values())].map((x) => `${x}.${p[0]}`) : []
-    }
-    for (const q of arms(query)) {
+    const read = lineage(query, found)
+    for (const [i, q] of arms(query).entries()) {
       const whose = [
-        ...(q.targetList ?? []).flatMap((t) => shown(t.ResTarget.val)),
-        ...(q.groupClause ?? []).flatMap((g) => refs(g)),
-      ].flatMap(resolve).find((c) => found.readers?.has(c) || personal(c))
+        ...read[i].columns.flatMap((c) => c.cols),
+        ...(q.groupClause ?? []).flatMap((g) => refs(g)).flatMap(read[i].resolve),
+      ].find((c) => found.readers?.has(c) || personal(c))
       if (whose) {
         out.push(`${f.path}: ${f.name} is declared shared, but shows ${whose}, which says whose a row is or is personal, outside a sum: sum it, or keep only the rows its reader reads by a test of a known pattern in its WHERE, (SELECT circle.whole()) for cella.sees (architecture.md, "Reading")`)
         break
@@ -609,7 +691,8 @@ function invoker(options) {
 // divide; or it sums, by exactly the columns it names and no finer, or
 // shows the rows of a view that sums so, as a contract's shared view
 // does (`shared`), and shows outside a sum, and groups by, no column that
-// says whose a row is nor a personal one. Whether its grouping is a
+// says whose a row is nor a personal one, read through a `*`, a WITH
+// query and a subquery in its FROM (`lineage`). Whether its grouping is a
 // record's own key, so that each sum is one record's, the check cannot
 // see: such a view reads as its reader, and review reads it.
 export function unshared(found) {
@@ -634,11 +717,12 @@ export function unshared(found) {
       continue
     }
     shared(view, aud, names, selects, resolve, fail, found)
-    for (const q of selects) {
+    const read = lineage(v.stmt.query.SelectStmt, found)
+    for (const [i, q] of selects.entries()) {
       const whose = [
-        ...(q.targetList ?? []).flatMap((t) => refs(t.ResTarget.val, true)),
-        ...(q.groupClause ?? []).flatMap((g) => refs(g)),
-      ].flatMap(resolve).find((c) => found.readers?.has(c) || personal(c))
+        ...read[i].columns.flatMap((c) => c.cols),
+        ...(q.groupClause ?? []).flatMap((g) => refs(g)).flatMap(read[i].resolve),
+      ].find((c) => found.readers?.has(c) || personal(c))
       if (whose) {
         fail(`${view} is declared shared, but shows or groups by ${whose}, which says whose a row is or is personal: sum over everyone, keep only the rows its reader reads by a test of a known pattern in its WHERE, or make it WITH (security_invoker = true)`)
         break
@@ -721,6 +805,8 @@ function statement(type, b, o, s, fail, owned, named, found) {
       break
     case 'CreateStmt':
       owned(b.relation.schemaname, `creates ${named(b.relation)}`)
+      // Every table's columns, core's among them, for a `*` that reads it.
+      ;(found.relations ??= new Map()).set(named(b.relation), { names: (b.tableElts ?? []).map((d) => d.ColumnDef?.colname).filter(Boolean) })
       if (o.kind !== 'core') {
         columns(b.relation, b.tableElts, found.at, found)
         // A partition is its parent's: the parent names its circle.
@@ -748,6 +834,8 @@ function statement(type, b, o, s, fail, owned, named, found) {
     case 'ViewStmt': {
       owned(b.view.schemaname, `creates ${named(b.view)}`)
       ;(found.composites ??= new Set()).add(named(b.view))
+      // A view's columns, and the query a column of it shows through.
+      ;(found.relations ??= new Map()).set(named(b.view), { names: shape(b).names, view: b })
       // A view over a table under row-level security hides it: it is
       // secured in turn, for a contract that reads it.
       if (read(b.query).some((t) => found.secured.has(t))) {
@@ -795,6 +883,10 @@ function statement(type, b, o, s, fail, owned, named, found) {
             v.invoker = false
           }
         }
+      }
+      if (type === 'AlterTableStmt') {
+        const added = (b.cmds ?? []).map((c) => c.AlterTableCmd).filter((c) => c?.subtype === 'AT_AddColumn').map((c) => c.def)
+        found.relations?.get(named(b.relation))?.names.push(...added.map((d) => d?.ColumnDef?.colname).filter(Boolean))
       }
       if (type === 'AlterTableStmt' && o.kind !== 'core') {
         const added = (b.cmds ?? []).map((c) => c.AlterTableCmd).filter((c) => c?.subtype === 'AT_AddColumn').map((c) => c.def)

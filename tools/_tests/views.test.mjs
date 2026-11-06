@@ -90,6 +90,19 @@ test('a shared view that shows the rows of a circle\'s records is refused, unles
   assert.match(await check(filtered(`l.member = cella.reader() OR l.amount > 100`)), /ledger.shares shows the rows of ledger.line/)
 })
 
+test('a shared view shows through its star, its WITH and the subqueries in its FROM', async () => {
+  const declared = (body, by = 'who') => `CREATE VIEW ledger.totals AS ${body};\nCOMMENT ON VIEW ledger.totals IS 'audience: shared by ${by}: the co-op''s totals';`
+  for (const body of [
+    'WITH w AS (SELECT l.member AS who, l.amount FROM ledger.line l) SELECT w.who, sum(w.amount) AS total FROM w GROUP BY w.who',
+    'SELECT x.who, sum(x.amount) AS total FROM (SELECT l.member AS who, l.amount FROM ledger.line l) x GROUP BY x.who',
+  ]) {
+    assert.match(await check(declared(body)), /ledger.totals is declared shared, but shows or groups by ledger.line.member, which says whose a row is/, body)
+  }
+  const filtered = `CREATE VIEW ledger.shares AS SELECT * FROM ledger.line l WHERE l.amount > 0 AND (l.member = cella.reader() OR l.amount > 100);\nCOMMENT ON VIEW ledger.shares IS 'audience: shared: a share that needs the whole to divide';`
+  assert.match(await check(filtered), /ledger.shares is declared shared, but shows or groups by ledger.line.member/)
+  assert.equal(await check(declared('WITH w AS (SELECT l.account, l.amount FROM ledger.line l) SELECT w.account, sum(w.amount) AS total FROM w GROUP BY w.account', 'account')), '')
+})
+
 test('a contract\'s views are the contract rule\'s, never this one\'s', async () => {
   const contract = `CREATE VIEW ledger.accounts AS SELECT l.account, sum(l.amount) AS total FROM ledger.line l GROUP BY l.account;\nCOMMENT ON VIEW ledger.accounts IS 'audience: shared by account';\n`
   assert.equal(await check('', { 'analytics.sql': contract }), '')

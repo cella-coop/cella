@@ -3,14 +3,17 @@ title = "contact-project"
 updated = 2026-11-06
 +++
 
-Whom a project is for. A project without a link is the co-op's own, not
-invalid. Declared by `project`.
+Whom a project is for: a client, a contact holding the client role
+([contact](../../feats/contact/index.md#the-client-role)). A project
+without a link is the co-op's own, not invalid. Declared by `project`.
 
 ## Schema
 
 `contact_project` (`sql/`): `contact_project.commission`, a project and the
 contact it is for, by id, with no foreign key into either feat. A trigger
-refuses a project or a contact that does not exist (SQLSTATE `09000`). The
+refuses a project or a contact that does not exist, and a contact that
+is no client, naming it and saying to set its client role (SQLSTATE
+`09000`). The
 app role may select, insert and update; the guards role may select.
 
 Every record names its owning circle, `circle`, a foreign key into
@@ -22,19 +25,21 @@ assembly's, unless the write that makes it names another.
 
 | Action | Label | Power | Why |
 |---|---|---|---|
-| `contact-project:project:link` | confluent | `manage-project` | the last writer wins; a project is for one contact |
+| `contact-project:project:link` | confluent | `manage-project` | the last writer wins; a project is for one client |
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it.
 
 ## Invariants
 
-- a commission's project and contact exist.
+- a commission's project and contact exist, and the contact is a client
+  when the link is made.
 
 ## Shell
 
 Adds to each project the contact's name, a card field of the projects'
-gallery, and to a project's page the contact with the form that links it;
+gallery, and to a project's page the client with the form that links
+it, whose picker offers the clients not archived and no other contact;
 to a contact's page, the projects it commissioned.
 
 ## Lanterne

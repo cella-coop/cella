@@ -1,5 +1,6 @@
 // fixture check, work: a mock co-op's projects, tasks and timesheets are
-// consistent. Every link a work graft holds resolves, and an invoice bills
+// consistent. Every link a work graft holds resolves, a project is for a
+// client, and an invoice bills
 // a project of the client it bills; shares never exceed
 // their project's budget; a done task, and only a done one, has its day; a
 // worker logs a plausible day, ten hours at most, on working days; an
@@ -14,6 +15,7 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 export function work(read, fail) {
   const addresses = new Set((read('membership').member ?? []).filter((m) => m.status === 'active').map((m) => m.address))
   const contacts = new Set((read('contact').contact ?? []).map((c) => c.id))
+  const clients = new Set((read('contact').contact ?? []).filter((c) => c.client).map((c) => c.id))
   const projects = new Map((read('project').project ?? []).map((p) => [p.id, p]))
   const tasks = new Map((read('task').task ?? []).map((t) => [t.id, t]))
   const time = read('timesheet')
@@ -55,6 +57,8 @@ export function work(read, fail) {
     has(projects, c.project, 'project', 'commission')
     if (!contacts.has(c.contact)) {
       fail(`commission of ${c.project}: no contact ${c.contact}`)
+    } else if (!clients.has(c.contact)) {
+      fail(`commission of ${c.project}: ${c.contact} is no client`)
     }
   }
 

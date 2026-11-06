@@ -1,6 +1,6 @@
 +++
 title = "Conflicts"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 # Conflicts
@@ -56,7 +56,7 @@ state is that of 24 October 2026.
 | `invoice.send` | confluent | right |
 | `invoice.payment` | confluent | right; **applied**: overpayment is a credit owed, not a refusal; same reference merges |
 | `invoice.void` | ordered | right |
-| `contact.add`, `.update`, `.archive` | confluent | right; **applied**: erasure wins ([erasure](#erasure-wins)) |
+| `contact.add`, `.update`, `.archive` | confluent | right: field registers, the client role one of them; **applied**: erasure wins ([erasure](#erasure-wins)) |
 | `contact.erase`, `membership.erase`, `person.forget` | ordered | right: a tombstone against every later value |
 | `membership.invite`, `person.profile` | confluent | right; **applied**: an invitation is taken up by its link; erasure wins |
 | `membership.link` | confluent | right: links are facts; the first taken up ends them all |
@@ -71,7 +71,7 @@ state is that of 24 October 2026.
 | `membership-project:project.share` | bounded on the budget | right |
 | `task.create`, `.move`, `.complete` | confluent | right: field registers, the last writer wins |
 | `membership-task:task.assign`, `project-task:task.file` | confluent | right: registers |
-| `contact-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one contact |
+| `contact-invoice:billing.link` | confluent | right: a register, the last writer wins; an invoice bills one client; **applied**: the contact holds the client role when the link is made, read in the same transaction, so a link after the role is cleared is refused and one before it stands |
 | `contact-project:project.link`, `invoice-project:invoice.link` | confluent | right: registers, as `contact-invoice`'s |
 | `timesheet.log`, `timesheet:period.submit` | confluent | right |
 | `timesheet:entry.correct` | confluent | right: a correction only lowers an entry, so two of one leave the lower in either order; against an approval, as a log ([time](#no-time-goes-into-an-approved-month)) |

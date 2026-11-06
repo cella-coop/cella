@@ -6,7 +6,7 @@ import type { Add, Archive, Changed, Erase, Fields, Update } from '../models/con
 type Action = keyof typeof actions
 
 // The columns a write may set, in a fixed order; nothing else reaches SQL.
-const columns = ['kind', 'name', 'form', 'email', 'phone', 'address', 'parent', 'tags', 'note', 'status'] as const
+const columns = ['kind', 'name', 'form', 'email', 'phone', 'address', 'parent', 'tags', 'note', 'client', 'archived'] as const
 
 // Those registered as personal data in `cella.personal`: the log commits
 // to their values under fresh salts, and the vault keeps them.
@@ -66,7 +66,7 @@ export async function update(input: Update, deps: Deps): Promise<Outcome<(typeof
 // Hides the contact from lists; it stays for the books, and the invoices
 // that name it are untouched.
 export async function archive(input: Archive, deps: Deps): Promise<Outcome<(typeof actions)['contact:contact:archive'], Changed>> {
-  const fields: Fields = { status: 'archived' }
+  const fields: Fields = { archived: true }
   return write(deps, {
     op: 'contact:contact:archive' satisfies Action,
     request: input,
@@ -82,7 +82,7 @@ export async function erase(input: Erase, deps: Deps): Promise<Outcome<(typeof a
   return write(deps, {
     op: 'contact:contact:erase' satisfies Action,
     request: input,
-    state: (tx) => set(tx, input.id, { status: 'archived' }),
+    state: (tx) => set(tx, input.id, { archived: true }),
     payload: (v) => ({ contact: v.contact, erasure: erasure(v.contact, ['contact']) }),
   })
 }

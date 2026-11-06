@@ -1,5 +1,8 @@
 export type Kind = 'company' | 'person'
-export type Status = 'lead' | 'active' | 'inactive' | 'archived'
+
+// The client role's lifecycle: a contact that is no client has none.
+export type Stage = 'lead' | 'active' | 'inactive'
+export const stages: Stage[] = ['lead', 'active', 'inactive']
 
 export interface Address {
   street: string
@@ -10,7 +13,8 @@ export interface Address {
   country: string
 }
 
-// A contact as the feat reads it.
+// A contact as the feat reads it. `client` is the client role's stage,
+// null for a contact the co-op does not bill.
 export interface Contact {
   id: string
   kind: Kind
@@ -21,10 +25,12 @@ export interface Contact {
   parent: string | null
   tags: string[]
   note: string
-  status: Status
+  client: Stage | null
+  archived: boolean
 }
 
-// The fields a contact write may set; each is its own register.
+// The fields a write may set; each is its own register, the client role
+// among them, set to a stage or cleared with null.
 export interface Fields {
   kind?: Kind
   name?: string
@@ -35,7 +41,8 @@ export interface Fields {
   parent?: string | null
   tags?: string[]
   note?: string
-  status?: Status
+  client?: Stage | null
+  archived?: boolean
 }
 
 export interface Add extends Fields {

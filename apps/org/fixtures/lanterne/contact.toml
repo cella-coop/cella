@@ -1,14 +1,16 @@
-# The organisations and people Lanterne deals with: the eight it works for,
-# and Margaux Roux, a person at Les Halles.
+# The organisations and people Lanterne deals with: the eight it works
+# for, each an active client, and Margaux Roux, a person at Les Halles,
+# who is no client.
 
 [[contact]]
 id = "halles"
 name = "Les Halles Paysannes"
 form = "SCIC SA"
+client = "active"
 note = "a network of farmers' shops; brand refresh and an online shop"
 
 # A person: Les Halles' contact for the shop, whose details are personal
-# data, of class contact.
+# data, of class contact. Lanterne bills Les Halles, not her.
 [[contact]]
 id = "halles-roux"
 kind = "person"
@@ -22,40 +24,47 @@ note = "runs the online shop; prefers mornings"
 id = "clairval"
 name = "Ville de Clairval"
 form = "commune"
+client = "active"
 note = "the town website, rebuilt to RGAA accessibility; won by tender"
 
 [[contact]]
 id = "nuvola"
 name = "Nuvola Énergie"
 form = "SCIC SAS"
+client = "active"
 note = "a citizen solar co-op; monthly marketing retainer"
 
 [[contact]]
 id = "mauve"
 name = "Compagnie Mauve Horizon"
 form = "association"
+client = "active"
 note = "a theatre company; season posters and brochure"
 
 [[contact]]
 id = "velo"
 name = "Vélo Solidaire"
 form = "association"
+client = "active"
 note = "a bike repair workshop; brand identity at the solidarity rate"
 
 [[contact]]
 id = "ferrand"
 name = "Maison Ferrand"
 form = "SARL"
+client = "active"
 note = "an artisan bakery group; packaging design"
 
 [[contact]]
 id = "terres"
 name = "Fondation Terres Vives"
 form = "fondation"
+client = "active"
 note = "a land-trust foundation; annual report and microsite"
 
 [[contact]]
 id = "ondine"
 name = "Atelier Ondine"
 form = "SAS"
+client = "active"
 note = "a ceramics studio; online shop"

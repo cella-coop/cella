@@ -249,8 +249,10 @@ as the code: an invoice names whom it bills as text, and the link to the
 contact record is the `contact-invoice` graft's. Amounts are in cents, and a
 mandate is a policy whose power is an id. `tools/fixture-check.mjs` checks
 that every entry balances, the surplus split adds up to the surplus, every
-link resolves and the books agree with the invoices; `tools/fixture/work.mjs`,
-that shares stay within budgets, an invoice bills a project of its client,
+link resolves, every billing names a client, and the books agree with the
+invoices; `tools/fixture/work.mjs`,
+that shares stay within budgets, a project is for a client, an invoice
+bills a project of its client,
 no one logs more than ten hours a day, time is a worker's on days of
 their employment, and an approved month was submitted and approved by
 someone else; `tools/fixture/people.mjs`, that a contract runs forward

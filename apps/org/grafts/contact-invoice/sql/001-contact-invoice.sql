@@ -10,7 +10,8 @@ CREATE TABLE contact_invoice.billing (
 
 CREATE INDEX ON contact_invoice.billing (contact);
 
--- Both sides resolve: the invoice and the contact exist.
+-- Both sides resolve: the invoice and the contact exist, and the contact is a
+-- client, holding the client role, when the link is made.
 CREATE FUNCTION contact_invoice.resolves() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF NOT EXISTS (SELECT FROM invoice.invoice i WHERE i.id = NEW.invoice) THEN
@@ -18,6 +19,10 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT FROM contact.contact c WHERE c.id = NEW.contact) THEN
     RAISE EXCEPTION 'no contact %', NEW.contact USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  IF NOT EXISTS (SELECT FROM contact.contact c WHERE c.id = NEW.contact AND c.client IS NOT NULL) THEN
+    RAISE EXCEPTION '% is no client, so no invoice bills it: set its client role on its page first', NEW.contact
+      USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;
 END

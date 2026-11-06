@@ -1,9 +1,9 @@
 CREATE SCHEMA contact;
 
 -- Companies and people in one collection; a contact at a company is a
--- person whose parent is that company. A person's email and phone are
--- personal data: the log commits to which fields a write changed, never to
--- their values.
+-- person whose parent is that company, and a client is a contact holding
+-- the client role. A person's email and phone are personal data: the log
+-- commits to which fields a write changed, never to their values.
 CREATE TABLE contact.contact (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   id text PRIMARY KEY,
@@ -16,7 +16,10 @@ CREATE TABLE contact.contact (
   parent text REFERENCES contact.contact,
   tags text[] NOT NULL DEFAULT '{}',
   note text NOT NULL DEFAULT '',
-  status text NOT NULL DEFAULT 'active' CHECK (status IN ('lead', 'active', 'inactive', 'archived')),
+  -- The client role, by its stage: NULL for a contact that is no client.
+  client text CHECK (client IN ('lead', 'active', 'inactive')),
+  -- Hidden from lists, kept for the books; every contact's, client or not.
+  archived boolean NOT NULL DEFAULT false,
   CHECK (parent IS DISTINCT FROM id)
 );
 

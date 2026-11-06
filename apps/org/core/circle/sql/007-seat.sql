@@ -38,12 +38,21 @@ CREATE INDEX ON circle.tenure (holder);
 CREATE INDEX ON circle.tenure (role, circle);
 
 -- A tenure is of a role in its own circle, and makes no more holders of
--- it in the circle at once than its `holders`: the tenures it overlaps,
--- itself among them, are within the cap. A handover ends one tenure on
--- the day the next begins, so the two never overlap.
+-- it in the circle at once than its `holders`. At once is on one day: on
+-- each day the tenure spans, the tenures of the role in the circle that
+-- run that day, itself among them, are within the cap, and tenures that
+-- overlap it on different days are not counted together. The count rises
+-- only where a tenure begins, so it is read at the new tenure's `since`
+-- and at each other's `since` inside it, an open `since` or `until` read
+-- as unbounded; the refusal names the first day past the cap. A handover
+-- ends one tenure on the day the next begins, so the two never overlap.
+-- An update of `until` is judged as an insert is.
 CREATE FUNCTION circle.capped() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   r circle.role;
+  lo date := coalesce(NEW.since, '-infinity');
+  hi date := coalesce(NEW.until, 'infinity');
+  passed date;
   held int;
 BEGIN
   SELECT * INTO r FROM circle.role WHERE id = NEW.role;
@@ -55,16 +64,25 @@ BEGIN
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF r.holders IS NOT NULL THEN
-    SELECT count(*) INTO held FROM circle.tenure t
-    WHERE t.role = NEW.role AND t.circle = NEW.circle AND t.id <> NEW.id
-      AND (t.since IS NULL OR NEW.until IS NULL OR t.since < NEW.until)
-      AND (t.until IS NULL OR NEW.since IS NULL OR t.until > NEW.since);
-    IF held >= r.holders THEN
-      RAISE EXCEPTION 'the % role is held by % at most in %, and % holds it then', NEW.role, r.holders, NEW.circle,
-        (SELECT string_agg(t.holder, ', ') FROM circle.tenure t
-         WHERE t.role = NEW.role AND t.circle = NEW.circle AND t.id <> NEW.id
-           AND (t.since IS NULL OR NEW.until IS NULL OR t.since < NEW.until)
-           AND (t.until IS NULL OR NEW.since IS NULL OR t.until > NEW.since))
+    SELECT d.day, 1 + count(t.id) INTO passed, held
+    FROM (
+      SELECT lo AS day
+      UNION
+      SELECT o.since FROM circle.tenure o
+      WHERE o.role = NEW.role AND o.circle = NEW.circle AND o.id <> NEW.id
+        AND o.since > lo AND o.since < hi
+    ) d
+    LEFT JOIN circle.tenure t
+      ON t.role = NEW.role AND t.circle = NEW.circle AND t.id <> NEW.id
+      AND coalesce(t.since, '-infinity') <= d.day AND coalesce(t.until, 'infinity') > d.day
+    GROUP BY d.day
+    HAVING 1 + count(t.id) > r.holders
+    ORDER BY d.day
+    LIMIT 1;
+    IF passed IS NOT NULL THEN
+      RAISE EXCEPTION 'the % role is held by % at most in %, and this tenure would make % holders %; a later since, or an earlier end to a tenure running that day, keeps it within',
+        NEW.role, r.holders, NEW.circle, held,
+        CASE WHEN passed = '-infinity' THEN 'before the records began' ELSE 'on ' || to_char(passed, 'YYYY-MM-DD') END
         USING ERRCODE = 'triggered_action_exception';
     END IF;
   END IF;

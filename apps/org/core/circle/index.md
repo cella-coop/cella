@@ -388,7 +388,15 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
   role in a circle that is not its own is refused, and so is one that
   would make more holders of the role in the circle at once than its
   `holders` (`circle.capped`, raising SQLSTATE `09000`), so a handover
-  ends one tenure on the day the next begins.
+  ends one tenure on the day the next begins. At once is on one day:
+  the cap counts, on each day the tenure spans, the tenures of the role
+  in the circle that run that day, itself among them, and refuses only
+  where some day's count passes `holders`, never for tenures that
+  overlap it on different days. Of two holders at most, one from
+  January to February and another from March to April leave room for a
+  third from January to April. The refusal names the first day the cap
+  would be passed and the cap, so a later `since`, or an earlier end to
+  a tenure running that day, fixes it.
 - Both draw their ids from one sequence, so a seat's id names one row
   of either. One with no `since` was held before the records began; an
   ended one keeps its row with `until`, so who sat where on a past day

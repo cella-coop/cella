@@ -86,7 +86,7 @@ test('a second tenure of the gérante role, capped at one, is refused while hers
   try {
     await assert.rejects(
       su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2026-11-01')`, [julien]),
-      /the manager role is held by 1 at most in ag, and camille@lanterne\.example holds it then/,
+      /the manager role is held by 1 at most in ag, and this tenure would make 2 holders on 2026-11-01/,
     )
   } finally {
     await su.query('ROLLBACK')

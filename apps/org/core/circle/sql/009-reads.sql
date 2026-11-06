@@ -87,7 +87,8 @@ CREATE EVENT TRIGGER scoped ON ddl_command_end
   WHEN TAG IN ('CREATE TABLE')
   EXECUTE FUNCTION circle.scoped();
 
--- The tables of the feats and the grafts that escape the reading rule:
+-- The tables of the feats and the grafts, and of core's structure, that
+-- escape the reading rule:
 -- each not under row-level security, enabled and forced, or with no
 -- policy by which the app role reads it. `cella migrate` fails a run that
 -- leaves any.
@@ -102,7 +103,7 @@ BEGIN ATOMIC
     END
   FROM pg_class c
   JOIN pg_namespace n ON n.oid = c.relnamespace
-  WHERE c.relkind IN ('r', 'p') AND NOT circle.cored(n.nspname)
+  WHERE c.relkind IN ('r', 'p') AND (NOT circle.cored(n.nspname) OR n.nspname IN ('circle', 'policy'))
     AND NOT EXISTS (SELECT FROM pg_depend d WHERE d.objid = c.oid AND d.deptype = 'e')
     AND (NOT c.relrowsecurity OR NOT c.relforcerowsecurity OR NOT EXISTS (
       SELECT FROM pg_policy p

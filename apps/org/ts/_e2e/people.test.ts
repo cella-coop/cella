@@ -260,6 +260,28 @@ test('a member\'s page lists every mandate may grants them: Inès\'s the partici
   assert.ok(asked.filter((a) => a.may).length > 0)
 })
 
+test('Inès, no member, reads her own seat in Web and the mandates her seat holds, and none of the assembly\'s, no other seat and no policy; Chloé, a member, reads the whole structure', async () => {
+  const read = async <R>(actor: string, sql: string) => (await as(actor).db.query<R>(sql)).rows
+  const seats = await read<{ circle: string; member: string }>(ines, 'SELECT circle, member FROM circle.seat ORDER BY circle')
+  assert.deepEqual(seats, [{ circle: 'web', member: ines }], 'her own seat and no one else\'s')
+  assert.deepEqual(await read(ines, 'SELECT id FROM circle.circle ORDER BY id'), [{ id: 'web' }], 'the circle she sits in and no other')
+  const mandates = await read<{ grantee: string }>(ines, 'SELECT DISTINCT grantee FROM circle.mandate ORDER BY grantee')
+  assert.deepEqual(mandates, [{ grantee: 'participant' }], 'the participant\'s, which her seat holds, and not the member role\'s, the gérante\'s or the assembly\'s')
+  for (const table of ['circle.right', 'circle.disclosure', 'circle.tenure', 'policy.policy', 'policy.wording', 'policy.value']) {
+    assert.deepEqual(await read(ines, `SELECT count(*)::int AS n FROM ${table}`), [{ n: 0 }], `${table} is the members'`)
+  }
+  assert.deepEqual(await read(ines, `SELECT policy.says('m-2021-001/1') AS s`), [{ s: null }], 'no wording quoted to her')
+  assert.deepEqual(await read(ines, 'SELECT circle.assembly() AS a'), [{ a: 'ag' }], 'the assembly she would apply to')
+  const whole = await one<{ seats: number; mandates: number; policies: number }>(
+    'SELECT (SELECT count(*) FROM circle.seat)::int AS seats, (SELECT count(*) FROM circle.mandate)::int AS mandates, (SELECT count(*) FROM policy.policy)::int AS policies',
+  )
+  const chloe = 'chloe@lanterne.example'
+  assert.deepEqual(
+    await read(chloe, 'SELECT (SELECT count(*) FROM circle.seat)::int AS seats, (SELECT count(*) FROM circle.mandate)::int AS mandates, (SELECT count(*) FROM policy.policy)::int AS policies'),
+    [whole],
+  )
+})
+
 test('Inès marks the internal rules and the statutes read, her own reading and no one else\'s', async () => {
   const forLea = await shell.act(`/people/lea@lanterne.example`, 'read', { version: 'internal-rules@3' }, ines)
   assert.match(forLea.reason ?? '', /ines@lanterne\.example may mark only their own reading/)

@@ -1,8 +1,9 @@
 // The denial scenario, generated for every slice: on a seeded Lanterne,
 // a person signed in who holds no mandate and is no member reads every
 // table, view and row-returning definer function each feat and graft
-// makes, and sees no row but those its slice declares shared and its
-// registries. No slice opts in: the slices are read from the tree and
+// makes, and core's structure, and sees no row but those its slice declares
+// shared and its registries; a member of the scope reads the structure
+// whole. No slice opts in: the slices are read from the tree and
 // their objects from the database, and a slice whose schema the database
 // lacks, or a schema no slice owns, fails. What Lanterne leaves empty
 // denies nothing, and is named unproven. Run by `cella test e2e denial`.
@@ -41,10 +42,11 @@ const retired = (schema: string, sql: string) =>
 
 // The schemas no feat or graft owns: the notary's and the migrations',
 // layers under every slice, and core's. The analytics port's is read as a
-// slice's is; core's circles and its register of policies are every
-// reader's, read whole ([trust](../../../../_corpus/doc/trust.md#current-limits)).
+// slice's is, and so are core's circles and its register of policies, the
+// co-op's structure, which a member of the scope reads whole
+// ([circle](../../core/circle/index.md#who-reads-the-structure)).
 const LAYERS = new Set(['cella', 'vault', 'migration', 'public'])
-const WHOLE = new Set(['circle', 'policy'])
+const STRUCTURE = ['circle', 'policy']
 const PORT = 'analytics'
 
 const nobody = 'nobody@denial.example'
@@ -89,13 +91,13 @@ const READS = `
   FROM pg_rewrite r JOIN pg_depend d ON d.classid = 'pg_rewrite'::regclass AND d.objid = r.oid
   WHERE d.refclassid IN ('pg_class'::regclass, 'pg_proc'::regclass) AND d.refobjid <> r.ev_class`
 
-// What `nobody` reads of a table or a view, or of a function keyed by a
-// secret they cannot hold, in a transaction rolled back; null where the
-// app's role may not read it at all.
-async function as(read: Read): Promise<number | null> {
+// What `actor`, `nobody` unless named, reads of a table or a view, or of a
+// function keyed by a secret they cannot hold, in a transaction rolled
+// back; null where the app's role may not read it at all.
+async function as(read: Read, actor = nobody): Promise<number | null> {
   await reader.query('BEGIN')
   try {
-    await reader.query(`SELECT set_config('cella.actor', $1, true)`, [nobody])
+    await reader.query(`SELECT set_config('cella.actor', $1, true)`, [actor])
     if (read.kind !== 'function') return (await reader.query(`SELECT count(*)::int AS n FROM ${read.name}`)).rows[0].n
     const secret = read.name.endsWith('(bytea)') ? randomBytes(32) : randomBytes(32).toString('hex')
     return (await reader.query(`SELECT count(*)::int AS n FROM ${read.name.replace(/\(.*\)$/, '')}($1)`, [secret])).rows[0].n
@@ -150,11 +152,11 @@ test('every feat and graft the tree holds owns a schema of the database, and eve
   ).rows.map((r) => r.nspname)
   const missing = [...tree].filter(([s, { sql }]) => !schemas.includes(s) && !retired(s, sql)).map(([s]) => s)
   assert.deepEqual(missing, [], 'a slice makes SQL in no schema of its name, so its denial test reads nothing of it')
-  const astray = schemas.filter((s) => !tree.has(s) && !LAYERS.has(s) && !WHOLE.has(s) && s !== PORT)
+  const astray = schemas.filter((s) => !tree.has(s) && !LAYERS.has(s) && !STRUCTURE.includes(s) && s !== PORT)
   assert.deepEqual(astray, [], 'a schema no slice owns escapes the denial test')
 })
 
-for (const [schema, name] of [[PORT, PORT] as const, ...[...tree].map(([s, { name }]) => [s, name] as const)]) {
+for (const [schema, name] of [[PORT, PORT] as const, ...STRUCTURE.map((s) => [s, s] as const), ...[...tree].map(([s, { name }]) => [s, name] as const)]) {
   test(`${name} shows a person with no mandate nothing but what it declares shared`, async (t) => {
     const slice = tree.get(schema)
     if (slice && retired(schema, slice.sql)) return t.skip('retired: its migrations drop its schema')
@@ -184,3 +186,24 @@ for (const [schema, name] of [[PORT, PORT] as const, ...[...tree].map(([s, { nam
     assert.deepEqual(leaks, [], `${nobody}, signed in with no mandate, reads past ${name}'s policies`)
   })
 }
+
+// A member of the scope, who holds the member role seated in the
+// assembly, reads the whole structure: every row of each table and view
+// of core's circles and its register of policies.
+test('a member of the scope reads every row of the structure', async () => {
+  const member: string = (
+    await su.query(
+      `SELECT t.holder FROM circle.tenure t
+       WHERE t.role = 'member' AND t.circle = circle.assembly() AND t.until IS NULL ORDER BY t.holder LIMIT 1`,
+    )
+  ).rows[0].holder
+  const short: string[] = []
+  for (const schema of STRUCTURE) {
+    for (const read of (await su.query(OBJECTS, [schema])).rows as Read[]) {
+      if (!read.granted || read.kind === 'function') continue
+      const [all, n] = [await whole(read.name), await as(read, member)]
+      if (n !== all) short.push(`${read.name} shows ${n} of its ${all} rows`)
+    }
+  }
+  assert.deepEqual(short, [], `${member}, a member of the scope, reads short of the structure`)
+})

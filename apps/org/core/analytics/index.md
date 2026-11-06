@@ -109,7 +109,10 @@ counted one ([below](#what-is-withheld)).
 The same question, asked once, names for each feat the circles that
 powers of the reader's over its rows cover, `cella.circles(feat)`
 (`opens`), and open books' disclosure values in force on the verdict
-date, `circle.disclosed`, or none where no rule stands (`disclosure`).
+date, `circle.disclosed`, or none where no rule stands or the reader
+reads none, as a person who is no member reads none of the structure
+([circle](../circle/index.md#who-reads-the-structure)), so they read
+only their own cells of a counted view (`disclosure`).
 
 ## What is withheld
 

@@ -26,7 +26,9 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
   if (!found.rows[0]) {
     return null
   }
-  const procedure = (await procedures(db)).find((p) => p.id === found.rows[0].procedure)
+  // Its procedure by its id, whether or not its policy is in force now or
+  // its reader reads the register, which is the members'.
+  const procedure = (await db.query<Procedure>(`SELECT ${procedureColumns} FROM motion.procedure o WHERE o.id = $1`, [found.rows[0].procedure])).rows[0]
   if (!procedure) {
     throw new Error(`${id} is taken by ${found.rows[0].procedure}, which is no procedure`)
   }
@@ -51,13 +53,16 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
   return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows, leaves: await leftBy(db, id) }
 }
 
+// A procedure's terms, as a motion is taken by them.
+const procedureColumns = `id, label, method,
+  CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
+  json_build_array(quorum_num, quorum_den) AS quorum, ballot, consult`
+
 // The procedures a motion may be taken by, the built-in ones first: those
 // whose policy is in force, or which name none.
 export async function procedures(db: Db): Promise<Procedure[]> {
   const { rows } = await db.query<Procedure>(
-    `SELECT id, label, method,
-            CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
-            json_build_array(quorum_num, quorum_den) AS quorum, ballot, consult
+    `SELECT ${procedureColumns}
      FROM motion.procedure o
      WHERE o.policy IS NULL OR EXISTS (
        SELECT FROM policy.policy r

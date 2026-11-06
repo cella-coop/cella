@@ -355,6 +355,20 @@ makes is held to it by tooling, never by hand:
 - **A policy that opens rows to every reader is declared,** commented
   `'shared: why'`, as the keyring's is: a device's key checks a
   signature before anyone reads, so `person.device` is every reader's.
+- **Core's structure is its members'.** Core's circles, roles,
+  mandates, rights, members and tenures and the register of policies
+  are under row-level security, enabled and forced, by core's own
+  policies: a member of the scope, who holds the member role seated in
+  the assembly, reads every row, and anyone else signed in only their
+  own seats, the circles and roles they name and the mandates on those
+  roles
+  ([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)).
+  A slice's policy, view or invoker function that reads core reads it
+  as its reader; a guard reads it whole, as the guards role, and so
+  does a write's transaction. What a reader needs of core before a
+  write, as a candidate the assembly they apply to, core gives through
+  a function of its own, never by a wider policy, and the authority
+  reads the mandates as its owner.
 - **A `SECURITY DEFINER` function that returns rows is declared,** or
   reads as its invoker. One that returns a table, a set, a record or a
   composite reads as its owner, past every policy, so its comment says
@@ -402,9 +416,9 @@ columns that query shows, down to the tables they come from, so a
 column that says whose a row is or is personal is refused behind a
 `*` or a `WITH` as it is where it is named.
 `cella migrate` reads the database it migrated and
-fails a run that leaves a slice's table not enabled and forced, or with
+fails a run that leaves a slice's table, or core's circles' or register's, not enabled and forced, or with
 no policy the app role reads it by (`circle.unsecured`). And `cella test
-e2e denial` reads every feat and graft as no one, generated for each
+e2e denial` reads every feat and graft, and core's structure, as no one, generated for each
 with no file of its own ([tests](#tests)): what the check reads in the
 SQL, it proves on rows.
 
@@ -691,7 +705,7 @@ comment, one of two:
   `month`; or it shows the rows of a view that sums so, each key of that
   view's grouping shown and named, as `expense_project.totals` shows
   `expense_project.spent` by `project`; or the rows of a table no circle
-  owns, a registry's or core's circles', by the columns that key them,
+  owns, a registry's, by the columns that key them,
   as `account.rubrics` shows the rubrics by `id`. The log's head, one
   row, names none: `audience: shared`.
 
@@ -794,8 +808,11 @@ slice added later is read with no file of its own, and the test fails a
 slice whose schema the database lacks, unless its migrations drop it, a
 retired graft's, and a schema no slice owns but the notary's, the
 migrations' and core's. The analytics port's schema is read as a
-slice's; core's circles and its register of policies are every reader's
-([trust](trust.md#current-limits)). A table or a view Lanterne leaves
+slice's, and so are core's circles and its register of policies, which
+show the person with no mandate no row, since they sit nowhere, but the
+forms and their defaults, registries; and read as a member of the
+scope, core's show every row
+([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)). A table or a view Lanterne leaves
 empty denies nothing, and the test names it unproven rather than
 passing it.
 

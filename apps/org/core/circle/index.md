@@ -289,6 +289,54 @@ is a superuser: a `SECURITY DEFINER`
 function that filters its rows by its reader asks it in place of
 `cella.sees`, which there answers for the function's owner.
 
+### Who reads the structure
+
+The co-op's structure is its members' (the operator, 6 November 2026:
+"members of the scope read it; a signed-in person who is not a member
+reads none of it"): core's circles, roles and grantees, the mandates,
+the rights and open books' values, the members and the tenures, and
+the [register of policies](../policy/index.md). A member of the scope
+holds the member role, `member`, seated in the assembly by a tenure
+running on the verdict date (`circle.inside()`), and reads every row of
+it. Any other person signed in reads their own: the members that seat
+them, as a person or by a role they hold a tenure of, their tenures,
+the seats read from them, and the circles and roles those seats name,
+by the personal row's pattern
+([architecture](../../../../_corpus/doc/architecture.md#reading)),
+and the mandates on the roles they hold, the participant's among them
+(`circle.held()`), which say what their seats let them do; and
+nothing else: no other role's mandates, no circle's, no right and no
+policy.
+No one signed in reads none of it. A write's transaction and a
+superuser's session read the whole (`circle.whole()`), and the guards
+role reads every row, as it reads a slice's.
+
+`011-structure.sql` puts each of these tables, the register's with
+them, under row-level security, enabled and forced, with the policies
+`structure`, for the app role, and `structure_guards`, for the guards
+role; the forms and their defaults, the same in every scope, are
+registries every reader reads. `circle.seat` reads as its reader, so a
+person sees their own seats through it. `circle.inside()`,
+`circle.held()`, the roles the reader's seats hold, and `circle.own()`,
+the circles and roles they name, run as their owner, so a policy asks
+them without reading the table it guards, and say no more than
+whether, and of the reader's own seats.
+`circle.unsecured()` names core's tables with the slices', so `cella
+migrate` fails a run that leaves one not enabled and forced, or with
+no policy the app role reads by.
+
+The authority reads past these policies, as it always has: `cella.may`
+and `cella.covered` run as their owner, so a person's mandates open
+what they cover whether or not they read the mandates themselves, as
+Inès, employed and seated in Web, reads Web's records and logs her
+time. What a person reads before they are a member, to apply, core
+gives them through functions of its own, never a wider policy: the
+assembly's id, `circle.assembly()`, which runs as its owner, and its
+name and the procedure that decides them, `circle.applied()`, declared
+`audience: shared`. Open books' values are what every member reads,
+so a report asks them as its reader (`circle.disclosed`), and shows a
+person who is no member only their own cells of a counted view.
+
 ## Open books
 
 What a co-op shares with every member of the totals of members' own
@@ -413,11 +461,13 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
   seats its holder in its circle with its role; a tenure of a role that
   is a member of a circle seats its holder there too, with no role, for
   the days the two overlap, so the role's mandates reach no further than
-  they do. This last row has no id of its own.
+  they do. This last row has no id of its own. It reads as its reader,
+  so it shows what the members and the tenures let them read.
 - `circle.seated(circle, day)`: the people seated in a circle on a day,
   from which the membership-motion graft fixes a motion's roll.
 
-The app role and the guards role may select; the app role may insert a
+The app role and the guards role may select, the app role what [the
+structure's reading](#who-reads-the-structure) lets it; the app role may insert a
 member or a tenure, through `seat.add`, and end one, through
 `seat.remove`, and a role's membership of a circle, through
 `role.seat`, and end it, through `role.unseat`. Lanterne's members and
@@ -832,4 +882,4 @@ it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/circle/sql/analytics.sql`, the one a core library publishes beside the analytics port's, publishes `circle.circles`, `circle.roles`, `circle.mandates`, `circle.rights`, `circle.disclosures` and `circle.seats` to the analytics shell: the circles, their roles, the mandates each grantee, a role or a circle, holds, with their issuers, their parents, their limits and budgets, the rights the form gives, open books' disclosure values by the rule that set them, and who holds which role in which circle, and when. Each is shared by `id`.
+Core's circles publish no [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts): a shared view is read whole by every reader of a report, and the structure is its members' alone ([who reads it](#who-reads-the-structure)), so a view that showed the circles, roles, mandates, rights, seats or open books' values to the analytics shell would show them to a person who is no member. A report reads open books' values in force through the port's reader, `circle.disclosed` ([the port](../analytics/index.md#the-reader)), not through a view.

@@ -14,8 +14,8 @@ export async function standing(db: Db, member: string, actor?: string | null): P
   const found = await db.query<Omit<Standing, 'member' | 'open' | 'own'>>(
     `SELECT m.status, to_char(m.applied, 'YYYY-MM-DD') AS applied, ${decider} AS decider,
             person.holds($1, 'employee', cella.verdict_date()) AS employee, to_char(cella.verdict_date() + 14, 'YYYY-MM-DD') AS until
-     FROM circle.circle d LEFT JOIN membership.member m ON m.address = $1
-     WHERE d.assembly AND (m.address IS NOT NULL OR $2)`,
+     FROM circle.applied() d LEFT JOIN membership.member m ON m.address = $1
+     WHERE (m.address IS NOT NULL OR $2)`,
     [member, own],
   )
   if (!found.rows[0]) {

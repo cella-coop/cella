@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -66,7 +66,10 @@ Its functions:
   by its value as written, without its direction.
 - `policy.says(id)`: a policy's sentence as it reads, which a guard may
   quote in the reason it refuses; it runs with its owner's rights, and
-  the app role and the guards role may call it.
+  the app role and the guards role may call it. It quotes a wording only
+  where the structure's reading would: in a write's transaction, where
+  every guard runs, and to a member of the scope; anyone else reads null
+  (core's circles redefine it so in `011-structure.sql`).
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
   two as a JSON array, the friendly wording trimmed and an empty one
   none, as `policy.wording` keeps it. It is the one canonical form:
@@ -113,12 +116,17 @@ Its functions:
 the app role may call them.
 
 The app role and the guards role, `cella_guards`, may select the
-policies and their values; only the app reads the wordings. The app reads
-the forms and their defaults whole, the guards role every column of a
-default but its wordings. A slice's SQL that reads `policy.wording` is
-refused by `cella check feats`: a guard reads a policy's values from its
-own columns, never its sentence, which it may only quote, by
-`policy.says`.
+policies and their values, and only the app the wordings; the app role
+reads only what the structure's reading lets it: a member of the scope
+reads the whole register, and anyone else none of it
+([circle](../circle/index.md#who-reads-the-structure)), whose
+`011-structure.sql` puts the register's tables under row-level
+security, enabled and forced, since the register knows no circle. The
+app reads the forms and their defaults whole, registries every reader
+reads, the guards role every column of a default but its wordings. A
+slice's SQL that reads `policy.wording` is refused by `cella check
+feats`: a guard reads a policy's values from its own columns, never its
+sentence, which it may only quote, by `policy.says`.
 
 ## TypeScript
 

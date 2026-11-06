@@ -106,6 +106,7 @@
   }
   .inline .fields {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
   }
 </style>

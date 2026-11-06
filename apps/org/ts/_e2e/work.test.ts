@@ -1,9 +1,10 @@
 // The work scenario, end to end on a seeded Lanterne through the built
 // shell: the work pages render; Thomas creates a task, Yusuf gives it to
 // him and files it under the Halles shop, and Thomas moves it across the
-// board and completes it; he logs time against the shop, submits October,
-// and once the month is over Yusuf approves it, which closes it to new
-// entries; Yusuf may not approve his own month; no share or budget
+// board and completes it; he logs time against the shop and his week from
+// the form, each naming Web, the circle it was worked for, submits Web's
+// October, and once the month is over Yusuf, Web's lead, approves it,
+// which closes it to new entries and leaves no root month open; Yusuf may not approve his own month; no share or budget
 // goes beyond the pot; and a lead budgets their own circle's projects
 // alone, by their mandates' scope. Run by `cella test`, which builds the shell first,
 // on a fresh database.
@@ -11,6 +12,7 @@
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
+import { weeks } from '@cella/org-graft-employment-project-timesheet/api'
 import { Shell } from './serve.ts'
 
 const su = new pg.Client()
@@ -129,13 +131,59 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
   assert.equal(into.state, 'failed', 'done is a completion, not a move')
 })
 
-test('Thomas logs time against the shop and submits October; Yusuf cannot approve it before the month ends', async () => {
-  const logged = await shell.act('/projects/halles-shop', 'log', { day: '2026-10-24', hours: '2,5', billable: 'billable', note: 'Checkout audit' }, thomas)
+// The options a select of the page's offers, in order, by its name.
+const offered = (html: string, name: string) =>
+  [...(html.split(`name="${name}"`)[1]?.split('</select>')[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1])
+
+test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
+  const { text } = await shell.page('/projects/halles-shop?tab=time', thomas)
+  assert.deepEqual(offered(text, 'circle'), ['web', 'ag'], 'the shop is Web\'s, offered before the assembly he also sits in')
+  const logged = await shell.act('/projects/halles-shop', 'log', { day: '2026-10-24', hours: '2,5', billable: 'billable', circle: 'web', note: 'Checkout audit' }, thomas)
   assert.equal(logged.state, 'settled', logged.reason)
-  const booked = await one<{ project: string }>(
-    `SELECT b.project FROM project_timesheet.booking b JOIN timesheet.entry e ON e.id = b.entry WHERE e.note = 'Checkout audit'`,
+  const booked = await one<{ project: string; circle: string }>(
+    `SELECT b.project, e.circle FROM project_timesheet.booking b JOIN timesheet.entry e ON e.id = b.entry WHERE e.note = 'Checkout audit'`,
   )
-  assert.equal(booked.project, 'halles-shop')
+  assert.deepEqual(booked, { project: 'halles-shop', circle: 'web' })
+})
+
+test('Thomas logs his week from the form, each row naming the circle its time is worked for, and both rows land in Web\'s October', async () => {
+  // The week names each row's circle: the shop's offers Web first, the
+  // co-op's own time the root's, and he chooses Web for it, the time he
+  // gave Web's own meeting. The week is read as the server reads it for
+  // him, through the app's connection as its actor.
+  const app = new pg.Client({ user: 'cella_app' })
+  await app.connect()
+  await app.query(`SELECT set_config('cella.actor', $1, false)`, [thomas])
+  const [now] = await weeks(app, thomas)
+  await app.end()
+  assert.equal(now.monday, '2026-10-19')
+  const circles = (project: string) => now.rows.find((r) => r.project === project)?.circles.map((c) => c.id)
+  assert.deepEqual(circles('halles-shop'), ['web', 'ag'])
+  assert.deepEqual(circles(''), ['ag', 'web'])
+  const week: [string, string][] = [
+    ['row', 'halles-shop'],
+    ['row', '_'],
+    ['day', '2026-10-24'],
+    ['circle.halles-shop', 'web'],
+    ['circle._', 'web'],
+    ['cell.halles-shop.2026-10-24', '1'],
+    ['cell._.2026-10-24', '0,5'],
+  ]
+  const logged = await shell.act('/timesheets', 'week', week, thomas)
+  assert.equal(logged.state, 'settled', logged.reason)
+  const entries = await su.query(
+    `SELECT e.circle, e.minutes, b.project FROM timesheet.entry e LEFT JOIN project_timesheet.booking b ON b.entry = e.id
+     WHERE e.member = $1 AND e.day = '2026-10-24' ORDER BY e.minutes`,
+    [thomas],
+  )
+  assert.deepEqual(entries.rows, [
+    { circle: 'web', minutes: 30, project: null },
+    { circle: 'web', minutes: 60, project: 'halles-shop' },
+    { circle: 'web', minutes: 150, project: 'halles-shop' },
+  ])
+})
+
+test('Thomas submits October; Yusuf cannot approve it before the month ends', async () => {
   const ahead = await shell.act('/timesheets', 'log', { day: '2026-10-26', hours: '7', billable: 'billable' }, thomas)
   assert.equal(ahead.state, 'refused')
   assert.match(ahead.reason ?? '', /an entry for 2026-10-26 is in the future/)
@@ -149,19 +197,27 @@ test('Thomas logs time against the shop and submits October; Yusuf cannot approv
   assert.match(early.reason ?? '', /2026-10 runs until 2026-10-31/)
 })
 
-test('in November Yusuf approves Thomas\'s October for Web, which leaves the root\'s October open; his own he may not approve', async () => {
+test('in November Yusuf, Web\'s lead, approves Thomas\'s October for Web, all of his time, with no root month left open beside it; his own he may not approve', async () => {
   await shell.start('2026-11-02')
   const approved = await shell.act(`/people/${thomas}`, 'approve', { month: '2026-10/web' }, yusuf)
   assert.deepEqual([approved.op, approved.state], ['timesheet:period:approve', 'settled'])
-  // The shell's log names no circle, so its time is the root's, a month
-  // of its own, which approving Web's does not close.
-  const late = await shell.act('/timesheets', 'log', { day: '2026-10-30', hours: '1', billable: 'internal' }, thomas)
-  assert.equal(late.state, 'settled', late.reason)
+  // Every hour he logged from the shell named Web, so Web's month is all
+  // of his October, and approving it closes it to the week form too.
   const months = await su.query(`SELECT circle, state FROM timesheet.sheet WHERE member = $1 AND month = '2026-10' ORDER BY circle`, [thomas])
-  assert.deepEqual(months.rows, [
-    { circle: 'ag', state: 'open' },
-    { circle: 'web', state: 'approved' },
-  ])
+  assert.deepEqual(months.rows, [{ circle: 'web', state: 'approved' }])
+  const late = await shell.act(
+    '/timesheets',
+    'week',
+    [
+      ['row', 'halles-shop'],
+      ['day', '2026-10-30'],
+      ['circle.halles-shop', 'web'],
+      ['cell.halles-shop.2026-10-30', '1'],
+    ],
+    thomas,
+  )
+  assert.equal(late.state, 'refused')
+  assert.match(late.reason ?? '', /2026-10 in web was approved on 2026-11-02/)
   const november = await shell.act('/timesheets', 'log', { day: '2026-11-02', hours: '7', billable: 'billable' }, thomas)
   assert.equal(november.state, 'settled', 'November is open')
   const own = await shell.act(`/people/${yusuf}`, 'submit', { month: '2026-10/web' }, yusuf)

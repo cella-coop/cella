@@ -1,4 +1,6 @@
 import type { Db } from '@cella/org-db'
+import { offering, type Sat } from '@cella/org-circle/models'
+import { sitting } from '@cella/org-circle/api'
 import type { Week } from '../models/week.ts'
 
 const iso = (d: Date) => d.toISOString().slice(0, 10)
@@ -19,8 +21,10 @@ const plus = (day: string, n: number) => {
 // A worker's week from its Monday, as the grid enters it, or null for
 // someone the co-op does not employ: its days, open once they have come
 // while the worker is employed; the projects not archived, those they
-// booked to in the four weeks before first; the co-op's own time; and
-// what is logged in each.
+// booked to in the four weeks before first; the co-op's own time; the
+// circles each row offers, those the worker sits in that week, the
+// project's first where they sit in it and the root's for the co-op's
+// own time; and what is logged in each.
 export async function week(db: Db, worker: string | null, from: string, today: string): Promise<Week | null> {
   if (!worker || !(await db.query('SELECT FROM employment.worker WHERE address = $1', [worker])).rowCount) {
     return null
@@ -31,8 +35,8 @@ export async function week(db: Db, worker: string | null, from: string, today: s
      FROM generate_series($2::date, $2::date + 6, interval '1 day') AS d ORDER BY d`,
     [worker, from, today],
   )
-  const projects = await db.query<{ project: string; title: string }>(
-    `SELECT p.id AS project, p.title
+  const projects = await db.query<{ project: string; title: string; circle: string }>(
+    `SELECT p.id AS project, p.title, p.circle
      FROM project.project p
      LEFT JOIN LATERAL (
        SELECT max(e.day) AS last FROM project_timesheet.booking b JOIN timesheet.entry e ON e.id = b.entry
@@ -49,6 +53,9 @@ export async function week(db: Db, worker: string | null, from: string, today: s
      GROUP BY 1, 2`,
     [worker, from, sunday],
   )
+  // The circles the worker sits in that week, the root first, as the
+  // co-op's own time offers them.
+  const sat: Sat[] = await sitting(db, worker, from, sunday)
   const cells: Week['logged'] = {}
   for (const l of logged.rows) {
     cells[l.project] = { ...cells[l.project], [l.day]: l.minutes }
@@ -57,7 +64,10 @@ export async function week(db: Db, worker: string | null, from: string, today: s
     worker,
     monday: from,
     days: days.rows,
-    rows: [...projects.rows, { project: '', title: 'The co-op’s own time' }],
+    rows: [
+      ...projects.rows.map((p) => ({ project: p.project, title: p.title, circles: offering(sat, p.circle) })),
+      { project: '', title: 'The co-op’s own time', circles: sat },
+    ],
     logged: cells,
   }
 }

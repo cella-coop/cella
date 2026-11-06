@@ -13,6 +13,7 @@
     rows,
     name,
     held,
+    pick,
     unit = 'h',
   }: {
     caption: string
@@ -24,6 +25,11 @@
     name: (row: string, column: string) => string
     // What a cell holds already, if anything.
     held: (row: string, column: string) => number
+    // A choice each row makes, in a column of its own after its label, as
+    // the circle a row's time is worked for: its heading, its field name
+    // in the form and the options a row offers, the first chosen. A row
+    // offering none shows none.
+    pick?: { label: string; name: (row: string) => string; options: (row: string) => { value: string; label: string }[] }
     unit?: string
   } = $props()
 
@@ -64,6 +70,7 @@
   <thead>
     <tr>
       <td class="corner">{@render corner?.()}</td>
+      {#if pick}<th scope="col" class="pick">{pick.label}</th>{/if}
       {#each columns as c (c.key)}
         <th scope="col" class:closed={!c.open}>{c.label}{#if c.sub}<small>{c.sub}</small>{/if}</th>
       {/each}
@@ -74,6 +81,15 @@
     {#each rows as r, i (r.key)}
       <tr>
         <th scope="row">{r.label}</th>
+        {#if pick}
+          <td class="pick">
+            {#if pick.options(r.key).length}
+              <select name={pick.name(r.key)} aria-label="{r.label}: {pick.label}">
+                {#each pick.options(r.key) as o (o.value)}<option value={o.value}>{o.label}</option>{/each}
+              </select>
+            {/if}
+          </td>
+        {/if}
         {#each columns as c, j (c.key)}
           <td class:closed={!c.open}>
             <span class="held" aria-hidden="true">{shown(held(r.key, c.key))}</span>
@@ -97,6 +113,7 @@
   <tfoot>
     <tr>
       <th scope="row">Total</th>
+      {#if pick}<td></td>{/if}
       {#each columns as c (c.key)}<td class="total">{shown(down(c.key))}</td>{/each}
       <td class="total">{shown(all)}</td>
     </tr>
@@ -174,6 +191,18 @@
   input:focus {
     border-color: var(--accent-border);
     background: var(--raised);
+  }
+  .pick {
+    padding-inline-end: var(--space-2);
+  }
+  th.pick {
+    text-align: start;
+  }
+  .pick select {
+    height: 2.2rem;
+    min-width: 8rem;
+    max-width: 12rem;
+    font-size: var(--text-sm);
   }
   .closed input {
     background: transparent;

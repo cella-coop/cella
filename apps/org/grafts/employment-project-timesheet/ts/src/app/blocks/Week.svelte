@@ -1,12 +1,13 @@
 <script lang="ts">
   import { Button, Form, Grid, Note, date } from '@cella/org-ui'
-  import { cell, hours, type Week } from '../../models/week.ts'
+  import { cell, circle, hours, type Week } from '../../models/week.ts'
   import { useWeek } from '../../hooks/useWeek.ts'
 
   // The acting worker's week of time, a project to a row and a day to a
-  // column, the co-op's own time last: what is logged shows in each cell,
-  // and what is typed into one is added to it, each its own write when the
-  // week is logged; a refusal stops the rest, and the cells written
+  // column, the co-op's own time last, each row naming the circle its time
+  // is worked for: what is logged shows in each cell, and what is typed
+  // into one is added to it, each its own write when the week is logged,
+  // in its row's circle's month; a refusal stops the rest, and the cells written
   // before it are emptied. A day to come, or outside their employment, takes
   // nothing. This week or the one before.
   let { about }: { rows: unknown[]; about: { weeks?: Week[] } } = $props()
@@ -26,6 +27,7 @@
       rows={w.rows.map((r) => ({ key: r.project, label: r.title }))}
       name={(row, day) => cell(row, day)}
       held={(row, day) => hours(w.logged[row]?.[day] ?? 0)}
+      pick={{ label: 'Circle', name: circle, options: (row) => (w.rows.find((r) => r.project === row)?.circles ?? []).map((c) => ({ value: c.id, label: c.name })) }}
     >
       {#snippet corner()}
         Week of {date(w.monday)}

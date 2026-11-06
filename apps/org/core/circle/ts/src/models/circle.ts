@@ -60,6 +60,19 @@ export interface Detail extends Circle {
   mandates: Mandate[]
 }
 
+// A circle someone may work for, as a form offers it.
+export interface Sat {
+  id: string
+  name: string
+}
+
+// The circles a person sits in as a form offers them, the one a record
+// would be worked for first where they sit in it, the others in turn.
+export const offering = (sat: Sat[], first: string | null): Sat[] => [
+  ...sat.filter((c) => c.id === first),
+  ...sat.filter((c) => c.id !== first),
+]
+
 // A circle to create, by the motion that creates it, which the write
 // cites.
 export interface Create {

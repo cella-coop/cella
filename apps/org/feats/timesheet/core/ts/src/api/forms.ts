@@ -3,7 +3,8 @@ import type { Correct, Log, Period } from '../models/timesheet.ts'
 
 // What the shell's forms send, read into the handlers' inputs. Hours are
 // typed as a decimal, a comma or a point, and sent in whole minutes; time
-// is always the acting member's own.
+// is always the acting member's own, worked for the circle the form
+// names, the root's where it names none.
 
 export function minutes(typed: string): number {
   const n = Number(typed.trim().replace(',', '.'))
@@ -19,6 +20,7 @@ export const log = (form: Form, member: string): Log => ({
   minutes: minutes(form.get('hours')),
   billable: form.get('billable') !== 'internal',
   note: form.get('note') || undefined,
+  circle: form.get('circle') || undefined,
 })
 
 // The period an entry's page acts on: its member's month in its circle.

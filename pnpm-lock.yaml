@@ -866,6 +866,9 @@ importers:
 
   apps/org/grafts/employment-project-timesheet/ts:
     dependencies:
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1342,6 +1345,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
+      '@cella/org-circle':
+        specifier: workspace:*
+        version: link:../../../core/circle/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts

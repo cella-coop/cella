@@ -9,6 +9,9 @@ export interface Time {
   entries: { id: string; member: string; day: string; hours: number; billable: boolean }[]
   today: string
   archived: boolean
+  // The circles the acting member may log time on it for, the project's
+  // first where they sit in it.
+  circles: { id: string; name: string }[]
 }
 
 // What each project's time spent, by project.

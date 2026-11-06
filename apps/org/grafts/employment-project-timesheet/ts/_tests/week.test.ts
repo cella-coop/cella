@@ -2,9 +2,9 @@
 // timesheet and employment feats, the person core and the grafts beneath
 // this one: no action of its own, and the week the grid enters, its
 // days open once come while employed, its projects those booked to lately
-// first, and what each cell holds. That the actor books their own time is
-// the e2e scenario `participation`'s. Run by
-// `cella test slice employment-project-timesheet`.
+// first, the circles each row offers, and what each cell holds. That the
+// actor books their own time is the e2e scenario `participation`'s. Run
+// by `cella test slice employment-project-timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -32,12 +32,20 @@ before(async () => {
      VALUES ($1, 'Inès Haddad', 'junior developer', 'permanent', '2026-10-21', NULL, 2100, '2026-10-21')`,
     [ines],
   )
+  // She sits in Web and in Brand, and sat in Marketing until before the
+  // week; Ferrand's packaging is Brand's and Clairval's site Web's.
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('web', 'Web'), ('brand', 'Brand'), ('marketing', 'Marketing')`)
   await db.query(
-    `INSERT INTO project.project (id, title, started, archived) VALUES
-       ('ferrand-packaging', 'Maison Ferrand, packaging', '2026-09-01', NULL),
-       ('clairval-site', 'Ville de Clairval, town website', '2026-06-01', NULL),
-       ('mauve-posters', 'Compagnie Mauve Horizon, season posters', '2026-03-01', '2026-06-30'),
-       ('ondine-shop', 'Ondine, online shop', '2026-11-02', NULL)`,
+    `INSERT INTO circle.member (circle, person, since, until) VALUES
+       ('web', $1, '2026-10-21', NULL), ('brand', $1, '2026-09-01', NULL), ('marketing', $1, '2026-09-01', '2026-10-19')`,
+    [ines],
+  )
+  await db.query(
+    `INSERT INTO project.project (id, title, started, archived, circle) VALUES
+       ('ferrand-packaging', 'Maison Ferrand, packaging', '2026-09-01', NULL, 'brand'),
+       ('clairval-site', 'Ville de Clairval, town website', '2026-06-01', NULL, 'web'),
+       ('mauve-posters', 'Compagnie Mauve Horizon, season posters', '2026-03-01', '2026-06-30', 'brand'),
+       ('ondine-shop', 'Ondine, online shop', '2026-11-02', NULL, 'web')`,
   )
 })
 
@@ -78,6 +86,17 @@ test('the week: days open once come while employed, the projects booked to latel
   assert.deepEqual(
     w.rows.map((r) => r.project),
     ['ferrand-packaging', 'clairval-site', ''],
+  )
+  // Each row offers the circles she sits in that week, the project's
+  // first, and for the co-op's own time the root's, in which she has no
+  // seat, so the others by name; Marketing's seat ended before it.
+  assert.deepEqual(
+    w.rows.map((r) => r.circles.map((c) => c.id)),
+    [
+      ['brand', 'web'],
+      ['web', 'brand'],
+      ['brand', 'web'],
+    ],
   )
   assert.deepEqual(w.logged, { 'ferrand-packaging': { '2026-10-22': 180 }, '': { '2026-10-23': 420 } })
 })

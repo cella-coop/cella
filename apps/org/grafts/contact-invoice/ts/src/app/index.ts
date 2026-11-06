@@ -9,10 +9,10 @@ export const app: App = {
   name: 'contact-invoice',
   extends: {
     invoices: {
-      columns: [{ key: 'contact', label: 'Contact', role: 'hidden', value: (r: { contact?: string }) => r.contact }],
+      columns: [{ key: 'contact', label: 'Client', role: 'hidden', value: (r: { contact?: string }) => r.contact }],
       page: {
-        properties: (b: Billed) => [{ label: 'Contact', value: b.contact?.name ?? 'unbilled', href: b.contact ? `/contacts/${b.contact.id}` : undefined }],
-        related: (b: Billed) => (b.contact ? [{ label: b.contact.name, sub: 'contact', href: `/contacts/${b.contact.id}` }] : []),
+        properties: (b: Billed) => [{ label: 'Client', value: b.contact?.name ?? 'unbilled', href: b.contact ? `/contacts/${b.contact.id}` : undefined }],
+        related: (b: Billed) => (b.contact ? [{ label: b.contact.name, sub: 'client', href: `/contacts/${b.contact.id}` }] : []),
         blocks: [Contact],
       },
     },

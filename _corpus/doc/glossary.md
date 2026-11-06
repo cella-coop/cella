@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-11-04
+updated = 2026-11-06
 +++
 
 # Glossary
@@ -39,6 +39,7 @@ updated = 2026-11-04
 | **ordered** | an action that waits for the notary's verdict and shows Pending until it comes: an admission, an adoption, a close |
 | **share** | an allowance granted in advance that bounded actions spend: a budget, a block of numbers, a draw limit |
 | **series** | an invoice numbering sequence; the server's at rung 1, a device's own at rung 2 |
+| **client** | a contact the co-op bills: a role the contact holds, at a stage of its lifecycle (lead, active, inactive), never a collection or a kind of its own; only a client is linked to an invoice or a project ([contact](../../apps/org/feats/contact/index.md#the-client-role)) |
 | **notary** | the scope's office every attempt passes through: it runs the guards and alone writes the log; software with no legal force; the `cella` Postgres extension, a layer of org's core under every feat, not a feat |
 | **guard** | a check the notary runs on an attempt before it takes effect: does the actor hold a mandate, does it follow the rules, was the motion that carries it decided properly, is it sound in itself (a closed month, not one's own approval); SQL in its owner's schema, registered in `cella.guard`, run as `cella_guards` |
 | **action** | one change to the records, voting and closing included: an actor signs an attempt, or a passed motion carries it, signed by whoever closed it, and every attempt passes the guards before it takes effect; declared by its id, `<feat>:<entity>:<verb>`, with its label and what it needs in its feat's `models/actions.ts` |

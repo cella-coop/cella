@@ -82,8 +82,8 @@ test('erasing a person deletes their salts and values, redacts them, and the log
   assert.deepEqual((await form(n)).erasure, { $erasure: { subject: 'ana', erased: ['contact'], restricted: [] } })
   assert.equal(await secrets('ana'), 0)
   assert.equal(Number((await db.query(`SELECT count(*) AS n FROM vault.key WHERE subject = 'ana'`)).rows[0].n), 0)
-  const row = (await db.query('SELECT name, email, phone, status FROM contact.contact WHERE id = $1', ['ana'])).rows[0]
-  assert.deepEqual(row, { name: 'redacted', email: 'redacted', phone: 'redacted', status: 'archived' })
+  const row = (await db.query('SELECT name, email, phone, archived FROM contact.contact WHERE id = $1', ['ana'])).rows[0]
+  assert.deepEqual(row, { name: 'redacted', email: 'redacted', phone: 'redacted', archived: true })
   // The commitment no longer opens: the fold reads the gap as redacted.
   const read = await opened(added)
   assert.equal(read.values.email, 'redacted')

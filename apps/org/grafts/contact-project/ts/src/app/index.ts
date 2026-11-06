@@ -9,10 +9,10 @@ export const app: App = {
   name: 'contact-project',
   extends: {
     projects: {
-      columns: [{ key: 'contact', label: 'Contact', role: 'sub', value: (r: { contact?: string }) => r.contact }],
+      columns: [{ key: 'contact', label: 'Client', role: 'sub', value: (r: { contact?: string }) => r.contact }],
       page: {
-        properties: (f: For) => [{ label: 'Contact', value: f.contact?.name ?? 'own', href: f.contact ? `/contacts/${f.contact.id}` : undefined }],
-        related: (f: For) => (f.contact ? [{ label: f.contact.name, sub: 'contact', href: `/contacts/${f.contact.id}` }] : []),
+        properties: (f: For) => [{ label: 'Client', value: f.contact?.name ?? 'own', href: f.contact ? `/contacts/${f.contact.id}` : undefined }],
+        related: (f: For) => (f.contact ? [{ label: f.contact.name, sub: 'client', href: `/contacts/${f.contact.id}` }] : []),
         blocks: [Contact],
       },
     },

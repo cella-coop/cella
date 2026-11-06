@@ -3,7 +3,8 @@ export interface Named {
   name: string
 }
 
-// Whom a project is for, and the contacts it may be linked to.
+// Whom a project is for, and the clients it may be linked to: the
+// contacts holding the client role, archived ones left out.
 export interface For {
   contact: Named | null
   contacts: Named[]

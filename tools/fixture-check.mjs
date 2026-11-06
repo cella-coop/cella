@@ -1,6 +1,7 @@
 // fixture check: a mock co-op is consistent. Every journal entry balances,
 // every surplus distribution splits the whole surplus, every link a graft holds
-// resolves, every device and every membership and employment is a person's,
+// resolves, every billing names a client, every device and every
+// membership and employment is a person's,
 // every vote and seat a member's, every record's owning circle one the
 // co-op has, the books agree with the invoices,
 // and every document version is an outline of blocks the document model
@@ -171,6 +172,7 @@ const check = (name) => {
   }
 
   const contacts = ids(contact.contact)
+  const clients = ids((contact.contact ?? []).filter((c) => c.client))
   const invoices = new Map((invoice.invoice ?? []).map((i) => [i.id, i]))
   const accounts = ids(account.account, 'code')
   const periods = ids(account.period, 'month')
@@ -249,6 +251,9 @@ const check = (name) => {
   for (const b of read('graft.contact-invoice').billing ?? []) {
     has(new Set(invoices.keys()), b.invoice, 'invoice', 'billing')
     has(contacts, b.contact, 'contact', 'billing')
+    if (contacts.has(b.contact) && !clients.has(b.contact)) {
+      fail(`billing of ${b.invoice}: ${b.contact} is no client`)
+    }
   }
   for (const p of read('graft.invoice-transaction').posting ?? []) {
     has(new Set(invoices.keys()), p.invoice, 'invoice', 'posting')

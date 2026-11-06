@@ -6,7 +6,7 @@ export async function billed(db: Db, invoice: string): Promise<Billed> {
     'SELECT c.id, c.name FROM contact_invoice.billing b JOIN contact.contact c ON c.id = b.contact WHERE b.invoice = $1',
     [invoice],
   )
-  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.contact WHERE status <> 'archived' ORDER BY name`)
+  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.contact WHERE client IS NOT NULL AND NOT archived ORDER BY name`)
   return { contact: linked.rows[0] ?? null, contacts: all.rows }
 }
 

@@ -80,8 +80,8 @@ test('only a holder of erase-personal-data erases a contact: Julien may not, Cam
   assert.match(reason(await eraseContact({ id: margaux }, as(julien))), /erase-personal-data/)
   const done = settled(await eraseContact({ id: margaux }, as(camille)))
   assert.deepEqual(
-    await one('SELECT name, email, phone, note, status FROM contact.contact WHERE id = $1', [margaux]),
-    { name: 'redacted', email: 'redacted', phone: 'redacted', note: 'redacted', status: 'archived' },
+    await one('SELECT name, email, phone, note, archived FROM contact.contact WHERE id = $1', [margaux]),
+    { name: 'redacted', email: 'redacted', phone: 'redacted', note: 'redacted', archived: true },
   )
   assert.deepEqual(await erased(margaux), { contact: false })
   assert.deepEqual((await opened(done.entry)).erasure, { $erasure: { subject: margaux, erased: ['contact'], restricted: [] } })

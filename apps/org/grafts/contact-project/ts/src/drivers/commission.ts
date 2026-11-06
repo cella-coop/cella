@@ -9,7 +9,7 @@ export async function commissioner(db: Db, project: string): Promise<For> {
     'SELECT c.id, c.name FROM contact_project.commission m JOIN contact.contact c ON c.id = m.contact WHERE m.project = $1',
     [project],
   )
-  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.contact WHERE status <> 'archived' ORDER BY name`)
+  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.contact WHERE client IS NOT NULL AND NOT archived ORDER BY name`)
   return { contact: linked.rows[0] ?? null, contacts: all.rows }
 }
 

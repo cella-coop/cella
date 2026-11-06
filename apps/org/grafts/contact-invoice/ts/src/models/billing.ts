@@ -1,4 +1,5 @@
-// Whom an invoice bills, and the contacts it may be linked to.
+// Whom an invoice bills, and the clients it may be linked to: the
+// contacts holding the client role, archived ones left out.
 export interface Billed {
   contact: { id: string; name: string } | null
   contacts: { id: string; name: string }[]

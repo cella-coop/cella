@@ -14,5 +14,8 @@
     "@cella/org-contact": "workspace:*",
     "@cella/org-invoice": "workspace:*",
     "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@cella/org-sign": "workspace:*"
   }
 }

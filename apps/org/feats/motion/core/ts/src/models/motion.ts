@@ -65,6 +65,21 @@ export interface Given {
   at: string
 }
 
+// An effect its close carried, as its log entry says: its op, by its
+// kind's label where `motion.carries` registers the op, whether it
+// settled or was forgone, the entry it follows, the close's or an
+// earlier effect's, and a forgone one's reason, null where it is not
+// disclosed to the reader.
+export interface Effect {
+  id: string
+  entry: number
+  op: string
+  label: string | null
+  follows: number
+  settled: boolean
+  reason: string | null
+}
+
 export interface Detail extends Motion {
   body: string
   cutoff: number | null
@@ -76,6 +91,10 @@ export interface Detail extends Motion {
   messages: Message[]
   // The default policies of a legal form its actions left.
   leaves: Left[]
+  // The log entry of its close, and the effects its close carried, in
+  // the order logged; none while it is open.
+  close: number | null
+  effects: Effect[]
 }
 
 // An argument an action of a kind takes, as the New form asks for it.

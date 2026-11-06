@@ -202,7 +202,7 @@ The outcome itself is not this feat's to fix: it is folded from the votes by `ce
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed motion returns `Refused`, as the guards and the trigger judge it; the handler throws for none of them.
 - `propose` (confluent): inserts the motion by the procedure the write gives it, consent where it gives none, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`) under a lock on the numbering, proposed on the verdict date, and its actions; membership-motion's `propose` replaces it in the shell, gives it the procedure its requirements fix and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, procedure, ballot, deadline, actions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another. It inserts the text, the row answers the handles it mentions and the documents it links, and it submits `{ motion, member, message, reply, mentions, links }`, those the row's, without the text. It signs the request's fields it reads, its motion, member, reply and text, so a request naming mentions or links of its own names nothing.
-- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `membership-motion` replaces it in the shell with a close that counts the roll and admits and seats in the same verdict; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
+- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `membership-motion` replaces it in the shell with a close that counts the roll and carries what the motion passed as its effects, in the same transaction; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
 - `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, protected by the procedure the action names, if any, taking the default it names, if any, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). It first asks `motion.replacement_flaw`, the SQL `motion.adopts` judges by, whether the policy the action replaces is still its to replace; where another motion replaced it while this one was open, it writes nothing to the register, and the guard refuses the action with that reason. Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what this feat's circles' `adopt` extends with core's copy of a mandate.
 - `end` (ordered), and `ending`, the same as a write a graft extends: ends the policy a passed motion's action `n` names on the verdict date, through the register's `policy.end` (`ending` in `@cella/org-policy`). Submits `{ policy, motion, n, ends }`. `membership-motion` runs the circles' `end`, which extends it, for each policy a passing motion ends.
 
@@ -416,6 +416,22 @@ collection's `about`, and no procedure, since its requirements fix the one it is
 actions it carries, each a kind from `motion.carries`, whose arguments the
 form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows its proposal and each action it
 carries, its arguments by its kind's labels, a member by name, the default a policy takes as its form names it, each default the motion leaves and by which of its actions, every stance given as its activity, on a secret ballot the reader's own alone, and closes it (`close`).
+Once closed, it shows under the close each effect the close's
+transaction wrote, as the log keeps them (`effects`, read with the
+motion): every entry after the close's own and before the next
+decision's, since a write's entries are consecutive, in the order
+logged, each by its kind's label where `motion.carries` registers its
+op and by its op where none does, settled or forgone, and the entry it
+follows, the close or an earlier effect. A forgone one is marked so,
+with the reason its entry keeps, which `cella.disclosed` opens to its
+reader: the closer, whom every effect acts as, reads it, and so does a
+holder of its action's power; to anyone else the page says the reason
+is not disclosed to them. So an admission forgone with the subscription
+it requires shows forgone, its reason naming the refusal it follows,
+over the subscription, forgone with its own reason, the statutes'
+minimum and the shares asked. The outcome the close's post returns
+holds the same; the page reads them from the log, so they stand once
+the outcome is dismissed, for every later reader.
 Its roll, its outcome and the stance form are `membership-motion`'s;
 the stance it posts is this feat's `vote`, for the acting member.
 
@@ -423,10 +439,11 @@ A motion's state is open, passed or rejected: open until its close,
 then passed or rejected by the outcome of the stances the close froze.
 The outcome is the graft's, so the state is too: `membership-motion`
 reads it in SQL and gives the collection its State column and its board.
-This feat reads only whether and when a motion closed.
+Of its outcome, this feat reads only whether and when a motion closed.
 
 A motion's page has three tabs: Overview, the proposal in full under its
-deadline, and what the grafts say is decided (whom it admits, the
+deadline, once closed the effects its close carried, and what the grafts
+say is decided (whom it admits, the
 version it adopts, the outcome); Stances, the roll and the acting
 member's stance; and Discussion, its deliberation, each message under
 the one it answers, a mention drawn by `membership-motion`'s `member` embed

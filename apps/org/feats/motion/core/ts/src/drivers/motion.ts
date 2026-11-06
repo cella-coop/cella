@@ -1,6 +1,6 @@
 import type { Db, Read } from '@cella/org-db'
 import { leftBy } from '@cella/org-policy'
-import type { Motion, Detail, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
+import type { Motion, Detail, Effect, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
 import type { Message } from '../models/thread.ts'
 
 const columns = `id, circle, title, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
@@ -20,9 +20,10 @@ export async function motions(db: Db): Promise<Motion[]> {
 }
 
 // A motion, its proposal, every stance given on it, newest first, its
-// deliberation in the order received, and the defaults its actions left.
+// deliberation in the order received, the defaults its actions left, and
+// what its close carried.
 export async function motion(db: Db, id: string): Promise<Detail | null> {
-  const found = await db.query<Omit<Detail, 'terms' | 'leaves'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
+  const found = await db.query<Omit<Detail, 'terms' | 'leaves' | 'close' | 'effects'>>(`SELECT ${columns}, body, cutoff::int AS cutoff FROM motion.motion WHERE id = $1`, [id])
   if (!found.rows[0]) {
     return null
   }
@@ -50,7 +51,15 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
      FROM motion.message WHERE motion = $1 ORDER BY receipt`,
     [id],
   )
-  return { ...found.rows[0], terms, given: given.rows, actions: actions.rows, messages: messages.rows, leaves: await leftBy(db, id) }
+  return {
+    ...found.rows[0],
+    terms,
+    given: given.rows,
+    actions: actions.rows,
+    messages: messages.rows,
+    leaves: await leftBy(db, id),
+    ...(await effects(db, found.rows[0].cutoff)),
+  }
 }
 
 // A procedure's terms, as a motion is taken by them.
@@ -88,4 +97,33 @@ export async function summaries(db: Db): Promise<Summary[]> {
 export async function kinds(db: Db): Promise<Kind[]> {
   const { rows } = await db.query<Kind>('SELECT kind, label, fields FROM motion.carries ORDER BY label')
   return rows
+}
+
+// The effects a motion's close carried, from the log: its close's entry,
+// the decision whose receipt is the motion's cutoff, and every entry after
+// it and before the next decision's, since a write's entries are
+// consecutive and each effect follows the decision or an earlier effect.
+// An effect is named by the label of the kind whose op it is, where
+// `motion.carries` registers one. A forgone one's reason is in its logged
+// payload, which `cella.disclosed` opens to the reader who may read it.
+export async function effects(db: Db, cutoff: number | null): Promise<{ close: number | null; effects: Effect[] }> {
+  if (cutoff === null) {
+    return { close: null, effects: [] }
+  }
+  const close = await db.query<{ n: number }>(`SELECT n::int AS n FROM cella.log WHERE receipt = $1 AND op = 'motion:motion:close'`, [cutoff])
+  const n = close.rows[0]?.n
+  if (n === undefined) {
+    return { close: null, effects: [] }
+  }
+  const { rows } = await db.query<Effect>(
+    `WITH next AS (SELECT min(d.n) AS n FROM cella.log d WHERE d.n > $1 AND d.receipt IS NOT NULL)
+     SELECT l.n::text AS id, l.n::int AS entry, l.op, l.cause::int AS follows, l.settled,
+            (SELECT k.label FROM motion.carries k WHERE k.op = l.op ORDER BY k.kind LIMIT 1) AS label,
+            CASE WHEN l.settled THEN NULL ELSE cella.disclosed(l.n) ->> 'reason' END AS reason
+     FROM cella.log l, next
+     WHERE l.n > $1 AND (next.n IS NULL OR l.n < next.n)
+     ORDER BY l.n`,
+    [n],
+  )
+  return { close: n, effects: rows }
 }

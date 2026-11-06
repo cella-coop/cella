@@ -83,8 +83,35 @@ test('a keyed function matches its rows by its argument\'s digest', async () => 
   const keyed = (where, by = 'secret') => `${fn('found(secret bytea) RETURNS TABLE (member text)', `SELECT l.member FROM ledger.line l WHERE ${where}`)}
 COMMENT ON FUNCTION ledger.found(bytea) IS 'audience: keyed by ${by}: for whoever holds the secret';`
   assert.equal(await check(keyed('l.digest = sha256(found.secret)')), '')
-  assert.match(await check(keyed('l.digest = found.secret OR true')), /ledger.found is declared keyed by secret, but matches its rows by no digest of it/)
+  assert.equal(await check(keyed('sha256(secret) = l.digest')), '')
+  assert.match(await check(keyed('l.digest = found.secret OR true')), /ledger.found is declared keyed by secret, but compares no column of its rows with its digest/)
+  // A digest compared with itself, an expression or another argument
+  // matches no row by its own, and returns them all.
+  for (const where of ['sha256(found.secret) = sha256(found.secret)', 'sha256(secret) = sha256(secret)', "sha256(found.secret) = '\\x00'::bytea", 'sha256(found.secret) = found.other', 'sha256(found.secret) = other']) {
+    const two = `${fn('found(secret bytea, other bytea) RETURNS TABLE (member text)', `SELECT l.member FROM ledger.line l WHERE ${where}`)}
+COMMENT ON FUNCTION ledger.found(bytea, bytea) IS 'audience: keyed by secret: for whoever holds the secret';`
+    assert.match(await check(two), /ledger.found is declared keyed by secret, but compares no column of its rows with its digest/, where)
+  }
   assert.match(await check(keyed('l.digest = sha256(found.secret)', 'key')), /ledger.found is declared keyed by key, which is not one argument it takes/)
+})
+
+test('a shared function shows through its star, its WITH and the subqueries in its FROM', async () => {
+  const shared = (body) => `${fn('lines() RETURNS SETOF ledger.line', body)}
+COMMENT ON FUNCTION ledger.lines() IS 'audience: shared: every line';`
+  for (const body of [
+    'SELECT * FROM ledger.line',
+    'SELECT l.* FROM ledger.line l',
+    'WITH w AS (SELECT l.member AS who FROM ledger.line l) SELECT w.who FROM w',
+    'WITH w AS (SELECT l.member FROM ledger.line l) SELECT * FROM w',
+    'WITH w (who) AS (SELECT l.member FROM ledger.line l), v AS (SELECT who FROM w) SELECT v.who FROM v',
+    'SELECT x.who FROM (SELECT l.member AS who FROM ledger.line l) x',
+    'SELECT x.* FROM (SELECT l.member, sum(l.amount) FROM ledger.line l GROUP BY l.member) x',
+  ]) {
+    assert.match(await check(shared(body)), /ledger.lines is declared shared, but shows ledger.line.member, which says whose a row is/, body)
+  }
+  const sums = `${fn('totals() RETURNS TABLE (account text, total bigint)', 'WITH w AS (SELECT l.account, sum(l.amount)::bigint AS total FROM ledger.line l GROUP BY l.account) SELECT * FROM w')}
+COMMENT ON FUNCTION ledger.totals() IS 'audience: shared by account: the co-op''s totals by account';`
+  assert.equal(await check(sums), '')
 })
 
 test('a declared function the check cannot read is refused', async () => {

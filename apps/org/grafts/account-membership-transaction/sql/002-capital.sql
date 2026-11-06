@@ -165,28 +165,28 @@ GRANT UPDATE (cancelled) ON account_membership_transaction.subscription TO cella
 GRANT UPDATE (entry, paid) ON account_membership_transaction.repayment TO cella_app;
 
 -- account:capital:subscribe — a member admitted subscribes their shares,
--- by the write that follows their admission: they are active and hold at
--- least the shares the terms governing the verdict date ask, which value
--- a share, a refusal quoting the rule they copy (`policy.says`); this write made their one subscription, of exactly their
+-- by the write that follows their admission: they are active and hold
+-- shares `account.subscribe_flaw` finds sound on the verdict date, at
+-- least the minimum of the terms governing it, which value a share, its
+-- month open; this write made their one subscription, of exactly their
 -- shares at that value, on a capital account under 1013 they hold; and the
--- entry is exactly it, 4562 debited and 1012 credited. That the month is
--- open is account-transaction's guard on every line.
+-- entry is exactly it, 4562 debited and 1012 credited. Its reasons name
+-- no person: a subscription refused at a close is forgone, its reason in
+-- the log.
 CREATE FUNCTION account_membership_transaction.subscribes(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN m.address IS NULL THEN coalesce(x.member, 'no one') || ' is no member'
-    WHEN m.status <> 'active' THEN m.address || ' is ' || m.status || ': only a member admitted subscribes'
-    WHEN m.shares = 0 THEN m.address || ' holds no shares to subscribe'
-    WHEN t.id IS NULL THEN 'no adopted terms value a share on ' || cella.verdict_date()
-    WHEN m.shares < t.minimum THEN m.address || ' subscribes ' || m.shares || ' shares: '
-      || coalesce('"' || policy.says(t.policy) || '"', t.id || ' ask at least ' || t.minimum)
+    WHEN m.address IS NULL THEN 'the subscriber is no member'
+    WHEN m.status <> 'active' THEN 'the subscriber is ' || m.status || ': only a member admitted subscribes'
+    WHEN m.shares = 0 THEN 'the subscriber holds no shares to subscribe'
+    WHEN account.subscribe_flaw(m.shares, cella.verdict_date()) IS NOT NULL THEN account.subscribe_flaw(m.shares, cella.verdict_date())
     WHEN s.member IS NULL OR s.entry IS DISTINCT FROM x.entry OR s.account IS DISTINCT FROM x.account
-      THEN coalesce(x.entry, 'the entry') || ' is not ' || m.address || '''s subscription'
+      THEN coalesce(x.entry, 'the entry') || ' is not the member''s subscription'
     WHEN s.shares <> m.shares OR cella.cents(s.amount) IS DISTINCT FROM m.shares * cella.cents(t.share)
-      THEN m.address || '''s subscription is not their ' || m.shares || ' shares at ' || cella.cents(t.share) || ' cents each'
+      THEN 'the subscription is not the member''s ' || m.shares || ' shares at ' || cella.cents(t.share) || ' cents each'
     WHEN NOT EXISTS (SELECT FROM account.account a WHERE a.code = s.account AND a.holder = m.address AND a.parent = '1013')
-      THEN s.account || ' is no capital account of ' || m.address || '''s under 1013'
+      THEN s.account || ' is no capital account of the member''s under 1013'
     WHEN (
       SELECT count(*) <> 2 OR count(DISTINCT l.account) <> 2 OR bool_or(cella.cents(l.amount) <> cella.cents(s.amount))
         OR count(*) FILTER (WHERE (l.account = '4562' AND l.side = 'debit') OR (l.account = '1012' AND l.side = 'credit')) <> 2

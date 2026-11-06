@@ -12,24 +12,27 @@ const op = 'account:capital:subscribe' satisfies keyof typeof actions
 // feat's `holding`, and their shares at the share's value are called,
 // 4562 debited and 1012 credited, through the journal's `record`.
 // `account_membership_transaction.subscribes` decides: they are active,
-// hold at least the statutes' minimum, and the entry is exactly the
-// subscription; account-transaction's guard, that the month is open.
+// their shares sound by `account.subscribe_flaw`, at least the statutes'
+// minimum and their month open, and the entry is exactly the
+// subscription.
 export function subscribing(input: Subscribe): Write<Subscribed> {
   return {
     op,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ day: string; shares: number; name: string; value: string | null }>(
+      const { rows } = await tx.query<{ day: string; shares: number; name: string; value: string | null; flaw: string | null }>(
         `SELECT to_char(cella.verdict_date(), 'YYYY-MM-DD') AS day, m.shares, p.name,
-                account_membership.value(cella.verdict_date()) AS value
+                account_membership.value(cella.verdict_date()) AS value,
+                account.subscribe_flaw(m.shares, cella.verdict_date()) AS flaw
          FROM membership.member m JOIN person.person p ON p.address = m.address
          WHERE m.address = $1`,
         [input.member],
       )
       const m = rows[0]
-      // Nothing prices their shares: nothing is written, and the guard
-      // refuses, saying what is missing.
-      if (!m || m.value === null || m.shares === 0) {
+      // Nothing prices their shares, or the terms or the month refuse
+      // them (`account.subscribe_flaw`): nothing is written, and the guard
+      // refuses, saying what would let it settle.
+      if (!m || m.value === null || m.shares === 0 || m.flaw !== null) {
         return { member: input.member, account: '', shares: m?.shares ?? 0, amount: 0, entry: '' }
       }
       const cents = m.shares * Number(m.value)
@@ -60,8 +63,9 @@ export async function subscribe(input: Subscribe, deps: Deps): Promise<Outcome<(
 // What follows an admission, whichever write admits: the member's
 // subscription, an effect in the admission's transaction citing it, and
 // one the admission requires, so a subscription refused forgoes the
-// admission with it. Where no adopted terms value a share on the verdict
-// date, the subscription writes nothing and its guard refuses it.
+// admission with it. Where the terms or the month refuse the shares on
+// the verdict date, the subscription writes nothing and its guard refuses
+// it, saying why.
 export async function subscribed(request: unknown, deps: Deps): Promise<Done[]> {
   const { member, motion } = request as { member: string; motion: string }
   return [done(op, await subscribe({ member, motion }, deps))]

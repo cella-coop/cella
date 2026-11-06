@@ -673,7 +673,7 @@ function citing(b, o, found, into = found.cites) {
 // the row (architecture.md, "Writes stay home"). Each call's arguments are
 // literals, the last its caller's own name, so the check reads the action
 // a call lists in motion.cites, and its power, as it reads a literal row.
-const registerFns = { 'motion.register_carries': 5, 'motion.register_cite': 3, 'motion.register_cite_guard': 2 }
+const registerFns = { 'motion.register_carries': 5, 'motion.register_cite': 3, 'motion.register_cite_guard': 2, 'motion.register_put': 2, 'motion.register_ask_guard': 2 }
 
 function registersBy(call, o, fail, found) {
   const f = strings(call.funcname).join('.')

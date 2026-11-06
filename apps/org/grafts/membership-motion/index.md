@@ -267,7 +267,9 @@ she is on no roll of the assembly's.
   invited, a whole number of shares) and `fixed` (its roll). No seat is
   asked of the applicant, whose right puts it, so `sits` is not run; an
   application that puts no motion, as the membership feat's `applying`
-  alone does not, is refused.
+  alone does not, is refused. This graft lists the application in
+  `motion.puts` by `motion.register_put`, so every guard judging what a
+  motion asks covers it too, as `account-motion`'s capital terms do.
 - `membership_motion.founds`, on `membership-motion:scope:found`, the log's
   first entry, its check `first`: the log is empty, so a co-op is founded
   once; the form the founding names is one cella offers (`policy.form`),
@@ -326,7 +328,9 @@ she is on no roll of the assembly's.
   procedure its requirements fix and a secret ballot, titled as `put` titles one, and `fix`.
   It submits the application's op, `membership:member:apply`, with the
   application and the proposal in its payload; the guards judge it
-  (`membership.applies`, employment-membership's `serves`, `puts`). The
+  (`membership.applies`, employment-membership's `serves`, `puts`, and
+  account-motion's `subscribes`, which refuses shares under the
+  statutes' minimum before anything is written). The
   assembly must rule on it as on any motion: the close admits them, and
   the subscription follows. Its request names the shares, so the
   candidacy employment-membership opens after it pledges them.

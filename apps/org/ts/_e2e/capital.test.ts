@@ -16,8 +16,10 @@
 // at least ten shares at 25 € replacing the founding one, whose values are
 // copied into the terms by the effect that follows the adoption; a rule
 // whose value says no way is stricter is refused when proposed. Nadia's
-// admission with 8 shares is forgone with her subscription, which the rule's
-// sentence refuses, the close standing. The statutes, the assembly's policies in
+// admission with 8 shares is refused when it is proposed, its reason the
+// minimum, the rule and the shares asked; put with 10 while the assembly
+// raises the minimum to 12, it is forgone at its close with her
+// subscription, which the new terms refuse, the close standing. The statutes, the assembly's policies in
 // order, are generated anew once the new terms are adopted, their sentence
 // where the founding one read, and adopted under the same motion; the
 // version before still reads, and no hand edits them. The books balance
@@ -407,36 +409,73 @@ test('no hand edits the statutes, saves a version of them or adopts one', async 
   assert.equal((await one<{ version: string }>(`SELECT version FROM document.adopted WHERE document = 'statutes'`)).version, 'statutes@3')
 })
 
-test('an admission requires its subscription: Nadia, admitted with 8 shares, is refused her subscription with the rule\'s sentence, which forgoes her admission and seat with it, the close standing', async () => {
+test('Nadia\'s admission with 8 shares is refused when it is proposed, its reason the statutes\' minimum, the rule that sets it and the shares asked, naming no one, and nothing is written', async () => {
   await on('2026-12-15')
   const secret = random()
   settled(await invite({ address: nadia, name: 'Nadia Benali', link: await sha256(secret) }, as(thomas)))
   settled(await accept({ member: nadia, secret, key: (await fixture(nadia, 'laptop')).key, label: 'laptop' }, as(nadia)))
+  const fewer = await put({ kind: 'admit', args: { member: nadia, shares: 8 }, deadline: '2026-12-22', body: '' }, as(camille))
+  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
+  assert.equal(reason(fewer), `8 shares are fewer than the 10 the capital's terms ask, by ${newTerms} ("${sentence}"): ask at least 10 shares`)
+  assert.match(sentence, /Each associate subscribes at least 10 shares/)
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM motion.action WHERE kind = 'admit' AND args ->> 'member' = $1`, [nadia])).n, '0', 'no motion is put')
+})
+
+test('the close judges the terms again: Nadia, put sound with 10 shares while the assembly raises the minimum to 12, is refused her subscription, which forgoes her admission and seat with it, the close standing', async () => {
+  const consented = async (motion: string) => {
+    const roll = await all<{ member: string }>(
+      `SELECT r.member FROM membership_motion.roll r JOIN membership.member m ON m.address = r.member
+       WHERE r.motion = $1 AND m.status = 'active'`,
+      [motion],
+    )
+    for (const { member } of roll) {
+      settled(await vote({ motion, member, stance: 'consent' }, as(member)))
+    }
+  }
+  await on('2026-12-15')
+  const admitting = (settled(await put({ kind: 'admit', args: { member: nadia, shares: 10 }, deadline: '2026-12-22', body: '' }, as(camille))) as { motion: string }).motion
+  await consented(admitting)
+  const wording =
+    'A share is worth {account_share: 25 € | more is stricter}. Each associate subscribes at least {account_minimum: 12 | more is stricter} shares, ' +
+    'and may pay them in at most {account_instalments: 10 | less is stricter} monthly instalments. An associate who leaves is repaid their shares ' +
+    'at their nominal value from {account_delay: 12 | more is stricter} months after the exit, in {account_repayments: 3 | more is stricter} yearly repayments'
+  const raising = settled(await propose(
+    { circle: 'ag', title: 'Raise the minimum to 12 shares', procedure: 'consent', deadline: '2026-12-21', body: '', actions: [{ kind: 'policy', args: { kind: 'rule', wording, replaces: newTerms } }] },
+    as(camille),
+  )).motion
+  await consented(raising)
+  await on('2026-12-21')
+  settled(await close({ motion: raising }, as(camille)))
+  const raised = `${raising}/1`
+  assert.equal((await one<{ minimum: number }>('SELECT minimum FROM account.terms WHERE id = account.capital_for($1)', ['2026-12-22'])).minimum, 12)
+
+  await on('2026-12-22')
   const before = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
-  const then = await decided('admit', { member: nadia, shares: 8 }, '2026-12-15', '2026-12-22')
+  const closed = await close({ motion: admitting }, as(camille))
+  settled(closed)
+  const then = done('motion:motion:close', closed).then
   const [admission] = then
   assert.deepEqual([then.length, admission.op, admission.state, admission.forgone], [1, 'membership:member:admit', 'refused', true])
   const [refused] = admission.then
   assert.deepEqual([refused.op, refused.state, refused.forgone], ['account:capital:subscribe', 'refused', true])
-  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [newTerms])).s
-  assert.equal(refused.reason, `nadia@lanterne.example subscribes 8 shares: "${sentence}"`)
+  const sentence = (await one<{ s: string }>('SELECT policy.says($1) AS s', [raised])).s
+  assert.equal(refused.reason, `10 shares are fewer than the 12 the capital's terms ask, by ${raised} ("${sentence}"): ask at least 12 shares`)
   assert.equal(admission.reason, `membership:member:admit is forgone with account:capital:subscribe, which it requires: ${refused.reason}`)
-  assert.match(refused.reason ?? '', /Each associate subscribes at least 10 shares/)
   // The close, then the admission and the subscription, each forgone
   // with its reason in the log, citing what it follows.
-  const close = await one<{ n: string }>(`SELECT max(n) AS n FROM cella.log WHERE op = 'motion:motion:close'`)
+  const closing = await one<{ n: string }>(`SELECT max(n) AS n FROM cella.log WHERE op = 'motion:motion:close'`)
   assert.deepEqual(
     await all<{ op: string; cause: string | null; settled: boolean; reason: string | null }>(
       `SELECT op, cause, settled, form ->> 'reason' AS reason FROM cella.log WHERE n >= $1 ORDER BY n`,
-      [close.n],
+      [closing.n],
     ),
     [
       { op: 'motion:motion:close', cause: null, settled: true, reason: null },
-      { op: 'membership:member:admit', cause: close.n, settled: false, reason: admission.reason },
-      { op: 'account:capital:subscribe', cause: String(Number(close.n) + 1), settled: false, reason: refused.reason },
+      { op: 'membership:member:admit', cause: closing.n, settled: false, reason: admission.reason },
+      { op: 'account:capital:subscribe', cause: String(Number(closing.n) + 1), settled: false, reason: refused.reason },
     ],
   )
-  assert.ok(Number(close.n) > before)
+  assert.ok(Number(closing.n) > before)
   assert.equal((await one<{ status: string }>('SELECT status FROM membership.member WHERE address = $1', [nadia])).status, 'invited', 'no one is admitted without the capital the statutes ask')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM circle.seat WHERE member = $1', [nadia])).n, '0', 'nor seated')
   assert.equal((await one<{ n: string }>('SELECT count(*) AS n FROM account.account WHERE holder = $1', [nadia])).n, '0', 'and holds no capital account')

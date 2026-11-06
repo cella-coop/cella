@@ -67,10 +67,30 @@ test('a kind registers through register_carries with the action carrying it out;
   }
 })
 
+test('an action putting a motion registers through register_put, and a guard through register_ask_guard covers the proposal and every action putting one, listed before it and after', async () => {
+  await db.query('BEGIN')
+  try {
+    await db.query(`SELECT motion.register_put('test:member:apply', 'test')`)
+    await db.query(`SELECT motion.register_ask_guard('motion.closes(jsonb)', 'test')`)
+    await db.query(`SELECT motion.register_put('test:member:return', 'test')`)
+    assert.deepEqual((await db.query(`SELECT op, owner FROM motion.puts WHERE owner = 'test' ORDER BY op`)).rows, [
+      { op: 'test:member:apply', owner: 'test' },
+      { op: 'test:member:return', owner: 'test' },
+    ])
+    const { rows } = await db.query(
+      `SELECT op FROM cella.guard WHERE fn = 'motion.closes(jsonb)'::regprocedure AND owner = 'test' ORDER BY op`,
+    )
+    assert.deepEqual(rows, [{ op: 'motion:motion:propose' }, { op: 'test:member:apply' }, { op: 'test:member:return' }])
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
 test('the register functions are a migration\'s, not the app\'s', async () => {
   const { rows } = await db.query(`SELECT has_function_privilege('cella_app', f, 'EXECUTE') AS may FROM unnest(ARRAY[
-    'motion.register_carries(text, text, jsonb, text, text)', 'motion.register_cite(text, text, text)', 'motion.register_cite_guard(regprocedure, text)']::regprocedure[]) f`)
-  assert.deepEqual(rows, [{ may: false }, { may: false }, { may: false }])
+    'motion.register_carries(text, text, jsonb, text, text)', 'motion.register_cite(text, text, text)', 'motion.register_cite_guard(regprocedure, text)',
+    'motion.register_put(text, text)', 'motion.register_ask_guard(regprocedure, text)']::regprocedure[]) f`)
+  assert.deepEqual(rows, [{ may: false }, { may: false }, { may: false }, { may: false }, { may: false }])
 })
 
 test('an action is of a registered kind', async () => {

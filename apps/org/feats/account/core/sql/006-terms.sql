@@ -139,6 +139,29 @@ RETURN (
   LIMIT 1
 );
 
+-- What is wrong with subscribing that many shares on that day, or null:
+-- no terms govern it; fewer shares than the minimum of those that do,
+-- saying the minimum, the rule that sets it and the shares asked; or its
+-- month closed, saying the month and the first open one. It names no
+-- person, so a reason it gives may enter the log: the subscription's
+-- guard calls it at the close, and account-motion's on the proposal.
+CREATE FUNCTION account.subscribe_flaw(shares integer, day date) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN t.id IS NULL THEN 'no adopted terms value a share on ' || to_char(day, 'YYYY-MM-DD')
+      || ': the members adopt the capital''s terms by motion first'
+    WHEN shares < t.minimum THEN shares || ' shares are fewer than the ' || t.minimum || ' the capital''s terms ask, by '
+      || t.policy || coalesce(' ("' || policy.says(t.policy) || '")', '') || ': ask at least ' || t.minimum || ' shares'
+    WHEN p.closed IS NOT NULL THEN p.month || ' is closed, so nothing subscribed on ' || to_char(day, 'YYYY-MM-DD') || ' posts into it: '
+      || coalesce('the first open month is ' || o.month, 'no month of the books is open')
+  END
+  FROM (SELECT account.capital_for(day) AS id) c
+  LEFT JOIN account.terms t ON t.id = c.id
+  LEFT JOIN account.period p ON p.month = to_char(day, 'YYYY-MM')
+  CROSS JOIN (SELECT min(q.month) AS month FROM account.period q WHERE q.closed IS NULL) o;
+END;
+
 -- The day each of a capital's repayments falls due, by the clauses of
 -- `terms`, for an associate who left on `exited`: the first `delay`
 -- months after the exit, the others a year apart.

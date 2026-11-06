@@ -1,9 +1,10 @@
 // <cella-print src print ink alt>: a picture printed in the browser. It
-// draws its picture on a canvas at its own width, at most 1.5 device
-// pixels to a CSS pixel as the explorer prints, runs the print core and
-// lays each mask as a layer print.css colours. Importing this module
-// defines it; on a server, where there is no customElements, it does
-// nothing.
+// draws its picture on a canvas at the width it is shown, at most 1.5
+// device pixels to a CSS pixel as the explorer prints, runs the print
+// core and lays each mask as a layer print.css colours. It prints again
+// when its width changes, and clears what it laid when its src goes or
+// fails. Importing this module defines it; on a server, where there is
+// no customElements, it does nothing.
 
 import { PENTAD, type Status } from './house.ts'
 import { print, printMarkup, PRINT_STYLES, type Mask, type PrintStyleName } from './print.ts'
@@ -24,10 +25,23 @@ function define(): void {
   class CellaPrint extends HTMLElement {
     static observedAttributes = ['src', 'print', 'ink', 'alt']
     #turn = 0
+    // the CSS width the latest draw prints at, and the src it laid
+    #width = 0
+    #laid: string | null = null
+    #sizes = new ResizeObserver(() => {
+      if (this.clientWidth > 0 && this.clientWidth !== this.#width) {
+        void this.#draw()
+      }
+    })
 
     connectedCallback(): void {
       this.setAttribute('role', 'img')
+      this.#sizes.observe(this)
       void this.#draw()
+    }
+
+    disconnectedCallback(): void {
+      this.#sizes.unobserve(this)
     }
 
     attributeChangedCallback(): void {
@@ -36,12 +50,22 @@ function define(): void {
       }
     }
 
+    #clear(): void {
+      this.replaceChildren()
+      this.style.removeProperty('aspect-ratio')
+      delete this.dataset.over
+      this.#laid = null
+    }
+
     async #draw(): Promise<void> {
       const turn = ++this.#turn
       this.setAttribute('aria-label', this.getAttribute('alt') ?? '')
       const src = this.getAttribute('src')
-      if (!src) {
-        this.replaceChildren()
+      if (src !== this.#laid) {
+        this.#clear()
+      }
+      this.#width = this.clientWidth
+      if (!src || this.#width === 0) {
         return
       }
       const img = new Image()
@@ -50,13 +74,16 @@ function define(): void {
       try {
         await img.decode()
       } catch {
+        if (turn === this.#turn) {
+          this.#clear()
+        }
         return
       }
       if (turn !== this.#turn) {
         return
       }
       const scale = Math.min(1.5, devicePixelRatio || 1)
-      const width = Math.max(8, Math.round((this.clientWidth || img.naturalWidth) * scale))
+      const width = Math.max(8, Math.round(this.#width * scale))
       const height = Math.max(1, Math.round((width * img.naturalHeight) / img.naturalWidth))
       const canvas = document.createElement('canvas')
       canvas.width = width
@@ -75,6 +102,7 @@ function define(): void {
       this.dataset.over = p.over
       this.style.aspectRatio = `${width} / ${height}`
       this.innerHTML = printMarkup(p, p.masks.map((m) => maskUrl(m, width, height)))
+      this.#laid = src
     }
   }
   customElements.define('cella-print', CellaPrint)

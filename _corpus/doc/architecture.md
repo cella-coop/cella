@@ -781,6 +781,26 @@ member, once their three runs wait, starts a fourth on their page,
 which shows it failed with the cap's reason, as any failed write
 shows.
 
+One scenario proves that a write commits whole, its decision with all
+its effects or none of them (`cella test e2e effects`), through the
+built shell, started with a TEST-ONLY preload the scenario alone loads
+(`_e2e/crash.ts`, by `node --import`, never by `cella serve`), which
+kills the server the moment the notary answers an entry of the op it
+names: between a passing close's verdict and the actions it carries,
+and between an admission and the subscription it requires. After each,
+the log verifies and holds neither the close nor any effect of it, the
+motion is still open, and closing it again commits the close with every
+effect, its closer's browser asked for one signature. A carried
+suspension of a member already suspended is forgone with its reason
+while the close and the motion's other effect stand; an admission whose
+subscription the terms adopted since its proposal refuse is forgone
+with it, both listed as forgone under the close in the outcome its post
+returns, and no one is left admitted without their capital. The
+notary's half runs as the app's role (`cella test e2e notarised`): an
+effect citing no entry, an entry another transaction appended, or an
+entry `cella.follows` does not let its op follow, or appended with no
+write begun, is refused, nothing committed and no number used.
+
 ## Inside a package
 
 Seedling's layers, innermost first; imports point inward only.

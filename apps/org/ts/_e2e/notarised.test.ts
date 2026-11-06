@@ -5,8 +5,10 @@
 // app or as a superuser, is refused; a handler that skips submit, or rolls
 // its verdict back to a savepoint, commits nothing; a verdict settles only
 // the write begun; a decision commits with its effects and never without
-// one it requires, and an effect cites only its own write; and only a
-// superuser unbinds. Run by `cella test e2e notarised`.
+// one it requires; an effect cites only an entry its own write appended
+// and `cella.follows` lets it follow, and one citing anything else, or
+// appended with no write begun, uses no number; and only a superuser
+// unbinds. Run by `cella test e2e notarised`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -192,6 +194,38 @@ test('a decision commits with its effects, each citing its own write, and never 
       await app.query('ROLLBACK')
     }
     assert.equal(await head(), before + 2)
+  } finally {
+    await su.query(`DELETE FROM cella.follows WHERE owner = 'e2e'`)
+  }
+})
+
+test('an effect citing no entry, appended with no write begun, or by an op cella.follows does not let follow its cause is refused, nothing committed and no number used', async () => {
+  const note = 'test:run:note'
+  await su.query(`SELECT cella.lets_follow('import:run:record', $1, 'e2e')`, [note])
+  try {
+    const before = await head()
+    const refused = async (op: string, cause: number, why: RegExp, begun = true) => {
+      await app.query('BEGIN')
+      try {
+        if (begun) {
+          await (await recording(app)).submit()
+        }
+        await assert.rejects(app.query('SELECT cella.follow($1, $2, $3)', [op, { lines: 0 }, cause]), (e: Error & { code?: string }) => {
+          assert.equal(e.code, '09000', e.message)
+          assert.match(e.message, why)
+          return true
+        })
+      } finally {
+        await app.query('ROLLBACK')
+      }
+      assert.equal(await head(), before)
+    }
+    await refused(note, 0, /test:run:note cites entry 0, which this write did not append: an effect follows an entry of its own write/)
+    await refused(note, before + 1, /test:run:note follows no write: an effect is appended in the transaction of the decision it follows/, false)
+    await refused('test:run:stray', before + 1, /test:run:stray may not follow import:run:record: cella.follows registers no such effect/)
+    // No number was used: the next write takes the one after the head.
+    const made = await record({ kind: 'members', name: 'after.csv', dry: true, lines: [] }, as())
+    assert.equal(made.state === 'settled' && made.entry, before + 1)
   } finally {
     await su.query(`DELETE FROM cella.follows WHERE owner = 'e2e'`)
   }

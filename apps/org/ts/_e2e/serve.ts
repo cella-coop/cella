@@ -13,12 +13,15 @@ import { parse } from 'devalue'
 import { fixture, open, signer, type Device, type Json } from '@cella/org-sign'
 
 const entry = new URL('../build/index.js', import.meta.url).pathname
+// The TEST-ONLY crash point a scenario may load into the server.
+const crash = new URL('./crash.ts', import.meta.url).href
 
 export interface Done {
   op: string
   state: string
   entry?: number
   reason?: string
+  forgone?: boolean
   then: Done[]
   spent?: string[]
 }
@@ -49,6 +52,8 @@ export class Shell {
   // device's sign-in opened, and the device that signs their writes.
   #sessions = new Map<string, { cookie: string; device: Device }>()
   su: pg.Client
+  // The signatures the last post asked its device for.
+  signed = 0
 
   constructor(su: pg.Client) {
     this.su = su
@@ -61,9 +66,10 @@ export class Shell {
   // Starts the built server outside dev mode, as a scope's server runs,
   // after setting the notary's date for the app role, which each new
   // connection picks up; `env` adds to its environment, such as a
-  // `DATABASE_URL` logging in as another role. Sessions end with the
-  // server.
-  async start(date: string, env: NodeJS.ProcessEnv = {}) {
+  // `DATABASE_URL` logging in as another role; `crashing`, an op, loads
+  // the crash point, which kills the server once the notary answers that
+  // op's entry. Sessions end with the server.
+  async start(date: string, env: NodeJS.ProcessEnv = {}, crashing?: string) {
     await this.stop()
     await this.su.query(`ALTER ROLE cella_app IN DATABASE ${this.su.escapeIdentifier(this.su.database ?? '')} SET cella.clock = '${date}'`)
     const port = await free()
@@ -72,7 +78,9 @@ export class Shell {
     delete run.DATABASE_URL
     delete run.CELLA_DEV
     delete run.CELLA_SESSION_KEY_FILE
-    this.#server = spawn(process.execPath, [entry], { env: { ...run, ...env }, stdio: ['ignore', 'pipe', 'inherit'] })
+    delete run.CELLA_E2E_CRASH
+    const args = crashing ? ['--import', crash, entry] : [entry]
+    this.#server = spawn(process.execPath, args, { env: { ...run, ...env, ...(crashing ? { CELLA_E2E_CRASH: crashing } : {}) }, stdio: ['ignore', 'pipe', 'inherit'] })
     for (let i = 0; i < 100; i++) {
       try {
         await fetch(`${this.#base}/sign-in`)
@@ -86,7 +94,8 @@ export class Shell {
 
   async stop() {
     const server = this.#server
-    if (server && server.exitCode === null) {
+    // A server that killed itself has exited already.
+    if (server && server.exitCode === null && server.signalCode === null) {
       const exited = new Promise((r) => server.once('exit', r))
       server.kill('SIGKILL')
       await exited
@@ -194,9 +203,11 @@ export class Shell {
   // device signs and the proof goes back to the run it answers.
   async #post(path: string, action: string, body: URLSearchParams | FormData, actor: string): Promise<Done> {
     const s = await this.#session(actor)
+    this.signed = 0
     let result = await this.post(path, action, body, s.cookie)
     while (result.sign) {
       const ask = result.sign
+      this.signed++
       assert.equal(ask.device, s.device.key, 'the server asks the signed-in device to sign')
       const proof = await signer(ask.scope, ask.actor, s.device)(ask.op, ask.request)
       result = await this.post(path, action, new URLSearchParams({ 'cella-run': ask.run, 'cella-proof': JSON.stringify(proof) }), s.cookie)

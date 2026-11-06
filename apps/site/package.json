@@ -4,7 +4,10 @@
   "type": "module",
   "dependencies": {
     "@astrojs/mdx": "8.1.2",
+    "@astrojs/svelte": "9.1.2",
     "@cella/brand": "workspace:*",
+    "@cella/diagrams": "workspace:*",
+    "svelte": "5.57.2",
     "astro": "7.4.7"
   },
   "devDependencies": {

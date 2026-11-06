@@ -5,9 +5,10 @@
 // default worded otherwise, or one taken already, is refused as it is
 // proposed; an ordinary assembly's motion ending one default and
 // replacing another with Lanterne's own marks each left, by its action,
-// on the motion's page, the circle's and in the statutes generated anew;
-// one taking a default with its friendly wording padded or left empty
-// stands taken, and the circle's page marks it Default; and a later
+// on the motion's page, the circle's and in the statutes generated anew,
+// once for each of its four changes; its two taking a default again, one
+// with its friendly wording padded and one with it left empty, stand
+// taken, and the circle's page marks each Default; and a later
 // update of the form marks a default taken as updated, restores none
 // left and changes no policy, its new wording taken only by a motion.
 // Run by `cella test e2e forms`.
@@ -128,6 +129,8 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
         actions: [
           { kind: 'end', args: { policy: 'm-2021-001/48' } },
           { kind: 'policy', args: { kind: 'rule', wording: workShare.replace('25 %', '40 %'), replaces: 'm-2021-001/72' } },
+          { kind: 'policy', args: { kind: 'rule', wording: reserves, friendly: '  At least 15 % of the surplus is kept in reserve.  ', takes: 'scop-sarl-fr:reserves', replaces: 'm-2021-001/73' } },
+          { kind: 'policy', args: { kind: 'mandate', wording: excluding, friendly: '', takes: 'scop-sarl-fr:exclude-member', replaces: 'm-2021-001/49' } },
         ],
       },
       as(camille),
@@ -145,7 +148,8 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
   const then = done('motion:motion:close', closed).then
   const states = (ds: typeof then): string[] => ds.flatMap((d) => [`${d.op} ${d.state} ${d.reason ?? ''}`.trim(), ...states(d.then)])
   assert.ok(states(then).every((s) => s.includes(' settled')), states(then).join('\n'))
-  assert.ok(states(then).includes('document:document:generate settled'))
+  // Its four changes generate the statutes four times, in a row.
+  assert.equal(states(then).filter((s) => s === 'document:document:generate settled').length, 4)
 
   const s = await standing()
   assert.deepEqual(s.get('scop-sarl-fr:suspend-member'), { id: 'scop-sarl-fr:suspend-member', standing: 'left', left_by: `${motion}/1`, left_on: '2026-11-21' })
@@ -177,29 +181,9 @@ test('an ordinary assembly\'s motion leaving two defaults marks each left, by it
 })
 
 test('a policy taking a default with its friendly wording padded or left empty stands taken, and the circle\'s page marks it Default', async () => {
-  const { motion } = settled(
-    await propose(
-      {
-        circle: 'ag',
-        title: 'The reserves and exclusion, as the form words them',
-        deadline: '2026-11-28',
-        body: '',
-        actions: [
-          { kind: 'policy', args: { kind: 'rule', wording: reserves, friendly: '  At least 15 % of the surplus is kept in reserve.  ', takes: 'scop-sarl-fr:reserves', replaces: 'm-2021-001/73' } },
-          { kind: 'policy', args: { kind: 'mandate', wording: excluding, friendly: '', takes: 'scop-sarl-fr:exclude-member', replaces: 'm-2021-001/49' } },
-        ],
-      },
-      as(camille),
-    ),
-  )
-  for (const member of assembly) settled(await vote({ motion, member, stance: 'consent' }, as(member)))
-  await on('2026-11-28')
-  const closed = await close({ motion }, reacting(as(camille)))
-  settled(closed)
-  const then = done('motion:motion:close', closed).then
-  const states = (ds: typeof then): string[] => ds.flatMap((d) => [`${d.op} ${d.state} ${d.reason ?? ''}`.trim(), ...states(d.then)])
-  assert.ok(states(then).every((s) => s.includes(' settled')), states(then).join('\n'))
-
+  // The same motion re-took the reserves with the friendly wording padded,
+  // and exclusion with it empty.
+  const motion = leaving
   // Each is hashed as its wordings are kept, the default's hash.
   assert.deepEqual(
     await all(
@@ -209,24 +193,24 @@ test('a policy taking a default with its friendly wording padded or left empty s
       [motion],
     ),
     [
-      { id: `${motion}/1`, friendly: 'At least 15 % of the surplus is kept in reserve.', as_default: true, as_kept: true },
-      { id: `${motion}/2`, friendly: null, as_default: true, as_kept: true },
+      { id: `${motion}/3`, friendly: 'At least 15 % of the surplus is kept in reserve.', as_default: true, as_kept: true },
+      { id: `${motion}/4`, friendly: null, as_default: true, as_kept: true },
     ],
   )
   assert.deepEqual(
-    await all(`SELECT id, standing, policy FROM policy.standing('ag', '2026-11-28') WHERE id IN ('scop-sarl-fr:reserves', 'scop-sarl-fr:exclude-member') ORDER BY id`),
+    await all(`SELECT id, standing, policy FROM policy.standing('ag', '2026-11-21') WHERE id IN ('scop-sarl-fr:reserves', 'scop-sarl-fr:exclude-member') ORDER BY id`),
     [
-      { id: 'scop-sarl-fr:exclude-member', standing: 'taken', policy: `${motion}/2` },
-      { id: 'scop-sarl-fr:reserves', standing: 'taken', policy: `${motion}/1` },
+      { id: 'scop-sarl-fr:exclude-member', standing: 'taken', policy: `${motion}/4` },
+      { id: 'scop-sarl-fr:reserves', standing: 'taken', policy: `${motion}/3` },
     ],
   )
   // The circle's page marks each Default, never Default since updated.
   const circle = await circles.proposing(app, 'ag')
   assert.deepEqual(
-    circle?.policies.filter((p) => p.motion === motion).map((p) => [p.id, p.takes, p.outdated]),
+    circle?.policies.filter((p) => p.motion === motion && p.takes).map((p) => [p.id, p.takes, p.outdated]),
     [
-      [`${motion}/1`, 'scop-sarl-fr:reserves', false],
-      [`${motion}/2`, 'scop-sarl-fr:exclude-member', false],
+      [`${motion}/3`, 'scop-sarl-fr:reserves', false],
+      [`${motion}/4`, 'scop-sarl-fr:exclude-member', false],
     ],
   )
 })

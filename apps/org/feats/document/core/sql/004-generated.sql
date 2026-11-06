@@ -18,9 +18,9 @@ CREATE TRIGGER permanent BEFORE UPDATE OR DELETE ON document.generated
 -- A version `generate` makes cites one motion; one the seed carries over
 -- cites each motion whose change it first reads, on the one day it reads.
 -- A motion is cited by versions in a row: `document.generates` refuses one
--- a version before the adopted one cites, so a motion's several changes
--- each generate a version, and none is cited again once a later motion's
--- version is adopted.
+-- an earlier version cites unless the adopted one cites it too, so a
+-- motion's several changes each generate a version, however many, and
+-- none is cited again once a later motion's version is adopted.
 CREATE TABLE document.generation (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   document text NOT NULL REFERENCES document.generated,
@@ -48,7 +48,7 @@ BEGIN ATOMIC
 END;
 
 -- document:document:generate — the document is generated; no version of
--- it but the adopted one, the base, cites the motion; the motion adopted
+-- it cites the motion unless the adopted one, the base, does; the motion adopted
 -- a policy of its circle applying on the write's day, or ended one that
 -- day; the version reads the day `document.reads` gives from the base,
 -- never an earlier one; and it reads, each as a line as it reads, every
@@ -94,6 +94,7 @@ BEGIN ATOMIC
   LEFT JOIN LATERAL (
     SELECT c.version FROM document.generation c
     WHERE c.document = p.document AND c.motion = p.motion AND c.version IS DISTINCT FROM p.version AND c.version IS DISTINCT FROM p.base
+      AND NOT EXISTS (SELECT FROM document.generation b WHERE b.version = p.base AND b.motion = p.motion)
     ORDER BY (SELECT cv.n FROM document.version cv WHERE cv.id = c.version) DESC
     LIMIT 1
   ) cited ON true;

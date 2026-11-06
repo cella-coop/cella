@@ -3,7 +3,12 @@ import { leftBy } from '@cella/org-policy'
 import type { Motion, Detail, Effect, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
 import type { Message } from '../models/thread.ts'
 
-const columns = `id, circle, title, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
+// Its author by its grantee's name, a role's or a circle's, or its id
+// where its reader reads neither.
+const columns = `id, circle, author,
+  coalesce((SELECT r.name FROM circle.role r WHERE r.id = motion.author),
+           (SELECT c.name FROM circle.circle c WHERE c.id = motion.author), motion.author) AS "authorName",
+  title, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
 
 // The motions as the collection lists them, open first, then the

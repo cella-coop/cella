@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -25,7 +25,7 @@ Each circle also has a channel for its messages.
 |---|---|---|
 | circle | `id`, `name`, `assembly`, `purpose`, `procedure` | `assembly` marks the general assembly, one circle and only one, which holds every power inherently; no circle contains another; `procedure` names the procedure its motions are decided by where nothing they act under asks another: consent, majority, two thirds or one of the co-op's own, which the motion feat holds and checks |
 | role | `id`, `circle`, `name`, `duty`, `holders?` | `circle` is one circle, or `*` for a role every working circle has; `holders` caps how many hold it at once in a circle, one gérante or one lead a circle, none uncapped; `participant`, built in, is every circle's, the assembly's too |
-| grantee | `id`, `kind` | what a mandate is granted to, and what a procedure's party names ([motion](../../feats/motion/index.md#schema)): a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
+| grantee | `id`, `kind` | what a mandate is granted to, what a procedure's party names and what a motion is proposed as ([motion](../../feats/motion/index.md#schema)): a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
 | mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole co-op; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
 | message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |

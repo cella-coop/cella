@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 # Architecture
@@ -523,7 +523,7 @@ a registry and names none: it is commented `'registry: why'`.
 A graft's schema holds the junction, with keys into each feat's tables; no
 foreign key crosses a feat, and the keys out of a schema are a
 record's owning circle and a grantee, into core's `circle.grantee`, as a
-procedure's party is ([motion](../../apps/org/feats/motion/index.md#schema)). `feat-check` enforces these boundaries by
+procedure's party and a motion's author are ([motion](../../apps/org/feats/motion/index.md#schema)). `feat-check` enforces these boundaries by
 parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;

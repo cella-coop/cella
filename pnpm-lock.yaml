@@ -1622,6 +1622,9 @@ importers:
       astro:
         specifier: 7.4.7
         version: 7.4.7(@types/node@24.19.2)
+      sharp:
+        specifier: 0.35.5
+        version: 0.35.5(@types/node@24.19.2)
       svelte:
         specifier: 5.57.2
         version: 5.57.2

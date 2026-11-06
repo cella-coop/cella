@@ -2,4 +2,6 @@
 // text), so the text places a figure by its name and imports none.
 import Diagram from './Diagram.astro'
 
-export const figures = { Diagram }
+import Photo from './Photo.astro'
+
+export const figures = { Diagram, Photo }

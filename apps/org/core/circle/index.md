@@ -413,9 +413,9 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
 
 The app role and the guards role may select; the app role may insert a
 member or a tenure, through `seat.add`, and end one, through
-`seat.remove`. No action yet makes a role a member of a circle: the
-founding and a mock co-op's fixture do. Lanterne's members and tenures
-are seeded.
+`seat.remove`, and a role's membership of a circle, through
+`role.seat`, and end it, through `role.unseat`. Lanterne's members and
+tenures are seeded, the lead role's seat in coordination among them.
 
 ## Authority
 
@@ -505,6 +505,8 @@ tenure changes who holds the role, never what it holds.
 | `POST /api/circle/message` | confluent | the circle's channel |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
 | `POST /api/circle/seat.remove` | ordered | who holds which role |
+| `POST /api/circle/role.seat` | ordered | where a role's holders sit |
+| `POST /api/circle/role.unseat` | ordered | where a role's holders sit |
 
 A mandate has no action of its own: it is granted and revoked by the
 motion feat's `motion:policy:adopt` and `motion:policy:end`, both
@@ -530,6 +532,13 @@ ordered, which the motion feat extends with core's `granting` and
   mandate stays on the role, and every seat the role brings, as the lead
   role's in coordination, moves to the new holder. Spending writes read
   seats through `membership.may`, so they are ordered.
+- **role.seat** makes a role a member of another circle, from the
+  verdict date, so whoever holds the role sits there, with no role, for
+  the days their tenure runs: the holder of a later tenure sits there
+  with no seat of their own, and one whose tenure ended no longer does.
+  **role.unseat** ends that membership on the verdict date and leaves
+  every tenure of the role standing. Both change who sits where, and so
+  who reads and votes there, so they are ordered.
 
 ## Powers
 
@@ -540,6 +549,8 @@ ordered, which the motion feat extends with core's `granting` and
 | message | `discuss`, held in the circle | the circle's participants |
 | seat.add | `seat-member`, a collective mandate: the motion it cites gives this seat | the assembly, admitting a member; coordination, seating one in a working circle, and the assembly in coordination or itself |
 | seat.remove | `seat-member`, a collective mandate: the motion it cites ends this seat | as seat.add |
+| role.seat | `seat-member`, a collective mandate: the motion it cites seats this role in this circle | as seat.add: coordination, a role in a working circle, and the assembly, a role in coordination |
+| role.unseat | `seat-member`, a collective mandate: the motion it cites ends this role's seat | as seat.add |
 
 A circle is created by the motion it cites, a `circle` action of a
 motion of a circle holding `create-circle`: the guard that judges it is
@@ -556,6 +567,18 @@ active member's and elsewhere any person's whom membership has not
 suspended or let go. An admission gives one, the new member's in the
 motion's circle in its `member` role; a `seat` or `unseat` action
 names any other.
+
+A role is seated in a circle, and unseated, by the motion it cites, a
+`seat-role` or `unseat-role` action naming the circle and the role,
+which membership-motion's guards judge at the proposal and again as it
+is written: the circle and the role are ones there are; the role is
+not the circle's own, whose holders sit there by their tenures, so a
+role of one circle is seated only in another, and a `*` role, held in
+every working circle, in any; a role sits in a circle once, so a
+second seat while one runs is refused; and ending one names a seat the
+role holds there. Each refusal names the role and the circle, and what
+would fix it. Circles and roles have no end of their own, so none is
+refused for having ended.
 
 A mandate's policy is carried by a motion: it cites it, which the
 motion feat checks asks this, was put to a circle
@@ -618,6 +641,11 @@ the message's circle that counts.
   verdict date, and commits the same. The membership-motion graft
   carries out the seats a passing motion gives and ends, as its
   reaction to the close.
+- `seatRole` and `unseatRole` (ordered): insert a membership of the
+  circle whose member is the role, from the verdict date, and end it on
+  the verdict date, touching no tenure; each commits its id, circle,
+  role and the motion it cites. The membership-motion graft carries
+  them out as a passing motion's `seat-role` and `unseat-role` actions.
 
 ## Invariants
 

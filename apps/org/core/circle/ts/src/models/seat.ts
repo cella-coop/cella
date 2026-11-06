@@ -81,3 +81,12 @@ export interface Removed {
   seat: number
   until: string
 }
+
+// A role to seat in another circle, so whoever holds it sits there, and
+// the motion that seats it, which the write cites; ending the seat names
+// it the same way.
+export interface RoleSeat {
+  circle: string
+  role: string
+  motion: string
+}

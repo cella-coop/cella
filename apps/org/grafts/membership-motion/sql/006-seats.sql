@@ -83,6 +83,125 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 
 GRANT SELECT ON membership_motion.seating TO cella_app, cella_guards;
 
+-- circle:role:seat and :unseat cite a motion with the same power: a role
+-- made a member of another circle, so whoever holds it sits there, and
+-- that seat ended, every tenure of the role standing. What a motion may
+-- decide of them, registered so its New form offers them: the circle and
+-- the role.
+SELECT motion.register_cite('circle:role:seat', 'seat-member', 'membership-motion');
+SELECT motion.register_cite('circle:role:unseat', 'seat-member', 'membership-motion');
+SELECT motion.register_carries('seat-role', 'Seat a role in a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "role", "label": "Role", "type": "text"}]', 'circle:role:seat', 'membership-motion');
+SELECT motion.register_carries('unseat-role', 'End a role''s seat', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "role", "label": "Role", "type": "text"}]', 'circle:role:unseat', 'membership-motion');
+
+-- The terms of a role's seat in a circle, judged at the proposal and
+-- again as the seat is written: the circle is one there is, or `made`, one
+-- an earlier action of the same motion creates; the role is one there is;
+-- a seat is never in the role's own circle, where its holders sit by
+-- their tenures, and a role sits in a circle once, the seat `seat`, the
+-- one being written, aside; an unseat names a seat the role holds there.
+CREATE FUNCTION membership_motion.role_terms(kind text, circle text, role text, made boolean, seat bigint) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN c.id IS NULL AND NOT role_terms.made
+      THEN 'no circle ' || coalesce(role_terms.circle, 'is named') || ': a role is seated in a circle there is'
+    WHEN r.id IS NULL
+      THEN 'no role ' || coalesce(role_terms.role, 'is named') || ': a role is seated by the id of one there is'
+    WHEN role_terms.kind = 'seat-role' AND r.circle = role_terms.circle
+      THEN 'the ' || r.id || ' role is ' || r.circle || '''s own, where its holders sit by their tenures: seat it in another circle'
+    WHEN role_terms.kind = 'seat-role' AND o.id IS NOT NULL
+      THEN 'the ' || r.id || ' role sits in ' || role_terms.circle || ' already'
+        || coalesce(', since ' || to_char(o.since, 'YYYY-MM-DD'), '') || ': a role sits in a circle once, so end that seat first'
+    WHEN role_terms.kind = 'unseat-role' AND o.id IS NULL
+      THEN 'the ' || r.id || ' role holds no seat in ' || role_terms.circle || ' to end'
+  END
+  FROM (SELECT role_terms.circle AS circle, role_terms.role AS role) p
+  LEFT JOIN circle.circle c ON c.id = p.circle
+  LEFT JOIN circle.role r ON r.id = p.role
+  LEFT JOIN LATERAL (
+    SELECT m.id, m.since FROM circle.member m
+    WHERE m.circle = p.circle AND m.role = p.role AND m.id IS DISTINCT FROM role_terms.seat
+      AND (m.until IS NULL OR m.until > cella.verdict_date())
+    ORDER BY m.id
+    LIMIT 1
+  ) o ON true;
+END;
+
+-- motion:motion:propose — a role seated in a circle or unseated is the
+-- motion of a circle that may decide who sits there (`motion.decides`),
+-- on the terms `role_terms` judges.
+CREATE FUNCTION membership_motion.role_asks(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT r FROM (
+    SELECT coalesce(
+      membership_motion.role_terms(g.kind, g.circle, g.role, g.made, NULL),
+      CASE WHEN NOT g.made AND NOT motion.decides(d.circle, g.circle)
+        THEN d.circle || ' may not decide who sits in ' || g.circle END
+    ) AS r
+    FROM (
+      SELECT m.motion, m.n, m.kind, m.args ->> 'circle' AS circle, m.args ->> 'role' AS role,
+             EXISTS (
+               SELECT FROM motion.action o
+               WHERE o.motion = m.motion AND o.n < m.n AND o.kind = 'circle' AND o.args ->> 'id' = m.args ->> 'circle'
+             ) AS made
+      FROM motion.action m
+      WHERE m.motion = payload ->> 'motion' AND m.kind IN ('seat-role', 'unseat-role')
+    ) g
+    JOIN motion.motion d ON d.id = g.motion
+    ORDER BY g.n
+  ) x
+  WHERE r IS NOT NULL
+  LIMIT 1;
+END;
+
+-- circle:role:seat — the seat is a role's membership this write added
+-- from the verdict date, which the cited motion gives, on its terms.
+CREATE FUNCTION membership_motion.seats_role(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN s.id IS NULL OR s.role IS NULL THEN 'no seat of a role ' || coalesce(p.seat::text, 'is named')
+    WHEN s.since IS DISTINCT FROM cella.verdict_date() OR s.until IS NOT NULL
+      THEN 'seat ' || s.id || ' was not added by this write'
+    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
+    WHEN NOT EXISTS (
+      SELECT FROM motion.action m
+      WHERE m.motion = d.id AND m.kind = 'seat-role' AND m.args ->> 'circle' = s.circle AND m.args ->> 'role' = s.role
+    ) THEN d.id || ' does not seat the ' || s.role || ' role in ' || s.circle
+    ELSE membership_motion.role_terms('seat-role', s.circle, s.role, false, s.id)
+  END
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'motion' AS motion) p
+  LEFT JOIN circle.member s ON s.id = p.seat
+  LEFT JOIN motion.motion d ON d.id = p.motion;
+END;
+
+-- circle:role:unseat — the role's seat ended on the verdict date, and the
+-- cited motion ends it.
+CREATE FUNCTION membership_motion.unseats_role(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN s.id IS NULL OR s.role IS NULL
+      THEN 'the ' || coalesce(p.role, 'no') || ' role holds no seat in ' || coalesce(p.circle, 'no circle') || ' to end'
+    WHEN s.until IS DISTINCT FROM cella.verdict_date() THEN 'seat ' || s.id || ' was not ended by this write'
+    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
+    WHEN NOT EXISTS (
+      SELECT FROM motion.action m
+      WHERE m.motion = d.id AND m.kind = 'unseat-role' AND m.args ->> 'circle' = s.circle AND m.args ->> 'role' = s.role
+    ) THEN d.id || ' does not end the ' || s.role || ' role''s seat in ' || s.circle
+  END
+  FROM (SELECT (payload ->> 'seat')::bigint AS seat, payload ->> 'circle' AS circle,
+               payload ->> 'role' AS role, payload ->> 'motion' AS motion) p
+  LEFT JOIN circle.member s ON s.id = p.seat
+  LEFT JOIN motion.motion d ON d.id = p.motion;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('motion:motion:propose', 'membership_motion.role_asks(jsonb)', 'membership-motion'),
+  ('circle:role:seat', 'membership_motion.seats_role(jsonb)', 'membership-motion'),
+  ('circle:role:unseat', 'membership_motion.unseats_role(jsonb)', 'membership-motion');
+
 -- circle:circle:create — the circle the write made is one the cited
 -- motion creates, by its id, name and purpose, and its entry names the
 -- default bundle in force on the verdict date (`circle.bundle`), the

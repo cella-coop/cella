@@ -138,7 +138,7 @@ test('October\'s run waits for every worker\'s approved month', async () => {
   await on('2026-11-02')
   const early = await generate({ month: '2026-10' }, as(julien))
   assert.equal(early.state, 'refused')
-  assert.match(reason(early), /2026-10 is open, not approved: the run waits for it/)
+  assert.match(reason(early), /2026-10 in web is open, not approved: the run waits for it/)
 })
 
 test('once every October is approved, Julien prepares the run from the approved time, Inès\'s with the members\'', async () => {
@@ -146,12 +146,15 @@ test('once every October is approved, Julien prepares the run from the approved 
   // no member, and holds no mandate.
   const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary WHERE "from" <= '2026-10-01' GROUP BY member ORDER BY member`)).map((r) => r.member)
   for (const m of members) {
-    const submitted = await submitTime({ member: m, month: '2026-10' }, as(m))
-    assert.equal(submitted.state, 'settled', reason(submitted))
-    // The gérante approves time over the assembly, where everyone sits;
-    // her own month, Brand's lead.
-    const approved = await approveTime({ member: m, month: '2026-10' }, as(m === camille ? hugo : camille))
-    assert.equal(approved.state, 'settled', reason(approved))
+    // A month of each circle the worker logged October's time for.
+    for (const { circle } of await all<{ circle: string }>(`SELECT circle FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
+      const submitted = await submitTime({ member: m, month: '2026-10', circle }, as(m))
+      assert.equal(submitted.state, 'settled', reason(submitted))
+      // The gérante approves time over the assembly, where everyone sits;
+      // her own month, Brand's lead.
+      const approved = await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? hugo : camille))
+      assert.equal(approved.state, 'settled', reason(approved))
+    }
   }
   const run = await generate({ month: '2026-10' }, as(julien))
   assert.equal(run.state, 'settled', reason(run))

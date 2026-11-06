@@ -1,9 +1,9 @@
 // The timesheets alone, on a database holding only the app's core and
-// this feat: an entry makes its member's month, is corrected only by
-// lowering its time, an approved month takes no entry nor correction and
-// stays approved, only a submitted month is approved, and the guards refuse
-// what is not the actor's own. Run by `cella test slice
-// timesheet`.
+// this feat: an entry makes its member's month in its circle, is corrected
+// only by lowering its time, an approved month takes no entry nor
+// correction and stays approved, another circle's month stays open, only a
+// submitted month is approved, and the guards refuse what is not the
+// actor's own. Run by `cella test slice timesheet`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -89,7 +89,7 @@ test('an entry is corrected by lowering its time, to none, and the sheet reads w
 test('only a submitted month is approved', async () => {
   await refused(
     () => db.query(`UPDATE timesheet.period SET approved = '2026-11-02', approver = 'yusuf@lanterne.example' WHERE member = $1`, [lea]),
-    /lea@lanterne.example's 2026-10 is not submitted/,
+    /lea@lanterne.example's 2026-10 in \S+ is not submitted/,
   )
 })
 
@@ -99,16 +99,33 @@ test('an approved month takes no new entry, and stays approved', async () => {
     `UPDATE timesheet.period SET approved = '2026-11-02', approver = 'yusuf@lanterne.example' WHERE member = $1 AND month = '2026-10'`,
     [lea],
   )
-  await refused(() => log('2026-10-30', 2), /lea@lanterne.example's 2026-10 was approved on 2026-11-02: it takes no new entries/)
+  await refused(() => log('2026-10-30', 2), /lea@lanterne.example's 2026-10 in \S+ was approved on 2026-11-02: it takes no new entries/)
   await refused(
     () => db.query(`UPDATE timesheet.period SET submitted = '2026-11-03' WHERE member = $1 AND month = '2026-10'`, [lea]),
     /was approved on 2026-11-02/,
   )
   await refused(
     () => db.query(`UPDATE timesheet.entry SET minutes = 60 WHERE member = $1 AND day = '2026-10-12'`, [lea]),
-    /lea@lanterne.example's 2026-10 was approved on 2026-11-02: its entries stand/,
+    /lea@lanterne.example's 2026-10 in \S+ was approved on 2026-11-02: its entries stand/,
   )
   await log('2026-11-02', 7)
+})
+
+test('time for another circle is a month of its own: open while the root\'s is approved, and an entry keeps its circle', async () => {
+  await db.query(`INSERT INTO circle.circle (id, name) VALUES ('web', 'Web')`)
+  await db.query(`INSERT INTO timesheet.entry (member, day, minutes, circle) VALUES ($1, '2026-10-30', 120, 'web')`, [lea])
+  const { rows } = await db.query(
+    `SELECT circle = 'web' AS web, hours::float8 AS hours, entries, state FROM timesheet.sheet WHERE member = $1 AND month = '2026-10' ORDER BY circle = 'web'`,
+    [lea],
+  )
+  assert.deepEqual(rows, [
+    { web: false, hours: 7, entries: 2, state: 'approved' },
+    { web: true, hours: 2, entries: 1, state: 'open' },
+  ])
+  await refused(
+    () => db.query(`UPDATE timesheet.entry SET circle = circle.assembly() WHERE member = $1 AND circle = 'web'`, [lea]),
+    /is corrected only by lowering its time/,
+  )
 })
 
 test('outside a write the guards judge no one\'s time their own', async () => {
@@ -117,7 +134,7 @@ test('outside a write the guards judge no one\'s time their own', async () => {
   assert.equal(await guard('corrects', { entry: '0', minutes: 0 }), 'no entry 0')
   assert.match((await guard('submits', { member: lea, month: '2026-11' })) ?? '', /may not submit lea@lanterne.example's time/)
   assert.match((await guard('approves', { member: lea, month: '2026-10' })) ?? '', /was not approved by this write/)
-  assert.equal(await guard('approves', { member: lea, month: '2025-01' }), 'no timesheet lea@lanterne.example 2025-01')
+  assert.match((await guard('approves', { member: lea, month: '2025-01' })) ?? '', /^no timesheet lea@lanterne.example 2025-01 in \S+$/)
 })
 
 test('as the app role, a member reads their own entries, months and sheets; whoever approves time, everyone\'s; no one signed in, none', async () => {

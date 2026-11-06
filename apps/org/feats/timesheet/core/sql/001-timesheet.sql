@@ -1,8 +1,8 @@
 CREATE SCHEMA timesheet;
 
--- A member's timesheet for a month: open until they submit it, closed to
--- new entries once approved. The row is made by the first entry of the
--- month, or by the submit.
+-- A member's timesheet for a month in a circle: open until they submit
+-- it, closed to new entries once approved. The row is made by the first
+-- entry of the month in its circle, or by the submit.
 CREATE TABLE timesheet.period (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   member text NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE timesheet.period (
   submitted date,
   approved date,
   approver text,
-  PRIMARY KEY (member, month),
+  PRIMARY KEY (member, month, circle),
   CHECK ((approved IS NULL) = (approver IS NULL))
 );
 
@@ -40,20 +40,22 @@ CREATE FUNCTION timesheet.period_end(month text) RETURNS date
 LANGUAGE sql IMMUTABLE
 RETURN (to_date(month || '-01', 'YYYY-MM-DD') + interval '1 month')::date;
 
--- No entry goes into an approved period. The period row is made if the
--- entry is its first, in the circle the entry names, then read FOR SHARE,
--- and `timesheet:period:approve` updates it, so a log and a concurrent
--- approval are serialised: the approval waits for the log, or the log
--- sees the approval.
+-- No entry goes into an approved period. An entry's period is the month
+-- of its member in the circle it names, made if the entry is its first
+-- there, then read FOR SHARE, and `timesheet:period:approve` updates it,
+-- so a log and a concurrent approval are serialised: the approval waits
+-- for the log, or the log sees the approval. Another circle's month is
+-- another row, which neither waits on nor closes.
 CREATE FUNCTION timesheet.open_period() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   period text := timesheet.month_of(NEW.day);
   approved date;
 BEGIN
   INSERT INTO timesheet.period (circle, member, month) VALUES (NEW.circle, NEW.member, period) ON CONFLICT DO NOTHING;
-  SELECT p.approved INTO approved FROM timesheet.period p WHERE p.member = NEW.member AND p.month = period FOR SHARE;
+  SELECT p.approved INTO approved FROM timesheet.period p
+  WHERE p.member = NEW.member AND p.month = period AND p.circle = NEW.circle FOR SHARE;
   IF approved IS NOT NULL THEN
-    RAISE EXCEPTION '%''s % was approved on %: it takes no new entries', NEW.member, period, approved
+    RAISE EXCEPTION '%''s % in % was approved on %: it takes no new entries', NEW.member, period, NEW.circle, approved
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;
@@ -68,11 +70,11 @@ CREATE TRIGGER open_period BEFORE INSERT ON timesheet.entry
 CREATE FUNCTION timesheet.stays_approved() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF OLD.approved IS NOT NULL THEN
-    RAISE EXCEPTION '%''s % was approved on %', OLD.member, OLD.month, OLD.approved
+    RAISE EXCEPTION '%''s % in % was approved on %', OLD.member, OLD.month, OLD.circle, OLD.approved
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   IF NEW.approved IS NOT NULL AND NEW.submitted IS NULL THEN
-    RAISE EXCEPTION '%''s % is not submitted', NEW.member, NEW.month
+    RAISE EXCEPTION '%''s % in % is not submitted', NEW.member, NEW.month, NEW.circle
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;
@@ -82,16 +84,17 @@ $$;
 CREATE TRIGGER stays_approved BEFORE UPDATE ON timesheet.period
   FOR EACH ROW EXECUTE FUNCTION timesheet.stays_approved();
 
--- Each period's hours, billable and not, and where it stands.
+-- Each period's hours, billable and not, and where it stands: the
+-- entries of its circle, member and month.
 CREATE VIEW timesheet.sheet AS
-SELECT p.member, p.month, p.submitted, p.approved, p.approver,
+SELECT p.circle, p.member, p.month, p.submitted, p.approved, p.approver,
        (coalesce(sum(e.minutes), 0) / 60.0)::numeric(6, 2) AS hours,
        (coalesce(sum(e.minutes) FILTER (WHERE e.billable), 0) / 60.0)::numeric(6, 2) AS billable,
        count(e.id)::integer AS entries,
        CASE WHEN p.approved IS NOT NULL THEN 'approved' WHEN p.submitted IS NOT NULL THEN 'submitted' ELSE 'open' END AS state
 FROM timesheet.period p
-LEFT JOIN timesheet.entry e ON e.member = p.member AND timesheet.month_of(e.day) = p.month
-GROUP BY p.member, p.month, p.submitted, p.approved, p.approver;
+LEFT JOIN timesheet.entry e ON e.member = p.member AND timesheet.month_of(e.day) = p.month AND e.circle = p.circle
+GROUP BY p.circle, p.member, p.month, p.submitted, p.approved, p.approver;
 
 -- timesheet:entry:log — an entry is the actor's own time, on a day that
 -- has come.
@@ -105,35 +108,36 @@ BEGIN ATOMIC
   FROM (SELECT payload ->> 'member' AS member, (payload ->> 'day')::date AS day) w;
 END;
 
--- timesheet:period:submit — a member submits their own period, and one
--- with time in it.
+-- timesheet:period:submit — a member submits their own period in the
+-- circle the payload names, and one with time in it.
 CREATE FUNCTION timesheet.submits(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
     WHEN w.member IS DISTINCT FROM cella.actor() THEN coalesce(cella.actor(), 'no one') || ' may not submit ' || coalesce(w.member, 'no one') || '''s time'
-    WHEN s.member IS NULL OR s.submitted IS NULL THEN w.member || '''s ' || w.month || ' was not submitted by this write'
-    WHEN s.entries = 0 THEN w.member || '''s ' || w.month || ' has no time in it'
+    WHEN s.member IS NULL OR s.submitted IS NULL THEN w.member || '''s ' || w.month || ' in ' || w.circle || ' was not submitted by this write'
+    WHEN s.entries = 0 THEN w.member || '''s ' || w.month || ' in ' || w.circle || ' has no time in it'
   END
-  FROM (SELECT payload ->> 'member' AS member, payload ->> 'month' AS month) w
-  LEFT JOIN timesheet.sheet s ON s.member = w.member AND s.month = w.month;
+  FROM (SELECT payload ->> 'member' AS member, payload ->> 'month' AS month, coalesce(payload ->> 'circle', circle.assembly()) AS circle) w
+  LEFT JOIN timesheet.sheet s ON s.member = w.member AND s.month = w.month AND s.circle = w.circle;
 END;
 
--- timesheet:period:approve — the write approved a submitted period on the
--- verdict date, after its month ended, as someone other than its member.
+-- timesheet:period:approve — the write approved a submitted period of the
+-- circle the payload names on the verdict date, after its month ended, as
+-- someone other than its member.
 CREATE FUNCTION timesheet.approves(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT CASE
-    WHEN p.member IS NULL THEN 'no timesheet ' || coalesce(w.member, '?') || ' ' || coalesce(w.month, '?')
+    WHEN p.member IS NULL THEN 'no timesheet ' || coalesce(w.member, '?') || ' ' || coalesce(w.month, '?') || ' in ' || w.circle
     WHEN p.approved IS DISTINCT FROM cella.verdict_date() OR p.approver IS DISTINCT FROM cella.actor()
-      THEN p.member || '''s ' || p.month || ' was not approved by this write'
+      THEN p.member || '''s ' || p.month || ' in ' || p.circle || ' was not approved by this write'
     WHEN p.approver = p.member THEN p.member || ' may not approve their own time'
     WHEN p.approved < timesheet.period_end(p.month)
       THEN p.month || ' runs until ' || to_char(timesheet.period_end(p.month) - 1, 'YYYY-MM-DD')
   END
-  FROM (SELECT payload ->> 'member' AS member, payload ->> 'month' AS month) w
-  LEFT JOIN timesheet.period p ON p.member = w.member AND p.month = w.month;
+  FROM (SELECT payload ->> 'member' AS member, payload ->> 'month' AS month, coalesce(payload ->> 'circle', circle.assembly()) AS circle) w
+  LEFT JOIN timesheet.period p ON p.member = w.member AND p.month = w.month AND p.circle = w.circle;
 END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES

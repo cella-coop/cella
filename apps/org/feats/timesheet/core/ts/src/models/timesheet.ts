@@ -4,9 +4,11 @@ export type State = (typeof states)[number]
 // An entry, with where its period stands.
 export interface Entry {
   id: string
+  // The circle its time is worked for, whose month it is in.
+  circle: string
   member: string
   day: string
-  // The month of its period, `YYYY-MM`.
+  // The month of its period, `YYYY-MM`, in its circle.
   month: string
   hours: number
   billable: boolean
@@ -20,8 +22,9 @@ export interface Listed extends Omit<Entry, 'billable'> {
   billable: 'billable' | 'internal'
 }
 
-// A member's month: its hours and where it stands.
+// A member's month in a circle: its hours and where it stands.
 export interface Sheet {
+  circle: string
   member: string
   month: string
   hours: number
@@ -46,7 +49,7 @@ export interface Log {
   billable: boolean
   note?: string
   // The circle the time is worked for, its owning circle; the root's where
-  // none is named. A month takes the circle of its first entry.
+  // none is named. The entry goes into its member's month of that circle.
   circle?: string
 }
 
@@ -72,9 +75,13 @@ export interface Corrected extends Correct {
   day: string | null
 }
 
+// A member's month in a circle, its owning circle, which the guard reads
+// a mandate's scope against: each circle's month is submitted and
+// approved apart.
 export interface Period {
   member: string
   month: string
+  circle: string
 }
 
 export interface Submitted extends Period {
@@ -82,8 +89,5 @@ export interface Submitted extends Period {
 }
 
 export interface Approved extends Period {
-  // The month's owning circle, which the guard reads the approve-time
-  // mandate's scope against.
-  circle: string
   approved: string
 }

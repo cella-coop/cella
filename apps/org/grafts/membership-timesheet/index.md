@@ -1,6 +1,6 @@
 +++
 title = "membership-timesheet"
-updated = 2026-11-04
+updated = 2026-11-06
 +++
 
 A member's time, as the members see it: none is a suspended or former
@@ -26,18 +26,21 @@ no view and no write of its own, and has no client or server package.
 ## Circles
 
 Whose time a power covers is the month's owning circle, the circle its
-time is worked for, which its first entry names
+time is worked for: a member's month is one per circle, holding only
+that circle's entries
 ([timesheet](../../feats/timesheet/index.md#schema)), and the
 membership feat's one guard reads it, as it reads every record's
 ([membership](../../feats/person/feats/membership/index.md#seats)): a
-lead approves the months of their own circle by a mandate on `own`, and
-no slice checks a worker's seats again.
+lead approves the months of their own circle by a mandate on `own`, is
+refused a month of another circle the same member worked for, and no
+slice checks a worker's seats again.
 
 In the shell, the graft adds to the acting member's inbox each month
 submitted and not yet approved, of someone else, that they may approve
 today by the same test as the guard: holding `approve-time` by a
-mandate covering the month's circle (`membership.may`); linking to the
-person's page, which approves it. In Lanterne, Yusuf, Web's lead,
+mandate covering the month's circle (`membership.may`), a row for each
+circle's month, naming the circle; linking to the person's page, which
+approves it. In Lanterne, Yusuf, Web's lead,
 approves Thomas's month, and Inès's, Web's; Hugo, Brand's, is refused
 them; Camille, the gérante, seated in the assembly by a mandate on the
 whole co-op, approves anyone's, and so does Julien, seated there as

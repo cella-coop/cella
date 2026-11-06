@@ -208,10 +208,10 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
   for (const m of salaried) {
     // A day of November logged, so each month has time in it.
     settled(await log({ member: m, day: '2026-11-30', minutes: 420, billable: false }, as(m)))
-    settled(await submitTime({ member: m, month: '2026-11' }, as(m)))
-    // Logged naming no circle, each month is the root's, which Julien's
-    // approve-time, as treasurer on the whole co-op, covers.
-    settled(await approveTime({ member: m, month: '2026-11' }, as(m === julien ? camille : julien)))
+    settled(await submitTime({ member: m, month: '2026-11', circle: 'ag' }, as(m)))
+    // Logged naming no circle, each month is the root's, the assembly's,
+    // which Julien's approve-time, as treasurer on the whole co-op, covers.
+    settled(await approveTime({ member: m, month: '2026-11', circle: 'ag' }, as(m === julien ? camille : julien)))
   }
   const run = settled(await generate({ month: '2026-11' }, as(julien)))
   assert.equal(run.payslips, 11)

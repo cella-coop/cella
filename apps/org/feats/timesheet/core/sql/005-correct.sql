@@ -23,21 +23,21 @@ CREATE TRIGGER some_time BEFORE INSERT ON timesheet.entry
   FOR EACH ROW EXECUTE FUNCTION timesheet.some_time();
 
 -- An entry changes only by lowering its time, and only while its month is
--- not approved: the period is read FOR SHARE, as a log reads it, so a
--- correction and a concurrent approval are serialised.
+-- not approved: the period of its circle is read FOR SHARE, as a log
+-- reads it, so a correction and a concurrent approval are serialised.
 CREATE FUNCTION timesheet.lowers() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   approved date;
 BEGIN
-  IF (NEW.id, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.member, OLD.day, OLD.billable, OLD.note)
+  IF (NEW.id, NEW.circle, NEW.member, NEW.day, NEW.billable, NEW.note) IS DISTINCT FROM (OLD.id, OLD.circle, OLD.member, OLD.day, OLD.billable, OLD.note)
     OR NEW.minutes > OLD.minutes THEN
     RAISE EXCEPTION 'entry % is corrected only by lowering its time', OLD.id
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   SELECT p.approved INTO approved FROM timesheet.period p
-  WHERE p.member = OLD.member AND p.month = timesheet.month_of(OLD.day) FOR SHARE;
+  WHERE p.member = OLD.member AND p.month = timesheet.month_of(OLD.day) AND p.circle = OLD.circle FOR SHARE;
   IF approved IS NOT NULL THEN
-    RAISE EXCEPTION '%''s % was approved on %: its entries stand', OLD.member, timesheet.month_of(OLD.day), approved
+    RAISE EXCEPTION '%''s % in % was approved on %: its entries stand', OLD.member, timesheet.month_of(OLD.day), OLD.circle, approved
       USING ERRCODE = 'triggered_action_exception';
   END IF;
   RETURN NEW;
@@ -50,14 +50,14 @@ CREATE TRIGGER lowers BEFORE UPDATE ON timesheet.entry
 -- A month's entries count those with time in them: one corrected to none
 -- is in the log, not in the month.
 CREATE OR REPLACE VIEW timesheet.sheet AS
-SELECT p.member, p.month, p.submitted, p.approved, p.approver,
+SELECT p.circle, p.member, p.month, p.submitted, p.approved, p.approver,
        (coalesce(sum(e.minutes), 0) / 60.0)::numeric(6, 2) AS hours,
        (coalesce(sum(e.minutes) FILTER (WHERE e.billable), 0) / 60.0)::numeric(6, 2) AS billable,
        (count(e.id) FILTER (WHERE e.minutes > 0))::integer AS entries,
        CASE WHEN p.approved IS NOT NULL THEN 'approved' WHEN p.submitted IS NOT NULL THEN 'submitted' ELSE 'open' END AS state
 FROM timesheet.period p
-LEFT JOIN timesheet.entry e ON e.member = p.member AND timesheet.month_of(e.day) = p.month
-GROUP BY p.member, p.month, p.submitted, p.approved, p.approver;
+LEFT JOIN timesheet.entry e ON e.member = p.member AND timesheet.month_of(e.day) = p.month AND e.circle = p.circle
+GROUP BY p.circle, p.member, p.month, p.submitted, p.approved, p.approver;
 
 ALTER VIEW timesheet.sheet SET (security_invoker = true);
 

@@ -287,17 +287,31 @@ test('coordination grants the finance role send-quote by motion, under the send-
 
 test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusuf, Web\'s lead, may', async () => {
   await on('2026-11-02')
-  settled(await log({ member: thomas, day: '2026-10-30', minutes: 420, billable: true }, as(thomas)))
-  settled(await submit({ member: thomas, month: '2026-10' }, as(thomas)))
-  const astray = await approve({ member: thomas, month: '2026-10' }, as(hugo))
+  settled(await log({ member: thomas, day: '2026-10-30', minutes: 420, billable: true, circle: 'web' }, as(thomas)))
+  settled(await submit({ member: thomas, month: '2026-10', circle: 'web' }, as(thomas)))
+  const astray = await approve({ member: thomas, month: '2026-10', circle: 'web' }, as(hugo))
   assert.match(reason(astray), /hugo@lanterne\.example holds approve-time by no mandate covering web's records/)
-  settled(await approve({ member: thomas, month: '2026-10' }, as(yusuf)))
+  settled(await approve({ member: thomas, month: '2026-10', circle: 'web' }, as(yusuf)))
+})
+
+test('Thomas\'s time for Brand in October is a month of its own: Web\'s approved takes no more Web time and Brand\'s stays open, which Yusuf is refused and Hugo approves', async () => {
+  settled(await log({ member: thomas, day: '2026-10-29', minutes: 60, billable: false, circle: 'brand' }, as(thomas)))
+  assert.deepEqual(await all(`SELECT circle, state, hours::float8 AS hours FROM timesheet.sheet WHERE member = $1 AND month = '2026-10' ORDER BY circle`, [thomas]), [
+    { circle: 'brand', state: 'open', hours: 1 },
+    { circle: 'web', state: 'approved', hours: (await one<{ h: number }>(`SELECT (sum(minutes) / 60.0)::float8 AS h FROM timesheet.entry WHERE member = $1 AND circle = 'web' AND to_char(day, 'YYYY-MM') = '2026-10'`, [thomas])).h },
+  ])
+  const late = await log({ member: thomas, day: '2026-10-29', minutes: 60, billable: true, circle: 'web' }, as(thomas))
+  assert.match(reason(late), /thomas@lanterne\.example's 2026-10 in web was approved on 2026-11-02: it takes no new entries/)
+  settled(await submit({ member: thomas, month: '2026-10', circle: 'brand' }, as(thomas)))
+  const astray = await approve({ member: thomas, month: '2026-10', circle: 'brand' }, as(yusuf))
+  assert.match(reason(astray), /yusuf@lanterne\.example holds approve-time by no mandate covering brand's records/)
+  settled(await approve({ member: thomas, month: '2026-10', circle: 'brand' }, as(hugo)))
 })
 
 test('Julien, seated in the assembly as treasurer, approves Amina\'s time, which is Web\'s', async () => {
-  settled(await log({ member: amina, day: '2026-10-30', minutes: 300, billable: true }, as(amina)))
-  settled(await submit({ member: amina, month: '2026-10' }, as(amina)))
-  settled(await approve({ member: amina, month: '2026-10' }, as(julien)))
+  settled(await log({ member: amina, day: '2026-10-30', minutes: 300, billable: true, circle: 'web' }, as(amina)))
+  settled(await submit({ member: amina, month: '2026-10', circle: 'web' }, as(amina)))
+  settled(await approve({ member: amina, month: '2026-10', circle: 'web' }, as(julien)))
 })
 
 test('a grant no circle holds a mandate to issue under is put to the assembly: coordination and Brand, holding adopt-policy and no approve-expense, are passed over, and the assembly grants finance one as a root', async () => {

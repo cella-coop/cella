@@ -2,7 +2,8 @@ import type { Sheet } from '@cella/org-timesheet/models'
 
 // A worker's month, with who approved it by name.
 export interface Month extends Sheet {
-  // The month, a row's key.
+  // The month and its circle, `YYYY-MM/<circle>`, a row's key and what
+  // the submit and approve forms send.
   id: string
   approver_name: string | null
 }

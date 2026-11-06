@@ -98,17 +98,15 @@ export async function work(db, read, day) {
   }
   for (const p of time.period ?? []) {
     await db.query(
-      `INSERT INTO timesheet.period (member, month, submitted) VALUES ($1, $2, $3)
-       ON CONFLICT (member, month) DO UPDATE SET submitted = excluded.submitted`,
-      [p.member, p.month, day(p.submitted)],
+      `INSERT INTO timesheet.period (member, month, circle, submitted) VALUES ($1, $2, coalesce($3, circle.assembly()), $4)
+       ON CONFLICT (member, month, circle) DO UPDATE SET submitted = excluded.submitted`,
+      [p.member, p.month, p.circle ?? null, day(p.submitted)],
     )
     if (p.approved) {
-      await db.query('UPDATE timesheet.period SET approved = $3, approver = $4 WHERE member = $1 AND month = $2', [
-        p.member,
-        p.month,
-        day(p.approved),
-        p.approver,
-      ])
+      await db.query(
+        'UPDATE timesheet.period SET approved = $4, approver = $5 WHERE member = $1 AND month = $2 AND circle = coalesce($3, circle.assembly())',
+        [p.member, p.month, p.circle ?? null, day(p.approved), p.approver],
+      )
     }
   }
 

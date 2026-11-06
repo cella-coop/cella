@@ -1,6 +1,6 @@
 +++
 title = "employment-timesheet"
-updated = 2026-11-02
+updated = 2026-11-06
 +++
 
 Whose time is, by one's employment. A worker logs, corrects and submits
@@ -17,8 +17,8 @@ months by name. Declared by `timesheet`.
   worker's entry falls on a day of their employment, never before their
   hire nor after they leave. An entry of no worker's, a member who is not
   employed, is membership-timesheet's to judge.
-- `employment_timesheet.sheet`: each worker's months by name, and who
-  approved each.
+- `employment_timesheet.sheet`: each worker's months by name, one for
+  each circle they worked for, and who approved each.
 
 The graft has no action of its own: logging, correcting, submitting and
 approving are the timesheet feat's.
@@ -37,9 +37,10 @@ members, and the guard on the feat's log. Whose the actor is, the
 ## Shell
 
 Adds each entry's worker by name to the timesheets collection, and the
-hours by worker to the dashboard; to a person's page, their months,
-submitting their own and approving someone else's, the timesheet feat's
-writes.
+hours by worker to the dashboard; to a person's page, their months, a
+row for each circle's, submitting their own and approving someone
+else's, the timesheet feat's writes. Its forms name a month as its row
+is keyed, `YYYY-MM/<circle>`, so a write names the month's circle.
 
 ## Lanterne
 

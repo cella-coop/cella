@@ -21,10 +21,10 @@ export const log = (form: Form, member: string): Log => ({
   note: form.get('note') || undefined,
 })
 
-// The period an entry's page acts on: its member's month.
+// The period an entry's page acts on: its member's month in its circle.
 export async function period(db: Db, entry: string | undefined): Promise<Period> {
   const { rows } = await db.query<Period>(
-    'SELECT member, timesheet.month_of(day) AS month FROM timesheet.entry WHERE id::text = $1',
+    'SELECT member, timesheet.month_of(day) AS month, circle FROM timesheet.entry WHERE id::text = $1',
     [entry ?? ''],
   )
   if (!rows[0]) {

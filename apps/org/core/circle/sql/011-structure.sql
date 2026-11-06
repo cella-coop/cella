@@ -2,7 +2,8 @@
 -- mandates, rights and open books' values, the members and the tenures,
 -- and the register of policies are the members of the scope's. A member
 -- reads every row; anyone else signed in, their own seats, the
--- circles and roles they name, and the mandates on those roles; no one
+-- circles and roles they name, the mandates on those roles and the
+-- parts the co-op publishes by motion; no one
 -- signed in, none. A write's
 -- transaction and a superuser's session read the whole, and the guards
 -- role every row.
@@ -45,6 +46,22 @@ RETURN ARRAY(
   SELECT unnest(circle.held())
   ORDER BY 1
 );
+-- Whether the co-op publishes a part of its structure to the reader, who
+-- is signed in: the latest publication in force on the verdict date
+-- names it. It runs as its owner, as `inside` does, and says no more than
+-- whether.
+CREATE FUNCTION circle.published(part text) RETURNS boolean
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+RETURN cella.reader() IS NOT NULL AND coalesce((
+  SELECT published.part = ANY (o.parts) FROM circle.publication o
+  WHERE o."from" <= cella.verdict_date()
+    AND (o.until IS NULL OR o.until > cella.verdict_date())
+    AND (o.revoked IS NULL OR o.revoked > cella.verdict_date())
+  ORDER BY o."from" DESC, o.id DESC
+  LIMIT 1
+), false);
+
 -- The assembly an application is made to, its name and the procedure
 -- that decides it, which a person reads before they are a member.
 CREATE FUNCTION circle.applied() RETURNS TABLE (id text, name text, procedure text)
@@ -55,43 +72,49 @@ BEGIN ATOMIC
 END;
 COMMENT ON FUNCTION circle.applied() IS 'audience: shared: whoever may apply reads the assembly they apply to, its name and the procedure that decides an application, and nothing of who sits in it';
 
-REVOKE EXECUTE ON FUNCTION circle.inside(), circle.held(), circle.own(), circle.applied() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION circle.inside(), circle.held(), circle.own(), circle.applied() TO cella_app, cella_guards;
+REVOKE EXECUTE ON FUNCTION circle.inside(), circle.held(), circle.own(), circle.published(text), circle.applied() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION circle.inside(), circle.held(), circle.own(), circle.published(text), circle.applied() TO cella_app, cella_guards;
 
 -- Every table of the structure under row-level security, enabled and
 -- forced: `structure` for the app role, which reads the whole in a
--- write's transaction, every row as a member, and its own seats, what
--- they name and the mandates on its roles; `structure_guards`, every row
--- for the guards role.
+-- write's transaction, every row as a member, its own seats, what they
+-- name and the mandates on its roles, and each part the co-op publishes
+-- (`published`); `structure_guards`, every row for the guards role.
 
 ALTER TABLE circle.grantee ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.grantee TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])
+    OR (kind = 'circle' AND (SELECT circle.published('circles'))) OR (kind = 'role' AND (SELECT circle.published('roles')))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.grantee FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.circle ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.circle TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])
+    OR (SELECT circle.published('circles'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.circle FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.role ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.role TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR id = ANY ((SELECT circle.own())::text[])
+    OR (SELECT circle.published('roles'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.role FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.member ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.member TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR person = cella.reader() OR role = ANY ((SELECT circle.own())::text[])) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR person = cella.reader() OR role = ANY ((SELECT circle.own())::text[])
+    OR (SELECT circle.published('seats'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.member FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.tenure ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.tenure TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR holder = cella.reader()) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR holder = cella.reader()
+    OR (SELECT circle.published('seats'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.tenure FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.mandate ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON circle.mandate TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR grantee = ANY ((SELECT circle.held())::text[])) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR grantee = ANY ((SELECT circle.held())::text[])
+    OR (SELECT circle.published('mandates'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.mandate FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE circle.right ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
@@ -104,19 +127,24 @@ CREATE POLICY structure ON circle.disclosure TO cella_app
   USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
 CREATE POLICY structure_guards ON circle.disclosure FOR SELECT TO cella_guards USING (true);
 
+ALTER TABLE circle.publication ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
+CREATE POLICY structure ON circle.publication TO cella_app
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
+CREATE POLICY structure_guards ON circle.publication FOR SELECT TO cella_guards USING (true);
+
 ALTER TABLE policy.policy ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON policy.policy TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON policy.policy FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE policy.wording ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON policy.wording TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON policy.wording FOR SELECT TO cella_guards USING (true);
 
 ALTER TABLE policy.value ENABLE ROW LEVEL SECURITY, FORCE ROW LEVEL SECURITY;
 CREATE POLICY structure ON policy.value TO cella_app
-  USING ((SELECT circle.whole()) OR (SELECT circle.inside())) WITH CHECK (true);
+  USING ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register'))) WITH CHECK (true);
 CREATE POLICY structure_guards ON policy.value FOR SELECT TO cella_guards USING (true);
 
 -- A legal form and its defaults are the same in every scope: registries
@@ -132,11 +160,12 @@ CREATE POLICY registry_guards ON policy.default FOR SELECT TO cella_guards USING
 -- guard in the reason it refuses, and to whoever reads the register: it
 -- runs as its owner, since the guards role reads no wording, so it asks
 -- the structure's test itself, which the register knows no circle to
--- ask. A write's transaction, where every guard runs, and a member of
--- the scope read it; anyone else, null.
+-- ask. A write's transaction, where every guard runs, a member of the
+-- scope, and anyone signed in while the co-op publishes its register
+-- read it; anyone else, null.
 CREATE OR REPLACE FUNCTION policy.says(ref text) RETURNS text
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = pg_catalog, pg_temp
 RETURN (
   SELECT policy.sentence(w.legal) FROM policy.wording w
-  WHERE w.policy = says.ref AND ((SELECT circle.whole()) OR (SELECT circle.inside()))
+  WHERE w.policy = says.ref AND ((SELECT circle.whole()) OR (SELECT circle.inside()) OR (SELECT circle.published('register')))
 );

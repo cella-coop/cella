@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -68,8 +68,9 @@ Its functions:
   quote in the reason it refuses; it runs with its owner's rights, and
   the app role and the guards role may call it. It quotes a wording only
   where the structure's reading would: in a write's transaction, where
-  every guard runs, and to a member of the scope; anyone else reads null
-  (core's circles redefine it so in `011-structure.sql`).
+  every guard runs, to a member of the scope, and to anyone signed in
+  while the co-op publishes its register; anyone else reads null (core's
+  circles redefine it so in `011-structure.sql`).
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
   two as a JSON array, the friendly wording trimmed and an empty one
   none, as `policy.wording` keeps it. It is the one canonical form:
@@ -118,7 +119,9 @@ the app role may call them.
 The app role and the guards role, `cella_guards`, may select the
 policies and their values, and only the app the wordings; the app role
 reads only what the structure's reading lets it: a member of the scope
-reads the whole register, and anyone else none of it
+reads the whole register, and anyone else signed in all of it while
+the co-op publishes its register by a rule of the assembly, and none
+of it otherwise
 ([circle](../circle/index.md#who-reads-the-structure)), whose
 `011-structure.sql` puts the register's tables under row-level
 security, enabled and forced, since the register knows no circle. The

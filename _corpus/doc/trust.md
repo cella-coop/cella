@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 # Trust
@@ -719,6 +719,13 @@ What the build does not yet do, and what lifts each:
   it, though their seat grants no power. And core's analytical
   contract shares the structure by id to the analytics shell, read as
   its owner, as the shared-view rules allow.
+- **A published part is published whole.** What the co-op publishes by
+  motion ([what the co-op publishes](../../apps/org/core/circle/index.md#what-the-co-op-publishes))
+  every person signed in reads, every row of the part, never a chosen
+  circle's: a co-op that publishes its seats shows who sits where by
+  the address each seat keeps, and no name or other value the person
+  feat holds. The rule says which parts; whether to publish the seats
+  at all is the assembly's motion, which no tool judges.
 - **The log says who wrote what.** Every member reads each entry's op,
   actor, date and receipt, and its payload's digest. Pay, time and
   capital are committed to with a salt the vault keeps, so their digests

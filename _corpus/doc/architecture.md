@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 # Architecture
@@ -362,7 +362,12 @@ makes is held to it by tooling, never by hand:
   the assembly, reads every row, and anyone else signed in only their
   own seats, the circles and roles they name and the mandates on those
   roles
-  ([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)).
+  ([circle](../../apps/org/core/circle/index.md#who-reads-the-structure)),
+  and the parts of it the co-op publishes by a rule of the assembly,
+  as open books' values are set: its circles, roles, mandates, seats or
+  register, which core copies into its own rows at adoption and its
+  policies read by a function, never the rule's wording
+  ([what the co-op publishes](../../apps/org/core/circle/index.md#what-the-co-op-publishes)).
   A slice's policy, view or invoker function that reads core reads it
   as its reader; a guard reads it whole, as the guards role, and so
   does a write's transaction. What a reader needs of core before a

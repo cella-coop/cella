@@ -101,15 +101,12 @@ importers:
 
   apps/org/core/ui/ts:
     dependencies:
+      '@cella/brand':
+        specifier: workspace:*
+        version: link:../../../../../packages/brand
       '@cella/org-sign':
         specifier: workspace:*
         version: link:../../sign/ts
-      '@fontsource/alegreya':
-        specifier: 5.3.0
-        version: 5.3.0
-      '@fontsource/alegreya-sans':
-        specifier: 5.3.0
-        version: 5.3.0
       devalue:
         specifier: 5.9.4
         version: 5.9.4
@@ -1933,12 +1930,6 @@ packages:
 
   '@fontsource-variable/sen@5.3.0':
     resolution: {integrity: sha512-AEWNMDLtBO7iV0v2kwDZgxiLH2YADSUMnr/g2b8tgf/8dQNMPS+018iF5rzwVb/Mt79FwU5/39MlRGiK5VxkaQ==}
-
-  '@fontsource/alegreya-sans@5.3.0':
-    resolution: {integrity: sha512-Uf0RbuwzhSS3NQrBFcRzEUm7TxDQW3qdAbQ6JIOhsIW6V+YN2dqlR99lhfEE38R3GHgMCMJBzqSp7aJxhNXSOw==}
-
-  '@fontsource/alegreya@5.3.0':
-    resolution: {integrity: sha512-YCsp9dHYfMNdggXxinMMS0nkGlZkzs2MvPL7qPVjSO4DM1uJ29hmKEdTC/fBP+2K4Aa+4Z44JuOQz05eDcvNJA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -3936,10 +3927,6 @@ snapshots:
   '@fontsource-variable/inter@5.3.0': {}
 
   '@fontsource-variable/sen@5.3.0': {}
-
-  '@fontsource/alegreya-sans@5.3.0': {}
-
-  '@fontsource/alegreya@5.3.0': {}
 
   '@img/colour@1.1.0':
     optional: true

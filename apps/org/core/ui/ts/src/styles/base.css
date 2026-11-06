@@ -16,8 +16,10 @@ body {
   background: var(--ground);
   color: var(--text);
   font-family: var(--font-ui);
+  font-weight: var(--fw-text);
+  font-variation-settings: var(--fvs-text);
   font-size: var(--text-md);
-  line-height: 1.45;
+  line-height: var(--leading);
   -webkit-font-smoothing: antialiased;
   font-variant-numeric: tabular-nums;
 }
@@ -26,7 +28,9 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 500;
+  font-weight: var(--fw-display);
+  font-variation-settings: var(--fvs-display);
+  letter-spacing: var(--track-display);
   line-height: 1.2;
   margin: 0;
   color: var(--text);
@@ -44,6 +48,7 @@ a {
 code,
 .mono {
   font-family: var(--font-mono);
+  font-weight: var(--fw-mono);
   font-size: 0.85em;
 }
 

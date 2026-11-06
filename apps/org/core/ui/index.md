@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-04
+updated = 2026-11-06
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -11,23 +11,38 @@ other `.svelte` file, so no page or block styles itself.
 
 ## Tokens
 
-`styles/tokens.css`. Colours are parametric OKLCH: a tone is a chroma and
-a hue (`--tone-base`, warm paper; `--tone-accent`, ochre; positive,
-negative, warning), a shade is a lightness mirrored around a midpoint by
-one sign, `--theme`, so dark mode is that variable and a compressed ladder
-of surfaces. Components read roles, never shades:
+The shell wears `@cella/brand` ([brand](../../../../packages/brand/index.md)):
+`styles/tokens.css` imports the brand's `fonts.css` and `tokens.css` and
+lays over them only what is the shell's own. The tones, the shades, the
+roles, the theme and the type are the brand's, so a change of brand is a
+change of its `house.json` and never of this package. Colours are
+parametric OKLCH: a tone is a chroma and a hue (`--tone-base`, graphite
+paper; the five states, error, warning, success, info and help), a shade
+is a lightness mirrored around a midpoint by one sign, `--theme`, so dark
+mode is that variable and a compressed ladder of surfaces. The brand has
+no accent: the five status hues are the brand, and an action is plain
+ink. Components read roles, never shades:
 
 - surfaces: `--ground` under the sidebar, `--panel` under the content
   and its drawer alike, `--raised` for cards and stats on the panel,
   `--float` for floating things, `--sunk` for fields and a segmented
   control's well, `--selected` for its chosen segment, lighter than the
   well in both themes, `--hover`;
-- text: `--text`, `--text-muted`, `--text-subtle`;
-- accent: `--accent-fill` (fixed lightness in both themes),
-  `--accent-border`, `--accent-text`, `--accent-soft`, `--on-accent`;
-- type: Alegreya for display and headings, Alegreya Sans for everything
-  read or measured, self-hosted from Fontsource. A section's title is
-  Alegreya in sentence case with its count muted beside it, a card's and
+- text: `--text`, `--text-muted`, `--text-subtle`; the shell sets
+  `--text-subtle` to the muted step, since the brand's subtle step reads
+  under 4.5:1 on the ground and the wells and its quiet text is small;
+- ink, the roles still named accent: `--accent-fill`, the text's
+  lightness in either theme, so a primary button is plain ink with the
+  panel's `--on-accent` on it, and `--accent-border`, `--accent-text`,
+  `--accent-soft`;
+- type: the brand's, Sen for display and headings (`--font-display`),
+  Inter for everything read or measured (`--font-text`, which the shell
+  reads as `--font-ui`), Geist Mono for code (`--font-mono`), self-hosted
+  from Fontsource through the brand's `fonts.css`; headings take the
+  brand's weight and tracking, the body its weight and leading. The
+  shell keeps its own denser scale, `--text-2xs` to `--text-2xl` around
+  15px, beside the brand's `--t-*`. A section's title is
+  Sen in sentence case with its count muted beside it, a card's and
   a table's columns' labels quiet sentence case; the one eyebrow, small
   capitals tracked `0.1em`, is a stat tile's label. A section, and the
   page's content outside one, sets one inline padding (`--inset`) that
@@ -36,17 +51,24 @@ of surfaces. Components read roles, never shades:
   card's own padding is its inset;
 - states: a badge's tone is its state's class, alike in both themes:
   neutral at rest (a draft, closed, voided), accent under way (open,
-  unpaid, submitted, approved and not yet paid), drawn as a ring with no
-  fill so it never reads as an alarm, positive settled, warning wanting
-  attention (overdue, suspended), negative refused or failed; the soft
-  fills are tints (`--soft`), lighter in dark, so a tone shows in its
-  text and never saturates;
+  unpaid, submitted, approved and not yet paid), drawn as an ink ring
+  with no fill so it never reads as an alarm, positive settled, warning
+  wanting attention (overdue, suspended), negative refused or failed;
+  positive and negative are the brand's success and error
+  (`--positive-*` reads `--success-*`, `--negative-*` reads `--error-*`),
+  and info and help wait for a state that needs them. The soft fills are
+  tints (`--soft`, the brand's `--soft-a`), lighter in dark, so a tone
+  shows in its text and never saturates; a state is never told by colour
+  alone, keeping its word; a tone's text is never dimmed, since it
+  clears 4.5:1 on its tint only at full strength: a calendar entry's
+  time wears it as its title does;
 - locale: the app's, `locale` in `models/format.ts` (en-GB), writes
   every day (16 Oct 2026) and is how a date field reads and types one
   (16/10/2026), whatever the browser's language; amounts read as euros
   the French way;
-- shape: 12px radius on floating things and panels, 6px on controls; soft
-  shadows on floating things only (`--shadow-float`);
+- shape: the brand's 12px radius on floating things and panels
+  (`--radius`), 6px on controls; soft shadows on floating things only
+  (`--shadow-float`);
 - focus: one ring, `--focus`, on whatever the keyboard reaches, a field
   as much as a button; a focused field keeps the ring with its accent
   border, a select drawing it as an outline (`--focus-outline`), since

@@ -198,7 +198,6 @@
   }
   .time {
     font-variant-numeric: tabular-nums;
-    opacity: 0.8;
   }
   .entry .title {
     min-width: 0;

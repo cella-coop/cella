@@ -64,15 +64,24 @@ REVOKE EXECUTE ON FUNCTION payslip_transaction.register_payment_lines(regprocedu
 
 -- The lines a run's payment carries beside its own: each registered
 -- function's, in the order of their owners and names, so the order is the
--- same in every scope.
+-- same in every scope. Each is called by the schema and name its function
+-- has, the month cast to the type it was registered with, so a function
+-- overloaded under its name runs the overload registered; `keep` calls
+-- the functions that keep the same way.
 CREATE FUNCTION payslip_transaction.added(month text)
 RETURNS TABLE (account text, side text, cents bigint)
 LANGUAGE plpgsql STABLE AS $$
 DECLARE
-  f regprocedure;
+  call text;
 BEGIN
-  FOR f IN SELECT p.lines FROM payslip_transaction.payment_lines p ORDER BY p.owner, p.lines::text LOOP
-    RETURN QUERY EXECUTE format('SELECT x.account, x.side, x.cents FROM %s($1) x', f::oid::regproc) USING month;
+  FOR call IN
+    SELECT format('SELECT x.account, x.side, x.cents FROM %I.%I($1::%s) x', n.nspname, f.proname, f.proargtypes[0]::regtype)
+    FROM payslip_transaction.payment_lines p
+    JOIN pg_catalog.pg_proc f ON f.oid = p.lines
+    JOIN pg_catalog.pg_namespace n ON n.oid = f.pronamespace
+    ORDER BY p.owner, p.lines::text
+  LOOP
+    RETURN QUERY EXECUTE call USING month;
   END LOOP;
 END
 $$;
@@ -82,10 +91,16 @@ $$;
 CREATE FUNCTION payslip_transaction.keep(month text, entry text) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
-  f regprocedure;
+  call text;
 BEGIN
-  FOR f IN SELECT p.keeps FROM payslip_transaction.payment_lines p ORDER BY p.owner, p.lines::text LOOP
-    EXECUTE format('SELECT %s($1, $2)', f::oid::regproc) USING month, entry;
+  FOR call IN
+    SELECT format('SELECT %I.%I($1::%s, $2::%s)', n.nspname, f.proname, f.proargtypes[0]::regtype, f.proargtypes[1]::regtype)
+    FROM payslip_transaction.payment_lines p
+    JOIN pg_catalog.pg_proc f ON f.oid = p.keeps
+    JOIN pg_catalog.pg_namespace n ON n.oid = f.pronamespace
+    ORDER BY p.owner, p.lines::text
+  LOOP
+    EXECUTE call USING month, entry;
   END LOOP;
 END
 $$;

@@ -273,7 +273,13 @@ that a line's account exists and its period is open by
 `transaction.register_line_check`, and the transaction feat's own
 trigger runs every check registered before each line is inserted, so
 no graft puts a trigger on the journal. `cella check feats` reads each
-call's literal action and power as it reads a literal row.
+call's literal action and power as it reads a literal row. A register
+holds each function as a `regprocedure`, its name and its arguments'
+types, and calls it by its schema-qualified name with each argument
+cast to the type it was registered with, so a function overloaded
+under its name runs the overload registered and never another: the
+journal's line checks, patronage's divisions, a payslip posting's
+withholdings, the rights and the notary's authority are all called so.
 
 `cella check feats` checks this. `tools/sql-check.mjs` collects every
 such write and trigger that the owner's migrations leave standing. A

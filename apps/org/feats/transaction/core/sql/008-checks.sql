@@ -19,13 +19,22 @@ END;
 REVOKE EXECUTE ON FUNCTION transaction.register_line_check(regprocedure, text) FROM PUBLIC;
 
 -- Runs every check registered, before each line is inserted, in the order
--- of their owners and names, so the order is the same in every scope.
+-- of their owners and names, so the order is the same in every scope. Each
+-- is called by the schema and name its function has, the line cast to the
+-- type it was registered with, so a check overloaded under its name runs
+-- the overload registered.
 CREATE FUNCTION transaction.checks() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
-  f regprocedure;
+  call text;
 BEGIN
-  FOR f IN SELECT c.fn FROM transaction.line_check c ORDER BY c.owner, c.fn::text LOOP
-    EXECUTE format('SELECT %s($1)', f::oid::regproc) USING NEW;
+  FOR call IN
+    SELECT format('SELECT %I.%I($1::%s)', n.nspname, p.proname, p.proargtypes[0]::regtype)
+    FROM transaction.line_check c
+    JOIN pg_catalog.pg_proc p ON p.oid = c.fn
+    JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+    ORDER BY c.owner, c.fn::text
+  LOOP
+    EXECUTE call USING NEW;
   END LOOP;
   RETURN NEW;
 END

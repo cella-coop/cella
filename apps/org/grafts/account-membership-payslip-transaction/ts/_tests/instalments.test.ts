@@ -237,3 +237,34 @@ test('the graft adds to a run\'s payment by payslip-transaction\'s register, and
   assert.deepEqual((await db.query(`SELECT t.tgname FROM pg_trigger t JOIN pg_proc p ON p.oid = t.tgfoid WHERE t.tgrelid = 'payslip_transaction.posting'::regclass AND p.pronamespace = 'account_membership_payslip_transaction'::regnamespace`)).rows, [])
   assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.added('2027-03')`)).rows, [], 'a month with nothing due adds no line')
 })
+
+test('payslip-transaction\'s register calls the functions it holds, never an overload under their names', async () => {
+  // The functions registered take the month as varchar; each overload
+  // takes the text a call passes, which a call by name alone would prefer.
+  await db.query('BEGIN')
+  try {
+    await db.query(`CREATE SCHEMA extender`)
+    await db.query(`CREATE TABLE extender.kept (month text, entry text)`)
+    await db.query(
+      `CREATE FUNCTION extender.lines(month varchar) RETURNS TABLE (account text, side text, cents bigint)
+       LANGUAGE sql STABLE AS $$ VALUES ('4562', 'credit', 1::bigint) $$`,
+    )
+    await db.query(
+      `CREATE FUNCTION extender.lines(month text) RETURNS TABLE (account text, side text, cents bigint)
+       LANGUAGE sql STABLE AS $$ VALUES ('666', 'debit', 1::bigint) $$`,
+    )
+    await db.query(`CREATE FUNCTION extender.keeps(month varchar, entry varchar) RETURNS void LANGUAGE sql AS $$ INSERT INTO extender.kept VALUES (month, entry) $$`)
+    await db.query(
+      `CREATE FUNCTION extender.keeps(month text, entry text) RETURNS void LANGUAGE plpgsql AS $$
+       BEGIN
+         RAISE EXCEPTION 'the overload ran';
+       END $$`,
+    )
+    await db.query(`SELECT payslip_transaction.register_payment_lines('extender.lines(varchar)', 'extender.keeps(varchar, varchar)', 'test')`)
+    assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.added('2027-03')`)).rows, [{ account: '4562', side: 'credit', cents: '1' }])
+    await db.query(`SELECT payslip_transaction.keep('2027-03', 'je-none')`)
+    assert.deepEqual((await db.query(`SELECT * FROM extender.kept`)).rows, [{ month: '2027-03', entry: 'je-none' }])
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

@@ -37,14 +37,19 @@ SELECT person.register_right('person', 'person.known(text, date)', 'person');
 CREATE FUNCTION person.holds(actor text, "right" text, day date) RETURNS boolean
 LANGUAGE plpgsql STABLE AS $$
 DECLARE
-  f regprocedure;
+  call text;
   ok boolean;
 BEGIN
-  SELECT r.fn INTO f FROM person.rights r WHERE r.name = holds."right";
-  IF f IS NULL OR actor IS NULL OR NOT person.known(actor, day) THEN
+  SELECT format('SELECT %I.%I($1::%s, $2::%s)', n.nspname, p.proname, p.proargtypes[0]::regtype, p.proargtypes[1]::regtype)
+  INTO call
+  FROM person.rights r
+  JOIN pg_catalog.pg_proc p ON p.oid = r.fn
+  JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+  WHERE r.name = holds."right";
+  IF call IS NULL OR actor IS NULL OR NOT person.known(actor, day) THEN
     RETURN false;
   END IF;
-  EXECUTE format('SELECT %s($1, $2)', f::oid::regproc) INTO ok USING actor, day;
+  EXECUTE call INTO ok USING actor, day;
   RETURN coalesce(ok, false);
 END
 $$;

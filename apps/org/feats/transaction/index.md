@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -118,7 +118,10 @@ update or delete: the journal is permanent. A third numbers each entry
 posts it, every check an extender registered by
 `transaction.register_line_check(check, owner)`, the feat's published
 register, each a function of the line, `(transaction.line) → void`,
-that raises to refuse it, in the order of their owners and names; the
+that raises to refuse it, in the order of their owners and names, each
+called by its schema-qualified name with the line cast to
+`transaction.line`, so a check overloaded under its name runs the
+overload registered and refuses no line it was not asked to; the
 feat knows none of its extenders by name, and no extender puts a
 trigger on the journal. All raise SQLSTATE `09000`.
 `transaction.line_check` is that register, a registry the extenders'

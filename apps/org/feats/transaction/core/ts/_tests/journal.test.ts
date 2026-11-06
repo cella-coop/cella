@@ -150,6 +150,36 @@ test('as the app role, whoever keeps the books reads every entry and line; a gra
   assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT entry, account FROM transaction.line'), [{ entry: id, account: '101302' }], 'and that line alone')
 })
 
+test('the authority and a graft\'s opening, overloaded under their names, run the overloads registered', async () => {
+  // The functions registered take the reader as varchar; each overload
+  // takes the text a call passes, which a call by name alone would
+  // prefer, and would open every row to everyone.
+  await db.query(
+    `CREATE FUNCTION mandate.vmay(actor varchar, power varchar, cents bigint, about text, day date) RETURNS boolean
+     LANGUAGE sql STABLE RETURN mandate.may(actor, power, cents, about, day)`,
+  )
+  await db.query(`CREATE FUNCTION mandate.vmay(actor text, power text, cents bigint, about text, day date) RETURNS boolean LANGUAGE sql STABLE RETURN true`)
+  await db.query(
+    `CREATE FUNCTION mandate.vcovered(actor varchar, power varchar, day date) RETURNS text[]
+     LANGUAGE sql STABLE RETURN mandate.covered(actor, power, day)`,
+  )
+  await db.query(`CREATE FUNCTION mandate.vcovered(actor text, power text, day date) RETURNS text[] LANGUAGE sql STABLE RETURN ARRAY(SELECT id FROM circle.circle)`)
+  await db.query(`CREATE FUNCTION mandate.vholds(code varchar, reader varchar) RETURNS boolean LANGUAGE sql STABLE RETURN mandate.holds(code, reader)`)
+  await db.query(`CREATE FUNCTION mandate.vholds(code text, reader text) RETURNS boolean LANGUAGE sql STABLE RETURN true`)
+  await db.query(`UPDATE cella.authority SET fn = 'mandate.vmay(varchar, varchar, bigint, text, date)', covered = 'mandate.vcovered(varchar, varchar, date)'`)
+  await db.query(`UPDATE cella.reach SET fn = 'mandate.vholds(varchar, varchar)' WHERE what = 'transaction'`)
+  try {
+    const opened = (await db.query(`SELECT entry, account FROM transaction.line WHERE account = '101302'`)).rows
+    assert.equal(opened.length, 1)
+    assert.equal((await reading('julien@lanterne.example', 'SELECT id FROM transaction.entry')).length, Number((await db.query('SELECT count(*) AS n FROM transaction.entry')).rows[0].n))
+    assert.deepEqual(await reading('paul@lanterne.example', 'SELECT id FROM transaction.entry'), [])
+    assert.deepEqual(await reading('chloe@lanterne.example', 'SELECT entry, account FROM transaction.line'), opened)
+  } finally {
+    await db.query(`UPDATE cella.authority SET fn = 'mandate.may(text, text, bigint, text, date)', covered = 'mandate.covered(text, text, date)'`)
+    await db.query(`UPDATE cella.reach SET fn = 'mandate.holds(text, text)' WHERE what = 'transaction'`)
+  }
+})
+
 test('a check an extender registers runs on every line posted, and refuses the line it raises on', async () => {
   await db.query(`CREATE SCHEMA extender`)
   await db.query(
@@ -164,4 +194,28 @@ test('a check an extender registers runs on every line posted, and refuses the l
   const refused = await post([{ account: '666', side: 'debit', cents: 1_00 }, { account: '512', side: 'credit', cents: 1_00 }])
   assert.match(refused.refused ?? '', /je-\d+ posts to 666/)
   assert.ok((await post(rent)).id, 'a line the check passes posts')
+})
+
+test('a check overloaded under its name runs the overload registered: a line posts, and the check refuses as before', async () => {
+  // The check registered takes the line as a domain over it; the overload
+  // takes the line's own type, which a call by name alone would prefer.
+  await db.query(`CREATE DOMAIN extender.line AS transaction.line`)
+  await db.query(
+    `CREATE FUNCTION extender.no_777(line extender.line) RETURNS void LANGUAGE plpgsql AS $$
+     BEGIN
+       IF (line).account = '777' THEN
+         RAISE EXCEPTION '% posts to 777', (line).entry USING ERRCODE = 'triggered_action_exception';
+       END IF;
+     END $$`,
+  )
+  await db.query(`SELECT transaction.register_line_check('extender.no_777(extender.line)', 'test')`)
+  await db.query(
+    `CREATE FUNCTION extender.no_777(line transaction.line) RETURNS void LANGUAGE plpgsql AS $$
+     BEGIN
+       RAISE EXCEPTION 'the overload ran' USING ERRCODE = 'triggered_action_exception';
+     END $$`,
+  )
+  assert.ok((await post(rent)).id, 'a line the check passes posts')
+  const refused = await post([{ account: '777', side: 'debit', cents: 1_00 }, { account: '512', side: 'credit', cents: 1_00 }])
+  assert.match(refused.refused ?? '', /je-\d+ posts to 777/)
 })

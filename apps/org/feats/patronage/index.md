@@ -192,7 +192,10 @@ whose ceiling falls under the terms' rate is not refused.
   own approve writes them: it asks each division an extender registered
   by `patronage.register_division(basis, division)`, its published
   register, a function of the distribution answering each worker's
-  quantity and amount on that basis, and inserts what it answers; it
+  quantity and amount on that basis, called by its schema and name with
+  the distribution cast to the type it was registered with, so a
+  division overloaded under its name runs the overload registered, and
+  inserts what it answers; it
   knows no basis's graft by name, and no graft writes a part or puts a
   trigger on `patronage.distribution`;
   `divided(distribution)` sets each basis's parts against its portion, and

@@ -53,6 +53,24 @@ test('a member\'s right is held by the active members on the day: not by an invi
   assert.equal(await holds(paul, 'draw-account', '2025-06-01'), true, 'he was a member then')
 })
 
+test('a right\'s function overloaded under its name runs the overload registered', async () => {
+  // The function registered for the member's right takes the address as
+  // varchar; the overload takes the text a call passes, which a call by
+  // name alone would prefer, and would make everyone a member.
+  await db.query('BEGIN')
+  try {
+    await db.query(`CREATE SCHEMA extender`)
+    await db.query(`CREATE FUNCTION extender.active(address varchar, day date) RETURNS boolean LANGUAGE sql STABLE RETURN membership.active(address, day)`)
+    await db.query(`CREATE FUNCTION extender.active(address text, day date) RETURNS boolean LANGUAGE sql STABLE RETURN true`)
+    await db.query(`UPDATE person.rights SET fn = 'extender.active(varchar, date)' WHERE name = 'member'`)
+    assert.equal(await holds(amina, 'draw-account'), true)
+    assert.equal(await holds(ines, 'draw-account'), false)
+    assert.equal(await holds(paul, 'draw-account'), false)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
 test('a right nobody registered is held by no one, and a right grants only its power', async () => {
   assert.equal(await holds(amina, 'log-time'), false)
   assert.equal(await holds(amina, 'approve-time'), false)

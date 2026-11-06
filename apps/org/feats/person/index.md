@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -148,8 +148,11 @@ what they keep is theirs.
   this core registers, and the active members and those employed, which
   `membership` and `employment` register by
   `person.register_right(name, fn, owner)`, so this core knows neither
-  by name. `person.holds(actor, right, day)` asks it: only a person the
-  co-op knows holds any right, and no one a right nobody registered.
+  by name. `person.holds(actor, right, day)` asks it, calling the
+  function by its schema and name with its arguments cast to the types
+  it was registered with, so a function overloaded under its name runs
+  the overload registered: only a person the co-op knows holds any
+  right, and no one a right nobody registered.
   The app role and the guards role may select it; only the migrations
   register.
 

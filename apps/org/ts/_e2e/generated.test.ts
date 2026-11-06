@@ -12,7 +12,9 @@
 // version for each, in a row, both citing it, the second reading both
 // changes; and a motion's second change, cited once another motion's
 // version is adopted after its first, is refused, naming the version its
-// first change made. Run by `cella test e2e generated`.
+// first change made; and a motion's three policy changes generate three
+// versions in a row, each citing it, the third reading all three. Run by
+// `cella test e2e generated`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -204,4 +206,34 @@ test('a motion\'s second change, cited once another motion\'s version is adopted
   assert.match(reason(late), new RegExp(`statutes@8 cites ${two}, and statutes@9 is adopted since: a generation cites a motion that changed the policies after it`))
   assert.equal(await adopted(), 'statutes@9')
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM document.version WHERE document = 'statutes'`)).n, '9')
+})
+
+test('a motion\'s three policy changes generate three versions in a row, each citing it, the third reading all three', async () => {
+  const rules = [
+    'Each circle names a member who keeps its minutes',
+    'The minutes of each meeting are published within a week',
+    'Any member may ask a circle for its minutes of the last ten years',
+  ]
+  const three = await motioned(
+    'Three rules for the minutes',
+    rules.map((wording) => ({ kind: 'policy', args: { kind: 'rule', wording } })),
+    '2027-01-11',
+  )
+  const then = closes.get(three) ?? []
+  assert.deepEqual(
+    then.map((d) => [d.op, d.state, d.then.map((t) => [t.op, t.state, t.reason ?? ''])]),
+    rules.map(() => ['motion:policy:adopt', 'settled', [['document:document:generate', 'settled', '']]]),
+  )
+  assert.equal(await adopted(), 'statutes@12')
+  const day = await applies(`${three}/1`)
+  for (const v of ['statutes@10', 'statutes@11', 'statutes@12']) {
+    assert.deepEqual(await cites(v), [{ motion: three, day }], `${v} cites ${three}`)
+  }
+  for (const [version, base] of [['statutes@11', 'statutes@10'], ['statutes@12', 'statutes@11']]) {
+    assert.equal((await one<{ base: string }>('SELECT base FROM document.adoption WHERE version = $1', [version])).base, base)
+  }
+  const third = await linesOf('statutes@12')
+  for (const n of [1, 2, 3]) {
+    assert.ok(third.includes(await says(`${three}/${n}`)), `statutes@12 reads ${three}/${n}`)
+  }
 })

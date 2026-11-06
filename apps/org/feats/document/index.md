@@ -106,8 +106,9 @@ it, in one write whose log entry commits to the version's hash: the
 document is frozen at each adoption, and every earlier version still
 reads. Each generated version keeps the motion it cites and the day it
 reads, and a generation never goes back: it cites a motion no version
-of the document but the adopted one cites, so a motion's several
-changes generate one version each in a row and an earlier motion is
+of the document cites unless the adopted one does, so a motion's
+several changes, however many, generate one version each in a row and
+an earlier motion is
 never cited again once a later one's version is adopted, and reads the later of the day that motion's
 change applies and the day the adopted version reads, so a policy
 adopted to apply before a change the document already reads lands in
@@ -194,7 +195,8 @@ The document feat owns:
   hand;
 - a generated document's versions cite a motion only in a row, and
   their days only move forward: a motion cited by a version before the
-  adopted one, or a day earlier than the adopted version's, is refused,
+  adopted one and not by the adopted one, or a day earlier than the
+  adopted version's, is refused,
   the refusal naming the version that cites it or the day that version
   reads.
 
@@ -381,10 +383,12 @@ a motion's page.
   `statutes@3`, the founding motion and its day cited again are refused
   naming `statutes@1`, which cites it; a motion's two changes, ending
   a policy and adopting another, generate a version each in a row, both
-  citing it, the second reading both changes (`forms`); a motion's second
-  change cited once another motion's version is adopted after its first
-  is refused, naming the version its first change made; a rule adopted to apply on 20 December after one adopted to
-  apply on 1 January generates a version reading 1 January, and so both,
+  citing it, the second reading both changes (`forms`); a motion's three
+  policy changes generate three versions in a row, each citing it and
+  the third reading all three; a motion's second change cited once
+  another motion's version is adopted after its first is refused,
+  naming the version its first change made; a rule adopted to apply on
+  20 December after one adopted to apply on 1 January generates a version reading 1 January, and so both,
   and the January motion, cited again once that version is adopted, is
   refused;
   a motion whose generation never ran, cited later by hand, reads the

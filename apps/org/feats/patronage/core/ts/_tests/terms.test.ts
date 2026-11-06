@@ -130,12 +130,14 @@ test('terms are copied from the rule, never over a year already approved, and ne
   }
 })
 
-test('approving makes each weighed basis\'s parts as the division registered for it answers, and refuses a basis none divides', async () => {
+test('approving makes each weighed basis\'s parts as the division registered for it answers, never an overload under its name, and refuses a basis none divides', async () => {
   await db.query('BEGIN')
   try {
     // An extender's division of pay and of equal parts, and one of time
     // worked that also answers a row by pay, which its basis's rows alone
-    // keep out.
+    // keep out. The division of time takes its distribution as varchar,
+    // and an overload under its name the text a call passes, which a call
+    // by name alone would prefer; it is never asked.
     await db.query(`CREATE SCHEMA extender`)
     await db.query(
       `CREATE FUNCTION extender.by_pay(ref text) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
@@ -143,8 +145,13 @@ test('approving makes each weighed basis\'s parts as the division registered for
        $$`,
     )
     await db.query(
-      `CREATE FUNCTION extender.by_time(ref text) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
+      `CREATE FUNCTION extender.by_time(ref varchar) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
          VALUES ('b@x', 'hours', 600::bigint, patronage.portion(ref, 'hours')), ('b@x', 'salary', 1::bigint, 1::bigint)
+       $$`,
+    )
+    await db.query(
+      `CREATE FUNCTION extender.by_time(ref text) RETURNS TABLE (worker text, basis text, quantity bigint, cents bigint) LANGUAGE sql AS $$
+         VALUES ('z@x', 'hours', 1::bigint, patronage.portion(ref, 'hours'))
        $$`,
     )
     await db.query(`SELECT patronage.register_division('salary', 'extender.by_pay(text)'), patronage.register_division('equal', 'extender.by_pay(text)')`)
@@ -155,7 +162,7 @@ test('approving makes each weighed basis\'s parts as the division registered for
       (e: Error & { code?: string }) => e.code === '09000' && /2024 divides its work share by hours, which no division is registered for/.test(e.message),
     )
     await db.query('ROLLBACK TO SAVEPOINT s')
-    await db.query(`SELECT patronage.register_division('hours', 'extender.by_time(text)')`)
+    await db.query(`SELECT patronage.register_division('hours', 'extender.by_time(varchar)')`)
     await db.query(`SELECT patronage.divide('2024')`)
     assert.deepEqual((await db.query(`SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = '2024' ORDER BY basis, worker`)).rows, [
       { worker: 'a@x', basis: 'equal', quantity: '1', cents: '200000' },

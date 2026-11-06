@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-05
+updated = 2026-11-06
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -55,8 +55,11 @@ registered, a function of the run's month answering lines, in the order
 of their owners and names. Once the entry is posted, `pay` calls
 `keep(month, entry)`, which runs each registrant's `keeps`, a function of
 the month and the entry, by which the graft records in its own schema
-what it keeps of its lines. This graft knows none of them by name, and
-no graft above puts a trigger on `posting`.
+what it keeps of its lines. Each is called by the schema and name its
+function has, its arguments cast to the types it was registered with, so
+a function overloaded under its name runs the overload registered. This
+graft knows none of them by name, and no graft above puts a trigger on
+`posting`.
 
 ## Shell
 

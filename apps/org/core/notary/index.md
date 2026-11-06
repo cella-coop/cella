@@ -170,7 +170,10 @@ security, and its policies ask the functions above
 is the owner's alone: every other column of the log stays everyone's,
 and the vault opens to the app only through `cella.disclosed(n)`.
 `may`, `covered` and `reaches` call the functions their registries name, so each
-is a `STABLE` function of the shape it is registered for.
+is a `STABLE` function of the shape it is registered for. Each is called
+by the schema and name its function has, its arguments cast to the types
+it was registered with, so a function overloaded under its name runs the
+overload registered.
 
 ## The guards role
 

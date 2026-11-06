@@ -22,19 +22,24 @@ REVOKE EXECUTE ON FUNCTION patronage.register_division(text, regprocedure) FROM 
 
 -- Makes a distribution's parts, in the write that approves it: for each
 -- basis its year's terms weigh, in the order of the bases, the parts the
--- division registered for it answers. A basis the terms weigh that no
--- division is registered for is refused (SQLSTATE 09000).
+-- division registered for it answers, called by the schema and name its
+-- function has, the distribution cast to the type it was registered with,
+-- so a division overloaded under its name runs the overload registered. A
+-- basis the terms weigh that no division is registered for is refused
+-- (SQLSTATE 09000).
 CREATE FUNCTION patronage.divide(ref text) RETURNS void LANGUAGE plpgsql AS $$
 DECLARE
   b text;
-  f regprocedure;
+  f text;
 BEGIN
   FOR b, f IN
-    SELECT w.basis, v.fn
+    SELECT w.basis, CASE WHEN p.oid IS NOT NULL THEN format('%I.%I($1::%s)', n.nspname, p.proname, p.proargtypes[0]::regtype) END
     FROM patronage.distribution d
     JOIN patronage.terms t ON t.id = patronage.terms_for(d.year)
     CROSS JOIN LATERAL (VALUES ('salary', t.salary, 1), ('hours', t.hours, 2), ('equal', t.equal, 3)) AS w (basis, weight, n)
     LEFT JOIN patronage.division v ON v.basis = w.basis
+    LEFT JOIN pg_catalog.pg_proc p ON p.oid = v.fn
+    LEFT JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
     WHERE d.id = ref AND w.weight > 0
     ORDER BY w.n
   LOOP
@@ -44,8 +49,8 @@ BEGIN
     END IF;
     EXECUTE format(
       'INSERT INTO patronage.part (distribution, worker, basis, quantity, amount)
-       SELECT $1, v.worker, v.basis, v.quantity, cella.amount(v.cents) FROM %s($1) v WHERE v.basis = $2',
-      f::oid::regproc
+       SELECT $1, v.worker, v.basis, v.quantity, cella.amount(v.cents) FROM %s v WHERE v.basis = $2',
+      f
     ) USING ref, b;
   END LOOP;
 END

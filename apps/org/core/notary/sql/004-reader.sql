@@ -22,7 +22,10 @@ RETURN coalesce(current_setting('cella.writing', true), '') = 'on';
 -- a power cover on a day, `(actor, power, day) → text[]`, a feat's; the powers that read a feat's
 -- rows, `key` narrowing one to the rows the feat passes it, such as a
 -- file's class; and the functions a graft registers to open a feat's rows
--- it joins to more readers, `(key, reader) → boolean`.
+-- it joins to more readers, `(key, reader) → boolean`. Each is called by
+-- the schema and name its function has, its arguments cast to the types
+-- it was registered with, so a function overloaded under its name runs
+-- the overload registered.
 CREATE TABLE cella.authority (
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
   fn regprocedure NOT NULL,
@@ -55,15 +58,19 @@ CREATE FUNCTION cella.may(power text) RETURNS boolean
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-  f regprocedure;
+  call text;
   ok boolean;
 BEGIN
-  SELECT a.fn INTO f FROM cella.authority a;
-  IF f IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
+  SELECT format('SELECT %I.%I($1::%s, $2::%s, NULL::%s, NULL::%s, $3::%s)', n.nspname, p.proname,
+           p.proargtypes[0]::regtype, p.proargtypes[1]::regtype, p.proargtypes[2]::regtype, p.proargtypes[3]::regtype, p.proargtypes[4]::regtype)
+  INTO call
+  FROM cella.authority a
+  JOIN pg_catalog.pg_proc p ON p.oid = a.fn
+  JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace;
+  IF call IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
     RETURN false;
   END IF;
-  EXECUTE format('SELECT %s($1, $2, NULL::bigint, NULL::text, $3)', f::oid::regproc)
-    INTO ok USING cella.reader(), may.power, cella.verdict_date();
+  EXECUTE call INTO ok USING cella.reader(), may.power, cella.verdict_date();
   RETURN coalesce(ok, false);
 END
 $$;
@@ -75,15 +82,19 @@ CREATE FUNCTION cella.covered(power text) RETURNS text[]
 LANGUAGE plpgsql STABLE SECURITY DEFINER
 SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
-  f regprocedure;
+  call text;
   got text[];
 BEGIN
-  SELECT a.covered INTO f FROM cella.authority a;
-  IF f IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
+  SELECT format('SELECT %I.%I($1::%s, $2::%s, $3::%s)', n.nspname, p.proname,
+           p.proargtypes[0]::regtype, p.proargtypes[1]::regtype, p.proargtypes[2]::regtype)
+  INTO call
+  FROM cella.authority a
+  JOIN pg_catalog.pg_proc p ON p.oid = a.covered
+  JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace;
+  IF call IS NULL OR power IS NULL OR cella.reader() IS NULL THEN
     RETURN '{}';
   END IF;
-  EXECUTE format('SELECT %s($1, $2, $3)', f::oid::regproc)
-    INTO got USING cella.reader(), covered.power, cella.verdict_date();
+  EXECUTE call INTO got USING cella.reader(), covered.power, cella.verdict_date();
   RETURN coalesce(got, '{}');
 END
 $$;
@@ -120,7 +131,7 @@ RETURN cella.writing()
 CREATE FUNCTION cella.reaches(what text, key text) RETURNS boolean
 LANGUAGE plpgsql STABLE AS $$
 DECLARE
-  f regprocedure;
+  call text;
   ok boolean;
 BEGIN
   IF cella.reader() IS NULL THEN
@@ -129,8 +140,15 @@ BEGIN
   IF EXISTS (SELECT FROM cella.reading g WHERE g.what = reaches.what AND g.key = reaches.key AND cella.may(g.power)) THEN
     RETURN true;
   END IF;
-  FOR f IN SELECT x.fn FROM cella.reach x WHERE x.what = reaches.what ORDER BY x.owner LOOP
-    EXECUTE format('SELECT %s($1, $2)', f::oid::regproc) INTO ok USING reaches.key, cella.reader();
+  FOR call IN
+    SELECT format('SELECT %I.%I($1::%s, $2::%s)', n.nspname, p.proname, p.proargtypes[0]::regtype, p.proargtypes[1]::regtype)
+    FROM cella.reach x
+    JOIN pg_catalog.pg_proc p ON p.oid = x.fn
+    JOIN pg_catalog.pg_namespace n ON n.oid = p.pronamespace
+    WHERE x.what = reaches.what
+    ORDER BY x.owner
+  LOOP
+    EXECUTE call INTO ok USING reaches.key, cella.reader();
     IF ok THEN
       RETURN true;
     END IF;

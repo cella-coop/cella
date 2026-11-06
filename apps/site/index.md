@@ -53,6 +53,29 @@ the scale `--t-*`. It names no colour or face of its own, so a change of
 favicon is the brand's `favicon.svg`. The theme follows the system's,
 as the tokens do; an element may set `data-theme` to wear the other.
 
+## Whose words
+
+The text is the operator's, written by hand; no agent writes it. Two
+guards hold it, each routable around:
+
+- **The settings.** `.claude/settings.json` denies `Edit`, `Write` and
+  `NotebookEdit` on `apps/site/src/content/**` to every Claude session
+  started in the repository, and its `PreToolUse` hook, a script under
+  `tools/` with its own tests, refuses a shell command that writes,
+  moves, removes or redirects into a file there, as it refuses an
+  `Edit`, `Write` or `NotebookEdit` of one. Where no `node` is on the session's path, the hook refuses
+  any call that names the path, a read among them. It reads the
+  command as written, so one that builds the path as it runs goes
+  past it. It reaches only a
+  session started in `cella/`: the box's lanes start in the workshop's
+  root and Sol's run pi, so for them the rule alone holds.
+- **The rule.** [AGENTS.md](../../AGENTS.md) says it, and a change that
+  needs a word of the text changed says so in its entry's Flag.
+
+No gate refuses a version that touches the text, since the forge does
+not yet record who pushed a version: what it keeps is the pushed
+head's committer, which any agent sets.
+
 ## Running it
 
 | Command | What |

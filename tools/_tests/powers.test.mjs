@@ -295,4 +295,6 @@ test('every table of a feat or a graft names its owning circle, keyed into core\
   const foreign = await check({ invoice: 'CREATE TABLE invoice.invoice (circle text NOT NULL REFERENCES circle.circle, member text REFERENCES member.member);' })
   assert.match(foreign.errors.join('\n'), /holds a foreign key into member.member: no foreign key crosses a feat/)
   assert.doesNotMatch(foreign.errors.join('\n'), /into circle.circle/)
+  const party = await check({ motion: `CREATE TABLE motion.party (grantee text NOT NULL REFERENCES circle.grantee); COMMENT ON TABLE motion.party IS 'registry: a procedure''s parties';` })
+  assert.deepEqual(party.errors, [], 'a grantee is the other key out of a schema')
 })

@@ -6,8 +6,8 @@
 // is on no roll of Web's; and once the assembly adopts a procedure giving
 // a circle's lead a veto, a Web motion decided by it with the majority
 // for fails when its lead votes against, while one decided by majority
-// passes. Run
-// by `cella test e2e roll`.
+// passes; and a procedure whose veto names no role is refused as it is
+// proposed. Run by `cella test e2e roll`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -105,7 +105,12 @@ test('a procedure giving the lead a veto refuses a motion the lead vetoes though
   await on('2026-11-21')
   settled(await close({ motion }, as(camille)))
   assert.deepEqual((await carried(motion, as(camille))).map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
-  assert.deepEqual(await one(`SELECT method, voters, veto FROM motion.procedure WHERE id = 'led'`), { method: 'majority', voters: null, veto: ['lead'] })
+  assert.equal((await one<{ method: string }>(`SELECT method FROM motion.procedure WHERE id = 'led'`)).method, 'majority')
+  // Its one party is the lead, a role by its grantee: it vetoes, and every seat votes.
+  assert.deepEqual(
+    await all(`SELECT q.kind, q.grantee, g.kind AS is FROM motion.party q JOIN circle.grantee g ON g.id = q.grantee WHERE q.procedure = 'led'`),
+    [{ kind: 'vetoes', grantee: 'lead', is: 'role' }],
+  )
 
   // Put to Web under it, the lead may veto; put by majority, no one may.
   const vetoed = await put('web', 'Drop the agency\'s own site', 'led', '2026-12-05', yusuf)
@@ -123,6 +128,21 @@ test('a procedure giving the lead a veto refuses a motion the lead vetoes though
   }
   assert.equal(await passes(vetoed), false, 'four for and the lead against: the lead vetoes it')
   assert.equal(await passes(counted), true, 'four for and one against, by majority, passes')
+})
+
+test('a procedure whose veto names no role is refused as it is proposed, the reason naming the party', async () => {
+  const refused = await propose(
+    {
+      circle: 'ag',
+      title: 'The clerked circle',
+      procedure: 'consent',
+      deadline: '2026-12-19',
+      body: 'A working circle may decide by a majority its clerk can veto.',
+      actions: [{ kind: 'policy', args: { kind: 'procedure', wording: led.replace('{procedure: led}', '{procedure: clerked}').replace('{veto: lead}', '{veto: clerk}') } }],
+    },
+    as(camille),
+  )
+  assert.match(reason(refused), /no role clerk for a procedure's vetoes/)
 })
 
 test('the log verifies', async () => {

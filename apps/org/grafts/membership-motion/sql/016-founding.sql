@@ -1,7 +1,7 @@
 -- The founders of a co-op founded by a motion: the members whose
 -- membership began by the day it closed; whether each sat in its circle
 -- with a vote that day, a seat counting then and, where its procedure
--- names the roles that vote, holding one; and whether each gave it a
+-- has roles that vote, holding one (`motion.votes`); and whether each gave it a
 -- stance before its cutoff.
 CREATE FUNCTION membership_motion.founders(ref text) RETURNS TABLE (member text, seated boolean, decided boolean)
 LANGUAGE sql STABLE
@@ -13,7 +13,7 @@ BEGIN ATOMIC
       WHERE s.circle = d.circle AND s.member = b.address
         AND (s.since IS NULL OR s.since <= d.closed)
         AND (s.until IS NULL OR s.until > d.closed)
-        AND (p.voters IS NULL OR 'participant' = ANY (p.voters) OR s.role = ANY (p.voters))
+        AND motion.votes(p.id, s.role)
     ),
     EXISTS (
       SELECT FROM motion.vote v
@@ -90,7 +90,7 @@ BEGIN ATOMIC
       WHERE s.circle = r.id AND s.member = cella.actor()
         AND (s.since IS NULL OR s.since <= cella.verdict_date())
         AND (s.until IS NULL OR s.until > cella.verdict_date())
-        AND (p.voters IS NULL OR 'participant' = ANY (p.voters) OR s.role = ANY (p.voters))
+        AND motion.votes(p.id, s.role)
     ) THEN 'the founding''s signer has no vote in ' || r.id || ': a founder seated in a role that votes by ' || r.procedure || ' signs it'
   END
   FROM (

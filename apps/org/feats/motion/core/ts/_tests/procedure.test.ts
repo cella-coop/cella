@@ -18,6 +18,15 @@ const rejects = async (sql: string, says: RegExp) => {
   }
 }
 
+// The grantees a procedure's parties name here, in the transaction: the
+// role `lead` and the circles `coordination` and `ag`, those not made yet.
+const grantees = async () => {
+  await db.query(`INSERT INTO circle.role (id, circle, name) SELECT 'lead', '*', 'Circle lead' WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = 'lead')`)
+  await db.query(
+    `INSERT INTO circle.circle (id, name) SELECT c, c FROM unnest('{coordination,ag}'::text[]) c WHERE NOT EXISTS (SELECT FROM circle.grantee g WHERE g.id = c)`,
+  )
+}
+
 before(async () => {
   await db.connect()
 })
@@ -101,6 +110,12 @@ test('a procedure policy names itself, decides by consent or majority, marks its
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {voters: Circle Leads}')) ?? '', /names the roles that vote by id, as \{voters: lead, secretary\}, not Circle Leads/)
   assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, the {veto: , } may veto')) ?? '', /names the roles that may veto by id/)
   assert.match((await flaw('By {procedure: crowd}, {method: consent}, with {quorum: none}, after consulting {consult: Coordination}')) ?? '', /names the circle it consults by id, as \{consult: coordination\}, not Coordination/)
+  // Each party is a grantee there is, of its kind: a role votes and vetoes, a circle is consulted.
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, the {veto: clerk} may veto')) ?? '', /no role clerk for a procedure's vetoes/)
+  assert.match((await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {voters: ag}')) ?? '', /ag is a circle, and a procedure's voters are roles/)
+  assert.match((await flaw('By {procedure: crowd}, {method: consent}, with {quorum: none}, after consulting {consult: participant}')) ?? '', /participant is a role, and a procedure consults a circle/)
+  assert.match((await flaw('By {procedure: crowd}, {method: consent}, with {quorum: none}, after consulting {consult: nowhere}')) ?? '', /no circle nowhere for a procedure to consult/)
+  assert.equal(await flaw('By {procedure: crowd}, {method: majority}, with {quorum: none}, by {voters: participant}'), null)
   // A name taken: a built-in one only on its own terms, and none a policy made.
   assert.equal(await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: none}'), null)
   assert.match((await flaw('By {procedure: two-thirds}, a {method: majority} of {share: 2/3}, with {quorum: 1/2}')) ?? '', /two-thirds is a procedure already, and its terms are fixed/)
@@ -118,6 +133,16 @@ test('adopting a procedure policy makes its procedure, or names the built-in one
       (await db.query(`SELECT id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, policy FROM motion.procedure WHERE id = 'statutory'`)).rows,
       [{ id: 'statutory', label: 'Statutory assembly', method: 'majority', share_num: 2, share_den: 3, quorum_num: 1, quorum_den: 2, ballot: 'open', policy: 'm-2026-092/1' }],
     )
+    // Its parties are copied as grantees, each by its kind; one naming no grantee is refused, saying which.
+    await grantees()
+    await adopt('By {procedure: led}, a {method: majority}, with {quorum: none}, the {veto: lead} may veto, once {consult: coordination} is heard', 3)
+    assert.equal((await db.query<{ p: string }>(`SELECT motion.procedure_from('m-2026-092/3') AS p`)).rows[0].p, 'led')
+    assert.deepEqual((await db.query<{ p: string[] }>(`SELECT motion.parties('led') AS p`)).rows[0].p, ['consulted coordination', 'vetoes lead'])
+    assert.equal((await db.query<{ c: string }>(`SELECT motion.consults('led') AS c`)).rows[0].c, 'coordination')
+    await adopt('By {procedure: clerked}, a {method: majority}, with {quorum: none}, the {veto: clerk} may veto', 4)
+    await db.query('SAVEPOINT clerked')
+    await assert.rejects(db.query(`SELECT motion.procedure_from('m-2026-092/4')`), /no role clerk for a procedure's vetoes/)
+    await db.query('ROLLBACK TO SAVEPOINT clerked')
     // A built-in procedure, already counted by, comes to name its policy, its terms unchanged.
     await db.query(
       `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-093', 'ag', 'x', 'consent', 'consent', '2026-11-21', '2026-12-05')`,
@@ -166,15 +191,20 @@ test('a procedure is as strict as another when whatever passes by it passes by t
   await db.query('BEGIN')
   try {
     await db.query(
-      `INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, voters, veto) VALUES
-         ('ordinary', 'Ordinary', 'majority', NULL, NULL, 1, 4, NULL, '{}'),
-         ('extraordinary', 'Extraordinary', 'majority', 2, 3, 1, 2, NULL, '{}'),
-         ('half', 'Half', 'majority', 1, 2, 1, 2, NULL, '{}'),
-         ('leads', 'Leads', 'majority', 2, 3, 1, 2, '{lead}', '{}'),
-         ('vetoed', 'Vetoed', 'majority', 2, 3, 1, 2, NULL, '{lead}'),
-         ('quorate-consent', 'Quorate consent', 'consent', NULL, NULL, 1, 2, NULL, '{}')`,
+      `INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den) VALUES
+         ('ordinary', 'Ordinary', 'majority', NULL, NULL, 1, 4),
+         ('extraordinary', 'Extraordinary', 'majority', 2, 3, 1, 2),
+         ('half', 'Half', 'majority', 1, 2, 1, 2),
+         ('leads', 'Leads', 'majority', 2, 3, 1, 2),
+         ('vetoed', 'Vetoed', 'majority', 2, 3, 1, 2),
+         ('quorate-consent', 'Quorate consent', 'consent', NULL, NULL, 1, 2)`,
     )
-    await db.query(`INSERT INTO motion.procedure (id, label, method, consult) VALUES ('heard', 'Heard', 'consent', 'coordination'), ('elsewhere', 'Elsewhere', 'consent', 'ag')`)
+    await db.query(`INSERT INTO motion.procedure (id, label, method) VALUES ('heard', 'Heard', 'consent'), ('elsewhere', 'Elsewhere', 'consent')`)
+    await grantees()
+    await db.query(
+      `INSERT INTO motion.party (procedure, kind, grantee) VALUES
+         ('leads', 'votes', 'lead'), ('vetoed', 'vetoes', 'lead'), ('heard', 'consulted', 'coordination'), ('elsewhere', 'consulted', 'ag')`,
+    )
     const strict = async (a: string, b: string) =>
       (await db.query<{ s: boolean }>('SELECT motion.as_strict($1, $2) AS s', [a, b])).rows[0].s
     const pairs: [string, string, boolean][] = [

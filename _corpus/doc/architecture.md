@@ -521,12 +521,13 @@ a registry and names none: it is commented `'registry: why'`.
 `feat-check` refuses a table that is neither.
 
 A graft's schema holds the junction, with keys into each feat's tables; no
-foreign key crosses a feat, and the one key out of a schema is a
-record's owning circle. `feat-check` enforces these boundaries by
+foreign key crosses a feat, and the keys out of a schema are a
+record's owning circle and a grantee, into core's `circle.grantee`, as a
+procedure's party is ([motion](../../apps/org/feats/motion/index.md#schema)). `feat-check` enforces these boundaries by
 parsing every `sql/` file with libpg_query, Postgres's own parser,
 PL/pgSQL bodies statement by statement. Beyond references, it refuses SQL
 that creates, alters, indexes, drops or grants outside its own schema;
-holds a foreign key out of it but its owning circle's; names no owning
+holds a foreign key out of it but its owning circle's or a grantee's; names no owning
 circle in a table that is no registry; reads a policy's wording
 (`policy.wording`, [policies](#policies)); writes `cella.*` other than to register,
 under its own name, its guards on its own actions, those of the feats it
@@ -1257,7 +1258,10 @@ circle's core that a mandate's `grantee` references, so circles and
 roles share one namespace of ids. A person never holds a mandate
 directly: they hold a role by a tenure, and the role holds the mandate, so
 `circle.mandate_flaw` refuses a mandate policy that names a person
-([circle](../../apps/org/core/circle/index.md#entities)).
+([circle](../../apps/org/core/circle/index.md#entities)). A procedure's
+parties, the roles that vote and veto and the circle it consults, are
+grantees by the same key, `motion.party`
+([motion](../../apps/org/feats/motion/index.md#schema)).
 
 **A right is no mandate**: it is a power the legal form gives every
 person, every member or every employee as such (`{right: member}`),
@@ -1322,7 +1326,7 @@ its procedure says: by default the people seated in its circle on the
 day it was proposed, never an agent or a service; a procedure may name
 the roles whose seats vote (`{voters: lead}`) and those that may veto
 (`{veto: lead}`), each a value of its sentence copied into
-`motion.procedure`. A seat in one circle carries no vote in another: the roll reads
+`motion.party` as a grantee. A seat in one circle carries no vote in another: the roll reads
 the seats of the motion's own circle alone. A stance needs `vote`, the
 power a procedure gives the seats on the roll and no mandate grants: the
 motion feat registers it in `motion.stance_power`, and

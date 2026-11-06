@@ -1,11 +1,6 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import { page } from '$app/state'
-  import '@fontsource/alegreya/400.css'
-  import '@fontsource/alegreya/500.css'
-  import '@fontsource/alegreya-sans/400.css'
-  import '@fontsource/alegreya-sans/500.css'
-  import '@fontsource/alegreya-sans/700.css'
   import '../styles/tokens.css'
   import '../styles/base.css'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'

@@ -1,106 +1,46 @@
-/* Cella's tokens. Colours are parametric OKLCH: a tone is a chroma and a
-   hue, a shade is a lightness, and every role composes the two. One sign,
-   --theme, mirrors the shade ramp, so dark mode is a single variable.
-   Components read roles, never shades. */
+/* Cella's tokens: the brand's, and over them only what is the shell's
+   own. The tones, shades, roles, theme and type come from @cella/brand;
+   change its house.json, never this file, to change them. Components
+   read roles, never shades. */
 
-:root {
-  --theme: 1;
-  color-scheme: light;
-}
+@import '@cella/brand/fonts.css';
+@import '@cella/brand/tokens.css';
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    --theme: -1;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme='light'] {
-  --theme: 1;
-  color-scheme: light;
-}
-
-:root[data-theme='dark'] {
-  --theme: -1;
-  color-scheme: dark;
-}
-
-:root {
-  /* Tones: chroma and hue. Warm paper for the ground, ochre for the accent. */
-  --tone-base: 0.012 75;
-  --tone-accent: 0.12 48;
-  --tone-positive: 0.09 150;
-  --tone-negative: 0.12 28;
-  --tone-warning: 0.11 80;
-
-  /* Shades: lightness around a midpoint, mirrored by --theme. */
-  --shade-0: calc(0.58 + var(--theme) * 0.39);
-  --shade-1: calc(0.58 + var(--theme) * 0.355);
-  --shade-2: calc(0.58 + var(--theme) * 0.32);
-  --shade-3: calc(0.58 + var(--theme) * 0.27);
-  --shade-4: calc(0.58 + var(--theme) * 0.19);
-  --shade-5: calc(0.58 + var(--theme) * 0.06);
-  --shade-6: calc(0.58 + var(--theme) * -0.1);
-  --shade-7: calc(0.58 + var(--theme) * -0.17);
-  --shade-8: calc(0.58 + var(--theme) * -0.27);
-  --shade-9: calc(0.58 + var(--theme) * -0.36);
-
-  /* Surfaces: the ground the sidebar sits on, the panel the content and
-     its drawer sit on, raised for cards and stats on the panel, float for
-     floating things, sunk for wells. */
-  --ground: oklch(var(--shade-2) var(--tone-base));
-  --panel: oklch(var(--shade-0) var(--tone-base));
-  --raised: oklch(var(--shade-1) var(--tone-base));
-  --sunk: oklch(calc(0.58 + var(--theme) * 0.3) var(--tone-base));
-  --float: oklch(var(--shade-0) var(--tone-base));
+/* Declared on every [data-theme] as the brand's roles are, so a region
+   wearing the other theme reads its own. */
+:root,
+[data-theme] {
   /* The chosen segment of a segmented control, lighter than its sunk well
      in both themes: the well darkens in light and lightens in dark, so
      dark sets its own step above it. */
   --selected: oklch(var(--shade-0) var(--tone-base));
-  --hover: oklch(var(--shade-3) var(--tone-base) / 60%);
-  --line: oklch(var(--shade-3) var(--tone-base));
 
-  --text: oklch(var(--shade-9) var(--tone-base));
-  --text-muted: oklch(var(--shade-7) var(--tone-base));
-  --text-subtle: oklch(var(--shade-6) var(--tone-base));
+  /* Quiet text at the muted step: the brand's subtle step reads under
+     4.5:1 on the ground and the wells in both themes (3.9:1 on the light
+     ground, 4.1:1 on a dark well), which WCAG AA refuses for the small
+     text the shell sets quiet. */
+  --text-subtle: var(--text-muted);
 
-  /* Accent: the fill keeps its lightness in both themes, so the brand reads
-     the same; border and text follow the ramp to keep contrast. WCAG AA
-     sets the steps: subtle text 4.5:1 on the ground and wells, white on
-     the fill 4.5:1, and the focus ring 3:1 on every surface, in both
-     themes. */
-  --accent-fill: oklch(0.55 var(--tone-accent));
-  --accent-border: oklch(var(--shade-6) var(--tone-accent));
-  --accent-text: oklch(var(--shade-8) var(--tone-accent));
-  --accent-soft: oklch(var(--shade-3) var(--tone-accent) / calc(0.4 + var(--theme) * 0.15));
-  --on-accent: oklch(0.98 0.01 75);
-  /* A ring in the accent, soft in both themes: a state under way. */
-  --accent-ring: oklch(var(--shade-4) var(--tone-accent));
-
-  /* A state's soft tint, as a badge fills: 60% in light, 32% in dark,
-     where the shade under it is dark and a stronger tint saturates. */
-  --soft: calc(0.46 + var(--theme) * 0.14);
-  --positive-text: oklch(var(--shade-8) var(--tone-positive));
-  --positive-soft: oklch(var(--shade-3) var(--tone-positive) / var(--soft));
-  --negative-text: oklch(var(--shade-8) var(--tone-negative));
-  --negative-soft: oklch(var(--shade-3) var(--tone-negative) / var(--soft));
-  --warning-text: oklch(var(--shade-8) var(--tone-warning));
-  --warning-soft: oklch(var(--shade-3) var(--tone-warning) / var(--soft));
+  /* A state's soft tint, as a badge fills, named as the shell's badges
+     read it: positive is the brand's success, negative its error. */
+  --soft: var(--soft-a);
+  --positive-text: var(--success-text);
+  --positive-soft: var(--success-soft);
+  --negative-text: var(--error-text);
+  --negative-soft: var(--error-soft);
   --neutral-text: var(--text-muted);
   --neutral-soft: var(--sunk);
 
-  /* Shadow stays dark in both themes, as light does; floating things only. */
-  --shadow-float: 0 2px 6px oklch(0.2 0.02 60 / 10%), 0 16px 40px oklch(0.2 0.02 60 / 16%);
   --focus: 0 0 0 2px var(--accent-border);
   /* The same ring as an outline, for a select, whose native menu list
      WebKit draws without a shadow. */
   --focus-outline: 2px solid var(--accent-border);
+}
 
-  /* Type: Alegreya for the voice, its sans sibling for everything read or
-     measured. */
-  --font-display: 'Alegreya', 'Iowan Old Style', Georgia, serif;
-  --font-ui: 'Alegreya Sans', 'Gill Sans', system-ui, sans-serif;
-  --font-mono: ui-monospace, 'JetBrains Mono', 'SF Mono', monospace;
+:root {
+  /* Type: the brand's faces; the shell reads its text face as --font-ui
+     and keeps its own denser scale. */
+  --font-ui: var(--font-text);
 
   --text-2xs: 0.6875rem;
   --text-xs: 0.75rem;
@@ -112,7 +52,8 @@
 
   --eyebrow-tracking: 0.1em;
 
-  /* Space and shape. Floating things round to 12; controls less. */
+  /* Space and shape. Floating things and panels round to the brand's
+     radius; controls less. */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
   --space-3: 0.75rem;
@@ -120,36 +61,23 @@
   --space-5: 1.5rem;
   --space-6: 2rem;
 
-  --radius-float: 12px;
-  --radius-panel: 12px;
-  --radius-control: 6px;
+  --radius-float: var(--radius);
+  --radius-panel: var(--radius);
   --radius-pill: 999px;
 
   --row: 2.25rem;
   --sidebar: 15rem;
   --drawer: 20rem;
 
-  --ease: cubic-bezier(0.2, 0, 0, 1);
   --fast: 120ms;
 }
 
-/* An equal step in lightness reads stronger near black, so dark mode
-   compresses its surfaces, and lifts the panel above the ground rather
-   than sinking it. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --shade-0: 0.215;
-    --shade-1: 0.245;
-    --shade-2: 0.185;
-    --shade-3: 0.28;
     --selected: oklch(0.37 var(--tone-base));
   }
 }
 
-:root[data-theme='dark'] {
-  --shade-0: 0.215;
-  --shade-1: 0.245;
-  --shade-2: 0.185;
-  --shade-3: 0.28;
+[data-theme='dark'] {
   --selected: oklch(0.37 var(--tone-base));
 }

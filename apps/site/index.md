@@ -81,6 +81,25 @@ renderer hands it:
   Unsplash asks for, the `site` entry's photo credit with the
   photographer's name linked to their profile and "Unsplash" to the
   photo's page. The credit is always printed; no prop removes it.
+- **`<Icon name="…" role="…" />`** draws any of Phosphor's duotone
+  icons by its name, from `@phosphor-icons/core`, inline at build
+  time: its line in the role's text colour, `--<role>-text`, and its
+  duotone layer in the role's soft colour, `--<role>-soft`, a role one
+  of the status hues (`success`, `error`, `warning`, `info`, `help`)
+  or `accent`, the text's own colour unset. The duotone layer retains
+  its full shape in the soft colour, rather than multiplying the soft
+  token's alpha by Phosphor's default 0.2. The icon is decorative and
+  carries no client script. A name Phosphor has not fails the build,
+  naming it.
+- **`<Figure>`** composes them: a `<Photo>` with icons laid over it or
+  beside it, `<Figure photo="…" alt="…" print="…" layout="over|beside">`
+  with its `<Icon>`s as children, at the corners or the edge its layout
+  places them, and the photo's credit once under the whole. `alt` is
+  the operator's description in the section's text. A figure holds
+  exactly one photo and any number of icons; it works in both themes.
+  The build-only fixture under `test/` exercises both layouts in both
+  themes and rejects an unknown icon; its four screenshots show the
+  figure without adding any section text or publishing a fixture photo.
 
 ## Photos
 

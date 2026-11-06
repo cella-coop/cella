@@ -7,9 +7,10 @@
     "@astrojs/svelte": "9.1.2",
     "@cella/brand": "workspace:*",
     "@cella/diagrams": "workspace:*",
-    "svelte": "5.57.2",
+    "@phosphor-icons/core": "2.1.1",
     "astro": "7.4.7",
-    "sharp": "0.35.5"
+    "sharp": "0.35.5",
+    "svelte": "5.57.2"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.12",

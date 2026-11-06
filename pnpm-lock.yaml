@@ -1619,6 +1619,9 @@ importers:
       '@cella/diagrams':
         specifier: workspace:*
         version: link:../../packages/diagrams
+      '@phosphor-icons/core':
+        specifier: 2.1.1
+        version: 2.1.1
       astro:
         specifier: 7.4.7
         version: 7.4.7(@types/node@24.19.2)
@@ -2193,6 +2196,9 @@ packages:
 
   '@pgsql/types@18.0.0':
     resolution: {integrity: sha512-jtAY4JU7jdVYZ/Vv3zlZqVP+FRWZokyCLKPPCnAApiaJAElpyyiMC3HRiquBu29kSrVs+rkqZD50SUIb/zyEGw==}
+
+  '@phosphor-icons/core@2.1.1':
+    resolution: {integrity: sha512-v4ARvrip4qBCImOE5rmPUylOEK4iiED9ZyKjcvzuezqMaiRASCHKcRIuvvxL/twvLpkfnEODCOJp5dM4eZilxQ==}
 
   '@polka/url@1.0.0-next.29':
     resolution: {integrity: sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww==}
@@ -4190,6 +4196,8 @@ snapshots:
   '@oxc-project/types@0.156.0': {}
 
   '@pgsql/types@18.0.0': {}
+
+  '@phosphor-icons/core@2.1.1': {}
 
   '@polka/url@1.0.0-next.29': {}
 

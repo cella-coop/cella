@@ -38,10 +38,16 @@ fn wrap_of(guc: &str, path: String) -> Wrap {
         }
         let bytes = std::fs::read(&path).unwrap_or_else(|e| fail(format!("{guc} {path}: {e}")));
         if bytes.len() != 32 {
-            fail(format!("{guc} {path}: a vault key is 32 bytes, got {}", bytes.len()));
+            fail(format!(
+                "{guc} {path}: a vault key is 32 bytes, got {}",
+                bytes.len()
+            ));
         }
         let key = vault::wrap_key(&bytes);
-        let wrap = Wrap { key, id: vault::wrap_id(&key) };
+        let wrap = Wrap {
+            key,
+            id: vault::wrap_id(&key),
+        };
         cell.borrow_mut().insert(path, wrap);
         wrap
     })
@@ -49,8 +55,9 @@ fn wrap_of(guc: &str, path: String) -> Wrap {
 
 /// The wrap key every vault key is sealed under, from `cella.vault_key_file`.
 fn wrap() -> Wrap {
-    let path =
-        setting(&VAULT_KEY_FILE).unwrap_or_else(|| fail("cella.vault_key_file is not set: the vault's own key, apart from the notary's"));
+    let path = setting(&VAULT_KEY_FILE).unwrap_or_else(|| {
+        fail("cella.vault_key_file is not set: the vault's own key, apart from the notary's")
+    });
     wrap_of("cella.vault_key_file", path)
 }
 
@@ -84,7 +91,12 @@ fn unwrap(subject: &str, class: &str, year: i32, sealed: &[u8], id: &[u8]) -> ([
     let plain = vault::open(&under.key, &key_aad(subject, class, year), sealed).unwrap_or_else(|_| {
         fail(format!("cella: the key of {subject}'s {class} from {year} does not open under the wrap key {} it names", hex(id)))
     });
-    (plain.try_into().unwrap_or_else(|_| fail("cella: a vault key is 32 bytes")), moved)
+    (
+        plain
+            .try_into()
+            .unwrap_or_else(|_| fail("cella: a vault key is 32 bytes")),
+        moved,
+    )
 }
 
 /// N bytes from Postgres's strong random source.
@@ -99,17 +111,41 @@ fn random<const N: usize>() -> [u8; N] {
 }
 
 pub(crate) fn key_aad(subject: &str, class: &str, year: i32) -> Vec<u8> {
-    vault::bound(&[b"key", subject.as_bytes(), class.as_bytes(), &year.to_be_bytes()])
+    vault::bound(&[
+        b"key",
+        subject.as_bytes(),
+        class.as_bytes(),
+        &year.to_be_bytes(),
+    ])
 }
 
-fn secret_aad(commitment: &[u8; 32], subject: &str, class: &str, year: i32, field: &str) -> Vec<u8> {
-    vault::bound(&[b"secret", commitment, subject.as_bytes(), class.as_bytes(), &year.to_be_bytes(), field.as_bytes()])
+fn secret_aad(
+    commitment: &[u8; 32],
+    subject: &str,
+    class: &str,
+    year: i32,
+    field: &str,
+) -> Vec<u8> {
+    vault::bound(&[
+        b"secret",
+        commitment,
+        subject.as_bytes(),
+        class.as_bytes(),
+        &year.to_be_bytes(),
+        field.as_bytes(),
+    ])
 }
 
 /// The key sealing a subject's values of a class from a year, and whether
 /// it is restricted: made on first use when `make`, sealed under the
 /// scope's wrap key, whose id it names.
-fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: bool) -> Option<([u8; 32], bool)> {
+fn data_key(
+    c: &mut SpiClient<'_>,
+    subject: &str,
+    class: &str,
+    year: i32,
+    make: bool,
+) -> Option<([u8; 32], bool)> {
     let rows = spi(c.select(
         "SELECT sealed, restricted IS NOT NULL, wrap FROM vault.key WHERE subject = $1 AND class = $2 AND year = $3",
         Some(1),
@@ -128,12 +164,23 @@ fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: 
     }
     let key = random::<32>();
     let under = wrap();
-    let sealed =
-        vault::seal(&under.key, &random::<NONCE>(), &key_aad(subject, class, year), &key).unwrap_or_else(|e| fail(format!("cella: {e}")));
+    let sealed = vault::seal(
+        &under.key,
+        &random::<NONCE>(),
+        &key_aad(subject, class, year),
+        &key,
+    )
+    .unwrap_or_else(|e| fail(format!("cella: {e}")));
     spi(c.update(
         "INSERT INTO vault.key (subject, class, year, sealed, wrap) VALUES ($1, $2, $3, $4, $5)",
         None,
-        &[subject.into(), class.into(), year.into(), sealed.into(), under.id.to_vec().into()],
+        &[
+            subject.into(),
+            class.into(),
+            year.into(),
+            sealed.into(),
+            under.id.to_vec().into(),
+        ],
     ));
     Some((key, false))
 }
@@ -142,15 +189,22 @@ fn data_key(c: &mut SpiClient<'_>, subject: &str, class: &str, year: i32, make: 
 fn class_of(c: &SpiClient<'_>, field: &str) -> String {
     let parts: Vec<&str> = field.split('.').collect();
     let [schema, tab, col] = parts[..] else {
-        refuse(format!("{field} names no column: a personal field is schema.table.column"), "refused before any guard");
+        refuse(
+            format!("{field} names no column: a personal field is schema.table.column"),
+            "refused before any guard",
+        );
     };
     let rows = spi(c.select(
         "SELECT class FROM cella.personal WHERE schema = $1 AND tab = $2 AND col = $3",
         Some(1),
         &[schema.into(), tab.into(), col.into()],
     ));
-    first::<String>(rows)
-        .unwrap_or_else(|| refuse(format!("{field} is not registered as personal data in cella.personal"), "refused before any guard"))
+    first::<String>(rows).unwrap_or_else(|| {
+        refuse(
+            format!("{field} is not registered as personal data in cella.personal"),
+            "refused before any guard",
+        )
+    })
 }
 
 /// Commits to one personal value: a fresh salt, the commitment, and the
@@ -167,15 +221,26 @@ fn commit(c: &mut SpiClient<'_>, p: &Personal, receipt: i64, year: i32) -> Value
     if !erased.is_empty() {
         // A tombstone a restore wrote again names no receipt, only its day.
         let (at, on) = spi(erased.first().get_two::<i64, String>());
-        let when = at.map_or_else(|| format!("on {}", on.unwrap_or_default()), |n| format!("at receipt {n}"));
-        refuse(format!("{}'s {class} data was erased {when}: erasure wins", p.subject), "refused before any guard");
+        let when = at.map_or_else(
+            || format!("on {}", on.unwrap_or_default()),
+            |n| format!("at receipt {n}"),
+        );
+        refuse(
+            format!(
+                "{}'s {class} data was erased {when}: erasure wins",
+                p.subject
+            ),
+            "refused before any guard",
+        );
     }
     let (key, _) = data_key(c, &p.subject, &class, year, true).expect("made");
     let salt = random::<32>();
-    let commitment = vault::commit(&salt, &p.value).unwrap_or_else(|e| refuse(format!("{}: {e}", p.field), "refused before any guard"));
+    let commitment = vault::commit(&salt, &p.value)
+        .unwrap_or_else(|e| refuse(format!("{}: {e}", p.field), "refused before any guard"));
     let plain = canonical(&p.value).unwrap_or_else(|e| fail(format!("cella: {e}")));
     let aad = secret_aad(&commitment, &p.subject, &class, year, &p.field);
-    let sealed = vault::seal(&key, &random::<NONCE>(), &aad, plain.as_bytes()).unwrap_or_else(|e| fail(format!("cella: {e}")));
+    let sealed = vault::seal(&key, &random::<NONCE>(), &aad, plain.as_bytes())
+        .unwrap_or_else(|e| fail(format!("cella: {e}")));
     spi(c.update(
         "INSERT INTO vault.secret (commitment, receipt, subject, class, year, field, salt, sealed)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)",
@@ -206,13 +271,32 @@ fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) 
         Some(list) => list.iter().cloned().collect(),
         None => known.iter().map(|(k, _, _)| k.clone()).collect(),
     };
-    if let Some(unknown) = wanted.iter().find(|w| !known.iter().any(|(k, _, _)| k == *w)) {
-        refuse(format!("no retention class {unknown}"), "refused before any guard");
+    if let Some(unknown) = wanted
+        .iter()
+        .find(|w| !known.iter().any(|(k, _, _)| k == *w))
+    {
+        refuse(
+            format!("no retention class {unknown}"),
+            "refused before any guard",
+        );
     }
     let (mut erased, mut restricted) = (Vec::new(), Vec::new());
     for (class, years, kept) in known.into_iter().filter(|(k, _, _)| wanted.contains(k)) {
-        erase_class(c, &e.subject, &class, years, kept, Some(receipt), date, year);
-        if kept { restricted.push(class) } else { erased.push(class) }
+        erase_class(
+            c,
+            &e.subject,
+            &class,
+            years,
+            kept,
+            Some(receipt),
+            date,
+            year,
+        );
+        if kept {
+            restricted.push(class)
+        } else {
+            erased.push(class)
+        }
     }
     json!({ vault::ERASURE: { "subject": e.subject, "erased": erased, "restricted": restricted } })
 }
@@ -220,11 +304,19 @@ fn erase(c: &mut SpiClient<'_>, e: &Erase, receipt: i64, date: &str, year: i32) 
 /// The retention classes: each one's clock in years, and whether the law
 /// keeps it.
 fn retention(c: &SpiClient<'_>) -> Vec<(String, i32, bool)> {
-    spi(c.select("SELECT class, years, restricted FROM cella.retention ORDER BY class", None, &[]))
-        .map(|r| {
-            (spi(r.get::<String>(1)).unwrap_or_default(), spi(r.get::<i32>(2)).unwrap_or_default(), spi(r.get::<bool>(3)).unwrap_or(true))
-        })
-        .collect()
+    spi(c.select(
+        "SELECT class, years, restricted FROM cella.retention ORDER BY class",
+        None,
+        &[],
+    ))
+    .map(|r| {
+        (
+            spi(r.get::<String>(1)).unwrap_or_default(),
+            spi(r.get::<i32>(2)).unwrap_or_default(),
+            spi(r.get::<bool>(3)).unwrap_or(true),
+        )
+    })
+    .collect()
 }
 
 /// Erases one class of a subject's on `date`, of year `year`: restricted
@@ -232,7 +324,16 @@ fn retention(c: &SpiClient<'_>) -> Vec<(String, i32, bool)> {
 /// restricted, else in full, its keys and sealed values deleted and its
 /// columns redacted; then the tombstone, naming the erasure's receipt.
 #[allow(clippy::too_many_arguments)]
-fn erase_class(c: &mut SpiClient<'_>, subject: &str, class: &str, years: i32, restrict: bool, receipt: Option<i64>, date: &str, year: i32) {
+fn erase_class(
+    c: &mut SpiClient<'_>,
+    subject: &str,
+    class: &str,
+    years: i32,
+    restrict: bool,
+    receipt: Option<i64>,
+    date: &str,
+    year: i32,
+) {
     if restrict {
         spi(c.update(
             "DELETE FROM vault.key WHERE subject = $1 AND class = $2 AND year + $3 + 1 <= $4",
@@ -247,7 +348,11 @@ fn erase_class(c: &mut SpiClient<'_>, subject: &str, class: &str, years: i32, re
             &[subject.into(), class.into(), date.into()],
         ));
     } else {
-        spi(c.update("DELETE FROM vault.key WHERE subject = $1 AND class = $2", None, &[subject.into(), class.into()]));
+        spi(c.update(
+            "DELETE FROM vault.key WHERE subject = $1 AND class = $2",
+            None,
+            &[subject.into(), class.into()],
+        ));
         redact(c, subject, class);
     }
     tombstone(c, subject, class, receipt, date, restrict);
@@ -263,23 +368,35 @@ fn erase_class(c: &mut SpiClient<'_>, subject: &str, class: &str, years: i32, re
 /// out; run again, none.
 pub fn reerase(list: &Value) -> i64 {
     let Some(items) = list.get("erasures").and_then(Value::as_array) else {
-        fail("cella: a list of erasures is an object whose `erasures` is an array, as cella backup writes it");
+        fail(
+            "cella: a list of erasures is an object whose `erasures` is an array, as cella backup writes it",
+        );
     };
     Spi::connect_mut(|c| {
         lock_head(c);
         let known = retention(c);
         let mut done = 0;
         for item in items {
-            let text =
-                |k: &str| item.get(k).and_then(Value::as_str).unwrap_or_else(|| fail(format!("cella: an erasure without its {k}: {item}")));
+            let text = |k: &str| {
+                item.get(k)
+                    .and_then(Value::as_str)
+                    .unwrap_or_else(|| fail(format!("cella: an erasure without its {k}: {item}")))
+            };
             let (subject, class, date) = (text("subject"), text("class"), text("date"));
             let listed = item
                 .get("restricted")
                 .and_then(Value::as_bool)
-                .unwrap_or_else(|| fail(format!("cella: an erasure without its restricted: {item}")));
-            let year: i32 = date.get(..4).and_then(|y| y.parse().ok()).unwrap_or_else(|| fail(format!("cella: an erasure's date {date}")));
+                .unwrap_or_else(|| {
+                    fail(format!("cella: an erasure without its restricted: {item}"))
+                });
+            let year: i32 = date
+                .get(..4)
+                .and_then(|y| y.parse().ok())
+                .unwrap_or_else(|| fail(format!("cella: an erasure's date {date}")));
             let Some((_, years, kept)) = known.iter().find(|(k, _, _)| k == class) else {
-                fail(format!("cella: no retention class {class}, which the list's erasure of {subject} names"));
+                fail(format!(
+                    "cella: no retention class {class}, which the list's erasure of {subject} names"
+                ));
             };
             let restrict = *kept && listed;
             let held = spi(c.select(
@@ -321,10 +438,21 @@ impl Drop for Redacting {
 fn redact(c: &mut SpiClient<'_>, subject: &str, class: &str) {
     REDACTING.with(|r| r.set(true));
     let _during = Redacting;
-    spi(c.update("SELECT cella.redact($1, $2)", None, &[subject.into(), class.into()]));
+    spi(c.update(
+        "SELECT cella.redact($1, $2)",
+        None,
+        &[subject.into(), class.into()],
+    ));
 }
 
-fn tombstone(c: &mut SpiClient<'_>, subject: &str, class: &str, receipt: Option<i64>, date: &str, restricted: bool) {
+fn tombstone(
+    c: &mut SpiClient<'_>,
+    subject: &str,
+    class: &str,
+    receipt: Option<i64>,
+    date: &str,
+    restricted: bool,
+) {
     spi(c.update(
         "INSERT INTO vault.erased (subject, class, receipt, date, restricted) VALUES ($1, $2, $3, $4::date, $5)
          ON CONFLICT (subject, class) DO UPDATE
@@ -337,7 +465,9 @@ fn tombstone(c: &mut SpiClient<'_>, subject: &str, class: &str, receipt: Option<
 /// The payload as the log keeps it: personal values committed to and
 /// sealed, erasures carried out, each marker replaced by what it became.
 pub fn logged(c: &mut SpiClient<'_>, payload: &Value, receipt: i64, date: &str) -> Value {
-    let year: i32 = date[..4].parse().unwrap_or_else(|_| fail(format!("cella: verdict date {date}")));
+    let year: i32 = date[..4]
+        .parse()
+        .unwrap_or_else(|_| fail(format!("cella: verdict date {date}")));
     vault::logged(payload, &mut |m| {
         Ok(match m {
             Marked::Personal(p) => commit(c, &p, receipt, year),
@@ -363,13 +493,21 @@ fn open_one(c: &mut SpiClient<'_>, commitment: &[u8; 32]) -> Option<Value> {
     let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
     let (subject, class, field) = (text(1), text(2), text(4));
     let year = spi(row.get::<i32>(3)).unwrap_or_default();
-    let salt: [u8; 32] = spi(row.get::<Vec<u8>>(5)).unwrap_or_default().try_into().ok()?;
+    let salt: [u8; 32] = spi(row.get::<Vec<u8>>(5))
+        .unwrap_or_default()
+        .try_into()
+        .ok()?;
     let sealed = spi(row.get::<Vec<u8>>(6)).unwrap_or_default();
     let (key, restricted) = data_key(c, &subject, &class, year, false)?;
     if restricted {
         return Some(Value::String("restricted".into()));
     }
-    let plain = vault::open(&key, &secret_aad(commitment, &subject, &class, year, &field), &sealed).ok()?;
+    let plain = vault::open(
+        &key,
+        &secret_aad(commitment, &subject, &class, year, &field),
+        &sealed,
+    )
+    .ok()?;
     let value: Value = serde_json::from_slice(&plain).ok()?;
     vault::opens(commitment, &salt, &value).then_some(value)
 }
@@ -379,7 +517,11 @@ fn open_one(c: &mut SpiClient<'_>, commitment: &[u8; 32]) -> Option<Value> {
 /// for the erased.
 pub fn opened(n: i64) -> Option<Value> {
     Spi::connect_mut(|c| {
-        let rows = spi(c.select("SELECT form FROM cella.log WHERE n = $1", Some(1), &[n.into()]));
+        let rows = spi(c.select(
+            "SELECT form FROM cella.log WHERE n = $1",
+            Some(1),
+            &[n.into()],
+        ));
         let form = first::<pgrx::JsonB>(rows)?.0;
         Some(vault::opened(&form, &mut |k| open_one(c, k)))
     })
@@ -390,7 +532,9 @@ pub fn opened(n: i64) -> Option<Value> {
 /// from the year it was asked (no later value is accepted), has run out,
 /// carried out in full: its keys and values deleted, its columns redacted.
 pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
-    let year: i32 = date[..4].parse().unwrap_or_else(|_| fail(format!("cella: verdict date {date}")));
+    let year: i32 = date[..4]
+        .parse()
+        .unwrap_or_else(|_| fail(format!("cella: verdict date {date}")));
     Spi::connect_mut(|c| {
         let mut out = Vec::new();
         let expired: Vec<(String, String, i32)> = spi(c.select(
@@ -415,11 +559,17 @@ pub fn sweep(date: &str) -> Vec<(String, String, i64, bool)> {
         ))
         .map(|r| (spi(r.get::<String>(1)).unwrap_or_default(), spi(r.get::<String>(2)).unwrap_or_default()))
         .collect();
-        let mut touched: BTreeSet<(String, String)> = expired.iter().map(|(s, k, _)| (s.clone(), k.clone())).collect();
+        let mut touched: BTreeSet<(String, String)> = expired
+            .iter()
+            .map(|(s, k, _)| (s.clone(), k.clone()))
+            .collect();
         touched.extend(due.iter().cloned());
         for (subject, class) in touched {
             let mut destroyed = 0i64;
-            for (_, _, y) in expired.iter().filter(|(s, k, _)| *s == subject && *k == class) {
+            for (_, _, y) in expired
+                .iter()
+                .filter(|(s, k, _)| *s == subject && *k == class)
+            {
                 spi(c.update(
                     "DELETE FROM vault.key WHERE subject = $1 AND class = $2 AND year = $3",
                     None,
@@ -464,13 +614,23 @@ type SealedKey = (String, String, i32, Vec<u8>, Vec<u8>);
 
 /// The vault's keys, each with the id of the wrap key it names, in order.
 fn sealed_keys(c: &SpiClient<'_>) -> Vec<SealedKey> {
-    spi(c.select("SELECT subject, class, year, sealed, wrap FROM vault.key ORDER BY subject, class, year", None, &[]))
-        .map(|row| {
-            let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
-            let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
-            (text(1), text(2), spi(row.get::<i32>(3)).unwrap_or_default(), bytes(4), bytes(5))
-        })
-        .collect()
+    spi(c.select(
+        "SELECT subject, class, year, sealed, wrap FROM vault.key ORDER BY subject, class, year",
+        None,
+        &[],
+    ))
+    .map(|row| {
+        let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
+        let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
+        (
+            text(1),
+            text(2),
+            spi(row.get::<i32>(3)).unwrap_or_default(),
+            bytes(4),
+            bytes(5),
+        )
+    })
+    .collect()
 }
 
 /// Seals every vault key under the current wrap key: each that names the
@@ -486,8 +646,13 @@ pub fn rewrap() -> i64 {
             if !old {
                 continue;
             }
-            let resealed = vault::seal(&under.key, &random::<NONCE>(), &key_aad(&subject, &class, year), &key)
-                .unwrap_or_else(|e| fail(format!("cella: {e}")));
+            let resealed = vault::seal(
+                &under.key,
+                &random::<NONCE>(),
+                &key_aad(&subject, &class, year),
+                &key,
+            )
+            .unwrap_or_else(|e| fail(format!("cella: {e}")));
             spi(c.update(
                 "UPDATE vault.key SET sealed = $4, wrap = $5 WHERE subject = $1 AND class = $2 AND year = $3",
                 None,
@@ -514,7 +679,10 @@ pub fn name_wraps() -> i64 {
             let aad = key_aad(&subject, &class, year);
             let current = wrap();
             let opens = |w: &Wrap| vault::open(&w.key, &aad, &sealed).is_ok();
-            let Some(under) = Some(current).filter(opens).or_else(|| previous().filter(opens)) else {
+            let Some(under) = Some(current)
+                .filter(opens)
+                .or_else(|| previous().filter(opens))
+            else {
                 fail(format!(
                     "cella: the key of {subject}'s {class} from {year} opens under neither cella.vault_key_file nor cella.vault_key_previous, so the upgrade cannot name its wrap key: point cella.vault_key_previous at the vault key file that sealed it"
                 ));
@@ -522,7 +690,12 @@ pub fn name_wraps() -> i64 {
             spi(c.update(
                 "UPDATE vault.key SET wrap = $4 WHERE subject = $1 AND class = $2 AND year = $3",
                 None,
-                &[subject.into(), class.into(), year.into(), under.id.to_vec().into()],
+                &[
+                    subject.into(),
+                    class.into(),
+                    year.into(),
+                    under.id.to_vec().into(),
+                ],
             ));
             named += 1;
         }

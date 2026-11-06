@@ -27,7 +27,7 @@
 
 use fips204::traits::{KeyGen as _, SerDes as _, Signer as _, Verifier as _};
 
-use crate::{CryptoError, MultisigAlgo, MULTISIG_ED25519, MULTISIG_ML_DSA_44};
+use crate::{CryptoError, MULTISIG_ED25519, MULTISIG_ML_DSA_44, MultisigAlgo};
 
 /// A signature scheme: keygen, sign, verify, and byte-level (de)serialization
 /// for its key and signature types. One impl per `MULTISIG_*` algorithm.
@@ -49,8 +49,7 @@ pub trait SigningScheme {
     fn sign(sk: &Self::SecretKey, msg: &[u8]) -> Result<Self::Signature, CryptoError>;
 
     /// Verify `sig` over `msg` against `pk`.
-    fn verify(pk: &Self::PublicKey, msg: &[u8], sig: &Self::Signature)
-        -> Result<(), CryptoError>;
+    fn verify(pk: &Self::PublicKey, msg: &[u8], sig: &Self::Signature) -> Result<(), CryptoError>;
 
     /// Serialize a public key to scheme-native bytes (no algorithm prefix).
     fn public_key_to_bytes(pk: &Self::PublicKey) -> Vec<u8>;
@@ -96,8 +95,7 @@ fn split(blob: &[u8]) -> Result<(MultisigAlgo, &[u8]), CryptoError> {
 /// algorithm must be known; both failures are [`CryptoError::UnknownAlgorithm`]
 /// territory rather than a silent fall-through.
 pub fn verify_blob(pk_blob: &[u8], msg: &[u8], sig_blob: &[u8]) -> Result<(), CryptoError> {
-    let (pk_algo, pk_bytes) =
-        split(pk_blob).map_err(|_| CryptoError::MalformedPublicKey)?;
+    let (pk_algo, pk_bytes) = split(pk_blob).map_err(|_| CryptoError::MalformedPublicKey)?;
     let (sig_algo, sig_bytes) = split(sig_blob)?;
     if pk_algo != sig_algo {
         return Err(CryptoError::UnknownAlgorithm);
@@ -139,11 +137,7 @@ impl SigningScheme for Ed25519 {
         Ok(sk.sign(msg))
     }
 
-    fn verify(
-        pk: &Self::PublicKey,
-        msg: &[u8],
-        sig: &Self::Signature,
-    ) -> Result<(), CryptoError> {
+    fn verify(pk: &Self::PublicKey, msg: &[u8], sig: &Self::Signature) -> Result<(), CryptoError> {
         pk.verify(msg, sig)
     }
 
@@ -152,8 +146,9 @@ impl SigningScheme for Ed25519 {
     }
 
     fn public_key_from_bytes(bytes: &[u8]) -> Result<Self::PublicKey, CryptoError> {
-        let arr: &[u8; crate::PUBLIC_KEY_LEN] =
-            bytes.try_into().map_err(|_| CryptoError::MalformedPublicKey)?;
+        let arr: &[u8; crate::PUBLIC_KEY_LEN] = bytes
+            .try_into()
+            .map_err(|_| CryptoError::MalformedPublicKey)?;
         crate::PublicKey::from_bytes(arr)
     }
 
@@ -162,8 +157,9 @@ impl SigningScheme for Ed25519 {
     }
 
     fn signature_from_bytes(bytes: &[u8]) -> Result<Self::Signature, CryptoError> {
-        let arr: &[u8; crate::SIGNATURE_LEN] =
-            bytes.try_into().map_err(|_| CryptoError::MalformedSignature)?;
+        let arr: &[u8; crate::SIGNATURE_LEN] = bytes
+            .try_into()
+            .map_err(|_| CryptoError::MalformedSignature)?;
         crate::Signature::from_bytes(arr)
     }
 }
@@ -181,7 +177,9 @@ impl MlDsa44 {
     /// keep protecting a 32-byte seed regardless of scheme (the D8
     /// decision). Same seed, same keypair, always.
     #[must_use]
-    pub fn keygen_from_seed(seed: &[u8; 32]) -> (
+    pub fn keygen_from_seed(
+        seed: &[u8; 32],
+    ) -> (
         <Self as SigningScheme>::PublicKey,
         <Self as SigningScheme>::SecretKey,
     ) {
@@ -201,14 +199,11 @@ impl SigningScheme for MlDsa44 {
     }
 
     fn sign(sk: &Self::SecretKey, msg: &[u8]) -> Result<Self::Signature, CryptoError> {
-        sk.try_sign(msg, &[]).map_err(|_| CryptoError::SigningFailed)
+        sk.try_sign(msg, &[])
+            .map_err(|_| CryptoError::SigningFailed)
     }
 
-    fn verify(
-        pk: &Self::PublicKey,
-        msg: &[u8],
-        sig: &Self::Signature,
-    ) -> Result<(), CryptoError> {
+    fn verify(pk: &Self::PublicKey, msg: &[u8], sig: &Self::Signature) -> Result<(), CryptoError> {
         if pk.verify(msg, sig, &[]) {
             Ok(())
         } else {
@@ -221,8 +216,9 @@ impl SigningScheme for MlDsa44 {
     }
 
     fn public_key_from_bytes(bytes: &[u8]) -> Result<Self::PublicKey, CryptoError> {
-        let arr: [u8; fips204::ml_dsa_44::PK_LEN] =
-            bytes.try_into().map_err(|_| CryptoError::MalformedPublicKey)?;
+        let arr: [u8; fips204::ml_dsa_44::PK_LEN] = bytes
+            .try_into()
+            .map_err(|_| CryptoError::MalformedPublicKey)?;
         fips204::ml_dsa_44::PublicKey::try_from_bytes(arr)
             .map_err(|_| CryptoError::MalformedPublicKey)
     }
@@ -232,7 +228,9 @@ impl SigningScheme for MlDsa44 {
     }
 
     fn signature_from_bytes(bytes: &[u8]) -> Result<Self::Signature, CryptoError> {
-        bytes.try_into().map_err(|_| CryptoError::MalformedSignature)
+        bytes
+            .try_into()
+            .map_err(|_| CryptoError::MalformedSignature)
     }
 }
 
@@ -280,10 +278,8 @@ mod tests {
     fn ml_dsa_44_serde_roundtrip() {
         let (pk, sk) = MlDsa44::keygen().unwrap();
         let sig = MlDsa44::sign(&sk, b"m").unwrap();
-        let pk2 =
-            MlDsa44::public_key_from_bytes(&MlDsa44::public_key_to_bytes(&pk)).unwrap();
-        let sig2 =
-            MlDsa44::signature_from_bytes(&MlDsa44::signature_to_bytes(&sig)).unwrap();
+        let pk2 = MlDsa44::public_key_from_bytes(&MlDsa44::public_key_to_bytes(&pk)).unwrap();
+        let sig2 = MlDsa44::signature_from_bytes(&MlDsa44::signature_to_bytes(&sig)).unwrap();
         MlDsa44::verify(&pk2, b"m", &sig2).unwrap();
     }
 
@@ -291,13 +287,21 @@ mod tests {
     fn blob_dispatch_routes_both_schemes() {
         let (epk, esk) = Ed25519::keygen().unwrap();
         let esig = Ed25519::sign(&esk, b"m").unwrap();
-        verify_blob(&Ed25519::public_key_blob(&epk), b"m", &Ed25519::signature_blob(&esig))
-            .unwrap();
+        verify_blob(
+            &Ed25519::public_key_blob(&epk),
+            b"m",
+            &Ed25519::signature_blob(&esig),
+        )
+        .unwrap();
 
         let (mpk, msk) = MlDsa44::keygen().unwrap();
         let msig = MlDsa44::sign(&msk, b"m").unwrap();
-        verify_blob(&MlDsa44::public_key_blob(&mpk), b"m", &MlDsa44::signature_blob(&msig))
-            .unwrap();
+        verify_blob(
+            &MlDsa44::public_key_blob(&mpk),
+            b"m",
+            &MlDsa44::signature_blob(&msig),
+        )
+        .unwrap();
     }
 
     #[test]

@@ -37,7 +37,9 @@ pub fn rewrap(repo: &Repo, url: Option<&str>) -> Result {
         .arg("SELECT cella.vault_rewrap(), (SELECT count(*) FROM vault.key)");
     let out = Steps::read(&mut cmd)?;
     let (moved, all) = out.trim().split_once('|').unwrap_or((out.trim(), "?"));
-    println!("rewrapped: {moved} of {all} vault keys moved to cella.vault_key_file; the previous file now seals none");
+    println!(
+        "rewrapped: {moved} of {all} vault keys moved to cella.vault_key_file; the previous file now seals none"
+    );
     Ok(())
 }
 
@@ -47,9 +49,16 @@ pub fn fixture(repo: &Repo, name: &str) -> Result<PathBuf> {
     let dir = fixtures.join(name);
     if name.contains('/') || !dir.is_dir() {
         let known: Vec<String> = fs::read_dir(&fixtures)
-            .map(|d| d.flatten().map(|e| e.file_name().to_string_lossy().into_owned()).collect())
+            .map(|d| {
+                d.flatten()
+                    .map(|e| e.file_name().to_string_lossy().into_owned())
+                    .collect()
+            })
             .unwrap_or_default();
-        return Err(Fail::new(format!("no fixture {name}; there are: {}", known.join(", "))));
+        return Err(Fail::new(format!(
+            "no fixture {name}; there are: {}",
+            known.join(", ")
+        )));
     }
     Ok(dir)
 }
@@ -70,14 +79,28 @@ pub fn sweep(repo: &Repo, url: Option<&str>) -> Result {
     if let Some(url) = url {
         cmd.args(["-d", url]);
     }
-    cmd.args(["-X", "-q", "-t", "-A", "-F", " ", "-v", "ON_ERROR_STOP=1", "-c"])
-        .arg("SELECT subject, class, keys, redacted FROM cella.vault_sweep()");
+    cmd.args([
+        "-X",
+        "-q",
+        "-t",
+        "-A",
+        "-F",
+        " ",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+    ])
+    .arg("SELECT subject, class, keys, redacted FROM cella.vault_sweep()");
     let out = Steps::read(&mut cmd)?;
     let lines: Vec<&str> = out.lines().filter(|l| !l.trim().is_empty()).collect();
     for line in &lines {
         let f: Vec<&str> = line.split(' ').collect();
         if let [subject, class, keys, redacted] = f[..] {
-            let done = if redacted == "t" { ", redacted" } else { ", restricted still" };
+            let done = if redacted == "t" {
+                ", redacted"
+            } else {
+                ", restricted still"
+            };
             println!("{subject} {class}: {keys} keys destroyed{done}");
         }
     }
@@ -92,16 +115,32 @@ pub fn verify(repo: &Repo, url: Option<&str>) -> Result {
     if let Some(url) = url {
         cmd.args(["-d", url]);
     }
-    cmd.args(["-X", "-q", "-t", "-A", "-F", " ", "-v", "ON_ERROR_STOP=1", "-c"]).arg(
+    cmd.args([
+        "-X",
+        "-q",
+        "-t",
+        "-A",
+        "-F",
+        " ",
+        "-v",
+        "ON_ERROR_STOP=1",
+        "-c",
+    ])
+    .arg(
         "SELECT cella.verify_log(), (SELECT n FROM cella.head), encode(cella.notary_key(), 'hex')",
     );
     let out = Steps::read(&mut cmd)?;
     let mut fields = out.split_whitespace();
-    let (Some(verified), Some(head), Some(public)) = (fields.next(), fields.next(), fields.next()) else {
-        return Err(Fail::new(format!("unexpected answer from cella.verify_log(): {out}")));
+    let (Some(verified), Some(head), Some(public)) = (fields.next(), fields.next(), fields.next())
+    else {
+        return Err(Fail::new(format!(
+            "unexpected answer from cella.verify_log(): {out}"
+        )));
     };
     if verified != "t" {
-        return Err(Fail::new(format!("the log does not verify; its head is at {head}")));
+        return Err(Fail::new(format!(
+            "the log does not verify; its head is at {head}"
+        )));
     }
     println!("log verifies: {head} entries, signed by {public}");
     Ok(())
@@ -120,13 +159,17 @@ pub struct Import<'a> {
 /// record a signed write, or in a dry run every write made and undone;
 /// prints what each line came to and records the run.
 pub fn import(repo: &Repo, steps: &Steps, import: &Import<'_>, url: Option<&str>) -> Result {
-    let file = std::path::absolute(import.file).map_err(|e| Fail::new(format!("{}: {e}", import.file.display())))?;
+    let file = std::path::absolute(import.file)
+        .map_err(|e| Fail::new(format!("{}: {e}", import.file.display())))?;
     if !file.is_file() {
         return Err(Fail::new(format!("no file {}", file.display())));
     }
     repo.install(steps)?;
     let mut cmd = on(&Dev::new(repo), url, "node")?;
-    cmd.arg(repo.root.join("tools/import.mjs")).arg(import.kind).arg(&file).arg(import.actor);
+    cmd.arg(repo.root.join("tools/import.mjs"))
+        .arg(import.kind)
+        .arg(&file)
+        .arg(import.actor);
     if import.dry {
         cmd.arg("--dry-run");
     }

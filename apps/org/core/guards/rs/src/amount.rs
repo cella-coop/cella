@@ -60,7 +60,10 @@ fn parse_cents(s: &str) -> Result<i64> {
         None => (false, t),
     };
     let (whole, frac) = t.split_once('.').unwrap_or((t, ""));
-    let digits = whole.bytes().chain(frac.bytes()).all(|b| b.is_ascii_digit());
+    let digits = whole
+        .bytes()
+        .chain(frac.bytes())
+        .all(|b| b.is_ascii_digit());
     if whole.is_empty() || frac.len() > 2 || !digits {
         return Err(bad());
     }
@@ -115,13 +118,21 @@ mod tests {
     #[test]
     fn overflow_is_an_error() {
         let max = Amount::new(i64::MAX).unwrap();
-        assert_eq!(max.checked_add(Amount::new(1).unwrap()), Err(Error::Overflow));
-        assert_eq!(Balance::new(i64::MIN).debit(Amount::new(1).unwrap()), Err(Error::Overflow));
+        assert_eq!(
+            max.checked_add(Amount::new(1).unwrap()),
+            Err(Error::Overflow)
+        );
+        assert_eq!(
+            Balance::new(i64::MIN).debit(Amount::new(1).unwrap()),
+            Err(Error::Overflow)
+        );
     }
 
     #[test]
     fn balances_go_negative() {
-        let b = Balance::default().debit(Amount::new(4205).unwrap()).unwrap();
+        let b = Balance::default()
+            .debit(Amount::new(4205).unwrap())
+            .unwrap();
         assert_eq!(b.to_string(), "-42.05");
     }
 }

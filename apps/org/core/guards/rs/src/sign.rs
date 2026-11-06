@@ -63,7 +63,9 @@ pub fn restates(request: &Value, payload: &Value) -> Result<()> {
         return Ok(());
     };
     for (field, value) in asked {
-        let Some(said) = logged.get(field).map(unmarked) else { continue };
+        let Some(said) = logged.get(field).map(unmarked) else {
+            continue;
+        };
         if kind(&said) == kind(value) && said != *value {
             return Err(Error::Restated(field.clone()));
         }
@@ -127,9 +129,12 @@ impl Request<'_> {
     /// keys, no malleable signatures.
     pub fn verify(&self, sig: &[u8]) -> Result<()> {
         let message = self.message()?;
-        let key = VerifyingKey::from_bytes(&self.device).map_err(|_| Error::Signature("the device key is not an Ed25519 key"))?;
-        let sig = Signature::from_slice(sig).map_err(|_| Error::Signature("a signature is 64 bytes"))?;
-        key.verify_strict(message.as_bytes(), &sig).map_err(|_| Error::Signature("the signature does not verify"))
+        let key = VerifyingKey::from_bytes(&self.device)
+            .map_err(|_| Error::Signature("the device key is not an Ed25519 key"))?;
+        let sig =
+            Signature::from_slice(sig).map_err(|_| Error::Signature("a signature is 64 bytes"))?;
+        key.verify_strict(message.as_bytes(), &sig)
+            .map_err(|_| Error::Signature("the signature does not verify"))
     }
 }
 
@@ -143,7 +148,14 @@ mod tests {
 
     fn signed(key: &SigningKey, request: &Value, nonce: &str) -> ([u8; 32], [u8; 64]) {
         let digest = request_digest(request, SALT).unwrap();
-        let r = Request { scope: "lanterne.example", op: "invoice:invoice:issue", actor: "julien@lanterne.example", device: key.verifying_key().to_bytes(), digest, nonce };
+        let r = Request {
+            scope: "lanterne.example",
+            op: "invoice:invoice:issue",
+            actor: "julien@lanterne.example",
+            device: key.verifying_key().to_bytes(),
+            digest,
+            nonce,
+        };
         (digest, key.sign(r.message().unwrap().as_bytes()).to_bytes())
     }
 
@@ -153,28 +165,91 @@ mod tests {
         let nonce = "00112233445566778899aabbccddeeff";
         let request = json!({"series": "F-2026", "lines": [{"cents": 52000}]});
         let (digest, sig) = signed(&key, &request, nonce);
-        let r = |op, actor, digest, nonce| Request { scope: "lanterne.example", op, actor, device: key.verifying_key().to_bytes(), digest, nonce };
+        let r = |op, actor, digest, nonce| Request {
+            scope: "lanterne.example",
+            op,
+            actor,
+            device: key.verifying_key().to_bytes(),
+            digest,
+            nonce,
+        };
 
-        assert!(r("invoice:invoice:issue", "julien@lanterne.example", digest, nonce).verify(&sig).is_ok());
-        let other = request_digest(&json!({"series": "F-2026", "lines": [{"cents": 52001}]}), SALT).unwrap();
-        assert!(r("invoice:invoice:issue", "julien@lanterne.example", other, nonce).verify(&sig).is_err());
-        assert!(r("invoice:invoice:void", "julien@lanterne.example", digest, nonce).verify(&sig).is_err());
-        assert!(r("invoice:invoice:issue", "chloe@lanterne.example", digest, nonce).verify(&sig).is_err());
-        assert!(r("invoice:invoice:issue", "julien@lanterne.example", digest, "ffeeddccbbaa99887766554433221100").verify(&sig).is_err());
+        assert!(
+            r(
+                "invoice:invoice:issue",
+                "julien@lanterne.example",
+                digest,
+                nonce
+            )
+            .verify(&sig)
+            .is_ok()
+        );
+        let other = request_digest(
+            &json!({"series": "F-2026", "lines": [{"cents": 52001}]}),
+            SALT,
+        )
+        .unwrap();
+        assert!(
+            r(
+                "invoice:invoice:issue",
+                "julien@lanterne.example",
+                other,
+                nonce
+            )
+            .verify(&sig)
+            .is_err()
+        );
+        assert!(
+            r(
+                "invoice:invoice:void",
+                "julien@lanterne.example",
+                digest,
+                nonce
+            )
+            .verify(&sig)
+            .is_err()
+        );
+        assert!(
+            r(
+                "invoice:invoice:issue",
+                "chloe@lanterne.example",
+                digest,
+                nonce
+            )
+            .verify(&sig)
+            .is_err()
+        );
+        assert!(
+            r(
+                "invoice:invoice:issue",
+                "julien@lanterne.example",
+                digest,
+                "ffeeddccbbaa99887766554433221100"
+            )
+            .verify(&sig)
+            .is_err()
+        );
     }
 
     #[test]
     fn a_request_digest_is_salted() {
         let request = json!({"name": "Ana Martin"});
         let other = "ffeeddccbbaa99887766554433221100ffeeddccbbaa99887766554433221100";
-        assert_ne!(request_digest(&request, SALT).unwrap(), request_digest(&request, other).unwrap());
+        assert_ne!(
+            request_digest(&request, SALT).unwrap(),
+            request_digest(&request, other).unwrap()
+        );
         assert_eq!(request_digest(&request, "short"), Err(Error::Field("salt")));
-        assert_eq!(request_digest(&request, &SALT.to_uppercase()), Err(Error::Field("salt")));
+        assert_eq!(
+            request_digest(&request, &SALT.to_uppercase()),
+            Err(Error::Field("salt"))
+        );
     }
 
     #[test]
     fn a_payload_restates_what_was_signed() {
-        let request = json!({"person": "lea@lanterne.example", "email": "lea@example.org", "note": "mine"});
+        let request =
+            json!({"person": "lea@lanterne.example", "email": "lea@example.org", "note": "mine"});
         let payload = json!({
             "person": "lea@lanterne.example",
             "email": {"$personal": {"field": "person.person.email", "subject": "lea@lanterne.example", "value": "lea@example.org"}},
@@ -182,30 +257,66 @@ mod tests {
         });
         assert_eq!(restates(&request, &payload), Ok(()));
         let swapped = json!({"person": "camille@lanterne.example", "entry": "42"});
-        assert_eq!(restates(&request, &swapped), Err(Error::Restated("person".into())));
+        assert_eq!(
+            restates(&request, &swapped),
+            Err(Error::Restated("person".into()))
+        );
         let marked = json!({"email": {"$personal": {"field": "person.person.email", "subject": "lea@lanterne.example", "value": "eve@example.org"}}});
-        assert_eq!(restates(&request, &marked), Err(Error::Restated("email".into())));
+        assert_eq!(
+            restates(&request, &marked),
+            Err(Error::Restated("email".into()))
+        );
         let nested = json!({"lines": [{"cents": 52000}]});
-        assert_eq!(restates(&json!({"lines": [{"cents": 52000}]}), &nested), Ok(()));
-        assert_eq!(restates(&json!({"lines": [{"cents": 52001}]}), &nested), Err(Error::Restated("lines".into())));
+        assert_eq!(
+            restates(&json!({"lines": [{"cents": 52000}]}), &nested),
+            Ok(())
+        );
+        assert_eq!(
+            restates(&json!({"lines": [{"cents": 52001}]}), &nested),
+            Err(Error::Restated("lines".into()))
+        );
         assert_eq!(restates(&json!("a scalar request"), &payload), Ok(()));
         // Composed in its place, of another kind: the stored file's id for
         // the file sent, the names of the fields changed for their values.
         let composed = json!({"file": "0193", "fields": ["email"]});
-        assert_eq!(restates(&json!({"file": {"name": "cv.pdf"}, "fields": {"email": "a@b.c"}}), &composed), Ok(()));
+        assert_eq!(
+            restates(
+                &json!({"file": {"name": "cv.pdf"}, "fields": {"email": "a@b.c"}}),
+                &composed
+            ),
+            Ok(())
+        );
     }
 
     #[test]
     fn fields_cannot_forge_lines() {
-        let r = Request { scope: "lanterne.example", op: "a:b:c", actor: "x\nop d:e:f", device: [0; 32], digest: [0; 32], nonce: "00112233445566778899aabbccddeeff" };
+        let r = Request {
+            scope: "lanterne.example",
+            op: "a:b:c",
+            actor: "x\nop d:e:f",
+            device: [0; 32],
+            digest: [0; 32],
+            nonce: "00112233445566778899aabbccddeeff",
+        };
         assert_eq!(r.message(), Err(Error::Field("actor")));
-        let r = Request { actor: "x", nonce: "short", ..r };
+        let r = Request {
+            actor: "x",
+            nonce: "short",
+            ..r
+        };
         assert_eq!(r.message(), Err(Error::Field("nonce")));
     }
 
     #[test]
     fn the_message_is_fixed() {
-        let r = Request { scope: "s", op: "a:b:c", actor: "x", device: [1; 32], digest: [2; 32], nonce: "00112233445566778899aabbccddeeff" };
+        let r = Request {
+            scope: "s",
+            op: "a:b:c",
+            actor: "x",
+            device: [1; 32],
+            digest: [2; 32],
+            nonce: "00112233445566778899aabbccddeeff",
+        };
         let m = r.message().unwrap();
         assert!(m.starts_with("cella org 2026-10 write\nscope s\nop a:b:c\nactor x\ndevice 0101"));
         assert!(m.ends_with("\nnonce 00112233445566778899aabbccddeeff\n"));

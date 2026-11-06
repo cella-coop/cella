@@ -51,7 +51,19 @@ fn refuse(e: &cella_guards::Error) -> ! {
 // Amounts: positive cents. Balances are numeric, derived.
 
 #[derive(
-    Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, PostgresType, PostgresEq, PostgresOrd,
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Serialize,
+    Deserialize,
+    PostgresType,
+    PostgresEq,
+    PostgresOrd,
 )]
 #[inoutfuncs]
 pub struct Amount {
@@ -93,7 +105,10 @@ fn cents(a: Amount) -> i64 {
 #[pg_operator(immutable, parallel_safe)]
 #[opname(+)]
 fn amount_add(a: Amount, b: Amount) -> Amount {
-    let sum = a.primitive().checked_add(b.primitive()).unwrap_or_else(|e| refuse(&e));
+    let sum = a
+        .primitive()
+        .checked_add(b.primitive())
+        .unwrap_or_else(|e| refuse(&e));
     Amount { cents: sum.cents() }
 }
 
@@ -123,7 +138,9 @@ fn document_canonical(snapshot: &[u8]) -> String {
 
 #[pg_extern(immutable, parallel_safe)]
 fn document_hash(snapshot: &[u8]) -> Vec<u8> {
-    cella_guards::document::hash(snapshot).unwrap_or_else(|e| refuse(&e)).to_vec()
+    cella_guards::document::hash(snapshot)
+        .unwrap_or_else(|e| refuse(&e))
+        .to_vec()
 }
 
 #[pg_extern(immutable, parallel_safe)]
@@ -155,7 +172,8 @@ impl Votes {
     fn tally(&self) -> Tally {
         let mut t = Tally::default();
         for (member, stance, receipt) in &self.rows {
-            t.record(member, stance, *receipt).unwrap_or_else(|e| refuse(&e));
+            t.record(member, stance, *receipt)
+                .unwrap_or_else(|e| refuse(&e));
         }
         t
     }
@@ -168,18 +186,30 @@ pub struct Consent;
 #[pg_aggregate]
 impl Aggregate<Consent> for Consent {
     type State = Votes;
-    type Args = (name!(member, String), name!(stance, String), name!(receipt, i64));
+    type Args = (
+        name!(member, String),
+        name!(stance, String),
+        name!(receipt, i64),
+    );
     type Finalize = bool;
     const INITIAL_CONDITION: Option<&'static str> = Some(r#"{"rows":[]}"#);
 
     #[pgrx(immutable, parallel_safe)]
-    fn state(mut current: Self::State, (member, stance, receipt): Self::Args, _: pg_sys::FunctionCallInfo) -> Self::State {
+    fn state(
+        mut current: Self::State,
+        (member, stance, receipt): Self::Args,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::State {
         current.rows.push((member, stance, receipt));
         current
     }
 
     #[pgrx(immutable, parallel_safe)]
-    fn finalize(current: Self::State, _: Self::OrderedSetArgs, _: pg_sys::FunctionCallInfo) -> Self::Finalize {
+    fn finalize(
+        current: Self::State,
+        _: Self::OrderedSetArgs,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::Finalize {
         current.tally().consent().unwrap_or_else(|e| refuse(&e))
     }
 }
@@ -191,18 +221,30 @@ pub struct Majority;
 #[pg_aggregate]
 impl Aggregate<Majority> for Majority {
     type State = Votes;
-    type Args = (name!(member, String), name!(stance, String), name!(receipt, i64));
+    type Args = (
+        name!(member, String),
+        name!(stance, String),
+        name!(receipt, i64),
+    );
     type Finalize = bool;
     const INITIAL_CONDITION: Option<&'static str> = Some(r#"{"rows":[]}"#);
 
     #[pgrx(immutable, parallel_safe)]
-    fn state(mut current: Self::State, (member, stance, receipt): Self::Args, _: pg_sys::FunctionCallInfo) -> Self::State {
+    fn state(
+        mut current: Self::State,
+        (member, stance, receipt): Self::Args,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::State {
         current.rows.push((member, stance, receipt));
         current
     }
 
     #[pgrx(immutable, parallel_safe)]
-    fn finalize(current: Self::State, _: Self::OrderedSetArgs, _: pg_sys::FunctionCallInfo) -> Self::Finalize {
+    fn finalize(
+        current: Self::State,
+        _: Self::OrderedSetArgs,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::Finalize {
         current.tally().majority().unwrap_or_else(|e| refuse(&e))
     }
 }
@@ -234,9 +276,17 @@ impl Aggregate<Share> for Share {
     const INITIAL_CONDITION: Option<&'static str> = Some(r#"{"votes":{"rows":[]},"of":null}"#);
 
     #[pgrx(immutable, parallel_safe)]
-    fn state(mut current: Self::State, (member, stance, receipt, num, den): Self::Args, _: pg_sys::FunctionCallInfo) -> Self::State {
+    fn state(
+        mut current: Self::State,
+        (member, stance, receipt, num, den): Self::Args,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::State {
         if current.of.is_some_and(|of| of != (num, den)) {
-            ereport!(ERROR, PgSqlErrorCode::ERRCODE_DATA_EXCEPTION, "a share of the votes is one fraction for every stance");
+            ereport!(
+                ERROR,
+                PgSqlErrorCode::ERRCODE_DATA_EXCEPTION,
+                "a share of the votes is one fraction for every stance"
+            );
         }
         current.of = Some((num, den));
         current.votes.rows.push((member, stance, receipt));
@@ -244,9 +294,17 @@ impl Aggregate<Share> for Share {
     }
 
     #[pgrx(immutable, parallel_safe)]
-    fn finalize(current: Self::State, _: Self::OrderedSetArgs, _: pg_sys::FunctionCallInfo) -> Self::Finalize {
+    fn finalize(
+        current: Self::State,
+        _: Self::OrderedSetArgs,
+        _: pg_sys::FunctionCallInfo,
+    ) -> Self::Finalize {
         match current.of {
-            Some((num, den)) => current.votes.tally().share(num, den).unwrap_or_else(|e| refuse(&e)),
+            Some((num, den)) => current
+                .votes
+                .tally()
+                .share(num, den)
+                .unwrap_or_else(|e| refuse(&e)),
             None => false,
         }
     }
@@ -384,7 +442,14 @@ fn submit(
     payload: JsonB,
     actor: &str,
     signed: JsonB,
-) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
+) -> TableIterator<
+    'static,
+    (
+        name!(verdict, i64),
+        name!(state, String),
+        name!(reason, Option<String>),
+    ),
+> {
     let n = notary::submit(op, &payload, actor, &signed);
     TableIterator::once((n, "settled".to_string(), None))
 }
@@ -403,8 +468,14 @@ fn begin(op: &str, actor: &str, device: &[u8]) {
 /// on a truncate: refuses a change no begun transaction makes, unless the
 /// notary is redacting or a superuser set `cella.unbound`.
 #[pg_trigger]
-fn notarised<'a>(trigger: &'a PgTrigger<'a>) -> Result<Option<PgHeapTuple<'a, AllocatedByPostgres>>, PgTriggerError> {
-    notary::notarised(&format!("{}.{}", trigger.table_schema()?, trigger.table_name()?));
+fn notarised<'a>(
+    trigger: &'a PgTrigger<'a>,
+) -> Result<Option<PgHeapTuple<'a, AllocatedByPostgres>>, PgTriggerError> {
+    notary::notarised(&format!(
+        "{}.{}",
+        trigger.table_schema()?,
+        trigger.table_name()?
+    ));
     Ok(None)
 }
 
@@ -486,7 +557,14 @@ fn follow(
     op: &str,
     payload: JsonB,
     cause: i64,
-) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
+) -> TableIterator<
+    'static,
+    (
+        name!(verdict, i64),
+        name!(state, String),
+        name!(reason, Option<String>),
+    ),
+> {
     let n = notary::follow(op, &payload, cause);
     TableIterator::once((n, "settled".to_string(), None))
 }
@@ -501,7 +579,14 @@ fn forgo(
     op: &str,
     cause: i64,
     why: &str,
-) -> TableIterator<'static, (name!(verdict, i64), name!(state, String), name!(reason, Option<String>))> {
+) -> TableIterator<
+    'static,
+    (
+        name!(verdict, i64),
+        name!(state, String),
+        name!(reason, Option<String>),
+    ),
+> {
     let n = notary::forgo(op, cause, why);
     TableIterator::once((n, "forgone".to_string(), Some(why.to_string())))
 }
@@ -737,7 +822,15 @@ fn opened(n: i64) -> Option<JsonB> {
 /// per subject and class touched. A superuser's, run by `cella vault sweep`.
 #[pg_extern(volatile, security_definer)]
 #[search_path(pg_catalog, pg_temp)]
-fn vault_sweep() -> TableIterator<'static, (name!(subject, String), name!(class, String), name!(keys, i64), name!(redacted, bool))> {
+fn vault_sweep() -> TableIterator<
+    'static,
+    (
+        name!(subject, String),
+        name!(class, String),
+        name!(keys, i64),
+        name!(redacted, bool),
+    ),
+> {
     TableIterator::new(vault::sweep(&notary::iso(notary::verdict_date())))
 }
 

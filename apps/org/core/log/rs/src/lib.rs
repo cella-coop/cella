@@ -295,11 +295,7 @@ pub fn build(
 /// `expected_prev` is what the verifier knows should come before this
 /// claim (e.g. the hash of the prior claim in their copy of the log).
 /// For the genesis claim, pass [`GENESIS_PREV`].
-pub fn verify(
-    claim: &Claim,
-    author_public: &[u8],
-    expected_prev: Hash,
-) -> Result<(), VerifyError> {
+pub fn verify(claim: &Claim, author_public: &[u8], expected_prev: Hash) -> Result<(), VerifyError> {
     if claim.prev != expected_prev {
         return Err(VerifyError::PrevMismatch {
             expected: expected_prev,
@@ -447,7 +443,7 @@ pub fn decode(bytes: &[u8]) -> Result<Claim, CodecError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cella_crypto::{hash, Identity};
+    use cella_crypto::{Identity, hash};
 
     fn fixture_edit(schema: &str, content: &[u8]) -> ClaimBody {
         ClaimBody::new(schema.to_string(), content.to_vec())
@@ -465,8 +461,8 @@ mod tests {
     fn build_then_verify_genesis() {
         let (id, author, public) = ident();
         let body = fixture_edit("test::Genesis", b"hello");
-        let claim = build(0, GENESIS_PREV, 1_700_000_000_000, author, body, &id)
-            .expect("build genesis");
+        let claim =
+            build(0, GENESIS_PREV, 1_700_000_000_000, author, body, &id).expect("build genesis");
         verify(&claim, &public, GENESIS_PREV).expect("verify genesis");
     }
 
@@ -475,8 +471,15 @@ mod tests {
         let id = Identity::generate_ed25519();
         let public = id.public_form();
         let author = CellId::from_public_form(&public);
-        let claim =
-            build(0, GENESIS_PREV, 1, author, fixture_edit("test::V0", b"x"), &id).unwrap();
+        let claim = build(
+            0,
+            GENESIS_PREV,
+            1,
+            author,
+            fixture_edit("test::V0", b"x"),
+            &id,
+        )
+        .unwrap();
         assert_eq!(claim.author_sig.len(), 64);
         verify(&claim, &public, GENESIS_PREV).expect("bare ed25519 form verifies");
     }
@@ -516,8 +519,15 @@ mod tests {
     fn build_chain_verifies_end_to_end() {
         let (id, author, public) = ident();
 
-        let m0 =
-            build(0, GENESIS_PREV, 1, author, fixture_edit("test::A", b"a"), &id).unwrap();
+        let m0 = build(
+            0,
+            GENESIS_PREV,
+            1,
+            author,
+            fixture_edit("test::A", b"a"),
+            &id,
+        )
+        .unwrap();
         let m0_hash = content_hash(&m0).unwrap();
 
         let m1 = build(1, m0_hash, 2, author, fixture_edit("test::B", b"b"), &id).unwrap();
@@ -533,17 +543,29 @@ mod tests {
     fn chain_rejects_seq_gap() {
         let (id, author, public) = ident();
 
-        let m0 =
-            build(0, GENESIS_PREV, 1, author, fixture_edit("test::A", b"a"), &id).unwrap();
+        let m0 = build(
+            0,
+            GENESIS_PREV,
+            1,
+            author,
+            fixture_edit("test::A", b"a"),
+            &id,
+        )
+        .unwrap();
         let m0_hash = content_hash(&m0).unwrap();
 
         // Seq jumps from 0 to 2 — should reject.
-        let m_skip =
-            build(2, m0_hash, 2, author, fixture_edit("test::Skip", b"x"), &id).unwrap();
+        let m_skip = build(2, m0_hash, 2, author, fixture_edit("test::Skip", b"x"), &id).unwrap();
 
-        let err = verify_chain(&[m0, m_skip], |aid| (aid == author).then(|| public.clone()))
-            .unwrap_err();
-        assert!(matches!(err, VerifyError::SeqNotMonotonic { expected: 1, actual: 2 }));
+        let err =
+            verify_chain(&[m0, m_skip], |aid| (aid == author).then(|| public.clone())).unwrap_err();
+        assert!(matches!(
+            err,
+            VerifyError::SeqNotMonotonic {
+                expected: 1,
+                actual: 2
+            }
+        ));
     }
 
     /// `n` claims chained from genesis by one author, with the author's id
@@ -552,7 +574,9 @@ mod tests {
         let (id, author, public) = ident();
         let mut claims: Vec<Claim> = Vec::new();
         for seq in 0..n {
-            let prev = claims.last().map_or(GENESIS_PREV, |c| content_hash(c).unwrap());
+            let prev = claims
+                .last()
+                .map_or(GENESIS_PREV, |c| content_hash(c).unwrap());
             let body = fixture_edit("test::Edit", &seq.to_le_bytes());
             claims.push(build(seq, prev, 1, author, body, &id).unwrap());
         }
@@ -562,9 +586,15 @@ mod tests {
     #[test]
     fn chain_rejects_a_first_claim_past_genesis() {
         let (author, public, claims) = chain(2);
-        let err = verify_chain(&claims[1..], |aid| (aid == author).then(|| public.clone()))
-            .unwrap_err();
-        assert!(matches!(err, VerifyError::SeqNotMonotonic { expected: 0, actual: 1 }));
+        let err =
+            verify_chain(&claims[1..], |aid| (aid == author).then(|| public.clone())).unwrap_err();
+        assert!(matches!(
+            err,
+            VerifyError::SeqNotMonotonic {
+                expected: 0,
+                actual: 1
+            }
+        ));
     }
 
     #[test]
@@ -581,7 +611,13 @@ mod tests {
         let mut cursor = ChainCursor::after(0, content_hash(&claims[0]).unwrap());
         // The held claim, sent again, is a replay, not the next.
         let err = cursor.accept(&claims[0], lookup).unwrap_err();
-        assert!(matches!(err, VerifyError::SeqNotMonotonic { expected: 1, actual: 0 }));
+        assert!(matches!(
+            err,
+            VerifyError::SeqNotMonotonic {
+                expected: 1,
+                actual: 0
+            }
+        ));
         for claim in &claims[1..] {
             cursor.accept(claim, lookup).expect("continues the tail");
         }
@@ -605,7 +641,9 @@ mod tests {
         assert!(matches!(err, VerifyError::UnknownAuthor));
         assert_eq!(cursor, held);
 
-        cursor.accept(&claims[1], lookup).expect("the true claim still follows");
+        cursor
+            .accept(&claims[1], lookup)
+            .expect("the true claim still follows");
         assert_eq!(cursor.next_seq(), 2);
     }
 
@@ -613,14 +651,28 @@ mod tests {
     fn chain_rejects_broken_prev() {
         let (id, author, public) = ident();
 
-        let m0 =
-            build(0, GENESIS_PREV, 1, author, fixture_edit("test::A", b"a"), &id).unwrap();
+        let m0 = build(
+            0,
+            GENESIS_PREV,
+            1,
+            author,
+            fixture_edit("test::A", b"a"),
+            &id,
+        )
+        .unwrap();
         // The bogus m1 reuses GENESIS_PREV instead of m0's content hash.
-        let m1 =
-            build(1, GENESIS_PREV, 2, author, fixture_edit("test::B", b"b"), &id).unwrap();
+        let m1 = build(
+            1,
+            GENESIS_PREV,
+            2,
+            author,
+            fixture_edit("test::B", b"b"),
+            &id,
+        )
+        .unwrap();
 
-        let err = verify_chain(&[m0, m1], |aid| (aid == author).then(|| public.clone()))
-            .unwrap_err();
+        let err =
+            verify_chain(&[m0, m1], |aid| (aid == author).then(|| public.clone())).unwrap_err();
         assert!(matches!(err, VerifyError::PrevMismatch { .. }));
     }
 
@@ -672,7 +724,9 @@ mod tests {
     #[test]
     fn cellid_from_public_key_matches_fingerprint() {
         let id = Identity::generate_ed25519();
-        let cella_crypto::Identity::Ed25519(kp) = &id else { unreachable!() };
+        let cella_crypto::Identity::Ed25519(kp) = &id else {
+            unreachable!()
+        };
         let cell_id = CellId::from_public_form(&id.public_form());
         assert_eq!(cell_id.0, kp.public_key().fingerprint());
         assert_eq!(cell_id, CellId::from(&kp.public_key()));

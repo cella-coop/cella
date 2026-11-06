@@ -120,11 +120,9 @@ pub fn encrypt(recipients: &[Recipient], plaintext: &[u8]) -> Result<Vec<u8>, Cr
         return Err(CryptoError::EncryptionFailed);
     }
 
-    let recipients_dyn = recipients
-        .iter()
-        .map(|r| &r.0 as &dyn ::age::Recipient);
-    let encryptor =
-        ::age::Encryptor::with_recipients(recipients_dyn).map_err(|_| CryptoError::EncryptionFailed)?;
+    let recipients_dyn = recipients.iter().map(|r| &r.0 as &dyn ::age::Recipient);
+    let encryptor = ::age::Encryptor::with_recipients(recipients_dyn)
+        .map_err(|_| CryptoError::EncryptionFailed)?;
 
     let mut ciphertext = Vec::with_capacity(plaintext.len());
     let mut writer = encryptor
@@ -194,11 +192,8 @@ mod tests {
         let g3 = AgeIdentity::generate();
         let seed = [0x42u8; 32];
 
-        let ct = encrypt(
-            &[g1.to_public(), g2.to_public(), g3.to_public()],
-            &seed,
-        )
-        .expect("encrypt to three guardians");
+        let ct = encrypt(&[g1.to_public(), g2.to_public(), g3.to_public()], &seed)
+            .expect("encrypt to three guardians");
 
         for g in [&g1, &g2, &g3] {
             let pt = decrypt(g, &ct).expect("each guardian decrypts");

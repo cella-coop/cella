@@ -42,7 +42,10 @@ mod tests {
     #[test]
     fn lanterne_surplus_2025() {
         let surplus = Amount::new(6_140_000).unwrap();
-        assert_eq!(allocate(surplus, &[45, 40, 15]), Ok(vec![2_763_000, 2_456_000, 921_000]));
+        assert_eq!(
+            allocate(surplus, &[45, 40, 15]),
+            Ok(vec![2_763_000, 2_456_000, 921_000])
+        );
     }
 
     #[test]
@@ -68,6 +71,9 @@ mod tests {
     fn large_values_do_not_overflow() {
         let a = Amount::new(i64::MAX).unwrap();
         let parts = allocate(a, &[i64::MAX, i64::MAX]).unwrap();
-        assert_eq!(i128::from(parts[0]) + i128::from(parts[1]), i128::from(i64::MAX));
+        assert_eq!(
+            i128::from(parts[0]) + i128::from(parts[1]),
+            i128::from(i64::MAX)
+        );
     }
 }

@@ -53,6 +53,29 @@ BEGIN
 END
 $$;
 
+-- circle:role:seat: the membership of the circle whose member is the role,
+-- by the seat id, circle and role its entry carries, from the entry's day.
+CREATE FUNCTION circle.fold_role_seat(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  INSERT INTO circle.member (id, circle, role, since)
+  VALUES ((p ->> 'seat')::bigint, p ->> 'circle', p ->> 'role', (entry ->> 'date')::date);
+END
+$$;
+
+-- circle:role:unseat: the membership its entry names ends on the entry's
+-- day; an entry naming no seat, 0, ended none.
+CREATE FUNCTION circle.fold_role_unseat(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  UPDATE circle.member SET until = (entry ->> 'date')::date WHERE id = (p ->> 'seat')::bigint;
+END
+$$;
+
 -- circle:circle:message has no handler, so no entry of it can be logged:
 -- one that is folds by refusing, never by changing nothing.
 CREATE FUNCTION circle.fold_message(entry jsonb) RETURNS void
@@ -115,5 +138,7 @@ SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', '
 SELECT cella.lets_fold('circle:circle:message', 1, 'circle.fold_message(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:remove', 1, 'circle.fold_seat_remove(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:role:seat', 1, 'circle.fold_role_seat(jsonb)', 'circle');
+SELECT cella.lets_fold('circle:role:unseat', 1, 'circle.fold_role_unseat(jsonb)', 'circle');
 SELECT cella.lets_fold('motion:policy:adopt', 1, 'circle.fold_granting(jsonb)', 'circle');
 SELECT cella.lets_fold('motion:policy:end', 1, 'circle.fold_revoking(jsonb)', 'circle');

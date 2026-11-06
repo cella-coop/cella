@@ -41,8 +41,14 @@ pub enum Target<'a> {
 
 impl<'a> Shell<'a> {
     pub fn new(repo: &'a Repo, port: Option<u16>) -> Self {
-        let port = port.or_else(|| env::var("CELLA_ANALYTICS_PORT").ok()?.parse().ok()).unwrap_or(54343);
-        Self { repo, port, dir: repo.data().join("analytics").join(port.to_string()) }
+        let port = port
+            .or_else(|| env::var("CELLA_ANALYTICS_PORT").ok()?.parse().ok())
+            .unwrap_or(54343);
+        Self {
+            repo,
+            port,
+            dir: repo.data().join("analytics").join(port.to_string()),
+        }
     }
 
     pub fn url(&self) -> String {
@@ -56,9 +62,15 @@ impl<'a> Shell<'a> {
     /// The shell's pid while it runs: the pid file's, if that process is
     /// DuckDB still, so a pid another process took since is never signalled.
     fn pid(&self) -> Option<u32> {
-        let pid: u32 = fs::read_to_string(self.dir.join("pid")).ok()?.trim().parse().ok()?;
+        let pid: u32 = fs::read_to_string(self.dir.join("pid"))
+            .ok()?
+            .trim()
+            .parse()
+            .ok()?;
         let cmdline = fs::read(Path::new("/proc").join(pid.to_string()).join("cmdline")).ok()?;
-        String::from_utf8_lossy(&cmdline).contains("duckdb").then_some(pid)
+        String::from_utf8_lossy(&cmdline)
+            .contains("duckdb")
+            .then_some(pid)
     }
 
     pub fn running(&self) -> bool {
@@ -68,13 +80,15 @@ impl<'a> Shell<'a> {
     /// Hands a server the shell: where it serves and its token's file,
     /// which the port reads with `CELLA_DUCKDB_EXTENSIONS`.
     pub fn env(&self, cmd: &mut Command) {
-        cmd.env("CELLA_ANALYTICS", self.url()).env("CELLA_ANALYTICS_TOKEN_FILE", self.token());
+        cmd.env("CELLA_ANALYTICS", self.url())
+            .env("CELLA_ANALYTICS_TOKEN_FILE", self.token());
     }
 
     /// What the running shell attaches, as its start recorded it, said
     /// without a password.
     fn attached(&self) -> String {
-        fs::read_to_string(self.dir.join("attach")).map_or_else(|_| "a database it did not record".to_owned(), |a| shown(&a))
+        fs::read_to_string(self.dir.join("attach"))
+            .map_or_else(|_| "a database it did not record".to_owned(), |a| shown(&a))
     }
 
     /// Starts the shell on a database, or reuses the one that runs on its
@@ -83,12 +97,19 @@ impl<'a> Shell<'a> {
     /// it if it answers as any other role.
     pub fn start(&self, target: &Target) -> Result {
         let attach = match target {
-            Target::Dev(db) => format!("host=127.0.0.1 port={} dbname={db} user=cella_analytics", Dev::new(self.repo).port),
+            Target::Dev(db) => format!(
+                "host=127.0.0.1 port={} dbname={db} user=cella_analytics",
+                Dev::new(self.repo).port
+            ),
             Target::Url(url) => (*url).to_owned(),
         };
         if let Some(pid) = self.pid() {
             if fs::read_to_string(self.dir.join("attach")).is_ok_and(|a| a == attach) {
-                println!("analytics shell runs already on {} (pid {pid}), attaching {}", self.url(), shown(&attach));
+                println!(
+                    "analytics shell runs already on {} (pid {pid}), attaching {}",
+                    self.url(),
+                    shown(&attach)
+                );
                 return Ok(());
             }
             return Err(Fail::new(format!(
@@ -100,14 +121,30 @@ impl<'a> Shell<'a> {
             )));
         }
         let extensions = extensions()?;
-        fs::DirBuilder::new().recursive(true).mode(0o700).create(&self.dir).map_err(io(&self.dir))?;
+        fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(&self.dir)
+            .map_err(io(&self.dir))?;
         let token = self.token();
         if !token.exists() {
             key::token(&token)?;
         }
         let secret = fs::read_to_string(&token).map_err(io(&token))?;
         let load = |names: &[&str]| -> String {
-            names.iter().map(|e| format!("LOAD {};\n", literal(&extensions.join(format!("{e}.duckdb_extension")).to_string_lossy()))).collect()
+            names
+                .iter()
+                .map(|e| {
+                    format!(
+                        "LOAD {};\n",
+                        literal(
+                            &extensions
+                                .join(format!("{e}.duckdb_extension"))
+                                .to_string_lossy()
+                        )
+                    )
+                })
+                .collect()
         };
         // What the server runs before it serves: the scope attached
         // read-only, its catalog checked for a migration's changes, the
@@ -139,9 +176,18 @@ impl<'a> Shell<'a> {
         if !fifo.exists() {
             Steps::read(Command::new("mkfifo").arg("-m").arg("600").arg(&fifo))?;
         }
-        let stdin = OpenOptions::new().read(true).write(true).open(&fifo).map_err(io(&fifo))?;
+        let stdin = OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&fifo)
+            .map_err(io(&fifo))?;
         let log_path = self.dir.join("log");
-        let log = OpenOptions::new().create(true).append(true).mode(0o600).open(&log_path).map_err(io(&log_path))?;
+        let log = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .mode(0o600)
+            .open(&log_path)
+            .map_err(io(&log_path))?;
         let mut cmd = self.repo.cmd("duckdb");
         cmd.args(["-no-agent", "-no-init", "-cmd"])
             .arg(format!(".read {}", self.dir.join("serve.sql").display()))
@@ -150,25 +196,38 @@ impl<'a> Shell<'a> {
             .stdout(log.try_clone().map_err(io(&log_path))?)
             .stderr(log)
             .process_group(0);
-        let mut child = cmd.spawn().map_err(|e| Fail::new(format!("duckdb: {e}; run cella inside `nix develop`")))?;
+        let mut child = cmd
+            .spawn()
+            .map_err(|e| Fail::new(format!("duckdb: {e}; run cella inside `nix develop`")))?;
         fs::write(self.dir.join("pid"), child.id().to_string()).map_err(io(&self.dir))?;
         let start = Instant::now();
         loop {
             if let Ok(Some(status)) = child.try_wait() {
                 let said = fs::read_to_string(&log_path).unwrap_or_default();
                 let tail: Vec<&str> = said.lines().rev().take(12).collect();
-                return Err(Fail::new(format!("the analytics shell exited ({status}):\n{}", tail.into_iter().rev().collect::<Vec<_>>().join("\n"))));
+                return Err(Fail::new(format!(
+                    "the analytics shell exited ({status}):\n{}",
+                    tail.into_iter().rev().collect::<Vec<_>>().join("\n")
+                )));
             }
-            if let Some(role) = self.ask("SELECT * FROM postgres_query('scope', 'SELECT current_user::text AS role')") {
+            if let Some(role) = self
+                .ask("SELECT * FROM postgres_query('scope', 'SELECT current_user::text AS role')")
+            {
                 if role != "cella_analytics" {
                     self.stop()?;
-                    return Err(Fail::new(format!("the analytics shell logs in as {role}: it reads only as cella_analytics")));
+                    return Err(Fail::new(format!(
+                        "the analytics shell logs in as {role}: it reads only as cella_analytics"
+                    )));
                 }
                 break;
             }
             if start.elapsed() > READY {
                 self.stop()?;
-                return Err(Fail::new(format!("the analytics shell did not answer within {}s; see {}", READY.as_secs(), log_path.display())));
+                return Err(Fail::new(format!(
+                    "the analytics shell did not answer within {}s; see {}",
+                    READY.as_secs(),
+                    log_path.display()
+                )));
             }
             thread::sleep(Duration::from_millis(250));
         }
@@ -176,14 +235,25 @@ impl<'a> Shell<'a> {
             Target::Dev(db) => format!("database {db}"),
             Target::Url(_) => "the database --url names".to_owned(),
         };
-        println!("analytics shell on {}, {on} as cella_analytics, read-only", self.url());
+        println!(
+            "analytics shell on {}, {on} as cella_analytics, read-only",
+            self.url()
+        );
         Ok(())
     }
 
     /// One value the shell answers, or none while it does not.
     fn ask(&self, sql: &str) -> Option<String> {
-        let out = self.client(&["-csv", "-noheader"]).arg("-c").arg(sql).stdin(Stdio::null()).output().ok()?;
-        out.status.success().then(|| String::from_utf8_lossy(&out.stdout).trim().to_owned())
+        let out = self
+            .client(&["-csv", "-noheader"])
+            .arg("-c")
+            .arg(sql)
+            .stdin(Stdio::null())
+            .output()
+            .ok()?;
+        out.status
+            .success()
+            .then(|| String::from_utf8_lossy(&out.stdout).trim().to_owned())
     }
 
     /// The DuckDB CLI as the shell's client, connected to it.
@@ -234,16 +304,27 @@ pub fn run(repo: &Repo, command: Analytics) -> Result {
         Analytics::Status { port } => {
             let shell = Shell::new(repo, port);
             if let Some(pid) = shell.pid() {
-                println!("running on {} (pid {pid}), attaching {}", shell.url(), shell.attached());
+                println!(
+                    "running on {} (pid {pid}), attaching {}",
+                    shell.url(),
+                    shell.attached()
+                );
                 return Ok(());
             }
             println!("stopped");
             Err(Fail { code: 3, msg: None })
         }
-        Analytics::Query { sql, report, json, port } => {
+        Analytics::Query {
+            sql,
+            report,
+            json,
+            port,
+        } => {
             let shell = Shell::new(repo, port);
             if !shell.running() {
-                return Err(Fail::new("the analytics shell is stopped; run `cella analytics start`"));
+                return Err(Fail::new(
+                    "the analytics shell is stopped; run `cella analytics start`",
+                ));
             }
             if let Some(file) = report {
                 let mut node = repo.node("report.mjs");
@@ -252,7 +333,12 @@ pub fn run(repo: &Repo, command: Analytics) -> Result {
                 return Steps::exec(&mut node);
             }
             let sql = sql.ok_or_else(|| Fail::new("give the SQL to run, or --report FILE"))?;
-            Steps::exec(shell.client(&[if json { "-json" } else { "-box" }]).arg("-c").arg(sql))
+            Steps::exec(
+                shell
+                    .client(&[if json { "-json" } else { "-box" }])
+                    .arg("-c")
+                    .arg(sql),
+            )
         }
     }
 }
@@ -260,7 +346,9 @@ pub fn run(repo: &Repo, command: Analytics) -> Result {
 /// The directory DuckDB's extensions are in, for this DuckDB's version and
 /// platform: the one under `CELLA_DUCKDB_EXTENSIONS` that holds them.
 fn extensions() -> Result<PathBuf> {
-    let root = env::var("CELLA_DUCKDB_EXTENSIONS").map_err(|_| Fail::new("CELLA_DUCKDB_EXTENSIONS is unset; run cella inside `nix develop`"))?;
+    let root = env::var("CELLA_DUCKDB_EXTENSIONS").map_err(|_| {
+        Fail::new("CELLA_DUCKDB_EXTENSIONS is unset; run cella inside `nix develop`")
+    })?;
     let versions = fs::read_dir(&root).map_err(|e| Fail::new(format!("{root}: {e}")))?;
     versions
         .flatten()
@@ -268,7 +356,11 @@ fn extensions() -> Result<PathBuf> {
         .flatten()
         .flatten()
         .map(|p| p.path())
-        .find(|p| EXTENSIONS.iter().all(|e| p.join(format!("{e}.duckdb_extension")).is_file()))
+        .find(|p| {
+            EXTENSIONS
+                .iter()
+                .all(|e| p.join(format!("{e}.duckdb_extension")).is_file())
+        })
         .ok_or_else(|| Fail::new(format!("{root} holds no {}", EXTENSIONS.join(", "))))
 }
 
@@ -276,14 +368,28 @@ fn extensions() -> Result<PathBuf> {
 /// its user info or its query, a keyword string without its `password`.
 fn shown(attach: &str) -> String {
     if let Some((scheme, rest)) = attach.split_once("://") {
-        let (rest, query) = rest.split_once('?').map_or((rest, None), |(r, q)| (r, Some(q)));
+        let (rest, query) = rest
+            .split_once('?')
+            .map_or((rest, None), |(r, q)| (r, Some(q)));
         let host = rest.find('/').unwrap_or(rest.len());
         let rest = match rest[..host].rfind('@') {
-            Some(at) => format!("{}{}", rest[..at].split(':').next().unwrap_or_default(), &rest[at..]),
+            Some(at) => format!(
+                "{}{}",
+                rest[..at].split(':').next().unwrap_or_default(),
+                &rest[at..]
+            ),
             None => rest.to_owned(),
         };
-        let query: Vec<&str> = query.into_iter().flat_map(|q| q.split('&')).filter(|p| !p.starts_with("password=")).collect();
-        return if query.is_empty() { format!("{scheme}://{rest}") } else { format!("{scheme}://{rest}?{}", query.join("&")) };
+        let query: Vec<&str> = query
+            .into_iter()
+            .flat_map(|q| q.split('&'))
+            .filter(|p| !p.starts_with("password="))
+            .collect();
+        return if query.is_empty() {
+            format!("{scheme}://{rest}")
+        } else {
+            format!("{scheme}://{rest}?{}", query.join("&"))
+        };
     }
     // Each `key = value`, a value quoted in single quotes with backslash
     // escapes, or bare to the next space.
@@ -327,7 +433,13 @@ fn literal(s: &str) -> String {
 
 /// Writes a file only its owner reads, as one holding the token.
 fn secret_file(path: &Path, text: &str) -> Result {
-    let mut file = OpenOptions::new().write(true).create(true).truncate(true).mode(0o600).open(path).map_err(io(path))?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create(true)
+        .truncate(true)
+        .mode(0o600)
+        .open(path)
+        .map_err(io(path))?;
     file.write_all(text.as_bytes()).map_err(io(path))
 }
 
@@ -341,12 +453,27 @@ mod tests {
 
     #[test]
     fn what_a_shell_attaches_is_said_without_a_password() {
-        assert_eq!(shown("postgresql://cella_analytics:s3cret@db.example:5432/scope"), "postgresql://cella_analytics@db.example:5432/scope");
-        assert_eq!(shown("postgres://cella_analytics@db.example/scope?sslmode=require&password=s3cret"), "postgres://cella_analytics@db.example/scope?sslmode=require");
-        assert_eq!(shown("postgres://db.example/scope"), "postgres://db.example/scope");
+        assert_eq!(
+            shown("postgresql://cella_analytics:s3cret@db.example:5432/scope"),
+            "postgresql://cella_analytics@db.example:5432/scope"
+        );
+        assert_eq!(
+            shown("postgres://cella_analytics@db.example/scope?sslmode=require&password=s3cret"),
+            "postgres://cella_analytics@db.example/scope?sslmode=require"
+        );
+        assert_eq!(
+            shown("postgres://db.example/scope"),
+            "postgres://db.example/scope"
+        );
         let dev = "host=127.0.0.1 port=54342 dbname=cella user=cella_analytics";
         assert_eq!(shown(dev), dev);
-        assert_eq!(shown("host=db password=s3cret dbname=scope"), "host=db dbname=scope");
-        assert_eq!(shown(r"host=db password = 's3 cr\'et' dbname=scope"), "host=db dbname=scope");
+        assert_eq!(
+            shown("host=db password=s3cret dbname=scope"),
+            "host=db dbname=scope"
+        );
+        assert_eq!(
+            shown(r"host=db password = 's3 cr\'et' dbname=scope"),
+            "host=db dbname=scope"
+        );
     }
 }

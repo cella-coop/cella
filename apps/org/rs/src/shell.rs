@@ -20,10 +20,19 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
         }
         Shell::new(repo, None).start(&Target::Dev(&dev.db))?;
         let mut scope = dev.cmd("psql");
-        scope.args(["-X", "-q", "-t", "-A", "-c", "SELECT current_setting('cella.scope', true)"]);
+        scope.args([
+            "-X",
+            "-q",
+            "-t",
+            "-A",
+            "-c",
+            "SELECT current_setting('cella.scope', true)",
+        ]);
         data::migrate(repo, steps, None)?;
         if Steps::read(&mut scope)?.is_empty() {
-            println!("the dev database names no scope: seed it with `cella db reset --seed lanterne`");
+            println!(
+                "the dev database names no scope: seed it with `cella db reset --seed lanterne`"
+            );
         }
     } else {
         data::migrate(repo, steps, url)?;
@@ -32,7 +41,9 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
     key::session(&session)?;
     let mut server = if prod {
         build(repo, steps)?;
-        println!("shell on http://127.0.0.1:{port}, production, behind TLS that sets x-forwarded-proto");
+        println!(
+            "shell on http://127.0.0.1:{port}, production, behind TLS that sets x-forwarded-proto"
+        );
         let mut node = dev.cmd("node");
         node.arg(repo.shell_dir().join("build"))
             .env("PORT", port.to_string())
@@ -45,7 +56,10 @@ pub fn serve(repo: &Repo, steps: &Steps, port: u16, prod: bool, url: Option<&str
         let mut sync = repo.shell("svelte-kit");
         sync.arg("sync");
         steps.run("sync", &mut [sync], quiet)?;
-        println!("shell on http://localhost:{port}, dev mode, database {}", dev.db);
+        println!(
+            "shell on http://localhost:{port}, dev mode, database {}",
+            dev.db
+        );
         let mut vite = dev.cmd("pnpm");
         vite.current_dir(repo.shell_dir())
             .args(["exec", "vite", "dev", "--strictPort", "--port"])

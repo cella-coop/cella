@@ -11,12 +11,21 @@ pub struct Fail {
 
 impl Fail {
     pub fn new(msg: impl Into<String>) -> Self {
-        Self { code: 1, msg: Some(msg.into()) }
+        Self {
+            code: 1,
+            msg: Some(msg.into()),
+        }
     }
 
     fn status(s: ExitStatus) -> Self {
-        let code = s.code().and_then(|c| u8::try_from(c).ok()).filter(|c| *c != 0);
-        Self { code: code.unwrap_or(1), msg: None }
+        let code = s
+            .code()
+            .and_then(|c| u8::try_from(c).ok())
+            .filter(|c| *c != 0);
+        Self {
+            code: code.unwrap_or(1),
+            msg: None,
+        }
     }
 
     fn spawn(cmd: &Command, e: &io::Error) -> Self {
@@ -24,7 +33,9 @@ impl Fail {
         if e.kind() == io::ErrorKind::NotFound {
             return Self {
                 code: 127,
-                msg: Some(format!("`{program}` is not on PATH; run cella inside `nix develop`")),
+                msg: Some(format!(
+                    "`{program}` is not on PATH; run cella inside `nix develop`"
+                )),
             };
         }
         Self::new(format!("{program}: {e}"))
@@ -43,7 +54,10 @@ pub fn quiet(_: &str) -> Option<String> {
 
 #[must_use]
 pub fn last_line(out: &str) -> Option<String> {
-    out.lines().rev().find(|l| !l.trim().is_empty()).map(str::to_owned)
+    out.lines()
+        .rev()
+        .find(|l| !l.trim().is_empty())
+        .map(str::to_owned)
 }
 
 /// Runs commands as named steps, one line each, or streams them.

@@ -63,11 +63,16 @@ impl HybridSecretKey {
         let (x_bytes, dk_bytes) = bytes.split_at(32);
         let x_arr: [u8; 32] = x_bytes.try_into().expect("split length");
         let dk_arr: Zeroizing<[u8; fips203::ml_kem_768::DK_LEN]> = Zeroizing::new(
-            dk_bytes.try_into().map_err(|_| CryptoError::MalformedIdentity)?,
+            dk_bytes
+                .try_into()
+                .map_err(|_| CryptoError::MalformedIdentity)?,
         );
         let mlkem = fips203::ml_kem_768::DecapsKey::try_from_bytes(*dk_arr)
             .map_err(|_| CryptoError::MalformedIdentity)?;
-        Ok(Self { x25519: x25519_dalek::StaticSecret::from(x_arr), mlkem })
+        Ok(Self {
+            x25519: x25519_dalek::StaticSecret::from(x_arr),
+            mlkem,
+        })
     }
 }
 
@@ -75,11 +80,16 @@ impl HybridSecretKey {
 pub fn hybrid_keygen() -> Result<(HybridPublicKey, HybridSecretKey), CryptoError> {
     let x_secret = x25519_dalek::StaticSecret::random_from_rng(rand_core::OsRng);
     let x_public = x25519_dalek::PublicKey::from(&x_secret);
-    let (ek, dk) =
-        fips203::ml_kem_768::KG::try_keygen().map_err(|_| CryptoError::KeygenFailed)?;
+    let (ek, dk) = fips203::ml_kem_768::KG::try_keygen().map_err(|_| CryptoError::KeygenFailed)?;
     Ok((
-        HybridPublicKey { x25519: x_public, mlkem: ek },
-        HybridSecretKey { x25519: x_secret, mlkem: dk },
+        HybridPublicKey {
+            x25519: x_public,
+            mlkem: ek,
+        },
+        HybridSecretKey {
+            x25519: x_secret,
+            mlkem: dk,
+        },
     ))
 }
 
@@ -95,8 +105,7 @@ impl HybridPublicKey {
 
     /// Parse the wire form; fails closed on an unknown suite byte.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, CryptoError> {
-        let (&suite, rest) =
-            bytes.split_first().ok_or(CryptoError::MalformedPublicKey)?;
+        let (&suite, rest) = bytes.split_first().ok_or(CryptoError::MalformedPublicKey)?;
         if suite != KEM_SUITE_HYBRID_X25519_MLKEM768 {
             return Err(CryptoError::UnknownAlgorithm);
         }
@@ -105,11 +114,15 @@ impl HybridPublicKey {
         }
         let (x_bytes, ek_bytes) = rest.split_at(X25519_LEN);
         let x_arr: [u8; 32] = x_bytes.try_into().expect("split length");
-        let ek_arr: [u8; MLKEM_EK_LEN] =
-            ek_bytes.try_into().map_err(|_| CryptoError::MalformedPublicKey)?;
+        let ek_arr: [u8; MLKEM_EK_LEN] = ek_bytes
+            .try_into()
+            .map_err(|_| CryptoError::MalformedPublicKey)?;
         let mlkem = fips203::ml_kem_768::EncapsKey::try_from_bytes(ek_arr)
             .map_err(|_| CryptoError::MalformedPublicKey)?;
-        Ok(Self { x25519: x25519_dalek::PublicKey::from(x_arr), mlkem })
+        Ok(Self {
+            x25519: x25519_dalek::PublicKey::from(x_arr),
+            mlkem,
+        })
     }
 }
 
@@ -175,7 +188,13 @@ pub fn seal_multi(
     let cipher = ChaCha20Poly1305::new(Key::from_slice(payload_key.as_ref()));
     let nonce = ChaCha20Poly1305::generate_nonce(&mut OsRng);
     let sealed = cipher
-        .encrypt(&nonce, Payload { msg: plaintext, aad })
+        .encrypt(
+            &nonce,
+            Payload {
+                msg: plaintext,
+                aad,
+            },
+        )
         .map_err(|_| CryptoError::EncryptionFailed)?;
 
     // The KEM: wrap the payload key per recipient under both legs.
@@ -184,8 +203,10 @@ pub fn seal_multi(
         let eph = x25519_dalek::EphemeralSecret::random_from_rng(rand_core::OsRng);
         let eph_pk = x25519_dalek::PublicKey::from(&eph);
         let dh = eph.diffie_hellman(&recipient.x25519);
-        let (mlkem_ss, mlkem_ct) =
-            recipient.mlkem.try_encaps().map_err(|_| CryptoError::EncryptionFailed)?;
+        let (mlkem_ss, mlkem_ct) = recipient
+            .mlkem
+            .try_encaps()
+            .map_err(|_| CryptoError::EncryptionFailed)?;
         let ct_bytes = mlkem_ct.into_bytes();
         let ss = Zeroizing::new(mlkem_ss.into_bytes());
         let wrap_key = combine(&dh, ss.as_ref(), &eph_pk, &ct_bytes);
@@ -218,8 +239,10 @@ pub fn open_multi(
     sealed: &SealedMulti,
     aad: &[u8],
 ) -> Result<Zeroizing<Vec<u8>>, CryptoError> {
-    let (&suite, rest) =
-        wrap.kem.split_first().ok_or(CryptoError::DecryptionFailed)?;
+    let (&suite, rest) = wrap
+        .kem
+        .split_first()
+        .ok_or(CryptoError::DecryptionFailed)?;
     if suite != KEM_SUITE_HYBRID_X25519_MLKEM768 || sealed.suite != suite {
         return Err(CryptoError::UnknownAlgorithm);
     }
@@ -230,12 +253,15 @@ pub fn open_multi(
     let eph_arr: [u8; 32] = eph_bytes.try_into().expect("split length");
     let eph_pk = x25519_dalek::PublicKey::from(eph_arr);
     let dh = recipient.x25519.diffie_hellman(&eph_pk);
-    let ct_arr: [u8; MLKEM_CT_LEN] =
-        ct_bytes.try_into().map_err(|_| CryptoError::DecryptionFailed)?;
+    let ct_arr: [u8; MLKEM_CT_LEN] = ct_bytes
+        .try_into()
+        .map_err(|_| CryptoError::DecryptionFailed)?;
     let ct = fips203::ml_kem_768::CipherText::try_from_bytes(ct_arr)
         .map_err(|_| CryptoError::DecryptionFailed)?;
-    let mlkem_ss =
-        recipient.mlkem.try_decaps(&ct).map_err(|_| CryptoError::DecryptionFailed)?;
+    let mlkem_ss = recipient
+        .mlkem
+        .try_decaps(&ct)
+        .map_err(|_| CryptoError::DecryptionFailed)?;
     let ss = Zeroizing::new(mlkem_ss.into_bytes());
     let wrap_key = combine(&dh, ss.as_ref(), &eph_pk, ct_bytes);
 
@@ -245,14 +271,19 @@ pub fn open_multi(
             .decrypt(Nonce::from_slice(&[0u8; 12]), wrap.wrapped.as_slice())
             .map_err(|_| CryptoError::DecryptionFailed)?,
     );
-    let key: &[u8; 32] =
-        payload_key.as_slice().try_into().map_err(|_| CryptoError::DecryptionFailed)?;
+    let key: &[u8; 32] = payload_key
+        .as_slice()
+        .try_into()
+        .map_err(|_| CryptoError::DecryptionFailed)?;
 
     let cipher = ChaCha20Poly1305::new(Key::from_slice(key));
     let plain = cipher
         .decrypt(
             Nonce::from_slice(&sealed.nonce),
-            Payload { msg: &sealed.sealed, aad },
+            Payload {
+                msg: &sealed.sealed,
+                aad,
+            },
         )
         .map_err(|_| CryptoError::DecryptionFailed)?;
     Ok(Zeroizing::new(plain))
@@ -266,8 +297,7 @@ mod tests {
     fn multi_recipient_roundtrip() {
         let (pk1, sk1) = hybrid_keygen().unwrap();
         let (pk2, sk2) = hybrid_keygen().unwrap();
-        let sealed =
-            seal_multi(&[&pk1, &pk2], b"for both of you", b"envelope-hash").unwrap();
+        let sealed = seal_multi(&[&pk1, &pk2], b"for both of you", b"envelope-hash").unwrap();
         assert_eq!(sealed.wraps.len(), 2);
         let p1 = open_multi(&sk1, &sealed.wraps[0], &sealed, b"envelope-hash").unwrap();
         let p2 = open_multi(&sk2, &sealed.wraps[1], &sealed, b"envelope-hash").unwrap();
@@ -310,7 +340,9 @@ mod tests {
         let pk2 = HybridPublicKey::from_bytes(&bytes).unwrap();
         let sealed = seal_multi(&[&pk2], b"via wire form", b"").unwrap();
         assert_eq!(
-            open_multi(&sk, &sealed.wraps[0], &sealed, b"").unwrap().as_slice(),
+            open_multi(&sk, &sealed.wraps[0], &sealed, b"")
+                .unwrap()
+                .as_slice(),
             b"via wire form"
         );
         // Unknown suite byte fails closed.
@@ -331,7 +363,10 @@ mod tests {
         let (pk, sk) = hybrid_keygen().unwrap();
         let (_, wrong) = hybrid_keygen().unwrap();
         let sealed = seal_multi(&[&pk], b"post-quantum holds", b"").unwrap();
-        let franken = HybridSecretKey { x25519: sk.x25519.clone(), mlkem: wrong.mlkem };
+        let franken = HybridSecretKey {
+            x25519: sk.x25519.clone(),
+            mlkem: wrong.mlkem,
+        };
         assert!(open_multi(&franken, &sealed.wraps[0], &sealed, b"").is_err());
     }
 }

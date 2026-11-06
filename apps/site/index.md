@@ -21,9 +21,29 @@ One page, `src/pages/index.astro`, in one layout,
 - **the hero**: the mark above the wordmark, the brand's stacked
   lockup taken inline so its name is in the text's colour, and one line
   under it;
-- **the sections**: empty skeletons, each a heading and a placeholder
-  line, in the order the page reads. Their content is the operator's to
-  write.
+- **the sections**: one for each entry of the `sections` collection,
+  in the order its `order` gives, each its heading and its body.
+
+## The text
+
+Every word the site shows lives in its content collections, under
+`src/content/`, declared with their schemas in `src/content.config.ts`:
+
+| Collection | What it holds |
+|---|---|
+| `site` | one entry, `site.yaml`: the page's title and description, the hero's line, and the labels the site's components print, the mark a diagram wears and the credit under a photo among them |
+| `sections` | one MDX file a section, `<id>.mdx`: its `heading` and its `order` in the frontmatter, its body below |
+
+A page or a layout holds structure and no prose: it reads the
+collections and lays them out. `cella check site` refuses a page,
+layout or component of the site that holds a word of copy, a string
+literal or a text node outside the collections, beyond what is
+plumbing: an `id`, a class, a path, a `lang`, an `aria-*` attribute
+naming an element that the collections label.
+
+A section's body is MDX, so the text places the site's figures where
+it reads, by name and without an import: the renderer hands every
+section the site's components.
 
 The layout imports the brand's `fonts.css` and `tokens.css` and reads
 its roles alone: the ground with its paper, the text and its muted
@@ -39,6 +59,6 @@ as the tokens do; an element may set `data-theme` to wear the other.
 |---|---|
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change, the brand's files among them |
 | `cella site build` | the static site into `apps/site/dist`, its pages, its styles and the brand's fonts and images, ready for any static host |
-| `cella check site` | `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
+| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 
 `dist/` and Astro's `.astro/` are ignored by git.

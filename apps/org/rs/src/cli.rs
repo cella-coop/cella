@@ -174,7 +174,7 @@ pub enum Part {
     Shell,
     /// The brand's generated files are what its house.json makes
     Brand,
-    /// astro check over the landing site, then its build
+    /// The landing site's copy check, astro check over it, then its build
     Site,
     /// cargo check and clippy over the workspace
     Rust,

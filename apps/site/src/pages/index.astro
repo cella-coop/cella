@@ -1,28 +1,33 @@
 ---
-// The landing page: the hero, then the sections, each an empty skeleton
-// whose content is the operator's to write.
+// The landing page: the hero, then the sections in their order. Every
+// word it shows is the content collections' (index.md, the text); it
+// holds the structure alone.
+import { getCollection, getEntry, render } from 'astro:content'
 import lockup from '@cella/brand/lockup-stack.svg?raw'
+import { figures } from '../components/figures'
 import Base from '../layouts/Base.astro'
 
-const sections = [
-  { id: 'what', heading: 'What cella is' },
-  { id: 'how', heading: 'How it works' },
-  { id: 'who', heading: 'Who it is for' },
-  { id: 'join', heading: 'Join' },
-]
+const site = (await getEntry('site', 'site'))!.data
+const sections = await Promise.all(
+  (await getCollection('sections'))
+    .sort((a, b) => a.data.order - b.data.order)
+    .map(async (s) => ({ id: s.id, heading: s.data.heading, ...(await render(s)) })),
+)
 ---
 
-<Base title="Cella" description="Cella, the cooperative workspace.">
+<Base title={site.title} description={site.description}>
   <header class="hero">
     <h1 class="lockup" set:html={lockup} />
-    <p class="line">The cooperative workspace.</p>
+    <p class="line">{site.line}</p>
   </header>
   <main>
     {
-      sections.map((s) => (
-        <section id={s.id} aria-labelledby={`${s.id}-heading`}>
-          <h2 id={`${s.id}-heading`}>{s.heading}</h2>
-          <p class="placeholder">To be written.</p>
+      sections.map(({ id, heading, Content }) => (
+        <section id={id} aria-labelledby={`${id}-heading`}>
+          <h2 id={`${id}-heading`}>{heading}</h2>
+          <div class="body">
+            <Content components={figures} />
+          </div>
         </section>
       ))
     }
@@ -71,8 +76,11 @@ const sections = [
     font-size: var(--t-2xl);
   }
 
-  .placeholder {
-    margin: 0;
-    color: var(--text-subtle);
+  .body > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .body > :global(:last-child) {
+    margin-bottom: 0;
   }
 </style>

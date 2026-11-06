@@ -26,11 +26,15 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
     }
 }
 
-/// `cella check site`: `astro check`, then a build into a directory of
-/// its own, removed after, so the check leaves `dist` as it found it. It
-/// sits in `.data`, on the checkout's filesystem, since Astro moves its
-/// assets there by rename, which cannot cross to another.
+/// `cella check site`: the copy check (`tools/site-copy.mjs`: no word of
+/// copy outside the content collections), `astro check`, then a build
+/// into a directory of its own, removed after, so the check leaves `dist`
+/// as it found it. It sits in `.data`, on the checkout's filesystem, since
+/// Astro moves its assets there by rename, which cannot cross to another.
 pub fn check(repo: &Repo, steps: &Steps) -> Result {
+    let mut copy = repo.node("site-copy.mjs");
+    copy.arg(repo.site_dir());
+    steps.run("site copy", &mut [copy], last_line)?;
     let out = repo.data().join(format!("site-check-{}", std::process::id()));
     let mut check = astro(repo);
     check.arg("check");

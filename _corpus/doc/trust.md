@@ -662,6 +662,10 @@ reader's mandates cover, by the row-level policies' own test, and the
 port filters the view to those circles' rows and the reader's own, and
 refuses a report on a scoped view that names no reader
 ([the reader](../../apps/org/core/analytics/index.md#the-reader)). A
+custom report a member saves names no reader: it is a definition, and
+each run of it on its page asks Postgres again as whoever opens it, so a member whose mandate to read a circle ends reads no more
+of that circle's rows through a report they saved under it, and their
+own still (the e2e scenario `report-reader`). A
 shared total of members' own figures is read only as the cells open
 books' disclosure values share with every member and those the reader's
 own permission opens, each other cell left out before the report sums

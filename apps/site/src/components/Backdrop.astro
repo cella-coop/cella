@@ -1,0 +1,86 @@
+---
+// A photo printed in the house's halftone as the background of what holds
+// it: a hero, or the panel a figure sits in. It lays the print's masks
+// alone, with no paper, each in the theme's own tone of its ink's status,
+// so it reads in either theme, and fades out where `fade` says the text
+// lies. It is decorative; its credit sits in its corner, as Unsplash asks.
+import { getEntry } from 'astro:content'
+import { creditParts, loadBackdrop, type Status } from '../lib/photo'
+
+interface Props {
+  photo: string | { photo: string; ink?: Status }
+  fade?: 'start' | 'center' | 'none'
+  width?: number
+}
+
+const { photo, fade = 'none', width = 1600 } = Astro.props
+const { photo: name, ink } = typeof photo === 'string' ? { photo, ink: undefined } : photo
+const { meta, layers } = await loadBackdrop(name, width, ink)
+const site = (await getEntry('site', 'site'))!.data
+const { beforeName, between, afterUnsplash } = creditParts(site.photo.credit)
+const referral = (url: string) => {
+  const u = new URL(url)
+  u.searchParams.set('utm_source', 'cella')
+  u.searchParams.set('utm_medium', 'referral')
+  return u.href
+}
+---
+
+<div class="backdrop" data-fade={fade} aria-hidden="true">
+  {layers.map((l) => <span style={{ '--mask': `url(${l.url})`, '--ink': `var(--${l.status}-text)` }} />)}
+</div>
+<p class="credit">
+  {beforeName}<a href={referral(meta.photographerUrl)}>{meta.photographer}</a>{between}<a href={referral(meta.photoUrl)}>{site.photo.unsplash}</a>{afterUnsplash}
+</p>
+
+<style>
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  .backdrop span {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    opacity: 0.55;
+    mask-image: var(--mask);
+    mask-size: cover;
+    mask-position: center;
+    mask-repeat: no-repeat;
+  }
+
+  /* Fading towards the text's side, so the words sit on the paper */
+  .backdrop[data-fade='start'] {
+    mask-image: linear-gradient(to right, transparent 25%, black 75%);
+  }
+
+  .backdrop[data-fade='center'] {
+    mask-image: radial-gradient(ellipse 60% 90% at center, transparent 35%, black 100%);
+  }
+
+  @media (max-width: 56rem) {
+    .backdrop[data-fade='start'] {
+      mask-image: linear-gradient(to bottom, transparent 30%, black 85%);
+    }
+  }
+
+  .credit {
+    position: absolute;
+    right: 0.75rem;
+    bottom: 0.5rem;
+    z-index: 1;
+    margin: 0;
+    padding: 0.15rem 0.5rem;
+    border-radius: var(--radius-control);
+    background: color-mix(in oklch, var(--panel) 85%, transparent);
+    color: var(--text-muted);
+    font-size: var(--t-xs);
+  }
+
+  .credit a {
+    color: inherit;
+  }
+</style>

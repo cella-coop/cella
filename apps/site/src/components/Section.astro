@@ -4,8 +4,10 @@
 // numbered steps, a figure beside the text, or a band with an action.
 import Button from './Button.astro'
 import Icon from './Icon.astro'
+import Backdrop from './Backdrop.astro'
 import Showcase from './Showcase.astro'
 import type { IconRole } from '../lib/icon'
+import type { Status } from '../lib/photo'
 
 type Link = { label: string; href: string }
 type Item = { icon?: string; role?: IconRole; title: string; body: string }
@@ -16,11 +18,12 @@ interface Props {
   eyebrow?: string
   items: Item[]
   figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+  backdrop?: string | { photo: string; ink?: Status }
   side: 'start' | 'end'
   action?: Link
 }
 
-const { id, heading, kind, eyebrow, items, figure, side, action } = Astro.props
+const { id, heading, kind, eyebrow, items, figure, backdrop, side, action } = Astro.props
 const labelled = `${id}-heading`
 ---
 
@@ -35,8 +38,11 @@ const labelled = `${id}-heading`
       </div>
       {
         kind === 'split' && figure && (
-          <div class="figure">
-            <Showcase figure={figure} />
+          <div class="figure" data-backdrop={backdrop ? 'yes' : 'no'}>
+            {backdrop && <Backdrop photo={backdrop} width={1000} />}
+            <div class="card">
+              <Showcase figure={figure} />
+            </div>
           </div>
         )
       }
@@ -174,6 +180,26 @@ const labelled = `${id}-heading`
 
   .figure :global(figure) {
     margin: 0;
+  }
+
+  /* A figure on a halftone: the print fills a panel, the figure a card of
+     paper on it, the credit in the panel's corner */
+  .figure[data-backdrop='yes'] {
+    position: relative;
+    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.5rem);
+    border-radius: calc(var(--radius) * 1.5);
+    overflow: hidden;
+    background: var(--sunk);
+  }
+
+  .figure[data-backdrop='yes'] .card {
+    position: relative;
+    z-index: 1;
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    box-shadow: var(--shadow-float);
   }
 
   /* cta: a band in the accent's ink */

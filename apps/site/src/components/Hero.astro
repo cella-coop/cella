@@ -2,7 +2,11 @@
 // The hero: an eyebrow, the page's heading and its lede, its two actions,
 // and the figure it names beside them; the brand's five inks under it.
 import Button from './Button.astro'
+import Backdrop from './Backdrop.astro'
 import Showcase from './Showcase.astro'
+import type { Status } from '../lib/photo'
+
+type Shown = string | { photo: string; ink?: Status }
 
 type Link = { label: string; href: string }
 interface Props {
@@ -13,6 +17,7 @@ interface Props {
     primary?: Link
     secondary?: Link
     figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+    backdrop?: Shown
   }
   size?: 'large' | 'small'
 }
@@ -21,6 +26,7 @@ const { hero, size = 'large' } = Astro.props
 ---
 
 <section class="hero" id="top" data-figure={hero.figure ? 'yes' : 'no'} data-size={size}>
+  {hero.backdrop && <Backdrop photo={hero.backdrop} fade={hero.figure ? 'start' : 'center'} />}
   <div class="wrap grid">
     <div class="copy">
       {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
@@ -58,6 +64,8 @@ const { hero, size = 'large' } = Astro.props
   }
 
   .grid {
+    position: relative;
+    z-index: 1;
     display: grid;
     gap: 3rem;
     align-items: center;
@@ -114,6 +122,15 @@ const { hero, size = 'large' } = Astro.props
 
   .figure :global(figure) {
     margin: 0;
+  }
+
+  /* On a halftone the figure sits on a card of paper */
+  .hero:has(:global(.backdrop)) .figure {
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    box-shadow: var(--shadow-float);
   }
 
   .inks {

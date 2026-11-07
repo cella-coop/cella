@@ -8,4 +8,5 @@ import svelte from '@astrojs/svelte'
 export default defineConfig({
   output: 'static',
   integrations: [mdx(), svelte()],
+  devToolbar: { enabled: false },
 })

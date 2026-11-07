@@ -6,6 +6,14 @@ import { z } from 'astro/zod'
 
 const link = z.object({ label: z.string(), href: z.string() })
 
+// A vendored photo printed in the house's halftone as a background: its
+// name, or its name and the status whose ink it wears, the photo's own
+// ink unset.
+const backdrop = z.union([
+  z.string(),
+  z.object({ photo: z.string(), ink: z.enum(['error', 'warning', 'success', 'info', 'help']).optional() }),
+])
+
 // A figure a hero or a section shows beside its text: a diagram of
 // @cella/diagrams by its name, or a vendored photo with its description.
 const figure = z.union([
@@ -62,6 +70,8 @@ const pages = defineCollection({
       primary: link.optional(),
       secondary: link.optional(),
       figure: figure.optional(),
+      // Printed behind the whole hero, fading under its text.
+      backdrop: backdrop.optional(),
     }),
   }),
 })
@@ -81,6 +91,8 @@ const sections = defineCollection({
     eyebrow: z.string().optional(),
     items: z.array(item).default([]),
     figure: figure.optional(),
+    // Printed in a panel behind a split's figure.
+    backdrop: backdrop.optional(),
     side: z.enum(['start', 'end']).default('end'),
     action: link.optional(),
   }),

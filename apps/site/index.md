@@ -70,6 +70,21 @@ Every word the site shows lives in its content collections, under
 | `sections` | one MDX file a section, `<page>/<id>.mdx`: its `heading`, `order` and `kind` in the frontmatter, with its eyebrow, items, figure, side and action as its kind uses them, its body below |
 | `blog` | one MDX file a post, `<name>.mdx`: its title, summary, date, authors and whether it is a draft, which shows in the dev server and is left out of the build |
 
+A hero or a split section may name a **backdrop**: a vendored photo
+(`src/photos/`, [photos](#photos)) printed in the house's halftone
+behind it, `backdrop: <name>` or `backdrop: { photo: <name>, ink:
+<status> }`. `Backdrop.astro` prints it at build time through
+`printFile` and lays the print's masks alone, with no paper, each in
+the theme's own tone of its ink's status, `--<status>-text`, so it
+reads in either theme where a print's paper stays the light theme's.
+Unset, a photo's ink is its own, from its name, the same on every page.
+Behind a hero it fades out under the text, from the text's side beside
+a figure and from the centre without one; behind a split it fills a
+panel and the figure sits on a card of paper over it. It is decorative,
+`aria-hidden`, and its Unsplash credit sits in its corner. A print
+inks the tones under its edge, so a bright, high-key photo prints as a
+texture and a dark one as a slab.
+
 A hero or a section names its figure in its frontmatter, `{ diagram:
 <name> }` or `{ photo: <name>, alt: …, print: … }`, and a card its
 icon by Phosphor's name and a role, as `<Icon>` takes them.

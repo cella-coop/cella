@@ -18,6 +18,7 @@ interface Props {
     primary?: Link
     secondary?: Link
     figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+    backdrop?: string | { photo: string; ink?: 'error' | 'warning' | 'success' | 'info' | 'help' }
   }
   size?: 'large' | 'small'
 }

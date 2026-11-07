@@ -125,7 +125,7 @@ test('a statement compares a span with the one before, opens a line on its accou
   assert.deepEqual(s.columns, ['2026-10', '2026-09'])
   const sold = s.rubrics.find((r) => r.id === 'production-sold')
   assert.deepEqual(sold?.amounts, [25_800_00, 34_100_00])
-  assert.deepEqual(sold?.accounts, [{ code: '706', label: 'Prestations de services', href: '/accounts/706', amounts: [25_800_00, 34_100_00] }])
+  assert.deepEqual(sold?.accounts, [{ code: '706', label: 'Service revenue', href: '/accounts/706', amounts: [25_800_00, 34_100_00] }])
   assert.equal(s.rubrics.find((r) => r.id === 'goods-sold'), undefined, 'a line nothing posted to is left out')
   assert.deepEqual(s.rubrics.find((r) => r.id === 'result')?.amounts, [22_780_00, -5_320_00])
   const b = (await draw(port(), app, 'balance', new URLSearchParams({ span: '2026-10' })))?.drawn as Statement
@@ -217,7 +217,7 @@ test('the pages draw each report and say what they read', async () => {
   const income = await read('/reports/income?span=2026-10', camille)
   assert.match(income, /Income statement, 2026-10 against 2026-09/)
   assert.match(income, /read at the log's entry \d+/)
-  assert.match(income, /Prestations de services/)
+  assert.match(income, /Service revenue/)
   const margin = await read('/reports/margins', camille)
   assert.match(margin, /Projects on 2026-10-25/)
   assert.match(margin, /budget spent/)

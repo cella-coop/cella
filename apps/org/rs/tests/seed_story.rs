@@ -298,7 +298,7 @@ fn author_leaves_motions_put_by_a_held_role_and_by_a_circle() {
     let authors = seeded(
         "author",
         "SELECT string_agg(author, ' ' ORDER BY title) FROM motion.motion \
-         WHERE title IN ('The gérante asks the assembly', 'The assembly asks itself')",
+         WHERE title IN ('The manager asks the assembly', 'The assembly asks itself')",
     );
     assert_eq!(authors, "ag manager");
 }

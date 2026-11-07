@@ -116,15 +116,15 @@ test('Chloé logs her time and claims a receipt, which the log commits to, and l
   time = settled(await logTime({ member: chloe, day: '2026-10-23', minutes: 150, billable: false }, as(chloe))).entry
   assert.equal((await opened(time)).minutes, 150)
   const claimed = settled(
-    await capture({ member: chloe, day: '2026-10-23', label: 'Taxi to the Mauve première', category: '6251', net: 3200, vat: null, receipt: 'TAXI CLAIRVAL 23/10 32,00 EUR' }, as(chloe)),
+    await capture({ member: chloe, day: '2026-10-23', label: 'Taxi to the Mauve opening night', category: '6251', net: 3200, vat: null, receipt: 'TAXI CLAIRVAL 23/10 32,00 EUR' }, as(chloe)),
   )
   receipt = claimed.entry
-  assert.equal((await opened(receipt)).label, 'Taxi to the Mauve première')
+  assert.equal((await opened(receipt)).label, 'Taxi to the Mauve opening night')
   const exit = await excluded('2026-10-24', '2026-11-07')
   assert.deepEqual(exit.map((d) => [d.op, d.state]), [['membership:member:exclude', 'settled']])
 })
 
-test('no one erases another: Julien, and Camille as gérante, may not erase Chloé, who has left', async () => {
+test('no one erases another: Julien, and Camille as manager, may not erase Chloé, who has left', async () => {
   await on('2026-11-08')
   for (const actor of [julien, camille]) {
     assert.match(reason(await erase({ member: chloe }, as(actor))), new RegExp(`${actor.replaceAll('.', '\\.')} may not erase chloe@lanterne\\.example's personal data: only their own`))
@@ -145,7 +145,7 @@ test('Chloé erases her own data, by her right and no motion: her name at once; 
   assert.ok(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM payslip.payslip WHERE member = $1 AND gross IS NOT NULL`, [chloe])).n) > 0)
   assert.equal(Number((await one<{ n: string }>(`SELECT count(*) AS n FROM timesheet.entry WHERE member = $1 AND day = '2026-10-23' AND minutes = 150`, [chloe])).n), 1)
   assert.equal((await opened(time)).minutes, 'restricted')
-  assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'Taxi to the Mauve première')
+  assert.equal((await one<{ label: string }>(`SELECT label FROM expense.expense WHERE member = $1 AND day = '2026-10-23'`, [chloe])).label, 'Taxi to the Mauve opening night')
   assert.equal((await opened(receipt)).label, 'restricted')
   assert.match((await one<{ label: string }>(`SELECT label FROM account.account WHERE holder = $1`, [chloe])).label, /Chloé/)
   assert.equal(await verifies(), true)

@@ -5,7 +5,7 @@
 [[contact]]
 id = "halles"
 name = "Les Halles Paysannes"
-form = "SCIC SA"
+form = "community-interest co-operative"
 client = "active"
 note = "a network of farmers' shops; brand refresh and an online shop"
 
@@ -23,14 +23,14 @@ note = "runs the online shop; prefers mornings"
 [[contact]]
 id = "clairval"
 name = "Ville de Clairval"
-form = "commune"
+form = "municipality"
 client = "active"
 note = "the town website, rebuilt to RGAA accessibility; won by tender"
 
 [[contact]]
 id = "nuvola"
 name = "Nuvola Énergie"
-form = "SCIC SAS"
+form = "community-interest co-operative"
 client = "active"
 note = "a citizen solar co-op; monthly marketing retainer"
 
@@ -51,20 +51,20 @@ note = "a bike repair workshop; brand identity at the solidarity rate"
 [[contact]]
 id = "ferrand"
 name = "Maison Ferrand"
-form = "SARL"
+form = "limited company"
 client = "active"
 note = "an artisan bakery group; packaging design"
 
 [[contact]]
 id = "terres"
 name = "Fondation Terres Vives"
-form = "fondation"
+form = "foundation"
 client = "active"
 note = "a land-trust foundation; annual report and microsite"
 
 [[contact]]
 id = "ondine"
 name = "Atelier Ondine"
-form = "SAS"
+form = "simplified joint-stock company"
 client = "active"
 note = "a ceramics studio; online shop"

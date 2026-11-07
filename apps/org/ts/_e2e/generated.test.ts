@@ -141,7 +141,7 @@ test('a rule adopted after it to apply on 20 December generates a version readin
 })
 
 test('a motion whose generation never ran, cited later by hand, reads the adopted version\'s day', async () => {
-  later = await decided('The gérante reports to the assembly each quarter', '2026-12-22', '2026-12-21', false)
+  later = await decided('The manager reports to the assembly each quarter', '2026-12-22', '2026-12-21', false)
   settled(await adopt({ motion: later, n: 1 }, as(camille)))
   assert.equal(await adopted(), 'statutes@4')
   settled(await generate({ document: 'statutes', motion: later, day: '2026-12-22' }, as(camille)))

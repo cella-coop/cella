@@ -2,7 +2,7 @@
 # integration computes them line by line, and the widest ratio the internal
 # rules allow between the highest and the lowest salary (1.6); each
 # member's monthly gross salary, amounts in cents; and the pay runs since
-# the books moved here, one a month, prepared, approved by the gérante and
+# the books moved here, one a month, prepared, approved by the manager and
 # paid on the 28th. July to September were carried over: each posted, and
 # paid, in one entry of the journal (graft.payslip-transaction.toml).
 # September's payslips hold the members' approved hours; timesheets began

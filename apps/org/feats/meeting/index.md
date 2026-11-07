@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -53,7 +53,7 @@ document, `document-meeting`'s.
 
 | Action | Power or check | Lanterne |
 |---|---|---|
-| schedule, cancel | `schedule-meeting` | a circle's lead, the gérante for any circle |
+| schedule, cancel | `schedule-meeting` | a circle's lead, the manager for any circle |
 | item.add, .move, .remove | `discuss`, held in the meeting's circle | the circle's participants |
 | hold, minute | `keep-minutes` | a circle's secretary or its lead |
 

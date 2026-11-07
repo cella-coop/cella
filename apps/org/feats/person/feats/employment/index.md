@@ -1,6 +1,6 @@
 +++
 title = "Employment"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 A person's employment, member or not: the job, the contract, the days it
@@ -61,7 +61,7 @@ shell are not built; the salary is the `payslip` feat's.
 
 | Action | Power | Lanterne |
 |---|---|---|
-| hire | `hire-worker`, no limit | Camille, as gérante |
+| hire | `hire-worker`, no limit | Camille, as manager |
 
 `002-powers.sql` registers it in `cella.power`, and the
 membership feat checks it. What a hire costs is the salary's,

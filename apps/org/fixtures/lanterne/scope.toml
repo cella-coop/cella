@@ -6,8 +6,8 @@
 # founding names and whose defaults its founding motion takes;
 # `founding` is that motion, which its founders decided.
 name = "Lanterne"
-legal_name = "Lanterne SCOP SARL"
-form = "SCOP SARL à capital variable"
+legal_name = "Lanterne Worker Co-operative Limited Company"
+form = "Worker co-operative limited company with variable capital"
 legal_form = "scop-sarl-fr"
 founding = "m-2021-001"
 address = "lanterne.example"

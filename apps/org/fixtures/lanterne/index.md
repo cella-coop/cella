@@ -6,7 +6,16 @@ updated = 2026-11-08
 # Lanterne
 
 A mock co-op to build the prototype against: a creative agency in Montreuil,
-run as a SCOP SARL by its ten worker-members since 2021. It builds websites
+in the EU, run as a worker co-operative by its ten worker-members since
+2021, its members living around the world. Every word a reader sees in it
+is English: its titles, descriptions, motions, documents, minutes,
+policies, rights, roles and account labels; its people's names are
+international. The founding legal form reads “worker co-operative limited company
+with variable capital”; its `scop-sarl-fr` identifier, French street addresses,
+people's and clients' names, registration numbers and account codes stay as
+recorded, not translated. The fixture's imported sample files use English
+headings and labels too, while retaining their source formats and figures.
+It builds websites
 and online shops, designs brands, print and packaging, and runs marketing for
 clients who are mostly co-ops, associations and small local firms. Every
 name, number and identifier here is invented.
@@ -18,7 +27,7 @@ tenure of its `member` role, whose mandates let every member edit contacts
 and documents; and in one working circle, as its member or its lead.
 The lead role is a member of coordination, which meets weekly, so each
 circle's lead sits there by their tenure, and Camille sits there as a
-member. A capped role, as the gérante's or a circle's lead, is held by
+member. A capped role, as the manager's or a circle's lead, is held by
 one person at a time. No circle sits in another: the assembly is one
 circle beside coordination and the four working circles.
 
@@ -29,7 +38,7 @@ circle beside coordination and the four working circles.
 | Marketing | Malik Benali, Chloé Moreau | Malik |
 | Operations | Julien Petit | Julien |
 
-Camille is the gérante, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
+Camille is the manager, by a tenure from 20 June 2024 until 20 June 2028, with a mandate to
 sign contracts and commit up to 20 000 €. Julien holds the finance role: he
 keeps the books, issues invoices, records suppliers' bills and pays them
 up to 3 000 € a payment,
@@ -39,7 +48,7 @@ members' expenses up to 1 000 € a month each, Camille up to 2 000 € an
 expense and suppliers' bills up to 5 000 € a bill, and leads quote up to
 15 000 €. Sofia, Brand's print buyer since 12 October, approves Brand's
 print and paper bills up to 1 200 € a bill.
-Leads and the gérante run projects and set their budgets, the leads up to
+Leads and the manager run projects and set their budgets, the leads up to
 15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
 those of their own circle's members; Julien, seated in the assembly as
 treasurer, approves everyone's, as Camille does. Every member creates
@@ -75,7 +84,7 @@ assembly, and no one opens a candidacy for another.
   statutes' two assemblies, the ordinary, a majority of the votes cast
   once a quarter of the associates take part, and the extraordinary,
   which amends the statutes, two thirds of the votes cast once half take
-  part (`motion.toml`; loi n° 78-763, as the CG Scop's model statutes
+  part (`motion.toml`; Act No. 78-763, as the CG Scop's model statutes
   put it, not checked on Légifrance).
 - **Mandates.** Each mandate is a policy, the assembly's, adopted with
   the statutes by m-2021-001, but the four of the bills' chain, below,
@@ -139,7 +148,7 @@ assembly, and no one opens a candidacy for another.
   Chloé, in Marketing, reads every circle's expenses and the books, and
   her own pay and not Yusuf's, since `read` opens no one's pay. A power
   that reads a feat's rows reads them by its mandate's scope beside it:
-  the gérante's `approve-expense`, on the whole co-op, every circle's
+  the manager's `approve-expense`, on the whole co-op, every circle's
   expenses, and Web's lead's `approve-time`, on their own circle, Web's
   time alone.
 - **Rules.** The statutes' capital terms and the work share's terms are
@@ -163,7 +172,8 @@ assembly, and no one opens a candidacy for another.
   most 1.6, the solidarity rate for associations and co-ops under ten
   staff, each value saying which way is stricter, and the clients refused,
   which bind by their words alone.
-- **Legal form.** Lanterne is a SCOP SARL in France, and its founding
+- **Legal form.** Lanterne is a worker co-operative limited company with
+  variable capital in France (registered as a SCOP SARL), and its founding
   motion, `m-2021-001`, which `scope.toml` names as its `founding`, was
   decided by its founders, the four members since 1 March 2021, each
   seated in the assembly that day and consenting, Paul among them, whose
@@ -177,9 +187,9 @@ assembly, and no one opens a candidacy for another.
   are its own. It has left none of the defaults, so its statutes say they
   leave none.
 - **Statutes (generated).** The statutes are the assembly's policies in
-  order, generated around the fixed text of a SCOP SARL à capital
-  variable (`document.toml`), and after them the defaults of the SCOP
-  SARL the assembly left: `statutes@1`, adopted on 1 March 2021 with
+  order, generated around the fixed text of a worker co-operative limited
+  company with variable capital (`document.toml`), and after them the
+  defaults of that form the assembly left: `statutes@1`, adopted on 1 March 2021 with
   m-2021-001's procedures, mandates and rules, and `statutes@2`, on 20
   June 2026, with the internal rules' five rules m-2026-007 adopted and
   coordination's `approve-bill` m-2026-008 granted that day.
@@ -193,10 +203,10 @@ assembly, and no one opens a candidacy for another.
   October's rent and tools. Each member's capital, their shares at 50 €,
   is in an account of their own; each may draw up to 500 € on it. The
   assembly approved the 2025 split of 61 400 € in June (m-2026-006), as
-  loi 78-763, art. 33 allows: 27 630 € to the members for their work,
+  Act No. 78-763, article 33 allows: 27 630 € to the members for their work,
   divided by salary, 9 210 € to the legal reserve, 24 111,78 € to the
   development fund and 448,22 € as interest on capital, within the 3,5 %
-  of the 13 000 € of capital the statutes pay at most (loi 47-1775, art.
+  of the 13 000 € of capital the statutes pay at most (Act No. 47-1775, article
   14, caps it at 5,36 % for the 2026 assembly); the result was
   carried over undistributed. The 2025 distribution (`patronage.toml`) is
   a draft until its approval cites m-2026-006, which makes each worker's
@@ -220,7 +230,7 @@ assembly, and no one opens a candidacy for another.
   and over Sofia's 1 200 €, and Atelier Lumen's October rent, 1 080 €,
   the assembly's and outside Brand's.
 - **Bills, a chain of mandates (ordered).** Who approves a supplier's
-  bill below the gérante is handed down three mandates deep, each
+  bill below the manager is handed down three mandates deep, each
   narrower than the one above ([circle](../../core/circle/index.md#lanterne)):
   the annual assembly's m-2026-008, on 20 June 2026, grants coordination
   `approve-bill` up to 3 000 € a write; coordination's m-2026-009, on
@@ -258,7 +268,7 @@ assembly, and no one opens a candidacy for another.
   staffing, the rate card and Inès's admission; it meets next on 26
   October. Camille scheduled the assembly of 31 October, its agenda the
   June minutes, Inès's admission and the rate card. Leads and the
-  gérante schedule meetings; secretaries and leads hold them and record
+  manager schedule meetings; secretaries and leads hold them and record
   who came; every member marks themselves.
 - **Files (confluent).** The statutes as adopted in 2024 are the co-op's
   own; Camille's subscription form is on her file, Inès's contract on

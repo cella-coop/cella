@@ -48,7 +48,7 @@ and then of `pay-payroll`, is `membership-payslip`'s, in their inbox.
 | Action | Power | Lanterne |
 |---|---|---|
 | generate | `prepare-payroll`, no limit | Julien, as finance |
-| approve | `approve-payroll`, no limit | Camille, as gérante |
+| approve | `approve-payroll`, no limit | Camille, as manager |
 | pay | `pay-payroll`, no limit | Julien, as finance |
 
 Wages are owed whatever their size, so no power has a limit.

@@ -5,7 +5,7 @@
 
 [[circle]]
 id = "ag"
-name = "Assemblée générale"
+name = "General assembly"
 assembly = true
 purpose = "every member, one vote: statutes, admissions, accounts and surplus"
 
@@ -43,7 +43,7 @@ duty = "every member, seated in the assembly; what every member may do is grante
 [[role]]
 id = "manager"
 circle = "ag"
-name = "Gérante"
+name = "Manager"
 duty = "the legal representative, elected by the assembly for four years"
 holders = 1
 
@@ -86,7 +86,7 @@ holders = 1
 # Who is in which circle and who holds which role. Every member holds the
 # assembly's member role and is a member of one working circle; each
 # working circle's lead holds its lead role, which is a member of
-# coordination, so every lead sits there; Camille, the gérante, sits there
+# coordination, so every lead sits there; Camille, the manager, sits there
 # as a member.
 
 [[tenure]]

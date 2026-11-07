@@ -281,7 +281,7 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   actor holds a seat that counts in the circle on the verdict date,
   where the participant's `discuss` is held.
 
-Lanterne: Camille holds the gérante role by a tenure from 20 June 2024
+Lanterne: Camille holds the manager role by a tenure from 20 June 2024
 until 20 June 2028, and acts alone under its mandates while it runs.
 Julien issues invoices, records payments, posts entries, closes
 periods and pays suppliers up to 3 000 € a payment, as finance; Chloé

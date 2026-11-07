@@ -211,12 +211,28 @@ registries and name none.
 
 The outcome itself is not this feat's to fix: it is folded from the votes by `cella.consent`, `cella.majority` or `cella.share` over the roll, by the motion's procedure, its quorum and its vetoes, as the `membership-motion` graft does.
 
+## Folds
+
+The actions that write the feat's schema without a proposer's words say
+how their entry applies to the state before it (`sql/013-folds.sql`,
+[folds](../../../_corpus/doc/architecture.md#folds)), at version 1: a stance inserts the
+stance by the receipt its entry carries, on the entry's day, as its
+commitment where the ballot is secret; a close sets the closed day to
+the entry's and the cutoff to the receipt it carries; an adoption runs
+`policy.adopt` on the action's terms as the folded motion holds them,
+from the day the entry says it applies, and the procedure it makes, and
+refuses a policy or a hash other than the entry's; an end runs
+`policy.end` and refuses a day other than the entry's. A proposal and a
+message keep their words out of the log, a title, a text and a message's
+body, so neither folds yet, and a fold stops at the first stance on a
+motion its log proposed.
+
 ## Handlers
 
 - `vote` (confluent): the member's own stance, with the write's receipt, `cella.receipt()`, which the notary signs; logged as a single-entry batch, the stance marked personal on a secret ballot. A stance for another member, off the roll or on a closed motion returns `Refused`, as the guards and the trigger judge it; the handler throws for none of them.
 - `propose` (confluent): inserts the motion as its author, the role the proposal names (`author`) or else its circle, by the procedure the write gives it, consent where it gives none, its method the procedure's and its ballot the one the proposal names or else the procedure's, numbered the year's next (`m-2026-013`) under a lock on the numbering, proposed on the verdict date, and its actions; membership-motion's `propose` replaces it in the shell, gives it the procedure its requirements fix and fixes the roll in the same write, by `proposing`, the write this one makes. Submits `{ motion, circle, author, procedure, ballot, deadline, actions }`: the title and the text are the proposer's words and stay out of the log.
 - `post` (confluent): the acting member's message, with the write's receipt, perhaps answering another. It inserts the text, the row answers the handles it mentions and the documents it links, and it submits `{ motion, member, message, reply, mentions, links }`, those the row's, without the text. It signs the request's fields it reads, its motion, member, reply and text, so a request naming mentions or links of its own names nothing.
-- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits. `membership-motion` replaces it in the shell with a close that counts the roll and carries what the motion passed as its effects, in the same transaction; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
+- `close` (ordered), and `closing`, the same as a write a graft extends in its transaction: sets the closed date to `cella.verdict_date()` and the cutoff to the close's own receipt, then submits `{ motion, closed, cutoff }`. `membership-motion` replaces it in the shell with a close that counts the roll and carries what the motion passed as its effects, in the same transaction; where that graft is mounted, this close alone counts no roll and its guard `counts` refuses it.
 - `adopt` (ordered): adopts the policy a passed motion carries as its action `n`, through the register's `policy.adopt` (`adopting` in `@cella/org-policy`), in the motion's circle, from the day the action names or the verdict date, whichever is later, protected by the procedure the action names, if any, taking the default it names, if any, and copies a procedure policy's values into the procedure they make (`motion.procedure_from`). It first asks `motion.replacement_flaw`, the SQL `motion.adopts` judges by, whether the policy the action replaces is still its to replace; where another motion replaced it while this one was open, it writes nothing to the register, and the guard refuses the action with that reason. Submits `{ policy, motion, n, applies, hash }`, the hash of its wordings in hex. `membership-motion` runs it for each policy a passing motion carries, as it carries out the motion's other actions. `adopting`, the same as a write a graft extends in its transaction, is what this feat's circles' `adopt` extends with core's copy of a mandate.
 - `end` (ordered), and `ending`, the same as a write a graft extends: ends the policy a passed motion's action `n` names on the verdict date, through the register's `policy.end` (`ending` in `@cella/org-policy`). Submits `{ policy, motion, n, ends }`. `membership-motion` runs the circles' `end`, which extends it, for each policy a passing motion ends.
 

@@ -24,7 +24,7 @@ export function closing(input: Close): Write<Closed> {
       const row = rows[0]
       return { motion: input.motion, closed: row?.closed ?? '', cutoff: Number(row?.cutoff ?? 0) }
     },
-    payload: () => ({ ...input }),
+    payload: (v) => ({ ...input, closed: v.closed, cutoff: v.cutoff }),
   }
 }
 

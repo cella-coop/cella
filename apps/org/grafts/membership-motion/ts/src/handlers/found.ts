@@ -10,13 +10,19 @@ const op = 'membership-motion:scope:found' satisfies keyof typeof actions
 // empty log, as a form cella offers whose defaults its policies take,
 // once its root can decide, by a founding motion of the root its
 // founders, each seated there with a vote, decided. The log keeps the
-// form, the motion, where it came from and how many rows of each kind,
-// never the rows.
+// form, the motion, where it came from, how many rows of each kind, and
+// the rows themselves as `cella.carry` reads them once they are in, each
+// personal value as its commitment, so the fold applies them to an empty
+// database before any other entry.
 export async function found(input: Founding, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Founded>> {
   return write(deps, {
     op,
     request: { form: input.form, motion: input.motion, from: input.from },
-    state: async (tx) => ({ form: input.form, motion: input.motion, from: input.from, founded: await input.load(tx) }),
+    state: async (tx) => {
+      const founded = await input.load(tx)
+      const { rows } = await tx.query<{ carried: Founded['carried'] }>('SELECT cella.carry() AS carried')
+      return { form: input.form, motion: input.motion, from: input.from, founded, carried: rows[0].carried }
+    },
     payload: (v) => ({ ...v }),
   })
 }

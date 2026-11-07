@@ -1,11 +1,14 @@
 -- What of a person is personal data, by class: their name, of class
 -- `profile`, kept while they belong or work here and erased once they have
 -- left; their email and phone, of class `contact`, which they may erase
--- themselves. Their address is the pseudonym every entry names them by.
+-- themselves; and the label each of their devices goes by, their own
+-- wording, of class `profile`. Their address is the pseudonym every entry
+-- names them by.
 INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
   ('person', 'person', 'name', 'profile', 'address', 'person'),
   ('person', 'person', 'email', 'contact', 'address', 'person'),
-  ('person', 'person', 'phone', 'contact', 'address', 'person');
+  ('person', 'person', 'phone', 'contact', 'address', 'person'),
+  ('person', 'device', 'label', 'profile', 'address', 'person');
 
 COMMENT ON COLUMN person.person.address IS 'not personal: the pseudonymous address every log entry names the person by';
 

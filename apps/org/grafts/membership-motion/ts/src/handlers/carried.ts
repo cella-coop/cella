@@ -33,7 +33,7 @@ function admit(input: { member: string; shares: number; motion: string; circle: 
       const added = await seating(tx, { circle: input.circle, member: input.member, role: 'member', motion: input.motion })
       return { member: input.member, shares: input.shares, seat: added.seat }
     },
-    payload: (v) => ({ ...request, seat: v.seat }),
+    payload: (v) => ({ ...request, circle: input.circle, seat: v.seat }),
   })
 }
 

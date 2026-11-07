@@ -17,6 +17,7 @@ import { add } from '@cella/org-circle/api'
 import { done, type Deps } from '@cella/org-db'
 import { fixture, signer } from '@cella/org-sign'
 import { reader, scope, sign } from './lanterne.ts'
+import { folded, tables, unfold } from './fold.ts'
 import { reacting } from '../src/lib/server/slices.ts'
 
 const su = new pg.Client()
@@ -187,4 +188,23 @@ test('the log verifies, records its guards, and catches tampering', async () => 
   await su.query(`UPDATE cella.log SET actor = 'mallory@lanterne.example' WHERE n = 4`)
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, false)
   await su.query('ROLLBACK')
+})
+
+test('the log folds into a fresh database that matches it, every table but those of the books and the documents, which fold in later changes', async () => {
+  const db = process.env.PGDATABASE ?? 'cella'
+  try {
+    assert.match(folded(db), /circle, employment, employment_membership, membership, membership_motion, person, policy folded, \S+ matches \S+ row for row/)
+    const [source, fold] = [await tables(db), await tables(`${db}_fold`)]
+    const differ = Object.keys(source).filter((t) => source[t] !== fold[t]).sort()
+    assert.deepEqual(differ, [
+      'account.account',
+      'account_membership_transaction.subscription',
+      'document.update',
+      'transaction.entry',
+      'transaction.journal',
+      'transaction.line',
+    ])
+  } finally {
+    await unfold(db)
+  }
 })

@@ -131,6 +131,15 @@ slice's SQL that reads `policy.wording` is refused by `cella check
 feats`: a guard reads a policy's values from its own columns, never its
 sentence, which it may only quote, by `policy.says`.
 
+## Folds
+
+The register changes only by `policy.adopt` and `policy.end`, which
+the motion feat's handlers call and its folds again
+(`sql/003-folds.sql`, [folds](../../../_corpus/doc/architecture.md#folds)); policy's own
+folds of `motion:policy:adopt` and `motion:policy:end` check, after
+them, that the register holds the policy the entry adopted with its
+hash, or ended on the day it says.
+
 ## TypeScript
 
 - `kinds`: the three kinds, as the New motion form offers them.

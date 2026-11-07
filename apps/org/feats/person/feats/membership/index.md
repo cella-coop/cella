@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -96,7 +96,8 @@ member by, commented not personal (`006-erase.sql`). The invitation's
 payload commits to the invitee's name when the invitation brings in a new
 person, and to its link's digest; an acceptance's, to the link and the key
 it enrolled, so the log says which device took the invitation up. The
-label is the invitee's wording and stays out.
+label is the invitee's wording, personal data of class `profile`: the
+acceptance commits to it, as the invitation's and as the device's.
 
 ## Guards
 
@@ -111,6 +112,20 @@ label is the invitee's wording and stays out.
 - `membership.erases`, on `membership:member:erase`: the member is the actor and has left, and the write erased every class of their personal data, at once or restricted.
 
 Whether the cited motion of an admission, a suspension or an exclusion asks it is the `membership-motion` graft's guard on the same actions; whether it closed and passed on its roll, `membership-motion`'s.
+
+## Folds
+
+Each action of the feat says how its entry applies to the state before
+it (`sql/017-folds.sql`, [folds](../../../../../../_corpus/doc/architecture.md#folds)), at version 1, by the
+SQL its handler runs with the day and the values its entry carries, so
+the triggers its writes fire fire again: an invitation inserts the
+invited member and the link it carries; an application, the applicant
+invited and applied that day, or applied where invited already; a link,
+its digest; an acceptance, the invitation by its key and its label's
+commitment; an admission, the member active with the shares it names; a
+suspension, an exclusion or a withdrawal, the member's status and day,
+unless they stand so already; and an erasure nothing of its own, its
+erasure folding as the notary carried it out.
 
 ## Handlers
 

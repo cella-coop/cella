@@ -1,6 +1,6 @@
 +++
 title = "employment-membership"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 The way from employee to member: a worker's candidacy, the probation
@@ -60,6 +60,12 @@ their own candidacy by `opens`.
   the candidacy is the actor's own, who applied on the verdict date; it
   was opened on that day as the payload names it, from their hire to the
   day before, pledging shares.
+
+## Folds
+
+`employment-membership:candidacy:open` (`employment_membership.fold_open`,
+`sql/004-folds.sql`, [folds](../../../../../_corpus/doc/architecture.md#folds)) inserts the
+candidacy as its entry carries it, opened on the entry's day.
 
 ## Handlers
 

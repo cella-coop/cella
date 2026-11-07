@@ -21,6 +21,8 @@ export interface Enrolled {
   address: string
   label: string
   key: string
+  // The device that signed the enrolment, by its public key in hex.
+  by: string
   enrolled: string
 }
 

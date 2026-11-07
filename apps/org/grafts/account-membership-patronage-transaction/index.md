@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -101,7 +101,8 @@ A credit reads as the member's capital account does, for the member and capital'
 
 ## Shell
 
-Adds to a statement, once its year is distributed, what the part became:
+Adds to a statement, in an Employed tab once its year is distributed,
+what the part became:
 owed in cash, until a write pays it out, in shares and how many,
 blocked until when, and the capital account's movements with the
 balance after each. Adds to a person's page, for the member alone, their

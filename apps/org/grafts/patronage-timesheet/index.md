@@ -1,6 +1,6 @@
 +++
 title = "patronage-timesheet"
-updated = 2026-11-06
+updated = 2026-11-09
 +++
 
 How a surplus's work share divides among the workers by time worked,
@@ -46,8 +46,8 @@ counts once it is approved.
 
 ## Shell
 
-Adds to a distribution's page, until it is approved, how its portion by
-time worked would divide, member by member, each as its reader may read it.
+Adds to a distribution's Split tab, until it is approved, how its portion
+by time worked would divide, member by member, each as its reader may read it.
 
 ## Lanterne
 

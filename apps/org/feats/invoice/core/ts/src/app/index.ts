@@ -7,8 +7,9 @@ import Send from './blocks/Send.svelte'
 const standing = (i: Listed) => (i.overdue ? 'overdue' : i.state)
 const tones: Record<string, Tone> = { overdue: 'warning', unpaid: 'accent', partial: 'accent', paid: 'positive', overpaid: 'warning', voided: 'neutral' }
 
-// The feat's client side: the invoices, a new invoice, and
-// an invoice's page with its lines and payments.
+// The feat's client side: the invoices, a new invoice, and an invoice's
+// page, what it bills for and whom, its lines and payments in a tab of
+// their own.
 export const app: App = {
   name: 'invoice',
   collections: {
@@ -38,9 +39,10 @@ export const app: App = {
       },
       page: {
         eyebrow: 'Invoice',
-        title: (i: Detail) => i.id,
-        subtitle: (i: Detail) => `${i.bill_to} · ${i.label}`,
+        title: (i: Detail) => i.label,
+        subtitle: (i: Detail) => i.id,
         properties: (i: Detail) => [
+          { label: 'Bills', value: i.bill_to },
           { label: 'Standing', value: standing(i), kind: 'badge', tone: tones[standing(i)] },
           { label: 'Total', value: i.total, kind: 'money' },
           { label: 'Net', value: i.net, kind: 'money' },
@@ -61,7 +63,11 @@ export const app: App = {
           ...(i.sent ? [{ at: i.sent, text: 'sent' }] : []),
           { at: i.issued, text: 'issued' },
         ],
-        blocks: [Lines],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'lines', label: 'Lines' },
+        ],
+        blocks: [{ tab: 'lines', block: Lines }],
         actions: Send,
       },
     },

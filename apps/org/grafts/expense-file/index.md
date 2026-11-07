@@ -1,6 +1,6 @@
 +++
 title = "expense-file"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The receipts on an expense: files of class `expense-receipt` about its
@@ -55,8 +55,8 @@ erasure leaves them, and attached; a claim without one attaches nothing.
 ## Shell
 
 The expenses' New form, a claim with its receipt as a file; how many
-receipts each expense holds; and on an expense's page its receipts, each
-opening as its file, with another attached.
+receipts each expense holds; and on an expense's page, in a Receipts tab, its receipts,
+each opening as its file, with another attached.
 
 ## Lanterne
 

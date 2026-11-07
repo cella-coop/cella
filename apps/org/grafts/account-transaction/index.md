@@ -1,6 +1,6 @@
 +++
 title = "account-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A transaction's lines post to accounts. The graft resolves each line's
@@ -118,7 +118,10 @@ Adds each account's debits, credits and balance to the chart, from
 `account_transaction.balance`, with whether the whole trial balance agrees
 (`agrees`, the collection's `about`) as the collection's status, and the chart's dashboard: the debits, the
 credits, the cash the cash accounts hold and the balance by kind; an
-account's ledger, every line posted to it, to its page. The financial
+account's ledger, every line posted to it, to its page in a Ledger tab;
+and a period's entries, every entry dated in its month as its reader
+reads the journal, each with what it moved, to its page in an Entries
+tab. The financial
 statements are the `report` feat's.
 
 ## Lanterne

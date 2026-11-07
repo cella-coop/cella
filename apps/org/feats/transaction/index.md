@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -194,8 +194,9 @@ Every entry and line reads for whoever holds `record-entry`, `carry-books` or `c
 ## Shell
 
 The journal, as the `transactions` collection, the latest entry first,
-each with the sum of its debits; an entry's page lists its lines and the
-entries that correct it. `/journal` and its entries' old addresses
+each with the sum of its debits; an entry's page, its header's crumb its id,
+is titled by its label, links the entries that correct it and holds its
+lines in its Lines tab. `/journal` and its entries' old addresses
 redirect there. Posting
 from the shell is not offered: the pilot's entries come from invoices,
 bills and expenses, through their grafts.

@@ -1,4 +1,4 @@
-import { date, icons, type App } from '@cella/org-ui'
+import { icons, type App } from '@cella/org-ui'
 import type { Account, Period } from '../models/account.ts'
 import type { Terms } from '../models/terms.ts'
 import Close from './blocks/Close.svelte'
@@ -13,7 +13,8 @@ const open = (p: Period) => (p.closed ? 'closed' : 'open')
 const adopted = (t: Terms) => (t.adopted ? 'adopted' : 'drafted')
 
 // The feat's client side: the chart of accounts, the periods of the books
-// and a period's close, and the statutes' capital clauses.
+// and a period's close, and the statutes' capital clauses. An account's
+// ledger and a period's entries are the tabs its extenders add.
 export const app: App = {
   name: 'account',
   collections: {
@@ -32,7 +33,6 @@ export const app: App = {
       page: {
         eyebrow: 'Account',
         title: (a: Account) => `${a.code} ${a.label}`,
-        subtitle: (a: Account) => `${a.kind}${a.cash ? ', cash' : ''}`,
         properties: (a: Account) => [
           { label: 'Code', value: a.code, kind: 'mono' },
           { label: 'Kind', value: a.kind, kind: 'badge' },
@@ -40,6 +40,7 @@ export const app: App = {
           { label: 'Holder', value: a.holder },
           { label: 'Frozen', value: a.frozen ? 'yes' : 'no' },
         ],
+        tabs: [{ id: 'overview', label: 'Overview' }],
       },
     },
     periods: {
@@ -57,11 +58,11 @@ export const app: App = {
       page: {
         eyebrow: 'Period',
         title: (p: Period) => p.month,
-        subtitle: (p: Period) => (p.closed ? `closed on ${date(p.closed)}; nothing posts into it` : 'open: an entry dated in it posts'),
         properties: (p: Period) => [
           { label: 'State', value: open(p), kind: 'badge', tone: p.closed ? 'neutral' : 'accent' },
           { label: 'Closed on', value: p.closed, kind: 'date' },
         ],
+        tabs: [{ id: 'overview', label: 'Overview' }],
         actions: Close,
       },
     },
@@ -82,7 +83,7 @@ export const app: App = {
       page: {
         eyebrow: 'Capital terms',
         title: (t: Terms) => `Capital terms from ${t.from}`,
-        subtitle: (t: Terms) => (t.adopted ? `adopted on ${date(t.adopted)}` : 'drafted: adopted once the members decide'),
+        subtitle: (t: Terms) => t.id,
         properties: (t: Terms) => [
           { label: 'State', value: adopted(t), kind: 'badge', tone: t.adopted ? 'positive' : 'accent' },
           { label: 'From', value: String(t.from) },

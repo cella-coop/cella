@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -286,12 +286,13 @@ A worker's parts of a work share, and so their statement, read for the worker an
 ## Shell
 
 The `distributions` collection, each year's surplus in a table, the
-latest first, a distribution's page showing its split under a Split tab
-and its state, draft, approved or distributed, and its New form drafting
+latest first, a distribution's page, its header's crumb its id, showing its
+state, draft, approved or distributed, and its split in a Split tab, and its New form drafting
 a year's split; `bases`, the patronage terms by year, governing,
-to govern or replaced, each copied from its rule; and `statements`, each
+to govern or replaced, each copied from its rule, which its page names; and `statements`, each
 worker's part of each year's work share, a statement's page its part
-basis by basis against each basis's portion and weight. Approving is
+basis by basis against each basis's portion and weight in a By basis
+tab. Approving is
 `motion-patronage`'s form over this feat's write; distributing and
 employing follow the approval, and adopting terms a rule's adoption, with
 no form. Printed, a page drops the shell and reads as a

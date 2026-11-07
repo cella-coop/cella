@@ -8,7 +8,8 @@ const category = (e: Expense) => categories.find((c) => c.code === e.category)?.
 
 // The feat's client side: the expenses as a board by status, on which a
 // card dragged into the next column is that column's write; a new claim
-// as the acting member; and an expense's page with its next write.
+// as the acting member; and an expense's page with its next write, its
+// receipts and postings the tabs its extenders add.
 export const app: App = {
   name: 'expense',
   collections: {
@@ -48,7 +49,7 @@ export const app: App = {
       page: {
         eyebrow: 'Expense',
         title: (e: Expense) => e.label,
-        subtitle: (e: Expense) => `${e.id}, ${category(e)}`,
+        subtitle: (e: Expense) => e.id,
         properties: (e: Expense) => [
           { label: 'Status', value: e.status, kind: 'badge', tone: tones[e.status] },
           { label: 'Amount', value: e.total, kind: 'money' },
@@ -65,6 +66,7 @@ export const app: App = {
           ...(e.submitted ? [{ at: e.submitted, text: 'submitted' }] : []),
           { at: e.day, text: 'spent' },
         ],
+        tabs: [{ id: 'overview', label: 'Overview' }],
         actions: Status,
       },
     },

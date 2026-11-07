@@ -1,6 +1,6 @@
 +++
 title = "expense-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 An expense's approval and its reimbursement post balanced entries, in the
@@ -57,7 +57,7 @@ as its event, and one that keeps none is refused.
 ## Shell
 
 Replaces the expense feat's approve and reimburse with these, and adds an
-expense's postings to its page.
+expense's postings to its page in a Postings tab.
 
 ## Analytics
 

@@ -18,3 +18,11 @@ export interface Movement {
 export interface Ledger extends Balance {
   movements: Movement[]
 }
+
+// An entry dated in a period of the books, with what it moved.
+export interface Dated {
+  id: string
+  date: string
+  label: string
+  amount: number
+}

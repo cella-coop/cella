@@ -1,4 +1,4 @@
-import { date, icons, type App, type Tone } from '@cella/org-ui'
+import { icons, type App, type Tone } from '@cella/org-ui'
 import { stage, type Detail, type Distribution } from '../models/distribution.ts'
 import { divides, type Terms } from '../models/terms.ts'
 import type { Sheet, Statement } from '../models/statement.ts'
@@ -11,16 +11,10 @@ const tones: Record<ReturnType<typeof stage>, Tone> = { draft: 'neutral', approv
 // the list shows them.
 type Staged = Distribution & { state: ReturnType<typeof stage> }
 type Divided = Omit<Terms, 'basis'> & { basis: string; state: string }
-const standing = (d: Distribution) =>
-  d.distributed
-    ? `distributed on ${date(d.distributed)}`
-    : d.approved
-      ? `approved on ${date(d.approved)}; distributed once finance posts it`
-      : 'drafted: approved once the assembly decides'
 
-// The feat's client side: each year's distribution with its split, the
-// statutes' terms for the work share, and each worker's statement of
-// their part.
+// The feat's client side: each year's distribution, its split in a tab of
+// its own, the statutes' terms for the work share, and each worker's
+// statement of their part, basis by basis in a tab of its own.
 export const app: App = {
   name: 'patronage',
   collections: {
@@ -46,7 +40,7 @@ export const app: App = {
       page: {
         eyebrow: 'Distribution',
         title: (d: Detail) => `${d.year} distribution`,
-        subtitle: standing,
+        subtitle: (d: Detail) => d.id,
         properties: (d: Detail) => [
           { label: 'State', value: stage(d), kind: 'badge', tone: tones[stage(d)] },
           { label: 'Surplus', value: d.surplus, kind: 'money' },
@@ -54,9 +48,14 @@ export const app: App = {
           { label: 'Approved on', value: d.approved, kind: 'date' },
           { label: 'Distributed on', value: d.distributed, kind: 'date' },
         ],
-        tabs: [{ id: 'split', label: 'Split' }],
+        // Its split in a tab of its own, where its extenders add how the
+        // work share would divide by each basis.
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'split', label: 'Split' },
+        ],
         related: (d: Detail) => (d.approved ? [{ label: `${d.year} statements`, sub: 'each worker’s part', href: '/statements' }] : []),
-        blocks: [Shares],
+        blocks: [{ tab: 'split', block: Shares }],
       },
     },
     bases: {
@@ -77,9 +76,10 @@ export const app: App = {
       page: {
         eyebrow: 'Patronage terms',
         title: (t: Terms) => `Patronage terms from ${t.from}`,
-        subtitle: (t: Terms) => `adopted on ${date(t.adopted)}, as the rule ${t.policy}`,
+        subtitle: (t: Terms) => t.id,
         properties: (t: Terms) => [
           { label: 'From', value: String(t.from) },
+          { label: 'As the rule', value: t.policy, kind: 'mono' },
           { label: 'By pay %', value: t.salary, kind: 'number' },
           { label: 'By time worked %', value: t.hours, kind: 'number' },
           { label: 'In equal parts %', value: t.equal, kind: 'number' },
@@ -109,7 +109,7 @@ export const app: App = {
       page: {
         eyebrow: 'Statement',
         title: (s: Sheet) => `${s.year} work share statement`,
-        subtitle: (s: Sheet) => (s.distributed ? `Distributed on ${date(s.distributed)}` : s.approved ? `Approved on ${date(s.approved)}` : ''),
+        subtitle: (s: Sheet) => s.id,
         properties: (s: Sheet) => [
           { label: 'Year', value: String(s.year) },
           { label: 'Part', value: s.amount, kind: 'money' },
@@ -118,7 +118,11 @@ export const app: App = {
           { label: 'Distributed on', value: s.distributed, kind: 'date' },
         ],
         related: (s: Sheet) => [{ label: `${s.year} distribution`, sub: 'the split', href: `/distributions/${s.distribution}` }],
-        blocks: [Basis],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'basis', label: 'By basis' },
+        ],
+        blocks: [{ tab: 'basis', block: Basis }],
       },
     },
   },

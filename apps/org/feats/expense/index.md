@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -147,7 +147,9 @@ a card into the next column is that column's write (submit, approve,
 refuse, reimburse), with a dashboard of what awaits approval and
 reimbursement and the spend by category and month; a new claim as the
 acting member, which `expense-file` replaces with one carrying its
-receipt; and an expense's page with its next write and its receipts.
+receipt; and an expense's page, its header's crumb its id, with its next
+write; its receipts and its postings are the tabs `expense-file` and
+`expense-transaction` add after its first.
 
 ## Lanterne
 

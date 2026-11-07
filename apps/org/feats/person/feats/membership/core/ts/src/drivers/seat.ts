@@ -1,6 +1,7 @@
 import type { Db } from '@cella/org-db'
 import { sentences } from '@cella/org-policy'
 import type { Held, Seat } from '@cella/org-circle/models'
+import type { Power } from '../models/power.ts'
 
 const seat = `p.id::text AS id, p.circle, c.name AS "circleName", p.member, mp.name AS "memberName", p.role, r.name AS "roleName",
   to_char(p.since, 'YYYY-MM-DD') AS since, to_char(p.until, 'YYYY-MM-DD') AS until, c.procedure, c.assembly AS root`
@@ -36,6 +37,37 @@ export async function held(db: Db, member: string): Promise<Held[]> {
   // Each mandate reads as its policy's sentence, from the register.
   const read = await sentences(db, rows.map((r) => r.policy))
   return rows.map((r) => ({ ...r, sentence: read.get(r.policy) ?? r.policy, limit: r.limit === null ? null : Number(r.limit) }))
+}
+
+// Every power a person holds on the verdict date and what through, as
+// `membership.may` and `membership.entitled` grant it: each mandate
+// `membership.holds` gives, in the circle of its seat, with the tenure
+// that holds its role there, none for the participant's, and its caps and
+// scope; and each right `membership.rights` gives. A power held twice is
+// listed twice.
+export async function powers(db: Db, member: string): Promise<Power[]> {
+  const { rows } = await db.query<Power>(
+    `SELECT 'm' || md.id || '@' || h.circle || coalesce('#' || t.id, '') AS id, md.power, md.id::text AS mandate,
+       h.circle, c.name AS "circleName", t.role, r.name AS "roleName", t.id::text AS tenure,
+       to_char(t.since, 'YYYY-MM-DD') AS since, to_char(t.until, 'YYYY-MM-DD') AS until,
+       cella.cents(md."limit") AS "limit", cella.cents(md.budget) AS budget, md.per, md.scope, sc.name AS "scopeName", NULL::text AS "right"
+     FROM membership.holds($1, cella.verdict_date()) h
+     JOIN circle.mandate md ON md.id = h.mandate
+     JOIN circle.circle c ON c.id = h.circle
+     LEFT JOIN circle.tenure t ON t.holder = $1 AND t.role = md.grantee AND t.circle = h.circle
+       AND (t.since IS NULL OR t.since <= cella.verdict_date()) AND (t.until IS NULL OR t.until > cella.verdict_date())
+     LEFT JOIN circle.role r ON r.id = t.role
+     LEFT JOIN circle.circle sc ON sc.id = md.scope
+     UNION ALL
+     SELECT 'r' || g.id, g.power, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+       cella.cents(g."limit"), NULL, NULL, NULL, NULL, g."right"
+     FROM membership.rights($1, cella.verdict_date()) x
+     JOIN circle.right g ON g.id = x."right"
+     ORDER BY power, "right" NULLS FIRST, "circleName", tenure NULLS LAST, mandate`,
+    [member],
+  )
+  const amount = (v: number | string | null) => (v === null ? null : Number(v))
+  return rows.map((r) => ({ ...r, limit: amount(r.limit), budget: amount(r.budget) }))
 }
 
 // The circles each member sits in now, by address.

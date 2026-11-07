@@ -892,7 +892,8 @@ Every feat and graft reads core's circles; those that extend them:
 
 - the membership feat: whether a seat counts on a day, and so who may
   use a power, `may`, `over` and `entitled`, the authority every read
-  asks; a circle's seats on its page, and a person's on theirs.
+  asks; a circle's seats on its page, and a person's on theirs, with
+  every power they hold and by what.
 - the motion feat: mandates as the policies its circles adopt and end,
   and whom a circle's motion decides about.
 - the meeting feat: a meeting's circle, and how a circle meets.

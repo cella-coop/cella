@@ -234,11 +234,15 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   in `cella.reading`
   ([reading](../../../../core/circle/index.md#reading)), and it finds no
   right.
+- `membership.rights(person, day)` (`015-rights.sql`): the rights in
+  force in `circle.right` the person holds on the day, where person's
+  core says they are one of the people each names (`person.holds`). It
+  is the one place the rights and the people are joined, as `holds` is
+  for the seats: `entitled` asks it, and a person's page lists it.
 - `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
-  the actor holds the power by a right, with no seat: a right in force
-  in `circle.right`, on every person, member or employee, within its
-  `limit`, where person's core says the actor is one of them on the day
-  (`person.holds`). A right lets each act on what is their own, which
+  the actor holds the power by a right, with no seat: a right
+  `membership.rights` gives them on the day, within its `limit`. A
+  right lets each act on what is their own, which
   the feat's guard checks, so it opens no one else's rows to read
   ([rights](../../../../core/circle/index.md#rights)). A right reaches
   the whole co-op.
@@ -296,7 +300,8 @@ member's; and to the list the circles they sit in;
 under Joining, whether they sit in the assembly and in a working
 circle; and under Own and decide, what they decide read back as
 sentences: where they sit, how each of those circles decides, and the
-mandates they act by, each as its policy reads, its limit in it.
+mandates they act by, each as its policy reads, its limit in it; and
+under Powers, every power they hold and by what ([shell](#shell)).
 
 ## Grafts
 
@@ -321,7 +326,10 @@ the assembly for an active member and elsewhere for anyone known whom
 membership has not suspended or let go; a mandate's scope covers the
 records of its circle, its holder's own or the whole co-op, and a seat
 with no mandate covers none; and a right is held by
-whoever person's core says is one of its people, with no seat.
+whoever person's core says is one of its people, with no seat, and
+`membership.rights` lists a right exactly where `entitled` grants its
+power. `powers` (`cella test e2e powers`) reads the Powers tab of
+every Lanterne person against `may` and `entitled`, power by power.
 
 ## Shell
 
@@ -343,7 +351,26 @@ page offers them Erase my data instead, which says what the law keeps,
 asks them to confirm and signs `erase`. Seats and powers are this
 feat's `membership/seats` ([seats](#seats)).
 
-The page gains two tabs. Joining lists what joining asks, step by step,
+A person's page has a Powers tab: what they may do on the verdict date,
+power by power, each as `membership.may` and `membership.entitled`
+answer it and through what. A power held by a seat names the circle it
+is held in, the role, the tenure that holds the role, from and until,
+or the seat alone for the participant's, and the mandate, with its
+limit per write, or its budget and its period, said to be unchecked,
+since `may` checks no budget yet, and what it covers, the whole co-op,
+a circle or the seat's own circle, each mandate linking to its page and
+its chain ([the shell](../../../../core/circle/index.md#shell)). A power
+held twice, by two seats or two mandates, lists each. A power held by a
+right names what the person is, person, member or employee, that gives
+it, and covers what is their own. It reads `membership.holds` and
+`membership.rights`, the two places a person's mandates and rights are
+read, and joins them only to the tenure, the circles and the mandate or
+right they name, so it lists exactly what the guard grants. Whoever
+reads the person's seats reads the mandates they hold by them; their
+rights, as the rest of the structure, only a member reads ([who reads
+it](../../../../core/circle/index.md#who-reads-the-structure)).
+
+Beside it, the page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and
 then admitted, and a device that signs; the admission once a probation
 ends (`employment-membership-motion`); the texts to read

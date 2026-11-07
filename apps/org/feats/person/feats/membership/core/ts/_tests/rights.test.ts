@@ -3,7 +3,8 @@
 // mandate, with no seat, held by whoever person's core says is one of the people
 // it names that day: every person, every active member. A right no feat
 // registered, every employee's here, where employment is not migrated,
-// is held by no one. Run by `cella test slice membership`.
+// is held by no one; and `membership.rights` lists a right exactly
+// where `entitled` grants it. Run by `cella test slice membership`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -79,4 +80,18 @@ test('a right nobody registered is held by no one, and a right grants only its p
 test('a right is never the authority reads ask: it lets each act on their own, and opens no one else\'s rows', async () => {
   assert.equal((await db.query(`SELECT membership.entitled($1, 'keep-profile', NULL, '2026-10-24') AS m`, [amina])).rows[0].m, true)
   assert.equal((await db.query(`SELECT membership.may($1, 'keep-profile', NULL, NULL, '2026-10-24') AS m`, [amina])).rows[0].m, false)
+})
+
+test('rights lists a right exactly where entitled grants its power, as a person\'s page reads it', async () => {
+  for (const [who, day] of [[amina, '2026-10-24'], [ines, '2026-10-24'], [paul, '2026-10-24'], [paul, '2025-06-01'], ['nobody@x', '2026-10-24']]) {
+    const { rows } = await db.query<{ power: string }>(
+      `SELECT g.power FROM membership.rights($1, $2) r JOIN circle.right g ON g.id = r."right" ORDER BY g.power`,
+      [who, day],
+    )
+    const listed = rows.map((r) => r.power)
+    for (const power of ['keep-profile', 'draw-account', 'log-time']) {
+      const { rows: e } = await db.query<{ m: boolean }>(`SELECT membership.entitled($1, $2, NULL, $3) AS m`, [who, power, day])
+      assert.equal(listed.includes(power), e[0].m, `${who} ${power} on ${day}`)
+    }
+  }
 })

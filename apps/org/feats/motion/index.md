@@ -23,7 +23,8 @@ How a circle acts as a whole: motions, proposed, voted on and closed, each carry
 `motion` (`core/sql/`):
 
 - `motion.motion`: circle, title, method (`consent` or `majority`), the procedure it is decided by, which its requirements fix as it is proposed and never its proposal ([requirements](#requirements)), whose method it keeps by a foreign key, its ballot (`open` or `secret`, [below](#ballots)), proposed, deadline and body; on close, the date it closed and its cutoff, the receipt the close took.
-- `motion.procedure`: how a motion is decided: its method; for a majority, the share of the votes cast it needs, at least `share_num` in every `share_den` of those for and against, or none for more for than against; and its quorum, at least `quorum_num` in every `quorum_den` of those counted giving a stance; and its ballot, `open` or `secret`, which a motion proposed under it takes unless the proposal names the other; the roles whose seats vote, `voters`, none for every seat, and those that may veto, `veto`, none where no one may; the circle it consults, `consult`, none where it consults none; and the procedure policy whose values it holds (`policy`, [below](#procedures)). Consent, majority and two thirds are built in, by open ballot, and election, a majority by secret ballot, each naming no policy until its scope adopts it; every other procedure is a policy's, as Lanterne's ordinary and extraordinary assemblies are. A procedure a motion is decided by is fixed (`motion.procedure_kept`), but for the policy a built-in one comes to name; a circle's procedure, by which its motions are decided where nothing asks another, names one, which this feat checks.
+- `motion.procedure`: how a motion is decided: its method; for a majority, the share of the votes cast it needs, at least `share_num` in every `share_den` of those for and against, or none for more for than against; and its quorum, at least `quorum_num` in every `quorum_den` of those counted giving a stance; and its ballot, `open` or `secret`, which a motion proposed under it takes unless the proposal names the other; and the procedure policy whose values it holds (`policy`, [below](#procedures)). Who votes on a motion decided by it, who may veto it and who is consulted are its parties, in `motion.party`. Consent, majority and two thirds are built in, by open ballot, and election, a majority by secret ballot, each naming no policy until its scope adopts it; every other procedure is a policy's, as Lanterne's ordinary and extraordinary assemblies are. A procedure a motion is decided by is fixed (`motion.procedure_kept`), but for the policy a built-in one comes to name; a circle's procedure, by which its motions are decided where nothing asks another, names one, which this feat checks.
+- `motion.party`: a procedure's parties, each a grantee by one key into core's `circle.grantee`, the key a mandate's recipient is too ([circle](../../core/circle/index.md#entities)), with its kind: `votes`, a role whose seats in the motion's circle vote, none for every seat; `vetoes`, a role whose seats on the roll may veto; `consulted`, the circle whose seats must have spoken on a motion before it closes. Only a procedure policy's adoption makes them, and they are fixed as its terms are (`motion.party_kept`); the built-in procedures have none.
 - `motion.vote`: a stance by receipt, the motion, the member's address and the day they give. Receipts order stances; only those received before the cutoff count. A stance is personal data of its member, of class `books`, so a secret one is logged by its commitment ([below](#ballots)); ten years after a former member's erasure, `cella vault sweep` redacts their stances to `redacted`, which counts as none given.
 
 - `motion.message`: a motion's deliberation, by receipt: its author's address, the message it answers (one of the same motion, received before it), its text, the handles it mentions (`@amina`, or a whole address) and the documents it links (`[[internal-rules]]`), and the day. The table generates the mentions and the links from the text (`motion.mentions`, `motion.links`), by the grammar `models/thread.ts` draws it with: a handle after a space or at the start, its trailing `._-` dropped, a link by its id, each lowered and each once, in the order given. So no row mentions or links what its text does not give, whatever its writer names. A closed motion takes no message (`open_for_messages`). The handles and links are resolved and checked by `membership-motion` and `document-motion`; the text is the author's words and stays out of the log.
@@ -60,20 +61,32 @@ By the {label: extraordinary assembly}'s procedure, {procedure: extraordinary}, 
 - `veto`, where any: the roles whose seats on the roll may veto, written as `voters` is (`{veto: lead}`). A stance against, or an objection, from one of them is a veto: the motion does not pass, whatever the count. A veto role's seats are on the roll though `voters` does not name it.
 - `consult`, where any: the circle a motion decided by it consults, by
   id (`{consult: coordination}`). It closes only once someone seated in
-  that circle has said something on its deliberation, which they may,
-  and this feat checks the circle is one as the policy is proposed
+  that circle has said something on its deliberation, which they may
   ([consultation](../../grafts/membership-motion/index.md#guards)).
 - `label`, where not its name in words: how the New form and a motion's
   page call it, its first letter capitalised.
 
-A procedure marks no other value. `motion.terms(marked)` reads the terms
-from the values as written, by name, and says what is wrong with them;
-`motion.fraction`, a share as written. The values are copied into
-`motion.procedure` as the policy is adopted, in the same verdict
-(`motion.procedure_from`): a new row by the name it marks, or the
-built-in row of that name, which names no policy yet and whose terms it
-repeats, now naming it. A motion is counted by those columns, never by
-the sentence. A procedure's terms are fixed once a motion is put to it,
+A procedure marks no other value. Each role `voters` and `veto` name,
+and the circle `consult` names, is a grantee, and is one party of the
+procedure, by its id and its kind (`votes`, `vetoes`, `consulted`). A
+party names a grantee there is, and of its kind: a role votes or
+vetoes, and a circle is consulted. A policy naming one there is not, or
+a circle to vote or a role to consult, is refused as it is proposed and
+again as it is adopted, the reason naming the party and what it names,
+as `no role clerk for a procedure's vetoes` or `coordination is a circle,
+and a procedure's voters are roles` (`motion.party_flaw`).
+
+`motion.terms(marked)` reads the terms from the values as written, by
+name, and says what is wrong with them; `motion.fraction`, a share as
+written; `motion.named`, the parties the values name, and `motion.parties`,
+a procedure's own, in one order, so the two compare; `motion.calls`, the
+roles whose seats its roll calls; `motion.votes`, whether a seat in a role
+votes by it; and `motion.consults`, the circle it consults. The values are
+copied into `motion.procedure`, and its parties into `motion.party`, as
+the policy is adopted, in the same verdict (`motion.procedure_from`): a
+new row by the name it marks, or the built-in row of that name, which
+names no policy yet and whose terms it repeats, now naming it. A motion
+is counted by those rows, never by the sentence. A procedure's terms are fixed once a motion is put to it,
 so a policy changing them names a new procedure and replaces the old
 policy, which ends; a procedure whose policy has ended, or applies only
 later, puts no motion. A motion's page reads the terms it is decided by
@@ -121,8 +134,8 @@ as `b`, so that every count that passes by `a` passes by `b` too:
 
 - both decide by the same method; consent and a majority count
   different stances, so neither is stricter than the other;
-- both call the same roll: every seat, or the seats in the same roles,
-  those that vote and those that may veto;
+- both call the same roll: every seat, or the seats of the same
+  parties, those that vote and those that may veto;
 - `a`'s quorum is no lower;
 - for a majority, `a` lets veto every role `b` does, and its share of
   the votes cast is no lower: more for than against is stricter than
@@ -248,8 +261,7 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   marks sound values (`circle.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
   never both, perhaps a procedure, perhaps a scope, and nothing else), a
-  mandate's procedure is one the motion feat holds, a procedure policy
-  consults, if any, a circle there is, and the motion's circle may
+  mandate's procedure is one the motion feat holds, and the motion's circle may
   decide it: about the role's circle or the circle a collective mandate
   is on; and the end of a mandate's policy is put to a circle on its
   chain as an issuer (`circle.chain`), the one that issued it or one

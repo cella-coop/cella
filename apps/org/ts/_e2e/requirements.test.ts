@@ -102,7 +102,7 @@ after(async () => {
 test('coordination grants Web adopt-policy under its own, by a procedure the assembly adopted that consults coordination', async () => {
   const adopted = await decided('ag', 'A procedure that hears coordination', [heard], '2026-11-02', '2026-11-09')
   assert.deepEqual(adopted.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
-  assert.deepEqual(await one(`SELECT method, consult FROM motion.procedure WHERE id = 'heard'`), { method: 'consent', consult: 'coordination' })
+  assert.deepEqual(await one(`SELECT method, motion.consults(id) AS consult FROM motion.procedure WHERE id = 'heard'`), { method: 'consent', consult: 'coordination' })
   const granted = await decided('coordination', 'Web adopts its own policies', [webPolicies], '2026-11-09', '2026-11-16')
   assert.deepEqual(granted.map((d) => [d.op, d.state, d.reason ?? '']), [['motion:policy:adopt', 'settled', '']])
   assert.deepEqual(

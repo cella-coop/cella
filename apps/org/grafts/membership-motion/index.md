@@ -151,9 +151,9 @@ as entry 1.
   which this graft's `propose` calls in the proposal's own write, from
   `membership_motion.called(motion)`: the people seated in its
   circle on the day it is proposed, in core's `circle.seat`, by its
-  procedure: every seat, or where it names
-  `voters` the seats in those roles (`participant` every seat), and the
-  seats in a role it names in `veto`, who may veto. Seats are people's,
+  procedure's parties (`motion.party`): every seat, or where it has
+  parties that vote the seats in those roles (`participant` every
+  seat), and the seats in a role that vetoes, who may veto. Seats are people's,
   so no agent and no service is ever on a roll, and only the motion's
   own circle's seats are read, so a seat in one circle carries no vote in another. `fix` runs
   with its owner's rights, since nothing else writes the roll, and only the app

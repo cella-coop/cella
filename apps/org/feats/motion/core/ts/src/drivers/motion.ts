@@ -65,7 +65,7 @@ export async function motion(db: Db, id: string): Promise<Detail | null> {
 // A procedure's terms, as a motion is taken by them.
 const procedureColumns = `id, label, method,
   CASE WHEN share_num IS NULL THEN NULL ELSE json_build_array(share_num, share_den) END AS share,
-  json_build_array(quorum_num, quorum_den) AS quorum, ballot, consult`
+  json_build_array(quorum_num, quorum_den) AS quorum, ballot, motion.consults(o.id) AS consult`
 
 // The procedures a motion may be taken by, the built-in ones first: those
 // whose policy is in force, or which name none.

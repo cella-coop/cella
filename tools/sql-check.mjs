@@ -23,7 +23,7 @@
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema, but its owning circle's
-//     into core's circle table;
+//     into core's circle table and a grantee's into core's grantees;
 //   - names its owning circle in every table, `circle`, text, never null,
 //     a foreign key into circle.circle, unless the table is a registry
 //     its migrations fill, commented 'registry: why' (`unowned`);
@@ -292,10 +292,14 @@ export function undeclared(found) {
     .map((c) => `${c.path}: ${c.key} may hold personal data: register it in cella.personal, or comment it 'not personal: why'`)
 }
 
-// Core's circle table, the one table outside its own schema a feat's or
-// a graft's table may hold a foreign key into: the record's owning
-// circle.
+// Core's circle table, which a feat's or a graft's table holds a foreign
+// key into for the record's owning circle.
 const circleTable = (rv) => rv?.schemaname === 'circle' && rv?.relname === 'circle'
+
+// Core's grantees, the circles and roles a mandate, a procedure's party
+// or a motion's author is keyed into: the other key a feat's or a
+// graft's table may hold out of its schema.
+const granteeTable = (rv) => rv?.schemaname === 'circle' && rv?.relname === 'grantee'
 
 // Whether a table's columns name its owning circle: `circle`, text, never
 // null, a foreign key into core's circle table, by the column or by a
@@ -856,7 +860,7 @@ function statement(type, b, o, s, fail, owned, named, found) {
       }
       walk(b, (_, n) => {
         const into = n.Constraint?.pktable
-        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && into?.schemaname !== b.relation.schemaname && !circleTable(into)) {
+        if (n.Constraint?.contype === 'CONSTR_FOREIGN' && into?.schemaname !== b.relation.schemaname && !circleTable(into) && !granteeTable(into)) {
           fail(`${named(b.relation)} holds a foreign key into ${named(n.Constraint.pktable)}: no foreign key crosses a feat`)
         }
       })

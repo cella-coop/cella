@@ -15,7 +15,7 @@ BEGIN ATOMIC
     WHEN NOT membership.sits_in(cella.actor(), d.circle, cella.verdict_date())
       AND NOT (cella.action() = 'motion:message:post' AND EXISTS (
         SELECT FROM motion.procedure o
-        WHERE o.id = d.procedure AND membership.sits_in(cella.actor(), o.consult, cella.verdict_date())
+        WHERE o.id = d.procedure AND membership.sits_in(cella.actor(), motion.consults(o.id), cella.verdict_date())
       ))
       THEN cella.actor() || ' holds no seat in ' || d.circle || ', so may not ' || split_part(cella.action(), ':', 3) || ' ' || d.id
   END

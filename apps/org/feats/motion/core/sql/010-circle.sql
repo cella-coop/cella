@@ -95,8 +95,7 @@ END;
 -- the end of a mandate's policy, the motion's circle is on its chain as
 -- an issuer, the one that issued it or one that issued a mandate it is
 -- issued under, the assembly on every chain; for the end of a right's,
--- the assembly. A procedure policy consults, if any, a circle there is.
--- And each end or replacement of a policy granting the assembly a
+-- the assembly. And each end or replacement of a policy granting the assembly a
 -- collective `adopt-policy` mandate with no `until`
 -- (`circle.sovereign_by`) leaves it, with the actions before it, still
 -- keeping one in force on the verdict date (`circle.sovereignty`):
@@ -136,12 +135,6 @@ BEGIN ATOMIC
     LEFT JOIN circle.mandate x ON m.kind = 'end' AND x.policy = m.args ->> 'policy'
     CROSS JOIN LATERAL (SELECT btrim(motion.marked(m.args ->> 'wording') ->> 'procedure') AS procedure) v
     WHERE m.motion = payload ->> 'motion'
-    UNION ALL
-    SELECT 'no circle ' || c.consult || ' for a procedure to consult'
-    FROM motion.action m
-    CROSS JOIN LATERAL (SELECT btrim(motion.marked(m.args ->> 'wording') ->> 'consult') AS consult) c
-    WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'procedure'
-      AND c.consult IS NOT NULL AND NOT EXISTS (SELECT FROM circle.circle o WHERE o.id = c.consult)
     UNION ALL
     SELECT circle.sovereignty(
       ARRAY(SELECT coalesce(o.args ->> 'policy', o.args ->> 'replaces') FROM motion.action o

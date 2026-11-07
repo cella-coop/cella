@@ -11,15 +11,15 @@ INSERT INTO cella.guard (op, fn, owner) VALUES
 CREATE FUNCTION membership_motion.consulted(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT d.id || ' is decided by ' || o.id || ', which consults ' || o.consult
-    || ': it closes once someone seated in ' || o.consult || ' has said something on it'
+  SELECT d.id || ' is decided by ' || o.id || ', which consults ' || motion.consults(o.id)
+    || ': it closes once someone seated in ' || motion.consults(o.id) || ' has said something on it'
   FROM motion.motion d
   JOIN motion.procedure o ON o.id = d.procedure
-  WHERE d.id = payload ->> 'motion' AND o.consult IS NOT NULL
+  WHERE d.id = payload ->> 'motion' AND motion.consults(o.id) IS NOT NULL
     AND NOT EXISTS (
       SELECT FROM motion.message g
       WHERE g.motion = d.id
-        AND membership.sits_in(g.member, o.consult, g.at)
+        AND membership.sits_in(g.member, motion.consults(o.id), g.at)
     );
 END;
 

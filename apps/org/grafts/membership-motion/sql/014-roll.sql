@@ -7,22 +7,24 @@ DROP FUNCTION membership_motion.fix_roll();
 
 -- Who a motion's procedure calls to its roll: the people seated in its
 -- circle on the day it is proposed, in the membership feat's seats, a lower
--- order than this graft; every seat, or where the procedure names the
--- roles that vote the seats in them (`participant` is every seat), and
--- the seats in a role that may veto, each so marked. Only the motion's
+-- order than this graft; every seat, or where the procedure's parties
+-- name roles that vote the seats in them (`participant` is every seat),
+-- and the seats in a role that vetoes, each so marked (`motion.calls`). Only the motion's
 -- own circle's seats are read, so a seat above carries no vote below;
 -- seats are people's, so no agent and no service is ever called.
 CREATE FUNCTION membership_motion.called(ref text) RETURNS TABLE (member text, veto boolean)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT s.member, coalesce(bool_or(s.role = ANY (p.veto)), false)
+  SELECT s.member, coalesce(bool_or(EXISTS (
+    SELECT FROM motion.party q WHERE q.procedure = p.id AND q.kind = 'vetoes' AND q.grantee = s.role
+  )), false)
   FROM motion.motion d
   JOIN motion.procedure p ON p.id = d.procedure
   JOIN circle.seat s ON s.circle = d.circle
     AND (s.since IS NULL OR s.since <= d.proposed)
     AND (s.until IS NULL OR s.until > d.proposed)
   WHERE d.id = ref
-    AND (p.voters IS NULL OR 'participant' = ANY (p.voters) OR s.role = ANY (p.voters) OR s.role = ANY (p.veto))
+    AND (motion.calls(p.id) IS NULL OR s.role = ANY (motion.calls(p.id)))
   GROUP BY s.member;
 END;
 

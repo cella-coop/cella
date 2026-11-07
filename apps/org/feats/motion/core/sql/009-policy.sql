@@ -84,6 +84,70 @@ BEGIN ATOMIC
   LATERAL (SELECT motion.fraction(v.share) AS s, motion.fraction(v.quorum) AS q, motion.roles(v.voters) AS voters, motion.roles(v.veto) AS veto) f;
 END;
 
+-- The parties a procedure's values name, each grantee by its kind: the
+-- roles that vote, `votes`, those that may veto, `vetoes`, and the circle
+-- it consults, `consulted`.
+CREATE FUNCTION motion.named(voters text[], veto text[], consult text) RETURNS TABLE (kind text, grantee text)
+LANGUAGE sql IMMUTABLE
+BEGIN ATOMIC
+  SELECT 'votes', v FROM unnest(named.voters) v
+  UNION SELECT 'vetoes', v FROM unnest(named.veto) v
+  UNION SELECT 'consulted', named.consult WHERE named.consult IS NOT NULL;
+END;
+
+-- A procedure's parties, each as its kind and its grantee (`vetoes
+-- lead`), in order, so the parties of two procedures, or of a procedure
+-- and the values a policy marks, compare.
+CREATE FUNCTION motion.parties(ref text) RETURNS text[]
+LANGUAGE sql STABLE
+RETURN ARRAY(SELECT q.kind || ' ' || q.grantee FROM motion.party q WHERE q.procedure = parties.ref ORDER BY 1);
+
+-- The circle a procedure consults, or null.
+CREATE FUNCTION motion.consults(ref text) RETURNS text
+LANGUAGE sql STABLE
+RETURN (SELECT q.grantee FROM motion.party q WHERE q.procedure = consults.ref AND q.kind = 'consulted');
+
+-- The roles whose seats a procedure calls to its roll, those that vote
+-- and those that may veto, in order; null for every seat, where no
+-- party votes or `participant` does.
+CREATE FUNCTION motion.calls(ref text) RETURNS text[]
+LANGUAGE sql STABLE
+RETURN CASE WHEN EXISTS (SELECT FROM motion.party q WHERE q.procedure = calls.ref AND q.kind = 'votes')
+    AND NOT EXISTS (SELECT FROM motion.party q WHERE q.procedure = calls.ref AND q.kind = 'votes' AND q.grantee = 'participant')
+  THEN ARRAY(SELECT DISTINCT q.grantee FROM motion.party q WHERE q.procedure = calls.ref AND q.kind IN ('votes', 'vetoes') ORDER BY 1)
+END;
+
+-- Whether a seat in `role` votes by a procedure: where no party votes,
+-- every seat does; else a seat in a role that does, `participant` every
+-- seat. A seat with no role, a member's own, votes only by the first.
+CREATE FUNCTION motion.votes(ref text, role text) RETURNS boolean
+LANGUAGE sql STABLE
+RETURN NOT EXISTS (SELECT FROM motion.party q WHERE q.procedure = votes.ref AND q.kind = 'votes')
+  OR EXISTS (SELECT FROM motion.party q WHERE q.procedure = votes.ref AND q.kind = 'votes' AND q.grantee IN ('participant', votes.role));
+
+-- What is wrong with the parties a procedure's values name, or null: each
+-- is a grantee there is, and of its kind, a role to vote or veto and a
+-- circle to be consulted; the reason names the first that is not.
+CREATE FUNCTION motion.party_flaw(voters text[], veto text[], consult text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN x.wants = 'circle' AND g.id IS NULL THEN 'no circle ' || x.grantee || ' for a procedure to consult'
+    WHEN x.wants = 'circle' THEN x.grantee || ' is a role, and a procedure consults a circle'
+    WHEN g.id IS NULL THEN 'no role ' || x.grantee || ' for a procedure''s ' || x.term
+    ELSE x.grantee || ' is a circle, and a procedure''s ' || x.term || ' are roles'
+  END
+  FROM (
+    SELECT v AS grantee, 'role' AS wants, 'voters' AS term, 1 AS o FROM unnest(party_flaw.voters) v
+    UNION ALL SELECT v, 'role', 'vetoes', 2 FROM unnest(party_flaw.veto) v
+    UNION ALL SELECT party_flaw.consult, 'circle', 'consultation', 3 WHERE party_flaw.consult IS NOT NULL
+  ) x
+  LEFT JOIN circle.grantee g ON g.id = x.grantee
+  WHERE g.kind IS DISTINCT FROM x.wants
+  ORDER BY x.o, x.grantee
+  LIMIT 1;
+END;
+
 -- The values a legal wording marks, by name as written.
 CREATE FUNCTION motion.marked(legal text) RETURNS jsonb
 LANGUAGE sql IMMUTABLE
@@ -95,26 +159,30 @@ LANGUAGE sql STABLE
 RETURN (SELECT jsonb_object_agg(v.name, v.literal) FROM policy.value v WHERE v.policy = ref);
 
 -- What is wrong with the procedure a policy's values would make, or null:
--- its terms, or a name a procedure has already, unless it is a built-in
--- one no policy has made, whose terms the values repeat.
+-- its terms; its parties (`motion.party_flaw`); or a name a procedure has
+-- already, unless it is a built-in one no policy has made, whose terms
+-- and parties the values repeat.
 CREATE FUNCTION motion.procedure_flaw(marked jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT coalesce(t.flaw, (
+  SELECT coalesce(t.flaw, motion.party_flaw(t.voters, t.veto, t.consult), (
     SELECT o.id || ' is a procedure already, and its terms are fixed: a procedure on new terms takes a new name'
     FROM motion.procedure o
     WHERE o.id = t.id AND (o.policy IS NOT NULL
-      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto, o.consult)
-         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult))
+      OR (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot)
+         IS DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot)
+      OR motion.parties(o.id) IS DISTINCT FROM ARRAY(SELECT n.kind || ' ' || n.grantee FROM motion.named(t.voters, t.veto, t.consult) n ORDER BY 1))
   ))
   FROM motion.terms(marked) t;
 END;
 
 -- Copies a procedure policy's values into the procedure they make, in the
--- write that adopts it: a new procedure by the name it marks, or the
--- built-in one of that name, on the same terms, which now names it.
--- Returns the procedure's name, or null for a policy of another kind;
--- terms that make no procedure are refused (SQLSTATE 09000).
+-- write that adopts it: a new procedure by the name it marks, with the
+-- parties it names, or the built-in one of that name, on the same terms,
+-- which now names it. Returns the procedure's name, or null for a policy
+-- of another kind; terms that make no procedure, or parties that name no
+-- grantee of their kind, are refused (SQLSTATE 09000), the reason naming
+-- which.
 CREATE FUNCTION motion.procedure_from(ref text) RETURNS text
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -131,26 +199,29 @@ BEGIN
   END IF;
   UPDATE motion.procedure o SET policy = ref WHERE o.id = t.id AND o.policy IS NULL;
   IF NOT FOUND THEN
-    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, voters, veto, consult, policy)
-    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult, ref);
+    INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den, ballot, policy)
+    VALUES (t.id, t.label, t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, ref);
+    INSERT INTO motion.party (procedure, kind, grantee)
+    SELECT t.id, n.kind, n.grantee FROM motion.named(t.voters, t.veto, t.consult) n;
   END IF;
   RETURN t.id;
 END
 $$;
 
 GRANT INSERT, UPDATE (policy) ON motion.procedure TO cella_app;
+GRANT INSERT ON motion.party TO cella_app;
 
 -- Whether procedure `a` is at least as strict as procedure `b`: every
 -- count that passes by `a` passes by `b` too. So both decide by the same
--- method and call the same roll, every seat or the seats in the same
--- roles, those that vote and those that may veto; `a`'s quorum is no
--- lower; and, for a majority, `a` lets every role veto that `b` does, and
--- its share of the votes cast is no lower, more for than against being
--- stricter than any half or less and looser than any more than half.
--- Consent and a majority count different stances, so neither is stricter
--- than the other; under consent any objection blocks, so a veto adds
--- nothing. `a` consults the circle `b` consults, if any. The ballot
--- changes no count. A procedure is as strict as
+-- method and call the same roll, every seat or the seats of the same
+-- parties, those that vote and those that may veto (`motion.calls`);
+-- `a`'s quorum is no lower; and, for a majority, `a` lets every party
+-- veto that `b` does, and its share of the votes cast is no lower, more
+-- for than against being stricter than any half or less and looser than
+-- any more than half. Consent and a majority count different stances, so
+-- neither is stricter than the other; under consent any objection
+-- blocks, so a veto adds nothing. `a` consults the party `b` consults, if
+-- any. The ballot changes no count. A procedure is as strict as
 -- itself, and a name no procedure has is as strict as none.
 CREATE FUNCTION motion.as_strict(a text, b text) RETURNS boolean
 LANGUAGE sql STABLE
@@ -158,19 +229,19 @@ BEGIN ATOMIC
   SELECT coalesce((
     SELECT x.id = y.id OR (
       x.method = y.method
-      AND (CASE WHEN x.voters IS NULL OR 'participant' = ANY (x.voters) THEN NULL
-                ELSE ARRAY(SELECT DISTINCT r FROM unnest(x.voters || x.veto) r ORDER BY r) END)
-        IS NOT DISTINCT FROM
-          (CASE WHEN y.voters IS NULL OR 'participant' = ANY (y.voters) THEN NULL
-                ELSE ARRAY(SELECT DISTINCT r FROM unnest(y.voters || y.veto) r ORDER BY r) END)
+      AND motion.calls(x.id) IS NOT DISTINCT FROM motion.calls(y.id)
       AND x.quorum_num::bigint * y.quorum_den >= y.quorum_num::bigint * x.quorum_den
-      AND (x.method = 'consent' OR (x.veto @> y.veto AND CASE
+      AND (x.method = 'consent' OR (NOT EXISTS (
+        SELECT FROM motion.party v
+        WHERE v.procedure = y.id AND v.kind = 'vetoes'
+          AND NOT EXISTS (SELECT FROM motion.party w WHERE w.procedure = x.id AND w.kind = 'vetoes' AND w.grantee = v.grantee)
+      ) AND CASE
         WHEN x.share_num IS NULL AND y.share_num IS NULL THEN true
         WHEN y.share_num IS NULL THEN 2 * x.share_num > x.share_den
         WHEN x.share_num IS NULL THEN 2 * y.share_num <= y.share_den
         ELSE x.share_num::bigint * y.share_den >= y.share_num::bigint * x.share_den
       END))
-      AND (y.consult IS NULL OR x.consult = y.consult)
+      AND (motion.consults(y.id) IS NULL OR motion.consults(x.id) = motion.consults(y.id))
     )
     FROM motion.procedure x, motion.procedure y
     WHERE x.id = as_strict.a AND y.id = as_strict.b
@@ -360,8 +431,9 @@ BEGIN ATOMIC
     WHEN r.kind = 'procedure' AND NOT EXISTS (
       SELECT FROM motion.procedure o, motion.terms(motion.marked_by(r.id)) t
       WHERE o.policy = r.id AND o.id = t.id
-        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot, o.voters, o.veto, o.consult)
-          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot, t.voters, t.veto, t.consult)
+        AND (o.method, o.share_num, o.share_den, o.quorum_num, o.quorum_den, o.ballot)
+          IS NOT DISTINCT FROM (t.method, t.share_num, t.share_den, t.quorum_num, t.quorum_den, t.ballot)
+        AND motion.parties(o.id) = ARRAY(SELECT n.kind || ' ' || n.grantee FROM motion.named(t.voters, t.veto, t.consult) n ORDER BY 1)
     ) THEN r.id || ' makes no procedure on the terms it marks'
   END
   FROM (SELECT payload ->> 'motion' AS motion, (payload ->> 'n')::integer AS n, payload ->> 'policy' AS policy, payload ->> 'hash' AS hash) p

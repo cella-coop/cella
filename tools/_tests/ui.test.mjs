@@ -92,6 +92,18 @@ test('a collection page renders the Collection alone', () => {
   assert.match(found[1], /renders <div> beside the Collection/)
 })
 
+test('an item page renders the Detail and its slices\' blocks alone', () => {
+  const path = 'apps/org/ts/src/routes/[collection]/[id]/+page.svelte'
+  const only = component("  import { Detail } from '@cella/org-ui'", '{#snippet header()}\n  <w.block data={d} />\n{/snippet}\n{#if page}\n  <Detail title="x">\n    {#each blocks as b}<b.block data={d} />{/each}\n  </Detail>\n{/if}')
+  assert.deepEqual(problems(path, only, false), [])
+  const framed = component("  import { Frame, Properties } from '@cella/org-ui'", '<Frame title="x">\n  <Properties items={[]} />\n  <b.block data={d} />\n</Frame>')
+  const found = problems(path, framed, false)
+  assert.equal(found.length, 3, `${found}`)
+  assert.match(found[0], /draws no <Detail>/)
+  assert.match(found[1], /renders <Frame> beside the Detail/)
+  assert.match(found[2], /renders <Properties> beside the Detail/)
+})
+
 test('browser storage is reached only from a hook\'s state class', () => {
   assert.match(problems(block, component("  const v = localStorage.getItem('cella-views')"), false)[0], /reaches browser storage/)
   assert.match(problems('apps/org/core/ui/ts/src/components/Collection.svelte', component('  sessionStorage.clear()'), true)[0], /reaches browser storage/)

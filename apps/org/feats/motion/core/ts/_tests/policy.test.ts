@@ -196,6 +196,43 @@ test('a proposal adopts only a sound policy of a kind, applying no earlier than 
   assert.equal(await asks({ kind: 'rule', wording: 'x', until: '2026-11-22' }), null)
 })
 
+test('a publication or a disclosure rule proposed replaces the one standing on days its own meet, and a motion proposes one of a kind', async () => {
+  const publishes = (parts: string) => `The co-op publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
+  const asks = async (...actions: object[]) => {
+    await db.query('SAVEPOINT asking')
+    try {
+      for (const [i, args] of actions.entries()) {
+        await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-014', $1, 'policy', $2)`, [3 + i, args])
+      }
+      return (await db.query<{ r: string | null }>(`SELECT motion.circle_asks('{"motion": "m-2026-014"}') AS r`)).rows[0].r
+    } finally {
+      await db.query('ROLLBACK TO SAVEPOINT asking')
+    }
+  }
+  await db.query('BEGIN')
+  try {
+    assert.equal(await asks({ kind: 'rule', wording: publishes('circles') }), null)
+    assert.match(
+      (await asks({ kind: 'rule', wording: publishes('circles') }, { kind: 'rule', wording: publishes('roles'), from: '2026-12-01' })) ?? '',
+      /^actions 3 and 4 of m-2026-014 are both a publication on days that meet: one stands at a time, so a motion adopts one$/,
+    )
+    assert.equal(
+      await asks({ kind: 'rule', wording: publishes('circles'), until: '2026-12-01' }, { kind: 'rule', wording: publishes('roles'), from: '2026-12-01' }),
+      null,
+      'one after the other',
+    )
+    const standing = (await adopt(publishes('circles'), 9)).rows[0].id
+    await db.query('SELECT circle.mandate_from($1)', [standing])
+    assert.match(
+      (await asks({ kind: 'rule', wording: publishes('roles') })) ?? '',
+      new RegExp(`^${standing} publishes parts of the structure from 2026-11-21: one publication stands at a time, so one on days that meet its replaces ${standing}$`),
+    )
+    assert.equal(await asks({ kind: 'rule', wording: publishes('roles'), replaces: standing }), null)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
 test('a policy replaces only the one in force the day it would apply, and replaced by no other', async () => {
   const asks = async (args: object) => {
     await db.query(`UPDATE motion.action SET args = $1 WHERE motion = 'm-2026-016'`, [args])

@@ -330,3 +330,63 @@ test('a publication is the assembly\'s, names the parts it publishes, and a pers
     await db.query('ROLLBACK')
   }
 })
+
+// What adopting a rule refuses, as the write that adopts it would, or
+// null where it is copied.
+const refused = async (policy: string) => {
+  await db.query('SAVEPOINT adopting')
+  try {
+    await db.query('SELECT circle.mandate_from($1)', [policy])
+    await db.query('RELEASE SAVEPOINT adopting')
+    return null
+  } catch (e) {
+    await db.query('ROLLBACK TO SAVEPOINT adopting')
+    return (e as Error).message
+  }
+}
+
+test('one publication and one disclosure rule stand at a time, so ending one revives no earlier one', async () => {
+  await staged()
+  try {
+    const published = async () => {
+      await db.query('SAVEPOINT reading')
+      try {
+        await db.query('SET LOCAL ROLE cella_app')
+        await db.query(`SELECT set_config('cella.actor', 'candidate@denial.example', true)`)
+        return (await db.query<{ parts: string[] }>(
+          `SELECT ARRAY(SELECT p FROM unnest(ARRAY['circles', 'roles', 'mandates', 'seats', 'register']) p WHERE circle.published(p)) AS parts`,
+        )).rows[0].parts
+      } finally {
+        await db.query('ROLLBACK TO SAVEPOINT reading')
+      }
+    }
+    const first = await adopt('rule', publishes('circles'), 'm-2026-040', 1)
+    assert.equal(await refused(first), null)
+    const beside = await adopt('rule', publishes('circles and roles'), 'm-2026-041', 1)
+    assert.match(
+      (await refused(beside)) ?? '',
+      new RegExp(`^${first} publishes parts of the structure from \\d{4}-\\d{2}-\\d{2}: one publication stands at a time, so one on days that meet its replaces ${first}$`),
+    )
+    await db.query(`SELECT policy.end($1, 'm-2026-042', 1)`, [beside])
+    const next = await adopt('rule', publishes('circles and roles'), 'm-2026-043', 1, first)
+    assert.equal(await refused(next), null, 'a publication replacing the one in force stands')
+    assert.deepEqual(await published(), ['circles', 'roles'])
+    await db.query(`SELECT policy.end($1, 'm-2026-044', 1)`, [next])
+    await db.query('SELECT circle.mandate_ended($1)', [next])
+    assert.deepEqual(await published(), [], 'ending the later publication publishes nothing the earlier did')
+
+    const disclosed = async () => (await db.query('SELECT policy FROM circle.disclosed(cella.verdict_date())')).rows
+    const rule = await adopt('rule', books('5', '50 %', '80 %'), 'm-2026-045', 1)
+    assert.equal(await refused(rule), null)
+    const other = await adopt('rule', books('7', '40 %', '60 %'), 'm-2026-046', 1)
+    assert.match((await refused(other)) ?? '', new RegExp(`^${rule} sets open books' disclosure values from .*: one disclosure rule stands at a time, so one on days that meet its replaces ${rule}$`))
+    await db.query(`SELECT policy.end($1, 'm-2026-047', 1)`, [other])
+    const stricter = await adopt('rule', books('7', '40 %', '60 %'), 'm-2026-048', 1, rule)
+    assert.equal(await refused(stricter), null)
+    await db.query(`SELECT policy.end($1, 'm-2026-049', 1)`, [stricter])
+    await db.query('SELECT circle.mandate_ended($1)', [stricter])
+    assert.deepEqual(await disclosed(), [], 'ending the later rule leaves none standing')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

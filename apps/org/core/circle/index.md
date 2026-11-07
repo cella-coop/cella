@@ -377,11 +377,17 @@ and `revoking` carry them ([handlers](#handlers)). A rule marking
 `publish` is the publication: it marks nothing else, only the assembly
 adopts it, and it names at least one part and none but the five; one
 that does not is refused as its motion is proposed and again as it is
-adopted, saying what is wrong (`circle.publication_flaw`). A later
-rule replaces it the day it applies, and ending it by motion withdraws
-every part the day it ends. `circle.published(part)` says whether the
-rule in force on the verdict date publishes a part, and never to no
-one signed in; it runs as its owner and says no more than whether, so
+adopted, saying what is wrong (`circle.publication_flaw`). One
+publication stands at a time: a rule marking `publish` whose days meet
+those of a publication not revoked is refused, as its motion is
+proposed and again as it is adopted, unless it replaces that one,
+saying which it must replace (`circle.overlap_flaw`). A later rule
+replaces it the day it applies, and ending it by motion withdraws
+every part the day it ends, so no part an earlier rule published is
+read again unless a motion publishes it again.
+`circle.published(part)` says whether the one publication in force on
+the verdict date publishes a part, and never to no one signed in; it
+runs as its owner and says no more than whether, so
 the structure's policies ask it without reading the publication. A
 person signed in reads a part published whole, as a member does, and
 nothing of a part that is not; `circle.publication` itself is the
@@ -417,8 +423,13 @@ mandate's values, and ends them with it: `circle.disclosure_from` and
 disclosure rule: it marks all three and nothing else, only the
 assembly adopts it, and one that does not is refused as its motion is
 proposed and again as it is adopted, saying what is wrong
-(`circle.disclosure_flaw`). A later rule replaces it the day it
-applies. `circle.disclosed(day)` reads the values in force on a day,
+(`circle.disclosure_flaw`). One disclosure rule stands at a time, as
+one publication does: a rule whose days meet those of a disclosure
+rule not revoked is refused unless it replaces that one, saying which
+(`circle.overlap_flaw`). A later rule replaces it the day it applies,
+and ending it by motion
+leaves none standing, so values an earlier rule set are never read
+again. `circle.disclosed(day)` reads the values in force on a day,
 none where no rule stands.
 
 The analytics port reads them for each run that reads a counted view, a

@@ -190,11 +190,38 @@ BEGIN ATOMIC
   HAVING bool_or(v.name LIKE 'disclosure\_%');
 END;
 
+-- What is wrong with a disclosure rule or a publication applying from
+-- `day`, perhaps until `until`, and replacing `replaces`, or null: one of
+-- each stands at a time, so one whose days meet those of another of its
+-- kind not yet revoked by then replaces that one, and the refusal names
+-- it. `made` is the rule itself, once adopted. `what` is `disclosure` or
+-- `publication`.
+CREATE FUNCTION circle.overlap_flaw(what text, day date, until date, replaces text, made text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT o.policy || CASE overlap_flaw.what WHEN 'disclosure' THEN ' sets open books'' disclosure values' ELSE ' publishes parts of the structure' END
+    || ' from ' || to_char(o."from", 'YYYY-MM-DD') || coalesce(' until ' || to_char(o.ends, 'YYYY-MM-DD'), '')
+    || ': one ' || CASE overlap_flaw.what WHEN 'disclosure' THEN 'disclosure rule' ELSE 'publication' END
+    || ' stands at a time, so one on days that meet its replaces ' || o.policy
+  FROM (
+    SELECT d.id, d.policy, d."from", least(d.until, d.revoked) AS ends FROM circle.disclosure d WHERE overlap_flaw.what = 'disclosure'
+    UNION ALL
+    SELECT p.id, p.policy, p."from", least(p.until, p.revoked) FROM circle.publication p WHERE overlap_flaw.what = 'publication'
+  ) o
+  WHERE o.policy IS DISTINCT FROM overlap_flaw.replaces AND o.policy IS DISTINCT FROM overlap_flaw.made
+    AND (o.ends IS NULL OR o.ends > overlap_flaw.day)
+    AND (overlap_flaw.until IS NULL OR o."from" < overlap_flaw.until)
+    AND (o.ends IS NULL OR o."from" < o.ends)
+  ORDER BY o."from", o.id
+  LIMIT 1;
+END;
+
 -- Copies open books' disclosure rule into `circle.disclosure` in the
 -- write that adopts it, and revokes the values of the policy it replaces
 -- the day it applies, whatever it is. Returns the row it made, or null
 -- for a policy that marks no disclosure value; a rule whose values are
--- unsound is refused (SQLSTATE 09000).
+-- unsound, or whose days meet another's it does not replace
+-- (`circle.overlap_flaw`), is refused (SQLSTATE 09000).
 CREATE FUNCTION circle.disclosure_from(ref text) RETURNS bigint
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -208,7 +235,9 @@ BEGIN
     OR NOT EXISTS (SELECT FROM policy.value v WHERE v.policy = ref AND v.name LIKE 'disclosure\_%') THEN
     RETURN NULL;
   END IF;
-  wrong := circle.disclosure_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref));
+  wrong := coalesce(
+    circle.disclosure_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref)),
+    (SELECT circle.overlap_flaw('disclosure', p.applies, p.ends, p.replaces, p.id) FROM policy.policy p WHERE p.id = ref));
   IF wrong IS NOT NULL THEN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;
@@ -230,8 +259,8 @@ BEGIN ATOMIC
   WHERE p.id = disclosure_ended.ref AND d.policy = p.id AND p.ends IS NOT NULL AND d.revoked IS NULL;
 END;
 
--- Open books' disclosure values in force on a day: the latest rule
--- applying then, none where no rule stands.
+-- Open books' disclosure values in force on a day: those of the one
+-- rule standing then (`circle.overlap_flaw`), none where no rule stands.
 CREATE FUNCTION circle.disclosed(day date) RETURNS TABLE (policy text, contributors integer, largest numeric, two numeric)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -297,8 +326,9 @@ END;
 -- Copies the publication into `circle.publication` in the write that
 -- adopts it, and revokes the parts of the policy it replaces the day it
 -- applies, whatever it is. Returns the row it made, or null for a
--- policy that marks no `publish`; a publication that is unsound is
--- refused (SQLSTATE 09000).
+-- policy that marks no `publish`; a publication that is unsound, or
+-- whose days meet another's it does not replace (`circle.overlap_flaw`),
+-- is refused (SQLSTATE 09000).
 CREATE FUNCTION circle.publication_from(ref text) RETURNS bigint
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -311,7 +341,9 @@ BEGIN
   IF NOT EXISTS (SELECT FROM circle.publication_of(ref)) THEN
     RETURN NULL;
   END IF;
-  wrong := circle.publication_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref));
+  wrong := coalesce(
+    circle.publication_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref)),
+    (SELECT circle.overlap_flaw('publication', p.applies, p.ends, p.replaces, p.id) FROM policy.policy p WHERE p.id = ref));
   IF wrong IS NOT NULL THEN
     RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
   END IF;

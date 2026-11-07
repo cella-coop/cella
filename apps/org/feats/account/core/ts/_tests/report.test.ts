@@ -1,9 +1,10 @@
 // The statements' presentation alone, on a database holding only the app's
 // core and this feat: each account is placed in one rubric of each sheet
 // by its code's longest prefix, every total names rubrics of its own
-// sheet, and the spans are drawn from the periods of the books. The
-// slice's other tests share the database, so the periods this one writes
-// are rolled back after it. Run by `cella test slice account`.
+// sheet, the rubrics read in English, and the spans are drawn from the
+// periods of the books. The slice's other tests share the database, so
+// the periods this one writes are rolled back after it. Run by `cella
+// test slice account`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -63,6 +64,28 @@ test('a total adds and subtracts rubrics of its own sheet, and a line names its 
     db.query(`INSERT INTO account.rubric (id, sheet, n, kind, label) VALUES ('sideless', 'income', 99, 'line', 'No side')`),
     /check/,
   )
+})
+
+test('the rubrics read in English, as IFRS and common EU usage name them', async () => {
+  const { rows } = await db.query<{ id: string; label: string }>(`SELECT id, label FROM account.rubric WHERE id = ANY($1) ORDER BY sheet, n`, [
+    ['assets', 'current', 'receivables', 'cash', 'liabilities-total', 'equity', 'capital', 'legal-reserve', 'carried', 'debts', 'operating-income', 'result'],
+  ])
+  assert.deepEqual(Object.fromEntries(rows.map((r) => [r.id, r.label])), {
+    assets: 'Assets',
+    current: 'Current assets',
+    receivables: 'Trade receivables',
+    cash: 'Cash and cash equivalents',
+    'liabilities-total': 'Total equity and liabilities',
+    equity: 'Equity',
+    capital: 'Share capital',
+    'legal-reserve': 'Legal reserve',
+    carried: 'Retained earnings',
+    debts: 'Liabilities',
+    'operating-income': 'Operating income',
+    result: 'Profit or loss',
+  })
+  const french = await db.query(`SELECT id, label FROM account.rubric WHERE label ~* '[àâçéèêëîïôûùü]|\\m(actif|passif|dettes|produits|capitaux|total d[eu]s?)\\M'`)
+  assert.deepEqual(french.rows, [], 'no rubric reads in French')
 })
 
 test('the spans are each month, quarter and year of the books, against the one before', async () => {

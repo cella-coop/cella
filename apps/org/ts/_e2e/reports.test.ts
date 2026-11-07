@@ -218,6 +218,15 @@ test('the pages draw each report and say what they read', async () => {
   assert.match(income, /Income statement, 2026-10 against 2026-09/)
   assert.match(income, /read at the log's entry \d+/)
   assert.match(income, /Service revenue/)
+  assert.match(income, /Sales of products and services/)
+  assert.match(income, /Total operating income/)
+  const balance = await read('/reports/balance?span=2026-10', camille)
+  for (const rubric of ['Current assets', 'Cash and cash equivalents', 'Total assets', 'Equity', 'Share capital', 'Total equity and liabilities']) {
+    assert.ok(balance.includes(rubric), rubric)
+  }
+  for (const rubric of ['Actif', 'Capitaux propres', 'Dettes', 'Total du passif']) {
+    assert.ok(!balance.includes(rubric), `no ${rubric}`)
+  }
   const margin = await read('/reports/margins', camille)
   assert.match(margin, /Projects on 2026-10-25/)
   assert.match(margin, /budget spent/)

@@ -58,6 +58,17 @@ and a press back to the system's theme forgets the choice. Every icon
 the site shows is a Phosphor duotone, through `iconMarkup`
 ([its figures](#its-figures)).
 
+## The assets
+
+`/assets`, `src/pages/assets/[...path].astro`, is the asset library,
+in the dev server alone: its `getStaticPaths` gives no path in a build,
+so no build has it, and no page links to it. It shows what the site has
+to draw with: each vendored photo as it is, in the house's print, and as
+a backdrop in each of the five inks; each diagram bare and on a
+backdrop; each icon the site uses, with the theme toggle's and the
+menu's, in every role; and the components. Its only words are the
+assets' names, identifiers the copy check passes, so it holds no copy.
+
 ## The text
 
 Every word the site shows lives in its content collections, under

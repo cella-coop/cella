@@ -1,0 +1,282 @@
+---
+// The asset library, at `/assets` in the dev server alone: no build has it
+// and no page links to it. It shows what the site has to draw with: each
+// vendored photo as it is, in the house's print and as a backdrop in each
+// ink; each diagram, bare and on a backdrop; each icon the site uses in
+// every role; and the components. Its only words are the assets' own
+// names, so it holds no copy (index.md, the assets).
+import { readdirSync } from 'node:fs'
+import { join } from 'node:path'
+import { getCollection } from 'astro:content'
+import { diagrams, type DiagramName } from '@cella/diagrams'
+import Backdrop from '../../components/Backdrop.astro'
+import Button from '../../components/Button.astro'
+import Diagram from '../../components/Diagram.astro'
+import Icon from '../../components/Icon.astro'
+import Photo from '../../components/Photo.astro'
+import ThemeToggle from '../../components/ThemeToggle.astro'
+import Base from '../../layouts/Base.astro'
+import { siteData } from '../../lib/content'
+import { STATUSES } from '../../lib/photo'
+
+export function getStaticPaths() {
+  return import.meta.env.DEV ? [{ params: { path: undefined } }] : []
+}
+
+const site = await siteData()
+const dir = join(process.cwd(), 'src/photos')
+const photos = (() => {
+  try {
+    return readdirSync(dir).filter((f) => f.endsWith('.jpg')).map((f) => f.slice(0, -4)).sort()
+  } catch {
+    return []
+  }
+})()
+const named = Object.keys(diagrams) as DiagramName[]
+const used = (await getCollection('sections')).flatMap((s) => s.data.items.flatMap((i) => (i.icon ? [i.icon] : [])))
+const icons = [...new Set([...used, 'sun', 'moon', 'list'])].sort()
+const roles = ['accent', ...STATUSES] as const
+---
+
+<Base title={site.title} description={site.description}>
+  <header class="wrap bar">
+    <a href="/" set:html={site.title} />
+    <nav>
+      <a href="#photos">{'photos'}</a>
+      <a href="#diagrams">{'diagrams'}</a>
+      <a href="#icons">{'icons'}</a>
+      <a href="#components">{'components'}</a>
+    </nav>
+    <ThemeToggle label={site.theme.toggle} />
+  </header>
+
+  <main class="wrap">
+    <section id="photos">
+      <h2>{'photos'}</h2>
+      {
+        photos.map((name) => (
+          <article class="asset">
+            <h3>
+              <code>{name}</code>
+            </h3>
+            <div class="row">
+              <figure>
+                <Photo name={name} alt={name} print={'none'} />
+                <figcaption>{'none'}</figcaption>
+              </figure>
+              <figure>
+                <Photo name={name} alt={name} />
+                <figcaption>{'house'}</figcaption>
+              </figure>
+            </div>
+            <div class="inks">
+              {STATUSES.map((ink) => (
+                <figure>
+                  <div class="panel">
+                    <Backdrop photo={{ photo: name, ink }} width={700} />
+                  </div>
+                  <figcaption>
+                    <code>{ink}</code>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          </article>
+        ))
+      }
+    </section>
+
+    <section id="diagrams">
+      <h2>{'diagrams'}</h2>
+      {
+        named.map((name) => (
+          <article class="asset">
+            <h3>
+              <code>{name}</code>
+            </h3>
+            <div class="row">
+              <div class="card">
+                <Diagram name={name} />
+              </div>
+              {photos.slice(0, 1).map((p) => (
+                <div class="panel framed">
+                  <Backdrop photo={p} width={900} />
+                  <div class="card">
+                    <Diagram name={name} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </article>
+        ))
+      }
+    </section>
+
+    <section id="icons">
+      <h2>{'icons'}</h2>
+      <table>
+        <thead>
+          <tr>
+            <th />
+            {roles.map((r) => <th><code>{r}</code></th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {
+            icons.map((name) => (
+              <tr>
+                <th>
+                  <code>{name}</code>
+                </th>
+                {roles.map((r) => (
+                  <td>
+                    <Icon name={name} role={r} />
+                  </td>
+                ))}
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </section>
+
+    <section id="components">
+      <h2>{'components'}</h2>
+      <div class="row buttons">
+        <Button href="#components">{'primary'}</Button>
+        <Button href="#components" variant={'secondary'}>{'secondary'}</Button>
+        <ThemeToggle label={site.theme.toggle} />
+      </div>
+    </section>
+  </main>
+</Base>
+
+<style>
+  .bar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 3.5rem;
+    border-bottom: 1px solid var(--line);
+    background: var(--ground);
+  }
+
+  .bar nav {
+    display: flex;
+    gap: 1.25rem;
+    margin-inline-start: auto;
+    font-family: var(--font-mono);
+    font-size: var(--t-sm);
+  }
+
+  main {
+    padding-block: 2rem 6rem;
+  }
+
+  section {
+    padding-block: 2rem;
+    border-bottom: 1px solid var(--line);
+  }
+
+  h2 {
+    margin: 0 0 1.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--t-xl);
+  }
+
+  h3 {
+    margin: 0 0 1rem;
+    font-size: var(--t-md);
+  }
+
+  .asset + .asset {
+    margin-top: 3rem;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .inks {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  figure {
+    margin: 0;
+  }
+
+  .row :global(.photo) {
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: 0.4rem;
+    color: var(--text-muted);
+    font-size: var(--t-xs);
+  }
+
+  .panel {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    border-radius: var(--radius);
+    background: var(--sunk);
+  }
+
+  /* The ink tiles are small: the credit shows on the photo's own row */
+  .inks .panel :global(.credit) {
+    display: none;
+  }
+
+  .panel.framed {
+    aspect-ratio: auto;
+    padding: 2.5rem 2rem 3rem;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
+    padding: 1.25rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .card :global(figure) {
+    margin: 0;
+  }
+
+  table {
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 0.5rem 0.75rem;
+    font-weight: normal;
+    text-align: center;
+  }
+
+  tbody th {
+    text-align: start;
+  }
+
+  td :global(.icon) {
+    width: 2rem;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+  }
+</style>

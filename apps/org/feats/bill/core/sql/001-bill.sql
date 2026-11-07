@@ -10,7 +10,7 @@ CREATE SEQUENCE bill.number;
 -- text; a supplier as a record of its own waits on a contact feat.
 CREATE TABLE bill.bill (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
-  id text PRIMARY KEY DEFAULT 'bi-' || lpad(nextval('bill.number')::text, 4, '0'),
+  id text PRIMARY KEY DEFAULT 'bi-' || to_char(nextval('bill.number'), 'FM9999999999999990000'),
   supplier text NOT NULL CHECK (supplier <> ''),
   reference text NOT NULL CHECK (reference <> ''),
   issued date NOT NULL,

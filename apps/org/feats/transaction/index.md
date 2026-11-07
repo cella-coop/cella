@@ -104,7 +104,8 @@ journal at rung 3.
 
 `transaction` (`core/sql/`):
 
-- `transaction.entry`: id (`je-0041`, gapless), date, label,
+- `transaction.entry`: id (`je-0041`, gapless, its number four digits or
+  more, so `je-10000` follows `je-9999`), date, label,
   `corrects` and the receipt it was posted at; an entry carried over from
   before the log has no receipt.
 - `transaction.line`: the entry, its line number, the account code, a
@@ -183,7 +184,8 @@ do, must name the next number.
 slice transaction`), runs on the app's core and this feat alone: an entry
 balances or is refused, ids are gapless and a refused entry returns its
 number, nothing posted changes, `transaction.pays` takes a payment and
-nothing else, and `transaction.corrects` refuses a second correction from the same base.
+nothing else, `transaction.corrects` refuses a second correction from the same base,
+and the journal numbers on past four digits, `je-10000` after `je-9999`.
 
 ## Reads
 

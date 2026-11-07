@@ -10,7 +10,7 @@ CREATE SEQUENCE expense.number;
 -- words and stays out of the log.
 CREATE TABLE expense.expense (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
-  id text PRIMARY KEY DEFAULT 'ex-' || lpad(nextval('expense.number')::text, 4, '0'),
+  id text PRIMARY KEY DEFAULT 'ex-' || to_char(nextval('expense.number'), 'FM9999999999999990000'),
   member text NOT NULL,
   day date NOT NULL,
   label text NOT NULL CHECK (label <> ''),

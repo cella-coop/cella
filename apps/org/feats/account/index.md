@@ -27,7 +27,8 @@ posted to it, which the `account-transaction` graft reads from the
 An account's `kind` is its place in the books: `asset`, `liability`,
 `equity`, `income` or `expense`. Capital accounts, reserves and funds are
 equity accounts distinguished by their code: `1013` holds members' paid-up
-capital, one account under it per member (`101301`, …), `1012` what they
+capital, one account under it per member (`101301`, …, two digits or
+more, so `1013100` follows `101399`), `1012` what they
 subscribed and have not paid, owed by them in `4562`, `1061` the legal
 reserve, `1068` the development fund, an indivisible reserve; `4567` is
 what the co-op owes associates who left (the PCG's accounts, Règlement
@@ -316,7 +317,9 @@ only rubrics of its own sheet and a line its side, and the spans are each
 month, quarter and year of the books against the one before.
 `core/ts/_tests/periods.test.ts`: the first month opens alone and each
 next one after the latest, twice changing nothing; a month leaving a gap
-is refused. The e2e scenario `patronage` opens 2027's first month.
+is refused. `core/ts/_tests/numbers.test.ts`: a holder's account is the
+next under its parent, two digits or more, so the 100th holder's follows
+the 99th's. The e2e scenario `patronage` opens 2027's first month.
 
 ## Reads
 

@@ -1499,7 +1499,9 @@ bytewise without their generated columns, which their rows compute, a
 personal column as the newest commitment the vault holds for its field
 and subject, or in a folded scope the newest the fold applied, and as
 its value where neither holds one. A fold resumes from a checkpoint,
-whose state it hashes again first. A slice is **folded** when every action it
+whose state it hashes again first, and verifies the log after it from
+the checkpoint's entry (`cella.verify_log(after)`), never from the
+first, so a re-fold costs what it folds, not the log's length. A slice is **folded** when every action it
 names, among those the scope registers and its log holds, has a fold (`cella.folded()`); the state
 hash and the compare read the folded slices and fail naming the others.
 Every slice is folded: `cella check feats` refuses an action with no

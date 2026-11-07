@@ -10,7 +10,7 @@ CREATE SEQUENCE import.number;
 -- id, address or title, never a person's name. A run never changes.
 CREATE TABLE import.run (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
-  id text PRIMARY KEY DEFAULT 'im-' || lpad(nextval('import.number')::text, 4, '0'),
+  id text PRIMARY KEY DEFAULT 'im-' || to_char(nextval('import.number'), 'FM9999999999999990000'),
   kind text NOT NULL CHECK (kind ~ '^[a-z]+$'),
   name text NOT NULL CHECK (name <> ''),
   actor text NOT NULL,

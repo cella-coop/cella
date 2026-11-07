@@ -1095,121 +1095,180 @@ fn signers(c: &SpiClient<'_>) -> Vec<Signer> {
     .collect()
 }
 
+/// How many entries `verify_log` reads at a time. Each page is read in an
+/// SPI connection of its own, which frees what it read before the next, so
+/// a verification holds one page and the chain's last write, whatever the
+/// log's length.
+const PAGE: i64 = 10_000;
+
 pub fn verify_log() -> bool {
+    verify_after(0)
+}
+
+/// Verifies the log after entry `after`, as it stands here: from entry
+/// `after`'s hash, where a checkpoint the fold recorded starts, or from the
+/// genesis at 0, every entry and receipt after it, each write's effects,
+/// that the head names the last entry and that every receipt names a
+/// verdict. What came before `after` is the checkpoint's, which it trusts;
+/// `after` is the end of a write, since a write is checked whole.
+pub fn verify_after(after: i64) -> bool {
     let scope = scope();
-    Spi::connect(|c| {
-        let mut chain = match Chain::new(&signers(c)) {
-            Ok(chain) => chain.following(follows(c)),
-            Err(e) => {
-                warning!("cella: the signers are out of order: {e}");
-                return false;
+    let (signers, follows, start) = Spi::connect(|c| {
+        let start = if after == 0 {
+            Some(log::GENESIS.to_vec())
+        } else {
+            let rows = spi(c.select(
+                "SELECT hash FROM cella.log WHERE n = $1",
+                Some(1),
+                &[after.into()],
+            ));
+            if rows.is_empty() {
+                None
+            } else {
+                spi(rows.first().get_one::<Vec<u8>>())
             }
         };
-        let rows = spi(c.select(
-            "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.guards, l.prev, l.hash, l.sig, l.receipt,
-                    r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
-                    l.key, r.key, l.cause, l.cause_hash, l.settled
-             FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
-             ORDER BY l.n",
-            None,
-            &[],
-        ));
-        let mut last = log::GENESIS.to_vec();
-        let mut decisions = 0;
-        for row in rows {
-            let n = spi(row.get::<i64>(1)).unwrap_or_default();
-            let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
-            let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
-            let guards = spi(row.get::<JsonB>(6)).and_then(|j| listed_guards(&j.0));
-            // A decision names its receipt; an effect, the entry it follows.
-            let receipt = spi(row.get::<i64>(10)).map(|number| {
-                Some(Receipt {
-                    n: number,
-                    op: spi(row.get::<String>(11))?,
-                    actor: spi(row.get::<String>(12))?,
-                    device: bytes(13).try_into().ok()?,
-                    nonce: spi(row.get::<String>(14))?,
-                    request: bytes(15).try_into().ok()?,
-                    signature: bytes(16).try_into().ok()?,
-                    payload: bytes(17).try_into().ok()?,
-                    time: spi(row.get::<String>(18))?,
-                })
-            });
-            let basis = match &receipt {
-                Some(r) => r.as_ref().and_then(|r| {
-                    Some(Basis::Receipt {
-                        n: r.n,
-                        hash: bytes(19).try_into().ok()?,
-                    })
-                }),
-                None => (|| {
-                    Some(Basis::Cause {
-                        n: spi(row.get::<i64>(24))?,
-                        hash: bytes(25).try_into().ok()?,
-                        settled: spi(row.get::<bool>(26))?,
-                    })
-                })(),
-            };
-            let (Some(payload), Some(guards), Some(basis)) =
-                (bytes(5).try_into().ok(), guards, basis)
-            else {
-                warning!(
-                    "cella: log broken at {n}: unreadable entry, or neither a receipt nor a cause"
-                );
-                return false;
-            };
-            // What the log keeps of the payload, commitments in place of
-            // personal values, is what its digest names; erasure deletes
-            // what a commitment opens to, never the commitment.
-            let form = spi(row.get::<JsonB>(21)).map(|j| j.0);
-            if form.and_then(|f| log::payload_digest(&f).ok()) != Some(payload) {
-                warning!(
-                    "cella: log broken at {n}: the logged payload does not hash to the entry's digest"
-                );
-                return false;
-            }
-            let entry = Entry {
-                n,
-                op: text(2),
-                actor: text(3),
-                date: text(4),
-                payload,
-                basis,
-                guards,
-            };
-            let Some(key) = spi(row.get::<i32>(22)) else {
-                warning!("cella: log broken at {n}: no signer named");
-                return false;
-            };
-            if let Some(Some(receipt)) = &receipt {
-                let Some(receipt_key) = spi(row.get::<i32>(23)) else {
-                    warning!("cella: log broken at {n}: no signer named");
-                    return false;
-                };
-                if let Err(b) = chain.check_receipt(
-                    &scope,
-                    &entry,
-                    receipt_key,
-                    receipt,
-                    &bytes(19),
-                    &bytes(20),
-                ) {
-                    warning!("cella: log broken at {}: {}", b.n, b.why);
-                    return false;
-                }
-                decisions += 1;
-            }
-            let hash = bytes(8);
-            if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
-                warning!("cella: log broken at {}: {}", b.n, b.why);
-                return false;
-            }
-            last = hash;
-        }
-        if let Err(b) = chain.finish() {
-            warning!("cella: log broken at {}: {}", b.n, b.why);
+        (signers(c), follows(c), start)
+    });
+    let Some(mut last) = start else {
+        warning!("cella: the log holds no entry {after} to verify after");
+        return false;
+    };
+    let mut chain = match Chain::new(&signers) {
+        Ok(chain) => chain.following(follows),
+        Err(e) => {
+            warning!("cella: the signers are out of order: {e}");
             return false;
         }
+    };
+    if after > 0 {
+        let Ok(prev) = <[u8; 32]>::try_from(last.as_slice()) else {
+            warning!("cella: entry {after}'s hash is unreadable");
+            return false;
+        };
+        chain = chain.after(after, prev);
+    }
+    let mut at = after;
+    let mut decisions = 0;
+    loop {
+        let read = Spi::connect(|c| {
+            let rows = spi(c.select(
+                "SELECT l.n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD'), l.payload, l.guards, l.prev, l.hash, l.sig, l.receipt,
+                        r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, l.form,
+                        l.key, r.key, l.cause, l.cause_hash, l.settled
+                 FROM cella.log l LEFT JOIN cella.receipt r ON r.n = l.receipt
+                 WHERE l.n > $1
+                 ORDER BY l.n
+                 LIMIT $2",
+                None,
+                &[at.into(), PAGE.into()],
+            ));
+            let mut count = 0;
+            for row in rows {
+                count += 1;
+                let n = spi(row.get::<i64>(1)).unwrap_or_default();
+                let text = |i| spi(row.get::<String>(i)).unwrap_or_default();
+                let bytes = |i| spi(row.get::<Vec<u8>>(i)).unwrap_or_default();
+                let guards = spi(row.get::<JsonB>(6)).and_then(|j| listed_guards(&j.0));
+                // A decision names its receipt; an effect, the entry it follows.
+                let receipt = spi(row.get::<i64>(10)).map(|number| {
+                    Some(Receipt {
+                        n: number,
+                        op: spi(row.get::<String>(11))?,
+                        actor: spi(row.get::<String>(12))?,
+                        device: bytes(13).try_into().ok()?,
+                        nonce: spi(row.get::<String>(14))?,
+                        request: bytes(15).try_into().ok()?,
+                        signature: bytes(16).try_into().ok()?,
+                        payload: bytes(17).try_into().ok()?,
+                        time: spi(row.get::<String>(18))?,
+                    })
+                });
+                let basis = match &receipt {
+                    Some(r) => r.as_ref().and_then(|r| {
+                        Some(Basis::Receipt {
+                            n: r.n,
+                            hash: bytes(19).try_into().ok()?,
+                        })
+                    }),
+                    None => (|| {
+                        Some(Basis::Cause {
+                            n: spi(row.get::<i64>(24))?,
+                            hash: bytes(25).try_into().ok()?,
+                            settled: spi(row.get::<bool>(26))?,
+                        })
+                    })(),
+                };
+                let (Some(payload), Some(guards), Some(basis)) =
+                    (bytes(5).try_into().ok(), guards, basis)
+                else {
+                    warning!(
+                        "cella: log broken at {n}: unreadable entry, or neither a receipt nor a cause"
+                    );
+                    return None;
+                };
+                // What the log keeps of the payload, commitments in place of
+                // personal values, is what its digest names; erasure deletes
+                // what a commitment opens to, never the commitment.
+                let form = spi(row.get::<JsonB>(21)).map(|j| j.0);
+                if form.and_then(|f| log::payload_digest(&f).ok()) != Some(payload) {
+                    warning!(
+                        "cella: log broken at {n}: the logged payload does not hash to the entry's digest"
+                    );
+                    return None;
+                }
+                let entry = Entry {
+                    n,
+                    op: text(2),
+                    actor: text(3),
+                    date: text(4),
+                    payload,
+                    basis,
+                    guards,
+                };
+                let Some(key) = spi(row.get::<i32>(22)) else {
+                    warning!("cella: log broken at {n}: no signer named");
+                    return None;
+                };
+                if let Some(Some(receipt)) = &receipt {
+                    let Some(receipt_key) = spi(row.get::<i32>(23)) else {
+                        warning!("cella: log broken at {n}: no signer named");
+                        return None;
+                    };
+                    if let Err(b) = chain.check_receipt(
+                        &scope,
+                        &entry,
+                        receipt_key,
+                        receipt,
+                        &bytes(19),
+                        &bytes(20),
+                    ) {
+                        warning!("cella: log broken at {}: {}", b.n, b.why);
+                        return None;
+                    }
+                    decisions += 1;
+                }
+                let hash = bytes(8);
+                if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
+                    warning!("cella: log broken at {}: {}", b.n, b.why);
+                    return None;
+                }
+                last = hash;
+                at = n;
+            }
+            Some(count)
+        });
+        match read {
+            None => return false,
+            Some(count) if count < PAGE => break,
+            Some(_) => {}
+        }
+    }
+    if let Err(b) = chain.finish() {
+        warning!("cella: log broken at {}: {}", b.n, b.why);
+        return false;
+    }
+    Spi::connect(|c| {
         // No head row is a log no write has reached yet.
         let head = spi(c.select("SELECT n, hash FROM cella.head", Some(1), &[]));
         let head = if head.is_empty() {
@@ -1221,12 +1280,15 @@ pub fn verify_log() -> bool {
             warning!("cella: the head does not name the log's last entry");
             return false;
         }
-        let receipts = spi(
-            spi(c.select("SELECT count(*) FROM cella.receipt", Some(1), &[]))
-                .first()
-                .get_one::<i64>(),
-        );
-        if receipts != Some(decisions) {
+        // Every receipt names a verdict: those the entries up to `after`
+        // name, and those this walk checked.
+        let counts = spi(c.select(
+            "SELECT (SELECT count(*) FROM cella.receipt), (SELECT count(*) FROM cella.log WHERE n <= $1 AND receipt IS NOT NULL)",
+            Some(1),
+            &[after.into()],
+        ));
+        let (receipts, before) = spi(counts.first().get_two::<i64, i64>());
+        if receipts != before.map(|b| b + decisions) {
             warning!("cella: a receipt names no verdict");
             return false;
         }

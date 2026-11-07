@@ -23,17 +23,20 @@ export async function opening(tx: Db, accounts: Open[]): Promise<string[]> {
 }
 
 // Opens, inside a write's transaction, a capital account for its holder:
-// the next code under `parent`, two digits after it (`101312` under
-// `1013`), of the parent's kind, with the label the write gives it.
+// the next code under `parent`, at least two digits after it (`101312`
+// under `1013`, `1013100` after `101399`), of the parent's kind, with
+// the label the write gives it.
 // Returns its code. A subscription opens a member's account so.
 export async function holding(tx: Db, input: Hold): Promise<string> {
   const { rows } = await tx.query<{ code: string }>(
     `INSERT INTO account.account (code, label, kind, parent, holder)
-     SELECT p.code || lpad((coalesce(max(substr(a.code, length(p.code) + 1)::integer), 0) + 1)::text, 2, '0'), $2, p.kind, p.code, $3
+     SELECT p.code || lpad(x.next::text, greatest(2, length(x.next::text)), '0'), $2, p.kind, p.code, $3
      FROM account.account p
-     LEFT JOIN account.account a ON a.parent = p.code AND a.code ~ ('^' || p.code || '[0-9]{2}$')
+     CROSS JOIN LATERAL (
+       SELECT coalesce(max(substr(a.code, length(p.code) + 1)::integer), 0) + 1 AS next
+       FROM account.account a WHERE a.parent = p.code AND a.code ~ ('^' || p.code || '[0-9]{2,}$')
+     ) x
      WHERE p.code = $1
-     GROUP BY p.code, p.kind
      RETURNING code`,
     [input.parent, input.label, input.holder],
   )

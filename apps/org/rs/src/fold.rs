@@ -177,9 +177,12 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
         checkpoints += 1;
         done = end;
     }
-    if psql(&dev, f.into, "SELECT cella.verify_log()")? != "t" {
+    // A fold resumed at a checkpoint verifies the log after it, from the
+    // checkpoint's entry, which is the source's; a fold from the first
+    // entry verifies it whole.
+    if psql(&dev, f.into, &format!("SELECT cella.verify_log({at})"))? != "t" {
         return Err(Fail::new(format!(
-            "the log folded into {} does not verify",
+            "the log folded into {} does not verify after entry {at}",
             f.into
         )));
     }

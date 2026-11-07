@@ -21,7 +21,8 @@
 //! | `cella.forgo(op, cause, why)` | function | records an effect forgone, citing an entry the write appended |
 //! | `cella.cause()` | function | the entry the effect being judged follows, for guards |
 //! | `cella.action()`, `cella.actor()`, `cella.device()` | functions | the action being judged, for guards |
-//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it, and each write's effects |
+//! | `cella.verify_log()` | function | `log::Chain` over the whole log and its receipts, each under the signer that names it, and each write's effects, a page at a time |
+//! | `cella.verify_log(after)` | function | the same from entry `after`'s hash, a checkpoint's, over the entries after it |
 //! | `cella.signed(n, request)` | function, the owner's | `sign::request_digest`: whether a request is what receipt `n`'s member signed, under the salt it keeps |
 //! | `cella.notary_key()` | function | the scope's public key, from `cella.key_file` |
 //! | `cella.head`, `cella.log`, `cella.receipt`, `cella.receipt_seq` | tables, sequence | the log and its signed receipts |
@@ -631,6 +632,16 @@ SELECT pg_catalog.pg_extension_config_dump('cella.follows', '');
 #[search_path(pg_catalog, pg_temp)]
 fn verify_log() -> bool {
     notary::verify_log()
+}
+
+/// Checks the log after entry `after` as `verify_log` checks it whole,
+/// from that entry's hash as it stands: where a checkpoint the fold
+/// recorded is trusted, a verification starts there, never from the first
+/// entry. `after` is the end of a write.
+#[pg_extern(stable, security_definer, name = "verify_log")]
+#[search_path(pg_catalog, pg_temp)]
+fn verify_log_after(after: i64) -> bool {
+    notary::verify_after(after)
 }
 
 /// Whether `request` is what receipt `n`'s member signed: salted with the

@@ -536,7 +536,7 @@ $f$;
     /// Each earlier version the notary ships, which `cella test notary`
     /// stages beside the current one, and the function its guards read the
     /// action through: `cella.op()` before 0.6.0.
-    const EARLIER: [(&str, &str); 8] = [
+    const EARLIER: [(&str, &str); 9] = [
         ("0.1.0-alpha", "op"),
         ("0.2.0", "op"),
         ("0.3.0", "op"),
@@ -545,6 +545,7 @@ $f$;
         ("0.6.0", "action"),
         ("0.7.0", "action"),
         ("0.8.0", "action"),
+        ("0.9.0", "action"),
     ];
 
     fn version() -> Option<String> {
@@ -629,6 +630,31 @@ ALTER EXTENSION cella UPDATE;"
             assert!(breaks(tamper), "the log verified after: {tamper}");
         }
         assert!(verifies(), "each tamper rolled back");
+    }
+
+    #[pg_test]
+    fn the_log_verifies_after_a_checkpoint_from_its_hash() {
+        beside();
+        scope();
+        settle(100);
+        entry_after(first_hash());
+        let after = |n: i64| {
+            Spi::get_one_with_args::<bool>("SELECT cella.verify_log($1)", &[n.into()])
+                .expect("verify_log(after)")
+                .expect("a verdict")
+        };
+        assert!(
+            after(0) && after(1) && after(2),
+            "each write's end verifies"
+        );
+        // What precedes the checkpoint is trusted; what follows it is
+        // checked as the whole log is.
+        Spi::run("UPDATE cella.log SET form = '{\"cents\": 101}' WHERE n = 1").expect("a tamper");
+        assert!(!verifies() && !after(0));
+        assert!(after(1), "entry 1 is the checkpoint's");
+        Spi::run("UPDATE cella.log SET form = '{\"cents\": 201}' WHERE n = 2").expect("a tamper");
+        assert!(!after(1));
+        assert!(!after(3), "the log holds no entry 3");
     }
 
     const CARRY: &str = "test:thing:carry";

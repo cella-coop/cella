@@ -13,6 +13,7 @@ pub mod fold;
 mod key;
 mod repo;
 pub mod run;
+mod secret;
 mod shell;
 mod site;
 mod test;

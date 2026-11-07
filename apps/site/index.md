@@ -167,7 +167,8 @@ profile's URL, the photo's page, its Unsplash id and the licence, the
 [Unsplash License](https://unsplash.com/license), which lets the photo
 be modified, as the print does. The two credit links carry
 `utm_source=cella` and `utm_medium=referral`. With an Unsplash access key in
-`UNSPLASH_ACCESS_KEY`, the task reads the photographer through
+`UNSPLASH_ACCESS_KEY` or, unset, the development secrets'
+`unsplash_access_key` ([secrets](../org/rs/index.md#secrets)), the task reads the photographer through
 Unsplash's API and calls the photo's download endpoint, as the API's
 guidelines ask; with none, it reads the page's public image and asks
 for the name and the profile's URL on the terminal. A page that refuses

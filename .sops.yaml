@@ -1,0 +1,11 @@
+# The repository's secrets (apps/org/rs/index.md, secrets): sops files
+# under secrets/, their values encrypted to these age recipients. A new
+# recipient reads every version of every file, so one is added on purpose
+# and the files re-encrypted with `sops updatekeys`.
+keys:
+  - &ixxie age1pf3zaphwq2w7rpk6j7jsnk33mn8halcp2rt9zky2wafzulzjgdus56xd3l
+creation_rules:
+  - path_regex: ^secrets/[^/]+\.yaml$
+    key_groups:
+      - age:
+          - *ixxie

@@ -13,7 +13,7 @@ updated = 2026-11-08
 | `cella check feats\|fixtures\|types\|shell\|brand\|site\|rust` | development | one part alone; `brand` regenerates the brand's files in memory (`tools/brand.mjs --check`) and fails on each that differs from what `packages/brand` commits, or is missing or left over; `site` runs the copy check (`tools/site-copy.mjs`), which fails on a word of copy in a page, layout or component of the site, outside its content collections, naming its file and line, then `astro check` over the site, then builds it into a temporary directory, so a site that does not build fails it, then builds the figure fixture under `apps/site/test` twice, failing where it does not build or where it builds with an icon name Phosphor lacks |
 | `cella brand` | development | writes the brand's generated files from its `house.json` (`tools/brand.mjs`): its tokens, fonts, Starlight mapping, mark, wordmark, lockups and icons, at `packages/brand`'s root, removing any it no longer makes ([the brand](../../../packages/brand/index.md)) |
 | `cella site dev [--port PORT]` | development | the landing site's dev server, Astro's on `http://localhost:4321` by default, reloading on every change, until stopped ([the site](../../site/index.md)) |
-| `cella site photo add <url> [--name NAME]` | development | vendors an Unsplash photo into the site with its credit's sidecar, asking for the photographer by hand where no `UNSPLASH_ACCESS_KEY` is set ([the site](../../site/index.md#photos)) |
+| `cella site photo add <url> [--name NAME]` | development | vendors an Unsplash photo into the site with its credit's sidecar, asking for the photographer by hand where no Unsplash key is set, in `UNSPLASH_ACCESS_KEY` or the development secrets ([secrets](#secrets), [the site](../../site/index.md#photos)) |
 | `cella site screenshots` | development | builds the figure fixture under `apps/site/test` and takes its four screenshots, a figure over and beside its photo in both themes, into that directory, for a landing's entry ([the site](../../site/index.md)) |
 | `cella site build` | development | builds the landing site static into `apps/site/dist`; it is deployed nowhere until the operator says so |
 | `cella serve [--port PORT]` | development | the shell's dev server, Vite on `http://localhost:5173` by default, against the dev database: starts the cluster if it is stopped, and the analytics shell on the dev database, or reuses the one that runs on it, refused where the port's shell attaches another, applies any new migration, says if the database is unseeded, then runs until stopped. It sets `CELLA_DEV=1`, dev mode, whose sign-in page offers the fixture members: the browser derives the TEST-ONLY key of the one picked and signs with it, as with any device |
@@ -46,6 +46,16 @@ updated = 2026-11-08
 | `cella key init --vault <PATH>` | production | writes a new vault key, the 32 random bytes `cella.vault_key_file` reads, apart from the notary's, the same way |
 
 The dev cluster is Postgres 18 in `.data/pg`, owned by the user, listening on 127.0.0.1 at `CELLA_PGPORT` (54342) with trust authentication and on no Unix socket, whose path a deep checkout's `.data` would make longer than the 107 bytes one may hold; the dev database is `CELLA_DB` (`cella`). Commands on it connect by the `PG*` variables. `--url` connects anywhere else instead and is handed to the node tools as `DATABASE_URL`; cella never reads `DATABASE_URL` from its own environment, so a production database is only ever named on the command line. Both `serve`s keep the shell's session key, 32 random bytes made owner-only on first use, in `.data/session.key` and hand it to the server as `CELLA_SESSION_KEY_FILE`, so sessions outlive a restart. They hand it the analytics shell too, its address as `CELLA_ANALYTICS` and its token's file as `CELLA_ANALYTICS_TOKEN_FILE`, which the port reads with `CELLA_DUCKDB_EXTENSIONS`.
+
+## Secrets
+
+A development secret, an API key a task needs, lives in `secrets/dev.yaml`, a [sops](https://github.com/getsops/sops) file whose values are encrypted to the age recipients `.sops.yaml` names and whose keys stay readable; it is committed, and the repository being public, so is its ciphertext and the names of its keys. `sops` is on the devshell's path. `secret::get` decrypts one value by its key with the caller's age identity, sops's own (`~/.config/sops/age/keys.txt`, or `SOPS_AGE_KEY_FILE`), holds it zeroized, and hands it to the one tool that needs it in that tool's environment, never on a command line; no file or no such key is none, and a file that will not decrypt fails naming it. A secret already in the environment wins over the file's.
+
+| Key | Read by |
+|---|---|
+| `unsplash_access_key` | `cella site photo add`, as `UNSPLASH_ACCESS_KEY` |
+
+A person edits the file with `sops secrets/dev.yaml` from the repository's root, which decrypts it into their editor and encrypts it again on save. A recipient reads every version of the file, so one is added to `.sops.yaml` on purpose, the file re-encrypted with `sops updatekeys secrets/dev.yaml`, and a recipient lost means every value rotated.
 
 ## On the path
 

@@ -78,6 +78,7 @@
         postgresql_18.pg_config
         postgresql_18.dev
         (duckdb2 pkgs)
+        sops
       ];
 
       # pgrx's bindgen: libclang, and the libc headers its search path lacks

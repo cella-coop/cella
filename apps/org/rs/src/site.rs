@@ -5,6 +5,7 @@ use std::process::Command;
 use crate::cli::{Site, SitePhoto};
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line};
+use crate::secret;
 
 /// The landing site, `apps/site`: Astro's dev server, or its static build
 /// into `apps/site/dist`. It is deployed nowhere.
@@ -39,6 +40,12 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
         } => {
             let mut add = repo.node("site-photo.mjs");
             add.arg(url).arg(repo.site_dir());
+            // The environment's key wins; else the development secrets'
+            if std::env::var_os("UNSPLASH_ACCESS_KEY").is_none()
+                && let Some(key) = secret::get(repo, "unsplash_access_key")?
+            {
+                add.env("UNSPLASH_ACCESS_KEY", key.as_str());
+            }
             if let Some(name) = name {
                 add.args(["--name", &name]);
             }

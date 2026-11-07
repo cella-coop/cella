@@ -876,6 +876,13 @@ log's bytes an entry with its receipt; and it fails where the peak at
 the end is more than 64 MB over the peak a tenth of the way, where the
 re-fold takes more than thirty seconds, or where the fold runs under
 its floor, a thousand entries a second until a run at full size sets it.
+The fold test plants a receipt no verdict names, once before a
+checkpoint's receipts and once after them, and one keeping an entry
+past the head, as a log cut short leaves it; the verification resumed
+from that checkpoint refuses each, and verifies again once they are
+gone. The scale tier plants them in its re-folded scope, from its
+latest checkpoint, and the notary's own tests on a log of two entries,
+each a checkpoint.
 
 Every feat and graft has a denial test, generated, which no slice opts
 into or out of (`cella test e2e denial`, run by every `cella test`): on
@@ -1603,7 +1610,14 @@ that cannot hold `redacted`, which a fold leaves null under its
 commitment, as a payslip's figures, reads that commitment. A fold resumes from a checkpoint,
 whose state it hashes again first, and verifies the log after it from
 the checkpoint's entry (`cella.verify_log(after)`), never from the
-first, so a re-fold costs what it folds, not the log's length. A slice is **folded** when every action it
+first, so a re-fold costs what it folds, not the log's length. Its check
+that every receipt names a verdict is bounded the same way: each receipt
+keeps the entry that names it, which the notary writes with it as it
+appends, so the check reads the receipts keeping an entry after the
+checkpoint's, each one a verdict it walks, and still finds a receipt no
+verdict names before the checkpoint, which keeps no entry, by the index
+of those alone, without reading the receipts or the entries there, so
+nothing it reads grows with the log's prefix. A slice is **folded** when every action it
 names, among those the scope registers and its log holds, has a fold (`cella.folded()`); the state
 hash and the compare read the folded slices and fail naming the others.
 Every slice is folded: `cella check feats` refuses an action with no

@@ -536,7 +536,7 @@ $f$;
     /// Each earlier version the notary ships, which `cella test notary`
     /// stages beside the current one, and the function its guards read the
     /// action through: `cella.op()` before 0.6.0.
-    const EARLIER: [(&str, &str); 9] = [
+    const EARLIER: [(&str, &str); 10] = [
         ("0.1.0-alpha", "op"),
         ("0.2.0", "op"),
         ("0.3.0", "op"),
@@ -546,6 +546,7 @@ $f$;
         ("0.7.0", "action"),
         ("0.8.0", "action"),
         ("0.9.0", "action"),
+        ("0.10.0", "action"),
     ];
 
     fn version() -> Option<String> {
@@ -658,7 +659,7 @@ ALTER EXTENSION cella UPDATE;"
     }
 
     #[pg_test]
-    fn a_receipt_before_a_checkpoint_is_the_checkpoint_s() {
+    fn a_receipt_no_verdict_names_is_refused_before_a_checkpoint_and_after_it() {
         beside();
         scope();
         // A receipt is numbered before its write locks the head, so entry
@@ -680,6 +681,11 @@ ALTER EXTENSION cella UPDATE;"
             verifies() && after(1) && after(2),
             "a receipt numbered out of the log's order verifies"
         );
+        let kept = Spi::get_one::<i64>(&format!(
+            "SELECT entry FROM cella.receipt WHERE n = {first}"
+        ))
+        .expect("its entry");
+        assert_eq!(kept, Some(1), "a receipt keeps the entry that names it");
         // A receipt naming no verdict, as entry 2's would with its nonce.
         let orphan = |n: i64| {
             Spi::run_with_args(
@@ -690,17 +696,43 @@ ALTER EXTENSION cella UPDATE;"
             )
             .expect("an orphan receipt");
         };
+        let gone =
+            || Spi::run("DELETE FROM cella.receipt WHERE entry IS NULL").expect("the orphan gone");
         orphan(999_999);
-        assert!(!verifies(), "the whole log refuses it");
         assert!(
-            after(1) && after(2),
-            "below the checkpoint's highest receipt, it is the checkpoint's"
+            !verifies() && !after(1) && !after(2),
+            "below the checkpoint's receipts, every verification refuses it"
         );
-        Spi::run("DELETE FROM cella.receipt WHERE n = 999999").expect("the orphan gone");
+        gone();
         orphan(first + 1_000_000_000);
         assert!(
             !verifies() && !after(1) && !after(2),
-            "above it, every verification refuses it"
+            "above them, every verification refuses it"
+        );
+        gone();
+        assert!(
+            verifies() && after(1) && after(2),
+            "the orphans gone, it verifies"
+        );
+        // A receipt keeping an entry the log has not, as one a log cut
+        // short leaves, and a receipt keeping another entry than the one
+        // naming it.
+        Spi::run_with_args(
+            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt, entry)
+             SELECT $1, op, actor, device, nonce || 'cut', request, signature, payload, at, hash, sig, key, salt, 3
+             FROM cella.receipt WHERE n = 1000000",
+            &[(first + 1).into()],
+        )
+        .expect("a receipt past the head");
+        assert!(
+            !verifies() && !after(2),
+            "a receipt past the head names no verdict"
+        );
+        Spi::run("DELETE FROM cella.receipt WHERE entry = 3").expect("it gone");
+        Spi::run("UPDATE cella.receipt SET entry = 5 WHERE entry = 2").expect("a tamper");
+        assert!(
+            !after(1) && !after(2),
+            "a receipt keeping another entry than the one naming it breaks the log"
         );
     }
 
@@ -1049,8 +1081,8 @@ END $$"#
         };
         let hash = log::hash(&prev, &entry).expect("a hash");
         Spi::run_with_args(
-            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
-             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12)",
+            "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt, entry)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 1, $12, 2)",
             &[
                 receipt.n.into(),
                 OP.into(),

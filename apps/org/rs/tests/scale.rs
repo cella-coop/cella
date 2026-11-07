@@ -492,7 +492,7 @@ impl Scope {
                                 .unwrap_or_default();
                             if let (Some(r), Some(rh)) = (e.receipt, receipt_hash) {
                                 receipts.push_str(&format!(
-                                    "{r}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}T09:00:00.000000Z\t{}\t{}\t2\t\\N\n",
+                                    "{r}\t{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}T09:00:00.000000Z\t{}\t{}\t2\t\\N\t{}\n",
                                     text(&e.op),
                                     text(&e.actor),
                                     bytea(&device),
@@ -503,6 +503,7 @@ impl Scope {
                                     e.date,
                                     bytea(rh),
                                     bytea(&notary.sign(rh).to_bytes()),
+                                    e.n,
                                 ));
                             }
                             let (receipt, cause, cause_hash) = match e.cause {
@@ -541,7 +542,7 @@ impl Scope {
                 });
         copy(
             SOURCE,
-            "cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)",
+            "cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt, entry)",
             &receipts,
         );
         copy(
@@ -959,6 +960,48 @@ fn a_generated_scope_folds_in_bounded_memory_and_re_folds_from_its_latest_checkp
     assert!(
         rate >= FLOOR_PER_SECOND,
         "the fold ran at {rate:.0} entries/s, under its floor of {FLOOR_PER_SECOND}"
+    );
+    // A receipt no verdict names, numbered before the checkpoint's receipts
+    // and after them, and one keeping an entry past the head, as a log cut
+    // short leaves it: the verification resumed from the checkpoint refuses
+    // each, reading no receipt before it.
+    let resumed = || psql(FOLD, &format!("SELECT cella.verify_log({latest})"));
+    assert_eq!(
+        resumed(),
+        "t",
+        "the re-folded log verifies after its checkpoint"
+    );
+    for (n, entry, at) in [
+        ("(SELECT min(n) - 1 FROM cella.receipt)", "NULL", "before"),
+        ("(SELECT max(n) + 1 FROM cella.receipt)", "NULL", "after"),
+        (
+            "(SELECT max(n) + 1 FROM cella.receipt)",
+            "(SELECT n + 1 FROM cella.head)",
+            "past the head",
+        ),
+    ] {
+        psql(
+            FOLD,
+            &format!(
+                "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, entry)
+                 SELECT {n}, op, actor, device, nonce || '-planted', request, signature, payload, at, hash, sig, key, {entry}
+                 FROM cella.receipt WHERE n = (SELECT min(n) FROM cella.receipt)"
+            ),
+        );
+        assert_eq!(
+            resumed(),
+            "f",
+            "a receipt no verdict names, {at} the checkpoint's, is refused"
+        );
+        psql(
+            FOLD,
+            "DELETE FROM cella.receipt WHERE nonce LIKE '%-planted'",
+        );
+    }
+    assert_eq!(
+        resumed(),
+        "t",
+        "the planted receipts gone, it verifies again"
     );
     for db in [FOLD, SOURCE] {
         psql(

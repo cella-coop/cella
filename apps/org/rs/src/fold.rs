@@ -429,15 +429,16 @@ fn since(dev: &Dev, f: &Fold<'_>, head: i64, to: i64) -> Result {
 
 /// Streams the source's signers, receipts and entries after `at` up to
 /// `to` into the database folded into, by `COPY` from one psql into the
-/// other, and moves its head to `to`. A receipt's salt stays behind: it is
-/// the owner's, and the fold reads no request.
+/// other, each receipt with the entry it keeps, and moves its head to
+/// `to`. A receipt's salt stays behind: it is the owner's, and the fold
+/// reads no request.
 fn copy(dev: &Dev, f: &Fold<'_>, at: i64, to: i64) -> Result {
     let tables = [
         ("cella.signer (id, public, since)", format!("SELECT id, public, since FROM cella.signer WHERE since > {at} AND since <= {to} ORDER BY id")),
         (
-            "cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key)",
+            "cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, entry)",
             format!(
-                "SELECT r.n, r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, r.key
+                "SELECT r.n, r.op, r.actor, r.device, r.nonce, r.request, r.signature, r.payload, r.at, r.hash, r.sig, r.key, r.entry
                  FROM cella.receipt r JOIN cella.log l ON l.receipt = r.n WHERE l.n > {at} AND l.n <= {to} ORDER BY l.n"
             ),
         ),

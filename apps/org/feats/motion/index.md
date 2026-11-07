@@ -275,6 +275,27 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   refuses it for its issuer: a circle holding `adopt-policy` alone, or
   a mandate for the power narrower than the grant, is passed over for
   the next, and where none is left the assembly decides it.
+- `motion.grant_flaw(issuer, wording, from, until)`: what is wrong with
+  a mandate policy of that wording a motion of `issuer` would adopt,
+  applying from and until those days, as the field a form names it under
+  and why, or nothing, which `putting` asks before it proposes a grant
+  or a change: its values are unsound (`circle.mandate_flaw`, under the
+  field it is about); the issuer may not decide about its grantee's
+  circle (`motion.decides`); or the issuer, not the assembly, holds no
+  mandate for the power standing that day to issue it under, or none it
+  is no wider than (`circle.parent_for`, `circle.wider`), the reason
+  naming the parent and how the grant is wider, and saying to narrow it
+  or put it to the assembly. Each reason names no one. Its values are
+  read from the wording's marks by `motion.granting`, as the copy reads
+  them, never from its words.
+- `motion.issues(motion)`: what each action of a motion does to the
+  mandates, which its page shows: for a mandate policy, the mandate it
+  granted and its parent once closed, or while open the parent it would
+  be issued under were it closed at its deadline and what
+  `motion.grant_flaw` finds wrong with it; for the end or replacement of
+  a mandate's policy, that mandate and every mandate below it its close
+  revokes (`circle.under`), those standing on the day it ends while
+  open, those revoked that day once closed.
 - `motion.circle_asks`, on `motion:motion:propose`: each mandate policy
   marks sound values (`circle.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
@@ -365,17 +386,22 @@ a trigger on core's table
 - `putting`: the proposal a motion about a circle (`about`, read from
   its page's form) makes, to the circle that decides it, naming no
   procedure, since `membership-motion`'s `propose` gives it the
-  one its requirements fix: for a grant, the circle `decider` finds
-  holding `adopt-policy` and a mandate for the power granted that the
-  grant is no wider than, the one it issues the grant under, or else
-  the assembly; titled with what it decides. Granting a mandate is
-  proposing its policy, its legal wording made from the role, the power,
+  one its requirements fix: for a grant, the issuer it names, or else
+  the circle `decider` finds holding `adopt-policy` and a mandate for
+  the power granted that the grant is no wider than, the one it issues
+  the grant under, or else the assembly; titled with what it decides.
+  Granting a mandate is proposing its policy, from and until the days it
+  names, its legal wording made from the role or the circle, the power,
   what it grants in words, its cap and its scope, each value marked
   (`The {role: finance} role holds {power: pay-supplier}, to pay suppliers, up to {limit: 3 000 €} a write`;
-  `…, in its {scope: own} circle`);
-  revoking one is proposing to end its policy, put to the circle that
-  adopted it, since a policy is ended by its own circle: a mandate the
-  assembly adopted is the assembly's to end. Setting open books'
+  `…, in its {scope: own} circle`; `The {circle: coordination} circle holds {power: send-quote}, to …, by motion, up to …`);
+  changing one is proposing a policy of those values replacing its own,
+  and revoking one is proposing to end its policy, each put to the
+  circle that adopted it, since a policy is replaced and ended by its
+  own circle: a mandate the assembly adopted is the assembly's to
+  change or end. A grant or a change `motion.grant_flaw` finds wrong is
+  refused before anything is proposed, its reason after the label of the
+  field it names. Setting open books'
   disclosure values is proposing the assembly's disclosure rule, its
   legal wording Lanterne's with the three values marked as core reads
   them ([open books](../../core/circle/index.md#open-books)), replacing
@@ -398,9 +424,10 @@ a trigger on core's table
 Adds to the motions collection's `about` the circles a motion may be
 put in, which the motion feat's New form offers.
 On a circle's page, which circle decides about it, the open motions
-about it, and Propose…: granting a mandate to one of its roles, or
-revoking one, with a deadline and why,
-posted to the `put` membership-motion serves; and its Policies,
+about it, and Propose…: granting a mandate to one of its roles or to
+it, changing one of its mandates or revoking one, with a deadline and
+why, posted to the `put` membership-motion serves (below, under
+Shell); and its Policies,
 the policies it adopted that are in force, each as its legal wording
 reads (`policy.sentence`), its kind, whether it takes a default of the
 co-op's legal form (Default, or Default, since updated, where cella has
@@ -481,6 +508,46 @@ holds the same; the page reads them from the log, so they stand once
 the outcome is dismissed, for every later reader.
 Its roll, its outcome and the stance form are `membership-motion`'s;
 the stance it posts is this feat's `vote`, for the acting member.
+
+A mandate is granted, changed and revoked from where it is read, by a
+motion this feat proposes from the circle's page, its Propose… form
+posted to the `put` membership-motion serves. Grant a mandate asks for
+its grantee, a role of the circle or the circle itself, by motion; a
+power and what it grants in words; perhaps a limit per write or a
+budget and its period; perhaps a scope; perhaps the days it applies
+from and until; and the circle whose motion issues it, the assembly or
+another that may decide about the circle and holds `adopt-policy` by
+motion (`issuers`), or else the first that holds a mandate to issue it
+under, or the assembly (`motion.decider`). The form writes the mandate
+policy's sentence with its values marked (`worded`, in the feat's
+`models/circles.ts`), shows it as it will read as it is typed, and
+proposes a motion of the issuer carrying Adopt a policy, its procedure
+the one its requirements fix. Change one of its mandates is the same
+form filled with the chosen mandate's values, proposing a policy that
+replaces its own, a motion of the circle that issued it, whose policy
+it is; Revoke one of its mandates proposes ending its policy, a motion
+of that circle too. Replacing or ending a mandate's policy revokes every
+mandate issued under it the same day, and the form says so. Before
+anything is proposed, a grant or a change is judged by
+`motion.grant_flaw(issuer, wording, from, until)`, from the day it would
+apply, the deadline unless it names one: its values as core holds them
+sound (`circle.mandate_flaw`), its issuer one that may decide about the
+grantee's circle (`motion.decides`), and, for an issuer other than the
+assembly, a mandate it holds for the power standing that day that the
+grant is no wider than, found by the SQL that finds its parent as it is
+adopted (`circle.parent_for`, `circle.wider`). A refusal is the write's
+outcome, the label of the field it is about first, then what is wrong,
+with the values it read, and what would fix it: a cap wider than the
+parent's names the limit, the parent mandate and both caps; no mandate
+to issue under names the issuer and the power. A motion's page shows,
+under Mandates, what its actions do to the mandates (`motion.issues`):
+for each grant, the parent it would be issued under were it closed at
+its deadline, and what `motion.grant_flaw` finds wrong with it as it
+stands, or once closed the mandate it granted and its parent; for each
+end or replacement of a mandate's policy, that mandate and every one
+below it its close revokes the same day (`circle.under`), or once
+closed those it revoked; each by its power, grantee, cap and issuer,
+linking to the page of the circle that lists it.
 
 A motion's state is open, passed or rejected: open until its close,
 then passed or rejected by the outcome of the stances the close froze.

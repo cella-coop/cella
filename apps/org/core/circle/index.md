@@ -584,7 +584,11 @@ core knows procedures by name alone. The parent is found as the policy is adopte
 `circle.parent_of(policy)`: the first of the issuer's mandates for the
 power, standing on the day the policy applies, that the new one is
 narrower than, or else the first it holds for the power, so a refusal
-says how the new one is wider. A grant from a circle that holds no
+says how the new one is wider. It reads the policy's values through
+`circle.parent_for(issuer, power, limit, budget, per, scope, from,
+until)`, which finds the same for values no policy holds yet, so the
+motion feat judges a grant before it is proposed by the SQL that finds
+its parent as it is adopted. A grant from a circle that holds no
 mandate for its power, or one wider than all it holds, is refused. A role every
 working circle has (`*`) is the assembly's to grant, so its mandates
 are roots; a right, no mandate, is in none of it. A power exercised "by
@@ -858,8 +862,8 @@ those every working circle has among them, and the mandates granted to
 them, each its policy's sentence as it reads (`sentences` in
 `@cella/org-policy`), with their limits, budgets, scopes and days, and
 who issued each. Who sits in it is the membership feat's, which names
-people. Proposing to grant a mandate to one of its roles or revoke one
-is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
+people. Proposing to grant a mandate to one of its roles or to it, or to
+change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
 close of a passing motion carries them out.
 
 ## Who builds on it

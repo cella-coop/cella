@@ -84,7 +84,7 @@ pub enum Command {
         /// The fixture's directory name, such as lanterne
         fixture: String,
 
-        /// Play an e2e scenario's story into the dev database (repeatable)
+        /// Play one e2e scenario's story into the dev database; reset before another
         #[arg(long, value_name = "NAME", conflicts_with = "url")]
         scenario: Vec<String>,
 

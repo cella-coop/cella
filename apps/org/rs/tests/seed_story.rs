@@ -81,6 +81,68 @@ fn governance_is_left_in_the_dev_database() {
 }
 
 #[test]
+fn two_stories_are_refused_before_founding() {
+    let _cluster = CLUSTER.lock().unwrap();
+    let db = format!("seed_two_stories_{}", std::process::id());
+    let reset = cella(&db, &["db", "reset"]);
+    assert!(
+        reset.status.success(),
+        "{}",
+        String::from_utf8_lossy(&reset.stderr)
+    );
+    let result = (|| {
+        let seeded = cella(
+            &db,
+            &[
+                "seed",
+                "lanterne",
+                "--scenario",
+                "governance",
+                "--scenario",
+                "authority",
+            ],
+        );
+        assert!(!seeded.status.success());
+        let error = String::from_utf8_lossy(&seeded.stderr);
+        assert!(
+            error.contains("seed one story") && error.contains("cella db reset"),
+            "{error}"
+        );
+        let rows = Command::new("psql")
+            .args(["-X", "-q", "-t", "-A", "-h", "127.0.0.1", "-p"])
+            .arg(std::env::var("CELLA_PGPORT").unwrap_or_else(|_| "54342".into()))
+            .args([
+                "-U",
+                "postgres",
+                "-d",
+                &db,
+                "-c",
+                "SELECT count(*) FROM cella.log",
+            ])
+            .output()
+            .expect("psql");
+        assert!(
+            rows.status.success(),
+            "{}",
+            String::from_utf8_lossy(&rows.stderr)
+        );
+        assert_eq!(String::from_utf8_lossy(&rows.stdout).trim(), "0");
+    })();
+    let drop = Command::new("dropdb")
+        .args(["--if-exists", "--force", "-h", "127.0.0.1", "-p"])
+        .arg(std::env::var("CELLA_PGPORT").unwrap_or_else(|_| "54342".into()))
+        .args(["-U", "postgres", &db])
+        .output()
+        .expect("dropdb");
+    assert!(
+        drop.status.success(),
+        "{}",
+        String::from_utf8_lossy(&drop.stderr)
+    );
+    result
+}
+
+#[test]
 fn authority_is_left_in_the_dev_database() {
     let _cluster = CLUSTER.lock().unwrap();
     let db = format!("seed_authority_{}", std::process::id());

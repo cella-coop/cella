@@ -6,10 +6,13 @@
 // amount over her limit and a record her scope does not cover; closing
 // coordination's open m-2026-013 grants finance a second mandate under
 // the root, and closing the assembly's m-2026-014 ends the root and
-// revokes every mandate under it the same day. Run by `cella test e2e
-// chain`.
+// revokes every mandate under it the same day; its story, as `cella seed`
+// plays it, leaves those two motions open for a reader to close. Run by
+// `cella test e2e chain`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { carried, close } from '@cella/org-graft-membership-motion/api'
@@ -80,7 +83,7 @@ test('Sofia, the print buyer, is refused a power she holds by no mandate, Brand\
   assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /the actor holds approve-bill by no mandate covering ag's records/)
 })
 
-test('closing m-2026-013 grants finance a second mandate under coordination\'s; closing m-2026-014 ends coordination\'s and revokes every mandate under it the same day', async () => {
+unseeded('closing m-2026-013 grants finance a second mandate under coordination\'s; closing m-2026-014 ends coordination\'s and revokes every mandate under it the same day', async () => {
   assert.equal((await close({ motion: 'm-2026-013' }, as(camille))).state, 'settled')
   assert.deepEqual((await carried('m-2026-013', as(camille))).map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])
   assert.deepEqual((await bills()).map((m) => [m.grantee, m.parent, m.limit]), [
@@ -99,3 +102,5 @@ test('closing m-2026-013 grants finance a second mandate under coordination\'s; 
   ])
   assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /the actor holds no mandate for approve-bill/)
 })
+
+if (!process.env.CELLA_STORY) runTest('chain story', async (t) => story((name, step) => t.test(name, step)))

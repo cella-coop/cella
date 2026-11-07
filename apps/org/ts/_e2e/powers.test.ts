@@ -12,7 +12,9 @@
 // through; `SHOTS` names where its screenshots go. Run by `cella test e2e
 // powers`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
@@ -120,7 +122,7 @@ test('Inès, no member, reading Camille\'s tab finds no right on it', async () =
   }
 })
 
-test('in every browser, light and dark, Camille\'s Powers tab opens and its commit\'s line leads to the mandate\'s chain', async () => {
+unseeded('in every browser, light and dark, Camille\'s Powers tab opens and its commit\'s line leads to the mandate\'s chain', async () => {
   const commit = await mandate('manager', 'commit')
   await shell.stop()
   mkdirSync(shots, { recursive: true })
@@ -158,3 +160,5 @@ test('in every browser, light and dark, Camille\'s Powers tab opens and its comm
     }
   }
 })
+
+if (!process.env.CELLA_STORY) runTest('powers story', async (t) => story((name, step) => t.test(name, step)))

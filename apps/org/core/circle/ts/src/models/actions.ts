@@ -12,6 +12,13 @@ export const actions = {
   // ordered, since the procedure it sets decides the motions put to the
   // circle after it
   'circle:circle:amend': ordered({ power: 'amend-circle' }),
+  // a new role in a circle, or a `*` role every working circle has, by the
+  // motion it cites; ordered, since the same motion's later actions seat
+  // people in it
+  'circle:role:make': ordered({ power: 'amend-circle' }),
+  // a role's name, duty or cap, by the motion it cites; ordered, since a
+  // cap counts the seats on the day
+  'circle:role:amend': ordered({ power: 'amend-circle' }),
   // who holds which role; a seat is given by the motion it cites, such
   // as the admission that seats a new member in the assembly
   'circle:seat:add': ordered({ power: 'seat-member' }),

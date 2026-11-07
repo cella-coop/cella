@@ -3,6 +3,7 @@ import { outcome, states, type Roll, type State } from '../models/roll.ts'
 import type { Standing } from '../models/asking.ts'
 import Appoint from './blocks/Appoint.svelte'
 import Terms from './blocks/Terms.svelte'
+import Roles from './blocks/Roles.svelte'
 import Electorate from './blocks/Electorate.svelte'
 import Membership from './blocks/Membership.svelte'
 import Outcome from './blocks/Outcome.svelte'
@@ -13,8 +14,8 @@ const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejecte
 // rejected, its views and its board, on which dragging an open motion
 // into Passed or Rejected is its close; a motion's roll, each member's
 // stance and its outcome, and the form a member on the roll casts their
-// stance with; and a circle's Settings tab, its terms, which a motion
-// amends.
+// stance with; and a circle's Settings tab, its terms and its roles,
+// which a motion amends and makes.
 export const app: App = {
   name: 'membership-motion/circles',
   extends: {
@@ -50,7 +51,14 @@ export const app: App = {
       },
     },
     circles: {
-      page: { actions: Appoint, tabs: [{ id: 'settings', label: 'Settings' }], blocks: [{ tab: 'settings', block: Terms }] },
+      page: {
+        actions: Appoint,
+        tabs: [{ id: 'settings', label: 'Settings' }],
+        blocks: [
+          { tab: 'settings', block: Terms },
+          { tab: 'settings', block: Roles },
+        ],
+      },
     },
   },
 }

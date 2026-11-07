@@ -128,7 +128,7 @@ for (const [name, launch] of browsers()) {
           await page.waitForURL(`${dev.base}/circles/web?tab=settings`)
           await page.waitForLoadState('networkidle')
 
-          const form = page.locator('form.settings')
+          const form = page.locator('form.settings').first()
           assert.equal(await form.getByLabel('Name').inputValue(), was, `${at}: its name in force`)
           assert.equal(await form.getByLabel('Decides by').inputValue(), 'consent', `${at}: its procedure in force`)
           assert.equal(await form.getByText('A motion of General assembly changes it').count(), 3, `${at}: each term is the assembly's motion's to change`)

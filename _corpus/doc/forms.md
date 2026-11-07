@@ -1,6 +1,6 @@
 +++
 title = "Legal forms"
-updated = 2026-11-09
+updated = 2026-11-12
 +++
 
 # Legal forms
@@ -93,7 +93,7 @@ and by which motion ([generated documents](../../apps/org/feats/document/index.m
 | `adopt-document` | mandate | the assembly adopts a document's version | cella |
 | `seat-member` | mandate, protected | the assembly gives and ends seats | cella |
 | `create-circle` | mandate | the assembly creates a circle, by motion, which holds the default bundle from that day | cella |
-| `amend-circle` | mandate | the assembly changes a circle's name, purpose or procedure, by motion, its id kept | cella |
+| `amend-circle` | mandate | the assembly changes a circle's name, purpose or procedure, by motion, its id kept, and makes and changes its roles | cella |
 | `withdraw-membership` | right, protected | every member withdraws from the co-op by their own action | Code de commerce art. L231-6 |
 | `keep-profile` | right, protected | every person keeps their own profile | GDPR art. 16 |
 | `keep-devices` | right, protected | every person enrols and revokes their own devices | cella |

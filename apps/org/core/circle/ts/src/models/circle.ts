@@ -104,6 +104,37 @@ export interface Amended {
   was: Terms
 }
 
+// What a role may be changed in, by the motion that amends it: its name,
+// its duty and its cap, each left as it is where none is given.
+export interface Duties {
+  name?: string | null
+  duty?: string | null
+  holders?: number | null
+}
+
+// A role to make in a circle, or in every working circle (`*`), by the
+// motion that makes it, which the write cites; no cap, uncapped.
+export interface Make {
+  id: string
+  circle: string
+  name: string
+  duty: string
+  holders: number | null
+  motion: string
+}
+
+// A role to amend, by the motion that changes it, which the write cites.
+export interface Remake extends Duties {
+  role: string
+  motion: string
+}
+
+// The role amended and what each term it changed was.
+export interface Remade {
+  role: string
+  was: Duties
+}
+
 // The circle created and the default bundle it holds from its first day:
 // the mandates on the roles every circle has, in force that day, by id.
 export interface Created {

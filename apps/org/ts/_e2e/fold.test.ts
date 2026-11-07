@@ -261,11 +261,14 @@ test('24 October: the assembly and coordination put their motions, which are dis
   const adopts = (await one<{ policy: string }>(`SELECT policy FROM circle.mandate WHERE grantee = 'coordination' AND power = 'adopt-document'`)).policy
   const founding = (await one<{ policy: string }>(`SELECT policy FROM account.terms WHERE id = 'm-2021-001-43'`)).policy
   const patronage = (await one<{ policy: string }>(`SELECT policy FROM patronage.terms ORDER BY id LIMIT 1`)).policy
-  await proposed('assembly', 'ag', 'Admit Nadia, create Design, amend Web, adopt the handbook and the new terms', [
+  await proposed('assembly', 'ag', 'Admit Nadia, create Design, amend Web and its roles, adopt the handbook and the new terms', [
     { kind: 'admit', args: { member: nadia, shares: 20 } },
     { kind: 'circle', args: { id: 'design', name: 'Design', purpose: 'product and service design' } },
     { kind: 'seat', args: { circle: 'design', member: sofia } },
     { kind: 'amend-circle', args: { circle: 'web', purpose: 'the studio\'s websites' } },
+    { kind: 'role', args: { circle: 'web', id: 'editor', name: 'Editor', duty: 'edits the studio\'s copy', holders: 1 } },
+    { kind: 'seat', args: { circle: 'web', member: sofia, role: 'editor' } },
+    { kind: 'amend-role', args: { role: 'print-buyer', duty: 'orders Brand\'s print and paper' } },
     { kind: 'policy', args: { kind: 'rule', wording: capitalRule(20), replaces: founding } },
     { kind: 'policy', args: { kind: 'rule', wording: workRule, from: '2027-01-01', replaces: patronage } },
     { kind: 'end', args: { policy: adopts } },
@@ -290,7 +293,7 @@ test('24 October: the assembly and coordination put their motions, which are dis
   settled(await cancel({ meeting: later.meeting }, as(camille)))
 })
 
-test('31 October: the closes carry Inès\'s and Nadia\'s admissions, their subscriptions, the new terms, Design, Web\'s purpose and the handbook; Inès spreads hers and Nadia pays hers in', async () => {
+test('31 October: the closes carry Inès\'s and Nadia\'s admissions, their subscriptions, the new terms, Design, Web\'s purpose and Editor role, the print buyer\'s duty and the handbook; Inès spreads hers and Nadia pays hers in', async () => {
   await on('2026-10-31')
   settled(await close({ motion: 'm-2026-012' }, as(camille)))
   await closed('assembly')

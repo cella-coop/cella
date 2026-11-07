@@ -43,8 +43,11 @@ export async function held(db: Db, member: string): Promise<Held[]> {
 // `membership.may` and `membership.entitled` grant it: each mandate
 // `membership.holds` gives, in the circle of its seat, with the tenure
 // that holds its role there, none for the participant's, and its caps and
-// scope; and each right `membership.rights` gives. A power held twice is
-// listed twice.
+// scope; and each right `membership.rights` gives, with its power and
+// limit, which it reads as its owner and answers the reader for
+// themselves, or for anyone where they are a member: never by joining
+// `circle.right`, which a non-member reads no row of. A power held twice
+// is listed twice.
 export async function powers(db: Db, member: string): Promise<Power[]> {
   const { rows } = await db.query<Power>(
     `SELECT 'm' || md.id || '@' || h.circle || coalesce('#' || t.id, '') AS id, md.power, md.id::text AS mandate,
@@ -61,8 +64,7 @@ export async function powers(db: Db, member: string): Promise<Power[]> {
      UNION ALL
      SELECT 'r' || g.id, g.power, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
        cella.cents(g."limit"), NULL, NULL, NULL, NULL, g."right"
-     FROM membership.rights($1, cella.verdict_date()) x
-     JOIN circle.right g ON g.id = x."right"
+     FROM membership.rights($1, cella.verdict_date()) g
      ORDER BY power, "right" NULLS FIRST, "circleName", tenure NULLS LAST, mandate`,
     [member],
   )

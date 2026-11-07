@@ -33,11 +33,12 @@ export const app: App = {
       page: {
         eyebrow: 'Motion',
         title: (d: Detail) => d.title,
-        subtitle: (d: Detail) => `${d.id} · by ${d.terms.label.toLowerCase()} in ${d.circle}`,
+        subtitle: (d: Detail) => `${d.id} · put by ${d.authorName} · by ${d.terms.label.toLowerCase()} in ${d.circle}`,
         properties: (d: Detail) => [
           { label: 'Procedure', value: d.terms.label },
           ...(terms(d.terms) === d.terms.label.toLowerCase() ? [] : [{ label: 'Terms', value: terms(d.terms) }]),
           { label: 'Circle', value: d.circle, href: `/circles/${d.circle}` },
+          { label: 'Put by', value: d.authorName },
           { label: 'Proposed', value: d.proposed, kind: 'date' },
           { label: 'Deadline', value: d.deadline, kind: 'date' },
           { label: 'Closed', value: d.closed, kind: 'date' },

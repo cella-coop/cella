@@ -454,9 +454,9 @@ page shows Open books.
 
 The `motions` collection, open ones first. Its New form proposes one:
 the circle it is put in, from those its circles' part lists in the
-collection's `about`, and no procedure, since its requirements fix the one it is decided by, which its page shows; the deadline, the title and the text; and the
+collection's `about`, and no procedure, since its requirements fix the one it is decided by, which its page shows; whom it is put by, its chosen circle or a role the acting member holds by a tenure on the day (`motion.authored`), the roles listed in the collection's `about` for that member (`authors`, by active tenure), its circle by default. Choosing a role sends its id as the proposal's `author`; choosing the circle sends no author. The server checks the choice again on the verdict date. The form also asks for the deadline, the title and the text; and the
 actions it carries, each a kind from `motion.carries`, whose arguments the
-form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows its proposal and each action it
+form then asks for: Adopt a policy asks for its kind, from the three this feat adds to the collection's `about` (`policyKinds`), its wording with each value marked `{name: value}`, perhaps its plain words, the days it applies from and until, the policy it replaces, from those not ended (`policies`), the procedure that alone changes it, from those in force (`protections`), and the default it takes, from the defaults of the forms the register offers (`defaults`); End a policy asks for the policy it ends, from the same list. A motion's page shows who put it, its circle or the role by name (`authorName`), never the person who proposed it as that role, its proposal and each action it
 carries, its arguments by its kind's labels, a member by name, the default a policy takes as its form names it, each default the motion leaves and by which of its actions, every stance given as its activity, on a secret ballot the reader's own alone, and closes it (`close`).
 Once closed, it shows under the close each effect the close's
 transaction wrote, as the log keeps them (`effects`, read with the
@@ -499,8 +499,8 @@ open a message as the acting member, or a reply to the one chosen. The stances g
 Activity card, their one home.
 
 A motion drawn elsewhere is one card, the feat's `Card` (`./app`):
-its title, circle, method and where it stands, linking to its page, over
-the motions `summaries` (`./api`) reads. `document-motion` embeds
+its title, circle and who put it (the circle's name or the role's name), method and where it stands, linking to its page, over
+the motions `summaries` (`./api`) reads, including each motion's author and its readable name. `document-motion` embeds
 it in documents, `meeting-motion` in a meeting's minutes.
 
 ## Domain

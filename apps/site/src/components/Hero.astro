@@ -7,6 +7,7 @@
 // without a print, stands beside the words on a card; with a print, the
 // print alone shows.
 import Art from './Art.astro'
+import Plate from './Plate.astro'
 import Button from './Button.astro'
 import Showcase from './Showcase.astro'
 import type { Status } from '../lib/photo'
@@ -32,11 +33,13 @@ interface Props {
 const { hero, size = 'large', tone, surface } = Astro.props
 const art = hero.backdrop
 const named = typeof art === 'string' ? art : art?.photo
-const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
+// A large hero with a print is laid as a plate; a small one, as a cut print
+const layout = art && named ? (size === 'large' ? 'plate' : 'art') : hero.figure ? 'figure' : 'plain'
 ---
 
 <section class="hero band" id="top" data-layout={layout} data-size={size} data-surface={surface}>
-  {art && <Art photo={art} tone={tone} side={'end'} key={`hero-${named}`} />}
+  {layout === 'plate' && named && <Plate photo={named} tone={tone} key={`hero-${named}`} />}
+  {layout === 'art' && art && <Art photo={art} tone={tone} side={'end'} key={`hero-${named}`} />}
   <div class="wrap grid">
     <div class="copy">
       {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
@@ -95,6 +98,21 @@ const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
   .hero[data-layout='art'] .copy {
     max-width: 34rem;
     width: calc(50% - 3rem);
+  }
+
+  /* A plate: the drawing over the band, the words left of its axis */
+  .hero[data-layout='plate'] {
+    display: flex;
+    align-items: center;
+    min-height: clamp(36rem, 88vh, 56rem);
+  }
+
+  .hero[data-layout='plate'] .copy {
+    max-width: 26rem;
+  }
+
+  .hero[data-layout='plate'] h1 {
+    font-size: clamp(var(--t-4xl), 5vw, calc(var(--t-4xl) * 1.8));
   }
 
   /* With a figure: the figure on a card beside the words */
@@ -157,17 +175,20 @@ const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
 
   /* A narrow screen: the print above, the words under it */
   @media (max-width: 56rem) {
-    .hero[data-layout='art'] {
+    .hero[data-layout='art'],
+    .hero[data-layout='plate'] {
       display: block;
       min-height: 0;
       padding-top: 0;
     }
 
-    .hero[data-layout='art'] .grid {
+    .hero[data-layout='art'] .grid,
+    .hero[data-layout='plate'] .grid {
       margin-top: 1.5rem;
     }
 
-    .hero[data-layout='art'] .copy {
+    .hero[data-layout='art'] .copy,
+    .hero[data-layout='plate'] .copy {
       width: auto;
       max-width: none;
     }

@@ -55,6 +55,29 @@ const CACHE = join(process.cwd(), '.astro/print')
 // A change to how a mask is made bumps it, so no stale mask is reused
 const VERSION = 2
 
+/** A photo in one ink, black, levelled as a print's mask is, as a JPEG at
+ * a width: the plate's picture, which the page lays into its paper. Kept
+ * as a mask is. */
+export const monoUrl = (name: string, size: Size) => `/mono/${name}-${WIDTHS[size]}.jpg`
+
+export const monoKeys = () => photoNames().flatMap((name) => [WIDTHS.hero, WIDTHS.large].map((width) => ({ name, width })))
+
+export async function mono(name: string, width: number) {
+  const cached = join(CACHE, `mono-${name}-${width}-${statSync(file(name)).mtimeMs}-${VERSION}.jpg`)
+  if (existsSync(cached)) {
+    return readFileSync(cached)
+  }
+  const jpeg = await sharp(readFileSync(file(name)))
+    .resize({ width: Math.round(width * SCALE) })
+    .grayscale()
+    .normalise({ lower: 1, upper: 99 })
+    .jpeg({ quality: 78, mozjpeg: true })
+    .toBuffer()
+  mkdirSync(CACHE, { recursive: true })
+  writeFileSync(cached, jpeg)
+  return jpeg
+}
+
 /** A photo's ink, unless one is named: its own, from its name, the same on
  * every page. */
 export const inkOf = (name: string, ink?: Status): Status =>

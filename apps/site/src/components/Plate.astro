@@ -1,0 +1,168 @@
+---
+// A plate: a hero laid as a neo-Swiss specimen plate (index.md, the
+// plate). The paper of its band; a technical drawing over it, hairlines in
+// the text's ink and one line in the band's tone; a photo in one ink laid
+// into the paper on the far side, cut on its near edge as a cell's; and
+// the words on the near side. On a narrow screen the photo stands above
+// the words and the drawing behind both.
+import { cut } from '../lib/cut'
+import { drawing } from '../lib/plate'
+import { monoUrl } from '../lib/print'
+import type { Status } from '../lib/photo'
+
+interface Props {
+  photo: string
+  tone: Status
+  key: string
+}
+
+const { photo, tone, key } = Astro.props
+const id = `plate-${key.replace(/[^a-z0-9-]/g, '-')}`
+const wide = cut(key, 'left', { reach: [0.08, 0.3], round: 0.05 })
+const narrow = cut(`${key}-narrow`, 'below', { reach: [0.1, 0.3], round: 0.05 })
+const style = {
+  // the band's hue at twice its chroma, mid-light, so it reads in either theme
+  '--accent': `oklch(from oklch(0.6 var(--tone-${tone})) l calc(c * 2) h)`,
+  '--cut': `url(#${id}-wide)`,
+  '--cut-narrow': `url(#${id}-narrow)`,
+  '--photo': `url(${monoUrl(photo, 'hero')})`,
+  '--photo-narrow': `url(${monoUrl(photo, 'large')})`,
+}
+const lines = drawing()
+---
+
+<svg class="clips" aria-hidden="true" width="0" height="0">
+  <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox"><path d={wide} /></clipPath>
+  <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox"><path d={narrow} /></clipPath>
+</svg>
+<div class="plate" style={style} aria-hidden="true">
+  <div class="photo"></div>
+  <div class="lines" set:html={lines} />
+</div>
+
+<style>
+  .clips {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  .plate {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  /* The photo in one ink, laid into the paper: its whites the paper's */
+  .photo {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 54%;
+    background: var(--photo) center / cover no-repeat;
+    mix-blend-mode: multiply;
+    clip-path: var(--cut);
+  }
+
+  /* In the dark theme the paper is dark: the photo lies on it as it is */
+  :global([data-theme='dark']) .photo {
+    mix-blend-mode: normal;
+    opacity: 0.9;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .photo {
+      mix-blend-mode: normal;
+      opacity: 0.9;
+    }
+  }
+
+  /* The drawing over all, a hair at any size */
+  .lines,
+  .lines :global(svg) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .lines :global(line),
+  .lines :global(circle) {
+    fill: none;
+    stroke-width: 1;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .lines :global(.ink) {
+    stroke: var(--text);
+    opacity: 0.7;
+  }
+
+  .lines :global(.faint) {
+    stroke: var(--text);
+    opacity: 0.18;
+  }
+
+  .lines :global(.strong) {
+    stroke-width: 1.5;
+    opacity: 0.85;
+  }
+
+  .lines :global(.dash) {
+    stroke-dasharray: 3 5;
+  }
+
+  .lines :global(.tone) {
+    stroke: var(--accent);
+    stroke-width: 2;
+    opacity: 1;
+  }
+
+  .lines :global(.tone.soft) {
+    fill: color-mix(in oklch, var(--accent) 45%, transparent);
+    stroke: none;
+  }
+
+  .lines :global(.fill) {
+    fill: var(--text);
+    stroke: none;
+    opacity: 1;
+  }
+
+  .lines :global(.tone.fill) {
+    fill: var(--accent);
+  }
+
+  .lines :global(.paper) {
+    stroke: var(--ground);
+    stroke-width: 1.5;
+  }
+
+  .lines :global(.note) {
+    fill: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  .lines :global(.note.big) {
+    fill: var(--text);
+    font-family: var(--font-display);
+    font-size: 30px;
+    font-weight: 700;
+  }
+
+  @media (max-width: 56rem) {
+    .plate {
+      position: relative;
+      inset: auto;
+      height: max(18rem, 70vw);
+    }
+
+    .photo {
+      width: 100%;
+      background-image: var(--photo-narrow);
+      clip-path: var(--cut-narrow);
+    }
+  }
+</style>

@@ -125,6 +125,24 @@ build. The print's credit sits in a corner clear of the cut, plain
 small text in the print's muted ink, which its light paper carries in
 either theme.
 
+### The plate
+
+A large hero with a print is laid as a **plate**, after a neo-Swiss
+specimen plate (`Plate.astro`): the band's paper; over it a technical
+drawing, `src/lib/plate.ts`, an axis with its scale, dashed orbits,
+construction hairlines, registration marks, numbered points and a node,
+in hairlines of the text's ink that stay a hair at any size, and one
+line and the node's ring in the band's hue at twice its chroma, the
+colour the plate wears; and on the far side the photo in one ink,
+greyscale and levelled, laid into the paper by multiplying it, so the
+paper's grain shows through, its near edge cut as a cell's. The words
+stand left of the axis; on a narrow screen the photo stands above them.
+The drawing is laid on a 1440 by 900 field the band slices to its own
+size; its only marks are numbers and the letters a figure wears. The
+photo in one ink is its own file, `/mono/<photo>-<width>.jpg`, made by
+the static endpoint `src/pages/mono/[key].jpg.ts` at 1200 and 600 CSS
+pixels and kept as a mask is.
+
 ## Prints
 
 A print is shown as the brand explorer shows one: a picture on the

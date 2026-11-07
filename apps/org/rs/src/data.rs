@@ -63,11 +63,20 @@ pub fn fixture(repo: &Repo, name: &str) -> Result<PathBuf> {
     Ok(dir)
 }
 
-pub fn seed(repo: &Repo, steps: &Steps, fixture: &str, url: Option<&str>) -> Result {
+pub fn seed(
+    repo: &Repo,
+    steps: &Steps,
+    fixture: &str,
+    url: Option<&str>,
+    scenarios: &[String],
+) -> Result {
     let dir = self::fixture(repo, fixture)?;
     repo.install(steps)?;
     let mut cmd = on(&Dev::new(repo), url, "node")?;
     cmd.arg(repo.root.join("tools/seed.mjs")).arg(dir);
+    for name in scenarios {
+        cmd.arg("--scenario").arg(name);
+    }
     steps.run(&format!("seed {fixture}"), &mut [cmd], last_line)
 }
 

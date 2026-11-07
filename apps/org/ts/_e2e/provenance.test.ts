@@ -10,7 +10,9 @@
 // Léa's approval is refused. Run by `cella test e2e provenance`.
 // unfolded: it stages Web's lead role around the notary, which its logged writes then name, since no write makes a role yet
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -206,3 +208,5 @@ test('the assembly ending coordination\'s approve-expense revokes Web\'s lead\'s
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
+
+if (!process.env.CELLA_STORY) runTest('provenance story', async (t) => story((name, step) => t.test(name, step)))

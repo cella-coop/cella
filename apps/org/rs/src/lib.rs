@@ -51,9 +51,11 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
             url.as_deref(),
             erasures.as_deref(),
         ),
-        Command::Seed { fixture, url } => {
-            data::seed(&Repo::find()?, &steps, &fixture, url.as_deref())
-        }
+        Command::Seed {
+            fixture,
+            scenario,
+            url,
+        } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref(), &scenario),
         Command::Import {
             kind,
             file,

@@ -8,7 +8,9 @@
 // four against fails, one with seven for and three against passes,
 // whatever procedure its proposal names. Run by `cella test e2e procedure`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -147,3 +149,5 @@ test('put under it, six for and four against fails, seven for and three against 
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
+
+if (!process.env.CELLA_STORY) runTest('procedure story', async (t) => story((name, step) => t.test(name, step)))

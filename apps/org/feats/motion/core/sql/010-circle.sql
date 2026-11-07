@@ -101,8 +101,9 @@ END;
 -- keeping one in force on the verdict date (`circle.sovereignty`):
 -- another adopted earlier in the motion with no `from` and no `until`,
 -- or one in force it holds that the motion does not end.
--- A rule marking open books' disclosure values is the assembly's and
--- marks them soundly (`circle.disclosure_flaw`).
+-- A rule marking open books' disclosure values, or the parts of the
+-- structure it publishes, is the assembly's and marks them soundly
+-- (`circle.disclosure_flaw`, `circle.publication_flaw`).
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -149,6 +150,15 @@ BEGIN ATOMIC
       AND circle.sovereign_by(CASE m.kind WHEN 'end' THEN m.args ->> 'policy' WHEN 'policy' THEN nullif(m.args ->> 'replaces', '') END)
     UNION ALL
     SELECT circle.disclosure_flaw(k.marks, d.circle)
+    FROM motion.action m
+    JOIN motion.motion d ON d.id = m.motion
+    CROSS JOIN LATERAL (
+      SELECT jsonb_object_agg(p.name, jsonb_build_object('literal', p.literal, 'stricter', p.stricter)) AS marks
+      FROM policy.marks(m.args ->> 'wording') p
+    ) k
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    UNION ALL
+    SELECT circle.publication_flaw(k.marks, d.circle)
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
     CROSS JOIN LATERAL (

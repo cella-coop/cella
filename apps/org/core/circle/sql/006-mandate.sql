@@ -244,10 +244,100 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
+-- The parts a publication's literal names, in its order: a list by
+-- commas and a last `and`, each trimmed and in lower case.
+CREATE FUNCTION circle.parts(literal text) RETURNS text[]
+LANGUAGE sql IMMUTABLE
+RETURN ARRAY(
+  SELECT btrim(t.p)
+  FROM regexp_split_to_table(lower(coalesce(literal, '')), '\s*,\s*(and\s+)?|\s+and\s+') WITH ORDINALITY AS t(p, n)
+  WHERE btrim(t.p) <> ''
+  ORDER BY t.n
+);
+
+-- What is wrong with the publication, by its marks as written, as
+-- `circle.disclosure_flaw` reads them, and the circle adopting it, or
+-- null: null too for a rule marking no `publish`. It is the assembly's,
+-- marks `publish` and nothing else, and names at least one part, each
+-- of circles, roles, mandates, seats and register.
+CREATE FUNCTION circle.publication_flaw(marks jsonb, issuer text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN NOT coalesce(marks, '{}') ? 'publish' THEN NULL
+    WHEN issuer IS DISTINCT FROM circle.assembly()
+      THEN 'what of its structure the co-op publishes is the assembly''s: only a motion of the assembly adopts it'
+    WHEN x.other IS NOT NULL
+      THEN 'a publication marks publish and nothing else, not ' || x.other
+    WHEN cardinality(x.parts) = 0
+      THEN 'a publication names what it publishes, any of circles, roles, mandates, seats and register, as {publish: circles and roles}'
+    WHEN x.unknown IS NOT NULL
+      THEN 'a publication publishes any of circles, roles, mandates, seats and register, as {publish: circles and roles}, not ' || x.unknown
+  END
+  FROM (
+    SELECT v.parts,
+           (SELECT k FROM jsonb_object_keys(coalesce(marks, '{}')) k WHERE k <> 'publish' ORDER BY k LIMIT 1) AS other,
+           (SELECT u.p FROM unnest(v.parts) WITH ORDINALITY AS u(p, n)
+            WHERE u.p <> ALL (ARRAY['circles', 'roles', 'mandates', 'seats', 'register']) ORDER BY u.n LIMIT 1) AS unknown
+    FROM (SELECT circle.parts(marks #>> '{publish,literal}') AS parts) v
+  ) x;
+END;
+
+-- The publication's parts as its rule names them, and its days; no row
+-- for a policy that marks no `publish`.
+CREATE FUNCTION circle.publication_of(ref text) RETURNS TABLE (parts text[], "from" date, until date)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT circle.parts(v.literal), p.applies, p.ends
+  FROM policy.policy p
+  JOIN policy.value v ON v.policy = p.id AND v.name = 'publish'
+  WHERE p.id = publication_of.ref AND p.kind = 'rule';
+END;
+
+-- Copies the publication into `circle.publication` in the write that
+-- adopts it, and revokes the parts of the policy it replaces the day it
+-- applies, whatever it is. Returns the row it made, or null for a
+-- policy that marks no `publish`; a publication that is unsound is
+-- refused (SQLSTATE 09000).
+CREATE FUNCTION circle.publication_from(ref text) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE
+  wrong text;
+  made bigint;
+BEGIN
+  UPDATE circle.publication o SET revoked = p.applies
+  FROM policy.policy p
+  WHERE p.id = ref AND o.policy = p.replaces AND o.revoked IS NULL;
+  IF NOT EXISTS (SELECT FROM circle.publication_of(ref)) THEN
+    RETURN NULL;
+  END IF;
+  wrong := circle.publication_flaw(circle.marks_of(ref), (SELECT p.circle FROM policy.policy p WHERE p.id = ref));
+  IF wrong IS NOT NULL THEN
+    RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  INSERT INTO circle.publication (policy, parts, "from", until)
+  SELECT ref, o.parts, o."from", o.until
+  FROM circle.publication_of(ref) o
+  RETURNING id INTO made;
+  RETURN made;
+END
+$$;
+
+-- Revokes the parts of a publication that ended, on the day it ended,
+-- in the write that ends it.
+CREATE FUNCTION circle.publication_ended(ref text) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE circle.publication o SET revoked = p.ends
+  FROM policy.policy p
+  WHERE p.id = publication_ended.ref AND o.policy = p.id AND p.ends IS NOT NULL AND o.revoked IS NULL;
+END;
+
 -- Copies a mandate policy's values into the mandate they grant, with its
 -- issuer and the mandate it is issued under, or a
--- right policy's into the right, and a disclosure rule's into open books
--- (`circle.disclosure_from`), in the write that adopts it, and revokes
+-- right policy's into the right, a disclosure rule's into open books
+-- (`circle.disclosure_from`) and a publication's into its parts
+-- (`circle.publication_from`), in the write that adopts it, and revokes
 -- the mandate or the right of the policy it replaces the day it applies,
 -- with every mandate issued under that mandate (`circle.revoke`).
 -- Returns the mandate, or null for a right or a policy of another kind,
@@ -263,6 +353,7 @@ DECLARE
   gone bigint[] := '{}';
 BEGIN
   PERFORM circle.disclosure_from(ref);
+  PERFORM circle.publication_from(ref);
   SELECT p.kind INTO k FROM policy.policy p WHERE p.id = ref AND p.kind IN ('mandate', 'right');
   IF k IS NULL THEN
     RETURN QUERY SELECT NULL::bigint, gone;
@@ -296,7 +387,8 @@ BEGIN
 END
 $$;
 
--- Revokes the mandate, the right or the disclosure values of a policy
+-- Revokes the mandate, the right, the disclosure values or the
+-- publication of a policy
 -- that ended, on the day it ended, in the write that ends it, and with the mandate every mandate
 -- issued under it (`circle.revoke`). Returns the mandate, or null, and
 -- the mandates it revoked, the policy's first.
@@ -307,6 +399,7 @@ DECLARE
   gone bigint[];
 BEGIN
   PERFORM circle.disclosure_ended(ref);
+  PERFORM circle.publication_ended(ref);
   UPDATE circle.right r SET revoked = p.ends
   FROM policy.policy p
   WHERE p.id = ref AND r.policy = p.id AND p.kind = 'right' AND p.ends IS NOT NULL AND r.revoked IS NULL;
@@ -354,9 +447,17 @@ BEGIN ATOMIC
     ) THEN r.id || ' sets no disclosure values open books reads: its values are copied as it is adopted'
     WHEN EXISTS (SELECT FROM circle.disclosure s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle.disclosure_of(r.id))
       THEN r.id || ' marks no disclosure value, and sets some'
+    WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle.publication_of(r.id)) AND NOT EXISTS (
+      SELECT FROM circle.publication_of(r.id) v
+      JOIN circle.publication s ON s.policy = r.id
+      WHERE (s.parts, s."from", s.until) IS NOT DISTINCT FROM (v.parts, v."from", v.until)
+    ) THEN r.id || ' publishes nothing the structure''s policies read: its parts are copied as it is adopted'
+    WHEN EXISTS (SELECT FROM circle.publication s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle.publication_of(r.id))
+      THEN r.id || ' marks no publish, and publishes some'
     WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND (o.revoked IS NULL OR o.revoked > r.applies))
       OR EXISTS (SELECT FROM circle.right o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.disclosure o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
+      OR EXISTS (SELECT FROM circle.publication o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       THEN 'what ' || r.replaces || ' granted is not revoked the day ' || r.id || ' applies'
     ELSE (SELECT circle.outlives(o.id, r.applies) FROM circle.mandate o WHERE o.policy = r.replaces)
   END
@@ -379,7 +480,9 @@ BEGIN ATOMIC
     (SELECT 'right ' || g.id || ' of ' || r.id || ' is not revoked the day it ends'
      FROM circle.right g WHERE g.policy = r.id AND r.kind = 'right' AND g.revoked IS DISTINCT FROM r.ends),
     (SELECT 'the disclosure values of ' || r.id || ' are not revoked the day it ends'
-     FROM circle.disclosure s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
+     FROM circle.disclosure s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends),
+    (SELECT 'the publication of ' || r.id || ' is not revoked the day it ends'
+     FROM circle.publication s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
   )
   FROM policy.policy r
   WHERE r.id = payload ->> 'policy';

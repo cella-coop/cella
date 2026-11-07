@@ -131,6 +131,20 @@ CREATE TABLE circle.disclosure (
   CHECK (until IS NULL OR "from" < until)
 );
 
+-- What of the structure the co-op publishes to every person signed in,
+-- member or not: the parts its assembly's publication rule names,
+-- copied as it is adopted (`circle.publication_from`), on its policy's
+-- days; `revoked`, the day its rule ended or was replaced.
+CREATE TABLE circle.publication (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  policy text NOT NULL UNIQUE,
+  parts text[] NOT NULL CHECK (cardinality(parts) > 0 AND parts <@ ARRAY['circles', 'roles', 'mandates', 'seats', 'register']),
+  "from" date NOT NULL,
+  until date,
+  revoked date,
+  CHECK (until IS NULL OR "from" < until)
+);
+
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 

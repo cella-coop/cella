@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -266,6 +266,9 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   is on; and the end of a mandate's policy is put to a circle on its
   chain as an issuer (`circle.chain`), the one that issued it or one
   that issued a mandate it is issued under, the assembly on every chain.
+  A rule marking open books' disclosure values, or the parts of the
+  structure it publishes, is the assembly's and marks them soundly
+  (`circle.disclosure_flaw`, `circle.publication_flaw`).
   And the policies the motion adopts, replaces and ends leave the
   assembly, once it is carried out, a collective `adopt-policy` mandate
   in force on the verdict date with no `until` (`circle.sovereignty`),

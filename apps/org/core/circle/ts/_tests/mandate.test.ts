@@ -2,7 +2,9 @@
 // and this feat: a mandate is a policy granted to one grantee, a circle or
 // a role, whose values this feat holds sound, copies into `circle.mandate`
 // as it is adopted and revokes as it ends, and a right one of its own
-// kind, copied into `circle.right`; its
+// kind, copied into `circle.right`, and a publication of the assembly its
+// parts, copied into `circle.publication`, which a person who is no
+// member reads by while it stands; its
 // guards refuse a mandate policy adopted without its mandate, and an end
 // that leaves it standing. Run by `cella test slice circle`.
 
@@ -265,6 +267,65 @@ test('open books\' disclosure rule is the assembly\'s, marks its three values so
     await db.query('SELECT circle.mandate_ended($1)', [second])
     assert.equal(await guard('revokes', second), null)
     assert.deepEqual(await disclosed(), [], 'with no rule standing, open books shares nothing')
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})
+
+const publishes = (parts: string) => `The co-op publishes its {publish: ${parts}} to every person signed in to the scope, member or not`
+const unpublished = async (wording: string, issuer = 'ag') =>
+  (await db.query<{ r: string | null }>('SELECT circle.publication_flaw($1, $2) AS r', [await marks(wording), issuer])).rows[0].r
+
+test('a publication is the assembly\'s, names the parts it publishes, and a person signed in who is no member reads exactly those while it stands', async () => {
+  await staged()
+  try {
+    assert.equal(await unpublished(publishes('circles and roles')), null)
+    assert.equal(await unpublished(publishes('circles, roles, mandates, seats and register')), null)
+    assert.equal(await unpublished('Refused clients are named in the internal rules'), null, 'a rule marking no publish is no publication')
+    assert.match((await unpublished(publishes('circles'), 'operations')) ?? '', /only a motion of the assembly adopts it/)
+    assert.match((await unpublished(publishes('circles and pay'))) ?? '', /any of circles, roles, mandates, seats and register, as \{publish: circles and roles\}, not pay/)
+    assert.match((await unpublished(`${publishes('circles')}, as {publish_noise: 2}`)) ?? '', /marks publish and nothing else, not publish_noise/)
+
+    // Who is signed in, sits nowhere and holds no role reads none of the
+    // structure, as the app's role reads it.
+    const candidate = 'candidate@denial.example'
+    await db.query(`INSERT INTO circle.tenure (holder, role, circle) VALUES ('chloe@lanterne.example', 'finance', 'operations')`)
+    const reads = async (actor: string | null = candidate) => {
+      await db.query('SAVEPOINT reading')
+      try {
+        await db.query('SET LOCAL ROLE cella_app')
+        await db.query(`SELECT set_config('cella.actor', $1, true)`, [actor ?? ''])
+        const n = async (sql: string) => (await db.query<{ n: number }>(`SELECT count(*)::int AS n FROM ${sql}`)).rows[0].n
+        return {
+          circles: await n('circle.circle'),
+          roles: await n('circle.role'),
+          grantees: await n('circle.grantee'),
+          tenures: await n('circle.tenure'),
+          policies: await n('policy.policy'),
+        }
+      } finally {
+        await db.query('ROLLBACK TO SAVEPOINT reading')
+      }
+    }
+    const nothing = { circles: 0, roles: 0, grantees: 0, tenures: 0, policies: 0 }
+    assert.deepEqual(await reads(), nothing)
+
+    const ruled = await adopt('rule', publishes('circles and roles'), 'm-2026-030', 1)
+    assert.match((await guard('grants', ruled)) ?? '', /publishes nothing the structure's policies read/)
+    await db.query('SELECT circle.mandate_from($1)', [ruled])
+    assert.equal(await guard('grants', ruled), null)
+    const whole = (await db.query<{ circles: number; roles: number; grantees: number }>(
+      `SELECT (SELECT count(*) FROM circle.circle)::int AS circles, (SELECT count(*) FROM circle.role)::int AS roles,
+              (SELECT count(*) FROM circle.grantee)::int AS grantees`,
+    )).rows[0]
+    assert.deepEqual(await reads(), { ...whole, tenures: 0, policies: 0 }, 'every circle and role and their grantees, and no seat and no policy')
+    assert.deepEqual(await reads(null), nothing, 'no one signed in reads nothing published')
+
+    await db.query(`SELECT policy.end($1, 'm-2026-031', 1)`, [ruled])
+    assert.match((await guard('revokes', ruled)) ?? '', /the publication of .* is not revoked the day it ends/)
+    await db.query('SELECT circle.mandate_ended($1)', [ruled])
+    assert.equal(await guard('revokes', ruled), null)
+    assert.deepEqual(await reads(), nothing, 'ended, it publishes nothing')
   } finally {
     await db.query('ROLLBACK')
   }

@@ -379,6 +379,9 @@ rights the person reads on their own page, member or not, by
 non-member reading another's page reads none, and no reader learns
 from the tab a right they neither hold nor read as a member ([who
 reads it](../../../../core/circle/index.md#who-reads-the-structure)).
+A tab with no line says "No power you may read on this day", which is
+true of a person who holds none and of a reader who may read none of
+another's.
 
 Beside it, the page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and

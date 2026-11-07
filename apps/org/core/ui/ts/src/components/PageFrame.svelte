@@ -205,8 +205,10 @@
     flex: none;
   }
   /* A write in the header keeps it one row: its fields' labels are read,
-     not seen, and its choices stay narrow. */
-  .actions :global(.field .label) {
+     not seen, and its choices stay narrow. A form in a popover opened
+     from the header is no part of the row: its labels show and its
+     choices take its width, as in any form. */
+  .actions :global(.field:not(.popover *) .label) {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -214,7 +216,7 @@
     clip-path: inset(50%);
     white-space: nowrap;
   }
-  .actions :global(select) {
+  .actions :global(select:not(.popover *)) {
     max-width: 16rem;
   }
   /* The quiet icon group: the drawer's panel tabs, then its toggle; the

@@ -1,6 +1,6 @@
 +++
 title = "Analytics"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The analytics port (`@cella/org-analytics`): what a report asks of the
@@ -188,4 +188,13 @@ their rows, and leaves no withheld cell between a total and the same
 total less a cell. The e2e scenario `reading` runs a saved custom report over a scoped
 view as Lanterne's readers: Inès, in Web and no member, reads Web's and
 the assembly's rows and no other circle's, and a person whose mandate
-to read went reads none of them.
+to read went reads none of them. The e2e scenario `report-reader` runs
+one through the built shell across a mandate's end: Chloé, a member,
+saves a custom report over `expense.expenses` while the member role's
+mandate to read every circle stands, and reads every expense through
+it; the assembly ends the mandate; the same report, and a new one she
+saves, then show her Marketing's and the assembly's expenses and her
+own, one she spent for Brand among them, and no other of Brand's or
+Web's, as the expenses' page does, through the page and through the
+port run as her; and Inès, who never held the mandate, reads Web's and
+the assembly's alone through both.

@@ -47,8 +47,8 @@ RETURN ARRAY(
   ORDER BY 1
 );
 -- Whether the co-op publishes a part of its structure to the reader, who
--- is signed in: the latest publication in force on the verdict date
--- names it. It runs as its owner, as `inside` does, and says no more than
+-- is signed in: the one publication in force on the verdict date
+-- (`circle.overlap_flaw`) names it. It runs as its owner, as `inside` does, and says no more than
 -- whether.
 CREATE FUNCTION circle.published(part text) RETURNS boolean
 LANGUAGE sql STABLE SECURITY DEFINER

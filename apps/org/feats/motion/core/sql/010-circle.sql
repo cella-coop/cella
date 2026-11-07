@@ -86,6 +86,25 @@ BEGIN ATOMIC
   );
 END;
 
+-- The rules a motion would adopt that set open books' disclosure values
+-- or publish parts of the structure, each with the days it would apply
+-- were the motion closed at its deadline and the policy it replaces, as
+-- `circle.overlap_flaw` judges them; none whose days are not written
+-- YYYY-MM-DD, which `motion.asks` refuses.
+CREATE FUNCTION motion.standing_rules(motion text) RETURNS TABLE (n integer, what text, day date, until date, replaces text)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT m.n, CASE WHEN k.marked ? 'publish' THEN 'publication' ELSE 'disclosure' END,
+         coalesce((m.args ->> 'from')::date, d.deadline), (m.args ->> 'until')::date, nullif(m.args ->> 'replaces', '')
+  FROM motion.action m
+  JOIN motion.motion d ON d.id = m.motion
+  CROSS JOIN LATERAL (SELECT coalesce(motion.marked(m.args ->> 'wording'), '{}') AS marked) k
+  WHERE m.motion = standing_rules.motion AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    AND coalesce(m.args ->> 'from', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
+    AND coalesce(m.args ->> 'until', '') ~ '^([0-9]{4}-[0-9]{2}-[0-9]{2})?$'
+    AND (k.marked ? 'publish' OR EXISTS (SELECT FROM jsonb_object_keys(k.marked) x WHERE x LIKE 'disclosure\_%'));
+END;
+
 -- motion:motion:propose — each action of these kinds names what it
 -- applies to, and the motion's circle may decide it: for a mandate
 -- policy, whose values core's circles holds sound (`circle.mandate_flaw`),
@@ -103,7 +122,10 @@ END;
 -- or one in force it holds that the motion does not end.
 -- A rule marking open books' disclosure values, or the parts of the
 -- structure it publishes, is the assembly's and marks them soundly
--- (`circle.disclosure_flaw`, `circle.publication_flaw`).
+-- (`circle.disclosure_flaw`, `circle.publication_flaw`); one of each
+-- stands at a time, so such a rule replaces the one its days meet
+-- (`circle.overlap_flaw`), and a motion adopts no two of a kind whose
+-- days meet.
 CREATE FUNCTION motion.circle_asks(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -166,6 +188,18 @@ BEGIN ATOMIC
       FROM policy.marks(m.args ->> 'wording') p
     ) k
     WHERE m.motion = payload ->> 'motion' AND m.kind = 'policy' AND m.args ->> 'kind' = 'rule'
+    UNION ALL
+    SELECT coalesce(
+      circle.overlap_flaw(s.what, s.day, s.until, s.replaces, NULL),
+      (SELECT 'actions ' || o.n || ' and ' || s.n || ' of ' || (payload ->> 'motion') || ' are both '
+         || CASE s.what WHEN 'disclosure' THEN 'a disclosure rule' ELSE 'a publication' END
+         || ' on days that meet: one stands at a time, so a motion adopts one'
+       FROM motion.standing_rules(payload ->> 'motion') o
+       WHERE o.what = s.what AND o.n < s.n
+         AND (s.until IS NULL OR o.day < s.until) AND (o.until IS NULL OR s.day < o.until)
+       ORDER BY o.n LIMIT 1)
+    )
+    FROM motion.standing_rules(payload ->> 'motion') s
   ) x
   WHERE r IS NOT NULL
   LIMIT 1;

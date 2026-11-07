@@ -268,7 +268,10 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   that issued a mandate it is issued under, the assembly on every chain.
   A rule marking open books' disclosure values, or the parts of the
   structure it publishes, is the assembly's and marks them soundly
-  (`circle.disclosure_flaw`, `circle.publication_flaw`).
+  (`circle.disclosure_flaw`, `circle.publication_flaw`), and, since one
+  of each stands at a time, replaces the one in force on days its own
+  meet, which the refusal names, and is the motion's only one of its
+  kind on those days (`circle.overlap_flaw`, `motion.standing_rules`).
   And the policies the motion adopts, replaces and ends leave the
   assembly, once it is carried out, a collective `adopt-policy` mandate
   in force on the verdict date with no `until` (`circle.sovereignty`),

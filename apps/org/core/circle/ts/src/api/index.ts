@@ -8,7 +8,7 @@ import { circle, circles, listing, mandate, mandating } from '../drivers/circle.
 export { granting, revoking } from '../handlers/index.ts'
 export { create } from '../handlers/circle.ts'
 export { add, remove, seatRole, seating, unseatRole } from '../handlers/seat.ts'
-export { circle, circles, mandate, sitting } from '../drivers/circle.ts'
+export { circle, circles, lenses, mandate, sitting } from '../drivers/circle.ts'
 
 // Core's slice: every feat builds on core, so any slice may extend its
 // collections, the circles and the mandates that link them.

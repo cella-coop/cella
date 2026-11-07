@@ -1108,12 +1108,13 @@ pub fn verify_log() -> bool {
 /// Verifies the log after entry `after`, as it stands here: from entry
 /// `after`'s hash, where a checkpoint the fold recorded starts, or from the
 /// genesis at 0, every entry and receipt after it, each write's effects,
-/// that the head names the last entry and that every receipt names a
-/// verdict. What came before `after` is the checkpoint's, which it trusts;
-/// `after` is the end of a write, since a write is checked whole.
+/// that the head names the last entry and that every receipt above the
+/// highest the entries up to `after` name names a verdict it walked. What
+/// came before `after` is the checkpoint's, which it trusts and never
+/// reads; `after` is the end of a write, since a write is checked whole.
 pub fn verify_after(after: i64) -> bool {
     let scope = scope();
-    let (signers, follows, start) = Spi::connect(|c| {
+    let (signers, follows, start, floor) = Spi::connect(|c| {
         let start = if after == 0 {
             Some(log::GENESIS.to_vec())
         } else {
@@ -1128,8 +1129,29 @@ pub fn verify_after(after: i64) -> bool {
                 spi(rows.first().get_one::<Vec<u8>>())
             }
         };
-        (signers(c), follows(c), start)
+        // A write takes its receipt's number at its first use, before it
+        // locks the head, so a later entry may name a lower number than an
+        // earlier one: the checkpoint's receipts are those up to the highest
+        // its entries name, read down the log's receipt index past the
+        // receipts of the entries after it, never through its own.
+        let floor = if after == 0 {
+            Some(0)
+        } else {
+            let rows = spi(c.select(
+                "SELECT coalesce((SELECT receipt FROM cella.log
+                                   WHERE n <= $1 AND receipt IS NOT NULL
+                                   ORDER BY receipt DESC LIMIT 1), 0)",
+                Some(1),
+                &[after.into()],
+            ));
+            spi(rows.first().get_one::<i64>())
+        };
+        (signers(c), follows(c), start, floor)
     });
+    let Some(floor) = floor else {
+        warning!("cella: the receipts up to entry {after} are unreadable");
+        return false;
+    };
     let Some(mut last) = start else {
         warning!("cella: the log holds no entry {after} to verify after");
         return false;
@@ -1246,7 +1268,9 @@ pub fn verify_after(after: i64) -> bool {
                         warning!("cella: log broken at {}: {}", b.n, b.why);
                         return None;
                     }
-                    decisions += 1;
+                    if receipt.n > floor {
+                        decisions += 1;
+                    }
                 }
                 let hash = bytes(8);
                 if let Err(b) = chain.check(&entry, key, &bytes(7), &hash, &bytes(9)) {
@@ -1280,15 +1304,14 @@ pub fn verify_after(after: i64) -> bool {
             warning!("cella: the head does not name the log's last entry");
             return false;
         }
-        // Every receipt names a verdict: those the entries up to `after`
-        // name, and those this walk checked.
-        let counts = spi(c.select(
-            "SELECT (SELECT count(*) FROM cella.receipt), (SELECT count(*) FROM cella.log WHERE n <= $1 AND receipt IS NOT NULL)",
+        // Every receipt above the checkpoint's names a verdict this walk
+        // checked; the log names a receipt once, so their counts agree.
+        let receipts = spi(c.select(
+            "SELECT count(*) FROM cella.receipt WHERE n > $1",
             Some(1),
-            &[after.into()],
+            &[floor.into()],
         ));
-        let (receipts, before) = spi(counts.first().get_two::<i64, i64>());
-        if receipts != before.map(|b| b + decisions) {
+        if spi(receipts.first().get_one::<i64>()) != Some(decisions) {
             warning!("cella: a receipt names no verdict");
             return false;
         }

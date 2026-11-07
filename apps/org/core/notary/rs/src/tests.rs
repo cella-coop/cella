@@ -657,6 +657,53 @@ ALTER EXTENSION cella UPDATE;"
         assert!(!after(3), "the log holds no entry 3");
     }
 
+    #[pg_test]
+    fn a_receipt_before_a_checkpoint_is_the_checkpoint_s() {
+        beside();
+        scope();
+        // A receipt is numbered before its write locks the head, so entry
+        // 2 may name a lower number than entry 1 does. The sequence is not
+        // transactional: it stays past every number a test fixes.
+        Spi::run(
+            "SELECT setval('cella.receipt_seq', greatest(2000000, (SELECT last_value FROM cella.receipt_seq)))",
+        )
+        .expect("the receipts' numbers");
+        let first = settle(100);
+        entry_after(first_hash());
+        let after = |n: i64| {
+            Spi::get_one_with_args::<bool>("SELECT cella.verify_log($1)", &[n.into()])
+                .expect("verify_log(after)")
+                .expect("a verdict")
+        };
+        assert!(first > 1_000_000, "entry 1's receipt is above entry 2's");
+        assert!(
+            verifies() && after(1) && after(2),
+            "a receipt numbered out of the log's order verifies"
+        );
+        // A receipt naming no verdict, as entry 2's would with its nonce.
+        let orphan = |n: i64| {
+            Spi::run_with_args(
+                "INSERT INTO cella.receipt (n, op, actor, device, nonce, request, signature, payload, at, hash, sig, key, salt)
+                 SELECT $1, op, actor, device, nonce || $1::text, request, signature, payload, at, hash, sig, key, salt
+                 FROM cella.receipt WHERE n = 1000000",
+                &[n.into()],
+            )
+            .expect("an orphan receipt");
+        };
+        orphan(999_999);
+        assert!(!verifies(), "the whole log refuses it");
+        assert!(
+            after(1) && after(2),
+            "below the checkpoint's highest receipt, it is the checkpoint's"
+        );
+        Spi::run("DELETE FROM cella.receipt WHERE n = 999999").expect("the orphan gone");
+        orphan(first + 1_000_000_000);
+        assert!(
+            !verifies() && !after(1) && !after(2),
+            "above it, every verification refuses it"
+        );
+    }
+
     const CARRY: &str = "test:thing:carry";
     const PAY: &str = "test:thing:pay";
 

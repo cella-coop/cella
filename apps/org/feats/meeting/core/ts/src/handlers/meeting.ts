@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Add, Added, Minute, Minuted, Move, Moved, Remove, Removed, Schedule, Scheduled, Settle, Settled } from '../models/meeting.ts'
 
@@ -32,7 +32,8 @@ export async function schedule(input: Schedule, deps: Deps): Out<'meeting:meetin
       )
       return { meeting: id, circle: input.circle, at: rows[0].at }
     },
-    payload: (v) => ({ ...v }),
+    // What the meeting is and where it meets, which its fold writes.
+    payload: (v) => ({ ...v, title: input.title, place: input.place ?? '', link: input.link || null }),
   })
 }
 
@@ -43,15 +44,19 @@ export const adding = (input: Add): Write<Added> => ({
   op: 'meeting:item:add' satisfies Action,
   request: input,
   state: async (tx) => {
-    const { rows } = await tx.query<{ id: string }>(
+    const { rows } = await tx.query<{ id: string; pos: number; title: string; presenter: string; minutes: number | null }>(
       `INSERT INTO meeting.item (meeting, pos, title, presenter, minutes)
        SELECT $1, coalesce(max(pos), 0) + 1, $2, $3, $4 FROM meeting.item WHERE meeting = $1
-       RETURNING id::text AS id`,
+       RETURNING id::text AS id, pos, title, presenter, minutes`,
       [input.meeting, input.title, input.presenter ?? '', input.minutes ?? null],
     )
-    return { meeting: input.meeting, item: Number(rows[0].id) }
+    const { id, ...item } = rows[0]
+    return { meeting: input.meeting, item: Number(id), ...item }
   },
-  payload: (v) => ({ ...v }),
+  // The item as it was added, its position as its text, since a payload
+  // holds no float; its presenter names a person, so the log keeps its
+  // commitment and the vault the name.
+  payload: (v) => ({ ...v, pos: String(v.pos), presenter: personal('meeting.item.presenter', String(v.item), v.presenter) }),
 })
 
 export async function add(input: Add, deps: Deps): Out<'meeting:item:add', Added> {
@@ -79,7 +84,8 @@ export async function move(input: Move, deps: Deps): Out<'meeting:item:move', Mo
       }
       return { meeting: input.meeting, item: input.item, pos }
     },
-    payload: (v) => ({ ...v }),
+    // The position as its text, since a payload holds no float.
+    payload: (v) => ({ ...v, pos: String(v.pos) }),
   })
 }
 

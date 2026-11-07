@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its
@@ -123,14 +123,30 @@ makes its bill names it itself.
 That approving and paying post their entries is the `bill-transaction`
 graft's guard on the same ops.
 
+## Folds
+
+Each action folds by `core/sql/005-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)): a record
+makes the bill under the id its entry names, in its circle, recorded on
+the entry's day by its actor, with its supplier, reference, days, label,
+category, amounts and lines as the entry keeps them, each quantity and
+VAT rate as their text, and one that merged adds nothing; an approval
+approves it on its entry's day by its actor, and a payment pays it on
+its entry's day. What approving and paying post folds by
+`bill-transaction`'s folds.
+
 ## Handlers
 
 `record`, and the specs `approving` and `paying` that the graft wraps
 with their postings, each also a write of its own (`approve`, `pay`).
 Each line's VAT rate comes in hundredths of a percent, as an invoice's
-does. The payload holds the bill's id and its amounts, never the
-supplier's name nor the label: a supplier may be a person, a sole
-trader, and nothing of a bill says whose yet.
+does. The payload holds the bill's id, its circle and its amounts, and
+for a record that did not merge what its fold records again: the
+supplier, its reference, the days the bill bears, its label, category
+and lines. The supplier's name and the label enter the log as they are:
+a supplier may be a person, a sole trader, but nothing of a bill says
+whose, so neither is registered personal, and the entries a bill posts
+name only its id (`Bill bi-0007`), so the log held neither before.
 
 ## Tests
 

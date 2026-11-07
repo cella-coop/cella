@@ -1,6 +1,6 @@
 +++
 title = "invoice-project"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Which project an invoice bills work of. An invoice that names no project
@@ -33,6 +33,11 @@ assembly's, unless the write that makes it names another.
 On an invoice's page the write is the action `charge`, apart from
 `contact-invoice`'s `link` on the same page. `002-powers.sql` registers
 the power in `cella.power`, and the membership feat checks it.
+
+## Folds
+
+A link folds by `sql/003-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+the invoice charged to the project its entry names, or moved to it.
 
 ## Invariants
 

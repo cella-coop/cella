@@ -171,7 +171,14 @@ sequenceDiagram
   every feat and graft, the founding's carried rows among them. The fold
   rebuilds structure, never personal values: a personal value is a
   commitment in the log and its value stays in the vault, so a folded
-  scope holds each commitment and opens none. The fold streams the log,
+  scope holds each commitment and opens none. A person's own words, a
+  motion's title and text, a message or a comment, are such values; a
+  document's text is the co-op's, and its edits' entries carry it. Every
+  action folds, which `cella check feats` holds, and every e2e scenario's
+  log is folded and compared after it, but those that stage around the
+  notary what their logged writes build on. The vault's sweep redacts on
+  no write, so a swept scope folds to the commitments it has since
+  redacted ([folds](architecture.md#folds)). The fold streams the log,
   its memory bounded whatever the log's length. Each action's fold is
   versioned as a guard is: an entry folds by the version in force when it
   was written, so two engines at different versions fold one log to the

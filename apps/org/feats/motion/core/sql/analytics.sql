@@ -5,6 +5,7 @@ CREATE VIEW motion.motions AS
 SELECT d.id, d.circle, d.title, d.method, d.procedure, d.ballot, d.proposed, d.deadline, d.closed
 FROM motion.motion d;
 COMMENT ON VIEW motion.motions IS 'audience: scoped by circle';
+COMMENT ON COLUMN motion.motions.title IS 'personal: a motion''s title is its proposer''s words, which agendas and minutes show; erasure redacts it here as in the motion feat';
 
 CREATE VIEW motion.procedures AS
 SELECT p.id, p.label, p.method, p.share_num, p.share_den, p.quorum_num, p.quorum_den, p.ballot

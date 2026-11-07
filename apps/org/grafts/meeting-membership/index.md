@@ -1,6 +1,6 @@
 +++
 title = "meeting-membership"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Who came to a meeting, who was expected, the circle's seats on its day,
@@ -36,6 +36,13 @@ assembly's, unless the write that makes it names another.
   `keep-minutes` by a mandate covering the meeting's circle, which its
   payload names for the membership feat's guard, and `meeting-membership`
   refuses it for a member not seated there.
+
+## Folds
+
+A mark and a record fold alike by `sql/005-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+the member's mark at the meeting, as the entry names it, the last
+winning, made on the entry's day by its actor. The graft's trigger
+judges it again as it folds, as it did when it was written.
 
 ## Shell
 

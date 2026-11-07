@@ -40,9 +40,9 @@ before(async () => {
   )
   await db.query(`INSERT INTO cella.authority (fn, covered, owner) VALUES ('mandate.may(text, text, bigint, text, date)', 'mandate.covered(text, text, date)', 'test')`)
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, ballot, proposed, deadline) VALUES
-       ('m-2026-301', 'ag', 'An action', 'majority', 'majority', 'open', '2026-10-20', '2026-11-03'),
-       ('m-2026-302', 'ag', 'An election', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, ballot, proposed, deadline) VALUES
+       ('m-2026-301', 'ag', 'camille@lanterne.example', 'An action', 'majority', 'majority', 'open', '2026-10-20', '2026-11-03'),
+       ('m-2026-302', 'ag', 'camille@lanterne.example', 'An election', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
   )
   let receipt = 2000
   for (const motion of ['m-2026-301', 'm-2026-302']) {

@@ -1,6 +1,6 @@
 +++
 title = "contact-project"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Whom a project is for: a client, a contact holding the client role
@@ -34,6 +34,13 @@ membership feat checks it.
 
 - a commission's project and contact exist, and the contact is a client
   when the link is made.
+
+## Folds
+
+A link folds by `contact_project.fold_link` (`sql/003-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): the project its entry names, for
+the contact it names, linking again moving it; the graft's trigger
+judges both sides again, as it did.
 
 ## Shell
 

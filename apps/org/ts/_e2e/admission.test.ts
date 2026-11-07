@@ -190,13 +190,12 @@ test('the log verifies, records its guards, and catches tampering', async () => 
   await su.query('ROLLBACK')
 })
 
-test('the log folds into a fresh database that matches it, every table but the document\'s, which folds in a later change', async () => {
+test('the log folds into a fresh database that matches it, every table of every slice', async () => {
   const db = process.env.PGDATABASE ?? 'cella'
   try {
-    assert.match(folded(db), /account, account_membership_patronage_transaction, account_membership_payslip_transaction, account_membership_transaction, circle, employment, employment_membership, membership, membership_motion, patronage, patronage_transaction, payslip, payslip_transaction, person, policy, report, timesheet, transaction folded, \S+ matches \S+ row for row/)
+    assert.match(folded(db), /^compare: account, .* folded, \S+ matches \S+ row for row, state [0-9a-f]+$/m)
     const [source, fold] = [await tables(db), await tables(`${db}_fold`)]
-    const differ = Object.keys(source).filter((t) => source[t] !== fold[t]).sort()
-    assert.deepEqual(differ, ['document.update'])
+    assert.deepEqual(Object.keys(source).filter((t) => source[t] !== fold[t]).sort(), [])
   } finally {
     await unfold(db)
   }

@@ -29,9 +29,9 @@ before(async () => {
   await db.connect()
   await db.query(`SELECT motion.register_carries('admit', 'Admit a member', '[{"name": "member", "label": "Address", "type": "text"}]', 'test:member:admit', 'test')`)
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-       ('m-2026-012', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
-       ('m-2026-013', 'ag', 'Admit someone', 'consent', 'consent', '2026-10-24', '2026-11-07')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+       ('m-2026-012', 'ag', 'camille@lanterne.example', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('m-2026-013', 'ag', 'camille@lanterne.example', 'Admit someone', 'consent', 'consent', '2026-10-24', '2026-11-07')`,
   )
 })
 

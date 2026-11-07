@@ -1,6 +1,6 @@
 +++
 title = "expense-transaction"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 An expense's approval and its reimbursement post balanced entries, in the
@@ -33,11 +33,26 @@ assembly's, unless the write that makes it names another.
   `.paid`, on `expense:expense:reimburse`: the expense has a posting for
   the event, dated on it, whose lines are exactly the event's.
 
+## Folds
+
+An expense's approval and its reimbursement fold by `sql/002-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), once the
+expense feat's fold has moved the expense: the entry each posted, as its
+payload keeps it, its date, its label and its lines (`logged`), linked
+as the event it is.
+
 ## Handlers
 
 `approve` and `reimburse` wrap the expense feat's specs: the expense's
 state, then the entry through the transaction feat's `record`, then the
-posting, then `cella.submit` once.
+posting, then `cella.submit` once. Each payload keeps the entry it
+posted, for its fold.
+
+## Tests
+
+`ts/_tests/folds.test.ts` (`cella test slice expense-transaction`): a
+charge and a payment fold the entries their payloads keep, each linked
+as its event, and one that keeps none is refused.
 
 ## Shell
 

@@ -21,8 +21,8 @@ let receipt = 0
 // roll, as this graft's proposal does.
 const insert = (id: string, procedure: string) =>
   db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline)
-     SELECT $1, 'ag', $1, p.method, p.id, '2026-10-20', '2026-11-03' FROM motion.procedure p WHERE p.id = $2`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline)
+     SELECT $1, 'ag', 'camille@lanterne.example', $1, p.method, p.id, '2026-10-20', '2026-11-03' FROM motion.procedure p WHERE p.id = $2`,
     [id, procedure],
   )
 const fix = async (id: string) => (await db.query<{ n: number }>('SELECT membership_motion.fix($1) AS n', [id])).rows[0].n
@@ -126,8 +126,8 @@ test('a proposal that did not fix its roll is refused; fixed, it is not', async 
 
 test('a secret ballot\'s tally is sealed to the app until its close, and to whoever does not read the motion, and a redacted stance counts as none given', async () => {
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, ballot, proposed, deadline)
-     VALUES ('m-2026-106', 'ag', 'm-2026-106', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, ballot, proposed, deadline)
+     VALUES ('m-2026-106', 'ag', 'camille@lanterne.example', 'm-2026-106', 'majority', 'election', 'secret', '2026-10-20', '2026-11-03')`,
   )
   await fix('m-2026-106')
   await vote('m-2026-106', 'camille', 'for')

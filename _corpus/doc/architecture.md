@@ -1156,7 +1156,10 @@ membership feat's guard reads, or for an action a motion
 carries the row in `motion.cites`, or for a stance the row in
 `motion.stance_power`; the label mirrors it for the
 TypeScript, and `cella check feats` refuses any difference, and any
-action declared outside a `models/actions.ts`. Every action is signed by
+action declared outside a `models/actions.ts`. Every action folds, too:
+its slice registers how its entry applies to the state before it
+([folds](#folds)), and `cella check feats` refuses an action with no
+fold, as it refuses one with no power. Every action is signed by
 a device of its actor and carries its request
 ([signatures](signatures.md)).
 
@@ -1474,23 +1477,32 @@ bytewise without their generated columns, which their rows compute, a
 personal column as the newest commitment the vault holds for its field
 and subject, or in a folded scope the newest the fold applied, and as
 its value where neither holds one. A fold resumes from a checkpoint,
-whose state it hashes again first. A slice is **folded** when it
-registers a fold and every action it names, among those the scope
-registers and its log holds, has one (`cella.folded()`); the state hash
-and the compare read the folded slices and name the others. `cella
-check feats` lists every action with no fold and counts those with one.
-Folded now are core's circles and policy register, the person feat with
-its nested membership and employment, the graft between those two, and
-membership-motion's founding, close and the roll it counts; the books
-and pay, the account, transaction, patronage, payslip, timesheet and
-report feats and every graft whose feats are all among them or the
-person feats, but motion-patronage, whose approval a proposal writes,
-and account-membership, which only a founding carries rows into; every
-write that posts carries its entry as the journal shows it, its date,
-its label and its lines (`logged`). The motion feat folds a stance, a
-close and a policy's adoption and end, and not yet a proposal or a
-message, which keep their proposer's words out of the log, so a log that
-proposes a motion folds no further than its first stance on it.
+whose state it hashes again first. A slice is **folded** when every action it
+names, among those the scope registers and its log holds, has a fold (`cella.folded()`); the state
+hash and the compare read the folded slices and fail naming the others.
+Every slice is folded: `cella check feats` refuses an action with no
+fold, an action-less graft registers a fold on each op on which it
+writes its schema, and a slice whose rows only a founding carries, as
+account-membership's terms, folds by the founding's carry, so the
+compare reads its rows too. Every write that posts carries its entry as the
+journal shows it, its date, its label and its lines (`logged`). A
+person's own words, a motion's title and text, a message, a comment,
+are personal data of their writer: the log keeps their commitments, the
+vault their values, so the fold writes each as `redacted` and the
+compare reads its commitment on both sides. A document's content is the
+co-op's text, not personal, so an edit's entry carries its update's
+bytes and a version's its snapshot, and the fold rebuilds both. `cella
+test e2e` folds each scenario's log after it and compares, so a write
+whose entry carries less than it changed fails the day it is written. A
+scenario that stages state around the notary, as only the host may,
+undoes it before it ends; one whose logged writes then build on what it
+staged, which no log can rebuild, says why in an `// unfolded:` line,
+and is not folded: today editor, which carries its documents in,
+notarised, which registers a test's effect, and provenance and
+requirements, since no write makes a role yet. The vault's
+sweep redacts a restricted class once its clock runs out, on no write,
+so the log holds no entry for it, and a swept scope folds to the
+commitments the sweep has since redacted.
 
 ## Policies
 

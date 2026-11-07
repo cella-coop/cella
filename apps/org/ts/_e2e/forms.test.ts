@@ -219,6 +219,7 @@ test('a later update of the form marks a default taken as updated, restores none
   const before = await statutes()
   const offer = (key: string, kind: string, legal: string, protect: string | null, source: string | null) =>
     su.query('SELECT policy.offer($1, $2, $3, $4, NULL, $5, $6)', ['scop-sarl-fr', key, kind, legal, protect, source])
+  await su.query(`CREATE TEMP TABLE form_before AS SELECT * FROM policy.default WHERE form = 'scop-sarl-fr' AND key IN ('admit-member', 'suspend-member', 'work-share')`)
   await su.query('SET cella.unbound = on')
   await offer('admit-member', 'mandate', 'The {circle: ag} circle holds {power: admit-member}, to admit members on the statutes\' conditions, by motion', null, 'loi n° 47-1775 art. 7')
   await offer('suspend-member', 'mandate', 'The {circle: ag} circle holds {power: suspend-member}, to suspend a member for a term, by motion', null, null)
@@ -251,6 +252,14 @@ test('a later update of the form marks a default taken as updated, restores none
     )
   assert.match(reason(await taking(admitting)), /a policy takes scop-sarl-fr:admit-member worded as it reads/)
   settled(await taking('The {circle: ag} circle holds {power: admit-member}, to admit members on the statutes\' conditions, by motion'))
+  // The form goes back as it was, staged around the notary as the host's
+  // update was, so the log folds into the state the scenario leaves.
+  await su.query('SET cella.unbound = on')
+  await su.query(
+    `UPDATE policy.default d SET (legal, hash, friendly, protected, source, reviewed) = (k.legal, k.hash, k.friendly, k.protected, k.source, k.reviewed)
+     FROM form_before k WHERE d.id = k.id`,
+  )
+  await su.query('RESET cella.unbound')
 })
 
 test('the log verifies', async () => {

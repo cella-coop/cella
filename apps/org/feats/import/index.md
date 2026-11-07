@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -80,11 +80,21 @@ core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
 
+## Folds
+
+A record folds by `core/sql/002-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)), at version 1:
+the run under the id its entry names, of its kind and its file's name,
+by the entry's actor on its day, with its counts and each of its lines
+as the entry keeps them; the table checks the counts add up, as it did.
+
 ## Tests
 
 `core/ts/_tests/run.test.ts` (`cella test slice import`): a run recorded
 as its importer on the day, its lines counted; the counts must add up, and
-the guard refuses a run the write does not name. The e2e scenario `import`
+the guard refuses a run the write does not name. `folds.test.ts`: a run
+folds as its entry carries it, and one whose counts do not add up is
+refused. The e2e scenario `import`
 runs every kind on Lanterne's samples.
 
 ## Shell

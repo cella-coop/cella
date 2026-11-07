@@ -180,9 +180,9 @@ export async function seed(db, read, { from, dir }) {
     let policies = 0
     for (const d of motions) {
       const taken = await db.query(
-        `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline, body)
-         SELECT $1, $2, $3, p.method, p.id, $5, $6, $7 FROM motion.procedure p WHERE p.id = $4`,
-        [d.id, d.circle, d.title, d.procedure, day(d.proposed), day(d.deadline), d.body ?? ''],
+        `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline, body)
+         SELECT $1, $2, $8, $3, p.method, p.id, $5, $6, $7 FROM motion.procedure p WHERE p.id = $4`,
+        [d.id, d.circle, d.title, d.procedure, day(d.proposed), day(d.deadline), d.body ?? '', d.proposer],
       )
       if (!taken.rowCount) {
         throw new Error(`${d.id} is taken by ${d.procedure}, which is no procedure`)

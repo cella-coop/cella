@@ -59,15 +59,15 @@ test('a share is a majority’s, more than none and at most all; a quorum at mos
 test('a motion is taken by its procedure’s method, and the procedure is fixed once one is', async () => {
   await db.query(`INSERT INTO motion.procedure (id, label, method, share_num, share_den, quorum_num, quorum_den) VALUES ('statutes', 'Statutes', 'majority', 3, 4, 1, 2)`)
   await rejects(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-090', 'ag', 'x', 'consent', 'statutes', '2026-10-24', '2026-11-07')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-2026-090', 'ag', 'camille@lanterne.example', 'x', 'consent', 'statutes', '2026-10-24', '2026-11-07')`,
     /motion_procedure_method_fkey/,
   )
   await rejects(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-090', 'ag', 'x', 'majority', 'nowhere', '2026-10-24', '2026-11-07')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-2026-090', 'ag', 'camille@lanterne.example', 'x', 'majority', 'nowhere', '2026-10-24', '2026-11-07')`,
     /motion_procedure_method_fkey/,
   )
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-091', 'ag', 'Amend the statutes', 'majority', 'statutes', '2026-10-24', '2026-11-07')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-2026-091', 'ag', 'camille@lanterne.example', 'Amend the statutes', 'majority', 'statutes', '2026-10-24', '2026-11-07')`,
   )
   await rejects(`UPDATE motion.procedure SET share_num = 2 WHERE id = 'statutes'`, /motions are taken by statutes: its terms are fixed/)
   await rejects(`DELETE FROM motion.procedure WHERE id = 'statutes'`, /motions are taken by statutes: its terms are fixed/)
@@ -145,7 +145,7 @@ test('adopting a procedure policy makes its procedure, or names the built-in one
     await db.query('ROLLBACK TO SAVEPOINT clerked')
     // A built-in procedure, already counted by, comes to name its policy, its terms unchanged.
     await db.query(
-      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-093', 'ag', 'x', 'consent', 'consent', '2026-11-21', '2026-12-05')`,
+      `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-2026-093', 'ag', 'camille@lanterne.example', 'x', 'consent', 'consent', '2026-11-21', '2026-12-05')`,
     )
     await adopt('By {procedure: consent}, {method: consent}, with a quorum of {quorum: none}', 2)
     await db.query(`SELECT motion.procedure_from('m-2026-092/2')`)
@@ -176,7 +176,7 @@ test('adopting a procedure policy makes its procedure, or names the built-in one
       await adopt(twoThirds.replace('statutory}', 'amendments}'), 2, 'm-2026-092/1')
       await db.query(`SELECT motion.procedure_from('m-2026-092/2')`)
       await db.query(
-        `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-2026-094', 'ag', 'x', 'majority', 'statutory', $1, '2026-12-31')`,
+        `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-2026-094', 'ag', 'camille@lanterne.example', 'x', 'majority', 'statutory', $1, '2026-12-31')`,
         [clock],
       )
       return (await db.query<{ r: string | null }>(`SELECT motion.decides_by('{"motion": "m-2026-094"}') AS r`)).rows[0].r

@@ -3,8 +3,8 @@
 -- motion or not. A message names the members it mentions by the handle
 -- its text gives (`@amina`, or a whole address) and the documents it links
 -- (`[[internal-rules]]`), which the grafts joining members and documents
--- resolve and check; the text is its author's words and stays out of the
--- log, as a proposal's does.
+-- resolve and check; the text is its author's words, which the log
+-- commits to and the vault keeps, as a proposal's (`008-ballot.sql`).
 
 -- A text's tokens in the order given, by the grammar models/thread.ts
 -- draws it with: a handle starts after a space or at the start, so an

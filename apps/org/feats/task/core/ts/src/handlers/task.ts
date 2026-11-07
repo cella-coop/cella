@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Complete, Create, Created, Move, Moved } from '../models/task.ts'
 
@@ -21,8 +21,15 @@ export const creating = (input: Create): Write<Created> => ({
     )
     return { task: rows[0].id, created: rows[0].created }
   },
-  // The title may name a person; the log holds the task's id alone.
-  payload: (v) => ({ ...v }),
+  // The task as it was made, which its fold writes. The title may name a
+  // person, so the log keeps its commitment and the vault the title.
+  payload: (v) => ({
+    ...v,
+    title: personal('task.task.title', v.task, input.title),
+    priority: input.priority ?? 'normal',
+    due: input.due || null,
+    status: input.status ?? 'todo',
+  }),
 })
 
 export async function create(input: Create, deps: Deps): Out<'task:task:create', Created> {

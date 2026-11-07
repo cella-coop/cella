@@ -9,6 +9,7 @@
 // and `cella.follows` lets it follow, and one citing anything else, or
 // appended with no write begun, uses no number; and only a superuser
 // unbinds. Run by `cella test e2e notarised`.
+// unfolded: it registers a test's effect around the notary, which no migration registers and its logged effects then follow
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -41,7 +42,7 @@ async function recording(db: pg.Client) {
      VALUES ('members', 'by-hand.csv', $1, cella.verdict_date(), true, 0, 0, '[]') RETURNING id`,
     [camille],
   )
-  const payload = { run: rows[0].id, kind: 'members', dry: true, settled: 0, refused: 0 }
+  const payload = { run: rows[0].id, kind: 'members', name: 'by-hand.csv', dry: true, settled: 0, refused: 0, lines: [] }
   return { submit: () => db.query('SELECT cella.submit($1, $2, $3, $4)', [op, payload, camille, { request, ...proof }]) }
 }
 

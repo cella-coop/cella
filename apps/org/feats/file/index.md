@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -49,11 +49,14 @@ this feat's spec, `storing`, and commits to it with `committed`.
 
 ## What the log keeps
 
-Of the co-op's own file, its name and BLAKE3. Of a personal file, a
-commitment to each, the vault keeping them until erasure
-([trust](../../../../_corpus/doc/trust.md#personal-data)). The request the
-member signs holds the bytes themselves, in base64, so their signature
-covers the content; the receipt keeps only its salted digest.
+Of the co-op's own file, its name, its BLAKE3 and its bytes, in base64
+as the member signed them, which are no one's, so its entry folds to the
+file. Of a personal file, a commitment to its name and to its BLAKE3,
+the vault keeping them until erasure
+([trust](../../../../_corpus/doc/trust.md#personal-data)), and never its
+bytes. The request the member signs holds the bytes themselves, in
+base64, so their signature covers the content; the receipt keeps only
+its salted digest.
 
 ## Who opens a file
 
@@ -86,13 +89,26 @@ core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
 
+## Folds
+
+An upload folds by `core/sql/004-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+the co-op's own file under the id its entry names, uploaded by the
+entry's actor on its day, with its name, type, size and the bytes its
+entry keeps, which must hash to the BLAKE3 it names. The write it
+publishes, `storing`, folds by `file.fold_storing`, which an attaching
+graft's fold calls as its handler calls `storing`: a personal file in
+its class's part, its name and bytes as the commitments its entry keeps,
+the bytes' to their BLAKE3, written as erasure leaves them, its name
+`redacted` and its bytes null, since a folded scope opens no commitment.
+
 ## Tests
 
 `core/ts/_tests/file.test.ts` (`cella test slice file`): a file is named
 by BLAKE3's reference vector for its bytes, which the log commits to; it
 never changes and holds what its size says, at most 10 MiB; each class
 sits in its own part; who opens a file; what `file.stored` refuses; and a
-personal file's name and hash are commitments in the log.
+personal file's name and hash are commitments in the log; `folds.test.ts`,
+how an upload and a stored personal file fold.
 
 ## Reads
 

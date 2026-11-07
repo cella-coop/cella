@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Post, Posted } from '../models/thread.ts'
 
@@ -13,7 +13,7 @@ const op = 'motion:message:post' satisfies keyof typeof actions
 // `motion.posts` checks it is the actor's own and names what its payload
 // does, and the grafts that each mention is a member and each link a
 // document, and that the actor sits in the motion's circle. The text is
-// the author's words and stays out of the log.
+// the author's words: the log commits to it and the vault keeps it.
 export async function post(input: Post, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Posted>> {
   return write(deps, {
     op,
@@ -32,6 +32,7 @@ export async function post(input: Post, deps: Deps): Promise<Outcome<(typeof act
       member: input.member,
       message: v.message,
       reply: input.reply,
+      body: personal('motion.message.body', input.member, input.body),
       mentions: v.mentions,
       links: v.links,
     }),

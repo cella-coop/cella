@@ -1,6 +1,6 @@
 +++
 title = "meeting-motion"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Motions on an agenda: an item that tables a motion, and where the
@@ -29,6 +29,18 @@ one transaction under one verdict, as `project-timesheet` books time:
 the item is titled as the motion unless named, and the seat guard on
 the action judges who adds it. It is a write of its own name, `table`, on a
 meeting's page, beside the feat's `item`.
+
+## Folds
+
+The graft has no action of its own: it folds the meeting feat's
+`meeting:item:add`, on which its write tables a motion, by
+`meeting_motion.fold_add` (`sql/002-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)),
+once the feat's fold has added the item. An entry that names a motion
+tables it under the item and meeting the entry names; one that names
+none writes nothing here. An item titled as the motion it tables keeps
+the blank title its member signed, and its entry carries the motion's
+title it took as `named`, which the feat's fold reads, so an agenda
+line names the motion in the log as it does on the page.
 
 ## Shell
 

@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import { createDoc } from '../models/blocks.ts'
 import { anchor } from '../models/anchor.ts'
@@ -9,7 +9,10 @@ const op = 'document:document:comment' satisfies keyof typeof actions
 
 // Comments on a version, on the text it quotes, anchored by Loro cursors
 // at the quote's ends when one block of the version holds it. Confluent;
-// `document.quotes` still refuses a quote the version does not hold.
+// `document.quotes` still refuses a quote the version does not hold. Its
+// text is its author's words: the log commits to it and the vault keeps
+// it; the quote, the version's own text, and the anchor the log keeps as
+// they are.
 export async function comment(input: Comment, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Commented>> {
   const { rows } = await deps.db.query<{ snapshot: Uint8Array }>('SELECT snapshot FROM document.version WHERE id = $1', [input.version])
   let where = null
@@ -30,7 +33,11 @@ export async function comment(input: Comment, deps: Deps): Promise<Outcome<(type
       )
       return { comment: Number(rows[0].id), version: input.version }
     },
-    // The comment's words may be personal; the log holds where it is.
-    payload: (v) => ({ ...v }),
+    payload: (v) => ({
+      ...v,
+      quote: input.quote,
+      anchor: where,
+      text: personal('document.comment.text', deps.actor, input.text),
+    }),
   })
 }

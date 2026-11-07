@@ -23,11 +23,11 @@ before(async () => {
        ('old@lanterne.example', 'exited', 0)`,
   )
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-       ('m-1', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
-       ('m-2', 'ag', 'Admit Chloé again', 'consent', 'consent', '2026-10-14', '2026-10-31'),
-       ('m-3', 'ag', 'Suspend Chloé', 'consent', 'consent', '2026-10-14', '2026-10-31'),
-       ('m-4', 'ag', 'Let the old go again', 'consent', 'consent', '2026-10-14', '2026-10-31')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+       ('m-1', 'ag', 'camille@lanterne.example', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('m-2', 'ag', 'camille@lanterne.example', 'Admit Chloé again', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('m-3', 'ag', 'camille@lanterne.example', 'Suspend Chloé', 'consent', 'consent', '2026-10-14', '2026-10-31'),
+       ('m-4', 'ag', 'camille@lanterne.example', 'Let the old go again', 'consent', 'consent', '2026-10-14', '2026-10-31')`,
   )
   await db.query(
     `INSERT INTO motion.action (motion, n, kind, args) VALUES

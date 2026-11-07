@@ -1,6 +1,6 @@
 +++
 title = "membership-task"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Who does a task. A task without an assignee is unassigned, not invalid.
@@ -27,6 +27,13 @@ assembly's, unless the write that makes it names another.
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it.
+
+## Folds
+
+An assignment folds by `membership_task.fold_assign` (`sql/004-folds.sql`, [folds](../../../../_corpus/doc/architecture.md#folds)):
+the task given to the member the entry names, or taken from whoever had
+it where it names none. The graft's trigger judges the assignee again on
+the entry's day, as it did when it was written.
 
 ## Invariants
 

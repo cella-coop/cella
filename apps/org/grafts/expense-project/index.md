@@ -1,6 +1,6 @@
 +++
 title = "expense-project"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The project an expense was spent for, to bill on to its client; an
@@ -27,6 +27,18 @@ under a project, replacing any it was under; the last filing wins.
 - `expense_project.files`, on the write: the expense is the actor's own,
   neither refused nor reimbursed, and the project exists and is not
   archived.
+
+## Folds
+
+A filing folds by `sql/002-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)): the expense
+its entry names under its project, replacing any it was under, as its
+payload, the expense and the project, keeps them.
+
+## Tests
+
+`ts/_tests/folds.test.ts` (`cella test slice expense-project`): an
+expense folds filed under its entry's project, the last filing winning.
 
 ## Shell
 

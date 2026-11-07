@@ -1,6 +1,6 @@
 +++
 title = "employment-file"
-updated = 2026-11-04
+updated = 2026-11-07
 +++
 
 A worker's employment records, such as their signed contract and its
@@ -28,6 +28,14 @@ files a worker's record; the log commits to its name and BLAKE3.
   and the file was uploaded by this write about them, of class `payroll`.
 - `001-employment-file.sql` registers the power, which the membership
   feat checks.
+
+## Folds
+
+An attachment folds by `employment_file.fold_attach` (`sql/002-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): the file stored about the
+worker by the file feat's fold of `storing`, the write its handler
+calls (`file.fold_storing`), its name and bytes as the commitments its
+entry keeps, then kept on the worker's file.
 
 ## Tests
 

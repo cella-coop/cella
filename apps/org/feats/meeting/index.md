@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -95,6 +95,27 @@ assembly's, unless the write that makes it names another.
 `meeting.meeting.circle` is the circle that meets; its agenda items are
 in its circle, which `meeting.in_its_circle` copies into each as it is
 made. `meeting.setting` is keyed by its circle.
+
+An item's presenter names a person, so it is personal data of class
+`profile`, erased when asked, its subject the item, since no column
+names whose it is, by its id as text, `ref`, which a trigger keeps (`core/sql/005-personal.sql`): a write commits to it
+in the log, and the vault keeps it. A meeting's title, place and link,
+and an item's title, are the circle's work and enter the log as they
+are.
+
+## Folds
+
+Each action folds by `core/sql/006-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+a meeting scheduled under the id its entry names, of its circle, at its
+time, with its title, place and link, on the entry's day; an item added
+under its id at the position its entry gives as its text, since a
+payload holds no float, with its title, or where its member signed it
+blank for an extending graft to fill, the one it took (`named`), its
+minutes, and its presenter as its commitment, the feat's trigger putting it in its meeting's circle;
+an item moved to the position its entry gives, and one removed; a
+meeting held or cancelled on its entry's day; and its minutes begun on
+the entry's day, keeping their first. The feat's triggers judge each
+again as it folds.
 
 ## Circles
 

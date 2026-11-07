@@ -41,8 +41,8 @@ before(async () => {
   await db.connect()
   await db.query(`SET cella.clock = '2026-11-21'`)
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-       ('m-2026-014', 'ag', 'The solidarity rate', 'consent', 'consent', '2026-11-07', '2026-11-21')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+       ('m-2026-014', 'ag', 'camille@lanterne.example', 'The solidarity rate', 'consent', 'consent', '2026-11-07', '2026-11-21')`,
   )
   await db.query(
     `INSERT INTO motion.action (motion, n, kind, args) VALUES
@@ -246,9 +246,9 @@ test('a policy replaces only the one in force the day it would apply, and replac
     await adopt(solidarity, 1)
     await adopt('Associations pay the solidarity rate, {rate: 25 % | less is stricter} below the rate card', 2, { replaces: 'm-2026-014/1', applies: '2027-01-01' })
     await db.query(
-      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-         ('m-2026-016', 'ag', 'Remote work', 'consent', 'consent', '2026-11-21', '2026-11-28'),
-         ('m-2026-017', 'ag', 'Remote work, again', 'consent', 'consent', '2026-11-21', '2026-11-28')`,
+      `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+         ('m-2026-016', 'ag', 'camille@lanterne.example', 'Remote work', 'consent', 'consent', '2026-11-21', '2026-11-28'),
+         ('m-2026-017', 'ag', 'camille@lanterne.example', 'Remote work, again', 'consent', 'consent', '2026-11-21', '2026-11-28')`,
     )
     await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-016', 1, 'policy', '{}'), ('m-2026-017', 1, 'policy', '{}')`)
 
@@ -373,8 +373,8 @@ test('a policy is ended by a motion of its own circle, on the verdict date, by t
   try {
     await adopt(solidarity, 1)
     await db.query(
-      `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES
-         ('m-2026-015', 'ag', 'No solidarity rate', 'consent', 'consent', '2026-11-07', '2026-11-21')`,
+      `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES
+         ('m-2026-015', 'ag', 'camille@lanterne.example', 'No solidarity rate', 'consent', 'consent', '2026-11-07', '2026-11-21')`,
     )
     await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-2026-015', 1, 'end', '{"policy": "m-2026-014/1"}')`)
     assert.equal(await asks(), null)

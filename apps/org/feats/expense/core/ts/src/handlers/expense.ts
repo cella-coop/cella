@@ -14,16 +14,21 @@ export const capturing = (input: Capture): Write<Captured> => ({
   op: 'expense:expense:capture' satisfies Action,
   request: input,
   state: async (tx) => {
-    const { rows } = await tx.query<{ id: string; circle: string; total: string }>(
+    const { rows } = await tx.query<{ id: string; circle: string; net: string; vat: string | null; total: string }>(
       `INSERT INTO expense.expense AS e (member, day, label, category, net, vat, receipt, circle)
        VALUES ($1, $2, $3, $4, cella.amount($5), cella.amount($6), $7, coalesce($8, circle.assembly()))
-       RETURNING e.id, e.circle, expense.total(e) AS total`,
+       RETURNING e.id, e.circle, cella.cents(e.net) AS net, cella.cents(e.vat) AS vat, expense.total(e) AS total`,
       [input.member, input.day, input.label, input.category, input.net, input.vat, input.receipt, input.circle ?? null],
     )
-    return { expense: rows[0].id, circle: rows[0].circle, member: input.member, day: input.day, category: input.category, amount: Number(rows[0].total) }
+    const r = rows[0]
+    return {
+      expense: r.id, circle: r.circle, member: input.member, day: input.day, category: input.category,
+      net: Number(r.net), vat: r.vat === null ? null : Number(r.vat), amount: Number(r.total),
+    }
   },
   // The label and the receipt are the member's own: the log commits to
-  // them, and the vault keeps them.
+  // them, and the vault keeps them. Its figures, before VAT and the VAT,
+  // the log keeps as they are, for its fold.
   payload: (v) => ({
     ...v,
     label: personal('expense.expense.label', input.member, input.label),

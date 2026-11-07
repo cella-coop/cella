@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies
@@ -112,6 +112,17 @@ Every record names its owning circle, `circle`, a foreign key into
 core's circles ([owning
 circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
+
+## Folds
+
+Each action folds by `core/sql/005-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+an add, the contact under the id its entry names, an update and an
+archive, its fields, each set to the value its entry keeps of the fields
+it names and every other left as it was, a personal one as its
+commitment, written `redacted`, as JSON in the address. An erasure
+archives the person, and the erasure its entry keeps, folded after it
+(`cella.fold_erasures`), drops the commitments to their contact data
+and redacts it, as the notary did.
 
 ## Handlers
 

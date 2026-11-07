@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps, type Write } from '@cella/org-db'
+import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Void, Voided } from '../models/invoice.ts'
 
@@ -19,8 +19,9 @@ export const voiding = (input: Void): Write<Voided> => ({
     )
     return { invoice: input.invoice, voided: rows[0]?.voided ?? '' }
   },
-  // The reason is free text and stays out of the log.
-  payload: (v) => ({ ...v }),
+  // The reason is free text, which may name a person: the log keeps its
+  // commitment and the vault its value.
+  payload: (v) => ({ ...v, reason: personal('invoice.invoice.reason', v.invoice, input.reason) }),
 })
 
 // `void` is a keyword, so the handler is `annul`; the write is still void.

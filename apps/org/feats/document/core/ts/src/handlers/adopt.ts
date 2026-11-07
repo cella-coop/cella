@@ -6,25 +6,28 @@ import type { Adopt, Adopted } from '../models/document.ts'
 const op = 'document:document:adopt' satisfies keyof typeof actions
 
 // Makes a version binding, on the verdict date; the log commits to the
-// version's hash, the content adopted. The guards on this op decide:
+// version's hash, the content adopted, and carries the adoption's
+// number, which orders two of one write. The guards on this op decide:
 // `document.adopts`, that the version is the document's and its base is
 // still the adopted version; the grafts', that the cited motion asks
 // for this content, closed and passed.
 export async function adopt(input: Adopt, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Adopted>> {
+  let adoption = 0
   return write(deps, {
     op,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ receipt: string; adopted: string; hash: string | null }>(
+      const { rows } = await tx.query<{ receipt: string; n: string; adopted: string; hash: string | null }>(
         `INSERT INTO document.adoption (receipt, document, version, base, adopted)
          VALUES (cella.receipt(), $1, $2, $3, cella.verdict_date())
-         RETURNING receipt, to_char(adopted, 'YYYY-MM-DD') AS adopted,
+         RETURNING receipt, n, to_char(adopted, 'YYYY-MM-DD') AS adopted,
            (SELECT encode(v.hash, 'hex') FROM document.version v WHERE v.id = $2 AND v.document = $1) AS hash`,
         [input.document, input.version, input.base],
       )
       const r = rows[0]
+      adoption = Number(r.n)
       return { document: input.document, version: input.version, hash: r.hash ?? '', adopted: r.adopted, receipt: Number(r.receipt) }
     },
-    payload: (v) => ({ ...v, base: input.base, motion: input.motion }),
+    payload: (v) => ({ ...v, base: input.base, motion: input.motion, adoption }),
   })
 }

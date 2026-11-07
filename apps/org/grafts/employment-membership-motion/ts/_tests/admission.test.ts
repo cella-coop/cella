@@ -49,7 +49,7 @@ test('invited, her probation over and no motion moving to admit her, Inès is du
 })
 
 test('an open motion to admit her holds the proposal back; once it closes without admitting her, one is due again', async () => {
-  await db.query(`INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline) VALUES ('m-1', 'ag', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31')`)
+  await db.query(`INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline) VALUES ('m-1', 'ag', 'camille@lanterne.example', 'Admit Inès', 'consent', 'consent', '2026-10-14', '2026-10-31')`)
   await db.query(`INSERT INTO motion.action (motion, n, kind, args) VALUES ('m-1', 1, 'admit', '{"member": "ines@lanterne.example", "shares": 20}')`)
   assert.deepEqual((await admissions()).find((a) => a.address === ines), { address: ines, stage: 'invited', motion: 'm-1', due: false })
   await db.query(`UPDATE motion.motion SET closed = '2026-10-31', cutoff = 1 WHERE id = 'm-1'`)

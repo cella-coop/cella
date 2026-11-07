@@ -287,8 +287,18 @@ test('a member who leaves draws nothing more, even before the freeze that follow
   // Stands in for the exit write. The freeze follows it as a write of its
   // own, account-membership's reaction, which the capital scenario runs;
   // until then a draw is refused all the same, as only a member draws.
+  // Staged around the notary, it is undone after, so the log folds into
+  // the state the scenario leaves.
   await su.query(`UPDATE membership.member SET status = 'exited' WHERE address = $1`, [sofia])
-  assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE holder = $1`, [sofia])).frozen, false)
-  const late = await draw({ member: sofia, cents: 10_00 }, as(sofia))
-  assert.match(reason(late), /sofia@lanterne.example is exited: only an active member draws/)
+  try {
+    assert.equal((await one<{ frozen: boolean }>(`SELECT frozen FROM account.account WHERE holder = $1`, [sofia])).frozen, false)
+    const late = await draw({ member: sofia, cents: 10_00 }, as(sofia))
+    assert.match(reason(late), /sofia@lanterne.example is exited: only an active member draws/)
+  } finally {
+    // An exit is final, so its undoing skips the trigger that says so.
+    await su.query('BEGIN')
+    await su.query('SET LOCAL session_replication_role = replica')
+    await su.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [sofia])
+    await su.query('COMMIT')
+  }
 })

@@ -24,19 +24,24 @@ export async function edit(input: Edit, deps: Deps): Promise<Outcome<(typeof act
   } catch (e) {
     throw new Error(`${input.document}: the edit leaves ${(e as Error).message}`)
   }
+  let appended = 0
+  let update = ''
   return write(deps, {
     op,
     request: input,
     state: async (tx) => {
-      const { rows } = await tx.query<{ receipt: string; digest: string }>(
+      const { rows } = await tx.query<{ receipt: string; digest: string; n: string; update: string }>(
         `INSERT INTO document.update (receipt, document, author, at, bytes)
          VALUES (cella.receipt(), $1, $2, cella.verdict_date(), $3)
-         RETURNING receipt, encode(cella.digest(bytes), 'hex') AS digest`,
+         RETURNING receipt, encode(cella.digest(bytes), 'hex') AS digest, n, encode(bytes, 'hex') AS update`,
         [input.document, deps.actor, input.update],
       )
+      appended = Number(rows[0].n)
+      update = rows[0].update
       return { document: input.document, receipt: Number(rows[0].receipt), digest: rows[0].digest }
     },
-    // The log commits to the update by its digest, never its bytes.
-    payload: (v) => ({ ...v }),
+    // The log keeps the update's bytes, in hex, the co-op's text, and its
+    // number, so the fold rebuilds it row for row.
+    payload: (v) => ({ ...v, appended, update }),
   })
 }

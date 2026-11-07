@@ -1,6 +1,6 @@
 +++
 title = "project-timesheet"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Time against a project, what it spent of the budget, what it cost the
@@ -59,6 +59,16 @@ it.
 ## Invariants
 
 - a booking's entry exists, and its project exists and is not archived.
+
+## Folds
+
+A booking folds by `project_timesheet.fold_log` (`sql/004-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)), on `timesheet:entry:log`, once
+the timesheet feat's fold has logged the entry: the entry booked to the
+project its entry names, where it names one, the graft's trigger judging
+the project again, as it did. An entry that names none is the co-op's
+own time. The rate and the cost are parameters no action writes, which
+the founding carries.
 
 ## Reads
 

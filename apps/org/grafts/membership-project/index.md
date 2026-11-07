@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -56,6 +56,14 @@ membership feat checks it.
 
 What a share is spent on is not recorded: spending against a share waits
 for the expense feat.
+
+## Folds
+
+A share folds by `membership_project.fold_share` (`sql/004-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): under the id its entry names, of
+its amount, to its member from its project, granted on the day its
+entry names, which its entry carries; the graft's trigger judges it
+against the member and what is left of the budget again, as it did.
 
 ## Shell
 

@@ -24,6 +24,12 @@ site hold no feat and write no SQL. Read
   it; `cella check feats` refuses one that does not. Only the log's
   first entry declares a check, `first`, instead. An action not yet
   built is not declared ([actions](_corpus/doc/architecture.md#actions)).
+- **Every action folds.** Its slice's SQL registers how its entry applies
+  to the state before it, by `cella.lets_fold`, and its entry carries all
+  it changed, a personal value as its commitment; `cella check feats`
+  refuses an action with no fold, and every e2e scenario's log folds into
+  a fresh database that matches it row for row, but one whose file says
+  why it cannot (`// unfolded:`) ([folds](_corpus/doc/architecture.md#folds)).
 - **The notary is the only path that appends to the log.** It is a layer,
   the `cella` extension in org's core, not a feat, and has no actions of its
   own. Only the extension's functions write the log; a handler writes

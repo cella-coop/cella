@@ -128,6 +128,7 @@ const check = (name) => {
   const motions = ids(motion.motion)
   for (const d of motion.motion ?? []) {
     has(circles, d.circle, 'circle', `motion ${d.id}`)
+    known(d.proposer, `proposer of ${d.id}`)
     for (const v of d.vote ?? []) {
       known(v.member, `vote on ${d.id}`)
     }

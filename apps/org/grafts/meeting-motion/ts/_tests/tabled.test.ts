@@ -27,8 +27,8 @@ before(async () => {
   await db.connect()
   await db.query(`INSERT INTO circle.circle (id, name) VALUES ('coordination', 'Coordination') ON CONFLICT DO NOTHING`)
   await db.query(
-    `INSERT INTO motion.motion (id, circle, title, method, procedure, proposed, deadline)
-     VALUES ('m-2026-011', 'coordination', 'Raise the day rate for 2027', 'consent', 'consent', '2026-10-12', '2026-11-09')`,
+    `INSERT INTO motion.motion (id, circle, proposer, title, method, procedure, proposed, deadline)
+     VALUES ('m-2026-011', 'coordination', 'camille@lanterne.example', 'Raise the day rate for 2027', 'consent', 'consent', '2026-10-12', '2026-11-09')`,
   )
   await db.query(
     `INSERT INTO meeting.meeting (id, circle, title, at) VALUES

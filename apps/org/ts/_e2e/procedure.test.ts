@@ -139,6 +139,9 @@ test('put under it, six for and four against fails, seven for and three against 
   }
   assert.equal(await passes(six), false, 'six in ten is short of two thirds')
   assert.equal(await passes(seven), true, 'seven in ten is two thirds and more')
+  // The staged procedure goes back, so the log folds into the state the
+  // scenario leaves.
+  await su.query("SET cella.unbound = on; UPDATE circle.circle SET procedure = 'consent' WHERE id = 'ag'; RESET cella.unbound")
 })
 
 test('the log verifies', async () => {

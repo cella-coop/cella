@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -78,6 +78,17 @@ Each write on a project, a milestone, its budget or its archive names
 the project's circle in its payload, which the membership feat's guard
 reads a mandate's scope against, so a lead runs their own circle's
 projects alone ([membership](../person/feats/membership/index.md#seats)).
+
+## Folds
+
+Each action folds by `core/sql/004-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+a project under the id its entry names, in its circle, with the title,
+summary and due day it was started with and the day it started, which
+its entry carries; a milestone under the number its entry names, with
+its title and due day, the feat's trigger putting it in its project's
+circle as it did; a completion on the day its entry names, keeping the
+first; a budget set to the amount its entry names; and an archive on
+the day its entry names, archiving twice changing nothing.
 
 ## Shell
 

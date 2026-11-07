@@ -62,8 +62,11 @@ const current = (href: string) => {
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
-    background: color-mix(in oklch, var(--ground) 82%, transparent);
+    /* the panel, the design's first shade, white in the light theme, over a
+       hero on the ground */
+    background-color: color-mix(in oklch, var(--panel) 92%, transparent);
+    background-image: var(--grain-panel);
+    background-blend-mode: var(--grain-blend);
     backdrop-filter: blur(12px) saturate(1.2);
   }
 

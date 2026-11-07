@@ -33,7 +33,7 @@ export async function posts() {
 export const toneOf = (band: number) => STATUSES[band % STATUSES.length]
 
 /** A page's bands take the ground and the panel in turn, the hero the
- * ground, so two in a row always differ. */
+ * ground, under the header's panel, so two in a row always differ. */
 export const surfaceOf = (band: number) => (band % 2 ? 'panel' : 'ground')
 
 export const dated =(d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' })

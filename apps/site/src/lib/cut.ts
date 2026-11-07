@@ -1,7 +1,7 @@
 // The cut: the edge where a band's colour meets its print (index.md, the
-// cut), drawn as an edge of the mark's cells is: straight runs, turning
-// once or twice, the colour convex as a cell, bulging into the picture, its
-// corners rounded. It is a clip path in its overlay's own units, 0 to 1,
+// cut), drawn as an edge of the mark's cells is: two straight runs and one
+// turn, the colour convex as a cell, bulging into the picture, its turn
+// rounded. It is a clip path in its overlay's own units, 0 to 1,
 // seeded, so a placement's cut is its own and the same on every build.
 import { rng } from '@cella/brand'
 
@@ -40,19 +40,11 @@ export function cut(key: string, turn: 'left' | 'right' | 'below' = 'left', { re
   const rand = rng(seedOf(key))
   const [lo, hi] = reach
   const at = (t: number) => lo + (hi - lo) * t
-  // the edge's ends, and one or two bends standing out past both, so the
-  // colour is convex
+  // the edge's ends, and one bend standing out past both, so the colour
+  // is convex
   const top: Point = [at(rand() * 0.45), 0]
   const foot: Point = [at(rand() * 0.45), 1]
-  const bends: Point[] = []
-  const two = rand() < 0.5
-  if (two) {
-    const y1 = 0.22 + rand() * 0.2
-    const y2 = 0.58 + rand() * 0.2
-    bends.push([at(0.7 + rand() * 0.3), y1], [at(0.7 + rand() * 0.3), y2])
-  } else {
-    bends.push([at(0.75 + rand() * 0.25), 0.35 + rand() * 0.3])
-  }
+  const bends: Point[] = [[at(0.75 + rand() * 0.25), 0.35 + rand() * 0.3]]
   // a bend that would dent the colour inward goes, so it stays convex
   const edge = [top, ...bends, foot].filter((p, k, all) => {
     if (k === 0 || k === all.length - 1) {

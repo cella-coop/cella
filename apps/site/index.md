@@ -109,9 +109,9 @@ figure and no print shows the figure on a card beside its words.
 ### The cut
 
 `src/lib/cut.ts` draws the edge where the band's colour meets its print
-as an edge of the mark's cells is drawn: straight runs, turning once or
-twice, each bend standing out past its neighbours so the colour is
-convex as a cell, bulging into the picture, its bends rounded. Its ends
+as an edge of the mark's cells is drawn: two straight runs and one turn,
+the turn standing out past both ends so the colour is convex as a cell,
+bulging into the picture, the turn rounded. Its ends
 and bends stand between a tenth and two fifths into the print. The cut
 is a clip path in the print's own units: `Art.astro` holds one for a
 wide screen, the colour reaching in from the print's near edge,

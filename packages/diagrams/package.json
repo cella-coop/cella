@@ -1,0 +1,12 @@
+{
+  "name": "@cella/diagrams",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "dependencies": {
+    "@cella/brand": "workspace:*",
+    "svelte": "5.57.2"
+  }
+}

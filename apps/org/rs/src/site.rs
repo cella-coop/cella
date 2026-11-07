@@ -35,6 +35,11 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
     let mut copy = repo.node("site-copy.mjs");
     copy.arg(repo.site_dir());
     steps.run("site copy", &mut [copy], last_line)?;
+    let mut diagrams = repo.node("site-diagrams.mjs");
+    diagrams
+        .arg(repo.root.join("packages/diagrams"))
+        .arg(repo.site_dir());
+    steps.run("site diagrams", &mut [diagrams], last_line)?;
     let out = repo
         .data()
         .join(format!("site-check-{}", std::process::id()));

@@ -187,7 +187,9 @@ for (const [a, b] of edges) {
     continue
   }
   if (shared.includes(a)) {
-    fail(`${a}: depends on ${b}; a package outside the tree depends on no package of the repository`)
+    if (a !== 'packages/diagrams' || b !== 'packages/brand') {
+      fail(`${a}: depends on ${b}; a package outside the tree depends on no package of the repository except diagrams on brand`)
+    }
     continue
   }
   if (shared.includes(b)) {

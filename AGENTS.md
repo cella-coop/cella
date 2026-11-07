@@ -86,7 +86,8 @@ site hold no feat and write no SQL. Read
 - **The site's text is the operator's.** No agent writes
   `apps/site/src/content/**`, by an edit, a script, a move or a rename:
   the operator writes every word of it by hand. Agents write the site's
-  structure and its components. A
+  structure, its components and its diagrams in `@cella/diagrams`
+  ([diagrams](packages/diagrams/index.md)). A
   change that needs a word of the text changed says so in its entry's
   Flag, and the operator writes it; `.claude/settings.json` refuses an
   agent's edit there early

@@ -8,7 +8,9 @@ updated = 2026-11-06
 from `@cella/brand` ([the brand](../../packages/brand/index.md)). It
 stands outside the feat tree, as the brand does: it holds no feat,
 writes no SQL and depends on no package of the repository but the
-brand, which `cella check feats` enforces.
+brand and its diagrams, `@cella/diagrams`
+([diagrams](../../packages/diagrams/index.md)), which `cella check
+feats` enforces.
 
 It is deployed nowhere. No domain serves it and no host builds it;
 nothing of it goes public until the operator says so.
@@ -43,7 +45,7 @@ naming an element that the collections label.
 
 A section's body is MDX, so the text places the site's figures where
 it reads, by name and without an import: the renderer hands every
-section the site's components.
+section the site's components ([its figures](#its-figures)).
 
 The layout imports the brand's `fonts.css` and `tokens.css` and reads
 its roles alone: the ground with its paper, the text and its muted
@@ -52,6 +54,18 @@ the scale `--t-*`. It names no colour or face of its own, so a change of
 `house.json` restyles the site with `cella brand` and nothing else. The
 favicon is the brand's `favicon.svg`. The theme follows the system's,
 as the tokens do; an element may set `data-theme` to wear the other.
+
+## Its figures
+
+A section's body places a figure by its name, with the components the
+renderer hands it:
+
+- **`<Diagram name="…" />`** renders the diagram of that name from
+  `@cella/diagrams` inside a `<figure>`, its `alt` its `meta`'s, and
+  under it the mark every diagram wears: the `site` entry's diagram
+  label, "AI-generated", in the muted text, which the wrapper always
+  prints and no prop removes. A name the diagrams do not list fails the
+  build, naming it.
 
 ## Whose words
 
@@ -82,6 +96,6 @@ head's committer, which any agent sets.
 |---|---|
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change, the brand's files among them |
 | `cella site build` | the static site into `apps/site/dist`, its pages, its styles and the brand's fonts and images, ready for any static host |
-| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
+| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking names used in MDX), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 
 `dist/` and Astro's `.astro/` are ignored by git.

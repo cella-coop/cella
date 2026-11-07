@@ -1,0 +1,37 @@
+---
+// A page of the asset library: the site's header, its links the library's
+// parts and its lockup leading to the library's index, the part's name as
+// its heading, its body and the site's footer.
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import { nav } from '../lib/assets'
+import { siteData } from '../lib/content'
+import Base from './Base.astro'
+
+const { part } = Astro.props as { part?: string }
+const site = await siteData()
+---
+
+<Base title={site.title} description={site.description}>
+  <Header title={site.title} nav={nav} toggle={site.theme.toggle} menu={site.menu} home={'/assets'} />
+  <main class="wrap">
+    {part && <h1><code>{part}</code></h1>}
+    <slot />
+  </main>
+  <Footer footer={site.footer} toggle={site.theme.toggle} />
+</Base>
+
+<style>
+  main {
+    padding-block: 3rem 6rem;
+  }
+
+  h1 {
+    margin: 0 0 2rem;
+    font-size: var(--t-3xl);
+  }
+
+  h1 code {
+    font-family: var(--font-mono);
+  }
+</style>

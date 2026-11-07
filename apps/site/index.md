@@ -62,12 +62,21 @@ the site shows is a Phosphor duotone, through `iconMarkup`
 
 `/assets`, `src/pages/assets/[...path].astro`, is the asset library,
 in the dev server alone: its `getStaticPaths` gives no path in a build,
-so no build has it, and no page links to it. It shows what the site has
-to draw with: each vendored photo as it is, in the house's print, and as
-a backdrop in each of the five inks; each diagram bare and on a
-backdrop; each icon the site uses, with the theme toggle's and the
-menu's, in every role; and the components. Its only words are the
-assets' names, identifiers the copy check passes, so it holds no copy.
+so no build has it, and no page of the site links to it. It wears the
+site's header, its links the library's parts and its lockup leading to
+the library's index, and the site's footer (`src/layouts/Assets.astro`).
+Its index leads to its parts, `src/lib/assets.ts`'s `PARTS`, each a page
+of its own, its body in `src/components/assets/`:
+
+| Page | What it shows |
+|---|---|
+| `/assets/photos` | every vendored photo as the site prints it, a backdrop in one tone, each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink |
+| `/assets/diagrams` | every diagram, as a section's figure shows it |
+| `/assets/icons` | every icon the site draws, the cards', the toggle's, the menu's and the library's own, in every role |
+| `/assets/components` | the site's components, each by its name |
+
+Its only words are the assets' names, identifiers the copy check
+passes, so it holds no copy.
 
 ## The text
 

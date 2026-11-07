@@ -1,0 +1,50 @@
+---
+// Every diagram of @cella/diagrams, as a section's figure shows it.
+import { diagrams, type DiagramName } from '@cella/diagrams'
+import Diagram from '../Diagram.astro'
+
+const named = Object.keys(diagrams) as DiagramName[]
+---
+
+<ul class="grid" role="list">
+  {
+    named.map((name) => (
+      <li>
+        <div class="card">
+          <Diagram name={name} />
+        </div>
+        <p class="name">
+          <code>{name}</code>
+        </p>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .card {
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .card :global(figure) {
+    margin: 0;
+  }
+
+  .name {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+</style>

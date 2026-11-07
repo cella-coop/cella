@@ -13,9 +13,10 @@ interface Props {
   action?: Link
   toggle: string
   menu: string
+  home?: string
 }
 
-const { title, nav, action, toggle, menu } = Astro.props
+const { title, nav, action, toggle, menu, home = '/' } = Astro.props
 const here = Astro.url.pathname.replace(/\/$/, '')
 const current = (href: string) => {
   const to = href.replace(/\/$/, '')
@@ -25,7 +26,7 @@ const current = (href: string) => {
 
 <header class="header">
   <div class="wrap bar">
-    <a class="home" href="/" aria-label={title} set:html={lockup} />
+    <a class="home" href={home} aria-label={title} set:html={lockup} />
     <nav aria-label={title}>
       {
         nav.map((l) => (

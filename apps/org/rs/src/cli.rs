@@ -304,9 +304,10 @@ pub enum Site {
 
 #[derive(Subcommand)]
 pub enum SitePhoto {
-    /// Download a photo and record its Unsplash credit
+    /// Download photos and record their Unsplash credits, skipping one already vendored
     Add {
-        url: String,
+        #[arg(required = true)]
+        urls: Vec<String>,
         #[arg(long)]
         name: Option<String>,
     },

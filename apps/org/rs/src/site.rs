@@ -36,10 +36,13 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
             result
         }
         Site::Photo {
-            command: SitePhoto::Add { url, name },
+            command: SitePhoto::Add { urls, name },
         } => {
+            if name.is_some() && urls.len() > 1 {
+                return Err(Fail::new("--name names one photo; give one URL with it"));
+            }
             let mut add = repo.node("site-photo.mjs");
-            add.arg(url).arg(repo.site_dir());
+            add.arg("--site").arg(repo.site_dir());
             // The environment's key wins; else the development secrets'
             if std::env::var_os("UNSPLASH_ACCESS_KEY").is_none()
                 && let Some(key) = secret::get(repo, "unsplash_access_key")?
@@ -49,6 +52,7 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
             if let Some(name) = name {
                 add.args(["--name", &name]);
             }
+            add.args(&urls);
             Steps::exec(&mut add)
         }
     }

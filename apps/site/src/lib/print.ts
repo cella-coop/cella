@@ -12,10 +12,12 @@ import { printFile } from '@cella/brand/print-file'
 import { photoNames } from './assets'
 import { STATUSES, type Status } from './photo'
 
-/** The widths a print is made at, in CSS pixels: a panel's, and a tile's
- * or a phone's. */
-export const WIDTHS = { large: 600, small: 360 } as const
+/** The widths a print is made at, in CSS pixels: a panel's, a tile's or a
+ * phone's, and the asset library's enlarged view, made in the dev server
+ * alone. */
+export const WIDTHS = { large: 600, small: 360, full: 1200 } as const
 export type Size = keyof typeof WIDTHS
+const BUILT: Size[] = import.meta.env.DEV ? ['large', 'small', 'full'] : ['large', 'small']
 
 const SCALE = 1.5
 
@@ -27,7 +29,7 @@ const file = (name: string) => {
 export const maskUrl = (name: string, size: Size) => `/print/${name}-${WIDTHS[size]}.png`
 
 /** Every mask a build makes: each photo at each width. */
-export const maskKeys = () => photoNames().flatMap((name) => Object.values(WIDTHS).map((w) => ({ name, width: w })))
+export const maskKeys = () => photoNames().flatMap((name) => BUILT.map((size) => ({ name, width: WIDTHS[size] })))
 
 /** One photo's mask at a width, as a PNG: its alpha the ink's coverage. */
 export async function mask(name: string, width: number) {

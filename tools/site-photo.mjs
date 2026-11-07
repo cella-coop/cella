@@ -41,9 +41,43 @@ async function get(request, url, headers = {}) {
   return res
 }
 
+/** A short name from a photo page's slug: the first three words of its
+ * description, without the trailing id, `-2` and on where one is taken. */
+export function shortName(slug, taken = () => false) {
+  const words = slug.split('-')
+  const described = words.length > 1 ? words.slice(0, -1) : words
+  const base = described.slice(0, 3).join('-').toLowerCase().replace(/[^a-z0-9-]+/g, '') || slug.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+  let name = base
+  for (let n = 2; taken(name); n++) name = `${base}-${n}`
+  return name
+}
+
+/** Vendors every photo a list of pages names, one after another, skipping
+ * a page a sidecar already credits before it asks Unsplash anything, so a
+ * run again spends no request on a photo it has: two requests a photo,
+ * its credit and the download Unsplash asks to be told of. */
+export async function addAll(inputs, site, opts = {}) {
+  const dir = join(site, 'src/photos')
+  const sidecars = existsSync(dir) ? readdirSync(dir).filter((f) => f.endsWith('.json')).map((f) => JSON.parse(readFileSync(join(dir, f), 'utf8'))) : []
+  const had = new Set(sidecars.map((m) => m.photoUrl))
+  const taken = (name) => existsSync(join(dir, `${name}.jpg`)) || existsSync(join(dir, `${name}.json`))
+  let added = 0
+  for (const input of inputs) {
+    const { page, id } = photoUrl(input)
+    if (had.has(page)) {
+      console.log(`skipped ${page}: already vendored`)
+      continue
+    }
+    await add(page, site, shortName(id, taken), opts)
+    had.add(page)
+    added++
+  }
+  console.log(`vendored ${added} of ${inputs.length}`)
+}
+
 export async function add(input, site, named, { request = fetch, ask } = {}) {
   const { page, id } = photoUrl(input)
-  const name = named ?? id.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  const name = named ?? shortName(id)
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) throw new Error('name must be lowercase words separated by hyphens')
   const dir = join(site, 'src/photos')
   if (existsSync(join(dir, `${name}.jpg`)) || existsSync(join(dir, `${name}.json`))) throw new Error(`${name}: photo already exists`)
@@ -84,10 +118,16 @@ export async function add(input, site, named, { request = fetch, ask } = {}) {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const [input, site, flag, named] = process.argv.slice(2)
+  const args = process.argv.slice(2)
+  const usage = 'usage: site-photo.mjs [--check SITE | --site SITE [--name NAME] URL...]'
   try {
-    if (input === '--check' && site) checkPhotos(join(site, 'src/photos'))
-    else if (input && site && (!flag || flag === '--name') && (!flag || named)) await add(input, site, named)
-    else throw new Error('usage: site-photo.mjs [--check SITE | URL SITE [--name NAME]]')
+    if (args[0] === '--check' && args[1]) checkPhotos(join(args[1], 'src/photos'))
+    else if (args[0] === '--site' && args[1]) {
+      const named = args[2] === '--name' ? args[3] : undefined
+      const urls = args.slice(named ? 4 : 2)
+      if (!urls.length || (named && urls.length > 1)) throw new Error(usage)
+      if (named) await add(urls[0], args[1], named)
+      else await addAll(urls, args[1])
+    } else throw new Error(usage)
   } catch (e) { console.error(e.message); process.exitCode = 1 }
 }

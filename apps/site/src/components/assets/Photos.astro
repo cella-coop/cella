@@ -1,22 +1,29 @@
 ---
 // Every photo of the library as the site prints it, on the print's paper
-// in a real ink, each in an ink drawn at random on every load. Hovering one shows a
-// toolbar of the five inks; a press wears that ink. A print's dots are the
-// same in any ink, so a change of ink is a change of colour alone.
+// in a real ink, each in an ink drawn at random on every load. Hovering one
+// shows a toolbar of the five inks; a press wears that ink. A print's dots
+// are the same in any ink, so a change of ink is a change of colour alone.
+// A press on a photo opens it large, printed at the enlarged width, in its
+// ink; a press anywhere, or escape, closes it.
 import Backdrop from '../Backdrop.astro'
 import { photoNames } from '../../lib/assets'
 import { STATUSES } from '../../lib/photo'
+import { maskUrl, ratio } from '../../lib/print'
 
-const photos = photoNames().map((name) => ({
-  name,
-  ink: STATUSES[Math.floor(Math.random() * STATUSES.length)],
-}))
+const photos = await Promise.all(
+  photoNames().map(async (name) => ({
+    name,
+    ink: STATUSES[Math.floor(Math.random() * STATUSES.length)],
+    full: maskUrl(name, 'full'),
+    ratio: await ratio(name),
+  })),
+)
 ---
 
 <ul class="grid" role="list">
   {
-    photos.map(({ name, ink }) => (
-      <li class="tile" data-ink={ink}>
+    photos.map(({ name, ink, full, ratio }) => (
+      <li class="tile" data-ink={ink} data-name={name} data-full={full} data-ratio={ratio}>
         <div class="print">
           <Backdrop photo={{ photo: name, ink }} size={'small'} />
           <div class="tools" role="toolbar" aria-label={name}>
@@ -33,7 +40,28 @@ const photos = photoNames().map((name) => ({
   }
 </ul>
 
+<dialog class="lightbox">
+  <div class="large"><span /></div>
+  <p class="name"><code /></p>
+</dialog>
+
 <script>
+  const box = document.querySelector<HTMLDialogElement>('.lightbox')!
+  const large = box.querySelector<HTMLElement>('.large')!
+  for (const print of document.querySelectorAll<HTMLElement>('.tile .print')) {
+    print.addEventListener('click', (e) => {
+      if ((e.target as HTMLElement).closest('.tools, .credit')) {
+        return
+      }
+      const tile = print.closest<HTMLElement>('.tile')!
+      large.style.setProperty('--mask', `url(${tile.dataset.full})`)
+      large.style.setProperty('--ink', `var(--print-${tile.dataset.ink}-deep)`)
+      large.style.setProperty('--ratio', tile.dataset.ratio!)
+      box.querySelector('code')!.textContent = tile.dataset.name!
+      box.showModal()
+    })
+  }
+  box.addEventListener('click', () => box.close())
   for (const button of document.querySelectorAll<HTMLButtonElement>('.tile .ink')) {
     button.addEventListener('click', () => {
       const tile = button.closest<HTMLElement>('.tile')!
@@ -63,6 +91,45 @@ const photos = photoNames().map((name) => ({
     overflow: hidden;
     border: 1px solid var(--line);
     border-radius: var(--radius);
+    cursor: zoom-in;
+  }
+
+  /* The enlarged print: the photo's whole frame, as large as the window lets */
+  .lightbox {
+    max-width: none;
+    max-height: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    outline: none;
+    cursor: zoom-out;
+  }
+
+  .lightbox::backdrop {
+    background: oklch(0.15 0 0 / 80%);
+  }
+
+  .large {
+    position: relative;
+    width: min(92vw, 1200px, calc(84vh * var(--ratio)));
+    aspect-ratio: var(--ratio);
+    overflow: hidden;
+    isolation: isolate;
+    border-radius: var(--radius);
+    background: var(--print-paper);
+  }
+
+  .large span {
+    position: absolute;
+    inset: 0;
+    background: var(--ink);
+    mask: var(--mask) center / cover no-repeat;
+    mix-blend-mode: multiply;
+  }
+
+  .lightbox .name {
+    color: oklch(0.85 0 0);
+    text-align: center;
   }
 
   .print :global(.credit) {

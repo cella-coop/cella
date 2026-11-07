@@ -70,7 +70,7 @@ of its own, its body in `src/components/assets/`:
 
 | Page | What it shows |
 |---|---|
-| `/assets/photos` | every vendored photo as the site prints it ([prints](#prints)), each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink |
+| `/assets/photos` | every vendored photo as the site prints it ([prints](#prints)), each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink; a press on a photo opens it large in its ink, printed at 1200 CSS pixels, a mask the dev server alone makes |
 | `/assets/diagrams` | every diagram, as a section's figure shows it |
 | `/assets/icons` | every icon the site draws, the cards', the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |
@@ -191,12 +191,17 @@ renderer hands it:
 ## Photos
 
 A photo is vendored, never linked: `cella site photo add <unsplash
-url> [--name NAME]` downloads it into `src/photos/<name>.jpg`, its
-name the photo's slug unset, with a sidecar `src/photos/<name>.json`
+url>... [--name NAME]` downloads each into `src/photos/<name>.jpg`, its
+name the first three words of the page's slug unset, numbered where one
+is taken, `--name` naming a single one, with a sidecar `src/photos/<name>.json`
 holding what its credit needs: the photographer's name and their
 profile's URL, the photo's page, its Unsplash id and the licence, the
 [Unsplash License](https://unsplash.com/license), which lets the photo
-be modified, as the print does. The two credit links carry
+be modified, as the print does. The photos are picked on Unsplash's own
+site, which spends nothing of the API, and vendored in one run: a page
+a sidecar already credits is skipped before Unsplash is asked anything,
+and each new one costs two requests, its credit and the download its
+guidelines ask to be told of. The two credit links carry
 `utm_source=cella` and `utm_medium=referral`. With an Unsplash access key in
 `UNSPLASH_ACCESS_KEY` or, unset, the development secrets'
 `unsplash_access_key` ([secrets](../org/rs/index.md#secrets)), the task reads the photographer through

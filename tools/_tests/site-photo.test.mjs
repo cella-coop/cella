@@ -3,11 +3,34 @@ import { strict as assert } from 'node:assert'
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { photoUrl, checkPhotos, add } from '../site-photo.mjs'
+import { photoUrl, checkPhotos, add, addAll, shortName } from '../site-photo.mjs'
 import { createRequire } from 'node:module'
 const sharp = createRequire(new URL('../../packages/brand/package.json', import.meta.url))('sharp')
 
 const credit = { photographer: 'Ada Example', photographerUrl: 'https://unsplash.com/@ada', photoUrl: 'https://unsplash.com/photos/aBc123', id: 'aBc123', licence: 'Unsplash License', licenceUrl: 'https://unsplash.com/license' }
+test('a short name is the slug\'s first three words, numbered where taken', () => {
+  assert.equal(shortName('people-of-diverse-skin-tones-fist-bumping-in-a-circle-BTpIUnszs_Q'), 'people-of-diverse')
+  assert.equal(shortName('white-buildings-sKKuyRyiy6k'), 'white-buildings')
+  assert.equal(shortName('white-buildings-sKKuyRyiy6k', (n) => n === 'white-buildings'), 'white-buildings-2')
+})
+
+test('a run again asks Unsplash nothing for a photo it has', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'site-photo-all-'))
+  try {
+    mkdirSync(join(root, 'src/photos'), { recursive: true })
+    writeFileSync(join(root, 'src/photos/had.json'), JSON.stringify({ photoUrl: 'https://unsplash.com/photos/had-it-aBc123' }))
+    let asked = 0
+    const request = async () => {
+      asked++
+      return { ok: false, status: 500 }
+    }
+    await addAll(['https://unsplash.com/photos/had-it-aBc123'], root, { request })
+    assert.equal(asked, 0)
+  } finally {
+    rmSync(root, { recursive: true, force: true })
+  }
+})
+
 test('only Unsplash photo pages and safe names', () => {
   assert.deepEqual(photoUrl('https://unsplash.com/photos/aBc123?utm_source=cella'), { page: credit.photoUrl, id: credit.id })
   for (const url of ['https://evil.test/photos/aBc123', 'http://unsplash.com/photos/aBc123', 'https://unsplash.com/photos/../../oops']) assert.throws(() => photoUrl(url))

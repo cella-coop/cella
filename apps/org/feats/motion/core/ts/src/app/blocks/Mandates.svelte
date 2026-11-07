@@ -1,17 +1,19 @@
 <script lang="ts">
   import { Note, power, Properties, Section, type Prop } from '@cella/org-ui'
+  import { cap } from '@cella/org-circle/app'
   import type { Issuing, Mandate } from '../../models/circles.ts'
 
   // What the motion's actions do to the mandates: for each grant, the
   // parent it is issued under, or would be were it closed at its
   // deadline, and while it is open what is wrong with it; for each end or
   // replacement of a mandate's policy, every mandate its close revokes the
-  // same day; once closed, each mandate granted or revoked. Each links to
-  // the circle whose page lists it.
+  // same day; once closed, each mandate granted or revoked. Each names its
+  // grantee and issuer by name and its cap as a mandate's page says it,
+  // and opens its own page, its chain.
   let { data }: { data: { mandates: Issuing[] } | null; id: string } = $props()
 
-  const named = (m: Mandate) => `${power(m.power)}, ${m.grantee}, ${m.cap}, issued by ${m.issuer}`
-  const row = (label: string, m: Mandate): Prop => ({ label, value: named(m), href: `/circles/${m.circle}` })
+  const named = (m: Mandate) => `${power(m.power)}, ${m.grantee}, ${cap(m)}, issued by ${m.issuer}`
+  const row = (label: string, m: Mandate): Prop => ({ label, value: named(m), href: `/mandates/${m.id}` })
   const many = (n: number) => (n === 1 ? 'one mandate' : `${n} mandates`)
 
   // What the action does, in a sentence.

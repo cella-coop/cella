@@ -1,13 +1,10 @@
-import { icons, power, type App, type Tone } from '@cella/org-ui'
+import { icons, power, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
 import Structure from './blocks/Structure.svelte'
-import { cap, covers } from './words.ts'
+import { cap, covers, tones } from './words.ts'
 
 export { cap } from './words.ts'
-
-// A mandate's state as its badge shows it.
-const tones: Record<Standing['state'], Tone> = { stands: 'positive', pending: 'accent', revoked: 'negative', expired: 'neutral' }
 
 // The feat's client side: the circles, none within another, and a
 // circle's page with its roles, the mandates granted to them, and the
@@ -57,7 +54,7 @@ export const app: App = {
           { key: 'granteeName', label: 'Granted to', role: 'sub', value: (m: Standing) => m.granteeName },
           { key: 'cap', label: 'Cap', value: (m: Standing) => cap(m) },
           { key: 'scope', label: 'Covers', value: (m: Standing) => covers(m) },
-          { key: 'issuer', label: 'Issued by', kind: 'mono', value: (m: Standing) => m.issuer },
+          { key: 'issuerName', label: 'Issued by', value: (m: Standing) => m.issuerName },
           { key: 'state', label: 'State', kind: 'badge', role: 'meta', value: (m: Standing) => m.state, tone: (m: Standing) => tones[m.state] },
         ],
       },
@@ -79,7 +76,7 @@ export const app: App = {
           { label: 'From', value: m.from, kind: 'date' },
           ...(m.until ? [{ label: 'Until', value: m.until, kind: 'date' as const }] : []),
           ...(m.procedure ? [{ label: 'Decided by', value: m.procedure, kind: 'badge' as const }] : []),
-          { label: 'Issued by', value: m.issuer, kind: 'mono', href: `/circles/${m.issuer}` },
+          { label: 'Issued by', value: m.issuerName, href: `/circles/${m.issuer}` },
           ...(m.motion ? [{ label: 'Adopted by', value: m.motion, kind: 'mono' as const, href: `/motions/${m.motion}` }] : []),
         ],
         blocks: [Chain],

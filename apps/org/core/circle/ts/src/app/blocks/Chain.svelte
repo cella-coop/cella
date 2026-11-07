@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Note, power, Section, Table, type Column } from '@cella/org-ui'
   import type { Depth, Provenance } from '../../models/circle.ts'
-  import { cap, covers, narrows } from '../words.ts'
+  import { cap, covers, narrows, tones } from '../words.ts'
 
   // Where a mandate's authority comes from: its chain, the root the
   // assembly issued first, down to the mandate, each link with how it
@@ -15,7 +15,7 @@
   const above = (k: Depth) => data.chain.find((p) => p.depth === k.depth - 1)
   const chain: Column<Depth>[] = [
     { key: 'grantee', label: 'Granted to', kind: 'title', value: (k) => (k.id === data.id ? `${k.granteeName} (this one)` : k.granteeName) },
-    { key: 'issuer', label: 'Issued by', kind: 'mono', value: (k) => k.issuer },
+    { key: 'issuer', label: 'Issued by', value: (k) => k.issuerName },
     { key: 'cap', label: 'Cap', value: (k) => cap(k).replace(/^up to /, '') },
     { key: 'scope', label: 'Covers', value: (k) => covers(k) },
     {
@@ -31,10 +31,10 @@
     { key: 'depth', label: 'Below', kind: 'number', value: (k) => k.depth },
     { key: 'power', label: 'Power', value: (k) => power(k.power) },
     { key: 'grantee', label: 'Granted to', kind: 'title', value: (k) => k.granteeName },
-    { key: 'issuer', label: 'Issued by', kind: 'mono', value: (k) => k.issuer },
+    { key: 'issuer', label: 'Issued by', value: (k) => k.issuerName },
     { key: 'cap', label: 'Cap', value: (k) => cap(k) },
     { key: 'scope', label: 'Covers', value: (k) => covers(k) },
-    { key: 'state', label: 'State', kind: 'badge', value: (k) => k.state },
+    { key: 'state', label: 'State', kind: 'badge', value: (k) => k.state, tone: (k) => tones[k.state] },
   ]
   const open = (k: Depth) => `/mandates/${k.id}`
 </script>

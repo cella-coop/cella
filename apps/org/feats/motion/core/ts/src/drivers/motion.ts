@@ -3,11 +3,14 @@ import { leftBy } from '@cella/org-policy'
 import type { Motion, Detail, Effect, Given, Kind, Labelled, Procedure, Summary } from '../models/motion.ts'
 import type { Message } from '../models/thread.ts'
 
-// Its author by its grantee's name, a role's or a circle's, or its id
-// where its reader reads neither.
-const columns = `id, circle, author,
+// Its circle by name, and its author by its grantee's name, a role's or a
+// circle's, or its id where its reader reads neither, with the circle
+// whose page names it: the circle itself, or the one its role is of, the
+// motion's own for a role every working circle has.
+const columns = `id, circle, coalesce((SELECT c.name FROM circle.circle c WHERE c.id = motion.circle), motion.circle) AS "circleName", author,
   coalesce((SELECT r.name FROM circle.role r WHERE r.id = motion.author),
            (SELECT c.name FROM circle.circle c WHERE c.id = motion.author), motion.author) AS "authorName",
+  coalesce((SELECT coalesce(nullif(r.circle, '*'), motion.circle) FROM circle.role r WHERE r.id = motion.author), motion.author) AS "authorCircle",
   title, method, procedure, ballot, to_char(proposed, 'YYYY-MM-DD') AS proposed,
   to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed`
 

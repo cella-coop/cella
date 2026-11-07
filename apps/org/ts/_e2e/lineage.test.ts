@@ -48,7 +48,7 @@ test('the print buyer\'s mandate opens from Brand\'s page, and its chain walks u
   const deepest = await page(`/mandates/${deep}`)
   assert.ok(deepest.includes('(this one)'), 'the chain marks the mandate the page is of')
   assert.ok(deepest.includes('the root, the assembly'), 'the chain starts at the assembly\'s root')
-  assert.ok(deepest.includes('smaller cap; brand alone'), 'the print buyer\'s link narrows its scope to Brand')
+  assert.ok(deepest.includes('smaller cap; Brand alone'), 'the print buyer\'s link narrows its scope to Brand')
   assert.ok(deepest.includes('Nothing is issued under it'))
   const up = links(deepest)
   assert.ok(up.indexOf(root) < up.indexOf(mid) && up.indexOf(mid) < up.indexOf(deep), 'the chain reads from the root down')

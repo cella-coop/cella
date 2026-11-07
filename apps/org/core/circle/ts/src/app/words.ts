@@ -1,12 +1,13 @@
-import { money } from '@cella/org-ui'
+import { money, type Tone } from '@cella/org-ui'
 import type { Standing } from '../models/circle.ts'
 
 // A mandate's cap in words: a limit a write, a budget a period, or none.
 export const cap = (m: Pick<Standing, 'limit' | 'budget' | 'per'>) =>
   m.limit !== null ? `up to ${money(m.limit)} a write` : m.budget !== null ? `within ${money(m.budget)} a ${m.per}` : 'uncapped'
 
-// What a mandate covers in words.
-export const covers = (m: Pick<Standing, 'scope'>) => (m.scope === null ? 'the whole co-op' : m.scope === 'own' ? 'its own circle' : m.scope)
+// What a mandate covers in words, a circle by its name where it is read.
+export const covers = (m: Pick<Standing, 'scope'> & { scopeName?: string | null }) =>
+  m.scope === null ? 'the whole co-op' : m.scope === 'own' ? 'its own circle' : (m.scopeName ?? m.scope)
 
 // How a link of a chain narrows the one above it, in words: a smaller
 // cap, a narrower scope, a later start, an earlier end; none where it is
@@ -19,3 +20,6 @@ export function narrows(k: Standing, above: Standing): string[] {
     ...(k.until !== null && (above.until === null || k.until < above.until) ? ['ends sooner'] : []),
   ]
 }
+
+// A mandate's state as its badge shows it.
+export const tones: Record<Standing['state'], Tone> = { stands: 'positive', pending: 'accent', revoked: 'negative', expired: 'neutral' }

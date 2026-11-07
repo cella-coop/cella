@@ -98,7 +98,7 @@ export interface Put {
 // would be were it closed at its deadline, with what is wrong with it
 // while open; for each end or replacement of a mandate's policy, that
 // mandate and every one below it its close revokes. Each mandate by its
-// power and grantee, with the circle whose page lists it.
+// power and grantee, opening its own page.
 export interface Issuing {
   kind: 'policy' | 'end'
   closed: boolean
@@ -110,13 +110,16 @@ export interface Issuing {
   revokes: Mandate[]
 }
 
+// A mandate a motion's actions grant, issue under or revoke: its power,
+// its grantee and its issuer by name, and its cap in cents.
 export interface Mandate {
   id: string
   power: string
   grantee: string
   issuer: string
-  cap: string
-  circle: string
+  limit: number | null
+  budget: number | null
+  per: 'month' | 'year' | null
 }
 
 // An amount in euros as a policy writes it, its thousands spaced: `3 000 €`.

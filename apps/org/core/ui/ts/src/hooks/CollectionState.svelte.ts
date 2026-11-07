@@ -16,6 +16,9 @@ export class CollectionState {
     return -1
   })
   creating = $state(false)
+  // The field the View panel adds a condition on, while its popover picks
+  // the first value it keeps.
+  adding: string | null = $state(null)
   search: HTMLInputElement | undefined = $state()
 
   readonly #rows: () => any[]

@@ -8,7 +8,9 @@
   // to its trigger by CSS anchor positioning, flipped to stay in the
   // viewport; where a browser lacks it, placed by hand on opening. As a
   // menu, it focuses its first item on opening, and the arrow keys, Home
-  // and End move among its items.
+  // and End move among its items. `open` opens it once it is drawn, as a
+  // condition just added opens to pick its values; `onclose` hears it
+  // close.
   let {
     label,
     trigger,
@@ -17,6 +19,9 @@
     menu = true,
     wide = false,
     button = false,
+    chip = false,
+    open = false,
+    onclose,
   }: {
     // What the trigger opens: the popover's name, and the trigger's
     // description beside the name its visible text gives it, so a voice
@@ -30,14 +35,24 @@
     // The trigger reads as a quiet button, as wide as its text, as on a
     // page; otherwise it fills its row, as in the sidebar.
     button?: boolean
+    // The trigger reads as a chip, as a condition on a collection's rows.
+    chip?: boolean
+    open?: boolean
+    onclose?: () => void
   } = $props()
 
   const id = $props.id()
+  const opening = (pop: HTMLElement) => {
+    if (open && !pop.matches(':popover-open')) {
+      pop.showPopover()
+    }
+  }
   const items = (pop: HTMLElement) => [...pop.querySelectorAll<HTMLElement>('[role^="menuitem"]:not([disabled])')]
 
   function ontoggle(e: ToggleEvent) {
     const pop = e.currentTarget as HTMLElement
     if (e.newState !== 'open') {
+      onclose?.()
       return
     }
     const anchor = document.querySelector<HTMLElement>(`[popovertarget="${id}"]`)
@@ -76,11 +91,12 @@
   }
 </script>
 
-<button class="trigger" class:button popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
+<button class="trigger" class:button class:chip popovertarget={id} aria-haspopup={menu ? 'menu' : 'dialog'} aria-describedby="{id}-about" style:anchor-name="--{id}">
   {@render trigger()}
   <span id="{id}-about" hidden>{label}</span>
 </button>
 <div
+  {@attach opening}
   {id}
   popover="auto"
   class="popover {side}"
@@ -122,6 +138,20 @@
     white-space: nowrap;
     justify-self: start;
     align-self: end;
+  }
+  .chip {
+    width: auto;
+    max-width: 100%;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+    line-height: 1.6rem;
+    font-size: var(--text-xs);
+    background: var(--accent-soft);
+    color: var(--accent-text);
+  }
+  .chip:hover {
+    background: var(--accent-soft);
+    color: var(--text);
   }
   .popover {
     margin: 0;

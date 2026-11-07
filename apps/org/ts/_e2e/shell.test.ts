@@ -199,7 +199,7 @@ test('widgets reordered as the keyboard drops them stay in their new order', asy
     { kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
     { kind: 'chart', title: 'By standing', measure: { op: 'count' }, by: 'state' },
   ]
-  // Lifting the first, two steps down and a drop: what the View card hands
+  // Lifting the first, two steps down and a drop: what the View panel hands
   // the address.
   const move = drag.drop(drag.step(drag.step(drag.start('widgets', 0, ws.length, 'keyboard'), 1), 1)).move
   assert.ok(move)

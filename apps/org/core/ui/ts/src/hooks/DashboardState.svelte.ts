@@ -12,7 +12,7 @@ export interface Draft {
   within: 'month' | 'year'
 }
 
-// The dashboard's editor in the View card: which widget is open, a new
+// The dashboard's editor in the View panel's Display popover: which widget is open, a new
 // one being -1, and its draft until it is saved into the address.
 export class DashboardState {
   editing: number | null = $state(null)

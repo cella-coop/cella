@@ -129,7 +129,9 @@ export const sortable =
           width: `${pending.rect.width}px`,
           height: `${pending.rect.height}px`,
         })
-        document.body.append(preview)
+        // In a popover, the preview joins it in the top layer, above it.
+        const host = node.closest<HTMLElement>('[popover]') ?? document.body
+        host.append(preview)
         pending.item.setAttribute('data-dragging', '')
         frame = requestAnimationFrame(scroll)
       }

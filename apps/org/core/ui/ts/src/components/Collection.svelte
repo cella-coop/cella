@@ -49,7 +49,7 @@
   // The one collection component: the same header, view bar and rows for
   // every collection, as a list, a feed, a table, a gallery, a board, a calendar
   // or a dashboard, and the drawer's
-  // View card holding how they are shown. The view bar's tabs are the
+  // View panel holding how they are shown. The view bar's tabs are the
   // collection's preset views, then the viewer's own; the active one, and
   // anything changed from it, live in the address, so a view can be
   // linked and the server renders it as it is. The rows are the server's,
@@ -303,6 +303,7 @@
     {shown}
     grouped={grouped?.key}
     placing={placing?.key}
+    {sorted}
     {custom}
     {dirty}
     onchange={change}

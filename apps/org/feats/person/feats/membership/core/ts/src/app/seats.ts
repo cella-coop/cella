@@ -3,11 +3,13 @@ import type { Held, Seat } from '@cella/org-circle/models'
 import Circles from './blocks/Circles.svelte'
 import Decides from './blocks/Decides.svelte'
 import Members from './blocks/Members.svelte'
+import Powers from './blocks/Powers.svelte'
 import Seats from './blocks/Seats.svelte'
 
 // The feat's seats, client side: a circle's seats, and a member's seats and the
-// mandates they hold through them; the circles joining asks, and what a
-// member decides, read back as sentences.
+// mandates they hold through them; every power they hold and by what, on
+// its own tab; the circles joining asks, and what a member decides, read
+// back as sentences.
 export const app: App = {
   name: 'membership/seats',
   extends: {
@@ -24,7 +26,8 @@ export const app: App = {
       page: {
         related: (d: { seats: Seat[]; held: Held[] }) =>
           d.seats.filter((s) => !s.until).map((s) => ({ label: s.circleName, sub: s.roleName ?? undefined, href: `/circles/${s.circle}` })),
-        blocks: [Seats, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }],
+        tabs: [{ id: 'powers', label: 'Powers' }],
+        blocks: [Seats, { tab: 'joining', block: Circles }, { tab: 'rights', block: Decides }, { tab: 'powers', block: Powers }],
       },
     },
   },

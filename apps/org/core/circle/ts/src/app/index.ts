@@ -4,6 +4,8 @@ import Chain from './blocks/Chain.svelte'
 import Structure from './blocks/Structure.svelte'
 import { cap, covers } from './words.ts'
 
+export { cap } from './words.ts'
+
 // A mandate's state as its badge shows it.
 const tones: Record<Standing['state'], Tone> = { stands: 'positive', pending: 'accent', revoked: 'negative', expired: 'neutral' }
 

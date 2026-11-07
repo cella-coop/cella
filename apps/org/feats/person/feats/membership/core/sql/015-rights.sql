@@ -4,17 +4,28 @@
 -- right lets each act on what is their own, which the feat's guard
 -- checks, and so opens no one else's rows: it is never the authority
 -- reads ask (`may`), only what a write may use beside a seat's mandates.
+-- The rights in force a person holds on a day are read in one place, as
+-- the seats' mandates are by `holds`: `entitled` asks it, and a person's
+-- page lists it.
+CREATE FUNCTION membership.rights(person text, day date) RETURNS TABLE ("right" bigint)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT m.id
+  FROM circle.right m
+  WHERE (m."from" IS NULL OR m."from" <= rights.day)
+    AND (m.until IS NULL OR m.until > rights.day)
+    AND (m.revoked IS NULL OR m.revoked > rights.day)
+    AND person.holds(rights.person, m."right", rights.day);
+END;
+
 CREATE FUNCTION membership.entitled(actor text, power text, cents bigint, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
-    SELECT FROM circle.right m
+    SELECT FROM membership.rights(entitled.actor, entitled.day) r
+    JOIN circle.right m ON m.id = r."right"
     WHERE m.power = entitled.power
-      AND (m."from" IS NULL OR m."from" <= entitled.day)
-      AND (m.until IS NULL OR m.until > entitled.day)
-      AND (m.revoked IS NULL OR m.revoked > entitled.day)
       AND (m."limit" IS NULL OR entitled.cents IS NULL OR entitled.cents <= cella.cents(m."limit"))
-      AND person.holds(entitled.actor, m."right", entitled.day)
   );
 END;
 

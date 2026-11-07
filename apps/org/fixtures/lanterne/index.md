@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 # Lanterne
@@ -37,7 +37,8 @@ prepares and pays the monthly pay run, which Camille approves, reimburses
 expenses up to 3 000 € and closes each month. Leads approve their
 members' expenses up to 1 000 € a month each, Camille up to 2 000 € an
 expense and suppliers' bills up to 5 000 € a bill, and leads quote up to
-15 000 €.
+15 000 €. Sofia, Brand's print buyer since 12 October, approves Brand's
+print and paper bills up to 1 200 € a bill.
 Leads and the gérante run projects and set their budgets, the leads up to
 15 000 € and Camille up to 50 000 €, and approve timesheets, a lead
 those of their own circle's members; Julien, seated in the assembly as
@@ -91,7 +92,7 @@ assembly, and no one opens a candidacy for another.
   exclude members, adopt and end policies, approve the distribution, adopt documents and
   seat members; coordination's to adopt and end policies, adopt
   documents and seat members. No working circle holds
-  one, so a motion of Web carries no action. The rights follow,
+  one from the founding, so a motion of Web carries no action. The rights follow,
   `m-2021-001/60` to `/71`, each a policy of the kind `right`, no
   mandate, given to the people who hold it as such, with no seat and no
   grantee, as `Every {right: employee} holds {power: claim-expense}, to
@@ -179,7 +180,8 @@ assembly, and no one opens a candidacy for another.
   variable (`document.toml`), and after them the defaults of the SCOP
   SARL the assembly left: `statutes@1`, adopted on 1 March 2021 with
   m-2021-001's procedures, mandates and rules, and `statutes@2`, on 20
-  June 2026, with the internal rules' five rules m-2026-007 adopted.
+  June 2026, with the internal rules' five rules m-2026-007 adopted and
+  coordination's `approve-bill` m-2026-008 granted that day.
   No one edits them; the next adoption by the assembly generates the next.
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
   0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
@@ -213,8 +215,29 @@ assembly, and no one opens a candidacy for another.
   her 2 200 € is a run's, and October's waits for every worker's October
   to be approved, hers with the members'. Four October expenses are
   claimed, three submitted. Two suppliers' bills are recorded and wait
-  for Camille's approval: Imprimerie du Parc's paper, 1 440 €, and
-  Atelier Lumen's October rent, 1 080 €.
+  for Camille's approval: Imprimerie du Parc's paper, 1 440 €, Brand's
+  and over Sofia's 1 200 €, and Atelier Lumen's October rent, 1 080 €,
+  the assembly's and outside Brand's.
+- **Bills, a chain of mandates (ordered).** Who approves a supplier's
+  bill below the gérante is handed down three mandates deep, each
+  narrower than the one above ([circle](../../core/circle/index.md#lanterne)):
+  the annual assembly's m-2026-008, on 20 June 2026, grants coordination
+  `approve-bill` up to 3 000 € a write; coordination's m-2026-009, on
+  28 September, grants Operations, which keeps the suppliers,
+  `approve-bill` up to 2 000 € and `adopt-policy`, each under its own;
+  and Operations' m-2026-010, on 12 October, decided by Julien, its one
+  seat, grants the print buyer, a role made for Brand and held by Sofia
+  by a tenure from that day, `approve-bill` up to 1 200 € on Brand's
+  bills (`{scope: brand}`). A circle decides about no role of its own,
+  so Brand's is Operations' to grant. Two motions wait to be closed,
+  each past its deadline of 24 October with consents and no objection:
+  coordination's m-2026-013, granting finance `approve-bill` up to
+  1 500 € under its own, and the assembly's m-2026-014, ending
+  coordination's, whose close revokes Operations' and the print buyer's
+  with it the same day. Sofia, on the verdict date, holds no mandate to
+  record a bill, approves Imprimerie du Parc's 1 440 € over her limit
+  and Atelier Lumen's rent outside her scope, and each is refused
+  saying so.
 - **Work (confluent, bounded and ordered).** Eight projects, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's

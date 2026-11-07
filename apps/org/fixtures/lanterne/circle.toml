@@ -75,6 +75,13 @@ name = "Treasurer"
 duty = "finance's hand in the assembly: approves everyone's time for the pay run"
 holders = 1
 
+[[role]]
+id = "print-buyer"
+circle = "brand"
+name = "Print buyer"
+duty = "orders Brand's print and paper and approves their bills"
+holders = 1
+
 
 # Who is in which circle and who holds which role. Every member holds the
 # assembly's member role and is a member of one working circle; each
@@ -227,3 +234,12 @@ role = "secretary"
 circle = "coordination"
 holder = "malik@lanterne.example"
 role = "secretary"
+
+# Brand's print buyer, a role made for Brand alone: it orders the
+# circle's print and paper, and Operations, by m-2026-010, lets it
+# approve their bills up to 1 200 €. Sofia holds it from that day.
+[[tenure]]
+circle = "brand"
+holder = "sofia@lanterne.example"
+role = "print-buyer"
+since = 2026-10-12

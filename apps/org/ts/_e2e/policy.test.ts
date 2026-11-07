@@ -138,7 +138,7 @@ test('the assembly\'s page lists the policy in force, as it reads, with its moti
       },
     ],
   )
-  assert.deepEqual((await circles.proposing(app, 'coordination'))?.policies, [], 'a policy is its circle\'s')
+  assert.deepEqual((await circles.proposing(app, 'web'))?.policies, [], 'a policy is its circle\'s')
 })
 
 test('a motion closed so late its policies would end on or before the day they apply passes, and adopts neither', async () => {

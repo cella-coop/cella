@@ -138,7 +138,7 @@ test('the stance form starts at the acting member\'s latest stance, and is not o
   const hugos = await as('/motions/m-2026-012?tab=stances', hugo)
   assert.match(hugos, /<option value="consent"[^>]*selected/, 'Hugo\'s select holds his latest stance, consent')
   assert.ok(hugos.includes('Change stance'), 'and offers to change it')
-  assert.ok(hugos.includes('Now: consent · receipt 38'), 'saying which receipt it is')
+  assert.ok(hugos.includes('Now: consent · receipt 57'), 'saying which receipt it is')
   assert.ok((await as('/motions/m-2026-012?tab=stances', ines)).includes("Not on this motion's roll."), 'Inès, invited, reads the assembly\'s motion as every seat does, and is on no roll')
 })
 

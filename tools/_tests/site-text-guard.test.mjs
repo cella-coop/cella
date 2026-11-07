@@ -1,13 +1,14 @@
 // The site's text guard (apps/site/index.md, whose words): every way an
 // agent's tool call writes, moves, removes or redirects into
-// apps/site/src/content/ is refused, naming the path; a read of the text
-// and a write anywhere else pass. The hook itself refuses by exit 2 with
+// apps/site/src/content/ is refused, naming the path, and so is a remove,
+// move or restore of a directory holding it; a read of the text and a
+// write anywhere else pass. The hook itself refuses by exit 2 with
 // its reason on stderr, as Claude Code reads a PreToolUse hook.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { guard, reason } from '../site-text-guard.mjs'
@@ -116,6 +117,147 @@ test('a call that names the text and writes nothing there passes', () => {
     `echo '${text}' | wc -c`,
   ]
   for (const command of passed) assert.equal(bash(command), null, `passes: ${command}`)
+})
+
+test('the reviewer\'s four commands, which change a directory holding the text, are refused', () => {
+  assert.match(bash('rm -rf apps/site'), /rm -r removes apps\/site, which holds apps\/site\/src\/content/)
+  assert.match(bash('mv apps/site /tmp/site'), /mv moves apps\/site, which holds/)
+  assert.equal(bash('git restore .'), `git restore overwrites ${repo.replace(/\/$/, '')}, which holds ${text}`)
+  assert.match(bash('git clean -fd apps/site'), /git clean removes apps\/site, which holds/)
+})
+
+test('a remove, move or restore of a directory holding the text is refused, by any spelling', () => {
+  const refused = [
+    'rm -r apps',
+    'rm -R apps/site/src',
+    'rm --recursive -f apps/site/',
+    'rm -fr .',
+    'rm -rf ./apps//site',
+    `rm -rf ${repo}`,
+    'rm -rf *',
+    'rm -rf apps/s*',
+    'rm -rf apps/site/src/con[tx]ent',
+    'cd apps && rm -rf site',
+    'cd apps/site/src && rm -rf ..',
+    'rmdir apps/site/src/content',
+    'rmdir apps/site',
+    'mv apps /tmp/apps',
+    'mv -t /tmp apps/site/src',
+    'mv /tmp/content apps/site/src',
+    'mv /tmp/content -t apps/site/src',
+    'mv -T /tmp/site apps/site',
+    'cp -r /tmp/src apps/site',
+    'git mv apps/site apps/web',
+    'git rm -r apps/site',
+    'git rm -rf --cached .',
+    'find apps/site -name "*.mdx" -delete',
+    'find . -name "*.bak" -delete',
+    'find apps -type f -exec rm {} +',
+    'find apps/site -name "*.mdx" -exec sed -i s/a/b/ {} +',
+    'rsync -a --delete /tmp/site/ apps/site/',
+    'rsync -a --delete-after /tmp/src/ apps/site/src',
+    'git restore apps/site',
+    'git restore -s HEAD~1 -- apps',
+    'git restore :/',
+    'git restore ":(top)apps/site"',
+    'git restore "apps/*"',
+    'git restore "*.yaml"',
+    'git restore -SW .',
+    'git checkout .',
+    'git checkout -- .',
+    'git checkout HEAD~1 -- apps/site',
+    'git checkout main -- :/',
+    'git clean -fd',
+    'git clean -fdx .',
+    'git clean -fd :/',
+    'git -C apps/site clean -fd',
+    'git -C apps/site restore ..',
+    'cd apps/site && git clean -fdx',
+    'cd apps/site/src && git restore ..',
+    'sh -c "rm -rf apps/site"',
+  ]
+  for (const command of refused) {
+    const why = bash(command)
+    assert.ok(why, `refused: ${command}`)
+    assert.match(why, /apps\/site\/src\/content/, `names the text: ${command}`)
+  }
+})
+
+test('the same commands on a directory beside the text, and a branch switched to, pass', () => {
+  const passed = [
+    'rm -rf apps/org/dist',
+    'rm -rf apps/site/dist apps/site/node_modules',
+    'rm -r apps/site/src/pages/old',
+    'rm apps',
+    'rmdir apps/site/src/empty',
+    'mv apps/site/dist /tmp/dist',
+    'mv /tmp/x apps/site',
+    'mv /tmp/x apps/site/src/pages/',
+    'cp -r /tmp/assets apps/site/public',
+    'cp -r apps/site /tmp/site',
+    'rsync -a /tmp/site/ apps/site/',
+    'rsync -a --delete apps/site/ /tmp/site/',
+    'rsync -a --delete /tmp/dist/ apps/site/dist/',
+    'find . -name "*.md"',
+    'find apps/site -name "*.mdx" -exec grep -l title {} +',
+    'find apps/org -name "*.log" -delete',
+    'git restore apps/org',
+    'git restore --staged .',
+    'git restore ":!apps/site"',
+    'git restore "apps/org/*"',
+    'git checkout main',
+    'git checkout -b feature origin/main',
+    'git checkout -B 26-11-07-x origin/26-11-07-x',
+    'git checkout HEAD~1 -- apps/org',
+    'git switch main',
+    'git switch -c feature',
+    'git clean -fd apps/org',
+    'git clean -n',
+    'git clean --dry-run -d .',
+    'git -C apps/org clean -fdx',
+    'cd apps/org && git clean -fdx',
+    'git -C /tmp restore .',
+    'git -C /tmp clean -fdx',
+    'git stash list',
+    'git stash pop',
+    'git reset --soft HEAD~1',
+    'git reset HEAD apps/site',
+    'git add .',
+    'git status -- apps/site',
+    'git diff .',
+    'ls apps/site',
+    'corpus message send plan "rm -rf apps/site and git restore . pass now"',
+    'git commit -m "guard(site): refuse rm -rf apps/site and git clean"',
+  ]
+  for (const command of passed) assert.equal(bash(command), null, `passes: ${command}`)
+})
+
+test('git reset --hard and git stash are refused while the text has changes git has not committed', () => {
+  const root = mkdtempSync(join(tmpdir(), 'guard-repo-'))
+  const git = (...args) => spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
+  git('init', '-q')
+  mkdirSync(join(root, text), { recursive: true })
+  mkdirSync(join(root, 'apps/org'), { recursive: true })
+  writeFileSync(join(root, yaml), 'title: x\n')
+  writeFileSync(join(root, 'apps/org/a.ts'), 'x\n')
+  git('add', '.')
+  git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init')
+  const run = (command, cwd = root) => guard(root)({ tool_name: 'Bash', tool_input: { command }, cwd })
+  const forms = ['git reset --hard', 'git reset --hard HEAD~1', 'git stash', 'git stash -u', 'git stash push', 'git stash save wip', 'git stash push -m wip', 'git stash push -- apps/site', 'git -C apps/org stash']
+
+  writeFileSync(join(root, 'apps/org/a.ts'), 'y\n')
+  for (const command of forms) assert.equal(run(command), null, `passes while the text is committed: ${command}`)
+
+  writeFileSync(join(root, yaml), 'title: y\n')
+  for (const command of forms) {
+    const why = run(command)
+    assert.ok(why, `refused while the text has changes: ${command}`)
+    assert.match(why, /the changes git has not committed in apps\/site\/src\/content/)
+  }
+  assert.equal(run('git stash push -- apps/org'), null)
+  assert.equal(run('git stash push apps/org'), null)
+  assert.equal(run('git stash list'), null)
+  assert.equal(run('git reset --hard', tmpdir()), null)
 })
 
 test('the hook\'s wrapper runs the guard with a node, and with none refuses only an edit tool\'s write', (t) => {

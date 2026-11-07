@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -104,8 +104,17 @@ guards hold it, each routable around:
   started in the repository, and its `PreToolUse` hook, a script under
   `tools/` with its own tests, refuses a shell command that writes,
   moves, removes or redirects into a file there, as it refuses an
-  `Edit`, `Write` or `NotebookEdit` of one. It refuses a write and
-  nothing else: a call that names the path without writing there
+  `Edit`, `Write` or `NotebookEdit` of one. It refuses the same done
+  to a directory that holds the text: an `rm -r`, `mv`, `find -delete`
+  or `rsync --delete` of the text's directory or of any directory
+  above it, the repository's root among them, git's `rm -r` and `mv`
+  too, and an `mv` or `cp` that lands on one; a `git restore`,
+  `checkout` or `clean` whose pathspec holds the text, or a `git clean`
+  with none run from such a directory; and a `git reset --hard` or
+  `git stash` while the text has changes git has not committed. A
+  branch switched to, a git command in another repository, and every
+  such command on a directory beside the text, pass. It refuses a
+  write and nothing else: a call that names the path without writing there
   passes, a search, a read, a commit message or a message sent through
   corpus among them. Where no `node` is on the session's path, the
   hook looks for one where NixOS keeps it, without starting nix;

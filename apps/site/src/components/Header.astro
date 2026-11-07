@@ -1,6 +1,7 @@
 ---
 // The header, sticky at the top: the brand's lockup linking home, the
-// site's links to its sections, the theme toggle and the site's action.
+// site's links, its action if it names one, and the theme toggle, an icon
+// alone in the bar's far corner.
 import lockup from '@cella/brand/lockup.svg?raw'
 import { iconMarkup } from '../lib/icon'
 import Button from './Button.astro'
@@ -37,7 +38,6 @@ const current = (href: string) => {
       }
     </nav>
     <div class="tools">
-      <ThemeToggle label={toggle} />
       {action && <Button href={action.href}>{action.label}</Button>}
       {
         nav.length > 0 && (
@@ -55,6 +55,9 @@ const current = (href: string) => {
       }
     </div>
   </div>
+  <div class="corner">
+    <ThemeToggle label={toggle} bare />
+  </div>
 </header>
 
 <style>
@@ -70,11 +73,21 @@ const current = (href: string) => {
     backdrop-filter: blur(12px) saturate(1.2);
   }
 
+  /* the bar keeps clear of the corner where the wrap reaches it */
   .bar {
     display: flex;
     align-items: center;
     gap: 2rem;
     height: 4rem;
+    padding-inline-end: max(1.5rem, calc(4rem - (100vw - min(100vw, 72rem)) / 2));
+  }
+
+  /* The theme toggle, in the bar's far corner */
+  .corner {
+    position: absolute;
+    top: 50%;
+    right: 0.75rem;
+    transform: translateY(-50%);
   }
 
   .home {

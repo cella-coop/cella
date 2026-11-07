@@ -2,13 +2,13 @@
 // The theme toggle: a moon in the light theme and a sun in the dark, both
 // Phosphor duotone. A press wears the other theme and remembers it; a
 // press back to the system's theme forgets the choice, so the page follows
-// the system again.
+// the system again. `bare` draws the icon alone, with no outline or fill.
 import { iconMarkup } from '../lib/icon'
 
-const { label } = Astro.props as { label: string }
+const { label, bare = false } = Astro.props as { label: string; bare?: boolean }
 ---
 
-<button class="toggle" type="button" aria-label={label} data-theme-toggle>
+<button class="toggle" type="button" aria-label={label} data-theme-toggle data-bare={bare ? 'yes' : 'no'}>
   <span class="moon" set:html={iconMarkup('moon', 'accent')} />
   <span class="sun" set:html={iconMarkup('sun', 'accent')} />
 </button>
@@ -56,6 +56,15 @@ const { label } = Astro.props as { label: string }
   }
 
   .toggle:hover {
+    background: var(--hover);
+  }
+
+  .toggle[data-bare='yes'] {
+    border-color: transparent;
+    background: none;
+  }
+
+  .toggle[data-bare='yes']:hover {
     background: var(--hover);
   }
 

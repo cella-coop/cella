@@ -26,15 +26,16 @@ interface Props {
   }
   size?: 'large' | 'small'
   tone: Status
+  surface: 'ground' | 'panel'
 }
 
-const { hero, size = 'large', tone } = Astro.props
+const { hero, size = 'large', tone, surface } = Astro.props
 const art = hero.backdrop
 const named = typeof art === 'string' ? art : art?.photo
 const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
 ---
 
-<section class="hero band" id="top" data-layout={layout} data-size={size} style={{ '--tone': `var(--tone-${tone})` }}>
+<section class="hero band" id="top" data-layout={layout} data-size={size} data-surface={surface}>
   {art && <Art photo={art} tone={tone} side={'end'} key={`hero-${named}`} />}
   <div class="wrap grid">
     <div class="copy">

@@ -1,10 +1,10 @@
 ---
-// A print filling its side of a band, in the print's plain ink, the band's
-// colour meeting it along an edge drawn as an edge of the mark's cells:
-// two straight runs and one turn, the colour convex as a cell
-// (index.md, the cut). `side` is the print's side; on a narrow screen it
-// stands above the words, the colour rising over its foot. Its two cuts
-// are clip paths of its own, seeded by `key`.
+// A print filling its side of a band, in the band's tone, cut where it
+// meets the page along an edge drawn as an edge of the mark's cells: two
+// straight runs and one turn, the page's side convex as a cell (index.md,
+// the cut). `side` is the print's side; on a narrow screen it stands above
+// the words, cut at its foot. Its two cuts are clip paths of its own,
+// seeded by `key`.
 import type { Status } from '../lib/photo'
 import { cut } from '../lib/cut'
 import Backdrop from './Backdrop.astro'
@@ -24,13 +24,12 @@ const narrow = cut(`${key}-narrow`, 'below', { reach: [0.12, 0.34], round: 0.05 
 const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)` }
 ---
 
-<div class="art" data-side={side}>
-  <Backdrop photo={name} size={'hero'} narrow={'large'} plain />
-  <svg class="clips" aria-hidden="true" width="0" height="0">
-    <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox"><path d={wide} /></clipPath>
-    <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox"><path d={narrow} /></clipPath>
-  </svg>
-  <div class="flow" style={clips} aria-hidden="true"></div>
+<svg class="clips" aria-hidden="true" width="0" height="0">
+  <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox"><path d={wide} /></clipPath>
+  <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox"><path d={narrow} /></clipPath>
+</svg>
+<div class="art" data-side={side} style={clips}>
+  <Backdrop photo={{ photo: name, ink: tone }} size={'hero'} narrow={'large'} />
 </div>
 
 <style>
@@ -40,12 +39,13 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
     height: 0;
   }
 
-  /* The print: three fifths of the band, top to foot */
+  /* The print: three fifths of the band, top to foot, cut on its near side */
   .art {
     position: absolute;
     top: 0;
     bottom: 0;
     width: 60%;
+    clip-path: var(--cut);
   }
 
   .art[data-side='end'] {
@@ -54,15 +54,6 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
 
   .art[data-side='start'] {
     left: 0;
-  }
-
-  /* The band's colour over the print's near part, cut along its edge */
-  .flow {
-    position: absolute;
-    inset: -1px;
-    z-index: 1;
-    background: var(--band);
-    clip-path: var(--cut);
   }
 
   .art[data-side='start'] :global(.credit) {
@@ -77,9 +68,6 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
       position: relative;
       width: 100%;
       height: max(16rem, 62vw);
-    }
-
-    .flow {
       clip-path: var(--cut-narrow);
     }
 

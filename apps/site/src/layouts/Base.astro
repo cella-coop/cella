@@ -96,11 +96,19 @@ const { title, description } = Astro.props
     padding-inline: 1.5rem;
   }
 
-  /* A band: a section in one of the five tones, the page's ground tinted
-     by it in either theme, its colour also what flows over its print */
-  .band {
-    --band: oklch(from oklch(var(--shade-2) var(--tone)) l calc(c * 0.6) h);
-    background: var(--band);
+  /* A band: a section with one of the five tones, which its print wears,
+     on one of the design's surfaces, the ground and the panel in turn, so
+     two bands in a row always differ; each wears its surface's grain */
+  .band[data-surface='ground'] {
+    background-color: var(--ground);
+    background-image: var(--grain-ground);
+    background-blend-mode: var(--grain-blend);
+  }
+
+  .band[data-surface='panel'] {
+    background-color: var(--panel);
+    background-image: var(--grain-panel);
+    background-blend-mode: var(--grain-blend);
   }
 
   .eyebrow {

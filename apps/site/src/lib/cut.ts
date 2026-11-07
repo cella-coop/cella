@@ -1,8 +1,9 @@
 // The cut: the edge where a band's colour meets its print (index.md, the
 // cut), drawn as an edge of the mark's cells is: two straight runs and one
-// turn, the colour convex as a cell, bulging into the picture, its turn
-// rounded. It is a clip path in its overlay's own units, 0 to 1,
-// seeded, so a placement's cut is its own and the same on every build.
+// turn, the page's side convex as a cell, bulging into the picture, its
+// turn rounded. It clips the print, so the page itself shows past it, and
+// is in the print's own units, 0 to 1, seeded, so a placement's cut is its
+// own and the same on every build.
 import { rng } from '@cella/brand'
 
 type Point = [number, number]
@@ -30,11 +31,11 @@ function rounded(poly: Point[], soft: boolean[], rad: number, f: (p: Point) => s
 }
 
 /**
- * The colour's shape as the `d` of a clip path in its overlay's units.
- * Built with the colour on the left, its edge running from the top to the
- * foot; `turn` names the colour's side as drawn: `left`, `right`, or
- * `below` for a print above its words. `reach` is how far into the
- * overlay the edge stands, from its least to its most.
+ * The print's shape as the `d` of a clip path in its own units. Built
+ * with the page on the left, the edge running from the top to the foot;
+ * `turn` names the page's side as drawn: `left`, `right`, or `below` for
+ * a print above its words. `reach` is how far into the print the edge
+ * stands, from its least to its most.
  */
 export function cut(key: string, turn: 'left' | 'right' | 'below' = 'left', { reach = [0.3, 0.62], round = 0.06 } = {}): string {
   const rand = rng(seedOf(key))
@@ -55,8 +56,9 @@ export function cut(key: string, turn: 'left' | 'right' | 'below' = 'left', { re
     // y runs down, so a bend out past its neighbours' line crosses positive
     return cross > 0
   })
-  const poly: Point[] = [[-0.1, -0.1], [edge[0][0], -0.1], ...edge.slice(1, -1), [edge[edge.length - 1][0], 1.1], [-0.1, 1.1]]
-  const soft = poly.map((_, k) => k > 1 && k < poly.length - 2)
+  // The print's own side of the edge: the page shows through the other
+  const poly: Point[] = [[edge[0][0], -0.1], ...edge.slice(1, -1), [edge[edge.length - 1][0], 1.1], [1.1, 1.1], [1.1, -0.1]]
+  const soft = poly.map((_, k) => k > 0 && k < poly.length - 3)
   const f = (p: Point) => {
     const [x, y] = turn === 'left' ? p : turn === 'right' ? [1 - p[0], p[1]] : [p[1], 1 - p[0]]
     return `${+x.toFixed(4)} ${+y.toFixed(4)}`

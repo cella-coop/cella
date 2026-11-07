@@ -25,9 +25,10 @@ interface Props {
   side: 'start' | 'end'
   action?: Link
   tone: Status
+  surface: 'ground' | 'panel'
 }
 
-const { id, heading, kind, eyebrow, items, figure, backdrop, side, action, tone } = Astro.props
+const { id, heading, kind, eyebrow, items, figure, backdrop, side, action, tone, surface } = Astro.props
 const labelled = `${id}-heading`
 const art = kind === 'split' ? backdrop : undefined
 const named = typeof art === 'string' ? art : art?.photo
@@ -40,7 +41,7 @@ const named = typeof art === 'string' ? art : art?.photo
   data-side={side}
   data-art={art ? 'yes' : 'no'}
   aria-labelledby={labelled}
-  style={{ '--tone': `var(--tone-${tone})` }}
+  data-surface={surface}
 >
   {art && <Art photo={art} tone={tone} side={side} key={`${id}-${named}`} />}
   <div class="wrap">
@@ -130,11 +131,17 @@ const named = typeof art === 'string' ? art : art?.photo
     grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
   }
 
+  /* a card one surface up from its band: a panel on the ground, raised on
+     a panel */
   .section[data-kind='features'] .item {
     padding: 1.5rem;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--panel);
+  }
+
+  .section[data-surface='panel'][data-kind='features'] .item {
+    background: var(--raised);
   }
 
   .item :global(.icon) {

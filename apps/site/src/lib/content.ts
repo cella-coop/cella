@@ -32,4 +32,8 @@ export async function posts() {
  * sections the rest, so no two bands in a row share one. */
 export const toneOf = (band: number) => STATUSES[band % STATUSES.length]
 
+/** A page's bands take the ground and the panel in turn, the hero the
+ * ground, so two in a row always differ. */
+export const surfaceOf = (band: number) => (band % 2 ? 'panel' : 'ground')
+
 export const dated =(d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' })

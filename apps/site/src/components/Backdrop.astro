@@ -16,11 +16,9 @@ interface Props {
   photo: string | { photo: string; ink?: Status }
   size?: Size
   narrow?: Size
-  // the print's plain ink, its text's, in place of a status's
-  plain?: boolean
 }
 
-const { photo, size = 'large', narrow = 'small', plain = false } = Astro.props
+const { photo, size = 'large', narrow = 'small' } = Astro.props
 const { photo: name, ink } = typeof photo === 'string' ? { photo, ink: undefined } : photo
 const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${name}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
 const site = (await getEntry('site', 'site'))!.data
@@ -32,7 +30,7 @@ const referral = (url: string) => {
   return u.href
 }
 const masks = {
-  '--ink': plain ? 'var(--print-text)' : inkVar(inkOf(name, ink)),
+  '--ink': inkVar(inkOf(name, ink)),
   '--mask': `url(${maskUrl(name, size)})`,
   '--mask-small': `url(${maskUrl(name, narrow)})`,
 }

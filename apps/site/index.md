@@ -50,11 +50,14 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
 - **the footer**: the mark, the site's closing line, its links and the
   theme toggle again.
 
-The hero and each section are **bands**, each in one of the five tones
+The hero and each section are **bands**, each with one of the five tones
 in turn, the hero the first (`toneOf` in `src/lib/content.ts`), so no
-two bands in a row share one: its background the page's ground tinted
-by its tone, `--band`, which turns with the theme. The bands part the
-sections; no line does, nor between them and the footer.
+two bands in a row share one; its tone is its print's ink, so the colour
+is the pictures'. A band stands on one of the design's surfaces, the
+ground and the panel in turn (`surfaceOf`), each with its own grain, so
+two bands in a row always differ, and a card in it stands one surface up,
+a panel on the ground and raised on a panel. No line parts the sections,
+nor them and the footer.
 
 The layout sets the theme the visitor chose before the first paint,
 from `localStorage`; with none it follows the system's, as the tokens
@@ -98,28 +101,29 @@ Every word the site shows lives in its content collections, under
 
 A hero or a split section may name a **backdrop**: a vendored photo
 (`src/photos/`, [photos](#photos)) in the house's print, `backdrop:
-<name>`. The print, in the print's plain ink, fills three fifths of the band,
+<name>`. The print, in its band's tone, fills three fifths of the band,
 top to foot, the far side in a hero and the side `side` names in a
 split, and the words stand on the band in the other; on a narrow screen
-it stands above them. The band's colour reaches over the print's near
-part to an edge drawn as a cell's ([the cut](#the-cut)). A hero or a split
+it stands above them. The print is cut on its near side along an edge
+drawn as a cell's, the band's surface showing past it ([the cut](#the-cut)). A hero or a split
 naming both a print and a figure shows the print alone; one with a
 figure and no print shows the figure on a card beside its words.
 
 ### The cut
 
-`src/lib/cut.ts` draws the edge where the band's colour meets its print
-as an edge of the mark's cells is drawn: two straight runs and one turn,
-the turn standing out past both ends so the colour is convex as a cell,
-bulging into the picture, the turn rounded. Its ends
-and bends stand between a tenth and two fifths into the print. The cut
-is a clip path in the print's own units: `Art.astro` holds one for a
-wide screen, the colour reaching in from the print's near edge,
-mirrored for a print on the left, and one for a narrow, rising over its
-foot, each seeded by the placement and the photo, so every cut is its
-own and the same on every build. The print's
-credit sits in a corner clear of the colour, plain small text in the
-print's muted ink, which its light paper carries in either theme.
+`src/lib/cut.ts` draws the edge where a print meets its band as an edge
+of the mark's cells is drawn: two straight runs and one turn, the turn
+standing out past both ends so the band's side is convex as a cell,
+bulging into the picture, the turn rounded. Its ends and turn stand
+between a tenth and two fifths into the print. The cut clips the print,
+so the band's own surface and grain show past it, and is a clip path in
+the print's own units: `Art.astro` holds one for a wide screen, on the
+print's near edge, mirrored for a print on the left, and one for a
+narrow, on its foot, each seeded by the
+placement and the photo, so every cut is its own and the same on every
+build. The print's credit sits in a corner clear of the cut, plain
+small text in the print's muted ink, which its light paper carries in
+either theme.
 
 ## Prints
 
@@ -127,8 +131,7 @@ A print is shown as the brand explorer shows one: a picture on the
 print's light paper, `--print-paper`, in a real ink, `--print-<status>-deep`,
 the same in either theme, with the panel's grain multiplied over it, a
 bounded thing and never a background a text lies on. On the site its
-ink is the print's plain one, `--print-text`, the colour the band's
-alone; in the asset library, the five in turn.
+ink is its band's tone; in the asset library, the five in turn.
 
 Its mask is printed once, at build, by the brand's `printFile`
 (`src/lib/print.ts`), from the photo levelled, its darkest and lightest

@@ -31,9 +31,13 @@ export const maskUrl = (name: string, size: Size) => `/print/${name}-${WIDTHS[si
 /** Every mask a build makes: each photo at each width. */
 export const maskKeys = () => photoNames().flatMap((name) => BUILT.map((size) => ({ name, width: WIDTHS[size] })))
 
-/** One photo's mask at a width, as a PNG: its alpha the ink's coverage. */
+/** One photo's mask at a width, as a PNG: its alpha the ink's coverage.
+ * The photo is levelled first, its darkest and lightest hundredth taken to
+ * black and white, so a high-key photo is not bare paper nor a dark one a
+ * slab: each spans the print's range. */
 export async function mask(name: string, width: number) {
-  const printed = await printFile(readFileSync(file(name)), { width: Math.round(width * SCALE), scale: SCALE, style: PRINT_STYLES.house })
+  const levelled = await sharp(readFileSync(file(name))).normalise({ lower: 1, upper: 99 }).toBuffer()
+  const printed = await printFile(levelled, { width: Math.round(width * SCALE), scale: SCALE, style: PRINT_STYLES.house })
   return printed.masks[0].png
 }
 

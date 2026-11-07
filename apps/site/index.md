@@ -105,7 +105,9 @@ bounded thing and never a background a text lies on. Unset, a photo's
 ink is its own, from its name, the same on every page.
 
 Its mask is printed once, at build, by the brand's `printFile`
-(`src/lib/print.ts`), at the width the print is shown, 600 CSS pixels
+(`src/lib/print.ts`), from the photo levelled, its darkest and lightest
+hundredth taken to black and white so a high-key photo is no bare paper
+and a low-key one no slab, at the width the print is shown, 600 CSS pixels
 for a panel and 360 for a tile or a phone, at 1.5 device pixels to one,
 so its dots are the house's 2.5 CSS pixel cell where it is shown. Each
 mask is its own file, `/print/<photo>-<width>.png`, made by the static

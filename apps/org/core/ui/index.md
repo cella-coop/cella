@@ -156,8 +156,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   cards' fields and the board's grouping, in a calendar, the date it
   places the items by, month or week, and its cards' fields, in a
   dashboard, its widgets; and saving what is shown as a view. Its rows
-  are the server's, kept, filtered, ordered and paged in SQL
-  ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale)):
+  are the server's, kept, filtered, ordered and paged in SQL, and only
+  the lensed circle's where the member has a lens: a collection whose
+  rows name no owning circle says under its header that the lens
+  leaves it whole
+  ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale),
+  [the lens](../../../../_corpus/doc/architecture.md#the-lens)):
   a list, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard

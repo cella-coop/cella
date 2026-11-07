@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for

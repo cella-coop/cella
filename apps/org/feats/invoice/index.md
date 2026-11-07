@@ -1,6 +1,6 @@
 +++
 title = "Invoice"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 What the co-op bills: issue an invoice, send it, record what is paid

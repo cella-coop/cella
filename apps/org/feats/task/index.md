@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands

@@ -1,6 +1,6 @@
 +++
 title = "Bill"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 What the co-op is billed: a supplier's bill recorded as it came, with its

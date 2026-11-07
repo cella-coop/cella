@@ -1,9 +1,9 @@
 // The reads scenario: a collection read in SQL, a page at a time. The
-// composer over rows of its own; every collection's read composed and run
-// on a seeded Lanterne, each badge and date column's key holding what it
-// shows; and the built shell paging fifty thousand time entries, its text
-// filter, its counts and the viewer's own views' tallies, outside dev
-// mode. Run by `cella test e2e reads`.
+// composer over rows of its own, and through a lens; every collection's
+// read composed and run on a seeded Lanterne, each badge and date
+// column's key holding what it shows; and the built shell paging fifty
+// thousand time entries, its text filter, its counts and the viewer's own
+// views' tallies, outside dev mode. Run by `cella test e2e reads`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -92,7 +92,7 @@ test('the composer counts, gives each enumeration\'s values, and runs the widget
   assert.deepEqual(await values(db, invoices, ['state', 'client']), { state: ['overdue', 'paid', 'unpaid'], client: ['Les Halles', 'Nuvola Énergie'] })
   assert.deepEqual(
     await read(db, invoices, { keep: { where: [{ field: 'state', is: ['paid'] }] }, counts: [{ where: [] }], values: ['state', 'nothing'] }),
-    { rows: [{ id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0, client: 'Les Halles' }], counts: [3], values: { state: ['overdue', 'paid', 'unpaid'], nothing: [] } },
+    { rows: [{ id: 'c', state: 'paid', issued: '2026-10-20', total: 200, owed: 0, client: 'Les Halles' }], counts: [3], values: { state: ['overdue', 'paid', 'unpaid'], nothing: [] }, whole: false },
     'a page\'s rows, counts and values in one statement',
   )
   const [owed, month, average, byMonth, byClient] = await measures(db, invoices, [
@@ -114,6 +114,25 @@ test('the composer counts, gives each enumeration\'s values, and runs the widget
     { label: 'Les Halles', value: 1 },
     { label: 'Nuvola Énergie', value: 1 },
   ], 'a row without the field falls under "—"')
+})
+
+test('under a lens the composer keeps the lensed circle\'s rows, and a select that names no circle reads whole', async () => {
+  const db = await as(hugo)
+  const owned: Source = {
+    rows: [
+      { sql: `SELECT * FROM (VALUES ('a', 'web'), ('b', 'brand'), ('c', NULL)) v(id, circle)`, order: 'id' },
+      { sql: `SELECT * FROM (VALUES ('d')) v(id)`, order: 'id' },
+    ],
+    fields: [],
+  }
+  const lensed = { ...owned, lens: 'web' }
+  assert.deepEqual((await page(db, lensed, { where: [] })).map((r) => r.id), ['a', 'c', 'd'], 'Web\'s row, the row that names no circle, and every row of the select that names none')
+  assert.deepEqual(await counts(db, lensed, [{ where: [] }]), [3], 'the counts narrow with it')
+  assert.deepEqual(await measures(db, lensed, [{ where: [], op: 'count' }]), [3], 'and the widgets')
+  assert.equal((await read(db, lensed, { counts: [{ where: [] }] })).whole, false, 'a select names the circle, so the lens does not leave it whole')
+  assert.equal((await read(db, { ...invoices, lens: 'web' }, { counts: [{ where: [] }] })).whole, true, 'no select names one: the lens leaves it whole')
+  assert.deepEqual(await counts(db, { ...invoices, lens: 'web' }, [{ where: [] }]), [3], 'and keeps every row')
+  assert.equal((await read(db, owned, { counts: [{ where: [] }] })).whole, false, 'with no lens there is nothing to leave whole')
 })
 
 const collections = slices.flatMap((s) => Object.keys(s.collections ?? {}))

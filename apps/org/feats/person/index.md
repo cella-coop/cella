@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Everyone the co-op knows, by the address they sign with, and their

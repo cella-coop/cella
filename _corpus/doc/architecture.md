@@ -1059,8 +1059,8 @@ writes' only HTTP path.
 A collection is read in SQL, a page at a time. `@cella/org-db` composes
 its owner's select, the selects of the extensions that add rows, and one
 join per extension that adds fields into one statement (`src/read.ts`),
-each row the JSON of its fields; the view's conditions, its text filter,
-the collection's order and the page's limit run in it, so the server
+each row the JSON of its fields; the member's lens ([the lens](#the-lens)), the view's conditions, its
+text filter, the collection's order and the page's limit run in it, so the server
 holds a page of rows and Postgres the rest. Which rows its reader reads
 is asked once per statement, not once per row: each row-level policy
 asks the circles the reader reads in as an uncorrelated subquery,
@@ -1098,6 +1098,24 @@ are, naming one circle the member reads, or none. Nothing of it
 enters the log and no row-level policy reads it, so it narrows what a
 reader reads and never widens it; a lens naming a circle the member
 no longer reads, or one of another scope, is none.
+
+Every collection reads through the lens. An owner's `list`, and each
+select that adds rows (`rows`), exposes the circle that owns each row
+under `circle`, as nearly every table holds one since circles are core
+([circles are core](#circles-are-core)), and where the member has a
+lens the composed read keeps only the rows whose `circle` is the
+lens's, one condition in the one statement
+([reading at scale](#reading-at-scale)): its page, its tabs' counts,
+its enumerations' values and its dashboard's widgets all narrow with
+it. The lens is one circle and not its subcircles, so a record the
+root circle owns, the assembly's, leaves the view while a working
+circle is lensed. A collection whose rows name no owning circle, a
+registry (the chart of accounts, the periods, the imports, the circles
+and the log), reads whole whatever the lens, and says so under its
+header; a row that names none, as a report the feat draws itself, is
+kept. An item's page,
+the command menu and the Inbox, which is what waits on the member,
+read whatever the lens.
 
 ## The analytics shell
 

@@ -36,7 +36,8 @@
     count?: string
     // What the page is, in its trade's words: the name's tooltip.
     caption?: string
-    // An item's line under its name, at the top of the content.
+    // An item's line under its name, or what a lens leaves of a
+    // collection, at the top of the content.
     subtitle?: string
     // Whether the whole page's subject holds, beside its count.
     badges?: { label: string; tone: Tone }[]

@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:

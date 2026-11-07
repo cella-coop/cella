@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one

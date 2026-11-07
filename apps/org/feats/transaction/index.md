@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The journal: every movement of money in the co-op, as balanced

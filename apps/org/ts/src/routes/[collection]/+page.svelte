@@ -45,6 +45,7 @@
       values={data.values}
       dashboard={data.dashboard}
       sorted={data.sorted}
+      whole={data.whole}
     />
   {/key}
 {/if}

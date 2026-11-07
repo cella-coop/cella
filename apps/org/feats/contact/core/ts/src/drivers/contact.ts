@@ -8,7 +8,7 @@ const columns = 'id, kind, name, form, email, phone, parent, tags, note, client,
 // client stage is null for a contact that is no client, which the Clients
 // view leaves out.
 export const listing: Read = {
-  sql: `SELECT id, kind, name, coalesce(form, kind) AS form, email, phone, parent, tags, note, client
+  sql: `SELECT id, kind, name, coalesce(form, kind) AS form, email, phone, parent, tags, note, client, circle
         FROM contact.contact WHERE NOT archived`,
   order: 'name',
 }

@@ -127,6 +127,36 @@ test('the co-op selector lists the circles, and the one chosen is the lens its t
   assert.equal(await logged(), before, 'and nothing of it enters the log')
 })
 
+test('a lensed collection lists only its circle’s rows, and a registry says the lens leaves it whole', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (path: string, lens?: string) => {
+    const res = await fetch(`${shell.base}${path}`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    assert.equal(res.status, 200, `${path} renders`)
+    return res.text()
+  }
+  const listed = (html: string, name: string) => new Set([...html.matchAll(new RegExp(`href="/${name}/([^"/?#]+)"`, 'g'))].map((m) => decodeURIComponent(m[1])))
+  const owned = async (table: string) => new Set((await su.query<{ id: string }>(`SELECT id::text FROM ${table} WHERE circle = 'web'`)).rows.map((r) => r.id))
+
+  for (const [name, table] of [['expenses', 'expense.expense'], ['projects', 'project.project']] as const) {
+    const all = listed(await seen(`/${name}`), name)
+    const webs = await owned(table)
+    const lensed = await seen(`/${name}`, 'web')
+    const kept = listed(lensed, name)
+    assert.ok(kept.size > 0 && kept.size < all.size, `the lens on Web keeps some of the ${name}, not all: ${kept.size} of ${all.size}`)
+    assert.deepEqual([...kept].sort(), [...all].filter((id) => webs.has(id)).sort(), `the lens on Web keeps exactly Web's ${name}`)
+    assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger reads Lanterne / Web')
+    assert.ok(!lensed.includes('whole: no circle owns its rows'), `the ${name} are not left whole`)
+  }
+
+  const chart = await seen('/accounts', 'web')
+  const counted = (html: string) => Number(/class="count[^"]*">(\d+)</.exec(html)?.[1] ?? NaN)
+  const unlensed = await seen('/accounts')
+  assert.match(chart, /The lens on Web leaves Accounts whole: no circle owns its rows\./, 'a registry says the lens leaves it whole')
+  assert.ok(counted(chart) > 0, 'the chart of accounts holds rows')
+  assert.equal(counted(chart), counted(unlensed), 'and keeps every one of them under the lens')
+  assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
+})
+
 test('every collection has a dashboard, its widgets run by the server', async () => {
   const invoices = await page('/invoices?view=dashboard')
   assert.equal(invoices.status, 200)

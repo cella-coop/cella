@@ -1,6 +1,6 @@
 +++
 title = "Contact"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The organisations and people the co-op deals with: its CRM. Companies

@@ -1,10 +1,10 @@
 import { A4, Pdf, width, wrap, type Page, type Style } from '@cella/org-pdf'
 import type { Printed } from '../models/invoice.ts'
 
-// An issued invoice as a PDF a client's accountant accepts: in French, as
-// loi n° 94-665 art. 2 asks of an invoice, with the mentions of the code de
-// commerce (art. L441-9, R123-237) and of the CGI (annexe II, art. 242
-// nonies A), each figure as the invoice was issued.
+// An issued invoice as a PDF a client's accountant accepts: in English,
+// since the prototype is not bound to French law, with the mentions of the
+// code de commerce (art. L441-9, R123-237) and of the CGI (annexe II, art.
+// 242 nonies A), each figure as the invoice was issued.
 
 const margin = 50
 const right = A4.width - margin
@@ -15,19 +15,24 @@ const floor = 110
 
 const nbsp = ' '
 
-// Cents as French euros: 12 345,67 €.
+// Cents as euros in English: €12,345.67.
 export function euros(cents: number): string {
   const sign = cents < 0 ? '-' : ''
   const abs = Math.abs(cents)
-  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, nbsp)
-  return `${sign}${whole},${String(abs % 100).padStart(2, '0')}${nbsp}€`
+  const whole = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  return `${sign}€${whole}.${String(abs % 100).padStart(2, '0')}`
 }
 
-// YYYY-MM-DD as 31/12/2026.
-export const day = (iso: string) => iso.split('-').reverse().join('/')
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
-// A decimal as text, without its trailing zeros, with a decimal comma.
-const decimal = (text: string) => String(Number(text)).replace('.', ',')
+// YYYY-MM-DD as 31 December 2026, which reads the same in every country.
+export function day(iso: string): string {
+  const [y, m, d] = iso.split('-')
+  return `${Number(d)}${nbsp}${months[Number(m) - 1]}${nbsp}${y}`
+}
+
+// A decimal as text, without its trailing zeros.
+const decimal = (text: string) => String(Number(text))
 
 // A SIREN in its three groups: 123 456 789.
 const siren = (s: string) => s.replace(/\s/g, '').replace(/(\d{3})(?=\d)/g, `$1${nbsp}`)
@@ -38,13 +43,13 @@ const small: Style = { size: 8, grey: 0.35 }
 // SIREN and registry (R123-237), and VAT number (242 nonies A, I, 2°).
 function mentions(p: Printed): string[] {
   const s = p.seller
-  const named = [s.name, s.form && (s.capital ? `${s.form} au capital de ${s.capital}` : s.form)].filter(Boolean).join(', ')
+  const named = [s.name, s.form && (s.capital ? `${s.form} with a share capital of ${s.capital}` : s.form)].filter(Boolean).join(', ')
   return [
     named,
-    s.seat && `Siège : ${s.seat}`,
+    s.seat && `Registered office: ${s.seat}`,
     s.siren && `SIREN ${siren(s.siren)}`,
-    s.rcs && `RCS ${s.rcs}`,
-    s.vat && `TVA intracommunautaire ${s.vat}`,
+    s.rcs && `Trade register RCS ${s.rcs}`,
+    s.vat && `EU VAT number ${s.vat}`,
   ].filter((m): m is string => !!m)
 }
 
@@ -68,10 +73,10 @@ function joined(parts: string[], style: Style): string[] {
 // article asks to be said.
 function terms(p: Printed): string[] {
   return [
-    `À régler au plus tard le ${day(p.invoice.due)}. Pas d’escompte pour paiement anticipé.`,
-    'Tout retard de paiement entraîne des pénalités au taux de refinancement de la Banque centrale européenne ' +
-      'majoré de 10 points (code de commerce, art. L441-10), exigibles dès le lendemain de l’échéance, et, ' +
-      `pour un client professionnel, une indemnité forfaitaire pour frais de recouvrement de 40${nbsp}€ (art. D441-5).`,
+    `Payable by ${day(p.invoice.due)} at the latest. No discount for early payment.`,
+    'Late payment incurs penalties at the European Central Bank’s refinancing rate plus 10 points ' +
+      '(code de commerce, art. L441-10), due from the day after the due date, and, for a business client, ' +
+      `a fixed indemnity of ${euros(40_00)} for the costs of recovery (art. D441-5).`,
   ]
 }
 
@@ -82,17 +87,17 @@ const described = columns.quantity - 40 - columns.description
 function header(page: Page, y: number): number {
   page.fill(margin, y - 6, room, 20, 0.93)
   const head: Style = { size: 8.5, bold: true }
-  page.text(columns.description, y, 'Désignation', head)
-  page.text(columns.quantity, y, 'Qté', { ...head, align: 'right' })
-  page.text(columns.price, y, 'Prix unitaire HT', { ...head, align: 'right' })
-  page.text(columns.rate, y, 'TVA', { ...head, align: 'right' })
-  page.text(columns.amount, y, 'Montant HT', { ...head, align: 'right' })
+  page.text(columns.description, y, 'Description', head)
+  page.text(columns.quantity, y, 'Qty', { ...head, align: 'right' })
+  page.text(columns.price, y, 'Net unit price', { ...head, align: 'right' })
+  page.text(columns.rate, y, 'VAT', { ...head, align: 'right' })
+  page.text(columns.amount, y, 'Net amount', { ...head, align: 'right' })
   return y - 24
 }
 
 export function pdf(p: Printed): Uint8Array {
   const i = p.invoice
-  const doc = new Pdf(`Facture ${i.id}`)
+  const doc = new Pdf(`Invoice ${i.id}`)
   let page = doc.page()
 
   // The seller, top left; the invoice's number and dates, top right.
@@ -102,18 +107,18 @@ export function pdf(p: Printed): Uint8Array {
     page.text(margin, y, line, { size: 9, grey: 0.3 })
     y -= 12
   }
-  page.text(right, 790, 'FACTURE', { size: 20, bold: true, align: 'right' })
-  page.text(right, 770, `N° ${i.id}`, { size: 10, bold: true, align: 'right' })
-  page.text(right, 756, `Date d’émission : ${day(i.issued)}`, { size: 9, align: 'right' })
-  page.text(right, 744, `Échéance : ${day(i.due)}`, { size: 9, align: 'right' })
+  page.text(right, 790, 'INVOICE', { size: 20, bold: true, align: 'right' })
+  page.text(right, 770, `No. ${i.id}`, { size: 10, bold: true, align: 'right' })
+  page.text(right, 756, `Date of issue: ${day(i.issued)}`, { size: 9, align: 'right' })
+  page.text(right, 744, `Due date: ${day(i.due)}`, { size: 9, align: 'right' })
   if (i.voided) {
-    page.text(right, 726, `ANNULÉE le ${day(i.voided)}`, { size: 10, bold: true, align: 'right' })
+    page.text(right, 726, `VOID on ${day(i.voided)}`, { size: 10, bold: true, align: 'right' })
   }
 
   // Whom it bills, as issued.
   const billed = 320
   y = 690
-  page.text(billed, y, 'Facturé à', small)
+  page.text(billed, y, 'Bill to', small)
   y -= 14
   page.text(billed, y, i.bill_to, { size: 11, bold: true })
   for (const line of (i.bill_address ?? '').split('\n').filter((l) => l.trim())) {
@@ -122,7 +127,7 @@ export function pdf(p: Printed): Uint8Array {
   }
 
   y = Math.min(y, 640) - 30
-  for (const line of wrap(`Objet : ${i.label}`, room, { size: 10 })) {
+  for (const line of wrap(`Subject: ${i.label}`, room, { size: 10 })) {
     page.text(margin, y, line, { size: 10 })
     y -= 13
   }
@@ -140,7 +145,7 @@ export function pdf(p: Printed): Uint8Array {
     text.forEach((t, n) => page.text(columns.description, y - n * 12, t, { size: 9.5 }))
     page.text(columns.quantity, y, decimal(l.quantity), { size: 9.5, align: 'right' })
     page.text(columns.price, y, euros(l.unit_price), { size: 9.5, align: 'right' })
-    page.text(columns.rate, y, `${decimal(l.vat_rate)}${nbsp}%`, { size: 9.5, align: 'right' })
+    page.text(columns.rate, y, `${decimal(l.vat_rate)}%`, { size: 9.5, align: 'right' })
     page.text(columns.amount, y, euros(l.amount), { size: 9.5, align: 'right' })
     y -= tall
     page.rule(margin, y + 8, right, y + 8, 0.3, 0.8)
@@ -149,9 +154,9 @@ export function pdf(p: Printed): Uint8Array {
   // The totals: net, the VAT at each rate on its base, and the total due
   // (242 nonies A, I, 10° bis).
   const sums: [string, string, boolean][] = [
-    ['Total HT', euros(i.net), false],
-    ...p.taxed.map((t): [string, string, boolean] => [`TVA ${decimal(t.rate)}${nbsp}% sur ${euros(t.base)}`, euros(t.tax), false]),
-    ['Total TTC', euros(i.total), true],
+    ['Total excl. VAT', euros(i.net), false],
+    ...p.taxed.map((t): [string, string, boolean] => [`VAT ${decimal(t.rate)}% on ${euros(t.base)}`, euros(t.tax), false]),
+    ['Total incl. VAT', euros(i.total), true],
   ]
   const lines = terms(p).flatMap((t) => wrap(t, room, { size: 8.5 }))
   if (y - sums.length * 16 - 30 - lines.length * 11 < floor) {
@@ -172,7 +177,7 @@ export function pdf(p: Printed): Uint8Array {
 
   // When it is due and what paying late costs.
   y -= 14
-  page.text(margin, y, 'Conditions de paiement', { size: 9, bold: true })
+  page.text(margin, y, 'Payment terms', { size: 9, bold: true })
   for (const line of lines) {
     y -= 11
     page.text(margin, y, line, { size: 8.5 })

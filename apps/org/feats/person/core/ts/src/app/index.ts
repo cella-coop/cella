@@ -1,6 +1,7 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
 import type { Person } from '../models/person.ts'
 import type { Ask } from '../models/inbox.ts'
+import Account from './blocks/Account.svelte'
 import Devices from './blocks/Devices.svelte'
 import Profile from './blocks/Profile.svelte'
 import { columns } from './views/devices.ts'
@@ -61,6 +62,17 @@ export const app: App = {
     },
     devices: {
       view: { group: 'platform', subgroup: 'Personal', title: 'Devices', icon: icons.SealCheck, columns, linked: false },
+    },
+  },
+  // The acting person's own settings, first under Personal: their name,
+  // contact details and theme, and their devices.
+  settings: {
+    account: {
+      subgroup: 'Personal',
+      title: 'Account',
+      caption: 'Your name, how to reach you, your theme and the devices that sign your writes.',
+      icon: icons.UserCircle,
+      block: Account,
     },
   },
 }

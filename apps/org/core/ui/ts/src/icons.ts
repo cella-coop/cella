@@ -1,6 +1,7 @@
 // The icons slices may name, Phosphor's, drawn duotone by `Icon`. One list,
 // so the shell's iconography stays one family.
 export { default as Users } from 'phosphor-svelte/lib/Users'
+export { default as UserCircle } from 'phosphor-svelte/lib/UserCircle'
 export { default as CirclesThree } from 'phosphor-svelte/lib/CirclesThree'
 export { default as TreeStructure } from 'phosphor-svelte/lib/TreeStructure'
 export { default as Scales } from 'phosphor-svelte/lib/Scales'

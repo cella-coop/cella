@@ -40,14 +40,19 @@
     }
     const settled: string[] = []
     try {
+      // The outcome the page shows: the last write's that names one, as
+      // a theme kept in a cookie names none, or the one that did not settle.
       let last: Result | null = null
       for (const s of p.saves) {
         const body = new FormData()
         for (const [name, value] of Object.entries(s.fields)) {
           body.set(name, value)
         }
-        last = await post(target(s.write, page.url.searchParams), body).catch(lost)
-        if (last.type !== 'success') {
+        const r = await post(target(s.write, page.url.searchParams), body).catch(lost)
+        if (!last || r.type !== 'success' || r.data?.done) {
+          last = r
+        }
+        if (r.type !== 'success') {
           break
         }
         settled.push(s.write)

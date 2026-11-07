@@ -170,6 +170,21 @@ export interface View<R = any> {
   counted?: boolean
 }
 
+// The theme a person wears: light, dark or the system's.
+export type Theme = 'light' | 'dark' | 'system'
+
+// A settings page a slice serves at `/settings/<name>`, in Settings'
+// sidebar under its group, first in it: its title and icon, and the block
+// that draws it, given what its server side read for the acting person,
+// who looks, and the theme they wear.
+export interface SettingsPage<T = any> {
+  subgroup: 'Personal' | 'Organization'
+  title: string
+  caption?: string
+  icon: Component<any>
+  block: Component<{ data: T; viewer: Viewer | null; theme: Theme }>
+}
+
 // A collection a feat owns: its view, and its items' page if it has one.
 export interface Owned<R = any, T = any> {
   view: View<R>
@@ -223,6 +238,7 @@ export interface App {
   name: string
   collections?: Record<string, Owned>
   extends?: Record<string, Added>
+  settings?: Record<string, SettingsPage>
 }
 
 // An account a statement's line gathers, with its figure in each column,

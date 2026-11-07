@@ -7,27 +7,34 @@
 import type { Db, Form, Slice } from '@cella/org-db'
 import * as forms from './forms.ts'
 import type { Arg } from '../models/index.ts'
-import { deciding, proposing } from '../drivers/proposing.ts'
+import { deciding, issuing, proposing } from '../drivers/proposing.ts'
 import type { Kind, Put } from '../models/circles.ts'
 
-export { deciding, proposing } from '../drivers/proposing.ts'
+export { deciding, issuing, proposing } from '../drivers/proposing.ts'
 export { putting, worded } from '../handlers/put.ts'
 export { adopt, end } from '../handlers/policy.ts'
 
-// What a grant and a revocation ask for: a mandate is a policy, so its
-// form is this feat's, and `putting` words it. Setting open books'
-// disclosure values asks for the three; withholding them, for the rule
-// in force it ends.
+// What a grant, a change and a revocation ask for: a mandate is a policy,
+// so its form is this feat's, and `putting` words it. A grant names its
+// grantee, `role:<id>` or `circle:<id>`, and perhaps the circle whose
+// motion issues it; a change, the mandate it replaces and the values it
+// grants instead. Setting open books' disclosure values asks for the
+// three; withholding them, for the rule in force it ends.
+const granted: Arg[] = [
+  { name: 'grantee', label: 'Grantee', type: 'text', optional: true },
+  { name: 'role', label: 'Role', type: 'text', optional: true },
+  { name: 'power', label: 'Power', type: 'text' },
+  { name: 'text', label: 'Grants', type: 'text', optional: true },
+  { name: 'limit', label: 'Limit per write, €', type: 'number', optional: true },
+  { name: 'budget', label: 'Budget, €', type: 'number', optional: true },
+  { name: 'per', label: 'Budget per', type: 'text', optional: true },
+  { name: 'scope', label: 'Covers', type: 'text', optional: true },
+  { name: 'from', label: 'From', type: 'text', optional: true },
+  { name: 'until', label: 'Until', type: 'text', optional: true },
+]
 const asked: Record<Kind, Arg[]> = {
-  grant: [
-    { name: 'role', label: 'Role', type: 'text' },
-    { name: 'power', label: 'Power', type: 'text' },
-    { name: 'text', label: 'Grants', type: 'text', optional: true },
-    { name: 'limit', label: 'Limit per write, €', type: 'number', optional: true },
-    { name: 'budget', label: 'Budget, €', type: 'number', optional: true },
-    { name: 'per', label: 'Budget per', type: 'text', optional: true },
-    { name: 'scope', label: 'Covers', type: 'text', optional: true },
-  ],
+  grant: [...granted, { name: 'issuer', label: 'Issued by', type: 'text', optional: true }],
+  change: [{ name: 'policy', label: 'Mandate', type: 'text' }, ...granted],
   revoke: [{ name: 'policy', label: 'Mandate', type: 'text' }],
   disclose: [
     { name: 'contributors', label: 'Fewest people in a total', type: 'number' },
@@ -38,7 +45,8 @@ const asked: Record<Kind, Arg[]> = {
 }
 
 // A motion about the circle whose page it is, read as its kind declares
-// its arguments.
+// its arguments; a grantee chosen as `role:<id>` or `circle:<id>` is the
+// role or the circle the policy marks.
 export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   const kind = form.get('kind') as Kind
   const fields = Object.hasOwn(asked, kind) ? asked[kind] : undefined
@@ -48,14 +56,21 @@ export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   if (!form.get('deadline')) {
     throw new Error('a motion needs a deadline')
   }
-  const args = forms.args(form, fields)
+  const { grantee, ...args } = forms.args(form, fields)
+  if (grantee !== undefined) {
+    const [what, id] = String(grantee).split(':')
+    if ((what !== 'role' && what !== 'circle') || !id) {
+      throw new Error(`a mandate is granted to a role or a circle, as role:finance or circle:web, not “${grantee}”`)
+    }
+    args[what] = id
+  }
   return { circle, kind, args, deadline: form.get('deadline'), body: form.get('body') }
 }
 
 export const slice: Slice = {
   name: 'motion/circles',
   extends: {
-    motions: { about: async (db) => ({ circles: await deciding(db) }) },
+    motions: { about: async (db) => ({ circles: await deciding(db) }), item: (db, motion) => issuing(db, motion) },
     circles: { item: (db, circle) => proposing(db, circle) },
   },
 }

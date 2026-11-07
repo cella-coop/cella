@@ -86,6 +86,127 @@ BEGIN ATOMIC
   );
 END;
 
+-- A mandate policy's values as `circle.parent_for` reads them, from its
+-- wording's marks: its grantee and the circle it is about, as
+-- `motion.circle_action` names it, its power, its limit and budget,
+-- each where it is an amount, its period and its scope.
+CREATE FUNCTION motion.granting(wording text) RETURNS TABLE (
+  grantee text, subject text, power text, "limit" cella.amount, budget cella.amount, per text, scope text
+)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT coalesce(k.marked ->> 'role', k.marked ->> 'circle'),
+         coalesce(k.marked ->> 'circle', (SELECT nullif(r.circle, '*') FROM circle.role r WHERE r.id = k.marked ->> 'role')),
+         k.marked ->> 'power',
+         (SELECT (t.value #>> '{}')::bigint::cella.amount FROM policy.typed('limit', k.marked ->> 'limit') t WHERE t.type = 'amount'),
+         (SELECT (t.value #>> '{}')::bigint::cella.amount FROM policy.typed('budget', k.marked ->> 'budget') t WHERE t.type = 'amount'),
+         k.marked ->> 'per',
+         btrim(k.marked ->> 'scope')
+  FROM (SELECT coalesce(motion.marked(granting.wording), '{}') AS marked) k;
+END;
+
+-- What is wrong with a mandate policy of this wording that a motion of
+-- `issuer` would adopt, applying from `from` until `until`, as the field
+-- a form names it under and why, or no row: its values are unsound
+-- (`circle.mandate_flaw`); the issuer may not decide about its grantee's
+-- circle (`motion.decides`); or the issuer, not the assembly, holds no
+-- mandate for its power standing that day to issue it under, or none it
+-- is no wider than (`circle.parent_for`, `circle.wider`), the same SQL
+-- that finds its parent as it is adopted. Each reason says what would fix
+-- it, and names no one.
+CREATE FUNCTION motion.grant_flaw(issuer text, wording text, "from" date, until date) RETURNS TABLE (field text, reason text)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT f.field, f.reason
+  FROM (
+    SELECT CASE
+             WHEN x.flaw LIKE 'a mandate names its power%' THEN 'power'
+             WHEN x.flaw LIKE 'a limit %' OR x.flaw LIKE 'a mandate caps %' THEN 'limit'
+             WHEN x.flaw LIKE 'a budget %' THEN 'budget'
+             WHEN x.flaw LIKE 'a mandate''s scope %' THEN 'scope'
+             WHEN x.flaw LIKE 'a mandate names its procedure %' THEN 'procedure'
+             ELSE 'grantee'
+           END AS field,
+           x.flaw AS reason, 1 AS rank
+    FROM (SELECT circle.mandate_flaw(motion.marked(grant_flaw.wording)) AS flaw) x
+    WHERE x.flaw IS NOT NULL
+    UNION ALL
+    SELECT 'issuer', coalesce(grant_flaw.issuer, 'no circle') || ' may not decide to grant a mandate in '
+             || coalesce(v.subject, 'every working circle') || ': put it to ' || circle.assembly() || ', which decides about every circle', 2
+    FROM motion.granting(grant_flaw.wording) v
+    WHERE NOT coalesce(motion.decides(grant_flaw.issuer, coalesce(v.subject, '*')), false)
+    UNION ALL
+    SELECT CASE
+             WHEN p.id IS NULL THEN 'issuer'
+             WHEN w.wider LIKE 'its cap%' THEN CASE WHEN v.budget IS NOT NULL THEN 'budget' ELSE 'limit' END
+             WHEN w.wider LIKE 'it covers%' THEN 'scope'
+             WHEN w.wider LIKE 'it applies from%' THEN 'from'
+             WHEN w.wider LIKE 'it outlasts%' THEN 'until'
+             ELSE 'power'
+           END,
+           CASE
+             WHEN p.id IS NULL
+               THEN grant_flaw.issuer || ' holds no mandate for ' || v.power || ' standing on ' || grant_flaw."from"
+                 || ' to issue it under: put it to ' || circle.assembly() || ', or have ' || circle.assembly()
+                 || ' grant ' || grant_flaw.issuer || ' one first'
+             ELSE 'it is wider than mandate ' || p.id || ', the ' || v.power || ' ' || grant_flaw.issuer
+               || ' holds to issue it under: ' || w.wider || '; narrow it to fit, or put it to ' || circle.assembly()
+           END,
+           3
+    FROM motion.granting(grant_flaw.wording) v
+    CROSS JOIN LATERAL (
+      SELECT circle.parent_for(grant_flaw.issuer, v.power, v."limit", v.budget, v.per, v.scope, grant_flaw."from", grant_flaw.until) AS id
+    ) p
+    CROSS JOIN LATERAL (
+      SELECT circle.wider(v.power, v."limit", v.budget, v.per, v.scope, grant_flaw."from", grant_flaw.until, p.id) AS wider
+    ) w
+    WHERE grant_flaw.issuer IS DISTINCT FROM circle.assembly()
+      AND (p.id IS NULL OR w.wider IS NOT NULL)
+  ) f
+  ORDER BY f.rank
+  LIMIT 1;
+END;
+
+-- What each action of a motion does to the mandates: for a mandate
+-- policy, the mandate it granted once the motion is closed and the parent
+-- it was issued under, or while it is open the parent it would be issued
+-- under were it closed at its deadline (`circle.parent_for`) and what
+-- `motion.grant_flaw` finds wrong with it; for the end or the replacement
+-- of a mandate's policy, that mandate and every mandate below it its
+-- close revokes (`circle.under`), those standing on the day it ends while
+-- open, those revoked that day once closed.
+CREATE FUNCTION motion.issues(motion text) RETURNS TABLE (n integer, kind text, closed boolean, granted bigint, parent bigint, flaw text, ends bigint, revokes bigint[])
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT m.n, m.kind, d.closed IS NOT NULL, g.id,
+         CASE WHEN d.closed IS NULL AND m.kind = 'policy'
+           THEN circle.parent_for(d.circle, v.power, v."limit", v.budget, v.per, v.scope, t.day, t.until, ARRAY[nullif(m.args ->> 'replaces', '')])
+           ELSE g.parent END,
+         CASE WHEN d.closed IS NULL AND m.kind = 'policy'
+           THEN (SELECT f.reason FROM motion.grant_flaw(d.circle, m.args ->> 'wording', t.day, t.until) f) END,
+         x.id,
+         CASE WHEN x.id IS NULL THEN NULL ELSE ARRAY(
+           SELECT u.id FROM circle.under(x.id) u JOIN circle.mandate o ON o.id = u.id
+           WHERE CASE WHEN d.closed IS NULL
+                   THEN (o.revoked IS NULL OR o.revoked > t.day) AND (o.until IS NULL OR o.until > t.day)
+                   ELSE o.revoked = coalesce(e.ends, r.applies) END
+           ORDER BY u.depth, u.id) END
+  FROM motion.action m
+  JOIN motion.motion d ON d.id = m.motion
+  CROSS JOIN LATERAL (
+    SELECT CASE WHEN coalesce(m.args ->> 'from', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (m.args ->> 'from')::date ELSE d.deadline END AS day,
+           CASE WHEN coalesce(m.args ->> 'until', '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' THEN (m.args ->> 'until')::date END AS until
+  ) t
+  LEFT JOIN LATERAL motion.granting(m.args ->> 'wording') v ON m.kind = 'policy'
+  LEFT JOIN policy.policy r ON m.kind = 'policy' AND r.motion = m.motion AND r.n = m.n
+  LEFT JOIN circle.mandate g ON g.policy = r.id
+  LEFT JOIN policy.policy e ON m.kind = 'end' AND e.id = m.args ->> 'policy'
+  LEFT JOIN circle.mandate x ON x.policy = CASE m.kind WHEN 'end' THEN m.args ->> 'policy' ELSE nullif(m.args ->> 'replaces', '') END
+  WHERE m.motion = issues.motion
+    AND ((m.kind = 'policy' AND m.args ->> 'kind' = 'mandate') OR x.id IS NOT NULL)
+  ORDER BY m.n;
+END;
+
 -- What is wrong with withholding open books, put on `circle`'s page and
 -- naming `policy`, on `day`, or null: a withholding ends the disclosure
 -- rule in force that day and nothing else, and is the assembly's, so it

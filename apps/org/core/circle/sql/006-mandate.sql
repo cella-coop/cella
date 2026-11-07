@@ -99,25 +99,42 @@ BEGIN ATOMIC
   GROUP BY p.id, p.applies, p.ends;
 END;
 
--- The mandate a mandate policy is issued under, or null: none where its
--- issuer, the circle that adopted it, is the assembly, whose mandates are
--- roots; else the first of the issuer's mandates for the power, standing
--- on the day the policy applies, that its values are narrower than
--- (`circle.wider`), or the first standing at all, which `circle.narrows`
--- then refuses saying how it is wider.
-CREATE FUNCTION circle.parent_of(ref text) RETURNS bigint
+-- The mandate a mandate of these values, issued by `issuer` from the day
+-- `from`, would be issued under, or null: none where the issuer is the
+-- assembly, whose mandates are roots; else the first of the issuer's
+-- mandates for the power, standing on that day, that the values are
+-- narrower than (`circle.wider`), or the first standing at all, which
+-- `circle.narrows` then refuses saying how it is wider; never one of
+-- `besides`, the policy itself and the one it replaces. So a grant is
+-- judged before its policy exists, as the motion feat's form asks, by
+-- the SQL that finds its parent as it is adopted.
+CREATE FUNCTION circle.parent_for(
+  issuer text, power text, "limit" cella.amount, budget cella.amount, per text, scope text, "from" date, until date, besides text[] DEFAULT '{}'
+) RETURNS bigint
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT u.id
+  FROM circle.mandate u
+  WHERE u.grantee = parent_for.issuer AND u.power = parent_for.power
+    AND NOT coalesce(u.policy = ANY (parent_for.besides), false)
+    AND parent_for.issuer IS DISTINCT FROM circle.assembly()
+    AND (u.revoked IS NULL OR u.revoked > parent_for."from")
+    AND (u.until IS NULL OR u.until > parent_for."from")
+  ORDER BY circle.wider(parent_for.power, parent_for."limit", parent_for.budget, parent_for.per, parent_for.scope,
+                        parent_for."from", parent_for.until, u.id) IS NULL DESC, u.id
+  LIMIT 1;
+END;
+
+-- The mandate a mandate policy is issued under, or null: its values'
+-- parent (`circle.parent_for`), issued by the circle that adopted it from
+-- the day it applies, besides itself and the policy it replaces.
+CREATE FUNCTION circle.parent_of(ref text) RETURNS bigint
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT circle.parent_for(p.circle, v.power, cella.amount(v."limit"), cella.amount(v.budget), v.per, v.scope, p.applies, v.until, ARRAY[p.id, p.replaces])
   FROM policy.policy p
   CROSS JOIN circle.mandated(parent_of.ref) v
-  JOIN circle.mandate u ON u.grantee = p.circle AND u.power = v.power AND u.policy <> p.id AND u.policy IS DISTINCT FROM p.replaces
-  WHERE p.id = parent_of.ref
-    AND p.circle IS DISTINCT FROM circle.assembly()
-    AND (u.revoked IS NULL OR u.revoked > p.applies)
-    AND (u.until IS NULL OR u.until > p.applies)
-  ORDER BY circle.wider(v.power, cella.amount(v."limit"), cella.amount(v.budget), v.per, v.scope, v."from", v.until, u.id) IS NULL DESC, u.id
-  LIMIT 1;
+  WHERE p.id = parent_of.ref;
 END;
 
 -- What is wrong with open books' disclosure rule, by its marks as

@@ -13,7 +13,10 @@
 // both forgone under the close in the outcome its post returns, naming no
 // one, and no one is admitted without their capital; on her motion's
 // page, in every browser, the admission shows forgone under the close
-// with its reason, over the subscription, forgone with its own; `SHOTS`
+// with its reason, over the subscription, forgone with its own, to
+// Camille, who closed it, and to Léa, who neither closed it nor holds
+// their actions' power, since the close commits to no one's personal
+// data and `cella.disclosed` opens its entries to every reader; `SHOTS`
 // names where its screenshots go. A motion suspending Chloé and Sofia, closed after Chloé's suspension, forgoes hers with its
 // reason and carries Sofia's, the close standing. Run by `cella test e2e
 // effects`.
@@ -41,6 +44,7 @@ const camille = 'camille@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 const chloe = 'chloe@lanterne.example'
 const sofia = 'sofia@lanterne.example'
+const lea = 'lea@lanterne.example'
 const nadia = 'nadia@lanterne.example'
 const yara = 'yara@lanterne.example'
 // Invited here, each signs from the laptop their invitation enrolls.
@@ -206,8 +210,9 @@ test('Yara\'s subscription, refused at the close by the terms raised since her m
   assert.equal(await verified(), true)
 })
 
-test('Yara\'s motion\'s page shows under its close her admission forgone with its reason, over her subscription forgone with its own, on every browser, in light and in dark', async () => {
+test('Yara\'s motion\'s page shows under its close her admission forgone with its reason, over her subscription forgone with its own, to Camille who closed it and to Léa, a member it commits nothing of, on every browser, in light and in dark', async () => {
   const cutoff = (await one<{ cutoff: string }>('SELECT cutoff FROM motion.motion WHERE id = $1', [motions.yara])).cutoff
+  assert.equal(await count('SELECT count(*) AS n FROM vault.secret WHERE receipt = $1', [cutoff]), 0, 'the close commits to no one\'s personal data')
   const close = Number((await one<{ n: string }>(`SELECT n FROM cella.log WHERE receipt = $1 AND op = 'motion:motion:close'`, [cutoff])).n)
   const [, admission, subscription] = await logged(close)
   const label = (await one<{ label: string }>(`SELECT label FROM motion.carries WHERE op = 'membership:member:admit' ORDER BY kind LIMIT 1`)).label
@@ -224,9 +229,9 @@ test('Yara\'s motion\'s page shows under its close her admission forgone with it
     const browser = await launch()
     const dev = await serve()
     try {
-      for (const scheme of ['light', 'dark'] as const) {
+      for (const [who, scheme] of [camille, lea].flatMap((who) => (['light', 'dark'] as const).map((scheme) => [who, scheme] as const))) {
         const context = await browser.newContext({ viewport: { width: 1440, height: 960 }, colorScheme: scheme, extraHTTPHeaders: { 'x-forwarded-proto': 'http' } })
-        await signIn(context, dev.base, camille)
+        await signIn(context, dev.base, who)
         const page = await context.newPage()
         const errors: string[] = []
         page.on('pageerror', (e) => errors.push(e.message))
@@ -234,10 +239,10 @@ test('Yara\'s motion\'s page shows under its close her admission forgone with it
         await page.waitForLoadState('networkidle')
         const section = page.locator('section', { has: page.getByRole('heading', { name: /^Effects of the close/ }) })
         const rows = await section.locator('tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent?.trim() ?? '')))
-        assert.deepEqual(rows, shown, `${engine}, ${scheme}: each effect under the close, forgone, with the entry it follows`)
-        assert.deepEqual(await section.locator('p.note').allTextContents(), notes, `${engine}, ${scheme}: each forgone effect's reason`)
+        assert.deepEqual(rows, shown, `${engine}, ${who}, ${scheme}: each effect under the close, forgone, with the entry it follows`)
+        assert.deepEqual(await section.locator('p.note').allTextContents(), notes, `${engine}, ${who}, ${scheme}: each forgone effect's reason, in full`)
         await section.scrollIntoViewIfNeeded()
-        await page.screenshot({ path: `${shots}/forgone-${engine}-${scheme}.png`, fullPage: true })
+        await page.screenshot({ path: `${shots}/forgone-${engine}-${who.split('@')[0]}-${scheme}.png`, fullPage: true })
         assert.deepEqual(errors, [], 'the page threw nothing')
         await context.close()
       }

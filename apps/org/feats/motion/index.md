@@ -465,9 +465,14 @@ logged, each by its kind's label where `motion.carries` registers its
 op and by its op where none does, settled or forgone, and the entry it
 follows, the close or an earlier effect. A forgone one is marked so,
 with the reason its entry keeps, which `cella.disclosed` opens to its
-reader: the closer, whom every effect acts as, reads it, and so does a
-holder of its action's power; to anyone else the page says the reason
-is not disclosed to them. So an admission forgone with the subscription
+reader as it opens any entry: the closer, whom every effect acts as,
+reads it; so does the person every commitment of the close's receipt,
+which an effect's commitments are, is about, and so every reader of a
+close that commits to no one's personal data; and so does a holder of
+its action's power. To anyone else the page says the reason is not
+disclosed to them. No kind a motion carries, and nothing that follows
+one, commits to anyone's personal data, so every member reads every
+forgone effect's reason, which names no one. So an admission forgone with the subscription
 it requires shows forgone, its reason naming the refusal it follows,
 over the subscription, forgone with its own reason, the statutes'
 minimum and the shares asked. The outcome the close's post returns

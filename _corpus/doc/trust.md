@@ -726,7 +726,12 @@ What the build does not yet do, and what lifts each:
   and refuses a definer function that returns rows, and a view, unless
   it reads as its reader or is declared shared, summing the whole or
   filtering its rows by its reader's test, or a function keyed by a
-  secret its caller holds; that a declared share's why is true, that the powers a feat names in
+  secret its caller holds. The app role reads views of those two kinds
+  and no other, as the e2e scenario `reading` proves on the migrated
+  database. That scenario also reads the two views that join another
+  circle's record, an expense's claim and a document's adoption,
+  through the shell's composed reads as a reader who may not read what
+  they join ([SQL](architecture.md#sql)). That a declared share's why is true, that the powers a feat names in
   `cella.reading` are the right ones and that a graft's reach opens no
   more than it says are left to review
   ([reading](architecture.md#reading)). The denial test proves on rows

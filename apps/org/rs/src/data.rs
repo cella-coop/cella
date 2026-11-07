@@ -70,11 +70,16 @@ pub fn seed(
     url: Option<&str>,
     scenarios: &[String],
 ) -> Result {
+    if scenarios.len() > 1 {
+        return Err(Fail::new(
+            "seed one story at a time; run cella db reset before seeding another",
+        ));
+    }
     let dir = self::fixture(repo, fixture)?;
     repo.install(steps)?;
     let mut cmd = on(&Dev::new(repo), url, "node")?;
     cmd.arg(repo.root.join("tools/seed.mjs")).arg(dir);
-    for name in scenarios {
+    if let Some(name) = scenarios.first() {
         cmd.arg("--scenario").arg(name);
     }
     steps.run(&format!("seed {fixture}"), &mut [cmd], last_line)

@@ -3,7 +3,7 @@
 // carries the state the mock co-op held before its log with it
 // (`seed/found.mjs`).
 // It connects to DATABASE_URL if set, otherwise by the PG* variables.
-// Usage: node tools/seed.mjs apps/org/fixtures/<co-op> [--scenario NAME]...
+// Usage: node tools/seed.mjs apps/org/fixtures/<co-op> [--scenario NAME]
 
 import { existsSync, readFileSync } from 'node:fs'
 import { basename, join } from 'node:path'
@@ -19,6 +19,9 @@ for (let i = 3; i < process.argv.length; i += 2) {
     throw new Error(`unknown scenario; available stories: ${stories.join(', ')}`)
   }
   scenarios.push(process.argv[i + 1])
+}
+if (scenarios.length > 1) {
+  throw new Error('seed one story at a time; run cella db reset before seeding another')
 }
 if (scenarios.length && process.env.DATABASE_URL) {
   throw new Error('--scenario needs the dev cluster, not --url')

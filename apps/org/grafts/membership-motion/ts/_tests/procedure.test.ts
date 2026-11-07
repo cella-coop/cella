@@ -46,7 +46,7 @@ before(async () => {
   for (const name of ten) {
     await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, $2) ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2021-03-01', 20)`, [at(name), name])
   }
-  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
   for (const name of ten) {
     await db.query(`INSERT INTO circle.member (circle, person, since) VALUES ('ag', $1, '2021-03-01')`, [at(name)])
   }

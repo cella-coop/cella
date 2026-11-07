@@ -34,12 +34,12 @@ before(async () => {
     await db.query(`INSERT INTO membership.member (address, status, since, suspended) VALUES ($1, $2, '2024-01-10', $3)`, [address, status, status === 'suspended' ? '2026-10-01' : null])
   }
   await db.query(
-    `INSERT INTO circle.role (id, circle, name) VALUES ('treasurer', 'operations', 'Treasurer'), ('steward', '*', 'Steward'), ('gerante', 'ag', 'Gérante')`,
+    `INSERT INTO circle.role (id, circle, name) VALUES ('treasurer', 'operations', 'Treasurer'), ('steward', '*', 'Steward'), ('director', 'ag', 'Director')`,
   )
   await db.query(
     `INSERT INTO circle.mandate (grantee, issuer, power, policy, "limit", "from", until, revoked, scope) VALUES
        ('treasurer', 'ag', 'pay-supplier', 'why/1', '3000.00', '2026-01-01', NULL, NULL, NULL),
-       ('gerante', 'ag', 'pay-supplier', 'why/2', '10000.00', '2026-01-01', NULL, NULL, NULL),
+       ('director', 'ag', 'pay-supplier', 'why/2', '10000.00', '2026-01-01', NULL, NULL, NULL),
        ('steward', 'ag', 'approve-time', 'why/3', NULL, '2026-01-01', NULL, NULL, 'own'),
        ('treasurer', 'ag', 'record-entry', 'why/4', NULL, '2026-01-01', NULL, '2026-09-01', NULL),
        ('treasurer', 'ag', 'close-books', 'why/5', NULL, '2026-01-01', '2026-06-30', NULL, NULL),
@@ -64,7 +64,7 @@ test('a write the actor may make has no reason', async () => {
 
 test('an amount over a mandate\'s limit names the mandate, its limit and who could raise it', async () => {
   const why = await whyNot(julien, 'pay-supplier', 'ag', 3200_00)
-  assert.equal(why, `the actor holds no mandate for pay-supplier up to 3200.00 €: mandate ${await id('why/1')} grants it to treasurer in operations up to 3000.00 € a write, issued by ag; a motion of ag raising its limit to 3200.00 €, or a tenure of a role holding it up to that, gerante in ag (mandate ${await id('why/2')}, issued by ag), would allow it`)
+  assert.equal(why, `the actor holds no mandate for pay-supplier up to 3200.00 €: mandate ${await id('why/1')} grants it to treasurer in operations up to 3000.00 € a write, issued by ag; a motion of ag raising its limit to 3200.00 €, or a tenure of a role holding it up to that, director in ag (mandate ${await id('why/2')}, issued by ag), would allow it`)
 })
 
 test('a mandate whose scope misses the record\'s circle names what it covers and what would', async () => {
@@ -90,7 +90,7 @@ test('a suspended member\'s mandate grants to an active member alone', async () 
 })
 
 test('no mandate at all names the roles holding the power over the record\'s circle, or the assembly that may grant it', async () => {
-  assert.equal(await whyNot(amina, 'pay-supplier', 'ag', 5000_00), `the actor holds no mandate for pay-supplier up to 5000.00 € over ag's records: it is held by gerante in ag (mandate ${await id('why/2')}, issued by ag), and a tenure of one would allow it`)
+  assert.equal(await whyNot(amina, 'pay-supplier', 'ag', 5000_00), `the actor holds no mandate for pay-supplier up to 5000.00 € over ag's records: it is held by director in ag (mandate ${await id('why/2')}, issued by ag), and a tenure of one would allow it`)
   assert.equal(await whyNot(amina, 'repay-capital', 'ag'), 'the actor holds no mandate for repay-capital over ag\'s records: no role holds it, and a motion of ag granting it would allow it')
 })
 

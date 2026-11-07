@@ -130,8 +130,8 @@ test('Julien pays a supplier 2 400 € within his 3 000 € limit; 3 200 € is 
   assert.match(reason(beyond), /the actor holds no mandate for pay-supplier up to 3200\.00 €/)
 
   // Camille commits up to 20 000 € as manager, but holds no pay-supplier.
-  const gerante = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc', cents: 100_00 }, as(camille))
-  assert.match(reason(gerante), /the actor holds no mandate for pay-supplier/)
+  const manager = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc', cents: 100_00 }, as(camille))
+  assert.match(reason(manager), /the actor holds no mandate for pay-supplier/)
   assert.equal(await head(), before)
 })
 

@@ -20,7 +20,7 @@ before(async () => {
   await db.query(`SET cella.clock = '2026-10-24'`)
   await db.query(`WITH person AS (INSERT INTO person.person (address, name) VALUES ($1, 'Julien'), ($2, 'Camille'), ($3, 'Sofia') ON CONFLICT DO NOTHING) INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2021-09-01', 20), ($2, 'active', '2021-03-01', 40), ($3, 'active', '2022-09-05', 20) ON CONFLICT DO NOTHING`, [julien, camille, sofia])
   await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true) ON CONFLICT DO NOTHING`)
-  await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('finance', 'ag', 'Finance'), ('manager', 'ag', 'Gérante')`)
+  await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('finance', 'ag', 'Finance'), ('manager', 'ag', 'Manager')`)
   await db.query(`INSERT INTO circle.mandate (grantee, issuer, power, policy, "from") VALUES ('finance', 'ag', 'reimburse-expense', 'm-2026-001/1', '2026-01-01'), ('manager', 'ag', 'hire-worker', 'm-2026-001/2', '2026-01-01')`)
   await db.query(`INSERT INTO circle.tenure (circle, holder, role, until) VALUES ('ag', $1, 'finance', NULL), ('ag', $2, 'manager', NULL)`, [julien, camille])
   await db.query(

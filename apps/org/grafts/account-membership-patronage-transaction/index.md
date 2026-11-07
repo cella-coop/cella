@@ -1,6 +1,6 @@
 +++
 title = "account-membership-patronage-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 The work share employed in the associates' capital: once a year's
@@ -109,14 +109,14 @@ work share statements: each year's part, what it buys in shares and
 what it pays, as credited once distributed. Finance reads every
 statement in the `statements` collection, and a member their own. Adds
 to a distribution's page, under a Return tab once it is distributed,
-the year's return to the federation: the surplus and its
-split (loi n° 78-763, art. 33), the workers sharing the work share and
+the year's return to the federation, each figure labelled in
+English: the surplus and its split (loi n° 78-763, art. 33), the workers sharing the work share and
 the associates among them, what it employed in shares and owed in cash
 (Code du travail, art. R3323-11, L3324-10), the legal reserve and the
 highest capital, the associates and the capital, and the capital the
 employed associates hold, each with its source and whether it was
 checked, and the whole as CSV. Which figures the CG SCOP's annual return
-and the révision coopérative ask for is not verified against their
+and its cooperative review ask for is not verified against their
 forms, nor the article setting the employees' 51 % of the capital.
 
 ## Lanterne

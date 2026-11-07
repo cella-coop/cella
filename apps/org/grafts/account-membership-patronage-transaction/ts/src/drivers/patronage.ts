@@ -43,8 +43,8 @@ export async function employed(db: Db, statement: string): Promise<Employed | nu
 // The figures of a distributed year a SCOP reports to its federation, from
 // the books and the members. The surplus and its split answer to loi n°
 // 78-763, art. 33, the work share's division and what it employs in shares
-// to the Code du travail; which figures the CG SCOP's annual return and the
-// révision coopérative ask for was not verified against their forms, and
+// to the Code du travail; which figures the CG SCOP's annual return and its
+// cooperative review ask for was not verified against their forms, and
 // the employees' hold on the capital not against the article that sets it.
 // They are the co-op's, which `federation` sums whole for every reader.
 export async function figures(db: Db, distribution: string): Promise<Figure[]> {
@@ -60,11 +60,11 @@ export async function figures(db: Db, distribution: string): Promise<Figure[]> {
   const art33 = 'loi n° 78-763, art. 33'
   const unverified = 'asked for by the federation: not verified against its forms'
   return [
-    { id: 'surplus', label: 'Surplus (excédents nets de gestion)', value: n('surplus'), unit: 'cents', source: art33, verified: true },
-    { id: 'legal', label: 'To the legal reserve (réserve légale)', value: n('legal'), unit: 'cents', source: `${art33}, 1°`, verified: true },
-    { id: 'development', label: 'To the development fund (fonds de développement)', value: n('development'), unit: 'cents', source: `${art33}, 2°`, verified: true },
-    { id: 'work', label: 'Work share (part travailleurs)', value: n('work'), unit: 'cents', source: `${art33}, 3°`, verified: true },
-    { id: 'interest', label: 'Interest on capital (intérêts aux parts)', value: n('interest'), unit: 'cents', source: `${art33}, 4°; loi n° 47-1775, art. 14`, verified: true },
+    { id: 'surplus', label: 'Net surplus', value: n('surplus'), unit: 'cents', source: art33, verified: true },
+    { id: 'legal', label: 'To the legal reserve', value: n('legal'), unit: 'cents', source: `${art33}, 1°`, verified: true },
+    { id: 'development', label: 'To the development fund', value: n('development'), unit: 'cents', source: `${art33}, 2°`, verified: true },
+    { id: 'work', label: 'Work share', value: n('work'), unit: 'cents', source: `${art33}, 3°`, verified: true },
+    { id: 'interest', label: 'Interest on capital', value: n('interest'), unit: 'cents', source: `${art33}, 4°; loi n° 47-1775, art. 14`, verified: true },
     { id: 'workers', label: 'Workers sharing the work share', value: n('workers'), unit: 'count', source: `${art33}, 3°; BOI-BIC-PTP-10-30, § 90`, verified: true },
     { id: 'associates_sharing', label: 'Of whom associates', value: n('associates_sharing'), unit: 'count', source: 'Code du travail, art. R3323-11', verified: true },
     { id: 'employed', label: 'Work share employed in shares', value: n('employed'), unit: 'cents', source: 'Code du travail, art. R3323-11', verified: true },

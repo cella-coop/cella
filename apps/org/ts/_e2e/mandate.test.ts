@@ -9,7 +9,9 @@
 // coordination hold theirs through a grantee, and every employee logs
 // their time by right. Run by `cella test e2e mandate`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -219,3 +221,5 @@ test('a mandate the assembly issues is a root, whatever the circles hold: financ
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
+
+if (!process.env.CELLA_STORY) runTest('mandate story', async (t) => story((name, step) => t.test(name, step)))

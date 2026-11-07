@@ -10,7 +10,9 @@
 // assembly, which issues it as a root; and a lead approves the
 // time of their own circle alone, the treasurer everyone's. Run by `cella test` on a fresh database.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { circles, propose as proposeAlone, vote } from '@cella/org-motion/api'
@@ -334,3 +336,5 @@ test('a grant no circle holds a mandate to issue under is put to the assembly: c
 test('the log verifies', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
 })
+
+if (!process.env.CELLA_STORY) runTest('governance story', async (t) => story((name, step) => t.test(name, step)))

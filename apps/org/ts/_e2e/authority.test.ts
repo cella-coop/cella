@@ -4,7 +4,9 @@
 // seat and a mandate, within the mandate's limit. Run by `cella test` on a
 // fresh database.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { issue } from '@cella/org-graft-invoice-transaction/api'
@@ -311,3 +313,5 @@ test('every verdict names its signed receipt, and the log verifies them both', a
     await su.query('ROLLBACK')
   }
 })
+
+if (!process.env.CELLA_STORY) runTest('authority story', async (t) => story((name, step) => t.test(name, step)))

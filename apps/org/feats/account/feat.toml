@@ -1,5 +1,5 @@
 name = "account"
-group = "finance"
+group = "ledger"
 builtin = false
 rung = 1
 grafts = ["account-motion", "account-membership", "account-membership-payslip-transaction", "account-membership-transaction"]

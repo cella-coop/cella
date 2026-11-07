@@ -6,9 +6,12 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // pages are configuration over the one collection component and the one
 // detail view; blocks are the components a detail view composes.
 
-// `home` is the sidebar's head, above the groups and unnamed: the co-op's
-// home and what waits on the acting member.
-export type Group = 'home' | 'governance' | 'work' | 'finance' | 'platform'
+// The sidebar's sections: `home`, what waits on the acting member, always
+// shown; then accordions: governance; office, the documents, meetings and
+// reports; work; payments, money in and out; ledger, the accounts, their
+// periods and transactions; equity, the members' capital and what the
+// surplus builds; and `platform`, Settings, a sidebar of its own.
+export type Group = 'home' | 'governance' | 'office' | 'work' | 'payments' | 'ledger' | 'equity' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the
 // address on hover.
@@ -117,6 +120,10 @@ export type Status = (about: any) => { label: string; tone: Tone } | undefined
 
 export interface View<R = any> {
   group: Group
+  // A heading the collection sits under within its section, where the
+  // section is long enough to need more than one; a section whose
+  // collections name none, or one, lists them without headings.
+  subgroup?: string
   title: string
   // A line under the title saying what the collection is, in its trade's
   // words.
@@ -142,6 +149,10 @@ export interface View<R = any> {
   empty?: string
   // Rows link to their detail; a collection without pages lists only.
   linked?: boolean
+  // False keeps the collection out of the sidebar, as files are, which
+  // belong to the records they are attached to; the command menu still
+  // reaches it.
+  listed?: boolean
   // Where a row links when it is not an item of the collection's own, as
   // what waits in the inbox links to where it is done.
   href?: (row: R) => string | undefined
@@ -180,7 +191,7 @@ export interface Added<E = any> {
 }
 
 // The sidebar's navigation, by group.
-export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number }[] }[]
+export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; subgroup?: string; listed?: boolean }[] }[]
 
 // A member the dev server may act as.
 export interface Person {

@@ -11,11 +11,26 @@ export class ShellState {
   drawer = $state(true)
   // The drawer's open panel, by id; a page without it opens its first.
   panel: string | null = $state(null)
+  // The sidebar's accordions the viewer opened or shut, by key; one they
+  // never touched is open while it holds the page, shut otherwise.
+  toggled: Record<string, boolean> = $state({})
+  // The last page outside settings, where settings' back link returns.
+  left = $state('/inbox')
 
   constructor(outcome: () => Outcome | null, drawer: () => boolean, names: () => Record<string, string>) {
     this.#outcome = outcome
     this.#names = names
     this.drawer = drawer()
+  }
+
+  // Keeps `left` on the page the viewer is on while it is not a page of
+  // settings; called once, as the shell starts.
+  follow(path: () => string, away: () => boolean) {
+    $effect(() => {
+      if (!away()) {
+        this.left = path()
+      }
+    })
   }
 
   // A person's name by their address, or none where the co-op knows no
@@ -31,6 +46,16 @@ export class ShellState {
 
   dismiss() {
     this.#dismissed = this.#outcome()
+  }
+
+  // Whether an accordion is open: as the viewer left it, else open where
+  // it holds the page.
+  expanded(key: string, holds: boolean): boolean {
+    return this.toggled[key] ?? holds
+  }
+
+  toggle(key: string, holds: boolean) {
+    this.toggled[key] = !this.expanded(key, holds)
   }
 
   // A panel's tab opens the drawer on it.

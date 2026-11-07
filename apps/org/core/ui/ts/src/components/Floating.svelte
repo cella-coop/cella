@@ -58,7 +58,7 @@
     inset: auto;
     margin: 0;
     padding: var(--space-1);
-    border: none;
+    border: 1px solid var(--line);
     border-radius: var(--radius-float);
     background: var(--float);
     color: var(--text);

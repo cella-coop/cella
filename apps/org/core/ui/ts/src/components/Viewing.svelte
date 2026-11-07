@@ -320,9 +320,10 @@
   }
   .option {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: var(--space-3);
+    gap: var(--space-1) var(--space-3);
   }
   .option select,
   .option input {
@@ -333,12 +334,17 @@
     font-size: var(--text-sm);
     color: var(--text-muted);
   }
+  /* A fieldset is as wide as its widest content unless told otherwise,
+     so a long chip would push the drawer's card past its edge; at no
+     minimum, the chip ellipsises instead. */
   fieldset {
     margin: 0;
     padding: 0;
     border: none;
     display: grid;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--space-1);
+    min-inline-size: 0;
   }
   legend {
     padding: 0 0 var(--space-1);

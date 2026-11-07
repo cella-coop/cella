@@ -1,5 +1,5 @@
 name = "document"
-group = "governance"
+group = "office"
 builtin = false
 rung = 1
 grafts = ["document-motion"]

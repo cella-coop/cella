@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { Snippet } from 'svelte'
+  import type { Component, Snippet } from 'svelte'
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
   import type { Panel, Tone } from '../models/view.ts'
@@ -18,6 +18,7 @@
   // drawer. ] shows and hides the drawer on every page at once.
   let {
     title,
+    icon,
     count,
     caption,
     subtitle,
@@ -29,6 +30,8 @@
     children,
   }: {
     title: string
+    // The collection's icon, as the sidebar shows it, before its name.
+    icon?: Component<any>
     // How many items the page shows, after its name.
     count?: string
     // What the page is, in its trade's words: the name's tooltip.
@@ -61,6 +64,7 @@
       {#if back}
         <a href={back.href} class="back" title="Back to {back.label}  Esc" aria-label="Back to {back.label}"><Icon icon={CaretLeft} /></a>
       {/if}
+      {#if icon && !back}<span class="mark" aria-hidden="true"><Icon {icon} size="1.15rem" /></span>{/if}
       <h1 title={caption}>{title}</h1>
       {#if count}<span class="count">{count}</span>{/if}
       {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
@@ -153,6 +157,11 @@
   .back:hover {
     background: var(--hover);
     color: var(--text);
+  }
+  .mark {
+    display: flex;
+    flex: none;
+    color: var(--text-muted);
   }
   h1 {
     font-family: var(--font-ui);

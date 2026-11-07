@@ -331,7 +331,7 @@ The `accounts` collection, the chart by code; `periods`, the latest month
 first, its New form opening the month after the latest, and a period's
 page closing it; `terms`, the statutes' capital
 clauses, the latest first, governing, to apply or replaced, titled
-Capital terms. The financial
+Capital. The financial
 statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial

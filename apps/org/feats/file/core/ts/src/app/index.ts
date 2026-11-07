@@ -12,6 +12,9 @@ export const app: App = {
     files: {
       view: {
         group: 'platform',
+        // A file belongs to the record it is attached to, so it is no
+        // stop in the sidebar; the command menu reaches the list.
+        listed: false,
         title: 'Files',
         caption: 'What the co-op keeps on file: its own papers, receipts, employment and member records',
         icon: icons.Paperclip,

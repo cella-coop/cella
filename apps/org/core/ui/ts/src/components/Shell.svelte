@@ -3,6 +3,9 @@
   import { page } from '$app/state'
   import '../styles/tokens.css'
   import '../styles/base.css'
+  import CaretDown from 'phosphor-svelte/lib/CaretDown'
+  import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
+  import CaretRight from 'phosphor-svelte/lib/CaretRight'
   import CaretUpDown from 'phosphor-svelte/lib/CaretUpDown'
   import Check from 'phosphor-svelte/lib/Check'
   import type { Jump, Nav, Person } from '../models/view.ts'
@@ -13,11 +16,14 @@
   import Outcome from './Outcome.svelte'
   import Popover from './Popover.svelte'
   import { typing } from '../models/keys.ts'
+  import { TestTube } from '../icons.ts'
 
-  // The shell: the sidebar, the co-op at its top and the acting member's
-  // account at its foot, the command menu and the navigation between, and
-  // the content beside it; the last write's outcome floats above. ] shows
-  // or hides every page's drawer.
+  // The shell: the sidebar and the content beside it; the last write's
+  // outcome floats above. ] shows or hides every page's drawer. The
+  // sidebar's top stays put: the co-op, the command menu and a grid of
+  // sections, one open at a time. Its middle, which alone scrolls, lists
+  // the open section's collections. Its foot stays put too: the co-op's
+  // settings and the acting member's account.
   let {
     scope,
     nav,
@@ -58,12 +64,70 @@
   const here = (href: string) => page.url.pathname === href || page.url.pathname.startsWith(`${href}/`)
   const initials = (name: string) => name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('')
   const back = $derived(page.url.pathname + page.url.search)
+
+  // The sections, flat accordions in this order, each opening its
+  // collections.
+  const sections = [
+    { group: 'governance', title: 'Governance' },
+    { group: 'office', title: 'Office' },
+    { group: 'work', title: 'Work' },
+    { group: 'payments', title: 'Payments' },
+    { group: 'ledger', title: 'Ledger' },
+    { group: 'equity', title: 'Equity' },
+  ]
+  const has = (group: string) => nav.some((g) => g.group === group)
+  // The group the page is in: its section and group open by themselves.
+  const held = $derived(nav.find((g) => g.items.some((i) => here(i.href) && i.href !== '/'))?.group)
+  // A group's collections by subgroup, in the order each first appears;
+  // labelled only where there is more than one.
+  const parts = (group: string) => {
+    const by = new Map<string, Nav[number]['items']>()
+    for (const item of (nav.find((g) => g.group === group)?.items ?? []).filter((i) => i.listed !== false)) {
+      const key = item.subgroup ?? ''
+      by.set(key, [...(by.get(key) ?? []), item])
+    }
+    return [...by].map(([sub, items]) => ({ sub, items }))
+  }
+  // Settings is its own sidebar, in place of the sections, while a page
+  // of it is open; the account and co-op menus lead into it.
+  const settings = $derived(held === 'platform')
+  const first = $derived(parts('platform')[0]?.items[0]?.href)
+  state.follow(() => back, () => settings)
+  const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.count ?? 0), 0) ?? 0
 </script>
 
 <svelte:window {onkeydown} />
 
+<!-- A group's collections, labelled by subgroup where it has several. -->
+{#snippet list(group: string)}
+  {const ps = $derived(parts(group))}
+  {#each ps as part (part.sub)}
+    {#if ps.length > 1}<p class="group">{part.sub}</p>{/if}
+    <ul>
+      {#each part.items as item (item.href)}
+        <li>
+          <a href={item.href} class:on={here(item.href)} aria-current={here(item.href) ? 'page' : undefined}>
+            <Icon icon={item.icon} />{item.title}
+            {#if item.count}<span class="count" aria-label="{item.count} waiting">{item.count}</span>{/if}
+          </a>
+        </li>
+      {/each}
+    </ul>
+  {/each}
+{/snippet}
+
 <div class="shell">
   <nav class="sidebar" aria-label="Main">
+    {#if settings}
+    <div class="top">
+      <a class="leave" href={state.left}><Icon icon={CaretLeft} size="0.8rem" />Back to app</a>
+    </div>
+    <div class="middle">
+      <p class="label">Settings</p>
+      {@render list('platform')}
+    </div>
+    {:else}
+    <div class="top">
     <div class="coop">
       <Popover label="Co-op: {scope.name}">
         {#snippet trigger()}
@@ -71,7 +135,6 @@
           <b class="name">{scope.name}</b>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
-        <p class="label">Co-op</p>
         <button role="menuitemradio" aria-checked="true" class="item">
           <span class="mark small">{scope.name.slice(0, 1).toUpperCase()}</span>
           <span class="names">
@@ -80,41 +143,59 @@
           </span>
           <Icon icon={Check} />
         </button>
+        {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
       </Popover>
     </div>
 
+    <!-- Always here, above the sections: what waits on the acting member. -->
+    <ul>
+      {#each nav.find((g) => g.group === 'home')?.items ?? [] as item (item.href)}
+        <li>
+          <a href={item.href} class:on={here(item.href)} aria-current={here(item.href) ? 'page' : undefined}>
+            <Icon icon={item.icon} />{item.title}
+            {#if item.count}<span class="count" aria-label="{item.count} waiting">{item.count}</span>{/if}
+          </a>
+        </li>
+      {/each}
+    </ul>
+
+    </div>
+
+    <!-- The sections, accordions as Linear's: the name and a caret, no
+         icon; open, the collections indented on a guide line. -->
+    <div class="middle">
+      {#each sections.filter((s) => has(s.group)) as s (s.group)}
+        {const open = $derived(state.expanded(s.group, s.group === held))}
+        <button class="head" aria-expanded={open} onclick={() => state.toggle(s.group, s.group === held)}>
+          <span class="title">{s.title}</span>
+          <span class="caret"><Icon icon={open ? CaretDown : CaretRight} size="0.7rem" /></span>
+          {#if !open && waiting(s.group)}<span class="dot" aria-label="{waiting(s.group)} waiting in {s.title}"></span>{/if}
+        </button>
+        {#if open}<div class="tree">{@render list(s.group)}</div>{/if}
+      {/each}
+    </div>
+    {/if}
+
+    <div class="foot">
     <Command {collections} {source} />
-
-    {#each nav as g (g.group)}
-      {#if g.group !== 'home'}<p class="group">{g.group}</p>{/if}
-      <ul>
-        {#each g.items as item (item.href)}
-          <li>
-            <a href={item.href} class:on={here(item.href)} aria-current={here(item.href) ? 'page' : undefined}>
-              <Icon icon={item.icon} />{item.title}
-              {#if item.count}<span class="count" aria-label="{item.count} waiting">{item.count}</span>{/if}
-            </a>
-          </li>
-        {/each}
-      </ul>
-    {/each}
-
     <div class="account">
       <Popover label="Account: {actor?.name ?? 'no one signed in'}" side="top" wide>
         {#snippet trigger()}
           <span class="avatar" aria-hidden="true">{actor ? initials(actor.name) : '–'}</span>
           <span class="names">
             <b>{actor?.name ?? 'No one signed in'}</b>
-            {#if dev}<span class="dev">Development</span>{/if}
           </span>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
         {#if actor}
           <p class="label">Signed in</p>
           <p class="hint">{actor.address}, on this device</p>
-          <form method="post" action="/sign-out" class="list">
-            <button class="item">Sign out</button>
-          </form>
+          <div class="list">
+            {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
+            <form method="post" action="/sign-out" class="list">
+              <button class="item">Sign out</button>
+            </form>
+          </div>
         {/if}
         <p class="label">Theme</p>
         <form method="post" action="/theme" class="themes">
@@ -125,9 +206,20 @@
         </form>
       </Popover>
     </div>
+    </div>
   </nav>
 
-  <main class="main">{@render children()}</main>
+  <main class="main">
+    {@render children()}
+    {#if dev}
+      <!-- Dev mode, where anyone signs in as a fixture member: a watermark
+           at the content's foot, by the drawer. Its word is drawn by CSS,
+           a mark and no text to read. -->
+      <p class="prototype" title="Development server: anyone may sign in as a fixture member" aria-hidden="true">
+        <Icon icon={TestTube} size="1.1rem" />
+      </p>
+    {/if}
+  </main>
 </div>
 
 {#if state.outcome}
@@ -140,27 +232,118 @@
     grid-template-columns: var(--sidebar) minmax(0, 1fr);
     height: 100dvh;
   }
+  /* Top and foot stay put; only the middle scrolls. */
   .sidebar {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    position: relative;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    min-height: 0;
     padding: var(--space-3);
-    overflow-y: auto;
     font-size: var(--text-sm);
   }
+  /* The dev-mode watermark: upright at the content's bottom right, below
+     the drawer, large and faint enough to read past. */
+  .prototype {
+    position: absolute;
+    right: var(--space-4);
+    bottom: var(--space-3);
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    margin: 0;
+    font-size: var(--text-md);
+    color: var(--text);
+    opacity: 0.16;
+    pointer-events: none;
+    user-select: none;
+  }
+  .prototype::after {
+    content: 'prototype';
+  }
+  .top {
+    display: grid;
+    gap: var(--space-2);
+    padding-bottom: var(--space-4);
+  }
+  /* Settings' way back to where the member left the app. */
+  .leave {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    height: 1.9rem;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .leave:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .middle {
+    min-height: 0;
+    overflow-y: auto;
+  }
+  .foot {
+    display: grid;
+    gap: var(--space-3);
+    padding-top: var(--space-2);
+  }
+  /* A section's or a group's accordion: the icon, the name and a quiet
+     caret, as a collection's row is drawn; open, its collections hang
+     from a guide line. */
+  .head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    height: 1.9rem;
+    padding: 0 var(--space-2);
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-align: start;
+    cursor: pointer;
+  }
+  .head:hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+  .head:focus-visible {
+    outline: 2px solid var(--accent-text);
+    outline-offset: 1px;
+  }
+  .head .title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .caret {
+    display: flex;
+    color: var(--text-subtle);
+  }
+  .tree {
+    margin: 1px 0 var(--space-2) calc(var(--space-2) + 1px);
+    padding-left: var(--space-1);
+    border-left: 1px solid var(--line);
+  }
+  /* Something in a shut accordion waits on the acting member. */
+  .dot {
+    margin-inline-start: auto;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-fill);
+  }
   .main {
+    position: relative;
     margin: var(--space-2) var(--space-2) var(--space-2) 0;
     background: var(--panel);
     border-radius: var(--radius-panel);
     min-height: 0;
     overflow: hidden;
-  }
-  .coop {
-    margin-bottom: var(--space-2);
-  }
-  .account {
-    margin-top: auto;
-    padding-top: var(--space-2);
   }
   .mark {
     display: grid;
@@ -208,10 +391,6 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-  .names .dev,
-  .dev {
-    color: var(--warning-text);
   }
   .list {
     display: grid;
@@ -275,12 +454,8 @@
     color: var(--text-subtle);
     padding: var(--space-2) var(--space-2) var(--space-1);
   }
-  .group {
+  ul + .group {
     margin-top: var(--space-3);
-  }
-  /* A group is named by its key, in sentence case. */
-  .group::first-letter {
-    text-transform: uppercase;
   }
   .hint {
     font-size: var(--text-xs);
@@ -310,16 +485,17 @@
     color: var(--text);
     font-weight: 500;
   }
+  /* How many rows wait: a small pill, quiet beside its name. */
   .count {
     margin-inline-start: auto;
-    min-width: 1.4rem;
-    padding: 0 var(--space-1);
+    min-width: 1.1rem;
+    padding: 0 5px;
     border-radius: 999px;
-    background: var(--accent-fill);
-    color: var(--on-accent);
+    background: var(--sunk);
+    color: var(--text-muted);
     font-size: var(--text-2xs);
     font-weight: 600;
-    line-height: 1.4rem;
+    line-height: 1.1rem;
     text-align: center;
   }
   @media (max-width: 700px) {

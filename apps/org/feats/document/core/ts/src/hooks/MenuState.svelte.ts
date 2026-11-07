@@ -38,12 +38,18 @@ export class MenuState {
     this.#ed = ed
   }
 
-  // The embeds the page offers, by the slices that draw them.
+  // The embeds the page offers, one item a kind: choosing one inserts the
+  // kind's block empty, and the block asks which record it shows.
   offers: Item[] = $derived.by(() =>
-    Object.entries(this.#ed.embeds()).flatMap(([embed, e]) =>
-      (e.embed.choices?.(e.data) ?? []).map((c) => ({ label: `${e.embed.label} · ${c.label}`, hint: c.ref, kind: 'embed' as const, props: { embed, ref: c.ref } })),
-    ),
+    Object.entries(this.#ed.embeds())
+      .filter(([, e]) => (e.embed.choices?.(e.data) ?? []).length > 0)
+      .map(([embed, e]) => ({ label: e.embed.label, hint: 'embed', kind: 'embed' as const, props: { embed } })),
   )
+
+  // An embed block inserted empty takes the record its picker chose.
+  pick(id: TreeID, embed: string, ref: string): void {
+    this.#ed.apply(() => ops.retype(this.#ed.doc, id, 'embed', { embed, ref }))
+  }
 
   matches: Item[] = $derived.by(() => {
     const q = this.query.toLowerCase()

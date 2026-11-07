@@ -1,5 +1,5 @@
 name = "report"
-group = "finance"
+group = "office"
 builtin = false
 rung = 1
 grafts = []

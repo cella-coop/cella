@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -53,7 +53,9 @@ An embed shows a thing of another slice inside the document: the
 document holds only its kind and ref, and the slice that knows the kind
 draws it, through the page's `embeds` (a motion is
 `document-motion`'s, a meeting `document-meeting`'s). This feat knows
-no motions and no meetings.
+no motions and no meetings. The slash menu offers each kind once; the
+block it inserts has a kind and no ref yet, and asks, from the kind's
+choices, which record it shows.
 
 ## The canonical form
 

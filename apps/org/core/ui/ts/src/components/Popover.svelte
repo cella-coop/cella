@@ -50,6 +50,13 @@
     }
   }
 
+  // A link chosen in it leaves the page, so it closes as it goes.
+  function onclick(e: MouseEvent) {
+    if ((e.target as HTMLElement).closest('a[href]')) {
+      ;(e.currentTarget as HTMLElement).hidePopover()
+    }
+  }
+
   function onkeydown(e: KeyboardEvent) {
     if (!menu) {
       return
@@ -82,6 +89,7 @@
   aria-label={label}
   style:position-anchor="--{id}"
   {ontoggle}
+  {onclick}
   {onkeydown}
 >
   {@render children()}
@@ -122,7 +130,9 @@
     max-height: calc(100dvh - 2 * var(--space-2));
     overflow-y: auto;
     padding: var(--space-2);
-    border: none;
+    /* A hairline edge, so the float stands off what it lies over in dark
+       as well as in light. */
+    border: 1px solid var(--line);
     border-radius: var(--radius-float);
     background: var(--float);
     color: var(--text);

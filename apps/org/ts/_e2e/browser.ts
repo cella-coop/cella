@@ -90,7 +90,7 @@ export async function signIn(context: BrowserContext, base: string, actor: strin
   try {
     await page.goto(`${base}/sign-in`)
     await page.getByTitle(actor).click()
-    await page.waitForURL(`${base}/`)
+    await page.waitForURL(`${base}/inbox`)
   } finally {
     await page.close()
   }

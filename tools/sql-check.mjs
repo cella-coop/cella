@@ -63,6 +63,8 @@
 //     shared: why' and keeps it: it sums by exactly the columns it names
 //     and none that says whose a row is, or filters its rows by its
 //     reader's test; every other view is security_invoker (`unshared`).
+//     A node's core keeps the same rule on the views its migrations make,
+//     since the app role reads them as it reads a slice's.
 //   What a declared share shows, a view's or a function's, is read through
 //   a `*`, a WITH query and a subquery in its FROM, down to their tables
 //   (`lineage`).
@@ -687,9 +689,10 @@ function invoker(options) {
   return v === true || v === 1 || ['true', 'on', 'yes', '1'].includes(String(v).toLowerCase())
 }
 
-// The views of a feat's or a graft's migrations that read as their owner,
-// past every row-level policy, and are not declared shared, or whose
-// declaration their query does not keep (architecture.md, "SQL"). A view
+// The views of a feat's, a graft's or a core's migrations that read as
+// their owner, past every row-level policy, and are not declared shared,
+// or whose declaration their query does not keep (architecture.md,
+// "SQL"). A view
 // reads as its reader, WITH (security_invoker = true), unless its comment
 // declares it shared, 'audience: shared by <columns>: why' or 'audience:
 // shared: why', and then each arm of its query keeps its rows by its
@@ -889,10 +892,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
         found.summed.set(named(b.view), new Set(grains.flatMap((g) => g.keys)))
       }
       carry(b, found)
-      // A view a slice's migrations make, beside its contract: whether it
-      // reads as its reader, and its comment, which outlives a CREATE OR
-      // REPLACE as the view does; the replacement's options are its own.
-      if (o.kind !== 'core' && !found.at.endsWith(`/${CONTRACT}`)) {
+      // A view a slice's or a core's migrations make, beside its contract:
+      // whether it reads as its reader, and its comment, which outlives a
+      // CREATE OR REPLACE as the view does; the replacement's options are
+      // its own.
+      if (!found.at.endsWith(`/${CONTRACT}`)) {
         const view = named(b.view)
         ;(found.views ??= new Map()).set(view, { name: view, path: found.at, scope: s, stmt: b, invoker: invoker(b.options), comment: found.views.get(view)?.comment ?? null })
       }

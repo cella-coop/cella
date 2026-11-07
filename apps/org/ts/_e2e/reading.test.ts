@@ -12,7 +12,11 @@
 // motion's count, is kept to whoever reads it, so Inès and Paul, who
 // left, read nothing of a record another circle owns through one, nor
 // through a view the app reads, which reads as its reader, an expense's
-// claim or a document's adoption among them; a saved report reads for
+// claim or a document's adoption among them, or is declared shared, as
+// seven are; through the reads the shell composes, Inès, who sees the
+// assembly's motion to adopt Coordination's rate card and not the card,
+// reads neither the version's id nor its hash, and no claim on an
+// expense she may not read nor its claimant's name; a saved report reads for
 // whoever runs it, through the analytics shell;
 // and a server logging in as the superuser reads as the app role all the
 // same. Run by `cella test e2e reading`.
@@ -23,6 +27,9 @@ import pg from 'pg'
 import { profile } from '@cella/org-person/api'
 import { scoped } from '@cella/org-analytics'
 import { custom, save } from '@cella/org-report/api'
+import { propose } from '@cella/org-graft-membership-motion/api'
+import { asked, onDocument, slice as adoptions } from '@cella/org-graft-document-motion/api'
+import { claim, claims } from '@cella/org-graft-expense-membership/api'
 import { reading as opened, type Reading } from './port.ts'
 import { Shell } from './serve.ts'
 import { reader, sign } from './lanterne.ts'
@@ -259,6 +266,78 @@ test('a view the app reads reads as its reader: Inès, in Web and no member, and
   }
   assert.deepEqual((await reading(paul, 'SELECT address FROM employment_membership.path')).map((r) => r.address), [paul], 'Paul reads his own path alone')
   assert.deepEqual(await reading(paul, `SELECT id FROM report.listed WHERE kind = 'custom'`), [], 'and no report a member saved')
+  await app.query(`SELECT set_config('cella.actor', '', false)`)
+})
+
+test('every view the app role may read reads as its reader, or is declared shared: the seven that sum the whole or keep their rows by their reader\'s test', async () => {
+  // Read from the database the migrations made, whatever made or granted
+  // a view: a core's, a slice's, a grant on all a schema's tables.
+  const { rows } = await su.query<{ view: string; comment: string | null }>(
+    `SELECT n.nspname || '.' || c.relname AS view, obj_description(c.oid, 'pg_class') AS comment
+     FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+     WHERE c.relkind IN ('v', 'm') AND n.nspname NOT IN ('pg_catalog', 'information_schema')
+       AND has_table_privilege('cella_app', c.oid, 'SELECT')
+       AND NOT coalesce(c.reloptions && ARRAY['security_invoker=true', 'security_invoker=on', 'security_invoker=1'], false)
+     ORDER BY 1`,
+  )
+  for (const r of rows) {
+    assert.match(r.comment ?? '', /^audience: shared(?: by [^:]+)?: \S/, `${r.view} reads as its owner and is not declared shared`)
+  }
+  assert.deepEqual(
+    rows.map((r) => r.view),
+    [
+      'account.report', 'account_membership.capital', 'expense_project.spent', 'invoice_project.invoiced',
+      'patronage_payslip.work_share', 'patronage_timesheet.time_share', 'project_timesheet.burn',
+    ],
+    'the statements\' spans, a project\'s spend, invoicing and burn, a member\'s capital and a worker\'s two shares of the surplus',
+  )
+})
+
+test('through the reads the shell composes, a reader who sees a motion but not the version it adopts reads neither its id nor its hash, and one who may not read an expense reads neither it nor whose it is', async () => {
+  // The assembly proposes adopting Coordination's rate card: Inès, in Web
+  // and no member, reads the assembly's motion and not Coordination's
+  // document.
+  const version = 'rate-card-2027@2'
+  const proposed = await propose(
+    { circle: 'ag', title: 'The assembly adopts the rate card', procedure: 'consent', deadline: '2026-12-31', body: '', actions: [{ kind: 'adopt', args: { version } }] },
+    { db: reader(app, camille), actor: camille, sign: sign(camille) },
+  )
+  assert.equal(proposed.state, 'settled', proposed.state === 'refused' ? proposed.reason : '')
+  const motion = (proposed as { value: { motion: string } }).value.motion
+  const hash = (await su.query<{ hash: string }>(`SELECT encode(hash, 'hex') AS hash FROM document.version WHERE id = $1`, [version])).rows[0].hash
+  assert.deepEqual(await reading(ines, 'SELECT id FROM motion.motion WHERE id = $1', [motion]), [{ id: motion }], 'Inès reads the assembly\'s motion')
+  assert.deepEqual(await reading(ines, 'SELECT id FROM document.version WHERE id = $1', [version]), [], 'and not the version it adopts')
+
+  for (const member of [ines, paul]) {
+    const db = reader(app, member)
+    assert.deepEqual(await asked(db, { motion }), [], `${member} reads nothing the motion adopts from the adoption's driver`)
+    assert.deepEqual((await adoptions.extends!.motions.item!(db, motion, member) as { adopting: unknown[] }).adopting, [], `nor from what it composes into the motion's page`)
+    assert.deepEqual((await onDocument(db, 'rate-card-2027')).asked, [], 'nor into the document\'s')
+  }
+  const shown = await page(`/motions/${motion}`, ines)
+  assert.equal(shown.status, 200, 'Inès opens the motion')
+  assert.ok(!shown.text.includes(hash.slice(0, 16)), 'and reads no hash of the version it adopts on its page')
+  const chloes = await asked(reader(app, chloe), { motion })
+  assert.deepEqual(chloes.map((a) => [a.version, a.hash]), [[version, hash]], 'where Chloé, who reads the document, reads both')
+  assert.ok((await page(`/motions/${motion}`, chloe)).text.includes(hash.slice(0, 16)), 'and its hash on the motion\'s page')
+
+  // An expense's claim: Brand's ex-0001 and Marketing's ex-0003 are none
+  // of Inès's, nor any of Paul's, who left.
+  const names = (await su.query<{ name: string }>(
+    `SELECT p.name FROM expense.expense e JOIN person.person p ON p.address = e.member WHERE e.id IN ('ex-0001', 'ex-0003')`,
+  )).rows.map((r) => r.name)
+  assert.equal(names.length, 2)
+  for (const [member, reads] of [[ines, ['ex-0002', 'ex-0004']], [paul, []]] as const) {
+    const db = reader(app, member)
+    for (const id of ['ex-0001', 'ex-0003']) {
+      assert.equal(await claim(db, id), null, `${member} reads no claim on ${id} from the claim's driver`)
+    }
+    const listed = (await db.query<{ id: string; name: string; decider_name: string | null }>(`${claims} ORDER BY id`)).rows
+    assert.deepEqual(listed.map((r) => r.id), [...reads], `${member} reads the claims of the expenses they read alone, as the expenses' list composes them`)
+    for (const r of listed) {
+      assert.ok(!names.includes(r.name) && !names.includes(r.decider_name ?? ''), `and no claimant's or decider's name of another's`)
+    }
+  }
   await app.query(`SELECT set_config('cella.actor', '', false)`)
 })
 

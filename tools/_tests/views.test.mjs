@@ -1,6 +1,6 @@
-// The SQL check's rule on owner-rights views: a view a slice's migrations
-// make reads as its reader, WITH (security_invoker = true), unless its
-// comment declares it shared, and then it keeps what it declares: it sums
+// The SQL check's rule on owner-rights views: a view a slice's or core's
+// migrations make reads as its reader, WITH (security_invoker = true),
+// unless its comment declares it shared, and then it keeps what it declares: it sums
 // by exactly the columns it names and by no column that says whose a row
 // is, or keeps its rows by its reader's test. Its options are read through
 // a later ALTER VIEW or CREATE OR REPLACE, its comment through both; a
@@ -106,4 +106,24 @@ test('a shared view shows through its star, its WITH and the subqueries in its F
 test('a contract\'s views are the contract rule\'s, never this one\'s', async () => {
   const contract = `CREATE VIEW ledger.accounts AS SELECT l.account, sum(l.amount) AS total FROM ledger.line l GROUP BY l.account;\nCOMMENT ON VIEW ledger.accounts IS 'audience: shared by account';\n`
   assert.equal(await check('', { 'analytics.sql': contract }), '')
+})
+
+test('a view core\'s migrations make keeps the same rule, since the app role reads it as a slice\'s', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-views-'))
+  const core = async (sql) => {
+    const dir = join(repo, 'apps/org/core/ledger/sql')
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
+    writeFileSync(join(dir, '001.sql'), `CREATE SCHEMA ledger;\nCREATE TABLE ledger.line (member text, amount bigint);\nALTER TABLE ledger.line ENABLE ROW LEVEL SECURITY;\n${sql}`)
+    const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [] }
+    const errors = await checkSql(repo, ['apps/org'], new Set(['cella', 'ledger', 'circle']), found)
+    return [...errors, ...unshared(found)].join('\n')
+  }
+  try {
+    assert.match(await core('CREATE VIEW ledger.lines AS SELECT l.member, l.amount FROM ledger.line l;'), /ledger.lines reads as its owner, past every row-level policy/)
+    assert.equal(await core('CREATE VIEW ledger.lines WITH (security_invoker = true) AS SELECT l.member, l.amount FROM ledger.line l;'), '')
+    assert.equal(await core(`CREATE VIEW ledger.total AS SELECT sum(l.amount) AS total FROM ledger.line l;\nCOMMENT ON VIEW ledger.total IS 'audience: shared: the whole, which every member reads';`), '')
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
 })

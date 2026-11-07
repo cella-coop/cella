@@ -579,21 +579,37 @@ whole. The pattern every such row-level policy takes, the power checks
 asked once per query:
 `USING ((SELECT cella.sees('<feat>')) OR circle = ANY ((SELECT
 cella.circles('<feat>'))::text[]) OR member = cella.reader() OR
-cella.reaches('<feat>', member))`. Every view a slice's migrations
-make reads as its reader (`security_invoker`), unless it is declared
+cella.reaches('<feat>', member))`. Every view a slice's or core's
+migrations make reads as its reader (`security_invoker`), unless it is declared
 shared in its comment, `'audience: shared by <columns>: why'` or
 `'audience: shared: why'`, as a definer function is, and keeps the
 same rules: what it shows is a sum every member reads, by the columns
 it names and none that says whose a row is, as the statements' spans
 and a project's burn are, or a share that needs the whole to divide,
 which filters its rows by the same test instead, as a worker's share of
-the surplus does. `cella check feats` refuses a view in a slice's
-migrations that reads as its owner and is not declared shared, so a
+the surplus does. `cella check feats` refuses a view in a slice's or
+core's migrations that reads as its owner and is not declared shared, so a
 view that joins a record another circle owns, such as an expense's
 claim or a document's adoption, reads as its reader and shows of that
 record what the reader may read; and so does a sum kept per record, a
 bill's VAT or an invoice's standing, which the check cannot tell from a
-shared total. A view reading as its reader is read so wherever it is
+shared total. Of the views the app role reads, seven read as their
+owner, each declared shared: the statements' spans (`account.report`);
+a project's spend, invoicing and burn, summed by project
+(`expense_project.spent`, `invoice_project.invoiced`,
+`project_timesheet.burn`); and a member's capital and a worker's two
+shares of the surplus, kept by their reader's test
+(`account_membership.capital`, `patronage_payslip.work_share`,
+`patronage_timesheet.time_share`). Every other reads as its reader.
+The e2e scenario `reading` proves it on the database the migrations
+make, whatever made or granted a view: it fails a view the app role
+may read that reads as its owner and is not declared shared. It reads
+the two views that join another circle's record through the reads the
+shell composes, as a reader who may not read what they join: one who
+sees a motion but not the document version it adopts reads neither the
+version's id nor its hash on the motion's page or from the adoption's
+driver, and one who may not read an expense reads neither it nor its
+claimant's or decider's name from the claim's driver. A view reading as its reader is read so wherever it is
 read from, inside a view that reads as its owner too, so a shared view
 and a contract read the tables, never such a view. A stance on a secret ballot is the one row no power opens: its
 row-level policy reads `cella.writing()` in place of `sees` and asks no `reaches`,

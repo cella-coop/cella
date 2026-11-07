@@ -14,7 +14,7 @@ const photos = await Promise.all(
   photoNames().map(async (name, i) => ({
     name,
     ink: STATUSES[i % STATUSES.length],
-    full: maskUrl(name, 'full'),
+    full: maskUrl(name, 'hero'),
     ratio: await ratio(name),
   })),
 )

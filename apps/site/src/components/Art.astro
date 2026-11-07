@@ -1,0 +1,84 @@
+---
+// A print filling its side of a section, cut where it meets the page by
+// the mark's cells (index.md, prints): `edge` the side the page lies on,
+// and on a narrow screen, where the print stands above the text, its
+// foot. Its two cuts are clip paths of its own, seeded by `key`.
+import type { Status } from '../lib/photo'
+import type { Size } from '../lib/print'
+import { cut } from '../lib/cut'
+import Backdrop from './Backdrop.astro'
+
+interface Props {
+  photo: string | { photo: string; ink?: Status }
+  edge: 'start' | 'end'
+  key: string
+  size?: Size
+  narrow?: Size
+}
+
+const { photo, edge, key, size = 'hero', narrow = 'large' } = Astro.props
+const id = `cut-${key.replace(/[^a-z0-9-]/g, '-')}`
+const wide = cut(key, edge)
+const foot = cut(`${key}-foot`, 'bottom')
+const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)` }
+---
+
+<svg class="clips" aria-hidden="true" width="0" height="0">
+  <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox">
+    {wide.map((d) => <path d={d} />)}
+  </clipPath>
+  <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox">
+    {foot.map((d) => <path d={d} />)}
+  </clipPath>
+</svg>
+<div class="art" data-edge={edge} style={clips}>
+  <Backdrop photo={photo} size={size} narrow={narrow} />
+</div>
+
+<style>
+  .clips {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  /* Half the section, its cut on the half's inner edge */
+  .art {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 50%;
+    clip-path: var(--cut);
+  }
+
+  .art[data-edge='start'] {
+    right: 0;
+  }
+
+  .art[data-edge='end'] {
+    left: 0;
+  }
+
+  /* The credit in a corner of the print's whole side, clear of the cut */
+  .art[data-edge='end'] :global(.credit) {
+    right: auto;
+    left: 0.75rem;
+  }
+
+  @media (max-width: 56rem) {
+    .art {
+      position: relative;
+      width: 100%;
+      height: max(16rem, 62vw);
+      clip-path: var(--cut-narrow);
+    }
+
+    .art :global(.credit),
+    .art[data-edge='end'] :global(.credit) {
+      top: 0.5rem;
+      right: 0.75rem;
+      bottom: auto;
+      left: auto;
+    }
+  }
+</style>

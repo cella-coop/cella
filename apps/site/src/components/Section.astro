@@ -1,10 +1,13 @@
 ---
 // One section of the page, laid out by its kind (content.config.ts): its
 // eyebrow and heading, its body, and what its kind adds: a grid of cards,
-// numbered steps, a figure beside the text, or a band with an action.
+// numbered steps, a figure beside the text, or a band with an action. A
+// split with a print lays it as a hero does, filling its side top to foot,
+// cut by the mark's cells where it meets the page; with a print, the
+// print alone shows.
+import Art from './Art.astro'
 import Button from './Button.astro'
 import Icon from './Icon.astro'
-import Backdrop from './Backdrop.astro'
 import Showcase from './Showcase.astro'
 import type { IconRole } from '../lib/icon'
 import type { Status } from '../lib/photo'
@@ -25,9 +28,12 @@ interface Props {
 
 const { id, heading, kind, eyebrow, items, figure, backdrop, side, action } = Astro.props
 const labelled = `${id}-heading`
+const art = kind === 'split' ? backdrop : undefined
+const named = typeof art === 'string' ? art : art?.photo
 ---
 
-<section id={id} class="section" data-kind={kind} data-side={side} aria-labelledby={labelled}>
+<section id={id} class="section" data-kind={kind} data-side={side} data-art={art ? 'yes' : 'no'} aria-labelledby={labelled}>
+  {art && <Art photo={art} edge={side === 'start' ? 'end' : 'start'} key={`${id}-${named}`} />}
   <div class="wrap">
     <div class="inner">
       <div class="head">
@@ -37,9 +43,8 @@ const labelled = `${id}-heading`
         {action && <div class="action"><Button href={action.href}>{action.label}</Button></div>}
       </div>
       {
-        kind === 'split' && figure && (
-          <div class="figure" data-backdrop={backdrop ? 'yes' : 'no'}>
-            {backdrop && <Backdrop photo={backdrop} />}
+        kind === 'split' && figure && !art && (
+          <div class="figure">
             <div class="card">
               <Showcase figure={figure} />
             </div>
@@ -182,23 +187,36 @@ const labelled = `${id}-heading`
     margin: 0;
   }
 
-  /* A figure on a print: the print is a panel, a picture with its own
-     paper, the figure a card on it, the credit in the panel's corner */
-  .figure[data-backdrop='yes'] {
-    position: relative;
-    padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.5rem);
-    border-radius: calc(var(--radius) * 1.5);
-    overflow: hidden;
-  }
-
-  .figure[data-backdrop='yes'] .card {
-    position: relative;
-    z-index: 1;
+  .figure .card {
     padding: 1.5rem;
     border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--panel);
-    box-shadow: var(--shadow-float);
+  }
+
+  /* A split with a print: the print fills its side, the words the other */
+  .section[data-art='yes'] {
+    position: relative;
+    display: flex;
+    align-items: center;
+    min-height: clamp(28rem, 70vh, 44rem);
+    overflow: hidden;
+  }
+
+  .section[data-art='yes'] .wrap {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* the words in the far half, a gap short of the print */
+  .section[data-art='yes'] .inner {
+    display: block;
+    width: calc(50% - 3rem);
+    max-width: 34rem;
+  }
+
+  .section[data-art='yes'][data-side='start'] .inner {
+    margin-inline-start: auto;
   }
 
   /* cta: a band in the accent's ink */
@@ -234,6 +252,23 @@ const labelled = `${id}-heading`
 
     .section[data-kind='split'][data-side='start'] .figure {
       order: 0;
+    }
+
+    .section[data-art='yes'] {
+      display: block;
+      min-height: 0;
+      padding-top: 0;
+    }
+
+    .section[data-art='yes'] .wrap {
+      margin-top: 1.5rem;
+    }
+
+    .section[data-art='yes'] .inner,
+    .section[data-art='yes'][data-side='start'] .inner {
+      width: auto;
+      max-width: none;
+      margin: 0;
     }
   }
 </style>

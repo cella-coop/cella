@@ -32,6 +32,8 @@ const PLUMBING = new Set([
   'in', 'in2', 'result', 'operator', 'mode', 'values', 'k1', 'k2', 'k3', 'k4',
   'x', 'y', 'dx', 'dy', 'slope', 'intercept', 'tableValues', 'stdDeviation',
   'filterUnits', 'primitiveUnits', 'color-interpolation-filters', 'preserveAspectRatio',
+  // an SVG shape's geometry
+  'd', 'points', 'transform', 'clipPathUnits', 'maskUnits',
   // an input's range
   'min', 'max', 'step',
 ])

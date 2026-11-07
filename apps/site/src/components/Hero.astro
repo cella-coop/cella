@@ -1,10 +1,12 @@
 ---
 // The hero: an eyebrow, the page's heading and its lede, its two actions,
-// and beside them its print, a panel of a photo in the house's print, with
-// the figure it names on a card over it, or either alone; the brand's five
-// inks under it.
+// and its print or its figure; the brand's five inks under it. A print
+// fills the hero's far side, top to foot, cut where it meets the page by
+// the mark's cells, the words on the ground beside it; on a narrow screen
+// it stands above them. A figure, named without a print, stands beside
+// the words on a card; with a print, the print alone shows.
+import Art from './Art.astro'
 import Button from './Button.astro'
-import Backdrop from './Backdrop.astro'
 import Showcase from './Showcase.astro'
 import type { Status } from '../lib/photo'
 
@@ -25,9 +27,13 @@ interface Props {
 }
 
 const { hero, size = 'large' } = Astro.props
+const art = hero.backdrop
+const named = typeof art === 'string' ? art : art?.photo
+const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
 ---
 
-<section class="hero" id="top" data-figure={hero.figure || hero.backdrop ? 'yes' : 'no'} data-size={size}>
+<section class="hero" id="top" data-layout={layout} data-size={size}>
+  {art && <Art photo={art} edge={'start'} key={`hero-${named}`} />}
   <div class="wrap grid">
     <div class="copy">
       {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
@@ -47,14 +53,9 @@ const { hero, size = 'large' } = Astro.props
       }
     </div>
     {
-      (hero.figure || hero.backdrop) && (
-        <div class="side" data-print={hero.backdrop ? 'yes' : 'no'} data-card={hero.figure ? 'yes' : 'no'}>
-          {hero.backdrop && <Backdrop photo={hero.backdrop} />}
-          {hero.figure && (
-            <div class="card">
-              <Showcase figure={hero.figure} />
-            </div>
-          )}
+      layout === 'figure' && hero.figure && (
+        <div class="card">
+          <Showcase figure={hero.figure} />
         </div>
       )
     }
@@ -77,14 +78,52 @@ const { hero, size = 'large' } = Astro.props
     align-items: center;
   }
 
-  .hero[data-figure='yes'] .grid {
+  /* With a print: the print fills the far side, the words the near */
+  .hero[data-layout='art'] {
+    display: flex;
+    align-items: center;
+    min-height: clamp(32rem, 82vh, 52rem);
+  }
+
+  .hero[data-layout='art'][data-size='small'] {
+    min-height: clamp(24rem, 56vh, 36rem);
+  }
+
+  /* the words in the near half, a gap short of the print */
+  .hero[data-layout='art'] .copy {
+    max-width: 34rem;
+    width: calc(50% - 3rem);
+  }
+
+  /* With a figure: the figure on a card beside the words */
+  .hero[data-layout='figure'] .grid {
     grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
   }
 
-  .hero[data-figure='no'] .copy {
+  .card {
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .card :global(figure) {
+    margin: 0;
+  }
+
+  /* Plain: the words centred */
+  .hero[data-layout='plain'] .copy {
     max-width: 48rem;
     margin-inline: auto;
     text-align: center;
+  }
+
+  .hero[data-layout='plain'] .lede {
+    margin-inline: auto;
+  }
+
+  .hero[data-layout='plain'] .actions {
+    justify-content: center;
   }
 
   h1 {
@@ -111,10 +150,6 @@ const { hero, size = 'large' } = Astro.props
     font-size: var(--t-xl);
   }
 
-  .hero[data-figure='no'] .lede {
-    margin-inline: auto;
-  }
-
   .actions {
     display: flex;
     flex-wrap: wrap;
@@ -122,47 +157,11 @@ const { hero, size = 'large' } = Astro.props
     margin-top: 2rem;
   }
 
-  .hero[data-figure='no'] .actions {
-    justify-content: center;
-  }
-
-  .side :global(figure) {
-    margin: 0;
-  }
-
-  /* The print is a panel, a picture with its own paper; the figure sits
-     on a card over its lower corner */
-  .side[data-print='yes'] {
-    position: relative;
-    min-height: 22rem;
-    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2.5rem, 6vw, 4rem) clamp(2rem, 5vw, 4rem);
-    border-radius: calc(var(--radius) * 1.5);
-    overflow: hidden;
-  }
-
-  .side[data-print='yes'][data-card='no'] {
-    aspect-ratio: 4 / 3;
-    min-height: 0;
-  }
-
-  .card {
-    position: relative;
-    z-index: 1;
-    padding: 1.5rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius) 0 0 var(--radius);
-    background: var(--panel);
-    box-shadow: var(--shadow-float);
-  }
-
-  .side[data-print='no'] .card {
-    border-radius: var(--radius);
-  }
-
   .inks {
     position: absolute;
     inset-inline: 0;
     bottom: 0;
+    z-index: 1;
     display: flex;
     height: 3px;
   }
@@ -191,8 +190,24 @@ const { hero, size = 'large' } = Astro.props
     background: var(--p4);
   }
 
+  /* A narrow screen: the print above, the words under it */
   @media (max-width: 56rem) {
-    .hero[data-figure='yes'] .grid {
+    .hero[data-layout='art'] {
+      display: block;
+      min-height: 0;
+      padding-top: 0;
+    }
+
+    .hero[data-layout='art'] .grid {
+      margin-top: 1.5rem;
+    }
+
+    .hero[data-layout='art'] .copy {
+      width: auto;
+      max-width: none;
+    }
+
+    .hero[data-layout='figure'] .grid {
       grid-template-columns: minmax(0, 1fr);
     }
   }

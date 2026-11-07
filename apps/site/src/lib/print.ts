@@ -12,12 +12,11 @@ import { printFile } from '@cella/brand/print-file'
 import { photoNames } from './assets'
 import { STATUSES, type Status } from './photo'
 
-/** The widths a print is made at, in CSS pixels: a panel's, a tile's or a
- * phone's, and the asset library's enlarged view, made in the dev server
- * alone. */
-export const WIDTHS = { large: 600, small: 360, full: 1200 } as const
+/** The widths a print is made at, in CSS pixels: a hero's, which the asset
+ * library's enlarged view shares, a panel's or a phone's hero, and a
+ * tile's. */
+export const WIDTHS = { hero: 1200, large: 600, small: 360 } as const
 export type Size = keyof typeof WIDTHS
-const BUILT: Size[] = import.meta.env.DEV ? ['large', 'small', 'full'] : ['large', 'small']
 
 const SCALE = 1.5
 
@@ -29,7 +28,7 @@ const file = (name: string) => {
 export const maskUrl = (name: string, size: Size) => `/print/${name}-${WIDTHS[size]}.png`
 
 /** Every mask a build makes: each photo at each width. */
-export const maskKeys = () => photoNames().flatMap((name) => BUILT.map((size) => ({ name, width: WIDTHS[size] })))
+export const maskKeys = () => photoNames().flatMap((name) => Object.values(WIDTHS).map((width) => ({ name, width })))
 
 /** One photo's mask at a width, as a PNG: its alpha the ink's coverage.
  * The photo is levelled first, its darkest and lightest hundredth taken to
@@ -44,7 +43,9 @@ export async function mask(name: string, width: number) {
   }
   const levelled = await sharp(readFileSync(file(name))).normalise({ lower: 1, upper: 99 }).toBuffer()
   const printed = await printFile(levelled, { width: Math.round(width * SCALE), scale: SCALE, style: PRINT_STYLES.house })
-  const png = printed.masks[0].png
+  // A halftone is all edges, so no encoder shrinks it far; sixteen levels
+  // of coverage keep its soft edge at half the bytes of a full alpha
+  const png = await sharp(printed.masks[0].png).png({ palette: true, colours: 16, compressionLevel: 9 }).toBuffer()
   mkdirSync(CACHE, { recursive: true })
   writeFileSync(cached, png)
   return png
@@ -52,7 +53,7 @@ export async function mask(name: string, width: number) {
 
 const CACHE = join(process.cwd(), '.astro/print')
 // A change to how a mask is made bumps it, so no stale mask is reused
-const VERSION = 1
+const VERSION = 2
 
 /** A photo's ink, unless one is named: its own, from its name, the same on
  * every page. */

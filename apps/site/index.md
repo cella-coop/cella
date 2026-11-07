@@ -33,9 +33,10 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   `site` entry's links, the current page's marked; the theme toggle; the
   site's action as a button. On a narrow screen the links fold into a
   menu under Phosphor's `list` icon, a `<details>` with no script.
-- **the hero**: an eyebrow, the heading, a lede, two actions and a
-  figure beside them, each but the heading optional. Home's is large and
-  sits on the brand's five inks; every other page's is small.
+- **the hero**: an eyebrow, the heading, a lede, two actions, and a
+  print filling its far half or a figure beside the words, each but the
+  heading optional. Home's is large and sits on the brand's five inks;
+  every other page's is small.
 - **the sections**: the page's, from `sections/<page>/`, in their order,
   each laid out by its kind:
 
@@ -44,7 +45,7 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   | `prose` | its body in a readable column, the default |
   | `features` | its heading and body centred over a grid of cards, each an icon, a title and a line |
   | `steps` | the same over its items numbered in a row |
-  | `split` | its body beside its figure, on the side `side` gives |
+  | `split` | its body beside its print, filling the half `side` gives, or beside its figure |
   | `cta` | a band in the accent's ink: its body and its action |
 
 - **the footer**: the mark, the site's closing line, its links and the
@@ -91,10 +92,29 @@ Every word the site shows lives in its content collections, under
 | `blog` | one MDX file a post, `<name>.mdx`: its title, summary, date, authors and whether it is a draft, which shows in the dev server and is left out of the build |
 
 A hero or a split section may name a **backdrop**: a vendored photo
-(`src/photos/`, [photos](#photos)) in the house's print, a panel beside
-its text, `backdrop: <name>` or `backdrop: { photo: <name>, ink:
-<status> }`. In a hero the panel stands beside the heading, the figure
-on a card over it, or alone; in a split it holds the figure on a card.
+(`src/photos/`, [photos](#photos)) in the house's print, `backdrop:
+<name>` or `backdrop: { photo: <name>, ink: <status> }`. The print
+fills half the section, top to foot, the far half in a hero and the half
+`side` names in a split, and the words stand on the ground in the other
+half; on a narrow screen it stands above them. Where it meets the
+page it is cut by the mark's cells ([the cut](#the-cut)). A hero or a
+split naming both a print and a figure shows the print alone; one with
+a figure and no print shows the figure on a card beside its words.
+
+### The cut
+
+`src/lib/cut.ts` cuts a print's edge as the mark is drawn: cells, each
+the Voronoi cell of its seed among seeds no one sees, rounded at their
+corners and kept apart by a gutter. A band of them runs along the
+edge, a quarter of the print's width deep, and a cell is kept the
+likelier the further into the print it lies, so the picture breaks into
+cells where it meets the ground; a kept cell keeps no gutter from the
+whole print, so it grows out of it, and none is cut flat by the print's
+box. Beyond the band the print is whole. The cut is a clip path in the
+print's own units, `Art.astro` holding one for a wide screen, on its
+inner edge, and one for a narrow, on its foot, each seeded by the
+placement and the photo, so every cut is its own and the same on every
+build. The print's credit sits in a corner of its whole side.
 
 ## Prints
 
@@ -107,9 +127,11 @@ ink is its own, from its name, the same on every page.
 Its mask is printed once, at build, by the brand's `printFile`
 (`src/lib/print.ts`), from the photo levelled, its darkest and lightest
 hundredth taken to black and white so a high-key photo is no bare paper
-and a low-key one no slab, at the width the print is shown, 600 CSS pixels
-for a panel and 360 for a tile or a phone, at 1.5 device pixels to one,
-so its dots are the house's 2.5 CSS pixel cell where it is shown. Each
+and a low-key one no slab, at the width the print is shown, 1200 CSS
+pixels for a hero's half, 600 for a phone's hero, and 360 for a tile, at
+1.5 device pixels to one, so its dots are the house's 2.5 CSS pixel cell
+where it is shown, in a sixteen-level palette, half the bytes of a full
+alpha, a hero's about half a megabyte. Each
 mask is its own file, `/print/<photo>-<width>.png`, made by the static
 endpoint `src/pages/print/[key].png.ts` for every photo at each width
 and cached by the browser as any image; a page holds none inline. A

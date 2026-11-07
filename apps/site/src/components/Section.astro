@@ -24,16 +24,25 @@ interface Props {
   backdrop?: string | { photo: string; ink?: Status }
   side: 'start' | 'end'
   action?: Link
+  tone: Status
 }
 
-const { id, heading, kind, eyebrow, items, figure, backdrop, side, action } = Astro.props
+const { id, heading, kind, eyebrow, items, figure, backdrop, side, action, tone } = Astro.props
 const labelled = `${id}-heading`
 const art = kind === 'split' ? backdrop : undefined
 const named = typeof art === 'string' ? art : art?.photo
 ---
 
-<section id={id} class="section" data-kind={kind} data-side={side} data-art={art ? 'yes' : 'no'} aria-labelledby={labelled}>
-  {art && <Art photo={art} edge={side === 'start' ? 'end' : 'start'} key={`${id}-${named}`} />}
+<section
+  id={id}
+  class="section band"
+  data-kind={kind}
+  data-side={side}
+  data-art={art ? 'yes' : 'no'}
+  aria-labelledby={labelled}
+  style={{ '--tone': `var(--tone-${tone})` }}
+>
+  {art && <Art photo={art} tone={tone} side={side} key={`${id}-${named}`} />}
   <div class="wrap">
     <div class="inner">
       <div class="head">
@@ -71,10 +80,6 @@ const named = typeof art === 'string' ? art : art?.photo
 <style>
   .section {
     padding-block: clamp(4rem, 10vh, 7rem);
-  }
-
-  .section + :global(.section) {
-    border-top: 1px solid var(--line);
   }
 
   h2 {

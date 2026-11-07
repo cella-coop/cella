@@ -1,10 +1,11 @@
 ---
 // The hero: an eyebrow, the page's heading and its lede, its two actions,
-// and its print or its figure; the brand's five inks under it. A print
-// fills the hero's far side, top to foot, cut where it meets the page by
-// the mark's cells, the words on the ground beside it; on a narrow screen
-// it stands above them. A figure, named without a print, stands beside
-// the words on a card; with a print, the print alone shows.
+// and its print or its figure, on a band of its tone. A print fills the
+// hero's far side, top to foot, in the band's tone, the band's colour
+// flowing over its near edge in the mark's cells, the words on the band
+// beside it; on a narrow screen it stands above them. A figure, named
+// without a print, stands beside the words on a card; with a print, the
+// print alone shows.
 import Art from './Art.astro'
 import Button from './Button.astro'
 import Showcase from './Showcase.astro'
@@ -24,16 +25,17 @@ interface Props {
     backdrop?: Shown
   }
   size?: 'large' | 'small'
+  tone: Status
 }
 
-const { hero, size = 'large' } = Astro.props
+const { hero, size = 'large', tone } = Astro.props
 const art = hero.backdrop
 const named = typeof art === 'string' ? art : art?.photo
 const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
 ---
 
-<section class="hero" id="top" data-layout={layout} data-size={size}>
-  {art && <Art photo={art} edge={'start'} key={`hero-${named}`} />}
+<section class="hero band" id="top" data-layout={layout} data-size={size} style={{ '--tone': `var(--tone-${tone})` }}>
+  {art && <Art photo={art} tone={tone} side={'end'} key={`hero-${named}`} />}
   <div class="wrap grid">
     <div class="copy">
       {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
@@ -60,7 +62,6 @@ const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
       )
     }
   </div>
-  <div class="inks" aria-hidden="true"><i /><i /><i /><i /><i /></div>
 </section>
 
 <style>
@@ -139,10 +140,6 @@ const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
     font-size: clamp(var(--t-3xl), 4.5vw, calc(var(--t-4xl) * 1.4));
   }
 
-  .hero[data-size='small'] .inks {
-    display: none;
-  }
-
   .lede {
     margin: 1.5rem 0 0;
     max-width: 36rem;
@@ -155,39 +152,6 @@ const layout = art ? 'art' : hero.figure ? 'figure' : 'plain'
     flex-wrap: wrap;
     gap: 0.75rem;
     margin-top: 2rem;
-  }
-
-  .inks {
-    position: absolute;
-    inset-inline: 0;
-    bottom: 0;
-    z-index: 1;
-    display: flex;
-    height: 3px;
-  }
-
-  .inks i {
-    flex: 1;
-  }
-
-  .inks i:nth-child(1) {
-    background: var(--p0);
-  }
-
-  .inks i:nth-child(2) {
-    background: var(--p1);
-  }
-
-  .inks i:nth-child(3) {
-    background: var(--p2);
-  }
-
-  .inks i:nth-child(4) {
-    background: var(--p3);
-  }
-
-  .inks i:nth-child(5) {
-    background: var(--p4);
   }
 
   /* A narrow screen: the print above, the words under it */

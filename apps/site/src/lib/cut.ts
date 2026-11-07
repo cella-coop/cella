@@ -1,11 +1,13 @@
-// The cut: the edge a print meets the page along, after the mark
-// (index.md, prints). The mark is cells, each the Voronoi cell of its seed
-// among seeds no one sees, shrunk by a gutter and rounded at its corners;
-// the cut is a band of such cells along the print's edge, some kept and
-// the rest cut away, kept the likelier the further into the print, so
-// the picture breaks into cells where it meets the ground. Beyond the band
-// the print is whole. It is a clip path in the box's own units, 0 to 1,
-// seeded, so a placement's cut is its own and the same on every build.
+// The cut: the edge where a section's colour flows over its print, after
+// the mark (index.md, the cut). The mark is cells, each the Voronoi cell
+// of its seed among seeds no one sees, rounded at its corners and kept
+// apart by a gutter; here the colour is cells too. Near its own side it is
+// whole, drawn as one shape, the union of its cells, so its edge is a
+// rounded coastline of cells; past that, loose cells of it float over the
+// picture, the fewer the further in. No loose cell touches the overlay's
+// box, so none is cut to a straight line. It is a clip path in the box's
+// own units, 0 to 1, seeded, so a placement's cut is its own and the same
+// on every build.
 import { rng } from '@cella/brand'
 
 type Point = [number, number]
@@ -68,104 +70,6 @@ function cell(seeds: Point[], a: number, box: Point[], inset: (b: number) => num
   return poly
 }
 
-/** A string's seed. */
-const seedOf = (key: string) => [...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
-
-/**
- * A print's cut as the `d` of clip paths in object-bounding-box units.
- * `edge` names the side of the print the page meets: `start` its left,
- * `end` its right, `bottom` its foot. The band of cells is `depth` of the
- * print's width (or height), a hundred units across the box.
- */
-export function cut(key: string, edge: 'start' | 'end' | 'bottom', { depth = 26, pitch = 9, gutter = 1.6, round = 1.4 } = {}): string[] {
-  const rand = rng(seedOf(key))
-  const L = 100
-  // The cells run on past the band into the print, where every one is
-  // whole print, so the print's own edge is cells and never a line
-  const span = depth + pitch * 2
-  // Built with the band at the left, x from 0, along y; turned after
-  const cells: { p: Point; kind: 'loose' | 'gone' | 'whole' }[] = []
-  const cols = Math.max(3, Math.round(span / pitch))
-  for (let c = 0; c < cols; c++) {
-    const x0 = (c + 0.5) * (span / cols)
-    // past the band a cell is the whole print; in it, a loose cell is kept
-    // the likelier the further into the print it lies
-    const keep = 0.15 + 0.7 * Math.min(1, x0 / depth)
-    for (let y = -pitch; y < L + pitch; y += pitch) {
-      const p: Point = [x0 + (rand() - 0.5) * pitch * 0.7, y + (rand() - 0.5) * pitch * 0.7 + (c % 2) * pitch * 0.5]
-      cells.push({ p, kind: x0 > depth ? 'whole' : rand() < keep ? 'loose' : 'gone' })
-    }
-  }
-  // seeds outside the box on the page's side, so the outer cells close
-  const outside: Point[] = []
-  for (let y = -pitch; y < L + pitch; y += pitch) {
-    outside.push([-pitch * 0.9, y + rand() * pitch])
-  }
-  const seeds = [...cells.map((b) => b.p), ...outside]
-  const box: Point[] = [[-20, -20], [L + 20, -20], [L + 20, L + 20], [-20, L + 20]]
-  const turn = (p: Point): Point => (edge === 'start' ? p : edge === 'end' ? [L - p[0], p[1]] : [p[1], L - p[0]])
-  const f = (p: Point) => {
-    const [x, y] = turn(p)
-    return `${+(x / L).toFixed(4)} ${+(y / L).toFixed(4)}`
-  }
-  const whole = (n: number) => n < cells.length && cells[n].kind === 'whole'
-  const paths: string[] = []
-  // A loose cell keeps a gutter from every neighbour, as the mark's cells
-  // do, rounded, and no cell is cut flat by the box's edge
-  cells.forEach((c, i) => {
-    if (c.kind !== 'loose') {
-      return
-    }
-    const poly = clipHalf(cell(seeds, i, box, () => gutter / 2), gutter / 2, 0, -1, 0)
-    if (poly.length >= 3) {
-      paths.push(rounded(poly, round, f))
-    }
-  })
-  // The whole print is one shape, its cells' union: each keeps a gutter
-  // from what is not whole and none from what is, their shared edges
-  // cancel, and what is left is one outline, rounded at every corner, so
-  // no seam, crack or notch shows where its cells meet
-  const edges = new Map<string, [Point, Point]>()
-  const spot = (p: Point) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`
-  cells.forEach((c, i) => {
-    if (c.kind !== 'whole') {
-      return
-    }
-    const poly = cell(seeds, i, box, (n) => (whole(n) ? 0 : gutter / 2))
-    poly.forEach((a, k) => {
-      const b = poly[(k + 1) % poly.length]
-      const back = `${spot(b)}>${spot(a)}`
-      if (edges.has(back)) {
-        edges.delete(back)
-      } else {
-        edges.set(`${spot(a)}>${spot(b)}`, [a, b])
-      }
-    })
-  })
-  const from = new Map([...edges.values()].map(([a, b]) => [spot(a), b]))
-  const loops: Point[][] = []
-  while (from.size) {
-    const [start, next] = from.entries().next().value as [string, Point]
-    const loop: Point[] = []
-    let at = start
-    let to: Point | undefined = next
-    while (to) {
-      from.delete(at)
-      loop.push(to)
-      at = spot(to)
-      to = at === start ? undefined : from.get(at)
-    }
-    loops.push(loop)
-  }
-  for (const loop of loops) {
-    const kept = smooth(loop, round * 0.8)
-    if (kept.length >= 3) {
-      paths.push(rounded(kept, round * 1.5, f))
-    }
-  }
-  return paths
-}
-
 /** An outline without its thorns: a corner too near the last leaves no
  * room to round either, and one sharper than 55° no rounding softens, so
  * both go, again until none is left. */
@@ -196,4 +100,98 @@ function smooth(loop: Point[], near: number): Point[] {
     pts = out
   }
   return pts
+}
+
+/** A string's seed. */
+const seedOf = (key: string) => [...key].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7)
+
+/**
+ * The cut of a colour flowing over a print, as the `d` of clip paths in
+ * object-bounding-box units. `toward` names where the colour flows: to
+ * the `right`, from the box's left edge, or to the `top`, from its foot.
+ * `aspect` is the box's depth over its length, the depth the way the
+ * colour flows, so the cells stay round in it. A cell is `pitch` of the
+ * box's length across.
+ */
+export function cut(key: string, toward: 'right' | 'top', { aspect = 0.8, pitch = 10, whole = 0.3, gutter = 1.8, round = 1.6 } = {}): string[] {
+  const rand = rng(seedOf(key))
+  // Built with the colour flowing along x, from 0 to D, its length along y
+  const H = 100
+  const D = H * aspect
+  const cells: { p: Point; kind: 'loose' | 'gone' | 'whole' }[] = []
+  const cols = Math.max(3, Math.round(D / pitch))
+  for (let c = 0; c < cols; c++) {
+    const x0 = (c + 0.5) * (D / cols)
+    const at = x0 / D
+    // whole near its own side; past it a cell is kept the likelier the
+    // nearer the whole it lies
+    const keep = Math.max(0, 0.85 - 1.1 * (at - whole) / (1 - whole))
+    for (let y = -pitch; y < H + pitch; y += pitch) {
+      const p: Point = [x0 + (rand() - 0.5) * pitch * 0.7, y + (rand() - 0.5) * pitch * 0.7 + (c % 2) * pitch * 0.5]
+      cells.push({ p, kind: at < whole ? 'whole' : rand() < keep ? 'loose' : 'gone' })
+    }
+  }
+  // seeds past the far side, so the farthest cells close
+  for (let y = -pitch; y < H + pitch; y += pitch) {
+    cells.push({ p: [D + pitch * 0.9, y + rand() * pitch], kind: 'gone' })
+  }
+  const seeds = cells.map((c) => c.p)
+  const box: Point[] = [[-20, -20], [D + 20, -20], [D + 20, H + 20], [-20, H + 20]]
+  const f = (p: Point) => {
+    const [u, v] = toward === 'right' ? [p[0] / D, p[1] / H] : [p[1] / H, 1 - p[0] / D]
+    return `${+u.toFixed(4)} ${+v.toFixed(4)}`
+  }
+  const isWhole = (n: number) => cells[n].kind === 'whole'
+  const paths: string[] = []
+  // A loose cell keeps a gutter from every neighbour, rounded, and is left
+  // out where it would touch the box, so none is cut straight
+  const m = gutter
+  cells.forEach((c, i) => {
+    if (c.kind !== 'loose') {
+      return
+    }
+    const poly = cell(seeds, i, box, () => gutter / 2)
+    const inside = poly.every(([x, y]) => x > m && x < D - m && y > m && y < H - m)
+    if (poly.length >= 3 && inside) {
+      paths.push(rounded(poly, round, f))
+    }
+  })
+  // The whole is one shape, its cells' union: each keeps a gutter from
+  // what is not whole and none from what is, their shared edges cancel,
+  // and what is left is one outline, its thorns merged away, rounded
+  const edges = new Map<string, [Point, Point]>()
+  const spot = (p: Point) => `${p[0].toFixed(5)},${p[1].toFixed(5)}`
+  cells.forEach((c, i) => {
+    if (c.kind !== 'whole') {
+      return
+    }
+    const poly = cell(seeds, i, box, (n) => (isWhole(n) ? 0 : gutter / 2))
+    poly.forEach((a, k) => {
+      const b = poly[(k + 1) % poly.length]
+      const back = `${spot(b)}>${spot(a)}`
+      if (edges.has(back)) {
+        edges.delete(back)
+      } else {
+        edges.set(`${spot(a)}>${spot(b)}`, [a, b])
+      }
+    })
+  })
+  const from = new Map([...edges.values()].map(([a, b]) => [spot(a), b]))
+  while (from.size) {
+    const [start, next] = from.entries().next().value as [string, Point]
+    const loop: Point[] = []
+    let at = start
+    let to: Point | undefined = next
+    while (to) {
+      from.delete(at)
+      loop.push(to)
+      at = spot(to)
+      to = at === start ? undefined : from.get(at)
+    }
+    const kept = smooth(loop, round * 0.8)
+    if (kept.length >= 3) {
+      paths.push(rounded(kept, round * 1.5, f))
+    }
+  }
+  return paths
 }

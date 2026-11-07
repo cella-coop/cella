@@ -96,6 +96,13 @@ const { title, description } = Astro.props
     padding-inline: 1.5rem;
   }
 
+  /* A band: a section in one of the five tones, the page's ground tinted
+     by it in either theme, its colour also what flows over its print */
+  .band {
+    --band: oklch(from oklch(var(--shade-2) var(--tone)) l calc(c * 0.6) h);
+    background: var(--band);
+  }
+
   .eyebrow {
     display: inline-block;
     margin: 0 0 1rem;

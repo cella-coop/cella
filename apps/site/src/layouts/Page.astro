@@ -4,7 +4,7 @@
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import Hero from '../components/Hero.astro'
-import { siteData } from '../lib/content'
+import { siteData, toneOf } from '../lib/content'
 import Base from './Base.astro'
 
 type Link = { label: string; href: string }
@@ -31,7 +31,7 @@ const full = title === site.title ? title : site.titled.replace('{page}', title)
 <Base title={full} description={description}>
   <Header title={site.title} nav={site.nav} action={site.action} toggle={site.theme.toggle} menu={site.menu} />
   <main>
-    <Hero hero={hero} size={size} />
+    <Hero hero={hero} size={size} tone={toneOf(0)} />
     <slot />
   </main>
   <Footer footer={site.footer} toggle={site.theme.toggle} />

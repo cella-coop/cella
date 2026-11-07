@@ -35,8 +35,7 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   menu under Phosphor's `list` icon, a `<details>` with no script.
 - **the hero**: an eyebrow, the heading, a lede, two actions, and a
   print filling its far half or a figure beside the words, each but the
-  heading optional. Home's is large and sits on the brand's five inks;
-  every other page's is small.
+  heading optional. Home's is large; every other page's is small.
 - **the sections**: the page's, from `sections/<page>/`, in their order,
   each laid out by its kind:
 
@@ -50,6 +49,12 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
 
 - **the footer**: the mark, the site's closing line, its links and the
   theme toggle again.
+
+The hero and each section are **bands**, each in one of the five tones
+in turn, the hero the first (`toneOf` in `src/lib/content.ts`), so no
+two bands in a row share one: its background the page's ground tinted
+by its tone, `--band`, which turns with the theme. The bands part the
+sections; no line does, nor between them and the footer.
 
 The layout sets the theme the visitor chose before the first paint,
 from `localStorage`; with none it follows the system's, as the tokens
@@ -93,41 +98,41 @@ Every word the site shows lives in its content collections, under
 
 A hero or a split section may name a **backdrop**: a vendored photo
 (`src/photos/`, [photos](#photos)) in the house's print, `backdrop:
-<name>` or `backdrop: { photo: <name>, ink: <status> }`. The print
-fills half the section, top to foot, the far half in a hero and the half
-`side` names in a split, and the words stand on the ground in the other
-half; on a narrow screen it stands above them. Where it meets the
-page it is cut by the mark's cells ([the cut](#the-cut)). A hero or a
-split naming both a print and a figure shows the print alone; one with
-a figure and no print shows the figure on a card beside its words.
+<name>`. The print, in its band's tone, fills a little more than half
+the band, top to foot, the far side in a hero and the side `side` names
+in a split, and the words stand on the band in the other; on a narrow
+screen it stands above them. The band's colour flows over the print's
+near edge in the mark's cells ([the cut](#the-cut)). A hero or a split
+naming both a print and a figure shows the print alone; one with a
+figure and no print shows the figure on a card beside its words.
 
 ### The cut
 
-`src/lib/cut.ts` cuts a print's edge as the mark is drawn: cells, each
-the Voronoi cell of its seed among seeds no one sees, rounded at their
-corners and kept apart by a gutter. A band of them runs along the
-edge, a quarter of the print's width deep, and a loose cell in it is
-kept the likelier the further into the print it lies, so the picture
-breaks into cells where it meets the ground; none is cut flat by the
-print's box. Past the band the cells are the whole print, drawn as one
-shape: their union, their shared edges cancelled, its outline a gutter
-off the loose cells, its corners too near or sharper than 55° merged
-away and every other rounded, so the print's own edge is a coastline of
-cells with no seam, crack or thorn. The cut is a clip path in the
-print's own units, `Art.astro` holding one for a wide screen, on its
-inner edge, and one for a narrow, on its foot, each seeded by the
-placement and the photo, so every cut is its own and the same on every
-build. The print's credit sits in a corner of its whole side, plain
-small text in the print's muted ink, which its light paper carries in
-either theme.
+`src/lib/cut.ts` draws the band's colour flowing over its print as the
+mark is drawn: cells, each the Voronoi cell of its seed among seeds no
+one sees, rounded at their corners and kept apart by a gutter. Near the
+band's side the colour is whole, drawn as one shape: its cells' union,
+their shared edges cancelled, its outline a gutter off the loose cells,
+its corners too near or sharper than 55° merged away and every other
+rounded, so its edge is a coastline of cells. Past it loose cells of the
+colour float over the picture, the fewer the further in, and one that
+would touch the overlay's box is left out, so no cell is cut to a
+straight line. The cut is built at its overlay's depth over its length,
+so its cells stay round, and is a clip path in the overlay's own units:
+`Art.astro` holds one for a wide screen, the colour flowing in from the
+print's near edge, mirrored for a print on the left, and one for a
+narrow, flowing up over its foot, each seeded by the placement and the
+photo, so every cut is its own and the same on every build. The print's
+credit sits in a corner clear of the colour, plain small text in the
+print's muted ink, which its light paper carries in either theme.
 
 ## Prints
 
 A print is shown as the brand explorer shows one: a picture on the
 print's light paper, `--print-paper`, in a real ink, `--print-<status>-deep`,
 the same in either theme, with the panel's grain multiplied over it, a
-bounded thing and never a background a text lies on. Unset, a photo's
-ink is its own, from its name, the same on every page.
+bounded thing and never a background a text lies on. On the site its
+ink is its band's tone; in the asset library, the five in turn.
 
 Its mask is printed once, at build, by the brand's `printFile`
 (`src/lib/print.ts`), from the photo levelled, its darkest and lightest

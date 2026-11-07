@@ -1,5 +1,6 @@
 // Reading the collections the way every page does (index.md, the text).
 import { getCollection, getEntry, render } from 'astro:content'
+import { STATUSES } from './photo'
 
 export const siteData = async () => (await getEntry('site', 'site'))!.data
 
@@ -27,4 +28,8 @@ export async function posts() {
   )
 }
 
-export const dated = (d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' })
+/** A page's bands take the five tones in turn: the hero the first, its
+ * sections the rest, so no two bands in a row share one. */
+export const toneOf = (band: number) => STATUSES[band % STATUSES.length]
+
+export const dated =(d: Date) => d.toLocaleDateString('en', { day: 'numeric', month: 'long', year: 'numeric' })

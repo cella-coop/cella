@@ -1,7 +1,7 @@
 ---
 // A page's sections, in their order, each with the site's figures handed
-// to its body.
-import { sectionsOf } from '../lib/content'
+// to its body, each a band in the next of the five tones after the hero's.
+import { sectionsOf, toneOf } from '../lib/content'
 import { figures } from './figures'
 import Section from './Section.astro'
 
@@ -10,8 +10,8 @@ const sections = await sectionsOf(page)
 ---
 
 {
-  sections.map(({ id, data, Content }) => (
-    <Section id={id} {...data}>
+  sections.map(({ id, data, Content }, i) => (
+    <Section id={id} {...data} tone={toneOf(i + 1)}>
       <Content components={figures} />
     </Section>
   ))

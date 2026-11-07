@@ -1,38 +1,43 @@
 ---
-// A print filling its side of a section, cut where it meets the page by
-// the mark's cells (index.md, prints): `edge` the side the page lies on,
-// and on a narrow screen, where the print stands above the text, its
-// foot. Its two cuts are clip paths of its own, seeded by `key`.
+// A print filling its side of a band, in the band's tone, the band's
+// colour flowing over its near edge and breaking into the mark's cells
+// (index.md, the cut). `side` is the print's side; on a narrow screen it
+// stands above the words, the colour flowing up over its foot. Its two
+// cuts are clip paths of its own, seeded by `key`.
 import type { Status } from '../lib/photo'
-import type { Size } from '../lib/print'
 import { cut } from '../lib/cut'
 import Backdrop from './Backdrop.astro'
 
 interface Props {
   photo: string | { photo: string; ink?: Status }
-  edge: 'start' | 'end'
+  tone: Status
+  side: 'start' | 'end'
   key: string
-  size?: Size
-  narrow?: Size
 }
 
-const { photo, edge, key, size = 'hero', narrow = 'large' } = Astro.props
+const { photo, tone, side, key } = Astro.props
+const name = typeof photo === 'string' ? photo : photo.photo
 const id = `cut-${key.replace(/[^a-z0-9-]/g, '-')}`
-const wide = cut(key, edge)
-const foot = cut(`${key}-foot`, 'bottom')
+// The flow is about half the print's width and its full height on a wide
+// screen, its whole width and two fifths of its height on a narrow
+const wide = cut(key, 'right', { aspect: 0.55, pitch: 9 })
+// on a narrow screen the print is 62vw tall and the flow 45% of it across
+// the whole width: 0.28 deep to long on every phone
+const narrow = cut(`${key}-narrow`, 'top', { aspect: 0.28, pitch: 7, gutter: 1.2, round: 1.1 })
 const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)` }
 ---
 
-<svg class="clips" aria-hidden="true" width="0" height="0">
-  <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox">
-    {wide.map((d) => <path d={d} />)}
-  </clipPath>
-  <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox">
-    {foot.map((d) => <path d={d} />)}
-  </clipPath>
-</svg>
-<div class="art" data-edge={edge} style={clips}>
-  <Backdrop photo={photo} size={size} narrow={narrow} />
+<div class="art" data-side={side}>
+  <Backdrop photo={{ photo: name, ink: tone }} size={'hero'} narrow={'large'} />
+  <svg class="clips" aria-hidden="true" width="0" height="0">
+    <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox">
+      {wide.map((d) => <path d={d} />)}
+    </clipPath>
+    <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox">
+      {narrow.map((d) => <path d={d} />)}
+    </clipPath>
+  </svg>
+  <div class="flow" style={clips} aria-hidden="true"></div>
 </div>
 
 <style>
@@ -42,25 +47,43 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
     height: 0;
   }
 
-  /* Half the section, its cut on the half's inner edge */
+  /* The print: its side of the band, top to foot */
   .art {
     position: absolute;
     top: 0;
     bottom: 0;
-    width: 50%;
-    clip-path: var(--cut);
+    width: 58%;
   }
 
-  .art[data-edge='start'] {
+  .art[data-side='end'] {
     right: 0;
   }
 
-  .art[data-edge='end'] {
+  .art[data-side='start'] {
     left: 0;
   }
 
-  /* The credit in a corner of the print's whole side, clear of the cut */
-  .art[data-edge='end'] :global(.credit) {
+  /* The band's colour over the print's near edge, cut into cells */
+  .flow {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    z-index: 1;
+    width: 45%;
+    background: var(--band);
+    clip-path: var(--cut);
+  }
+
+  .art[data-side='end'] .flow {
+    left: -1px;
+  }
+
+  .art[data-side='start'] .flow {
+    right: -1px;
+    transform: scaleX(-1);
+  }
+
+  .art[data-side='start'] :global(.credit) {
     right: auto;
     left: 0.75rem;
   }
@@ -70,11 +93,23 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
       position: relative;
       width: 100%;
       height: max(16rem, 62vw);
+    }
+
+    .flow,
+    .art[data-side='end'] .flow,
+    .art[data-side='start'] .flow {
+      top: auto;
+      right: 0;
+      bottom: -1px;
+      left: 0;
+      width: auto;
+      height: 45%;
+      transform: none;
       clip-path: var(--cut-narrow);
     }
 
     .art :global(.credit),
-    .art[data-edge='end'] :global(.credit) {
+    .art[data-side='start'] :global(.credit) {
       top: 0.5rem;
       right: 0.75rem;
       bottom: auto;

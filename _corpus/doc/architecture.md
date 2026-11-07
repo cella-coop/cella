@@ -1496,9 +1496,14 @@ a **checkpoint** in `cella.checkpoint`: the entry, its hash and the
 state hash, the BLAKE3 of the folded slices' rows in a canonical order,
 `cella.state_rows`: each table by name, its rows as JSON text sorted
 bytewise without their generated columns, which their rows compute, a
-personal column as the newest commitment the vault holds for its field
-and subject, or in a folded scope the newest the fold applied, and as
-its value where neither holds one. A fold resumes from a checkpoint,
+personal text column null where its value is null, as one a later
+write cleared is, whatever the vault or the fold kept for it before,
+since a payload keeps a null as null, never as a commitment, and a fold
+writes it so; else a personal column as the newest commitment the vault
+holds for its field and subject, or in a folded scope the newest the
+fold applied, and as its value where neither holds one, so a column
+that cannot hold `redacted`, which a fold leaves null under its
+commitment, as a payslip's figures, reads that commitment. A fold resumes from a checkpoint,
 whose state it hashes again first, and verifies the log after it from
 the checkpoint's entry (`cella.verify_log(after)`), never from the
 first, so a re-fold costs what it folds, not the log's length. A slice is **folded** when every action it

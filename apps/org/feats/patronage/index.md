@@ -1,6 +1,6 @@
 +++
 title = "Patronage"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The year-end cycle of a worker co-op's surplus: the statutes' terms for
@@ -235,6 +235,18 @@ L3243-4) and redacted after.
   and no year they would govern is approved; `patronage.copies`, on the
   same op, that they are what the rule marks, from the year it applies
   in.
+
+## Folds
+
+Each action folds by `sql/009-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+terms adopted by the SQL the handler runs, `patronage.terms_from`,
+which must make the terms the entry names; a split drafted from the
+surplus and the percents its entry keeps, as its handler drafts it; an
+approval on its entry's day with the parts the entry keeps, each
+worker's quantity and amount as their commitments, since the divisions
+that made them read pay and time the log keeps no value of; and a
+distribution on its entry's day, whose entry patronage-transaction
+folds.
 
 ## Handlers
 

@@ -4,8 +4,10 @@
 // instalments than the statutes allow, counting those withheld already;
 // when a run is paid, each instalment due is withheld in its payment's own
 // entry, never more than is owed nor in more months than the plan's count,
-// and the payment's guards take the lines it adds. Run by `cella
-// test slice account-membership-payslip-transaction`.
+// and the payment's guards take the lines it adds; and a spread and a
+// payment's instalments fold as their entries keep them
+// (`sql/004-folds.sql`). Run by `cella test slice
+// account-membership-payslip-transaction`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -267,4 +269,35 @@ test('payslip-transaction\'s register calls the functions it holds, never an ove
   } finally {
     await db.query('ROLLBACK')
   }
+})
+
+test('a spread folds into her plan, its instalment as its commitment; a payment\'s instalments into what it withheld and paid in', async () => {
+  const commitment = { $commit: 'ab'.repeat(32) }
+  const entry = (n: number, op: string, payload: unknown) => ({ n, op, actor: ines, date: '2027-01-05', cause: null, payload })
+  await db.query('BEGIN')
+  const withheld = Number((await one<{ n: string }>('SELECT count(*) AS n FROM account_membership_payslip_transaction.withheld WHERE member = $1', [ines])).n)
+  await db.query('SELECT account_membership_payslip_transaction.fold_spread($1)', [entry(1, 'account:capital:spread', { member: ines, instalments: 4, each: commitment })])
+  assert.deepEqual(
+    await one(`SELECT instalments, each, to_char(since, 'YYYY-MM-DD') AS since, prior FROM account_membership_payslip_transaction.plan WHERE member = $1`, [ines]),
+    { instalments: 4, each: null, since: '2027-01-05', prior: withheld },
+  )
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM cella.commitment WHERE field = 'account_membership_payslip_transaction.plan.each' AND subject = $1`, [ines])).n, '1')
+  const id = (await one<{ id: string }>(`SELECT 'je-' || lpad((last + 1)::text, 4, '0') AS id FROM transaction.journal`)).id
+  await db.query(`INSERT INTO transaction.entry (id, date, label) VALUES ($1, '2027-01-05', 'Payroll paid, 2027-12')`, [id])
+  await db.query(
+    `INSERT INTO transaction.line (entry, n, account, side, amount) VALUES
+       ($1, 1, '512', 'debit', cella.amount(5000)), ($1, 2, '4562', 'credit', cella.amount(5000)),
+       ($1, 3, '1012', 'debit', cella.amount(5000)), ($1, 4, '101301', 'credit', cella.amount(5000))`,
+    [id],
+  )
+  await db.query('SELECT account_membership_payslip_transaction.fold_pay($1)', [
+    entry(2, 'payslip:run:pay', {
+      month: '2027-12',
+      entry: id,
+      posting: { date: '2027-01-05', label: 'Payroll paid, 2027-12', lines: [{ account: '512', side: 'debit', cents: 5000 }, { account: '4562', side: 'credit', cents: 5000 }, { account: '1012', side: 'debit', cents: 5000 }, { account: '101301', side: 'credit', cents: 5000 }] },
+    }),
+  ])
+  assert.deepEqual(await one(`SELECT member, cella.cents(amount) AS cents, entry FROM account_membership_payslip_transaction.withheld WHERE month = '2027-12'`), { member: ines, cents: '5000', entry: id })
+  assert.deepEqual(await one(`SELECT member, cella.cents(amount) AS cents, via FROM account_membership_transaction.paid WHERE entry = $1`, [id]), { member: ines, cents: '5000', via: 'pay' })
+  await db.query('ROLLBACK')
 })

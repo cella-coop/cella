@@ -2,8 +2,8 @@ import type { Refused, Settled } from '@cella/org-actions'
 import { done, write, type Deps, type Done } from '@cella/org-db'
 import { distributing } from '@cella/org-patronage/api'
 import type { Distribute, Distributed } from '@cella/org-patronage/models'
-import { record } from '@cella/org-transaction/api'
-import type { Line } from '@cella/org-transaction/models'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry, Line } from '@cella/org-transaction/models'
 
 // Distributes an approved split and posts it in one write: the patronage
 // feat's state, then the entry whose lines `patronage_transaction.lines`
@@ -13,6 +13,8 @@ import type { Line } from '@cella/org-transaction/models'
 // that the entry posts exactly the split (`posted`).
 export async function distribute(input: Distribute, deps: Deps): Promise<Settled<Distributed & { entry: string }> | Refused> {
   const w = distributing(input)
+  // The entry it posts, which its payload keeps for its fold.
+  let posting: Entry | null = null
   return write(deps, {
     op: w.op,
     request: w.request,
@@ -28,11 +30,12 @@ export async function distribute(input: Distribute, deps: Deps): Promise<Settled
         [input.distribution],
       )
       const lines = rows.map((r) => ({ account: r.account, side: r.side, cents: Number(r.cents) }))
-      const { entry } = await record(tx, { date: value.distributed, label: `Distribution of the ${value.year} surplus`, lines })
+      posting = { date: value.distributed, label: `Distribution of the ${value.year} surplus`, lines }
+      const { entry } = await record(tx, posting)
       await tx.query('INSERT INTO patronage_transaction.distribution (distribution, entry) VALUES ($1, $2)', [input.distribution, entry])
       return { ...value, entry }
     },
-    payload: (v) => ({ ...w.payload(v), entry: v.entry }),
+    payload: (v) => ({ ...w.payload(v), entry: v.entry, ...(posting ? { posting: logged(posting) } : {}) }),
   })
 }
 

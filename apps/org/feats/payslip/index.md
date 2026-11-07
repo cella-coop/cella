@@ -1,6 +1,6 @@
 +++
 title = "Payslip"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Pay: each worker's salary, member or not, and a pay run each month, one
@@ -79,15 +79,16 @@ assembly's, unless the write that makes it names another.
 
 ## Personal data
 
-A member's salary and each payslip's figures are personal data of class
-`payroll`, registered by the member's address (`003-personal.sql`): the
-law keeps them five years (Code du travail, art. L3243-4). Erasing a
+A member's salary and each payslip's figures and minutes are personal
+data of class `payroll`, registered by the member's address
+(`003-personal.sql`): the law keeps them five years (Code du travail, art. L3243-4). Erasing a
 member who has left restricts them; once their clock runs out `cella
 vault sweep` redacts them to NULL, so the figures are nullable, and
 `payslip.stays` lets an approved run's payslips take that one change
 (`cella.redacting()`). A run's payload holds its totals; the write that
-generates it holds each payslip's figures too, by commitment, so the
-log keeps a salted digest of every member's pay, never the figures.
+generates it holds each payslip's figures too, by commitment, and
+payslip-timesheet's each payslip's minutes, so the log keeps a salted
+digest of every member's pay, never the figures.
 
 ## Guards
 
@@ -96,6 +97,15 @@ log keeps a salted digest of every member's pay, never the figures.
 - `payslip.approves`, on `payslip:run:approve`: approved by this write, as
   the actor, and within the ratio.
 - `payslip.pays`, on `payslip:run:pay`: paid by this write.
+
+## Folds
+
+Each action folds by `sql/005-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+a run prepared on its entry's day with a payslip for each member its
+figures name, every figure as its commitment, since `payslip.due`
+reads salaries the log keeps no value of; an approval by the entry's
+actor and a payment, on their entries' days. payslip-timesheet folds a
+payslip's minutes, payslip-transaction the entries a run posts.
 
 ## Tests
 

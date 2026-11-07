@@ -125,7 +125,10 @@ its digest; an acceptance, the invitation by its key and its label's
 commitment; an admission, the member active with the shares it names; a
 suspension, an exclusion or a withdrawal, the member's status and day,
 unless they stand so already; and an erasure nothing of its own, its
-erasure folding as the notary carried it out.
+erasure folding as the notary carried it out. What `crediting`
+writes for an extender that credits shares folds by
+`membership.fold_credit`, which its fold calls: the shares added to
+what the member holds while they are active.
 
 ## Handlers
 

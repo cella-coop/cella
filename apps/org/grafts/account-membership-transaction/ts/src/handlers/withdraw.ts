@@ -1,8 +1,8 @@
 import type { Outcome } from '@cella/org-actions'
 import { done, write, type Deps, type Done, type Write } from '@cella/org-db'
 import type { actions } from '@cella/org-account/models'
-import { record } from '@cella/org-transaction/api'
-import type { Line } from '@cella/org-transaction/models'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry, Line } from '@cella/org-transaction/models'
 import type { Withdraw, Withdrawn } from '../models/capital.ts'
 
 type Op = 'account:capital:withdraw' | 'account:own:withdraw'
@@ -18,6 +18,8 @@ type Op = 'account:capital:withdraw' | 'account:own:withdraw'
 // repayments are exactly that;
 // account-transaction's guard, that the month is open.
 export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'): Write<Withdrawn> {
+  // The entry it posts, which its payload keeps for its fold.
+  let posting: Entry | null = null
   return {
     op,
     request: input,
@@ -53,7 +55,8 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
       if (!lines.length) {
         throw new Error(`${input.member} holds and owes no capital to withdraw`)
       }
-      const { entry } = await record(tx, { date: rows[0].day, label: `Capital to repay, ${input.member}`, lines })
+      posting = { date: rows[0].day, label: `Capital to repay, ${input.member}`, lines }
+      const { entry } = await record(tx, posting)
       if (cancelled > 0) {
         await tx.query('UPDATE account_membership_transaction.subscription SET cancelled = cella.amount($2) WHERE member = $1', [input.member, cancelled])
       }
@@ -71,7 +74,7 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
       await tx.query('INSERT INTO account_membership_transaction.withdrawal (member, entry) VALUES ($1, $2)', [input.member, entry])
       return { member: input.member, owed, cancelled, repayments: drawn.rowCount ?? 0, entry }
     },
-    payload: (v) => ({ ...v, ...(input.motion ? { motion: input.motion } : {}) }),
+    payload: (v) => ({ ...v, ...(input.motion ? { motion: input.motion } : {}), ...(posting ? { posting: logged(posting) } : {}) }),
   }
 }
 

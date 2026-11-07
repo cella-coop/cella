@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,
@@ -266,6 +266,21 @@ has left restricts it until `cella vault sweep` redacts it.
 - `account.owns`, on `account:own:freeze` and `account:own:withdraw`:
   the holder, or the member, the payload names is the actor. That they
   left by their own withdrawal is the grafts' guards'.
+
+## Folds
+
+Each action this feat handles folds by `sql/011-folds.sql`
+([folds](../../../../_corpus/doc/architecture.md#folds)): a month opened, and closed on
+the entry's day; terms adopted by the SQL the handler runs,
+`account.terms_from`, which must make the terms the entry names; and
+a freeze, the accounts the entry names. The writes it publishes fold by
+functions a graft's fold calls as its handler calls the write:
+`account.fold_opening` opens what `opening` opened, and
+`account.fold_holding` the capital account `holding` opened, its
+label, which names its holder, as the commitment the entry keeps. A
+subscription, a payment in, a draw, a repayment and a withdrawal fold
+by account-membership-transaction's folds, a spread by
+account-membership-payslip-transaction's.
 
 ## Handlers
 

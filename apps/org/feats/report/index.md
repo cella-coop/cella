@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-05
+updated = 2026-11-07
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -138,6 +138,14 @@ report is saved, and saved again under its id by its owner.
 saved is the actor's, saved on the verdict date, a `custom` one with a
 definition reading at least one view; a built-in report or another
 member's is never saved over.
+
+## Folds
+
+A save folds by `report.fold_save` (`sql/002-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): the actor's report as its entry
+keeps it, its title, caption and definition, saved on the entry's day,
+or saved again over their own; another's keeps its row, as it did when
+the guard refused the write.
 
 ## Handlers
 

@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -48,7 +48,8 @@ The amount of a payment in and of a draw is personal data of class
 each write's payload commits to it, and the vault keeps it, so the
 log's digest confirms no guess at a colleague's capital. The journal
 still shows the amount on the bank's line, as every member reads the
-books. Once a former member's clock runs out `cella vault sweep` redacts
+books, and so does the payload, which keeps the entry's lines for its
+fold. Once a former member's clock runs out `cella vault sweep` redacts
 it to NULL. A repayment's amount is logged as given: it falls due after
 its member has left, perhaps after their erasure, which refuses any
 later value of their class, and the exit drew it up from the books.
@@ -157,6 +158,19 @@ trigger on `membership.member` does it.
 At rung 1 the guard runs under the log's head lock, so two draws of one
 member are judged one after the other. At rung 2 a device holds the limit
 offline.
+
+## Folds
+
+Each action whose handler is this graft's folds by
+`sql/006-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)): its own rows,
+the entry it posts by `transaction.fold_record` and a subscription's
+capital account by `account.fold_holding`, as its handler calls
+`record` and `holding`; each payload keeps the entry it posts as
+`logged` gives it, and a subscription the account's label as its
+commitment. A payment in and a draw keep their amount as its commitment;
+a repayment is paid on its entry's day; a withdrawal cancels what its
+entry says and draws up its repayments by the SQL its handler runs, on
+what its entry owes, which must draw as many as it says.
 
 ## Tests
 

@@ -8,7 +8,8 @@
 // leaves has their capital withdrawn by the write that follows the exit,
 // moved to what is owed them and their repayments drawn up on the terms
 // of the day they exited, once, each paid once, in its turn and not
-// before its day. Run by `cella test slice
+// before its day; and each write folds into the rows it wrote
+// (`sql/006-folds.sql`). Run by `cella test slice
 // account-membership-transaction`.
 
 import { after, before, test } from 'node:test'
@@ -102,7 +103,16 @@ test('admitted, Inès subscribes her 20 shares by the write that follows: her ac
   const { value, r } = await judged(w, 'account_membership_transaction.subscribes')
   assert.equal(r, null)
   await db.query('COMMIT')
-  assert.deepEqual({ ...w.payload(value) }, { member: ines, account: '101302', shares: 20, amount: 100000, entry: 'je-0001', motion: 'm-2026-012' })
+  assert.deepEqual({ ...w.payload(value) }, {
+    member: ines,
+    account: '101302',
+    shares: 20,
+    amount: 100000,
+    entry: 'je-0001',
+    motion: 'm-2026-012',
+    posting: { date: '2026-10-31', label: 'Capital subscribed and called, 101302', lines: [{ account: '4562', side: 'debit', cents: 100000 }, { account: '1012', side: 'credit', cents: 100000 }] },
+    label: { $personal: { field: 'account.account.label', subject: ines, value: 'Capital — Inès Haddad' } },
+  })
   const s = await one<{ account: string; shares: number; entry: string }>('SELECT account, shares, entry FROM account_membership_transaction.subscription WHERE member = $1', [ines])
   assert.deepEqual(s, { account: '101302', shares: 20, entry: 'je-0001' })
   assert.deepEqual(await lines('je-0001'), [{ account: '4562', side: 'debit', cents: '100000' }, { account: '1012', side: 'credit', cents: '100000' }])
@@ -278,4 +288,74 @@ test('a repayment is paid once it falls due, after the one before it, exactly, a
   )
   await db.query('ROLLBACK')
   await db.query(`SET cella.clock = '2026-10-31'`)
+})
+
+// The rows of the tables named, as JSON text, sorted, each without the
+// columns named beside it: a personal one, which a fold writes as erasure
+// leaves it, and a journal entry's receipt, which it reads from the log.
+const shown = {
+  'account.account': ['label'],
+  'transaction.entry': ['receipt'],
+  'transaction.line': [],
+  'transaction.journal': [],
+  'account_membership_transaction.subscription': [],
+  'account_membership_transaction.paid': ['amount'],
+  'account_membership_transaction.draw': ['amount'],
+  'account_membership_transaction.repayment': [],
+  'account_membership_transaction.withdrawal': [],
+}
+async function state(): Promise<string[]> {
+  const out: string[] = []
+  for (const [t, without] of Object.entries(shown)) {
+    const { rows } = await db.query<{ r: string }>(`SELECT (to_jsonb(x) - $1::text[])::text AS r FROM ${t} x ORDER BY 1`, [without])
+    out.push(...rows.map((x) => `${t} ${x.r}`))
+  }
+  return out
+}
+// A payload as the log keeps it: each personal value its commitment.
+const logged = (v: unknown) => JSON.parse(JSON.stringify(v), (_, x) => (x && typeof x === 'object' && '$personal' in x ? commitment : x))
+const entry = (n: number, op: string, payload: unknown) => ({ n, op, actor: hugo, date: '2026-10-31', cause: null, payload })
+
+// The write's state, then, in its place, its payload folded by `fold`:
+// both leave the same rows, and the fold's stay where `keep` says.
+async function folds<T>(w: Write<T>, fold: string, keep = false) {
+  await db.query('BEGIN')
+  const payload = logged(w.payload(await w.state(db, {} as never)))
+  const written = await state()
+  await db.query('ROLLBACK')
+  await db.query('BEGIN')
+  await db.query(`SELECT ${fold}($1)`, [entry(1, w.op, payload)])
+  assert.deepEqual(await state(), written)
+  await db.query(keep ? 'COMMIT' : 'ROLLBACK')
+  return payload
+}
+
+test('a subscription and a withdrawal fold into the rows each wrote; a payment in, a draw and a repayment as their entries keep them', async () => {
+  const lou = 'lou@lanterne.example'
+  await db.query(`INSERT INTO person.person (address, name) VALUES ($1, 'Lou Martin')`, [lou])
+  await db.query(`INSERT INTO membership.member (address, status, since, shares) VALUES ($1, 'active', '2026-10-31', 20)`, [lou])
+  const subscribed = await folds(subscribing({ member: lou, motion: 'm-2026-020' }), 'account_membership_transaction.fold_subscribe', true)
+  assert.deepEqual(await one('SELECT label FROM account.account WHERE code = $1', [subscribed.account]), { label: 'redacted' }, 'the label names her: the fold keeps its commitment')
+  assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM cella.commitment WHERE field = 'account.account.label' AND subject = $1`, [lou])).n, '1')
+
+  const next = async () => (await one<{ id: string }>(`SELECT 'je-' || lpad((last + 1)::text, 4, '0') AS id FROM transaction.journal`)).id
+  const posting = (lines: [string, string, number][]) => ({ date: '2026-10-31', label: 'folded', lines: lines.map(([account, side, cents]) => ({ account, side, cents })) })
+  await db.query('BEGIN')
+  const paid = await next()
+  await db.query('SELECT account_membership_transaction.fold_pay($1)', [
+    entry(2, 'account:capital:pay', { member: lou, amount: commitment, entry: paid, posting: posting([['512', 'debit', 400_00], ['4562', 'credit', 400_00], ['1012', 'debit', 400_00], [subscribed.account, 'credit', 400_00]]) }),
+  ])
+  assert.deepEqual(await one('SELECT amount, via FROM account_membership_transaction.paid WHERE entry = $1', [paid]), { amount: null, via: 'bank' })
+  const drawn = await next()
+  await db.query('SELECT account_membership_transaction.fold_draw($1)', [entry(3, 'account:account:draw', { member: lou, amount: commitment, entry: drawn, posting: posting([['455', 'debit', 10_00], ['512', 'credit', 10_00]]) })])
+  assert.deepEqual(await one('SELECT member, amount FROM account_membership_transaction.draw WHERE entry = $1', [drawn]), { member: lou, amount: null })
+  const repaid = await next()
+  await db.query('SELECT account_membership_transaction.fold_repay($1)', [entry(4, 'account:capital:repay', { member: hugo, n: 2, amount: 20000, entry: repaid, posting: posting([['4567', 'debit', 200_00], ['512', 'credit', 200_00]]) })])
+  assert.deepEqual(await one(`SELECT entry, to_char(paid, 'YYYY-MM-DD') AS paid FROM account_membership_transaction.repayment WHERE member = $1 AND n = 2`, [hugo]), { entry: repaid, paid: '2026-10-31' })
+  await assert.rejects(db.query('SELECT account_membership_transaction.fold_draw($1)', [entry(5, 'account:account:draw', { member: lou, amount: commitment, entry: 'je-9999' })]), /entry 5 keeps no posting/)
+  await db.query('ROLLBACK')
+
+  await db.query(`UPDATE membership.member SET status = 'exited', exited = '2026-10-31', exit = 'withdrew' WHERE address = $1`, [lou])
+  const withdrawn = await folds(withdrawing({ member: lou }, 'account:own:withdraw'), 'account_membership_transaction.fold_withdraw')
+  assert.deepEqual({ owed: withdrawn.owed, cancelled: withdrawn.cancelled, repayments: withdrawn.repayments }, { owed: 0, cancelled: 100000, repayments: 0 })
 })

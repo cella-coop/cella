@@ -4,7 +4,7 @@
 import type { Slice } from '@cella/org-db'
 import { entry, journal, listing } from '../drivers/journal.ts'
 
-export { adjust, adjusting, pay, paying, post, posting, record } from '../handlers/index.ts'
+export { adjust, adjusting, logged, pay, paying, post, posting, record } from '../handlers/index.ts'
 export { entry, journal } from '../drivers/journal.ts'
 
 // The journal, as the shell's transactions. Posting through the shell is

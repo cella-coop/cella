@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { write, type Deps } from '@cella/org-db'
+import { personal, write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
 import type { Approve, Approved } from '../models/distribution.ts'
 
@@ -15,6 +15,8 @@ const op = 'patronage:distribution:approve' satisfies keyof typeof actions
 // that the motion approves this split, and membership-motion's
 // that it passed.
 export async function approve(input: Approve, deps: Deps): Promise<Outcome<(typeof actions)[typeof op], Approved>> {
+  // The parts it made, which its payload keeps for its fold.
+  let parts: { worker: string; basis: string; quantity: string | null; cents: string | null }[] = []
   return write(deps, {
     op,
     request: input,
@@ -25,8 +27,24 @@ export async function approve(input: Approve, deps: Deps): Promise<Outcome<(type
         [input.distribution],
       )
       await tx.query('SELECT patronage.divide($1)', [input.distribution])
+      parts = (
+        await tx.query<{ worker: string; basis: string; quantity: string | null; cents: string | null }>(
+          'SELECT worker, basis, quantity, cella.cents(amount) AS cents FROM patronage.part WHERE distribution = $1 ORDER BY worker, basis',
+          [input.distribution],
+        )
+      ).rows
       return { ...input, approved: rows[0]?.approved ?? '' }
     },
-    payload: (v) => ({ ...v }),
+    // Each part's quantity and amount are its worker's: the log keeps
+    // their commitments.
+    payload: (v) => ({
+      ...v,
+      parts: parts.map((p) => ({
+        worker: p.worker,
+        basis: p.basis,
+        quantity: p.quantity === null ? null : personal('patronage.part.quantity', p.worker, Number(p.quantity)),
+        amount: p.cents === null ? null : personal('patronage.part.amount', p.worker, Number(p.cents)),
+      })),
+    }),
   })
 }

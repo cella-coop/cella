@@ -1,6 +1,6 @@
 +++
 title = "account-membership-payslip-transaction"
-updated = 2026-11-04
+updated = 2026-11-07
 +++
 
 An associate's subscription paid in monthly instalments withheld from
@@ -76,6 +76,16 @@ spreading again offers only what the ceiling has left.
   payment withheld exactly each instalment due, each recorded as paid in
   through pay, and its entry posts exactly those lines beyond the run's
   own.
+
+## Folds
+
+A spread folds by `sql/004-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
+the member's plan from its entry's day, each instalment as its
+commitment, counting the instalments their pay withheld before it. A
+run's payment folds, once payslip-transaction's fold has posted it, into
+what it withheld: each line its entry keeps that credits an associate's
+capital account under 1013, which are this graft's alone, withheld from
+its holder and paid in through their pay, as `keeps` kept it.
 
 ## Tests
 

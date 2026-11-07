@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -144,6 +144,19 @@ assembly's, unless the write that makes it names another.
 - `transaction.pays`, on `transaction:transaction:pay`: the entry is two
   lines, `401` debited and `512` credited, each by the payload's `amount`,
   so the mandate's limit caps what left the bank.
+
+## Folds
+
+A post, a payment to a supplier and a correction fold by
+`transaction.fold_post` (`sql/009-folds.sql`,
+[folds](../../../../_corpus/doc/architecture.md#folds)): the entry the payload names, posted
+as the log keeps it. Every write that posts, this feat's or a graft's,
+carries its entry in its payload as `logged` gives it, its date, its
+label and its lines, as the journal shows them; `transaction.fold_record`
+posts it again under its id, which the journal's trigger refuses unless
+it is the next, with the receipt of the write its entry is in
+(`transaction.receipt_of`). A graft's fold calls it as its handler
+calls `record`.
 
 ## Handlers
 

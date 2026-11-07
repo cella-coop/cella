@@ -1,8 +1,9 @@
 import type { Outcome } from '@cella/org-actions'
-import { done, write, type Deps, type Done, type Write } from '@cella/org-db'
+import { done, personal, write, type Deps, type Done, type Write } from '@cella/org-db'
 import type { actions } from '@cella/org-account/models'
 import { holding } from '@cella/org-account/api'
-import { record } from '@cella/org-transaction/api'
+import { logged, record } from '@cella/org-transaction/api'
+import type { Entry } from '@cella/org-transaction/models'
 import type { Subscribe, Subscribed } from '../models/capital.ts'
 
 const op = 'account:capital:subscribe' satisfies keyof typeof actions
@@ -16,6 +17,10 @@ const op = 'account:capital:subscribe' satisfies keyof typeof actions
 // minimum and their month open, and the entry is exactly the
 // subscription.
 export function subscribing(input: Subscribe): Write<Subscribed> {
+  // The entry it posts and the account's label, which its payload keeps
+  // for its fold.
+  let posting: Entry | null = null
+  let label = ''
   return {
     op,
     request: input,
@@ -36,15 +41,17 @@ export function subscribing(input: Subscribe): Write<Subscribed> {
         return { member: input.member, account: '', shares: m?.shares ?? 0, amount: 0, entry: '' }
       }
       const cents = m.shares * Number(m.value)
-      const account = await holding(tx, { holder: input.member, parent: '1013', label: `Capital — ${m.name}` })
-      const { entry } = await record(tx, {
+      label = `Capital — ${m.name}`
+      const account = await holding(tx, { holder: input.member, parent: '1013', label })
+      posting = {
         date: m.day,
         label: `Capital subscribed and called, ${account}`,
         lines: [
           { account: '4562', side: 'debit', cents },
           { account: '1012', side: 'credit', cents },
         ],
-      })
+      }
+      const { entry } = await record(tx, posting)
       await tx.query(
         `INSERT INTO account_membership_transaction.subscription (member, account, shares, entry, amount)
          VALUES ($1, $2, $3, $4, cella.amount($5))`,
@@ -52,7 +59,11 @@ export function subscribing(input: Subscribe): Write<Subscribed> {
       )
       return { member: input.member, account, shares: m.shares, amount: cents, entry }
     },
-    payload: (v) => ({ ...v, motion: input.motion }),
+    payload: (v) => ({
+      ...v,
+      motion: input.motion,
+      ...(posting ? { posting: logged(posting), label: personal('account.account.label', v.member, label) } : {}),
+    }),
   }
 }
 

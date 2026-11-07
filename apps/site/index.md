@@ -98,8 +98,11 @@ renderer hands it:
   the operator's description in the section's text. A figure holds
   exactly one photo and any number of icons; it works in both themes.
   The build-only fixture under `test/` exercises both layouts in both
-  themes and rejects an unknown icon; its four screenshots show the
-  figure without adding any section text or publishing a fixture photo.
+  themes: `cella check site` builds it, and fails where it does not
+  build or where it builds with an icon name Phosphor lacks, so every
+  gate rejects an unknown icon; `cella site screenshots` takes its four
+  screenshots, over and beside, light and dark, which show the figure
+  without adding any section text or publishing a fixture photo.
 
 ## Photos
 

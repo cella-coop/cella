@@ -134,11 +134,12 @@ its database to another host, which arrives at rung 6
 | a graft | the cores of the feats it joins and of their ancestors, its node's among them; the grafts at or below its node that join a proper subset of its feats ([graft order](#graft-order)) |
 | a node's root | its own and its ancestors' cores, the cores and roots of the feats below it, the grafts at or below it |
 | the brand, `packages/brand` | no package of the repository; and any package may depend on it |
+| the diagrams, `packages/diagrams` | the brand alone; and only the site depends on them |
 | the site, `apps/site` | the brand and the diagrams; and no package depends on it |
 
 Nothing is ambient: no global module, no library outside the tree but the
-brand and the diagrams, which depend on nothing in the tree, no re-export that reaches around
-it. Third-party crates and npm packages are the only other dependencies
+brand, which depends on nothing in it, and the diagrams, which depend on
+the brand alone; no re-export that reaches around it. Third-party crates and npm packages are the only other dependencies
 from outside. When two apps need the same library, the
 repository's root becomes the top node and the library moves into its core.
 

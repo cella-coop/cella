@@ -68,7 +68,7 @@ CREATE TABLE invoice.payment (
 -- An invoice's id: its series and its number, `F-2026-0056`.
 CREATE FUNCTION invoice.number_id(series text, number integer) RETURNS text
 LANGUAGE sql IMMUTABLE
-RETURN series || '-' || lpad(number::text, 4, '0');
+RETURN series || '-' || lpad(number::text, greatest(4, length(number::text)), '0');
 
 -- Spends the next number of a series from its right. A number already
 -- issued is never issued again; a right that has run out refuses, since

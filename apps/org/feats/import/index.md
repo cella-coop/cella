@@ -53,7 +53,7 @@ entries are carried over by the power `carry-books`.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| run | `id`, `kind`, `name`, `actor`, `day`, `dry`, `settled`, `refused`, `lines` | `id` is `im-0001` and up; `lines` each a line's number, what it is, the action, its outcome, its entry or reason |
+| run | `id`, `kind`, `name`, `actor`, `day`, `dry`, `settled`, `refused`, `lines` | `id` is `im-0001` and up, its number four digits or more, so `im-10000` follows `im-9999`; `lines` each a line's number, what it is, the action, its outcome, its entry or reason |
 
 What a line is names a record by its id, its address or its title, never
 a person's name: a person among the contacts is `a person, line 4`.

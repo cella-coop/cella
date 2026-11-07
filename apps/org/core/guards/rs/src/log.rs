@@ -412,6 +412,16 @@ impl Chain {
         })
     }
 
+    /// The chain walked from entry `n`, whose hash is `hash`, as from a
+    /// checkpoint at the end of a write: its next entry is `n + 1`, linked
+    /// to `hash`, and opens a write.
+    #[must_use]
+    pub fn after(mut self, n: i64, hash: [u8; 32]) -> Self {
+        self.next = n + 1;
+        self.prev = hash;
+        self
+    }
+
     /// The chain, judging effects by `follows`, as `cella.follows` holds it.
     #[must_use]
     pub fn following(mut self, follows: Vec<Follows>) -> Self {
@@ -619,6 +629,25 @@ mod tests {
             chain.check(e, 1, p, h, s).unwrap();
         }
         assert_eq!(chain.len(), 3);
+
+        // Walked from a checkpoint at entry 1, the chain checks entries 2
+        // and 3 from entry 1's hash, and refuses another hash there.
+        let mut chain = Chain::new(&[signer(1, &key, 1)])
+            .unwrap()
+            .after(1, log[0].2);
+        for (e, p, h, s) in &log[1..] {
+            chain.check(e, 1, p, h, s).unwrap();
+        }
+        assert_eq!(chain.len(), 3);
+        let mut chain = Chain::new(&[signer(1, &key, 1)]).unwrap().after(1, [9; 32]);
+        let (e, p, h, s) = &log[1];
+        assert_eq!(
+            chain.check(e, 1, p, h, s),
+            Err(Broken {
+                n: 2,
+                why: "wrong prev"
+            })
+        );
 
         let mut chain = Chain::new(&[signer(1, &key, 1)]).unwrap();
         let (e, p, h, s) = &log[0];

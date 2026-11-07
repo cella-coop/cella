@@ -30,12 +30,14 @@ export function proposing(input: Propose): Write<Proposed> {
       await tx.query(`SELECT pg_advisory_xact_lock(hashtext('motion.motion'))`)
       const { rows } = await tx.query<Proposed & { proposer: string }>(
         `INSERT INTO motion.motion (id, circle, author, proposer, title, method, procedure, ballot, proposed, deadline, body)
-         SELECT 'm-' || y || '-' || lpad((coalesce(max(split_part(d.id, '-', 3)::int), 0) + 1)::text, 3, '0'),
+         SELECT 'm-' || y || '-' || lpad(x.next::text, greatest(3, length(x.next::text)), '0'),
                 $1, $7, cella.reader(), $2, p.method, p.id, coalesce($6, p.ballot), cella.verdict_date(), $4, $5
          FROM (SELECT to_char(cella.verdict_date(), 'YYYY') AS y) v
          JOIN motion.procedure p ON p.id = $3
-         LEFT JOIN motion.motion d ON d.id LIKE 'm-' || v.y || '-%'
-         GROUP BY v.y, p.id, p.method, p.ballot
+         CROSS JOIN LATERAL (
+           SELECT coalesce(max(split_part(d.id, '-', 3)::int), 0) + 1 AS next
+           FROM motion.motion d WHERE d.id LIKE 'm-' || v.y || '-%'
+         ) x
          RETURNING id AS motion, to_char(proposed, 'YYYY-MM-DD') AS proposed, ballot, author, proposer`,
         [input.circle, input.title, procedure, input.deadline, input.body, input.ballot ?? null, input.author ?? null],
       )

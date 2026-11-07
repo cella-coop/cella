@@ -20,7 +20,7 @@ DECLARE
   next text;
 BEGIN
   UPDATE transaction.journal SET last = last + 1 RETURNING last INTO n;
-  next := 'je-' || lpad(n::text, 4, '0');
+  next := 'je-' || lpad(n::text, greatest(4, length(n::text)), '0');
   IF NEW.id IS NOT NULL AND NEW.id <> next THEN
     RAISE EXCEPTION '% is not the journal''s next entry, %', NEW.id, next
       USING ERRCODE = 'triggered_action_exception';

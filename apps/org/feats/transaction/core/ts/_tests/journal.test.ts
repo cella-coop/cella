@@ -261,3 +261,17 @@ test('a post, a payment to a supplier and a correction fold into the journal eac
     /entry 4 keeps no label and lines for je-9999/,
   )
 })
+
+test('the journal numbers on past four digits: je-10000 follows je-9999, and neither collides', async () => {
+  await db.query('BEGIN')
+  try {
+    await db.query('UPDATE transaction.journal SET last = 9998')
+    const ids: string[] = []
+    for (const label of ['the 9,999th', 'the 10,000th', 'the 10,001st']) {
+      ids.push((await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ('2026-10-24', $1) RETURNING id`, [label])).rows[0].id)
+    }
+    assert.deepEqual(ids, ['je-9999', 'je-10000', 'je-10001'])
+  } finally {
+    await db.query('ROLLBACK')
+  }
+})

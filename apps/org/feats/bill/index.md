@@ -13,7 +13,7 @@ names its supplier as text; what it charges and pays in the books is the
 
 | Entity | Fields | Notes |
 |---|---|---|
-| bill | `id`, `supplier`, `reference`, `issued`, `due`, `label`, `category`, `lines[]`, `net`, `vat?`, `total`, `status`, `recorded`, `recorder`, `approved?`, `approver?`, `paid?` | `id` is `bi-0001` and up; `reference` is the supplier's own number for it; `category` the account of class 6 it is charged to |
+| bill | `id`, `supplier`, `reference`, `issued`, `due`, `label`, `category`, `lines[]`, `net`, `vat?`, `total`, `status`, `recorded`, `recorder`, `approved?`, `approver?`, `paid?` | `id` is `bi-0001` and up, its number four digits or more, so `bi-10000` follows `bi-9999`; `reference` is the supplier's own number for it; `category` the account of class 6 it is charged to |
 | line | `description`, `quantity`, `unit_price`, `amount`, `vat_rate` | `amount` = quantity × unit price, as an invoice's line |
 
 A bill's lines, their amounts and their VAT are counted as an invoice's

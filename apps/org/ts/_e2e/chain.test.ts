@@ -75,9 +75,9 @@ test('Sofia, the print buyer, is refused a power she holds by no mandate, Brand\
     { supplier: 'Imprimerie du Parc', reference: 'FA-2026-1203', issued: '2026-10-23', label: 'Proofs', category: '606', circle: 'brand', lines: [{ description: 'Proofs', quantity: '1', unit_price: 120_00, vat_rate: 2000 }] },
     as(sofia),
   )
-  assert.match(reason(recording), /sofia@lanterne\.example holds no mandate for record-bill/)
-  assert.match(reason(await approve({ bill: 'bi-0001' }, as(sofia))), /sofia@lanterne\.example holds no mandate for approve-bill up to 1440\.00 €/)
-  assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /sofia@lanterne\.example holds approve-bill by no mandate covering ag's records/)
+  assert.match(reason(recording), /the actor holds no mandate for record-bill/)
+  assert.match(reason(await approve({ bill: 'bi-0001' }, as(sofia))), /the actor holds no mandate for approve-bill up to 1440\.00 €/)
+  assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /the actor holds approve-bill by no mandate covering ag's records/)
 })
 
 test('closing m-2026-013 grants finance a second mandate under coordination\'s; closing m-2026-014 ends coordination\'s and revokes every mandate under it the same day', async () => {
@@ -97,5 +97,5 @@ test('closing m-2026-013 grants finance a second mandate under coordination\'s; 
     ['print-buyer', '2026-10-24'],
     ['finance', '2026-10-24'],
   ])
-  assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /sofia@lanterne\.example holds no mandate for approve-bill/)
+  assert.match(reason(await approve({ bill: 'bi-0002' }, as(sofia))), /the actor holds no mandate for approve-bill/)
 })

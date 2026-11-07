@@ -810,7 +810,12 @@ file anywhere else fails `cella test`:
   `cella_analytics`.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
-  seeded with Lanterne, through the handlers.
+  seeded with Lanterne, through the handlers. The `fold` scenario folds
+  that founding's carried rows into a fresh database and compares every
+  state table, including the accounts from July through December 2026,
+  row for row. Every other scenario folds and compares its own logged
+  writes after it runs, unless its file names staged state the log cannot
+  reproduce.
 
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.

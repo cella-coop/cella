@@ -25,7 +25,8 @@ END;
 -- circle, `circle`, as its handler reads it from the record or writes it
 -- there, and one naming none concerns the root's, the assembly's. This is
 -- the one guard that reads a permission's scope: no slice checks it again.
--- A right reaches the whole co-op.
+-- A right reaches the whole co-op. Refused, `why_not` says by what
+-- mandate, missing or exceeded, and what would fix it.
 CREATE OR REPLACE FUNCTION membership.empowered(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -33,11 +34,7 @@ BEGIN ATOMIC
     WHEN w.amount IS NOT NULL AND w.cents IS NULL THEN w.op || ' names its amount in ' || w.amount || ', which the payload lacks'
     WHEN membership.may(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
       OR membership.entitled(cella.actor(), w.power, w.cents, cella.verdict_date()) THEN NULL
-    WHEN membership.may(cella.actor(), w.power, w.cents, NULL, cella.verdict_date()) THEN
-      cella.actor() || ' holds ' || w.power || ' by no mandate covering ' || w.about || '''s records'
-    ELSE
-      cella.actor() || ' holds no mandate for ' || w.power
-        || coalesce(' up to ' || cella.amount(w.cents)::text || ' €', '')
+    ELSE membership.why_not(cella.actor(), w.power, w.cents, w.about, cella.verdict_date())
   END
   FROM (
     SELECT p.op, p.power, p.amount, (payload ->> p.amount)::bigint AS cents,

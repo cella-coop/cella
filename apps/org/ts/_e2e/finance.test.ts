@@ -107,7 +107,7 @@ test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the géra
   const big = laptop.state === 'settled' ? laptop.value.expense : ''
   await claim({ expense: big }, as(thomas))
   const beyond = await approveExpense({ expense: big }, as(camille))
-  assert.match(reason(beyond), /camille@lanterne\.example holds no mandate for approve-expense up to 2520\.00 €/)
+  assert.match(reason(beyond), /the actor holds no mandate for approve-expense up to 2520\.00 €/)
 
   // Within her limit, the gérante approves the plotter Hugo's budget could
   // not.

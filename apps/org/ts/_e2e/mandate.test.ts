@@ -87,7 +87,7 @@ test('Lanterne\'s mandates are policies of the assembly, adopted by its founding
 test('Julien pays a supplier 2 900 € within his 3 000 €, and is refused 3 100 €', async () => {
   await on('2026-11-07')
   settled(await paying('2026-11-07', 2900))
-  assert.match(reason(await paying('2026-11-07', 3100)), /julien@lanterne\.example holds no mandate for pay-supplier up to 3100\.00 €/)
+  assert.match(reason(await paying('2026-11-07', 3100)), /the actor holds no mandate for pay-supplier up to 3100\.00 €/)
 })
 
 let raising = ''
@@ -117,7 +117,7 @@ test('ending the policy revokes its mandate, and the next 3 100 € is refused',
     ),
     { ends: '2026-12-05', ended_by: `${motion}/1`, revoked: '2026-12-05' },
   )
-  assert.match(reason(await paying('2026-12-05', 3100)), /julien@lanterne\.example holds no mandate for pay-supplier up to 3100\.00 €/)
+  assert.match(reason(await paying('2026-12-05', 3100)), /the actor holds no mandate for pay-supplier up to 3100\.00 €/)
   settled(await paying('2026-12-05', 2900))
 })
 

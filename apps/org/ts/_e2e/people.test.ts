@@ -158,7 +158,7 @@ test('Inès, employed and no member, keeps her profile and devices, logs her tim
   const asPaul = { db: reader(app, paul), actor: paul, sign: signer(scope, paul, laptop) }
   const late = await log({ member: paul, day: '2025-11-28', minutes: 60, billable: false }, asPaul)
   assert.equal(late.state, 'refused')
-  assert.match(reason(late), /paul@lanterne\.example holds no mandate for log-time/)
+  assert.match(reason(late), /the actor holds no mandate for log-time/)
   const held = await all<{ day: string; may: boolean }>(
     `SELECT d::text AS day, membership.entitled($1, 'log-time', NULL, d) AS may FROM unnest(ARRAY['2025-11-28', '2025-12-01']::date[]) d ORDER BY d`,
     [paul],
@@ -185,7 +185,7 @@ test('a hire needs the manager\'s power and carries a first device; Camille hire
     minutes: 35 * 60,
   }
   const byHugo = await hire({ ...contract, key: laptop.key, label: 'laptop' }, as(hugo))
-  assert.match(reason(byHugo), /hugo@lanterne\.example holds no mandate for hire-worker/)
+  assert.match(reason(byHugo), /the actor holds no mandate for hire-worker/)
   // A hire whose payload names another key than the member signed: the
   // notary refuses it before any guard.
   const other = await fixture(bastien, 'phone')

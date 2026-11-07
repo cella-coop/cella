@@ -250,8 +250,18 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   `amount` field. The payload names the record's owning circle,
   `circle`, as its handler reads it from the record or writes it there,
   and one naming none concerns the root's, the assembly's. Refused, it
-  says whether the actor holds the power by no mandate covering that
-  circle or by none at all. Each feat and core registers the power its
+  names the mandate missing or exceeded and what would fix it, read by
+  `membership.why_not(actor, power, cents, about, day)`, with the values
+  it read: where the actor holds the power by a mandate whose limit the
+  amount exceeds, that mandate, its role and circle, its limit and the
+  amount, and that a motion of its issuer raising the limit, or someone
+  holding a mandate up to the amount, would allow it; where they hold it
+  by a mandate whose scope does not cover the record's circle, that
+  mandate, what it covers and the record's circle; where they held one
+  that is revoked or expired by the day, that one and since when; where
+  they hold none, the power, and the roles that hold it in the record's
+  circle, with the circle whose motion grants it. It names roles,
+  circles and mandates, never a person. Each feat and core registers the power its
   actions need in `cella.power`; this feat attaches its guard to every
   op listed, then and later, as `membership-motion` attaches its own to
   `motion.cites`. A write with no power, or whose power is in

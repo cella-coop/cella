@@ -200,7 +200,7 @@ pub enum Part {
     Shell,
     /// The brand's generated files are what its house.json makes
     Brand,
-    /// The landing site's copy check, astro check over it, then its build
+    /// The landing site's copy check, astro check over it, its build, then the figure fixture's
     Site,
     /// cargo check and clippy over the workspace
     Rust,
@@ -289,6 +289,8 @@ pub enum Site {
     },
     /// Build the site static into apps/site/dist
     Build,
+    /// Build the figure fixture and take its four screenshots into apps/site/test
+    Screenshots,
     /// Vendor an Unsplash photo with its attribution
     Photo {
         #[command(subcommand)]

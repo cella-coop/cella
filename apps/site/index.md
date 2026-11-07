@@ -98,31 +98,26 @@ Every word the site shows lives in its content collections, under
 
 A hero or a split section may name a **backdrop**: a vendored photo
 (`src/photos/`, [photos](#photos)) in the house's print, `backdrop:
-<name>`. The print, in its band's tone, fills a little more than half
-the band, top to foot, the far side in a hero and the side `side` names
-in a split, and the words stand on the band in the other; on a narrow
-screen it stands above them. The band's colour flows over the print's
-near edge in the mark's cells ([the cut](#the-cut)). A hero or a split
+<name>`. The print, in its band's tone, fills three fifths of the band,
+top to foot, the far side in a hero and the side `side` names in a
+split, and the words stand on the band in the other; on a narrow screen
+it stands above them. The band's colour reaches over the print's near
+part to an edge drawn as a cell's ([the cut](#the-cut)). A hero or a split
 naming both a print and a figure shows the print alone; one with a
 figure and no print shows the figure on a card beside its words.
 
 ### The cut
 
-`src/lib/cut.ts` draws the band's colour flowing over its print as the
-mark is drawn: cells, each the Voronoi cell of its seed among seeds no
-one sees, rounded at their corners and kept apart by a gutter. Near the
-band's side the colour is whole, drawn as one shape: its cells' union,
-their shared edges cancelled, its outline a gutter off the loose cells,
-its corners too near or sharper than 55° merged away and every other
-rounded, so its edge is a coastline of cells. Past it loose cells of the
-colour float over the picture, the fewer the further in, and one that
-would touch the overlay's box is left out, so no cell is cut to a
-straight line. The cut is built at its overlay's depth over its length,
-so its cells stay round, and is a clip path in the overlay's own units:
-`Art.astro` holds one for a wide screen, the colour flowing in from the
-print's near edge, mirrored for a print on the left, and one for a
-narrow, flowing up over its foot, each seeded by the placement and the
-photo, so every cut is its own and the same on every build. The print's
+`src/lib/cut.ts` draws the edge where the band's colour meets its print
+as an edge of the mark's cells is drawn: straight runs, turning once or
+twice, each bend standing out past its neighbours so the colour is
+convex as a cell, bulging into the picture, its bends rounded. Its ends
+and bends stand between a tenth and two fifths into the print. The cut
+is a clip path in the print's own units: `Art.astro` holds one for a
+wide screen, the colour reaching in from the print's near edge,
+mirrored for a print on the left, and one for a narrow, rising over its
+foot, each seeded by the placement and the photo, so every cut is its
+own and the same on every build. The print's
 credit sits in a corner clear of the colour, plain small text in the
 print's muted ink, which its light paper carries in either theme.
 

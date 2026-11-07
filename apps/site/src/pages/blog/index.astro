@@ -32,9 +32,13 @@ const all = await posts()
 </Page>
 
 <style>
+  /* The list keeps the page's left edge, the hero's, at a readable width */
   .list {
-    max-width: 48rem;
     padding-block: 2rem 6rem;
+  }
+
+  .list > * {
+    max-width: 48rem;
   }
 
   ol {

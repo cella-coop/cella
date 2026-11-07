@@ -32,9 +32,13 @@ const site = await siteData()
 </Page>
 
 <style>
+  /* The post keeps the page's left edge, the hero's, at a readable width */
   article {
-    max-width: 44rem;
     padding-block: 1rem 6rem;
+  }
+
+  article > :global(*) {
+    max-width: 44rem;
   }
 
   .authors {

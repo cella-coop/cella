@@ -87,6 +87,22 @@ test('a spoken attribute is copy; an attribute that names or places is plumbing'
   ])
 })
 
+test('an SVG filter\'s wiring and a number are plumbing; a title in an SVG is copy', () => {
+  const source = `<svg width="0" height="0">
+  <filter id="f" x="0" y="0" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+    <feColorMatrix in="SourceGraphic" type="saturate" values="0 0 0 0 0  -1 0 0 0 1" result="grey" />
+    <feComposite in="grey" in2="screen" operator="arithmetic" k1="0" k4="-0.5" />
+  </filter>
+  <input type="range" min="1.5" max="12" step="0.5" value="3" />
+  <text font-family="Sans Serif">Hello there</text>
+</svg>
+`
+  assert.deepEqual(findings(parse, source), [
+    { line: 7, what: 'the attribute font-family="Sans Serif" is copy' },
+    { line: 7, what: 'the text "Hello there" is copy' },
+  ])
+})
+
 test('a component\'s script holding a sentence fails; its paths and names pass', async () => {
   const found = await planted((dir) =>
     writeFileSync(

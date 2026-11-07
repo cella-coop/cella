@@ -28,7 +28,15 @@ const PLUMBING = new Set([
   'name', 'lang', 'dir', 'role', 'for', 'slot', 'style', 'target', 'tabindex',
   'loading', 'decoding', 'width', 'height', 'viewBox', 'xmlns', 'fill', 'stroke',
   'is:global', 'is:inline', 'is:raw', 'class:list', 'define:vars',
+  // an SVG filter's wiring: its inputs, results, units and operators
+  'in', 'in2', 'result', 'operator', 'mode', 'values', 'k1', 'k2', 'k3', 'k4',
+  'x', 'y', 'dx', 'dy', 'slope', 'intercept', 'tableValues', 'stdDeviation',
+  'filterUnits', 'primitiveUnits', 'color-interpolation-filters', 'preserveAspectRatio',
+  // an input's range
+  'min', 'max', 'step',
 ])
+// A number, or a list of them, says nothing a reader reads.
+const NUMERIC = /^[-+0-9.eE\s,]+$/
 // Attributes whose value the page renders as its content: a literal is
 // read as a text node, an expression walked as any other.
 const CONTENT = new Set(['set:html', 'set:text'])
@@ -41,8 +49,9 @@ const IDENT = /^[a-z0-9_./@:?*#=&%+~,\-[\]{}()]*$/
 const RAW = new Set(['style', 'script'])
 
 const attrName = (n) => (n.type === 'JSXNamespacedName' ? `${n.namespace.name}:${n.name.name}` : n.name)
-const plumbingAttr = (name, element) =>
+const plumbingAttr = (name, element, value) =>
   PLUMBING.has(name) ||
+  NUMERIC.test(value) ||
   name.startsWith('data-') ||
   (name.startsWith('aria-') && !SPOKEN.has(name)) ||
   // <meta name="viewport" content="…"> configures; a description's content is copy.
@@ -79,7 +88,7 @@ export function findings(parse, source, ts = false) {
           if (a.value?.type === 'Literal') {
             if (CONTENT.has(name)) {
               if (typeof a.value.value === 'string' && a.value.value.trim()) say(a, `the text "${a.value.value.trim()}" is copy`)
-            } else if (typeof a.value.value === 'string' && a.value.value.trim() && !plumbingAttr(name, open)) {
+            } else if (typeof a.value.value === 'string' && a.value.value.trim() && !plumbingAttr(name, open, a.value.value)) {
               say(a, `the attribute ${name}="${a.value.value}" is copy`)
             }
           } else walk(a.value, a)

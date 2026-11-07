@@ -40,6 +40,28 @@ export async function loadBackdrop(name: string, width: number, ink?: Status) {
   return { meta, tone: ink, light: await masks(image), dark: await masks(negative) }
 }
 
+/** A photo at a width as an inline JPEG, for a page that prints it itself. */
+export async function inlinePhoto(name: string, width: number) {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) throw new Error(`invalid photo name: ${name}`)
+  const small = await sharp(readFileSync(join(process.cwd(), 'src/photos', `${name}.jpg`)))
+    .resize({ width })
+    .jpeg({ quality: 70 })
+    .toBuffer()
+  return `data:image/jpeg;base64,${small.toString('base64')}`
+}
+
+/** The explorer's halftone spot, 0.5 + 0.25 (cos 2πu + cos 2πt), one cell
+ * of it as an inline grey PNG: white its peaks, black its valleys. */
+export async function spotTile(n = 64) {
+  const spot = Buffer.alloc(n * n)
+  for (let y = 0; y < n; y++) {
+    for (let x = 0; x < n; x++) {
+      spot[y * n + x] = Math.round((0.5 + 0.25 * (Math.cos((2 * Math.PI * x) / n) + Math.cos((2 * Math.PI * y) / n))) * 255)
+    }
+  }
+  return dataUrl(await sharp(spot, { raw: { width: n, height: n, channels: 1 } }).png().toBuffer())
+}
+
 export function creditParts(credit: string) {
   const [beforeName, afterName = ''] = credit.split('{name}')
   const [between, afterUnsplash = ''] = afterName.split('{unsplash}')

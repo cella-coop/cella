@@ -1,0 +1,186 @@
+---
+// The halftone prototype (index.md, the assets): every photo printed by
+// the browser through an SVG filter, the dot's size fixed in CSS pixels
+// whatever the tile's width. A slider sets the cell; the ink toolbar of
+// the photos page recolours a tile by switching its filter.
+import { photoNames } from '../../lib/assets'
+import { STATUSES, inlinePhoto } from '../../lib/photo'
+import HalftoneFilters from './HalftoneFilters.astro'
+
+const cell = 3
+const photos = await Promise.all(
+  photoNames().map(async (name) => ({
+    name,
+    src: await inlinePhoto(name, 1200),
+    ink: STATUSES[Math.floor(Math.random() * STATUSES.length)],
+  })),
+)
+---
+
+<HalftoneFilters cell={cell} />
+
+<div class="controls">
+  <label for="cell"><code>{'cell'}</code></label>
+  <input id="cell" type="range" min="1.5" max="12" step="0.5" value={cell} />
+  <output for="cell"><code>{cell}</code></output>
+  <label for="width"><code>{'width'}</code></label>
+  <input id="width" type="range" min="12" max="72" step="1" value="20" />
+</div>
+
+<ul class="grid" role="list">
+  {
+    photos.map(({ name, src, ink }) => (
+      <li class="tile" data-ink={ink}>
+        <div class="print">
+          <div class="screen" style={{ '--filter': `url(#halftone-${ink})` }}>
+            <img src={src} alt={name} />
+          </div>
+          <div class="tools" role="toolbar" aria-label={name}>
+            {STATUSES.map((s) => (
+              <button type="button" class="ink" data-set={s} aria-label={s} aria-pressed={s === ink ? 'true' : 'false'} style={{ '--swatch': `var(--tone-${s})` }} />
+            ))}
+          </div>
+        </div>
+        <p class="name">
+          <code>{name}</code>
+        </p>
+      </li>
+    ))
+  }
+</ul>
+
+<script>
+  // The slider is the prototype's alone: the cell's size, and the edge's
+  // softness that follows it, 1.2 / cell as the explorer's
+  const cell = document.querySelector<HTMLInputElement>('#cell')!
+  const shown = document.querySelector('output[for=cell] code')!
+  cell.addEventListener('input', () => {
+    const c = Number(cell.value)
+    const slope = c / 1.2
+    shown.textContent = String(c)
+    for (const image of document.querySelectorAll('feImage[data-cell]')) {
+      image.setAttribute('width', String(c))
+      image.setAttribute('height', String(c))
+    }
+    for (const f of document.querySelectorAll('[data-aa]')) {
+      f.setAttribute('slope', String(slope))
+      f.setAttribute('intercept', String(0.5 - 0.5 * slope))
+    }
+  })
+  const width = document.querySelector<HTMLInputElement>('#width')!
+  width.addEventListener('input', () => {
+    document.querySelector<HTMLElement>('.grid')!.style.setProperty('--tile', `${width.value}rem`)
+  })
+  for (const button of document.querySelectorAll<HTMLButtonElement>('.tile .ink')) {
+    button.addEventListener('click', () => {
+      const tile = button.closest<HTMLElement>('.tile')!
+      const ink = button.dataset.set!
+      tile.querySelector<HTMLElement>('.screen')!.style.setProperty('--filter', `url(#halftone-${ink})`)
+      tile.dataset.ink = ink
+      for (const b of tile.querySelectorAll('.ink')) {
+        b.setAttribute('aria-pressed', String(b === button))
+      }
+    })
+  }
+</script>
+
+<style>
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    color: var(--text-muted);
+  }
+
+  .grid {
+    --tile: 20rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(var(--tile), 100%), 1fr));
+    gap: 1.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .print {
+    position: relative;
+    aspect-ratio: 3 / 2;
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+  }
+
+  /* The screen's angle, the house's 23°: the filter runs in a wrapper
+     turned by it, twice the tile's size so it covers the tile, and the
+     photo inside turned back, so the dots tilt and the picture does not */
+  .screen {
+    position: absolute;
+    inset: -50%;
+    transform: rotate(23deg);
+    filter: var(--filter);
+  }
+
+  .screen img {
+    position: absolute;
+    top: 25%;
+    left: 25%;
+    width: 50%;
+    height: 50%;
+    object-fit: cover;
+    transform: rotate(-23deg);
+  }
+
+  /* The dark theme prints the photo's negative, so it stays a positive */
+  :global([data-theme='dark']) .screen {
+    filter: invert(1) var(--filter);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .screen {
+      filter: invert(1) var(--filter);
+    }
+  }
+
+  .tools {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.6rem;
+    z-index: 2;
+    display: flex;
+    gap: 0.35rem;
+    padding: 0.35rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklch, var(--panel) 90%, transparent);
+    box-shadow: var(--shadow-float);
+    opacity: 0;
+    transition: opacity 120ms var(--ease);
+  }
+
+  .print:hover .tools,
+  .print:focus-within .tools {
+    opacity: 1;
+  }
+
+  .ink {
+    width: 1.25rem;
+    height: 1.25rem;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 50%;
+    background: oklch(0.6 var(--swatch));
+    cursor: pointer;
+  }
+
+  .ink[aria-pressed='true'] {
+    border-color: var(--text);
+  }
+
+  .name {
+    margin: 0.5rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+</style>

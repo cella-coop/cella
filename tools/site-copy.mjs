@@ -6,7 +6,9 @@
 // plumbing: an import's path, an identifier-shaped string (an id, a class,
 // a collection's name, a path), and the attributes that name or place
 // rather than say, an aria-* naming an element the collections label
-// among them. It reads each file through Astro's own parser.
+// among them. An attribute the page renders as its content, set:html or
+// set:text, is never plumbing: its value is read as a text node is. It
+// reads each file through Astro's own parser.
 //
 //   node tools/site-copy.mjs <site dir>
 
@@ -25,8 +27,11 @@ const PLUMBING = new Set([
   'id', 'class', 'href', 'src', 'srcset', 'sizes', 'media', 'rel', 'type', 'charset',
   'name', 'lang', 'dir', 'role', 'for', 'slot', 'style', 'target', 'tabindex',
   'loading', 'decoding', 'width', 'height', 'viewBox', 'xmlns', 'fill', 'stroke',
-  'is:global', 'is:inline', 'is:raw', 'set:html', 'class:list', 'define:vars',
+  'is:global', 'is:inline', 'is:raw', 'class:list', 'define:vars',
 ])
+// Attributes whose value the page renders as its content: a literal is
+// read as a text node, an expression walked as any other.
+const CONTENT = new Set(['set:html', 'set:text'])
 // An aria-* attribute that says rather than names: its value is read aloud.
 const SPOKEN = new Set(['aria-label', 'aria-description', 'aria-roledescription', 'aria-valuetext', 'aria-placeholder'])
 // A string shaped as an identifier, a path or a selector: lower case, no
@@ -72,7 +77,9 @@ export function findings(parse, source, ts = false) {
           }
           const name = attrName(a.name)
           if (a.value?.type === 'Literal') {
-            if (typeof a.value.value === 'string' && a.value.value.trim() && !plumbingAttr(name, open)) {
+            if (CONTENT.has(name)) {
+              if (typeof a.value.value === 'string' && a.value.value.trim()) say(a, `the text "${a.value.value.trim()}" is copy`)
+            } else if (typeof a.value.value === 'string' && a.value.value.trim() && !plumbingAttr(name, open)) {
               say(a, `the attribute ${name}="${a.value.value}" is copy`)
             }
           } else walk(a.value, a)

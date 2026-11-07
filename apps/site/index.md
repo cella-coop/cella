@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -41,7 +41,12 @@ collections and lays them out. `cella check site` refuses a page,
 layout or component of the site that holds a word of copy, a string
 literal or a text node outside the collections, beyond what is
 plumbing: an `id`, a class, a path, a `lang`, an `aria-*` attribute
-naming an element that the collections label.
+naming an element that the collections label. An attribute whose value
+the page renders as its content, `set:html` and `set:text`, is never
+plumbing: its value is read as a text node is, a literal or the strings
+of an expression, so `<p set:html="A sentence." />` fails as `<p>A
+sentence.</p>` does, and markup the page takes inline, as the lockup,
+comes from an import.
 
 A section's body is MDX, so the text places the site's figures where
 it reads, by name and without an import: the renderer hands every

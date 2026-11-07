@@ -1,7 +1,8 @@
 // The site's copy check (apps/site/index.md, the text): today's tree,
 // every word of it in src/content/, passes; a heading planted in the page,
-// a sentence in its frontmatter, a spoken attribute or a component's
-// string fails, named by its file and line; plumbing passes.
+// a sentence in its frontmatter, a spoken attribute, a sentence under
+// set:html or set:text or a component's string fails, named by its file
+// and line; plumbing passes.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -94,4 +95,21 @@ test('a component\'s script holding a sentence fails; its paths and names pass',
     ),
   )
   assert.deepEqual(found, ["src/components/figures.ts:3: the string 'Photo by someone' is copy"])
+})
+
+test('set:html and set:text render their value as content: a literal is copy, an import is not', () => {
+  const source = `---
+import lockup from '@cella/brand/lockup-stack.svg?raw'
+---
+
+<h1 class="lockup" set:html={lockup} />
+<p set:html="A sentence." />
+<p set:text="A sentence." />
+<p set:html={'A sentence.'} />
+`
+  assert.deepEqual(findings(parse, source), [
+    { line: 6, what: 'the text "A sentence." is copy' },
+    { line: 7, what: 'the text "A sentence." is copy' },
+    { line: 8, what: "the string 'A sentence.' is copy" },
+  ])
 })

@@ -88,3 +88,29 @@ export interface Created {
   circle: string
   bundle: number[]
 }
+
+// A mandate as its page and the Mandates collection read it: its grant,
+// the circle its grantee is of, none for a role every working circle
+// has, and whether it stands on the verdict date, is yet to be, or has
+// ended, by its revocation or its term, and since when.
+export interface Standing extends Mandate {
+  granteeName: string
+  circle: string | null
+  procedure: string | null
+  parent: string | null
+  motion: string | null
+  state: 'stands' | 'pending' | 'revoked' | 'expired'
+  since: string
+}
+
+// A mandate at a depth: down its chain, the root's 0, or below the
+// mandate it is issued under, its own 0.
+export type Depth = Standing & { depth: number }
+
+// A mandate's page: the mandate, its chain from the root the assembly
+// issued down to itself, and every mandate issued under it, down its
+// provenance tree, each with its depth below it.
+export interface Provenance extends Standing {
+  chain: Depth[]
+  under: Depth[]
+}

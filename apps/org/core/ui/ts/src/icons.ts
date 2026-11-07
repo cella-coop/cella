@@ -2,6 +2,7 @@
 // so the shell's iconography stays one family.
 export { default as Users } from 'phosphor-svelte/lib/Users'
 export { default as CirclesThree } from 'phosphor-svelte/lib/CirclesThree'
+export { default as TreeStructure } from 'phosphor-svelte/lib/TreeStructure'
 export { default as Scales } from 'phosphor-svelte/lib/Scales'
 export { default as FileText } from 'phosphor-svelte/lib/FileText'
 export { default as Receipt } from 'phosphor-svelte/lib/Receipt'

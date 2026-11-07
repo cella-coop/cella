@@ -4,7 +4,8 @@
 
   // A circle's roles, and the mandates that grant them powers, each its
   // policy's sentence, capped by a limit per write or a budget over a
-  // period, scoped to what it covers, and the circle that issued it.
+  // period, scoped to what it covers, and the circle that issued it;
+  // each opens its mandate's page, its chain.
   let { data }: { data: Detail; id: string } = $props()
 
   const roles: Column<Role>[] = [
@@ -28,5 +29,5 @@
   <Table columns={roles} rows={data.roles} />
 </Section>
 <Section title="Mandates" count={data.mandates.length}>
-  <Table columns={mandates} rows={data.mandates} />
+  <Table columns={mandates} rows={data.mandates} href={(m) => `/mandates/${m.id}`} />
 </Section>

@@ -861,8 +861,28 @@ page lists its roles,
 those every working circle has among them, and the mandates granted to
 them, each its policy's sentence as it reads (`sentences` in
 `@cella/org-policy`), with their limits, budgets, scopes and days, and
-who issued each. Who sits in it is the membership feat's, which names
-people. Proposing to grant a mandate to one of its roles or to it, or to
+who issued each, each linking to its mandate's page.
+
+The `mandates` collection lists every mandate, by power, with its
+grantee, cap, scope, issuer and whether it stands on the verdict date.
+A mandate's page, `/mandates/<id>`, as the shell addresses an item,
+shows where its authority comes from: its sentence, grantee, power,
+caps, scope, days and procedure, whether it stands, is yet to be, or
+is revoked or expired, and since when, and its chain, read by
+`circle.chain(mandate)`, from the root the assembly issued down to the
+mandate, each link with its grantee, its issuer, its cap and its
+scope, and how it narrows the one above: a smaller cap, a narrower
+scope, a later start or an earlier end; each link's own page names
+the motion that adopted its policy. Under it, what was issued under it (`circle.under`),
+each linking to its own page, which its revocation would revoke the
+same day. The chain is the structure's, read by whoever reads the
+structure ([who reads it](#who-reads-the-structure)), and a link the
+reader does not read is left out; it names roles and circles, never
+who holds them. A grantee's name links to its circle, its issuer to
+its own, and the motion to its page.
+
+Who sits in a circle is the membership feat's, which names people.
+Proposing to grant a mandate to one of its roles or to it, or to
 change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
 close of a passing motion carries them out.
 

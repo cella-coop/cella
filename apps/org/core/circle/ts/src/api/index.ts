@@ -3,15 +3,15 @@
 // extend; the circles and the seats, which a passing motion creates,
 // gives and ends; its reads, and its slice, which the shell mounts.
 import type { Slice } from '@cella/org-db'
-import { circle, circles, listing } from '../drivers/circle.ts'
+import { circle, circles, listing, mandate, mandating } from '../drivers/circle.ts'
 
 export { granting, revoking } from '../handlers/index.ts'
 export { create } from '../handlers/circle.ts'
 export { add, remove, seatRole, seating, unseatRole } from '../handlers/seat.ts'
-export { circle, circles, sitting } from '../drivers/circle.ts'
+export { circle, circles, mandate, sitting } from '../drivers/circle.ts'
 
 // Core's slice: every feat builds on core, so any slice may extend its
-// collection.
+// collections, the circles and the mandates that link them.
 export const slice: Slice = {
   name: 'circle',
   core: true,
@@ -20,6 +20,10 @@ export const slice: Slice = {
       list: listing,
       item: circle,
       index: async (db) => (await circles(db)).map((c) => ({ id: c.id, title: c.name, sub: c.purpose })),
+    },
+    mandates: {
+      list: mandating,
+      item: mandate,
     },
   },
 }

@@ -7,8 +7,9 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { spawnSync } from 'node:child_process'
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { existsSync, mkdtempSync, readFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { dirname, join } from 'node:path'
 import { guard, reason } from '../site-text-guard.mjs'
 
 const repo = new URL('../..', import.meta.url).pathname
@@ -16,6 +17,7 @@ const check = guard(repo)
 const bash = (command, cwd = repo) => check({ tool_name: 'Bash', tool_input: { command }, cwd })
 const tool = (tool_name, tool_input, cwd = repo) => check({ tool_name, tool_input, cwd })
 const yaml = 'apps/site/src/content/site.yaml'
+const text = dirname(yaml)
 
 test('a write into the text by a shell command is refused, naming the path', () => {
   const refused = [
@@ -101,6 +103,48 @@ test('a read of the text and a write elsewhere pass', () => {
   for (const command of passed) assert.equal(bash(command), null, `passes: ${command}`)
 })
 
+test('a call that names the text and writes nothing there passes', () => {
+  const passed = [
+    `corpus message send plan "the guard refused a mention of ${text}; it passes now" --about stream/x`,
+    `git commit -m "doc(site): say who writes ${text}"`,
+    `git commit -m 'echo x > ${yaml}'`,
+    `grep -r title ${text}`,
+    `grep -rn "${text}" tools`,
+    `cat ${text}/sections/what.mdx`,
+    `ls ${text}`,
+    `rg -l Diagram ${text}/sections`,
+    `echo '${text}' | wc -c`,
+  ]
+  for (const command of passed) assert.equal(bash(command), null, `passes: ${command}`)
+})
+
+test('the hook\'s wrapper runs the guard with a node, and with none refuses only an edit tool\'s write', (t) => {
+  const wrapper = join(repo, 'tools/site-text-guard.sh')
+  const empty = mkdtempSync(join(tmpdir(), 'guard-'))
+  const call = (input, PATH) =>
+    spawnSync('/bin/sh', [wrapper], { input: JSON.stringify(input), encoding: 'utf8', env: { PATH, HOME: empty, USER: 'nobody' } })
+  const write = { tool_name: 'Write', tool_input: { file_path: join(repo, yaml), content: 'x' }, cwd: repo }
+  const shellWrite = { tool_name: 'Bash', tool_input: { command: `echo x > ${yaml}` }, cwd: repo }
+  const mention = { tool_name: 'Bash', tool_input: { command: `grep -r title ${text}` }, cwd: repo }
+
+  const withNode = dirname(process.execPath)
+  assert.equal(call(write, withNode).status, 2)
+  assert.equal(call(shellWrite, withNode).status, 2)
+  assert.equal(call(mention, withNode).status, 0)
+
+  if (existsSync('/run/current-system/sw/bin/node')) return t.skip('this system keeps a node where the wrapper looks')
+  const refused = call(write, empty)
+  assert.equal(refused.status, 2)
+  assert.match(refused.stderr, /operator's/)
+  assert.ok(refused.stderr.includes(`Write writes ${join(repo, yaml)}`))
+  assert.equal(call({ ...write, tool_name: 'Edit', tool_input: { file_path: yaml, old_string: 'a', new_string: 'b' } }, empty).status, 2)
+  assert.equal(call({ tool_name: 'NotebookEdit', tool_input: { notebook_path: join(repo, text, 'x.ipynb') } }, empty).status, 2)
+  assert.equal(call({ ...write, tool_input: { file_path: join(repo, 'apps/site/src/pages/index.astro'), content: 'x' } }, empty).status, 0)
+  assert.equal(call(shellWrite, empty).status, 0)
+  assert.equal(call(mention, empty).status, 0)
+  assert.equal(spawnSync('/bin/sh', [wrapper], { input: 'not json', encoding: 'utf8', env: { PATH: empty } }).status, 0)
+})
+
 test('an Edit, Write or NotebookEdit of the text is refused, and of anything else passes', () => {
   assert.match(tool('Edit', { file_path: join(repo, yaml), old_string: 'a', new_string: 'b' }), /Edit writes apps\/site\/src\/content\/site\.yaml/)
   assert.match(tool('Write', { file_path: join(repo, 'apps/site/src/content/sections/new.mdx'), content: 'x' }), /Write writes/)
@@ -130,5 +174,5 @@ test('the settings deny the edit tools on the text and wire the hook', () => {
   for (const t of ['Edit', 'Write', 'NotebookEdit']) assert.ok(settings.permissions.deny.includes(`${t}(apps/site/src/content/**)`), t)
   const [entry] = settings.hooks.PreToolUse
   for (const t of ['Bash', 'Edit', 'Write', 'NotebookEdit']) assert.match(entry.matcher, new RegExp(`\\b${t}\\b`))
-  assert.match(entry.hooks[0].command, /tools\/site-text-guard\.mjs/)
+  assert.match(entry.hooks[0].command, /tools\/site-text-guard\.sh/)
 })

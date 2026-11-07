@@ -1,6 +1,6 @@
 +++
 title = "Site"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 `apps/site` (`@cella/site`) is cella's landing site: an
@@ -104,14 +104,24 @@ guards hold it, each routable around:
   started in the repository, and its `PreToolUse` hook, a script under
   `tools/` with its own tests, refuses a shell command that writes,
   moves, removes or redirects into a file there, as it refuses an
-  `Edit`, `Write` or `NotebookEdit` of one. Where no `node` is on the session's path, the hook refuses
-  any call that names the path, a read among them. It reads the
-  command as written, so one that builds the path as it runs goes
-  past it. It reaches only a
-  session started in `cella/`: the box's lanes start in the workshop's
-  root and Sol's run pi, so for them the rule alone holds.
+  `Edit`, `Write` or `NotebookEdit` of one. It refuses a write and
+  nothing else: a call that names the path without writing there
+  passes, a search, a read, a commit message or a message sent through
+  corpus among them. Where no `node` is on the session's path, the
+  hook looks for one where NixOS keeps it, without starting nix;
+  finding none, it refuses only an `Edit`, `Write` or `NotebookEdit`
+  of a file there and passes every shell command, the rule holding
+  those. It reads the command as written, so one that builds the path
+  as it runs goes past it. The workshop's settings run the same hook,
+  so it reaches a Claude session started in `cella/` or in the
+  workshop's root; Sol's lanes run pi, so for them the rule alone
+  holds.
 - **The rule.** [AGENTS.md](../../AGENTS.md) says it, and a change that
   needs a word of the text changed says so in its entry's Flag.
+
+Both guards act on an agent's calls alone. No git hook, check or gate
+refuses a commit that changes the text, so the operator writes it in
+their own editor and commits it by hand, as any commit.
 
 No gate refuses a version that touches the text, since the forge does
 not yet record who pushed a version: what it keeps is the pushed

@@ -19,7 +19,9 @@ export const items: Item[] = [
   { label: 'Divider', hint: '---', kind: 'divider' },
 ]
 
-type Slash = { id: TreeID; at: number; index: number; x: number; y: number }
+// The menu sits below the caret, at `y`, or above it, its bottom at
+// `above`, where below would pass the window's bottom.
+type Slash = { id: TreeID; at: number; index: number; x: number; y: number; above: number }
 
 // The editor's floating chrome: the slash menu at the caret, filtered by
 // what is typed after the `/`, and the toolbar over a selection, with the
@@ -46,9 +48,41 @@ export class MenuState {
       .map(([embed, e]) => ({ label: e.embed.label, hint: 'embed', kind: 'embed' as const, props: { embed } })),
   )
 
-  // An embed block inserted empty takes the record its picker chose.
+  // An embed block inserted empty takes the record its picker chose, and
+  // the caret goes on to the paragraph after it, made if none follows.
   pick(id: TreeID, embed: string, ref: string): void {
-    this.#ed.apply(() => ops.retype(this.#ed.doc, id, 'embed', { embed, ref }))
+    const ed = this.#ed
+    const next = ed.rows[ed.index(id) + 1]
+    ed.apply(() => {
+      ops.retype(ed.doc, id, 'embed', { embed, ref })
+      const to = next && !atomic.has(next.kind) ? next.id : ops.after(ed.doc, id, 'paragraph')
+      return { id: to, anchor: 0, focus: 0 }
+    })
+  }
+
+  // The picker's keys: the arrows only browse it, as Chromium would pick
+  // on each; Enter picks what they reached. A click picks at once.
+  #browsing = false
+
+  pickKey(e: KeyboardEvent, id: TreeID, embed: string): void {
+    const el = e.currentTarget as HTMLSelectElement
+    if (e.key === 'Enter' && el.value) {
+      e.preventDefault()
+      this.pick(id, embed, el.value)
+      return
+    }
+    this.#browsing = /^(Arrow|Page|Home|End)/.test(e.key)
+  }
+
+  picked(e: Event, id: TreeID, embed: string): void {
+    const el = e.currentTarget as HTMLSelectElement
+    if (this.#browsing) {
+      this.#browsing = false
+      return
+    }
+    if (el.value) {
+      this.pick(id, embed, el.value)
+    }
   }
 
   matches: Item[] = $derived.by(() => {
@@ -58,9 +92,9 @@ export class MenuState {
 
   open(id: TreeID, at: number): void {
     const el = this.#ed.element(id)
-    const r = el ? this.#ed.caret(el) : { left: 0, bottom: 0 }
+    const r = el ? this.#ed.caret(el) : { left: 0, top: 0, bottom: 0 }
     this.query = ''
-    this.slash = { id, at, index: 0, x: r.left, y: r.bottom + 4 }
+    this.slash = { id, at, index: 0, x: r.left, y: r.bottom + 4, above: r.top - 4 }
   }
 
   close(): void {
@@ -71,6 +105,22 @@ export class MenuState {
   prune(): void {
     if (this.slash && !exists(this.#ed.doc, this.slash.id)) {
       this.slash = null
+    }
+  }
+
+  // The page moved under the caret, by a resize or a scroll: the toolbar
+  // and the menu go where it now is.
+  reflow(): void {
+    const s = this.#ed.sel()
+    if (!s || (!this.bar && !this.slash)) {
+      return
+    }
+    const r = this.#ed.caret(s.el)
+    if (this.bar && !s.collapsed) {
+      this.bar = { x: r.left, y: r.top - 40 }
+    }
+    if (this.slash) {
+      this.slash = { ...this.slash, x: r.left, y: r.bottom + 4, above: r.top - 4 }
     }
   }
 

@@ -688,6 +688,233 @@ for (const [name, launch] of browsers()) {
       })
     })
 
+    // What the walk in a headless browser found broken
+    // (_corpus/review/2026-11-09/editor-walk.md), each walked again.
+    describe('what the walk found broken', () => {
+      // A document with no draft yet, as the New form starts one, open in
+      // one tab only.
+      async function empty(): Promise<void> {
+        const id = `empty-${++made}`
+        await su.query('INSERT INTO document.document (id, title) VALUES ($1, $2)', [id, `Empty ${made}`])
+        await a?.close()
+        await bo?.close()
+        a = await context.newPage()
+        await open(a, id)
+      }
+
+      const saved = async (page: Page = a) => {
+        for (let i = 0; i < 100 && (await page.locator('[data-state]').getAttribute('data-state')) !== 'saved'; i++) {
+          await page.waitForTimeout(100)
+        }
+        assert.equal(await page.locator('[data-state]').getAttribute('data-state'), 'saved')
+      }
+
+      it('gives a new document a block to type in, and one undone past its first block', async () => {
+        await empty()
+        let r = await rows()
+        assert.deepEqual(
+          r.map((x) => [x.kind, x.text]),
+          [['paragraph', '']],
+        )
+        assert.equal((await caret()).id, r[0].id, 'the caret is in it')
+        await a.keyboard.type('First')
+        assert.equal((await rows())[0].text, 'First')
+        await saved()
+        // The only block made by this tab's own edit, as the walk made it:
+        // undone, the draft holds nothing, and is given a paragraph again.
+        await a.evaluate(() => {
+          const ed = (document.querySelector('[data-editor]') as any).cellaEditor
+          const t = ed.doc.getTree('blocks')
+          const first = t.roots()[0]
+          const n = t.createNode(undefined, 1)
+          n.data.set('type', 'paragraph')
+          n.data.setContainer('text', new (first.data.get('text').constructor)()).insert(0, 'mine')
+          ed.doc.commit()
+          t.delete(first.id)
+          ed.doc.commit({ origin: 'seed' })
+        })
+        await until((x) => x.length === 1 && x[0].text === 'mine')
+        await end(0)
+        await a.keyboard.press('Control+z')
+        await until((x) => x.length === 1 && x[0].text === '', a, 'a paragraph after the undo')
+        r = await rows()
+        assert.equal((await caret()).id, r[0].id)
+        await a.keyboard.type('Again')
+        assert.equal((await rows())[0].text, 'Again')
+        await saved()
+        await a.screenshot({ path: `${shots}/${name}-new-document.png` })
+        clean()
+      })
+
+      it('leaves a code block that ends the document, by ArrowDown and by Enter on its empty last line', async () => {
+        await fresher()
+        await end(26)
+        await a.keyboard.press('ArrowDown')
+        let r = await rows()
+        assert.equal(r.length, 28)
+        assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
+        assert.equal((await caret()).id, r[27].id)
+        await a.keyboard.type('Below')
+        await a.keyboard.press('Backspace')
+        await a.keyboard.press('Backspace')
+        await a.keyboard.press('Backspace')
+        await a.keyboard.press('Backspace')
+        await a.keyboard.press('Backspace')
+        await a.keyboard.press('Backspace')
+        r = await rows()
+        assert.equal(r.length, 27, 'Backspace in the empty paragraph merges it back')
+        await end(26)
+        await a.keyboard.press('Enter')
+        assert.equal((await rows())[26].text, '[rate]\nday = 560\n', 'one Enter is a line in the code')
+        await a.keyboard.press('Enter')
+        r = await rows()
+        assert.equal(r[26].text, '[rate]\nday = 560', 'the empty line goes')
+        assert.deepEqual([r[27].kind, r[27].text], ['paragraph', ''])
+        assert.equal((await caret()).id, r[27].id)
+        await a.keyboard.type('After the code')
+        assert.equal((await rows())[27].text, 'After the code')
+        await shows()
+        await converged()
+      })
+
+      it('puts the caret after a picked embed, and browses its picker by arrow without picking', async () => {
+        await fresher()
+        await end(1)
+        await a.keyboard.press('Enter')
+        await a.keyboard.type('/motion')
+        await a.locator('[role=listbox][aria-label="Turn into"]').waitFor()
+        await a.keyboard.press('Enter')
+        const picker = a.locator('select[aria-label="Which motion this block shows"]')
+        await picker.focus()
+        await a.keyboard.press('ArrowDown')
+        await settle()
+        let r = await rows()
+        assert.equal(r[2].kind, 'embed')
+        assert.equal(r[2].props.ref, undefined, 'an arrow only browses')
+        if (name === 'chromium') {
+          // Chromium moves a closed select by its arrows; Enter picks there.
+          const browsed = await picker.inputValue()
+          assert.ok(browsed)
+          await a.keyboard.press('Enter')
+          r = await rows()
+          assert.equal(r[2].props.ref, browsed)
+        } else {
+          await picker.selectOption('m-2026-007')
+          r = await rows()
+          assert.equal(r[2].props.ref, 'm-2026-007')
+        }
+        assert.equal((await caret()).id, r[3].id, 'the caret is in the paragraph after it')
+        await a.keyboard.type('Then')
+        assert.deepEqual([(await rows())[3].kind, (await rows())[3].text], ['paragraph', 'Then'])
+        await converged()
+      })
+
+      it('opens the slash menu above the caret near the window bottom', async () => {
+        await fresher()
+        await end(25)
+        await a.keyboard.press('Enter')
+        await editable(26).evaluate((el) => el.scrollIntoView({ block: 'end' }))
+        await editable(26).click()
+        await a.keyboard.type('/')
+        const menu = a.locator('[role=listbox][aria-label="Turn into"]')
+        await menu.waitFor()
+        await settle()
+        const box = (await menu.boundingBox())!
+        const block = (await editable(26).boundingBox())!
+        assert.ok(box.y >= 0 && box.y + box.height <= 900, `the menu is in the window: ${box.y}–${box.y + box.height}`)
+        if (block.y + block.height + box.height > 900) {
+          assert.ok(box.y + box.height <= block.y + block.height, `it opens above the caret: ${box.y + box.height} > ${block.y}`)
+        }
+        await a.screenshot({ path: `${shots}/${name}-slash-at-the-bottom.png` })
+        await a.keyboard.press('Escape')
+        clean()
+      })
+
+      it('drags a preview that holds its block', async () => {
+        await fresher()
+        await line(1).hover()
+        const grip = (await line(1).locator('[data-drag-handle]').boundingBox())!
+        await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2)
+        await a.mouse.down()
+        await a.mouse.move(grip.x + 30, grip.y + 60, { steps: 6 })
+        const fit = await a.evaluate(() => {
+          const p = document.querySelector<HTMLElement>('.drag-preview')!
+          const box = p.getBoundingClientRect()
+          const t = p.querySelector<HTMLElement>('.text')!.getBoundingClientRect()
+          return { box: [box.top, box.bottom], text: [t.top, t.bottom], said: p.textContent ?? '' }
+        })
+        await a.screenshot({ path: `${shots}/${name}-drag-preview.png` })
+        await a.mouse.move(grip.x + grip.width / 2, grip.y + grip.height / 2, { steps: 6 })
+        await a.mouse.up()
+        assert.match(fit.said, /Day rates and project floors/)
+        assert.ok(fit.text[0] >= fit.box[0] - 1 && fit.text[1] <= fit.box[1] + 1, `the text is inside the preview: ${JSON.stringify(fit)}`)
+        clean()
+      })
+
+      it('copies the first block chosen whole, and pastes it elsewhere', async () => {
+        await fresher()
+        await line(0).hover()
+        await line(0).locator('[data-drag-handle]').click()
+        assert.equal(await a.locator('[data-editor] [data-selected]').count(), 1)
+        await a.keyboard.press('Control+c')
+        await end(3)
+        await a.keyboard.press('Control+v')
+        const r = await rows()
+        assert.equal(r.length, 28)
+        assert.deepEqual([r[4].kind, r[4].text], ['heading', 'Rate card 2027'])
+        await converged()
+      })
+
+      it('quotes the selection in a comment, highlighted once posted', async () => {
+        await fresher()
+        await a.getByRole('button', { name: 'Save version' }).click()
+        await a.locator('input[name=quote]').waitFor()
+        await editable(0).click()
+        await a.keyboard.press('Control+Home')
+        await a.keyboard.press('Shift+End')
+        await settle()
+        assert.equal(await a.locator('input[name=quote]').inputValue(), 'Rate card 2027')
+        await a.locator('textarea[name=text]').fill('The year is right.')
+        await a.getByRole('button', { name: 'Comment', exact: true }).click()
+        await a.locator('[data-editor] [data-block] mark').first().waitFor({ timeout: 10000 })
+        assert.equal(await editable(0).locator('mark').textContent(), 'Rate card 2027')
+        clean()
+      })
+
+      it('keeps the toolbar over its selection as the window narrows', async () => {
+        await fresher()
+        await editable(1).click()
+        await a.keyboard.press('Control+Home')
+        for (let i = 0; i < 9; i++) {
+          await a.keyboard.press('Shift+ArrowRight')
+        }
+        const bar = a.locator('[role=toolbar][aria-label=Format]')
+        await bar.waitFor()
+        await a.setViewportSize({ width: 420, height: 900 })
+        try {
+          await settle()
+          await a.waitForTimeout(200)
+          const box = (await bar.boundingBox())!
+          // Where the toolbar goes: over the caret at the selection's focus,
+          // kept in the window.
+          const at = await a.evaluate(() => {
+            const s = document.getSelection()!
+            const r = s.getRangeAt(0).cloneRange()
+            r.collapse(false)
+            const c = r.getClientRects()[0] ?? r.getBoundingClientRect()
+            return { x: c.left, y: c.top }
+          })
+          const x = Math.max(8, Math.min(at.x, 420 - 8 - box.width))
+          const y = Math.max(8, at.y - 40)
+          assert.ok(Math.abs(box.x - x) <= 4 && Math.abs(box.y - y) <= 4, `the toolbar is over its selection: at ${box.x}, ${box.y}, not ${x}, ${y}`)
+          await a.screenshot({ path: `${shots}/${name}-toolbar-narrow.png` })
+        } finally {
+          await a.setViewportSize({ width: 1280, height: 900 })
+        }
+        clean()
+      })
+    })
+
     describe('pages', () => {
       it('shows the rate card, and the version a motion adopts', async () => {
         const page = await context.newPage()

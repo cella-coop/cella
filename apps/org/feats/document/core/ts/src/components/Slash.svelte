@@ -17,7 +17,7 @@
 </script>
 
 {#if sl}
-  <Floating x={sl.x} y={sl.y} label="Turn into" role="listbox">
+  <Floating x={sl.x} y={sl.y} above={sl.above} label="Turn into" role="listbox">
     <!-- Keyed by label and hint: two motions or meetings may share a title,
          and an embed's hint is its record's own ref. -->
     {#each ed.menu.matches as item, i (`${item.label}\u0000${item.hint}`)}

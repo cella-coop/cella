@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -354,7 +354,9 @@ block, which an empty block it holds the caret in, and the last block
 when empty, also say; the draft's hash as the page was read is among
 its Properties. The header saves the draft as a version (`version`), and
 the box under its Activity comments on one (`comment`), each comment
-in the Activity with what it quotes. Its saved versions, the data
+in the Activity with what it quotes; the box's Quoting takes the text
+last selected in the draft, and a posted comment's quote is highlighted
+there as the page refreshes. Its saved versions, the data
 central to it, are the Versions tab after the draft. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
 page reads its draft without the editor or the header's Save, and says
@@ -371,16 +373,26 @@ again from Loro. Its parts:
 
 - `EditorState`: the blocks as views, painting, the caret as Loro cursors
   carried through remote edits, undo per peer, and a block dropped by its
-  grip;
+  grip; a draft holding no block, a new document's or one undone past its
+  first, is given an empty paragraph with the caret in it, committed
+  outside the undo, so there is always a block to type in (two members
+  opening an empty draft at once give one each);
 - `Input`: typing, Enter, Backspace and Delete across blocks, markdown
   shortcuts (`#`–`###`, `-`, `1.`, `[]`, `>`, ```` ``` ````, `---`), marks
-  pending at a caret, and the keys;
+  pending at a caret, and the keys; Enter on a code block's empty last
+  line, and ArrowDown on its last line where it ends the document, leave
+  the code for a paragraph after it;
 - `ChoiceState`: blocks chosen whole (Shift and an arrow at an edge,
-  Escape, a grip, a drag leaving its block), deleted, nested and moved
-  together;
+  Escape, a grip, a drag leaving its block), deleted, copied, cut, nested
+  and moved together; the page hears their copy and cut too, since
+  Chromium leaves the selection mirroring them outside the editor;
 - `MenuState`: the slash menu, the embeds the page offers among its
   items, the toolbar over a selection, and Ctrl-K's link in the UI core's
-  popover;
+  popover; the menu and the toolbar follow their caret as the window is
+  resized or scrolled, and the menu opens above the caret where below it
+  would pass the window's edge; an embed's picker browses by its arrows
+  and picks by a click or Enter, and a pick puts the caret in the
+  paragraph after the embed, made where there is none;
 - `Clipboard`: blocks as fragments, text as runs, both as plain text;
 - `SyncState`: the live sync above, and the draft's hash.
 
@@ -430,8 +442,16 @@ a motion's page.
   undo of one's own edits, offline edits converging, a block repainted
   after a foreign mutation, and a fuzzer of random keys, compositions and
   remote edits that checks the page shows the model and the tabs
-  converge. Real IMEs, touch, screen readers and right-to-left text are
-  not tested.
+  converge. Then what the walk in a headless browser found broken
+  ([the review](../../../../_corpus/review/2026-11-09/editor-walk.md)),
+  each walked again: a new document typed into, and one undone past its
+  first block; the caret leaving a code block that ends the document; the
+  caret after a picked embed, and its picker browsed by arrow without
+  picking; the slash menu near the window's bottom; the drag preview
+  holding its text; chosen blocks copied and pasted; a comment quoting
+  the selection, highlighted once posted; and the toolbar following its
+  selection as the window narrows. Real IMEs, touch, screen readers and
+  right-to-left text are not tested.
 
 ## Lanterne
 

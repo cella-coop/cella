@@ -5,18 +5,22 @@
   // at the caret, a toolbar over a selection. In the top layer, as the
   // Popover is (native `popover`, opened manually, since what opens it is
   // typing and not a click), so nothing clips it; kept inside the
-  // viewport. Its buttons are a toolbar's or a menu's options, the chosen
-  // one `aria-selected`; a press on it never takes the focus, so the
-  // caret stays where it was.
+  // viewport by its own measured size, and drawn above `above` where
+  // below `y` it would pass the window's bottom. Its buttons are a
+  // toolbar's or a menu's options, the chosen one `aria-selected`; a
+  // press on it never takes the focus, so the caret stays where it was.
   let {
     x,
     y,
+    above,
     label,
     role = 'dialog',
     children,
   }: {
     x: number
     y: number
+    // Where its bottom goes when it is drawn above, as over the caret.
+    above?: number
     label: string
     role?: 'dialog' | 'listbox' | 'toolbar' | 'menu'
     children: Snippet
@@ -31,8 +35,22 @@
       }
     }
   }
-  const left = $derived(typeof window === 'undefined' ? x : Math.max(margin, Math.min(x, window.innerWidth - margin - 240)))
-  const top = $derived(typeof window === 'undefined' ? y : Math.max(margin, Math.min(y, window.innerHeight - margin - 48)))
+  // Placed again as its point moves or its size changes.
+  const place = (el: HTMLElement) => {
+    const at = { x, y, above }
+    const fit = () => {
+      const w = el.offsetWidth
+      const h = el.offsetHeight
+      const bottom = window.innerHeight - margin
+      const top = at.above !== undefined && at.y + h > bottom && at.above - h >= margin ? at.above - h : Math.max(margin, Math.min(at.y, bottom - h))
+      el.style.left = `${Math.max(margin, Math.min(at.x, window.innerWidth - margin - w))}px`
+      el.style.top = `${top}px`
+    }
+    fit()
+    const seen = new ResizeObserver(fit)
+    seen.observe(el)
+    return () => seen.disconnect()
+  }
 </script>
 
 <div
@@ -40,14 +58,13 @@
   popover="manual"
   {role}
   aria-label={label}
-  style:left="{left}px"
-  style:top="{top}px"
   onmousedown={(e) => {
     if ((e.target as HTMLElement).closest('button')) {
       e.preventDefault()
     }
   }}
   {@attach open}
+  {@attach place}
 >
   {@render children()}
 </div>

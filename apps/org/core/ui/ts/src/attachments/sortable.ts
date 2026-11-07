@@ -119,15 +119,31 @@ export const sortable =
           return
         }
         drag.start(o.list, pending.index, items().length, 'pointer', o.label(pending.index))
-        preview = pending.item.cloneNode(true) as HTMLElement
-        preview.removeAttribute('data-drag-item')
+        // The item's copy, inside an empty copy of the list, its tag and
+        // classes, so the list's own styles, which reach its items from
+        // above, draw the preview as they draw the item.
+        const copy = pending.item.cloneNode(true) as HTMLElement
+        copy.removeAttribute('data-drag-item')
+        copy.removeAttribute('data-drop')
+        for (const el of copy.querySelectorAll('[contenteditable], [id], [data-block]')) {
+          el.removeAttribute('contenteditable')
+          el.removeAttribute('id')
+          el.removeAttribute('data-block')
+        }
+        preview = document.createElement(node.tagName)
+        preview.className = node.className
         preview.classList.add('drag-preview')
         preview.setAttribute('aria-hidden', 'true')
+        preview.append(copy)
         Object.assign(preview.style, {
           left: `${pending.rect.left}px`,
           top: `${pending.rect.top}px`,
           width: `${pending.rect.width}px`,
           height: `${pending.rect.height}px`,
+          padding: '0',
+          minHeight: '0',
+          maxWidth: 'none',
+          overflow: 'hidden',
         })
         // In a popover, the preview joins it in the top layer, above it.
         const host = node.closest<HTMLElement>('[popover]') ?? document.body

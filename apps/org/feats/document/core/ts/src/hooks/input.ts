@@ -266,6 +266,15 @@ export class Input {
     const k = kind(ed.doc, s.id)
     const t = text(ed.doc, s.id)
     if (k === 'code') {
+      // Enter on a code block's empty last line leaves the code: the line
+      // goes, and a paragraph after it takes the caret.
+      if (s.collapsed && s.end === t.length && t.toString().endsWith('\n')) {
+        ed.apply(() => {
+          ops.remove(t, t.length - 1, 1)
+          return { id: ops.after(ed.doc, s.id, 'paragraph'), anchor: 0, focus: 0 }
+        })
+        return
+      }
       this.insert(s, '\n')
       return
     }
@@ -448,6 +457,10 @@ export class Input {
       if (next) {
         e.preventDefault()
         ed.vertical(next, ed.caret(s.el).left, false)
+      } else if (kind(ed.doc, s.id) === 'code') {
+        // Below a code block that ends the document, a paragraph to write in.
+        e.preventDefault()
+        ed.apply(() => ({ id: ops.after(ed.doc, s.id, 'paragraph'), anchor: 0, focus: 0 }))
       }
       return
     }

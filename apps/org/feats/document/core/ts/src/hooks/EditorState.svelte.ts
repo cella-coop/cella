@@ -58,17 +58,14 @@ export class EditorState {
   #remote: Want | null = null
   #spans = new Map<TreeID, { from: Cursor; to: Cursor }[]>()
   #observer: MutationObserver | null = null
+  #anchored = ''
   readonly #unsubscribe: () => void
 
   constructor(doc: LoroDoc, drag: DragState, anchors: Anchor[] = [], embeds: () => Embeds = () => ({})) {
     this.doc = doc
     this.drag = drag
     this.embeds = embeds
-    for (const a of anchors) {
-      const from = Cursor.decode(b64.decode(a.from))
-      const to = Cursor.decode(b64.decode(a.to))
-      this.#spans.set(a.block, [...(this.#spans.get(a.block) ?? []), { from, to }])
-    }
+    this.#anchor(anchors)
     // The undo stack holds this peer's commits only; a remote edit is never
     // undone here. Each step keeps the caret it was made at.
     this.undo = new UndoManager(doc, {
@@ -106,13 +103,65 @@ export class EditorState {
       this.#watch(block)
     }
     this.ready = true
+    // The floating chrome follows its caret as the page moves under it.
+    const reflow = (e: Event) => {
+      if (!(e.target instanceof Element && e.target.closest('[popover]'))) {
+        this.menu.reflow()
+      }
+    }
+    window.addEventListener('resize', reflow)
+    document.addEventListener('scroll', reflow, { capture: true, passive: true })
+    // Seeded once the editor is drawn, outside the effect that attaches it.
+    queueMicrotask(() => this.#seed())
     return () => {
+      window.removeEventListener('resize', reflow)
+      document.removeEventListener('scroll', reflow, { capture: true })
       this.#observer?.disconnect()
       this.#observer = null
       this.root = null
       this.#unsubscribe()
       this.undo.free()
     }
+  }
+
+  // A draft with no block has nothing to take a key: a new document's, or
+  // one undone past its first block. It is given an empty paragraph with
+  // the caret in it, committed outside the undo, so undoing never takes it
+  // back to nothing.
+  #seed(): void {
+    if (!this.root || this.roots.length) {
+      return
+    }
+    const id = ops.create(this.doc, undefined, 0, 'paragraph')
+    this.#want = { id, anchor: 0, focus: 0 }
+    this.doc.commit({ origin: 'seed' })
+    this.flush()
+  }
+
+  // The comments' quotes, highlighted where their cursors find them; the
+  // page hands them again as comments are posted.
+  highlight(anchors: Anchor[]): void {
+    if (this.#anchor(anchors)) {
+      for (const id of this.#els.keys()) {
+        this.#dirty.add(id)
+      }
+      this.flush()
+    }
+  }
+
+  #anchor(anchors: Anchor[]): boolean {
+    const key = JSON.stringify(anchors)
+    if (key === this.#anchored) {
+      return false
+    }
+    this.#anchored = key
+    this.#spans.clear()
+    for (const a of anchors) {
+      const from = Cursor.decode(b64.decode(a.from))
+      const to = Cursor.decode(b64.decode(a.to))
+      this.#spans.set(a.block, [...(this.#spans.get(a.block) ?? []), { from, to }])
+    }
+    return true
   }
 
   #watch(el: HTMLElement): void {
@@ -220,6 +269,10 @@ export class EditorState {
       this.chosen.prune()
       this.menu.prune()
       flushSync()
+      if (!this.roots.length) {
+        this.#seed()
+        return
+      }
     }
     const focused = this.focusedId()
     let kept: Want | null = null

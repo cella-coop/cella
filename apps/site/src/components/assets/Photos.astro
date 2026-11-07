@@ -1,6 +1,6 @@
 ---
 // Every photo of the library as the site prints it, on the print's paper
-// in a real ink, each in an ink drawn at random on every load. Hovering one
+// in a real ink, the five inks in turn, so no two in a row share one. Hovering one
 // shows a toolbar of the five inks; a press wears that ink. A print's dots
 // are the same in any ink, so a change of ink is a change of colour alone.
 // A press on a photo opens it large, printed at the enlarged width, in its
@@ -11,9 +11,9 @@ import { STATUSES } from '../../lib/photo'
 import { maskUrl, ratio } from '../../lib/print'
 
 const photos = await Promise.all(
-  photoNames().map(async (name) => ({
+  photoNames().map(async (name, i) => ({
     name,
-    ink: STATUSES[Math.floor(Math.random() * STATUSES.length)],
+    ink: STATUSES[i % STATUSES.length],
     full: maskUrl(name, 'full'),
     ratio: await ratio(name),
   })),

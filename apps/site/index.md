@@ -70,7 +70,7 @@ of its own, its body in `src/components/assets/`:
 
 | Page | What it shows |
 |---|---|
-| `/assets/photos` | every vendored photo as the site prints it ([prints](#prints)), each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink; a press on a photo opens it large in its ink, printed at 1200 CSS pixels, a mask the dev server alone makes |
+| `/assets/photos` | every vendored photo as the site prints it ([prints](#prints)), the five inks in turn, so no two in a row share one; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink; a press on a photo opens it large in its ink, printed at 1200 CSS pixels, a mask the dev server alone makes |
 | `/assets/diagrams` | every diagram, as a section's figure shows it |
 | `/assets/icons` | every icon the site draws, the cards', the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |

@@ -187,7 +187,7 @@ test('the close admits Nadia and seats her in the assembly, an effect in its tra
   // A member, she invites by the member role's mandate; she is no
   // employee, so logging time is no right of hers.
   settled(await invite({ address: 'yara@lanterne.example', name: 'Yara Haddad', link: await sha256(random()) }, as(nadia)))
-  assert.match(reason(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia))), /nadia@lanterne\.example holds no mandate for log-time/)
+  assert.match(reason(await log({ member: nadia, day: '2026-11-07', minutes: 240, billable: true }, as(nadia))), /the actor holds no mandate for log-time/)
 })
 
 test('Chloé suspended by the assembly\'s motion: carried out in the close\'s transaction, her writes are refused', async () => {
@@ -290,7 +290,7 @@ test('Hugo, Brand\'s lead, may not approve Thomas\'s time, which is Web\'s; Yusu
   settled(await log({ member: thomas, day: '2026-10-30', minutes: 420, billable: true, circle: 'web' }, as(thomas)))
   settled(await submit({ member: thomas, month: '2026-10', circle: 'web' }, as(thomas)))
   const astray = await approve({ member: thomas, month: '2026-10', circle: 'web' }, as(hugo))
-  assert.match(reason(astray), /hugo@lanterne\.example holds approve-time by no mandate covering web's records/)
+  assert.match(reason(astray), /the actor holds approve-time by no mandate covering web's records/)
   settled(await approve({ member: thomas, month: '2026-10', circle: 'web' }, as(yusuf)))
 })
 
@@ -304,7 +304,7 @@ test('Thomas\'s time for Brand in October is a month of its own: Web\'s approved
   assert.match(reason(late), /thomas@lanterne\.example's 2026-10 in web was approved on 2026-11-02: it takes no new entries/)
   settled(await submit({ member: thomas, month: '2026-10', circle: 'brand' }, as(thomas)))
   const astray = await approve({ member: thomas, month: '2026-10', circle: 'brand' }, as(yusuf))
-  assert.match(reason(astray), /yusuf@lanterne\.example holds approve-time by no mandate covering brand's records/)
+  assert.match(reason(astray), /the actor holds approve-time by no mandate covering brand's records/)
   settled(await approve({ member: thomas, month: '2026-10', circle: 'brand' }, as(hugo)))
 })
 

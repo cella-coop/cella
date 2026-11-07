@@ -119,7 +119,7 @@ test('the gérante approves it, which charges it to the books and lowers the yea
   const julienTries = await approve({ bill }, as(julien))
   assert.match(reason(julienTries), new RegExp(`julien@lanterne\\.example recorded ${bill}, and may not approve it too`))
   const hugoTries = await approve({ bill }, as(hugo))
-  assert.match(reason(hugoTries), /hugo@lanterne\.example holds no mandate for approve-bill/)
+  assert.match(reason(hugoTries), /the actor holds no mandate for approve-bill/)
 
   const approved = await approve({ bill }, as(camille))
   assert.equal(approved.state, 'settled', reason(approved))
@@ -172,12 +172,12 @@ test('beyond the gérante\'s 5 000 € an approval is refused, and beyond Julien
   const big = await record(press('FA-2026-1203', 5_000_00), as(julien))
   const huge = big.state === 'settled' ? big.value.bill : ''
   const over = await approve({ bill: huge }, as(camille))
-  assert.match(reason(over), /camille@lanterne\.example holds no mandate for approve-bill up to 6000\.00 €/)
+  assert.match(reason(over), /the actor holds no mandate for approve-bill up to 6000\.00 €/)
 
   const run = await record(press('FA-2026-1204', 3_500_00), as(julien))
   const within = run.state === 'settled' ? run.value.bill : ''
   assert.equal((await approve({ bill: within }, as(camille))).state, 'settled')
   const beyond = await pay({ bill: within }, as(julien))
-  assert.match(reason(beyond), /julien@lanterne\.example holds no mandate for pay-supplier up to 4200\.00 €/)
+  assert.match(reason(beyond), /the actor holds no mandate for pay-supplier up to 4200\.00 €/)
   await balanced()
 })

@@ -100,7 +100,7 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
     lines: [{ description: 'Newsletter', quantity: '1', unit_price: 300_00, vat_rate: 2000 }],
   }, as(chloe))
   assert.equal(refused.state, 'refused')
-  assert.match(reason(refused), /chloe@lanterne\.example holds no mandate for issue-invoice/)
+  assert.match(reason(refused), /the actor holds no mandate for issue-invoice/)
   assert.equal(await head(), before)
   assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
 })
@@ -108,7 +108,7 @@ test('Chloé holds no issue-invoice mandate: her invoice is refused and uses no 
 test('Camille holds no record-entry: her post is refused and uses no verdict number', async () => {
   const before = await head()
   const booked = await post(paying(100_00), as(camille))
-  assert.match(reason(booked), /camille@lanterne\.example holds no mandate for record-entry/)
+  assert.match(reason(booked), /the actor holds no mandate for record-entry/)
   assert.equal(await head(), before)
 })
 
@@ -125,11 +125,11 @@ test('Julien pays a supplier 2 400 € within his 3 000 € limit; 3 200 € is 
   const before = await head()
   const beyond = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc: brochures', cents: 3200_00 }, as(julien))
   assert.equal(beyond.state, 'refused')
-  assert.match(reason(beyond), /julien@lanterne\.example holds no mandate for pay-supplier up to 3200\.00 €/)
+  assert.match(reason(beyond), /the actor holds no mandate for pay-supplier up to 3200\.00 €/)
 
   // Camille commits up to 20 000 € as gérante, but holds no pay-supplier.
   const gerante = await pay({ date: '2026-10-24', label: 'Imprimerie du Parc', cents: 100_00 }, as(camille))
-  assert.match(reason(gerante), /camille@lanterne\.example holds no mandate for pay-supplier/)
+  assert.match(reason(gerante), /the actor holds no mandate for pay-supplier/)
   assert.equal(await head(), before)
 })
 
@@ -207,9 +207,9 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   await su.query(`UPDATE membership.member SET status = 'suspended' WHERE address = $1`, [thomas])
   try {
     const suspended = await update({ id: 'nuvola', fields: { note: 'Suspended' } }, as(thomas))
-    assert.match(reason(suspended), /thomas@lanterne\.example holds no mandate for edit-contact/)
+    assert.match(reason(suspended), /the actor holds no mandate for edit-contact/)
     const silenced = await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Suspended.' }, as(thomas))
-    assert.match(reason(silenced), /thomas@lanterne\.example holds no mandate for edit-document/)
+    assert.match(reason(silenced), /the actor holds no mandate for edit-document/)
   } finally {
     await su.query(`UPDATE membership.member SET status = 'active' WHERE address = $1`, [thomas])
   }
@@ -217,8 +217,8 @@ test('a suspended member\'s device and a non-member\'s are refused: nothing is a
   // Inès is invited, not a member: she signs from the laptop her hire
   // enrolled, and holds no mandate.
   const outsider = { db: reader(app, ines), actor: ines, sign: sign(ines) }
-  assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /ines@lanterne\.example holds no mandate for edit-contact/)
-  assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /ines@lanterne\.example holds no mandate for edit-document/)
+  assert.match(reason(await add({ id: 'ondine-bis', name: 'Atelier Ondine' }, outsider)), /the actor holds no mandate for edit-contact/)
+  assert.match(reason(await comment({ version: 'rate-card-2027@2', quote: 'from 4 800 €', text: 'Hello' }, outsider)), /the actor holds no mandate for edit-document/)
   assert.equal(await head(), before)
 })
 

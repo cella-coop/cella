@@ -1,0 +1,7 @@
+---
+import type { PrintStyleName } from '@cella/brand'
+import Photo from './Photo.astro'
+interface Props { photo: string; alt: string; print?: PrintStyleName | 'none'; layout: 'over' | 'beside' }
+const { photo, alt, print, layout } = Astro.props
+---
+<Photo name={photo} alt={alt} print={print} layout={layout}><slot /></Photo>

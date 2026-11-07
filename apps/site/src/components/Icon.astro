@@ -1,0 +1,10 @@
+---
+import { iconMarkup, type IconRole } from '../lib/icon'
+interface Props { name: string; role?: IconRole }
+const { name, role = 'accent' } = Astro.props
+const svg = iconMarkup(name, role)
+---
+<span class="icon" set:html={svg} />
+<style>
+  .icon { display: inline-flex; width: 3rem; aspect-ratio: 1; flex: none; }
+</style>

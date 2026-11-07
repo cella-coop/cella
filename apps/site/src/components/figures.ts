@@ -3,5 +3,7 @@
 import Diagram from './Diagram.astro'
 
 import Photo from './Photo.astro'
+import Icon from './Icon.astro'
+import Figure from './Figure.astro'
 
-export const figures = { Diagram, Photo }
+export const figures = { Diagram, Photo, Icon, Figure }

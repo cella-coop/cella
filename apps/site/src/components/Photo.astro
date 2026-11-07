@@ -4,22 +4,32 @@ import type { PrintStyleName } from '@cella/brand'
 import '@cella/brand/print.css'
 import { loadPhoto, creditParts } from '../lib/photo'
 
-interface Props { name: string; alt: string; print?: PrintStyleName | 'none' }
-const { name, alt, print = 'house' } = Astro.props
+interface Props { name: string; alt: string; print?: PrintStyleName | 'none'; layout?: 'over' | 'beside' }
+const { name, alt, print = 'house', layout } = Astro.props
+if (layout && layout !== 'over' && layout !== 'beside') throw new Error(layout)
 const { meta, printed, masks, ratio, original } = await loadPhoto(name, print)
 const site = (await getEntry('site', 'site'))!.data
 const { beforeName, between, afterUnsplash } = creditParts(site.photo.credit)
 const referral = (url: string) => { const u = new URL(url); u.searchParams.set('utm_source', 'cella'); u.searchParams.set('utm_medium', 'referral'); return u.href }
 ---
 
-<figure class="photo">
-  {printed ? <div class="cella-print" role="img" aria-label={alt} data-over={printed.over} style={ratio} set:html={masks} /> : <img src={original} alt={alt} loading="lazy" />}
+<figure class="photo" data-layout={layout}>
+  <div class="visual">
+    <div class="image">{printed ? <div class="cella-print" role="img" aria-label={alt} data-over={printed.over} style={ratio} set:html={masks} /> : <img src={original} alt={alt} loading="lazy" />}</div>
+    {Astro.slots.has('default') && <div class="icons"><slot /></div>}
+  </div>
   <figcaption>{beforeName}<a href={referral(meta.photographerUrl)}>{meta.photographer}</a>{between}<a href={referral(meta.photoUrl)}>{site.photo.unsplash}</a>{afterUnsplash}</figcaption>
 </figure>
 
 <style>
   .photo { margin: 2rem 0; }
-  .photo img, .photo .cella-print { width: 100%; height: auto; }
+  .visual { position: relative; }
+  .image img, .image .cella-print { display: block; width: 100%; height: auto; }
+  .photo[data-layout="beside"] .visual { display: flex; align-items: stretch; }
+  .photo[data-layout="beside"] .image { flex: 1; min-width: 0; }
+  .photo[data-layout="beside"] .icons { display: flex; flex-direction: column; justify-content: space-evenly; align-items: center; gap: 1rem; padding: 1rem; background: var(--accent-soft); }
+  .photo[data-layout="over"] .icons { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(2, max-content); grid-auto-rows: max-content; align-content: space-between; justify-content: space-between; gap: 1rem; padding: 1rem; pointer-events: none; }
+  .photo[data-layout="over"] .icons :global(.icon) { background: var(--panel); border-radius: 50%; padding: .5rem; box-sizing: content-box; }
   figcaption { margin-top: .5rem; color: var(--text-muted); font-size: var(--t-sm); }
   a { color: inherit; }
 </style>

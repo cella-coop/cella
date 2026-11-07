@@ -1,9 +1,12 @@
 ---
 // A photo printed in the house's halftone as the background of what holds
-// it: a hero, or the panel a figure sits in. It lays the print's masks
-// alone, with no paper, each in the theme's own tone of its ink's status,
-// so it reads in either theme, and fades out where `fade` says the text
-// lies. It is decorative; its credit sits in its corner, as Unsplash asks.
+// it: a hero, or the panel a figure sits in. It is monochrome, one tone,
+// its ink's status: a paper of that tone and the print's dots in a deeper
+// shade of it, both from the theme's shades, so they turn with the theme.
+// The dark theme lays the print of the photo's negative, so its light
+// dots fall where the photo is light and it stays a positive. It fades out
+// where `fade` says the text lies. It is decorative; its credit sits in
+// its corner, as Unsplash asks.
 import { getEntry } from 'astro:content'
 import { creditParts, loadBackdrop, type Status } from '../lib/photo'
 
@@ -15,7 +18,7 @@ interface Props {
 
 const { photo, fade = 'none', width = 1600 } = Astro.props
 const { photo: name, ink } = typeof photo === 'string' ? { photo, ink: undefined } : photo
-const { meta, layers } = await loadBackdrop(name, width, ink)
+const { meta, tone, light, dark } = await loadBackdrop(name, width, ink)
 const site = (await getEntry('site', 'site'))!.data
 const { beforeName, between, afterUnsplash } = creditParts(site.photo.credit)
 const referral = (url: string) => {
@@ -26,33 +29,64 @@ const referral = (url: string) => {
 }
 ---
 
-<div class="backdrop" data-fade={fade} aria-hidden="true">
-  {layers.map((l) => <span style={{ '--mask': `url(${l.url})`, '--ink': `var(--${l.status}-text)` }} />)}
+<div class="backdrop" data-fade={fade} style={{ '--tone': `var(--tone-${tone})` }} aria-hidden="true">
+  {light.map((url) => <span class="light" style={{ '--mask': `url(${url})` }} />)}
+  {dark.map((url) => <span class="dark" style={{ '--mask': `url(${url})` }} />)}
 </div>
 <p class="credit">
   {beforeName}<a href={referral(meta.photographerUrl)}>{meta.photographer}</a>{between}<a href={referral(meta.photoUrl)}>{site.photo.unsplash}</a>{afterUnsplash}
 </p>
 
 <style>
+  /* One tone at half the status's chroma: a muted monochrome, its paper
+     near the ground and its ink a few shades towards the text, fewer in
+     the dark theme, where the ink is the light that a positive spreads */
   .backdrop {
     position: absolute;
     inset: 0;
     z-index: 0;
+    background: oklch(from oklch(var(--shade-1) var(--tone)) l calc(c * 0.5) h);
     pointer-events: none;
   }
 
   .backdrop span {
     position: absolute;
     inset: 0;
-    background: var(--ink);
-    opacity: 0.55;
+    background: oklch(from oklch(var(--shade-7) var(--tone)) l calc(c * 0.5) h);
     mask-image: var(--mask);
     mask-size: cover;
     mask-position: center;
     mask-repeat: no-repeat;
   }
 
-  /* Fading towards the text's side, so the words sit on the paper */
+  /* The light theme's print, or the dark theme's of the negative */
+  .dark {
+    display: none;
+  }
+
+  .backdrop .dark {
+    background: oklch(from oklch(var(--shade-5) var(--tone)) l calc(c * 0.5) h);
+  }
+
+  :global([data-theme='dark']) .backdrop .dark {
+    display: block;
+  }
+
+  :global([data-theme='dark']) .backdrop .light {
+    display: none;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :global(:root:not([data-theme='light'])) .backdrop .dark {
+      display: block;
+    }
+
+    :global(:root:not([data-theme='light'])) .backdrop .light {
+      display: none;
+    }
+  }
+
+  /* Fading towards the text's side, so the words sit on the ground */
   .backdrop[data-fade='start'] {
     mask-image: linear-gradient(to right, transparent 25%, black 75%);
   }

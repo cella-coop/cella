@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+import sharp from 'sharp'
 import { printFile, dataUrl } from '@cella/brand/print-file'
 import { printMarkup, PRINT_STYLES, type PrintStyleName } from '@cella/brand'
 
@@ -21,18 +22,22 @@ export async function loadPhoto(name: string, style: PrintStyleName | 'none') {
   }
 }
 
-/** A photo printed as a backdrop: the print's masks alone, no paper, at
- * the width it is shown, each mask with the status its ink is a shade of,
- * so the page colours it in the theme's own tone of that status. */
+/** A photo printed as a backdrop, in one tone: its ink's status. The page
+ * lays the masks on a paper of that tone in the theme's shades, so the
+ * light theme's are the print of the photo, dark ink where it is dark,
+ * and the dark theme's the print of its negative, light ink where it is
+ * light: a positive in either theme. */
 export async function loadBackdrop(name: string, width: number, ink?: Status) {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) throw new Error(`invalid photo name: ${name}`)
   const dir = join(process.cwd(), 'src/photos')
   const meta = JSON.parse(readFileSync(join(dir, `${name}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
   // Unset, a photo's ink is its own, the same on every page it is shown
   ink ??= STATUSES[[...name].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % STATUSES.length]
-  const printed = await printFile(readFileSync(join(dir, `${name}.jpg`)), { width, style: PRINT_STYLES.house, ink })
-  const layers = printed.masks.map((m) => ({ status: m.ink.replace(/-deep$/, ''), url: dataUrl(m.png) }))
-  return { meta, layers, ratio: printed.width / printed.height }
+  const image = readFileSync(join(dir, `${name}.jpg`))
+  const negative = await sharp(image).negate({ alpha: false }).toBuffer()
+  const masks = async (src: Buffer) =>
+    (await printFile(src, { width, style: PRINT_STYLES.house, ink })).masks.map((m) => dataUrl(m.png))
+  return { meta, tone: ink, light: await masks(image), dark: await masks(negative) }
 }
 
 export function creditParts(credit: string) {

@@ -590,6 +590,153 @@ member = "chloe@lanterne.example"
 stance = "consent"
 at = 2026-06-20
 
+# The annual assembly of 20 June also gave coordination a mandate to
+# issue under: approving suppliers' bills, up to 3 000 € a write, which
+# coordination hands down to the working circles' roles. A root, the
+# assembly its issuer.
+[[motion]]
+id = "m-2026-008"
+circle = "ag"
+proposer = "julien@lanterne.example"
+title = "Let coordination hand down the approval of suppliers' bills"
+procedure = "consent"
+proposed = 2026-06-01
+deadline = 2026-06-20
+closed = 2026-06-20
+body = """
+Camille approves every supplier's bill. Coordination may grant the
+working circles' roles the approval of their own, up to 3 000 € a bill.
+"""
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: coordination} circle holds {power: approve-bill}, to approve suppliers' bills and grant the working circles' roles theirs, up to {limit: 3 000 €} a write" }
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "lea@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "thomas@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "sofia@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "amina@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-06-20
+
+# Coordination hands the bills to Operations, which keeps the suppliers:
+# approving them up to 2 000 € a write, under coordination's 3 000 €,
+# and adopting policies, under coordination's own, so it grants the
+# working circles' roles what it holds. A circle decides about no role
+# of its own, so Brand's is Operations' to grant.
+[[motion]]
+id = "m-2026-009"
+circle = "coordination"
+proposer = "camille@lanterne.example"
+title = "Operations grants the working circles the approval of their bills"
+procedure = "consent"
+proposed = 2026-09-14
+deadline = 2026-09-28
+closed = 2026-09-28
+body = """
+Operations keeps the suppliers. It may grant a working circle's role the
+approval of that circle's bills, up to 2 000 € a bill.
+"""
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: operations} circle holds {power: approve-bill}, to approve suppliers' bills and grant the working circles' roles theirs, up to {limit: 2 000 €} a write" }
+
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {circle: operations} circle holds {power: adopt-policy}, to grant the working circles' roles what it holds, by motion" }
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-09-21
+
+[[motion.vote]]
+member = "yusuf@lanterne.example"
+stance = "consent"
+at = 2026-09-21
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-09-21
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-09-21
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-09-21
+
+# Operations, by Julien, its one seat, lets Brand's print buyer approve
+# Brand's print and paper bills up to 1 200 €, under its own 2 000 €:
+# the third mandate down from the assembly.
+[[motion]]
+id = "m-2026-010"
+circle = "operations"
+proposer = "julien@lanterne.example"
+title = "Brand's print buyer approves Brand's print bills"
+procedure = "consent"
+proposed = 2026-10-05
+deadline = 2026-10-12
+closed = 2026-10-12
+body = """
+Brand orders its own print and paper. Its print buyer approves those
+bills up to 1 200 € a bill; larger ones go to Camille.
+"""
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: print-buyer} role holds {power: approve-bill}, to approve the print and paper bills of the {scope: brand} circle, up to {limit: 1 200 €} a write" }
+
+[[motion.vote]]
+member = "julien@lanterne.example"
+stance = "consent"
+at = 2026-10-06
+
 [[motion]]
 id = "m-2026-011"
 circle = "coordination"
@@ -681,3 +828,63 @@ at = 2026-10-23
 kind = "admit"
 args = { member = "ines@lanterne.example", shares = 20 }
 
+
+# Open on the verdict date, past its deadline with no objection, for
+# whoever closes it: coordination grants finance the approval of
+# suppliers' bills up to 1 500 €, under its own 3 000 €.
+[[motion]]
+id = "m-2026-013"
+circle = "coordination"
+proposer = "camille@lanterne.example"
+title = "Finance approves suppliers' bills up to 1 500 €"
+procedure = "consent"
+proposed = 2026-10-19
+deadline = 2026-10-24
+body = """
+Julien records every bill. Let finance approve those up to 1 500 € a
+bill, as long as someone else recorded it.
+"""
+[[motion.action]]
+kind = "policy"
+args = { kind = "mandate", wording = "The {role: finance} role holds {power: approve-bill}, to approve suppliers' bills, up to {limit: 1 500 €} a write" }
+
+[[motion.vote]]
+member = "camille@lanterne.example"
+stance = "consent"
+at = 2026-10-19
+
+[[motion.vote]]
+member = "hugo@lanterne.example"
+stance = "consent"
+at = 2026-10-20
+
+# Open on the verdict date, past its deadline with no objection, for
+# whoever closes it: the assembly ends coordination's approve-bill, and
+# its close revokes every mandate issued under it the same day,
+# Operations' and the print buyer's, and finance's if m-2026-013 closed
+# first.
+[[motion]]
+id = "m-2026-014"
+circle = "ag"
+proposer = "chloe@lanterne.example"
+title = "Coordination no longer hands down the approval of bills"
+procedure = "consent"
+proposed = 2026-10-19
+deadline = 2026-10-24
+body = """
+Camille approves every supplier's bill again. Coordination's mandate
+ends, and with it every one issued under it.
+"""
+[[motion.action]]
+kind = "end"
+args = { policy = "m-2026-008/1" }
+
+[[motion.vote]]
+member = "chloe@lanterne.example"
+stance = "consent"
+at = 2026-10-19
+
+[[motion.vote]]
+member = "malik@lanterne.example"
+stance = "consent"
+at = 2026-10-21

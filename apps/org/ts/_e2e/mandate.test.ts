@@ -67,13 +67,13 @@ after(async () => {
   await su.end()
 })
 
-test('Lanterne\'s mandates are policies of the assembly, adopted by its founding motion', async () => {
+test('Lanterne\'s mandates are policies: the assembly\'s founding motion adopted 53, and the bills\' chain four since', async () => {
   assert.deepEqual(
     await one(
       `SELECT count(*)::int AS mandates, count(*) FILTER (WHERE r.kind = 'mandate' AND r.circle = 'ag' AND r.motion = 'm-2021-001')::int AS adopted
        FROM circle.mandate m JOIN policy.policy r ON r.id = m.policy`,
     ),
-    { mandates: 53, adopted: 53 },
+    { mandates: 57, adopted: 53 },
   )
   assert.deepEqual(
     await one(

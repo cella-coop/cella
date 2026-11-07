@@ -127,7 +127,7 @@ test('only the assembly admits, the one circle holding the collective admit-memb
 
   const proposed = settled(await put({ kind: 'admit', args: { member: nadia, shares: 20 }, deadline: '2026-11-07', body: 'Nadia has worked with marketing since spring.' }, as(malik)))
   admission = proposed.motion
-  assert.equal(admission, 'm-2026-013')
+  assert.equal(admission, 'm-2026-015')
   const d = await one<{ circle: string; title: string; roll: string }>(
     `SELECT circle, title, (SELECT count(*) FROM membership_motion.roll r WHERE r.motion = d.id) AS roll FROM motion.motion d WHERE id = $1`,
     [admission],

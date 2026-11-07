@@ -908,16 +908,18 @@ mandates the assembly issued it, not by a place above them.
 | Circle lead | `schedule-meeting`, `keep-minutes` | its own circle |
 | Gérante | `schedule-meeting`, `erase-personal-data` | — |
 | Secretary (`*`: Julien in the assembly, Malik in coordination) | `keep-minutes` | its own circle |
-
-A cap of "its own circle" is the mandate's scope, `{scope: own}`: a
-lead runs, approves the time of and keeps the minutes of their own
-circle alone. Every other mandate marks none and covers the whole
-co-op, so the gérante's `manage-project` and the treasurer's
-`approve-time` cover every circle's, and finance pays a Web supplier
-as it pays any.
+| Print buyer (Sofia, in `brand`, since 12 October 2026) | `approve-bill` | 1 200 € limit, Brand's bills |
 | Participant (every seat, in its circle) | `propose`, `discuss` | — |
 | Participant | `read` | its own circle; and the assembly's |
 | Member | `read`, open books | — |
+
+A cap of "its own circle" is the mandate's scope, `{scope: own}`: a
+lead runs, approves the time of and keeps the minutes of their own
+circle alone. The print buyer's names Brand, `{scope: brand}`, so it
+covers Brand's bills alone. Every other mandate marks none and covers
+the whole co-op, so the gérante's `manage-project` and the treasurer's
+`approve-time` cover every circle's, and finance pays a Web supplier
+as it pays any.
 
 The gérante, the treasurer, finance, a circle's lead and a circle's
 secretary are each held by one person at a time (`holders` 1); the
@@ -929,7 +931,8 @@ their tenure, and Camille sits there as a member.
 | Circle, by motion | Power |
 |---|---|
 | Assemblée générale | `admit-member`, `suspend-member`, `exclude-member`, `adopt-policy`, `end-policy`, `approve-distribution`, `adopt-document`, `seat-member`, `create-circle` |
-| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member` |
+| Coordination | `adopt-policy`, `end-policy`, `adopt-document`, `seat-member`; `approve-bill`, 3 000 € limit |
+| Operations | `adopt-policy`; `approve-bill`, 2 000 € limit |
 
 | Right, given by the form | Power |
 |---|---|
@@ -939,10 +942,34 @@ their tenure, and Camille sits there as a member.
 
 Each is a policy of the assembly, a mandate or a right, adopted with
 the statutes by the founding motion, m-2021-001, on 1 March 2021, and in force since;
-each mandate among them is a root, the assembly its issuer. So
-coordination, which holds no mandate for a role's power, grants a
-working circle's role none until the assembly grants it one to issue
-under.
+each mandate among them is a root, the assembly its issuer. The bills
+are the one chain three mandates deep, each narrower than the one above:
+
+| Mandate | Issued by | Under |
+|---|---|---|
+| Coordination's `approve-bill`, up to 3 000 € a write | the assembly, m-2026-008, 20 June 2026 | none, a root |
+| Operations' `approve-bill`, up to 2 000 € a write, and its `adopt-policy` | coordination, m-2026-009, 28 September 2026 | coordination's `approve-bill`, and its `adopt-policy` |
+| The print buyer's `approve-bill`, up to 1 200 € a write, Brand's bills | Operations, m-2026-010, 12 October 2026 | Operations' `approve-bill` |
+
+A circle decides about no role of its own, so Brand's print buyer is
+granted by Operations, which keeps the suppliers, and not by Brand.
+Two motions stay open on the verdict date, each past its deadline of
+24 October with consents and no objection, for whoever closes them:
+
+- m-2026-013, coordination's, grants the finance role `approve-bill` up
+  to 1 500 € a write, under coordination's own; its close makes a second
+  mandate under the same root.
+- m-2026-014, the assembly's, ends coordination's `approve-bill`; its
+  close revokes Operations' and the print buyer's under it the same day
+  (`circle.revoke`), and finance's if m-2026-013 closed first, so the
+  gérante, whose own is a root, approves every bill alone again.
+
+On the verdict date Sofia, the print buyer, is refused each way a
+mandate refuses a write: recording a bill, `record-bill`, a power she
+holds by no mandate; approving Imprimerie du Parc's paper, Brand's
+1 440 €, over her 1 200 €; and approving Atelier Lumen's rent, 1 080 €
+and the assembly's, a record of a circle her mandate's scope does not
+cover.
 Lanterne's default bundle is what the founding motion grants the
 participant, lead and secretary roles, so a circle the assembly creates
 has its members read its records, its lead run its projects, approve
@@ -955,10 +982,11 @@ disclosure rule is the founding motion's last, with the defaults above,
 so a member reads a month's payroll or a project's time only where at
 least five people are in it and no one or two make most of it, unless
 a power of theirs reads every row of it.
-So the working circles carry no action by motion: a motion of Web
-decides by its text alone, and one carrying an action is refused at its
-proposal until a circle holding one grants Web a collective mandate for
-it.
+Of the working circles, Operations alone holds a collective mandate,
+and only to grant the roles of the others what it holds: a motion of
+Web decides by its text alone, and one carrying an action is refused at
+its proposal until a circle holding one grants Web a collective mandate
+for it.
 
 ## Analytics
 

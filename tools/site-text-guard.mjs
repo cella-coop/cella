@@ -7,9 +7,13 @@
 // perl -i, tee, mv, cp, rm, touch and their kin, git mv, rm, checkout or
 // restore, find's -delete or a writer it execs, a sh -c or eval of any
 // of these, and an inline script naming the path that writes a file.
-// Reads pass, and so does every write elsewhere. It reads the shell as
-// a lexer does, not as the shell runs it: a command that builds the path
-// at run time goes past it, which the doc says.
+// It refuses a write and nothing else: a read passes, and so does a call
+// that names the path without writing there, a search, a commit message
+// or a message sent through corpus among them, and every write elsewhere.
+// It reads the shell as a lexer does, not as the shell runs it: a command
+// that builds the path at run time goes past it, which the doc says.
+// tools/site-text-guard.sh finds the node it runs on, and stands in for
+// it where there is none.
 //
 //   node tools/site-text-guard.mjs < <hook input>
 

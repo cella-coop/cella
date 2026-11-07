@@ -13,7 +13,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if command -v node >/dev/null 2>&1; then exec node \"$CLAUDE_PROJECT_DIR/tools/site-text-guard.mjs\"; elif grep -q 'apps/site/src/content'; then echo \"The site's text is the operator's, and no agent writes it; with no node to read the call, the guard refuses any call naming apps/site/src/content (AGENTS.md; apps/site/index.md, whose words).\" >&2; exit 2; fi"
+            "command": "exec sh \"$CLAUDE_PROJECT_DIR/tools/site-text-guard.sh\""
           }
         ]
       }

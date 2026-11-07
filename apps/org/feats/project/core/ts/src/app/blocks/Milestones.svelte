@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Field, Form, Prose, Section, Table, type Column } from '@cella/org-ui'
+  import { Field, Form, Section, Table, type Column } from '@cella/org-ui'
   import type { Detail, Milestone } from '../../models/project.ts'
 
-  // What the project is, and its milestones in order: completing one, and
-  // adding the next. An archived project changes no more.
+  // The project's milestones in order: completing one, and adding the
+  // next. An archived project changes no more.
   let { data }: { data: Detail; id: string } = $props()
 
   const columns: Column<Milestone>[] = [
@@ -21,12 +21,6 @@
   ]
   const open = $derived(data.milestones.filter((m) => !m.completed).map((m) => ({ value: String(m.n), label: `${m.n}. ${m.title}` })))
 </script>
-
-{#if data.summary}
-  <Section title="Summary">
-    <Prose text={data.summary} />
-  </Section>
-{/if}
 
 <Section title="Milestones" count={data.milestones.length}>
   <Table {columns} rows={data.milestones} />

@@ -5,7 +5,7 @@ import Return from './blocks/Return.svelte'
 import Statements from './blocks/Statements.svelte'
 
 // The graft's client side: what a worker's part of the work share became,
-// in their statement's Employed tab; a member's own statements, on their page; and a
+// in their statement's Employed tab; a member's own statements, under Own and decide on their page; and a
 // year's return to the federation, on the distribution's page.
 export const app: App = {
   name: 'account-membership-patronage-transaction',
@@ -25,7 +25,7 @@ export const app: App = {
     },
     people: {
       page: {
-        blocks: [Statements],
+        blocks: [{ tab: 'rights', block: Statements }],
       },
     },
   },

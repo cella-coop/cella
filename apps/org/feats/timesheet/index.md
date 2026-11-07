@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -150,8 +150,9 @@ by the worker among the circles they sit in, and its hours log in that
 circle's month: a project's row offers the project's circle first where
 the worker sits in it, and the co-op's own time the root's, so time
 logged from the shell lands in the month of the circle it was worked
-for and is approved by whoever holds `approve-time` over that circle. An entry's page shows its worker's month and, in its
-header, lets its worker correct the entry's hours down while the month is not approved,
+for and is approved by whoever holds `approve-time` over that circle. An entry's page is titled by its note, or without one its hours and day,
+its header's crumb its id, and its Month tab shows its worker's month; in its
+header, it lets its worker correct the entry's hours down while the month is not approved,
 and submits the entry's month, its circle's, while open or approves it
 once submitted; a person's page lists their months, a row for each
 circle's, with the same writes (`employment-timesheet`).

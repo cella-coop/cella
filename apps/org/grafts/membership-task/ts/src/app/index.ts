@@ -4,7 +4,8 @@ import Assignee from './blocks/Assignee.svelte'
 import Doing from './blocks/Doing.svelte'
 
 // The graft's client side: who does each task, a column a board may group
-// by, giving a task to someone on its page, and the tasks a member does.
+// by, giving a task to someone on its page, and the tasks a member does,
+// in a Tasks tab on theirs.
 export const app: App = {
   name: 'membership-task',
   extends: {
@@ -18,7 +19,7 @@ export const app: App = {
       },
     },
     people: {
-      page: { blocks: [Doing] },
+      page: { tabs: [{ id: 'tasks', label: 'Tasks' }], blocks: [{ tab: 'tasks', block: Doing }] },
     },
   },
 }

@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -94,12 +94,16 @@ the day its entry names, archiving twice changing nothing.
 
 The `projects` collection opens as a gallery, each card naming its contact,
 its milestones done of all, its budget and what its time spent of it (the
-root picks these fields, which come from three slices). A project's page
-has three tabs: Overview, with its summary, its milestones (completing
-one, adding the next), its budget and its shares; Tasks
-(`project-task`); and Time (`project-timesheet`). The two are tabs because
-each is a list long enough to crowd the overview. Archive is the header's
-write.
+root picks these fields, which come from three slices). A project's page,
+its header's crumb its id, holds its summary under its title, then
+whom it is for (`contact-project`) and its Activity; its circle, its
+milestones done of all and the next, its budget and its days are its
+properties. The data central to it is in tabs after the first:
+Milestones, completing one and adding the next; Budget, its budget, what
+is spent and left of it, and its shares (`membership-project`); Tasks
+(`project-task`); Time (`project-timesheet`); Expenses
+(`expense-project`); and Invoices (`invoice-project`). Archive is the
+header's write.
 
 ## Import
 

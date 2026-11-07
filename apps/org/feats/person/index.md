@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -262,7 +262,9 @@ the membership's status, and Worker, employed or left. The New form is the
 children's: an invitation and a hire, each under its title. A person's
 page holds their address and devices, with the profile write on it; the
 children add their membership's and employment's properties and tabs
-(Joining, Own and decide), and the grafts joining them the rest. The
+(Joining, Own and decide, Powers, Employment), and the grafts joining
+them the rest, each in the tab of the slice it joins or in one of its
+own: Records, Tasks and Expenses. The
 `devices` collection, in Settings under Personal, lists every device,
 current ones first. On a person's
 own page the device their session signs with is marked as this device,

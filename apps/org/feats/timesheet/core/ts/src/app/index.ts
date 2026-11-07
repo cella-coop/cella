@@ -8,8 +8,9 @@ const tones: Record<State, Tone> = { open: 'neutral', submitted: 'accent', appro
 const kind = (e: Entry) => (e.billable ? 'billable' : 'internal')
 
 // The feat's client side: every entry in a table, with a dashboard of the
-// hours; logging time as the acting member; and an entry's page with its
-// member's month, submitted or approved from there.
+// hours; logging time as the acting member; and an entry's page, titled
+// by its note, with its member's month in its Month tab, submitted or
+// approved from there.
 export const app: App = {
   name: 'timesheet',
   collections: {
@@ -39,8 +40,8 @@ export const app: App = {
       },
       page: {
         eyebrow: 'Time entry',
-        title: (e: Detail) => `${e.hours} h on ${date(e.day)}`,
-        subtitle: (e: Detail) => e.note,
+        title: (e: Detail) => e.note || `${e.hours} h on ${date(e.day)}`,
+        subtitle: (e: Detail) => e.id,
         properties: (e: Detail) => [
           { label: 'Timesheet', value: e.state, kind: 'badge', tone: tones[e.state] },
           { label: 'Hours', value: e.hours, kind: 'number' },
@@ -48,7 +49,11 @@ export const app: App = {
           { label: 'Day', value: e.day, kind: 'date' },
           { label: 'Member', value: e.member, kind: 'person', href: `/people/${e.member}` },
         ],
-        blocks: [Period],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'month', label: 'Month' },
+        ],
+        blocks: [{ tab: 'month', block: Period }],
         actions: Sheet,
       },
     },

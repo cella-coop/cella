@@ -4,7 +4,8 @@ import Bills from './blocks/Bills.svelte'
 import Contact from './blocks/Contact.svelte'
 
 // The graft's client side: the contact an invoice bills and the form that
-// links it, and what a contact owes and the invoices that bill it.
+// links it, and what a contact owes and, in its Invoices tab, the
+// invoices that bill it.
 export const app: App = {
   name: 'contact-invoice',
   extends: {
@@ -23,7 +24,8 @@ export const app: App = {
       ],
       page: {
         properties: (b: Bill[]) => [{ label: 'Owes', value: b.reduce((s, x) => s + x.owed, 0), kind: 'money' }],
-        blocks: [Bills],
+        tabs: [{ id: 'invoices', label: 'Invoices' }],
+        blocks: [{ tab: 'invoices', block: Bills }],
       },
     },
   },

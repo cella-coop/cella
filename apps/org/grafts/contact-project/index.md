@@ -1,6 +1,6 @@
 +++
 title = "contact-project"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Whom a project is for: a client, a contact holding the client role
@@ -47,7 +47,7 @@ judges both sides again, as it did.
 Adds to each project the contact's name, a card field of the projects'
 gallery, and to a project's page the client with the form that links
 it, whose picker offers the clients not archived and no other contact;
-to a contact's page, the projects it commissioned.
+to a contact's page, in a Projects tab, the projects it commissioned.
 
 ## Lanterne
 

@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 # Trust
@@ -229,7 +229,13 @@ sequenceDiagram
   does; a real co-op's books come in after it, by the import of each
   kind under the importer's mandates. Every later entry passes the
   guards the founding's policies set: none is allowed because the
-  founding allowed it.
+  founding allowed it. What a founding must carry is not yet ruled:
+  the operator's ruling of 1 November 2026 makes it the one first
+  entry, on an empty log, that brings in the founders, the root circle,
+  its procedure and the first policies from the chosen form, and leaves
+  what it must carry to be worked out, so the rest of what it carries
+  and every guard that holds it is the building lane's reading, as the
+  legal sources of [legal forms](forms.md) are.
 - **Order comes from receipts, never from clocks.** A member's latest stance
   is the one with the highest receipt number, not the latest date.
 - **The scope's key** is read from a file only the database's superuser can

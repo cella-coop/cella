@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -108,6 +108,16 @@ written outside a write
 ([the notary](../../core/notary/index.md#bound)), so a founding is a
 write like any other, judged by its guard, `founds`, and every later
 write by the guards its policies set.
+
+What a founding must carry is not yet ruled. The operator's ruling of
+1 November 2026 makes it one first entry, allowed on an empty log
+alone, that brings in the founders, the root circle, its procedure and
+the first policies from the chosen form, and leaves what it must carry
+to be worked out. So the rest of what it carries, the founders as
+persons with their devices and memberships, their seats, the founding
+motion and its stances, and what `founds` holds it to, is the building
+lane's reading of that ruling, not a ruling, as the legal sources of
+[legal forms](../../../../_corpus/doc/forms.md) are.
 
 `cella seed` founds a mock co-op from its fixture so, signed by the
 first device in force it enrols, and the founding carries the state the

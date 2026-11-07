@@ -11,6 +11,7 @@ export const app: App = {
     imports: {
       view: {
         group: 'platform',
+        subgroup: 'Organization',
         title: 'Imports',
         caption: 'Members, contacts, the books, invoices, time, projects and tasks brought in from other tools',
         icon: icons.FileArrowUp,

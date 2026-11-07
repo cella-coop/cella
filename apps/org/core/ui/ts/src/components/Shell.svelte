@@ -84,7 +84,8 @@
   const has = (group: string) => nav.some((g) => g.group === group)
   // The group the page is in: its section and group open by themselves.
   const held = $derived(nav.find((g) => g.items.some((i) => here(i.href) && i.href !== '/'))?.group)
-  // A group's collections by subgroup, in the order each first appears;
+  // A group's collections by subgroup, in the order each first appears,
+  // Settings' in its areas' order;
   // labelled only where there is more than one.
   const parts = (group: string) => {
     const by = new Map<string, Nav[number]['items']>()
@@ -92,12 +93,17 @@
       const key = item.subgroup ?? ''
       by.set(key, [...(by.get(key) ?? []), item])
     }
-    return [...by].map(([sub, items]) => ({ sub, items }))
+    const parted = [...by].map(([sub, items]) => ({ sub, items }))
+    return group === 'platform' ? parted.sort((a, b) => areas.indexOf(a.sub) - areas.indexOf(b.sub)) : parted
   }
   // Settings is its own sidebar, in place of the sections, while a page
-  // of it is open; the account and co-op menus lead into it.
+  // of it is open: the member's own pages, then the co-op's. The account
+  // menu leads into it at Personal, the co-op menu at Organization.
+  const areas = ['Personal', 'Organization']
   const settings = $derived(held === 'platform')
-  const first = $derived(parts('platform')[0]?.items[0]?.href)
+  const opens = (area: string) => (parts('platform').find((p) => p.sub === area) ?? parts('platform')[0])?.items[0]?.href
+  const personal = $derived(opens('Personal'))
+  const organization = $derived(opens('Organization'))
   state.follow(() => back, () => settings)
   const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.waiting ?? i.count ?? 0), 0) ?? 0
 </script>
@@ -166,7 +172,7 @@
             {/each}
           </form>
         {/if}
-        {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
+        {#if organization}<a class="item" role="menuitem" href={organization}>Settings</a>{/if}
       </Popover>
     </div>
 
@@ -214,7 +220,7 @@
           <p class="label">Signed in</p>
           <p class="hint">{actor.address}, on this device</p>
           <div class="list">
-            {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
+            {#if personal}<a class="item" role="menuitem" href={personal}>Settings</a>{/if}
             <form method="post" action="/sign-out" class="list">
               <button class="item">Sign out</button>
             </form>

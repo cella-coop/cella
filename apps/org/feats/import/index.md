@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -99,7 +99,7 @@ runs every kind on Lanterne's samples.
 
 ## Shell
 
-The `imports` collection in Platform: each import with its kind, whether
+The `imports` collection in Settings, under Organization: each import with its kind, whether
 a dry run, and how many lines settled and were refused; New, a file of a
 kind tried in a dry run or imported; an import's page, each line with its
 write, its outcome and its entry or reason. `cella import <kind> <file>

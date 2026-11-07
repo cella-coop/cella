@@ -112,9 +112,13 @@ The theme is light, dark or the system's, a cookie the server writes into
   opened or shut stays so. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their
   address, Settings, Sign out and the theme. Settings is its own
-  sidebar, in place of the top and the sections while one of its pages
-  is open: Back to app, which returns to the last page left, then the
-  `platform` collections; the account and co-op menus lead into it. In
+  sidebar, one for the member and the co-op as Linear's, in place of
+  the top and the sections while one of its pages is open: Back to app,
+  which returns to the last page left, then the `platform` collections
+  in two groups, each under its heading, as each collection's
+  `subgroup` names: Personal, the member's own (Devices), then
+  Organization, the co-op's (Imports). The account menu's Settings opens
+  it at Personal's first page, the co-op menu's at Organization's. In
   dev mode a faint upright "prototype" with a test tube sits at the
   content's bottom right. The last write's outcome floats above.
 - `Gate`: what a person reaches before signing in, alone on the page,

@@ -60,7 +60,7 @@ export const app: App = {
       },
     },
     devices: {
-      view: { group: 'platform', title: 'Devices', icon: icons.SealCheck, columns, linked: false },
+      view: { group: 'platform', subgroup: 'Personal', title: 'Devices', icon: icons.SealCheck, columns, linked: false },
     },
   },
 }

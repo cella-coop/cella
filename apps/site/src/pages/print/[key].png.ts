@@ -8,4 +8,4 @@ export function getStaticPaths() {
 }
 
 export const GET: APIRoute = async ({ props }) =>
-  new Response(new Uint8Array(await mask(props.name, props.width)), { headers: { 'content-type': 'image/png' } })
+  new Response(new Uint8Array(await mask(props.name, props.width)), { headers: { 'content-type': 'image/png', 'cache-control': 'public, max-age=86400' } })

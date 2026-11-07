@@ -113,6 +113,10 @@ so its dots are the house's 2.5 CSS pixel cell where it is shown. Each
 mask is its own file, `/print/<photo>-<width>.png`, made by the static
 endpoint `src/pages/print/[key].png.ts` for every photo at each width
 and cached by the browser as any image; a page holds none inline. A
+mask is made once a photo, width and print settings, kept in the site's
+ignored `.astro/print/` by the photo's modification time and a version
+`print.ts` bumps when it changes how a mask is made, so the dev server,
+a restart and a build each reuse it. A
 mask is the same in any ink, so `Backdrop.astro` colours it in CSS, and
 a change of ink is a change of colour alone. It is decorative,
 `aria-hidden`, and its Unsplash credit sits in its corner. A print inks

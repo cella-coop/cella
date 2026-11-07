@@ -4,7 +4,7 @@
 // is shown, the cell 2.5 CSS pixels at 1.5 device pixels to one, and
 // served as its own file by `pages/print/[key].png.ts`. A mask is the
 // same in any ink, so the page colours it, and a change of ink is CSS.
-import { readFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { PRINT_STYLES } from '@cella/brand'
@@ -36,10 +36,23 @@ export const maskKeys = () => photoNames().flatMap((name) => BUILT.map((size) =>
  * black and white, so a high-key photo is not bare paper nor a dark one a
  * slab: each spans the print's range. */
 export async function mask(name: string, width: number) {
+  // Made once a photo, width and settings: kept by the photo's mtime in the
+  // site's ignored .astro/, so a reload, a restart and a build reuse it
+  const cached = join(CACHE, `${name}-${width}-${statSync(file(name)).mtimeMs}-${VERSION}.png`)
+  if (existsSync(cached)) {
+    return readFileSync(cached)
+  }
   const levelled = await sharp(readFileSync(file(name))).normalise({ lower: 1, upper: 99 }).toBuffer()
   const printed = await printFile(levelled, { width: Math.round(width * SCALE), scale: SCALE, style: PRINT_STYLES.house })
-  return printed.masks[0].png
+  const png = printed.masks[0].png
+  mkdirSync(CACHE, { recursive: true })
+  writeFileSync(cached, png)
+  return png
 }
+
+const CACHE = join(process.cwd(), '.astro/print')
+// A change to how a mask is made bumps it, so no stale mask is reused
+const VERSION = 1
 
 /** A photo's ink, unless one is named: its own, from its name, the same on
  * every page. */

@@ -14,8 +14,11 @@
 //                     roots of the feats below it, the grafts at or below
 //                     it
 //
-// A package in packages/, the brand, stands outside the tree: any package
-// may depend on it, and it depends on no package of the repository.
+// The packages in packages/ stand outside the tree. The brand depends on
+// no package of the repository, and any package may depend on it; the
+// diagrams depend on the brand alone, and only the site depends on them.
+// The site, apps/site, stands outside it too: it depends on the brand and
+// the diagrams alone, and no package depends on it.
 //
 // A graft sits at the lowest node whose feats, at any depth, hold every
 // feat it joins, and never joins a feat with one nested in it: a child
@@ -143,7 +146,7 @@ const shared = existsSync(join(repo, 'packages'))
   ? readdirSync(join(repo, 'packages')).map((n) => join('packages', n)).filter((d) => existsSync(join(repo, d, 'package.json')))
   : []
 // The site: an app with its manifest at its root and no feat.toml, which
-// may depend on a package outside the tree alone, and on which none may.
+// depends on the packages outside the tree alone, and on which none may.
 const sites = existsSync(join(repo, 'apps'))
   ? readdirSync(join(repo, 'apps')).map((a) => join('apps', a)).filter((d) => !isNode(d) && existsSync(join(repo, d, 'package.json')))
   : []
@@ -191,6 +194,10 @@ for (const [a, b] of edges) {
     if (a !== 'packages/diagrams' || b !== 'packages/brand') {
       fail(`${a}: depends on ${b}; a package outside the tree depends on no package of the repository except diagrams on brand`)
     }
+    continue
+  }
+  if (b === 'packages/diagrams') {
+    fail(`${a}: depends on ${b}; only the site depends on the diagrams`)
     continue
   }
   if (shared.includes(b)) {

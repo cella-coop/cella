@@ -73,6 +73,8 @@ export async function addAll(inputs, site, opts = {}) {
     added++
   }
   console.log(`vendored ${added} of ${inputs.length}`)
+  // The dev server lists the prints once, at its start
+  if (added) console.log('a running `cella site dev` serves the new prints once restarted')
 }
 
 export async function add(input, site, named, { request = fetch, ask } = {}) {

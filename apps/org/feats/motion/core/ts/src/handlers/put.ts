@@ -66,19 +66,22 @@ function granting(args: Put['args']) {
 // that adopted it, whose own it is; for open books' disclosure rule, the
 // assembly, whose rule it is. Granting a mandate proposes its policy,
 // revoking one ends its policy; disclosing proposes the rule, replacing
-// the one in force, and withholding ends that one. The title says what
-// is decided; `motion.circle_asks` checks the action and that circle's
-// say over it. membership-motion puts it by the procedure its
+// the one in force, and withholding ends that one and nothing else, put
+// on the assembly's page where a rule stands, or is refused before
+// anything is proposed by `motion.withhold_flaw`, whose reason names the
+// rule in force. The title says what is decided; `motion.circle_asks`
+// checks the action and that circle's say over it. membership-motion puts it by the procedure its
 // requirements fix, fixing its roll in the same write.
 export async function putting(input: Put, db: Db): Promise<Propose> {
-  const { rows } = await db.query<{ decider: string | null; name: string; role: string | null; mandate: string | null; standing: string | null }>(
-    `SELECT CASE WHEN $2 IN ('revoke', 'withhold') THEN (SELECT r.circle FROM policy.policy r WHERE r.id = $4)
-                 WHEN $2 = 'disclose' THEN circle.assembly()
+  const { rows } = await db.query<{ decider: string | null; name: string; role: string | null; mandate: string | null; standing: string | null; flaw: string | null }>(
+    `SELECT CASE WHEN $2 = 'revoke' THEN (SELECT r.circle FROM policy.policy r WHERE r.id = $4)
+                 WHEN $2 IN ('disclose', 'withhold') THEN circle.assembly()
                  ELSE motion.decider(c.id, ARRAY['adopt-policy', $5::jsonb ->> 'power'], cella.verdict_date(), $5::jsonb) END AS decider,
             c.name,
             (SELECT r.name FROM circle.role r WHERE r.id = $3) AS role,
             (SELECT x.power || ' from ' || r.name FROM circle.mandate x JOIN circle.role r ON r.id = x.grantee WHERE x.policy = $4) AS mandate,
-            (SELECT d.policy FROM circle.disclosed(cella.verdict_date()) d) AS standing
+            (SELECT d.policy FROM circle.disclosed(cella.verdict_date()) d) AS standing,
+            CASE WHEN $2 = 'withhold' THEN motion.withhold_flaw($1, $4, cella.verdict_date()) END AS flaw
      FROM circle.circle c
      WHERE c.id = $1`,
     [
@@ -90,6 +93,9 @@ export async function putting(input: Put, db: Db): Promise<Propose> {
     ],
   )
   const found = rows[0]
+  if (found?.flaw) {
+    throw new Error(found.flaw)
+  }
   if (!found?.decider) {
     throw new Error(`no circle may decide to ${input.kind} in ${input.circle}`)
   }

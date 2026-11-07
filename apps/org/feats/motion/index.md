@@ -382,7 +382,11 @@ a trigger on core's table
   force, so no total of members' own figures is shared beyond each
   reader's own rights. Both are put to the assembly, whose rule it is;
   the values are judged by `circle.disclosure_flaw` as the motion is
-  proposed, never here. It writes nothing: the circle
+  proposed, never here. A withholding ends the disclosure rule in force
+  on the verdict date and nothing else: one naming any other policy,
+  put on another circle's page, or put where no rule stands is refused
+  before anything is proposed, by `motion.withhold_flaw`, its reason
+  naming the rule in force to name instead. It writes nothing: the circle
   page's `put` is `membership-motion`'s, which proposes it and
   fixes its roll in one write, as only the graft holding the roll can.
   The writes that carry a passing motion out are
@@ -435,9 +439,11 @@ from another, or use what they know outside the books. Below, its form proposes 
 motion of the assembly, with a deadline and why, prefilled with those
 in force or else the defaults, posted to the `put` membership-motion
 serves as `disclose`; and where a rule stands, a second proposes
-ending it, `withhold`. A refusal, a value outside its range among
-them, is the SQL's, saying what would fix it. No other circle's page
-shows Open books.
+ending it, `withhold`, which ends that rule and nothing else. A
+refusal, a value outside its range among them, or a withholding that
+names another policy, is put on another circle's page or finds no rule
+standing, is the SQL's, saying what would fix it. No other circle's
+page shows Open books.
 
 ## Grafts
 

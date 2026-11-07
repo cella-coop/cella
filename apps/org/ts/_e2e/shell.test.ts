@@ -325,6 +325,26 @@ test("the assembly's page says what open books shares and what each value expose
   assert.ok(made.args.wording.includes('{disclosure_contributors: 7 | more is stricter}') && made.args.wording.includes('{disclosure_two: 70 % | less is stricter}'))
 })
 
+test("withholding open books ends the disclosure rule in force and nothing else: one naming another of the assembly's policies, or put on coordination's page, is refused naming the rule, with nothing proposed", async () => {
+  const { rule, other } = await one<{ rule: string; other: string }>(
+    `SELECT d.policy AS rule,
+            (SELECT p.id FROM policy.policy p WHERE p.circle = 'ag' AND p.id <> d.policy AND p.ends IS NULL ORDER BY p.id LIMIT 1) AS other
+     FROM circle.disclosed('2026-10-31') d`,
+  )
+  assert.ok(rule && other, 'Lanterne holds a disclosure rule and another policy of the assembly')
+  const withholdings = async () => (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.motion WHERE title LIKE 'Share no total%'`)).n
+  const proposed = await withholdings()
+  const withhold = (path: string, policy: string) => act(path, 'put', { kind: 'withhold', 'arg.policy': policy, deadline: '2026-11-14', body: '' }, camille)
+  const another = await withhold('/circles/ag', other)
+  // Turned back before it is signed, so no verdict is spent on it.
+  assert.equal(another.state, 'failed')
+  assert.equal(another.reason, `withholding open books ends the disclosure rule in force, ${rule}, and nothing else, not ${other}: name ${rule}`)
+  const elsewhere = await withhold('/circles/coordination', rule)
+  assert.equal(elsewhere.state, 'failed')
+  assert.match(elsewhere.reason ?? '', /disclosure rule is the assembly's: withhold it on the page of ag, not of coordination/)
+  assert.equal(await withholdings(), proposed, 'nothing is proposed')
+})
+
 test('the log the shell wrote verifies, and its page says so', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')

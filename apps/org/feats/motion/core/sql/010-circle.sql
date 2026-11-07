@@ -86,6 +86,29 @@ BEGIN ATOMIC
   );
 END;
 
+-- What is wrong with withholding open books, put on `circle`'s page and
+-- naming `policy`, on `day`, or null: a withholding ends the disclosure
+-- rule in force that day and nothing else, and is the assembly's, so it
+-- is put on the assembly's page, where a rule stands, naming that rule.
+-- Each refusal names the rule in force to name instead, or that none
+-- stands.
+CREATE FUNCTION motion.withhold_flaw(circle text, policy text, day date) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN withhold_flaw.circle IS DISTINCT FROM circle.assembly()
+      THEN 'open books'' disclosure rule is the assembly''s: withhold it on the page of '
+        || circle.assembly() || ', not of ' || coalesce(withhold_flaw.circle, 'no circle')
+    WHEN d.policy IS NULL
+      THEN 'no disclosure rule stands on ' || withhold_flaw.day || ', so there is none to withhold'
+    WHEN withhold_flaw.policy IS DISTINCT FROM d.policy
+      THEN 'withholding open books ends the disclosure rule in force, ' || d.policy || ', and nothing else, not '
+        || coalesce(withhold_flaw.policy, 'no policy') || ': name ' || d.policy
+  END
+  FROM (SELECT) one
+  LEFT JOIN circle.disclosed(withhold_flaw.day) d ON true;
+END;
+
 -- The rules a motion would adopt that set open books' disclosure values
 -- or publish parts of the structure, each with the days it would apply
 -- were the motion closed at its deadline and the policy it replaces, as

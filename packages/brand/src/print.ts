@@ -220,7 +220,7 @@ const attr = (s: string): string => s.replace(/&/g, '&amp;').replace(/"/g, '&quo
 
 /** The layers of a print over its masks' URLs, for a `.cella-print` or a
     `<cella-print>`, which print.css makes the paper. */
-export const printMarkup = (p: Pick<Print, 'masks'>, urls: string[]): string =>
+export const printMarkup = (p: { masks: { ink: string }[] }, urls: string[]): string =>
   p.masks.map((m, i) => `<span style="--mask: url(&quot;${attr(urls[i])}&quot;); --ink: var(--print-${m.ink})"></span>`).join('')
 
 /** The attributes of a print's container: its shape and how it lays its

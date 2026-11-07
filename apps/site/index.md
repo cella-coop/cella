@@ -66,6 +66,33 @@ renderer hands it:
   label, "AI-generated", in the muted text, which the wrapper always
   prints and no prop removes. A name the diagrams do not list fails the
   build, naming it.
+- **`<Photo name="…" alt="…" print="…" />`** renders the photo of that name
+  from `src/photos/` through the brand's print at build time
+  (`printFile`, [the print](../../packages/brand/index.md#the-print)):
+  `print` names any of `PRINT_STYLES`, `house` the five-ink halftone
+  unset, or `none` for the photo as it is. `alt` is the operator's
+  description in the section's text, used by both the print and the
+  unprinted image. Under it, the credit
+  Unsplash asks for, the `site` entry's photo credit with the
+  photographer's name linked to their profile and "Unsplash" to the
+  photo's page. The credit is always printed; no prop removes it.
+
+## Photos
+
+A photo is vendored, never linked: `cella site photo add <unsplash
+url> [--name NAME]` downloads it into `src/photos/<name>.jpg`, its
+name the photo's slug unset, with a sidecar `src/photos/<name>.json`
+holding what its credit needs: the photographer's name and their
+profile's URL, the photo's page, its Unsplash id and the licence, the
+[Unsplash License](https://unsplash.com/license), which lets the photo
+be modified, as the print does. The two credit links carry
+`utm_source=cella` and `utm_medium=referral`. With an Unsplash access key in
+`UNSPLASH_ACCESS_KEY`, the task reads the photographer through
+Unsplash's API and calls the photo's download endpoint, as the API's
+guidelines ask; with none, it reads the page's public image and asks
+for the name and the profile's URL on the terminal. A page that refuses
+automated reads needs an access key. `cella check site` refuses a photo without its
+sidecar, a sidecar missing any field, and a `<Photo name>` naming none.
 
 ## Whose words
 

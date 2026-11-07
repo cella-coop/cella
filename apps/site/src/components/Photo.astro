@@ -1,0 +1,25 @@
+---
+import { getEntry } from 'astro:content'
+import type { PrintStyleName } from '@cella/brand'
+import '@cella/brand/print.css'
+import { loadPhoto, creditParts } from '../lib/photo'
+
+interface Props { name: string; alt: string; print?: PrintStyleName | 'none' }
+const { name, alt, print = 'house' } = Astro.props
+const { meta, printed, masks, ratio, original } = await loadPhoto(name, print)
+const site = (await getEntry('site', 'site'))!.data
+const { beforeName, between, afterUnsplash } = creditParts(site.photo.credit)
+const referral = (url: string) => { const u = new URL(url); u.searchParams.set('utm_source', 'cella'); u.searchParams.set('utm_medium', 'referral'); return u.href }
+---
+
+<figure class="photo">
+  {printed ? <div class="cella-print" role="img" aria-label={alt} data-over={printed.over} style={ratio} set:html={masks} /> : <img src={original} alt={alt} loading="lazy" />}
+  <figcaption>{beforeName}<a href={referral(meta.photographerUrl)}>{meta.photographer}</a>{between}<a href={referral(meta.photoUrl)}>{site.photo.unsplash}</a>{afterUnsplash}</figcaption>
+</figure>
+
+<style>
+  .photo { margin: 2rem 0; }
+  .photo img, .photo .cella-print { width: 100%; height: auto; }
+  figcaption { margin-top: .5rem; color: var(--text-muted); font-size: var(--t-sm); }
+  a { color: inherit; }
+</style>

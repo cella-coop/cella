@@ -1,7 +1,7 @@
 use std::fs;
 use std::process::Command;
 
-use crate::cli::Site;
+use crate::cli::{Site, SitePhoto};
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line};
 
@@ -23,6 +23,16 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
             println!("built {}", repo.site_dir().join("dist").display());
             Ok(())
         }
+        Site::Photo {
+            command: SitePhoto::Add { url, name },
+        } => {
+            let mut add = repo.node("site-photo.mjs");
+            add.arg(url).arg(repo.site_dir());
+            if let Some(name) = name {
+                add.args(["--name", &name]);
+            }
+            Steps::exec(&mut add)
+        }
     }
 }
 
@@ -40,6 +50,9 @@ pub fn check(repo: &Repo, steps: &Steps) -> Result {
         .arg(repo.root.join("packages/diagrams"))
         .arg(repo.site_dir());
     steps.run("site diagrams", &mut [diagrams], last_line)?;
+    let mut photos = repo.node("site-photo.mjs");
+    photos.args(["--check"]).arg(repo.site_dir());
+    steps.run("site photos", &mut [photos], last_line)?;
     let out = repo
         .data()
         .join(format!("site-check-{}", std::process::id()));

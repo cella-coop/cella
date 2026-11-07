@@ -289,6 +289,21 @@ pub enum Site {
     },
     /// Build the site static into apps/site/dist
     Build,
+    /// Vendor an Unsplash photo with its attribution
+    Photo {
+        #[command(subcommand)]
+        command: SitePhoto,
+    },
+}
+
+#[derive(Subcommand)]
+pub enum SitePhoto {
+    /// Download a photo and record its Unsplash credit
+    Add {
+        url: String,
+        #[arg(long)]
+        name: Option<String>,
+    },
 }
 
 #[derive(Subcommand)]

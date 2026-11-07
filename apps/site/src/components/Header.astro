@@ -118,11 +118,13 @@ const current = (href: string) => {
     width: 2.25rem;
     height: 2.25rem;
     padding: 0.4rem;
-    border: 1px solid var(--line);
     border-radius: var(--radius-control);
-    background: var(--panel);
     cursor: pointer;
     list-style: none;
+  }
+
+  .menu summary:hover {
+    background: var(--hover);
   }
 
   .menu summary::-webkit-details-marker {

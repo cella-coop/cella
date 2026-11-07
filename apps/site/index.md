@@ -15,16 +15,48 @@ feats` enforces.
 It is deployed nowhere. No domain serves it and no host builds it;
 nothing of it goes public until the operator says so.
 
-## The page
+## The pages
 
-One page, `src/pages/index.astro`, in one layout,
-`src/layouts/Base.astro`:
+The site is home, vision, blog, about and contact: one page for each
+entry of the `pages` collection, and one for each post of the blog.
 
-- **the hero**: the mark above the wordmark, the brand's stacked
-  lockup taken inline so its name is in the text's colour, and one line
-  under it;
-- **the sections**: one for each entry of the `sections` collection,
-  in the order its `order` gives, each its heading and its body.
+| Route | File | What |
+|---|---|---|
+| `/` | `src/pages/index.astro` | the `home` page: its hero at full size, then its sections |
+| `/<name>` | `src/pages/[page].astro` | every other page but `blog`: its hero, then its sections |
+| `/blog/` | `src/pages/blog/index.astro` | the `blog` page's hero, then the posts newest first |
+| `/blog/<name>/` | `src/pages/blog/[post].astro` | one post: its title, date and authors, its body |
+
+Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
+
+- **the header**, sticky: the brand's lockup inline, linking home; the
+  `site` entry's links, the current page's marked; the theme toggle; the
+  site's action as a button. On a narrow screen the links fold into a
+  menu under Phosphor's `list` icon, a `<details>` with no script.
+- **the hero**: an eyebrow, the heading, a lede, two actions and a
+  figure beside them, each but the heading optional. Home's is large and
+  sits on the brand's five inks; every other page's is small.
+- **the sections**: the page's, from `sections/<page>/`, in their order,
+  each laid out by its kind:
+
+  | Kind | Layout |
+  |---|---|
+  | `prose` | its body in a readable column, the default |
+  | `features` | its heading and body centred over a grid of cards, each an icon, a title and a line |
+  | `steps` | the same over its items numbered in a row |
+  | `split` | its body beside its figure, on the side `side` gives |
+  | `cta` | a band in the accent's ink: its body and its action |
+
+- **the footer**: the mark, the site's closing line, its links and the
+  theme toggle again.
+
+The layout sets the theme the visitor chose before the first paint,
+from `localStorage`; with none it follows the system's, as the tokens
+do. The toggle shows a moon in the light theme and a sun in the dark,
+both Phosphor duotone; a press wears the other theme and remembers it,
+and a press back to the system's theme forgets the choice. Every icon
+the site shows is a Phosphor duotone, through `iconMarkup`
+([its figures](#its-figures)).
 
 ## The text
 
@@ -33,8 +65,14 @@ Every word the site shows lives in its content collections, under
 
 | Collection | What it holds |
 |---|---|
-| `site` | one entry, `site.yaml`: the page's title and description, the hero's line, and the labels the site's components print, the mark a diagram wears and the credit under a photo among them |
-| `sections` | one MDX file a section, `<id>.mdx`: its `heading` and its `order` in the frontmatter, its body below |
+| `site` | one entry, `site.yaml`: what every page shares, the site's title, description and tab title, the header's links, the menu's label and the action, the theme toggle's label, the footer, the blog's labels, and the labels the site's components print, the mark a diagram wears and the credit under a photo among them |
+| `pages` | one YAML file a page, `<name>.yaml`: its title, its description and its hero; `home` is `/` and `blog` heads the blog |
+| `sections` | one MDX file a section, `<page>/<id>.mdx`: its `heading`, `order` and `kind` in the frontmatter, with its eyebrow, items, figure, side and action as its kind uses them, its body below |
+| `blog` | one MDX file a post, `<name>.mdx`: its title, summary, date, authors and whether it is a draft, which shows in the dev server and is left out of the build |
+
+A hero or a section names its figure in its frontmatter, `{ diagram:
+<name> }` or `{ photo: <name>, alt: …, print: … }`, and a card its
+icon by Phosphor's name and a role, as `<Icon>` takes them.
 
 A page or a layout holds structure and no prose: it reads the
 collections and lays them out. `cella check site` refuses a page,
@@ -160,6 +198,6 @@ head's committer, which any agent sets.
 |---|---|
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change, the brand's files among them |
 | `cella site build` | the static site into `apps/site/dist`, its pages, its styles and the brand's fonts and images, ready for any static host |
-| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking names used in MDX), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
+| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text names, a `<Diagram name>` in an MDX body or a figure's `diagram:` in a page or a section's frontmatter), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 
 `dist/` and Astro's `.astro/` are ignored by git.

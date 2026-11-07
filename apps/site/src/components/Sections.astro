@@ -1,0 +1,18 @@
+---
+// A page's sections, in their order, each with the site's figures handed
+// to its body.
+import { sectionsOf } from '../lib/content'
+import { figures } from './figures'
+import Section from './Section.astro'
+
+const { page } = Astro.props as { page: string }
+const sections = await sectionsOf(page)
+---
+
+{
+  sections.map(({ id, data, Content }) => (
+    <Section id={id} {...data}>
+      <Content components={figures} />
+    </Section>
+  ))
+}

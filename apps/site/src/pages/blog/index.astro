@@ -1,0 +1,79 @@
+---
+// The blog's index: the blog page's hero, then every post newest first,
+// its date, title and summary.
+import Page from '../../layouts/Page.astro'
+import { dated, pageData, posts, siteData } from '../../lib/content'
+
+const page = await pageData('blog')
+const site = await siteData()
+const all = await posts()
+---
+
+<Page {...page}>
+  <section class="wrap list">
+    {
+      all.length === 0 ? (
+        <p class="empty">{site.blog.empty}</p>
+      ) : (
+        <ol role="list">
+          {all.map((p) => (
+            <li>
+              <a href={`/blog/${p.id}/`}>
+                <time datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
+                <h2>{p.data.title}</h2>
+                <p>{p.data.description}</p>
+              </a>
+            </li>
+          ))}
+        </ol>
+      )
+    }
+  </section>
+</Page>
+
+<style>
+  .list {
+    max-width: 48rem;
+    padding-block: 2rem 6rem;
+  }
+
+  ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li + li {
+    border-top: 1px solid var(--line);
+  }
+
+  a {
+    display: block;
+    padding-block: 2rem;
+    text-decoration: none;
+  }
+
+  a:hover h2 {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  time {
+    color: var(--text-subtle);
+    font-size: var(--t-sm);
+  }
+
+  h2 {
+    margin: 0.4rem 0 0.5rem;
+    font-size: var(--t-2xl);
+  }
+
+  p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  .empty {
+    padding-block: 2rem;
+  }
+</style>

@@ -1,0 +1,214 @@
+---
+// One section of the page, laid out by its kind (content.config.ts): its
+// eyebrow and heading, its body, and what its kind adds: a grid of cards,
+// numbered steps, a figure beside the text, or a band with an action.
+import Button from './Button.astro'
+import Icon from './Icon.astro'
+import Showcase from './Showcase.astro'
+import type { IconRole } from '../lib/icon'
+
+type Link = { label: string; href: string }
+type Item = { icon?: string; role?: IconRole; title: string; body: string }
+interface Props {
+  id: string
+  heading: string
+  kind: 'prose' | 'features' | 'steps' | 'split' | 'cta'
+  eyebrow?: string
+  items: Item[]
+  figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+  side: 'start' | 'end'
+  action?: Link
+}
+
+const { id, heading, kind, eyebrow, items, figure, side, action } = Astro.props
+const labelled = `${id}-heading`
+---
+
+<section id={id} class="section" data-kind={kind} data-side={side} aria-labelledby={labelled}>
+  <div class="wrap">
+    <div class="inner">
+      <div class="head">
+        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
+        <h2 id={labelled}>{heading}</h2>
+        <div class="body"><slot /></div>
+        {action && <div class="action"><Button href={action.href}>{action.label}</Button></div>}
+      </div>
+      {
+        kind === 'split' && figure && (
+          <div class="figure">
+            <Showcase figure={figure} />
+          </div>
+        )
+      }
+      {
+        (kind === 'features' || kind === 'steps') && items.length > 0 && (
+          <ol class="items" role="list">
+            {items.map((i) => (
+              <li class="item">
+                {i.icon && <Icon name={i.icon} role={i.role} />}
+                <h3>{i.title}</h3>
+                <p>{i.body}</p>
+              </li>
+            ))}
+          </ol>
+        )
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    padding-block: clamp(4rem, 10vh, 7rem);
+  }
+
+  .section + :global(.section) {
+    border-top: 1px solid var(--line);
+  }
+
+  h2 {
+    margin: 0;
+    font-size: clamp(var(--t-3xl), 4vw, calc(var(--t-4xl) * 1.3));
+  }
+
+  .body {
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: var(--t-lg);
+  }
+
+  .body > :global(:first-child) {
+    margin-top: 0;
+  }
+
+  .body > :global(:last-child) {
+    margin-bottom: 0;
+  }
+
+  .action {
+    margin-top: 2rem;
+  }
+
+  /* prose: one readable column */
+  .section[data-kind='prose'] .inner {
+    max-width: 44rem;
+  }
+
+  /* features and steps: a centred head over the items */
+  .section[data-kind='features'] .head,
+  .section[data-kind='steps'] .head {
+    max-width: 44rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .items {
+    display: grid;
+    gap: 1.25rem;
+    margin: 3rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .section[data-kind='features'] .items {
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  }
+
+  .section[data-kind='features'] .item {
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+  }
+
+  .item :global(.icon) {
+    width: 2.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .item h3 {
+    margin: 0 0 0.5rem;
+    font-size: var(--t-xl);
+  }
+
+  .item p {
+    margin: 0;
+    color: var(--text-muted);
+  }
+
+  .section[data-kind='steps'] .items {
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    counter-reset: step;
+  }
+
+  .section[data-kind='steps'] .item {
+    counter-increment: step;
+    padding-top: 1.25rem;
+    border-top: 2px solid var(--text);
+  }
+
+  .section[data-kind='steps'] .item::before {
+    content: counter(step, decimal-leading-zero);
+    display: block;
+    margin-bottom: 0.75rem;
+    color: var(--text-subtle);
+    font-family: var(--font-mono);
+    font-size: var(--t-sm);
+  }
+
+  /* split: the text beside its figure */
+  .section[data-kind='split'] .inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: 4rem;
+    align-items: center;
+  }
+
+  .section[data-kind='split'][data-side='start'] .figure {
+    order: -1;
+  }
+
+  .section[data-kind='split'][data-side='start'] .inner {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  }
+
+  .figure :global(figure) {
+    margin: 0;
+  }
+
+  /* cta: a band in the accent's ink */
+  .section[data-kind='cta'] .inner {
+    padding: clamp(2.5rem, 6vw, 4.5rem);
+    border-radius: calc(var(--radius) * 1.5);
+    background: var(--accent-fill);
+    color: var(--on-accent);
+    text-align: center;
+  }
+
+  .section[data-kind='cta'] .head {
+    max-width: 40rem;
+    margin-inline: auto;
+  }
+
+  .section[data-kind='cta'] .body {
+    color: inherit;
+    opacity: 0.8;
+  }
+
+  .section[data-kind='cta'] .action :global(.button) {
+    background: var(--on-accent);
+    color: var(--accent-fill);
+  }
+
+  @media (max-width: 56rem) {
+    .section[data-kind='split'] .inner,
+    .section[data-kind='split'][data-side='start'] .inner {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2.5rem;
+    }
+
+    .section[data-kind='split'][data-side='start'] .figure {
+      order: 0;
+    }
+  }
+</style>

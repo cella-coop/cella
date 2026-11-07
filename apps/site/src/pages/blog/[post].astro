@@ -1,0 +1,57 @@
+---
+// One post at `/blog/<name>/`: its title as the hero, its date and
+// authors, its body in the prose column, and the way back to the index.
+import { render } from 'astro:content'
+import { figures } from '../../components/figures'
+import Page from '../../layouts/Page.astro'
+import { dated, posts, siteData } from '../../lib/content'
+
+export async function getStaticPaths() {
+  return (await posts()).map((p) => ({ params: { post: p.id }, props: { post: p } }))
+}
+
+const { post } = Astro.props
+const { Content } = await render(post)
+const site = await siteData()
+---
+
+<Page title={post.data.title} description={post.data.description} hero={{ heading: post.data.title, lede: post.data.description, eyebrow: dated(post.data.date) }}>
+  <article class="wrap prose">
+    {
+      post.data.authors.length > 0 && (
+        <ul class="authors" role="list">
+          {post.data.authors.map((a) => (
+            <li>{a}</li>
+          ))}
+        </ul>
+      )
+    }
+    <Content components={figures} />
+    <p class="back"><a href="/blog/">{site.blog.back}</a></p>
+  </article>
+</Page>
+
+<style>
+  article {
+    max-width: 44rem;
+    padding-block: 1rem 6rem;
+  }
+
+  .authors {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 0 2.5rem;
+    padding: 0;
+    color: var(--text-muted);
+    list-style: none;
+  }
+
+  .authors li + li::before {
+    content: ', ';
+  }
+
+  .back {
+    margin-top: 4rem;
+    color: var(--text-muted);
+  }
+</style>

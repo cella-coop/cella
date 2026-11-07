@@ -1,0 +1,20 @@
+---
+// Every page of the pages collection but home and the blog's index, at
+// `/<name>`: its hero, then its sections.
+import { getCollection } from 'astro:content'
+import Sections from '../components/Sections.astro'
+import Page from '../layouts/Page.astro'
+
+export async function getStaticPaths() {
+  return (await getCollection('pages'))
+    .filter((p) => p.id !== 'home' && p.id !== 'blog')
+    .map((p) => ({ params: { page: p.id }, props: { data: p.data } }))
+}
+
+const { page } = Astro.params
+const { data } = Astro.props
+---
+
+<Page {...data}>
+  <Sections page={page} />
+</Page>

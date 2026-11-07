@@ -1,0 +1,172 @@
+---
+// The header, sticky at the top: the brand's lockup linking home, the
+// site's links to its sections, the theme toggle and the site's action.
+import lockup from '@cella/brand/lockup.svg?raw'
+import { iconMarkup } from '../lib/icon'
+import Button from './Button.astro'
+import ThemeToggle from './ThemeToggle.astro'
+
+type Link = { label: string; href: string }
+interface Props {
+  title: string
+  nav: Link[]
+  action?: Link
+  toggle: string
+  menu: string
+}
+
+const { title, nav, action, toggle, menu } = Astro.props
+const here = Astro.url.pathname.replace(/\/$/, '')
+const current = (href: string) => {
+  const to = href.replace(/\/$/, '')
+  return to !== '' && (here === to || here.startsWith(`${to}/`))
+}
+---
+
+<header class="header">
+  <div class="wrap bar">
+    <a class="home" href="/" aria-label={title} set:html={lockup} />
+    <nav aria-label={title}>
+      {
+        nav.map((l) => (
+          <a href={l.href} aria-current={current(l.href) ? 'page' : undefined}>
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+    <div class="tools">
+      <ThemeToggle label={toggle} />
+      {action && <Button href={action.href}>{action.label}</Button>}
+      {
+        nav.length > 0 && (
+          <details class="menu">
+            <summary aria-label={menu} set:html={iconMarkup('list', 'accent')} />
+            <nav aria-label={menu}>
+              {nav.map((l) => (
+                <a href={l.href} aria-current={current(l.href) ? 'page' : undefined}>
+                  {l.label}
+                </a>
+              ))}
+            </nav>
+          </details>
+        )
+      }
+    </div>
+  </div>
+</header>
+
+<style>
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid color-mix(in oklch, var(--line) 60%, transparent);
+    background: color-mix(in oklch, var(--ground) 82%, transparent);
+    backdrop-filter: blur(12px) saturate(1.2);
+  }
+
+  .bar {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    height: 4rem;
+  }
+
+  .home {
+    display: flex;
+    color: var(--text);
+  }
+
+  .home :global(svg) {
+    width: auto;
+    height: 1.6rem;
+  }
+
+  .bar > nav {
+    display: flex;
+    gap: 1.5rem;
+    margin-inline-start: auto;
+  }
+
+  /* On a narrow screen the links fold into a menu under a list icon */
+  .menu {
+    display: none;
+    position: relative;
+  }
+
+  .menu summary {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0.4rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-control);
+    background: var(--panel);
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .menu summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu[open] summary {
+    background: var(--hover);
+  }
+
+  .menu nav {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    display: grid;
+    min-width: 12rem;
+    padding: 0.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    box-shadow: var(--shadow-float);
+  }
+
+  .menu nav a {
+    padding: 0.6rem 0.75rem;
+    border-radius: var(--radius-control);
+  }
+
+  .menu nav a:hover {
+    background: var(--hover);
+  }
+
+  nav a {
+    color: var(--text-muted);
+    font-size: var(--t-md);
+    text-decoration: none;
+    transition: color 120ms var(--ease);
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--text);
+  }
+
+  .tools {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  @media (max-width: 48rem) {
+    .bar > nav {
+      display: none;
+    }
+
+    .menu {
+      display: block;
+    }
+
+    .tools {
+      margin-inline-start: auto;
+    }
+  }
+</style>

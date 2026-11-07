@@ -36,9 +36,9 @@ test('today\'s tree passes: every word the site shows is in its collections', as
 })
 
 test('a heading planted in index.astro fails, named by its file and line', async () => {
-  const line = page.split('\n').findIndex((l) => l.includes('<main>')) + 2
+  const line = page.split('\n').findIndex((l) => l.includes('<Sections')) + 1
   const found = await planted((dir) =>
-    writeFileSync(join(dir, 'src/pages/index.astro'), page.replace('<main>', '<main>\n    <h2>Join</h2>')),
+    writeFileSync(join(dir, 'src/pages/index.astro'), page.replace('<Sections', '<h2>Join</h2>\n  <Sections')),
   )
   assert.deepEqual(found, [`src/pages/index.astro:${line}: the text "Join" is copy`])
 })

@@ -26,17 +26,28 @@ export function check(dir, parse, site) {
   for (const file of registered) if (!files.includes(file)) errors.push(`src/index.ts: missing ${file}`)
   // The registry's keys must name exactly their files, including when aliases are used.
   for (const file of files) if (!source.includes(`'${file.slice(0, -7)}':`)) errors.push(`${file}: registry key must match filename`)
+  // Every diagram the text names: a <Diagram name> in an MDX body, or a
+  // figure's `diagram:` in a page's YAML or a section's frontmatter.
   if (site) {
-    const sections = join(site, 'src/content/sections')
-    for (const file of readdirSync(sections).filter((name) => name.endsWith('.mdx'))) {
-      const text = readFileSync(join(sections, file), 'utf8')
-      for (const match of text.matchAll(/<Diagram\s+name=["']([^"']+)["']/g)) {
+    const content = join(site, 'src/content')
+    for (const file of walk(content).filter((name) => /\.(mdx|ya?ml)$/.test(name))) {
+      const text = readFileSync(join(content, file), 'utf8')
+      const named = [
+        ...text.matchAll(/<Diagram\s+name=["']([^"']+)["']/g),
+        ...text.matchAll(/\bdiagram:[ \t]*["']?([a-z0-9-]+)["']?/g),
+      ]
+      for (const match of named) {
         if (!files.includes(`${match[1]}.svelte`)) errors.push(`${file}: unknown diagram ${match[1]}`)
       }
     }
   }
   return errors
 }
+
+const walk = (dir, at = '') =>
+  readdirSync(join(dir, at), { withFileTypes: true }).flatMap((e) =>
+    e.isDirectory() ? walk(dir, join(at, e.name)) : [join(at, e.name)],
+  )
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const dir = resolve(process.argv[2] ?? 'packages/diagrams')

@@ -1,0 +1,156 @@
+---
+// The hero: an eyebrow, the page's heading and its lede, its two actions,
+// and the figure it names beside them; the brand's five inks under it.
+import Button from './Button.astro'
+import Showcase from './Showcase.astro'
+
+type Link = { label: string; href: string }
+interface Props {
+  hero: {
+    eyebrow?: string
+    heading: string
+    lede?: string
+    primary?: Link
+    secondary?: Link
+    figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+  }
+  size?: 'large' | 'small'
+}
+
+const { hero, size = 'large' } = Astro.props
+---
+
+<section class="hero" id="top" data-figure={hero.figure ? 'yes' : 'no'} data-size={size}>
+  <div class="wrap grid">
+    <div class="copy">
+      {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
+      <h1>{hero.heading}</h1>
+      {hero.lede && <p class="lede">{hero.lede}</p>}
+      {
+        (hero.primary || hero.secondary) && (
+          <div class="actions">
+            {hero.primary && <Button href={hero.primary.href}>{hero.primary.label}</Button>}
+            {hero.secondary && (
+              <Button href={hero.secondary.href} variant={'secondary'}>
+                {hero.secondary.label}
+              </Button>
+            )}
+          </div>
+        )
+      }
+    </div>
+    {
+      hero.figure && (
+        <div class="figure">
+          <Showcase figure={hero.figure} />
+        </div>
+      )
+    }
+  </div>
+  <div class="inks" aria-hidden="true"><i /><i /><i /><i /><i /></div>
+</section>
+
+<style>
+  .hero {
+    position: relative;
+    padding-block: clamp(4rem, 12vh, 8rem) clamp(3rem, 9vh, 6rem);
+    overflow: hidden;
+  }
+
+  .grid {
+    display: grid;
+    gap: 3rem;
+    align-items: center;
+  }
+
+  .hero[data-figure='yes'] .grid {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  }
+
+  .hero[data-figure='no'] .copy {
+    max-width: 48rem;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(var(--t-4xl), 6vw, calc(var(--t-4xl) * 2));
+  }
+
+  .hero[data-size='small'] {
+    padding-block: clamp(3rem, 9vh, 5.5rem) clamp(2rem, 6vh, 3.5rem);
+  }
+
+  .hero[data-size='small'] h1 {
+    font-size: clamp(var(--t-3xl), 4.5vw, calc(var(--t-4xl) * 1.4));
+  }
+
+  .hero[data-size='small'] .inks {
+    display: none;
+  }
+
+  .lede {
+    margin: 1.5rem 0 0;
+    max-width: 36rem;
+    color: var(--text-muted);
+    font-size: var(--t-xl);
+  }
+
+  .hero[data-figure='no'] .lede {
+    margin-inline: auto;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+
+  .hero[data-figure='no'] .actions {
+    justify-content: center;
+  }
+
+  .figure :global(figure) {
+    margin: 0;
+  }
+
+  .inks {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    height: 3px;
+  }
+
+  .inks i {
+    flex: 1;
+  }
+
+  .inks i:nth-child(1) {
+    background: var(--p0);
+  }
+
+  .inks i:nth-child(2) {
+    background: var(--p1);
+  }
+
+  .inks i:nth-child(3) {
+    background: var(--p2);
+  }
+
+  .inks i:nth-child(4) {
+    background: var(--p3);
+  }
+
+  .inks i:nth-child(5) {
+    background: var(--p4);
+  }
+
+  @media (max-width: 56rem) {
+    .hero[data-figure='yes'] .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

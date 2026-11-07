@@ -1,0 +1,37 @@
+---
+// A page of the site: the header with the page marked in its links, the
+// page's hero, its body and the footer.
+import Footer from '../components/Footer.astro'
+import Header from '../components/Header.astro'
+import Hero from '../components/Hero.astro'
+import { siteData } from '../lib/content'
+import Base from './Base.astro'
+
+type Link = { label: string; href: string }
+interface Props {
+  title: string
+  description: string
+  hero: {
+    eyebrow?: string
+    heading: string
+    lede?: string
+    primary?: Link
+    secondary?: Link
+    figure?: { diagram: string } | { photo: string; alt: string; print?: string }
+  }
+  size?: 'large' | 'small'
+}
+
+const { title, description, hero, size = 'small' } = Astro.props
+const site = await siteData()
+const full = title === site.title ? title : site.titled.replace('{page}', title).replace('{site}', site.title)
+---
+
+<Base title={full} description={description}>
+  <Header title={site.title} nav={site.nav} action={site.action} toggle={site.theme.toggle} menu={site.menu} />
+  <main>
+    <Hero hero={hero} size={size} />
+    <slot />
+  </main>
+  <Footer footer={site.footer} toggle={site.theme.toggle} />
+</Base>

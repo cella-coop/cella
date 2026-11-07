@@ -1,7 +1,8 @@
 ---
-// The site's one layout: the brand's faces and tokens, its favicon, and
-// the ground with its paper. It reads the brand's roles alone and names
-// no colour or face of its own.
+// The site's one layout: the brand's faces and tokens, its favicon, the
+// ground with its paper, and the theme the visitor chose, set before the
+// first paint. It reads the brand's roles alone and names no colour or
+// face of its own.
 import '@cella/brand/fonts.css'
 import '@cella/brand/tokens.css'
 import favicon from '@cella/brand/favicon.svg?url'
@@ -22,6 +23,15 @@ const { title, description } = Astro.props
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{title}</title>
+    <script is:inline>
+      // A theme the visitor chose overrides the system's; none, it follows.
+      try {
+        const t = localStorage.getItem('theme')
+        if (t === 'light' || t === 'dark') {
+          document.documentElement.dataset.theme = t
+        }
+      } catch {}
+    </script>
   </head>
   <body>
     <slot />
@@ -45,10 +55,19 @@ const { title, description } = Astro.props
     font-variation-settings: var(--fvs-text);
     font-size: var(--t-md);
     line-height: var(--leading);
+    scroll-behavior: smooth;
+    scroll-padding-top: 5rem;
   }
 
   body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
     margin: 0;
+  }
+
+  main {
+    flex: 1;
   }
 
   h1,
@@ -58,6 +77,72 @@ const { title, description } = Astro.props
     font-weight: var(--fw-display);
     font-variation-settings: var(--fvs-display);
     letter-spacing: var(--track-display);
-    line-height: 1.15;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  a {
+    color: inherit;
+  }
+
+  .wrap {
+    width: 100%;
+    max-width: 72rem;
+    margin-inline: auto;
+    padding-inline: 1.5rem;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    margin: 0 0 1rem;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* A post's or a prose section's body */
+  .prose {
+    font-size: var(--t-lg);
+  }
+
+  .prose h2 {
+    margin: 2.5em 0 0.6em;
+    font-size: var(--t-2xl);
+  }
+
+  .prose h3 {
+    margin: 2em 0 0.5em;
+    font-size: var(--t-xl);
+  }
+
+  .prose blockquote {
+    margin: 1.5em 0;
+    padding-inline-start: 1.25rem;
+    border-inline-start: 3px solid var(--line);
+    color: var(--text-muted);
+  }
+
+  .prose code {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--sunk);
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+  }
+
+  .prose a {
+    text-underline-offset: 0.2em;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 </style>

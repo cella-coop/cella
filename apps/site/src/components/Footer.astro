@@ -1,0 +1,84 @@
+---
+// The footer: the brand's mark, the site's closing line, its links, and
+// the theme toggle again at the page's end.
+import mark from '@cella/brand/mark.svg?raw'
+import ThemeToggle from './ThemeToggle.astro'
+
+type Link = { label: string; href: string }
+interface Props {
+  footer: { line: string; links: Link[] }
+  toggle: string
+}
+
+const { footer, toggle } = Astro.props
+---
+
+<footer class="footer">
+  <div class="wrap bar">
+    <span class="mark" aria-hidden="true" set:html={mark} />
+    <p class="line">{footer.line}</p>
+    {
+      footer.links.length > 0 && (
+        <ul class="links" role="list">
+          {footer.links.map((l) => (
+            <li>
+              <a href={l.href}>{l.label}</a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    <ThemeToggle label={toggle} />
+  </div>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--line);
+    padding-block: 2.5rem;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+
+  .bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+
+  .mark :global(svg) {
+    display: block;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .line {
+    margin: 0;
+  }
+
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    margin: 0 0 0 auto;
+    padding: 0;
+    list-style: none;
+  }
+
+  .links a {
+    text-decoration: none;
+  }
+
+  .links a:hover {
+    color: var(--text);
+  }
+
+  .links + :global(.toggle) {
+    margin-inline-start: 0;
+  }
+
+  .bar > :global(.toggle:only-of-type) {
+    margin-inline-start: auto;
+  }
+</style>

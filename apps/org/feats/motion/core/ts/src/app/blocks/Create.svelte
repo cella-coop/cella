@@ -11,12 +11,17 @@
 
   const state = useProposal(() => about)
   const circles = $derived((about.circles ?? []).map((c) => ({ value: c.id, label: c.name })))
+  const authors = $derived([
+    { value: '', label: 'The circle' },
+    ...(about.authors ?? []),
+  ])
   const kinds = $derived([{ value: '', label: 'Nothing beyond its text' }, ...about.kinds.map((k) => ({ value: k.kind, label: k.label }))])
 </script>
 
 <Form action="propose" submit="Propose">
   <Field label="Title" name="title" required wide />
   <Field label="Circle" name="circle" options={circles} placeholder="Choose…" bind:value={state.circle} required />
+  <Field label="Put by" name="author" options={authors} bind:value={state.author} />
   <Field label="Deadline" name="deadline" type="date" required />
   <Field label="Decides" name="kind" options={kinds} bind:value={state.kind} />
   {#each state.fields as f (f.name)}

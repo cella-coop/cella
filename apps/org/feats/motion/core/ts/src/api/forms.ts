@@ -21,6 +21,7 @@ export async function propose(form: Form, db: Db): Promise<Propose> {
   }
   return {
     circle: form.get('circle'),
+    ...(form.get('author') ? { author: form.get('author') } : {}),
     title: form.get('title'),
     deadline: form.get('deadline'),
     body: form.get('body'),

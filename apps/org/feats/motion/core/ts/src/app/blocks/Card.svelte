@@ -3,7 +3,7 @@
   import type { Summary } from '../../models/motion.ts'
 
   // A motion drawn as a card where another slice shows it, inside a
-  // document or a meeting's minutes: its title, circle, method and where it
+  // document or a meeting's minutes: its title, author, method and where it
   // stands, linking to its page. The slice hands the motions it read.
   let { ref, data }: { ref: string; data: { motions: Summary[] } } = $props()
   const d = $derived(data.motions.find((x) => x.id === ref))
@@ -15,7 +15,7 @@
     <a class="title" href="/motions/{d.id}">{d.title}</a>
     <div class="meta">
       <Badge tone={d.closed ? 'neutral' : 'accent'}>{d.closed ? `closed ${date(d.closed)}` : `open until ${date(d.deadline)}`}</Badge>
-      <span>{d.circle} · {d.method}</span>
+      <span>{d.circle} · put by {d.authorName} · {d.method}</span>
     </div>
   {:else}
     <div class="title">No such motion</div>

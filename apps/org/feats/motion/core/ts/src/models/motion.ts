@@ -119,6 +119,8 @@ export interface Summary {
   id: string
   title: string
   circle: string
+  author: string
+  authorName: string
   method: string
   deadline: string
   closed: string | null
@@ -187,6 +189,7 @@ export interface Offered {
   kinds: Kind[]
   procedures: Procedure[]
   circles?: { id: string; name: string; procedure: string }[]
+  authors?: Choice[]
   // The lists of choices the kinds' arguments name, by key.
   [options: string]: unknown
 }

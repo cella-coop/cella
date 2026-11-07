@@ -5,6 +5,7 @@ import type { Arg, Choice, Offered } from '../models/motion.ts'
 // the motion's requirements fix the one it is decided by.
 export class ProposalState {
   circle = $state('')
+  author = $state('')
   kind = $state('')
   readonly #offered: () => Offered
 

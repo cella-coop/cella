@@ -92,8 +92,21 @@ export async function procedures(db: Db): Promise<Procedure[]> {
 // a picker that searches replaces the list when they are many.
 export async function summaries(db: Db): Promise<Summary[]> {
   const { rows } = await db.query<Summary>(
-    `SELECT id, title, circle, method, to_char(deadline, 'YYYY-MM-DD') AS deadline, to_char(closed, 'YYYY-MM-DD') AS closed
-     FROM motion.motion ORDER BY proposed DESC, id DESC`,
+    `SELECT ${columns} FROM motion.motion ORDER BY proposed DESC, id DESC`,
+  )
+  return rows
+}
+
+// Roles the acting member holds today, named for the New form. The
+// motion's author guard checks the tenure again when the write settles.
+export async function authors(db: Db, actor: string | null): Promise<{ value: string; label: string }[]> {
+  if (!actor) return []
+  const { rows } = await db.query<{ value: string; label: string }>(
+    `SELECT DISTINCT r.id AS value, r.name AS label
+     FROM circle.tenure t JOIN circle.role r ON r.id = t.role
+     WHERE t.holder = $1 AND (t.since IS NULL OR t.since <= cella.verdict_date())
+       AND (t.until IS NULL OR t.until > cella.verdict_date())
+     ORDER BY label, value`, [actor],
   )
   return rows
 }

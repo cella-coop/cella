@@ -1,7 +1,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { defaults, kinds as policyKinds, register } from '@cella/org-policy'
 import { close, post, propose, vote } from '../handlers/index.ts'
-import { motion, motions, kinds, listing, procedures } from '../drivers/motion.ts'
+import { authors, motion, motions, kinds, listing, procedures } from '../drivers/motion.ts'
 import type { Stance } from '../models/motion.ts'
 import * as forms from './forms.ts'
 
@@ -13,8 +13,9 @@ export const slice: Slice = {
   collections: {
     motions: {
       list: listing,
-      about: async (db) => ({
+      about: async (db, actor) => ({
         kinds: await kinds(db),
+        authors: await authors(db, actor ?? null),
         procedures: await procedures(db),
         // The choices a policy's kind, what it replaces, the procedure that
         // alone changes it and the default it takes are offered from.

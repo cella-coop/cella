@@ -168,10 +168,10 @@ assembly, and no one opens a candidacy for another.
   by the extraordinary assembly's procedure: only a motion decided by it,
   or by a stricter one, replaces or ends them. `m-2021-001/76`, `The
   {circle: ag} circle holds {power: create-circle}, to create a circle,
-  by motion`, is how a circle is made, and a circle the assembly creates
+  by motion`, is how a circle is made, and the policy after it, `The {circle: ag} circle holds {power: amend-circle}, to change a circle's name, purpose or procedure, by motion`, how one is changed, and a circle the assembly creates
   holds Lanterne's default bundle from that day, the mandates on the
   participant, lead and secretary roles. The last three of the founding
-  motion, `m-2021-001/77` to `/79`, are how Lanterne reads: `The {role:
+  motion, `m-2021-001/78` to `/80`, are how Lanterne reads: `The {role:
   participant} role holds {power: read}, to read the records of its
   {scope: own} circle`, and of the `{scope: ag}` circle, the whole
   co-op's; and open books, `The {role: member} role holds {power: read},
@@ -192,9 +192,9 @@ assembly, and no one opens a candidacy for another.
   20 | more is stricter} shares`, and `m-2021-001/44`, the work share
   `{patronage_salary: 100 % | more is stricter}` by pay; and the law's
   floors on the surplus, `m-2021-001/72`, at least `{work_share: 25 % |
-  more is stricter}` to all the employees, and `/75`, at least
+  more is stricter}` to all the employees, and `/73`, at least
   `{reserve_share: 15 % | more is stricter}` to the reserves, named for no
-  feat. Its last, `m-2021-001/80`, is open books' disclosure rule, the
+  feat. Its last, `m-2021-001/81`, is open books' disclosure rule, the
   disclosure study's defaults, copied by core into `circle.disclosure`:
   a total of members' own figures is shared with every member where at
   least `{disclosure_contributors: 5 | more is stricter}` people put into
@@ -215,8 +215,8 @@ assembly, and no one opens a candidacy for another.
   each policy that is one names it (`takes = "scop-sarl-fr:ordinary"`),
   worded and protected as it reads. They are its six procedures, the
   participant's mandates (`/45`, `/46`), the assembly's collective
-  mandates (`/47` to `/56`), its rights (`/10`, `/62` to `/73`, `/76`, `/77`) and the
-  floors on the surplus (`/74`, `/75`): 35 policies. Its role mandates,
+  mandates (`/47` to `/55` but `/50`, `/76`, `/77`), its rights (`/10`, `/50`, `/60` to `/71`, `/74`, `/75`) and the
+  floors on the surplus (`/72`, `/73`): 36 policies. Its role mandates,
   coordination's collective mandates and its capital and work share terms
   are its own. It has left none of the defaults, so its statutes say they
   leave none.

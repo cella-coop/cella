@@ -83,6 +83,27 @@ export interface Create {
   motion: string
 }
 
+// What a circle may be changed in, by the motion that amends it: its
+// name, its purpose and its procedure, each left as it is where none is
+// given.
+export interface Terms {
+  name?: string | null
+  purpose?: string | null
+  procedure?: Procedure | null
+}
+
+// A circle to amend, by the motion that changes it, which the write cites.
+export interface Amend extends Terms {
+  circle: string
+  motion: string
+}
+
+// The circle amended and what each term it changed was.
+export interface Amended {
+  circle: string
+  was: Terms
+}
+
 // The circle created and the default bundle it holds from its first day:
 // the mandates on the roles every circle has, in force that day, by id.
 export interface Created {

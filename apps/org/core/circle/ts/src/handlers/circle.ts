@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Create, Created } from '../models/circle.ts'
+import type { Amend, Amended, Create, Created, Terms } from '../models/circle.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -21,5 +21,28 @@ export async function create(input: Create, deps: Deps): Out<'circle:circle:crea
       return { circle: input.id, bundle: rows[0].bundle.map(Number) }
     },
     payload: (v) => ({ circle: v.circle, name: input.name, purpose: input.purpose, bundle: v.bundle, motion: input.motion }),
+  })
+}
+
+const terms = ['name', 'purpose', 'procedure'] as const
+
+// Amends a circle, citing the motion that changes it: its name, its
+// purpose or its procedure from the verdict date, its id never. Its entry
+// carries each term it changed and what it was.
+export async function amend(input: Amend, deps: Deps): Out<'circle:circle:amend', Amended> {
+  const given: Terms = Object.fromEntries(terms.filter((t) => input[t] !== undefined && input[t] !== null).map((t) => [t, input[t]]))
+  return write(deps, {
+    op: 'circle:circle:amend' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<Required<Terms>>(`SELECT name, purpose, procedure FROM circle.circle WHERE id = $1 FOR UPDATE`, [input.circle])
+      const was: Terms = Object.fromEntries(Object.keys(given).map((t) => [t, rows[0]?.[t as keyof Terms] ?? null]))
+      await tx.query(
+        `UPDATE circle.circle SET name = coalesce($2, name), purpose = coalesce($3, purpose), procedure = coalesce($4, procedure) WHERE id = $1`,
+        [input.circle, given.name ?? null, given.purpose ?? null, given.procedure ?? null],
+      )
+      return { circle: input.circle, was }
+    },
+    payload: (v) => ({ circle: v.circle, ...given, was: v.was, motion: input.motion }),
   })
 }

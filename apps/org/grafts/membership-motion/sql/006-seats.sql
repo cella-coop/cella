@@ -228,3 +228,116 @@ END;
 
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('circle:circle:create', 'membership_motion.creates(jsonb)', 'membership-motion');
+
+-- A circle a motion amends, carried out by core's circle:circle:amend
+-- under the collective mandate `amend-circle`: its id, and any of its new
+-- name, purpose and procedure.
+SELECT motion.register_cite('circle:circle:amend', 'amend-circle', 'membership-motion');
+SELECT motion.register_carries('amend-circle', 'Change a circle', '[{"name": "circle", "label": "Circle", "type": "text"}, {"name": "name", "label": "Name", "type": "text", "optional": true}, {"name": "purpose", "label": "Purpose", "type": "text", "optional": true}, {"name": "procedure", "label": "Procedure", "type": "text", "optional": true}]', 'circle:circle:amend', 'membership-motion');
+
+-- The procedures a circle may decide by on `day`: those built in, and
+-- those a procedure policy in force that day makes.
+CREATE FUNCTION membership_motion.procedures(day date) RETURNS SETOF text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT o.id
+  FROM motion.procedure o
+  LEFT JOIN policy.policy r ON r.id = o.policy
+  WHERE o.policy IS NULL OR (r.applies <= procedures.day AND (r.ends IS NULL OR r.ends > procedures.day))
+  ORDER BY o.id;
+END;
+
+-- The terms of a circle's amendment, `args` as the motion carries them,
+-- judged at the proposal and again as it is written: the circle is one
+-- there is; it changes the name, the purpose or the procedure, and
+-- nothing else; a name given is not blank and no other circle's; a
+-- procedure given is one in force on the verdict date (`procedures`);
+-- and it changes something of `was`, the circle's terms before it.
+CREATE FUNCTION membership_motion.amend_terms(circle text, args jsonb, was jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN c.id IS NULL
+      THEN 'no circle ' || coalesce(amend_terms.circle, 'is named') || ': a motion amends a circle there is, by its id'
+    WHEN x.key IS NOT NULL
+      THEN 'an amendment of ' || c.id || ' changes its name, its purpose or its procedure, not its ' || x.key
+    WHEN NOT (amend_terms.args ?| ARRAY['name', 'purpose', 'procedure'])
+      THEN 'the amendment of ' || c.id || ' gives no new name, purpose or procedure: give at least one'
+    WHEN amend_terms.args ? 'name' AND coalesce(amend_terms.args ->> 'name', '') !~ '\S'
+      THEN 'the amendment of ' || c.id || ' gives it a blank name: give it a name'
+    WHEN o.id IS NOT NULL
+      THEN o.id || ' is named ' || o.name || ' already: give ' || c.id || ' a name no other circle has'
+    WHEN amend_terms.args ? 'procedure' AND (amend_terms.args ->> 'procedure') NOT IN (SELECT membership_motion.procedures(cella.verdict_date()))
+      THEN coalesce(amend_terms.args ->> 'procedure', 'none') || ' is no procedure in force on ' || to_char(cella.verdict_date(), 'YYYY-MM-DD')
+        || ': give ' || c.id || ' one of ' || (SELECT string_agg(q, ', ') FROM membership_motion.procedures(cella.verdict_date()) q)
+    WHEN NOT EXISTS (
+      SELECT FROM jsonb_each(amend_terms.args - 'circle') a WHERE a.value IS DISTINCT FROM amend_terms.was -> a.key
+    ) THEN 'the amendment of ' || c.id || ' changes nothing: it is named ' || c.name || ', for ' || coalesce(nullif(c.purpose, ''), 'no purpose')
+      || ', deciding by ' || c.procedure || ' already; give a term it does not have'
+  END
+  FROM (SELECT amend_terms.circle AS circle) p
+  LEFT JOIN circle.circle c ON c.id = p.circle
+  LEFT JOIN LATERAL (
+    SELECT k.key FROM jsonb_object_keys(amend_terms.args) k(key)
+    WHERE k.key NOT IN ('circle', 'name', 'purpose', 'procedure') ORDER BY k.key LIMIT 1
+  ) x ON true
+  LEFT JOIN LATERAL (
+    SELECT y.id, y.name FROM circle.circle y
+    WHERE y.id <> p.circle AND lower(btrim(y.name)) = lower(btrim(amend_terms.args ->> 'name'))
+    ORDER BY y.id
+    LIMIT 1
+  ) o ON true;
+END;
+
+-- A circle's terms as an amendment reads them, `was`.
+CREATE FUNCTION membership_motion.terms(circle text) RETURNS jsonb
+LANGUAGE sql STABLE
+RETURN (SELECT jsonb_build_object('name', c.name, 'purpose', c.purpose, 'procedure', c.procedure) FROM circle.circle c WHERE c.id = terms.circle);
+
+-- motion:motion:propose — a circle amended is the motion of a circle
+-- that may decide about it (`motion.decides`), on the terms
+-- `amend_terms` judges against the circle as it stands.
+CREATE FUNCTION membership_motion.amend_asks(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT r FROM (
+    SELECT coalesce(
+      membership_motion.amend_terms(m.args ->> 'circle', m.args, membership_motion.terms(m.args ->> 'circle')),
+      CASE WHEN NOT motion.decides(d.circle, m.args ->> 'circle')
+        THEN d.circle || ' may not decide about ' || (m.args ->> 'circle') || ': put its amendment to the assembly, or to another circle holding amend-circle' END
+    ) AS r
+    FROM motion.action m
+    JOIN motion.motion d ON d.id = m.motion
+    WHERE m.motion = payload ->> 'motion' AND m.kind = 'amend-circle'
+    ORDER BY m.n
+  ) x
+  WHERE r IS NOT NULL
+  LIMIT 1;
+END;
+
+-- circle:circle:amend — the circle the write changed is one the cited
+-- motion amends, to the terms its entry carries and the circle now has,
+-- on the terms `amend_terms` judges against what its entry says it was.
+CREATE FUNCTION membership_motion.amends(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN c.id IS NULL THEN 'no circle ' || coalesce(p.circle, 'is named') || ': a motion amends a circle there is, by its id'
+    WHEN d.id IS NULL THEN 'no motion ' || coalesce(p.motion, 'is cited')
+    WHEN NOT EXISTS (
+      SELECT FROM motion.action m
+      WHERE m.motion = d.id AND m.kind = 'amend-circle' AND m.args ->> 'circle' = c.id
+        AND (m.args - 'circle') = p.terms
+        AND NOT EXISTS (SELECT FROM jsonb_each(p.terms) t WHERE t.value IS DISTINCT FROM membership_motion.terms(c.id) -> t.key)
+    ) THEN d.id || ' does not amend ' || c.id || ' to ' || p.terms::text
+    ELSE membership_motion.amend_terms(c.id, p.terms, p.was)
+  END
+  FROM (SELECT payload ->> 'circle' AS circle, payload ->> 'motion' AS motion,
+               payload - ARRAY['circle', 'motion', 'was'] AS terms, payload -> 'was' AS was) p
+  LEFT JOIN circle.circle c ON c.id = p.circle
+  LEFT JOIN motion.motion d ON d.id = p.motion;
+END;
+
+INSERT INTO cella.guard (op, fn, owner) VALUES
+  ('motion:motion:propose', 'membership_motion.amend_asks(jsonb)', 'membership-motion'),
+  ('circle:circle:amend', 'membership_motion.amends(jsonb)', 'membership-motion');

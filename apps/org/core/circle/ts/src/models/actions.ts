@@ -8,6 +8,10 @@ export const actions = {
   // a new circle, by the motion it cites, holding the default bundle from
   // that day; ordered, since the same motion's later actions seat people in it
   'circle:circle:create': ordered({ power: 'create-circle' }),
+  // a circle's name, purpose or procedure, by the motion it cites;
+  // ordered, since the procedure it sets decides the motions put to the
+  // circle after it
+  'circle:circle:amend': ordered({ power: 'amend-circle' }),
   // the circle's channel, for those seated in it
   'circle:circle:message': confluent({ power: 'discuss' }),
   // who holds which role; a seat is given by the motion it cites, such

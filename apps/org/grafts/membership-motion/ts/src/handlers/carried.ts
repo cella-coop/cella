@@ -1,7 +1,7 @@
 import { done, write, type Deps, type Done } from '@cella/org-db'
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import { admitting, exclude, suspend } from '@cella/org-membership/api'
-import { add, create, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
+import { add, amend, create, remove, seatRole, seating, unseatRole } from '@cella/org-circle/api'
 import { circles } from '@cella/org-motion/api'
 
 type Args = Record<string, string | number | undefined>
@@ -51,6 +51,10 @@ const writes: Record<string, { op: Permission; run: (a: Args, motion: string, de
   circle: {
     op: 'circle:circle:create',
     run: (a, motion, deps) => create({ id: String(a.id), name: String(a.name), purpose: text(a.purpose) ?? '', motion }, deps),
+  },
+  'amend-circle': {
+    op: 'circle:circle:amend',
+    run: (a, motion, deps) => amend({ circle: String(a.circle), name: text(a.name), purpose: text(a.purpose), procedure: text(a.procedure), motion }, deps),
   },
   seat: {
     op: 'circle:seat:add',

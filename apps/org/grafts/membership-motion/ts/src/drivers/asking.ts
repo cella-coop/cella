@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Appointing, Decider, Standing } from '../models/asking.ts'
+import type { Amending, Appointing, Decider, Standing } from '../models/asking.ts'
 
 const decider = `json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure)`
 
@@ -57,4 +57,26 @@ export async function appointing(db: Db, circle: string): Promise<Appointing | n
     [circle],
   )
   return { circle, decider: found.rows[0].decider, members: members.rows, roles: roles.rows, seats: seats.rows }
+}
+
+// A circle's terms on its Settings tab, from those in force: its name,
+// purpose and procedure; the procedures in force it may take
+// (`membership_motion.procedures`); the circle that decides its
+// amendment, the assembly unless another holding `amend-circle` may
+// (`motion.decider`), and the deadline asked, two weeks on; and why no
+// write of the reader's changes them, since only a motion amends a
+// circle.
+export async function amending(db: Db, circle: string): Promise<Amending | null> {
+  const { rows } = await db.query<Amending>(
+    `SELECT c.id AS circle, c.name, c.purpose, c.procedure,
+            (SELECT coalesce(json_agg(json_build_object('value', o.id, 'label', o.label) ORDER BY o.label), '[]')
+             FROM motion.procedure o WHERE o.id IN (SELECT membership_motion.procedures(cella.verdict_date()))) AS procedures,
+            json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
+            c.name || '''s name, purpose and procedure change only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write amends a circle' AS refused
+     FROM circle.circle c
+     JOIN circle.circle d ON d.id = motion.decider(c.id, ARRAY['amend-circle'], cella.verdict_date())
+     WHERE c.id = $1`,
+    [circle],
+  )
+  return rows[0] ?? null
 }

@@ -63,7 +63,7 @@ const shown = (text: string, ids: string[]) => ids.filter((id) => text.includes(
 // What `actor` reads of every expense through a saved report's page, and
 // through the port the server hands that page, run as them.
 async function through(id: string, saved: Parameters<typeof custom>[1], actor: string) {
-  const page = await shell.page(`/reports/${id}`, actor)
+  const page = await shell.page(`/reports/${id}?tab=figures`, actor)
   assert.equal(page.status, 200, `${actor} opens ${id}`)
   const rows = (await custom(scoped(analytics.analytics, reader(app, actor)), saved)).custom.result.rows
   return { page: shown(page.text, [...theirs, hers]), port: rows.map((r) => String(r['e.id'])) }

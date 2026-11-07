@@ -235,7 +235,7 @@ test('Yara\'s motion\'s page shows under its close her admission forgone with it
         const page = await context.newPage()
         const errors: string[] = []
         page.on('pageerror', (e) => errors.push(e.message))
-        await page.goto(`${dev.base}/motions/${motions.yara}`)
+        await page.goto(`${dev.base}/motions/${motions.yara}?tab=effects`)
         await page.waitForLoadState('networkidle')
         const section = page.locator('section', { has: page.getByRole('heading', { name: /^Effects of the close/ }) })
         const rows = await section.locator('tbody tr').evaluateAll((trs) => trs.map((tr) => [...tr.querySelectorAll('td')].map((td) => td.textContent?.trim() ?? '')))

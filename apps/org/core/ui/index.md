@@ -243,18 +243,24 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Detail`: the one record page, the same for every collection, as
   Linear's issue page. The content is the record's: its title, large,
   then its free-form content, a document's blocks where its kind holds
-  them, and under a hairline its Activity, what happened to it in order,
-  with its comments and the box that adds one where its kind takes
-  comments (`comment`). Each slice gives its events newest first
+  them, a record's own words where it holds them as text, a circle's
+  purpose or a report's caption (`summary`, in the text face as
+  `Prose`), and under a hairline its Activity, what happened to it in
+  order, with its comments and the box that adds one where its kind
+  takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
   Details panel holds its properties, label and value rows on the
   drawer itself, with no card or panel around them, and under them
   Related; nothing in the drawer is boxed. A record whose structured
   data is central to it puts that data in a tab of its own after the
-  first (`tabs`): a motion's Stances, an invoice's Lines, a period's
-  Entries; the first tab is the content and its Activity, and a kind with no
-  free-form content shows its overview's blocks there. Tabs show as
+  first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
+  circle's Roles, Seats and Policies, a document's Versions, a report's
+  Figures, an invoice's Lines, a period's Entries; the first tab is the
+  content and its Activity, and a kind with no free-form content shows
+  its overview's blocks there. The header's crumb names the record by
+  its kind and reference (`subtitle`, its id), never a sentence about
+  it, which its properties and content say. Tabs show as
   pills in the header when there are two or more, the open one in the
   URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
   bare one in the first, and an extension's blocks join the owner's

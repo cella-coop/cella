@@ -12,7 +12,7 @@ import Custom from './blocks/Custom.svelte'
 // quarters, and the months of the year its span is in; the federation
 // figures' distributed years.
 function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
-  const at = (q: string) => `/reports/${d.report.id}?${q}`
+  const at = (q: string) => `/reports/${d.report.id}?tab=figures&${q}`
   if ((d.report.kind === 'income' || d.report.kind === 'balance') && d.drawn) {
     const s = d.drawn as Sheet
     const year = s.span.id.slice(0, 4)
@@ -31,8 +31,9 @@ function moves(d: Drawn): { label: string; sub?: string; href: string }[] {
 // at, or why it drew nothing.
 const read = (d: Drawn) => (d.failed ? d.failed : d.head ? `read at the log's entry ${d.head.n}` : '')
 
-// The feat's client side: the saved reports, each page drawing its report
-// through the port, and saving a member's own.
+// The feat's client side: the saved reports, each page saying what its
+// report reads and drawing it through the port in its Figures tab, and
+// saving a member's own.
 export const app: App = {
   name: 'report',
   collections: {
@@ -55,14 +56,21 @@ export const app: App = {
       page: {
         eyebrow: 'Report',
         title: (d: Drawn) => d.report.title,
-        subtitle: (d: Drawn) => [d.report.caption, read(d)].filter(Boolean).join('; '),
+        subtitle: (d: Drawn) => d.report.id,
+        summary: (d: Drawn) => [d.report.caption, read(d)].filter(Boolean).join('; '),
         properties: (d: Drawn) => [
           { label: 'Kind', value: d.report.kind, kind: 'badge' },
           { label: 'Read at entry', value: d.head?.n ?? null, kind: 'number' },
           ...(d.report.owner ? [{ label: 'Saved by', value: d.report.owner }, { label: 'Saved on', value: d.report.saved, kind: 'date' as const }] : []),
         ],
         related: moves,
-        blocks: [Statement, Margins, Federation, Custom],
+        // What it reads and when, then what it drew, the data central to it,
+        // in a tab of its own.
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'figures', label: 'Figures' },
+        ],
+        blocks: [Statement, Margins, Federation, Custom].map((block) => ({ tab: 'figures', block })),
       },
     },
   },

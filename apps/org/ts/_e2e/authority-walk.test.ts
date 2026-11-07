@@ -253,7 +253,7 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
   const { grant, change } = await opened()
   await walk('open', async (w) => {
     await w.as(sofia)
-    await w.open('/circles/brand')
+    await w.open('/circles/brand?tab=roles')
     await Promise.all([w.page().waitForURL(`${w.base}/mandates/${chain}`), w.page().locator(`a[href="/mandates/${chain}"]`).first().click()])
     await w.page().waitForLoadState('networkidle')
     assert.match((await section(w.page(), 'Chain').textContent()) ?? '', /this one/, `${w.at}: the chain is drawn`)
@@ -298,7 +298,7 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await w.page().keyboard.press('Escape')
 
     for (const [name, id, says] of [['4-grant', grant, /grants a mandate the assembly issues, a root/], ['4-change', change, /revokes one mandate the same day, the one it replaces/], ['4-revoke', 'm-2026-014', /revokes 3 mandates the same day, the one it ends and every one issued under it/]] as const) {
-      await w.open(`/motions/${id}`)
+      await w.open(`/motions/${id}?tab=effects`)
       const mandates = section(w.page(), 'Mandates')
       assert.match((await mandates.textContent()) ?? '', says, `${w.at}: ${name}'s page says what it does to the mandates`)
       await mandates.scrollIntoViewIfNeeded()
@@ -343,7 +343,7 @@ unseeded('two closes on one day under coordination\'s, the change and m-2026-014
 unseeded('after them all: m-2026-014\'s page shows what it revoked, and Sofia\'s approve of the paper bill names her mandate and the day', async () => {
   await walk('closed', async (w) => {
     await w.as(sofia)
-    await w.open('/motions/m-2026-014')
+    await w.open('/motions/m-2026-014?tab=effects')
     const mandates = section(w.page(), 'Mandates')
     assert.match((await mandates.textContent()) ?? '', /revoked 4 mandates the same day, the one it ends and every one issued under it/, `${w.at}: the cascade`)
     await mandates.scrollIntoViewIfNeeded()

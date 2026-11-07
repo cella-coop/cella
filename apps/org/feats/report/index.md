@@ -194,13 +194,15 @@ contracts share, which name no one but where a column declares it.
 ## Shell
 
 The `reports` collection, titled Reports, in Office: each saved report
-with its kind, the built-in ones first. A report's page draws it: the
-statements as two `Sheet`s, the span's figure and the span before's, its
-spans listed above it to move between (`span`); the margins as a table
+with its kind, the built-in ones first. A report's page, its header's
+crumb its id, opens on what it is about and the log's entry it read, or
+why it drew nothing, and draws it in its Figures tab, the data central
+to it: the statements as two `Sheet`s, the span's figure and the span
+before's, its spans listed in the drawer's Related to move between
+(`span`), each opening the Figures tab; the margins as a table
 over a summary of the margin, the time cost and how many are watched; the
 federation figures as sections; a custom report as its chart over a
-table. Each page says the log's entry it read. The New form saves a
-custom report from its title and its definition.
+table. The New form saves a custom report from its title and its definition.
 
 ## Lanterne
 

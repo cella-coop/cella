@@ -166,16 +166,17 @@ The `meetings` collection, in Governance, opens as a calendar of the
 month by the day each meeting meets (the UI core's calendar layout,
 `look.on = 'at'`), each entry tinted by its status; the list, table,
 gallery, board by status and dashboard are a click away in the View
-card. A new meeting is scheduled from the New form. A meeting's page
-has two tabs: **Agenda**, the agenda as the UI core's `Ordered` list,
-its items dragged into order (each drop the `move` write, shown at once
-by `AgendaState` and put back if refused), removed and added while the
-meeting is scheduled, with what the grafts add under it, the motions
-it tables and who came; and **Minutes**, `document-meeting`'s, a
-document read as a document is. Minutes earn their tab: they are a
-different thing from the agenda, a text written after it, as a
-motion's stances are beside its overview. Holding and cancelling are
-the header's writes.
+card. A new meeting is scheduled from the New form. A meeting's page,
+its header's crumb its id, has two tabs: **Overview**, its content, the
+minutes `document-meeting` draws there, a document read as a document
+is, and under them its Activity: scheduled, minutes begun, held or
+cancelled; and **Agenda**, the data central to it, the agenda as the UI
+core's `Ordered` list, its items dragged into order (each drop the
+`move` write, shown at once by `AgendaState` and put back if refused),
+removed and added while the meeting is scheduled, with what the grafts
+add under it, the motions it tables and who came. Its circle, day,
+place and link are its properties. Holding and cancelling are the
+header's writes.
 
 ## Tests
 

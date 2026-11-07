@@ -214,23 +214,23 @@ test('the pages draw each report and say what they read', async () => {
   for (const title of ['Income statement', 'Balance sheet', 'Project margins', 'Federation figures', 'Spent by circle']) {
     assert.ok(list.includes(title), title)
   }
-  const income = await read('/reports/income?span=2026-10', camille)
+  assert.match(await read('/reports/income', camille), /read at the log's entry \d+/, 'its overview says what it read')
+  const income = await read('/reports/income?tab=figures&span=2026-10', camille)
   assert.match(income, /Income statement, 2026-10 against 2026-09/)
-  assert.match(income, /read at the log's entry \d+/)
   assert.match(income, /Service revenue/)
   assert.match(income, /Sales of products and services/)
   assert.match(income, /Total operating income/)
-  const balance = await read('/reports/balance?span=2026-10', camille)
+  const balance = await read('/reports/balance?tab=figures&span=2026-10', camille)
   for (const rubric of ['Current assets', 'Cash and cash equivalents', 'Total assets', 'Equity', 'Share capital', 'Total equity and liabilities']) {
     assert.ok(balance.includes(rubric), rubric)
   }
   for (const rubric of ['Actif', 'Capitaux propres', 'Dettes', 'Total du passif']) {
     assert.ok(!balance.includes(rubric), `no ${rubric}`)
   }
-  const margin = await read('/reports/margins', camille)
+  const margin = await read('/reports/margins?tab=figures', camille)
   assert.match(margin, /Projects on 2026-10-25/)
   assert.match(margin, /budget spent/)
-  const federation = await read('/reports/federation', camille)
+  const federation = await read('/reports/federation?tab=figures', camille)
   assert.match(federation, /The figures are drawn once a year's surplus is distributed/)
   await server.stop()
   await server.start('2026-10-25')

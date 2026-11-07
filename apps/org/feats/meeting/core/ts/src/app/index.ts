@@ -10,9 +10,9 @@ const tones: Record<Status, Tone> = { scheduled: 'accent', held: 'positive', can
 export const when = (m: Meeting) => `${date(m.at)}, ${m.at.slice(11, 16)}`
 
 // The feat's client side: the meetings on a calendar by the day they
-// meet, a new one, and a meeting's page with its agenda, reordered by
-// dragging, and holding or cancelling it. Its Agenda is the first of the
-// page's tabs; the minutes' graft adds theirs.
+// meet, a new one, and a meeting's page, holding or cancelling it: its
+// content first, which the minutes' graft fills, and its agenda in a
+// tab after it, reordered by dragging.
 export const app: App = {
   name: 'meeting',
   collections: {
@@ -37,7 +37,7 @@ export const app: App = {
       page: {
         eyebrow: 'Meeting',
         title: (m: Detail) => m.title,
-        subtitle: (m: Detail) => [m.circle, when(m), m.place].filter(Boolean).join(' · '),
+        subtitle: (m: Detail) => m.id,
         properties: (m: Detail) => [
           { label: 'Status', value: m.status, kind: 'badge', tone: tones[m.status] },
           { label: 'Circle', value: m.circle },
@@ -51,8 +51,11 @@ export const app: App = {
           ...(m.settled ? [{ at: m.settled, text: m.status }] : []),
           ...(m.scheduled ? [{ at: m.scheduled, text: 'scheduled' }] : []),
         ],
-        tabs: [{ id: 'agenda', label: 'Agenda' }],
-        blocks: [Agenda],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'agenda', label: 'Agenda' },
+        ],
+        blocks: [{ tab: 'agenda', block: Agenda }],
         actions: Settle,
       },
     },

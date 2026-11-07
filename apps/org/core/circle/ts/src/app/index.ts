@@ -29,7 +29,8 @@ export const app: App = {
       page: {
         eyebrow: 'Circle',
         title: (c: Detail) => c.name,
-        subtitle: (c: Detail) => c.purpose,
+        subtitle: (c: Detail) => c.id,
+        summary: (c: Detail) => c.purpose,
         properties: (c: Detail) => [
           { label: 'Id', value: c.id, kind: 'mono' },
           ...(c.assembly ? [{ label: 'The assembly', value: 'holds every power' }] : []),
@@ -40,7 +41,13 @@ export const app: App = {
           ...c.issuers.map((k) => ({ label: k.name, sub: 'issued its mandates', href: `/circles/${k.id}` })),
           ...c.issued.map((k) => ({ label: k.name, sub: 'holds mandates it issued', href: `/circles/${k.id}` })),
         ],
-        blocks: [Structure],
+        // Its purpose first, then its roles and their mandates in a tab of
+        // their own; its seats and policies are the tabs its extenders add.
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'roles', label: 'Roles' },
+        ],
+        blocks: [{ tab: 'roles', block: Structure }],
       },
     },
     mandates: {

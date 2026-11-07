@@ -74,6 +74,7 @@
     eyebrow={page.eyebrow}
     title={page.title(data.item)}
     subtitle={page.subtitle?.(data.item)}
+    summary={page.summary?.(data.item)}
     back={{ href: `/${data.name}`, label: mounted.view.title }}
     {tabs}
     {tab}

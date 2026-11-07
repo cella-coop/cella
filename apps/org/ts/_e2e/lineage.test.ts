@@ -43,7 +43,7 @@ test('the print buyer\'s mandate opens from Brand\'s page, and its chain walks u
     (await su.query<{ id: string }>(`SELECT id::text FROM circle.mandate WHERE grantee = $1 AND power = 'approve-bill'`, [grantee])).rows[0].id
   const [root, mid, deep] = [await id('coordination'), await id('operations'), await id('print-buyer')]
 
-  assert.ok(links(await page('/circles/brand')).includes(deep), 'Brand\'s page links the print buyer\'s mandate')
+  assert.ok(links(await page('/circles/brand?tab=roles')).includes(deep), 'Brand\'s Roles link the print buyer\'s mandate')
 
   const deepest = await page(`/mandates/${deep}`)
   assert.ok(deepest.includes('(this one)'), 'the chain marks the mandate the page is of')
@@ -88,7 +88,7 @@ test('in every browser, light and dark, the walk is clicked through from Brand\'
           await page.waitForURL(`${dev.base}/mandates/${to}`)
           await page.waitForLoadState('networkidle')
         }
-        await page.goto(`${dev.base}/circles/brand`)
+        await page.goto(`${dev.base}/circles/brand?tab=roles`)
         await page.waitForLoadState('networkidle')
         await open(deep)
         const chain = page.locator('section', { has: page.getByRole('heading', { name: 'Chain' }) })

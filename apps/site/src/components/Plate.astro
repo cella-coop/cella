@@ -21,8 +21,7 @@ const id = `plate-${key.replace(/[^a-z0-9-]/g, '-')}`
 const wide = cut(key, 'left', { reach: [0.08, 0.3], round: 0.05 })
 const narrow = cut(`${key}-narrow`, 'below', { reach: [0.1, 0.3], round: 0.05 })
 const style = {
-  // the band's hue at twice its chroma, mid-light, so it reads in either theme
-  '--accent': `oklch(from oklch(0.6 var(--tone-${tone})) l calc(c * 2) h)`,
+  '--tone': `var(--tone-${tone})`,
   '--cut': `url(#${id}-wide)`,
   '--cut-narrow': `url(#${id}-narrow)`,
   '--photo': `url(${monoUrl(photo, 'hero')})`,
@@ -47,7 +46,10 @@ const lines = drawing()
     height: 0;
   }
 
+  /* the band's hue at twice its chroma, mid-light, so it reads in either
+     theme: the colour the plate wears */
   .plate {
+    --accent: oklch(from oklch(0.6 var(--tone)) l calc(c * 2) h);
     position: absolute;
     inset: 0;
     pointer-events: none;

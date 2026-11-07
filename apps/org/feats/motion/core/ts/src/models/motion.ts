@@ -46,6 +46,10 @@ export function terms(p: Procedure): string {
 export interface Motion {
   id: string
   circle: string
+  // The grantee it was proposed as, its circle or a role, by id and by
+  // name; the id where its reader reads no name.
+  author: string
+  authorName: string
   title: string
   method: Method
   // The procedure it was proposed under, whose method is its own.
@@ -161,6 +165,9 @@ export interface Propose {
   procedure?: string
   // Its ballot, where it is not its procedure's.
   ballot?: Ballot
+  // The role it is proposed as, one its proposer holds on the day; its
+  // circle where it names none.
+  author?: string
   deadline: string
   body: string
   actions: Carried[]
@@ -170,6 +177,7 @@ export interface Proposed {
   motion: string
   proposed: string
   ballot: Ballot
+  author: string
 }
 
 // What the New form offers: the kinds of action, the procedures, and the

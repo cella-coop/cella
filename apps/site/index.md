@@ -98,7 +98,7 @@ Every word the site shows lives in its content collections, under
 
 A hero or a split section may name a **backdrop**: a vendored photo
 (`src/photos/`, [photos](#photos)) in the house's print, `backdrop:
-<name>`. The print, in its band's tone, fills three fifths of the band,
+<name>`. The print, in the print's plain ink, fills three fifths of the band,
 top to foot, the far side in a hero and the side `side` names in a
 split, and the words stand on the band in the other; on a narrow screen
 it stands above them. The band's colour reaches over the print's near
@@ -127,7 +127,8 @@ A print is shown as the brand explorer shows one: a picture on the
 print's light paper, `--print-paper`, in a real ink, `--print-<status>-deep`,
 the same in either theme, with the panel's grain multiplied over it, a
 bounded thing and never a background a text lies on. On the site its
-ink is its band's tone; in the asset library, the five in turn.
+ink is the print's plain one, `--print-text`, the colour the band's
+alone; in the asset library, the five in turn.
 
 Its mask is printed once, at build, by the brand's `printFile`
 (`src/lib/print.ts`), from the photo levelled, its darkest and lightest

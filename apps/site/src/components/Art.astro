@@ -1,5 +1,5 @@
 ---
-// A print filling its side of a band, in the band's tone, the band's
+// A print filling its side of a band, in the print's plain ink, the band's
 // colour meeting it along an edge drawn as an edge of the mark's cells:
 // two straight runs and one turn, the colour convex as a cell
 // (index.md, the cut). `side` is the print's side; on a narrow screen it
@@ -25,7 +25,7 @@ const clips = { '--cut': `url(#${id}-wide)`, '--cut-narrow': `url(#${id}-narrow)
 ---
 
 <div class="art" data-side={side}>
-  <Backdrop photo={{ photo: name, ink: tone }} size={'hero'} narrow={'large'} />
+  <Backdrop photo={name} size={'hero'} narrow={'large'} plain />
   <svg class="clips" aria-hidden="true" width="0" height="0">
     <clipPath id={`${id}-wide`} clipPathUnits="objectBoundingBox"><path d={wide} /></clipPath>
     <clipPath id={`${id}-narrow`} clipPathUnits="objectBoundingBox"><path d={narrow} /></clipPath>

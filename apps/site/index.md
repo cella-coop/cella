@@ -106,15 +106,20 @@ a figure and no print shows the figure on a card beside its words.
 `src/lib/cut.ts` cuts a print's edge as the mark is drawn: cells, each
 the Voronoi cell of its seed among seeds no one sees, rounded at their
 corners and kept apart by a gutter. A band of them runs along the
-edge, a quarter of the print's width deep, and a cell is kept the
-likelier the further into the print it lies, so the picture breaks into
-cells where it meets the ground; a kept cell keeps no gutter from the
-whole print, so it grows out of it, and none is cut flat by the print's
-box. Beyond the band the print is whole. The cut is a clip path in the
+edge, a quarter of the print's width deep, and a loose cell in it is
+kept the likelier the further into the print it lies, so the picture
+breaks into cells where it meets the ground; none is cut flat by the
+print's box. Past the band the cells are the whole print, drawn as one
+shape: their union, their shared edges cancelled, its outline a gutter
+off the loose cells, its corners too near or sharper than 55° merged
+away and every other rounded, so the print's own edge is a coastline of
+cells with no seam, crack or thorn. The cut is a clip path in the
 print's own units, `Art.astro` holding one for a wide screen, on its
 inner edge, and one for a narrow, on its foot, each seeded by the
 placement and the photo, so every cut is its own and the same on every
-build. The print's credit sits in a corner of its whole side.
+build. The print's credit sits in a corner of its whole side, plain
+small text in the print's muted ink, which its light paper carries in
+either theme.
 
 ## Prints
 

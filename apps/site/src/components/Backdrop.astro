@@ -81,11 +81,10 @@ const masks = {
     bottom: 0.5rem;
     z-index: 2;
     margin: 0;
-    padding: 0.15rem 0.5rem;
-    border-radius: var(--radius-control);
-    background: color-mix(in oklch, var(--panel) 85%, transparent);
-    color: var(--text-muted);
+    /* in the print's own muted ink: its paper is light in either theme */
+    color: var(--print-muted);
     font-size: var(--t-xs);
+    opacity: 0.8;
   }
 
   .credit a {

@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -320,6 +320,53 @@ says, as an inbox's ask links to where it is done.
 
 A `Column` places itself in the list view by `role`: the title, the line
 under it, the trailing meta, or the table alone.
+
+## Settings
+
+A settings page is a plain form, `Settings`, one `Setting` a row: its
+label, its current value in its field, and under it in a quiet line
+what changes it, a write the reader makes or a motion of the circle
+that decides it. Every field is editable, whoever reads it; Save posts
+only the fields changed. A slice declares each setting with the write
+that changes it directly, if any, and the motion kind that changes it
+otherwise, its arguments filled from the field (`models/settings.ts`).
+
+A setting (`Declared`, as the package exports its type) names its
+field, its value in force, the page action that saves it, if one does,
+and, where the reader's write would be refused, why, as its slice reads
+the guard's reason before anything is written; and the motion that
+changes it otherwise: its kind, its arguments from the value typed and
+the one it replaces, those the reader may change before proposing
+labelled as the New form labels them and the rest carried as they are,
+and the words its title says the change in. The form is handed the
+circle that decides its motions and the deadline asked for, as its
+slice reads them. `plan` splits the fields changed into each write,
+posted once with all its fields, one after the other until one does not
+settle, and one motion: the kind of the first field changed that its
+reader may not write, which every other field of that kind joins, its
+arguments merged and its titles joined. A field of another kind waits
+for the next Save, marked not saved, as does one no motion is declared
+to change. The dev server alone serves a specimen of a form mixing the
+two kinds, `/specimens/settings`, a page of no slice that reads nothing
+and has no actions, for the browser test to see the dialog on.
+
+A field the reader may change saves by its write, and the form shows
+the outcome as any `Form` does. A field they may not change, since its
+write needs a mandate they lack, or since only a motion changes it,
+does not save: Save opens `ProposeInstead`, a dialog in the top layer
+as `Popover` is, which says why in the guard's own words, the refusal
+its write's guard gives as early as it can, with the values it read,
+and offers to propose the change instead. Its form is the motions'
+New form, prefilled: the circle that decides it (`motion.decider`),
+its title saying the change ("Rename Coordination to Operations"),
+the action it carries with its arguments, from the value typed and the
+one it replaces, and the deadline the procedure its requirements fix
+asks for. The reader may edit any of it before proposing; Propose posts
+it to the page slice's own `propose` action, and the outcome names the
+log entry that proposes the
+motion. Closing the dialog keeps what was typed, and the field marks
+the change as not saved. A form whose fields mix the two saves the one
+kind and offers the motion for the other, in one go.
 
 ## Posting a write
 

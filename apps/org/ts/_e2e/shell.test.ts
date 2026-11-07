@@ -157,6 +157,23 @@ test('a lensed collection lists only its circle’s rows, and a registry says th
   assert.ok(!unlensed.includes('leaves Accounts whole'), 'with no lens it says nothing')
 })
 
+test('the sidebar’s counts narrow with the lens, and the Inbox and a shut section’s dot stay whole', async () => {
+  const session = await shell.signIn(camille)
+  const seen = async (lens?: string) => {
+    const res = await fetch(`${shell.base}/projects`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    assert.equal(res.status, 200)
+    return res.text()
+  }
+  const pill = (html: string, href: string) => Number(new RegExp(`href="${href}"[^>]*>(?:(?!</a>).)*?<span class="count[^"]*" aria-label="(\\d+) waiting">`, 's').exec(html)?.[1] ?? 0)
+  const dots = (html: string) => [...html.matchAll(/aria-label="(\d+) waiting in ([^"]+)"/g)].map((m) => `${m[2]}: ${m[1]}`)
+  const whole = await seen()
+  const lensed = await seen('web')
+  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the co-op is lensed on Web')
+  assert.ok(pill(whole, '/inbox') > 0, 'Camille has asks waiting in her Inbox')
+  assert.equal(pill(lensed, '/inbox'), pill(whole, '/inbox'), 'the Inbox counts what waits on her whatever the lens')
+  assert.deepEqual(dots(lensed), dots(whole), 'and a shut section’s dot is the same under the lens as without')
+})
+
 test('every collection has a dashboard, its widgets run by the server', async () => {
   const invoices = await page('/invoices?view=dashboard')
   assert.equal(invoices.status, 200)

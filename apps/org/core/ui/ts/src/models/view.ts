@@ -190,8 +190,10 @@ export interface Added<E = any> {
   page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
 }
 
-// The sidebar's navigation, by group.
-export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; subgroup?: string; listed?: boolean }[] }[]
+// The sidebar's navigation, by group: a collection's `count` is its rows
+// for the acting member in the lensed circle, its pill; `waiting`, all of
+// them whatever the lens, which a shut section's dot sums.
+export type Nav = { group: string; items: { href: string; title: string; icon: Component<any>; count?: number; waiting?: number; subgroup?: string; listed?: boolean }[] }[]
 
 // A member the dev server may act as.
 export interface Person {

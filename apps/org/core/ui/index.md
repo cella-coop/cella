@@ -95,16 +95,19 @@ The theme is light, dark or the system's, a cookie the server writes into
   of the scope's, written by `/lens` as `/theme` writes the theme, so
   the server renders the lensed page and nothing of it enters the log;
   a lens naming a circle the member no longer reads is none. Then,
-  always shown, the Inbox, where `/` and the sign-in land, and Activity,
+  always shown, the Inbox, whole whatever the lens, since it is what
+  waits on the member, where `/` and the sign-in land, and Activity,
   the log. The middle holds the sections as
   accordions, as Linear's teams: Governance, Office, Work, Payments,
   Ledger and Equity, flat, never nested, each its name
   and a caret, a dot on a shut one whose collections hold rows waiting
-  on the acting member. Open, a section's collections hang from a guide
+  on the acting member, whole whatever the lens as the Inbox is. Open,
+  a section's collections hang from a guide
   line; a section's collections that name a `subgroup` are labelled by
   it where it has more than one. A collection the view declares
-  `counted` shows how many rows it holds for the acting member, in a
-  small quiet pill. Several sections may be open at once: one the
+  `counted` shows how many rows it holds for the acting member, in the
+  lensed circle where there is a lens, the count its page heads with,
+  in a small quiet pill. Several sections may be open at once: one the
   viewer never touched is open while it holds the page, and one they
   opened or shut stays so. The foot is the command menu,
   then the account menu, the signed-in member, whose menu holds their

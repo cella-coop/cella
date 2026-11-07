@@ -186,8 +186,9 @@ const order = ['home', 'governance', 'office', 'work', 'payments', 'ledger', 'eq
 // The sidebar's sections: what waits on the acting member, then each
 // section's collections, of which the sidebar shows one at a time.
 // `counts` are the counted collections' rows for the acting member, by
-// address.
-export const nav = (counts: Record<string, number> = {}): Nav =>
+// address, in the lensed circle where there is a lens; `waiting`, all of
+// them whatever the lens.
+export const nav = (counts: Record<string, number> = {}, waiting: Record<string, number> = counts): Nav =>
   order
     .map((group) => ({
       group,
@@ -195,7 +196,7 @@ export const nav = (counts: Record<string, number> = {}): Nav =>
         ...apps.flatMap((a) =>
           Object.entries(a.collections ?? {})
             .filter(([, c]) => c.view.group === group)
-            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`], subgroup: c.view.subgroup, listed: c.view.listed })),
+            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`], waiting: waiting[`/${name}`], subgroup: c.view.subgroup, listed: c.view.listed })),
         ),
       ],
     }))

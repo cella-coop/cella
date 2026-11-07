@@ -17,7 +17,7 @@
 <!-- Signed in, the shell; before, the pages a person reaches first, the
      sign-in and an invitation's link, alone. -->
 {#if data.actor}
-  <Shell scope={data.scope} nav={nav(data.counts)} actor={data.actor} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer} people={data.people} circles={data.circles} lens={data.lens}>
+  <Shell scope={data.scope} nav={nav(data.counts, data.waiting)} actor={data.actor} dev={data.dev} theme={data.theme} {outcome} source="/search" drawer={data.drawer} people={data.people} circles={data.circles} lens={data.lens}>
     {@render children()}
   </Shell>
 {:else}

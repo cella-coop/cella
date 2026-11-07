@@ -189,6 +189,22 @@ BEGIN
 END
 $$;
 
+-- The ids of the records an entry is about, by the name its form holds
+-- each under: every plain text or number under its op's thing, the middle
+-- of `feat:thing:verb`, or under a slice its op names, each feat a graft's
+-- name joins. Never a commitment, an object, nor any other of the form's
+-- values, so Activity links an entry to its record and reads nothing else
+-- of the form.
+CREATE FUNCTION cella.records(n bigint) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+RETURN (
+  SELECT coalesce(jsonb_object_agg(k, l.form -> k), '{}')
+  FROM cella.log l,
+       unnest(array_prepend(split_part(l.op, ':', 2), string_to_array(split_part(l.op, ':', 1), '-'))) k
+  WHERE l.n = records.n AND jsonb_typeof(l.form -> k) IN ('string', 'number')
+);
+
 REVOKE EXECUTE ON FUNCTION cella.opened(bigint) FROM cella_app;
 REVOKE EXECUTE ON FUNCTION cella.disclosed(bigint) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION cella.disclosed(bigint) TO cella_app;

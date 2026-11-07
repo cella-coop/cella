@@ -439,8 +439,25 @@ test("withholding open books ends the disclosure rule in force and nothing else:
   assert.equal(await withholdings(), proposed, 'nothing is proposed')
 })
 
-test('the log the shell wrote verifies, and its page says so', async () => {
+test('the log the shell wrote verifies, and Activity reads it as a feed whose every line opens its record', async () => {
   assert.equal((await one<{ v: boolean }>('SELECT cella.verify_log() AS v')).v, true)
   const { text } = await page('/log')
-  assert.ok(text.includes('verifies') && text.includes('motion:motion:close'))
+  assert.ok(text.includes('verifies'))
+  assert.match(text, /class="list feed[\s"]/, 'Activity opens as a feed')
+  // Julien's issue, said from its op and linked to its invoice by the id
+  // `cella.records` reads.
+  assert.match(text, /<a href="\/invoices\/F-2026-0056" class="what stretched[^"]*"[^>]*>issued invoice F-2026-0056<\/a>/)
+  assert.match(text, /closed motion m-2026-012/)
+  // The time of a line that links to its record opens the entry itself.
+  assert.match(text, /<a href="\/log\/\d+" class="when[\s"]/)
+  const lines = [...text.matchAll(/<a href="([^"]+)" class="what stretched[\s"]/g)].map((m) => m[1].replaceAll('&amp;', '&'))
+  assert.ok(lines.length > 0)
+  for (const href of new Set(lines)) {
+    assert.equal((await page(href)).status, 200, `${href} opens`)
+  }
+  // An entry keeps no record id but under its op's thing or slices.
+  assert.deepEqual(
+    await one<{ r: unknown }>(`SELECT cella.records(n) AS r FROM cella.log WHERE op = 'invoice:invoice:issue' ORDER BY n DESC LIMIT 1`),
+    { r: { invoice: 'F-2026-0056' } },
+  )
 })

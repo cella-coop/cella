@@ -97,7 +97,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   a lens naming a circle the member no longer reads is none. Then,
   always shown, the Inbox, whole whatever the lens, since it is what
   waits on the member, where `/` and the sign-in land, and Activity,
-  the log. The middle holds the sections as
+  the log read as a feed of who did what. The middle holds the sections as
   accordions, as Linear's teams: Governance, Office, Work, Payments,
   Ledger and Equity, flat, never nested, each its name
   and a caret, a dot on a shut one whose collections hold rows waiting
@@ -156,7 +156,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   and rows for every collection, and a drawer holding one card, View
   (`Viewing`): the text filter, the conditions on the rows (an
   enumeration's values as chips, a date's month or year), the layout
-  (list · table · gallery · board · calendar · dashboard, icon-only so
+  (list · feed · table · gallery · board · calendar · dashboard, icon-only so
   it fits) and, in a table, its columns, in a gallery or on a board, its
   cards' fields and the board's grouping, in a calendar, the date it
   places the items by, month or week, and its cards' fields, in a
@@ -167,13 +167,17 @@ The theme is light, dark or the system's, a cookie the server writes into
   leaves it whole
   ([reading at scale](../../../../_corpus/doc/architecture.md#reading-at-scale),
   [the lens](../../../../_corpus/doc/architecture.md#the-lens)):
-  a list, a table and a gallery draw a hundred rows at a time
+  a list, a feed, a table and a gallery draw a hundred rows at a time
   (`PAGE`), with a button under them that asks the address for the
   next hundred (`n`) and how many of the rows are drawn; the keyboard
   moving past the last drawn row asks for the next page, and the text
   filter goes into the address once the typing pauses, which draws the
   first page again. A board and a calendar place every row the view
-  keeps. `Gallery`
+  keeps. The feed draws each row as one line of who did what and when,
+  as a record's Activity reads: its first person column as their chip,
+  then its title, linked, then its first date, and the time links to
+  the row's own page where the view links its title elsewhere; it is
+  offered only where a column is a person and one a date. `Gallery`
   lays the items out as cards (`Tile`); `Board` puts them in a column
   per value of an enumeration, each with its count, the board offered
   only where a field enumerates; `Calendar` puts them on the days of a
@@ -187,7 +191,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   (`models/calendar.ts`). A view, its extensions overriding it part by
   part, declares its `look`: its default layout, its board's grouping
   and columns' order (`lanes`), its cards' fields, its calendar's date
-  (`on`) and span; circles and projects open as a gallery, motions and
+  (`on`) and span; the log opens as a feed, circles and projects as a gallery, motions and
   tasks as a board, timesheets as a table, meetings as a calendar of
   months. A board move is
   a write only where a slice declares it (`shifts`: the field, the

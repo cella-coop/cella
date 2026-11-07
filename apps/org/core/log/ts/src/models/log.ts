@@ -20,6 +20,9 @@ export interface Entry {
   // When the receipt was signed, as the notary's clock read it.
   at: string
   device: string
+  // The ids of the records the entry is about, by the name its form holds
+  // each under (`cella.records`): `{ invoice: 'F-2026-004' }`.
+  records: Record<string, string | number>
 }
 
 export interface Detail extends Entry {

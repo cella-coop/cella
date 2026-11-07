@@ -247,7 +247,7 @@ export function result(w: Widget, measured: number | null | { label: string; val
   return { kind: 'chart', title: w.title, format: format(w.measure, fs), line, points }
 }
 
-export const layouts = ['list', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
+export const layouts = ['list', 'feed', 'table', 'gallery', 'board', 'calendar', 'dashboard'] as const
 export type Layout = (typeof layouts)[number]
 
 // How a collection is looked at: its layout, the conditions on its rows,

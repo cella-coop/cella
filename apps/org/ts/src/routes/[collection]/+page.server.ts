@@ -36,7 +36,7 @@ export const load: PageServerLoad = async ({ params, url, locals, cookies }) => 
     // Its rows through the member's lens, where they have one.
     const from = source(params.collection, await lensed(db, cookies, locals.actor)) ?? named
     const day = await today(db)
-    const paged = spec.layout === 'list' || spec.layout === 'table' || spec.layout === 'gallery'
+    const paged = spec.layout === 'list' || spec.layout === 'feed' || spec.layout === 'table' || spec.layout === 'gallery'
     const { rows, counts, values, whole } = await read(db, from, {
       ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? keeps, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],

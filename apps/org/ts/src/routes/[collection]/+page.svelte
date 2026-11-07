@@ -31,6 +31,7 @@
       matched={data.matched}
       about={data.about}
       href={mounted.view.href ?? (linked ? href : undefined)}
+      own={linked ? href : undefined}
       creates={creates}
       status={[mounted.view.status, ...added.map((e) => e.extension.status)].filter((s) => s !== undefined)}
       empty={mounted.view.empty}

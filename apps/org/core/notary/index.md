@@ -51,6 +51,7 @@ guards' and the analytics', who reads ([below](#reads)) and the folds, so the ex
 | `cella.may(power)`, `cella.covered(power)` | whether the reader holds the power on the verdict date, by any mandate, as the authority says; and the owning circles their mandates for it cover that day |
 | `cella.circles(what)`, `cella.sees(what)`, `cella.reaches(what, key)` | the owning circles whose rows of `what` the reader reads, by the powers that read them; whether they see every row: a write's transaction, or a current role past row-level security (a superuser's tools, or a function running as its owner to sum the whole); and whether they reach one row by its key: a power for that key, or a graft's function |
 | `cella.disclosed(n)` | entry `n` opened, for the reader who wrote it, whom all its commitments are about, or who holds its action's power; null for anyone else |
+| `cella.records(n)` | the records entry `n` is about, by the name its form holds each under: every plain text or number under its op's thing or a slice its op names, `{"invoice": "F-2026-004"}` for `invoice:invoice:send`, `{"role": …, "circle": …}` for `circle:role:seat`; never a commitment nor any other of the form's values, so Activity links an entry to its record and reads nothing else of the form |
 | `cella.fold`, `cella.lets_fold(op, version, fn, owner)`, `cella.folds_of(op, n)` | the folds: each slice's fold of an action by version, `(op, owner, version, fn, since)`, registered by the slice from its migration, a superuser's, `since` the first entry after it; and the folds entry `n` of `op` runs, each owner's version in force at `n`, the action's own slice's first, then core's and the feats', then the grafts' by how many feats they join ([architecture](../../../../_corpus/doc/architecture.md#folds)) |
 | `cella.fold_log(upto)`, `cella.fold_head`, `cella.checkpoint` | a procedure, a superuser's, that applies the log copied into a database by its folds from the entry after the fold's head through `upto`, one write per transaction, committed with the head, `cella.clock` set to each entry's date, the founding's carried rows before its folds and an entry's erasures after them; how far it has applied the log; and the checkpoints `cella fold` records, `(n, hash, state)` |
 | `cella.carry()`, `cella.fold_carried(n, carried)` | the state the founding carries, read inside its write and granted to the app: every registered state table's rows by its name, without their generated columns, a decimal or a JSON value as its text, each personal value marked `$personal`, and each sequence's value; and its application before the founding's folds, a superuser's, as a replica loads a snapshot, each table's rows in place of the migrations', each personal value by its commitment |
@@ -177,7 +178,8 @@ security, and its policies ask the functions above
 ([architecture](../../../../_corpus/doc/architecture.md#sql),
 [trust](../../../../_corpus/doc/trust.md#one-server)). `cella.log.form`
 is the owner's alone: every other column of the log stays everyone's,
-and the vault opens to the app only through `cella.disclosed(n)`.
+the ids of the records an entry is about everyone's through
+`cella.records(n)`, and the vault opens to the app only through `cella.disclosed(n)`.
 `may`, `covered` and `reaches` call the functions their registries name, so each
 is a `STABLE` function of the shape it is registered for. Each is called
 by the schema and name its function has, its arguments cast to the types

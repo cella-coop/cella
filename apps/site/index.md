@@ -70,7 +70,7 @@ of its own, its body in `src/components/assets/`:
 
 | Page | What it shows |
 |---|---|
-| `/assets/photos` | every vendored photo as the site prints it, a backdrop in one tone, each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink |
+| `/assets/photos` | every vendored photo as the site prints it ([prints](#prints)), each in an ink drawn at random on every load; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since a print's dots are the same in any ink |
 | `/assets/diagrams` | every diagram, as a section's figure shows it |
 | `/assets/icons` | every icon the site draws, the cards', the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |
@@ -91,22 +91,30 @@ Every word the site shows lives in its content collections, under
 | `blog` | one MDX file a post, `<name>.mdx`: its title, summary, date, authors and whether it is a draft, which shows in the dev server and is left out of the build |
 
 A hero or a split section may name a **backdrop**: a vendored photo
-(`src/photos/`, [photos](#photos)) printed in the house's halftone
-behind it, `backdrop: <name>` or `backdrop: { photo: <name>, ink:
-<status> }`. `Backdrop.astro` prints it at build time through
-`printFile` in one tone, its ink's status at half its chroma: a paper of
-the theme's `--shade-1` and dots a few shades towards the text, so it
-turns with the theme where a print's paper stays the light theme's. The
-light theme lays the print of the photo, dark dots where it is dark; the
-dark theme the print of its negative, light dots where it is light, so
-it is a positive in either. Unset, a photo's ink is its own, from its
-name, the same on every page.
-Behind a hero it fades out under the text, from the text's side beside
-a figure and from the centre without one; behind a split it fills a
-panel and the figure sits on a card of paper over it. It is decorative,
-`aria-hidden`, and its Unsplash credit sits in its corner. A print
-inks the tones under its edge, so a bright, high-key photo prints as a
-texture and a dark one as a slab.
+(`src/photos/`, [photos](#photos)) in the house's print, a panel beside
+its text, `backdrop: <name>` or `backdrop: { photo: <name>, ink:
+<status> }`. In a hero the panel stands beside the heading, the figure
+on a card over it, or alone; in a split it holds the figure on a card.
+
+## Prints
+
+A print is shown as the brand explorer shows one: a picture on the
+print's light paper, `--print-paper`, in a real ink, `--print-<status>-deep`,
+the same in either theme, with the panel's grain multiplied over it, a
+bounded thing and never a background a text lies on. Unset, a photo's
+ink is its own, from its name, the same on every page.
+
+Its mask is printed once, at build, by the brand's `printFile`
+(`src/lib/print.ts`), at the width the print is shown, 600 CSS pixels
+for a panel and 360 for a tile or a phone, at 1.5 device pixels to one,
+so its dots are the house's 2.5 CSS pixel cell where it is shown. Each
+mask is its own file, `/print/<photo>-<width>.png`, made by the static
+endpoint `src/pages/print/[key].png.ts` for every photo at each width
+and cached by the browser as any image; a page holds none inline. A
+mask is the same in any ink, so `Backdrop.astro` colours it in CSS, and
+a change of ink is a change of colour alone. It is decorative,
+`aria-hidden`, and its Unsplash credit sits in its corner. A print inks
+the tones under its edge, so a bright, high-key photo prints best.
 
 A hero or a section names its figure in its frontmatter, `{ diagram:
 <name> }` or `{ photo: <name>, alt: …, print: … }`, and a card its

@@ -6,7 +6,7 @@ import { z } from 'astro/zod'
 
 const link = z.object({ label: z.string(), href: z.string() })
 
-// A vendored photo printed in the house's halftone as a background: its
+// A vendored photo in the house's print, a panel beside the text: its
 // name, or its name and the status whose ink it wears, the photo's own
 // ink unset.
 const backdrop = z.union([

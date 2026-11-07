@@ -1,6 +1,6 @@
 ---
-// Every photo of the library as the site prints it, a backdrop in one
-// tone, each in an ink drawn at random on every load. Hovering one shows a
+// Every photo of the library as the site prints it, on the print's paper
+// in a real ink, each in an ink drawn at random on every load. Hovering one shows a
 // toolbar of the five inks; a press wears that ink. A print's dots are the
 // same in any ink, so a change of ink is a change of colour alone.
 import Backdrop from '../Backdrop.astro'
@@ -18,10 +18,10 @@ const photos = photoNames().map((name) => ({
     photos.map(({ name, ink }) => (
       <li class="tile" data-ink={ink}>
         <div class="print">
-          <Backdrop photo={{ photo: name, ink }} width={800} />
+          <Backdrop photo={{ photo: name, ink }} size={'small'} />
           <div class="tools" role="toolbar" aria-label={name}>
             {STATUSES.map((s) => (
-              <button type="button" class="ink" data-set={s} aria-label={s} aria-pressed={s === ink ? 'true' : 'false'} style={{ '--swatch': `var(--tone-${s})` }} />
+              <button type="button" class="ink" data-set={s} aria-label={s} aria-pressed={s === ink ? 'true' : 'false'} style={{ '--swatch': `var(--print-${s}-deep)` }} />
             ))}
           </div>
         </div>
@@ -38,7 +38,7 @@ const photos = photoNames().map((name) => ({
     button.addEventListener('click', () => {
       const tile = button.closest<HTMLElement>('.tile')!
       const ink = button.dataset.set!
-      tile.querySelector<HTMLElement>('.backdrop')!.style.setProperty('--tone', `var(--tone-${ink})`)
+      tile.querySelector<HTMLElement>('.backdrop')!.style.setProperty('--ink', `var(--print-${ink}-deep)`)
       tile.dataset.ink = ink
       for (const b of tile.querySelectorAll('.ink')) {
         b.setAttribute('aria-pressed', String(b === button))
@@ -103,7 +103,7 @@ const photos = photoNames().map((name) => ({
     padding: 0;
     border: 2px solid transparent;
     border-radius: 50%;
-    background: oklch(0.6 var(--swatch));
+    background: var(--swatch);
     cursor: pointer;
   }
 

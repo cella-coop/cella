@@ -1,6 +1,8 @@
 ---
 // The hero: an eyebrow, the page's heading and its lede, its two actions,
-// and the figure it names beside them; the brand's five inks under it.
+// and beside them its print, a panel of a photo in the house's print, with
+// the figure it names on a card over it, or either alone; the brand's five
+// inks under it.
 import Button from './Button.astro'
 import Backdrop from './Backdrop.astro'
 import Showcase from './Showcase.astro'
@@ -25,8 +27,7 @@ interface Props {
 const { hero, size = 'large' } = Astro.props
 ---
 
-<section class="hero" id="top" data-figure={hero.figure ? 'yes' : 'no'} data-size={size}>
-  {hero.backdrop && <Backdrop photo={hero.backdrop} fade={hero.figure ? 'start' : 'center'} />}
+<section class="hero" id="top" data-figure={hero.figure || hero.backdrop ? 'yes' : 'no'} data-size={size}>
   <div class="wrap grid">
     <div class="copy">
       {hero.eyebrow && <p class="eyebrow">{hero.eyebrow}</p>}
@@ -46,9 +47,14 @@ const { hero, size = 'large' } = Astro.props
       }
     </div>
     {
-      hero.figure && (
-        <div class="figure">
-          <Showcase figure={hero.figure} />
+      (hero.figure || hero.backdrop) && (
+        <div class="side" data-print={hero.backdrop ? 'yes' : 'no'} data-card={hero.figure ? 'yes' : 'no'}>
+          {hero.backdrop && <Backdrop photo={hero.backdrop} />}
+          {hero.figure && (
+            <div class="card">
+              <Showcase figure={hero.figure} />
+            </div>
+          )}
         </div>
       )
     }
@@ -120,17 +126,37 @@ const { hero, size = 'large' } = Astro.props
     justify-content: center;
   }
 
-  .figure :global(figure) {
+  .side :global(figure) {
     margin: 0;
   }
 
-  /* On a halftone the figure sits on a card of paper */
-  .hero:has(:global(.backdrop)) .figure {
+  /* The print is a panel, a picture with its own paper; the figure sits
+     on a card over its lower corner */
+  .side[data-print='yes'] {
+    position: relative;
+    min-height: 22rem;
+    padding: clamp(2.5rem, 6vw, 4rem) 0 clamp(2.5rem, 6vw, 4rem) clamp(2rem, 5vw, 4rem);
+    border-radius: calc(var(--radius) * 1.5);
+    overflow: hidden;
+  }
+
+  .side[data-print='yes'][data-card='no'] {
+    aspect-ratio: 4 / 3;
+    min-height: 0;
+  }
+
+  .card {
+    position: relative;
+    z-index: 1;
     padding: 1.5rem;
     border: 1px solid var(--line);
-    border-radius: var(--radius);
+    border-radius: var(--radius) 0 0 var(--radius);
     background: var(--panel);
     box-shadow: var(--shadow-float);
+  }
+
+  .side[data-print='no'] .card {
+    border-radius: var(--radius);
   }
 
   .inks {

@@ -8,7 +8,6 @@ export const PARTS = [
   { name: 'diagrams', icon: 'flow-arrow' },
   { name: 'icons', icon: 'shapes' },
   { name: 'components', icon: 'squares-four' },
-  { name: 'halftone', icon: 'circles-four' },
 ] as const
 
 export type Part = (typeof PARTS)[number]['name']

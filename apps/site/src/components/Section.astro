@@ -39,7 +39,7 @@ const labelled = `${id}-heading`
       {
         kind === 'split' && figure && (
           <div class="figure" data-backdrop={backdrop ? 'yes' : 'no'}>
-            {backdrop && <Backdrop photo={backdrop} width={1000} />}
+            {backdrop && <Backdrop photo={backdrop} />}
             <div class="card">
               <Showcase figure={figure} />
             </div>
@@ -182,14 +182,13 @@ const labelled = `${id}-heading`
     margin: 0;
   }
 
-  /* A figure on a halftone: the print fills a panel, the figure a card of
-     paper on it, the credit in the panel's corner */
+  /* A figure on a print: the print is a panel, a picture with its own
+     paper, the figure a card on it, the credit in the panel's corner */
   .figure[data-backdrop='yes'] {
     position: relative;
     padding: clamp(2rem, 5vw, 3.5rem) clamp(1.5rem, 4vw, 3rem) clamp(2.5rem, 5vw, 3.5rem);
     border-radius: calc(var(--radius) * 1.5);
     overflow: hidden;
-    background: var(--sunk);
   }
 
   .figure[data-backdrop='yes'] .card {

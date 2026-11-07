@@ -85,10 +85,13 @@ A hero or a split section may name a **backdrop**: a vendored photo
 (`src/photos/`, [photos](#photos)) printed in the house's halftone
 behind it, `backdrop: <name>` or `backdrop: { photo: <name>, ink:
 <status> }`. `Backdrop.astro` prints it at build time through
-`printFile` and lays the print's masks alone, with no paper, each in
-the theme's own tone of its ink's status, `--<status>-text`, so it
-reads in either theme where a print's paper stays the light theme's.
-Unset, a photo's ink is its own, from its name, the same on every page.
+`printFile` in one tone, its ink's status at half its chroma: a paper of
+the theme's `--shade-1` and dots a few shades towards the text, so it
+turns with the theme where a print's paper stays the light theme's. The
+light theme lays the print of the photo, dark dots where it is dark; the
+dark theme the print of its negative, light dots where it is light, so
+it is a positive in either. Unset, a photo's ink is its own, from its
+name, the same on every page.
 Behind a hero it fades out under the text, from the text's side beside
 a figure and from the centre without one; behind a split it fills a
 panel and the figure sits on a card of paper over it. It is decorative,

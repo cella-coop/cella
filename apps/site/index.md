@@ -90,10 +90,8 @@ mark its closing part with stars, `*like this*`, set thin.
 
 The page is the panel, an off-white in the light theme, under a wide
 grid of the text's ink at a breath of strength, a honeycomb of
-flat-topped hexagons 15rem from flat to flat (9rem on a phone) with a
-short three-armed tick at each corner, the plus's kin where three edges
-meet, drawn as one tile the text's ink shows through, and the panel's
-grain. Every value is the brand's: its
+flat-topped hexagons 15rem from flat to flat (9rem on a phone), drawn
+as one tile the text's ink shows through, and the panel's grain. Every value is the brand's: its
 roles, its five inks `--p0` to `--p4`, mixed for the grid, the glass and
 the bands, so a change of `house.json` restyles the site with `cella
 brand` and nothing else. Headings are the display face, Urbanist; the

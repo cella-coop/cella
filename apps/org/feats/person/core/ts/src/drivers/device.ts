@@ -8,7 +8,7 @@ const columns = `encode(key, 'hex') AS id, encode(key, 'hex') AS key, address, l
 
 // Every device as the collection lists them, current ones first.
 export const listing: Read = {
-  sql: `SELECT ${columns} FROM person.device`,
+  sql: `SELECT ${columns}, circle FROM person.device`,
   order: 'revoked IS NOT NULL, address, enrolled, label',
 }
 

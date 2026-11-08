@@ -13,10 +13,13 @@ export interface Read {
 
 // What one collection's rows are read from: its owner's select and those
 // of the extensions that add rows of their own, in that order, and each
-// extension's select of `id` and the fields it adds to that row.
+// extension's select of `id` and the fields it adds to that row; and the
+// circle the member lensed the co-op on, if any, which keeps only the
+// rows a select says that circle owns, under `circle`.
 export interface Source {
   rows: Read[]
   fields: string[]
+  lens?: string | null
 }
 
 // A condition on a row, as a view holds one: an enumeration among some of
@@ -55,10 +58,14 @@ class Statement {
 
 // The rows as `r(src, at, row)`: each source's rows in its order, `row`
 // the JSON of the owner's fields with every extension's merged over it,
-// one join per extension, so the collection is one statement.
-function rows(s: Source): string {
+// one join per extension, so the collection is one statement. Under a
+// lens, a select's rows are those whose `circle` is the lens's; a select
+// that names no owning circle, and a row that names none, are kept.
+function rows(st: Statement, s: Source): string {
+  const lens = s.lens ? st.p(s.lens) : null
+  const lensed = lens ? ` WHERE coalesce(to_jsonb(x)->>'circle', ${lens}) = ${lens}` : ''
   const from = s.rows.length
-    ? s.rows.map((r, i) => `SELECT ${i} AS src, row_number() OVER (ORDER BY ${r.order}) AS at, to_jsonb(x) AS row FROM (${r.sql}) x`).join('\n  UNION ALL\n  ')
+    ? s.rows.map((r, i) => `SELECT ${i} AS src, row_number() OVER (ORDER BY ${r.order}) AS at, to_jsonb(x) AS row FROM (${r.sql}) x${lensed}`).join('\n  UNION ALL\n  ')
     : `SELECT 0 AS src, 0::bigint AS at, NULL::jsonb AS row WHERE false`
   const merged = ['o.row', ...s.fields.map((_, i) => `coalesce(to_jsonb(e${i}) - 'id', '{}')`)].join(' || ')
   const joins = s.fields.map((f, i) => `LEFT JOIN (${f}) e${i} ON e${i}.id::text = o.row->>'id'`).join('\n  ')
@@ -91,7 +98,8 @@ function kept(st: Statement, k: Keep): string {
 // of them with no limit); how many each of `counts` keeps; and each of
 // `values`' keys' values, sorted, the empty one left out, the choices an
 // enumeration's editor offers. Each part is left out where it is not
-// asked.
+// asked. Under a lens, it answers too whether the lens leaves the rows
+// whole, as it does where no select names the circle that owns its rows.
 export interface Asked {
   keep?: Keep
   limit?: number
@@ -101,7 +109,11 @@ export interface Asked {
 }
 
 // What a page asks, read in one statement over the rows composed once.
-export async function read(db: Db, s: Source, a: Asked): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]> }> {
+export async function read(
+  db: Db,
+  s: Source,
+  a: Asked,
+): Promise<{ rows: { id: string }[]; counts: number[]; values: Record<string, string[]>; whole: boolean }> {
   const st = new Statement()
   const parts: string[] = []
   if (a.keep) {
@@ -116,15 +128,29 @@ export async function read(db: Db, s: Source, a: Asked): Promise<{ rows: { id: s
       `(SELECT coalesce(json_object_agg(k, vs), '{}') FROM (SELECT k, array_agg(DISTINCT v ORDER BY v) AS vs FROM r, unnest(${st.p(a.values)}::text[]) k, LATERAL (SELECT row->>k AS v) x WHERE v <> '' GROUP BY k) g) AS values`,
     )
   }
+  if (parts.length && s.lens) {
+    parts.push(`NOT (${['false', ...s.rows.map(owning)].join(' OR ')}) AS whole`)
+  }
   const found = parts.length
-    ? (await db.query<{ rows?: { id: string }[]; counts?: number[]; values?: Record<string, string[]> }>(`${rows(s)}\nSELECT ${parts.join(',\n  ')}`, st.params)).rows[0]
+    ? (
+        await db.query<{ rows?: { id: string }[]; counts?: number[]; values?: Record<string, string[]>; whole?: boolean }>(
+          `${rows(st, s)}\nSELECT ${parts.join(',\n  ')}`,
+          st.params,
+        )
+      ).rows[0]
     : undefined
   return {
     rows: found?.rows ?? [],
     counts: found?.counts ?? [],
     values: { ...Object.fromEntries((a.values ?? []).map((k) => [k, []])), ...found?.values },
+    whole: found?.whole ?? false,
   }
 }
+
+// Whether a select names the circle that owns its rows, `circle`: its
+// columns read over no row of it, one row of nulls under their keys.
+const owning = (r: Read) =>
+  `coalesce((SELECT to_jsonb(z) ? 'circle' FROM (SELECT x.* FROM (VALUES (1)) one LEFT JOIN (${r.sql}) x ON false) z), false)`
 
 // The rows a read keeps, in the collection's order, `limit` of them after
 // the first `offset`; no limit reads them all.
@@ -178,7 +204,7 @@ export async function measures(db: Db, s: Source, ms: Measure[]): Promise<(numbe
     const skip = m.by.month ? ` AND coalesce(row->>${by}, '') <> ''` : ''
     return `(SELECT coalesce(json_agg(json_build_object('label', label, 'value', value) ORDER BY label), '[]') FROM (SELECT ${label} AS label, coalesce(${value}, 0)::float8 AS value FROM r WHERE ${where}${skip} GROUP BY 1) g) AS m${i}`
   })
-  const { rows: found } = await db.query<Record<string, number | null | { label: string; value: number }[]>>(`${rows(s)}\nSELECT ${each.join(',\n  ')}`, st.params)
+  const { rows: found } = await db.query<Record<string, number | null | { label: string; value: number }[]>>(`${rows(st, s)}\nSELECT ${each.join(',\n  ')}`, st.params)
   return ms.map((_, i) => found[0]?.[`m${i}`] ?? null)
 }
 

@@ -79,6 +79,7 @@
     shifts,
     dashboard = null,
     sorted = null,
+    whole = false,
   }: {
     name: string
     title: string
@@ -115,6 +116,9 @@
     // The field the rows are ordered by first, and which way, which a
     // table's header says.
     sorted?: { key: string; dir: 'ascending' | 'descending' } | null
+    // Whether the member's lens leaves the collection whole, as it does
+    // one whose rows name no circle that owns them, which its header says.
+    whole?: boolean
   } = $props()
 
   const typed = $derived(fields(columns))
@@ -304,6 +308,7 @@
   {icon}
   {count}
   {caption}
+  subtitle={whole && shell.lens ? `The lens on ${shell.lens.name} leaves ${title} whole: no circle owns its rows.` : undefined}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}
   panels={[{ id: 'view', label: 'View', icon: SlidersHorizontal, body: viewing }]}
 >

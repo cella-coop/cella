@@ -11,3 +11,8 @@ export async function lensing(db: Db, cookies: Cookies, actor: string): Promise<
   const named = cookies.get('cella-lens')
   return { circles, lens: circles.find((c) => c.id === named) ?? null }
 }
+
+// The circle a collection is read through, the member's lens, or none.
+export async function lensed(db: Db, cookies: Cookies, actor: string | null): Promise<string | null> {
+  return actor && cookies.get('cella-lens') ? ((await lensing(db, cookies, actor)).lens?.id ?? null) : null
+}

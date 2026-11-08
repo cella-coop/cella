@@ -16,7 +16,7 @@ const division = `CASE patronage.basis_of(t.id) ${Object.entries(divides).map(([
 // with how it divides, and governing this year, to govern a later one or
 // replaced, as the list shows them.
 export const bases: Read = {
-  sql: `SELECT ${fields(division)}, CASE WHEN t.id = patronage.terms_for(extract(year FROM cella.verdict_date())::integer) THEN 'governing'
+  sql: `SELECT ${fields(division)}, t.circle, CASE WHEN t.id = patronage.terms_for(extract(year FROM cella.verdict_date())::integer) THEN 'governing'
           WHEN t."from" > extract(year FROM cella.verdict_date()) THEN 'to govern' ELSE 'replaced' END AS state FROM patronage.terms t`,
   order: '"from" DESC, adopted DESC, id',
 }

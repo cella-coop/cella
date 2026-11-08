@@ -11,7 +11,7 @@ const kinds = `array_position(ARRAY['income', 'balance', 'margins', 'federation'
 // The saved reports as the collection lists them: the four the feat draws
 // itself first, then the members' own by title.
 export const listing: Read = {
-  sql: `SELECT id, title, caption, kind, owner, to_char(saved, 'YYYY-MM-DD') AS saved FROM report.listed`,
+  sql: `SELECT id, title, caption, kind, owner, to_char(saved, 'YYYY-MM-DD') AS saved, circle FROM report.listed`,
   order: `${kinds}, title`,
 }
 

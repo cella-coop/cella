@@ -30,12 +30,13 @@ CREATE TABLE report.report (
   saved date NOT NULL
 );
 
--- Every report the collection lists: those the feat draws, then the
--- members' own, of kind `custom`.
+-- Every report the collection lists: those the feat draws, which no
+-- circle owns, then the members' own, of kind `custom`, each under the
+-- circle that owns it.
 CREATE VIEW report.listed WITH (security_invoker = true) AS
-  SELECT d.id, d.title, d.caption, d.kind, NULL::json AS definition, NULL::text AS owner, NULL::date AS saved FROM report.drawn d
+  SELECT d.id, d.title, d.caption, d.kind, NULL::json AS definition, NULL::text AS owner, NULL::date AS saved, NULL::text AS circle FROM report.drawn d
   UNION ALL
-  SELECT r.id, r.title, r.caption, 'custom', r.definition, r.owner, r.saved FROM report.report r;
+  SELECT r.id, r.title, r.caption, 'custom', r.definition, r.owner, r.saved, r.circle FROM report.report r;
 
 -- When a project is watched, from a day on: once its billable time has
 -- spent `burn` percent of its budget, or once what it invoiced keeps less

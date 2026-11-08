@@ -14,7 +14,7 @@ const label = `CASE e.category ${categories.map((c) => `WHEN ${literal(c.code)} 
 // The expenses as the collection lists them, the latest spent first, each
 // category by its label.
 export const listing: Read = {
-  sql: `SELECT ${fields(label)} FROM expense.expense e`,
+  sql: `SELECT ${fields(label)}, e.circle FROM expense.expense e`,
   order: 'day DESC, id DESC',
 }
 

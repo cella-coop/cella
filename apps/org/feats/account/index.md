@@ -1,6 +1,6 @@
 +++
 title = "Account"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The co-op's accounts and what its members own: the chart of accounts,

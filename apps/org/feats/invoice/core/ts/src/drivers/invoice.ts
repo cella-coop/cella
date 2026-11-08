@@ -19,7 +19,7 @@ const money: (keyof Listed)[] = ['total', 'paid', 'owed', 'credit']
 // The invoices as the collection lists them, the latest first, each
 // standing as its badge shows it: overdue where it is.
 export const listing: Read = {
-  sql: `SELECT ${columns(`CASE WHEN ${overdue} THEN 'overdue' ELSE s.state END`)}, i.series, i.number
+  sql: `SELECT ${columns(`CASE WHEN ${overdue} THEN 'overdue' ELSE s.state END`)}, i.series, i.number, i.circle
         FROM invoice.invoice i JOIN invoice.standing s ON s.id = i.id`,
   order: 'series DESC, number DESC',
 }

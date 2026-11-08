@@ -2,6 +2,7 @@ import { error, type Actions } from '@sveltejs/kit'
 import { ordered, read, today, type Db, type Source } from '@cella/org-db'
 import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { using } from '#lib/server/db.ts'
+import { lensed } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
 import { mounted, source, writes } from '#lib/server/slices.ts'
 import { perform } from '#lib/server/write.ts'
@@ -17,11 +18,12 @@ import type { PageServerLoad } from './$types'
 // what its header says about it; and, in the
 // dashboard layout, its widgets run over the rows it keeps. A board
 // places every row the view keeps, a calendar those on the days it shows,
-// and a dashboard draws none.
-export const load: PageServerLoad = async ({ params, url, locals }) => {
+// and a dashboard draws none. Under the member's lens it reads only the
+// lensed circle's rows, and says where the lens leaves it whole.
+export const load: PageServerLoad = async ({ params, url, locals, cookies }) => {
   const m = mounted(params.collection)
-  const from = source(params.collection)
-  if (!m || !from) {
+  const named = source(params.collection)
+  if (!m || !named) {
     error(404, `There is no collection ${params.collection}`)
   }
   const fs = fields(columns(params.collection))
@@ -31,9 +33,11 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
   const limit = drawn(url)
   const keeps = keeping(spec, fs)
   return using(locals.actor, async (db) => {
+    // Its rows through the member's lens, where they have one.
+    const from = source(params.collection, await lensed(db, cookies, locals.actor)) ?? named
     const day = await today(db)
     const paged = spec.layout === 'list' || spec.layout === 'table' || spec.layout === 'gallery'
-    const { rows, counts, values } = await read(db, from, {
+    const { rows, counts, values, whole } = await read(db, from, {
       ...(spec.layout === 'dashboard' ? {} : { keep: placing(spec, fs, url, day) ?? keeps, ...(paged ? { limit } : {}) }),
       counts: [{ where: spec.where }, keeps, ...tabs.map((p) => ({ where: wheres(p.where, fs) }))],
       values: fs.filter((f) => f.type === 'enum').map((f) => f.key),
@@ -56,6 +60,9 @@ export const load: PageServerLoad = async ({ params, url, locals }) => {
       errors,
       dashboard: spec.layout === 'dashboard' ? await measured(db, from, spec, fs, params.collection) : null,
       sorted: ordered(from),
+      // Whether the lens leaves the collection whole, its rows naming no
+      // circle that owns them.
+      whole,
     }
   })
 }

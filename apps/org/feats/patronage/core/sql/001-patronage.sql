@@ -195,16 +195,16 @@ BEGIN ATOMIC
 END;
 
 -- Each worker's statement for a year: their part of the work share, in
--- all and by basis.
+-- all and by basis, owned by the circle that owns its distribution.
 CREATE VIEW patronage.statement AS
-SELECT p.distribution || ':' || p.worker AS id, p.distribution, d.year, p.worker,
+SELECT p.distribution || ':' || p.worker AS id, p.distribution, d.year, p.worker, d.circle,
        sum(cella.cents(p.amount))::bigint AS amount,
        coalesce(sum(cella.cents(p.amount)) FILTER (WHERE p.basis = 'salary'), 0)::bigint AS salary,
        coalesce(sum(cella.cents(p.amount)) FILTER (WHERE p.basis = 'hours'), 0)::bigint AS hours,
        coalesce(sum(cella.cents(p.amount)) FILTER (WHERE p.basis = 'equal'), 0)::bigint AS equal
 FROM patronage.part p
 JOIN patronage.distribution d ON d.id = p.distribution
-GROUP BY p.distribution, d.year, p.worker;
+GROUP BY p.distribution, d.year, p.worker, d.circle;
 
 -- patronage:distribution:approve — the write approved the split on the
 -- verdict date, once its year was over; the shares add up to the surplus,

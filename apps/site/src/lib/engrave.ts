@@ -27,9 +27,9 @@ const SOFT = 0.3
 
 // A portrait, a person's own picture in `src/people/`, is shown small, in
 // a single cell, so it is cut square and coarser for its size: its lines
-// as far apart on the page as a figure's, some forty across a face
+// a little closer on the page than a figure's, some sixty across a face
 export const PORTRAIT = 480
-const PORTRAIT_BASE = 220
+const PORTRAIT_BASE = 330
 
 type Kind = 'photo' | 'person'
 const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people' }
@@ -60,7 +60,7 @@ export function peopleNames(): string[] {
 
 const CACHE = join(process.cwd(), '.astro/engraving')
 // A change to how an engraving is cut bumps it, so no stale one is reused
-const VERSION = 2
+const VERSION = 3
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 

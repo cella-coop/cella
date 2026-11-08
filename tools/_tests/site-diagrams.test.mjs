@@ -51,3 +51,21 @@ test('a missing mark, unlisted component and unknown MDX name each fail', () => 
   assert.ok(errors.some((e) => e.includes('not listed')))
   assert.ok(errors.some((e) => e.includes('unknown diagram missing')))
 }))
+
+test('a band in the drafts naming an unknown diagram fails, naming the draft', () => fixture(({ dir, site, put }) => {
+  mkdirSync(join(site, 'src/drafts/pages/home'), { recursive: true })
+  put('site/src/drafts/pages/home/join.mdx', '---\nkind: cta\ndiagram: gone\n---\n')
+  put('site/src/content/sections/section.mdx', '---\nkind: quote\ndiagram: one\n---\n')
+  const errors = check(dir, parse, site, () => undefined)
+  assert.deepEqual(errors, ['src/drafts/pages/home/join.mdx: unknown diagram gone'])
+}))
+
+test('a vendored glyph must be Phosphor\'s own path', () => fixture(({ dir, site, put }) => {
+  mkdirSync(join(dir, 'src/lang'), { recursive: true })
+  put('diagrams/src/lang/glyphs.ts', "export const GLYPHS = {\n  'check': 'M1 1Z',\n  'x': 'M2 2Z',\n  'nope': 'M3 3Z',\n} as const\n")
+  const icons = { check: '<svg><path d="M1 1Z"/></svg>', x: '<svg><path d="M9 9Z"/></svg>' }
+  const errors = check(dir, parse, site, (name) => icons[name])
+  assert.ok(!errors.some((e) => e.includes(' check ')))
+  assert.ok(errors.some((e) => e.includes('x differs')))
+  assert.ok(errors.some((e) => e.includes('nope is not a Phosphor icon')))
+}))

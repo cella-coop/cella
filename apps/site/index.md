@@ -136,6 +136,20 @@ credit Unsplash asks for, a small spaced label: the `site` entry's photo
 credit, the photographer's name linked to their profile and "Unsplash"
 to the photo's page.
 
+## The sign-up
+
+The footer opens with a sign-up for news (`Signup.astro`): a heading
+and what a subscriber gets, then the email field and the button as one
+row of cells, the field a wash cell and the button the solid one, and a
+box a co-op that might pilot ticks, sent as `pilot`. It posts the form
+to the list's endpoint, `PUBLIC_SIGNUP_URL`, in the page, so the page
+stays put: once sent it clears the field and says to confirm by email,
+the list sending the confirmation (double opt-in), and failed it says
+so. With no endpoint set, as in the dev server, it sends nothing and
+only shows what it would say. Its words are the `site` entry's
+`signup`. The list behind it is to be a self-hosted Listmonk, moving
+into a running Cella scope later; neither is wired yet.
+
 ## The assets
 
 `/assets`, `src/pages/assets/[...path].astro`, is the asset library,

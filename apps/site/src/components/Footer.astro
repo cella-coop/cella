@@ -1,21 +1,27 @@
 ---
-// The footer, on the page's own paper and its grid: the lockup and
+// The footer, on the page's own paper and its grid: the sign-up for news,
+// then the lockup and
 // the site's closing line, the sitemap in columns, each a heading over
 // its links, and under them the note that the site shows prototype work.
 import lockup from '@cella/brand/lockup.svg?raw'
 import type { Marks } from '../lib/text'
+import Signup from './Signup.astro'
 
 type Link = { label: string; href: string }
 interface Props {
   footer: { line: string; columns: { heading: string; links: Link[] }[]; disclaimer: string }
+  signup: Parameters<typeof Signup>[0]['text']
   drafted: Marks
 }
 
-const { footer, drafted } = Astro.props
+const { footer, signup, drafted } = Astro.props
 ---
 
 <footer class="footer">
   <div class="wrap">
+    <div class="news">
+      <Signup text={signup} ink={'error'} drafted={drafted} />
+    </div>
     <div class="top">
       <div class="brand">
         <span class="lockup" aria-hidden="true" set:html={lockup} />
@@ -50,6 +56,10 @@ const { footer, drafted } = Astro.props
     padding-block: 3.5rem 3rem;
     color: var(--text-muted);
     font-size: 0.92rem;
+  }
+
+  .news {
+    margin-bottom: clamp(3rem, 6vw, 4.5rem);
   }
 
   .top {

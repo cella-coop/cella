@@ -45,5 +45,5 @@ const laid = sections.map((s) => {
     <slot />
     {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} />)}
   </main>
-  <Footer footer={site.footer} drafted={site.drafted} />
+  <Footer footer={site.footer} signup={site.signup} drafted={site.drafted} />
 </Base>

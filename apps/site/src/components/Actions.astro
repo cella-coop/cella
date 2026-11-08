@@ -1,21 +1,23 @@
 ---
-// A row of actions as a row of cells (index.md, the layout): the links
-// side by side, their tops and feet aligned, each pair sharing a slanted
-// edge cut by one gutter, the row's two ends bulging as a cluster's rim.
-// The first is solid in the section's ink, the rest a wash of it. The
-// cells are drawn once the row is laid out, and again when it changes
-// size; before that, and with no script, each is a plain rounded fill.
+// A row of actions as a row of cells (index.md, the layout): side by side,
+// their tops and feet aligned, each pair sharing a slanted edge cut by one
+// gutter, the row's two ends bulging as a cluster's rim. Its cells are its
+// links, the first solid in the ink and the rest a wash of it, or what its
+// slot holds, any element of class `cell` whose `data-tone` is `fill` or
+// `wash`, as a form's field and button. The cells are drawn once the row
+// is laid out, and again when it changes size; before that, and with no
+// script, each is a plain rounded fill.
 import type { Link, Status } from '../schemas'
 import type { Marks } from '../lib/text'
 
 interface Props {
-  links: { link: Link; field: string }[]
+  links?: { link: Link; field: string }[]
   ink: Status
   seed: number
-  drafted: Marks
+  drafted?: Marks
 }
 
-const { links, ink, seed, drafted } = Astro.props
+const { links = [], ink, seed, drafted = () => undefined } = Astro.props
 const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
 ---
 
@@ -23,11 +25,12 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
   <svg aria-hidden="true"></svg>
   {
     links.map(({ link, field }, i) => (
-      <a class:list={['cell', { wash: i > 0 }]} href={link.href} data-drafted={drafted(field)}>
+      <a class="cell" data-tone={i ? 'wash' : 'fill'} href={link.href} data-drafted={drafted(field)}>
         {link.label}
       </a>
     ))
   }
+  <slot />
 </div>
 
 <script>
@@ -62,12 +65,14 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     const h = box.height
     const polys = outlines(cells.map((c) => c.getBoundingClientRect().width), h, Number(row.dataset.seed), 5)
     svg.setAttribute('viewBox', `0 0 ${f(box.width)} ${f(h)}`)
-    svg.innerHTML = polys.map((p, i) => `<path class="${i ? 'wash' : 'fill'}" d="${roundedPath(p, h * 0.2, f)}"/>`).join('')
+    svg.innerHTML = polys.map((p, i) => `<path class="${cells[i].dataset.tone ?? 'fill'}" d="${roundedPath(p, h * 0.2, f)}"/>`).join('')
     row.dataset.drawn = ''
     cells.forEach((c, i) => {
       const path = svg.children[i]
-      c.onmouseenter = c.onfocus = () => path.classList.add('lift')
-      c.onmouseleave = c.onblur = () => path.classList.remove('lift')
+      c.addEventListener('mouseenter', () => path.classList.add('lift'))
+      c.addEventListener('mouseleave', () => path.classList.remove('lift'))
+      c.addEventListener('focus', () => path.classList.add('lift'))
+      c.addEventListener('blur', () => path.classList.remove('lift'))
     })
   }
 
@@ -115,44 +120,49 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     transform: scale(1.03);
   }
 
-  .cell {
+  .actions :global(.cell) {
+    min-width: 0;
+    margin: 0;
     padding: 0.95rem 1.7rem;
+    border: 0;
     border-radius: 0.9rem;
     background: var(--fill);
     color: var(--on-fill);
+    font: inherit;
     font-size: 0.95rem;
     font-weight: 650;
     line-height: 1.2;
     text-decoration: none;
     white-space: nowrap;
+    cursor: pointer;
   }
 
-  .cell.wash {
+  .actions :global(.cell[data-tone='wash']) {
     background: var(--wash);
     color: var(--on-wash);
   }
 
-  .cell + .cell {
+  .actions :global(.cell + .cell) {
     margin-left: 0.4rem;
   }
 
   /* drawn, the cells are the svg's, side by side with no gap */
-  [data-drawn] .cell {
+  [data-drawn] :global(.cell) {
     background: none;
   }
 
-  [data-drawn] .cell + .cell {
+  [data-drawn] :global(.cell + .cell) {
     margin-left: 0;
   }
 
-  .cell:focus-visible {
+  .actions :global(.cell:focus-visible) {
     outline: 2px solid var(--text);
     outline-offset: -5px;
     border-radius: 0.6rem;
   }
 
   @media (max-width: 30rem) {
-    .cell {
+    .actions :global(.cell) {
       padding: 0.85rem 1.2rem;
       font-size: 0.9rem;
     }

@@ -1,0 +1,157 @@
+---
+// The sign-up for news (index.md, the sign-up): a heading and what a
+// subscriber gets, the email field and the button as one row of cells,
+// and a box a co-op that might pilot ticks. It posts to the list's
+// endpoint, `PUBLIC_SIGNUP_URL`, in the page, so it stays put and says
+// what came of it; with no endpoint set, as in the dev server, it only
+// shows what it would say once sent.
+import type { Status } from '../schemas'
+import type { Marks } from '../lib/text'
+import Actions from './Actions.astro'
+
+interface Props {
+  text: { heading: string; note: string; label: string; placeholder: string; pilot: string; submit: string; done: string; failed: string }
+  ink: Status
+  drafted: Marks
+}
+
+const { text, ink, drafted } = Astro.props
+const endpoint = import.meta.env.PUBLIC_SIGNUP_URL ?? ''
+const d = (k: string) => drafted(`signup.${k}`)
+---
+
+<form class="signup" action={endpoint || undefined} method="post" data-signup data-endpoint={endpoint}>
+  <div class="words">
+    <p class="heading" data-drafted={d('heading')}>{text.heading}</p>
+    <p class="note" data-drafted={d('note')}>{text.note}</p>
+  </div>
+  <div class="fields">
+    <Actions ink={ink} seed={11}>
+      <input class="cell field" data-tone="wash" type="email" name="email" required autocomplete="email" aria-label={text.label} placeholder={text.placeholder} data-drafted={d('label')} />
+      <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
+    </Actions>
+    <label class="pilot" data-drafted={d('pilot')}>
+      <input type="checkbox" name="pilot" />
+      <span>{text.pilot}</span>
+    </label>
+    <p class="said" role="status" aria-live="polite" hidden></p>
+    <template data-done>{text.done}</template>
+    <template data-failed>{text.failed}</template>
+  </div>
+</form>
+
+<script>
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-signup]')) {
+    const said = form.querySelector<HTMLElement>('.said')!
+    const say = (which: 'done' | 'failed') => {
+      said.textContent = form.querySelector<HTMLTemplateElement>(`template[data-${which}]`)!.content.textContent
+      said.dataset.state = which
+      said.hidden = false
+    }
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const endpoint = form.dataset.endpoint
+      form.dataset.busy = ''
+      try {
+        if (endpoint) {
+          const res = await fetch(endpoint, { method: 'POST', body: new FormData(form) })
+          if (!res.ok) {
+            throw new Error(String(res.status))
+          }
+        }
+        form.reset()
+        say('done')
+      } catch {
+        say('failed')
+      } finally {
+        delete form.dataset.busy
+      }
+    })
+  }
+</script>
+
+<style>
+  .signup {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 1.5rem clamp(2rem, 5vw, 5rem);
+    align-items: start;
+  }
+
+  .words {
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .heading {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .note {
+    max-width: 30rem;
+  }
+
+  .fields {
+    display: grid;
+    gap: 0.9rem;
+    justify-items: start;
+    min-width: 0;
+  }
+
+  .fields :global(.actions) {
+    width: min(100%, 30rem);
+  }
+
+  .field {
+    flex: 1;
+    cursor: text;
+    font-weight: 500;
+  }
+
+  .field::placeholder {
+    color: var(--on-wash);
+    opacity: 0.55;
+  }
+
+  [data-busy] button {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .pilot {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  .pilot input {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin: 0;
+    accent-color: var(--p0);
+  }
+
+  .said {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  .said[data-state='failed'] {
+    color: var(--error-text);
+  }
+
+  @media (max-width: 56rem) {
+    .signup {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

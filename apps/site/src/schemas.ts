@@ -28,6 +28,19 @@ export const site = z.object({
     disclaimer: z.string(),
   }),
   blog: z.object({ empty: z.string(), back: z.string() }),
+  // The sign-up for news: its heading and what a subscriber gets, the
+  // field's label read aloud and its placeholder, the box a co-op that
+  // might pilot ticks, the button, and what it says once sent or failed.
+  signup: z.object({
+    heading: z.string(),
+    note: z.string(),
+    label: z.string(),
+    placeholder: z.string(),
+    pilot: z.string(),
+    submit: z.string(),
+    done: z.string(),
+    failed: z.string(),
+  }),
   // The mark under a diagram, which says it was made by a model.
   diagram: z.object({ mark: z.string() }),
   photo: z.object({ credit: z.string(), unsplash: z.string() }),

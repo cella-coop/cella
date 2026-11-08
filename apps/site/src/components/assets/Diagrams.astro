@@ -1,34 +1,48 @@
 ---
-// Every diagram of @cella/diagrams, as a section's figure shows it.
+// Every diagram of @cella/diagrams, on the paper as a post's figure shows
+// it, and on each band, light on its colour, as a band shows it.
 import { diagrams, type DiagramName } from '@cella/diagrams'
 import Diagram from '../Diagram.astro'
 
 const named = Object.keys(diagrams) as DiagramName[]
 ---
 
-<ul class="grid" role="list">
+<ul class="list" role="list">
   {
     named.map((name) => (
       <li>
-        <div class="card">
-          <Diagram name={name} />
-        </div>
         <p class="name">
           <code>{name}</code>
         </p>
+        <div class="row">
+          <div class="card">
+            <Diagram name={name} />
+          </div>
+          <div class="card" data-on="a">
+            <Diagram name={name} band />
+          </div>
+          <div class="card" data-on="b">
+            <Diagram name={name} band />
+          </div>
+        </div>
       </li>
     ))
   }
 </ul>
 
 <style>
-  .grid {
+  .list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(28rem, 1fr));
-    gap: 1.5rem;
+    gap: 3rem;
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: 1.5rem;
   }
 
   .card {
@@ -38,12 +52,31 @@ const named = Object.keys(diagrams) as DiagramName[]
     background: var(--panel);
   }
 
+  .card[data-on] {
+    --text: var(--band-ink);
+    --text-muted: color-mix(in oklch, var(--band-ink) 88%, transparent);
+    --dg-ground: var(--band);
+    border-color: transparent;
+    background: var(--band);
+    color: var(--band-ink);
+  }
+
+  .card[data-on='a'] {
+    --band: var(--band-a);
+    --band-ink: var(--band-a-ink);
+  }
+
+  .card[data-on='b'] {
+    --band: var(--band-b);
+    --band-ink: var(--band-b-ink);
+  }
+
   .card :global(figure) {
     margin: 0;
   }
 
   .name {
-    margin: 0.5rem 0 0;
+    margin: 0 0 0.75rem;
     color: var(--text-muted);
     font-size: var(--t-sm);
   }

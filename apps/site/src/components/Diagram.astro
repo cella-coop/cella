@@ -1,20 +1,49 @@
 ---
+// A diagram of @cella/diagrams by its name, in a figure with the mark
+// every diagram wears. On the paper its particles take the status tones;
+// on a band, `band`, it is the band's light ink alone, its shapes and
+// glyphs carrying what the tones would.
 import { diagrams, type DiagramName } from '@cella/diagrams'
 import { siteData } from '../lib/text'
 
-const { name } = Astro.props as { name: DiagramName }
+const { name, band = false } = Astro.props as { name: DiagramName; band?: boolean }
 const diagram = Object.hasOwn(diagrams, name) ? diagrams[name] : undefined
-if (!diagram) throw new Error(name)
+if (!diagram) {
+  throw new Error(name)
+}
 const { component: Picture, meta } = diagram
 const site = await siteData()
 ---
 
-<figure class="diagram">
+<figure class:list={['diagram', { band }]}>
   <div role="img" aria-label={meta.alt}><Picture /></div>
   <figcaption>{site.diagram.mark}</figcaption>
 </figure>
 
 <style>
-  .diagram { margin: 2rem 0; }
-  figcaption { margin-top: .5rem; color: var(--text-muted); font-size: var(--t-sm); }
+  .diagram {
+    --dg-grant: var(--success-text);
+    --dg-no: var(--error-text);
+    --dg-ask: var(--help-text);
+    margin: 2rem 0;
+  }
+
+  .band {
+    --dg-grant: currentColor;
+    --dg-no: currentColor;
+    --dg-ask: currentColor;
+    margin: 0;
+  }
+
+  figcaption {
+    margin-top: 0.5rem;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+
+  .band figcaption {
+    color: inherit;
+    font-size: var(--t-xs);
+    opacity: 0.7;
+  }
 </style>

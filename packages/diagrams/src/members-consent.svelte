@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-  import { Auth, Axis, Dot, Frame, Glyph, Line, Name, Num, Particle, Wait } from './lang'
+  import { Auth, Axis, Dot, Frame, Glyph, Line, Name, Particle, Wait } from './lang'
 
   const base = 344
   const top = 30
@@ -66,9 +66,4 @@
   <!-- the role acts under it -->
   <Glyph name="stamp" x={role} y={104} />
 
-  <Num n={1} x={40} y={318} />
-  <Num n={2} x={40} y={270} />
-  <Num n={3} x={40} y={214} />
-  <Num n={4} x={40} y={170} />
-  <Num n={5} x={40} y={104} />
 </Frame>

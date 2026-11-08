@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-  import { Auth, Axis, Dot, Frame, Glyph, Line, Name, Num, Particle } from './lang'
+  import { Auth, Axis, Dot, Frame, Glyph, Line, Name, Particle } from './lang'
 
   const base = 344
   const top = 30
@@ -63,9 +63,4 @@
 
   <Glyph name="prohibit" x={buyer} y={50} tone="no" refused />
 
-  <Num n={1} x={42} y={306} />
-  <Num n={2} x={42} y={230} />
-  <Num n={3} x={42} y={156} />
-  <Num n={4} x={42} y={112} />
-  <Num n={5} x={42} y={50} />
 </Frame>

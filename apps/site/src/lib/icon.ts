@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
-export type IconRole = 'accent' | 'success' | 'error' | 'warning' | 'info' | 'help'
+// A role's colours, or `current`, the text's own colour around it, its
+// duotone layer a fifth of it, for an icon on a band
+export type IconRole = 'accent' | 'success' | 'error' | 'warning' | 'info' | 'help' | 'current'
 export function iconMarkup(name: string, role: IconRole): string {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) throw new Error(`unknown Phosphor duotone icon: ${name}`)
-  if (!['accent', 'success', 'error', 'warning', 'info', 'help'].includes(role)) throw new Error(`unknown icon role: ${role}`)
+  if (!['accent', 'success', 'error', 'warning', 'info', 'help', 'current'].includes(role)) throw new Error(`unknown icon role: ${role}`)
   let svg: string
   try {
     const path = createRequire(import.meta.url).resolve(`@phosphor-icons/core/assets/duotone/${name}-duotone.svg`)
@@ -12,7 +14,11 @@ export function iconMarkup(name: string, role: IconRole): string {
   } catch {
     throw new Error(`unknown Phosphor duotone icon: ${name}`)
   }
-  return svg.replace('<svg ', '<svg width="100%" height="100%" aria-hidden="true" focusable="false" ')
+  const marked = svg.replace('<svg ', '<svg width="100%" height="100%" aria-hidden="true" focusable="false" ')
+  if (role === 'current') {
+    return marked
+  }
+  return marked
     .replace('fill="currentColor"', `fill="var(--${role}-text)"`)
     .replaceAll('opacity="0.2"', `fill="var(--${role}-soft)" opacity="1"`)
 }

@@ -245,8 +245,10 @@ renderer hands it:
 - **`<Diagram name="…" />`** renders the diagram of that name from
   `@cella/diagrams` inside a `<figure>`, its `alt` its `meta`'s, and
   under it the mark every diagram wears: the `site` entry's diagram
-  label, "AI-generated", in the muted text, which the wrapper always
-  prints and no prop removes. On the paper its particles take the
+  label, "AI-generated", in the muted text with Phosphor's sparkle, run
+  out to the screen's edge on the diagram's outer side, `edge` (`r`
+  unset), the sparkle outermost, which the wrapper always prints and no
+  prop removes. On the paper its particles take the
   status tones; a band's, `band`, are its light ink alone. A name the
   diagrams do not list fails the build, naming it.
 - **`<Photo name="…" alt="…" print="…" />`** renders the photo of that name

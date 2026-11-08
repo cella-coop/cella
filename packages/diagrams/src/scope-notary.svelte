@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-  import { Axis, Dot, Frame, Glyph, Line, Name, Num, Particle, Wait } from './lang'
+  import { Axis, Dot, Frame, Glyph, Line, Name, Particle, Wait } from './lang'
 
   const base = 344
   const top = 30
@@ -55,8 +55,4 @@
   <Dot x={notary} y={96} />
   <Glyph name="x" x={member} y={83} tone="no" />
 
-  <Num n={1} x={42} y={312} />
-  <Num n={2} x={42} y={246} />
-  <Num n={3} x={42} y={190} />
-  <Num n={4} x={42} y={112} />
 </Frame>

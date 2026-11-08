@@ -75,8 +75,6 @@ the geometry of the particles' paths.
   joining. `src/lang/glyphs.ts` holds Phosphor's paths, vendored so the
   package depends on the brand alone; `cella check site` compares each
   with `@phosphor-icons/core`'s own and refuses one that differs.
-- **Steps are numbered** in a column by the axis, each a mono numeral in
-  a hairline ring at its event's height (`Num`).
 - **Boxes are records**: a rounded box filled with the ground, dashed
   while pending; a span, a faint wash, groups what happens together, as
   one transaction.

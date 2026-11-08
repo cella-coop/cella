@@ -166,19 +166,6 @@
     stroke: none;
   }
 
-  /* step numbers */
-  .dg :global(.num > circle) {
-    fill: var(--ground);
-    stroke: currentColor;
-    stroke-width: 0.9;
-  }
-
-  .dg :global(.num > text) {
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    font-weight: 500;
-  }
-
   /* the time axis, a hairline */
   .dg :global(.axis) {
     stroke: currentColor;

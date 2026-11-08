@@ -7,7 +7,7 @@
 </script>
 
 <script lang="ts">
-  import { Axis, Dot, Frame, Glyph, Line, Name, Num, Particle, Wait } from './lang'
+  import { Axis, Dot, Frame, Glyph, Line, Name, Particle, Wait } from './lang'
 
   const base = 344
   const top = 30
@@ -57,8 +57,4 @@
   <Dot x={a} y={70} />
   <Glyph name="seal-check" x={c} y={54} />
 
-  <Num n={1} x={42} y={300} />
-  <Num n={2} x={42} y={228} />
-  <Num n={3} x={42} y={170} />
-  <Num n={4} x={42} y={74} />
 </Frame>

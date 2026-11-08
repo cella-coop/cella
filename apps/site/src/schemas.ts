@@ -67,19 +67,32 @@ const item = z.object({ title: z.string(), body: z.string() })
 // section with a figure sets it beside its text, the sides trading down
 // the page. `heading` may mark a closing part with stars, `*like this*`,
 // set thin. Its file's name is its anchor; `order` places it.
-export const section = z.object({
-  kind: z.enum(['hero', 'prose', 'features', 'steps', 'list', 'quote', 'cta']).default('prose'),
-  order: z.number().default(0),
-  title: z.string().optional(),
-  description: z.string().optional(),
-  eyebrow: z.string().optional(),
-  heading: z.string(),
-  primary: link.optional(),
-  secondary: link.optional(),
-  action: link.optional(),
-  items: z.array(item).default([]),
-  figure: figure.optional(),
-})
+//
+// A band, `quote` or `cta`, holds no photo: it draws the diagram of
+// `@cella/diagrams` its `diagram` names, light on its colour, and a band
+// that names none fails the build; a figure on a band is dropped.
+const BANDS = ['quote', 'cta']
+export const section = z
+  .object({
+    kind: z.enum(['hero', 'prose', 'features', 'steps', 'list', 'quote', 'cta']).default('prose'),
+    order: z.number().default(0),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    eyebrow: z.string().optional(),
+    heading: z.string(),
+    primary: link.optional(),
+    secondary: link.optional(),
+    action: link.optional(),
+    items: z.array(item).default([]),
+    figure: figure.optional(),
+    diagram: z.string().optional(),
+  })
+  .superRefine((s, ctx) => {
+    if (BANDS.includes(s.kind) && !s.diagram) {
+      ctx.addIssue({ code: 'custom', path: ['diagram'], message: `is required on a ${s.kind} band: name one of @cella/diagrams` })
+    }
+  })
+  .transform((s) => (BANDS.includes(s.kind) ? { ...s, figure: undefined } : s))
 
 export type Section = z.infer<typeof section>
 export type Figure = z.infer<typeof figure>

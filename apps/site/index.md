@@ -45,8 +45,8 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   | `features` | its body as a lede, then its items, each a cell of the brand in one of the five inks, a title and a line |
   | `steps` | its body, then its items numbered in two columns |
   | `list` | its body, then its items as ruled rows, a title and a muted line |
-  | `quote` | a band of sage, its edges cut as a cell's: its body set large, its heading the attribution |
-  | `cta` | a band of coral, its edges cut as a cell's: its eyebrow, heading, body and action |
+  | `quote` | a band of deep sage, its edges cut as a cell's: its body set large, its heading the attribution, its diagram beside them |
+  | `cta` | a band of coral, its edges cut as a cell's: its eyebrow, heading, body and action, its diagram beside them |
 
 - **the footer**, on the page's own paper and its grid: the lockup
   and the site's closing line, the sitemap in columns, each a heading
@@ -57,12 +57,23 @@ A band's edges are a rounded outline in its own box (`EDGES` in
 `Section.astro`), a few long edges meeting at wide turns rounded by the
 brand's own corner, its corners at the screen's sides standing past it.
 
+A band is a strong ink, its words and its diagram light on it: the
+sage a deep shade of the success ink's hue, `--band-a`, and the coral
+the error's, `--band-b`, each with its light ink, `--band-a-ink` and
+`--band-b-ink`, mixed from the brand's inks in `Base.astro` and deep
+enough for light text in either theme. A band holds no photo: it draws
+the diagram its section's `diagram` names, from `@cella/diagrams`
+([its language](../../packages/diagrams/index.md#the-language)), light
+on its colour, its glyphs' rings and its labels' halos the band's own,
+under it the mark every diagram wears. A band that names no diagram
+fails the build, naming its file and the field; a `figure` on a band is
+dropped (`src/schemas.ts`).
+
 A section's actions, its `primary`, `action` and `secondary` links, are
 a row of cells (`Actions.astro`): side by side, their tops and feet
 aligned, each pair sharing a slanted edge cut by one gutter and the
 row's two ends bulging, the first solid in the section's ink and the
-rest a wash of it; on the coral band, the band's light ink and a veil of
-it. A small script draws the cells once the row is laid out and again
+rest a wash of it; on a band, the band's light ink and a veil of it. A small script draws the cells once the row is laid out and again
 when it changes size, the cut seeded by the section; before it, and
 with no script, each link is a plain rounded fill. A hovered or focused
 cell swells a little.
@@ -164,7 +175,7 @@ of its own, its body in `src/components/assets/`:
 |---|---|
 | `/assets/photos` | every vendored photo as the site engraves it, the five inks in turn, so no two in a row share one; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since an engraving's lines are the same in any ink; a press on a photo opens it large in its ink |
 | `/assets/clusters` | the clusters a figure may be cut into, on two photos, for the operator to choose from: the blob the pages wear, the brand's organic silhouettes `amoeba`, `branch`, `bubbles` and `colony`, and the filled Phosphor icons `users-three`, `house`, `hand-heart`, `tree` and `chat-circle` (`src/lib/silhouette.ts` rasterises one at build and the brand turns it into a signed distance), each sized by the cluster's middle and, beside it, `+interest`, by the photo's interest; an icon's cells at half the pitch, so its outline reads |
-| `/assets/diagrams` | every diagram, as a post's figure shows it |
+| `/assets/diagrams` | every diagram, on the paper as a post's figure shows it and on each band, light on its colour |
 | `/assets/icons` | every icon the site draws, the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |
 
@@ -226,8 +237,9 @@ renderer hands it:
   `@cella/diagrams` inside a `<figure>`, its `alt` its `meta`'s, and
   under it the mark every diagram wears: the `site` entry's diagram
   label, "AI-generated", in the muted text, which the wrapper always
-  prints and no prop removes. A name the diagrams do not list fails the
-  build, naming it.
+  prints and no prop removes. On the paper its particles take the
+  status tones; a band's, `band`, are its light ink alone. A name the
+  diagrams do not list fails the build, naming it.
 - **`<Photo name="…" alt="…" print="…" />`** renders the photo of that name
   from `src/photos/` through the brand's print at build time
   (`printFile`, [the print](../../packages/brand/index.md#the-print)):
@@ -324,6 +336,6 @@ head's committer, which any agent sets.
 |---|---|
 | `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change to the site and to the brand's generated files; a change to the brand's model, `packages/brand/src/`, as its clusters, takes a restart, since Vite keeps the package's modules it loaded |
 | `cella site build [--release]` | the static site into `apps/site/dist`, its pages, its styles, its engravings and the brand's fonts and images, ready for any static host; `--release` refuses any text a draft still supplies |
-| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text names), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
+| `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text or its drafts name, and the diagrams' vendored glyphs against Phosphor's), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 
 `dist/` and Astro's `.astro/` are ignored by git.

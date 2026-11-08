@@ -34,8 +34,8 @@ const PLUMBING = new Set([
   'filterUnits', 'primitiveUnits', 'color-interpolation-filters', 'preserveAspectRatio',
   // an SVG shape's geometry
   'd', 'points', 'transform', 'clipPathUnits', 'maskUnits',
-  // an input's range
-  'min', 'max', 'step',
+  // an input's range, and a form's wiring
+  'min', 'max', 'step', 'method', 'action', 'enctype', 'autocomplete', 'inputmode',
 ])
 // A number, or a list of them, says nothing a reader reads.
 const NUMERIC = /^[-+0-9.eE\s,]+$/

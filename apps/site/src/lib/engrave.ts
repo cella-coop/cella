@@ -4,7 +4,7 @@
 // build, into a mask whose alpha is the ink's coverage, and served as its
 // own file by `pages/engraving/[key].png.ts`; the page colours it, so a
 // change of ink is CSS.
-import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { photoNames } from './assets'
@@ -25,16 +25,38 @@ const PITCH = 5.5
 const SWELL = 0.86
 const SOFT = 0.3
 
-const file = (name: string) => {
+// A portrait, a person's own picture in `src/people/`, is shown small, in
+// a single cell, so it is cut square and coarser for its size: its lines
+// as far apart on the page as a figure's, some forty across a face
+export const PORTRAIT = 480
+const PORTRAIT_BASE = 220
+
+type Kind = 'photo' | 'person'
+const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people' }
+
+const file = (name: string, kind: Kind = 'photo') => {
   if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
     throw new Error(`invalid photo name: ${name}`)
   }
-  return join(process.cwd(), 'src/photos', `${name}.jpg`)
+  return join(process.cwd(), DIRS[kind], `${name}.jpg`)
 }
 
 export const engravingUrl = (name: string) => `/engraving/${name}-${WIDTH}.png`
+export const portraitUrl = (name: string) => `/portrait/${name}-${PORTRAIT}.png`
 
 export const engravingKeys = () => photoNames().map((name) => ({ name, width: WIDTH }))
+
+/** Every person's picture in `src/people/`, by name. */
+export function peopleNames(): string[] {
+  try {
+    return readdirSync(join(process.cwd(), DIRS.person))
+      .filter((f) => f.endsWith('.jpg'))
+      .map((f) => f.slice(0, -4))
+      .sort()
+  } catch {
+    return []
+  }
+}
 
 const CACHE = join(process.cwd(), '.astro/engraving')
 // A change to how an engraving is cut bumps it, so no stale one is reused
@@ -42,15 +64,15 @@ const VERSION = 2
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
-export async function engrave(name: string, width: number) {
-  const cached = join(CACHE, `${name}-${width}-${statSync(file(name)).mtimeMs}-${VERSION}.png`)
+export async function engrave(name: string, width: number, kind: Kind = 'photo') {
+  const cached = join(CACHE, `${kind}-${name}-${width}-${statSync(file(name, kind)).mtimeMs}-${VERSION}.png`)
   if (existsSync(cached)) {
     return readFileSync(cached)
   }
-  const s = width / BASE
+  const s = width / (kind === 'person' ? PORTRAIT_BASE : BASE)
   const pitch = PITCH * s
-  const { data, info } = await sharp(readFileSync(file(name)))
-    .resize({ width })
+  const { data, info } = await sharp(readFileSync(file(name, kind)))
+    .resize(kind === 'person' ? { width, height: width, fit: 'cover', position: 'attention' } : { width })
     .grayscale()
     .normalise({ lower: 2, upper: 98 })
     .blur(0.8 * s)

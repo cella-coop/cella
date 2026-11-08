@@ -72,8 +72,9 @@ const figure = z.object({
 
 // An item: its title and its line, a step of a steps section, a row of a
 // list, or in any other section a cell of its list of cells, holding the
-// Phosphor icon `icon` names.
-const item = z.object({ title: z.string(), body: z.string(), icon: z.string().optional() })
+// Phosphor icon `icon` names, or the portrait `photo` names, a person's
+// picture in `src/people/`, engraved in the cell.
+const item = z.object({ title: z.string(), body: z.string(), icon: z.string().optional(), photo: z.string().optional() })
 
 // One section of a page, laid out by its kind: `hero` the page's top,
 // with its title and description; `prose` its body; `features`, `steps`

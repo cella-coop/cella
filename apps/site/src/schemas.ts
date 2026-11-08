@@ -108,9 +108,10 @@ export const section = z
     // a form under its words: the compact sign-up or the contact form
     form: z.enum(['signup', 'contact']).optional(),
     // a list of cells holds its items' numbers, and stands down the page,
-    // side by side or in two columns
+    // side by side or in two columns (`layout` is MDX's own word: a file
+    // naming one is wrapped in that component)
     numbered: z.boolean().default(false),
-    layout: z.enum(['column', 'row', 'grid']).default('column'),
+    arrange: z.enum(['column', 'row', 'grid']).default('column'),
     // a band's ink, and whether it quotes
     ink: z.enum(STATUSES).optional(),
     quote: z.boolean().default(false),

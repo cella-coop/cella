@@ -1,18 +1,19 @@
 ---
 // The site's components, each by its name.
+import Actions from '../Actions.astro'
 import ThemeToggle from '../ThemeToggle.astro'
 import { siteData } from '../../lib/text'
 
 const site = await siteData()
+const links = ['first', 'second', 'third'].map((label) => ({ link: { label, href: '#' }, field: label }))
 ---
 
 <ul class="grid" role="list">
   <li>
     <div class="card">
-      <a class="btn solid" href="#">{'solid'}</a>
-      <a class="btn" href="#">{'outline'}</a>
+      <Actions links={links} ink={'error'} seed={7} drafted={() => undefined} />
     </div>
-    <p class="name"><code>{'button'}</code></p>
+    <p class="name"><code>{'actions'}</code></p>
   </li>
   <li>
     <div class="card">

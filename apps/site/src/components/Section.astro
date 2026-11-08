@@ -7,6 +7,7 @@
 import { cell, roundedPath, type Point } from '@cella/brand'
 import type { Status } from '../schemas'
 import type { Rendered } from '../lib/text'
+import Actions from './Actions.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
 
@@ -34,6 +35,12 @@ const EDGES: Record<string, Point[]> = {
 }
 const outline = band && roundedPath(EDGES[band], 0.07, (v) => v.toFixed(4))
 const clip = band && `band-${s.id}`
+// its actions, the call to act first
+const actions = [
+  ...(s.primary ? [{ link: s.primary, field: 'primary' }] : []),
+  ...(s.action ? [{ link: s.action, field: 'action' }] : []),
+  ...(s.secondary ? [{ link: s.secondary, field: 'secondary' }] : []),
+]
 ---
 
 <section id={hero ? undefined : s.id} class:list={['section', { hero }]} data-band={band} style={clip ? { 'clip-path': `url(#${clip})` } : undefined}>
@@ -90,15 +97,7 @@ const clip = band && `band-${s.id}`
               </ul>
             )
           }
-          {
-            (s.primary || s.secondary || s.action) && (
-              <div class="actions">
-                {s.primary && <a class="btn solid" href={s.primary.href} data-drafted={d('primary')}>{s.primary.label}</a>}
-                {s.action && <a class="btn solid" href={s.action.href} data-drafted={d('action')}>{s.action.label}</a>}
-                {s.secondary && <a class="btn" href={s.secondary.href} data-drafted={d('secondary')}>{s.secondary.label}</a>}
-              </div>
-            )
-          }
+          {actions.length > 0 && <div class="row"><Actions links={actions} ink={ink} seed={seed} drafted={d} /></div>}
         </div>
         {s.figure && <Engraving figure={s.figure} ink={s.figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={d} />}
       </div>
@@ -245,10 +244,8 @@ const clip = band && `band-${s.id}`
     font-weight: 400;
   }
 
-  .actions {
+  .row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
   }
 
   /* the breaks: two shaped bands of ink, their edges cut as a cell's */
@@ -277,14 +274,12 @@ const clip = band && `band-${s.id}`
     padding-block: 0;
   }
 
-  [data-band='cta'] .btn {
-    border-color: var(--band-b-ink);
-    color: var(--band-b-ink);
-  }
-
-  [data-band='cta'] .btn.solid {
-    background: var(--band-b-ink);
-    color: var(--band-b);
+  /* on the coral, the cells are the band's own light ink and a veil of it */
+  [data-band='cta'] .row :global(.actions) {
+    --fill: var(--band-b-ink);
+    --on-fill: var(--band-b);
+    --wash: color-mix(in oklch, var(--band-b-ink) 22%, transparent);
+    --on-wash: var(--band-b-ink);
   }
 
   blockquote {

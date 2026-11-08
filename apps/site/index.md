@@ -57,6 +57,16 @@ A band's edges are a rounded outline in its own box (`EDGES` in
 `Section.astro`), a few long edges meeting at wide turns rounded by the
 brand's own corner, its corners at the screen's sides standing past it.
 
+A section's actions, its `primary`, `action` and `secondary` links, are
+a row of cells (`Actions.astro`): side by side, their tops and feet
+aligned, each pair sharing a slanted edge cut by one gutter and the
+row's two ends bulging, the first solid in the section's ink and the
+rest a wash of it; on the coral band, the band's light ink and a veil of
+it. A small script draws the cells once the row is laid out and again
+when it changes size, the cut seeded by the section; before it, and
+with no script, each link is a plain rounded fill. A hovered or focused
+cell swells a little.
+
 A section with a figure sets it beside its words; down the page the
 figures trade sides, the hero's on the right, and take the five inks in
 turn, the hero's the coral (`Page.astro`). A figure bleeds past the

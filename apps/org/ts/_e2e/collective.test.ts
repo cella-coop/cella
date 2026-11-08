@@ -18,7 +18,9 @@
 // in force has gone, while a replacement in force at once carries. Run
 // by `cella test e2e collective`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -298,3 +300,5 @@ test('an end leaving the assembly only an adopt-policy that applies from a later
   assert.equal(await holds('ag', 'adopt-policy', '2027-04-11'), true)
   assert.equal((await adopts()).includes(first), false)
 })
+
+if (!process.env.CELLA_STORY) runTest('collective story', async (t) => story((name, step) => t.test(name, step)))

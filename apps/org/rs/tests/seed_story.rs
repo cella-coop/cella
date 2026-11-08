@@ -302,3 +302,32 @@ fn author_leaves_motions_put_by_a_held_role_and_by_a_circle() {
     );
     assert_eq!(authors, "ag manager");
 }
+
+#[test]
+fn tenure_leaves_web_s_lead_with_lea() {
+    let lead = seeded(
+        "tenure",
+        "SELECT string_agg(holder, ' ') FROM circle.tenure \
+         WHERE circle = 'web' AND role = 'lead' AND until IS NULL",
+    );
+    assert_eq!(lead, "lea@lanterne.example");
+}
+
+#[test]
+fn role_seat_leaves_finance_s_seat_in_brand_ended() {
+    let seat = seeded(
+        "role-seat",
+        "SELECT to_char(since, 'YYYY-MM-DD') || ' ' || to_char(until, 'YYYY-MM-DD') \
+         FROM circle.member WHERE circle = 'brand' AND role = 'finance'",
+    );
+    assert_eq!(seat, "2026-10-31 2026-11-14");
+}
+
+#[test]
+fn collective_leaves_ines_admitted_under_the_assembly_s_mandate() {
+    let status = seeded(
+        "collective",
+        "SELECT status FROM membership.member WHERE address = 'ines@lanterne.example'",
+    );
+    assert_eq!(status, "active");
+}

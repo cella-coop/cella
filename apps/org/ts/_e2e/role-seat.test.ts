@@ -8,7 +8,9 @@
 // seat ended that no role holds are refused at the proposal, each saying
 // what would fix it. Run by `cella test e2e role-seat`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -169,3 +171,5 @@ test('a motion seats the finance role in Brand, whoever holds it sits there, and
   )
   assert.equal((await seated('operations', '2026-11-14')).includes(thomas), true)
 })
+
+if (!process.env.CELLA_STORY) runTest('role-seat story', async (t) => story((name, step) => t.test(name, step)))

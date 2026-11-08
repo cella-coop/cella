@@ -7,7 +7,9 @@
 // coordination, where the lead role is a member. Run by `cella test e2e
 // tenure`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, story } = createStory()
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import { vote } from '@cella/org-motion/api'
@@ -158,3 +160,5 @@ test('handing Web\'s lead from Yusuf to Léa keeps every mandate on the role and
   assert.deepEqual(await seated('coordination', '2026-10-31'), [camille, at('hugo'), julien, lea, at('malik')].sort())
   assert.deepEqual(await seated('coordination', '2026-10-30'), [camille, at('hugo'), julien, at('malik'), yusuf].sort())
 })
+
+if (!process.env.CELLA_STORY) runTest('tenure story', async (t) => story((name, step) => t.test(name, step)))

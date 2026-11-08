@@ -42,9 +42,31 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   |---|---|
   | `hero` | the page's top: an eyebrow, the heading large, the body as a lede, two actions; its figure overhangs the section after it |
   | `prose` | its body in a readable column, the default |
-  | `features` | its body as a lede, then its items as a list of cells (`Cells.astro`): each a cell of the brand, the five inks in turn however many items there are, beside a title and a line; a cell holds its item's number where the section is `numbered: true`, or its item's Phosphor `icon` (the regular weight) in the paper, else it is bare. Its `arrange` lays them out (not `layout`, which MDX takes as a component to wrap the file in): `column`, down the page, unset; `row`, side by side, each cell over its words, as many to a row as fit; `grid`, two columns, each cell beside its words, one on a narrow screen. Any section but `steps` and `list` that has `items` shows them so, under its body; a body may write the same list inline, with words before and after it: `<Cells arrange="grid" numbered>` holding `<Cell title="…" icon="…" photo="…">`s, each its words as markdown (`Cell.astro`), the inks and numbers following each cell's place |
-  | `steps` | its body, then its items numbered in two columns |
-  | `list` | its body, then its items as ruled rows, a title and a muted line |
+  | `features` | its body as a lede, then its items as a list of cells |
+  | `steps` | its body, then its items as steps |
+  | `list` | its body, then its items as ruled rows |
+
+Every section's `items` are one list (`List.astro`, each item an
+`Item.astro`), under its body, laid out by its `arrange`, or by what its
+kind implies (`arrange`, not `layout`, which MDX takes as a component to
+wrap the file in):
+
+| Layout | What |
+|---|---|
+| `column` | cells down the page, each beside its title and words; a section's default |
+| `row` | cells side by side, each over its words, as many to a row as fit |
+| `grid` | cells in two columns, each beside its words, one on a narrow screen |
+| `ruled` | no cells: a title and its words in two columns every row shares, a rule under each; a `list`'s default |
+| `steps` | no cells: a large thin numeral in the item's ink over its title and words, in two columns; a `steps`'s default |
+
+The items take the five inks in turn however many there are, four on a
+band, which leaves its own out. A cell is the brand's, seeded by the
+item's place or its title, and holds the item's number where the list
+is `numbered: true`, its Phosphor `icon` (the regular weight) in the
+paper, or a person's portrait, `photo` ([the people](#the-people));
+else it is bare. A body writes the same list inline, with words before
+and after it: `<List layout="grid" numbered>` holding `<Item title="…"
+icon="…" photo="…">`s, each its words as markdown.
   | `band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what any section may (eyebrow, heading, body, items, actions, a form) with its diagram beside them; with `quote: true` its body set large and its heading the attribution |
   | `quote` | a band that quotes, sage unless its `ink` says |
   | `cta` | a band, coral unless its `ink` says |

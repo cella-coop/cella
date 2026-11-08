@@ -1,42 +1,45 @@
 ---
-// A list as cells (index.md, the layout): its items, each a `Cell`, the
-// cells taking the five inks in turn however many there are, leaving out
-// the one `skip` names, as a band's own, and numbered where `numbered`.
-// Its items are its `items`, as a section's frontmatter gives them, or its
-// slot, the `Cell`s a body writes inline. Its `layout`, a section's
-// `arrange` or the body's own: `column`, down the page, unset; `row`,
-// side by side, each cell over its words; `grid`, two columns, each cell
-// beside them.
+// A list (index.md, the lists): its items, each an `Item`, taking the
+// five inks in turn however many there are, leaving out the one `skip`
+// names, as a band's own, and counted where `numbered`. Its items are its
+// `items`, as a section's frontmatter gives them, or its slot, the
+// `Item`s a body writes inline. Its `layout`:
+//   `column`, unset: cells down the page, each beside its words;
+//   `row`: cells side by side, each over its words, as many as fit;
+//   `grid`: cells in two columns, each beside its words;
+//   `ruled`: no cells, a title and its words in two columns every row
+//     shares, a rule under each;
+//   `steps`: no cells, a large numeral in the item's ink over its title
+//     and words, in two columns.
 import { inline } from '../lib/inline'
 import { STATUSES, type Status } from '../schemas'
-import Cell from './Cell.astro'
+import Item from './Item.astro'
+
+export type Layout = 'column' | 'row' | 'grid' | 'ruled' | 'steps'
 
 interface Props {
   items?: { title: string; body: string; icon?: string; photo?: string }[]
+  layout?: Layout
   numbered?: boolean
   seed?: number
   drafted?: true
-  // an ink the cells leave out, as a band's own, so none sinks into it
+  // an ink the items leave out, as a band's own, so none sinks into it
   skip?: Status
-  layout?: 'column' | 'row' | 'grid'
-  // the same, as a body writes it, in its section's words
-  arrange?: 'column' | 'row' | 'grid'
 }
 
-const { items, numbered = false, seed = 1, drafted, skip, layout, arrange } = Astro.props
-// the turn of inks, by the item's place, as custom properties the cells
-// read by their place in the list
+const { items, layout = 'column', numbered = false, seed = 1, drafted, skip } = Astro.props
+// the turn of inks, as custom properties each item reads by its place
 const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
 const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
 ---
 
-<ul class="cells" data-layout={layout ?? arrange ?? 'column'} data-cycle={inks.length} data-numbered={numbered ? '' : undefined} style={turn} role="list" data-drafted={drafted}>
+<ul class="list" data-layout={layout} data-cycle={inks.length} data-numbered={numbered ? '' : undefined} style={turn} role="list" data-drafted={drafted}>
   {
     items
       ? items.map((it, i) => (
-          <Cell title={it.title} icon={it.icon} photo={it.photo} seed={seed * 13 + i * 7}>
+          <Item title={it.title} icon={it.icon} photo={it.photo} seed={seed * 13 + i * 7}>
             <Fragment set:html={inline(it.body)} />
-          </Cell>
+          </Item>
         ))
       : <slot />
   }
@@ -44,17 +47,17 @@ const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
 
 <style>
   /* a readable measure, near the lede's above it */
-  .cells {
+  .list {
     display: grid;
     gap: 1.6rem;
     max-width: 34rem;
     margin: 0.75rem 0 1.25rem;
     padding: 0;
     list-style: none;
-    counter-reset: cell;
+    counter-reset: item;
   }
 
-  /* each cell's ink, its place in the turn of five, or of four on a band */
+  /* each item's ink, its place in the turn of five, or of four on a band */
   [data-cycle='5'] > :global(.item:nth-child(5n + 1)) { --ink: var(--c0); }
   [data-cycle='5'] > :global(.item:nth-child(5n + 2)) { --ink: var(--c1); }
   [data-cycle='5'] > :global(.item:nth-child(5n + 3)) { --ink: var(--c2); }
@@ -65,22 +68,31 @@ const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
   [data-cycle='4'] > :global(.item:nth-child(4n + 3)) { --ink: var(--c2); }
   [data-cycle='4'] > :global(.item:nth-child(4n)) { --ink: var(--c3); }
 
-  /* side by side, as many to a row as fit, each its cell over its words */
   [data-layout='row'] {
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
     gap: 2rem 2.2rem;
     max-width: none;
   }
 
-  /* two columns, each its cell beside its words, one on a narrow screen */
   [data-layout='grid'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1.8rem 1.6rem;
     max-width: none;
   }
 
+  [data-layout='ruled'] {
+    gap: 0;
+  }
+
+  [data-layout='steps'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 2.2rem;
+    max-width: none;
+  }
+
   @media (max-width: 40rem) {
-    [data-layout='grid'] {
+    [data-layout='grid'],
+    [data-layout='steps'] {
       grid-template-columns: minmax(0, 1fr);
     }
   }

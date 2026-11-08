@@ -108,11 +108,12 @@ export const section = z
     diagram: z.string().optional(),
     // a form under its words: the compact sign-up or the contact form
     form: z.enum(['signup', 'contact']).optional(),
-    // a list of cells holds its items' numbers, and stands down the page,
-    // side by side or in two columns (`layout` is MDX's own word: a file
-    // naming one is wrapped in that component)
+    // its items' list counts them, and is laid out by `arrange`, a list's
+    // layout (List.astro), or by what its kind implies: ruled for a list,
+    // steps for steps, a column of cells else (`layout` is MDX's own word:
+    // a file naming one is wrapped in that component)
     numbered: z.boolean().default(false),
-    arrange: z.enum(['column', 'row', 'grid']).default('column'),
+    arrange: z.enum(['column', 'row', 'grid', 'ruled', 'steps']).optional(),
     // a band's ink, and whether it quotes
     ink: z.enum(STATUSES).optional(),
     quote: z.boolean().default(false),

@@ -10,13 +10,12 @@ import type { DiagramName } from '@cella/diagrams'
 import type { Status } from '../schemas'
 import type { Marks, Rendered } from '../lib/text'
 import Actions from './Actions.astro'
-import Cells from './Cells.astro'
+import List from './List.astro'
 import { figures } from './figures'
 import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
-import { inline } from '../lib/inline'
 import Signup from './Signup.astro'
 
 interface Props {
@@ -54,6 +53,8 @@ const clip = band && `band-${s.id}`
 const diagram = band ? (s.diagram as DiagramName) : undefined
 const paired = Boolean(s.figure || diagram)
 // its actions, the call to act first
+// its items' layout: its `arrange`, or the one its kind implies
+const layout = s.arrange ?? (s.kind === 'steps' ? 'steps' : s.kind === 'list' ? 'ruled' : 'column')
 const actions = [
   ...(s.primary ? [{ link: s.primary, field: 'primary' }] : []),
   ...(s.action ? [{ link: s.action, field: 'action' }] : []),
@@ -79,31 +80,13 @@ const actions = [
         {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
       </div>
     ) : (
-      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero, roomy: s.arrange !== 'column' && s.items.length > 0 }]}>
+      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero, roomy: ['row', 'grid', 'steps'].includes(layout) && s.items.length > 0 }]}>
         <div class="copy">
           {num !== undefined && <span class="num" aria-hidden="true">{String(num).padStart(2, '0')}</span>}
           {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
           <Heading text={s.heading} level={hero ? 1 : 2} drafted={d('heading')} />
           {Content && <div class:list={['body', { lede: s.kind !== 'prose' }]} data-drafted={d('body')}><Content components={figures} /></div>}
-          {!['steps', 'list'].includes(s.kind) && s.items.length > 0 && <Cells items={s.items} numbered={s.numbered} seed={seed} drafted={d('items')} skip={band} layout={s.arrange} />}
-          {
-            s.kind === 'steps' && s.items.length > 0 && (
-              <ol class="steps" role="list" data-drafted={d('items')}>
-                {s.items.map((it, i) => (
-                  <li class="step"><span class="n" aria-hidden="true">{i + 1}</span><h3 set:html={inline(it.title)} /><p set:html={inline(it.body)} /></li>
-                ))}
-              </ol>
-            )
-          }
-          {
-            s.kind === 'list' && s.items.length > 0 && (
-              <ul class="rows" role="list" data-drafted={d('items')}>
-                {s.items.map((it) => (
-                  <li><span set:html={inline(it.title)} /><span set:html={inline(it.body)} /></li>
-                ))}
-              </ul>
-            )
-          }
+          {s.items.length > 0 && <List items={s.items} layout={layout} numbered={s.numbered} seed={seed} drafted={d('items')} skip={band} />}
           {actions.length > 0 && <div class="row"><Actions links={actions} ink={ink} seed={seed} drafted={d} /></div>}
           {s.form === 'signup' && <div class="form"><Signup text={forms.signup} ink={ink} drafted={forms.drafted} /></div>}
           {s.form === 'contact' && <div class="form"><ContactForm text={forms.contact} ink={ink} drafted={forms.drafted} /></div>}
@@ -205,58 +188,6 @@ const actions = [
     max-width: 33rem;
     color: var(--text-muted);
     font-size: clamp(1.1rem, 1.45vw, 1.28rem);
-  }
-
-  .step p {
-    margin: 0.3rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.97rem;
-  }
-
-  .steps {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2rem 2.2rem;
-    margin: 0.5rem 0 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  .step {
-    display: grid;
-    gap: 0.4rem;
-    align-content: start;
-  }
-
-  .step .n {
-    color: var(--p0);
-    font-family: var(--font-display);
-    font-size: 2.8rem;
-    font-weight: 250;
-    line-height: 1;
-  }
-
-  .rows {
-    display: grid;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-  }
-
-  /* two columns every row shares, so a long title or line stays in its
-     own and the rows line up */
-  .rows li {
-    display: grid;
-    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
-    gap: 1.5rem;
-    padding: 0.65rem 0;
-    border-bottom: 1px solid var(--rule);
-    font-weight: 520;
-  }
-
-  .rows li span:last-child {
-    color: var(--text-muted);
-    font-weight: 400;
   }
 
   .row {

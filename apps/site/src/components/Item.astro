@@ -1,12 +1,13 @@
 ---
-// One item of a list of cells (index.md, the layout): a lone cell of the
-// brand beside its title and its words. The cell is bare, or holds its
-// Phosphor icon, `icon`, in the regular weight, drawn in the paper on the
-// ink, or, for a person, `photo`, their picture engraved in the ink and
-// cut into the cell, larger; the list numbers it where it is numbered.
-// Its ink is its place in the list's turn (Cells.astro); its shape is
-// seeded by `seed`, or by its title, so it is the same on every build.
-// Its words are its slot, markdown where a body writes it.
+// One item of a list (index.md, the lists): its title and its words, and,
+// where its list lays it as a cell, a lone cell of the brand beside or
+// over them. The cell is bare, or holds its Phosphor icon, `icon`, in the
+// regular weight, drawn in the paper on the ink, or, for a person,
+// `photo`, their picture engraved in the ink and cut into the cell,
+// larger; a numbered list counts it. Its ink is its place in the list's
+// turn (List.astro); its shape is seeded by `seed`, or by its title, so
+// it is the same on every build. Its words are its slot, markdown where a
+// body writes it. How it stands is its list's `layout`.
 import { cell } from '@cella/brand'
 import { portraitUrl } from '../lib/engrave'
 import { glyphPaths } from '../lib/icon'
@@ -58,19 +59,20 @@ const box = (() => {
       </span>
     )
   }
-  <div>
+  <div class="text">
     <h3 set:html={inline(title)} />
     <div class="words"><slot /></div>
   </div>
 </li>
 
 <style>
+  /* a cell beside its words: the column, and the grid */
   .item {
     display: grid;
     grid-template-columns: auto 1fr;
     gap: 1.1rem;
     align-items: start;
-    counter-increment: cell;
+    counter-increment: item;
   }
 
   .mark {
@@ -107,7 +109,7 @@ const box = (() => {
   }
 
   .n::before {
-    content: counter(cell);
+    content: counter(item);
   }
 
   :global([data-numbered]) .n {
@@ -152,6 +154,7 @@ const box = (() => {
     margin-top: 0.6em;
   }
 
+  /* a row: each cell over its words */
   :global([data-layout='row']) .item {
     grid-template-columns: minmax(0, 1fr);
     gap: 0.9rem;
@@ -159,5 +162,53 @@ const box = (() => {
 
   :global([data-layout='grid']) .item {
     gap: 0.85rem;
+  }
+
+  /* ruled: no cell, the title and the words in two columns every row
+     shares, a rule under each */
+  :global([data-layout='ruled']) .item {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 1.5rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  :global([data-layout='ruled']) .text {
+    display: contents;
+  }
+
+  :global([data-layout='ruled']) h3 {
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 520;
+    letter-spacing: 0;
+    line-height: 1.6;
+  }
+
+  :global([data-layout='ruled']) .words {
+    margin: 0;
+    font-size: 1rem;
+  }
+
+  /* steps: no cell, a large thin numeral in the item's ink over its title
+     and words */
+  :global([data-layout='steps']) .item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.4rem;
+    align-content: start;
+  }
+
+  :global([data-layout='steps']) .item::before {
+    content: counter(item);
+    color: var(--ink);
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 250;
+    line-height: 1;
+  }
+
+  :global([data-layout='ruled']) .mark,
+  :global([data-layout='steps']) .mark {
+    display: none;
   }
 </style>

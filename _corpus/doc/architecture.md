@@ -980,12 +980,14 @@ votes and subscriptions, hires, time entries and their months, expenses,
 purchases and sales, the payroll and the books' months. The tier folds
 it with a checkpoint every ten thousand entries, then re-folds from
 its latest checkpoint, ten thousand entries before the head. It says
-the entries folded a second, the fold's peak memory beside the shared
-buffers, a tenth of the way and at the end, the re-fold's time and the
-log's bytes an entry with its receipt; and it fails where the peak at
-the end is more than 64 MB over the peak a tenth of the way, where the
-re-fold takes more than thirty seconds, or where the fold runs under
-its floor, a thousand entries a second until a run at full size sets it.
+the entries folded a second, a checkpoint's time from the kept hashes
+and the state's hashed from scratch, the fold's peak memory beside the
+shared buffers, a tenth of the way and at the end, the re-fold's time
+and the log's bytes an entry with its receipt; and it fails where the
+peak at the end is more than 64 MB over the peak a tenth of the way,
+where the re-fold takes more than thirty seconds, where the hashes the
+fold kept differ from its rows hashed from scratch, or where the fold
+runs under its floor, a thousand entries a second until a run at full size sets it.
 The forge's `scale` flow, `.corpus/flows/scale.toml`, runs the tier each
 night over main's head on the box, at a tenth of its size
 (`--members 1000`), about a million entries, which the box's disk holds;
@@ -1791,18 +1793,45 @@ scope's ([the CLI](../../apps/org/rs/index.md)), one write per
 transaction, by `cella.fold_log`, as the superuser under
 `cella.unbound`. Every so many entries, at the end of a write, it records
 a **checkpoint** in `cella.checkpoint`: the entry, its hash and the
-state hash, the BLAKE3 of the folded slices' rows in a canonical order,
-`cella.state_rows`: each table by name, its rows as JSON text sorted
-bytewise without their generated columns, which their rows compute, a
-personal text column null where its value is null, as one a later
-write cleared is, whatever the vault or the fold kept for it before,
-since a payload keeps a null as null, never as a commitment, and a fold
-writes it so; else a personal column as the newest commitment the vault
-holds for its field and subject, or in a folded scope the newest the
-fold applied, and as its value where neither holds one, so a column
-that cannot hold `redacted`, which a fold leaves null under its
-commitment, as a payslip's figures, reads that commitment. A fold resumes from a checkpoint,
-whose state it hashes again first, and verifies the log after it from
+state hash. A row hashes in its canonical form, `cella.state_rows`: its
+table's name and the row as JSON text without its generated columns,
+which their rows compute, a personal text column null where its value
+is null, as one a later write cleared is, whatever the vault or the
+fold kept for it before, since a payload keeps a null as null, never as
+a commitment, and a fold writes it so; else a personal column as the
+newest commitment the vault holds for its field and subject, or in a
+folded scope the newest the fold applied, and as its value where
+neither holds one, so a column that cannot hold `redacted`, which a
+fold leaves null under its commitment, as a payslip's figures, reads
+that commitment. The
+state hash is **incremental**: each folded table keeps a multiset hash
+of its rows in `cella.table_hash`, an LtHash16, 1024 lanes of 16 bits,
+2048 bytes, the lane-wise sum modulo 2^16 of each term's BLAKE3 output
+extended to that width under a key of its own (`cella.lthash`, the
+notary's from 0.12.0), so the hash is independent of the rows' order. A
+row's terms are its canonical form with each personal column
+`"personal"`, a null text one null, and for each other personal column
+`[field, subject, commitment]` where a commitment holds for it, else
+`[field, the row's form, its value]`: since every row of a subject reads
+its field's newest commitment, a new one changes the hash by the count
+of that subject's rows (`cella.slot`) times the difference of two terms,
+never by reading them. The fold keeps the hashes as it writes, by a
+trigger on every state table that `cella fold` makes
+(`cella.keep_hashes`), adding a row's terms where it inserts it,
+subtracting them where it deletes it and both where it updates it, and by
+one on the commitments it applies; only while it folds, `cella.folding`
+on, so a row written around the fold leaves its table's kept hash as it
+was. The founding's carried rows, which no trigger sees, are hashed from
+scratch once they are in (`cella.rehash`). The state hash is the BLAKE3
+of a line for each folded table, by name, its name, a tab and its hash in
+hex, and a checkpoint reads it from the kept hashes alone
+(`cella.kept_hash`), so it costs what the writes since the last one
+changed, never the state's size. `cella.state_hash()` hashes every row
+from scratch to the same value; `cella fold --compare` and the scale
+tier's end check that the two agree, so a fold whose kept hash drifts
+from its rows fails, naming the table. A fold resumes from a checkpoint,
+whose kept hashes it checks against the checkpoint's state hash, never
+hashing the state again, and verifies the log after it from
 the checkpoint's entry (`cella.verify_log(after)`), never from the
 first, so a re-fold costs what it folds, not the log's length. Its check
 that every receipt names a verdict is bounded the same way: each receipt

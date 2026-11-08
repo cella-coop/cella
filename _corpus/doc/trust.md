@@ -183,7 +183,9 @@ sequenceDiagram
   versioned as a guard is: an entry folds by the version in force when it
   was written, so two engines at different versions fold one log to the
   same state. Every so many entries the fold records a checkpoint, the
-  hash of the non-personal state at that entry, so a verification, a move
+  hash of the non-personal state at that entry, a multiset hash of each
+  table's rows the fold keeps as it writes, so a checkpoint costs what
+  changed since the last one, never the state's size, and a verification, a move
   to another host or a witness starts from a trusted checkpoint, never
   from the first entry. A checkpoint holds the entries and receipts up to
   it, which a verification starting there trusts and never reads: each

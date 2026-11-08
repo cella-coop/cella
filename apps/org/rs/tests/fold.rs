@@ -315,7 +315,9 @@ fn a_log_folds_into_the_state_it_was_written_with() {
     let end = latest(&whole);
 
     // Stopped at a checkpoint and resumed there, the same state; resumed
-    // anywhere else, or after its state changed, refused.
+    // anywhere else, or with its kept hashes changed, refused. A resume
+    // reads the kept hashes, never the rows: a row written around the fold
+    // the compare refuses, naming its table.
     ok(&["fold", &src, "--into", &halves, "--to", "3"]);
     let wrong = cella(&["fold", &src, "--into", &halves, "--from", "2"]);
     assert!(
@@ -323,9 +325,13 @@ fn a_log_folds_into_the_state_it_was_written_with() {
         "{}",
         said(&wrong)
     );
+    let kept = psql(
+        &halves,
+        "SELECT encode(hash, 'hex') FROM cella.table_hash WHERE tab = 'circle.circle'",
+    );
     psql(
         &halves,
-        "SET cella.unbound = on; UPDATE circle.circle SET purpose = 'moved' WHERE id = 'web'",
+        "UPDATE cella.table_hash SET hash = cella.lthash_zero() WHERE tab = 'circle.circle'",
     );
     let moved = cella(&["fold", &src, "--into", &halves, "--from", "3"]);
     assert!(
@@ -335,7 +341,7 @@ fn a_log_folds_into_the_state_it_was_written_with() {
     );
     psql(
         &halves,
-        "SET cella.unbound = on; UPDATE circle.circle SET purpose = 'the website' WHERE id = 'web'",
+        &format!("UPDATE cella.table_hash SET hash = '\\x{kept}' WHERE tab = 'circle.circle'"),
     );
     ok(&[
         "fold",
@@ -349,6 +355,17 @@ fn a_log_folds_into_the_state_it_was_written_with() {
         "--compare",
     ]);
     assert_eq!(latest(&halves), end);
+    psql(
+        &halves,
+        "SET cella.unbound = on; UPDATE circle.circle SET purpose = 'moved' WHERE id = 'web'",
+    );
+    let around = cella(&["fold", &src, "--into", &halves, "--from", "8", "--compare"]);
+    assert!(
+        !around.status.success()
+            && said(&around).contains("keeps drift from its rows in circle.circle:"),
+        "{}",
+        said(&around)
+    );
 
     // A row the log does not carry fails the compare, which names it.
     psql(

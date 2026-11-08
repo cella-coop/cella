@@ -10,6 +10,7 @@ pub mod digest;
 pub mod document;
 pub mod hex;
 pub mod log;
+pub mod multiset;
 pub mod sign;
 pub mod vault;
 pub mod vote;

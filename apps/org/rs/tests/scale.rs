@@ -1,8 +1,9 @@
 //! The fold's scale tier (architecture.md, "Tests"): a generated scope,
 //! Lanterne grown to ten thousand members over twenty years, about ten
 //! million entries, folded into a fresh database, measured, and failed on
-//! memory that grows with the log or a re-fold from the latest checkpoint
-//! over its bound. Run by `cella test scale`, never by `cella test`: it is
+//! memory that grows with the log, a re-fold from the latest checkpoint
+//! over its bound, or hashes the fold kept as it wrote that differ from its
+//! rows hashed from scratch. Run by `cella test scale`, never by `cella test`: it is
 //! ignored here, and takes its size from `CELLA_SCALE_MEMBERS` and
 //! `CELLA_SCALE_YEARS`. Needs the dev cluster (`cella db start`).
 //!
@@ -931,6 +932,7 @@ fn a_generated_scope_folds_in_bounded_memory_and_re_folds_from_its_latest_checkp
             .unwrap_or_else(|| panic!("no number after {after:?} in {measured}"))
     };
     let rate = number("measured: ");
+    let checkpoint = number("a checkpoint ");
     let peak = number("its sessions ");
     let tenth = number("MB, ");
     let refolding = Instant::now();
@@ -946,8 +948,17 @@ fn a_generated_scope_folds_in_bounded_memory_and_re_folds_from_its_latest_checkp
     ]);
     let refold = refolding.elapsed().as_secs_f64();
     print!("{refolded}");
+    // The hashes the fold kept as it wrote against its rows hashed from
+    // scratch, which is what a checkpoint read before they were kept.
+    let scratching = Instant::now();
+    let agree = psql(FOLD, "SELECT cella.state_hash() = cella.kept_hash()");
+    let scratch = scratching.elapsed().as_secs_f64();
     println!(
-        "scale: {head} entries; folded at {rate:.0} entries/s; peak memory {peak:.1} MB, {tenth:.1} MB a tenth of the way; re-folded from the latest checkpoint, entry {latest}, in {refold:.1}s; {bytes:.0} bytes an entry"
+        "scale: {head} entries; folded at {rate:.0} entries/s; a checkpoint {checkpoint:.1} ms from its kept hashes, {scratch:.1}s from scratch; peak memory {peak:.1} MB, {tenth:.1} MB a tenth of the way; re-folded from the latest checkpoint, entry {latest}, in {refold:.1}s; {bytes:.0} bytes an entry"
+    );
+    assert_eq!(
+        agree, "t",
+        "the hashes the fold kept as it wrote differ from its rows hashed from scratch"
     );
     assert!(
         peak <= tenth + GROWTH_MB,

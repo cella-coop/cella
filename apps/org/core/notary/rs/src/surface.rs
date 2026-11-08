@@ -9,6 +9,7 @@
 //! | `cella.amount(bigint)`, `cella.cents(amount)` | functions | `Amount::new`, `Amount::cents` |
 //! | `cella.allocate(amount, bigint[])` | function | `allocate` |
 //! | `cella.digest(text)`, `cella.digest(bytea)` | functions | `digest`, BLAKE3 of the UTF-8 text or the bytes |
+//! | `cella.lthash(text)`, `cella.lthash_add(bytea, bytea)`, `cella.lthash_times(bytea, bigint)`, `cella.lthash_zero()`, `cella.lthash_sum(bytea)` | functions, aggregate | `multiset`: an element's `LtHash16`, the sum of two, a hash times a count, the empty multiset's, and the sum over rows, a null the empty multiset |
 //! | `cella.document_canonical(bytea)`, `cella.document_hash(bytea)`, `cella.document_text(bytea)` | functions | `document::canonical`, `document::hash`, `document::plain`, over a Loro snapshot |
 //! | `cella.consent(member, stance, receipt)` | aggregate | `Tally::consent` |
 //! | `cella.majority(member, stance, receipt)` | aggregate | `Tally::majority` |
@@ -127,6 +128,48 @@ fn digest_text(text: &str) -> Vec<u8> {
 fn digest_bytes(bytes: &[u8]) -> Vec<u8> {
     cella_guards::digest(bytes).to_vec()
 }
+
+// The multiset hash a fold keeps of each state table, LtHash16
+// (`cella_guards::multiset`): an element's hash, the sum of two, a hash
+// times a count, `-1` its inverse, and the empty multiset's; the
+// aggregate `cella.lthash_sum` is their sum over rows.
+
+fn width(e: &cella_guards::multiset::Width) -> ! {
+    ereport!(ERROR, PgSqlErrorCode::ERRCODE_DATA_EXCEPTION, e.to_string());
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn lthash(element: &str) -> Vec<u8> {
+    cella_guards::multiset::element(element.as_bytes())
+}
+
+// A null is the empty multiset, so the aggregate starts from none.
+#[pg_extern(immutable, parallel_safe)]
+fn lthash_add(a: Option<&[u8]>, b: Option<&[u8]>) -> Option<Vec<u8>> {
+    match (a, b) {
+        (None, None) => None,
+        (Some(h), None) | (None, Some(h)) => Some(h.to_vec()),
+        (Some(a), Some(b)) => Some(cella_guards::multiset::add(a, b).unwrap_or_else(|e| width(&e))),
+    }
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn lthash_times(a: &[u8], k: i64) -> Vec<u8> {
+    cella_guards::multiset::times(a, k).unwrap_or_else(|e| width(&e))
+}
+
+#[pg_extern(immutable, parallel_safe)]
+fn lthash_zero() -> Vec<u8> {
+    cella_guards::multiset::zero()
+}
+
+extension_sql!(
+    r"
+CREATE AGGREGATE cella.lthash_sum(bytea) (SFUNC = cella.lthash_add, STYPE = bytea, PARALLEL = SAFE);
+",
+    name = "lthash_sum",
+    requires = [lthash_add],
+);
 
 // Documents: the canonical JSON of a Loro snapshot's block tree, its
 // BLAKE3, and its plain text. Deterministic for a pinned `loro`, so a
@@ -325,7 +368,9 @@ impl Aggregate<Share> for Share {
 // everyone else could confirm a guess of the request with it. A receipt
 // keeps the entry that names it, which the notary writes with it under the
 // head's lock, so one no entry names has none, and the index of those
-// finds it without reading the receipts that do.
+// finds it without reading the receipts that do. The log's index of its
+// actions lets the fold list the actions it holds an index probe each,
+// never reading the log.
 
 extension_sql!(
     r"
@@ -376,6 +421,7 @@ CREATE TABLE cella.log (
     CONSTRAINT log_basis CHECK (CASE WHEN cause IS NULL THEN receipt IS NOT NULL AND cause_hash IS NULL AND settled
                                      ELSE receipt IS NULL AND cause < n AND length(cause_hash) = 32 END)
 );
+CREATE INDEX log_op ON cella.log (op);
 CREATE TABLE cella.guard (
     op text NOT NULL,
     fn regprocedure NOT NULL,

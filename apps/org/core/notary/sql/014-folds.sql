@@ -62,8 +62,8 @@ END;
 
 -- How far the fold has applied the log in this database, and the
 -- checkpoints it recorded: at entry `n`, whose hash is `hash`, the state
--- hash `state`, the BLAKE3 of the folded slices' rows as `cella fold`
--- reads them from `cella.state_rows`.
+-- hash `state`, the BLAKE3 of the folded slices' tables' kept hashes
+-- (`cella.kept_hash`, 018-kept-hashes.sql).
 CREATE TABLE cella.fold_head (
   one boolean PRIMARY KEY DEFAULT true CHECK (one),
   n bigint NOT NULL CHECK (n > 0)
@@ -80,9 +80,13 @@ GRANT SELECT ON cella.fold_head, cella.checkpoint TO PUBLIC;
 -- fold's head through `upto`, the end of a write: each settled entry by
 -- its folds, the entry as `{n, op, actor, date, cause, payload}`, its
 -- payload as the log keeps it, a forgone one by none, the log's first
--- entry once the rows it carries are in (`cella.fold_carried`), and an
--- entry that erases after its folds, as its write erased once its state
--- was in (`cella.fold_erasures`). One write per
+-- entry once the rows it carries are in (`cella.fold_carried`), which no
+-- trigger sees, so the kept hashes are taken again from scratch
+-- (`cella.rehash`), and an entry that erases after its folds, as its write
+-- erased once its state was in (`cella.fold_erasures`), each with
+-- `cella.folding` on, so the triggers `cella.keep_hashes` made keep each
+-- table's hash as it writes, added to the kept hashes at the end of the
+-- call (`cella.kept_flush`), before a checkpoint reads them. One write per
 -- transaction, a decision and the effects after it, committed with the
 -- fold's head, so the verdict date each reads is its entry's and a fold
 -- that fails leaves the head at the last write folded whole. A
@@ -98,6 +102,7 @@ BEGIN
   IF upto > coalesce((SELECT max(l.n) FROM cella.log l), 0) THEN
     RAISE EXCEPTION 'cella.fold_log: the log here holds no entry %', upto;
   END IF;
+  PERFORM cella.kept_session();
   FOR i IN at + 1 .. upto LOOP
     SELECT l.n, l.op, l.actor, l.date, l.form, l.receipt, l.cause, l.settled INTO e FROM cella.log l WHERE l.n = i;
     IF e.receipt IS NULL AND i = at + 1 THEN
@@ -108,8 +113,10 @@ BEGIN
       COMMIT;
     END IF;
     PERFORM pg_catalog.set_config('cella.clock', e.date::text, true);
+    PERFORM pg_catalog.set_config('cella.folding', 'on', true);
     IF e.n = 1 AND e.settled AND e.form -> 'carried' IS NOT NULL THEN
       PERFORM cella.fold_carried(e.n, e.form -> 'carried');
+      PERFORM cella.rehash();
     END IF;
     IF e.settled THEN
       FOR f IN SELECT x.schema, x.name FROM cella.folds_of(e.op, e.n) x LOOP
@@ -122,6 +129,7 @@ BEGIN
   IF upto > at THEN
     INSERT INTO cella.fold_head (n) VALUES (upto) ON CONFLICT (one) DO UPDATE SET n = excluded.n;
   END IF;
+  PERFORM cella.kept_flush();
   COMMIT;
 END
 $$;
@@ -401,16 +409,22 @@ REVOKE EXECUTE ON FUNCTION cella.state_rows(text[]) FROM PUBLIC;
 -- folded, and the actions of it with no fold: a slice is folded when
 -- every action of it, by the slice its id names, among those the scope
 -- registers or its log holds, has a fold. A slice no action names, whose
--- rows only a founding carries, is folded by the founding's carry.
+-- rows only a founding carries, is folded by the founding's carry. The
+-- actions the log holds are read up its index of them, a probe each from
+-- the last, so a resumed fold lists them without reading the log.
 CREATE FUNCTION cella.folded() RETURNS TABLE (schema text, folded boolean, unfolded text[])
 LANGUAGE sql STABLE SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  WITH ops AS (
+  WITH RECURSIVE logged(op) AS (
+    SELECT min(l.op) FROM cella.log l
+    UNION ALL
+    SELECT (SELECT min(l.op) FROM cella.log l WHERE l.op > d.op) FROM logged d WHERE d.op IS NOT NULL
+  ), ops AS (
     SELECT p.op FROM cella.power p
     UNION SELECT f.op FROM cella.fold f
     UNION SELECT f.op FROM cella.follows f
     UNION SELECT f.cause FROM cella.follows f
-    UNION SELECT DISTINCT l.op FROM cella.log l
+    UNION SELECT d.op FROM logged d WHERE d.op IS NOT NULL
   ), slices AS (
     SELECT DISTINCT s.schema FROM cella.state s
   )

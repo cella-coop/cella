@@ -2,11 +2,13 @@
 //! migrated as the scope's, each entry applied by its actions' folds
 //! (`cella.fold_log`, architecture.md "Folds"), so the copy rebuilds the
 //! scope's non-personal state. The log's rows are streamed between the two
-//! by `COPY`, never held, and the state is hashed as it streams out, so the
-//! fold's memory is bounded whatever the log's length. Every so many
-//! entries it records a checkpoint, the state hash at the end of a write,
-//! from which a fold resumes; then the copy's log verifies, and a compare
-//! reads both databases' folded slices, by state hash and then row by row.
+//! by `COPY`, never held, so the fold's memory is bounded whatever the
+//! log's length, and the copy keeps each state table's multiset hash as the
+//! fold writes it (`cella.keep_hashes`). Every so many entries it records a
+//! checkpoint, the state hash at the end of a write, read from the kept
+//! hashes alone, from which a fold resumes; then the copy's log verifies,
+//! and a compare checks the kept hashes against the rows and reads both
+//! databases' folded slices, by state hash and then row by row.
 
 use std::collections::BTreeMap;
 use std::io::{BufRead, BufReader};
@@ -155,6 +157,11 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
                 quiet,
             )?;
             settle(&dev, f)?;
+            psql(
+                &dev,
+                f.into,
+                "SELECT cella.keep_hashes(); SELECT cella.rehash();",
+            )?;
             0
         }
         Some(n) => resume(&dev, f, n, to)?,
@@ -169,11 +176,13 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
         .map(|s| s.0.as_str())
         .collect();
     let mut done = at;
-    let mut checkpoints = 0;
+    let mut checkpoints: u32 = 0;
     // The peak memory of the fold's sessions, and what it was by the first
     // checkpoint a tenth of the way, so a peak that grows with the log shows.
     let mut sessions = 0;
     let mut tenth: Option<(i64, u64)> = None;
+    let list = array(&schemas);
+    let mut checkpointing = 0.0;
     let folding = Instant::now();
     while done < to {
         let want = (done + f.every).min(to);
@@ -207,17 +216,19 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
                 e.msg.unwrap_or_else(|| "see above".into())
             )),
         })?;
-        let ((state, _), hashed) = hash(&dev, f.into, &schemas)?;
-        sessions = sessions.max(peak(&called).unwrap_or(0)).max(hashed);
+        sessions = sessions.max(peak(&called).unwrap_or(0));
+        // The state hash from the kept hashes alone, so a checkpoint reads
+        // no row of the state.
+        let checkpoint = Instant::now();
         psql(
             &dev,
             f.into,
             &format!(
-                "INSERT INTO cella.checkpoint (n, hash, state) SELECT n, hash, '\\x{}' FROM cella.log WHERE n = {end}
-                 ON CONFLICT (n) DO UPDATE SET hash = excluded.hash, state = excluded.state",
-                hex(&state)
+                "INSERT INTO cella.checkpoint (n, hash, state) SELECT n, hash, cella.kept_hash({list}) FROM cella.log WHERE n = {end}
+                 ON CONFLICT (n) DO UPDATE SET hash = excluded.hash, state = excluded.state"
             ),
         )?;
+        checkpointing += checkpoint.elapsed().as_secs_f64();
         checkpoints += 1;
         done = end;
         if tenth.is_none() && (done - at) * 10 >= to - at {
@@ -267,8 +278,10 @@ pub fn fold(repo: &Repo, steps: &Steps, f: &Fold<'_>) -> Result {
     );
     #[allow(clippy::cast_precision_loss)]
     let rate = (to - at) as f64 / folded_in.max(0.001);
+    #[allow(clippy::cast_precision_loss)]
+    let each = 1000.0 * checkpointing / f64::from(checkpoints.max(1));
     println!(
-        "measured: {rate:.0} entries/s folded, checkpoints hashed; peak memory: its sessions {}{}, beside the shared buffers; this process {}",
+        "measured: {rate:.0} entries/s folded, checkpoints hashed; a checkpoint {each:.1} ms; peak memory: its sessions {}{}, beside the shared buffers; this process {}",
         mb(sessions),
         tenth.map_or_else(String::new, |(n, kb)| format!(
             ", {} by entry {n}, a tenth of the way",
@@ -354,12 +367,17 @@ fn resume(dev: &Dev, f: &Fold<'_>, n: i64, to: i64) -> Result<i64> {
         .filter(|s| s.1)
         .map(|s| s.0.as_str())
         .collect();
-    let ((now, _), _) = hash(dev, f.into, &schemas)?;
-    if hex(&now) != state {
+    // The kept hashes, never the rows: a resume reads nothing of the state.
+    psql(dev, f.into, "SELECT cella.keep_hashes()")?;
+    let now = psql(
+        dev,
+        f.into,
+        &format!("SELECT encode(cella.kept_hash({}), 'hex')", array(&schemas)),
+    )?;
+    if now != state {
         return Err(Fail::new(format!(
-            "the state of {} hashes to {}, not to its checkpoint's {state} at entry {n}: it changed since it was folded",
-            f.into,
-            hex(&now)
+            "the hashes {} keeps hash to {now}, not to its checkpoint's {state} at entry {n}: they changed since it was folded",
+            f.into
         )));
     }
     Ok(n)
@@ -603,50 +621,51 @@ impl Rows {
     }
 }
 
-/// A state hash and its tables' own, by name.
-type Hashes = ([u8; 32], BTreeMap<String, [u8; 32]>);
-
-/// The state hash of the schemas' tables, the BLAKE3 of every row line in
-/// canonical order, and each table's own; and the peak memory of the
-/// session that read them, in kB.
-fn hash(dev: &Dev, db: &str, schemas: &[&str]) -> Result<(Hashes, u64)> {
-    let mut state = blake3::Hasher::new();
-    let mut tables: BTreeMap<String, blake3::Hasher> = BTreeMap::new();
-    let mut rows = Rows::open(dev, db, schemas, None)?;
-    while let Some(line) = rows.next()? {
-        add(&mut state, &mut tables, &line);
-    }
-    let kb = rows.peak;
-    rows.close()?;
-    Ok((
-        (
-            *state.finalize().as_bytes(),
-            tables
-                .into_iter()
-                .map(|(t, h)| (t, *h.finalize().as_bytes()))
-                .collect(),
-        ),
-        kb,
-    ))
+/// The schemas as an SQL array.
+fn array(schemas: &[&str]) -> String {
+    format!(
+        "ARRAY[{}]::text[]",
+        schemas
+            .iter()
+            .map(|s| literal(s))
+            .collect::<Vec<_>>()
+            .join(", ")
+    )
 }
 
-/// One row line into the state hash and its table's.
-fn add(state: &mut blake3::Hasher, tables: &mut BTreeMap<String, blake3::Hasher>, line: &str) {
-    state.update(line.as_bytes()).update(b"\n");
-    let (table, row) = line.split_once('\t').unwrap_or((line, ""));
-    if !tables.contains_key(table) {
-        tables.insert(table.to_owned(), blake3::Hasher::new());
-    }
-    if let Some(h) = tables.get_mut(table) {
-        h.update(row.as_bytes()).update(b"\n");
-    }
+/// Each of the schemas' state tables' multiset hashes, by name, in hex:
+/// from scratch, every row read (`cella.table_hashes`), or as the fold
+/// kept them as it wrote (`cella.table_hash`), reading no row.
+fn tables(dev: &Dev, db: &str, schemas: &[&str], kept: bool) -> Result<BTreeMap<String, String>> {
+    let list = array(schemas);
+    let sql = if kept {
+        format!(
+            "SELECT h.tab, encode(h.hash, 'hex') FROM cella.state_tables({list}) t JOIN cella.table_hash h ON h.tab = t.schema || '.' || t.tab"
+        )
+    } else {
+        format!("SELECT tab, encode(hash, 'hex') FROM cella.table_hashes({list})")
+    };
+    Ok(psql(dev, db, &sql)?
+        .lines()
+        .filter_map(|l| l.split_once('\t'))
+        .map(|(t, h)| (t.to_owned(), h.to_owned()))
+        .collect())
+}
+
+/// The state hash of the tables' hashes, as `cella.state_of` gives it: the
+/// BLAKE3 of a line for each table by name, its name, a tab and its hash.
+fn state(tables: &BTreeMap<String, String>) -> [u8; 32] {
+    let lines: Vec<String> = tables.iter().map(|(t, h)| format!("{t}\t{h}")).collect();
+    *blake3::hash(lines.join("\n").as_bytes()).as_bytes()
 }
 
 /// How many differing rows of a table a compare shows on each side.
 const SHOWN: usize = 3;
 
-/// Compares the source's folded slices with the fold's: equal state
-/// hashes match; otherwise each table that differs is read on both sides
+/// Compares the source's folded slices with the fold's: first the hashes
+/// the fold kept as it wrote with its rows hashed from scratch, which
+/// differ where a row was written around the fold, naming each table; then
+/// equal state hashes match; otherwise each table that differs is read on both sides
 /// in its canonical order and merged, and the rows only one side holds are
 /// shown, a few of each. A slice not folded is one the compare cannot
 /// cover, so it fails too, naming it, even where every folded row matches.
@@ -661,8 +680,22 @@ fn compare(dev: &Dev, f: &Fold<'_>, folded: &[(String, bool, String)]) -> Result
         .filter(|s| !s.1)
         .map(|s| s.0.clone())
         .collect();
-    let ((ours, our_tables), _) = hash(dev, f.source, &schemas)?;
-    let ((theirs, their_tables), _) = hash(dev, f.into, &schemas)?;
+    let our_tables = tables(dev, f.source, &schemas, false)?;
+    let their_tables = tables(dev, f.into, &schemas, false)?;
+    let kept = tables(dev, f.into, &schemas, true)?;
+    if kept != their_tables {
+        let drifts: Vec<&str> = their_tables
+            .keys()
+            .filter(|t| kept.get(*t) != their_tables.get(*t))
+            .map(String::as_str)
+            .collect();
+        return Err(Fail::new(format!(
+            "compare: the hashes {} keeps drift from its rows in {}: a row was written there around the fold",
+            f.into,
+            drifts.join(", ")
+        )));
+    }
+    let (ours, theirs) = (state(&our_tables), state(&their_tables));
     let not = if unfolded.is_empty() {
         String::new()
     } else {
@@ -779,51 +812,22 @@ fn merge(
 mod tests {
     use super::*;
 
-    fn lines(rows: &[&str]) -> Hashes {
-        let mut state = blake3::Hasher::new();
-        let mut tables = BTreeMap::new();
-        for r in rows {
-            add(&mut state, &mut tables, r);
-        }
-        (
-            *state.finalize().as_bytes(),
-            tables
-                .into_iter()
-                .map(|(t, h)| (t, *h.finalize().as_bytes()))
-                .collect(),
-        )
-    }
-
     #[test]
-    fn the_state_hash_reads_rows_in_their_order_and_each_table_apart() {
-        let one = lines(&[
-            "circle.circle\t{\"id\": \"ag\"}",
-            "circle.circle\t{\"id\": \"web\"}",
-            "circle.role\t{\"id\": \"lead\"}",
-        ]);
-        let again = lines(&[
-            "circle.circle\t{\"id\": \"ag\"}",
-            "circle.circle\t{\"id\": \"web\"}",
-            "circle.role\t{\"id\": \"lead\"}",
-        ]);
-        assert_eq!(one, again);
-        // Another order is another state: the order is canonical, never
-        // the order a table happens to keep its rows in.
-        let swapped = lines(&[
-            "circle.circle\t{\"id\": \"web\"}",
-            "circle.circle\t{\"id\": \"ag\"}",
-            "circle.role\t{\"id\": \"lead\"}",
-        ]);
-        assert_ne!(one.0, swapped.0);
-        assert_eq!(one.1["circle.role"], swapped.1["circle.role"]);
-        assert_ne!(one.1["circle.circle"], swapped.1["circle.circle"]);
-        // A row moved from one table to another changes both tables' hashes.
-        let moved = lines(&[
-            "circle.circle\t{\"id\": \"ag\"}",
-            "circle.role\t{\"id\": \"web\"}",
-            "circle.role\t{\"id\": \"lead\"}",
-        ]);
-        assert_ne!(one.0, moved.0);
+    fn the_state_hash_is_the_tables_hashes_by_name() {
+        let of = |v: &[(&str, &str)]| -> BTreeMap<String, String> {
+            v.iter()
+                .map(|(t, h)| ((*t).to_owned(), (*h).to_owned()))
+                .collect()
+        };
+        let one = of(&[("circle.role", "00ff"), ("circle.circle", "ab01")]);
+        // A line a table, by name, bytewise, as `cella.state_of` reads them.
+        assert_eq!(
+            state(&one),
+            *blake3::hash(b"circle.circle\tab01\ncircle.role\t00ff").as_bytes()
+        );
+        // A hash moved from one table to another is another state.
+        let moved = of(&[("circle.role", "ab01"), ("circle.circle", "00ff")]);
+        assert_ne!(state(&one), state(&moved));
     }
 
     #[test]

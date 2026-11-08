@@ -99,7 +99,7 @@
   const settings = $derived(held === 'platform')
   const first = $derived(parts('platform')[0]?.items[0]?.href)
   state.follow(() => back, () => settings)
-  const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.count ?? 0), 0) ?? 0
+  const waiting = (group: string) => nav.find((g) => g.group === group)?.items.reduce((n, i) => n + (i.waiting ?? i.count ?? 0), 0) ?? 0
 </script>
 
 <svelte:window {onkeydown} />

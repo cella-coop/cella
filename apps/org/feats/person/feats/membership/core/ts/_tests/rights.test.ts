@@ -4,7 +4,9 @@
 // it names that day: every person, every active member. A right no feat
 // registered, every employee's here, where employment is not migrated,
 // is held by no one; and `membership.rights` lists a right exactly
-// where `entitled` grants it. Run by `cella test slice membership`.
+// where `entitled` grants it, and, read as the app's reader, answers a
+// person for themselves and a member for anyone. Run by `cella test slice
+// membership`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -85,7 +87,7 @@ test('a right is never the authority reads ask: it lets each act on their own, a
 test('rights lists a right exactly where entitled grants its power, as a person\'s page reads it', async () => {
   for (const [who, day] of [[amina, '2026-10-24'], [ines, '2026-10-24'], [paul, '2026-10-24'], [paul, '2025-06-01'], ['nobody@x', '2026-10-24']]) {
     const { rows } = await db.query<{ power: string }>(
-      `SELECT g.power FROM membership.rights($1, $2) r JOIN circle.right g ON g.id = r."right" ORDER BY g.power`,
+      `SELECT power FROM membership.rights($1, $2) ORDER BY power`,
       [who, day],
     )
     const listed = rows.map((r) => r.power)
@@ -93,5 +95,42 @@ test('rights lists a right exactly where entitled grants its power, as a person\
       const { rows: e } = await db.query<{ m: boolean }>(`SELECT membership.entitled($1, $2, NULL, $3) AS m`, [who, power, day])
       assert.equal(listed.includes(power), e[0].m, `${who} ${power} on ${day}`)
     }
+  }
+})
+
+test('read as the app\'s reader, rights answers a person for themselves, a member for anyone, and a non-member nothing for another', async () => {
+  const app = new pg.Client({ user: 'cella_app' })
+  await app.connect()
+  const read = async (reader: string, person: string) => {
+    await app.query(`SELECT set_config('cella.actor', $1, false)`, [reader])
+    return (await app.query<{ power: string }>(
+      `SELECT power FROM membership.rights($1, '2026-10-24') ORDER BY power`,
+      [person],
+    )).rows.map((r) => r.power)
+  }
+  // Amina sits in the assembly as a member; Inès, invited, is none, and
+  // reads no row of `circle.right`.
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'ag', true) ON CONFLICT DO NOTHING`)
+  const root = (await db.query<{ id: string }>('SELECT circle.assembly() AS id')).rows[0].id
+  const role = (await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('member', $1, 'Member') ON CONFLICT DO NOTHING RETURNING id`, [root])).rowCount
+  const tenure = (await db.query<{ id: string }>(`INSERT INTO circle.tenure (circle, holder, role) VALUES ($1, $2, 'member') RETURNING id`, [root, amina])).rows[0].id
+  try {
+    await app.query(`SELECT set_config('cella.actor', $1, false)`, [ines])
+    assert.deepEqual((await app.query('SELECT id FROM circle.right')).rows, [], 'Inès reads no row of circle.right')
+    // What the slice's other tests register beside these rights, each
+    // holds too: a reader reads exactly what the whole does, or nothing.
+    const whole = async (person: string) =>
+      (await db.query<{ power: string }>(`SELECT power FROM membership.rights($1, '2026-10-24') ORDER BY power`, [person])).rows.map((r) => r.power)
+    assert.ok((await whole(ines)).includes('keep-profile') && !(await whole(ines)).includes('draw-account'))
+    assert.ok((await whole(amina)).includes('draw-account'))
+    assert.deepEqual(await read(ines, ines), await whole(ines), 'Inès reads her own rights, her person\'s among them')
+    assert.deepEqual(await read(ines, amina), [], 'and no one else\'s')
+    assert.deepEqual(await read(amina, amina), await whole(amina), 'Amina reads her own')
+    assert.deepEqual(await read(amina, ines), await whole(ines), 'and, a member, anyone\'s')
+    assert.deepEqual(await read('', ines), [], 'no one signed in reads none')
+  } finally {
+    await app.end()
+    await db.query('DELETE FROM circle.tenure WHERE id = $1', [tenure])
+    if (role) await db.query(`DELETE FROM circle.role WHERE id = 'member'`)
   }
 })

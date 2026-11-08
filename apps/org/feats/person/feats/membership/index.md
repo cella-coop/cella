@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -238,7 +238,12 @@ the shell, `membership/seats`, is `api/seats.ts` and `app/seats.ts`.
   force in `circle.right` the person holds on the day, where person's
   core says they are one of the people each names (`person.holds`). It
   is the one place the rights and the people are joined, as `holds` is
-  for the seats: `entitled` asks it, and a person's page lists it.
+  for the seats: `entitled` asks it, and a person's page lists it. It
+  runs as its owner, and to the app's reader it answers for themselves,
+  or for anyone where they are a member (`circle.inside()`), and
+  otherwise nothing: a person who is not a member reads the rights they
+  hold, each with its power and limit, and no other row of
+  `circle.right`.
 - `membership.entitled(actor, power, cents, day)` (`015-rights.sql`):
   the actor holds the power by a right, with no seat: a right
   `membership.rights` gives them on the day, within its `limit`. A
@@ -329,7 +334,9 @@ with no mandate covers none; and a right is held by
 whoever person's core says is one of its people, with no seat, and
 `membership.rights` lists a right exactly where `entitled` grants its
 power. `powers` (`cella test e2e powers`) reads the Powers tab of
-every Lanterne person against `may` and `entitled`, power by power.
+every Lanterne person against `may` and `entitled`, power by power,
+each signed in as the person whose page it is, Inès as herself, and a
+non-member reading another's tab finds no right on it.
 
 ## Shell
 
@@ -367,8 +374,11 @@ it, and covers what is their own. It reads `membership.holds` and
 read, and joins them only to the tenure, the circles and the mandate or
 right they name, so it lists exactly what the guard grants. Whoever
 reads the person's seats reads the mandates they hold by them; their
-rights, as the rest of the structure, only a member reads ([who reads
-it](../../../../core/circle/index.md#who-reads-the-structure)).
+rights the person reads on their own page, member or not, by
+`membership.rights`, and a member reads them on anyone's, while a
+non-member reading another's page reads none, and no reader learns
+from the tab a right they neither hold nor read as a member ([who
+reads it](../../../../core/circle/index.md#who-reads-the-structure)).
 
 Beside it, the page gains two tabs. Joining lists what joining asks, step by step,
 each kept by the slice that knows it: the membership's own, invited and

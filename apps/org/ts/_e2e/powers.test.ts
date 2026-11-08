@@ -1,11 +1,13 @@
 // A person's powers, end to end on a seeded Lanterne, through the driver
 // and the built shell: for every person and every power, the Powers tab
 // lists a line exactly where `membership.may` or `membership.entitled`
-// grants it on the verdict date. Camille's tab names the gérante's tenure,
+// grants it on the verdict date, each read signed in as the person whose
+// page it is. Camille's tab names the gérante's tenure,
 // 2024 to 2028, and its 20 000 € commit; Hugo's, Brand's lead, the lead's
 // approve-expense within 1 000 € a month, its budget unchecked; and
 // Inès's, Web's participant's mandates and her rights as a person and an
-// employee. Each mandate's line opens its page. Then, in every browser,
+// employee, read as herself; and a non-member reading another's tab finds
+// no right on it. Each mandate's line opens its page. Then, in every browser,
 // light and dark, Camille's tab is opened and its commit's line clicked
 // through; `SHOTS` names where its screenshots go. Run by `cella test e2e
 // powers`.
@@ -30,9 +32,10 @@ const hugo = 'hugo@lanterne.example'
 const ines = 'ines@lanterne.example'
 
 const all = async <R>(sql: string, values: unknown[] = []) => (await su.query(sql, values)).rows as R[]
-// A tab of a person's page, as text, its tags gone.
-const tab = async (member: string) => {
-  const { status, text } = await shell.page(`/people/${member}?tab=powers`, camille)
+// A tab of a person's page, as text, its tags gone, read by whoever is
+// signed in, the person themselves unless another is named.
+const tab = async (member: string, by = member) => {
+  const { status, text } = await shell.page(`/people/${member}?tab=powers`, by)
   assert.equal(status, 200)
   return { html: text, text: text.replace(/<[^>]+>/g, ' ').replace(/&#39;|&rsquo;|’/g, "'").replace(/\s+/g, ' ') }
 }
@@ -52,13 +55,13 @@ after(async () => {
   await su.end()
 })
 
-test('for every person and every power, the tab lists a line exactly where may or entitled grants it', async () => {
+test('for every person and every power, their own tab lists a line exactly where may or entitled grants it', async () => {
   const people = (await all<{ address: string }>('SELECT address FROM person.person ORDER BY address')).map((p) => p.address)
   const powers = (await all<{ power: string }>('SELECT power FROM circle.mandate UNION SELECT power FROM circle.right ORDER BY power')).map((p) => p.power)
   assert.ok(people.length >= 12 && powers.length > 30, `${people.length} people, ${powers.length} powers`)
   let lines = 0
   for (const person of people) {
-    const listed = await seats.powers(reader(app, camille), person)
+    const listed = await seats.powers(reader(app, person), person)
     lines += listed.length
     const by = new Set(listed.map((p) => p.power))
     for (const power of powers) {
@@ -84,7 +87,7 @@ test('Camille holds the commit as gérante, by her tenure from 2024 to 2028, up 
 })
 
 test('Hugo, Brand\'s lead, approves expenses within 1 000 € a month, its budget shown and said unchecked, and runs Brand\'s projects alone', async () => {
-  const listed = await seats.powers(reader(app, camille), hugo)
+  const listed = await seats.powers(reader(app, hugo), hugo)
   const expense = listed.filter((p) => p.power === 'approve-expense' && p.role === 'lead')
   assert.deepEqual(expense.map((p) => [p.circle, p.budget, p.per, p.limit]), [['brand', 100_000, 'month', null]])
   const projects = listed.filter((p) => p.power === 'manage-project')
@@ -96,7 +99,7 @@ test('Hugo, Brand\'s lead, approves expenses within 1 000 € a month, its budge
 })
 
 test('Inès, no member, holds Web\'s participant mandates by her seat there, and a person\'s and an employee\'s rights', async () => {
-  const listed = await seats.powers(reader(app, camille), ines)
+  const listed = await seats.powers(reader(app, ines), ines)
   const seated = listed.filter((p) => p.mandate !== null)
   assert.ok(seated.length > 0 && seated.every((p) => p.circle === 'web' && p.tenure === null), 'every mandate of hers is by her seat in Web')
   assert.deepEqual([...new Set(listed.map((p) => p.right).filter((r) => r !== null))].sort(), ['employee', 'person'])
@@ -106,6 +109,15 @@ test('Inès, no member, holds Web\'s participant mandates by her seat there, and
     assert.ok(text.includes(says), `Inès's tab says ${says}`)
   }
   assert.ok(!text.includes("every member's right"), 'she holds no member\'s right')
+})
+
+test('Inès, no member, reading Camille\'s tab finds no right on it', async () => {
+  const listed = await seats.powers(reader(app, ines), camille)
+  assert.deepEqual(listed.filter((p) => p.right !== null), [], 'the driver gives her none of Camille\'s rights')
+  const { text } = await tab(camille, ines)
+  for (const says of ["every person's right", "every member's right", "every employee's right"]) {
+    assert.ok(!text.includes(says), `the tab says no ${says}`)
+  }
 })
 
 test('in every browser, light and dark, Camille\'s Powers tab opens and its commit\'s line leads to the mandate\'s chain', async () => {

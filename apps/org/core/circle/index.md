@@ -305,8 +305,9 @@ by the personal row's pattern
 ([architecture](../../../../_corpus/doc/architecture.md#reading)),
 and the mandates on the roles they hold, the participant's among them
 (`circle.held()`), which say what their seats let them do; and
-nothing else: no other role's mandates, no circle's, no right and no
-policy, but what the co-op publishes by motion
+nothing else: no other role's mandates, no circle's, no right but
+those they hold, which a feat that reads a person's rights gives them
+as its owner, and no policy, but what the co-op publishes by motion
 ([what the co-op publishes](#what-the-co-op-publishes)).
 No one signed in reads none of it. A write's transaction and a
 superuser's session read the whole (`circle.whole()`), and the guards

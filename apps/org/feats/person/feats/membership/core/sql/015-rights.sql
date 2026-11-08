@@ -6,26 +6,34 @@
 -- reads ask (`may`), only what a write may use beside a seat's mandates.
 -- The rights in force a person holds on a day are read in one place, as
 -- the seats' mandates are by `holds`: `entitled` asks it, and a person's
--- page lists it.
-CREATE FUNCTION membership.rights(person text, day date) RETURNS TABLE ("right" bigint)
-LANGUAGE sql STABLE
+-- page lists it, each right with its kind, power and limit. It runs as
+-- its owner, so a person who is no member, and reads no row of
+-- `circle.right`, reads the rights they hold: to the app's reader it
+-- answers for themselves, or for anyone where they are a member
+-- (`circle.inside`), and otherwise nothing; a write's transaction, where
+-- `entitled` asks it, and a superuser's session read it whole.
+CREATE FUNCTION membership.rights(person text, day date)
+RETURNS TABLE (id bigint, "right" text, power text, "limit" cella.amount)
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
 BEGIN ATOMIC
-  SELECT m.id
+  SELECT m.id, m."right", m.power, m."limit"
   FROM circle.right m
-  WHERE (m."from" IS NULL OR m."from" <= rights.day)
+  WHERE ((SELECT circle.whole()) OR rights.person = cella.reader() OR (SELECT circle.inside()))
+    AND (m."from" IS NULL OR m."from" <= rights.day)
     AND (m.until IS NULL OR m.until > rights.day)
     AND (m.revoked IS NULL OR m.revoked > rights.day)
     AND person.holds(rights.person, m."right", rights.day);
 END;
+COMMENT ON FUNCTION membership.rights(text, date) IS 'audience: shared: the rights a person holds, which a non-member reads no row of, it keeps for that person, a member of the scope and a write';
 
 CREATE FUNCTION membership.entitled(actor text, power text, cents bigint, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT EXISTS (
     SELECT FROM membership.rights(entitled.actor, entitled.day) r
-    JOIN circle.right m ON m.id = r."right"
-    WHERE m.power = entitled.power
-      AND (m."limit" IS NULL OR entitled.cents IS NULL OR entitled.cents <= cella.cents(m."limit"))
+    WHERE r.power = entitled.power
+      AND (r."limit" IS NULL OR entitled.cents IS NULL OR entitled.cents <= cella.cents(r."limit"))
   );
 END;
 

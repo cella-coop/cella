@@ -260,3 +260,12 @@ built with adapter-node, its node modules and the `cella` CLI, which
 runs it as `cella serve --prod` does, with the DuckDB extensions the
 analytics shell loads. Its closure holds no key, no session key and no
 database: those are the host's.
+
+The flake's `nixosModules.cella` runs one scope on a NixOS host:
+Postgres 18 with `cella-pg` preloaded and the scope's settings, the
+notary's and the vault's key files at the paths the host names (the
+module never makes a key: `cella key init` does, once, by hand), the
+server and its analytics shell as units of their own user, and a
+nightly `cella backup` whose directory the host's own backup encrypts
+and carries off the host. A NixOS test boots it with test keys,
+migrates, signs one write and restores the night's backup.

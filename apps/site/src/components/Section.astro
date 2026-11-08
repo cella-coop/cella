@@ -84,7 +84,7 @@ const actions = [
           {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
           <Heading text={s.heading} level={hero ? 1 : 2} drafted={d('heading')} />
           {Content && <div class:list={['body', { lede: s.kind !== 'prose' }]} data-drafted={d('body')}><Content components={figures} /></div>}
-          {!['steps', 'list'].includes(s.kind) && s.items.length > 0 && <Cells items={s.items} numbered={s.numbered} seed={seed} drafted={d('items')} skip={band} />}
+          {!['steps', 'list'].includes(s.kind) && s.items.length > 0 && <Cells items={s.items} numbered={s.numbered} seed={seed} drafted={d('items')} skip={band} layout={s.layout} />}
           {
             s.kind === 'steps' && s.items.length > 0 && (
               <ol class="steps" role="list" data-drafted={d('items')}>

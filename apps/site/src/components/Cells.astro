@@ -4,7 +4,9 @@
 // turn however many there are, leaving out the one `skip` names, as a
 // band's own. A cell may hold the item's number, when
 // the list is `numbered`, or its Phosphor icon, `icon`, in the regular
-// weight, drawn in the paper on the ink; else it is bare.
+// weight, drawn in the paper on the ink; else it is bare. Its `layout`:
+// `column`, down the page, unset; `row`, side by side, each cell over its
+// words; `grid`, two columns, each cell beside them.
 import { cell } from '@cella/brand'
 import { glyphPaths } from '../lib/icon'
 import { STATUSES, type Status } from '../schemas'
@@ -16,13 +18,16 @@ interface Props {
   drafted?: true
   // an ink the cells leave out, as a band's own, so none sinks into it
   skip?: Status
+  // how the items stand: down the page, side by side, each its cell over
+  // its words, or in two columns, each its cell beside them
+  layout?: 'column' | 'row' | 'grid'
 }
 
-const { items, numbered = false, seed = 1, drafted, skip } = Astro.props
+const { items, numbered = false, seed = 1, drafted, skip, layout = 'column' } = Astro.props
 const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
 ---
 
-<ul class="cells" role="list" data-drafted={drafted}>
+<ul class="cells" data-layout={layout} role="list" data-drafted={drafted}>
   {
     items.map((it, i) => (
       <li class="item">
@@ -56,6 +61,31 @@ const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
     grid-template-columns: auto 1fr;
     gap: 1.1rem;
     align-items: start;
+  }
+
+  /* side by side, as many to a row as fit, each its cell over its words */
+  [data-layout='row'] {
+    grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+    gap: 2rem 2.2rem;
+    max-width: none;
+  }
+
+  [data-layout='row'] .item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+
+  /* two columns, each its cell beside its words, one on a narrow screen */
+  [data-layout='grid'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 2.4rem;
+    max-width: none;
+  }
+
+  @media (max-width: 40rem) {
+    [data-layout='grid'] {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 
   .mark {

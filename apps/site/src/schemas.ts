@@ -107,8 +107,10 @@ export const section = z
     diagram: z.string().optional(),
     // a form under its words: the compact sign-up or the contact form
     form: z.enum(['signup', 'contact']).optional(),
-    // a features section's cells hold their items' numbers
+    // a list of cells holds its items' numbers, and stands down the page,
+    // side by side or in two columns
     numbered: z.boolean().default(false),
+    layout: z.enum(['column', 'row', 'grid']).default('column'),
     // a band's ink, and whether it quotes
     ink: z.enum(STATUSES).optional(),
     quote: z.boolean().default(false),

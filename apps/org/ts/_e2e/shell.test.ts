@@ -80,6 +80,53 @@ test('the sidebar names the co-op as the database does, and its menus open in th
   assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
 
+test('the co-op selector lists the circles, and the one chosen is the lens its trigger names until it is cleared', async () => {
+  const session = await shell.signIn(camille)
+  const logged = async () => (await one<{ n: number }>('SELECT count(*)::int AS n FROM cella.log')).n
+  const before = await logged()
+  const lensing = async (lens: string) => {
+    const res = await fetch(`${shell.base}/lens`, {
+      method: 'POST',
+      headers: { origin: shell.base, 'x-forwarded-proto': 'http', cookie: session, 'content-type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({ lens, back: '/projects' }),
+      redirect: 'manual',
+    })
+    return { status: res.status, location: res.headers.get('location'), cookie: res.headers.get('set-cookie') ?? '' }
+  }
+  const seen = async (lens?: string) => {
+    const res = await fetch(`${shell.base}/people`, { headers: { accept: 'text/html', cookie: lens ? `${session}; cella-lens=${lens}` : session } })
+    return res.text()
+  }
+  const checked = (text: string) => [...text.matchAll(/aria-checked="true"[^>]*name="lens" value="([^"]*)"/g)].map((m) => m[1])
+
+  const whole = await seen()
+  const menu = whole.slice(whole.indexOf('action="/lens"'))
+  const order = ['All circles', 'Assemblée générale', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const at = order.map((s) => menu.indexOf(s))
+  assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
+  assert.deepEqual([...at].sort((a, b) => a - b), at, 'All circles first, then the circles Camille sits in, then the rest')
+  assert.deepEqual(checked(whole), [''], 'with no lens, All circles is checked')
+  assert.ok(!whole.includes('Co-op: Lanterne / '), 'and the trigger names the co-op alone')
+
+  const set = await lensing('web')
+  assert.equal(set.status, 303)
+  assert.equal(set.location, '/projects', 'the menu returns to the page it was chosen on')
+  assert.match(set.cookie, /^cella-lens=web;.*HttpOnly/i, 'the lens is a cookie of the member\'s browser')
+  const lensed = await seen('web')
+  assert.ok(lensed.includes('Co-op: Lanterne / Web'), 'the trigger names the lens: Lanterne / Web')
+  assert.ok(lensed.replace(/<!--.*?-->|<[^>]+>/g, '').includes('Lanterne / Web'), 'in its visible text too')
+  assert.deepEqual(checked(lensed), ['web'], 'and Web is checked in the menu')
+
+  const stale = await seen('nowhere')
+  assert.ok(!stale.includes('Co-op: Lanterne / '), 'a lens naming no circle the member reads is none')
+  assert.deepEqual(checked(stale), [''])
+
+  const cleared = await lensing('')
+  assert.equal(cleared.status, 303)
+  assert.match(cleared.cookie, /^cella-lens=;.*Max-Age=0/i, 'All circles clears the lens')
+  assert.equal(await logged(), before, 'and nothing of it enters the log')
+})
+
 test('every collection has a dashboard, its widgets run by the server', async () => {
   const invoices = await page('/invoices?view=dashboard')
   assert.equal(invoices.status, 200)

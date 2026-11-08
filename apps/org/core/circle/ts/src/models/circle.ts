@@ -66,6 +66,14 @@ export interface Sat {
   name: string
 }
 
+// A circle the co-op selector offers as a lens, and whether the member
+// sits in it.
+export interface Lens {
+  id: string
+  name: string
+  sits: boolean
+}
+
 // The circles a person sits in as a form offers them, the one a record
 // would be worked for first where they sit in it, the others in turn.
 export const offering = (sat: Sat[], first: string | null): Sat[] => [

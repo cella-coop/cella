@@ -34,6 +34,8 @@
     source,
     drawer,
     people,
+    circles = [],
+    lens = null,
     children,
   }: {
     // The co-op the shell serves: its address, name and legal name.
@@ -47,10 +49,14 @@
     drawer: boolean
     // The names of the people the co-op knows, by address.
     people: Record<string, string>
+    // The circles the member reads, those they sit in first, and the one
+    // they lensed the co-op on, if any.
+    circles?: { id: string; name: string; sits: boolean }[]
+    lens?: { id: string; name: string } | null
     children: Snippet
   } = $props()
 
-  const state = useShell(() => outcome, () => drawer, () => people)
+  const state = useShell(() => outcome, () => drawer, () => people, () => lens)
 
   function onkeydown(e: KeyboardEvent) {
     if (e.key !== ']' || e.metaKey || e.ctrlKey || e.altKey || typing(e) || document.querySelector('dialog[open]')) {
@@ -129,10 +135,10 @@
     {:else}
     <div class="top">
     <div class="coop">
-      <Popover label="Co-op: {scope.name}">
+      <Popover label="Co-op: {scope.name}{lens ? ` / ${lens.name}` : ''}">
         {#snippet trigger()}
           <span class="mark" aria-hidden="true">{scope.name.slice(0, 1).toUpperCase()}</span>
-          <b class="name">{scope.name}</b>
+          <b class="name">{scope.name}{#if lens}<span class="lensed"> / {lens.name}</span>{/if}</b>
           <Icon icon={CaretUpDown} size="0.9em" />
         {/snippet}
         <button role="menuitemradio" aria-checked="true" class="item">
@@ -143,6 +149,23 @@
           </span>
           <Icon icon={Check} />
         </button>
+        {#if circles.length}
+          <!-- The circles: the one chosen is the member's lens, which every
+               collection reads through; All circles clears it. -->
+          <p class="label">Circles</p>
+          <form method="post" action="/lens" class="list" role="group" aria-label="Circles">
+            <input type="hidden" name="back" value={back} />
+            <button role="menuitemradio" aria-checked={!lens} class="item" name="lens" value="">
+              All circles{#if !lens}<Icon icon={Check} />{/if}
+            </button>
+            {#each circles as c, i (c.id)}
+              {#if i > 0 && !c.sits && circles[i - 1]?.sits}<hr />{/if}
+              <button role="menuitemradio" aria-checked={lens?.id === c.id} class="item" name="lens" value={c.id}>
+                {c.name}{#if lens?.id === c.id}<Icon icon={Check} />{/if}
+              </button>
+            {/each}
+          </form>
+        {/if}
         {#if first}<a class="item" role="menuitem" href={first}>Settings</a>{/if}
       </Popover>
     </div>
@@ -372,6 +395,9 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+  .lensed {
+    color: var(--text-muted);
+  }
   .names {
     display: grid;
     flex: 1;
@@ -394,6 +420,11 @@
   }
   .list {
     display: grid;
+  }
+  .list hr {
+    margin: var(--space-1) var(--space-2);
+    border: none;
+    border-top: 1px solid var(--line);
   }
   .item,
   .themes button {

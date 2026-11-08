@@ -981,7 +981,7 @@ bytes, such as a file's, which the collection's owner serves (`content`)
 to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
-membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
+membership's `accept`; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
 which redirects to them; and `/`, which lands a member in their Inbox until the co-op has a
 first page of its own. A collection's owner is a feat,
 or a core library, the log or the circles. A graft extends only a collection of a feat it
@@ -1086,6 +1086,18 @@ scope's timezone ([the notary](../../apps/org/core/notary/index.md#settings)).
 The UI core, `@cella/org-ui`, holds the tokens and every component the
 slices compose ([its doc](../../apps/org/core/ui/index.md)); a slice's
 blocks style nothing themselves.
+
+### The lens
+
+A member may lens the co-op on one of its circles, from the co-op
+selector ([the shell](../../apps/org/core/ui/index.md#components)): the
+circles they read, "All circles" first and the default. The lens is
+the member's view and never a write: a cookie of the scope's, which
+`/lens` writes and the root layout reads, as `/theme` and the drawer's
+are, naming one circle the member reads, or none. Nothing of it
+enters the log and no row-level policy reads it, so it narrows what a
+reader reads and never widens it; a lens naming a circle the member
+no longer reads, or one of another scope, is none.
 
 ## The analytics shell
 

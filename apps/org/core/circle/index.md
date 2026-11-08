@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -533,6 +533,10 @@ membership ([membership](../../feats/person/feats/membership/index.md#seats)).
   as the circles a record may be worked for, and `offering` (`./models`)
   puts the one the record's own circle names first where they sit in
   it, as the week of time offers a project's circle.
+- `lenses(db, person, day)` (`./api`): every circle the person reads,
+  those they sit in on the day first, then the rest, each marked
+  `sits`, which the co-op selector offers as the member's lens
+  ([the lens](../../../../_corpus/doc/architecture.md#the-lens)).
 
 The app role and the guards role may select, the app role what [the
 structure's reading](#who-reads-the-structure) lets it; the app role may insert a

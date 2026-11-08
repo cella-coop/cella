@@ -84,9 +84,19 @@ The theme is light, dark or the system's, a cookie the server writes into
 
 - `Shell`: the grid, sidebar · content. The sidebar's top and foot stay
   put and only its middle scrolls. Its top is the co-op selector, the
-  co-op's mark and name, its menu listing the scopes the shell serves
-  (one today) with their legal names; then, always shown, the Inbox,
-  where `/` and the sign-in land, and Activity, the log. The middle holds the sections as
+  co-op's mark and name, followed by the lensed circle's name where the
+  member has one, "Lanterne / Web", so a lens is never hidden. Its menu
+  lists the scopes the shell serves (one today) with their legal names,
+  then the circles the member reads: "All circles" first, which clears
+  the lens and is checked where there is none, then the circles the
+  member sits in, then the rest. A circle chosen there is the member's
+  **lens**, which every collection reads through
+  ([architecture](../../../../_corpus/doc/architecture.md#the-lens)): a cookie
+  of the scope's, written by `/lens` as `/theme` writes the theme, so
+  the server renders the lensed page and nothing of it enters the log;
+  a lens naming a circle the member no longer reads is none. Then,
+  always shown, the Inbox, where `/` and the sign-in land, and Activity,
+  the log. The middle holds the sections as
   accordions, as Linear's teams: Governance, Office, Work, Payments,
   Ledger and Equity, flat, never nested, each its name
   and a caret, a dot on a shut one whose collections hold rows waiting
@@ -300,8 +310,8 @@ exported.
 ## State
 
 A component holds no state of its own: the collection's filter and row,
-the command menu, the dismissed outcome, the drawer's opening and the
-people's names, and what a date field holds typed and says of it, are state classes in
+the command menu, the dismissed outcome, the drawer's opening, the
+lens and the people's names, and what a date field holds typed and says of it, are state classes in
 `hooks/` (`CollectionState`, `CommandState`, `ShellState`, `DateState`), and the sign-in and
 an invitation taken up (`SignInState`, `JoinState`), each reached through
 its `use*` hook, as [architecture](../../../../_corpus/doc/architecture.md#client-state)

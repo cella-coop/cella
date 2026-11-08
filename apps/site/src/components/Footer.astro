@@ -1,12 +1,13 @@
 ---
-// The footer, on the coral band a call to action runs into: the brand's
-// mark, the site's closing line and its links.
-import mark from '@cella/brand/mark.svg?raw'
+// The footer, on the page's own paper under a hairline: the lockup and
+// the site's closing line, the sitemap in columns, each a heading over
+// its links, and under them the note that the site shows prototype work.
+import lockup from '@cella/brand/lockup.svg?raw'
 import type { Marks } from '../lib/text'
 
 type Link = { label: string; href: string }
 interface Props {
-  footer: { line: string; links: Link[] }
+  footer: { line: string; columns: { heading: string; links: Link[] }[]; disclaimer: string }
   drafted: Marks
 }
 
@@ -14,20 +15,30 @@ const { footer, drafted } = Astro.props
 ---
 
 <footer class="footer">
-  <div class="wrap bar">
-    <span class="mark" aria-hidden="true" set:html={mark} />
-    <p class="label line" data-drafted={drafted('footer.line')}>{footer.line}</p>
-    {
-      footer.links.length > 0 && (
-        <ul class="links" role="list" data-drafted={drafted('footer.links')}>
-          {footer.links.map((l) => (
-            <li>
-              <a class="label" href={l.href}>{l.label}</a>
-            </li>
-          ))}
-        </ul>
-      )
-    }
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">
+        <span class="lockup" aria-hidden="true" set:html={lockup} />
+        <p data-drafted={drafted('footer.line')}>{footer.line}</p>
+      </div>
+      <nav class="map" data-drafted={drafted('footer.columns')}>
+        {
+          footer.columns.map((c) => (
+            <div>
+              <p class="label">{c.heading}</p>
+              <ul role="list">
+                {c.links.map((l) => (
+                  <li>
+                    <a href={l.href}>{l.label}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </div>
+    <p class="disclaimer" data-drafted={drafted('footer.disclaimer')}>{footer.disclaimer}</p>
   </div>
 </footer>
 
@@ -35,43 +46,75 @@ const { footer, drafted } = Astro.props
   .footer {
     position: relative;
     z-index: 1;
-    padding-block: 2rem 3rem;
-    background: var(--band-b);
-    color: var(--band-b-ink);
+    margin-top: clamp(4rem, 8vw, 7rem);
+    padding-block: 3.5rem 3rem;
+    border-top: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-size: 0.92rem;
   }
 
-  .bar {
+  .top {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: 2.5rem clamp(2rem, 5vw, 5rem);
+  }
+
+  .brand {
+    display: grid;
+    gap: 1rem;
+    align-content: start;
+  }
+
+  .lockup {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem 2.5rem;
+    color: var(--text);
   }
 
-  .mark :global(svg) {
-    display: block;
-    width: 1.75rem;
-    height: 1.75rem;
+  .lockup :global(svg) {
+    width: auto;
+    height: 1.4rem;
   }
 
-  .label {
-    color: inherit;
-    opacity: 0.8;
+  .brand p {
+    max-width: 22rem;
   }
 
-  .links {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1.5rem;
-    margin: 0 0 0 auto;
+  .map {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 2rem;
+  }
+
+  .map ul {
+    display: grid;
+    gap: 0.55rem;
+    margin: 0.9rem 0 0;
     padding: 0;
     list-style: none;
   }
 
-  .links a {
+  .map a {
+    color: var(--text);
     text-decoration: none;
   }
 
-  .links a:hover {
-    opacity: 1;
+  .map a:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .disclaimer {
+    max-width: 44rem;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid color-mix(in oklch, var(--rule) 50%, transparent);
+    color: var(--text-subtle);
+    font-size: 0.82rem;
+  }
+
+  @media (max-width: 56rem) {
+    .top {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

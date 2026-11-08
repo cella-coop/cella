@@ -46,10 +46,16 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   | `steps` | its body, then its items numbered in two columns |
   | `list` | its body, then its items as ruled rows, a title and a muted line |
   | `quote` | a band of sage, its edges cut as a cell's: its body set large, its heading the attribution |
-  | `cta` | a band of coral, its edges cut as a cell's, running into the footer: its eyebrow, heading, body and action |
+  | `cta` | a band of coral, its edges cut as a cell's: its eyebrow, heading, body and action |
 
-- **the footer**, on the coral band: the mark, the site's closing line
-  and its links.
+- **the footer**, on the page's own paper under a hairline: the lockup
+  and the site's closing line, the sitemap in columns, each a heading
+  over its links, and under them the note that the site shows
+  prototype work, not yet a product.
+
+A band's edges are a rounded outline in its own box (`EDGES` in
+`Section.astro`), a few long edges meeting at wide turns rounded by the
+brand's own corner, its corners at the screen's sides standing past it.
 
 A section with a figure sets it beside its words; down the page the
 figures trade sides, the hero's on the right, and take the five inks in
@@ -138,7 +144,7 @@ takes a draft over by writing that field, or the whole file, in
 
 | Collection | Where | What it holds |
 |---|---|---|
-| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer, the blog's labels, the mark a diagram wears and the credit under a photo |
+| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, sitemap and disclaimer, the blog's labels, the mark a diagram wears and the credit under a photo |
 | `pages`, `pageDrafts` | `pages/<page>/<section>.mdx` | a page is a folder of sections, its hero `hero.mdx`, with the page's `title` and `description`; each section's `kind`, `order`, `eyebrow`, `heading`, `items`, `figure` and actions in its frontmatter, its body below; `home` is `/` and `blog` heads the blog |
 | `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build |
 

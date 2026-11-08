@@ -20,7 +20,13 @@ export const site = z.object({
   // The narrow screen's menu button's label, read aloud.
   menu: z.string(),
   theme: z.object({ toggle: z.string() }),
-  footer: z.object({ line: z.string(), links: z.array(link).default([]) }),
+  // The footer: the brand's line, the sitemap's columns, each a heading
+  // over its links, and the note that the site shows prototype work.
+  footer: z.object({
+    line: z.string(),
+    columns: z.array(z.object({ heading: z.string(), links: z.array(link) })).default([]),
+    disclaimer: z.string(),
+  }),
   blog: z.object({ empty: z.string(), back: z.string() }),
   // The mark under a diagram, which says it was made by a model.
   diagram: z.object({ mark: z.string() }),

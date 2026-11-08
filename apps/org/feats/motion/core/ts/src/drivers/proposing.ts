@@ -1,6 +1,6 @@
 import type { Db } from '@cella/org-db'
 import { departures, inForce } from '@cella/org-policy'
-import type { Deciding, Held, Issuing, Mandate, Proposing } from '../models/circles.ts'
+import type { Deciding, Held, Issuing, Mandate, Proposing, Revising } from '../models/circles.ts'
 import type { Disclosure } from '../models/disclosure.ts'
 
 // Every circle, the assembly first and the others by name, with the
@@ -78,6 +78,26 @@ export async function proposing(db: Db, circle: string): Promise<Proposing | nul
     departures: await departures(db, circle),
     disclosure: await disclosing(db, circle),
   }
+}
+
+// What a mandate's page offers to propose about it: changing or revoking
+// it, while it stands on the verdict date, as the page of the circle that
+// lists it offers, a role every working circle has listed on the
+// assembly's; nothing once it is revoked or expired.
+export async function revising(db: Db, mandate: string): Promise<Revising | null> {
+  if (!/^\d+$/.test(mandate)) {
+    return null
+  }
+  const { rows } = await db.query<{ policy: string; circle: string }>(
+    `SELECT m.policy, coalesce(nullif(r.circle, '*'), g.id, circle.assembly()) AS circle
+     FROM circle.mandate m LEFT JOIN circle.role r ON r.id = m.grantee LEFT JOIN circle.circle g ON g.id = m.grantee
+     WHERE m.id = $1::bigint`,
+    [mandate],
+  )
+  const found = rows[0]
+  const p = found ? await proposing(db, found.circle) : null
+  const held = p?.mandates.find((m) => m.policy === found?.policy)
+  return p && held ? { circle: p.circle, circles: p.circles, held } : null
 }
 
 // A mandate as a motion's page names it: its power and grantee by name,

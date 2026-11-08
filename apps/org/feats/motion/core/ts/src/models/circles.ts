@@ -73,6 +73,16 @@ export interface Proposing {
   disclosure: Disclosure | null
 }
 
+// What a mandate's page proposes about it while it stands: changing it,
+// the form filled with its values, or revoking it, each by motion of the
+// circle that issued it; the circle whose page lists it, and every
+// circle, which its scope may name.
+export interface Revising {
+  circle: string
+  circles: { id: string; name: string }[]
+  held: Held
+}
+
 // A motion about a circle, carrying one action of these kinds, put
 // to the circle that decides it.
 export interface Put {

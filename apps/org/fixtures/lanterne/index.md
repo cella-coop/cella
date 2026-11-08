@@ -301,8 +301,10 @@ buyer's grant and change below.
    her 1 200 €, naming her mandate and the motion of Operations that
    would raise its limit; Approve on Atelier Lumen's rent, the
    assembly's, outside her scope, naming what her mandate covers and
-   the role that would cover it; and a bill recorded, which she holds
-   by no mandate, naming finance, which holds record-bill.
+   the role that would cover it; and a bill recorded from the Bills
+   list's New form, on the assembly's records since the form names no
+   circle, which she holds by no mandate, naming finance, which holds
+   record-bill, and the tenure that would allow it.
 4. **Granting, changing and revoking, by motion.** As Camille, open
    Brand's page: Propose… grants a mandate to one of its roles or to
    the circle, or changes or revokes one of its mandates, saying the
@@ -311,7 +313,11 @@ buyer's grant and change below.
    granting the print buyer `record-bill` over Brand's bills, put to
    the assembly, since no circle holds a mandate to issue it under,
    and raising her `approve-bill` to 1 500 €, put to Operations, which
-   issued it, by Julien, its one seat. Each motion's page says which
+   issued it, by Julien, its one seat. The print buyer's Approve bill
+   mandate's own page offers the same while it stands: Change… opens
+   the form filled with its values, Revoke… proposes ending it, each
+   put to Operations, which issued it, and saying that it revokes every
+   mandate issued under it the same day. Each motion's page says which
    mandate its grant would be issued under or which its end would
    revoke; m-2026-014's lists coordination's and every one under it.
    Close them from their pages, each as a member seated where it is
@@ -321,8 +327,9 @@ buyer's grant and change below.
    m-2026-014. Sofia then holds record-bill and approve-bill to
    1 500 €, until m-2026-014's close ends coordination's and revokes
    Operations', the print buyer's as the change made it, and
-   finance's with it, the same day; its page lists each under the one
-   it ends, the print buyer's 1 200 € the change replaced among them,
+   finance's with it, the same day; its page lists those four, each
+   under the one it ends, and not the print buyer's 1 200 €, which the
+   change's own close revoked that day and the change's page lists;
    and Sofia's Approve on the paper bill is refused, naming her
    mandate, the day it was revoked and the motion of Operations that
    would grant it anew.

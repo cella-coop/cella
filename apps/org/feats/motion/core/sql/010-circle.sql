@@ -167,6 +167,22 @@ BEGIN ATOMIC
   LIMIT 1;
 END;
 
+-- The mandates the settled entry that carried out a motion's action `n`
+-- revoked, as its `revoked` says, the adoption of a policy replacing a
+-- mandate's or the end of one; none where no such entry settled. The log's
+-- form is its owner's, so it reads as its owner, and answers with those
+-- ids alone, which name no one.
+CREATE FUNCTION motion.revoked_by(motion text, n integer) RETURNS bigint[]
+LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = pg_catalog, pg_temp
+BEGIN ATOMIC
+  SELECT coalesce(array_agg(w::bigint), '{}')
+  FROM cella.log l
+  CROSS JOIN LATERAL jsonb_array_elements_text(coalesce(l.form -> 'revoked', '[]')) w
+  WHERE l.settled AND l.op IN ('motion:policy:adopt', 'motion:policy:end')
+    AND l.form ->> 'motion' = revoked_by.motion AND l.form ->> 'n' = revoked_by.n::text;
+END;
+
 -- What each action of a motion does to the mandates: for a mandate
 -- policy, the mandate it granted once the motion is closed and the parent
 -- it was issued under, or while it is open the parent it would be issued
@@ -174,7 +190,9 @@ END;
 -- `motion.grant_flaw` finds wrong with it; for the end or the replacement
 -- of a mandate's policy, that mandate and every mandate below it its
 -- close revokes (`circle.under`), those standing on the day it ends while
--- open, those revoked that day once closed.
+-- open, and once closed those its close revoked, as the `revoked` of the
+-- entry that carried the action out says (`motion.revoked_by`), never
+-- one another write revoked the same day.
 CREATE FUNCTION motion.issues(motion text) RETURNS TABLE (n integer, kind text, closed boolean, granted bigint, parent bigint, flaw text, ends bigint, revokes bigint[])
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -189,7 +207,7 @@ BEGIN ATOMIC
            SELECT u.id FROM circle.under(x.id) u JOIN circle.mandate o ON o.id = u.id
            WHERE CASE WHEN d.closed IS NULL
                    THEN (o.revoked IS NULL OR o.revoked > t.day) AND (o.until IS NULL OR o.until > t.day)
-                   ELSE o.revoked = coalesce(e.ends, r.applies) END
+                   ELSE u.id = ANY (motion.revoked_by(m.motion, m.n)) END
            ORDER BY u.depth, u.id) END
   FROM motion.action m
   JOIN motion.motion d ON d.id = m.motion
@@ -200,7 +218,6 @@ BEGIN ATOMIC
   LEFT JOIN LATERAL motion.granting(m.args ->> 'wording') v ON m.kind = 'policy'
   LEFT JOIN policy.policy r ON m.kind = 'policy' AND r.motion = m.motion AND r.n = m.n
   LEFT JOIN circle.mandate g ON g.policy = r.id
-  LEFT JOIN policy.policy e ON m.kind = 'end' AND e.id = m.args ->> 'policy'
   LEFT JOIN circle.mandate x ON x.policy = CASE m.kind WHEN 'end' THEN m.args ->> 'policy' ELSE nullif(m.args ->> 'replaces', '') END
   WHERE m.motion = issues.motion
     AND ((m.kind = 'policy' AND m.args ->> 'kind' = 'mandate') OR x.id IS NOT NULL)

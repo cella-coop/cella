@@ -11,9 +11,11 @@
 // --scenario authority-walk` leaves four motions for the operator to
 // close. Its unseeded steps, which the test alone runs, walk it in
 // every browser, light and dark, as the person each step names: the chain, Sofia's powers, her refusals,
-// Brand's Propose… and what each open motion would issue or revoke;
+// Brand's Propose…, the print buyer's mandate's Change… and Revoke…
+// and what each open motion would issue or revoke;
 // closes the grant, the change, m-2026-013 and m-2026-014 in that order,
-// m-2026-014's revoking every mandate under coordination's the same day;
+// m-2026-014's revoking every mandate under coordination's the same day,
+// each closed motion naming only what its own close revoked;
 // and walks again, the revocation's page and the refusal it leaves.
 // `SHOTS` names where its screenshots go. Run by `cella test e2e
 // authority-walk`.
@@ -229,6 +231,23 @@ async function approving(w: Walker, bill: string) {
   return (await said.textContent()) ?? ''
 }
 
+// Records a bill from the Bills list's New form, as the signed-in
+// person, and returns the refusal the form shows.
+async function recording(w: Walker) {
+  await w.open('/bills')
+  await w.page().getByRole('button', { name: 'New' }).click()
+  const form = w.page().locator('form', { has: w.page().getByRole('button', { name: 'Record bill' }) })
+  await form.getByLabel('Supplier').fill('Imprimerie du Parc')
+  await form.getByLabel('Their reference').fill('FA-2026-1203')
+  await form.getByLabel('What for').fill('Proofs')
+  await form.getByLabel('Line 1').fill('Proofs')
+  await form.getByLabel('Unit price, €').fill('120.00')
+  await form.getByRole('button', { name: 'Record bill' }).click()
+  const said = w.page().getByText(/the actor holds/).first()
+  await said.waitFor()
+  return (await said.textContent()) ?? ''
+}
+
 unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Propose… and what each open motion would do', async () => {
   const chain = (await mandate('print-buyer', 'approve-bill')).id
   const { grant, change } = await opened()
@@ -248,6 +267,8 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await w.shot('3-refused-over')
     assert.match(await approving(w, rent), /by no mandate covering ag's records/, `${w.at}: outside her scope`)
     await w.shot('3-refused-outside')
+    assert.match(await recording(w), /no mandate for record-bill .*: it is held by finance in operations/, `${w.at}: a bill recorded`)
+    await w.shot('3-refused-record')
 
     await w.as(camille)
     await w.open('/circles/brand')
@@ -259,6 +280,22 @@ unseeded('before any close: the chain, Sofia\'s powers and refusals, Brand\'s Pr
     await form.getByLabel('Grants', { exact: true }).fill('record the print and paper bills of Brand')
     assert.match((await form.getByText(/^It will read:/).textContent()) ?? '', /The print-buyer role holds record-bill, to record the print and paper bills of Brand/, `${w.at}: the sentence as it will read`)
     await w.shot('4-propose')
+
+    await w.open(`/mandates/${chain}`)
+    await w.page().getByRole('button', { name: 'Change…' }).click()
+    const changing = w.page().locator('form', { has: w.page().locator('input[name="kind"][value="change"]') })
+    assert.equal(await changing.getByLabel('Power', { exact: true }).inputValue(), 'approve-bill', `${w.at}: Change… starts from its values`)
+    await changing.getByLabel('Limit per write, €').fill('1500')
+    assert.match((await changing.getByText(/^It will read:/).textContent()) ?? '', /The print-buyer role holds approve-bill, .*up to 1 500 € a write, in brand/, `${w.at}: the change as it will read`)
+    assert.match((await changing.textContent()) ?? '', /Put to operations, which issued it/, `${w.at}: put to its issuer`)
+    await w.shot('4-change-mandate')
+    await w.page().keyboard.press('Escape')
+    await w.page().getByRole('button', { name: 'Revoke…' }).click()
+    const revoking = w.page().locator('form', { has: w.page().locator('input[name="kind"][value="revoke"]') })
+    assert.match((await revoking.textContent()) ?? '', /Put to operations, which issued it; ending it revokes every mandate issued under it the same day/, `${w.at}: the revocation says what it revokes`)
+    await revoking.getByLabel('Why').fill('Brand buys its print through the co-op\'s finance role from November.')
+    await w.shot('4-revoke-mandate')
+    await w.page().keyboard.press('Escape')
 
     for (const [name, id, says] of [['4-grant', grant, /grants a mandate the assembly issues, a root/], ['4-change', change, /revokes one mandate the same day, the one it replaces/], ['4-revoke', 'm-2026-014', /revokes 3 mandates the same day, the one it ends and every one issued under it/]] as const) {
       await w.open(`/motions/${id}`)
@@ -293,12 +330,22 @@ unseeded('the grant, the change and m-2026-013 close, Sofia may record and appro
   assert.match(reason(await approve({ bill: paper }, as(sofia))), /^the actor holds no mandate for approve-bill up to 1440\.00 €: mandate \d+ grants it to print-buyer in brand, revoked on 2026-10-31; a motion of operations granting it anew would allow it$/)
 })
 
+unseeded('two closes on one day under coordination\'s, the change and m-2026-014, each page naming only what its own close revoked', async () => {
+  const { change } = await opened()
+  const replaced = (await one<{ id: string }>(`SELECT m.id::text FROM circle.mandate m JOIN motion.action a ON a.args ->> 'replaces' = m.policy WHERE a.motion = $1`, [change])).id
+  const revoked = await all<{ id: string }>(`SELECT id::text FROM circle.mandate WHERE power = 'approve-bill' AND revoked = '2026-10-31' AND id <> $1 ORDER BY id`, [replaced])
+  assert.deepEqual(await all('SELECT closed, revokes::text[] FROM motion.issues($1)', [change]), [{ closed: true, revokes: [replaced] }])
+  const [ended] = await all<{ closed: boolean; revokes: string[] }>('SELECT closed, revokes::text[] FROM motion.issues($1)', ['m-2026-014'])
+  assert.equal(ended.closed, true)
+  assert.deepEqual([...ended.revokes].sort(), revoked.map((m) => m.id).sort(), 'm-2026-014 names the four its close revoked, not the print buyer\'s 1 200 € the change revoked that day')
+})
+
 unseeded('after them all: m-2026-014\'s page shows what it revoked, and Sofia\'s approve of the paper bill names her mandate and the day', async () => {
   await walk('closed', async (w) => {
     await w.as(sofia)
     await w.open('/motions/m-2026-014')
     const mandates = section(w.page(), 'Mandates')
-    assert.match((await mandates.textContent()) ?? '', /revoked 5 mandates the same day, the one it ends and every one issued under it/, `${w.at}: the cascade`)
+    assert.match((await mandates.textContent()) ?? '', /revoked 4 mandates the same day, the one it ends and every one issued under it/, `${w.at}: the cascade`)
     await mandates.scrollIntoViewIfNeeded()
     await w.shot('5-revoked')
     assert.match(await approving(w, paper), /revoked on 2026-10-31/, `${w.at}: the refusal names the day`)

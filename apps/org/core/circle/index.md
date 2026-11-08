@@ -1,6 +1,6 @@
 +++
 title = "Circle"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Core's circles: the co-op's structure and the authority that flows
@@ -885,7 +885,9 @@ its own, and the motion to its page.
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to
 change or revoke one, is the motion feat's, a seat in it membership-motion's: the page's writes propose, and the
-close of a passing motion carries them out.
+close of a passing motion carries them out. A mandate's page, while it
+stands, changes or revokes it the same way, by the motion feat's
+Change… and Revoke….
 
 ## Who builds on it
 

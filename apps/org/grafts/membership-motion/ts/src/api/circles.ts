@@ -31,7 +31,8 @@ export { stances } from '../drivers/asks.ts'
 // On a member's page, proposing their
 // admission, suspension or exclusion, and on an employee's own, applying
 // to join; on a circle's, a seat in it, or what
-// the motion feat proposes about its powers.
+// the motion feat proposes about its powers; and on a mandate's, its
+// change or its revocation.
 export const slice: Slice = {
   name: 'membership-motion/circles',
   extends: {
@@ -57,6 +58,11 @@ export const slice: Slice = {
       actions: {
         appoint: action('motion:motion:propose', (form, id, deps) => forms.appointing(form, id ?? '', deps.db), put),
         put: action('motion:motion:propose', (form, id, deps) => circles.about(form, id ?? '', deps.db), async (input, deps) => propose(await circles.putting(input, deps.db), deps)),
+      },
+    },
+    mandates: {
+      actions: {
+        put: action('motion:motion:propose', (form, id, deps) => circles.revised(form, id ?? '', deps.db), async (input, deps) => propose(await circles.putting(input, deps.db), deps)),
       },
     },
   },

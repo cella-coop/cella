@@ -17,6 +17,14 @@ export class PutState {
   from = $state('')
   until = $state('')
 
+  // On a mandate's page, a change of that mandate from the start.
+  constructor(changing?: Held) {
+    if (changing) {
+      this.kind = 'change'
+      this.choose(changing.policy, [changing])
+    }
+  }
+
   // The sentence the policy will read, its marks dropped, once it names
   // its grantee and its power.
   sentence = $derived.by(() => {

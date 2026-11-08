@@ -60,8 +60,8 @@ brand's own corner, its corners at the screen's sides standing past it.
 A section with a figure sets it beside its words; down the page the
 figures trade sides, the hero's on the right, and take the five inks in
 turn, the hero's the coral (`Page.astro`). A figure bleeds past the
-column to the screen's edge on its outer side, its caption kept to the
-column. A plain section, `prose`, `features`, `steps` or `list`, is
+column to the screen's edge on its outer side, its caption at that
+edge. A plain section, `prose`, `features`, `steps` or `list`, is
 numbered, 01 on, in the display face's thinnest weight. A heading may
 mark its closing part with stars, `*like this*`, set thin.
 
@@ -107,9 +107,11 @@ follow a power law, a few large in the middle and a long tail of small
 toward the rim and a tail that points back to the words, its edge a
 lobed blob, never the box. The figure's SVG clips the print by it. Each
 section's cluster is seeded by its page's and its own name, so it is
-the same on every build. Under the figure, its caption and the credit
-Unsplash asks for: the `site` entry's photo credit, the photographer's
-name linked to their profile and "Unsplash" to the photo's page.
+the same on every build. Under the figure, at the screen's edge on the
+side it bleeds to and quiet, its caption in the display face over the
+credit Unsplash asks for, a small spaced label: the `site` entry's photo
+credit, the photographer's name linked to their profile and "Unsplash"
+to the photo's page.
 
 ## The assets
 

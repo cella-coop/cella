@@ -1,6 +1,6 @@
 +++
 title = "Users"
-updated = 2026-11-03
+updated = 2026-11-08
 +++
 
 # Users
@@ -108,8 +108,7 @@ What the first target needs that the org app does not do yet, by severity:
   member's records and the co-op's own papers, each opened by whom it
   concerns, who uploaded it and whoever holds a power over what it
   records; files in documents are not built. Each member's inbox gathers
-  what waits on them, counted in the sidebar; the home is a dashboard of
-  widgets pinned from many collections; a motion is decided by a
+  what waits on them, counted in the sidebar, and is where `/` lands; a motion is decided by a
   procedure, consent, a majority, two thirds or the co-op's own share of
   the votes cast, with a quorum, chosen per circle and per motion.
 

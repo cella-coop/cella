@@ -120,7 +120,7 @@ Who reads pay is a row-level policy (`sql/004-reads.sql`, [the pattern](../../..
 
 ## Shell
 
-The `payslips` collection in Finance, a table with a dashboard of the
+The `payslips` collection in Payments, a table with a dashboard of the
 payroll by month (gross, net, the cost to the co-op, what awaits
 payment); preparing a month's run; and a payslip's page, line by line,
 with its run's approval and payment.

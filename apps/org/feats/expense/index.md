@@ -142,7 +142,7 @@ make its total, and moves along its lifecycle on its entries' days.
 
 ## Shell
 
-The `expenses` collection in Finance, a board by status on which dragging
+The `expenses` collection in Payments, a board by status on which dragging
 a card into the next column is that column's write (submit, approve,
 refuse, reimburse), with a dashboard of what awaits approval and
 reimbursement and the spend by category and month; a new claim as the

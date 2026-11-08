@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -182,8 +182,8 @@ over their own; another's, a built-in one and one reading no view are
 refused. The e2e scenario `reports` checks the rest on Lanterne through a
 running shell: every span's statements equal `statement` to the cent; the
 margins on 25 October and a write moving one; the federation figures of
-2025 against the return; a custom report saved, run and refused; the
-pages and the home's pins.
+2025 against the return; a custom report saved, run and refused; and
+the pages.
 
 ## Reads
 
@@ -192,7 +192,7 @@ contracts share, which name no one but where a column declares it.
 
 ## Shell
 
-The `reports` collection, titled Reports, in finance: each saved report
+The `reports` collection, titled Reports, in Office: each saved report
 with its kind, the built-in ones first. A report's page draws it: the
 statements as two `Sheet`s, the span's figure and the span before's, its
 spans listed above it to move between (`span`); the margins as a table
@@ -201,11 +201,9 @@ federation figures as sections; a custom report as its chart over a
 table. Each page says the log's entry it read. The New form saves a
 custom report from its title and its definition.
 
-The home may pin a widget over the margins' rows, as the collection
-`reports/margins` with the fields of its table (`pinnable`): the server
-reads the rows through the port, `rows(port, id)`, and measures the
-widget over them. The co-op's home pins the margin on projects and the
-projects by watch so.
+The margins' rows are pinnable, as the collection `reports/margins` with
+the fields of its table (`pinnable`), and read through the port by
+`rows(port, id)`; no page pins them while the co-op's home is retired.
 
 ## Lanterne
 

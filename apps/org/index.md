@@ -1,6 +1,6 @@
 +++
 title = "Org"
-updated = 2026-11-04
+updated = 2026-11-08
 +++
 
 The cooperative workspace, for member-governed organisations. One deployment
@@ -25,15 +25,11 @@ serves one scope: a co-op, a joint circle of co-ops, or a federation.
 ## The shell
 
 `cella serve` shows Lanterne from the dev database. The sidebar's head
-is Home, the co-op's dashboard of widgets pinned from its collections
-and its reports, the cash, what clients owe, the projects' margins, the motions open
-and the meetings ahead until a viewer pins their own, and the Inbox,
-what waits on the acting person, its count beside it. Each feat's
-collection is a page in the sidebar: People, Circles, Motions, Documents
-and Meetings (governance); Contacts, Projects, Tasks and Timesheets (work);
-Invoices, Accounts, Periods, Allocations, Terms, Statements, Reports,
-Transactions, Expenses and Payslips (finance);
-Devices, Files, Imports and the Log (platform).
+is the Inbox, what waits on the acting person, its count beside it,
+where `/` lands, and Activity, the log. Each feat's collection is a page
+in one of the sidebar's sections: Governance, Office, Work, Payments,
+Ledger and Equity; the platform's, Devices, Files, Imports and the Log,
+are Settings' ([the shell](core/ui/index.md#components)).
 Every collection is the same component, its drawer's View card holding the filter, the
 layout (list, table, gallery, board, calendar or dashboard) and its
 options, and every item the same detail view, its

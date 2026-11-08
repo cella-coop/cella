@@ -116,7 +116,8 @@ Who reads a file at all, its name, class and bytes, is `file.opens`'s guard made
 
 ## Shell
 
-The `files` collection in Platform, every file with its kind, size and
+The `files` collection, out of the sidebar since a file belongs to the
+record it is attached to and reached from the command menu, every file with its kind, size and
 day; a file of the co-op's own uploaded from the New form; and a file's
 page, its kind, type, size, uploader, whom it concerns and its BLAKE3, and
 a link that opens it.

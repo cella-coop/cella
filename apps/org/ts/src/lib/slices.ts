@@ -1,4 +1,4 @@
-import { icons, type Added, type App, type Column, type Look, type Nav, type Owned, type Pin, type Preset, type Shift, type Widget } from '@cella/org-ui'
+import { type Added, type App, type Column, type Look, type Nav, type Owned, type Pin, type Preset, type Shift, type Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
@@ -201,21 +201,21 @@ export const shifts = (name: string): Shift[] => [
 export const views = (name: string): Preset[] =>
   presets([...(collection(name)?.view.views ?? []), ...extensions(name).flatMap((e) => e.extension.views ?? [])])
 
-const order = ['home', 'governance', 'work', 'finance', 'platform']
+const order = ['home', 'governance', 'office', 'work', 'payments', 'ledger', 'equity', 'platform']
 
-// The sidebar: the co-op's home and what waits on the acting member, then
-// each group's collections. `counts` are the counted collections' rows
-// for the acting member, by address.
+// The sidebar's sections: what waits on the acting member, then each
+// section's collections, of which the sidebar shows one at a time.
+// `counts` are the counted collections' rows for the acting member, by
+// address.
 export const nav = (counts: Record<string, number> = {}): Nav =>
   order
     .map((group) => ({
       group,
       items: [
-        ...(group === 'home' ? [{ href: '/', title: 'Home', icon: icons.House }] : []),
         ...apps.flatMap((a) =>
           Object.entries(a.collections ?? {})
             .filter(([, c]) => c.view.group === group)
-            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`] })),
+            .map(([name, c]) => ({ href: `/${name}`, title: c.view.title, icon: c.view.icon, count: counts[`/${name}`], subgroup: c.view.subgroup, listed: c.view.listed })),
         ),
       ],
     }))

@@ -110,7 +110,7 @@ for (const [name, launch] of browsers()) {
         await page.waitForURL(`${base}/sign-in`)
         await page.waitForLoadState('networkidle')
         await page.getByRole('button', { name: `Sign in as ${sam} · laptop` }).click()
-        await page.waitForURL(`${base}/`)
+        await page.waitForURL(`${base}/inbox`)
         await page.waitForLoadState('networkidle')
         assert.ok(await page.getByText('Sam Petit-Roux').first().isVisible(), 'signed in again, on the same device')
 

@@ -11,8 +11,8 @@ export const app: App = {
   collections: {
     log: {
       view: {
-        group: 'platform',
-        title: 'Log',
+        group: 'home',
+        title: 'Activity',
         icon: icons.Notebook,
         // `cella.verify_log()` rechecks every entry, receipt and signature on
         // each load.

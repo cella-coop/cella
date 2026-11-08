@@ -1,5 +1,5 @@
 name = "meeting"
-group = "governance"
+group = "office"
 builtin = false
 rung = 1
 grafts = ["meeting-motion", "document-meeting", "meeting-membership"]

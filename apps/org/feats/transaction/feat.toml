@@ -1,5 +1,5 @@
 name = "transaction"
-group = "finance"
+group = "ledger"
 builtin = false
 rung = 1
 grafts = ["account-transaction"]

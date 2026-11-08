@@ -1,6 +1,6 @@
 +++
 title = "Architecture"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 # Architecture
@@ -982,16 +982,15 @@ to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
 membership's `accept`; `/theme` for the user menu; `/journal`, the transactions' old address,
-which redirects to them; and `/`, the co-op's home, a dashboard of widgets pinned from many
-collections and from reports. A collection's owner is a feat,
+which redirects to them; and `/`, which lands a member in their Inbox until the co-op has a
+first page of its own. A collection's owner is a feat,
 or a core library, the log or the circles. A graft extends only a collection of a feat it
 joins, or of a feat one of them nests in, and a nested feat its parent's,
 as membership and employment extend person's people; any slice extends
 core's, which every feat builds on, as the membership feat adds a
 circle's seats to its page (`core` on the circles' `Slice`); the root may join
 two feats no graft joins, as it puts on the
-work collections' cards fields from several grafts, pins the home's
-widgets until a viewer pins their own, and runs an import across the
+work collections' cards fields from several grafts, and runs an import across the
 slices that read its kind. A package may mount its slice in parts, each
 named `<slice>/<part>` and reaching what its slice does, as a feat a
 graft of the circles dissolved into keeps what that graft added beside
@@ -1130,8 +1129,7 @@ which the port publishes as `analytics.head`, the catalog and the report
 on one snapshot, and stamps the result with that head. The org app's
 server makes the implementation at assembly from what `cella` hands it,
 and a feat calls the port it is handed: the `report` feat's server side
-is made with it (`reporting(port)`), and the root hands the home's pins
-over a report to that feat's rows. Where `cella` hands no shell, a run
+is made with it (`reporting(port)`). Where `cella` hands no shell, a run
 fails with why and a report's page says so.
 
 In development `cella db start` starts the shell on the dev database at
@@ -1744,8 +1742,10 @@ A row-level policy, which says which rows a reader sees
 
 ## Feat flags
 
-A feat's `feat.toml` names it, its group (governance, work, finance,
-platform), whether it is built in, the rung it arrives at and the grafts it
+A feat's `feat.toml` names it, its group, the sidebar section it opens in
+(home, governance, office, work, payments, ledger, equity, or platform,
+which is Settings' own sidebar), whether it is
+built in, the rung it arrives at and the grafts it
 declares. Groups are for navigation only; they are a field, not
 directories. A co-op enables the feats it uses; a disabled feat's pages are
 not served and its jobs and subscriptions go inert. Built-in feats are

@@ -58,6 +58,7 @@
   let {
     name,
     title,
+    icon,
     columns,
     rows,
     kept,
@@ -81,6 +82,8 @@
   }: {
     name: string
     title: string
+    // The collection's icon, as the sidebar shows it.
+    icon?: Component<any>
     caption?: string
     columns: Column[]
     rows: any[]
@@ -298,6 +301,7 @@
 
 <Frame
   {title}
+  {icon}
   {count}
   {caption}
   badges={status.map((s) => s(about)).filter((b) => b !== undefined)}

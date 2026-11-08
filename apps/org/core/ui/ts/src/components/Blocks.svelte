@@ -25,9 +25,11 @@
 </div>
 
 <style>
+  /* A document is the co-op's writing, not the app's: set whole, headings
+     too, in the text face; the display face stays the shell's. */
   .blocks {
     padding: var(--space-2) var(--space-2) var(--space-5) var(--space-5);
-    font-family: var(--font-display);
+    font-family: var(--font-ui);
     font-size: var(--text-lg);
     line-height: 1.55;
     max-width: 46rem;
@@ -135,7 +137,7 @@
   }
   .blocks :global(.heading) {
     display: flex;
-    font-weight: 500;
+    font-weight: 600;
     line-height: 1.25;
   }
   .blocks :global(.heading[data-level='1']) {
@@ -229,7 +231,6 @@
     color: var(--text-muted);
   }
   .blocks :global(.card .title) {
-    font-family: var(--font-display);
     font-size: var(--text-lg);
   }
   .blocks :global(.card .meta) {

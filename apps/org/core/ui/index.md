@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-06
+updated = 2026-11-07
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -35,9 +35,11 @@ ink. Components read roles, never shades:
   lightness in either theme, so a primary button is plain ink with the
   panel's `--on-accent` on it, and `--accent-border`, `--accent-text`,
   `--accent-soft`;
-- type: the brand's, Sen for display and headings (`--font-display`),
-  Inter for everything read or measured (`--font-text`, which the shell
-  reads as `--font-ui`), Geist Mono for code (`--font-mono`), self-hosted
+- type: the brand's, Sen for the shell's display and headings, its
+  buttons and the mark (`--font-display`), Inter for everything read or
+  measured (`--font-text`, which the shell reads as `--font-ui`), the
+  co-op's own writing whole, a document's headings and `Prose` included,
+  Geist Mono for code (`--font-mono`), self-hosted
   from Fontsource through the brand's `fonts.css`; headings take the
   brand's weight and tracking, the body its weight and leading. The
   shell keeps its own denser scale, `--text-2xs` to `--text-2xl` around
@@ -80,14 +82,28 @@ The theme is light, dark or the system's, a cookie the server writes into
 
 ## Components
 
-- `Shell`: the grid, sidebar · content. The sidebar's top is the co-op
-  selector, the co-op's mark and name, its menu listing the scopes the
-  shell serves (one today) with their legal names; its foot is the
-  account menu, the signed-in member, whose menu holds their address,
-  Sign out and the theme; between them the command menu and the
-  navigation: its head unnamed, the co-op's Home and the Inbox, then by
-  group, a collection the view declares `counted` showing how many rows
-  it holds for the acting member. The last write's outcome floats above.
+- `Shell`: the grid, sidebar · content. The sidebar's top and foot stay
+  put and only its middle scrolls. Its top is the co-op selector, the
+  co-op's mark and name, its menu listing the scopes the shell serves
+  (one today) with their legal names; then, always shown, the Inbox,
+  where `/` and the sign-in land, and Activity, the log. The middle holds the sections as
+  accordions, as Linear's teams: Governance, Office, Work, Payments,
+  Ledger and Equity, flat, never nested, each its name
+  and a caret, a dot on a shut one whose collections hold rows waiting
+  on the acting member. Open, a section's collections hang from a guide
+  line; a section's collections that name a `subgroup` are labelled by
+  it where it has more than one. A collection the view declares
+  `counted` shows how many rows it holds for the acting member, in a
+  small quiet pill. Several sections may be open at once: one the
+  viewer never touched is open while it holds the page, and one they
+  opened or shut stays so. The foot is the command menu,
+  then the account menu, the signed-in member, whose menu holds their
+  address, Settings, Sign out and the theme. Settings is its own
+  sidebar, in place of the top and the sections while one of its pages
+  is open: Back to app, which returns to the last page left, then the
+  `platform` collections; the account and co-op menus lead into it. In
+  dev mode a faint upright "prototype" with a test tube sits at the
+  content's bottom right. The last write's outcome floats above.
 - `Gate`: what a person reaches before signing in, alone on the page,
   the co-op's mark and name above one panel; `SignIn` in it, a button for
   each device this browser keeps for the scope, which signs the server's
@@ -107,7 +123,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   `z-index`) anywhere else.
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
-  item, a quiet caret back to its collection; the page's name, its
+  item, a quiet caret back to its collection, on a collection its icon as
+  the sidebar shows it; the page's name, its
   caption as the name's tooltip, with its count and status badges; the
   page's tabs right after, a collection's views, scrolling in their own
   strip; then the page's writes and one quiet icon group, the drawer's
@@ -344,7 +361,9 @@ values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
 card, adds, edits, reorders and removes them.
 
-The co-op's home, `Home`, is one dashboard over many collections. Its
+`Home`, a dashboard over many collections, is mounted on no page: the
+co-op's home is retired until a better first page is designed, and `/`
+lands in the Inbox. Its
 widgets are pins (`Pin`): a standard widget and the collection it runs
 over, checked by `pins` against that collection's fields and run by the
 server in SQL over its rows as the acting member sees them; each card names

@@ -6,7 +6,7 @@
 // by name, what would win his consent, linking the rate card; the mention
 // waits in his inbox until he answers, and the text stays out of the log.
 // Each member's inbox holds what waits on them, counted in the sidebar;
-// the home shows the co-op's figures from several collections; and Inès,
+// and Inès,
 // employed, no member and seated in Web, logs her week in the grid by her
 // right, booking hours to a project, and corrects a cell she typed too
 // high from its entry's page. Chloé proposes and discusses a motion in
@@ -25,7 +25,6 @@ import { submit } from '@cella/org-timesheet/api'
 import type { Deps } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
-import { reading as analytics } from './port.ts'
 
 const su = new pg.Client()
 const shell = new Shell(su)
@@ -226,30 +225,6 @@ test('each member’s inbox holds what waits on them, counted in the sidebar', a
   assert.ok((await read('/inbox', julien)).includes("Approve 2026-10's time in Web ines@lanterne.example"))
   await su.query(`DELETE FROM payslip.run WHERE month = '2026-10'`)
   await on('2026-10-24')
-})
-
-test('the home shows the co-op’s figures from several collections and its reports, and a viewer pins their own', async () => {
-  // The projects' margins are a report, read through the analytics shell.
-  const reports = await analytics(su, 30, '2026-10-24')
-  await shell.start('2026-10-24', reports.env)
-  const home = await read('/', camille).finally(() => reports.stop())
-  for (const title of ['Cash', 'Owed by clients', 'Overdue', 'Margin on projects', 'Open motions', 'Meetings ahead', 'Invoiced by month', 'Projects by watch']) {
-    assert.ok(home.includes(title), title)
-  }
-  assert.match(home, /Margin on projects Project margins/)
-  assert.ok(!home.includes('analytics shell'), 'every pin was read')
-  const open = (await one<{ n: number }>(`SELECT count(*)::int AS n FROM motion.motion WHERE closed IS NULL`)).n
-  assert.match(home, new RegExp(`Open motions Motions ${open} `))
-  const own = [
-    { collection: 'timesheets', kind: 'kpi', title: 'Hours logged', measure: { op: 'sum', field: 'hours' } },
-    { collection: 'nowhere', kind: 'kpi', title: 'Lost', measure: { op: 'count' } },
-    { collection: 'invoices', kind: 'kpi', title: 'Bad', measure: { op: 'sum', field: 'bill_to' } },
-  ]
-  const pinned = await read(`/?w=${encodeURIComponent(JSON.stringify(own))}`, camille)
-  assert.match(pinned, /Hours logged Timesheets/)
-  assert.match(pinned, /a widget on the home runs over no collection "nowhere"/)
-  assert.match(pinned, /sum of bill_to, which is text, not a number/)
-  assert.ok(!pinned.includes('Owed by clients'))
 })
 
 test('Inès logs her week in the grid by her right, booking hours to a project', async () => {

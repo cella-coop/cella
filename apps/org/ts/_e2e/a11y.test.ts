@@ -1,7 +1,7 @@
 // The accessibility scan, on a seeded Lanterne through the built shell:
 // axe-core, through Playwright, reads the sign-in page and, signed in as
 // Camille, the home, every collection the sidebar mounts in its default
-// view, the first item each lists and its form open on New, in light and
+// view, section by section, the first item each lists and its form open on New, in light and
 // in dark, on each browser `BROWSERS` names. A violation of impact
 // serious or critical fails it, unless `waiting` lists its rule on that
 // page: what waits for the operator's design session, since its fix
@@ -81,10 +81,22 @@ for (const [name, launch] of browsers()) {
           base = dev.base
           await signIn(context, base, camille)
           await visit('/')
-          const collections = await page
-            .getByRole('navigation', { name: 'Main' })
-            .locator('a[href^="/"]')
-            .evaluateAll((as) => [...new Set(as.map((a) => a.getAttribute('href')!))].filter((h) => h !== '/'))
+          // The sidebar's sections are accordions: open every one and
+          // gather what they list; then enter Settings, its own sidebar,
+          // by the account menu's link, and gather its collections too.
+          const nav = page.getByRole('navigation', { name: 'Main' })
+          const shut = nav.locator('button.head[aria-expanded="false"]')
+          for (let left = 20; left > 0 && (await shut.count()) > 0; left--) {
+            await shut.first().click()
+          }
+          const links = () => nav.locator('a[href^="/"]').evaluateAll((as) => as.map((a) => a.getAttribute('href')!))
+          const hrefs = await links()
+          found.push(...(await scan(page, scheme)))
+          const settings = await nav.locator('a[role="menuitem"]', { hasText: 'Settings' }).first().getAttribute('href')
+          assert.ok(settings, 'the account menu leads into Settings')
+          await visit(settings)
+          hrefs.push(...(await links()))
+          const collections = [...new Set(hrefs)].filter((h) => h !== '/')
           assert.ok(collections.length > 10, `the sidebar mounts the collections: ${collections.join(' ')}`)
           seen.collections = collections.length
           found.push(...(await scan(page, scheme)))

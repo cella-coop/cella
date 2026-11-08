@@ -107,10 +107,14 @@
     padding: 0 var(--space-2);
     border: none;
     border-radius: var(--radius-control);
-    background: var(--sunk);
+    /* Half the sunk ground: present, but quieter than the controls. */
+    background: color-mix(in oklab, var(--sunk) 50%, transparent);
     color: var(--text-muted);
     font-size: var(--text-sm);
     cursor: pointer;
+  }
+  .trigger:hover {
+    background: var(--sunk);
   }
   .trigger span {
     flex: 1;
@@ -125,14 +129,16 @@
     width: min(36rem, calc(100vw - 2rem));
     margin-top: 12vh;
     padding: 0;
-    border: none;
+    border: 1px solid var(--line);
     border-radius: var(--radius-float);
     background: var(--float);
     color: var(--text);
     box-shadow: var(--shadow-float);
   }
+  /* What lies behind dims and softens, untinted. */
   .menu::backdrop {
-    background: oklch(0.2 0.02 60 / 25%);
+    background: oklch(0 0 0 / 22%);
+    backdrop-filter: blur(3px);
   }
   input {
     border: none;

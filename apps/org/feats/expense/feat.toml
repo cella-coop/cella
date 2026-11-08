@@ -1,5 +1,5 @@
 name = "expense"
-group = "finance"
+group = "payments"
 builtin = false
 rung = 1
 grafts = ["expense-membership", "expense-project", "expense-transaction"]

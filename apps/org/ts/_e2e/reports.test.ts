@@ -208,7 +208,7 @@ test('a member saves a report of their own, which runs through the port; one rea
   assert.equal((await all(`SELECT id FROM report.report WHERE id = 'lines'`)).length, 0)
 })
 
-test('the pages draw each report and say what they read; the home pins the margins through the port', async () => {
+test('the pages draw each report and say what they read', async () => {
   await server.start('2026-10-25', shell.env)
   const list = await read('/reports', camille)
   for (const title of ['Income statement', 'Balance sheet', 'Project margins', 'Federation figures', 'Spent by circle']) {
@@ -223,9 +223,6 @@ test('the pages draw each report and say what they read; the home pins the margi
   assert.match(margin, /budget spent/)
   const federation = await read('/reports/federation', camille)
   assert.match(federation, /The figures are drawn once a year's surplus is distributed/)
-  const home = await read('/', camille)
-  assert.match(home, /Margin on projects Project margins/)
-  assert.match(home, /Projects by watch Project margins/)
   await server.stop()
   await server.start('2026-10-25')
   assert.match(await read('/reports/margins', camille), /the analytics shell is not running/)

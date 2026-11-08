@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Adoption by motion: what content of which document a motion asks to
@@ -93,8 +93,9 @@ generated from makes no write. The request names the motion's action,
 - On a document's page, the motions that adopt its versions, and the
   `motion` embed: a motion drawn inside the document as the motion
   feat's card (its title, circle, method and whether it is open), and offered in the editor's
-  slash menu. Every motion of the scope is offered; a picker that
-  searches replaces the list when they are many.
+  slash menu as one item, whose block asks which motion it shows. Every
+  motion of the scope is a choice; a picker that searches replaces the
+  list when they are many.
 
 - On the New motion form, `Adopt a document version`, with the versions
   to pick from, newest first by document: a meeting's minutes among them,

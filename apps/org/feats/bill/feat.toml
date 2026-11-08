@@ -1,5 +1,5 @@
 name = "bill"
-group = "finance"
+group = "payments"
 builtin = false
 rung = 1
 grafts = ["bill-transaction"]

@@ -23,6 +23,7 @@
   {#key data.name}
     <Collection
       title={mounted.view.title}
+      icon={mounted.view.icon}
       caption={mounted.view.caption}
       {columns}
       rows={data.rows}

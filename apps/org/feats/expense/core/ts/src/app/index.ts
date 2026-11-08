@@ -14,7 +14,7 @@ export const app: App = {
   collections: {
     expenses: {
       view: {
-        group: 'finance',
+        group: 'payments',
         title: 'Expenses',
         caption: 'What members spent for the co-op, approved within a mandate and paid back',
         icon: icons.Wallet,

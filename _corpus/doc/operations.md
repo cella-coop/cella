@@ -1,6 +1,6 @@
 +++
 title = "Operations"
-updated = 2026-11-13
+updated = 2026-11-16
 +++
 
 # Operations
@@ -244,3 +244,13 @@ migrations. `cella test e2e upgrade`, which rehearsed it from
 dump as its baseline: migrated in place, its log verified under the
 TEST-ONLY key that signed it, its vault moved to a vault key of its own,
 and both keys rotated.
+
+## Packaging
+
+A host installs a scope from the flake, never from a checkout. The
+flake's `cella-pg` is the notary as a Postgres 18 extension, built by
+cargo-pgrx in the sandbox: its shared library and its control and SQL
+files, every version's upgrade script among them, laid out as nixpkgs'
+`postgresql.withPackages` takes an extension, so a host's Postgres is
+`postgresql_18.withPackages (p: [ cella-pg ])` and its
+`shared_preload_libraries` names `cella`.

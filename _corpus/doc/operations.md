@@ -269,3 +269,12 @@ server and its analytics shell as units of their own user, and a
 nightly `cella backup` whose directory the host's own backup encrypts
 and carries off the host. A NixOS test boots it with test keys,
 migrates, signs one write and restores the night's backup.
+
+## The demo
+
+The demo is a production build serving Lanterne, the mock co-op, and
+nothing else: never a pilot co-op's data. `cella serve --prod --demo`
+runs it, its sign-in offering Lanterne's fixture members by name, each
+marked as a demo member, where a production sign-in offers no one;
+every page says it is a demo. The demo's scope carries its own keys,
+never a real scope's.

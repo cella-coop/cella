@@ -1,0 +1,50 @@
+---
+// A photo's engraving cut into a cluster's cells (index.md, figures): the
+// print's paper washed with its ink, the mask's lines in that ink, both
+// clipped by the cells, in a box w by h the photo covers.
+import type { Status } from '../schemas'
+import { engravingUrl } from '../lib/engrave'
+
+interface Props {
+  photo: string
+  ink: Status
+  cells: string[]
+  w: number
+  h: number
+  id: string
+  label?: string
+}
+
+const { photo, ink, cells, w, h, id, label } = Astro.props
+---
+
+<svg class="cut" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={label} style={{ '--ink': `var(--print-${ink}-deep)` }}>
+  <defs>
+    <clipPath id={`${id}-c`}>{cells.map((d) => <path d={d} />)}</clipPath>
+    <mask id={`${id}-m`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
+      <image href={engravingUrl(photo)} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
+    </mask>
+  </defs>
+  <g clip-path={`url(#${id}-c)`}>
+    <rect class="paper" width={w} height={h} />
+    <rect class="ink" width={w} height={h} mask={`url(#${id}-m)`} />
+  </g>
+</svg>
+
+<style>
+  .cut {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* the print's paper takes a wash of its ink, so even a light cell
+     belongs to it */
+  .paper {
+    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
+  }
+
+  .ink {
+    fill: var(--ink);
+  }
+</style>

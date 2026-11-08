@@ -1,14 +1,16 @@
 ---
 // A figure (index.md, figures): a photo engraved in one of the five inks,
 // laid on the print's paper washed with that ink and cut into a cluster
-// of the brand's cells, which runs off the screen's edge on the side it
-// bleeds to. Under it, its caption and its photographer's credit.
+// of the brand's cells, the large where the photo's interest is, which
+// runs off the screen's edge on the side it bleeds to. Under it, its
+// caption and its photographer's credit.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cluster } from '@cella/brand'
 import type { Figure, Status } from '../schemas'
-import { engravingUrl } from '../lib/engrave'
+import { interestIn } from '../lib/interest'
 import type { Marks } from '../lib/text'
+import Cut from './Cut.astro'
 
 interface Props {
   figure: Figure
@@ -23,8 +25,8 @@ interface Props {
 const { figure, ink, seed, bleed, aspect = 1.25, credit, drafted } = Astro.props
 const w = 1000
 const h = Math.round(w / aspect)
-const box = `0 0 ${w} ${h}`
-const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed })
+const interest = await interestIn(figure.photo, w, h)
+const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed, interest })
 const id = `cells-${figure.photo}-${seed}`
 const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
 const [before, rest = ''] = credit.template.split('{name}')
@@ -32,18 +34,7 @@ const [between, after = ''] = rest.split('{unsplash}')
 ---
 
 <figure class="engraving" data-bleed={bleed}>
-  <svg viewBox={box} role="img" aria-label={figure.alt ?? figure.caption} style={{ '--ink': `var(--print-${ink}-deep)` }}>
-    <defs>
-      <clipPath id={`${id}-c`}>{cells.map((d) => <path d={d} />)}</clipPath>
-      <mask id={`${id}-m`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
-        <image href={engravingUrl(figure.photo)} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
-      </mask>
-    </defs>
-    <g clip-path={`url(#${id}-c)`}>
-      <rect class="paper" width={w} height={h} />
-      <rect class="ink" width={w} height={h} mask={`url(#${id}-m)`} />
-    </g>
-  </svg>
+  <Cut photo={figure.photo} ink={ink} cells={cells} w={w} h={h} id={id} label={figure.alt ?? figure.caption} />
   <figcaption>
     <span class="caption" data-drafted={drafted('figure.caption')}>{figure.caption}</span>
     <span class="credit">{before}<a href={meta.photographerUrl}>{meta.photographer}</a>{between}<a href={meta.photoUrl}>{credit.unsplash}</a>{after}</span>
@@ -56,22 +47,6 @@ const [between, after = ''] = rest.split('{unsplash}')
     gap: 0.9rem;
     min-width: 0;
     margin: 0;
-  }
-
-  svg {
-    display: block;
-    width: 100%;
-    height: auto;
-  }
-
-  /* the print's paper takes a wash of its ink, so even a light cell
-     belongs to it */
-  .paper {
-    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
-  }
-
-  .ink {
-    fill: var(--ink);
   }
 
   /* the caption over the credit, quiet: the caption in the display face,

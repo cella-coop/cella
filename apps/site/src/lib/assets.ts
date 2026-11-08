@@ -5,6 +5,7 @@ import { join } from 'node:path'
 
 export const PARTS = [
   { name: 'photos', icon: 'images' },
+  { name: 'clusters', icon: 'hexagon' },
   { name: 'diagrams', icon: 'flow-arrow' },
   { name: 'icons', icon: 'shapes' },
   { name: 'components', icon: 'squares-four' },

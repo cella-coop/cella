@@ -118,9 +118,17 @@ of ink is CSS, the same in either theme, as a print is a physical thing.
 
 The cluster is the brand's (`cluster` in
 [the brand](../../packages/brand/index.md)): a power diagram whose cells
-follow a power law, a few large in the middle and a long tail of small
-toward the rim and a tail that points back to the words, its edge a
-lobed blob, never the box. The figure's SVG clips the print by it. Each
+follow a power law, a few large and a long tail of small toward the rim
+and a tail that points back to the words, its edge a lobed blob, never
+the box. The large gather on the photo's **interest**
+(`src/lib/interest.ts`): a 64-cell-wide grid, 0 to 1, of the energy of
+its edges, its local contrast and how like skin its colour is, weighed
+toward its middle, blurred broad and normalised, from the photo alone
+with sharp and no model; computed once at build and kept in the
+ignored `.astro/interest/` as the engravings are, then laid over the
+figure's box as the photo covers it. So the large cells frame its faces
+and people, and its plain background breaks small. The figure's SVG
+(`src/components/Cut.astro`) clips the print by the cluster. Each
 section's cluster is seeded by its page's and its own name, so it is
 the same on every build. Under the figure, at the screen's edge on the
 side it bleeds to and quiet, its caption in the display face over the
@@ -141,6 +149,7 @@ of its own, its body in `src/components/assets/`:
 | Page | What it shows |
 |---|---|
 | `/assets/photos` | every vendored photo as the site engraves it, the five inks in turn, so no two in a row share one; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since an engraving's lines are the same in any ink; a press on a photo opens it large in its ink |
+| `/assets/clusters` | the clusters a figure may be cut into, on two photos, for the operator to choose from: the blob the pages wear, the brand's organic silhouettes `amoeba`, `branch`, `bubbles` and `colony`, and the filled Phosphor icons `users-three`, `house`, `hand-heart`, `tree` and `chat-circle` (`src/lib/silhouette.ts` rasterises one at build and the brand turns it into a signed distance), each sized by the cluster's middle and, beside it, `+interest`, by the photo's interest; an icon's cells at half the pitch, so its outline reads |
 | `/assets/diagrams` | every diagram, as a post's figure shows it |
 | `/assets/icons` | every icon the site draws, the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |

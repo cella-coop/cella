@@ -3,6 +3,7 @@
 // and no page of the site links to it (index.md, the assets). Its index
 // leads to its parts, each a page of its own; its only words are names.
 import Icon from '../../components/Icon.astro'
+import Clusters from '../../components/assets/Clusters.astro'
 import Components from '../../components/assets/Components.astro'
 import Diagrams from '../../components/assets/Diagrams.astro'
 import Icons from '../../components/assets/Icons.astro'
@@ -36,6 +37,7 @@ const part = Astro.params.path as Part | undefined
     )
   }
   {part === 'photos' && <Photos />}
+  {part === 'clusters' && <Clusters />}
   {part === 'diagrams' && <Diagrams />}
   {part === 'icons' && <Icons />}
   {part === 'components' && <Components />}

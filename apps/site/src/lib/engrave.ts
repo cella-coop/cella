@@ -26,10 +26,14 @@ const SWELL = 0.86
 const SOFT = 0.3
 
 // A portrait, a person's own picture in `src/people/`, is shown small, in
-// a single cell, so it is cut square and coarser for its size: its lines
-// a little closer on the page than a figure's, some sixty across a face
+// a single cell, so it is cut square, its lines closer than a figure's.
+// A face lives in its mid-tones, which a levelled photo crushes, so a
+// portrait's contrast is evened out locally first, its mid-tones lifted
+// and its lightest third left to the hairlines: features stand out of
+// skin and beard alike
 export const PORTRAIT = 480
-const PORTRAIT_BASE = 330
+const PORTRAIT_BASE = 500
+const FACE = { clahe: 48, gamma: 1.8, light: 0.28 }
 
 type Kind = 'photo' | 'person'
 const DIRS: Record<Kind, string> = { photo: 'src/photos', person: 'src/people' }
@@ -41,8 +45,9 @@ const file = (name: string, kind: Kind = 'photo') => {
   return join(process.cwd(), DIRS[kind], `${name}.jpg`)
 }
 
-export const engravingUrl = (name: string) => `/engraving/${name}-${WIDTH}.png`
-export const portraitUrl = (name: string) => `/portrait/${name}-${PORTRAIT}.png`
+// the version in the address, so a browser never shows a stale cut
+export const engravingUrl = (name: string) => `/engraving/${name}-${WIDTH}.png?v=${VERSION}`
+export const portraitUrl = (name: string) => `/portrait/${name}-${PORTRAIT}.png?v=${VERSION}`
 
 export const engravingKeys = () => photoNames().map((name) => ({ name, width: WIDTH }))
 
@@ -60,7 +65,7 @@ export function peopleNames(): string[] {
 
 const CACHE = join(process.cwd(), '.astro/engraving')
 // A change to how an engraving is cut bumps it, so no stale one is reused
-const VERSION = 3
+const VERSION = 4
 
 const clamp = (v: number) => Math.max(0, Math.min(1, v))
 
@@ -69,15 +74,22 @@ export async function engrave(name: string, width: number, kind: Kind = 'photo')
   if (existsSync(cached)) {
     return readFileSync(cached)
   }
-  const s = width / (kind === 'person' ? PORTRAIT_BASE : BASE)
+  const face = kind === 'person'
+  const s = width / (face ? PORTRAIT_BASE : BASE)
   const pitch = PITCH * s
-  const { data, info } = await sharp(readFileSync(file(name, kind)))
-    .resize(kind === 'person' ? { width, height: width, fit: 'cover', position: 'attention' } : { width })
+  let picture = sharp(readFileSync(file(name, kind)))
+    .resize(face ? { width, height: width, fit: 'cover', position: 'attention' } : { width })
     .grayscale()
-    .normalise({ lower: 2, upper: 98 })
-    .blur(0.8 * s)
-    .raw()
-    .toBuffer({ resolveWithObject: true })
+  if (face) {
+    picture = picture.clahe({ width: FACE.clahe, height: FACE.clahe, maxSlope: 3 })
+  }
+  picture = picture.normalise({ lower: 2, upper: 98 })
+  if (face) {
+    picture = picture.gamma(FACE.gamma)
+  }
+  const { data, info } = await picture.blur(0.8 * s).raw().toBuffer({ resolveWithObject: true })
+  // where the lines begin to swell, the lights below it only hairlines
+  const light = face ? FACE.light : 0.18
   const { width: w, height: h } = info
   const px = Buffer.alloc(w * h * 2)
   // a line's coverage at a position across it: a cut covering `width` of
@@ -89,7 +101,7 @@ export async function engrave(name: string, width: number, kind: Kind = 'photo')
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const dark = 1 - data[y * w + x] / 255
-      const width = 0.17 + Math.pow(clamp((dark - 0.18) / 0.82), 1.25) * (SWELL - 0.17)
+      const width = 0.17 + Math.pow(clamp((dark - light) / (1 - light)), 1.25) * (SWELL - 0.17)
       const yy = y + 1.6 * s * Math.sin(x / (23 * s) + y / (61 * s))
       px[(y * w + x) * 2] = 255
       px[(y * w + x) * 2 + 1] = Math.round(line(yy, width) * 255)

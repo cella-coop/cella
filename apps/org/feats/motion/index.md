@@ -268,13 +268,18 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   may decide about it and holds, on the day, a collective mandate for
   every power in `powers`, the first by id, or else the assembly. For a
   grant, `powers` is `adopt-policy` and the power granted, `grant` its
-  values (its power, limit and budget in cents, period and scope), and the
-  circle's mandate for the power granted is one the grant is no wider
-  than (`circle.wider`), so a grant is put only to a circle that may
-  issue it under a mandate of its own and `circle.narrows` never
-  refuses it for its issuer: a circle holding `adopt-policy` alone, or
-  a mandate for the power narrower than the grant, is passed over for
-  the next, and where none is left the assembly decides it.
+  values (its power, limit and budget in cents, period and scope, and
+  the days it applies from and until), and the circle's mandate for the
+  power granted is one the grant is no wider than (`circle.wider`) over
+  the days it applies, from the day it names or else the motion's
+  deadline, until its own until or none: the days `motion.grant_flaw`
+  judges it on, never the day it is proposed, so a grant is put only to
+  a circle that may issue it under a mandate of its own, and neither
+  `motion.grant_flaw` nor `circle.narrows` refuses it for the issuer
+  `decider` chose: a circle holding `adopt-policy` alone, a mandate for
+  the power narrower than the grant, or one ending before the grant
+  applies or before its until, is passed over for the next, and where
+  none is left the assembly decides it.
 - `motion.grant_flaw(issuer, wording, from, until)`: what is wrong with
   a mandate policy of that wording a motion of `issuer` would adopt,
   applying from and until those days, as the field a form names it under
@@ -389,8 +394,9 @@ a trigger on core's table
   procedure, since `membership-motion`'s `propose` gives it the
   one its requirements fix: for a grant, the issuer it names, or else
   the circle `decider` finds holding `adopt-policy` and a mandate for
-  the power granted that the grant is no wider than, the one it issues
-  the grant under, or else the assembly; titled with what it decides.
+  the power granted that the grant is no wider than over the days it
+  applies, the one it issues the grant under, or else the assembly;
+  titled with what it decides.
   Granting a mandate is proposing its policy, from and until the days it
   names, its legal wording made from the role or the circle, the power,
   what it grants in words, its cap and its scope, each value marked

@@ -36,8 +36,10 @@ export function disclosed(args: Put['args']): string {
 }
 
 // A grant's values as `motion.decider` reads them: its power, its
-// limit and budget in cents, its period and its scope, none left blank.
-function granting(args: Put['args']) {
+// limit and budget in cents, its period and its scope, none left blank,
+// and the days it applies from, the one it names or else `deadline`, and
+// until: the days `motion.grant_flaw` judges it on.
+function granting(args: Put['args'], deadline: string | null) {
   const given = (v: string | number | undefined) => (v === undefined || v === '' ? null : v)
   const cents = (v: string | number | undefined) => (given(v) === null ? null : Math.round(Number(v) * 100))
   return {
@@ -46,14 +48,17 @@ function granting(args: Put['args']) {
     budget: cents(args.budget),
     per: given(args.per),
     scope: given(args.scope),
+    from: given(args.from) ?? deadline,
+    until: given(args.until),
   }
 }
 
 // The proposal an action about a circle makes, never by where it sits,
 // since circles never nest: for a grant, the circle it names as its
 // issuer, or else a circle holding `adopt-policy` and a mandate for the
-// power granted that the grant is no wider than, the one it issues the
-// grant under, or else the assembly (`motion.decider`); for a change or
+// power granted that the grant is no wider than over the days it
+// applies, the one it issues the grant under, or else the assembly
+// (`motion.decider`); for a change or
 // the end of a policy, the circle that adopted it, whose own it is and
 // whose motion alone replaces it; for open books' disclosure rule, the
 // assembly, whose rule it is. Granting a mandate proposes its policy,
@@ -95,7 +100,7 @@ export async function putting(input: Put, db: Db): Promise<Propose> {
       input.kind,
       args.role === undefined ? null : String(args.role),
       args.policy === undefined ? null : String(args.policy),
-      mandating ? JSON.stringify(granting(args)) : null,
+      mandating ? JSON.stringify(granting(args, input.deadline || null)) : null,
       wording,
       day(args.from),
       args.circle === undefined ? null : String(args.circle),

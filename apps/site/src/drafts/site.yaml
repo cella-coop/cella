@@ -8,7 +8,6 @@ footer:
         - { label: Blog, href: /blog }
     - heading: Project
       links:
-        - { label: Status, href: /about#status }
         - { label: Team, href: /about#team }
         - { label: Pilot, href: /#join }
     - heading: Get in touch

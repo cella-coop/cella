@@ -142,7 +142,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   panel tabs beside its toggle, which stays there when the drawer is
   shut. A write in the header keeps the row one line: its fields'
   labels are read by assistive technology and not seen, and a choice is
-  at most 16rem wide.
+  at most 16rem wide. A form a header's popover opens is no part of
+  the row: its fields show their labels and its choices take its width.
   Under it, the content and the drawer, which
   scrolls down and never across. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's

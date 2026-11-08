@@ -3,7 +3,8 @@
 // page's hero, its sections and the footer. Down the page the figures
 // trade sides and take the five inks in turn, home's hero the coral and
 // each other page a step further along; a
-// plain section is numbered.
+// section that asks for one, `ghost: true`, carries a ghost numeral,
+// counted among those that do.
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import Section from '../components/Section.astro'
@@ -41,11 +42,7 @@ const laid = sections.map((s) => {
   if (s.figure) {
     figures++
   }
-  // a plain section is numbered, and so is a band that neither quotes nor
-  // asks, by a form or an action
-  const asks = Boolean(s.form || s.action)
-  const counted = ['prose', 'features', 'steps', 'list'].includes(s.kind) || (s.kind === 'band' && !s.quote && !asks)
-  const num = counted ? ++plain : undefined
+  const num = s.ghost ? ++plain : undefined
   return { s, flip, ink, num }
 })
 ---

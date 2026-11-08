@@ -107,9 +107,8 @@ turn, home's hero the coral and every other page starting a step on for
 each place it holds in the header's links, so no two pages open alike,
 a post as its blog (`Page.astro`). A figure bleeds past the
 column to the screen's edge on its outer side, its caption at that
-edge. A plain section, `prose`, `features`, `steps` or `list`, and a
-band that neither quotes nor asks (by a form or an action), is
-numbered, 01 on, as a ghost numeral: the display face's thinnest
+edge. A section that asks for it, `ghost: true`, is numbered among
+those that do, 01 on, as a ghost numeral: the display face's thinnest
 weight, huge and faint behind the section's words, out at the
 screen's edge on their outer side, a gutter in from it. A heading may
 mark its closing part with stars, `*like this*`, set thin.

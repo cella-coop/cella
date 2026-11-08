@@ -114,6 +114,8 @@ export const section = z
     // a file naming one is wrapped in that component)
     numbered: z.boolean().default(false),
     arrange: z.enum(['column', 'row', 'grid', 'ruled', 'steps']).optional(),
+    // whether it carries a ghost numeral, its place among those that do
+    ghost: z.boolean().default(false),
     // a band's ink, and whether it quotes
     ink: z.enum(STATUSES).optional(),
     quote: z.boolean().default(false),

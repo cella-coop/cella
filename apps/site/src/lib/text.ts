@@ -1,8 +1,10 @@
-// The site's text as every page reads it (index.md, the text): the
-// operator's entry with its draft laid under it, field by field. A field
-// the operator wrote wins whole; one they left out, or an empty body, is
-// the draft's, and is marked drafted, so the dev server underlines it and
-// a release refuses it while any remains.
+// The site's text as every page reads it (index.md, the text). A page's
+// section is the operator's file whole once it exists, and its draft only
+// where they have written none. The site's shared text, site.yaml, is
+// their entry with its draft laid under it, field by field: a field they
+// wrote wins whole, one they left out is the draft's. What a draft gives
+// is marked drafted, so the dev server underlines it and a release
+// refuses it while any remains.
 import { getCollection, render, type CollectionEntry } from 'astro:content'
 import { section, site as siteSchema, type Section } from '../schemas'
 
@@ -65,17 +67,23 @@ export type Rendered = Section & {
 /** One section, its operator's file over its draft; its body the
  * operator's unless they left it empty. */
 async function compose(id: string, own?: CollectionEntry<'pages'>, draft?: CollectionEntry<'pageDrafts'>): Promise<Rendered> {
+  // a section is the operator's whole once their file exists; a draft
+  // stands only for one they have not written, every field of it drafted
   const drafted = new Set<string>()
-  const merged = merge(own?.data, draft?.data, '', drafted) as Json
-  if (id.endsWith('/hero')) {
-    merged.kind = 'hero'
+  const entry = own ?? draft
+  const data = { ...(entry?.data as Json) }
+  if (!own && draft) {
+    Object.keys(draft.data).forEach((k) => drafted.add(k))
   }
-  const parsed = section.safeParse(merged)
+  if (id.endsWith('/hero')) {
+    data.kind = 'hero'
+  }
+  const parsed = section.safeParse(data)
   if (!parsed.success) {
     throw invalid(`pages/${id}.mdx`, parsed.error)
   }
-  const body = own?.body?.trim() ? own : draft?.body?.trim() ? draft : undefined
-  if (body && body === draft) {
+  const body = entry?.body?.trim() ? entry : undefined
+  if (body && !own) {
     drafted.add('body')
   }
   record(`pages/${id}.mdx`, drafted)

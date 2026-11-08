@@ -6,7 +6,7 @@
 
 import type { Mark } from './house.ts'
 
-type Point = [number, number]
+export type Point = [number, number]
 
 /** The explorer's seeded random sequence. */
 export function rng(seed: number): () => number {
@@ -22,7 +22,7 @@ export function rng(seed: number): () => number {
 
 /** The part of a convex polygon on the near side of a line through
     (px, py) with normal (nx, ny). */
-function clipHalf(poly: Point[], px: number, py: number, nx: number, ny: number): Point[] {
+export function clipHalf(poly: Point[], px: number, py: number, nx: number, ny: number): Point[] {
   const out: Point[] = []
   for (let k = 0; k < poly.length; k++) {
     const a = poly[k]
@@ -41,7 +41,7 @@ function clipHalf(poly: Point[], px: number, py: number, nx: number, ny: number)
 }
 
 /** A closed path through a polygon's corners, each softened to a curve. */
-function roundedPath(poly: Point[], rad: number, f: (v: number) => string): string {
+export function roundedPath(poly: Point[], rad: number, f: (v: number) => string): string {
   const n = poly.length
   let d = ''
   for (let k = 0; k < n; k++) {

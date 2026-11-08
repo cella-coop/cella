@@ -51,6 +51,13 @@ from the explorer:
   seeds no one sees, each cut by the gutter and rounded, in the five inks
   at lightness 0.6 and chroma 0.13; a gutter never under 0.9 px at the
   size drawn, so a small mark keeps its cuts;
+- `cluster.ts`, the cells beyond the mark: `cluster`, the cells a
+  picture is cut into, a power diagram whose seeds' disks follow a
+  power law, a few large in the middle and a long tail of small toward
+  a lobed rim and a tail, each cell cut by a gutter its smaller
+  neighbour's size bounds, held within a reach of its own seed, and
+  dropped where it would be a spike; seeded, so a page's clusters are
+  the same on every build; and `cell`, a lone cell for a marker;
 - `wordmark.ts`, CELLA in Urbanist at weight 690, tracked -0.02em, from glyph
   outlines, and its lockups with the mark at 1.1 times its height, 0.16
   of it apart, beside it or above it;

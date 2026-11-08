@@ -15,7 +15,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, sy
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
-import { grain, hues, markSvg, print, printCss, PRINT_INKS, printInk, printMarkup, PRINT_STYLES, PRINT_TONE, resolve, rgb8, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
+import { cell, cluster, grain, hues, markSvg, print, printCss, PRINT_INKS, printInk, printMarkup, PRINT_STYLES, PRINT_TONE, resolve, rgb8, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
 import { printFile } from '../../packages/brand/src/print-file.ts'
 
 const repo = new URL('../..', import.meta.url).pathname
@@ -37,6 +37,17 @@ test('the house\'s hues are nudged off the pentad, and its inks are fuller than 
   hues(house).forEach((h, i) => assert.equal(h, Math.round((house.phase + i * house.step + house.nudge[i] + 360) % 360), `hue ${i}`))
   assert.ok(house.inkC > house.statusC, 'the inks speak louder than the states\' text')
   assert.match(printCss(house), new RegExp(`--print-info-fill: oklch\\(${house.accentL} ${house.inkC} `), 'a state\'s fill is an ink')
+})
+
+test('a cluster is its seed\'s, inside its box, and runs off the side it bleeds to', () => {
+  const opts = { pitch: 115, gutter: 12, round: 16, seed: 7, drop: 0.25 }
+  const xs = (paths) => paths.flatMap((d) => [...d.matchAll(/[MLQ ]?(-?[0-9.]+) (-?[0-9.]+)/g)].map((m) => Number(m[1])))
+  const held = cluster(1000, 800, opts)
+  assert.deepEqual(cluster(1000, 800, opts), held, 'the same seed, the same cells')
+  assert.ok(held.length > 20, `a cluster of many cells: ${held.length}`)
+  assert.ok(xs(held).every((x) => x >= 0 && x <= 1000), 'every cell inside the box')
+  assert.ok(xs(cluster(1000, 800, { ...opts, bleed: 'r' })).some((x) => x > 1000), 'bleeding right, a cell runs past the edge')
+  assert.match(cell(11), /^M[0-9. ]+Q/, 'a lone cell is a rounded path')
 })
 
 test('the mark is the explorer\'s, at 240 and at 16', () => {

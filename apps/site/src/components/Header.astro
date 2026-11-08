@@ -68,13 +68,16 @@ const current = (href: string) => {
     -webkit-backdrop-filter: blur(8px) saturate(1.2);
   }
 
-  /* the bar keeps clear of the corner where the wrap reaches it */
+  /* the bar reaches 2rem past the content on each side, and keeps clear
+     of the corner where it reaches it */
   .bar {
+    --reach: calc(var(--wrap) + 4rem);
     display: flex;
     align-items: center;
     gap: 2rem;
+    max-width: var(--reach);
     height: 4.2rem;
-    padding-right: max(16px, calc(4rem - (100vw - min(100vw, var(--wrap))) / 2));
+    padding-right: max(16px, calc(4rem - (100vw - min(100vw, var(--reach))) / 2));
   }
 
   /* The theme toggle, in the bar's far corner */

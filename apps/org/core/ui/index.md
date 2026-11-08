@@ -19,7 +19,7 @@ change of its `house.json` and never of this package. Colours are
 parametric OKLCH: a tone is a chroma and a hue (`--tone-base`, graphite
 paper; the five states, error, warning, success, info and help), a shade
 is a lightness mirrored around a midpoint by one sign, `--theme`, so dark
-mode is that variable and a compressed ladder of surfaces. The brand has
+mode is that variable alone, every shade mirrored. The brand has
 no accent: the five status hues are the brand, and an action is plain
 ink. Components read roles, never shades:
 

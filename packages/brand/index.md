@@ -42,8 +42,12 @@ from the explorer:
   lightness and hue as a browser cuts it;
 - `tones.ts`, the tone and shade model: a shade is a lightness around
   `mid` (0.61), mirrored by one sign, `--theme`, and spread by `contrast`
-  (0.92), so the light theme's panel is an off-white (0.969), with `depth` (0.85) drawing the surfaces' rungs together, and
-  dark compressing them; each role is a shade of a tone;
+  (0.92), so the light theme's panel is an off-white (0.969), with
+  `depth` (0.85) drawing the surfaces' rungs together; every shade,
+  surfaces included, is the same distance from `mid` in either theme,
+  since OKLCH's lightness is already even to the eye (`compress` off:
+  the explorer's own dark ladder of surfaces stays in the model, unworn);
+  each role is a shade of a tone;
 - `paper.ts`, the newsprint: its grain and its fibres, each an SVG
   turbulence tile in the text's ink, worn on the ground, the panel and
   raised surfaces at their strengths and at half in dark;

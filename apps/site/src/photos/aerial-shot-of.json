@@ -4,5 +4,6 @@
   "photoUrl": "https://unsplash.com/photos/aerial-shot-of-forest-2Hzmz15wGik",
   "id": "2Hzmz15wGik",
   "licence": "Unsplash License",
-  "licenceUrl": "https://unsplash.com/license"
+  "licenceUrl": "https://unsplash.com/license",
+  "focus": [{ "x": 0.45, "y": 0.5, "r": 0.14 }]
 }

@@ -206,9 +206,9 @@ const MERGE = 1.5
  * it leaves its neighbours room. Disks apart keep their regions inside
  * their own power cells, so two regions become one, the circle round
  * both, where that fits a largest disk, or where they stand too close
- * for a gutter between them, unless that grows too large. Near an edge
- * the cluster does not bleed past, a disk moves in off it as far as its
- * region stays inside, so its cell is round, not cut by the box; a
+ * for a gutter between them, unless that grows too large. A region
+ * running off an edge the cluster does not bleed past comes in off it,
+ * and its disk with it, so its cell is round, not cut by the box; a
  * region whose middle lies outside the box is left out. */
 function seat(focus: Focus[], { w, h, gutter, sep, rmax, bleed }: { w: number; h: number; gutter: number; sep: number; rmax: number; bleed: 'l' | 'r' | null }) {
   let regions = focus.filter((f) => f.x >= 0 && f.x <= w && f.y >= 0 && f.y <= h && f.r > 0).map((f) => ({ ...f }))
@@ -235,6 +235,15 @@ function seat(focus: Focus[], { w, h, gutter, sep, rmax, bleed }: { w: number; h
       merged = true
     }
   }
+  // a region running off an edge the cluster does not bleed past comes in
+  // off it, so its cell is round and the edge trims the picture's margin,
+  // never the cell: better a sliver of a face lost than a cell cut flat
+  regions = regions.map((p) => {
+    const r = Math.max(1, Math.min(p.r, w / 2 - gutter - 2, h / 2 - gutter - 2))
+    const lo = r + gutter + 2
+    const x = Math.min(bleed === 'r' ? Infinity : w - lo, Math.max(bleed === 'l' ? -Infinity : lo, p.x))
+    return { x, y: Math.min(h - lo, Math.max(lo, p.y)), r }
+  })
   const floor = regions.map((p) => p.r + gutter)
   const disks = regions.map((p, i) => ({ x: p.x, y: p.y, r: Math.max(floor[i], rmax * SEAT) }))
   // a disk off the edges, moved no further from its region's middle than

@@ -1,6 +1,6 @@
 +++
 title = "Glossary"
-updated = 2026-11-06
+updated = 2026-11-08
 +++
 
 # Glossary
@@ -22,8 +22,7 @@ updated = 2026-11-06
 | **increment** | a chunk of build work; never a slice |
 | **shell** | the org app's SvelteKit root, `apps/org/ts`, which mounts every slice's collections and pages; it holds the routes and no feature of its own |
 | **inbox** | what waits on the acting person, each ask linking to where it is done: stances, approvals, an invitation, meetings to answer, mentions |
-| **home** | the co-op's dashboard, widgets pinned from many collections |
-| **pin** | a widget on the home: a standard widget and the collection it runs over |
+| **home** | the sidebar's group above the sections, the Inbox and Activity; `/` lands on the Inbox, and the co-op's dashboard of pinned widgets is retired |
 | **collection** | what a feat holds, as the shell lists it, one route each (`/invoices`); a graft extends the collections of the feats it joins |
 | **state class** | a client's state, `hooks/<Name>State.svelte.ts`, reached through its `use<Name>` hook from context; components hold none of their own |
 | **core** | a node's shared libraries, inherited by its feats and grafts; org's core holds `actions`, `circle` (the circles, roles, tenures, seats and mandates every feat builds on), `crypto`, `log`, `keystore`, `db`, `sign`, `guards`, `ui`, the policy register and the notary |

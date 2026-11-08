@@ -6,8 +6,8 @@
 // and opens a line on its accounts, a member's capital summed into 1013;
 // each project's margin, burn and watch on 25 October, an approved
 // expense taking its cost off the margin and onto the income statement;
-// a custom report saved, run and refused; and the pages and the home's
-// pins, through the built server. Run by `cella test` on a fresh database.
+// a custom report saved, run and refused; and the pages, through the
+// built server. Run by `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'

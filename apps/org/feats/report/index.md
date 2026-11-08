@@ -201,10 +201,6 @@ federation figures as sections; a custom report as its chart over a
 table. Each page says the log's entry it read. The New form saves a
 custom report from its title and its definition.
 
-The margins' rows are pinnable, as the collection `reports/margins` with
-the fields of its table (`pinnable`), and read through the port by
-`rows(port, id)`; no page pins them while the co-op's home is retired.
-
 ## Lanterne
 
 The thresholds are a 90 % burn and a 20 % margin, from 1 January 2026. On

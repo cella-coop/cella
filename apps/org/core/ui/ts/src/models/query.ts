@@ -61,7 +61,7 @@ export type Widget = Kpi | Chart
 // server for more.
 export const PAGE = 100
 
-export const limits = { widgets: 12, pins: 24, title: 80, values: 24, value: 60 }
+export const limits = { widgets: 12, title: 80, values: 24, value: 60 }
 
 const object = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null && !Array.isArray(x)
 
@@ -159,50 +159,6 @@ export function widgets(x: unknown, fs: Field[]): { widgets: Widget[]; errors: s
     errors.push(`a dashboard holds at most ${limits.widgets} widgets`)
   }
   return { widgets: out, errors }
-}
-
-// A widget pinned to the co-op's home from one of its collections: a
-// widget over that collection's fields, and the collection it runs over.
-// The home is a list of them, its order the viewer's.
-export type Pin = Widget & { collection: string }
-
-// The home's pins, each checked against its collection's fields, which
-// `fields` gives by name; what names no collection or fails its check is
-// dropped and said.
-export function pins(x: unknown, fields: (collection: string) => Field[] | undefined): { pins: Pin[]; errors: string[] } {
-  if (!Array.isArray(x)) {
-    return { pins: [], errors: ['a home is a list of widgets'] }
-  }
-  const out: Pin[] = []
-  const errors: string[] = []
-  for (const p of x.slice(0, limits.pins)) {
-    try {
-      if (!object(p) || typeof p.collection !== 'string') {
-        throw new Error('a widget on the home names the collection it runs over')
-      }
-      const fs = fields(p.collection)
-      if (!fs) {
-        throw new Error(`a widget on the home runs over no collection ${JSON.stringify(p.collection)}`)
-      }
-      out.push({ ...widget(p, fs), collection: p.collection })
-    } catch (e) {
-      errors.push((e as Error).message)
-    }
-  }
-  if (x.length > limits.pins) {
-    errors.push(`a home holds at most ${limits.pins} widgets`)
-  }
-  return { pins: out, errors }
-}
-
-// The home after its widgets of one collection change: theirs replaced
-// where the first of them stood, or added at the end, the others kept in
-// their order.
-export function repin(all: Pin[], collection: string, ws: Widget[]): Pin[] {
-  const first = all.findIndex((p) => p.collection === collection)
-  const others = all.filter((p) => p.collection !== collection)
-  const at = first === -1 ? others.length : all.slice(0, first).filter((p) => p.collection !== collection).length
-  return [...others.slice(0, at), ...ws.map((w) => ({ ...w, collection })), ...others.slice(at)]
 }
 
 // What a dashboard shows when the collection or the viewer configured

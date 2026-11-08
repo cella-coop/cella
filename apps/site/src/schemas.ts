@@ -20,11 +20,12 @@ export const site = z.object({
   // The narrow screen's menu button's label, read aloud.
   menu: z.string(),
   theme: z.object({ toggle: z.string() }),
-  // The footer: the brand's line, the sitemap's columns, each a heading
-  // over its links, and the note that the site shows prototype work.
+  // The footer: the brand's line, the home page's link's label before the
+  // header's links it repeats, and the note that the site shows prototype
+  // work.
   footer: z.object({
     line: z.string(),
-    columns: z.array(z.object({ heading: z.string(), links: z.array(link) })).default([]),
+    home: z.string(),
     disclaimer: z.string(),
   }),
   blog: z.object({ empty: z.string(), back: z.string() }),

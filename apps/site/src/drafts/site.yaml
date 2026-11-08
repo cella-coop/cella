@@ -1,17 +1,6 @@
 # Drafted site-wide text: a field here fills one site.yaml in src/content/ leaves out.
 footer:
-  columns:
-    - heading: Cella
-      links:
-        - { label: About, href: /about }
-        - { label: Blog, href: /blog }
-    - heading: Project
-      links:
-        - { label: Team, href: /about#team }
-        - { label: Pilot, href: /#join }
-    - heading: Get in touch
-      links:
-        - { label: Contact, href: /contact }
+  home: Home
   disclaimer: |-
     Cella is prototype work and not yet a product. Nothing here is offered for use or sale; the site shows where the work is going.
 signup:

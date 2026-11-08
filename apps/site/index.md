@@ -72,9 +72,9 @@ icon="…" photo="…">`s, each its words as markdown.
   | `cta` | a band, coral unless its `ink` says |
 
 - **the footer**, on the page's own paper and its grid: the lockup
-  and the site's closing line, the sitemap in columns, each a heading
-  over its links, and under them the note that the site shows
-  prototype work, not yet a product.
+  and the site's closing line, the header's links in a row, the home
+  page's first, and under them the note that the site shows prototype
+  work, not yet a product.
 
 A band's edges are a rounded outline in its own box (`EDGES` in
 `Section.astro`), a few long edges meeting at wide turns rounded by the
@@ -250,7 +250,7 @@ a field they left out is the draft's.
 
 | Collection | Where | What it holds |
 |---|---|---|
-| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, sitemap and disclaimer, the blog's labels, the mark a diagram wears and the credit under a photo |
+| `site`, `siteDrafts` | `site.yaml` | what every page shares: the site's title, description and tab title, the header's links, the menu's label, the theme toggle's label, the footer's line, home link and disclaimer, the blog's labels, the mark a diagram wears and the credit under a photo |
 | `pages`, `pageDrafts` | `pages/<page>/<section>.mdx` | a page is a folder of sections, its hero `hero.mdx`, with the page's `title` and `description`; each section's `kind`, `order`, `eyebrow`, `heading`, `items`, `figure` and actions in its frontmatter, its body below; `home` is `/` and `blog` heads the blog |
 | `blog` | `blog/<name>.mdx` | one post a file, the operator's alone: its title, summary, date, authors and whether it is a draft post, which shows in the dev server and is left out of the build |
 

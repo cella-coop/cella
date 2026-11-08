@@ -1,14 +1,14 @@
 ---
 // A figure (index.md, figures): a photo engraved in one of the five inks,
 // laid on the print's paper washed with that ink and cut into a cluster
-// of the brand's cells, the large where the photo's interest is, which
+// of the brand's cells, the largest holding what the photo is of, which
 // runs off the screen's edge on the side it bleeds to. Under it, its
 // caption and its photographer's credit.
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cluster } from '@cella/brand'
 import type { Figure, Status } from '../schemas'
-import { interestIn } from '../lib/interest'
+import { focusIn } from '../lib/focus'
 import type { Marks } from '../lib/text'
 import Cut from './Cut.astro'
 
@@ -25,8 +25,8 @@ interface Props {
 const { figure, ink, seed, bleed, aspect = 1.25, credit, drafted } = Astro.props
 const w = 1000
 const h = Math.round(w / aspect)
-const interest = await interestIn(figure.photo, w, h)
-const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed, interest })
+const focus = await focusIn(figure.photo, w, h)
+const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed, focus })
 const id = `cells-${figure.photo}-${seed}`
 const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
 const [before, rest = ''] = credit.template.split('{name}')

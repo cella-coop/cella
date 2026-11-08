@@ -49,6 +49,18 @@ test('each image needs a complete, linked credit; each credit needs an image', (
     assert.throws(() => checkPhotos(dir), /incomplete Unsplash credit/)
   } finally { rmSync(dir, { recursive: true, force: true }) }
 })
+test('a credit may name its photo\'s focus, regions in fractions of the photo', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'site-photos-'))
+  try {
+    writeFileSync(join(dir, 'a.jpg'), 'image')
+    writeFileSync(join(dir, 'a.json'), JSON.stringify({ ...credit, focus: [{ x: 0.4, y: 0.3, r: 0.08 }] }))
+    checkPhotos(dir)
+    for (const focus of [[], [{ x: 1.4, y: 0.3, r: 0.08 }], [{ x: 0.4, y: 0.3, r: 0 }], [{ x: 0.4, y: 0.3 }], [{ x: 0.4, y: 0.3, r: 0.1, w: 2 }], { x: 0.4, y: 0.3, r: 0.1 }]) {
+      writeFileSync(join(dir, 'a.json'), JSON.stringify({ ...credit, focus }))
+      assert.throws(() => checkPhotos(dir), /focus is a list/, JSON.stringify(focus))
+    }
+  } finally { rmSync(dir, { recursive: true, force: true }) }
+})
 
 test('public download prompts for attribution without network', async () => {
   const root = mkdtempSync(join(tmpdir(), 'site-photo-public-'))

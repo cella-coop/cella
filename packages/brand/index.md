@@ -63,8 +63,16 @@ from the explorer:
   dropped where it would be a spike; seeded, so a page's clusters are
   the same on every build; and `cell`, a lone cell for a marker.
   `cluster` takes, beside its pitch, gutter, rounding, seed, `drop` and
-  `bleed`: `interest`, a field of 0 to 1 over its box, where its large
-  cells gather instead of the middle, the rim still breaking small;
+  `bleed`: `focus`, regions `{ x, y, r }` of its box, what its picture
+  is of, each seeded first with a disk a gutter wider than it, grown
+  toward the largest's size as its neighbours leave room, so its power
+  cell holds it whole and centred and no gutter comes within its
+  radius; two regions that fit one largest disk, or stand too close for
+  a gutter between them, share one, the circle round both; near an edge
+  it does not bleed past, a disk moves in as far as its region stays
+  inside, and its cell is always kept, cut by the box only where it
+  must be; the outline closes round each, and the other cells shrink
+  away from them as well as toward the rim;
   `silhouette`, the shape its cells fill, `'blob'` by default, an
   organic one by name or `{ kind, limbs }`, or `{ field, depth }`, any
   signed distance in the box's units, negative inside, its cells full

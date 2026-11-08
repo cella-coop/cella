@@ -1,0 +1,185 @@
+---
+// Each photo a figure wears, what was found in it and how the site cuts
+// it: the photo with every region found drawn over it, the focus a
+// figure holds solid and the rest dashed, and the figure at the hero's
+// aspect and a section's, bleeding right, its focus outlined over its
+// cells. Every tile is named by identifiers alone.
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { cluster } from '@cella/brand'
+import { preview } from '../../lib/assets'
+import { focus, focusIn, found } from '../../lib/focus'
+import { STATUSES } from '../../schemas'
+import Cut from '../Cut.astro'
+
+const PHOTOS = ['diverse-group-of', 'unknown-persons-using', 'people-working-on', 'group-of-people', 'person-holding-pencil', 'people-raising-their']
+const ASPECTS = [
+  { name: 'hero', aspect: 1.3, seed: 11 },
+  { name: 'section', aspect: 1.2, seed: 23 },
+]
+const W = 1000
+
+const photos = await Promise.all(
+  PHOTOS.map(async (photo, p) => {
+    const { src, w, h } = await preview(photo, 720)
+    const held = await focus(photo)
+    const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${photo}.json`), 'utf8')) as { focus?: unknown[] }
+    return {
+      photo,
+      source: meta.focus?.length ? 'sidecar' : 'found',
+      src,
+      w,
+      h,
+      found: await found(photo),
+      held,
+      cuts: await Promise.all(
+        ASPECTS.map(async ({ name, aspect, seed }) => {
+          const h = Math.round(W / aspect)
+          const regions = await focusIn(photo, W, h)
+          return { name, h, regions, cells: cluster(W, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed: 'r', focus: regions }) }
+        }),
+      ),
+      ink: STATUSES[p % STATUSES.length],
+    }
+  }),
+)
+---
+
+{
+  photos.map(({ photo, source, src, w, h, found, held, cuts, ink }) => (
+    <section class="photo">
+      <h2>
+        <code>{photo}</code> <code class="source">{source}</code>
+      </h2>
+      <ul class="grid" role="list">
+        <li class="tile">
+          <svg class="found" viewBox={`0 0 ${w} ${h}`} role="img" aria-label={photo}>
+            <image href={src} width={w} height={h} />
+            {found.map((f) => (
+              <circle class="region" data-kind={f.kind} cx={f.x * w} cy={f.y * h} r={f.r * w} />
+            ))}
+            {held.map((f) => (
+              <circle class="held" cx={f.x * w} cy={f.y * h} r={f.r * w} />
+            ))}
+          </svg>
+          <p class="name">
+            {found.map((f) => (
+              <code data-kind={f.kind}>
+                {f.kind} {f.x.toFixed(2)} {f.y.toFixed(2)} {f.r.toFixed(3)} {f.score.toFixed(2)}
+              </code>
+            ))}
+          </p>
+        </li>
+        {cuts.map((cut) => (
+          <li class="tile">
+            <div class="figure">
+              <Cut photo={photo} ink={ink} cells={cut.cells} w={W} h={cut.h} id={`in-${photo}-${cut.name}`} label={`${photo} ${cut.name}`} />
+              <svg class="over" viewBox={`0 0 ${W} ${cut.h}`} aria-hidden="true">
+                {cut.regions.map((f) => (
+                  <circle class="held" cx={f.x} cy={f.y} r={f.r} />
+                ))}
+              </svg>
+            </div>
+            <p class="name">
+              <code>{cut.name}</code>
+            </p>
+          </li>
+        ))}
+      </ul>
+    </section>
+  ))
+}
+
+<style>
+  .photo + .photo {
+    margin-top: 3rem;
+  }
+
+  h2 {
+    margin: 0 0 1rem;
+    font-size: var(--t-lg);
+    font-weight: normal;
+  }
+
+  .source {
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem 2rem;
+    align-items: start;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .found {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .figure {
+    position: relative;
+  }
+
+  .over {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  circle {
+    fill: none;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .region {
+    stroke-width: 1.5;
+    stroke-dasharray: 4 3;
+  }
+
+  .held {
+    stroke: var(--print-error-deep);
+    stroke-width: 2;
+  }
+
+  .over .held {
+    stroke-dasharray: 3 3;
+  }
+
+  [data-kind='face'] {
+    stroke: var(--print-success-deep);
+    color: var(--print-success-deep);
+  }
+
+  [data-kind='person'] {
+    stroke: var(--print-info-deep);
+    color: var(--print-info-deep);
+  }
+
+  [data-kind='detail'] {
+    stroke: var(--print-warning-deep);
+    color: var(--print-warning-deep);
+  }
+
+  .name {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    margin: 0.25rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--t-sm);
+  }
+
+  @media (max-width: 50rem) {
+    .grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

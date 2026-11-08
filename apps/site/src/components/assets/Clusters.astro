@@ -2,10 +2,10 @@
 // The clusters a figure may be cut into, side by side on the same photos
 // for the operator to choose from: the blob the pages wear, the organic
 // silhouettes and a few icons, each with its cells sized by the cluster's
-// middle and by the photo's interest. Every tile is named by its
-// silhouette, and `+interest` where its interest sizes it.
+// middle and round the photo's focus. Every tile is named by its
+// silhouette, and `+focus` where its cells are placed on its focus.
 import { cluster, ORGANIC, type Silhouette } from '@cella/brand'
-import { interestIn } from '../../lib/interest'
+import { focusIn } from '../../lib/focus'
 import { iconField } from '../../lib/silhouette'
 import { STATUSES } from '../../schemas'
 import Cut from '../Cut.astro'
@@ -24,15 +24,15 @@ const shapes: { name: string; silhouette: Silhouette; pitch: number; loose: numb
 
 const photos = await Promise.all(
   PHOTOS.map(async (photo, p) => {
-    const interest = await interestIn(photo, w, h)
+    const focus = await focusIn(photo, w, h)
     return {
       photo,
       rows: shapes.map((s, i) => ({
         name: s.name,
         ink: STATUSES[(i + p) % STATUSES.length],
-        cuts: [undefined, interest].map((field) => ({
-          label: field ? `${s.name}+interest` : s.name,
-          cells: cluster(w, h, { pitch: s.pitch, gutter: s.pitch / 9.5, round: s.pitch / 7, seed: SEED, drop: 0.25, silhouette: s.silhouette, interest: field, loose: s.loose }),
+        cuts: [undefined, focus].map((regions) => ({
+          label: regions ? `${s.name}+focus` : s.name,
+          cells: cluster(w, h, { pitch: s.pitch, gutter: s.pitch / 9.5, round: s.pitch / 7, seed: SEED, drop: 0.25, silhouette: s.silhouette, focus: regions, loose: s.loose }),
         })),
       })),
     }

@@ -131,14 +131,22 @@ The cluster is the brand's (`cluster` in
 [the brand](../../packages/brand/index.md)): a power diagram whose cells
 follow a power law, a few large and a long tail of small toward the rim
 and a tail that points back to the words, its edge a lobed blob, never
-the box. The large gather on the photo's **interest**
-(`src/lib/interest.ts`): a 64-cell-wide grid, 0 to 1, of the energy of
-its edges, its local contrast and how like skin its colour is, weighed
-toward its middle, blurred broad and normalised, from the photo alone
-with sharp and no model; computed once at build and kept in the
-ignored `.astro/interest/` as the engravings are, then laid over the
-figure's box as the photo covers it. So the large cells frame its faces
-and people, and its plain background breaks small. The figure's SVG
+the box. Its largest cells hold the photo's **focus**
+(`src/lib/focus.ts`), what the photo is of: each region whole and
+centred in one, the cells shrinking away from it. The focus is the
+sidecar's where it names one ([photos](#photos)); otherwise it is found
+at build: the faces in the photo, then the people no face was found on,
+by the detectors of Human (`@vladmandic/human`), their weights shipped
+in its package and run on TensorFlow's WASM backend, offline and with
+no native build; and where neither is found, the peaks of its
+**interest** (`src/lib/interest.ts`), a 64-cell-wide grid, 0 to 1, of
+the energy of its edges, its local contrast and how like skin its
+colour is, weighed toward its middle, blurred broad and normalised.
+What is found is kept in the ignored `.astro/focus/` and `.astro/interest/`
+by the photo's modification time and a version, as the engravings are,
+then laid over the figure's box as the photo covers it; a region whose
+middle the box cuts off is left out. So a face is never cut by a gutter,
+and the plain background breaks small. The figure's SVG
 (`src/components/Cut.astro`) clips the print by the cluster. Each
 section's cluster is seeded by its page's and its own name, so it is
 the same on every build. Under the figure, at the screen's edge on the
@@ -174,7 +182,8 @@ of its own, its body in `src/components/assets/`:
 | Page | What it shows |
 |---|---|
 | `/assets/photos` | every vendored photo as the site engraves it, the five inks in turn, so no two in a row share one; hovering one shows a toolbar of the five inks, and a press wears that ink, a change of colour alone since an engraving's lines are the same in any ink; a press on a photo opens it large in its ink |
-| `/assets/clusters` | the clusters a figure may be cut into, on two photos, for the operator to choose from: the blob the pages wear, the brand's organic silhouettes `amoeba`, `branch`, `bubbles` and `colony`, and the filled Phosphor icons `users-three`, `house`, `hand-heart`, `tree` and `chat-circle` (`src/lib/silhouette.ts` rasterises one at build and the brand turns it into a signed distance), each sized by the cluster's middle and, beside it, `+interest`, by the photo's interest; an icon's cells at half the pitch, so its outline reads |
+| `/assets/interest` | each photo a figure wears, `diverse-group-of`, `unknown-persons-using`, `people-working-on`, `group-of-people`, `person-holding-pencil` and `people-raising-their`: the photo with every region found in it drawn over it, a face's, a person's and its detail's each in its own ink and the focus its figures hold solid, named by kind, place, radius and score, and `sidecar` or `found` by where its focus comes from; beside it the figure as the site cuts it, at the hero's aspect, 1.3, and a section's, 1.2, bleeding right, its focus outlined over its cells |
+| `/assets/clusters` | the clusters a figure may be cut into, on two photos, for the operator to choose from: the blob the pages wear, the brand's organic silhouettes `amoeba`, `branch`, `bubbles` and `colony`, and the filled Phosphor icons `users-three`, `house`, `hand-heart`, `tree` and `chat-circle` (`src/lib/silhouette.ts` rasterises one at build and the brand turns it into a signed distance), each sized by the cluster's middle and, beside it, `+focus`, placed on the photo's focus; an icon's cells at half the pitch, so its outline reads |
 | `/assets/diagrams` | every diagram, on the paper as a post's figure shows it and on each band, light on its colour |
 | `/assets/icons` | every icon the site draws, the toggle's, the menu's and the library's own, in every role |
 | `/assets/components` | the site's components, each by its name |
@@ -290,8 +299,15 @@ download its guidelines ask to be told of. The two credit links carry
 Unsplash's API and calls the photo's download endpoint, as the API's
 guidelines ask; with none, it reads the page's public image and asks
 for the name and the profile's URL on the terminal. A page that refuses
-automated reads needs an access key. `cella check site` refuses a photo without its
-sidecar, a sidecar missing any field, and a `<Photo name>` naming none.
+automated reads needs an access key. A sidecar may also name the
+photo's **focus**, `"focus": [{ "x": 0.5, "y": 0.4, "r": 0.08 }]`, the
+regions its figures' largest cells hold, each its centre in fractions
+of the photo's width and height and its radius in fractions of its
+width, which replaces what is found in it ([figures](#figures)); it is
+the operator's to set where what is found is wrong, and
+`/assets/interest` shows both. `cella check site` refuses a photo without its
+sidecar, a sidecar missing any field or with a focus not a list of such
+regions, and a `<Photo name>` naming none.
 
 ## Whose words
 

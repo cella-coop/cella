@@ -29,9 +29,24 @@ export function checkPhotos(dir) {
     const meta = JSON.parse(readFileSync(join(dir, `${name}.json`), 'utf8'))
     if (!meta.photographer || !meta.photographerUrl || !meta.photoUrl || !meta.id || meta.licence !== licence || meta.licenceUrl !== license) throw new Error(`${name}: incomplete Unsplash credit`)
     photoUrl(meta.photoUrl)
+    checkFocus(name, meta.focus)
     const profile = new URL(meta.photographerUrl)
     if (profile.protocol !== 'https:' || !['unsplash.com', 'www.unsplash.com'].includes(profile.hostname) || !/^\/\@[^/]+\/?$/.test(profile.pathname)) throw new Error(`${name}: invalid photographer profile`)
     if (!readFileSync(join(dir, `${name}.jpg`)).length) throw new Error(`${name}: empty image`)
+  }
+}
+
+/** A sidecar's optional focus, what its figures' largest cells hold in
+ * place of what is found: a list of regions, each its centre `x`, `y` in
+ * fractions of the photo's width and height and its radius `r` in
+ * fractions of its width. */
+export function checkFocus(name, focus) {
+  if (focus === undefined) {
+    return
+  }
+  const fraction = (v) => typeof v === 'number' && v >= 0 && v <= 1
+  if (!Array.isArray(focus) || !focus.length || !focus.every((f) => f && fraction(f.x) && fraction(f.y) && fraction(f.r) && f.r > 0 && Object.keys(f).every((k) => ['x', 'y', 'r'].includes(k)))) {
+    throw new Error(`${name}: focus is a list of { x, y, r }, each a fraction of the photo, r above nought`)
   }
 }
 

@@ -1,14 +1,14 @@
 // Where a photo's interest lies (index.md, figures): a small grid, 0 to 1,
-// high on its faces, its people and its detail, low on plain background,
-// that a figure's cluster grows its large cells on. No model, only the
-// photo: the energy of its edges, its local contrast and how like skin
-// its colour is, weighed toward its middle, blurred and normalised. It is
-// computed once, at build, and cached as the engravings are.
+// high on its skin and its detail, low on plain background, whose peaks
+// are a photo's focus where no face or person is found in it. No model,
+// only the photo: the energy of its edges, its local contrast and how
+// like skin its colour is, weighed toward its middle, blurred and
+// normalised. It is computed once, at build, and cached as the
+// engravings are.
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
-import { sample, type Field, type Grid } from '@cella/brand'
-import { ratio } from './engrave'
+import type { Grid } from '@cella/brand'
 
 /** The grid's width, in cells; its height follows the photo's ratio. */
 const SIZE = 64
@@ -84,14 +84,6 @@ export async function interest(name: string): Promise<Grid> {
   mkdirSync(CACHE, { recursive: true })
   writeFileSync(cached, JSON.stringify(out))
   return out
-}
-
-/** A photo's interest at each point of a figure's box, w by h, that the
- * photo covers as the figure lays it, centred and cut to fill. */
-export async function interestIn(name: string, w: number, h: number): Promise<Field> {
-  const r = await ratio(name)
-  const tall = Math.max(h, w / r)
-  return sample(await interest(name), { x: (w - tall * r) / 2, y: (h - tall) / 2, w: tall * r, h: tall })
 }
 
 /** A field blurred by sharp, a Gaussian of sigma pixels, kept in 0 to 1. */

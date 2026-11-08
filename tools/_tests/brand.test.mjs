@@ -74,18 +74,52 @@ test('a cluster fills each organic silhouette, its seed\'s, inside its box', () 
   }
 })
 
-test('a cluster\'s large cells gather where the interest is', () => {
-  const opts = { pitch: 115, gutter: 12, round: 16, seed: 7 }
-  for (const side of ['l', 'r']) {
-    const interest = (x) => (side === 'r' ? x > 500 : x < 500) ? 1 : 0
-    const cells = cluster(1000, 833, { ...opts, interest })
-    const mean = (on) => {
-      const picked = cells.filter((d) => (middle(d)[0] > 500) === on)
-      return picked.reduce((s, d) => s + area(d), 0) / picked.length
+// A rounded cell's outline within its curves: each corner's chord
+const inner = (d) => [...d.matchAll(/[ML](-?[0-9.]+) (-?[0-9.]+)Q-?[0-9.]+ -?[0-9.]+ (-?[0-9.]+) (-?[0-9.]+)/g)].flatMap((m) => [[Number(m[1]), Number(m[2])], [Number(m[3]), Number(m[4])]])
+const contains = (ps, [x, y]) => ps.reduce((on, p, k) => {
+  const q = ps[(k + 1) % ps.length]
+  return (p[1] > y) !== (q[1] > y) && x < p[0] + ((y - p[1]) * (q[0] - p[0])) / (q[1] - p[1]) ? !on : on
+}, false)
+// how far a point inside a polygon lies from its nearest edge
+const depth = (ps, [x, y]) => Math.min(...ps.map((p, k) => {
+  const q = ps[(k + 1) % ps.length]
+  const [dx, dy] = [q[0] - p[0], q[1] - p[1]]
+  const t = Math.max(0, Math.min(1, ((x - p[0]) * dx + (y - p[1]) * dy) / (dx * dx + dy * dy || 1)))
+  return Math.hypot(x - p[0] - t * dx, y - p[1] - t * dy)
+}))
+
+test('a cluster holds each focus whole in one cell, its largest round it', () => {
+  const opts = { pitch: 115, gutter: 12, round: 16, drop: 0.25 }
+  const cases = [
+    [{ x: 500, y: 400, r: 60 }],
+    [{ x: 150, y: 120, r: 70 }, { x: 760, y: 560, r: 40 }],
+    // two faces side by side and a third apart
+    [{ x: 380, y: 300, r: 45 }, { x: 470, y: 320, r: 40 }, { x: 700, y: 250, r: 50 }],
+    // a row of faces too close for a gutter between them, too many to merge
+    [0, 1, 2, 3, 4, 5].map((k) => ({ x: 200 + k * 110, y: 380 + (k % 2) * 40, r: 42 })),
+  ]
+  for (const [n, focus] of cases.entries()) {
+    for (const seed of [3, 7, 11]) {
+      for (const bleed of [null, 'r']) {
+        const cells = cluster(1000, 769, { ...opts, seed, bleed, focus }).map(inner)
+        for (const f of focus) {
+          const holding = cells.filter((ps) => contains(ps, [f.x, f.y]))
+          assert.equal(holding.length, 1, `case ${n}, seed ${seed}: one cell holds the focus at ${f.x}, ${f.y}`)
+          const cut = Math.min(f.r, f.x - 2, 769 - 2 - f.y, f.y - 2, bleed === 'r' ? Infinity : 1000 - 2 - f.x)
+          assert.ok(depth(holding[0], [f.x, f.y]) >= cut - 0.5, `case ${n}, seed ${seed}, bleed ${bleed}: no gutter within ${f.r} of ${f.x}, ${f.y}: ${depth(holding[0], [f.x, f.y]).toFixed(1)}`)
+        }
+      }
     }
-    const [toward, away] = side === 'r' ? [mean(true), mean(false)] : [mean(false), mean(true)]
-    assert.ok(toward > away * 1.5, `interest on the ${side}: cells there average ${toward.toFixed(0)}, elsewhere ${away.toFixed(0)}`)
   }
+  // the cells shrink away from the focus
+  const focus = [{ x: 250, y: 300, r: 60 }]
+  const cells = cluster(1000, 769, { ...opts, seed: 7, focus })
+  const mean = (near) => {
+    const picked = cells.filter((d) => (Math.hypot(middle(d)[0] - 250, middle(d)[1] - 300) < 330) === near)
+    return picked.reduce((s, d) => s + area(d), 0) / picked.length
+  }
+  assert.ok(mean(true) > mean(false) * 1.5, `cells near the focus average ${mean(true).toFixed(0)}, elsewhere ${mean(false).toFixed(0)}`)
+  assert.deepEqual(cluster(1000, 769, { ...opts, seed: 7, focus }), cells, 'the same focus and seed, the same cells')
 })
 
 test('a mask is a signed distance a cluster fills, and a grid is sampled between its cells', () => {

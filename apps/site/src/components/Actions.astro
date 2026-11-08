@@ -39,21 +39,24 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
   const f = (v: number) => v.toFixed(1)
 
   // each cell's outline: flat along the row's top and foot, its shared
-  // sides slanted by a seeded tilt and parted by the gutter, its outer
-  // ends bulging past the label
+  // sides slanted by a seeded tilt and parted by the gutter, measured
+  // across the slant so every gap is the same width, its outer ends
+  // bulging past the label
   function outlines(widths: number[], h: number, seed: number, gutter: number): Point[][] {
     const rand = rng(seed)
     const xs = widths.reduce((acc, w) => [...acc, acc[acc.length - 1] + w], [0])
     const tilt = xs.map((_, i) => (i % 2 ? 1 : -1) * h * (0.14 + rand() * 0.12))
+    // half the gutter, as a horizontal shift that parts a slanted edge by it
+    const half = tilt.map((t) => ((gutter / 2) * Math.hypot(h, t)) / h)
     const bulge = h * 0.3
     return widths.map((_, i) => {
       const [l, r] = [xs[i], xs[i + 1]]
       const left: Point[] = i === 0
         ? [[l + bulge, 0], [l, h * (0.42 + rand() * 0.16)], [l + bulge, h]]
-        : [[l + tilt[i] / 2 + gutter / 2, 0], [l - tilt[i] / 2 + gutter / 2, h]]
+        : [[l + tilt[i] / 2 + half[i], 0], [l - tilt[i] / 2 + half[i], h]]
       const right: Point[] = i === widths.length - 1
         ? [[r - bulge, h], [r, h * (0.42 + rand() * 0.16)], [r - bulge, 0]]
-        : [[r - tilt[i + 1] / 2 - gutter / 2, h], [r + tilt[i + 1] / 2 - gutter / 2, 0]]
+        : [[r - tilt[i + 1] / 2 - half[i + 1], h], [r + tilt[i + 1] / 2 - half[i + 1], 0]]
       return [...left, ...right]
     })
   }
@@ -63,16 +66,16 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     const cells = [...row.querySelectorAll<HTMLElement>('.cell')]
     const box = row.getBoundingClientRect()
     const h = box.height
-    const polys = outlines(cells.map((c) => c.getBoundingClientRect().width), h, Number(row.dataset.seed), 5)
+    const polys = outlines(cells.map((c) => c.getBoundingClientRect().width), h, Number(row.dataset.seed), 6)
     svg.setAttribute('viewBox', `0 0 ${f(box.width)} ${f(h)}`)
     svg.innerHTML = polys.map((p, i) => `<path class="${cells[i].dataset.tone ?? 'fill'}" d="${roundedPath(p, h * 0.2, f)}"/>`).join('')
     row.dataset.drawn = ''
     cells.forEach((c, i) => {
       const path = svg.children[i]
-      c.addEventListener('mouseenter', () => path.classList.add('lift'))
-      c.addEventListener('mouseleave', () => path.classList.remove('lift'))
-      c.addEventListener('focus', () => path.classList.add('lift'))
-      c.addEventListener('blur', () => path.classList.remove('lift'))
+      c.addEventListener('mouseenter', () => path.classList.add('on'))
+      c.addEventListener('mouseleave', () => path.classList.remove('on'))
+      c.addEventListener('focus', () => path.classList.add('on'))
+      c.addEventListener('blur', () => path.classList.remove('on'))
     })
   }
 
@@ -84,8 +87,10 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
 <style>
   .actions {
     --fill: oklch(from var(--ink) calc(0.58 - var(--theme) * 0.04) c h);
+    --fill-on: oklch(from var(--ink) calc(0.58 - var(--theme) * 0.1) c h);
     --on-fill: oklch(0.985 0.004 250);
     --wash: oklch(from var(--ink) calc(0.62 + var(--theme) * 0.28) 0.045 h);
+    --wash-on: oklch(from var(--ink) calc(0.62 + var(--theme) * 0.24) 0.06 h);
     --on-wash: oklch(from var(--ink) calc(0.61 - var(--theme) * 0.25) 0.1 h);
     position: relative;
     display: inline-flex;
@@ -102,10 +107,10 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     overflow: visible;
   }
 
+  /* a cell never moves, so the gutters hold: a hovered or focused one
+     deepens its tone */
   svg :global(path) {
-    transform-box: fill-box;
-    transform-origin: center;
-    transition: transform 0.2s var(--ease), fill 0.2s var(--ease);
+    transition: fill 0.2s var(--ease);
   }
 
   svg :global(.fill) {
@@ -116,8 +121,12 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     fill: var(--wash);
   }
 
-  svg :global(.lift) {
-    transform: scale(1.03);
+  svg :global(.fill.on) {
+    fill: var(--fill-on);
+  }
+
+  svg :global(.wash.on) {
+    fill: var(--wash-on);
   }
 
   .actions :global(.cell) {
@@ -147,11 +156,11 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
   }
 
   /* drawn, the cells are the svg's, side by side with no gap */
-  [data-drawn] :global(.cell) {
+  .actions[data-drawn] :global(.cell[data-tone]) {
     background: none;
   }
 
-  [data-drawn] :global(.cell + .cell) {
+  .actions[data-drawn] :global(.cell + .cell) {
     margin-left: 0;
   }
 

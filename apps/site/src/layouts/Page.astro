@@ -1,7 +1,7 @@
 ---
 // A page of the site: the header with the page marked in its links, the
-// page's hero, its sections and the footer. Down the page the figures
-// trade sides and take the five inks in turn, home's hero the coral and
+// page's hero, its sections and the footer. Down the page the sections
+// trade sides, and the figures take the five inks in turn, home's hero the coral and
 // each other page a step further along; a
 // section that asks for one, `ghost: true`, carries a ghost numeral,
 // counted among those that do.
@@ -36,8 +36,9 @@ const turn = (i: number) => TURN[(start + i) % TURN.length]
 const seedOf = (id: string) => [...`${name}/${id}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
 let figures = 1
 let plain = 0
-const laid = sections.map((s) => {
-  const flip = s.figure ? figures % 2 === 1 : false
+const laid = sections.map((s, i) => {
+  // the sections trade sides down the page, the first away from the hero's
+  const flip = i % 2 === 0
   const ink = turn(figures)
   if (s.figure) {
     figures++

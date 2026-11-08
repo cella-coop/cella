@@ -101,8 +101,11 @@ when it changes size, the cut seeded by the section; before it, and
 with no script, each link is a plain rounded fill. A hovered or focused
 cell swells a little.
 
-A section with a figure sets it beside its words; down the page the
-figures trade sides, the hero's on the right, and take the five inks in
+A section with a figure sets it beside its words; down the page every
+section trades sides, the hero's figure on the right and the first
+section's on the left, words alone keeping to their column on their
+side, a band's diagram and a quote's as a figure; the figures take the
+five inks in
 turn, home's hero the coral and every other page starting a step on for
 each place it holds in the header's links, so no two pages open alike,
 a post as its blog (`Page.astro`). A figure bleeds past the

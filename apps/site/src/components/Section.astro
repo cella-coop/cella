@@ -72,7 +72,7 @@ const actions = [
   }
   {
     band && s.quote ? (
-      <div class="wrap pair">
+      <div class:list={['wrap', 'pair', { flip }]}>
         <blockquote>
           {Content && <div class="said" data-drafted={d('body')}><Content /></div>}
           <cite class="label" data-drafted={d('heading')}>{s.heading}</cite>
@@ -126,7 +126,8 @@ const actions = [
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
-  .pair.flip > :global(figure) {
+  .pair.flip > :global(figure),
+  .pair.flip > .plate {
     order: -1;
   }
 
@@ -136,6 +137,11 @@ const actions = [
 
   .single .copy {
     max-width: 44rem;
+  }
+
+  /* words alone trade sides too, their column to the right */
+  .single.flip .copy {
+    margin-left: auto;
   }
 
   /* the hero's figure overhangs the section after it */
@@ -247,6 +253,10 @@ const actions = [
     padding-block: 0;
   }
 
+  [data-band] .pair.flip {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+
   .plate {
     justify-self: center;
     width: 100%;
@@ -308,8 +318,13 @@ const actions = [
       grid-template-columns: minmax(0, 1fr);
     }
 
-    .pair.flip > :global(figure) {
+    .pair.flip > :global(figure),
+    .pair.flip > .plate {
       order: 0;
+    }
+
+    .single.flip .copy {
+      margin-left: 0;
     }
 
     .overhang {

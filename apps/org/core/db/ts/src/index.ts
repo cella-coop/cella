@@ -109,8 +109,10 @@ export interface Write<T> {
 // A personal value in a payload: the notary commits to it, under a fresh
 // salt, and keeps the value in the vault, never in the log. `field` is a
 // column registered in `cella.personal`, as `schema.table.column`;
-// `subject` whose it is, by their address or id.
-export const personal = (field: string, subject: string, value: unknown) => ({ $personal: { field, subject, value } })
+// `subject` whose it is, by their address or id. A null is no personal
+// data and stays null, so a field a write clears folds as null.
+export const personal = (field: string, subject: string, value: unknown) =>
+  value === null || value === undefined ? null : { $personal: { field, subject, value } }
 
 // An erasure in a payload: the notary erases the subject's personal data
 // of the classes named, or of every class, as it settles.

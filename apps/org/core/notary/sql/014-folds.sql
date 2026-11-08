@@ -347,8 +347,14 @@ REVOKE EXECUTE ON FUNCTION cella.fold_carried(bigint, jsonb) FROM PUBLIC;
 -- canonical order the state hash reads: each table by its name, bytewise,
 -- its rows as JSON text sorted bytewise, a personal column as
 -- `cella.committed` gives it, and a generated column left out, since its
--- row computes it, as a file's hash is its bytes'. A partition's rows are
--- its own, never its parent's again. The owner's.
+-- row computes it, as a file's hash is its bytes'. A personal text column
+-- null is null, before the vault or a fold's commitments are read: a fold
+-- writes each value it applies there as `redacted` and a null as null, as
+-- the log keeps it, so one a later write cleared reads null on both
+-- sides, never as the commitment its field had before. A column that
+-- cannot hold `redacted`, as a payslip's figures, a fold leaves null
+-- under its commitment, so its null reads as `cella.committed` gives it.
+-- A partition's rows are its own, never its parent's again. The owner's.
 CREATE FUNCTION cella.state_rows(schemas text[]) RETURNS TABLE (tab text, r text)
 LANGUAGE plpgsql STABLE SET search_path = pg_catalog, pg_temp AS $$
 DECLARE
@@ -359,9 +365,15 @@ BEGIN
   FOR t IN SELECT s.schema, s.tab FROM cella.state s WHERE s.schema = ANY (schemas)
              AND (SELECT c.relkind FROM pg_class c WHERE c.oid = to_regclass(format('%I.%I', s.schema, s.tab))) = 'r'
            ORDER BY s.schema COLLATE "C", s.tab COLLATE "C" LOOP
-    SELECT string_agg(format('%L, cella.committed(%L, x.%I::text, x.%I::text)', p.col, p.schema || '.' || p.tab || '.' || p.col, p.subject, p.col), ', ' ORDER BY p.col)
+    SELECT string_agg(
+             CASE WHEN a.atttypid IN ('text'::regtype, 'varchar'::regtype)
+               THEN format('%L, CASE WHEN x.%I IS NULL THEN NULL ELSE cella.committed(%L, x.%I::text, x.%I) END', p.col, p.col, p.schema || '.' || p.tab || '.' || p.col, p.subject, p.col)
+               ELSE format('%L, cella.committed(%L, x.%I::text, x.%I::text)', p.col, p.schema || '.' || p.tab || '.' || p.col, p.subject, p.col)
+             END, ', ' ORDER BY p.col)
       INTO personal
-      FROM cella.personal p WHERE p.schema = t.schema AND p.tab = t.tab;
+      FROM cella.personal p
+      JOIN pg_attribute a ON a.attrelid = to_regclass(format('%I.%I', p.schema, p.tab)) AND a.attname = p.col
+      WHERE p.schema = t.schema AND p.tab = t.tab;
     generated := cella.generated(t.schema, t.tab);
     RETURN QUERY EXECUTE format(
       'SELECT %L::text, y.r FROM (SELECT (to_jsonb(x)%s%s)::text AS r FROM ONLY %I.%I x) y ORDER BY y.r COLLATE "C"',

@@ -1,6 +1,6 @@
 +++
 title = "Log"
-updated = 2026-11-04
+updated = 2026-11-08
 +++
 
 A signed, hash-chained log in CBOR, with an envelope every entry extends. It becomes the notary's log: receipts, verdicts and signed batches of confluent writes, checked by their hashes and signatures and never replayed to rebuild the state, which a scope restores from its backup ([trust](../../../../_corpus/doc/trust.md#one-server)).
@@ -18,3 +18,21 @@ and the scope's key; and the scope's address, and its name and legal
 name (`named`, from `cella.scope_name` and `cella.scope_legal_name`). Its slice
 mounts the `log` collection, the one a core library owns; it has no
 writes, since only the notary appends.
+
+## Activity
+
+The shell lists the log as Activity, a feed of who did what and when
+(the `feed` layout of [the UI core](../ui/index.md#components)): each
+entry a line naming its actor, as their chip, then what they did, then
+its verdict date, newest first. What they did is said from the op, its
+verb in the past and its thing: `invoice:invoice:send` reads "sent
+invoice F-2026-004", `circle:role:seat` "seated a role in circle
+coordination"; an op whose thing is general, as a run or a period,
+names its feat with it, "approved a payslip run". The line links to the
+record the entry is about, the first of the ids `cella.records(n)`
+reads whose kind has a page in the shell, its thing's before its
+feats'; an entry about no record the shell shows links to the entry
+itself. The entry's page holds the rest: its op as the log keeps it,
+its receipt, hashes, signatures and deciding guards. An entry keeps
+nothing of what a write was about but these ids, its op and its actor,
+so the feed says no amount, title or name.

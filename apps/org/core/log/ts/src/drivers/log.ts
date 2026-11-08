@@ -2,7 +2,7 @@ import type { Db, Read } from '@cella/org-db'
 import type { Detail, Entry, Head } from '../models/log.ts'
 
 const entry = `l.n::text AS id, l.n::int AS n, l.op, l.actor, to_char(l.date, 'YYYY-MM-DD') AS date, l.guards,
-  l.receipt::int AS receipt, r.at, encode(r.device, 'hex') AS device`
+  l.receipt::int AS receipt, r.at, encode(r.device, 'hex') AS device, cella.records(l.n) AS records`
 
 // The scope every write signature names, as the database is set.
 export async function scope(db: Db): Promise<string | null> {

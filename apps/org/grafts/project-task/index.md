@@ -1,6 +1,6 @@
 +++
 title = "project-task"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Which project a task is in, and which of its milestones. A task in no
@@ -64,10 +64,11 @@ switch, or in a project the co-op does not hold, is refused
 
 ## Lanterne
 
-Twenty-seven of the thirty-three tasks are in a project, most under a
+Thirty-three of the thirty-seven tasks are in a project, most under a
 milestone: the Halles shop's launch checklist under Launch, its training
-and handover under Care and handover. The co-op's own tasks, such as
-closing October's books, are in none.
+and handover under Care and handover, and closing October's books under
+the books' move into cella. A few of the co-op's own, such as Inès's
+onboarding as a member, are in none.
 
 ## Analytics
 

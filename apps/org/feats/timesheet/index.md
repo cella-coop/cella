@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -162,11 +162,14 @@ Timesheets began on 1 September 2026. Every worker logs seven hours a
 working day, the 35-hour week of the internal rules, under a third of it
 billable, in line with what the invoices bill at the 80 € hourly rate.
 Each works for one circle, so each has one month a month, which the
-fixture names with its circle as it names their entries'.
+fixture names with its circle as it names their entries', but for the
+last week of October, when Camille gives part of hers to coordination
+and the assembly and Julien an hour a day to the assembly's accounts.
 September is submitted by everyone and approved: each lead approved their
 circle's, Julien in finance the leads and Inès, who is no member yet
 and sits in Web, and Camille as manager Julien. Inès logs hers by her
-right as every worker does. October is open.
+right as every worker does. October is open, but for Sofia's, submitted
+early for Hugo to approve.
 
 ## Analytics
 

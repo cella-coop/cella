@@ -247,6 +247,120 @@ title = "Raise the day rate for 2027"
 presenter = "Malik"
 minutes = 30
 
+# The working circles meet on their own: Operations, Julien alone, once a
+# month on the books; Brand to review its work before it goes to print;
+# Web every other Tuesday; Marketing on Thursdays, its meeting of 22
+# October cancelled for the Nuvola workshop.
+
+[[meeting]]
+id = "operations-2026-10-05"
+circle = "operations"
+title = "Operations: the books and the bills"
+at = 2026-10-05T14:00:00
+place = "Studio"
+status = "held"
+
+[[meeting.item]]
+title = "September's close"
+presenter = "Julien"
+minutes = 20
+
+[[meeting.item]]
+title = "Brand's print buyer approves Brand's print bills"
+presenter = "Julien"
+minutes = 10
+
+[[meeting]]
+id = "brand-2026-10-15"
+circle = "brand"
+title = "Brand review"
+at = 2026-10-15T15:00:00
+place = "Studio"
+status = "held"
+
+[[meeting.item]]
+title = "Maison Ferrand: the six packs before the press check"
+presenter = "Hugo"
+minutes = 30
+
+[[meeting.item]]
+title = "Terres Vives: the report's infographics"
+presenter = "Sofia"
+minutes = 20
+
+[[meeting]]
+id = "web-2026-10-20"
+circle = "web"
+title = "Web"
+at = 2026-10-20T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/web"
+status = "held"
+
+[[meeting.item]]
+title = "Halles shop: care and handover"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting.item]]
+title = "Clairval: what the accessibility audit found"
+presenter = "Léa"
+minutes = 20
+
+[[meeting.item]]
+title = "Accessibility as the floor of every site"
+presenter = "Yusuf"
+minutes = 15
+
+[[meeting]]
+id = "marketing-2026-10-22"
+circle = "marketing"
+title = "Marketing"
+at = 2026-10-22T11:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/marketing"
+status = "cancelled"
+
+[[meeting.item]]
+title = "November's social calendar"
+presenter = "Chloé"
+minutes = 20
+
+[[meeting]]
+id = "marketing-2026-10-29"
+circle = "marketing"
+title = "Marketing"
+at = 2026-10-29T11:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/marketing"
+scheduled = 2026-10-22
+status = "scheduled"
+
+[[meeting.item]]
+title = "November's social calendar"
+presenter = "Chloé"
+minutes = 20
+
+[[meeting.item]]
+title = "Nuvola: the Q4 review and the renewal"
+presenter = "Malik"
+minutes = 25
+
+[[meeting]]
+id = "web-2026-11-03"
+circle = "web"
+title = "Web"
+at = 2026-11-03T10:00:00
+place = "Studio"
+link = "https://meet.lanterne.example/web"
+scheduled = 2026-10-20
+status = "scheduled"
+
+[[meeting.item]]
+title = "Terres Vives microsite: the build"
+presenter = "Amina"
+minutes = 20
+
 # How each circle meets: the share of its seats a meeting needs present,
 # and whether its minutes are adopted by motion. The statutes have the
 # assembly approve its minutes at its next session; coordination keeps

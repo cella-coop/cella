@@ -407,3 +407,146 @@ text = "Where they leave the legal form's defaults"
 type = "embed"
 embed = "departures"
 ref = "scop-sarl-fr"
+
+# Each working circle keeps its own working texts.
+[[document]]
+id = "accessibility-checklist"
+circle = "web"
+title = "Accessibility checklist"
+
+[[document.version]]
+id = "accessibility-checklist@1"
+saved = 2026-10-19
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Accessibility checklist"
+
+[[document.version.block]]
+runs = [
+  { text = "What someone who did not build a site checks before it ships, against " },
+  { text = "WCAG 2.2", bold = true },
+  { text = " at level AA." },
+]
+
+[[document.version.block]]
+type = "embed"
+embed = "motion"
+ref = "m-2026-017"
+
+[[document.version.block]]
+type = "bullet"
+text = "Every page reads in order with a screen reader"
+
+[[document.version.block]]
+type = "bullet"
+text = "Every control works from the keyboard, its focus visible"
+
+[[document.version.block]]
+type = "bullet"
+text = "Text keeps a contrast of 4.5 to 1, large text 3 to 1"
+
+[[document.version.block]]
+type = "bullet"
+text = "Every image says what it shows, or is marked as decoration"
+
+[[document]]
+id = "print-specifications"
+circle = "brand"
+title = "Print specifications"
+
+[[document.version]]
+id = "print-specifications@1"
+saved = 2026-10-14
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Print specifications"
+
+[[document.version.block]]
+text = "What every file Brand sends to a printer holds."
+
+[[document.version.block]]
+type = "bullet"
+text = "PDF/X-4, CMYK, the printer's own profile"
+
+[[document.version.block]]
+type = "bullet"
+text = "3 mm bleed and crop marks"
+
+[[document.version.block]]
+type = "bullet"
+text = "Images at 300 dpi at their printed size"
+
+[[document.version.block]]
+type = "bullet"
+text = "A colour proof signed off before the press check"
+
+[[document]]
+id = "newsletter-style"
+circle = "marketing"
+title = "Newsletter style guide"
+
+[[document.version]]
+id = "newsletter-style@1"
+saved = 2026-09-29
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Newsletter style guide"
+
+[[document.version.block]]
+text = "How the newsletters Marketing writes for clients read."
+
+[[document.version.block]]
+type = "bullet"
+text = "One subject, said in the first line"
+
+[[document.version.block]]
+type = "bullet"
+text = "Plain English, short sentences, no jargon"
+
+[[document.version.block]]
+type = "bullet"
+text = "Every link says where it goes"
+
+[[document.version.block]]
+type = "embed"
+embed = "motion"
+ref = "m-2026-015"
+
+[[document]]
+id = "month-end-close"
+circle = "operations"
+title = "Month-end close"
+
+[[document.version]]
+id = "month-end-close@1"
+saved = 2026-10-05
+
+[[document.version.block]]
+type = "heading"
+level = 1
+text = "Month-end close"
+
+[[document.version.block]]
+text = "What finance does before a month of the books closes."
+
+[[document.version.block]]
+type = "numbered"
+text = "Reconcile the bank account line by line"
+
+[[document.version.block]]
+type = "numbered"
+text = "Post the pay run and the approved expenses"
+
+[[document.version.block]]
+type = "numbered"
+text = "Chase every invoice past its due date"
+
+[[document.version.block]]
+type = "numbered"
+text = "Close the period, once the books balance"

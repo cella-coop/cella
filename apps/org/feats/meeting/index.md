@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -202,6 +202,12 @@ the header's writes.
   guest on 21 September; the 26 October one scheduled.
 - The general assembly of 31 October 2026, scheduled, its agenda Inès's
   admission, the 2027 rate card and the minutes of 20 June.
+- The working circles' own: Operations on 5 October, Julien alone,
+  over September's close and the print buyer's mandate (m-2026-010);
+  Brand's review on 15 October and Web on 20 October, held and marked by
+  their leads, Web's tabling its accessibility motion (m-2026-017);
+  Marketing's of 22 October cancelled, its next on 29 October, and Web's
+  next on 3 November, scheduled.
 
 ## Analytics
 

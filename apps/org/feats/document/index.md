@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -448,6 +448,10 @@ a motion's page.
   m-2026-011, adds online shops and raises brand identity to 6 500 €. The
   seed carries each version over as one Loro update from one peer,
   patching the outline onto the one before.
+- Each working circle keeps a working text of its own: Web's
+  accessibility checklist, embedding m-2026-017, Brand's print
+  specifications, Marketing's newsletter style guide, embedding
+  m-2026-015, and Operations' month-end close.
 - Malik commented on version 2's retainer price, asking whether Nuvola's
   renewal in January keeps the current rate; he objects to m-2026-011,
   which would adopt version 2, by its hash, open until 9 November.

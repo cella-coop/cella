@@ -99,3 +99,15 @@ project = "nuvola-retainer"
 [[booking]]
 run = "chloe-nuvola"
 project = "nuvola-retainer"
+
+[[booking]]
+run = "camille-manage-c"
+project = "pipeline-2027"
+
+[[booking]]
+run = "camille-assembly"
+project = "statutes-2027"
+
+[[booking]]
+run = "julien-close"
+project = "books-move"

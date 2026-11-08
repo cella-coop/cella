@@ -1,0 +1,18 @@
+# The entries each expense's approval and reimbursement posted
+# (transaction.toml): the charge when it was approved, the payment when
+# it was reimbursed.
+
+[[posting]]
+expense = "ex-0005"
+event = "charge"
+entry = "je-0041"
+
+[[posting]]
+expense = "ex-0005"
+event = "payment"
+entry = "je-0042"
+
+[[posting]]
+expense = "ex-0006"
+event = "charge"
+entry = "je-0043"

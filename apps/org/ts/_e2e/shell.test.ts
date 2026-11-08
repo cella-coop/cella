@@ -352,9 +352,9 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   const made = await one<{ total: string; entry: string }>(
     `SELECT cella.cents(i.total) AS total, p.entry FROM invoice.invoice i JOIN invoice_transaction.posting p ON p.invoice = i.id WHERE i.id = 'F-2026-0056'`,
   )
-  assert.deepEqual(made, { total: '122460', entry: 'je-0041' })
+  assert.deepEqual(made, { total: '122460', entry: 'je-0044' })
   const { text } = await page('/invoices/F-2026-0056')
-  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0041'))
+  assert.ok(text.includes('Workshop on accessibility') && text.includes('je-0044'))
   assert.ok(text.includes('Download PDF'), 'the page offers the invoice as a PDF')
   const printed = await page('/invoices/F-2026-0056/content')
   assert.equal(printed.status, 200)

@@ -101,14 +101,14 @@ test('2026\'s statements reconcile with the trial balance: income less expenses,
   assert.ok(year)
   const income = (await statement(port(), 'income', year)).rubrics
   assert.equal(figure(income, 'result'), -(t.income + t.expense))
-  assert.equal(figure(income, 'result'), -80_00)
+  assert.equal(figure(income, 'result'), -265_00)
   assert.equal(figure(income, 'production-sold'), 121_200_00)
   const balance = (await statement(port(), 'balance', year)).rubrics
   assert.equal(figure(balance, 'assets-total'), figure(balance, 'liabilities-total'))
   assert.equal(figure(balance, 'assets-total'), t.asset)
-  assert.equal(figure(balance, 'assets-total'), 97_080_00)
+  assert.equal(figure(balance, 'assets-total'), 97_001_80)
   assert.equal(figure(balance, 'to-allocate'), 61_400_00, 'the 2025 result is not allocated yet')
-  assert.equal(figure(balance, 'cash'), 39_296_00)
+  assert.equal(figure(balance, 'cash'), 39_190_40)
 })
 
 test('months add up to their quarter, and quarters to their year', async () => {
@@ -127,7 +127,7 @@ test('a statement compares a span with the one before, opens a line on its accou
   assert.deepEqual(sold?.amounts, [25_800_00, 34_100_00])
   assert.deepEqual(sold?.accounts, [{ code: '706', label: 'Service revenue', href: '/accounts/706', amounts: [25_800_00, 34_100_00] }])
   assert.equal(s.rubrics.find((r) => r.id === 'goods-sold'), undefined, 'a line nothing posted to is left out')
-  assert.deepEqual(s.rubrics.find((r) => r.id === 'result')?.amounts, [22_780_00, -5_320_00])
+  assert.deepEqual(s.rubrics.find((r) => r.id === 'result')?.amounts, [22_595_00, -5_320_00])
   const b = (await draw(port(), app, 'balance', new URLSearchParams({ span: '2026-10' })))?.drawn as Statement
   const codes = b.rubrics.flatMap((r) => r.accounts ?? []).map((a) => a.code)
   assert.ok(codes.includes('1013'))
@@ -143,12 +143,15 @@ test('each project\'s margin, burn and watch, on 25 October', async () => {
   assert.equal(m.day, '2026-10-25')
   assert.deepEqual(m.threshold, { burn: 90, margin: 20 })
   assert.deepEqual(Object.fromEntries(m.projects.map((x) => [x.project, x.watch])), {
+    'books-move': 'on track',
     'clairval-site': 'on track',
     'ferrand-packaging': 'budget spent',
     'halles-shop': 'on track',
     'mauve-posters': 'on track',
     'nuvola-retainer': 'on track',
     'ondine-shop': 'archived',
+    'pipeline-2027': 'on track',
+    'statutes-2027': 'on track',
     'terres-report': 'over budget',
     'velo-identity': 'on track',
   })

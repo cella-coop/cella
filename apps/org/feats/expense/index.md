@@ -1,6 +1,6 @@
 +++
 title = "Expense"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 What the co-op's workers spend for it from their own pocket, to be paid back:
@@ -151,9 +151,12 @@ receipt; and an expense's page with its next write and its receipts.
 
 ## Lanterne
 
-Four October expenses: Sofia's print proofs, 180 €, Chloé's workshop
-coffee and Léa's font licence, submitted; Thomas's train to Clairval, a
-draft.
+Seven October expenses, every circle's own: Sofia's print proofs, 180 €,
+Chloé's workshop coffee and Léa's font licence, submitted; Thomas's
+train to Clairval, a draft; Yusuf's train to the federation's regional
+day, coordination's, approved by Camille and reimbursed; Julien's label
+printer, Operations', approved and owed him; and Chloé's taxi, refused
+by Malik. Each approval and the reimbursement posted its entry.
 
 ## Analytics
 

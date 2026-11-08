@@ -22,6 +22,32 @@ and online shops, designs brands, print and packaging, and runs marketing for
 clients who are mostly co-ops, associations and small local firms. Every
 name, number and identifier here is invented.
 
+Lanterne is rich enough to show every feature: each collection and each
+of its views holds enough rows, in enough of their states and with
+enough relations, that nothing the app can show is empty or trivial on
+it; and every circle holds data scoped to it, a distinct and believable
+slice, so the circle lens shows each circle its own. The fixture check
+asserts both, per collection and per circle: a collection the app
+mounts with too few rows, a state or a relation it never holds, or a
+circle with no rows scoped to it, fails it, naming the collection or the
+circle and what it lacks, so it stays true as features land
+(`tools/fixture/rich.mjs`). Which collections the app mounts it reads
+from the slices themselves, so one a feature adds fails it until the
+check says what of the fixture it lists. Every circle owns rows of each
+collection a circle's work fills, its projects, tasks, time, meetings,
+motions, documents and expenses, and the invoices and bills spread over
+more than one; the people, devices, contacts, files, books and pay are
+the co-op's, the assembly's. A collection whose rows are not the
+fixture's says why: the inbox is what waits on its reader, the reports
+are drawn from the books, the log holds the founding alone, an import's
+run is what importing one of the files under `import/` records, and a
+worker's statement is what approving the 2025 distribution makes. So
+does a lane left empty: no pay run is prepared or approved and not yet
+paid, since October's is the payroll scenarios' to generate. The
+`lenses` scenario reads the seeded co-op as the app does and holds it to
+the check: each board's lanes are the check's, every lane it finds held
+shows, and each circle's lens shows rows of its own and none another's.
+
 ## People and circles
 
 Every member sits in the general assembly, one member one vote, by a
@@ -80,6 +106,12 @@ assembly, and no one opens a candidacy for another.
 - **Rate card (confluent, then ordered).** The 2027 rate card has two
   versions. Malik has commented on the second and objected to m-2026-011,
   which would adopt it; the motion is open until 9 November.
+- **The working circles' motions (ordered).** Marketing passed
+  m-2026-015 on 5 October, publishing its case studies under CC BY;
+  Brand's m-2026-016, sending all of its print to one printer, closed
+  rejected on 8 October on Sofia's objection; Web's m-2026-017, making
+  accessibility the floor of every site, is open until 3 November,
+  tabled at its meeting of 20 October.
 - **Procedures.** Circles decide by consent. Each procedure is a policy
   of the assembly, adopted by the founding motion, m-2021-001, on 1
   March 2021: consent, majority, two thirds and election, and the
@@ -196,13 +228,18 @@ assembly, and no one opens a candidacy for another.
   June 2026, with the internal rules' five rules m-2026-007 adopted and
   coordination's `approve-bill` m-2026-008 granted that day.
   No one edits them; the next adoption by the assembly generates the next.
+- **Working texts (confluent).** Each working circle keeps one of its
+  own: Web's accessibility checklist, which embeds its motion on
+  accessibility, Brand's print specifications, Marketing's newsletter
+  style guide and Operations' month-end close.
 - **Invoices (bounded).** Fifteen invoices in the series F-2026, 0041 to
-  0055; the next is 0056. Clients owe 57 180 €. Compagnie Mauve Horizon's
+  0055; the next is 0056, each the circle's whose project it bills, Web's,
+  Brand's or Marketing's. Clients owe 57 180 €. Compagnie Mauve Horizon's
   posters (0044) are three months overdue, Vélo Solidaire has paid half of
   0051, and 0050 was voided and reissued at the solidarity rate.
 - **Books.** Carried over from the previous tool on 1 July; July to September
-  are closed, October to December are open. The bank holds 39 296 € after
-  October's rent and tools. Each member's capital, their shares at 50 €,
+  are closed, October to December are open. The bank holds 39 190,40 € after
+  October's rent, tools and Yusuf's reimbursed train. Each member's capital, their shares at 50 €,
   is in an account of their own; each may draw up to 500 € on it. The
   assembly approved the 2025 split of 61 400 € in June (m-2026-006), as
   Act No. 78-763, article 33 allows: 27 630 € to the members for their work,
@@ -226,8 +263,11 @@ assembly, and no one opens a candidacy for another.
   rules' 1.6. July to September's pay runs were carried over, one entry
   each. Inès was paid apart from them by the previous tool; from October
   her 2 200 € is a run's, and October's waits for every worker's October
-  to be approved, hers with the members'. Four October expenses are
-  claimed, three submitted. Two suppliers' bills are recorded and wait
+  to be approved, hers with the members'. Seven October expenses are
+  claimed, one for each circle and two for Marketing: three submitted and
+  waiting, Thomas's train a draft, Yusuf's train to the federation's
+  regional day approved by Camille and reimbursed, Julien's label printer
+  approved and owed him, and Chloé's taxi refused by Malik. Two suppliers' bills are recorded and wait
   for Camille's approval: Imprimerie du Parc's paper, 1 440 €, Brand's
   and over Sofia's 1 200 €, and Atelier Lumen's October rent, 1 080 €,
   the assembly's and outside Brand's.
@@ -251,15 +291,21 @@ assembly, and no one opens a candidacy for another.
   record a bill, approves Imprimerie du Parc's 1 440 € over her limit
   and Atelier Lumen's rent outside her scope, and each is refused
   saying so.
-- **Work (confluent, bounded and ordered).** Eight projects, one per
+- **Work (confluent, bounded and ordered).** Eleven projects: eight, one per
   commission, each invoice naming its own: the Halles shop launched on 8 October and is in care until
   November, Ferrand's packaging waits on its press check, Terres Vives's
-  microsite is under way, Ondine's shop is archived. Thirty-three tasks on
-  the board, each with a member of the circle that runs its project.
+  microsite is under way, Ondine's shop is archived; and three of the
+  circles' own, for no client: the assembly's revision of the statutes
+  for 2027, coordination's pipeline and staffing for 2027, and the move
+  of the books into cella, Operations'. Thirty-seven tasks on the board,
+  each its circle's, its project's where it is filed in one, mostly with
+  a member of that circle.
   Timesheets began on 1 September: seven hours a working day for everyone,
   under a third billable at 80 € an hour; an hour costs the co-op
   23,64 €. Four members hold shares of project budgets. September is
-  approved; October is open. The report feat watches a project past a 90 %
+  approved; October is open, but Sofia submitted hers early. In its last
+  week Camille gives part of her time to coordination and the assembly,
+  and Julien an hour a day to the assembly's accounts. The report feat watches a project past a 90 %
   burn or under a 20 % margin: Ferrand's packaging and Terres Vives's report
   are.
 - **Meetings (confluent, then ordered).** The annual assembly met on 20
@@ -271,7 +317,11 @@ assembly, and no one opens a candidacy for another.
   October. Camille scheduled the assembly of 31 October, its agenda the
   June minutes, Inès's admission and the rate card. Leads and the
   manager schedule meetings; secretaries and leads hold them and record
-  who came; every member marks themselves.
+  who came; every member marks themselves. The working circles meet on
+  their own: Operations on 5 October, Brand on 15 October and Web on 20
+  October, each marked by its lead; Marketing's of 22 October was
+  cancelled for the Nuvola workshop. Marketing meets next on 29 October,
+  Web on 3 November.
 - **Files (confluent).** The statutes as adopted in 2024 are the co-op's
   own; Camille's subscription form is on her file, Inès's contract on
   hers, filed by Camille as manager, and Sofia's and Chloé's receipts on

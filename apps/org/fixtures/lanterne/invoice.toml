@@ -1,12 +1,14 @@
 # Invoices in the series F-2026, amounts in cents. An invoice carries the name
 # and address it bills, as issued; the link to the contact record is the
-# contact-invoice graft's.
+# contact-invoice graft's. Each names the circle that did the work it bills, its
+# project's, and its lines and payments are that circle's too.
 
 series = "F-2026"
 next = 56
 
 [[invoice]]
 id = "F-2026-0041"
+circle = "web"
 issued = 2026-07-03
 due = 2026-08-02
 bill_to = "Les Halles Paysannes"
@@ -22,6 +24,7 @@ amount = 1440000
 
 [[invoice]]
 id = "F-2026-0042"
+circle = "marketing"
 issued = 2026-07-06
 due = 2026-08-05
 bill_to = "Nuvola Énergie"
@@ -37,6 +40,7 @@ amount = 576000
 
 [[invoice]]
 id = "F-2026-0043"
+circle = "web"
 issued = 2026-07-15
 due = 2026-08-14
 bill_to = "Ville de Clairval"
@@ -52,6 +56,7 @@ amount = 1440000
 
 [[invoice]]
 id = "F-2026-0044"
+circle = "brand"
 issued = 2026-07-21
 due = 2026-08-20
 bill_to = "Compagnie Mauve Horizon"
@@ -63,6 +68,7 @@ total = 744000
 
 [[invoice]]
 id = "F-2026-0045"
+circle = "web"
 issued = 2026-07-28
 due = 2026-08-27
 bill_to = "Atelier Ondine"
@@ -78,6 +84,7 @@ amount = 1140000
 
 [[invoice]]
 id = "F-2026-0046"
+circle = "marketing"
 issued = 2026-08-03
 due = 2026-09-02
 bill_to = "Nuvola Énergie"
@@ -93,6 +100,7 @@ amount = 576000
 
 [[invoice]]
 id = "F-2026-0047"
+circle = "web"
 issued = 2026-08-27
 due = 2026-09-26
 bill_to = "Les Halles Paysannes"
@@ -108,6 +116,7 @@ amount = 1440000
 
 [[invoice]]
 id = "F-2026-0048"
+circle = "marketing"
 issued = 2026-09-01
 due = 2026-10-01
 bill_to = "Nuvola Énergie"
@@ -123,6 +132,7 @@ amount = 576000
 
 [[invoice]]
 id = "F-2026-0049"
+circle = "web"
 issued = 2026-09-04
 due = 2026-10-04
 bill_to = "Ville de Clairval"
@@ -138,6 +148,7 @@ amount = 1440000
 
 [[invoice]]
 id = "F-2026-0050"
+circle = "brand"
 issued = 2026-09-11
 due = 2026-10-11
 bill_to = "Vélo Solidaire"
@@ -151,6 +162,7 @@ reason = "wrong amount; reissued as F-2026-0051 at the solidarity rate"
 
 [[invoice]]
 id = "F-2026-0051"
+circle = "brand"
 issued = 2026-09-12
 due = 2026-10-12
 bill_to = "Vélo Solidaire"
@@ -166,6 +178,7 @@ amount = 198000
 
 [[invoice]]
 id = "F-2026-0052"
+circle = "brand"
 issued = 2026-09-25
 due = 2026-10-25
 bill_to = "Maison Ferrand"
@@ -177,6 +190,7 @@ total = 1680000
 
 [[invoice]]
 id = "F-2026-0053"
+circle = "marketing"
 issued = 2026-10-01
 due = 2026-10-31
 bill_to = "Nuvola Énergie"
@@ -188,6 +202,7 @@ total = 576000
 
 [[invoice]]
 id = "F-2026-0054"
+circle = "web"
 issued = 2026-10-08
 due = 2026-11-07
 bill_to = "Les Halles Paysannes"
@@ -199,6 +214,7 @@ total = 1440000
 
 [[invoice]]
 id = "F-2026-0055"
+circle = "brand"
 issued = 2026-10-16
 due = 2026-11-15
 bill_to = "Fondation Terres Vives"

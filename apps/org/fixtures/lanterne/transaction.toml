@@ -695,3 +695,54 @@ debit = 1440000
 [[entry.line]]
 account = "411"
 credit = 1440000
+
+# What the expenses approved and reimbursed in October posted
+# (graft.expense-transaction.toml): an approval charges the expense's
+# category and its deductible VAT, owed to the member (421); a
+# reimbursement pays them from the bank.
+[[entry]]
+id = "je-0041"
+date = 2026-10-08
+label = "Expense ex-0005"
+
+[[entry.line]]
+account = "6251"
+debit = 9600
+
+[[entry.line]]
+account = "44566"
+debit = 960
+
+[[entry.line]]
+account = "421"
+credit = 10560
+
+[[entry]]
+id = "je-0042"
+date = 2026-10-15
+label = "Reimbursement of ex-0005"
+
+[[entry.line]]
+account = "421"
+debit = 10560
+
+[[entry.line]]
+account = "512"
+credit = 10560
+
+[[entry]]
+id = "je-0043"
+date = 2026-10-16
+label = "Expense ex-0006"
+
+[[entry.line]]
+account = "606"
+debit = 8900
+
+[[entry.line]]
+account = "44566"
+debit = 1780
+
+[[entry.line]]
+account = "421"
+credit = 10680

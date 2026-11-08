@@ -1,7 +1,7 @@
 ---
 // The contact form (index.md, the forms): a name and an email side by
-// side, a note, a box for the newsletter and one for the pilot, and the
-// button, a single cell in the section's ink. The fields are plain
+// side, a note, a box for the newsletter and one for the pilot, and to
+// their right the button, a single cell in the section's ink. The fields are plain
 // rounded fills of the text's ink over the paper, as the sign-up's
 // field. It posts to `PUBLIC_CONTACT_URL`.
 import type { Status } from '../schemas'
@@ -47,16 +47,16 @@ const d = (k: string) => drafted(`contact.${k}`)
     <span class="label" data-drafted={d('note')}>{text.note}</span>
     <textarea name="note" rows="6" placeholder={text.notePlaceholder}></textarea>
   </label>
-  <div class="ticks">
-    <Check name="list" label={text.list} ink={ink} checked drafted={d('list')} />
-    <Check name="pilot" label={text.pilot} ink={ink} drafted={d('pilot')} />
-  </div>
-  <div class="send">
+  <div class="foot">
+    <div class="ticks">
+      <Check name="list" label={text.list} ink={ink} checked drafted={d('list')} />
+      <Check name="pilot" label={text.pilot} ink={ink} drafted={d('pilot')} />
+    </div>
     <Actions ink={ink} seed={17}>
       <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
     </Actions>
-    <p class="said" role="status" aria-live="polite" hidden></p>
   </div>
+  <p class="said" role="status" aria-live="polite" hidden></p>
   <template data-done>{text.done}</template>
   <template data-failed>{text.failed}</template>
 </form>
@@ -134,10 +134,12 @@ const d = (k: string) => drafted(`contact.${k}`)
     gap: 0.7rem;
   }
 
-  .send {
+  /* the boxes, and the button to their right */
+  .foot {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem 1.5rem;
   }
 

@@ -1,0 +1,161 @@
+---
+// The contact form (index.md, the forms): a name and an email side by
+// side, a note, a box for the newsletter and one for the pilot, and the
+// button, a single cell in the section's ink. The fields are plain
+// rounded fills of the text's ink over the paper, as the sign-up's
+// field. It posts to `PUBLIC_CONTACT_URL`.
+import type { Status } from '../schemas'
+import type { Marks } from '../lib/text'
+import Actions from './Actions.astro'
+import Check from './Check.astro'
+
+interface Props {
+  text: {
+    name: string
+    namePlaceholder: string
+    email: string
+    emailPlaceholder: string
+    note: string
+    notePlaceholder: string
+    list: string
+    pilot: string
+    submit: string
+    done: string
+    failed: string
+  }
+  ink: Status
+  drafted: Marks
+}
+
+const { text, ink, drafted } = Astro.props
+const endpoint = import.meta.env.PUBLIC_CONTACT_URL ?? ''
+const d = (k: string) => drafted(`contact.${k}`)
+---
+
+<form class="contact" action={endpoint || undefined} method="post" data-form data-endpoint={endpoint}>
+  <div class="pair">
+    <label class="field">
+      <span class="label" data-drafted={d('name')}>{text.name}</span>
+      <input type="text" name="name" autocomplete="name" placeholder={text.namePlaceholder} />
+    </label>
+    <label class="field">
+      <span class="label" data-drafted={d('email')}>{text.email}</span>
+      <input type="email" name="email" required autocomplete="email" placeholder={text.emailPlaceholder} />
+    </label>
+  </div>
+  <label class="field">
+    <span class="label" data-drafted={d('note')}>{text.note}</span>
+    <textarea name="note" rows="6" placeholder={text.notePlaceholder}></textarea>
+  </label>
+  <div class="ticks">
+    <Check name="list" label={text.list} ink={ink} checked drafted={d('list')} />
+    <Check name="pilot" label={text.pilot} ink={ink} drafted={d('pilot')} />
+  </div>
+  <div class="send">
+    <Actions ink={ink} seed={17}>
+      <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
+    </Actions>
+    <p class="said" role="status" aria-live="polite" hidden></p>
+  </div>
+  <template data-done>{text.done}</template>
+  <template data-failed>{text.failed}</template>
+</form>
+
+<script>
+  import { wire } from '../lib/send'
+
+  wire('.contact[data-form]')
+</script>
+
+<style>
+  .contact {
+    display: grid;
+    gap: 1.3rem;
+    max-width: 40rem;
+    margin-top: 0.5rem;
+  }
+
+  .pair {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .field {
+    display: grid;
+    gap: 0.45rem;
+    min-width: 0;
+  }
+
+  .label {
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    padding: 0.9rem 1.1rem;
+    border: 0;
+    border-radius: 0.9rem;
+    background: color-mix(in oklch, var(--text) 9%, var(--panel));
+    color: var(--text);
+    font: inherit;
+    font-size: 0.95rem;
+    transition: background 0.15s var(--ease);
+  }
+
+  textarea {
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  input:hover,
+  textarea:hover {
+    background: color-mix(in oklch, var(--text) 13%, var(--panel));
+  }
+
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 0;
+  }
+
+  ::placeholder {
+    color: var(--text);
+    opacity: 0.4;
+  }
+
+  .ticks {
+    display: grid;
+    gap: 0.7rem;
+  }
+
+  .send {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem 1.5rem;
+  }
+
+  [data-busy] button {
+    opacity: 0.6;
+    cursor: progress;
+  }
+
+  .said {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 30rem) {
+    .pair {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+</style>

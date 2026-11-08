@@ -1,0 +1,96 @@
+---
+// A tick box: a rounded square outlined in ink, filled with the ink of
+// the form's button and ticked in the paper once checked; the native
+// box under it, unseen, takes the keyboard and the form.
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import type { Status } from '../schemas'
+
+interface Props {
+  name: string
+  label: string
+  ink: Status
+  checked?: boolean
+  drafted?: true
+}
+
+const { name, label, ink, checked = false, drafted } = Astro.props
+// the tick: Phosphor's bold check, its path alone
+const tick = readFileSync(createRequire(import.meta.url).resolve('@phosphor-icons/core/assets/bold/check-bold.svg'), 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
+const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
+---
+
+<label class="check" data-drafted={drafted} style={{ '--ink': `var(--p${P[ink]})` }}>
+  <input type="checkbox" name={name} checked={checked} />
+  <svg class="box" viewBox="0 0 100 100" aria-hidden="true">
+    <rect class="shape" x="6" y="6" width="88" height="88" rx="24" />
+    <g class="tick" transform="translate(24 24) scale(0.203)" set:html={tick} />
+  </svg>
+  <span>{label}</span>
+</label>
+
+<style>
+  .check {
+    --check-fill: oklch(from var(--ink) calc(0.58 - var(--theme) * 0.04) c h);
+    --check-tick: oklch(0.985 0.004 250);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+  }
+
+  .box {
+    flex: none;
+    width: 1.35rem;
+    height: 1.35rem;
+    overflow: visible;
+  }
+
+  .shape {
+    fill: transparent;
+    stroke: color-mix(in oklch, var(--text) 55%, transparent);
+    stroke-width: 6;
+    transition: fill 0.15s var(--ease), stroke 0.15s var(--ease);
+  }
+
+  .tick {
+    fill: var(--check-tick);
+    opacity: 0;
+    transition: opacity 0.15s var(--ease);
+  }
+
+  .check:hover .shape {
+    stroke: var(--text);
+  }
+
+  input:checked + .box .shape {
+    fill: var(--check-fill);
+    stroke: var(--check-fill);
+  }
+
+  input:checked + .box .tick {
+    opacity: 1;
+  }
+
+  input:focus-visible + .box {
+    outline: 2px solid var(--text);
+    outline-offset: 3px;
+    border-radius: 40%;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .shape,
+    .tick {
+      transition: none;
+    }
+  }
+</style>

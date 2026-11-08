@@ -28,14 +28,28 @@ export const site = z.object({
     disclaimer: z.string(),
   }),
   blog: z.object({ empty: z.string(), back: z.string() }),
-  // The sign-up for news: its heading and what a subscriber gets, the
-  // field's label read aloud and its placeholder, the box a co-op that
-  // might pilot ticks, the button, and what it says once sent or failed.
+  // The compact sign-up for news: the field's label read aloud and its
+  // placeholder, the box a co-op that might pilot ticks, the button, and
+  // what it says once sent or failed.
   signup: z.object({
-    heading: z.string(),
-    note: z.string(),
     label: z.string(),
     placeholder: z.string(),
+    pilot: z.string(),
+    submit: z.string(),
+    done: z.string(),
+    failed: z.string(),
+  }),
+  // The contact form: its fields' labels and placeholders, the boxes for
+  // the newsletter and the pilot, the button, and what it says once sent
+  // or failed.
+  contact: z.object({
+    name: z.string(),
+    namePlaceholder: z.string(),
+    email: z.string(),
+    emailPlaceholder: z.string(),
+    note: z.string(),
+    notePlaceholder: z.string(),
+    list: z.string(),
     pilot: z.string(),
     submit: z.string(),
     done: z.string(),
@@ -86,6 +100,8 @@ export const section = z
     items: z.array(item).default([]),
     figure: figure.optional(),
     diagram: z.string().optional(),
+    // a form under its words: the compact sign-up or the contact form
+    form: z.enum(['signup', 'contact']).optional(),
   })
   .superRefine((s, ctx) => {
     if (BANDS.includes(s.kind) && !s.diagram) {

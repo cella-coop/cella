@@ -1,22 +1,15 @@
 ---
-// The sign-up for news (index.md, the sign-up): a heading and what a
-// subscriber gets, the email field and the button as one row of cells,
-// and a box a co-op that might pilot ticks. It posts to the list's
-// endpoint, `PUBLIC_SIGNUP_URL`, in the page, so it stays put and says
-// what came of it; with no endpoint set, as in the dev server, it only
-// shows what it would say once sent.
-import { readFileSync } from 'node:fs'
-import { createRequire } from 'node:module'
+// The compact sign-up for news (index.md, the forms): the email field and
+// the button as one row of cells, the field plain ink and the button the
+// section's, and a box a co-op that might pilot ticks, in line with the
+// field's words. It posts to `PUBLIC_SIGNUP_URL`, the list's endpoint.
 import type { Status } from '../schemas'
 import type { Marks } from '../lib/text'
 import Actions from './Actions.astro'
-
-// the tick: Phosphor's bold check, its path alone, drawn in the paper
-const tick = readFileSync(createRequire(import.meta.url).resolve('@phosphor-icons/core/assets/bold/check-bold.svg'), 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
-const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
+import Check from './Check.astro'
 
 interface Props {
-  text: { heading: string; note: string; label: string; placeholder: string; pilot: string; submit: string; done: string; failed: string }
+  text: { label: string; placeholder: string; pilot: string; submit: string; done: string; failed: string }
   ink: Status
   drafted: Marks
 }
@@ -26,94 +19,32 @@ const endpoint = import.meta.env.PUBLIC_SIGNUP_URL ?? ''
 const d = (k: string) => drafted(`signup.${k}`)
 ---
 
-<form class="signup" action={endpoint || undefined} method="post" data-signup data-endpoint={endpoint}>
-  <div class="words">
-    <p class="heading" data-drafted={d('heading')}>{text.heading}</p>
-    <p class="note" data-drafted={d('note')}>{text.note}</p>
-  </div>
-  <div class="fields">
-    <Actions ink={ink} seed={11}>
-      <input class="cell field" data-tone="plain" type="email" name="email" required autocomplete="email" aria-label={text.label} placeholder={text.placeholder} data-drafted={d('label')} />
-      <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
-    </Actions>
-    <label class="pilot" data-drafted={d('pilot')} style={{ '--ink': `var(--p${P[ink]})` }}>
-      <input type="checkbox" name="pilot" />
-      <svg class="box" viewBox="0 0 100 100" aria-hidden="true">
-        <rect class="shape" x="6" y="6" width="88" height="88" rx="24" />
-        <g class="tick" transform="translate(24 24) scale(0.203)" set:html={tick} />
-      </svg>
-      <span>{text.pilot}</span>
-    </label>
-    <p class="said" role="status" aria-live="polite" hidden></p>
-    <template data-done>{text.done}</template>
-    <template data-failed>{text.failed}</template>
-  </div>
+<form class="signup" action={endpoint || undefined} method="post" data-form data-endpoint={endpoint}>
+  <Actions ink={ink} seed={11}>
+    <input class="cell field" data-tone="plain" type="email" name="email" required autocomplete="email" aria-label={text.label} placeholder={text.placeholder} data-drafted={d('label')} />
+    <button class="cell" data-tone="fill" type="submit" data-drafted={d('submit')}>{text.submit}</button>
+  </Actions>
+  <div class="ticks"><Check name="pilot" label={text.pilot} ink={ink} drafted={d('pilot')} /></div>
+  <p class="said" role="status" aria-live="polite" hidden></p>
+  <template data-done>{text.done}</template>
+  <template data-failed>{text.failed}</template>
 </form>
 
 <script>
-  for (const form of document.querySelectorAll<HTMLFormElement>('[data-signup]')) {
-    const said = form.querySelector<HTMLElement>('.said')!
-    const say = (which: 'done' | 'failed') => {
-      said.textContent = form.querySelector<HTMLTemplateElement>(`template[data-${which}]`)!.content.textContent
-      said.dataset.state = which
-      said.hidden = false
-    }
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault()
-      const endpoint = form.dataset.endpoint
-      form.dataset.busy = ''
-      try {
-        if (endpoint) {
-          const res = await fetch(endpoint, { method: 'POST', body: new FormData(form) })
-          if (!res.ok) {
-            throw new Error(String(res.status))
-          }
-        }
-        form.reset()
-        say('done')
-      } catch {
-        say('failed')
-      } finally {
-        delete form.dataset.busy
-      }
-    })
-  }
+  import { wire } from '../lib/send'
+
+  wire('.signup[data-form]')
 </script>
 
 <style>
   .signup {
-    display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 1.5rem clamp(2rem, 5vw, 5rem);
-    align-items: start;
-  }
-
-  .words {
-    display: grid;
-    gap: 0.6rem;
-  }
-
-  .heading {
-    color: var(--text);
-    font-family: var(--font-display);
-    font-size: clamp(1.5rem, 2.4vw, 2rem);
-    font-weight: 700;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
-  }
-
-  .note {
-    max-width: 30rem;
-  }
-
-  .fields {
     display: grid;
     gap: 0.9rem;
     justify-items: start;
     min-width: 0;
   }
 
-  .fields :global(.actions) {
+  .signup :global(.actions) {
     width: min(100%, 30rem);
   }
 
@@ -125,7 +56,7 @@ const d = (k: string) => drafted(`signup.${k}`)
 
   .field::placeholder {
     color: var(--text);
-    opacity: 0.4;
+    opacity: 0.45;
   }
 
   [data-busy] button {
@@ -133,76 +64,9 @@ const d = (k: string) => drafted(`signup.${k}`)
     cursor: progress;
   }
 
-  /* the check: a rounded square outlined in ink, filled with the button's
-     ink and ticked in the paper once checked; it stands in from the row's
-     bulge, in line with the field's words */
-  .pilot {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.65rem;
+  /* the box stands in from the row's bulge, in line with the field's words */
+  .ticks {
     padding-left: 1.7rem;
-    cursor: pointer;
-    font-size: 0.9rem;
-  }
-
-  .pilot input {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-  }
-
-  .box {
-    flex: none;
-    width: 1.35rem;
-    height: 1.35rem;
-    overflow: visible;
-  }
-
-  .shape {
-    fill: transparent;
-    stroke: color-mix(in oklch, var(--text) 55%, transparent);
-    stroke-width: 6;
-    transition: fill 0.15s var(--ease), stroke 0.15s var(--ease);
-  }
-
-  .tick {
-    fill: oklch(0.985 0.004 250);
-    opacity: 0;
-    transition: opacity 0.15s var(--ease);
-  }
-
-  .pilot:hover .shape {
-    stroke: var(--text);
-  }
-
-  input:checked + .box .shape {
-    fill: oklch(from var(--ink) calc(0.58 - var(--theme) * 0.04) c h);
-    stroke: oklch(from var(--ink) calc(0.58 - var(--theme) * 0.04) c h);
-  }
-
-  input:checked + .box .tick {
-    opacity: 1;
-  }
-
-  input:focus-visible + .box {
-    outline: 2px solid var(--text);
-    outline-offset: 3px;
-    border-radius: 40%;
-  }
-
-  @media (max-width: 30rem) {
-    .pilot {
-      padding-left: 1.2rem;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .shape,
-    .tick {
-      transition: none;
-    }
   }
 
   .said {
@@ -212,13 +76,9 @@ const d = (k: string) => drafted(`signup.${k}`)
     font-weight: 600;
   }
 
-  .said[data-state='failed'] {
-    color: var(--error-text);
-  }
-
-  @media (max-width: 56rem) {
-    .signup {
-      grid-template-columns: minmax(0, 1fr);
+  @media (max-width: 30rem) {
+    .ticks {
+      padding-left: 1.2rem;
     }
   }
 </style>

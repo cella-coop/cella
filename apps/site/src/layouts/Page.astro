@@ -21,6 +21,7 @@ const site = await siteData()
 const page = hero.title ?? hero.heading
 const full = page === site.title ? page : site.titled.replace('{page}', page).replace('{site}', site.title)
 const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
+const forms = { signup: site.signup, contact: site.contact, drafted: site.drafted }
 
 const TURN: Status[] = ['error', 'info', 'warning', 'success', 'help']
 // a section's seed, the same on every build: its page's and its own name
@@ -41,9 +42,9 @@ const laid = sections.map((s) => {
 <Base title={full} description={hero.description ?? site.description}>
   <Header title={site.title} nav={site.nav} toggle={site.theme.toggle} menu={site.menu} />
   <main>
-    <Section section={hero} ink={TURN[0]} seed={seedOf('hero')} credit={credit} />
+    <Section section={hero} ink={TURN[0]} seed={seedOf('hero')} credit={credit} forms={forms} />
     <slot />
-    {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} />)}
+    {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} forms={forms} />)}
   </main>
-  <Footer footer={site.footer} signup={site.signup} drafted={site.drafted} />
+  <Footer footer={site.footer} drafted={site.drafted} />
 </Base>

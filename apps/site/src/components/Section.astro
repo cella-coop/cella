@@ -8,11 +8,13 @@
 import { cell, roundedPath, type Point } from '@cella/brand'
 import type { DiagramName } from '@cella/diagrams'
 import type { Status } from '../schemas'
-import type { Rendered } from '../lib/text'
+import type { Marks, Rendered } from '../lib/text'
 import Actions from './Actions.astro'
+import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
+import Signup from './Signup.astro'
 
 interface Props {
   section: Rendered
@@ -21,9 +23,15 @@ interface Props {
   flip?: boolean
   num?: number
   credit: { template: string; unsplash: string }
+  // the forms' words, the site's, for a section that names one
+  forms: {
+    signup: Parameters<typeof Signup>[0]['text']
+    contact: Parameters<typeof ContactForm>[0]['text']
+    drafted: Marks
+  }
 }
 
-const { section: s, ink, seed, flip = false, num, credit } = Astro.props
+const { section: s, ink, seed, flip = false, num, credit, forms } = Astro.props
 const d = s.drafted
 const { Content } = s
 const hero = s.kind === 'hero'
@@ -105,6 +113,8 @@ const actions = [
             )
           }
           {actions.length > 0 && <div class="row"><Actions links={actions} ink={ink} seed={seed} drafted={d} /></div>}
+          {s.form === 'signup' && <div class="form"><Signup text={forms.signup} ink={ink} drafted={forms.drafted} /></div>}
+          {s.form === 'contact' && <div class="form"><ContactForm text={forms.contact} ink={ink} drafted={forms.drafted} /></div>}
         </div>
         {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
         {s.figure && <Engraving figure={s.figure} ink={s.figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={d} />}
@@ -296,12 +306,26 @@ const actions = [
     max-width: 30rem;
   }
 
-  /* on the coral, the cells are the band's own light ink and a veil of it */
-  [data-band] .row :global(.actions) {
+  /* on a band, the cells are the band's own light ink, a veil of it, and
+     a field an opaque tint of it; a tick fills with that ink */
+  [data-band] :global(.actions) {
     --fill: var(--band-ink);
     --on-fill: var(--band);
+    --fill-on: color-mix(in oklch, var(--band-ink) 88%, var(--band));
     --wash: color-mix(in oklch, var(--band-ink) 22%, transparent);
     --on-wash: var(--band-ink);
+    --plain: color-mix(in oklch, var(--band-ink) 18%, var(--band));
+    --plain-on: color-mix(in oklch, var(--band-ink) 26%, var(--band));
+    --on-plain: var(--band-ink);
+  }
+
+  [data-band] :global(.check) {
+    --check-fill: var(--band-ink);
+    --check-tick: var(--band);
+  }
+
+  .form {
+    margin-top: 0.4rem;
   }
 
   blockquote {

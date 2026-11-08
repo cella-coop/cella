@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 # Lanterne
@@ -264,6 +264,75 @@ assembly, and no one opens a candidacy for another.
   hers, filed by Camille as manager, and Sofia's and Chloé's receipts on
   their October expenses. Julien, as finance, opens the receipts and
   Camille, as manager, the contract.
+
+## The authority walk
+
+The authority model, walked in the running app from one scenario,
+`authority-walk` (`apps/org/ts/_e2e/authority-walk.test.ts`). Seed it
+and serve it:
+
+```sh
+cella db reset
+cella seed lanterne --scenario authority-walk
+cella serve
+```
+
+then sign in on `http://localhost:5173/sign-in` as the person each step
+names. The story starts from the bills' chain above, on 24 October,
+and leaves the clock on 31 October with four motions open, each past
+its deadline with every vote in, for the operator to close:
+coordination's m-2026-013 and the assembly's m-2026-014 from the
+fixture, and two the story proposes from Brand's page, the print
+buyer's grant and change below.
+
+1. **A mandate's chain.** As Sofia, open Brand's page, then the print
+   buyer's Approve bill mandate it lists: its Chain reads from the
+   assembly's root, coordination's 3 000 €, down through Operations'
+   2 000 € to hers, 1 200 € on Brand's bills, each link saying how it
+   narrows the one above; each link opens its own page, the root's
+   listing what was issued under it.
+2. **A person's powers.** As Sofia, her own page's Powers tab: every
+   power she holds and by what, Approve bill by her tenure of the print
+   buyer, up to 1 200 € over Brand's, each mandate's line opening its
+   page; and her rights as a member, an employee and a person.
+3. **Each refusal.** Still as Sofia, three writes her mandates do not
+   cover, each refused with the mandate missing or exceeded and what
+   would fix it: Approve on Imprimerie du Parc's bill, 1 440 €, over
+   her 1 200 €, naming her mandate and the motion of Operations that
+   would raise its limit; Approve on Atelier Lumen's rent, the
+   assembly's, outside her scope, naming what her mandate covers and
+   the role that would cover it; and a bill recorded, which she holds
+   by no mandate, naming finance, which holds record-bill.
+4. **Granting, changing and revoking, by motion.** As Camille, open
+   Brand's page: Propose… grants a mandate to one of its roles or to
+   the circle, or changes or revokes one of its mandates, saying the
+   sentence the policy will read and refusing before anything is
+   proposed what no issuer may issue. The story put two from there:
+   granting the print buyer `record-bill` over Brand's bills, put to
+   the assembly, since no circle holds a mandate to issue it under,
+   and raising her `approve-bill` to 1 500 €, put to Operations, which
+   issued it, by Julien, its one seat. Each motion's page says which
+   mandate its grant would be issued under or which its end would
+   revoke; m-2026-014's lists coordination's and every one under it.
+   Close them from their pages, each as a member seated where it is
+   put, Camille but for the change, which is Julien's, in this order:
+   the grant, the change, m-2026-013, which grants
+   finance `approve-bill` up to 1 500 € under coordination's, then
+   m-2026-014. Sofia then holds record-bill and approve-bill to
+   1 500 €, until m-2026-014's close ends coordination's and revokes
+   Operations', the print buyer's as the change made it, and
+   finance's with it, the same day; its page lists each under the one
+   it ends, the print buyer's 1 200 € the change replaced among them,
+   and Sofia's Approve on the paper bill is refused, naming her
+   mandate, the day it was revoked and the motion of Operations that
+   would grant it anew.
+
+The scenario's test plays the story, then the steps the seed skips
+(`unseeded`): it walks each step in every browser, light and dark, as
+the person it names, taking a screenshot at each, into `SHOTS`
+(`/tmp/cella-authority-walk-shots` unset), and closes the four motions
+in the order above between its two walks, the first before any close
+and the second after them all.
 
 ## Files
 

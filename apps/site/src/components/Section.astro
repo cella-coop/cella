@@ -4,7 +4,7 @@
 // side `flip` gives, the figure bleeding off the screen's outer edge; a
 // quote is a band of sage, a call to action one of coral that runs into
 // the footer. Its number, `num`, counts the page's plain sections.
-import { cell } from '@cella/brand'
+import { cell, roundedPath, type Point } from '@cella/brand'
 import type { Status } from '../schemas'
 import type { Rendered } from '../lib/text'
 import Engraving from './Engraving.astro'
@@ -24,9 +24,26 @@ const d = s.drafted
 const { Content } = s
 const hero = s.kind === 'hero'
 const band = s.kind === 'quote' ? 'quote' : s.kind === 'cta' ? 'cta' : undefined
+// A band's outline, as a cell's: a few long edges meeting at wide,
+// rounded corners, in the band's own box, so it stretches with it. The
+// corners at the screen's sides stand past it, so only the turns inside
+// show rounded; the coral's foot is straight, running into the footer
+const EDGES: Record<string, Point[]> = {
+  quote: [[-0.1, 0.155], [0.34, 0], [1.1, 0.08], [1.1, 0.89], [0.71, 1], [-0.1, 0.94]],
+  cta: [[-0.1, 0.07], [0.58, 0], [1.1, 0.125], [1.1, 1.1], [-0.1, 1.1]],
+}
+const outline = band && roundedPath(EDGES[band], 0.07, (v) => v.toFixed(4))
+const clip = band && `band-${s.id}`
 ---
 
-<section id={hero ? undefined : s.id} class:list={['section', { hero }]} data-band={band}>
+<section id={hero ? undefined : s.id} class:list={['section', { hero }]} data-band={band} style={clip ? { 'clip-path': `url(#${clip})` } : undefined}>
+  {
+    outline && (
+      <svg class="edge" width="0" height="0" aria-hidden="true">
+        <clipPath id={clip} clipPathUnits="objectBoundingBox"><path d={outline} /></clipPath>
+      </svg>
+    )
+  }
   {
     s.kind === 'quote' ? (
       <div class="wrap">
@@ -242,7 +259,10 @@ const band = s.kind === 'quote' ? 'quote' : s.kind === 'cta' ? 'cta' : undefined
   [data-band='quote'] {
     background: var(--band-a);
     color: var(--band-a-ink);
-    clip-path: polygon(0 14%, 34% 0, 100% 9%, 100% 88%, 71% 100%, 0 93%);
+  }
+
+  .edge {
+    position: absolute;
   }
 
   [data-band='cta'] {
@@ -250,7 +270,6 @@ const band = s.kind === 'quote' ? 'quote' : s.kind === 'cta' ? 'cta' : undefined
     --text-muted: color-mix(in oklch, var(--band-b-ink) 88%, transparent);
     background: var(--band-b);
     color: var(--band-b-ink);
-    clip-path: polygon(0 6%, 58% 0, 100% 12%, 100% 100%, 0 100%);
     padding-bottom: clamp(5rem, 8vw, 7rem);
   }
 

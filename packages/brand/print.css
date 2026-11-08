@@ -3,24 +3,24 @@
 /* A print's paper and inks are the light theme's in either theme,
    since a print is a physical thing. */
 :root {
-  --print-paper: oklch(0.8937 0.004 250);
-  --print-error-deep: oklch(0.487 0.085 30);
-  --print-warning-deep: oklch(0.487 0.085 80);
-  --print-success-deep: oklch(0.487 0.085 159);
-  --print-info-deep: oklch(0.487 0.085 237);
-  --print-help-deep: oklch(0.487 0.085 295);
-  --print-text: oklch(0.2712 0.004 250);
-  --print-muted: oklch(0.4289 0.004 250);
-  --print-accent-fill: oklch(0.2712 0.004 250);
-  --print-accent-light: oklch(0.7277 0.004 250);
-  --print-accent-text: oklch(0.3459 0.004 250);
+  --print-paper: oklch(0.9688 0.004 250);
+  --print-error-deep: oklch(0.518 0.085 30);
+  --print-warning-deep: oklch(0.518 0.085 80);
+  --print-success-deep: oklch(0.518 0.085 159);
+  --print-info-deep: oklch(0.518 0.085 237);
+  --print-help-deep: oklch(0.518 0.085 295);
+  --print-text: oklch(0.2788 0.004 250);
+  --print-muted: oklch(0.4536 0.004 250);
+  --print-accent-fill: oklch(0.2788 0.004 250);
+  --print-accent-light: oklch(0.7848 0.004 250);
+  --print-accent-text: oklch(0.3616 0.004 250);
   --print-error-fill: oklch(0.6 0.13 30);
   --print-warning-fill: oklch(0.6 0.13 80);
   --print-success-fill: oklch(0.6 0.13 159);
   --print-info-fill: oklch(0.6 0.13 237);
   --print-help-fill: oklch(0.6 0.13 295);
-  --print-warning-light: oklch(0.7277 0.085 80);
-  --print-sunk: oklch(0.8302 0.004 250);
+  --print-warning-light: oklch(0.7848 0.085 80);
+  --print-sunk: oklch(0.8984 0.004 250);
   --print-white: oklch(0.98 0.004 250);
 }
 

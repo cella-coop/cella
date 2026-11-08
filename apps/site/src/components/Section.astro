@@ -16,6 +16,7 @@ import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
+import { inline } from '../lib/inline'
 import Signup from './Signup.astro'
 
 interface Props {
@@ -89,7 +90,7 @@ const actions = [
             s.kind === 'steps' && s.items.length > 0 && (
               <ol class="steps" role="list" data-drafted={d('items')}>
                 {s.items.map((it, i) => (
-                  <li class="step"><span class="n" aria-hidden="true">{i + 1}</span><h3>{it.title}</h3><p>{it.body}</p></li>
+                  <li class="step"><span class="n" aria-hidden="true">{i + 1}</span><h3 set:html={inline(it.title)} /><p set:html={inline(it.body)} /></li>
                 ))}
               </ol>
             )
@@ -98,7 +99,7 @@ const actions = [
             s.kind === 'list' && s.items.length > 0 && (
               <ul class="rows" role="list" data-drafted={d('items')}>
                 {s.items.map((it) => (
-                  <li><span>{it.title}</span><span>{it.body}</span></li>
+                  <li><span set:html={inline(it.title)} /><span set:html={inline(it.body)} /></li>
                 ))}
               </ul>
             )

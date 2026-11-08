@@ -13,6 +13,7 @@
 import { cell } from '@cella/brand'
 import { portraitUrl } from '../lib/engrave'
 import { glyphPaths } from '../lib/icon'
+import { inline } from '../lib/inline'
 import { STATUSES, type Status } from '../schemas'
 
 interface Props {
@@ -68,8 +69,8 @@ const boxOf = (d: string) => {
           )
         }
         <div>
-          <h3>{it.title}</h3>
-          <p>{it.body}</p>
+          <h3 set:html={inline(it.title)} />
+          <p set:html={inline(it.body)} />
         </div>
       </li>
     ))

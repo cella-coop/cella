@@ -78,7 +78,7 @@ const actions = [
         {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
       </div>
     ) : (
-      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero }]}>
+      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero, roomy: s.arrange !== 'column' && s.items.length > 0 }]}>
         <div class="copy">
           {num !== undefined && <span class="num" aria-hidden="true">{String(num).padStart(2, '0')}</span>}
           {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
@@ -133,6 +133,13 @@ const actions = [
 
   .pair.flip {
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  /* words whose cells stand side by side take half the width, not five
+     twelfths, so the cells have room */
+  .pair.roomy,
+  .pair.roomy.flip {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 
   .pair.flip > :global(figure) {

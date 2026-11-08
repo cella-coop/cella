@@ -1,7 +1,8 @@
 ---
-// The footer, on the page's own paper and its grid: the lockup and the
-// site's closing line, the sitemap in columns, each a heading over its
-// links, and under them the note that the site shows prototype work.
+// The footer, on the page's own paper and its grid, one centred column:
+// the lockup in one ink, the text's, over the site's closing line, then
+// the sitemap in columns, each a heading over its links, and under it the
+// note that the site shows prototype work.
 import lockup from '@cella/brand/lockup.svg?raw'
 import type { Marks } from '../lib/text'
 
@@ -16,28 +17,26 @@ const { footer, drafted } = Astro.props
 
 <footer class="footer">
   <div class="wrap">
-    <div class="top">
-      <div class="brand">
-        <span class="lockup" aria-hidden="true" set:html={lockup} />
-        <p data-drafted={drafted('footer.line')}>{footer.line}</p>
-      </div>
-      <nav class="map" data-drafted={drafted('footer.columns')}>
-        {
-          footer.columns.map((c) => (
-            <div>
-              <p class="label">{c.heading}</p>
-              <ul role="list">
-                {c.links.map((l) => (
-                  <li>
-                    <a href={l.href}>{l.label}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))
-        }
-      </nav>
+    <div class="brand">
+      <span class="lockup" aria-hidden="true" set:html={lockup} />
+      <p data-drafted={drafted('footer.line')}>{footer.line}</p>
     </div>
+    <nav class="map" data-drafted={drafted('footer.columns')}>
+      {
+        footer.columns.map((c) => (
+          <div>
+            <p class="label">{c.heading}</p>
+            <ul role="list">
+              {c.links.map((l) => (
+                <li>
+                  <a href={l.href}>{l.label}</a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </nav>
     <p class="disclaimer" data-drafted={drafted('footer.disclaimer')}>{footer.disclaimer}</p>
   </div>
 </footer>
@@ -50,20 +49,22 @@ const { footer, drafted } = Astro.props
     padding-block: 3.5rem 3rem;
     color: var(--text-muted);
     font-size: 0.92rem;
+    text-align: center;
   }
 
-  .top {
+  .wrap {
     display: grid;
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    gap: 2.5rem clamp(2rem, 5vw, 5rem);
+    justify-items: center;
+    gap: 3rem;
   }
 
   .brand {
     display: grid;
+    justify-items: center;
     gap: 1rem;
-    align-content: start;
   }
 
+  /* the lockup in the text's ink alone, its mark's five inks put by */
   .lockup {
     display: flex;
     color: var(--text);
@@ -74,8 +75,11 @@ const { footer, drafted } = Astro.props
     height: 1.4rem;
   }
 
+  .lockup :global(path) {
+    fill: currentColor;
+  }
+
   .brand p {
-    max-width: 22rem;
     color: var(--text);
     font-family: var(--font-display);
     font-size: 0.95rem;
@@ -85,9 +89,10 @@ const { footer, drafted } = Astro.props
   }
 
   .map {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
-    gap: 2rem;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem clamp(2.5rem, 7vw, 5.5rem);
   }
 
   .map ul {
@@ -109,15 +114,8 @@ const { footer, drafted } = Astro.props
   }
 
   .disclaimer {
-    max-width: 44rem;
-    margin-top: 3.5rem;
+    max-width: 40rem;
     color: var(--text-subtle);
     font-size: 0.82rem;
-  }
-
-  @media (max-width: 56rem) {
-    .top {
-      grid-template-columns: minmax(0, 1fr);
-    }
   }
 </style>

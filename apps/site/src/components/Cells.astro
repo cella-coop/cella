@@ -79,8 +79,12 @@ const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
   /* two columns, each its cell beside its words, one on a narrow screen */
   [data-layout='grid'] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 2rem 2.4rem;
+    gap: 1.8rem 1.6rem;
     max-width: none;
+  }
+
+  [data-layout='grid'] .item {
+    gap: 0.85rem;
   }
 
   @media (max-width: 40rem) {
@@ -110,6 +114,11 @@ const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
 
   .icon {
     fill: oklch(0.985 0.004 250);
+  }
+
+  /* a title keeps the line breaks its text writes */
+  h3 {
+    white-space: pre-line;
   }
 
   p {

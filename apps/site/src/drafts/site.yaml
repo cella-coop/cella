@@ -6,11 +6,11 @@ footer:
         - { label: Concept, href: /concept }
         - { label: About, href: /about }
         - { label: Blog, href: /blog }
-    - heading: The project
+    - heading: Project
       links:
         - { label: Status, href: /about#status }
         - { label: Team, href: /about#team }
-        - { label: Join the pilot, href: /#join }
+        - { label: Pilot, href: /#join }
     - heading: Get in touch
       links:
         - { label: Contact, href: /contact }

@@ -29,6 +29,16 @@ interface Props {
 
 const { items, numbered = false, seed = 1, drafted, skip, layout = 'column' } = Astro.props
 const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
+// a cell's own box, so a portrait's edge lines up with the words beside
+// it and its top with their title, not the square it was drawn in
+const shapeOf = (i: number) => cell(seed * 13 + i * 7)
+const boxOf = (d: string) => {
+  const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const xs = nums.filter((_, k) => k % 2 === 0)
+  const ys = nums.filter((_, k) => k % 2 === 1)
+  const [x, y] = [Math.min(...xs), Math.min(...ys)]
+  return [x, y, Math.max(...xs) - x, Math.max(...ys) - y].map((v) => v.toFixed(1)).join(' ')
+}
 ---
 
 <ul class="cells" data-layout={layout} role="list" data-drafted={drafted}>
@@ -37,9 +47,9 @@ const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
       <li class="item">
         {
           it.photo ? (
-            <svg class="mark portrait" viewBox="2 2 96 96" role="img" aria-label={it.title} style={{ '--ink': `var(--p${inks[i % inks.length]})` }}>
+            <svg class="mark portrait" viewBox={boxOf(shapeOf(i))} role="img" aria-label={it.title} style={{ '--ink': `var(--p${inks[i % inks.length]})` }}>
               <defs>
-                <clipPath id={`face-${seed}-${i}`}><path d={cell(seed * 13 + i * 7)} /></clipPath>
+                <clipPath id={`face-${seed}-${i}`}><path d={shapeOf(i)} /></clipPath>
                 <mask id={`lines-${seed}-${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
                   <image href={portraitUrl(it.photo)} width="100" height="100" preserveAspectRatio="xMidYMid slice" />
                 </mask>
@@ -126,8 +136,8 @@ const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
   /* a portrait: the person engraved in a deep shade of the ink, on the
      print's paper washed with it, as a figure is */
   .portrait {
-    width: 10rem;
-    height: 10rem;
+    width: clamp(8rem, 30vw, 14rem);
+    height: auto;
   }
 
   .portrait .paper {

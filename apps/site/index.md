@@ -300,6 +300,18 @@ renderer hands it:
   four screenshots, over and beside, light and dark, which show the
   figure without adding any text or publishing a fixture photo.
 
+## The people
+
+A person's picture is `src/people/<name>.jpg`, their own, so it carries
+no credit sidecar. An item of a list of cells names it, `photo: <name>`,
+and its cell becomes the portrait: the picture cut square round its
+most telling part, engraved as a figure is but coarser for its small
+size, at 480 pixels, in a deep shade of the item's ink on the print's
+paper washed with it, and clipped to the cell, larger than an icon's.
+Each portrait is its own file, `/portrait/<name>-480.png`, made by the
+static endpoint `src/pages/portrait/[key].png.ts` and cached as an
+engraving is.
+
 ## Photos
 
 A photo is vendored, never linked: `cella site photo add <unsplash

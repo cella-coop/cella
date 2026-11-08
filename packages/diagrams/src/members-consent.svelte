@@ -1,7 +1,7 @@
 <script module lang="ts">
   export const meta = {
     title: 'Members decide',
-    alt: 'Worldlines with time running up. Ana, a member, puts a motion to the assembly. While the assembly deliberates, Ana, Ben and Cleo each send their consent. The assembly adopts the motion and grants the Treasurer role a mandate narrower than its own, and the Treasurer then acts under it.',
+    alt: 'Worldlines with time running up. Ana, a member, puts a motion to the assembly. While the assembly deliberates, Ana, Ben and Cleo send their consent in turn. The motion passes, the assembly grants the Treasurer role a mandate narrower than its own, and the Treasurer then pays under it.',
     made: 'ai',
   } as const
 </script>
@@ -18,19 +18,25 @@
   ]
   const ga = 284
   const role = 386
-  // each member's consent, from the last asked to the first
+  // every exchange climbs at one slope, so time reads the same across
+  // the diagram: the rise over a run
+  const slope = 0.07
+  const rise = (x1: number, x2: number) => Math.abs(x2 - x1) * slope
+  // each member's consent, in their order, Ana's first
   const consents = [
-    { x: 194, y: 290 },
-    { x: 134, y: 270 },
-    { x: 74, y: 250 },
+    { x: 74, y: 292 },
+    { x: 134, y: 274 },
+    { x: 194, y: 256 },
   ]
+  const motion = { y: 318, at: 318 - rise(74, ga) }
+  const grant = { y: 176, at: 176 - rise(ga + 4, role) }
 </script>
 
 <Frame width={440} height={418}>
-  <Axis x={14} y1={base} y2={top} />
+  <Axis x={14} y1={base} y2={base - 84} />
 
   <Auth x={ga} y1={base} y2={top} w={13} />
-  <Auth x={role} y1={162} y2={top} w={6} />
+  <Auth x={role} y1={grant.at} y2={top} w={6} />
 
   {#each people as p (p.name)}
     <Line x={p.x} y1={base} y2={top} />
@@ -38,32 +44,32 @@
   {/each}
   <Line x={ga} y1={base} y2={top} kind="rails" />
   <Name x={ga} y={base + 24} icon="users-three" name="Assembly" kind="circle" />
-  <Line x={role} y1={base} y2={162} vacant />
-  <Line x={role} y1={162} y2={top} />
-  <Name x={role} y={base + 24} icon="identification-badge" name="Treasurer" kind="role" />
+  <Line x={role} y1={base} y2={grant.at} vacant />
+  <Line x={role} y1={grant.at} y2={top} />
+  <Name x={role} y={base + 24} icon="wallet" name="Treasurer" kind="role" />
 
   <!-- a motion put to the assembly, which deliberates -->
-  <Particle kind="ask" x1={74} y1={318} x2={ga} y2={306} />
+  <Particle kind="ask" x1={74} y1={motion.y} x2={ga} y2={motion.at} />
   <text class="say" x={106} y={308} text-anchor="middle">motion</text>
-  <Wait x={ga} y1={306} y2={232} />
-  <Dot x={74} y={318} />
-  <Dot x={ga} y={306} />
+  <Wait x={ga} y1={motion.at} y2={232} />
+  <Dot x={74} y={motion.y} />
+  <Dot x={ga} y={motion.at} />
 
-  <!-- each member consents -->
+  <!-- each member consents, in turn -->
   {#each consents as c (c.x)}
-    <Particle kind="answer" x1={c.x + 9} y1={c.y} x2={ga - 6} y2={c.y - 8} />
+    <Particle kind="answer" x1={c.x + 9} y1={c.y} x2={ga - 6} y2={c.y - rise(c.x + 9, ga - 6)} />
     <Glyph name="check" x={c.x} y={c.y} tone="ask" />
   {/each}
-  <text class="say" x={238} y={234} text-anchor="middle">consent</text>
+  <text class="say" x={238} y={240} text-anchor="middle">consent</text>
 
-  <!-- adopted, and a narrower mandate granted to a role -->
-  <Glyph name="stamp" x={ga} y={214} />
-  <Particle kind="grant" x1={ga + 4} y1={176} x2={role} y2={162} />
-  <text class="say" x={335} y={152} text-anchor="middle">mandate</text>
-  <Dot x={ga} y={176} />
-  <Dot x={role} y={162} />
+  <!-- the motion passes, and a narrower mandate goes to a role -->
+  <Glyph name="gavel" x={ga} y={214} />
+  <Particle kind="grant" x1={ga + 4} y1={grant.y} x2={role} y2={grant.at} />
+  <text class="say" x={335} y={158} text-anchor="middle">mandate</text>
+  <Dot x={ga} y={grant.y} />
+  <Dot x={role} y={grant.at} />
 
-  <!-- the role acts under it -->
-  <Glyph name="stamp" x={role} y={104} />
+  <!-- the treasurer pays under it -->
+  <Glyph name="coins" x={role} y={104} />
 
 </Frame>

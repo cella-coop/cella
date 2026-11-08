@@ -69,10 +69,12 @@ the geometry of the particles' paths.
   bar on its line (`Wait`).
 - **Glyphs are what happens**: a Phosphor bold icon in a ring filled
   with the ground (`Glyph`): `check` consents, `x` says no, `hand-palm`
-  objects, `hourglass-simple` stays silent, `stamp` acts under a mandate,
-  `prohibit` in a dashed ring an act refused, `link-break` a mandate
-  ending, `seal-check` a signed record received, `handshake` a party
-  joining. `src/lang/glyphs.ts` holds Phosphor's paths, vendored so the
+  objects, `hourglass-simple` stays silent, `gavel` a motion passing,
+  `stamp` acts under a mandate, or the act's own icon where it says more,
+  as `coins` a payment, `prohibit` in a dashed ring an act refused,
+  `link-break` a mandate ending, `seal-check` a signed record received,
+  `handshake` a party joining. A line's name wears its kind's icon, or
+  its own where it has one, as `wallet` a treasurer. `src/lang/glyphs.ts` holds Phosphor's paths, vendored so the
   package depends on the brand alone; `cella check site` compares each
   with `@phosphor-icons/core`'s own and refuses one that differs.
 - **Boxes are records**: a rounded box filled with the ground, dashed

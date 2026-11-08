@@ -117,8 +117,11 @@ export type Depth = Standing & { depth: number }
 
 // A mandate's page: the mandate, its chain from the root the assembly
 // issued down to itself, and every mandate issued under it, down its
-// provenance tree, each with its depth below it.
+// provenance tree, each with its depth below it; and whether the links
+// above the highest one the reader reads are withheld from them, that
+// link's parent one they do not read.
 export interface Provenance extends Standing {
   chain: Depth[]
   under: Depth[]
+  withheld: boolean
 }

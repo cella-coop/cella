@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { power, Section, Table, type Column } from '@cella/org-ui'
+  import { Note, power, Section, Table, type Column } from '@cella/org-ui'
   import type { Depth, Provenance } from '../../models/circle.ts'
   import { cap, covers, narrows } from '../words.ts'
 
   // Where a mandate's authority comes from: its chain, the root the
   // assembly issued first, down to the mandate, each link with how it
   // narrows the one above; and below it what was issued under it, which
-  // its revocation revokes the same day. Each row opens its mandate.
+  // its revocation revokes the same day. Each row opens its mandate. A
+  // link is the root only where its parent is none; where the highest
+  // link the reader reads has one they do not, the chain says the links
+  // above it are withheld, and names nothing of them.
   let { data }: { data: Provenance; id: string } = $props()
 
   const above = (k: Depth) => data.chain.find((p) => p.depth === k.depth - 1)
@@ -20,7 +23,7 @@
       label: 'Narrows the one above',
       value: (k) => {
         const a = above(k)
-        return a ? narrows(k, a).join('; ') || 'as wide' : 'the root, the assembly\'s'
+        return a ? narrows(k, a).join('; ') || 'as wide' : k.parent === null ? 'the root, the assembly\'s' : 'the one above is withheld'
       },
     },
   ]
@@ -37,6 +40,7 @@
 </script>
 
 <Section title="Chain" count={data.chain.length}>
+  {#if data.withheld}<Note text="The links above are withheld from you." />{/if}
   <Table columns={chain} rows={data.chain} href={open} />
 </Section>
 <Section title="Issued under it" count={data.under.length}>

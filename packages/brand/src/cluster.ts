@@ -10,7 +10,7 @@ import { clipHalf, rng, roundedPath, type Point } from './mark.ts'
 export type ClusterOptions = {
   /** The typical cell's size, in the box's units. */
   pitch: number
-  /** The cut between two cells, at most. */
+  /** The cut between two cells, the same between any two. */
   gutter: number
   /** A corner's rounding, at most. */
   round: number
@@ -61,7 +61,7 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
   const radii = Array.from({ length: 1400 }, () => Math.min(rmax, rmin * (1 - rand()) ** (-1 / alpha))).sort((p, q) => q - p)
   const margin = rmax
   const disks: { x: number; y: number; r: number }[] = []
-  const sep = (r1: number, r2: number) => Math.min(gutter, 0.18 * Math.min(r1, r2)) * 0.4
+  const sep = gutter * 0.4
   for (const r of radii) {
     for (let tries = 0; tries < 50; tries++) {
       const x = -margin + rand() * (w + margin * 2)
@@ -69,7 +69,7 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
       if (r > Math.max(rmin, cap(x, y))) {
         continue
       }
-      if (disks.every((d) => Math.hypot(d.x - x, d.y - y) >= d.r + r + sep(d.r, r))) {
+      if (disks.every((d) => Math.hypot(d.x - x, d.y - y) >= d.r + r + sep)) {
         disks.push({ x, y, r })
         break
       }
@@ -88,10 +88,8 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
       }
       const [nx, ny] = [(t.x - s.x) / d, (t.y - s.y) / d]
       // the power bisector: where the two weighted distances meet, nearer
-      // the lighter seed; the gutter is the smaller cell's share, so a
-      // small cell is never swallowed by it
-      const g = Math.min(gutter, 0.18 * Math.min(s.r, t.r))
-      const at = (d * d + s.r * s.r - t.r * t.r) / (2 * d) - g / 2
+      // the lighter seed, less half the gutter, one width throughout
+      const at = (d * d + s.r * s.r - t.r * t.r) / (2 * d) - gutter / 2
       poly = clipHalf(poly, s.x + nx * at, s.y + ny * at, nx, ny)
     }
     // and no further from its seed than a reach of its disk, so a cell on

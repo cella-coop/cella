@@ -58,8 +58,8 @@ from the explorer:
 - `cluster.ts`, the cells beyond the mark: `cluster`, the cells a
   picture is cut into, a power diagram whose seeds' disks follow a
   power law, a few large in the middle and a long tail of small toward
-  a lobed rim and a tail, each cell cut by a gutter its smaller
-  neighbour's size bounds, held within a reach of its own seed, and
+  a lobed rim and a tail, each cell cut by one gutter, the same width
+  between any two, held within a reach of its own seed, and
   dropped where it would be a spike; seeded, so a page's clusters are
   the same on every build; and `cell`, a lone cell for a marker;
 - `wordmark.ts`, CELLA in Urbanist at weight 690, tracked -0.02em, from glyph

@@ -70,14 +70,15 @@ const figure = z.object({
   ink: z.enum(STATUSES).optional(),
 })
 
-// A card of a features section, a step of a steps section or a row of a
-// list: its title and its line, and in a features section the Phosphor
-// icon its cell holds.
+// An item: its title and its line, a step of a steps section, a row of a
+// list, or in any other section a cell of its list of cells, holding the
+// Phosphor icon `icon` names.
 const item = z.object({ title: z.string(), body: z.string(), icon: z.string().optional() })
 
 // One section of a page, laid out by its kind: `hero` the page's top,
 // with its title and description; `prose` its body; `features`, `steps`
-// and `list` its body then its items; `quote` its body set large, its
+// and `list` its body then its items, and any other kind with items its
+// items as a list of cells under its body; `quote` its body set large, its
 // heading the attribution; `cta` a band of its body and its action. A
 // section with a figure sets it beside its text, the sides trading down
 // the page. `heading` may mark a closing part with stars, `*like this*`,

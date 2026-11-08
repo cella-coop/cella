@@ -28,8 +28,9 @@ serves one scope: a co-op, a joint circle of co-ops, or a federation.
 is the Inbox, what waits on the acting person, its count beside it,
 where `/` lands, and Activity, the log. Each feat's collection is a page
 in one of the sidebar's sections: Governance, Office, Work, Payments,
-Ledger and Equity; the platform's, Devices, Files, Imports and the Log,
-are Settings' ([the shell](core/ui/index.md#components)).
+Ledger and Equity; the platform's are Settings', the member's Devices
+under Personal and the co-op's Imports under Organization, and Files is
+reached by the command menu ([the shell](core/ui/index.md#components)).
 Every collection is the same component, its drawer's View card holding the filter, the
 layout (list, table, gallery, board, calendar or dashboard) and its
 options, and every item the same detail view, its

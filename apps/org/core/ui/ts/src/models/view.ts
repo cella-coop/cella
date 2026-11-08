@@ -10,7 +10,9 @@ import type { Look, Preset, Shift, Widget } from './query.ts'
 // shown; then accordions: governance; office, the documents, meetings and
 // reports; work; payments, money in and out; ledger, the accounts, their
 // periods and transactions; equity, the members' capital and what the
-// surplus builds; and `platform`, Settings, a sidebar of its own.
+// surplus builds; and `platform`, Settings, a sidebar of its own, its
+// collections under Personal, the member's own, or Organization, the
+// co-op's, as each names its `subgroup`.
 export type Group = 'home' | 'governance' | 'office' | 'work' | 'payments' | 'ledger' | 'equity' | 'platform'
 
 // A `person` is an address, shown as the person's chip: their name, the

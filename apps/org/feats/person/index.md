@@ -263,7 +263,8 @@ children's: an invitation and a hire, each under its title. A person's
 page holds their address and devices, with the profile write on it; the
 children add their membership's and employment's properties and tabs
 (Joining, Own and decide), and the grafts joining them the rest. The
-`devices` collection lists every device, current ones first. On a person's
+`devices` collection, in Settings under Personal, lists every device,
+current ones first. On a person's
 own page the device their session signs with is marked as this device,
 and each other current one has its revoke, signed from this one; with
 none, the page says it is their only device. Enrolling a later device

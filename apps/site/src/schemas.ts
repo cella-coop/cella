@@ -89,8 +89,9 @@ const item = z.object({ title: z.string(), body: z.string(), icon: z.string().op
 // name is its anchor; `order` places it.
 //
 // A band holds no photo: it draws the diagram of `@cella/diagrams` its
-// `diagram` names, light on its colour, and a band that names none fails
-// the build; a figure on a band is dropped.
+// `diagram` names, or the Phosphor icon its `icon` names, large, light on
+// its colour; a band that names neither, or both, fails the build, and a
+// figure on a band is dropped.
 const BANDS = ['band', 'quote', 'cta']
 export const section = z
   .object({
@@ -106,6 +107,7 @@ export const section = z
     items: z.array(item).default([]),
     figure: figure.optional(),
     diagram: z.string().optional(),
+    icon: z.string().optional(),
     // a form under its words: the compact sign-up or the contact form
     form: z.enum(['signup', 'contact']).optional(),
     // its items' list counts them, and is laid out by `arrange`, a list's
@@ -121,8 +123,11 @@ export const section = z
     quote: z.boolean().default(false),
   })
   .superRefine((s, ctx) => {
-    if (BANDS.includes(s.kind) && !s.diagram) {
-      ctx.addIssue({ code: 'custom', path: ['diagram'], message: `is required on a ${s.kind} band: name one of @cella/diagrams` })
+    if (BANDS.includes(s.kind) && !s.diagram && !s.icon) {
+      ctx.addIssue({ code: 'custom', path: ['diagram'], message: `is required on a ${s.kind} band: name one of @cella/diagrams, or a Phosphor icon as \`icon\`` })
+    }
+    if (s.diagram && s.icon) {
+      ctx.addIssue({ code: 'custom', path: ['icon'], message: 'and a diagram both name the band\'s plate: keep one' })
     }
   })
   // every band is a `band`: a quote one that quotes, sage unset, a cta one

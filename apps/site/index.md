@@ -88,9 +88,10 @@ enough for light text in either theme. A band holds no photo: it draws
 the diagram its section's `diagram` names, from `@cella/diagrams`
 ([its language](../../packages/diagrams/index.md#the-language)), light
 on its colour, its glyphs' rings and its labels' halos the band's own,
-under it the mark every diagram wears. A band that names no diagram
-fails the build, naming its file and the field; a `figure` on a band is
-dropped (`src/schemas.ts`).
+under it the mark every diagram wears; or, in the diagram's place, the
+Phosphor icon its `icon` names, one large glyph in the band's light
+ink. A band that names neither, or both, fails the build, naming its
+file and the field; a `figure` on a band is dropped (`src/schemas.ts`).
 
 A section's actions, its `primary`, `action` and `secondary` links, are
 a row of cells (`Actions.astro`): side by side, their tops and feet

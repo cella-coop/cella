@@ -16,6 +16,7 @@ import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
+import Icon from './Icon.astro'
 import Signup from './Signup.astro'
 
 interface Props {
@@ -49,9 +50,11 @@ const EDGES: Point[][] = [
 ]
 const outline = band && roundedPath(EDGES[seed % 2], 0.07, (v) => v.toFixed(4))
 const clip = band && `band-${s.id}`
-// a band's diagram; the schema refuses a band that names none
-const diagram = band ? (s.diagram as DiagramName) : undefined
-const paired = Boolean(s.figure || diagram)
+// a band's plate: its diagram or its icon; the schema refuses a band that
+// names neither
+const diagram = band ? (s.diagram as DiagramName | undefined) : undefined
+const glyph = band ? s.icon : undefined
+const paired = Boolean(s.figure || diagram || glyph)
 // its actions, the call to act first
 // its items' layout: its `arrange`, or the one its kind implies
 const layout = s.arrange ?? (s.kind === 'steps' ? 'steps' : s.kind === 'list' ? 'ruled' : 'column')
@@ -78,6 +81,7 @@ const actions = [
           <cite class="label" data-drafted={d('heading')}>{s.heading}</cite>
         </blockquote>
         {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
+        {glyph && <div class="plate glyph"><Icon name={glyph} role="current" /></div>}
       </div>
     ) : (
       <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero, roomy: ['row', 'grid', 'steps'].includes(layout) && s.items.length > 0 }]}>
@@ -92,6 +96,7 @@ const actions = [
           {s.form === 'contact' && <div class="form"><ContactForm text={forms.contact} ink={ink} drafted={forms.drafted} /></div>}
         </div>
         {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
+        {glyph && <div class="plate glyph"><Icon name={glyph} role="current" /></div>}
         {s.figure && <Engraving figure={s.figure} ink={s.figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={d} />}
       </div>
     )
@@ -261,6 +266,16 @@ const actions = [
     justify-self: center;
     width: 100%;
     max-width: 30rem;
+  }
+
+  /* an icon in a diagram's place: one glyph, large, in the band's ink */
+  .glyph {
+    display: grid;
+    place-items: center;
+  }
+
+  .glyph :global(.icon) {
+    width: min(100%, 16rem);
   }
 
   /* on a band, the cells are the band's own light ink, a veil of it, and

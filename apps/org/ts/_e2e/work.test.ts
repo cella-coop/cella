@@ -251,7 +251,7 @@ test('a lead\'s mandates cover their own circle\'s projects: Yusuf, Web\'s lead,
   const brand = await shell.act('/projects/velo-identity', 'budget', { amount: '3400' }, yusuf)
   assert.equal(brand.state, 'refused')
   assert.match(brand.reason ?? '', /holds set-budget by no mandate covering brand's records/)
-  // His mandates mark their scope; the gérante's mark none and cover the whole co-op.
+  // His mandates mark their scope; the manager's mark none and cover the whole co-op.
   const scopes = await one<{ lead: string[]; manager: string[] }>(
     `SELECT array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'lead' AND power IN ('manage-project', 'set-budget')) AS lead,
             array_agg(DISTINCT coalesce(scope, '—')) FILTER (WHERE grantee = 'manager' AND power IN ('manage-project', 'set-budget')) AS manager

@@ -44,7 +44,7 @@ this feat's `approving` and `reimbursing` specs.
 | Action | Power | Lanterne |
 |---|---|---|
 | capture, submit | `claim-expense`, every employee's right: the claimant's own | every worker, member or not |
-| approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as gérante, up to 2 000 € an expense |
+| approve | `approve-expense`, within the mandate's limit for the expense's total, and its budget for the month | each lead, 1 000 € a month; Camille, as manager, up to 2 000 € an expense |
 | refuse | `approve-expense` | as approve |
 | reimburse | `reimburse-expense`, within the mandate's limit | Julien, as finance, up to 3 000 € |
 
@@ -123,7 +123,7 @@ over its circle, and whoever holds `approve-expense` or
 `reimburse-expense` over it (`sql/004-reads.sql`), since what a mandate
 acts on its holder reads. At Lanterne Inès, in Web and no member, reads
 Web's and the assembly's expenses and not Marketing's; every member,
-by open books, and the gérante and finance, whose mandates cover the
+by open books, and the manager and finance, whose mandates cover the
 whole co-op, read every one.
 
 ## Handlers

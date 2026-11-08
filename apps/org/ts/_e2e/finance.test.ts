@@ -1,5 +1,5 @@
 // The finance scenario, end to end on a seeded Lanterne: expenses claimed,
-// approved within a lead's budget and a gérante's limit and refused beyond
+// approved within a lead's budget and a manager's limit and refused beyond
 // them, charged and reimbursed; October's pay run prepared from every
 // worker's approved time, Inès's though she is no member, approved and
 // paid; draws within a member's limit and refused
@@ -93,7 +93,7 @@ test('Hugo approves Sofia\'s print proofs within his budget, which charges them;
   assert.deepEqual(logged.guards.map((r) => r.owner).sort(), ['expense', 'expense-membership', 'expense-transaction', 'membership'])
 })
 
-test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the gérante\'s 2 000 € limit too', async () => {
+test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the manager\'s 2 000 € limit too', async () => {
   const plotter = await capture({ member: sofia, day: '2026-10-24', label: 'Plotter repair', category: '606', net: 800_00, vat: 160_00, receipt: null }, as(sofia))
   assert.equal(plotter.state, 'settled')
   const id = plotter.state === 'settled' ? plotter.value.expense : ''
@@ -109,7 +109,7 @@ test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the géra
   const beyond = await approveExpense({ expense: big }, as(camille))
   assert.match(reason(beyond), /the actor holds no mandate for approve-expense up to 2520\.00 €/)
 
-  // Within her limit, the gérante approves the plotter Hugo's budget could
+  // Within her limit, the manager approves the plotter Hugo's budget could
   // not.
   assert.equal((await approveExpense({ expense: id }, as(camille))).state, 'settled')
   await balanced()
@@ -150,7 +150,7 @@ test('once every October is approved, Julien prepares the run from the approved 
     for (const { circle } of await all<{ circle: string }>(`SELECT circle FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
       const submitted = await submitTime({ member: m, month: '2026-10', circle }, as(m))
       assert.equal(submitted.state, 'settled', reason(submitted))
-      // The gérante approves time over the assembly, where everyone sits;
+      // The manager approves time over the assembly, where everyone sits;
       // her own month, Brand's lead.
       const approved = await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? hugo : camille))
       assert.equal(approved.state, 'settled', reason(approved))

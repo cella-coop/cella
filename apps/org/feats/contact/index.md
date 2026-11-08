@@ -73,7 +73,7 @@ ordered write's guard, so none of them waits.
 |---|---|---|
 | add, update | `edit-contact` | every member, through the `member` role's mandate |
 | archive | `edit-contact` | every member, through the `member` role's mandate |
-| erase | `erase-personal-data` | the gérante |
+| erase | `erase-personal-data` | the manager |
 
 `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it as any other: a power every member holds is

@@ -1,7 +1,7 @@
 // A person holds a role by a tenure, end to end on a seeded Lanterne:
-// Camille holds the gérante role from 20 June 2024 until 20 June 2028
+// Camille holds the manager role from 20 June 2024 until 20 June 2028
 // and approves an expense under its mandates while it runs; a second
-// tenure of the gérante role, capped at one, is refused while hers runs
+// tenure of the manager role, capped at one, is refused while hers runs
 // and taken from the day it ends; and the assembly hands Web's lead from
 // Yusuf to Léa, which keeps every mandate on the role and seats Léa in
 // coordination, where the lead role is a member. Run by `cella test e2e
@@ -62,7 +62,7 @@ after(async () => {
   await su.end()
 })
 
-test('Camille holds the gérante role by a tenure, 2024 to 2028, and approves an expense under it', async () => {
+test('Camille holds the manager role by a tenure, 2024 to 2028, and approves an expense under it', async () => {
   assert.deepEqual(
     await one(
       `SELECT circle, to_char(since, 'YYYY-MM-DD') AS since, to_char(until, 'YYYY-MM-DD') AS until
@@ -82,7 +82,7 @@ test('Camille holds the gérante role by a tenure, 2024 to 2028, and approves an
   assert.equal(await may(camille, 'approve-expense', '2024-06-19'), false, 'her tenure had not begun')
 })
 
-test('a second tenure of the gérante role, capped at one, is refused while hers runs and taken from the day it ends', async () => {
+test('a second tenure of the manager role, capped at one, is refused while hers runs and taken from the day it ends', async () => {
   assert.equal((await one<{ holders: number }>(`SELECT holders FROM circle.role WHERE id = 'manager'`)).holders, 1)
   await su.query('BEGIN')
   try {
@@ -96,7 +96,7 @@ test('a second tenure of the gérante role, capped at one, is refused while hers
   await su.query('BEGIN')
   try {
     await su.query(`INSERT INTO circle.tenure (circle, holder, role, since) VALUES ('ag', $1, 'manager', '2028-06-20')`, [julien])
-    assert.equal(await may(julien, 'commit', '2028-06-20'), true, 'the next gérante holds the role from the day hers ends')
+    assert.equal(await may(julien, 'commit', '2028-06-20'), true, 'the next manager holds the role from the day hers ends')
     assert.equal(await may(julien, 'commit', '2028-06-19'), false)
   } finally {
     await su.query('ROLLBACK')

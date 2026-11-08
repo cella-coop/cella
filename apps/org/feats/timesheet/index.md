@@ -1,6 +1,6 @@
 +++
 title = "Timesheet"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 Time worked, by worker and day, member or not, and each worker's
@@ -56,7 +56,7 @@ the approval updates it, so Postgres serialises them.
 | Power | Lanterne |
 |---|---|
 | `log-time` | every employee, by their right, member or not |
-| `approve-time` | the circle leads, finance and the gérante |
+| `approve-time` | the circle leads, finance and the manager |
 
 Logging, correcting and submitting are also the member's own
 (`timesheet.logs`, `timesheet.corrects`, `timesheet.submits`), and
@@ -165,7 +165,7 @@ Each works for one circle, so each has one month a month, which the
 fixture names with its circle as it names their entries'.
 September is submitted by everyone and approved: each lead approved their
 circle's, Julien in finance the leads and Inès, who is no member yet
-and sits in Web, and Camille as gérante Julien. Inès logs hers by her
+and sits in Web, and Camille as manager Julien. Inès logs hers by her
 right as every worker does. October is open.
 
 ## Analytics

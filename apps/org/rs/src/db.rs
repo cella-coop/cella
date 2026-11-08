@@ -121,7 +121,7 @@ impl<'a> Dev<'a> {
             // write names none: the slice's database holds the root, as a
             // founded scope does.
             let mut root = self.on(db, "psql");
-            root.args(["-qc", "INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true)"]);
+            root.args(["-qc", "INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true)"]);
             cmds.push(root);
         }
         if let Some(dir) = fixture {

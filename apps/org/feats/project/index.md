@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -40,8 +40,8 @@ membership feat checks it.
 
 | Power | Lanterne |
 |---|---|
-| `manage-project` | the circle leads and the gérante |
-| `set-budget` | the leads up to 15 000 €, the gérante up to 50 000 € |
+| `manage-project` | the circle leads and the manager |
+| `set-budget` | the leads up to 15 000 €, the manager up to 50 000 € |
 
 ## Invariants
 

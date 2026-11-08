@@ -22,7 +22,7 @@ proposed = 2021-02-15
 deadline = 2021-03-01
 closed = 2021-03-01
 body = """
-The founders adopt the statutes of Lanterne SCOP SARL à capital variable,
+The founders adopt the statutes of Lanterne, a worker co-operative limited company with variable capital,
 and with them how its circles decide and the mandates they grant.
 """
 
@@ -444,7 +444,7 @@ body = """
 The 2025 surplus of 61 400 € is allocated as the statutes require: 45 % to
 the members as their share of work (participation), 54,27 % to the
 indivisible reserves and 0,73 % as interest on capital, 448,22 € on its
-13 000 €, within the 3,5 % the statutes pay (loi 47-1775, art. 14).
+13 000 €, within the 3,5 % the statutes pay (Act No. 47-1775, article 14).
 """
 # What it decides beyond its text: the 2025 distribution approved.
 [[motion.action]]

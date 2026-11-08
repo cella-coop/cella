@@ -208,7 +208,7 @@ test('every employee still logs their time by right, no mandate: the right is th
   settled(await log({ member: julien, day: '2026-12-18', minutes: 90, billable: false, note: 'Supplier reconciliation' }, as(julien)))
 })
 
-test('a mandate the assembly issues is a root, whatever the circles hold: finance may approve 3 000 € of expenses, beyond the gérante\'s 2 000 €', async () => {
+test('a mandate the assembly issues is a root, whatever the circles hold: finance may approve 3 000 € of expenses, beyond the manager\'s 2 000 €', async () => {
   const wording = 'The {role: finance} role holds {power: approve-expense}, to approve expenses, up to {limit: 3 000 €} a write'
   const { motion, out } = await decided('Finance approves expenses', { kind: 'policy', args: { kind: 'mandate', wording } }, '2026-12-05', '2026-12-19')
   assert.deepEqual(out.map((d) => [d.op, d.state]), [['motion:policy:adopt', 'settled']])

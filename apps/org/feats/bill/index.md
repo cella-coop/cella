@@ -58,7 +58,7 @@ over this feat's `approving` and `paying` specs.
 | Action | Power | Lanterne |
 |---|---|---|
 | record | `record-bill` | Julien, as finance |
-| approve | `approve-bill`, within the mandate's limit for the bill's total | Camille, as gérante, up to 5 000 € a bill |
+| approve | `approve-bill`, within the mandate's limit for the bill's total | Camille, as manager, up to 5 000 € a bill |
 | pay | `pay-supplier`, within the mandate's limit for the bill's total | Julien, as finance, up to 3 000 € |
 
 `002-powers.sql` registers them in `cella.power`; the membership

@@ -37,7 +37,7 @@ label = "Coffee and pastries, Nuvola workshop"
 category = "6257"
 net = 4200
 vat = 420
-receipt = "boulangerie-1022.pdf"
+receipt = "bakery-1022.pdf"
 submitted = 2026-10-22
 
 [[expense]]

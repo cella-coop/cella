@@ -43,18 +43,18 @@ test('every main page renders on the seed', async () => {
   const pages: [string, string][] = [
     ['/people', 'Camille Martin'],
     [`/people/${camille}`, 'Powers held'],
-    ['/circles', 'Assemblée générale'],
-    ['/circles/ag', 'Gérante'],
+    ['/circles', 'General assembly'],
+    ['/circles/ag', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
     ['/motions/m-2026-012', 'passes by consent'],
     ['/documents', 'Rate card 2027'],
-    ['/documents/internal-rules', 'Règlement intérieur'],
+    ['/documents/internal-rules', 'Internal rules'],
     ['/invoices', 'F-2026-0055'],
     ['/invoices/F-2026-0044', 'Compagnie Mauve Horizon'],
     ['/bills', 'Imprimerie du Parc'],
     ['/bills/bi-0002', 'Studio rent, October'],
     ['/contacts', 'Vélo Solidaire'],
-    ['/accounts', 'Banque'],
+    ['/accounts', 'Bank'],
     ['/accounts/512', 'Ledger'],
     ['/periods', '2026-10'],
     ['/transactions', 'je-0001'],
@@ -75,7 +75,7 @@ test('every main page renders on the seed', async () => {
 test('the sidebar names the co-op as the database does, and its menus open in the top layer', async () => {
   const { text } = await page('/people')
   assert.ok(text.includes('<title>Lanterne · cella</title>'), 'the co-op is called by its name')
-  assert.ok(text.includes('Lanterne SCOP SARL'), 'its menu gives its legal name')
+  assert.ok(text.includes('Lanterne Worker Co-operative Limited Company'), 'its menu gives its legal name')
   assert.ok(!text.includes('lanterne.example</b>'), 'not by its address')
   assert.equal((text.match(/popover="auto"/g) ?? []).length, 2, 'the co-op menu and the account menu are popovers')
 })
@@ -101,7 +101,7 @@ test('the co-op selector lists the circles, and the one chosen is the lens its t
 
   const whole = await seen()
   const menu = whole.slice(whole.indexOf('action="/lens"'))
-  const order = ['All circles', 'Assemblée générale', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
+  const order = ['All circles', 'General assembly', 'Brand', 'Coordination', '<hr', 'Marketing', 'Operations', 'Web']
   const at = order.map((s) => menu.indexOf(s))
   assert.ok(at.every((i) => i >= 0), `the menu holds ${order.join(', ')}`)
   assert.deepEqual([...at].sort((a, b) => a - b), at, 'All circles first, then the circles Camille sits in, then the rest')
@@ -391,7 +391,7 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
   const subscribed = await one<{ op: string; actor: string }>('SELECT op, actor FROM cella.log WHERE n = $1', [closed.then[0].then[0].entry])
   assert.deepEqual(subscribed, { op: 'account:capital:subscribe', actor: camille })
   const { text } = await page(`/people/${ines}`)
-  assert.ok(text.includes('active') && text.includes('Assemblée générale') && text.includes('phone'))
+  assert.ok(text.includes('active') && text.includes('General assembly') && text.includes('phone'))
   assert.ok((await page('/motions/m-2026-012')).text.includes('passed by consent'))
 })
 

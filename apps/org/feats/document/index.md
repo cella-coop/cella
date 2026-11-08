@@ -436,7 +436,8 @@ a motion's page.
 ## Lanterne
 
 - The statutes are generated from the assembly's policies, around the
-  fixed text of a SCOP SARL à capital variable: `statutes@1`, adopted on
+  fixed text of a worker co-operative limited company with variable
+  capital: `statutes@1`, adopted on
   1 March 2021 with m-2021-001's procedures, mandates and rules, and
   `statutes@2`, on 20 June 2026, once m-2026-007 adopted the internal
   rules' five rules. The seed generates each and adopts it that day.

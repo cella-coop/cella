@@ -1,7 +1,7 @@
 use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
-use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
+use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt};
 use std::os::unix::process::CommandExt;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
@@ -121,11 +121,7 @@ impl<'a> Shell<'a> {
             )));
         }
         let extensions = extensions()?;
-        fs::DirBuilder::new()
-            .recursive(true)
-            .mode(0o700)
-            .create(&self.dir)
-            .map_err(io(&self.dir))?;
+        group_dir(&self.dir)?;
         let token = self.token();
         if !token.exists() {
             key::token(&token)?;
@@ -431,6 +427,24 @@ fn literal(s: &str) -> String {
     format!("'{}'", s.replace('\'', "''"))
 }
 
+/// Makes a port's directory and the `analytics` one above it, each its
+/// group's to write as the rest of `.data` is, so whoever clears a
+/// checkout removes them; the secrets in it are owner-only files. The
+/// mode is set, not only asked of `mkdir`, so neither the umask nor a
+/// default ACL's mask leaves the group out, and a directory an earlier
+/// start made owner-only is opened to the group too.
+fn group_dir(dir: &Path) -> Result {
+    fs::DirBuilder::new()
+        .recursive(true)
+        .mode(0o770)
+        .create(dir)
+        .map_err(io(dir))?;
+    for d in [dir, dir.parent().unwrap_or(dir)] {
+        fs::set_permissions(d, fs::Permissions::from_mode(0o770)).map_err(io(d))?;
+    }
+    Ok(())
+}
+
 /// Writes a file only its owner reads, as one holding the token.
 fn secret_file(path: &Path, text: &str) -> Result {
     let mut file = OpenOptions::new()
@@ -449,7 +463,31 @@ fn io(path: &Path) -> impl Fn(std::io::Error) -> Fail + '_ {
 
 #[cfg(test)]
 mod tests {
-    use super::shown;
+    use std::fs;
+    use std::os::unix::fs::{DirBuilderExt, PermissionsExt};
+    use std::path::Path;
+
+    use super::{group_dir, secret_file, shown};
+
+    #[test]
+    fn a_shell_s_directories_are_its_group_s_and_its_secrets_its_owner_s() {
+        let root = std::env::temp_dir().join(format!("cella-analytics-{}", std::process::id()));
+        let analytics = root.join("analytics");
+        let port = analytics.join("54343");
+        // A directory an earlier start made owner-only is opened too.
+        fs::DirBuilder::new()
+            .recursive(true)
+            .mode(0o700)
+            .create(&analytics)
+            .unwrap();
+        assert!(group_dir(&port).is_ok());
+        assert!(secret_file(&port.join("token"), "s3cret").is_ok());
+        let mode = |p: &Path| fs::metadata(p).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode(&analytics), 0o770);
+        assert_eq!(mode(&port), 0o770);
+        assert_eq!(mode(&port.join("token")), 0o600);
+        fs::remove_dir_all(&root).unwrap();
+    }
 
     #[test]
     fn what_a_shell_attaches_is_said_without_a_password() {

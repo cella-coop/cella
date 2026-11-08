@@ -5,7 +5,9 @@
 // as coordination, another circle, is refused, the reason naming the
 // role or the circle and never him. Run by `cella test e2e author`.
 
-import { after, before, test } from 'node:test'
+import { test as runTest } from 'node:test'
+import { createStory } from './story.ts'
+export const { before, after, test, unseeded, story } = createStory()
 import { mkdirSync } from 'node:fs'
 import assert from 'node:assert/strict'
 import pg from 'pg'
@@ -74,7 +76,7 @@ test('a proposal naming no author is the circle\'s', async () => {
   assert.equal((await summaries(as(julien).db)).find((s) => s.id === motion)?.authorName, 'Assemblée générale')
 })
 
-test('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
+unseeded('the New form puts a motion as a held role or as its circle, and the page names that author in light and dark', async () => {
   mkdirSync(shots, { recursive: true })
   for (const [engine, launch] of browsers()) {
     const browser = await launch()
@@ -138,3 +140,5 @@ test('Julien may propose as neither the gérante, which he does not hold, nor co
   assert.match(reason, /a motion of ag is proposed as ag or as a role its proposer holds, not as coordination, another circle/)
   assert.doesNotMatch(reason, /julien/)
 })
+
+if (!process.env.CELLA_STORY) runTest('author story', async (t) => story((name, step) => t.test(name, step)))

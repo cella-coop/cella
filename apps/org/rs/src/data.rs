@@ -5,6 +5,7 @@ use std::process::Command;
 use crate::db::Dev;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, last_line};
+use crate::shell;
 
 /// A command for a database: the dev cluster's by the PG* variables, or
 /// any by URL through `DATABASE_URL`, which the node tools read.
@@ -77,12 +78,30 @@ pub fn seed(
     }
     let dir = self::fixture(repo, fixture)?;
     repo.install(steps)?;
+    // A story that drives the built shell, through `serve.ts`, needs it built,
+    // as `cella test e2e` builds it first.
+    if let Some(name) = scenarios.first()
+        && drives_shell(&repo.root.join(format!("apps/org/ts/_e2e/{name}.test.ts")))?
+    {
+        shell::build(repo, steps)?;
+    }
     let mut cmd = on(&Dev::new(repo), url, "node")?;
     cmd.arg(repo.root.join("tools/seed.mjs")).arg(dir);
     if let Some(name) = scenarios.first() {
         cmd.arg("--scenario").arg(name);
     }
     steps.run(&format!("seed {fixture}"), &mut [cmd], last_line)
+}
+
+/// Whether a scenario drives the built shell: it imports `serve.ts`. One
+/// that is not there is no story, which the seed tool says.
+fn drives_shell(file: &Path) -> Result<bool> {
+    if !file.exists() {
+        return Ok(false);
+    }
+    let text =
+        fs::read_to_string(file).map_err(|e| Fail::new(format!("{}: {e}", file.display())))?;
+    Ok(text.contains("from './serve.ts'"))
 }
 
 /// Runs `cella.vault_sweep()` as the cluster's superuser, on the verdict

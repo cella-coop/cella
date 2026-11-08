@@ -254,3 +254,9 @@ files, every version's upgrade script among them, laid out as nixpkgs'
 `postgresql.withPackages` takes an extension, so a host's Postgres is
 `postgresql_18.withPackages (p: [ cella-pg ])` and its
 `shared_preload_libraries` names `cella`.
+
+The flake's `cella-org` is the org app as one derivation: the shell
+built with adapter-node, its node modules and the `cella` CLI, which
+runs it as `cella serve --prod` does, with the DuckDB extensions the
+analytics shell loads. Its closure holds no key, no session key and no
+database: those are the host's.

@@ -1068,7 +1068,7 @@ asks the circles the reader reads in as an uncorrelated subquery,
 row's owning circle with that list, so a page costs the same reading
 by mandate as reading everything. The same statement counts
 the rows each tab keeps and that the sidebar counts, gives each
-enumeration's values, and runs a dashboard's or the home's widgets as
+enumeration's values, and runs a dashboard's widgets as
 SQL aggregates. A field is read in SQL as the row holds it under the
 column's key, so a slice's select returns what each badge and date
 column shows under its key, already derived, such as an invoice's

@@ -1,5 +1,4 @@
-import { icons, type App, type Column } from '@cella/org-ui'
-import type { Margin } from '../models/margin.ts'
+import { icons, type App } from '@cella/org-ui'
 import type { Drawn, Report } from '../models/report.ts'
 import type { Statement as Sheet } from '../models/statement.ts'
 import type { Federation as Figures } from '../models/federation.ts'
@@ -66,25 +65,5 @@ export const app: App = {
         blocks: [Statement, Margins, Federation, Custom],
       },
     },
-  },
-}
-
-// The reports whose rows the home may pin a widget over, as the
-// collection `reports/<id>`, and the fields of their rows: each project's
-// margin.
-export const pinnable: Record<string, { title: string; columns: Column<Margin>[] }> = {
-  margins: {
-    title: 'Project margins',
-    columns: [
-      { key: 'title', label: 'Project', kind: 'title', value: (m) => m.title },
-      { key: 'invoiced', label: 'Invoiced', kind: 'money', value: (m) => m.invoiced },
-      { key: 'cost', label: 'Time cost', kind: 'money', value: (m) => m.cost },
-      { key: 'expenses', label: 'Expenses', kind: 'money', value: (m) => m.expenses },
-      { key: 'margin', label: 'Margin', kind: 'money', value: (m) => m.margin },
-      { key: 'percent', label: 'Margin %', kind: 'number', value: (m) => m.percent },
-      { key: 'burn', label: 'Burn %', kind: 'number', value: (m) => m.burn },
-      { key: 'landing', label: 'Margin at completion', kind: 'money', value: (m) => m.landing },
-      { key: 'watch', label: 'Watch', kind: 'badge', value: (m) => m.watch },
-    ],
   },
 }

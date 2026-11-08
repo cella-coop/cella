@@ -1,4 +1,4 @@
-import { type Added, type App, type Column, type Look, type Nav, type Owned, type Pin, type Preset, type Shift, type Widget } from '@cella/org-ui'
+import { type Added, type App, type Column, type Look, type Nav, type Owned, type Preset, type Shift, type Widget } from '@cella/org-ui'
 import { presets } from '@cella/org-ui/models'
 import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
@@ -34,7 +34,7 @@ import { app as projectTimesheet } from '@cella/org-graft-project-timesheet/app'
 import { app as expense } from '@cella/org-expense/app'
 import { app as bill } from '@cella/org-bill/app'
 import { app as payslip } from '@cella/org-payslip/app'
-import { app as report, pinnable as reported } from '@cella/org-report/app'
+import { app as report } from '@cella/org-report/app'
 import { app as accountMotion } from '@cella/org-graft-account-motion/app'
 import { app as accountMembership } from '@cella/org-graft-account-membership/app'
 import { app as accountMembershipTransaction } from '@cella/org-graft-account-membership-transaction/app'
@@ -146,26 +146,6 @@ export const apps: App[] = [
   expenseFile,
   root,
 ]
-
-// The co-op's home until a viewer pins their own: what a managing
-// director looks at first, the cash, what clients owe, the projects'
-// margins, the motions open and the meetings ahead. The root's, since
-// it runs over the fields of several slices no one slice joins.
-export const home: Pin[] = [
-  { collection: 'accounts', kind: 'kpi', title: 'Cash', measure: { op: 'sum', field: 'balance' }, where: [{ field: 'cash', is: ['cash'] }] },
-  { collection: 'invoices', kind: 'kpi', title: 'Owed by clients', measure: { op: 'sum', field: 'owed' } },
-  { collection: 'invoices', kind: 'kpi', title: 'Overdue', measure: { op: 'sum', field: 'owed' }, where: [{ field: 'state', is: ['overdue'] }] },
-  { collection: 'reports/margins', kind: 'kpi', title: 'Margin on projects', measure: { op: 'sum', field: 'margin' } },
-  { collection: 'motions', kind: 'kpi', title: 'Open motions', measure: { op: 'count' }, where: [{ field: 'state', is: ['open'] }] },
-  { collection: 'meetings', kind: 'kpi', title: 'Meetings ahead', measure: { op: 'count' }, where: [{ field: 'status', is: ['scheduled'] }] },
-  { collection: 'invoices', kind: 'chart', title: 'Invoiced by month', measure: { op: 'sum', field: 'total' }, by: 'issued' },
-  { collection: 'reports/margins', kind: 'chart', title: 'Projects by watch', measure: { op: 'count' }, by: 'watch' },
-]
-
-// What the home may pin a widget over besides a collection: a report's
-// rows, as `reports/<id>`, which the report feat reads through the
-// analytics port, with its rows' columns.
-export const pinnable = Object.entries(reported).map(([id, r]) => ({ name: `reports/${id}`, title: r.title, columns: r.columns as Column[] }))
 
 export const collection = (name: string): Owned | undefined => apps.find((a) => a.collections?.[name])?.collections?.[name]
 

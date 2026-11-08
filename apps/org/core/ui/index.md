@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -361,23 +361,11 @@ values beside them, a line with its months and values in a table for
 assistive technology and each month's tooltip. `Widgets`, in the View
 card, adds, edits, reorders and removes them.
 
-`Home`, a dashboard over many collections, is mounted on no page: the
-co-op's home is retired until a better first page is designed, and `/`
-lands in the Inbox. Its
-widgets are pins (`Pin`): a standard widget and the collection it runs
-over, checked by `pins` against that collection's fields and run by the
-server in SQL over its rows as the acting member sees them; each card names
-its collection and links to it (`from`). The root declares the co-op's
-pins until a viewer makes their own, JSON in the address (`w`) as a
-collection's are. The View card lists them in order, dragged into place
-or removed, and edits one collection's with `Widgets` (`c` in the
-address), `repin` putting them back where the first of them stood.
-
 ## Accessibility
 
 The `a11y` e2e scenario (`apps/org/ts/_e2e/a11y.test.ts`) scans, with
 axe-core through Playwright, the sign-in page and, signed in as
-Camille on Lanterne, the home, every collection the sidebar mounts in
+Camille on Lanterne, the Inbox `/` lands on, every collection the sidebar mounts in
 its default view, the first item each lists and its form open on
 New, in light and in dark, on Chromium, Firefox and WebKit. A
 violation of impact serious or critical fails it. What it found when

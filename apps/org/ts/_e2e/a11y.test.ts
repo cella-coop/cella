@@ -1,6 +1,6 @@
 // The accessibility scan, on a seeded Lanterne through the built shell:
 // axe-core, through Playwright, reads the sign-in page and, signed in as
-// Camille, the home, every collection the sidebar mounts in its default
+// Camille, the Inbox `/` lands on, every collection the sidebar mounts in its default
 // view, section by section, the first item each lists and its form open on New, in light and
 // in dark, on each browser `BROWSERS` names. A violation of impact
 // serious or critical fails it, unless `waiting` lists its rule on that

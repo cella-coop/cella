@@ -1,0 +1,114 @@
+---
+// A figure (index.md, figures): a photo engraved in one of the five inks,
+// laid on the print's paper washed with that ink and cut into a cluster
+// of the brand's cells, which runs off the screen's edge on the side it
+// bleeds to. Under it, its caption and its photographer's credit.
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { cluster } from '@cella/brand'
+import type { Figure, Status } from '../schemas'
+import { engravingUrl } from '../lib/engrave'
+import type { Marks } from '../lib/text'
+
+interface Props {
+  figure: Figure
+  ink: Status
+  seed: number
+  bleed?: 'l' | 'r'
+  aspect?: number
+  credit: { template: string; unsplash: string }
+  drafted: Marks
+}
+
+const { figure, ink, seed, bleed, aspect = 1.25, credit, drafted } = Astro.props
+const w = 1000
+const h = Math.round(w / aspect)
+const box = `0 0 ${w} ${h}`
+const cells = cluster(w, h, { pitch: 115, gutter: 12, round: 16, seed, drop: 0.25, bleed })
+const id = `cells-${figure.photo}-${seed}`
+const meta = JSON.parse(readFileSync(join(process.cwd(), 'src/photos', `${figure.photo}.json`), 'utf8')) as { photographer: string; photographerUrl: string; photoUrl: string }
+const [before, rest = ''] = credit.template.split('{name}')
+const [between, after = ''] = rest.split('{unsplash}')
+---
+
+<figure class="engraving" data-bleed={bleed}>
+  <svg viewBox={box} role="img" aria-label={figure.alt ?? figure.caption} style={{ '--ink': `var(--print-${ink}-deep)` }}>
+    <defs>
+      <clipPath id={`${id}-c`}>{cells.map((d) => <path d={d} />)}</clipPath>
+      <mask id={`${id}-m`} maskUnits="userSpaceOnUse" x="0" y="0" width={w} height={h}>
+        <image href={engravingUrl(figure.photo)} width={w} height={h} preserveAspectRatio="xMidYMid slice" />
+      </mask>
+    </defs>
+    <g clip-path={`url(#${id}-c)`}>
+      <rect class="paper" width={w} height={h} />
+      <rect class="ink" width={w} height={h} mask={`url(#${id}-m)`} />
+    </g>
+  </svg>
+  <figcaption>
+    <span data-drafted={drafted('figure.caption')}>{figure.caption}</span>
+    <span>{before}<a href={meta.photographerUrl}>{meta.photographer}</a>{between}<a href={meta.photoUrl}>{credit.unsplash}</a>{after}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .engraving {
+    display: grid;
+    gap: 0.9rem;
+    min-width: 0;
+    margin: 0;
+  }
+
+  svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* the print's paper takes a wash of its ink, so even a light cell
+     belongs to it */
+  .paper {
+    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
+  }
+
+  .ink {
+    fill: var(--ink);
+  }
+
+  figcaption {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  figcaption a {
+    color: inherit;
+  }
+
+  /* bleeding, the figure runs past the column to the screen's edge on its
+     outer side; its caption keeps to the column */
+  [data-bleed] {
+    --bleed: calc((100vw - min(100vw, var(--wrap))) / 2 + max(16px, env(safe-area-inset-right, 0px)));
+  }
+
+  [data-bleed='r'] {
+    margin-right: calc(-1 * var(--bleed));
+  }
+
+  [data-bleed='r'] figcaption {
+    padding-right: var(--bleed);
+  }
+
+  [data-bleed='l'] {
+    margin-left: calc(-1 * var(--bleed));
+  }
+
+  [data-bleed='l'] figcaption {
+    padding-left: var(--bleed);
+  }
+</style>

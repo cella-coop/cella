@@ -1,8 +1,7 @@
 ---
 // The site's components, each by its name.
-import Button from '../Button.astro'
 import ThemeToggle from '../ThemeToggle.astro'
-import { siteData } from '../../lib/content'
+import { siteData } from '../../lib/text'
 
 const site = await siteData()
 ---
@@ -10,8 +9,8 @@ const site = await siteData()
 <ul class="grid" role="list">
   <li>
     <div class="card">
-      <Button href="#">{'primary'}</Button>
-      <Button href="#" variant={'secondary'}>{'secondary'}</Button>
+      <a class="btn solid" href="#">{'solid'}</a>
+      <a class="btn" href="#">{'outline'}</a>
     </div>
     <p class="name"><code>{'button'}</code></p>
   </li>

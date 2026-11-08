@@ -1,20 +1,19 @@
 ---
-// Every photo of the library as the site prints it, on the print's paper
-// in a real ink, the five inks in turn, so no two in a row share one. Hovering one
-// shows a toolbar of the five inks; a press wears that ink. A print's dots
-// are the same in any ink, so a change of ink is a change of colour alone.
-// A press on a photo opens it large, printed at the enlarged width, in its
+// Every photo of the library as the site engraves it, on the print's
+// paper in a real ink, the five inks in turn, so no two in a row share
+// one. Hovering one shows a toolbar of the five inks; a press wears that
+// ink. An engraving's lines are the same in any ink, so a change of ink
+// is a change of colour alone. A press on a photo opens it large, in its
 // ink; a press anywhere, or escape, closes it.
-import Backdrop from '../Backdrop.astro'
 import { photoNames } from '../../lib/assets'
-import { STATUSES } from '../../lib/photo'
-import { maskUrl, ratio } from '../../lib/print'
+import { engravingUrl, ratio } from '../../lib/engrave'
+import { STATUSES } from '../../schemas'
 
 const photos = await Promise.all(
   photoNames().map(async (name, i) => ({
     name,
     ink: STATUSES[i % STATUSES.length],
-    full: maskUrl(name, 'hero'),
+    full: engravingUrl(name),
     ratio: await ratio(name),
   })),
 )
@@ -25,7 +24,7 @@ const photos = await Promise.all(
     photos.map(({ name, ink, full, ratio }) => (
       <li class="tile" data-ink={ink} data-name={name} data-full={full} data-ratio={ratio}>
         <div class="print">
-          <Backdrop photo={{ photo: name, ink }} size={'small'} />
+          <div class="backdrop" style={{ '--ink': `var(--print-${ink}-deep)`, '--mask': `url(${full})` }} aria-hidden="true"><span /></div>
           <div class="tools" role="toolbar" aria-label={name}>
             {STATUSES.map((s) => (
               <button type="button" class="ink" data-set={s} aria-label={s} aria-pressed={s === ink ? 'true' : 'false'} style={{ '--swatch': `var(--print-${s}-deep)` }} />
@@ -119,6 +118,13 @@ const photos = await Promise.all(
     background: var(--print-paper);
   }
 
+  .backdrop {
+    position: absolute;
+    inset: 0;
+    background: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
+  }
+
+  .backdrop span,
   .large span {
     position: absolute;
     inset: 0;

@@ -91,12 +91,14 @@ site hold no feat and write no SQL. Read
 - **Personal data never enters the log.** Commit to it; keep it in the vault.
 - **The site's text is the operator's.** No agent writes
   `apps/site/src/content/**`, by an edit, a script, a move or a rename:
-  the operator writes every word of it by hand. Agents write the site's
+  the operator writes every word of it by hand. An agent may draft text
+  in `apps/site/src/drafts/**`, laid out as the text is, which fills only
+  what the operator's text leaves out, is underlined in the dev server
+  and refused by a release, until the operator writes over it
+  ([the text](apps/site/index.md#the-text)). Agents write the site's
   structure, its components and its diagrams in `@cella/diagrams`
-  ([diagrams](packages/diagrams/index.md)). A
-  change that needs a word of the text changed says so in its entry's
-  Flag, and the operator writes it; `.claude/settings.json` refuses an
-  agent's edit there early
+  ([diagrams](packages/diagrams/index.md)); `.claude/settings.json`
+  refuses an agent's edit of the text early
   ([whose words](apps/site/index.md#whose-words)).
 - **A slice's UI is its own.** A feat mounts its collections in the shell
   through its `./api` and `./app` slices; a graft extends only the

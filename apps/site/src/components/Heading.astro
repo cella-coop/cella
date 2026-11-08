@@ -1,0 +1,15 @@
+---
+// A heading, its part marked `*so*` set thin.
+import { parts } from '../lib/text'
+
+interface Props {
+  text: string
+  level: 1 | 2
+  drafted?: true
+}
+
+const { text, level, drafted } = Astro.props
+const Tag = level === 1 ? 'h1' : 'h2'
+---
+
+<Tag data-drafted={drafted}>{parts(text).map((p) => (p.thin ? <span class="thin">{p.text}</span> : p.text))}</Tag>

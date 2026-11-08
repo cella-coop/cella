@@ -1,12 +1,12 @@
 ---
 import { diagrams, type DiagramName } from '@cella/diagrams'
-import { getEntry } from 'astro:content'
+import { siteData } from '../lib/text'
 
 const { name } = Astro.props as { name: DiagramName }
 const diagram = Object.hasOwn(diagrams, name) ? diagrams[name] : undefined
 if (!diagram) throw new Error(name)
 const { component: Picture, meta } = diagram
-const site = (await getEntry('site', 'site'))!.data
+const site = await siteData()
 ---
 
 <figure class="diagram">

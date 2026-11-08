@@ -292,7 +292,11 @@ pub enum Site {
         port: u16,
     },
     /// Build the site static into apps/site/dist
-    Build,
+    Build {
+        /// Refuse any text a draft still supplies: the site's every word the operator's
+        #[arg(long)]
+        release: bool,
+    },
     /// Build the figure fixture and take its four screenshots into apps/site/test
     Screenshots,
     /// Vendor an Unsplash photo with its attribution

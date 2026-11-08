@@ -47,6 +47,9 @@ const SPOKEN = new Set(['aria-label', 'aria-description', 'aria-roledescription'
 // A string shaped as an identifier, a path or a selector: lower case, no
 // space. Anything else, a capital, a space, a sentence's stop, is prose.
 const IDENT = /^[a-z0-9_./@:?*#=&%+~,\-[\]{}()]*$/
+// A string or a template's text that names, or only counts, as an SVG
+// viewBox's numbers and the spaces between them do.
+const quiet = (s) => IDENT.test(s) || NUMERIC.test(s)
 // Elements whose content is code, never copy.
 const RAW = new Set(['style', 'script'])
 
@@ -110,11 +113,11 @@ export function findings(parse, source, ts = false) {
       case 'ImportExpression':
         return
       case 'Literal':
-        if (typeof node.value === 'string' && !IDENT.test(node.value)) say(node, `the string '${node.value}' is copy`)
+        if (typeof node.value === 'string' && !quiet(node.value)) say(node, `the string '${node.value}' is copy`)
         return
       case 'TemplateElement': {
         const text = node.value.cooked ?? node.value.raw
-        if (!IDENT.test(text)) say(node, `the template text \`${text}\` is copy`)
+        if (!quiet(text)) say(node, `the template text \`${text}\` is copy`)
         return
       }
       default:

@@ -5,7 +5,7 @@
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
 import { nav } from '../lib/assets'
-import { siteData } from '../lib/content'
+import { siteData } from '../lib/text'
 import Base from './Base.astro'
 
 const { part } = Astro.props as { part?: string }
@@ -18,7 +18,7 @@ const site = await siteData()
     {part && <h1><code>{part}</code></h1>}
     <slot />
   </main>
-  <Footer footer={site.footer} toggle={site.theme.toggle} />
+  <Footer footer={site.footer} drafted={site.drafted} />
 </Base>
 
 <style>

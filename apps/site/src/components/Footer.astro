@@ -1,49 +1,50 @@
 ---
-// The footer: the brand's mark, the site's closing line, its links, and
-// the theme toggle again at the page's end.
+// The footer, on the coral band a call to action runs into: the brand's
+// mark, the site's closing line and its links.
 import mark from '@cella/brand/mark.svg?raw'
-import ThemeToggle from './ThemeToggle.astro'
+import type { Marks } from '../lib/text'
 
 type Link = { label: string; href: string }
 interface Props {
   footer: { line: string; links: Link[] }
-  toggle: string
+  drafted: Marks
 }
 
-const { footer, toggle } = Astro.props
+const { footer, drafted } = Astro.props
 ---
 
 <footer class="footer">
   <div class="wrap bar">
     <span class="mark" aria-hidden="true" set:html={mark} />
-    <p class="line">{footer.line}</p>
+    <p class="label line" data-drafted={drafted('footer.line')}>{footer.line}</p>
     {
       footer.links.length > 0 && (
-        <ul class="links" role="list">
+        <ul class="links" role="list" data-drafted={drafted('footer.links')}>
           {footer.links.map((l) => (
             <li>
-              <a href={l.href}>{l.label}</a>
+              <a class="label" href={l.href}>{l.label}</a>
             </li>
           ))}
         </ul>
       )
     }
-    <ThemeToggle label={toggle} />
   </div>
 </footer>
 
 <style>
   .footer {
-    padding-block: 2.5rem;
-    color: var(--text-muted);
-    font-size: var(--t-sm);
+    position: relative;
+    z-index: 1;
+    padding-block: 2rem 3rem;
+    background: var(--band-b);
+    color: var(--band-b-ink);
   }
 
   .bar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 1rem 1.5rem;
+    gap: 1rem 2.5rem;
   }
 
   .mark :global(svg) {
@@ -52,14 +53,15 @@ const { footer, toggle } = Astro.props
     height: 1.75rem;
   }
 
-  .line {
-    margin: 0;
+  .label {
+    color: inherit;
+    opacity: 0.8;
   }
 
   .links {
     display: flex;
     flex-wrap: wrap;
-    gap: 1.25rem;
+    gap: 1.5rem;
     margin: 0 0 0 auto;
     padding: 0;
     list-style: none;
@@ -70,14 +72,6 @@ const { footer, toggle } = Astro.props
   }
 
   .links a:hover {
-    color: var(--text);
-  }
-
-  .links + :global(.toggle) {
-    margin-inline-start: 0;
-  }
-
-  .bar > :global(.toggle:only-of-type) {
-    margin-inline-start: auto;
+    opacity: 1;
   }
 </style>

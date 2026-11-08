@@ -1,10 +1,11 @@
 ---
-// One post at `/blog/<name>/`: its title as the hero, its date and
-// authors, its body in the prose column, and the way back to the index.
+// One post at `/blog/<name>/`: its title as the hero, its date above and
+// its summary under, its authors, its body in the prose column, and the
+// way back to the index.
 import { render } from 'astro:content'
 import { figures } from '../../components/figures'
 import Page from '../../layouts/Page.astro'
-import { dated, posts, siteData } from '../../lib/content'
+import { dated, posts, siteData, type Rendered } from '../../lib/text'
 
 export async function getStaticPaths() {
   return (await posts()).map((p) => ({ params: { post: p.id }, props: { post: p } }))
@@ -13,13 +14,26 @@ export async function getStaticPaths() {
 const { post } = Astro.props
 const { Content } = await render(post)
 const site = await siteData()
+const hero: Rendered = {
+  kind: 'hero',
+  id: 'hero',
+  order: 0,
+  title: post.data.title,
+  description: post.data.description,
+  eyebrow: dated(post.data.date),
+  heading: post.data.title,
+  items: [],
+  drafted: () => undefined,
+  Content: null,
+}
 ---
 
-<Page title={post.data.title} description={post.data.description} hero={{ heading: post.data.title, lede: post.data.description, eyebrow: dated(post.data.date) }}>
+<Page name={`blog/${post.id}`} hero={hero}>
   <article class="wrap prose">
+    <p class="summary">{post.data.description}</p>
     {
       post.data.authors.length > 0 && (
-        <ul class="authors" role="list">
+        <ul class="authors label" role="list">
           {post.data.authors.map((a) => (
             <li>{a}</li>
           ))}
@@ -27,26 +41,29 @@ const site = await siteData()
       )
     }
     <Content components={figures} />
-    <p class="back"><a href="/blog/">{site.blog.back}</a></p>
+    <p class="back"><a href="/blog/" data-drafted={site.drafted('blog.back')}>{site.blog.back}</a></p>
   </article>
 </Page>
 
 <style>
-  /* The post keeps the page's left edge, the hero's, at a readable width */
   article {
-    padding-block: 1rem 6rem;
+    padding-block: 2rem 6rem;
   }
 
   article > :global(*) {
     max-width: 44rem;
   }
 
+  .summary {
+    color: var(--text-muted);
+    font-size: clamp(1.1rem, 1.45vw, 1.28rem);
+  }
+
   .authors {
     display: flex;
     flex-wrap: wrap;
-    margin: 0 0 2.5rem;
+    margin: 1.5rem 0 2.5rem;
     padding: 0;
-    color: var(--text-muted);
     list-style: none;
   }
 

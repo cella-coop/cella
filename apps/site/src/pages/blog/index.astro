@@ -2,24 +2,24 @@
 // The blog's index: the blog page's hero, then every post newest first,
 // its date, title and summary.
 import Page from '../../layouts/Page.astro'
-import { dated, pageData, posts, siteData } from '../../lib/content'
+import { dated, page, posts, siteData } from '../../lib/text'
 
-const page = await pageData('blog')
+const { hero, sections } = await page('blog')
 const site = await siteData()
 const all = await posts()
 ---
 
-<Page {...page}>
+<Page name="blog" hero={hero} sections={sections}>
   <section class="wrap list">
     {
       all.length === 0 ? (
-        <p class="empty">{site.blog.empty}</p>
+        <p class="empty" data-drafted={site.drafted('blog.empty')}>{site.blog.empty}</p>
       ) : (
         <ol role="list">
           {all.map((p) => (
             <li>
               <a href={`/blog/${p.id}/`}>
-                <time datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
+                <time class="label" datetime={p.data.date.toISOString()}>{dated(p.data.date)}</time>
                 <h2>{p.data.title}</h2>
                 <p>{p.data.description}</p>
               </a>
@@ -32,9 +32,8 @@ const all = await posts()
 </Page>
 
 <style>
-  /* The list keeps the page's left edge, the hero's, at a readable width */
   .list {
-    padding-block: 2rem 6rem;
+    padding-block: 4rem 6rem;
   }
 
   .list > * {
@@ -48,11 +47,12 @@ const all = await posts()
   }
 
   li + li {
-    border-top: 1px solid var(--line);
+    border-top: 1px solid var(--rule);
   }
 
   a {
-    display: block;
+    display: grid;
+    gap: 0.6rem;
     padding-block: 2rem;
     text-decoration: none;
   }
@@ -62,22 +62,11 @@ const all = await posts()
     text-underline-offset: 0.2em;
   }
 
-  time {
-    color: var(--text-subtle);
-    font-size: var(--t-sm);
-  }
-
   h2 {
-    margin: 0.4rem 0 0.5rem;
-    font-size: var(--t-2xl);
+    font-size: clamp(1.8rem, 3vw, 2.6rem);
   }
 
   p {
-    margin: 0;
     color: var(--text-muted);
-  }
-
-  .empty {
-    padding-block: 2rem;
   }
 </style>

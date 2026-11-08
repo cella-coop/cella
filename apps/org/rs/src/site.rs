@@ -18,9 +18,12 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
             dev.args(["dev", "--port"]).arg(port.to_string());
             Steps::exec(&mut dev)
         }
-        Site::Build => {
+        Site::Build { release } => {
             let mut build = astro(repo);
             build.arg("build");
+            if release {
+                build.env("CELLA_SITE_RELEASE", "1");
+            }
             steps.run("site", &mut [build], last_line)?;
             println!("built {}", repo.site_dir().join("dist").display());
             Ok(())

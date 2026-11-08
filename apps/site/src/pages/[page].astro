@@ -1,20 +1,15 @@
 ---
-// Every page of the pages collection but home and the blog's index, at
-// `/<name>`: its hero, then its sections.
-import { getCollection } from 'astro:content'
-import Sections from '../components/Sections.astro'
+// Every page folder but home and the blog's, at `/<name>`: its hero, then
+// its sections.
 import Page from '../layouts/Page.astro'
+import { page, pageNames } from '../lib/text'
 
 export async function getStaticPaths() {
-  return (await getCollection('pages'))
-    .filter((p) => p.id !== 'home' && p.id !== 'blog')
-    .map((p) => ({ params: { page: p.id }, props: { data: p.data } }))
+  return (await pageNames()).filter((p) => p !== 'home' && p !== 'blog').map((p) => ({ params: { page: p } }))
 }
 
-const { page } = Astro.params
-const { data } = Astro.props
+const name = Astro.params.page
+const { hero, sections } = await page(name)
 ---
 
-<Page {...data}>
-  <Sections page={page} />
-</Page>
+<Page name={name} hero={hero} sections={sections} />

@@ -1,13 +1,10 @@
 ---
-// The home page: its hero at full size, then its sections. Every word it
-// shows is the content collections' (index.md, the text).
-import Sections from '../components/Sections.astro'
+// The home page, `pages/home/`: its hero, then its sections. Every word it
+// shows is the text's (index.md, the text).
 import Page from '../layouts/Page.astro'
-import { pageData } from '../lib/content'
+import { page } from '../lib/text'
 
-const page = await pageData('home')
+const { hero, sections } = await page('home')
 ---
 
-<Page {...page} size={'large'}>
-  <Sections page={'home'} />
-</Page>
+<Page name="home" hero={hero} sections={sections} />

@@ -1,13 +1,11 @@
 ---
-// Every icon the site draws, in every role: the cards' icons the sections
-// name, the theme toggle's and the menu's, and the library's own.
-import { getCollection } from 'astro:content'
+// Every icon the site draws, in every role: the theme toggle's and the
+// menu's, and the library's own.
 import Icon from '../Icon.astro'
 import { PARTS } from '../../lib/assets'
 import { STATUSES } from '../../lib/photo'
 
-const used = (await getCollection('sections')).flatMap((s) => s.data.items.flatMap((i) => (i.icon ? [i.icon] : [])))
-const icons = [...new Set([...used, 'sun', 'moon', 'list', ...PARTS.map((p) => p.icon)])].sort()
+const icons = [...new Set(['sun', 'moon', 'list', ...PARTS.map((p) => p.icon)])].sort()
 const roles = ['accent', ...STATUSES] as const
 ---
 

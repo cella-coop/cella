@@ -36,9 +36,9 @@ test('today\'s tree passes: every word the site shows is in its collections', as
 })
 
 test('a heading planted in index.astro fails, named by its file and line', async () => {
-  const line = page.split('\n').findIndex((l) => l.includes('<Sections')) + 1
+  const line = page.split('\n').findIndex((l) => l.includes('<Page')) + 1
   const found = await planted((dir) =>
-    writeFileSync(join(dir, 'src/pages/index.astro'), page.replace('<Sections', '<h2>Join</h2>\n  <Sections')),
+    writeFileSync(join(dir, 'src/pages/index.astro'), page.replace('<Page', '<h2>Join</h2>\n<Page')),
   )
   assert.deepEqual(found, [`src/pages/index.astro:${line}: the text "Join" is copy`])
 })
@@ -62,6 +62,17 @@ const sections = [{ id: 'what', heading: 'What cella is' }]
     { line: 7, what: 'the text "The cooperative workspace." is copy' },
     { line: 9, what: "the string 'To be written.' is copy" },
   ])
+})
+
+test('a string or template text of numbers and spaces is plumbing; one with a word is copy', () => {
+  const source = `---
+const [w, h] = [1000, 800]
+const box = \`0 0 \${w} \${h}\`
+const gap = ' '
+const said = \`\${w} cells\`
+---
+`
+  assert.deepEqual(findings(parse, source), [{ line: 5, what: 'the template text ` cells` is copy' }])
 })
 
 test('a spoken attribute is copy; an attribute that names or places is plumbing', () => {

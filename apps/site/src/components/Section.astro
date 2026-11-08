@@ -1,286 +1,315 @@
 ---
-// One section of the page, laid out by its kind (content.config.ts): its
-// eyebrow and heading, its body, and what its kind adds: a grid of cards,
-// numbered steps, a figure beside the text, or a band with an action. A
-// split with a print lays it as a hero does, filling its side top to foot,
-// cut by the mark's cells where it meets the page; with a print, the
-// print alone shows.
-import Art from './Art.astro'
-import Button from './Button.astro'
-import Icon from './Icon.astro'
-import Showcase from './Showcase.astro'
-import type { IconRole } from '../lib/icon'
-import type { Status } from '../lib/photo'
+// One section of a page (index.md, the layout), by its kind. The hero
+// opens the page; a section with a figure sets it beside its text, on the
+// side `flip` gives, the figure bleeding off the screen's outer edge; a
+// quote is a band of sage, a call to action one of coral that runs into
+// the footer. Its number, `num`, counts the page's plain sections.
+import { cell } from '@cella/brand'
+import type { Status } from '../schemas'
+import type { Rendered } from '../lib/text'
+import Engraving from './Engraving.astro'
+import Heading from './Heading.astro'
 
-type Link = { label: string; href: string }
-type Item = { icon?: string; role?: IconRole; title: string; body: string }
 interface Props {
-  id: string
-  heading: string
-  kind: 'prose' | 'features' | 'steps' | 'split' | 'cta'
-  eyebrow?: string
-  items: Item[]
-  figure?: { diagram: string } | { photo: string; alt: string; print?: string }
-  backdrop?: string | { photo: string; ink?: Status }
-  side: 'start' | 'end'
-  action?: Link
-  tone: Status
-  surface: 'ground' | 'panel'
+  section: Rendered
+  ink: Status
+  seed: number
+  flip?: boolean
+  num?: number
+  credit: { template: string; unsplash: string }
 }
 
-const { id, heading, kind, eyebrow, items, figure, backdrop, side, action, tone, surface } = Astro.props
-const labelled = `${id}-heading`
-const art = kind === 'split' ? backdrop : undefined
-const named = typeof art === 'string' ? art : art?.photo
+const { section: s, ink, seed, flip = false, num, credit } = Astro.props
+const d = s.drafted
+const { Content } = s
+const hero = s.kind === 'hero'
+const band = s.kind === 'quote' ? 'quote' : s.kind === 'cta' ? 'cta' : undefined
 ---
 
-<section
-  id={id}
-  class="section band"
-  data-kind={kind}
-  data-side={side}
-  data-art={art ? 'yes' : 'no'}
-  aria-labelledby={labelled}
-  data-surface={surface}
->
-  {art && <Art photo={art} tone={tone} side={side} key={`${id}-${named}`} />}
-  <div class="wrap">
-    <div class="inner">
-      <div class="head">
-        {eyebrow && <p class="eyebrow">{eyebrow}</p>}
-        <h2 id={labelled}>{heading}</h2>
-        <div class="body"><slot /></div>
-        {action && <div class="action"><Button href={action.href}>{action.label}</Button></div>}
+<section id={hero ? undefined : s.id} class:list={['section', { hero }]} data-band={band}>
+  {
+    s.kind === 'quote' ? (
+      <div class="wrap">
+        <blockquote>
+          {Content && <div class="said" data-drafted={d('body')}><Content /></div>}
+          <cite class="label" data-drafted={d('heading')}>{s.heading}</cite>
+        </blockquote>
       </div>
-      {
-        kind === 'split' && figure && !art && (
-          <div class="figure">
-            <div class="card">
-              <Showcase figure={figure} />
-            </div>
-          </div>
-        )
-      }
-      {
-        (kind === 'features' || kind === 'steps') && items.length > 0 && (
-          <ol class="items" role="list">
-            {items.map((i) => (
-              <li class="item">
-                {i.icon && <Icon name={i.icon} role={i.role} />}
-                <h3>{i.title}</h3>
-                <p>{i.body}</p>
-              </li>
-            ))}
-          </ol>
-        )
-      }
-    </div>
-  </div>
+    ) : (
+      <div class:list={['wrap', s.figure ? 'pair' : 'single', { flip, overhang: hero }]}>
+        <div class="copy">
+          {num !== undefined && <span class="num" aria-hidden="true">{String(num).padStart(2, '0')}</span>}
+          {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
+          <Heading text={s.heading} level={hero ? 1 : 2} drafted={d('heading')} />
+          {Content && <div class:list={['body', { lede: s.kind !== 'prose' }]} data-drafted={d('body')}><Content /></div>}
+          {
+            s.kind === 'features' && s.items.length > 0 && (
+              <div class="features" data-drafted={d('items')}>
+                {s.items.map((it, i) => (
+                  <div class="feature">
+                    {/* each item's marker a cell of its own, in the inks in turn */}
+                    <svg class="cellmark" viewBox="0 0 100 100" aria-hidden="true"><path d={cell(seed * 13 + i * 7)} style={{ fill: `var(--p${i % 5})` }} /></svg>
+                    <div><h3>{it.title}</h3><p>{it.body}</p></div>
+                  </div>
+                ))}
+              </div>
+            )
+          }
+          {
+            s.kind === 'steps' && s.items.length > 0 && (
+              <ol class="steps" role="list" data-drafted={d('items')}>
+                {s.items.map((it, i) => (
+                  <li class="step"><span class="n" aria-hidden="true">{i + 1}</span><h3>{it.title}</h3><p>{it.body}</p></li>
+                ))}
+              </ol>
+            )
+          }
+          {
+            s.kind === 'list' && s.items.length > 0 && (
+              <ul class="rows" role="list" data-drafted={d('items')}>
+                {s.items.map((it) => (
+                  <li><span>{it.title}</span><span>{it.body}</span></li>
+                ))}
+              </ul>
+            )
+          }
+          {
+            (s.primary || s.secondary || s.action) && (
+              <div class="actions">
+                {s.primary && <a class="btn solid" href={s.primary.href} data-drafted={d('primary')}>{s.primary.label}</a>}
+                {s.action && <a class="btn solid" href={s.action.href} data-drafted={d('action')}>{s.action.label}</a>}
+                {s.secondary && <a class="btn" href={s.secondary.href} data-drafted={d('secondary')}>{s.secondary.label}</a>}
+              </div>
+            )
+          }
+        </div>
+        {s.figure && <Engraving figure={s.figure} ink={s.figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={d} />}
+      </div>
+    )
+  }
 </section>
 
 <style>
   .section {
-    padding-block: clamp(4rem, 10vh, 7rem);
+    position: relative;
   }
 
-  h2 {
-    margin: 0;
-    font-size: clamp(var(--t-3xl), 4vw, calc(var(--t-4xl) * 1.3));
+  .hero {
+    padding-top: clamp(2.5rem, 6vw, 5rem);
   }
 
-  .body {
-    margin-top: 1rem;
-    color: var(--text-muted);
-    font-size: var(--t-lg);
-  }
-
-  .body > :global(:first-child) {
-    margin-top: 0;
-  }
-
-  .body > :global(:last-child) {
-    margin-bottom: 0;
-  }
-
-  .action {
-    margin-top: 2rem;
-  }
-
-  /* prose: one readable column */
-  .section[data-kind='prose'] .inner {
-    max-width: 44rem;
-  }
-
-  /* features and steps: a centred head over the items */
-  .section[data-kind='features'] .head,
-  .section[data-kind='steps'] .head {
-    max-width: 44rem;
-    margin-inline: auto;
-    text-align: center;
-  }
-
-  .items {
+  .pair {
     display: grid;
-    gap: 1.25rem;
-    margin: 3rem 0 0;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: clamp(2rem, 5vw, 5rem);
+    align-items: center;
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .pair.flip {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  }
+
+  .pair.flip > :global(figure) {
+    order: -1;
+  }
+
+  .single {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
+
+  .single .copy {
+    max-width: 44rem;
+  }
+
+  /* the hero's figure overhangs the section after it */
+  .overhang {
+    margin-bottom: clamp(-7rem, -8vw, -3rem);
+  }
+
+  .copy {
+    display: grid;
+    gap: 1.5rem;
+    align-content: center;
+  }
+
+  .num {
+    margin-bottom: -0.5rem;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: clamp(4rem, 9vw, 8rem);
+    font-weight: 200;
+    letter-spacing: -0.04em;
+    line-height: 0.8;
+    opacity: 0.22;
+  }
+
+  .body :global(p) {
+    margin: 0;
+  }
+
+  .body :global(p + p) {
+    margin-top: 1em;
+  }
+
+  .lede {
+    max-width: 33rem;
+    color: var(--text-muted);
+    font-size: clamp(1.1rem, 1.45vw, 1.28rem);
+  }
+
+  .features {
+    display: grid;
+    gap: 1.6rem;
+    margin-top: 0.5rem;
+  }
+
+  .feature {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .cellmark {
+    flex: none;
+    width: 2.4rem;
+    height: 2.4rem;
+  }
+
+  .feature p,
+  .step p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.97rem;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem 2.2rem;
+    margin: 0.5rem 0 0;
     padding: 0;
     list-style: none;
   }
 
-  .section[data-kind='features'] .items {
-    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  }
-
-  /* a card one surface up from its band: a panel on the ground, raised on
-     a panel */
-  .section[data-kind='features'] .item {
-    padding: 1.5rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
-  }
-
-  .section[data-surface='panel'][data-kind='features'] .item {
-    background: var(--raised);
-  }
-
-  .item :global(.icon) {
-    width: 2.5rem;
-    margin-bottom: 1rem;
-  }
-
-  .item h3 {
-    margin: 0 0 0.5rem;
-    font-size: var(--t-xl);
-  }
-
-  .item p {
-    margin: 0;
-    color: var(--text-muted);
-  }
-
-  .section[data-kind='steps'] .items {
-    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-    counter-reset: step;
-  }
-
-  .section[data-kind='steps'] .item {
-    counter-increment: step;
-    padding-top: 1.25rem;
-    border-top: 2px solid var(--text);
-  }
-
-  .section[data-kind='steps'] .item::before {
-    content: counter(step, decimal-leading-zero);
-    display: block;
-    margin-bottom: 0.75rem;
-    color: var(--text-subtle);
-    font-family: var(--font-mono);
-    font-size: var(--t-sm);
-  }
-
-  /* split: the text beside its figure */
-  .section[data-kind='split'] .inner {
+  .step {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
-    gap: 4rem;
-    align-items: center;
+    gap: 0.4rem;
+    align-content: start;
   }
 
-  .section[data-kind='split'][data-side='start'] .figure {
-    order: -1;
+  .step .n {
+    color: var(--p0);
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 250;
+    line-height: 1;
   }
 
-  .section[data-kind='split'][data-side='start'] .inner {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  .rows {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
   }
 
-  .figure :global(figure) {
+  .rows li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--rule);
+    font-weight: 520;
+  }
+
+  .rows li span:last-child {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  /* the breaks: two shaped bands of ink, their edges cut as a cell's */
+  [data-band] {
+    padding-block: clamp(7rem, 12vw, 10rem) clamp(5rem, 9vw, 8rem);
+  }
+
+  [data-band='quote'] {
+    background: var(--band-a);
+    color: var(--band-a-ink);
+    clip-path: polygon(0 14%, 34% 0, 100% 9%, 100% 88%, 71% 100%, 0 93%);
+  }
+
+  [data-band='cta'] {
+    --text: var(--band-b-ink);
+    --text-muted: color-mix(in oklch, var(--band-b-ink) 88%, transparent);
+    background: var(--band-b);
+    color: var(--band-b-ink);
+    clip-path: polygon(0 6%, 58% 0, 100% 12%, 100% 100%, 0 100%);
+    padding-bottom: clamp(5rem, 8vw, 7rem);
+  }
+
+  [data-band='cta'] .pair {
+    padding-block: 0;
+  }
+
+  [data-band='cta'] .btn {
+    border-color: var(--band-b-ink);
+    color: var(--band-b-ink);
+  }
+
+  [data-band='cta'] .btn.solid {
+    background: var(--band-b-ink);
+    color: var(--band-b);
+  }
+
+  blockquote {
+    display: grid;
+    gap: 1.6rem;
+    max-width: 54rem;
     margin: 0;
   }
 
-  .figure .card {
-    padding: 1.5rem;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    background: var(--panel);
+  .said :global(p) {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 3.6vw, 3.1rem);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    line-height: 1.12;
   }
 
-  /* A split with a print: the print fills its side, the words the other */
-  .section[data-art='yes'] {
-    position: relative;
-    display: flex;
-    align-items: center;
-    min-height: clamp(28rem, 70vh, 44rem);
-    overflow: hidden;
+  .said :global(strong) {
+    font-weight: 760;
   }
 
-  .section[data-art='yes'] .wrap {
-    position: relative;
-    z-index: 1;
-  }
-
-  /* the words in the far half, a gap short of the print */
-  .section[data-art='yes'] .inner {
-    display: block;
-    width: calc(50% - 3rem);
-    max-width: 34rem;
-  }
-
-  .section[data-art='yes'][data-side='start'] .inner {
-    margin-inline-start: auto;
-  }
-
-  /* cta: a band in the accent's ink */
-  .section[data-kind='cta'] .inner {
-    padding: clamp(2.5rem, 6vw, 4.5rem);
-    border-radius: calc(var(--radius) * 1.5);
-    background: var(--accent-fill);
-    color: var(--on-accent);
-    text-align: center;
-  }
-
-  .section[data-kind='cta'] .head {
-    max-width: 40rem;
-    margin-inline: auto;
-  }
-
-  .section[data-kind='cta'] .body {
+  cite {
     color: inherit;
-    opacity: 0.8;
-  }
-
-  .section[data-kind='cta'] .action :global(.button) {
-    background: var(--on-accent);
-    color: var(--accent-fill);
+    font-style: normal;
+    opacity: 0.75;
   }
 
   @media (max-width: 56rem) {
-    .section[data-kind='split'] .inner,
-    .section[data-kind='split'][data-side='start'] .inner {
+    .pair,
+    .pair.flip {
       grid-template-columns: minmax(0, 1fr);
-      gap: 2.5rem;
     }
 
-    .section[data-kind='split'][data-side='start'] .figure {
+    .pair.flip > :global(figure) {
       order: 0;
     }
 
-    .section[data-art='yes'] {
-      display: block;
-      min-height: 0;
-      padding-top: 0;
+    .overhang {
+      margin-bottom: 0;
     }
 
-    .section[data-art='yes'] .wrap {
-      margin-top: 1.5rem;
-    }
-
-    .section[data-art='yes'] .inner,
-    .section[data-art='yes'][data-side='start'] .inner {
-      width: auto;
-      max-width: none;
-      margin: 0;
+    .steps {
+      grid-template-columns: minmax(0, 1fr);
     }
   }
 </style>

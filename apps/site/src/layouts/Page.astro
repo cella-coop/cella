@@ -1,38 +1,49 @@
 ---
 // A page of the site: the header with the page marked in its links, the
-// page's hero, its body and the footer.
+// page's hero, its sections and the footer. Down the page the figures
+// trade sides and take the five inks in turn, the hero's the coral; a
+// plain section is numbered.
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
-import Hero from '../components/Hero.astro'
-import { siteData, surfaceOf, toneOf } from '../lib/content'
+import Section from '../components/Section.astro'
+import type { Status } from '../schemas'
+import { siteData, type Rendered } from '../lib/text'
 import Base from './Base.astro'
 
-type Link = { label: string; href: string }
 interface Props {
-  title: string
-  description: string
-  hero: {
-    eyebrow?: string
-    heading: string
-    lede?: string
-    primary?: Link
-    secondary?: Link
-    figure?: { diagram: string } | { photo: string; alt: string; print?: string }
-    backdrop?: string | { photo: string; ink?: 'error' | 'warning' | 'success' | 'info' | 'help' }
-  }
-  size?: 'large' | 'small'
+  name: string
+  hero: Rendered
+  sections?: Rendered[]
 }
 
-const { title, description, hero, size = 'small' } = Astro.props
+const { name, hero, sections = [] } = Astro.props
 const site = await siteData()
-const full = title === site.title ? title : site.titled.replace('{page}', title).replace('{site}', site.title)
+const page = hero.title ?? hero.heading
+const full = page === site.title ? page : site.titled.replace('{page}', page).replace('{site}', site.title)
+const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
+
+const TURN: Status[] = ['error', 'info', 'warning', 'success', 'help']
+// a section's seed, the same on every build: its page's and its own name
+const seedOf = (id: string) => [...`${name}/${id}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
+let figures = 1
+let plain = 0
+const laid = sections.map((s) => {
+  const flip = s.figure ? figures % 2 === 1 : false
+  const ink = TURN[figures % TURN.length]
+  if (s.figure) {
+    figures++
+  }
+  const num = ['prose', 'features', 'steps', 'list'].includes(s.kind) ? ++plain : undefined
+  return { s, flip, ink, num }
+})
 ---
 
-<Base title={full} description={description}>
-  <Header title={site.title} nav={site.nav} action={site.action} toggle={site.theme.toggle} menu={site.menu} />
+<Base title={full} description={hero.description ?? site.description}>
+  <Header title={site.title} nav={site.nav} toggle={site.theme.toggle} menu={site.menu} />
   <main>
-    <Hero hero={hero} size={size} tone={toneOf(0)} surface={surfaceOf(0)} />
+    <Section section={hero} ink={TURN[0]} seed={seedOf('hero')} credit={credit} />
     <slot />
+    {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} />)}
   </main>
-  <Footer footer={site.footer} toggle={site.theme.toggle} />
+  <Footer footer={site.footer} drafted={site.drafted} />
 </Base>

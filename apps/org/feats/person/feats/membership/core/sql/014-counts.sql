@@ -47,10 +47,11 @@ BEGIN ATOMIC
     AND (m.revoked IS NULL OR m.revoked > holds.day);
 END;
 
--- A power is held, and a circle's channel kept, by a mandate the person
+-- A power is held by a mandate the person
 -- holds (`holds`) whose scope covers the record from its seat's circle:
 -- the participant's are found on any seat, and the guard that knows the
--- circle a write concerns holds them to a seat there (`sits`).
+-- circle a write concerns holds them to a seat there
+-- (`membership_motion.sits`, `meeting_membership.sits`).
 CREATE OR REPLACE FUNCTION membership.may(actor text, power text, cents bigint, about text, day date) RETURNS boolean
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -75,14 +76,4 @@ BEGIN ATOMIC
     WHERE m.power = covered.power
     ORDER BY c.id
   );
-END;
-
-CREATE OR REPLACE FUNCTION membership.sits(payload jsonb) RETURNS text
-LANGUAGE sql STABLE
-BEGIN ATOMIC
-  SELECT CASE
-    WHEN NOT membership.sits_in(cella.actor(), p.circle, cella.verdict_date())
-      THEN cella.actor() || ' holds no seat in ' || coalesce(p.circle, 'no circle')
-  END
-  FROM (SELECT payload ->> 'circle' AS circle) p;
 END;

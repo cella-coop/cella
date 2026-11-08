@@ -1,6 +1,6 @@
 +++
 title = "Trust"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 # Trust
@@ -702,8 +702,12 @@ What the build does not yet do, and what lifts each:
   it runs. Within a write, a guard checks that it did what its payload
   names, never that it did nothing else, so a handler's bug can change
   more under its verdict than its payload says. The feats' triggers hold
-  the invariants whoever writes. Nothing at rung 1 lifts either: the
-  pilot trusts its host for both, as the ratchet's first rung does.
+  the invariants whoever writes. The fold catches a write that does more
+  than its entry says in every test run: Lanterne's year writes through
+  every action and folds to match row for row, so such a handler fails
+  the day it is written ([folds](architecture.md#folds)). In production
+  nothing at rung 1 lifts either: the pilot trusts its host's code for
+  both, as the ratchet's first rung does.
 
 - **The host serves the signing code and says what to sign.** The browser
   signs the request the server asks it to, one per decision, the close

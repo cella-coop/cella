@@ -112,7 +112,7 @@ slice and actions of its own: the circles and their roles, the grantees, mandate
 the members of each circle and the tenures of each role, with the seats
 read from them. Its tables are in the `circle` schema, which every feat's
 and graft's SQL may reference as it references `cella.*`; its actions,
-`circle:circle:message`, `circle:seat:add` and `circle:seat:remove`, are
+`circle:circle:create`, `circle:seat:add` and `circle:seat:remove` among them, are
 named for it and declared in its `models/actions.ts` as a feat's are,
 and any slice may guard them. It knows no feat: whether a seat counts on
 a day is the membership feat's to say, so who may use a power,
@@ -912,15 +912,20 @@ file anywhere else fails `cella test`:
   `cella_analytics`.
 - an **e2e test** is a scenario across slices, from an app root's `_e2e/`.
   `cella test e2e [NAME]` runs each on a database migrated whole and
-  seeded with Lanterne, through the handlers. The `fold` scenario folds
-  that founding's carried rows into a fresh database and compares every
-  state table, including the accounts from July through December 2026,
-  row for row. Every other scenario folds and compares its own logged
-  writes after it runs, unless its file names staged state the log cannot
-  reproduce. A scenario passes on every run in every browser it drives,
-  or it is red: it waits on what the page shows, never on a guess at how
-  long the page takes, so a timeout that passes on a rerun is a fault,
-  fixed in the scenario or in the page where it lies, never retried.
+  seeded with Lanterne, through the handlers. The `fold` scenario is
+  Lanterne's year: from its seed it writes a year through the handlers,
+  every action the tree declares at least once, an admission, a close
+  carrying its effects and one refusing one, invoices, a payroll, a
+  period's close, the year's accounts and an erasure among them; it
+  asserts that its log names every op `cella.fold` registers, failing on
+  each it misses by name, and folds that log into a fresh database that
+  matches every state table row for row. Every other scenario folds and
+  compares its own logged writes after it runs, unless its file names
+  staged state the log cannot reproduce. A scenario passes on every run
+  in every browser it drives, or it is red: it waits on what the page
+  shows, never on a guess at how long the page takes, so a timeout that
+  passes on a rerun is a fault, fixed in the scenario or in the page
+  where it lies, never retried.
 
 Both run on the dev cluster (`cella db start`), on `cella_test`, renewed
 for each slice and each scenario.
@@ -1444,7 +1449,7 @@ it holds there: a seat brings its own role, if any, and the circle's
 participant role besides, and a seat in one circle brings no participant
 role in another. The participant's mandates cover proposing and discussing:
 `propose`, to propose a motion of the circle and close it, and
-`discuss`, to post on a motion's deliberation, in the circle's channel
+`discuss`, to post on a motion's deliberation
 and on its meetings' agendas. They are mandates like any other, policies
 the assembly adopts, since `participant` is a role every circle has
 (`*`). `membership.may` finds them on any seat the actor holds,

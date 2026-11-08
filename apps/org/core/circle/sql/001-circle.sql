@@ -164,8 +164,3 @@ END;
 -- to grant; a seat in one circle brings it in no other.
 INSERT INTO circle.role (id, circle, name, duty) VALUES
   ('participant', '*', 'Participant', 'every seat in the circle: proposing and discussing its motions, its channel and its agendas');
-
--- circle:circle:message needs the participant's `discuss`, which
--- the membership feat holds to a seat in the message's circle.
-INSERT INTO cella.power (op, power, amount, owner) VALUES
-  ('circle:circle:message', 'discuss', NULL, 'circle');

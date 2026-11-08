@@ -17,7 +17,8 @@ grants powers to them through mandates, each perhaps scoped to the
 resources it covers; a person holds a role by a tenure, and a circle counts people
 and roles among its members, and where each sits is read from the two
 ([seats](#seats)). A mandate's grantee is one circle or one role, never a person.
-Each circle also has a channel for its messages.
+Each circle is to have a channel for its messages: planned, not built,
+so no action of it is declared.
 
 ## Entities
 
@@ -28,7 +29,7 @@ Each circle also has a channel for its messages.
 | grantee | `id`, `kind` | what a mandate is granted to, what a procedure's party names and what a motion is proposed as ([motion](../../feats/motion/index.md#schema)): a `circle` or a `role`, by its id, one row for each, made as the circle or the role is, so circles and roles share one key |
 | mandate | `id`, `grantee`, `issuer`, `parent?`, `power`, `policy`, `limit?`, `budget?`, `per?`, `procedure?`, `scope?`, `from`, `until?`, `revoked?` | the values of the mandate policy `policy` that grants it: its `grantee` is a role, an individual mandate, or a circle, a collective one; `issuer` is the circle whose motion adopted it, and `parent` the mandate it is issued under, none for one the assembly issues; `power` is an id; `limit` caps a single write, in cents, `budget` caps a cumulative total over its `per` ("month" or "year"); `procedure` names the procedure a motion acting under it is decided by, which passes down to every mandate issued under it, by name, since the motion feat holds procedures; `scope` is the condition on what it covers, a circle's id or `own`, the circle its holder holds the role in, none for the whole co-op; `from` and `until` are the days its policy applies |
 | right | `id`, `right`, `power`, `policy`, `limit?`, `from`, `until?`, `revoked?` | the values of the right policy `policy`: a power the legal form gives every `person`, `member` or `employee` as such; no mandate, so no grantee |
-| message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel |
+| message | `id`, `circle`, `thread?`, `author`, `at`, `text` | the circle's channel; planned, not built, so it has no table yet |
 
 A **power** is the id of something a write needs, such as `issue-invoice`
 or `close-period`; the feat owning a write names the power in
@@ -199,14 +200,14 @@ discussing:
 | Power | Actions |
 |---|---|
 | `propose` | proposing a motion of the circle (`motion:motion:propose`) and closing it (`motion:motion:close`) |
-| `discuss` | posting on a motion's deliberation (`motion:message:post`), in the circle's channel (`circle:circle:message`), and adding, moving and removing an item of its meetings' agendas (`meeting:item:add`, `:move`, `:remove`) |
+| `discuss` | posting on a motion's deliberation (`motion:message:post`), and adding, moving and removing an item of its meetings' agendas (`meeting:item:add`, `:move`, `:remove`) |
 
 They are mandates like any other, each a policy, and since the role is
 every circle's (`*`) they are the assembly's to grant and hold in every
 circle. `membership.may` finds a participant's mandate on any seat
 the actor holds; the guard of the slice that knows which circle an
-action concerns (`membership.sits`, `membership_motion.sits`,
-`meeting_membership.sits`) asks for a seat in that circle. An
+action concerns (`membership_motion.sits`, `meeting_membership.sits`)
+asks for a seat in that circle. An
 agent's or a service's seat would bring no participant role unless a
 procedure says so: named, not built.
 
@@ -648,7 +649,6 @@ tenure changes who holds the role, never what it holds.
 |---|---|---|
 | `POST /api/circle/create` | ordered | a new circle, by motion |
 | `POST /api/circle/amend` | ordered | a circle's name, purpose or procedure, by motion |
-| `POST /api/circle/message` | confluent | the circle's channel |
 | `POST /api/circle/seat.add` | ordered | who holds which role |
 | `POST /api/circle/seat.remove` | ordered | who holds which role |
 | `POST /api/circle/role.seat` | ordered | where a role's holders sit |
@@ -673,8 +673,8 @@ and `revoking`. Creating a circle places it nowhere: circles never nest.
   changes, so every record, mandate and seat it owns stays its own.
   It commits what it changed and what it was. Ordered, since the
   procedure it sets decides the motions put to the circle after it.
-- **message** posts to the channel. Messages merge in any order; it has
-  no handler yet.
+- **message**, a post to the channel, is planned, not built, so it is not
+  declared ([actions](../../../_corpus/doc/architecture.md#actions)): messages are to merge in any order.
 - **seat.add** and **seat.remove** begin and end a tenure, where they
   name a role, or a person's membership of a circle, where they name
   none, and so change who may use the powers a mandate grants. A
@@ -745,10 +745,7 @@ A mandate's policy is carried by a motion: it cites it, which the
 motion feat checks asks this, was put to a circle
 that may decide it and that holds the collective mandate for the
 power, and `membership-motion` that it carried, and which
-`membership-motion` carries out when it passes. A message needs
-the participant's `discuss`, which `membership.may` finds on a
-seat and `membership.sits`, the membership feat's guard, on a seat in
-the message's circle that counts.
+`membership-motion` carries out when it passes.
 
 ## Guards
 
@@ -830,9 +827,6 @@ the state before it (`sql/011-folds.sql`,
 - `circle:role:unseat` (`circle.fold_role_unseat`) ends the membership
   its entry names on the entry's day; one naming no seat, `0`, ends
   none.
-- `circle:circle:message` (`circle.fold_message`) has no handler, so no
-  entry of it is logged, and its fold refuses one rather than change
-  nothing.
 - `membership:member:admit` (`circle.fold_admitting`), as a motion
   carried admits, seats the member in the motion's circle as a member,
   by the seat id and circle its entry carries, from the entry's day; an

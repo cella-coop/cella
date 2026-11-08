@@ -6,6 +6,9 @@
 import '@cella/brand/fonts.css'
 import '@cella/brand/tokens.css'
 import favicon from '@cella/brand/favicon.svg?url'
+import { louder } from '../lib/grain'
+
+const grainPreview = louder(6)
 
 interface Props {
   title: string
@@ -23,6 +26,7 @@ const { title, description } = Astro.props
     <meta name="description" content={description} />
     <link rel="icon" type="image/svg+xml" href={favicon} />
     <title>{title}</title>
+    <style is:inline set:html={grainPreview}></style>
     <script is:inline>
       // A theme the visitor chose overrides the system's; none, it follows.
       try {

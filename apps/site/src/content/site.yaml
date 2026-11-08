@@ -1,6 +1,24 @@
 title: Cella
 description: Cella, the cooperative workspace.
-line: The cooperative workspace.
+titled: "{page} · {site}"
+nav:
+  - { label: About, href: /about }
+  - { label: Concept, href: /concept }
+  - { label: Blog, href: /blog }
+  - { label: Contact, href: /contact }
+menu: Menu
+theme:
+  toggle: Switch theme
+footer:
+  line: Cella, the cooperative workspace.
+  links:
+    - { label: About, href: /about }
+    - { label: Concept, href: /concept }
+    - { label: Blog, href: /blog }
+    - { label: Contact, href: /contact }
+blog:
+  empty: No posts yet.
+  back: All posts
 diagram:
   mark: AI-generated
 photo:

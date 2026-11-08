@@ -1,0 +1,10 @@
+title: Cella
+description: Cella, the cooperative workspace.
+hero:
+  backdrop: diverse-group-of
+  eyebrow: To be written.
+  heading: The cooperative workspace.
+  lede: To be written.
+  primary: { label: Read the vision, href: /concept }
+  secondary: { label: Get in touch, href: /contact }
+  figure: { diagram: scope-notary }

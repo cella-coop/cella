@@ -239,12 +239,14 @@ passes, so it holds no copy.
 
 Every word the site shows lives in its text, in two places laid out
 alike: the operator's, `src/content/`, and an agent's **drafts**,
-`src/drafts/`. The site reads each entry as the operator's file with its
-draft laid under it, field by field (`src/lib/text.ts`): a field the
-operator wrote wins whole, an object merges key by key, and a field
-they left out, or a body they left empty, is the draft's. The operator
-takes a draft over by writing that field, or the whole file, in
-`src/content/`; the draft then shows nowhere and can go.
+`src/drafts/`. A page's section is the operator's file whole once it
+exists, and its draft, whole, only where they have written none; a
+draft is a complete section, and goes once the operator writes theirs,
+so deleting their file deletes the section rather than bringing a draft
+back. The site's shared text, `site.yaml`, is read as the operator's
+file with its draft laid under it, field by field (`src/lib/text.ts`):
+a field the operator wrote wins whole, an object merges key by key, and
+a field they left out is the draft's.
 
 | Collection | Where | What it holds |
 |---|---|---|

@@ -64,8 +64,7 @@ export type Rendered = Section & {
   Content: Awaited<ReturnType<typeof render>>['Content'] | null
 }
 
-/** One section, its operator's file over its draft; its body the
- * operator's unless they left it empty. */
+/** One section: the operator's file, or its draft where they wrote none. */
 async function compose(id: string, own?: CollectionEntry<'pages'>, draft?: CollectionEntry<'pageDrafts'>): Promise<Rendered> {
   // a section is the operator's whole once their file exists; a draft
   // stands only for one they have not written, every field of it drafted
@@ -80,7 +79,7 @@ async function compose(id: string, own?: CollectionEntry<'pages'>, draft?: Colle
   }
   const parsed = section.safeParse(data)
   if (!parsed.success) {
-    throw invalid(`pages/${id}.mdx`, parsed.error)
+    throw invalid(`src/${own ? 'content' : 'drafts'}/pages/${id}.mdx`, parsed.error)
   }
   const body = entry?.body?.trim() ? entry : undefined
   if (body && !own) {

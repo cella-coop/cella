@@ -160,12 +160,14 @@ const actions = [
     align-content: center;
   }
 
-  /* the number: a ghost numeral, huge and faint behind the words, its
-     top left in line with theirs */
+  /* the number: a ghost numeral, huge and faint behind the words, out at
+     the screen's edge on their outer side, the left unless the figure
+     takes it, a gutter in from it, whole on any width */
   .num {
+    --out: calc((100vw - min(100vw, var(--wrap))) / 2);
     position: absolute;
     top: -0.32em;
-    left: -0.06em;
+    left: calc(-1 * var(--out));
     z-index: -1;
     color: var(--text);
     font-family: var(--font-display);
@@ -176,6 +178,11 @@ const actions = [
     opacity: 0.07;
     pointer-events: none;
     user-select: none;
+  }
+
+  .flip .num {
+    right: calc(-1 * var(--out));
+    left: auto;
   }
 
   .body :global(p) {

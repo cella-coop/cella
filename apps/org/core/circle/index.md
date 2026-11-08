@@ -975,10 +975,15 @@ their tenure, and Camille sits there as a member.
 | Every member | `draw-account`, `spread-capital`, `mark-attendance`, `save-report` |
 | Every employee | `log-time`, `claim-expense`, `apply-membership` |
 
-Each is a policy of the assembly, a mandate or a right, adopted with
-the statutes by the founding motion, m-2021-001, on 1 March 2021, and in force since;
-each mandate among them is a root, the assembly its issuer. The bills
-are the one chain three mandates deep, each narrower than the one above:
+Each is a policy, a mandate or a right. All but four are the
+assembly's, adopted with the statutes by the founding motion,
+m-2021-001, on 1 March 2021, and in force since, and each mandate among
+them is a root, the assembly its issuer. The four are the bills':
+coordination's `approve-bill`, Operations' `approve-bill` and
+`adopt-policy`, and the print buyer's `approve-bill`, which three later
+motions adopted, the assembly's, coordination's and Operations', and of
+which only coordination's is a root. They are the one chain three
+mandates deep, each narrower than the one above:
 
 | Mandate | Issued by | Under |
 |---|---|---|

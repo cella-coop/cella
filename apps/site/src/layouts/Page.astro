@@ -41,7 +41,11 @@ const laid = sections.map((s) => {
   if (s.figure) {
     figures++
   }
-  const num = ['prose', 'features', 'steps', 'list'].includes(s.kind) ? ++plain : undefined
+  // a plain section is numbered, and so is a band that neither quotes nor
+  // asks, by a form or an action
+  const asks = Boolean(s.form || s.action)
+  const counted = ['prose', 'features', 'steps', 'list'].includes(s.kind) || (s.kind === 'band' && !s.quote && !asks)
+  const num = counted ? ++plain : undefined
   return { s, flip, ink, num }
 })
 ---

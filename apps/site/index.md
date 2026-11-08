@@ -48,7 +48,7 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   | `quote` | a band of sage, its edges cut as a cell's: its body set large, its heading the attribution |
   | `cta` | a band of coral, its edges cut as a cell's: its eyebrow, heading, body and action |
 
-- **the footer**, on the page's own paper under a hairline: the lockup
+- **the footer**, on the page's own paper and its grid: the lockup
   and the site's closing line, the sitemap in columns, each a heading
   over its links, and under them the note that the site shows
   prototype work, not yet a product.
@@ -153,9 +153,10 @@ merged entry is held to its schema (`src/schemas.ts`), and one missing
 a field in both fails the build, naming the file, the field, and where
 to write it.
 
-**Drafted text is marked.** In the dev server every element whose text a
-draft supplied is underlined dotted in the info ink, so the operator
-sees on the page what is not yet theirs. `cella site build --release`
+**Drafted text is marked.** In the dev server, Alt+Shift+D underlines
+dotted, in the info ink, every element whose text a draft supplied, so
+the operator sees on the page what is not yet theirs, and hides it
+again; hidden at first, the choice kept in the browser. `cella site build --release`
 refuses an entry that still shows a draft's text, naming it and its
 drafted fields, so a release is every word the operator's; a plain
 build, as `cella check site` makes, shows drafts and marks nothing.

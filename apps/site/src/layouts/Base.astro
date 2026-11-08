@@ -3,7 +3,7 @@
 // favicon, the page's paper under a wide grid, and the theme the visitor
 // chose, set before the first paint. Its own tokens are the brand's
 // roles and inks, mixed; it names no face of its own. In the dev server,
-// text a draft supplied is underlined dotted (lib/text.ts).
+// Alt+Shift+D underlines the text a draft supplied (lib/text.ts).
 import '@cella/brand/fonts.css'
 import '@cella/brand/tokens.css'
 import '@cella/brand/print.css'
@@ -36,6 +36,34 @@ const { title, description } = Astro.props
         }
       } catch {}
     </script>
+    {
+      dev && (
+        <script is:inline>
+          // Drafted text's underline, hidden until Alt+Shift+D shows it,
+          // and remembered either way
+          const root = document.documentElement
+          try {
+            if (localStorage.getItem('drafts') === 'shown') {
+              root.dataset.drafts = 'shown'
+            }
+          } catch {}
+          addEventListener('keydown', (e) => {
+            if (e.altKey && e.shiftKey && e.code === 'KeyD') {
+              e.preventDefault()
+              const shown = root.dataset.drafts !== 'shown'
+              if (shown) {
+                root.dataset.drafts = 'shown'
+              } else {
+                delete root.dataset.drafts
+              }
+              try {
+                localStorage.setItem('drafts', shown ? 'shown' : 'hidden')
+              } catch {}
+            }
+          })
+        </script>
+      )
+    }
   </head>
   <body>
     <slot />
@@ -50,7 +78,7 @@ const { title, description } = Astro.props
     --grid: color-mix(in oklch, var(--text) calc(2.25% + var(--theme) * 0.35%), transparent);
     --rule: color-mix(in oklch, var(--text) 32%, transparent);
     /* where the grid's lines cross, a short plus */
-    --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M-4 0H4M0-4V4M96 0H104M100-4V4M-4 100H4M0 96V104M96 100H104M100 96V104' stroke='rgb(128 130 136 / 0.32)' stroke-width='0.6'/%3E%3C/svg%3E");
+    --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M-2 0H2M0-2V2M98 0H102M100-2V2M-2 100H2M0 98V102M98 100H102M100 98V102' stroke='rgb(128 130 136 / 0.32)' stroke-width='0.6'/%3E%3C/svg%3E");
     /* the bar's glass: near white in the light theme, near black in the
        dark, either seen through */
     --glass: oklch(calc(0.545 + var(--theme) * 0.425) 0.004 250 / calc(0.485 - var(--theme) * 0.065));
@@ -218,8 +246,9 @@ const { title, description } = Astro.props
     font-size: 0.9em;
   }
 
-  /* text a draft supplied, in the dev server alone */
-  [data-dev] [data-drafted] {
+  /* text a draft supplied, in the dev server alone, while Alt+Shift+D
+     shows it */
+  [data-dev][data-drafts='shown'] [data-drafted] {
     text-decoration: underline dotted color-mix(in oklch, var(--p3) 70%, transparent);
     text-decoration-thickness: 2px;
     text-underline-offset: 0.18em;

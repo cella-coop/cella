@@ -50,10 +50,13 @@ END;
 -- mandate for every power in `powers`, the first by id; or else the
 -- assembly, which holds every power inherently. For a grant, `grant`
 -- carries its values, its power, its limit and budget in cents, its
--- period and its scope, and the circle also holds, standing on `day`, a
--- collective mandate for its power that a mandate of those values from
--- `day` is no wider than (`circle.wider`), the one it issues the grant
--- under, so `circle.narrows` never refuses the grant for its issuer.
+-- period and its scope, and the days it applies from and until, and the
+-- circle also holds a collective mandate for its power, standing on the
+-- day the grant applies from, or else `day`, that a mandate of those
+-- values over those days, until its until or none, is no wider than
+-- (`circle.wider`), the one it issues the grant under: the days
+-- `motion.grant_flaw` judges the grant on, so neither it nor
+-- `circle.narrows` refuses the grant for its issuer.
 CREATE FUNCTION motion.decider(subject text, powers text[], day date, "grant" jsonb DEFAULT NULL) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -65,19 +68,22 @@ BEGIN ATOMIC
        AND (decider."grant" IS NULL OR EXISTS (
          SELECT FROM circle.mandate u
          JOIN circle.grantee g ON g.id = u.grantee AND g.kind = 'circle'
+         CROSS JOIN LATERAL (
+           SELECT coalesce((decider."grant" ->> 'from')::date, decider.day) AS "from", (decider."grant" ->> 'until')::date AS until
+         ) t
          WHERE u.grantee = c.id
            AND u.power = decider."grant" ->> 'power'
-           AND (u."from" IS NULL OR u."from" <= decider.day)
-           AND (u.until IS NULL OR u.until > decider.day)
-           AND (u.revoked IS NULL OR u.revoked > decider.day)
+           AND (u."from" IS NULL OR u."from" <= t."from")
+           AND (u.until IS NULL OR u.until > t."from")
+           AND (u.revoked IS NULL OR u.revoked > t."from")
            AND circle.wider(
              decider."grant" ->> 'power',
              ((decider."grant" ->> 'limit')::bigint)::cella.amount,
              ((decider."grant" ->> 'budget')::bigint)::cella.amount,
              decider."grant" ->> 'per',
              decider."grant" ->> 'scope',
-             decider.day,
-             NULL,
+             t."from",
+             t.until,
              u.id
            ) IS NULL))
      ORDER BY c.id

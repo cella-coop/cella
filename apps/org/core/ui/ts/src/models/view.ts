@@ -30,7 +30,7 @@ export interface Column<R = any> {
   role?: 'title' | 'sub' | 'meta' | 'hidden'
 }
 
-// A label and value row in the drawer's Properties card.
+// A label and value row in the drawer's Details.
 export interface Prop {
   label: string
   value: unknown
@@ -50,6 +50,8 @@ export interface Event {
   text: string
   // Who did it, by address, shown as their chip.
   who?: string
+  // What a comment says, under its line.
+  body?: string
 }
 
 // A thing of one slice drawn inside another's item, such as a motion
@@ -92,9 +94,15 @@ export interface Page<T = any> {
   eyebrow: string
   title: (data: T) => string
   subtitle?: (data: T) => string
+  // The drawer's label and value rows, and the records it links to.
   properties?: (data: T) => Prop[]
   related?: (data: T) => Link[]
+  // What happened to the item, newest first; the page merges every
+  // slice's and shows them oldest first, under its content.
   activity?: (data: T) => Event[]
+  // The box that adds a comment, under the Activity, where the kind
+  // takes comments.
+  comment?: Block<T>
   // The page's tabs, the first its default, as pills in the header; an
   // extension may add its own after the owner's.
   tabs?: Tab[]

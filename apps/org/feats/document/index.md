@@ -353,7 +353,9 @@ since it), whether this member's edits are saved and that `/` adds a
 block, which an empty block it holds the caret in, and the last block
 when empty, also say; the draft's hash as the page was read is among
 its Properties. The header saves the draft as a version (`version`), and
-the page comments on one (`comment`). The server renders the draft read-only; the editor takes it
+the box under its Activity comments on one (`comment`), each comment
+in the Activity with what it quotes. Under the draft, its saved
+versions. The server renders the draft read-only; the editor takes it
 over once the browser holds the Loro document. A generated document's
 page reads its draft without the editor or the header's Save, and says
 whose policies it is generated from.

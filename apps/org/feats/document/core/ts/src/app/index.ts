@@ -1,5 +1,6 @@
 import { icons, short, type App } from '@cella/org-ui'
 import type { Listed, Page } from '../models/document.ts'
+import Comment from './blocks/Comment.svelte'
 import Create from './blocks/Create.svelte'
 import Draft from './blocks/Draft.svelte'
 import History from './blocks/History.svelte'
@@ -43,9 +44,12 @@ export const app: App = {
           { label: 'Comments', value: d.comments.length, kind: 'number' },
           { label: 'Draft hash', value: short(d.hash, 16), kind: 'mono' },
         ],
-        activity: (d: Page) =>
-          d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
+        activity: (d: Page) => [
+          ...d.comments.map((c) => ({ at: c.at, who: c.author, text: `commented on ${c.version}, quoting “${c.quote}”${c.resolved ? ', resolved' : ''}`, body: c.text })),
+          ...d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
+        ],
         blocks: [Draft, History],
+        comment: Comment,
         actions: Save,
       },
     },

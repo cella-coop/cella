@@ -134,7 +134,8 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Frame` (`PageFrame.svelte`): the one page frame, its header one
   compact row as Linear's, spanning the content and the drawer: on an
   item, a quiet caret back to its collection, on a collection its icon as
-  the sidebar shows it; the page's name, its
+  the sidebar shows it; the page's name (on an item, a muted crumb of
+  its kind and reference, its title the content's heading), its
   caption as the name's tooltip, with its count and status badges; the
   page's tabs right after, a collection's views, scrolling in their own
   strip; then the page's writes and one quiet icon group, the drawer's
@@ -142,7 +143,7 @@ The theme is light, dark or the system's, a cookie the server writes into
   shut. A write in the header keeps the row one line: its fields'
   labels are read by assistive technology and not seen, and a choice is
   at most 16rem wide.
-  Under it, the content (an item's subtitle first) and the drawer, which
+  Under it, the content and the drawer, which
   scrolls down and never across. The toggle, or `]` anywhere, shows and
   hides the drawer on every page at once; a cookie keeps the viewer's
   choice, so the server renders it. One tab per panel, the open one
@@ -223,16 +224,28 @@ The theme is light, dark or the system's, a cookie the server writes into
   carry none: the field the collection's read orders by first
   (`ordered`), where one select reads its rows and its order leads with
   a field by name; the view orders no rows of its own.
-- `Detail`: the one detail view, the item's blocks in the content and the
-  drawer's Details panel, its cards stacked as Linear stacks an issue's
-  properties: Properties (label and value rows), Related and Activity.
-  A page may declare tabs (`tabs`, the first its default), shown as
+- `Detail`: the one record page, the same for every collection, as
+  Linear's issue page. The content is the record's: its title, large,
+  then its free-form content, a document's blocks where its kind holds
+  them, and under a hairline its Activity, what happened to it in order,
+  with its comments and the box that adds one where its kind takes
+  comments (`comment`). Each slice gives its events newest first
+  (`activity`), a comment's words as its `body`; the page merges every
+  slice's and shows them oldest first, the box last. The drawer's
+  Details panel holds its properties, label and value rows on the
+  drawer itself, with no card or panel around them, and under them
+  Related; nothing in the drawer is boxed. A record whose structured
+  data is central to it puts that data in a tab of its own after the
+  first (`tabs`): a motion's Stances, an invoice's Lines, a period's
+  Entries; the first tab is the content and its Activity, and a kind with no
+  free-form content shows its overview's blocks there. Tabs show as
   pills in the header when there are two or more, the open one in the
   URL (`?tab=`); a block sits in the tab it names (`{ tab, block }`), a
   bare one in the first, and an extension's blocks join the owner's
   tabs or add their own. A tab earns its place only as a genuinely
-  different view: motions have Overview and Stances; documents and
-  invoices have one. Esc goes back to the collection.
+  different view. Every collection's item page is drawn by `Detail`
+  alone, and the ui check refuses an item page that frames itself. Esc
+  goes back to the collection.
 - `Card` (a borderless card raised on the panel, in the drawer or the
   content), `Section` (a block in the content),
   `Properties`, `Related`, `Activity`, `Table`, `Sheet` (a financial
@@ -280,8 +293,10 @@ The theme is light, dark or the system's, a cookie the server writes into
 - `Blocks`: a document of blocks, the block editor's surface and its
   read-only reader's, and the look of every kind of block (headings, list
   items with their markers, to-dos, quotes, code, dividers, embeds' cards,
-  a block chosen whole, where a dragged block lands). The document feat's
-  components name its classes and draw nothing of their own.
+  a block chosen whole, where a dragged block lands), every kind set in
+  the body font, Inter (`--font-ui`), headings and all, wherever the
+  editor or its reader stands. The document feat's components name its
+  classes and draw nothing of their own.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`

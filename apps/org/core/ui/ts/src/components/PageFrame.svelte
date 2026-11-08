@@ -24,6 +24,7 @@
     subtitle,
     badges = [],
     back,
+    heading = true,
     actions,
     bar,
     panels = [],
@@ -41,6 +42,9 @@
     // Whether the whole page's subject holds, beside its count.
     badges?: { label: string; tone: Tone }[]
     back?: { href: string; label: string }
+    // Whether the name is the page's heading; a record's page names its
+    // kind and reference here and holds its title as the heading.
+    heading?: boolean
     actions?: Snippet
     bar?: Snippet
     panels?: Panel[]
@@ -65,7 +69,11 @@
         <a href={back.href} class="back" title="Back to {back.label}  Esc" aria-label="Back to {back.label}"><Icon icon={CaretLeft} /></a>
       {/if}
       {#if icon && !back}<span class="mark" aria-hidden="true"><Icon {icon} size="1.15rem" /></span>{/if}
-      <h1 title={caption}>{title}</h1>
+      {#if heading}
+        <h1 title={caption}>{title}</h1>
+      {:else}
+        <span class="crumb" title={caption}>{title}</span>
+      {/if}
       {#if count}<span class="count">{count}</span>{/if}
       {#each badges as b (b.label)}<Badge tone={b.tone}>{b.label}</Badge>{/each}
     </div>
@@ -163,13 +171,17 @@
     flex: none;
     color: var(--text-muted);
   }
-  h1 {
+  h1,
+  .crumb {
     font-family: var(--font-ui);
     font-size: var(--text-md);
     font-weight: 500;
     line-height: 1.35;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+  .crumb {
+    color: var(--text-muted);
   }
   .count {
     font-size: var(--text-sm);

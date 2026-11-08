@@ -75,8 +75,13 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
       const path = svg.children[i]
       c.addEventListener('mouseenter', () => path.classList.add('on'))
       c.addEventListener('mouseleave', () => path.classList.remove('on'))
-      c.addEventListener('focus', () => path.classList.add('on'))
-      c.addEventListener('blur', () => path.classList.remove('on'))
+      // focus rings the cell's own outline, where the keyboard brought it
+      // or the cell takes typing
+      c.addEventListener('focus', () => {
+        path.classList.add('on')
+        path.classList.toggle('ring', c.matches(':focus-visible'))
+      })
+      c.addEventListener('blur', () => path.classList.remove('on', 'ring'))
     })
   }
 
@@ -92,8 +97,8 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     --on-fill: oklch(0.985 0.004 250);
     --wash: oklch(from var(--ink) calc(0.62 + var(--theme) * 0.28) 0.045 h);
     --wash-on: oklch(from var(--ink) calc(0.62 + var(--theme) * 0.24) 0.06 h);
-    --plain: color-mix(in oklch, var(--text) 8%, transparent);
-    --plain-on: color-mix(in oklch, var(--text) 13%, transparent);
+    --plain: color-mix(in oklch, var(--text) 9%, var(--panel));
+    --plain-on: color-mix(in oklch, var(--text) 13%, var(--panel));
     --on-plain: var(--text);
     --on-wash: oklch(from var(--ink) calc(0.61 - var(--theme) * 0.25) 0.1 h);
     position: relative;
@@ -131,6 +136,11 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
 
   svg :global(.plain.on) {
     fill: var(--plain-on);
+  }
+
+  svg :global(.ring) {
+    stroke: var(--text);
+    stroke-width: 2;
   }
 
   svg :global(.fill.on) {
@@ -181,10 +191,16 @@ const P = { error: 0, warning: 1, success: 2, info: 3, help: 4 }
     margin-left: 0;
   }
 
+  /* before the cells are drawn, focus rings the plain fill; once drawn,
+     the cell's outline carries the ring */
   .actions :global(.cell:focus-visible) {
     outline: 2px solid var(--text);
     outline-offset: -5px;
     border-radius: 0.6rem;
+  }
+
+  .actions[data-drawn] :global(.cell:focus-visible) {
+    outline: none;
   }
 
   @media (max-width: 30rem) {

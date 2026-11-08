@@ -1,7 +1,7 @@
 <script module lang="ts">
   export const meta = {
     title: 'Members decide',
-    alt: 'Worldlines with time running up. Ana, a member, puts a motion to the assembly. While the assembly deliberates, Ana, Ben and Cleo send their consent in turn. The motion passes, the assembly grants the Treasurer role a mandate narrower than its own, and the Treasurer then pays under it.',
+    alt: 'Worldlines with time running up. Ana, a member, puts a motion to the assembly. While the assembly deliberates, Ana, Ben and Cleo send their consent in turn. The motion passes: the assembly grants the Treasurer role a mandate narrower than its own and, in the same motion, Cleo takes the role. Cleo then pays as Treasurer under it.',
     made: 'ai',
   } as const
 </script>
@@ -69,7 +69,12 @@
   <Dot x={ga} y={grant.y} />
   <Dot x={role} y={grant.at} />
 
-  <!-- the treasurer pays under it -->
+  <!-- in the same motion, Cleo takes the role: a tick where her tenure
+       starts, her name beside it -->
+  <line class="tick" x1={role - 7} y1={grant.at} x2={role + 7} y2={grant.at} />
+  <text class="say" x={role + 11} y={grant.at + 14}>Cleo</text>
+
+  <!-- the treasurer, Cleo, pays under it -->
   <Glyph name="coins" x={role} y={104} />
 
 </Frame>

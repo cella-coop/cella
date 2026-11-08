@@ -51,7 +51,10 @@ the geometry of the particles' paths.
   arrow (`Axis`).
 - **Worldlines are who.** A circle is a double line, its two rails 4.4
   apart; a role, a person or a store a single line; a role dashed while
-  it stands vacant, or a co-op before it joins (`Line`). Each line's
+  it stands vacant, or a co-op before it joins (`Line`). Where someone
+  takes a role, a short tick crosses its line and their name, in the
+  particles' italic, stands beside it; the line is solid from there.
+  Each line's
   name stands at its foot, where it starts: its kind's glyph, bare, its
   name in the display face and its kind in small mono capitals
   (`Name`).

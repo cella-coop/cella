@@ -232,6 +232,11 @@ merged entry is held to its schema (`src/schemas.ts`), and one missing
 a field in both fails the build, naming the file, the field, and where
 to write it.
 
+An item's title and line, which the frontmatter holds as plain strings,
+read inline markdown (`src/lib/inline.ts`, `marked`): **bold**,
+*italic*, [links](…) and `code`, no blocks. A heading keeps its own
+convention, its stars setting a part thin.
+
 **Drafted text is marked.** In the dev server, Alt+Shift+D underlines
 dotted, in the info ink, every element whose text a draft supplied, so
 the operator sees on the page what is not yet theirs, and hides it

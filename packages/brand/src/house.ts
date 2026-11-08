@@ -44,6 +44,12 @@ export type House = {
   phase: number
   step: number
   statusC: number
+  /** The five inks' chroma, the brand at full voice: the states' tones
+      keep statusC, quieter, since they colour text and tints. */
+  inkC: number
+  /** Each hue's turn off the even pentad, in degrees, in its order: the
+      eye's correction, a yellow read gold, not green. */
+  nudge: number[]
   tones: Record<ToneName, Tone>
   fonts: { display: Face; text: Face; mono: Face }
   scale: { base: number; ratio: number; leading: number; track: number }
@@ -66,15 +72,17 @@ export const inkAction = (house: House): boolean => ['ink', 'strip', 'halftone']
 export function resolve(json: unknown): House {
   /* what house.json may leave to the explorer's defaults */
   type Paper = House['paper']
-  type Raw = Omit<House, 'depth' | 'paper'> & { depth?: number; paper: Omit<Paper, 'amount' | 'scale' | 'dark'> & Partial<Paper> }
+  type Raw = Omit<House, 'depth' | 'paper' | 'inkC' | 'nudge'> & { depth?: number; inkC?: number; nudge?: number[]; paper: Omit<Paper, 'amount' | 'scale' | 'dark'> & Partial<Paper> }
   const raw = structuredClone(json) as Raw
   const house: House = {
     ...raw,
     depth: raw.depth ?? 1,
+    inkC: raw.inkC ?? raw.statusC,
+    nudge: raw.nudge ?? PENTAD.map(() => 0),
     paper: { amount: 1, scale: 1, dark: 0.5, ...raw.paper },
   }
   PENTAD.forEach((k, i) => {
-    house.tones[k] = { c: house.statusC, h: Math.round((house.phase + i * house.step) % 360) }
+    house.tones[k] = { c: house.statusC, h: Math.round((house.phase + i * house.step + (house.nudge[i] ?? 0) + 360) % 360) }
   })
   house.tones.accent = inkAction(house) ? { ...house.tones.base } : { ...house.tones[house.action as ToneName] }
   return house

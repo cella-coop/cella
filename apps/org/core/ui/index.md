@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -35,7 +35,7 @@ ink. Components read roles, never shades:
   lightness in either theme, so a primary button is plain ink with the
   panel's `--on-accent` on it, and `--accent-border`, `--accent-text`,
   `--accent-soft`;
-- type: the brand's, Sen for the shell's display and headings, its
+- type: the brand's, Urbanist for the shell's display and headings, its
   buttons and the mark (`--font-display`), Inter for everything read or
   measured (`--font-text`, which the shell reads as `--font-ui`), the
   co-op's own writing whole, a document's headings and `Prose` included,
@@ -44,7 +44,7 @@ ink. Components read roles, never shades:
   brand's weight and tracking, the body its weight and leading. The
   shell keeps its own denser scale, `--text-2xs` to `--text-2xl` around
   15px, beside the brand's `--t-*`. A section's title is
-  Sen in sentence case with its count muted beside it, a card's and
+  Urbanist in sentence case with its count muted beside it, a card's and
   a table's columns' labels quiet sentence case; the one eyebrow, small
   capitals tracked `0.1em`, is a stat tile's label. A section, and the
   page's content outside one, sets one inline padding (`--inset`) that

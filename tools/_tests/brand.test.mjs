@@ -1,9 +1,12 @@
-// The brand's port of the explorer: the mark @cella/brand draws for
-// house.json is the SVG the explorer's own markSvg() draws, and its
-// shades, its paper and the tokens.css it writes are the values the
-// explorer's themeVars() sets, both captured from the explorer's src.html
-// (sha256 7fc005c3…98498e1cf8) into brand/. And `cella brand --check`
-// names each generated file that differs, is missing or is left over.
+// The brand's port of the explorer: the mark @cella/brand draws for the
+// explorer's house.json, kept in brand/ as the brand left it, is the SVG
+// the explorer's own markSvg() draws, and its shades, its paper and the
+// tokens.css it writes are the values the explorer's themeVars() sets,
+// both captured from the explorer's src.html (sha256 7fc005c3…98498e1cf8)
+// into brand/. The house has since grown past the explorer, its inks
+// fuller and its hues nudged, which the explorer's house leaves at their
+// defaults. And `cella brand --check` names each generated file that
+// differs, is missing or is left over.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -19,35 +22,44 @@ const repo = new URL('../..', import.meta.url).pathname
 const brand = join(repo, 'packages/brand')
 const fixture = (f) => readFileSync(new URL(`brand/${f}`, import.meta.url), 'utf8')
 const house = resolve(JSON.parse(readFileSync(join(brand, 'house.json'), 'utf8')))
+const ported = resolve(JSON.parse(fixture('explorer-house.json')))
 const explorer = JSON.parse(fixture('explorer-theme.json'))
 const themes = [['light', 1], ['dark', -1]]
 
 test('the five hues are the phase and the step, in the pentad\'s order', () => {
-  assert.deepEqual(hues(house), [23, 91, 159, 227, 295])
-  assert.deepEqual(house.tones.accent, house.tones.base, 'an action is ink: the accent is the paper\'s tone')
+  assert.deepEqual(hues(ported), [23, 91, 159, 227, 295])
+  assert.deepEqual(ported.tones.accent, ported.tones.base, 'an action is ink: the accent is the paper\'s tone')
+})
+
+test('the house\'s hues are nudged off the pentad, and its inks are fuller than its tones', () => {
+  assert.deepEqual(ported.nudge, [0, 0, 0, 0, 0], 'a house that names no nudge keeps the even pentad')
+  assert.equal(ported.inkC, ported.statusC, 'a house that names no ink chroma inks at its tones\'')
+  hues(house).forEach((h, i) => assert.equal(h, Math.round((house.phase + i * house.step + house.nudge[i] + 360) % 360), `hue ${i}`))
+  assert.ok(house.inkC > house.statusC, 'the inks speak louder than the states\' text')
+  assert.match(printCss(house), new RegExp(`--print-info-fill: oklch\\(${house.accentL} ${house.inkC} `), 'a state\'s fill is an ink')
 })
 
 test('the mark is the explorer\'s, at 240 and at 16', () => {
   for (const size of [240, 16]) {
-    assert.equal(markSvg(house.mark, hues(house), size), fixture(`explorer-mark-${size}.svg`).trim(), `at ${size}`)
+    assert.equal(markSvg(ported.mark, hues(ported), size), fixture(`explorer-mark-${size}.svg`).trim(), `at ${size}`)
   }
 })
 
 test('the shades, the well, the action and the paper are the explorer\'s in both themes', () => {
   for (const [name, t] of themes) {
     const want = explorer[name]
-    shades(house, t).forEach((l, i) => assert.equal(l.toFixed(4), want[`--shade-${i}`], `${name} shade ${i}`))
-    assert.equal(sunkL(house, t).toFixed(4), want['--sunk-l'], `${name} sunk`)
-    assert.equal(actionL(house, t).toFixed(4), want['--accent-l'], `${name} action`)
-    assert.equal(`oklch(${onActionL(house, t).toFixed(4)} var(--tone-base))`, want['--on-accent'], `${name} on the action`)
+    shades(ported, t).forEach((l, i) => assert.equal(l.toFixed(4), want[`--shade-${i}`], `${name} shade ${i}`))
+    assert.equal(sunkL(ported, t).toFixed(4), want['--sunk-l'], `${name} sunk`)
+    assert.equal(actionL(ported, t).toFixed(4), want['--accent-l'], `${name} action`)
+    assert.equal(`oklch(${onActionL(ported, t).toFixed(4)} var(--tone-base))`, want['--on-accent'], `${name} on the action`)
     for (const s of ['ground', 'panel', 'raised']) {
-      assert.equal(grain(house, s, t), want[`--grain-${s}`], `${name} ${s}'s paper`)
+      assert.equal(grain(ported, s, t), want[`--grain-${s}`], `${name} ${s}'s paper`)
     }
   }
 })
 
 test('tokens.css computes the explorer\'s shades and wears its paper in both themes', () => {
-  const css = tokensCss(house)
+  const css = tokensCss(ported)
   // the last rule of a selector: dark's sign comes before its values
   const rule = (selector) => css.slice(css.lastIndexOf(`${selector} {`)).split('\n}')[0]
   const model = rule(':root, [data-theme]')
@@ -125,7 +137,7 @@ test('a face house.json names that the package does not depend on is refused', (
 // 1.5 device pixels, and for five other presets with rotate off.
 const printed = JSON.parse(fixture('explorer-print.json'))
 const picture = { width: printed.width, height: printed.height, data: Buffer.from(printed.input, 'base64') }
-const unit = (ink) => rgb8(printInk(house, ink)).map((v) => v / 255)
+const unit = (ink) => rgb8(printInk(ported, ink)).map((v) => v / 255)
 
 test('house.json\'s print is the house style, and its tone the print\'s', () => {
   const raw = JSON.parse(readFileSync(join(brand, 'house.json'), 'utf8'))

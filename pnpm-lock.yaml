@@ -1647,7 +1647,7 @@ importers:
       '@fontsource-variable/inter':
         specifier: 5.3.0
         version: 5.3.0
-      '@fontsource-variable/sen':
+      '@fontsource-variable/urbanist':
         specifier: 5.3.0
         version: 5.3.0
       sharp:
@@ -1986,8 +1986,8 @@ packages:
   '@fontsource-variable/inter@5.3.0':
     resolution: {integrity: sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==}
 
-  '@fontsource-variable/sen@5.3.0':
-    resolution: {integrity: sha512-AEWNMDLtBO7iV0v2kwDZgxiLH2YADSUMnr/g2b8tgf/8dQNMPS+018iF5rzwVb/Mt79FwU5/39MlRGiK5VxkaQ==}
+  '@fontsource-variable/urbanist@5.3.0':
+    resolution: {integrity: sha512-riHbcRgoOhEdCwVw3n3R1JLEwvRD1N9GlXtBcwl/UJ2KabfyDBuryE2Yq10308QJgbXw3F/IFF+VoMuuqwVfIA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -4040,7 +4040,7 @@ snapshots:
 
   '@fontsource-variable/inter@5.3.0': {}
 
-  '@fontsource-variable/sen@5.3.0': {}
+  '@fontsource-variable/urbanist@5.3.0': {}
 
   '@img/colour@1.1.0': {}
 

@@ -82,7 +82,9 @@ export function printInk(house: House, name: string): Oklch {
   const [s, tone] = ink
   const { c, h } = house.tones[tone]
   const l = s === 'sunk' ? sunkL(house, 1) : s === 'fill' ? (tone === 'accent' && inkAction(house) ? shades(house, 1)[9] : house.accentL) : s === 'white' ? 0.98 : shades(house, 1)[s]
-  return [l, s === 'white' ? Math.min(c, 0.01) : c, h]
+  // a state's fill is one of the five inks, at their full chroma
+  const full = s === 'fill' && tone !== 'accent' && tone !== 'base'
+  return [l, s === 'white' ? Math.min(c, 0.01) : full ? house.inkC : c, h]
 }
 
 /** A picture's pixels, RGBA, row by row. */

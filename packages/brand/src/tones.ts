@@ -97,4 +97,4 @@ export function role(house: House, name: string, t: Theme): { oklch: Oklch; alph
 }
 
 /** The five inks, at the house's fixed lightness, in the pentad's order. */
-export const inks = (house: House, hs: number[]): Oklch[] => hs.map((h) => [house.accentL, house.statusC, h])
+export const inks = (house: House, hs: number[]): Oklch[] => hs.map((h) => [house.accentL, house.inkC, h])

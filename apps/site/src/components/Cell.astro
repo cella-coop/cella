@@ -1,0 +1,163 @@
+---
+// One item of a list of cells (index.md, the layout): a lone cell of the
+// brand beside its title and its words. The cell is bare, or holds its
+// Phosphor icon, `icon`, in the regular weight, drawn in the paper on the
+// ink, or, for a person, `photo`, their picture engraved in the ink and
+// cut into the cell, larger; the list numbers it where it is numbered.
+// Its ink is its place in the list's turn (Cells.astro); its shape is
+// seeded by `seed`, or by its title, so it is the same on every build.
+// Its words are its slot, markdown where a body writes it.
+import { cell } from '@cella/brand'
+import { portraitUrl } from '../lib/engrave'
+import { glyphPaths } from '../lib/icon'
+import { inline } from '../lib/inline'
+
+interface Props {
+  title: string
+  icon?: string
+  photo?: string
+  seed?: number
+}
+
+const { title, icon, photo, seed } = Astro.props
+const s = seed ?? [...title].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 11) % 9973
+const shape = cell(s)
+// a portrait is drawn in its cell's own box, so its edge lines up with
+// the words beside it and its top with their title
+const box = (() => {
+  const nums = (shape.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
+  const xs = nums.filter((_, k) => k % 2 === 0)
+  const ys = nums.filter((_, k) => k % 2 === 1)
+  const [x, y] = [Math.min(...xs), Math.min(...ys)]
+  return [x, y, Math.max(...xs) - x, Math.max(...ys) - y].map((v) => v.toFixed(1)).join(' ')
+})()
+---
+
+<li class="item">
+  {
+    photo ? (
+      <svg class="mark portrait" viewBox={box} role="img" aria-label={title}>
+        <defs>
+          <clipPath id={`face-${s}`}><path d={shape} /></clipPath>
+          <mask id={`lines-${s}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
+            <image href={portraitUrl(photo)} width="100" height="100" preserveAspectRatio="xMidYMid slice" />
+          </mask>
+        </defs>
+        <g clip-path={`url(#face-${s})`}>
+          <rect class="paper" width="100" height="100" />
+          <rect class="lines" width="100" height="100" mask={`url(#lines-${s})`} />
+        </g>
+      </svg>
+    ) : (
+      <span class="mark">
+        <svg viewBox="0 0 100 100" aria-hidden="true">
+          <path class="shape" d={shape} />
+          {icon && <g class="icon" transform="translate(27 27) scale(0.18)" set:html={glyphPaths(icon)} />}
+        </svg>
+        <span class="n" aria-hidden="true"></span>
+      </span>
+    )
+  }
+  <div>
+    <h3 set:html={inline(title)} />
+    <div class="words"><slot /></div>
+  </div>
+</li>
+
+<style>
+  .item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.1rem;
+    align-items: start;
+    counter-increment: cell;
+  }
+
+  .mark {
+    position: relative;
+    display: grid;
+    flex: none;
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .mark svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .shape {
+    fill: var(--ink);
+  }
+
+  .icon {
+    fill: oklch(0.985 0.004 250);
+  }
+
+  /* the number, the list's count, over the cell where the list numbers */
+  .n {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-items: center;
+    color: oklch(0.985 0.004 250);
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .n::before {
+    content: counter(cell);
+  }
+
+  :global([data-numbered]) .n {
+    display: grid;
+  }
+
+  :global([data-numbered]) .icon {
+    display: none;
+  }
+
+  /* a portrait: the person engraved in a deep shade of the ink, on the
+     print's paper washed with it, as a figure is */
+  .portrait {
+    width: clamp(7.5rem, 26vw, 12rem);
+    height: auto;
+  }
+
+  .portrait .paper {
+    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
+  }
+
+  .portrait .lines {
+    fill: oklch(from var(--ink) calc(l - 0.18) c h);
+  }
+
+  /* a title keeps the line breaks its text writes */
+  h3 {
+    white-space: pre-line;
+  }
+
+  .words {
+    margin-top: 0.3rem;
+    color: var(--text-muted);
+    font-size: 0.97rem;
+  }
+
+  .words :global(p) {
+    margin: 0;
+  }
+
+  .words :global(p + p) {
+    margin-top: 0.6em;
+  }
+
+  :global([data-layout='row']) .item {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem;
+  }
+
+  :global([data-layout='grid']) .item {
+    gap: 0.85rem;
+  }
+</style>

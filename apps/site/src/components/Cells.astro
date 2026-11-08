@@ -1,79 +1,44 @@
 ---
-// A list as cells (index.md, the layout): each item a lone cell of the
-// brand beside its title and line, the cells taking the five inks in
-// turn however many there are, leaving out the one `skip` names, as a
-// band's own. A cell may hold the item's number, when
-// the list is `numbered`, or its Phosphor icon, `icon`, in the regular
-// weight, drawn in the paper on the ink; or, for a person, `photo`, their
-// picture engraved in the ink and cut into the cell, larger; else it is
-// bare. Its `layout`,
-// a section's `arrange`:
-// `column`, down the page, unset; `row`, side by side, each cell over its
-// words; `grid`, two columns, each cell beside them.
-import { cell } from '@cella/brand'
-import { portraitUrl } from '../lib/engrave'
-import { glyphPaths } from '../lib/icon'
+// A list as cells (index.md, the layout): its items, each a `Cell`, the
+// cells taking the five inks in turn however many there are, leaving out
+// the one `skip` names, as a band's own, and numbered where `numbered`.
+// Its items are its `items`, as a section's frontmatter gives them, or its
+// slot, the `Cell`s a body writes inline. Its `layout`, a section's
+// `arrange` or the body's own: `column`, down the page, unset; `row`,
+// side by side, each cell over its words; `grid`, two columns, each cell
+// beside them.
 import { inline } from '../lib/inline'
 import { STATUSES, type Status } from '../schemas'
+import Cell from './Cell.astro'
 
 interface Props {
-  items: { title: string; body: string; icon?: string; photo?: string }[]
+  items?: { title: string; body: string; icon?: string; photo?: string }[]
   numbered?: boolean
   seed?: number
   drafted?: true
   // an ink the cells leave out, as a band's own, so none sinks into it
   skip?: Status
-  // how the items stand: down the page, side by side, each its cell over
-  // its words, or in two columns, each its cell beside them
   layout?: 'column' | 'row' | 'grid'
+  // the same, as a body writes it, in its section's words
+  arrange?: 'column' | 'row' | 'grid'
 }
 
-const { items, numbered = false, seed = 1, drafted, skip, layout = 'column' } = Astro.props
+const { items, numbered = false, seed = 1, drafted, skip, layout, arrange } = Astro.props
+// the turn of inks, by the item's place, as custom properties the cells
+// read by their place in the list
 const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
-// a cell's own box, so a portrait's edge lines up with the words beside
-// it and its top with their title, not the square it was drawn in
-const shapeOf = (i: number) => cell(seed * 13 + i * 7)
-const boxOf = (d: string) => {
-  const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number)
-  const xs = nums.filter((_, k) => k % 2 === 0)
-  const ys = nums.filter((_, k) => k % 2 === 1)
-  const [x, y] = [Math.min(...xs), Math.min(...ys)]
-  return [x, y, Math.max(...xs) - x, Math.max(...ys) - y].map((v) => v.toFixed(1)).join(' ')
-}
+const turn = Object.fromEntries(inks.map((p, k) => [`--c${k}`, `var(--p${p})`]))
 ---
 
-<ul class="cells" data-layout={layout} role="list" data-drafted={drafted}>
+<ul class="cells" data-layout={layout ?? arrange ?? 'column'} data-cycle={inks.length} data-numbered={numbered ? '' : undefined} style={turn} role="list" data-drafted={drafted}>
   {
-    items.map((it, i) => (
-      <li class="item">
-        {
-          it.photo ? (
-            <svg class="mark portrait" viewBox={boxOf(shapeOf(i))} role="img" aria-label={it.title} style={{ '--ink': `var(--p${inks[i % inks.length]})` }}>
-              <defs>
-                <clipPath id={`face-${seed}-${i}`}><path d={shapeOf(i)} /></clipPath>
-                <mask id={`lines-${seed}-${i}`} maskUnits="userSpaceOnUse" x="0" y="0" width="100" height="100">
-                  <image href={portraitUrl(it.photo)} width="100" height="100" preserveAspectRatio="xMidYMid slice" />
-                </mask>
-              </defs>
-              <g clip-path={`url(#face-${seed}-${i})`}>
-                <rect class="paper" width="100" height="100" />
-                <rect class="lines" width="100" height="100" mask={`url(#lines-${seed}-${i})`} />
-              </g>
-            </svg>
-          ) : (
-            <svg class="mark" viewBox="0 0 100 100" aria-hidden="true" style={{ '--ink': `var(--p${inks[i % inks.length]})` }}>
-              <path class="shape" d={cell(seed * 13 + i * 7)} />
-              {numbered && <text class="n" x="50" y="50">{i + 1}</text>}
-              {!numbered && it.icon && <g class="icon" transform="translate(27 27) scale(0.18)" set:html={glyphPaths(it.icon)} />}
-            </svg>
-          )
-        }
-        <div>
-          <h3 set:html={inline(it.title)} />
-          <p set:html={inline(it.body)} />
-        </div>
-      </li>
-    ))
+    items
+      ? items.map((it, i) => (
+          <Cell title={it.title} icon={it.icon} photo={it.photo} seed={seed * 13 + i * 7}>
+            <Fragment set:html={inline(it.body)} />
+          </Cell>
+        ))
+      : <slot />
   }
 </ul>
 
@@ -83,28 +48,28 @@ const boxOf = (d: string) => {
     display: grid;
     gap: 1.6rem;
     max-width: 34rem;
-    margin: 0.5rem 0 0;
+    margin: 0.75rem 0 1.25rem;
     padding: 0;
     list-style: none;
+    counter-reset: cell;
   }
 
-  .item {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1.1rem;
-    align-items: start;
-  }
+  /* each cell's ink, its place in the turn of five, or of four on a band */
+  [data-cycle='5'] > :global(.item:nth-child(5n + 1)) { --ink: var(--c0); }
+  [data-cycle='5'] > :global(.item:nth-child(5n + 2)) { --ink: var(--c1); }
+  [data-cycle='5'] > :global(.item:nth-child(5n + 3)) { --ink: var(--c2); }
+  [data-cycle='5'] > :global(.item:nth-child(5n + 4)) { --ink: var(--c3); }
+  [data-cycle='5'] > :global(.item:nth-child(5n)) { --ink: var(--c4); }
+  [data-cycle='4'] > :global(.item:nth-child(4n + 1)) { --ink: var(--c0); }
+  [data-cycle='4'] > :global(.item:nth-child(4n + 2)) { --ink: var(--c1); }
+  [data-cycle='4'] > :global(.item:nth-child(4n + 3)) { --ink: var(--c2); }
+  [data-cycle='4'] > :global(.item:nth-child(4n)) { --ink: var(--c3); }
 
   /* side by side, as many to a row as fit, each its cell over its words */
   [data-layout='row'] {
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
     gap: 2rem 2.2rem;
     max-width: none;
-  }
-
-  [data-layout='row'] .item {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.9rem;
   }
 
   /* two columns, each its cell beside its words, one on a narrow screen */
@@ -114,62 +79,9 @@ const boxOf = (d: string) => {
     max-width: none;
   }
 
-  [data-layout='grid'] .item {
-    gap: 0.85rem;
-  }
-
   @media (max-width: 40rem) {
     [data-layout='grid'] {
       grid-template-columns: minmax(0, 1fr);
     }
-  }
-
-  .mark {
-    flex: none;
-    width: 2.6rem;
-    height: 2.6rem;
-  }
-
-  .shape {
-    fill: var(--ink);
-  }
-
-  /* a portrait: the person engraved in a deep shade of the ink, on the
-     print's paper washed with it, as a figure is */
-  .portrait {
-    width: clamp(7.5rem, 26vw, 12rem);
-    height: auto;
-  }
-
-  .portrait .paper {
-    fill: color-mix(in oklch, var(--ink) 16%, var(--print-paper));
-  }
-
-  .portrait .lines {
-    fill: oklch(from var(--ink) calc(l - 0.18) c h);
-  }
-
-  .n {
-    fill: oklch(0.985 0.004 250);
-    font-family: var(--font-display);
-    font-size: 44px;
-    font-weight: 700;
-    text-anchor: middle;
-    dominant-baseline: central;
-  }
-
-  .icon {
-    fill: oklch(0.985 0.004 250);
-  }
-
-  /* a title keeps the line breaks its text writes */
-  h3 {
-    white-space: pre-line;
-  }
-
-  p {
-    margin: 0.3rem 0 0;
-    color: var(--text-muted);
-    font-size: 0.97rem;
   }
 </style>

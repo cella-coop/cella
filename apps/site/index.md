@@ -88,8 +88,13 @@ caption, alt, ink }` in its frontmatter, the ink the page's turn unset.
 
 The engraving (`src/lib/engrave.ts`) is rippled horizontal lines that
 swell with the tone, a hairline even in the lights, as a burin leaves,
-and a crossing hatch in the deepest shadows, cut at 1600 pixels at a
-pitch that makes them fine on a wide screen. It is cut once, at build,
+and never quite meet in the shadows, cut at 1600 pixels. The browser
+shrinks a mask by sampling it, so a pattern near its pixel pitch beats
+into moiré: the lines keep a pitch of 8 pixels, over four on a desktop
+figure; a line covers at most 0.86 of it, so a gap survives the shrink;
+and its edge is soft over 0.3 of it, a profile with little above its
+own frequency to alias. No crossing hatch, which wove a lattice with
+the lines. It is cut once, at build,
 into a mask whose alpha is the ink's coverage, an eight-level palette
 PNG of a few hundred kilobytes, its own file
 `/engraving/<photo>-1600.png` made by the static endpoint

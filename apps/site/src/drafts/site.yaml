@@ -3,7 +3,6 @@ footer:
   columns:
     - heading: Cella
       links:
-        - { label: Concept, href: /concept }
         - { label: About, href: /about }
         - { label: Blog, href: /blog }
     - heading: Project

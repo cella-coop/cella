@@ -17,7 +17,7 @@ nothing of it goes public until the operator says so.
 
 ## The pages
 
-The site is home, concept, blog, about and contact: one page for each
+The site is home, blog, about and contact: one page for each
 folder under `pages/` in the text, and one for each post of the blog.
 
 | Route | File | What |

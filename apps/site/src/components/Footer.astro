@@ -92,7 +92,7 @@ const { footer, drafted } = Astro.props
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 2rem clamp(2.5rem, 7vw, 5.5rem);
+    gap: 2rem clamp(3.5rem, 10vw, 8rem);
   }
 
   .map ul {
@@ -114,8 +114,11 @@ const { footer, drafted } = Astro.props
   }
 
   .disclaimer {
-    max-width: 40rem;
+    max-width: 28rem;
+    margin-block: 1.5rem 1rem;
     color: var(--text-subtle);
-    font-size: 0.82rem;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    line-height: 1.55;
   }
 </style>

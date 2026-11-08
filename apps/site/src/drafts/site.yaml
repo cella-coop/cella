@@ -19,7 +19,7 @@ footer:
 signup:
   label: Email address
   placeholder: you@your.coop
-  pilot: My co-op might pilot Cella
+  pilot: My coop might pilot Cella
   submit: Sign up
   done: Check your inbox for a link to confirm.
   failed: That did not go through. Try again in a moment.
@@ -29,9 +29,9 @@ contact:
   email: Email
   emailPlaceholder: you@your.coop
   note: Message
-  notePlaceholder: Tell us about your co-op, or what you would want from a workspace like this.
+  notePlaceholder: Tell us about your coop, or what you would want from a workspace like this.
   list: Sign up for the newsletter
-  pilot: My co-op might pilot Cella
+  pilot: My coop might pilot Cella
   submit: Send
   done: Thank you. We read every message and will write back.
   failed: That did not go through. Try again in a moment.

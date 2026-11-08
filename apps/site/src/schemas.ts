@@ -29,7 +29,7 @@ export const site = z.object({
   }),
   blog: z.object({ empty: z.string(), back: z.string() }),
   // The compact sign-up for news: the field's label read aloud and its
-  // placeholder, the box a co-op that might pilot ticks, the button, and
+  // placeholder, the box a coop that might pilot ticks, the button, and
   // what it says once sent or failed.
   signup: z.object({
     label: z.string(),

@@ -168,7 +168,7 @@ contact`, its words the `site` entry's `signup` and `contact`:
 
 - **the sign-up** (`Signup.astro`), compact, as the home page's Join
   band holds it: the email field and the button as one row of cells,
-  the field plain ink and the button the section's, and a box a co-op
+  the field plain ink and the button the section's, and a box a coop
   that might pilot ticks, sent as `pilot`, in line with the field's
   words. It posts to the list's endpoint, `PUBLIC_SIGNUP_URL`, the list
   sending a confirmation before anyone is on it (double opt-in).

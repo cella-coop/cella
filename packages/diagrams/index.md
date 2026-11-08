@@ -33,7 +33,7 @@ word. The text around it is the operator's
 | Diagram | What it shows | Where |
 |---|---|---|
 | `members-consent` | three members, their assembly and a role: a motion put, each member's consent, the motion adopted, a narrower mandate granted, the role acting | the home page's quote band |
-| `federation` | two co-ops, each its own scope, trading signed records; a third asks to join, is answered, and receives them too | the home page's call to join |
+| `federation` | two coops, each its own scope, trading signed records; a third asks to join, is answered, and receives them too | the home page's call to join |
 | `mandate-tree` | authority narrowing from the GA to the board to two roles, an act, then a revoke cascading down what derived from it and the next act refused | |
 | `scope-notary` | an action through a scope's notary: judged, state and signed log written in one transaction, answered; a second refused, nothing written | |
 | `signed-log` | the notary appending entries to a scope's log, each signed and carrying the hash of the one before, the next drawn pending | |
@@ -51,7 +51,7 @@ the geometry of the particles' paths.
   arrow (`Axis`).
 - **Worldlines are who.** A circle is a double line, its two rails 4.4
   apart; a role, a person or a store a single line; a role dashed while
-  it stands vacant, or a co-op before it joins (`Line`). Where someone
+  it stands vacant, or a coop before it joins (`Line`). Where someone
   takes a role, a short tick crosses its line and their name, in the
   particles' italic, stands beside it; the line is solid from there.
   Each line's

@@ -1,7 +1,7 @@
 <script module lang="ts">
   export const meta = {
-    title: 'A co-op joins the federation',
-    alt: 'Worldlines with time running up. Two co-ops, each its own scope, exchange signed records. A third co-op, not yet in the federation, asks to join; the second deliberates and consents. From then on records flow to the newcomer too, each signed by the scope that sent it.',
+    title: 'A coop joins the federation',
+    alt: 'Worldlines with time running up. Two coops, each its own scope, exchange signed records. A third coop, not yet in the federation, asks to join; the second deliberates and consents. From then on records flow to the newcomer too, each signed by the scope that sent it.',
     made: 'ai',
   } as const
 </script>
@@ -22,12 +22,12 @@
   <Axis x={14} y1={base} y2={top} />
 
   <Line x={a} y1={base} y2={top} kind="rails" />
-  <Name x={a} y={base + 24} icon="users-three" name="Lanterne" kind="co-op" />
+  <Name x={a} y={base + 24} icon="users-three" name="Lanterne" kind="coop" />
   <Line x={b} y1={base} y2={top} kind="rails" />
-  <Name x={b} y={base + 24} icon="users-three" name="Fourneau" kind="co-op" />
+  <Name x={b} y={base + 24} icon="users-three" name="Fourneau" kind="coop" />
   <Line x={c} y1={base} y2={joins} kind="rails" vacant />
   <Line x={c} y1={joins} y2={top} kind="rails" />
-  <Name x={c} y={base + 24} icon="users-three" name="Yours" kind="co-op" />
+  <Name x={c} y={base + 24} icon="users-three" name="Yours" kind="coop" />
 
   <!-- two scopes trade signed records -->
   <Particle kind="record" x1={a} y1={314} x2={b - 10} y2={303} />

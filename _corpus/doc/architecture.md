@@ -948,6 +948,12 @@ log's bytes an entry with its receipt; and it fails where the peak at
 the end is more than 64 MB over the peak a tenth of the way, where the
 re-fold takes more than thirty seconds, or where the fold runs under
 its floor, a thousand entries a second until a run at full size sets it.
+The forge's `scale` flow, `.corpus/flows/scale.toml`, runs the tier each
+night over main's head on the box, at a tenth of its size
+(`--members 1000`), about a million entries, which the box's disk holds;
+its bounds are the same at either size. A run at full size needs about
+45 GB of disk the box lacks: it runs by hand where a host has it, and the
+nightly flow grows to it once the box has.
 The fold test plants a receipt no verdict names, once before a
 checkpoint's receipts and once after them, and one keeping an entry
 past the head, as a log cut short leaves it; the verification resumed

@@ -26,3 +26,13 @@ name = "cella-test"
 run = ["nix", "develop", "-c", "sh", "-c", "export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test; status=$?; cella db stop; exit $status"]
 kind = "check"
 needs = ["cella-check"]
+
+# The fold's scale tier (apps/org/rs/index.md, Gates), which the nightly
+# `scale` flow runs at a tenth of its size, about a million entries, the
+# most the box's disk holds. Like `cella-test`, it fetches the lockfile's
+# packages for the offline install and runs on a dev cluster of its own
+# ports, stopped after, pass or fail.
+[[op]]
+name = "cella-scale"
+run = ["nix", "develop", "-c", "sh", "-c", "pnpm fetch --silent && export CELLA_PGPORT=$((20000 + $$ % 20000)) CELLA_ANALYTICS_PORT=$((40000 + $$ % 20000)); cella db start && cella test scale --members 1000; status=$?; cella db stop; exit $status"]
+kind = "check"

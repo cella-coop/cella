@@ -9,7 +9,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use crate::cli::Analytics;
-use crate::db::Dev;
+use crate::db::{Dev, analytics_port};
 use crate::key;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps};
@@ -41,9 +41,7 @@ pub enum Target<'a> {
 
 impl<'a> Shell<'a> {
     pub fn new(repo: &'a Repo, port: Option<u16>) -> Self {
-        let port = port
-            .or_else(|| env::var("CELLA_ANALYTICS_PORT").ok()?.parse().ok())
-            .unwrap_or(54343);
+        let port = port.unwrap_or_else(analytics_port);
         Self {
             repo,
             port,

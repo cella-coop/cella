@@ -3,6 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use crate::db::{analytics_port, pg_port};
 use crate::run::{Fail, Result, Steps, quiet};
 
 /// The repository: the Cargo workspace root that holds the org app.
@@ -34,10 +35,14 @@ impl Repo {
         ))
     }
 
-    /// A command run from the workspace root.
+    /// A command run from the workspace root, handed the dev cluster's and
+    /// the analytics shell's ports, so a test it runs meets the cluster
+    /// this cella started.
     pub fn cmd(&self, program: &str) -> Command {
         let mut cmd = Command::new(program);
-        cmd.current_dir(&self.root);
+        cmd.current_dir(&self.root)
+            .env("CELLA_PGPORT", pg_port().to_string())
+            .env("CELLA_ANALYTICS_PORT", analytics_port().to_string());
         cmd
     }
 
@@ -60,7 +65,7 @@ impl Repo {
 
     /// A binary of the shell's npm dependencies, run from the shell's directory.
     pub fn shell(&self, bin: &str) -> Command {
-        let mut cmd = Command::new("pnpm");
+        let mut cmd = self.cmd("pnpm");
         cmd.current_dir(self.shell_dir()).args(["exec", bin]);
         cmd
     }

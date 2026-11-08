@@ -247,7 +247,7 @@ pub enum Analytics {
         #[arg(long, value_name = "URL")]
         url: Option<String>,
 
-        /// The port it serves on, on localhost; CELLA_ANALYTICS_PORT or 54343
+        /// The port it serves on, on localhost; CELLA_ANALYTICS_PORT, else CORPUS_PORT plus one, else 54343
         #[arg(long)]
         port: Option<u16>,
     },

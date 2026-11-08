@@ -82,9 +82,10 @@ const { title, description } = Astro.props
     /* the bar's glass: near white in the light theme, near black in the
        dark, either seen through */
     --glass: oklch(calc(0.545 + var(--theme) * 0.425) 0.004 250 / calc(0.485 - var(--theme) * 0.065));
-    /* the bands: sage in the success ink's hue, coral in the error's */
-    --band-a: oklch(from var(--p2) calc(0.6 + var(--theme) * 0.27) 0.05 h);
-    --band-a-ink: oklch(from var(--p2) calc(0.59 - var(--theme) * 0.34) 0.03 h);
+    /* the bands: deep sage in the success ink's hue, coral in the
+       error's, each strong enough for its light ink in either theme */
+    --band-a: oklch(from var(--p2) calc(0.45 + var(--theme) * 0.03) 0.085 h);
+    --band-a-ink: oklch(from var(--p2) 0.975 0.012 h);
     --band-b: oklch(from var(--p0) calc(0.56 + var(--theme) * 0.06) 0.14 h);
     --band-b-ink: oklch(from var(--p0) 0.978 0.008 h);
   }

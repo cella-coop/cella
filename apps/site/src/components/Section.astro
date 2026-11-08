@@ -2,12 +2,15 @@
 // One section of a page (index.md, the layout), by its kind. The hero
 // opens the page; a section with a figure sets it beside its text, on the
 // side `flip` gives, the figure bleeding off the screen's outer edge; a
-// quote is a band of sage, a call to action one of coral that runs into
-// the footer. Its number, `num`, counts the page's plain sections.
+// quote is a band of deep sage, a call to action one of coral that runs
+// into the footer, each holding no photo but its diagram, drawn light on
+// its colour. Its number, `num`, counts the page's plain sections.
 import { cell, roundedPath, type Point } from '@cella/brand'
+import type { DiagramName } from '@cella/diagrams'
 import type { Status } from '../schemas'
 import type { Rendered } from '../lib/text'
 import Actions from './Actions.astro'
+import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
 import Heading from './Heading.astro'
 
@@ -35,6 +38,9 @@ const EDGES: Record<string, Point[]> = {
 }
 const outline = band && roundedPath(EDGES[band], 0.07, (v) => v.toFixed(4))
 const clip = band && `band-${s.id}`
+// a band's diagram; the schema refuses a band that names none
+const diagram = band ? (s.diagram as DiagramName) : undefined
+const paired = Boolean(s.figure || diagram)
 // its actions, the call to act first
 const actions = [
   ...(s.primary ? [{ link: s.primary, field: 'primary' }] : []),
@@ -53,14 +59,15 @@ const actions = [
   }
   {
     s.kind === 'quote' ? (
-      <div class="wrap">
+      <div class="wrap pair">
         <blockquote>
           {Content && <div class="said" data-drafted={d('body')}><Content /></div>}
           <cite class="label" data-drafted={d('heading')}>{s.heading}</cite>
         </blockquote>
+        {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
       </div>
     ) : (
-      <div class:list={['wrap', s.figure ? 'pair' : 'single', { flip, overhang: hero }]}>
+      <div class:list={['wrap', paired ? 'pair' : 'single', { flip, overhang: hero }]}>
         <div class="copy">
           {num !== undefined && <span class="num" aria-hidden="true">{String(num).padStart(2, '0')}</span>}
           {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
@@ -99,6 +106,7 @@ const actions = [
           }
           {actions.length > 0 && <div class="row"><Actions links={actions} ink={ink} seed={seed} drafted={d} /></div>}
         </div>
+        {diagram && <div class="plate"><Diagram name={diagram} band /></div>}
         {s.figure && <Engraving figure={s.figure} ink={s.figure.ink ?? ink} seed={seed} bleed={flip ? 'l' : 'r'} aspect={hero ? 1.3 : 1.2} credit={credit} drafted={d} />}
       </div>
     )
@@ -253,33 +261,47 @@ const actions = [
     padding-block: clamp(7rem, 12vw, 10rem) clamp(5rem, 9vw, 8rem);
   }
 
+  /* a band is a strong ink, its words and its diagram light on it */
   [data-band='quote'] {
-    background: var(--band-a);
-    color: var(--band-a-ink);
+    --band: var(--band-a);
+    --band-ink: var(--band-a-ink);
+  }
+
+  [data-band='cta'] {
+    --band: var(--band-b);
+    --band-ink: var(--band-b-ink);
+    padding-bottom: clamp(5rem, 8vw, 7rem);
+  }
+
+  [data-band] {
+    --text: var(--band-ink);
+    --text-muted: color-mix(in oklch, var(--band-ink) 88%, transparent);
+    --dg-ground: var(--band);
+    background: var(--band);
+    color: var(--band-ink);
   }
 
   .edge {
     position: absolute;
   }
 
-  [data-band='cta'] {
-    --text: var(--band-b-ink);
-    --text-muted: color-mix(in oklch, var(--band-b-ink) 88%, transparent);
-    background: var(--band-b);
-    color: var(--band-b-ink);
-    padding-bottom: clamp(5rem, 8vw, 7rem);
-  }
-
-  [data-band='cta'] .pair {
+  [data-band] .pair {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     padding-block: 0;
   }
 
+  .plate {
+    justify-self: center;
+    width: 100%;
+    max-width: 30rem;
+  }
+
   /* on the coral, the cells are the band's own light ink and a veil of it */
-  [data-band='cta'] .row :global(.actions) {
-    --fill: var(--band-b-ink);
-    --on-fill: var(--band-b);
-    --wash: color-mix(in oklch, var(--band-b-ink) 22%, transparent);
-    --on-wash: var(--band-b-ink);
+  [data-band] .row :global(.actions) {
+    --fill: var(--band-ink);
+    --on-fill: var(--band);
+    --wash: color-mix(in oklch, var(--band-ink) 22%, transparent);
+    --on-wash: var(--band-ink);
   }
 
   blockquote {
@@ -310,7 +332,8 @@ const actions = [
 
   @media (max-width: 56rem) {
     .pair,
-    .pair.flip {
+    .pair.flip,
+    [data-band] .pair {
       grid-template-columns: minmax(0, 1fr);
     }
 

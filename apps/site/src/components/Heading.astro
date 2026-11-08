@@ -1,5 +1,6 @@
 ---
-// A heading, its part marked `*so*` set thin.
+// A heading, its part marked `*so*` set thin, broken where its text
+// breaks a line.
 import { parts } from '../lib/text'
 
 interface Props {
@@ -13,3 +14,11 @@ const Tag = level === 1 ? 'h1' : 'h2'
 ---
 
 <Tag data-drafted={drafted}>{parts(text).map((p) => (p.thin ? <span class="thin">{p.text}</span> : p.text))}</Tag>
+
+<style>
+  /* a line break the text writes, `\n`, breaks the heading there */
+  h1,
+  h2 {
+    white-space: pre-line;
+  }
+</style>

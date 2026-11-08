@@ -235,10 +235,12 @@ const actions = [
     list-style: none;
   }
 
+  /* two columns every row shares, so a long title or line stays in its
+     own and the rows line up */
   .rows li {
-    display: flex;
-    justify-content: space-between;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 1.5rem;
     padding: 0.65rem 0;
     border-bottom: 1px solid var(--rule);
     font-weight: 520;

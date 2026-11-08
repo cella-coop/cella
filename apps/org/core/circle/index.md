@@ -882,8 +882,11 @@ the motion that adopted its policy. Under it, what was issued under it (`circle.
 each linking to its own page, which its revocation would revoke the
 same day. The chain is the structure's, read by whoever reads the
 structure ([who reads it](#who-reads-the-structure)), and a link the
-reader does not read is left out; it names roles and circles, never
-who holds them. A grantee's name links to its circle, its issuer to
+reader does not read is left out: the chain then starts at the highest
+link they read, under a line saying the links above it are withheld,
+and only a link issued under no mandate, its parent none, is called
+the root, the assembly's. It names roles and circles, never who holds
+them. A grantee's name links to its circle, its issuer to
 its own, and the motion to its page.
 
 Who sits in a circle is the membership feat's, which names people.

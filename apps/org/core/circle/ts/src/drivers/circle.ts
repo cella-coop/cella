@@ -127,8 +127,9 @@ export const mandating: Read = {
 // A mandate and where its authority comes from: its chain by
 // `circle.chain`, from the root the assembly issued down to itself, and
 // what was issued under it by `circle.under`, each read as the structure
-// is, so a link the reader does not read is left out; or null where the
-// reader reads no such mandate.
+// is, so a link the reader does not read is left out, and with it every
+// link above, withheld where the highest link read has a parent; or null
+// where the reader reads no such mandate.
 export async function mandate(db: Db, id: string): Promise<Provenance | null> {
   if (!/^\d+$/.test(id)) {
     return null
@@ -149,5 +150,6 @@ export async function mandate(db: Db, id: string): Promise<Provenance | null> {
   const all = [m, ...chain.rows, ...under.rows]
   const read = await sentences(db, [...new Set(all.map((x) => x.policy))])
   const worded = <T extends Omit<Standing, 'sentence'>>(x: T) => ({ ...x, sentence: read.get(x.policy) ?? x.policy, limit: num(x.limit), budget: num(x.budget) })
-  return { ...worded(m), chain: chain.rows.map(worded), under: under.rows.map(worded) }
+  const withheld = (chain.rows[0]?.parent ?? null) !== null
+  return { ...worded(m), chain: chain.rows.map(worded), under: under.rows.map(worded), withheld }
 }

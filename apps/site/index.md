@@ -284,7 +284,7 @@ head's committer, which any agent sets.
 
 | Command | What |
 |---|---|
-| `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change, the brand's files among them; drafted text underlined |
+| `cella site dev [--port PORT]` | Astro's dev server on `http://localhost:4321` by default, reloading on every change to the site and to the brand's generated files; a change to the brand's model, `packages/brand/src/`, as its clusters, takes a restart, since Vite keeps the package's modules it loaded |
 | `cella site build [--release]` | the static site into `apps/site/dist`, its pages, its styles, its engravings and the brand's fonts and images, ready for any static host; `--release` refuses any text a draft still supplies |
 | `cella check site` | the copy check (`tools/site-copy.mjs`, each page, layout and component read by Astro's parser), the diagram registry and metadata check (`tools/site-diagrams.mjs`, also checking every diagram the text names), `astro check`, the type check of its `.astro` files and scripts, then its build into a temporary directory; a part of `cella check` |
 

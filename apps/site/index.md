@@ -89,8 +89,10 @@ numbered, 01 on, in the display face's thinnest weight. A heading may
 mark its closing part with stars, `*like this*`, set thin.
 
 The page is the panel, an off-white in the light theme, under a wide
-grid of the text's ink at a breath of strength, 15rem squares (9rem on
-a phone) with a short plus where its lines cross, and the panel's grain. Every value is the brand's: its
+grid of the text's ink at a breath of strength, a honeycomb of pointed
+hexagons 15rem across (9rem on a phone) with a small dot at each
+corner, drawn as one tile the text's ink shows through, and the
+panel's grain. Every value is the brand's: its
 roles, its five inks `--p0` to `--p4`, mixed for the grid, the glass and
 the bands, so a change of `house.json` restyles the site with `cella
 brand` and nothing else. Headings are the display face, Urbanist; the

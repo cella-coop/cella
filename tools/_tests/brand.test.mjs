@@ -15,7 +15,7 @@ import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, sy
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { createRequire } from 'node:module'
-import { cell, cluster, grain, hues, markSvg, print, printCss, PRINT_INKS, printInk, printMarkup, PRINT_STYLES, PRINT_TONE, resolve, rgb8, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
+import { cell, cluster, grain, hues, maskField, markSvg, ORGANIC, sample, print, printCss, PRINT_INKS, printInk, printMarkup, PRINT_STYLES, PRINT_TONE, resolve, rgb8, shades, sunkL, actionL, onActionL, tokensCss } from '../../packages/brand/src/index.ts'
 import { printFile } from '../../packages/brand/src/print-file.ts'
 
 const repo = new URL('../..', import.meta.url).pathname
@@ -48,6 +48,62 @@ test('a cluster is its seed\'s, inside its box, and runs off the side it bleeds 
   assert.ok(xs(held).every((x) => x >= 0 && x <= 1000), 'every cell inside the box')
   assert.ok(xs(cluster(1000, 800, { ...opts, bleed: 'r' })).some((x) => x > 1000), 'bleeding right, a cell runs past the edge')
   assert.match(cell(11), /^M[0-9. ]+Q/, 'a lone cell is a rounded path')
+})
+
+// A cell's corners, its middle and its area, read back from its path.
+const corners = (d) => [...d.matchAll(/Q(-?[0-9.]+) (-?[0-9.]+)/g)].map((m) => [Number(m[1]), Number(m[2])])
+const middle = (d) => {
+  const ps = corners(d)
+  return [ps.reduce((s, p) => s + p[0], 0) / ps.length, ps.reduce((s, p) => s + p[1], 0) / ps.length]
+}
+const area = (d) => {
+  const ps = corners(d)
+  return Math.abs(ps.reduce((s, p, k) => s + p[0] * ps[(k + 1) % ps.length][1] - ps[(k + 1) % ps.length][0] * p[1], 0)) / 2
+}
+
+test('a cluster fills each organic silhouette, its seed\'s, inside its box', () => {
+  const opts = { pitch: 115, gutter: 12, round: 16, seed: 7, drop: 0.25 }
+  const xs = (paths) => paths.flatMap((d) => corners(d).map((p) => p[0]))
+  for (const kind of ORGANIC) {
+    const held = cluster(1000, 833, { ...opts, silhouette: kind })
+    assert.deepEqual(cluster(1000, 833, { ...opts, silhouette: kind }), held, `${kind}: the same seed, the same cells`)
+    assert.notDeepEqual(cluster(1000, 833, { ...opts, seed: 8, silhouette: kind }), held, `${kind}: another seed, another shape`)
+    assert.ok(held.length > 12, `${kind}: a cluster of many cells: ${held.length}`)
+    assert.ok(xs(held).every((x) => x >= 0 && x <= 1000), `${kind}: every cell inside the box`)
+    assert.deepEqual(cluster(1000, 833, { ...opts, silhouette: { kind, limbs: 5 } }).length > 0, true, `${kind}: its limbs may be counted`)
+  }
+})
+
+test('a cluster\'s large cells gather where the interest is', () => {
+  const opts = { pitch: 115, gutter: 12, round: 16, seed: 7 }
+  for (const side of ['l', 'r']) {
+    const interest = (x) => (side === 'r' ? x > 500 : x < 500) ? 1 : 0
+    const cells = cluster(1000, 833, { ...opts, interest })
+    const mean = (on) => {
+      const picked = cells.filter((d) => (middle(d)[0] > 500) === on)
+      return picked.reduce((s, d) => s + area(d), 0) / picked.length
+    }
+    const [toward, away] = side === 'r' ? [mean(true), mean(false)] : [mean(false), mean(true)]
+    assert.ok(toward > away * 1.5, `interest on the ${side}: cells there average ${toward.toFixed(0)}, elsewhere ${away.toFixed(0)}`)
+  }
+})
+
+test('a mask is a signed distance a cluster fills, and a grid is sampled between its cells', () => {
+  // a 20 by 20 grid, its middle 10 by 10 inside, laid over 200 by 200 from 100, 100
+  const data = Array.from({ length: 400 }, (_, i) => (i % 20 >= 5 && i % 20 < 15 && Math.floor(i / 20) >= 5 && Math.floor(i / 20) < 15 ? 1 : 0))
+  const place = { x: 100, y: 100, w: 200, h: 200 }
+  const field = maskField({ w: 20, h: 20, data }, place)
+  assert.ok(field(200, 200) < -40, `deep inside, far from the edge: ${field(200, 200)}`)
+  assert.ok(Math.abs(field(150, 200)) < 12, `on the edge, near nought: ${field(150, 200)}`)
+  assert.ok(field(110, 200) > 30, `outside: ${field(110, 200)}`)
+  assert.ok(field(0, 200) > 140, `past the grid, its distance added: ${field(0, 200)}`)
+  const at = sample({ w: 2, h: 1, data: [0, 1] }, { x: 0, y: 0, w: 2, h: 1 })
+  assert.equal(at(0.5, 0.5), 0)
+  assert.equal(at(1, 0.5), 0.5)
+  assert.equal(at(1.5, 0.5), 1)
+  const cells = cluster(400, 400, { pitch: 40, gutter: 4, round: 5, seed: 3, silhouette: { field }, loose: 0 })
+  assert.ok(cells.length > 8, `the square holds many cells: ${cells.length}`)
+  assert.ok(cells.every((d) => field(...middle(d)) < 20), 'every cell stands in the square')
 })
 
 test('the mark is the explorer\'s, at 240 and at 16', () => {

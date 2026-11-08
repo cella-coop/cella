@@ -3,9 +3,17 @@
 // Voronoi diagram whose seeds weigh their disk's area, so a big seed owns
 // a big cell: the disks' radii follow a power law, a few large and a long
 // tail of small, the large gathered in the middle, and the cluster's edge
-// a lobed blob with a tail, never its box.
+// a lobed blob with a tail, never its box. Given a field of interest, the
+// large gather where it is high instead; given a silhouette, an organic
+// one or a mask's, the cells fill that.
 
 import { clipHalf, rng, roundedPath, type Point } from './mark.ts'
+import { organic, type Field, type Organic } from './silhouette.ts'
+
+/** A cluster's outline: the lobed blob, an organic shape by name, or a
+ * signed distance in the box's units, negative inside, with how deep in
+ * it the cells reach their full size. */
+export type Silhouette = 'blob' | Organic | { kind: Organic; limbs?: number } | { field: Field; depth?: number }
 
 export type ClusterOptions = {
   /** The typical cell's size, in the box's units. */
@@ -19,6 +27,12 @@ export type ClusterOptions = {
   drop?: number
   /** A side the cluster runs off, past the box's edge. */
   bleed?: 'l' | 'r' | null
+  silhouette?: Silhouette
+  /** Where the picture's interest is, 0 to 1 at a point of the box: the
+   * large cells gather where it is high, the small where it is low. */
+  interest?: Field
+  /** How many of the loose cells past the rim stay, against the default. */
+  loose?: number
 }
 
 const f = (v: number) => v.toFixed(1)
@@ -29,7 +43,7 @@ const REACH = 1.5
 const REACH_SIDES = 14
 
 /** A cluster's cells, as SVG paths, in a box w by h. */
-export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop = 0, bleed = null }: ClusterOptions): string[] {
+export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop = 0, bleed = null, silhouette = 'blob', interest, loose = 1 }: ClusterOptions): string[] {
   // The outline: a blob whose radius wobbles with the angle, and a lobe,
   // its tail. Bleeding off one side, its middle leans toward that edge and
   // its tail points back the other way, toward the words
@@ -38,7 +52,7 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
   const lean = bleed === 'r' ? 0.14 : bleed === 'l' ? -0.14 : 0
   const [cx, cy] = [w * (0.5 + lean) + (shape() - 0.5) * w * 0.06, h / 2 + (shape() - 0.5) * h * 0.08]
   const tail = bleed === 'r' ? Math.PI + (shape() - 0.5) * 1.4 : bleed === 'l' ? (shape() - 0.5) * 1.4 : shape() * 6.3
-  const outline = (x: number, y: number) => {
+  const blob = (x: number, y: number) => {
     let u = (x - cx) / (w / 2)
     // toward the bleeding edge the outline reaches past it
     if ((bleed === 'r' && u > 0) || (bleed === 'l' && u < 0)) {
@@ -50,18 +64,46 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
     const R = 0.86 * (1 + 0.18 * Math.sin(2 * t + a) + 0.11 * Math.sin(3 * t + b) + 0.06 * Math.sin(5 * t + c) + lobe)
     return Math.hypot(u, v) / Math.min(0.97 * (1 + lobe), R)
   }
+  const outline = silhouette === 'blob' ? blob : depthOf(silhouette, { w, h, pitch, seed, bleed, cx })
 
   // The seeds: disks whose radii follow a power law, packed biggest first
   // at random spots without overlapping, over the box and a margin round
   // it. How big a disk may be falls off from the middle, so the big cells
-  // gather there and the rim and the tail break into ever smaller ones
+  // gather there and the rim and the tail break into ever smaller ones;
+  // given a field of interest, it follows the field inside, and the rim
+  // still breaks small
   const rand = rng(seed)
   const [rmin, rmax, alpha] = [pitch * 0.2, pitch * 1.3, 1.5]
-  const cap = (x: number, y: number) => rmax * Math.max(0.12, 1.05 - outline(x, y) * 0.85) ** 1.6
-  const radii = Array.from({ length: 1400 }, () => Math.min(rmax, rmin * (1 - rand()) ** (-1 / alpha))).sort((p, q) => q - p)
+  // the blob's outline is how far from its middle, so its falloff is
+  // steepened to its rim; any other is how deep in it, and a cell grows
+  // only as deep as it stands. Where the interest is nil the cap still
+  // lets the smallest disks in, so the plain parts fill with small cells
+  const steep = silhouette === 'blob' ? 3 : 1
+  const size = interest
+    ? (x: number, y: number) => Math.min(1.05 - outline(x, y) ** steep * 0.85, 0.38 + 0.67 * Math.max(0, Math.min(1, interest(x, y))))
+    : (x: number, y: number) => 1.05 - outline(x, y) * 0.85
+  const cap = (x: number, y: number) => rmax * Math.max(0.12, size(x, y)) ** 1.6
   const margin = rmax
+  // enough disks to fill the box with small ones, at any pitch
+  const count = Math.max(1400, Math.round((2.5 * (w + margin * 2) * (h + margin * 2)) / (Math.PI * rmin * rmin)))
+  const radii = Array.from({ length: count }, () => Math.min(rmax, rmin * (1 - rand()) ** (-1 / alpha))).sort((p, q) => q - p)
   const disks: { x: number; y: number; r: number }[] = []
   const sep = gutter * 0.4
+  // the disks bucketed by a square no two touching disks span more than
+  const span = rmax * 2 + sep
+  const buckets = new Map<number, { x: number; y: number; r: number }[]>()
+  const key = (i: number, j: number) => i * 4096 + j
+  const free = (x: number, y: number, r: number) => {
+    const [i, j] = [Math.floor(x / span), Math.floor(y / span)]
+    for (let di = -1; di <= 1; di++) {
+      for (let dj = -1; dj <= 1; dj++) {
+        if (buckets.get(key(i + di, j + dj))?.some((d) => Math.hypot(d.x - x, d.y - y) < d.r + r + sep)) {
+          return false
+        }
+      }
+    }
+    return true
+  }
   for (const r of radii) {
     for (let tries = 0; tries < 50; tries++) {
       const x = -margin + rand() * (w + margin * 2)
@@ -69,8 +111,11 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
       if (r > Math.max(rmin, cap(x, y))) {
         continue
       }
-      if (disks.every((d) => Math.hypot(d.x - x, d.y - y) >= d.r + r + sep)) {
-        disks.push({ x, y, r })
+      if (free(x, y, r)) {
+        const d = { x, y, r }
+        disks.push(d)
+        const k = key(Math.floor(x / span), Math.floor(y / span))
+        buckets.set(k, [...(buckets.get(k) ?? []), d])
         break
       }
     }
@@ -107,13 +152,58 @@ export function cluster(w: number, h: number, { pitch, gutter, round, seed, drop
     // inside the outline, or a loose cell past it, the smaller the likelier
     const at = outline(s.x, s.y)
     const small = s.r < rmin * 1.6
-    const loose = at >= 1 && at < (small ? 1.45 : 1.15) && rand() < (small ? 0.45 : 0.15)
-    if ((at >= 1 && !loose) || (at < 1 && at > 0.9 && rand() < drop)) {
+    const stray = at >= 1 && at < (small ? 1.45 : 1.15) && rand() < (small ? 0.45 : 0.15) * loose
+    if ((at >= 1 && !stray) ||(at < 1 && at > 0.9 && rand() < drop)) {
       return
     }
     paths.push(roundedPath(poly, Math.min(round, 0.3 * s.r), f))
   })
   return paths
+}
+
+/** A silhouette as the cluster reads it: 0 deep inside, 1 at its edge
+ * and more past it. An organic shape is fitted to the box round its
+ * middle, or the blob's when it bleeds, so it runs off that edge; its
+ * cells and a field's are full grown DEPTH pitches in, or at a field's
+ * own depth. */
+function depthOf(silhouette: Exclude<Silhouette, 'blob'>, { w, h, pitch, seed, bleed, cx }: { w: number; h: number; pitch: number; seed: number; bleed: 'l' | 'r' | null; cx: number }) {
+  if (typeof silhouette === 'object' && 'field' in silhouette) {
+    const { field, depth = pitch * DEPTH } = silhouette
+    return (x: number, y: number) => Math.max(0, 1 + field(x, y) / depth)
+  }
+  const [kind, limbs] = typeof silhouette === 'string' ? [silhouette, undefined] : [silhouette.kind, silhouette.limbs]
+  const sdf = organic(kind, seed, limbs)
+  // fitted to the box, stretched a little wider at most, round the box's
+  // middle, or the blob's when it leans toward a bleeding edge
+  const [x0, y0, x1, y1] = bounds(sdf)
+  let sy = (h * 0.96) / (y1 - y0)
+  const sx = Math.min((w * 0.96) / (x1 - x0), sy * 1.25)
+  sy = Math.min(sy, sx)
+  const [mx, my] = [bleed ? cx : w / 2, h / 2]
+  const [ux, uy] = [(x0 + x1) / 2, (y0 + y1) / 2]
+  const depth = (pitch * DEPTH) / sy
+  return (x: number, y: number) => Math.max(0, 1 + sdf([(x - mx) / sx + ux, (y - my) / sy + uy]) / depth)
+}
+
+/** How deep in a silhouette its cells reach their full size, in pitches:
+ * a cell grows only as deep as it stands, so a thin limb holds small ones. */
+const DEPTH = 2
+
+/** An organic shape's bounds, sampled. */
+function bounds(sdf: (p: [number, number]) => number) {
+  const b = [Infinity, Infinity, -Infinity, -Infinity]
+  for (let i = 0; i <= 80; i++) {
+    for (let j = 0; j <= 80; j++) {
+      const [u, v] = [-2.5 + (i / 80) * 5, -2.5 + (j / 80) * 5]
+      if (sdf([u, v]) < 0) {
+        b[0] = Math.min(b[0], u)
+        b[1] = Math.min(b[1], v)
+        b[2] = Math.max(b[2], u)
+        b[3] = Math.max(b[3], v)
+      }
+    }
+  }
+  return b
 }
 
 /** Whether a polygon reads as a cell: round enough for its size, its area

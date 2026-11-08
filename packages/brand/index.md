@@ -61,7 +61,24 @@ from the explorer:
   a lobed rim and a tail, each cell cut by one gutter, the same width
   between any two, held within a reach of its own seed, and
   dropped where it would be a spike; seeded, so a page's clusters are
-  the same on every build; and `cell`, a lone cell for a marker;
+  the same on every build; and `cell`, a lone cell for a marker.
+  `cluster` takes, beside its pitch, gutter, rounding, seed, `drop` and
+  `bleed`: `interest`, a field of 0 to 1 over its box, where its large
+  cells gather instead of the middle, the rim still breaking small;
+  `silhouette`, the shape its cells fill, `'blob'` by default, an
+  organic one by name or `{ kind, limbs }`, or `{ field, depth }`, any
+  signed distance in the box's units, negative inside, its cells full
+  grown `depth` in (two pitches unless given); and `loose`, how many of
+  the stray cells past the rim it keeps against the default;
+- `silhouette.ts`, the shapes a cluster fills, pure and seeded:
+  `organic(kind, seed, limbs?)` for `ORGANIC`'s `amoeba`, a wobbling
+  body putting out pseudopods, `branch`, a core whose limbs fork once,
+  `bubbles`, a main mass and bubbles standing off it, and `colony`,
+  lobes budding one off another, each a signed distance of circles and
+  tapering limbs melted together and fitted to the box; `maskField`, a
+  mask's signed distance from a grid of coverage laid at a place, by
+  an 8SSEDT sweep, so a page may hand it a rasterised icon; and
+  `sample`, a grid read between its cells at a point of the box;
 - `wordmark.ts`, CELLA in Urbanist at weight 690, tracked -0.02em, from glyph
   outlines, and its lockups with the mark at 1.1 times its height, 0.16
   of it apart, beside it or above it;

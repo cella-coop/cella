@@ -1,7 +1,8 @@
 ---
 // A page of the site: the header with the page marked in its links, the
 // page's hero, its sections and the footer. Down the page the figures
-// trade sides and take the five inks in turn, the hero's the coral; a
+// trade sides and take the five inks in turn, home's hero the coral and
+// each other page a step further along; a
 // plain section is numbered.
 import Footer from '../components/Footer.astro'
 import Header from '../components/Header.astro'
@@ -24,13 +25,19 @@ const credit = { template: site.photo.credit, unsplash: site.photo.unsplash }
 const forms = { signup: site.signup, contact: site.contact, drafted: site.drafted }
 
 const TURN: Status[] = ['error', 'info', 'warning', 'success', 'help']
+// where a page starts in the turn: home at the coral, every other page a
+// step on for each place it holds in the header's links, so no two open
+// alike; a post starts as its blog does
+const root = name.split('/')[0]
+const start = root === 'home' ? 0 : site.nav.findIndex((l) => l.href.replace(/\/$/, '') === `/${root}`) + 1
+const turn = (i: number) => TURN[(start + i) % TURN.length]
 // a section's seed, the same on every build: its page's and its own name
 const seedOf = (id: string) => [...`${name}/${id}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % 997
 let figures = 1
 let plain = 0
 const laid = sections.map((s) => {
   const flip = s.figure ? figures % 2 === 1 : false
-  const ink = TURN[figures % TURN.length]
+  const ink = turn(figures)
   if (s.figure) {
     figures++
   }
@@ -42,7 +49,7 @@ const laid = sections.map((s) => {
 <Base title={full} description={hero.description ?? site.description}>
   <Header title={site.title} nav={site.nav} toggle={site.theme.toggle} menu={site.menu} />
   <main>
-    <Section section={hero} ink={TURN[0]} seed={seedOf('hero')} credit={credit} forms={forms} />
+    <Section section={hero} ink={turn(0)} seed={seedOf('hero')} credit={credit} forms={forms} />
     <slot />
     {laid.map(({ s, flip, ink, num }) => <Section section={s} ink={ink} seed={seedOf(s.id)} flip={flip} num={num} credit={credit} forms={forms} />)}
   </main>

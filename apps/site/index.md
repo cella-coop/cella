@@ -80,7 +80,9 @@ cell swells a little.
 
 A section with a figure sets it beside its words; down the page the
 figures trade sides, the hero's on the right, and take the five inks in
-turn, the hero's the coral (`Page.astro`). A figure bleeds past the
+turn, home's hero the coral and every other page starting a step on for
+each place it holds in the header's links, so no two pages open alike,
+a post as its blog (`Page.astro`). A figure bleeds past the
 column to the screen's edge on its outer side, its caption at that
 edge. A plain section, `prose`, `features`, `steps` or `list`, is
 numbered, 01 on, in the display face's thinnest weight. A heading may

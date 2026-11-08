@@ -1,27 +1,32 @@
 ---
 // A list as cells (index.md, the layout): each item a lone cell of the
 // brand beside its title and line, the cells taking the five inks in
-// turn however many there are. A cell may hold the item's number, when
+// turn however many there are, leaving out the one `skip` names, as a
+// band's own. A cell may hold the item's number, when
 // the list is `numbered`, or its Phosphor icon, `icon`, in the regular
 // weight, drawn in the paper on the ink; else it is bare.
 import { cell } from '@cella/brand'
 import { glyphPaths } from '../lib/icon'
+import { STATUSES, type Status } from '../schemas'
 
 interface Props {
   items: { title: string; body: string; icon?: string }[]
   numbered?: boolean
   seed?: number
   drafted?: true
+  // an ink the cells leave out, as a band's own, so none sinks into it
+  skip?: Status
 }
 
-const { items, numbered = false, seed = 1, drafted } = Astro.props
+const { items, numbered = false, seed = 1, drafted, skip } = Astro.props
+const inks = STATUSES.map((_, i) => i).filter((i) => STATUSES[i] !== skip)
 ---
 
 <ul class="cells" role="list" data-drafted={drafted}>
   {
     items.map((it, i) => (
       <li class="item">
-        <svg class="mark" viewBox="0 0 100 100" aria-hidden="true" style={{ '--ink': `var(--p${i % 5})` }}>
+        <svg class="mark" viewBox="0 0 100 100" aria-hidden="true" style={{ '--ink': `var(--p${inks[i % inks.length]})` }}>
           <path class="shape" d={cell(seed * 13 + i * 7)} />
           {numbered && <text class="n" x="50" y="50">{i + 1}</text>}
           {!numbered && it.icon && <g class="icon" transform="translate(27 27) scale(0.18)" set:html={glyphPaths(it.icon)} />}
@@ -36,9 +41,11 @@ const { items, numbered = false, seed = 1, drafted } = Astro.props
 </ul>
 
 <style>
+  /* a readable measure, near the lede's above it */
   .cells {
     display: grid;
     gap: 1.6rem;
+    max-width: 34rem;
     margin: 0.5rem 0 0;
     padding: 0;
     list-style: none;

@@ -87,7 +87,9 @@ a post as its blog (`Page.astro`). A figure bleeds past the
 column to the screen's edge on its outer side, its caption at that
 edge. A plain section, `prose`, `features`, `steps` or `list`, and a
 band that neither quotes nor asks (by a form or an action), is
-numbered, 01 on, in the display face's thinnest weight. A heading may
+numbered, 01 on, as a ghost numeral: the display face's thinnest
+weight, huge and faint behind the section's words, its top left in
+line with theirs. A heading may
 mark its closing part with stars, `*like this*`, set thin.
 
 The page is the panel, an off-white in the light theme, under a wide

@@ -73,13 +73,12 @@ const { title, description } = Astro.props
 <style is:global>
   :root {
     --wrap: 76rem;
-    /* the grid: a honeycomb of flat-topped hexagons, each --cell from
-       flat to flat, its edges a breath of the text's ink. One tile is √3
-       of a hexagon's height by its height; the tile holds each edge once */
+    /* the grid's square, and its lines, a breath of the text's ink */
     --cell: 15rem;
-    --grid-ink: color-mix(in oklch, var(--text) calc(32% + var(--theme) * 2%), transparent);
-    --hex: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 173.2' preserveAspectRatio='none'%3E%3Cpath d='M0 86.6H50M50 86.6L100 173.2M100 0L50 86.6M100 173.2H200M100 0H200M200 173.2L250 86.6M200 0L250 86.6M250 86.6H300' fill='none' stroke='black' stroke-opacity='0.07' stroke-width='0.75'/%3E%3C/svg%3E");
+    --grid: color-mix(in oklch, var(--text) calc(2.25% + var(--theme) * 0.35%), transparent);
     --rule: color-mix(in oklch, var(--text) 32%, transparent);
+    /* where the grid's lines cross, a short plus */
+    --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' preserveAspectRatio='none'%3E%3Cpath d='M-2 0H2M0-2V2M98 0H102M100-2V2M-2 100H2M0 98V102M98 100H102M100 98V102' stroke='rgb(128 130 136 / 0.32)' stroke-width='0.6'/%3E%3C/svg%3E");
     /* the bar's glass: near white in the light theme, near black in the
        dark, either seen through */
     --glass: oklch(calc(0.545 + var(--theme) * 0.425) 0.004 250 / calc(0.485 - var(--theme) * 0.065));
@@ -115,26 +114,10 @@ const { title, description } = Astro.props
     flex-direction: column;
     min-height: 100dvh;
     margin: 0;
-    position: relative;
-    isolation: isolate;
     background-color: var(--panel);
-    background-image: var(--grain-panel);
-  }
-
-  /* the grid, behind everything, the text's ink seen through the tile */
-  body::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    pointer-events: none;
-    background-color: var(--grid-ink);
-    -webkit-mask-image: var(--hex);
-    mask-image: var(--hex);
-    -webkit-mask-size: calc(var(--cell) * 1.7320508) var(--cell);
-    mask-size: calc(var(--cell) * 1.7320508) var(--cell);
-    -webkit-mask-position: center top;
-    mask-position: center top;
+    background-image: var(--plus), linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px), var(--grain-panel);
+    background-size: var(--cell) var(--cell), var(--cell) var(--cell), var(--cell) var(--cell), auto;
+    background-position: center top;
   }
 
   main {

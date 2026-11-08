@@ -78,19 +78,22 @@ const item = z.object({ title: z.string(), body: z.string(), icon: z.string().op
 // One section of a page, laid out by its kind: `hero` the page's top,
 // with its title and description; `prose` its body; `features`, `steps`
 // and `list` its body then its items, and any other kind with items its
-// items as a list of cells under its body; `quote` its body set large, its
-// heading the attribution; `cta` a band of its body and its action. A
-// section with a figure sets it beside its text, the sides trading down
-// the page. `heading` may mark a closing part with stars, `*like this*`,
-// set thin. Its file's name is its anchor; `order` places it.
+// items as a list of cells under its body; `band` a strong band of one of
+// the five inks, `ink`, sage unset, holding what any section may and its
+// diagram, its body set large and its heading the attribution where it is
+// a `quote: true`. `quote` is a band that quotes, sage unless its ink
+// says; `cta` a band, coral unless its ink says. A section with a figure
+// sets it beside its text, the sides trading down the page. `heading`
+// may mark a closing part with stars, `*like this*`, set thin. Its file's
+// name is its anchor; `order` places it.
 //
-// A band, `quote` or `cta`, holds no photo: it draws the diagram of
-// `@cella/diagrams` its `diagram` names, light on its colour, and a band
-// that names none fails the build; a figure on a band is dropped.
-const BANDS = ['quote', 'cta']
+// A band holds no photo: it draws the diagram of `@cella/diagrams` its
+// `diagram` names, light on its colour, and a band that names none fails
+// the build; a figure on a band is dropped.
+const BANDS = ['band', 'quote', 'cta']
 export const section = z
   .object({
-    kind: z.enum(['hero', 'prose', 'features', 'steps', 'list', 'quote', 'cta']).default('prose'),
+    kind: z.enum(['hero', 'prose', 'features', 'steps', 'list', 'band', 'quote', 'cta']).default('prose'),
     order: z.number().default(0),
     title: z.string().optional(),
     description: z.string().optional(),
@@ -106,13 +109,29 @@ export const section = z
     form: z.enum(['signup', 'contact']).optional(),
     // a features section's cells hold their items' numbers
     numbered: z.boolean().default(false),
+    // a band's ink, and whether it quotes
+    ink: z.enum(STATUSES).optional(),
+    quote: z.boolean().default(false),
   })
   .superRefine((s, ctx) => {
     if (BANDS.includes(s.kind) && !s.diagram) {
       ctx.addIssue({ code: 'custom', path: ['diagram'], message: `is required on a ${s.kind} band: name one of @cella/diagrams` })
     }
   })
-  .transform((s) => (BANDS.includes(s.kind) ? { ...s, figure: undefined } : s))
+  // every band is a `band`: a quote one that quotes, sage unset, a cta one
+  // coral unset; and none keeps a figure
+  .transform((s) => {
+    if (s.kind === 'quote') {
+      return { ...s, kind: 'band' as const, quote: true, ink: s.ink ?? ('success' as const), figure: undefined }
+    }
+    if (s.kind === 'cta') {
+      return { ...s, kind: 'band' as const, ink: s.ink ?? ('error' as const), figure: undefined }
+    }
+    if (s.kind === 'band') {
+      return { ...s, ink: s.ink ?? ('success' as const), figure: undefined }
+    }
+    return s
+  })
 
 export type Section = z.infer<typeof section>
 export type Figure = z.infer<typeof figure>

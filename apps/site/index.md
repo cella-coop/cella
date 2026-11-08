@@ -45,8 +45,9 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   | `features` | its body as a lede, then its items as a list of cells (`Cells.astro`): each a cell of the brand, the five inks in turn however many items there are, beside a title and a line; a cell holds its item's number where the section is `numbered: true`, or its item's Phosphor `icon` (the regular weight) in the paper, else it is bare. Any section but `steps` and `list` that has `items` shows them so, under its body; a body may place the same list itself, `<Cells items={[…]} numbered />` |
   | `steps` | its body, then its items numbered in two columns |
   | `list` | its body, then its items as ruled rows, a title and a muted line |
-  | `quote` | a band of deep sage, its edges cut as a cell's: its body set large, its heading the attribution, its diagram beside them |
-  | `cta` | a band of coral, its edges cut as a cell's: its eyebrow, heading, body and action, its diagram beside them |
+  | `band` | a band of a strong ink, `ink` one of the five (`success` unset: deep sage; `error` the coral), its edges cut as a cell's, holding what any section may (eyebrow, heading, body, items, actions, a form) with its diagram beside them; with `quote: true` its body set large and its heading the attribution |
+  | `quote` | a band that quotes, sage unless its `ink` says |
+  | `cta` | a band, coral unless its `ink` says |
 
 - **the footer**, on the page's own paper and its grid: the lockup
   and the site's closing line, the sitemap in columns, each a heading

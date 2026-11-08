@@ -2,9 +2,9 @@
 // One section of a page (index.md, the layout), by its kind. The hero
 // opens the page; a section with a figure sets it beside its text, on the
 // side `flip` gives, the figure bleeding off the screen's outer edge; a
-// quote is a band of deep sage, a call to action one of coral that runs
-// into the footer, each holding no photo but its diagram, drawn light on
-// its colour. Its number, `num`, counts the page's plain sections.
+// band is a strong ink, its edges cut as a cell's, holding no photo but
+// its diagram, drawn light on its colour, and quoting where it says so.
+// Its number, `num`, counts the page's plain sections.
 import { roundedPath, type Point } from '@cella/brand'
 import type { DiagramName } from '@cella/diagrams'
 import type { Status } from '../schemas'
@@ -37,16 +37,17 @@ const { section: s, ink, seed, flip = false, num, credit, forms } = Astro.props
 const d = s.drafted
 const { Content } = s
 const hero = s.kind === 'hero'
-const band = s.kind === 'quote' ? 'quote' : s.kind === 'cta' ? 'cta' : undefined
+// a band's ink; the schema gives every band one
+const band = s.kind === 'band' ? s.ink : undefined
 // A band's outline, as a cell's: a few long edges meeting at wide,
-// rounded corners, in the band's own box, so it stretches with it. The
-// corners at the screen's sides stand past it, so only the turns inside
-// show rounded
-const EDGES: Record<string, Point[]> = {
-  quote: [[-0.1, 0.155], [0.34, 0], [1.1, 0.08], [1.1, 0.89], [0.71, 1], [-0.1, 0.94]],
-  cta: [[-0.1, 0.07], [0.58, 0], [1.1, 0.125], [1.1, 0.92], [0.36, 1], [-0.1, 0.95]],
-}
-const outline = band && roundedPath(EDGES[band], 0.07, (v) => v.toFixed(4))
+// rounded corners, in the band's own box, so it stretches with it, one of
+// two by its seed. The corners at the screen's sides stand past it, so
+// only the turns inside show rounded
+const EDGES: Point[][] = [
+  [[-0.1, 0.155], [0.34, 0], [1.1, 0.08], [1.1, 0.89], [0.71, 1], [-0.1, 0.94]],
+  [[-0.1, 0.07], [0.58, 0], [1.1, 0.125], [1.1, 0.92], [0.36, 1], [-0.1, 0.95]],
+]
+const outline = band && roundedPath(EDGES[seed % 2], 0.07, (v) => v.toFixed(4))
 const clip = band && `band-${s.id}`
 // a band's diagram; the schema refuses a band that names none
 const diagram = band ? (s.diagram as DiagramName) : undefined
@@ -68,7 +69,7 @@ const actions = [
     )
   }
   {
-    s.kind === 'quote' ? (
+    band && s.quote ? (
       <div class="wrap pair">
         <blockquote>
           {Content && <div class="said" data-drafted={d('body')}><Content /></div>}
@@ -236,21 +237,40 @@ const actions = [
     display: flex;
   }
 
-  /* the breaks: two shaped bands of ink, their edges cut as a cell's */
+  /* the breaks: shaped bands of ink, their edges cut as a cell's */
   [data-band] {
     padding-block: clamp(7rem, 12vw, 10rem) clamp(5rem, 9vw, 8rem);
   }
 
-  /* a band is a strong ink, its words and its diagram light on it */
-  [data-band='quote'] {
+  /* a band is a strong ink, its words and its diagram light on it: the
+     sage and the coral the site set first, the other three deepened
+     alike from their inks */
+  [data-band='success'] {
     --band: var(--band-a);
     --band-ink: var(--band-a-ink);
   }
 
-  [data-band='cta'] {
+  [data-band='error'] {
     --band: var(--band-b);
     --band-ink: var(--band-b-ink);
-    padding-bottom: clamp(5rem, 8vw, 7rem);
+  }
+
+  [data-band='warning'] {
+    --band: oklch(from var(--p1) calc(0.5 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='info'] {
+    --band: oklch(from var(--p3) calc(0.47 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='help'] {
+    --band: oklch(from var(--p4) calc(0.47 + var(--theme) * 0.03) 0.1 h);
+  }
+
+  [data-band='warning'],
+  [data-band='info'],
+  [data-band='help'] {
+    --band-ink: oklch(from var(--band) 0.975 0.01 h);
   }
 
   [data-band] {

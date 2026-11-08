@@ -24,11 +24,11 @@
   const rise = (x1: number, x2: number) => Math.abs(x2 - x1) * slope
   // each member's consent, in their order, Ana's first
   const consents = [
-    { x: 74, y: 292 },
-    { x: 134, y: 274 },
-    { x: 194, y: 256 },
+    { x: 74, y: 294 },
+    { x: 134, y: 268 },
+    { x: 194, y: 242 },
   ]
-  const motion = { y: 318, at: 318 - rise(74, ga) }
+  const motion = { y: 326, at: 326 - rise(74, ga) }
   const grant = { y: 176, at: 176 - rise(ga + 4, role) }
 </script>
 
@@ -50,8 +50,8 @@
 
   <!-- a motion put to the assembly, which deliberates -->
   <Particle kind="ask" x1={74} y1={motion.y} x2={ga} y2={motion.at} />
-  <text class="say" x={106} y={308} text-anchor="middle">motion</text>
-  <Wait x={ga} y1={motion.at} y2={232} />
+  <text class="say" x={106} y={315} text-anchor="middle">motion</text>
+  <Wait x={ga} y1={motion.at} y2={222} />
   <Dot x={74} y={motion.y} />
   <Dot x={ga} y={motion.at} />
 
@@ -60,10 +60,10 @@
     <Particle kind="answer" x1={c.x + 9} y1={c.y} x2={ga - 6} y2={c.y - rise(c.x + 9, ga - 6)} />
     <Glyph name="check" x={c.x} y={c.y} tone="ask" />
   {/each}
-  <text class="say" x={238} y={240} text-anchor="middle">consent</text>
+  <text class="say" x={238} y={226} text-anchor="middle">consent</text>
 
   <!-- the motion passes, and a narrower mandate goes to a role -->
-  <Glyph name="gavel" x={ga} y={214} />
+  <Glyph name="gavel" x={ga} y={204} />
   <Particle kind="grant" x1={ga + 4} y1={grant.y} x2={role} y2={grant.at} />
   <text class="say" x={335} y={158} text-anchor="middle">mandate</text>
   <Dot x={ga} y={grant.y} />

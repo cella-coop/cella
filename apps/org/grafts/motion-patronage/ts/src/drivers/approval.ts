@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import { numbered, type Db } from '@cella/org-db'
 import type { Approval } from '../models/approval.ts'
 
 const columns = `a.distribution AS id, a.distribution, l.year, a.motion, d.title, to_char(d.closed, 'YYYY-MM-DD') AS closed,
@@ -11,7 +11,7 @@ const from = `FROM motion_patronage.approval a
 // approves.
 export async function approvals(db: Db, by: { distribution: string } | { motion: string }): Promise<Approval[]> {
   const [where, value] = 'distribution' in by ? ['a.distribution', by.distribution] : ['a.motion', by.motion]
-  const { rows } = await db.query<Approval>(`SELECT ${columns} ${from} WHERE ${where} = $1 ORDER BY l.year DESC, d.proposed DESC, d.id DESC`, [value])
+  const { rows } = await db.query<Approval>(`SELECT ${columns} ${from} WHERE ${where} = $1 ORDER BY l.year DESC, d.proposed DESC, ${numbered('d.id', 'DESC')}`, [value])
   return rows
 }
 

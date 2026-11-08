@@ -12,7 +12,7 @@ reimbursed from the bank.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up, its number four digits or more, so `ex-10000` follows `ex-9999`; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference the member typed, beside the receipts kept as files |
+| expense | `id`, `member`, `day`, `label`, `category`, `net`, `vat?`, `receipt?`, `status`, `submitted?`, `decided?`, `decider?`, `reimbursed?` | `id` is `ex-0001` and up, its number four digits or more, so `ex-10000` follows `ex-9999`, in every list too, which orders ids by their number, never as text; amounts in cents; `category` is the account of class 6 it is charged to; `receipt` a reference the member typed, beside the receipts kept as files |
 
 An expense names its claimant, `member`, and its decider by address, as
 text; their names are the `expense-membership` graft's. Its label and

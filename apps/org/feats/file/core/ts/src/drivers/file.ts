@@ -1,4 +1,4 @@
-import { literal, type Content, type Db, type Read } from '@cella/org-db'
+import { literal, numbered, type Content, type Db, type Read } from '@cella/org-db'
 import { kinds, type File } from '../models/file.ts'
 
 const columns = `f.id, f.class, f.subject, f.name, f.type, f.size, encode(f.hash, 'hex') AS hash, f.uploader,
@@ -12,12 +12,12 @@ export const listing: Read = {
           f.class AS retention, f.subject, f.name, f.type, f.size, encode(f.hash, 'hex') AS hash, f.uploader,
           to_char(f.uploaded, 'YYYY-MM-DD') AS uploaded, f.circle
         FROM file.file f`,
-  order: 'uploaded DESC, id DESC',
+  order: `uploaded DESC, ${numbered('id', 'DESC')}`,
 }
 
 // Every file the co-op keeps, the latest first, without its bytes.
 export async function files(db: Db): Promise<File[]> {
-  const { rows } = await db.query<File>(`SELECT ${columns} FROM file.file f ORDER BY f.uploaded DESC, f.id DESC`)
+  const { rows } = await db.query<File>(`SELECT ${columns} FROM file.file f ORDER BY f.uploaded DESC, ${numbered('f.id', 'DESC')}`)
   return rows
 }
 

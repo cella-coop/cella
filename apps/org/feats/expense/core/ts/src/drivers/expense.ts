@@ -1,4 +1,4 @@
-import { literal, type Db, type Read } from '@cella/org-db'
+import { literal, numbered, type Db, type Read } from '@cella/org-db'
 import { categories, type Expense } from '../models/expense.ts'
 
 const fields = (category: string) => `e.id, e.member, to_char(e.day, 'YYYY-MM-DD') AS day, e.label, ${category} AS category,
@@ -15,12 +15,12 @@ const label = `CASE e.category ${categories.map((c) => `WHEN ${literal(c.code)} 
 // category by its label.
 export const listing: Read = {
   sql: `SELECT ${fields(label)}, e.circle FROM expense.expense e`,
-  order: 'day DESC, id DESC',
+  order: `day DESC, ${numbered('id', 'DESC')}`,
 }
 
 // Every expense, the latest spent first.
 export async function expenses(db: Db): Promise<Expense[]> {
-  const { rows } = await db.query<Expense>(`SELECT ${columns} FROM expense.expense e ORDER BY e.day DESC, e.id DESC`)
+  const { rows } = await db.query<Expense>(`SELECT ${columns} FROM expense.expense e ORDER BY e.day DESC, ${numbered('e.id', 'DESC')}`)
   return rows
 }
 

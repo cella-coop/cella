@@ -1,4 +1,4 @@
-import { literal, today, type Db, type Read } from '@cella/org-db'
+import { literal, numbered, today, type Db, type Read } from '@cella/org-db'
 import { categories, type Detail, type Lined, type Listed, type Recording, type Taxed } from '../models/bill.ts'
 
 // A bill is overdue when it is not paid past its due date, the scope's
@@ -19,12 +19,12 @@ const label = `CASE b.category ${categories.map((c) => `WHEN ${literal(c.code)} 
 // category by its label.
 export const listing: Read = {
   sql: `SELECT ${fields(label)}, b.circle FROM bill.bill b`,
-  order: 'recorded DESC, id DESC',
+  order: `recorded DESC, ${numbered('id', 'DESC')}`,
 }
 
 // Every bill, the latest recorded first.
 export async function bills(db: Db): Promise<Listed[]> {
-  const { rows } = await db.query<Listed>(`SELECT ${columns} FROM bill.bill b ORDER BY b.recorded DESC, b.id DESC`)
+  const { rows } = await db.query<Listed>(`SELECT ${columns} FROM bill.bill b ORDER BY b.recorded DESC, ${numbered('b.id', 'DESC')}`)
   return rows
 }
 

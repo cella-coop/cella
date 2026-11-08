@@ -14,7 +14,7 @@ it posts are the `invoice-transaction` graft's.
 
 | Entity | Fields | Notes |
 |---|---|---|
-| invoice | `id`, `issued`, `due`, `bill_to`, `bill_address?`, `seller`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, four digits or more, `F-2026-0056`, and `F-2026-10000` after `F-2026-9999` |
+| invoice | `id`, `issued`, `due`, `bill_to`, `bill_address?`, `seller`, `label`, `lines[]`, `net`, `vat`, `total`, `voided?`, `reason?` | `id` is the series and its number, four digits or more, `F-2026-0056`, and `F-2026-10000` after `F-2026-9999`, in every list too, which orders ids by their number, never as text |
 | line | `description`, `quantity`, `unit_price`, `amount`, `vat_rate` | `amount` = quantity × unit price |
 | payment | `at`, `amount`, `method`, `reference` | many per invoice; `reference` is the bank's |
 | series | `name`, `next` | one per year at rung 1; a device's own at rung 2 |

@@ -1,16 +1,16 @@
 // The feat's circles: their reads, proposals, writes and slice, which the
 // shell mounts: the circles a new motion may be put in, and on a circle's
-// page what may be proposed about it. membership-motion puts the
-// proposal, read by `about` and made by `putting`, to the circle that
+// page, or a mandate's, what may be proposed about it. membership-motion puts the
+// proposal, read by `about` or `revised` and made by `putting`, to the circle that
 // decides it, fixing its roll in the same write, and carries out each
 // policy a passing motion adopts or ends through `adopt` and `end`.
 import type { Db, Form, Slice } from '@cella/org-db'
 import * as forms from './forms.ts'
 import type { Arg } from '../models/index.ts'
-import { deciding, issuing, proposing } from '../drivers/proposing.ts'
+import { deciding, issuing, proposing, revising } from '../drivers/proposing.ts'
 import type { Kind, Put } from '../models/circles.ts'
 
-export { deciding, issuing, proposing } from '../drivers/proposing.ts'
+export { deciding, issuing, proposing, revising } from '../drivers/proposing.ts'
 export { putting, worded } from '../handlers/put.ts'
 export { adopt, end } from '../handlers/policy.ts'
 
@@ -67,10 +67,26 @@ export async function about(form: Form, circle: string, db: Db): Promise<Put> {
   return { circle, kind, args, deadline: form.get('deadline'), body: form.get('body') }
 }
 
+// A change or a revocation proposed from a mandate's page: a motion about
+// the circle whose page lists it, of its own policy, read as `about`
+// reads one from that page.
+export async function revised(form: Form, mandate: string, db: Db): Promise<Put> {
+  const found = await revising(db, mandate)
+  if (!found) {
+    throw new Error(`mandate ${mandate} does not stand today, so there is nothing to change or revoke`)
+  }
+  const put = await about(form, found.circle, db)
+  if (put.kind !== 'change' && put.kind !== 'revoke') {
+    throw new Error('a mandate\'s page changes or revokes it')
+  }
+  return { ...put, args: { ...put.args, policy: found.held.policy } }
+}
+
 export const slice: Slice = {
   name: 'motion/circles',
   extends: {
     motions: { about: async (db) => ({ circles: await deciding(db) }), item: (db, motion) => issuing(db, motion) },
     circles: { item: (db, circle) => proposing(db, circle) },
+    mandates: { item: (db, mandate) => revising(db, mandate) },
   },
 }

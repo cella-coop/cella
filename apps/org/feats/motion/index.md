@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -295,7 +295,8 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   `motion.grant_flaw` finds wrong with it; for the end or replacement of
   a mandate's policy, that mandate and every mandate below it its close
   revokes (`circle.under`), those standing on the day it ends while
-  open, those revoked that day once closed.
+  open, and once closed those its close revoked, as its write's
+  `revoked` says, never one another write revoked the same day.
 - `motion.circle_asks`, on `motion:motion:propose`: each mandate policy
   marks sound values (`circle.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
@@ -423,7 +424,8 @@ a trigger on core's table
 
 Adds to the motions collection's `about` the circles a motion may be
 put in, which the motion feat's New form offers.
-On a circle's page, which circle decides about it, the open motions
+On a mandate's page, while it stands, Change… and Revoke… (below,
+under Shell). On a circle's page, which circle decides about it, the open motions
 about it, and Propose…: granting a mandate to one of its roles or to
 it, changing one of its mandates or revoking one, with a deadline and
 why, posted to the `put` membership-motion serves (below, under
@@ -511,7 +513,10 @@ the stance it posts is this feat's `vote`, for the acting member.
 
 A mandate is granted, changed and revoked from where it is read, by a
 motion this feat proposes from the circle's page, its Propose… form
-posted to the `put` membership-motion serves. Grant a mandate asks for
+posted to the `put` membership-motion serves, or, for a mandate that
+stands, from its own page, whose Change… and Revoke… post the same
+forms, of its own policy, to the `put` membership-motion serves there
+(`revised`); a revoked or expired mandate's page offers neither. Grant a mandate asks for
 its grantee, a role of the circle or the circle itself, by motion; a
 power and what it grants in words; perhaps a limit per write or a
 budget and its period; perhaps a scope; perhaps the days it applies
@@ -523,7 +528,8 @@ policy's sentence with its values marked (`worded`, in the feat's
 `models/circles.ts`), shows it as it will read as it is typed, and
 proposes a motion of the issuer carrying Adopt a policy, its procedure
 the one its requirements fix. Change one of its mandates is the same
-form filled with the chosen mandate's values, proposing a policy that
+form filled with the chosen mandate's values, or with the values of
+the mandate whose page it is, proposing a policy that
 replaces its own, a motion of the circle that issued it, whose policy
 it is; Revoke one of its mandates proposes ending its policy, a motion
 of that circle too. Replacing or ending a mandate's policy revokes every

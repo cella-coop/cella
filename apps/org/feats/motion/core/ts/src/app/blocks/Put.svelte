@@ -2,6 +2,7 @@
   import { Field, Form, Note, Popover } from '@cella/org-ui'
   import { kinds, type Proposing } from '../../models/circles.ts'
   import { usePut } from '../../hooks/usePut.ts'
+  import Granted from './Granted.svelte'
 
   // Proposing a change to the circle's powers: granting a mandate to one
   // of its roles or to the circle, by motion of the circle chosen to issue
@@ -15,16 +16,11 @@
 
   const state = usePut()
   const options = <T extends { id: string }>(rows: T[], label: (r: T) => string) => rows.map((r) => ({ value: r.id, label: label(r) }))
-  const scopes = (circles: { id: string; name: string }[]) => [{ value: 'own', label: 'its own circle' }, ...options(circles, (c) => c.name)]
   const grantees = (p: Proposing) => [
     ...p.roles.map((r) => ({ value: `role:${r.id}`, label: r.name })),
     { value: `circle:${p.circle}`, label: `${p.name} itself, by motion` },
   ]
   const issuers = (p: Proposing) => [{ value: '', label: 'the first that holds a mandate to issue it under' }, ...options(p.issuers, (c) => c.name)]
-  const pers = [
-    { value: 'month', label: 'a month' },
-    { value: 'year', label: 'a year' },
-  ]
   const held = (p: Proposing) => p.mandates.map((m) => ({ value: m.policy, label: m.label }))
   const chosen = $derived(data?.mandates.find((m) => m.policy === state.policy) ?? null)
 </script>
@@ -51,18 +47,10 @@
         {:else}
           <input type="hidden" name="arg.grantee" value={state.grantee} />
         {/if}
-        <Field label="Power" name="arg.power" placeholder="approve-time" required bind:value={state.power} />
-        <Field label="Grants" name="arg.text" placeholder="approve timesheets" wide bind:value={state.text} />
-        <Field label="Limit per write, €" name="arg.limit" type="number" bind:value={state.limit} />
-        <Field label="Budget, €" name="arg.budget" type="number" bind:value={state.budget} />
-        <Field label="Budget per" name="arg.per" options={pers} placeholder="—" bind:value={state.per} />
-        <Field label="Covers" name="arg.scope" options={scopes(data.circles)} placeholder="the whole co-op" bind:value={state.scope} />
-        <Field label="From" name="arg.from" type="date" bind:value={state.from} />
-        <Field label="Until" name="arg.until" type="date" bind:value={state.until} />
+        <Granted circles={data.circles} />
         {#if state.kind === 'grant'}
           <Field label="Issued by" name="arg.issuer" options={issuers(data)} wide />
         {/if}
-        {#if state.sentence}<Note text="It will read: {state.sentence}." />{/if}
       {/if}
       {#if state.kind === 'change' && chosen}
         <Note text="Put to {chosen.issuer}, which issued it; replacing it revokes every mandate issued under it the same day." />

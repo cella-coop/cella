@@ -1,6 +1,6 @@
 +++
 title = "membership-motion"
-updated = 2026-11-07
+updated = 2026-11-08
 +++
 
 What a motion decides of a membership: admitting someone invited,
@@ -345,7 +345,8 @@ she is on no roll of the assembly's.
   and the guard of each action's kind). Every proposal
   goes through it: the New motion form, `put`, and on a circle's page
   what the motion feat proposes about its powers, read by its
-  `about` and made by its `putting`.
+  `about` and made by its `putting`, and on a mandate's page its
+  change or its revocation, read by its `revised`.
 - `close` (ordered), replacing the motion feat's in the shell: the
   motion feat's `closing`, then `count`, in one transaction under one
   verdict; the guards of each slice judge it (`motion.closes`, `sits`,
@@ -433,4 +434,6 @@ Apply to join…: the shares they pledge and the motion's deadline, two
 weeks on, and reasons, posted to `apply`. On a circle's page,
 Appoint…: seating a member in it, in one of its roles or as a plain
 member, or ending a seat held there, put to the circle that decides it; and
-the motion feat's Propose…, whose write this graft serves.
+the motion feat's Propose…, whose write this graft serves; on a
+mandate's page, the motion feat's Change… and Revoke…, whose write,
+`put`, it serves too.

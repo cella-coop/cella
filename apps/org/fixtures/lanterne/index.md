@@ -77,9 +77,10 @@ assembly, and no one opens a candidacy for another.
   which amends the statutes, two thirds of the votes cast once half take
   part (`motion.toml`; loi n° 78-763, as the CG Scop's model statutes
   put it, not checked on Légifrance).
-- **Mandates.** Each mandate is a policy of the assembly, adopted with
-  the statutes by m-2021-001: its sentence marks the role, the power and
-  the cap, as `The {role: finance} role holds {power: pay-supplier}, to
+- **Mandates.** Each mandate is a policy, the assembly's, adopted with
+  the statutes by m-2021-001, but the four of the bills' chain, below,
+  which three later motions adopted, the assembly's, coordination's and
+  Operations'. Its sentence marks the role, the power and the cap, as `The {role: finance} role holds {power: pay-supplier}, to
   pay suppliers, up to {limit: 3 000 €} a write`, and its values are
   copied into `circle.mandate` as it is adopted (`motion.toml`). A
   lead's mandates to run projects, approve time and hold meetings, and

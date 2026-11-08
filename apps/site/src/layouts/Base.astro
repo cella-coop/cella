@@ -71,7 +71,7 @@ const { title, description } = Astro.props
   }
 
   html {
-    background-color: var(--panel);
+    background-color: var(--ground);
     color: var(--text);
     font-family: var(--font-text);
     font-weight: var(--fw-text);
@@ -88,8 +88,8 @@ const { title, description } = Astro.props
     flex-direction: column;
     min-height: 100dvh;
     margin: 0;
-    background-color: var(--panel);
-    background-image: var(--plus), linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px), var(--grain-panel);
+    background-color: var(--ground);
+    background-image: var(--plus), linear-gradient(to right, var(--grid) 1px, transparent 1px), linear-gradient(to bottom, var(--grid) 1px, transparent 1px), var(--grain-ground);
     background-size: var(--cell) var(--cell), var(--cell) var(--cell), var(--cell) var(--cell), auto;
     background-position: center top;
   }

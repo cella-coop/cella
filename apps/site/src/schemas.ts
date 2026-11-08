@@ -71,8 +71,9 @@ const figure = z.object({
 })
 
 // A card of a features section, a step of a steps section or a row of a
-// list: its title and its line.
-const item = z.object({ title: z.string(), body: z.string() })
+// list: its title and its line, and in a features section the Phosphor
+// icon its cell holds.
+const item = z.object({ title: z.string(), body: z.string(), icon: z.string().optional() })
 
 // One section of a page, laid out by its kind: `hero` the page's top,
 // with its title and description; `prose` its body; `features`, `steps`
@@ -102,6 +103,8 @@ export const section = z
     diagram: z.string().optional(),
     // a form under its words: the compact sign-up or the contact form
     form: z.enum(['signup', 'contact']).optional(),
+    // a features section's cells hold their items' numbers
+    numbered: z.boolean().default(false),
   })
   .superRefine((s, ctx) => {
     if (BANDS.includes(s.kind) && !s.diagram) {

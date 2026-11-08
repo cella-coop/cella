@@ -42,7 +42,7 @@ Every page wears `src/layouts/Page.astro` over `src/layouts/Base.astro`:
   |---|---|
   | `hero` | the page's top: an eyebrow, the heading large, the body as a lede, two actions; its figure overhangs the section after it |
   | `prose` | its body in a readable column, the default |
-  | `features` | its body as a lede, then its items, each a cell of the brand in one of the five inks, a title and a line |
+  | `features` | its body as a lede, then its items as a list of cells (`Cells.astro`): each a cell of the brand, the five inks in turn however many items there are, beside a title and a line; a cell holds its item's number where the section is `numbered: true`, or its item's Phosphor `icon` (the fill weight) in the paper, else it is bare. A body may place the same list itself, `<Cells items={[…]} numbered />` |
   | `steps` | its body, then its items numbered in two columns |
   | `list` | its body, then its items as ruled rows, a title and a muted line |
   | `quote` | a band of deep sage, its edges cut as a cell's: its body set large, its heading the attribution, its diagram beside them |

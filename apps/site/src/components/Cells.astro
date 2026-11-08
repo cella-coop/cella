@@ -1,0 +1,95 @@
+---
+// A list as cells (index.md, the layout): each item a lone cell of the
+// brand beside its title and line, the cells taking the five inks in
+// turn however many there are. A cell may hold the item's number, when
+// the list is `numbered`, or its Phosphor icon, `icon`, drawn in the
+// paper on the ink; else it is bare.
+import { readFileSync } from 'node:fs'
+import { createRequire } from 'node:module'
+import { cell } from '@cella/brand'
+
+interface Props {
+  items: { title: string; body: string; icon?: string }[]
+  numbered?: boolean
+  seed?: number
+  drafted?: true
+}
+
+const { items, numbered = false, seed = 1, drafted } = Astro.props
+const require = createRequire(import.meta.url)
+// an icon's paths, Phosphor's fill weight, which reads at a cell's size
+const glyph = (name: string) => {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+    throw new Error(`unknown Phosphor icon: ${name}`)
+  }
+  try {
+    return readFileSync(require.resolve(`@phosphor-icons/core/assets/fill/${name}-fill.svg`), 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
+  } catch {
+    throw new Error(`unknown Phosphor icon: ${name}`)
+  }
+}
+---
+
+<ul class="cells" role="list" data-drafted={drafted}>
+  {
+    items.map((it, i) => (
+      <li class="item">
+        <svg class="mark" viewBox="0 0 100 100" aria-hidden="true" style={{ '--ink': `var(--p${i % 5})` }}>
+          <path class="shape" d={cell(seed * 13 + i * 7)} />
+          {numbered && <text class="n" x="50" y="50">{i + 1}</text>}
+          {!numbered && it.icon && <g class="icon" transform="translate(27 27) scale(0.18)" set:html={glyph(it.icon)} />}
+        </svg>
+        <div>
+          <h3>{it.title}</h3>
+          <p>{it.body}</p>
+        </div>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .cells {
+    display: grid;
+    gap: 1.6rem;
+    margin: 0.5rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 1.1rem;
+    align-items: start;
+  }
+
+  .mark {
+    flex: none;
+    width: 2.6rem;
+    height: 2.6rem;
+  }
+
+  .shape {
+    fill: var(--ink);
+  }
+
+  .n {
+    fill: oklch(0.985 0.004 250);
+    font-family: var(--font-display);
+    font-size: 44px;
+    font-weight: 700;
+    text-anchor: middle;
+    dominant-baseline: central;
+  }
+
+  .icon {
+    fill: oklch(0.985 0.004 250);
+  }
+
+  p {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.97rem;
+  }
+</style>

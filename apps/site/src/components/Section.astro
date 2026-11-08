@@ -5,11 +5,13 @@
 // quote is a band of deep sage, a call to action one of coral that runs
 // into the footer, each holding no photo but its diagram, drawn light on
 // its colour. Its number, `num`, counts the page's plain sections.
-import { cell, roundedPath, type Point } from '@cella/brand'
+import { roundedPath, type Point } from '@cella/brand'
 import type { DiagramName } from '@cella/diagrams'
 import type { Status } from '../schemas'
 import type { Marks, Rendered } from '../lib/text'
 import Actions from './Actions.astro'
+import Cells from './Cells.astro'
+import { figures } from './figures'
 import ContactForm from './ContactForm.astro'
 import Diagram from './Diagram.astro'
 import Engraving from './Engraving.astro'
@@ -80,20 +82,8 @@ const actions = [
           {num !== undefined && <span class="num" aria-hidden="true">{String(num).padStart(2, '0')}</span>}
           {s.eyebrow && <p class="label" data-drafted={d('eyebrow')}>{s.eyebrow}</p>}
           <Heading text={s.heading} level={hero ? 1 : 2} drafted={d('heading')} />
-          {Content && <div class:list={['body', { lede: s.kind !== 'prose' }]} data-drafted={d('body')}><Content /></div>}
-          {
-            s.kind === 'features' && s.items.length > 0 && (
-              <div class="features" data-drafted={d('items')}>
-                {s.items.map((it, i) => (
-                  <div class="feature">
-                    {/* each item's marker a cell of its own, in the inks in turn */}
-                    <svg class="cellmark" viewBox="0 0 100 100" aria-hidden="true"><path d={cell(seed * 13 + i * 7)} style={{ fill: `var(--p${i % 5})` }} /></svg>
-                    <div><h3>{it.title}</h3><p>{it.body}</p></div>
-                  </div>
-                ))}
-              </div>
-            )
-          }
+          {Content && <div class:list={['body', { lede: s.kind !== 'prose' }]} data-drafted={d('body')}><Content components={figures} /></div>}
+          {s.kind === 'features' && s.items.length > 0 && <Cells items={s.items} numbered={s.numbered} seed={seed} drafted={d('items')} />}
           {
             s.kind === 'steps' && s.items.length > 0 && (
               <ol class="steps" role="list" data-drafted={d('items')}>
@@ -192,26 +182,6 @@ const actions = [
     font-size: clamp(1.1rem, 1.45vw, 1.28rem);
   }
 
-  .features {
-    display: grid;
-    gap: 1.6rem;
-    margin-top: 0.5rem;
-  }
-
-  .feature {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 1.1rem;
-    align-items: start;
-  }
-
-  .cellmark {
-    flex: none;
-    width: 2.4rem;
-    height: 2.4rem;
-  }
-
-  .feature p,
   .step p {
     margin: 0.3rem 0 0;
     color: var(--text-muted);

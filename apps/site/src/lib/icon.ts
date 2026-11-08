@@ -1,6 +1,20 @@
 import { readFileSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
+/** A Phosphor icon's paths alone, in its fill weight, which reads at a
+ * small size, for an SVG that places and colours them. */
+export function glyphPaths(name: string): string {
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)) {
+    throw new Error(`unknown Phosphor icon: ${name}`)
+  }
+  try {
+    const path = createRequire(import.meta.url).resolve(`@phosphor-icons/core/assets/fill/${name}-fill.svg`)
+    return readFileSync(path, 'utf8').replace(/^[\s\S]*?<svg[^>]*>|<\/svg>\s*$/g, '')
+  } catch {
+    throw new Error(`unknown Phosphor icon: ${name}`)
+  }
+}
+
 // A role's colours, or `current`, the text's own colour around it, its
 // duotone layer a fifth of it, for an icon on a band
 export type IconRole = 'accent' | 'success' | 'error' | 'warning' | 'info' | 'help' | 'current'

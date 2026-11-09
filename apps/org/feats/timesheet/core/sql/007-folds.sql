@@ -2,10 +2,10 @@
 -- state before it (architecture.md, "Folds").
 
 -- timesheet:entry:log: the entry under the id the entry names, its note
--- and its minutes as their commitments. An entry is logged with its time
--- (`timesheet.some_time`), so its minutes are one, the least an entry
--- holds, as a carried number that takes no null is; the feat's trigger
--- makes the member's period, as it did when it was logged.
+-- as written and its minutes as their commitment. An entry is logged
+-- with its time (`timesheet.some_time`), so its minutes are one, the least
+-- an entry holds, as a carried number that takes no null is; the feat's
+-- trigger makes the member's period, as it did when it was logged.
 CREATE FUNCTION timesheet.fold_log(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
@@ -15,7 +15,7 @@ BEGIN
   PERFORM cella.commits('timesheet.entry.minutes', p ->> 'member', n, p -> 'minutes');
   INSERT INTO timesheet.entry (id, member, day, minutes, billable, note, circle)
   VALUES ((p ->> 'entry')::bigint, p ->> 'member', (p ->> 'day')::date, 1, (p ->> 'billable')::boolean,
-          cella.commits('timesheet.entry.note', p ->> 'member', n, p -> 'note'), p ->> 'circle');
+          p ->> 'note', p ->> 'circle');
 END
 $$;
 

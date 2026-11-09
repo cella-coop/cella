@@ -19,7 +19,9 @@ CREATE INDEX ON transaction.entry (corrects);
 CREATE INDEX ON transaction.entry (receipt);
 
 -- A line debits or credits one account, named by its code, by one positive
--- amount. Which accounts exist is the account-transaction graft's.
+-- amount. Which accounts exist is the account-transaction graft's. A line
+-- that posts a person's own figure names them, `person`, by their address
+-- (`010-personal.sql`).
 CREATE TABLE transaction.line (
   circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
   entry text NOT NULL REFERENCES transaction.entry,
@@ -27,6 +29,7 @@ CREATE TABLE transaction.line (
   account text NOT NULL,
   side text NOT NULL CHECK (side IN ('debit', 'credit')),
   amount cella.amount NOT NULL,
+  person text,
   PRIMARY KEY (entry, n)
 );
 

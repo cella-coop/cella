@@ -22,13 +22,9 @@ export const logging = (input: Log): Write<Logged> => ({
     )
     return { entry: rows[0].id, circle: rows[0].circle, member: input.member, day: input.day, minutes: input.minutes, billable: input.billable }
   },
-  // The minutes and the note, the member's own words, are personal, so
-  // the log keeps their commitments and the vault their values.
-  payload: (v) => ({
-    ...v,
-    minutes: personal('timesheet.entry.minutes', v.member, v.minutes),
-    note: personal('timesheet.entry.note', v.member, input.note ?? ''),
-  }),
+  // The note is a work record, logged as written; the minutes are
+  // personal, so the log keeps their commitment and the vault the minutes.
+  payload: (v) => ({ ...v, note: input.note ?? '', minutes: personal('timesheet.entry.minutes', v.member, v.minutes) }),
 })
 
 export async function log(input: Log, deps: Deps): Out<'timesheet:entry:log', Logged> {

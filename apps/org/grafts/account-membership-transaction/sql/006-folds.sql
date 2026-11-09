@@ -72,30 +72,32 @@ END
 $$;
 
 -- account:capital:withdraw and account:own:withdraw: the entry, what it
--- cancelled of the subscription, the repayments drawn up by the SQL its
--- handler runs, on what the entry owes, which must draw as many as it
--- says, and the withdrawal.
+-- cancelled of the subscription as its commitment, the repayments as the
+-- entry keeps them, each logged as given, which must fall due as the
+-- terms governing the day the member exited draw them up, and the
+-- withdrawal.
 CREATE FUNCTION account_membership_transaction.fold_withdraw(entry jsonb) RETURNS void
 LANGUAGE plpgsql AS $$
 DECLARE
   p jsonb := entry -> 'payload';
-  drawn integer := 0;
+  dues text;
+  terms text;
 BEGIN
   PERFORM account_membership_transaction.fold_posting(entry);
-  IF (p ->> 'cancelled')::bigint > 0 THEN
-    UPDATE account_membership_transaction.subscription SET cancelled = cella.amount((p ->> 'cancelled')::bigint) WHERE member = p ->> 'member';
-  END IF;
-  IF (p ->> 'owed')::bigint > 0 THEN
+  PERFORM cella.commits('account_membership_transaction.subscription.cancelled', p ->> 'member', (entry ->> 'n')::bigint, p -> 'cancelled');
+  IF jsonb_array_length(p -> 'repayments') > 0 THEN
     INSERT INTO account_membership_transaction.repayment (member, n, due, amount)
-    SELECT p ->> 'member', r.n, r.due, cella.amount((cella.allocate(cella.amount((p ->> 'owed')::bigint), array_fill(1::bigint, ARRAY[t.repayments])))[r.n])
+    SELECT p ->> 'member', r.n, r.due, cella.amount(r.cents)
+    FROM jsonb_to_recordset(p -> 'repayments') AS r (n integer, due date, cents bigint);
+    SELECT string_agg(r.n || ' on ' || r.due, ', ' ORDER BY r.n) INTO dues
+    FROM account_membership_transaction.repayment r WHERE r.member = p ->> 'member';
+    SELECT string_agg(r.n || ' on ' || r.due, ', ' ORDER BY r.n) INTO terms
     FROM membership.member m
     CROSS JOIN LATERAL account.repayments(account.capital_for(m.exited), m.exited) r
-    JOIN account.terms t ON t.id = account.capital_for(m.exited)
     WHERE m.address = p ->> 'member';
-    GET DIAGNOSTICS drawn = ROW_COUNT;
-  END IF;
-  IF drawn <> (p ->> 'repayments')::integer THEN
-    RAISE EXCEPTION 'account-membership-transaction: entry % draws up % repayments for %, but its terms draw up %', entry ->> 'n', p ->> 'repayments', p ->> 'member', drawn;
+    IF dues IS DISTINCT FROM terms THEN
+      RAISE EXCEPTION 'account-membership-transaction: entry % draws up repayments % for %, but its terms draw up %', entry ->> 'n', dues, p ->> 'member', coalesce(terms, 'none');
+    END IF;
   END IF;
   INSERT INTO account_membership_transaction.withdrawal (member, entry) VALUES (p ->> 'member', p ->> 'entry');
 END

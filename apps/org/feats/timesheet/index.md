@@ -25,9 +25,9 @@ entries to new time and Brand's month stays open.
 A period is **open** until its member submits it, **submitted** until
 someone approves it, and **approved** for good. Time is written in
 minutes, since a signed request holds integers only, and shown in hours.
-The note is the member's own words, personal data of class `payroll`
-as their minutes are (`003-personal.sql`): a log commits to it, and the
-vault keeps it. An entry's minutes are personal data of class
+The note says what the time was spent on, the co-op's work record, not
+personal data (`003-personal.sql`): a log carries it as written and
+its fold writes it again. An entry's minutes are personal data of class
 `payroll`, registered by the member's address (`006-salted.sql`): a log
 and a correction commit to them, and the vault keeps them, so the log's
 digest confirms no guess at a colleague's time. Erasing a member who
@@ -123,8 +123,8 @@ refusal naming the circle
 ## Folds
 
 Each action folds by `sql/007-folds.sql` ([folds](../../../../_corpus/doc/architecture.md#folds)):
-an entry under the id the entry names, its note and its minutes as their
-commitments, the feat's trigger making the member's month as it did. An
+an entry under the id the entry names, its note as written and its minutes as their
+commitment, the feat's trigger making the member's month as it did. An
 entry is logged with its time, so its minutes fold as one, the least an
 entry holds, as a carried number that takes no null does. A correction
 keeps the commitment to the minutes it brought the entry to; a month

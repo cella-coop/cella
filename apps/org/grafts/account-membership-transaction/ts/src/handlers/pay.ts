@@ -34,7 +34,7 @@ export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof actio
       posting = {
         date: day,
         label: 'Capital paid in',
-        lines: lines.rows.map((l) => ({ account: l.account, side: l.side, cents: Number(l.cents) })),
+        lines: lines.rows.map((l) => ({ account: l.account, side: l.side, cents: Number(l.cents), person: input.member })),
       }
       const { entry } = await record(tx, posting)
       await tx.query(
@@ -43,7 +43,8 @@ export async function pay(input: Pay, deps: Deps): Promise<Outcome<(typeof actio
       )
       return { member: input.member, amount: input.cents, entry }
     },
-    // The amount is the member's capital: the log keeps its commitment.
+    // The amount is the member's capital: the log keeps its commitment,
+    // and its lines', which are theirs (`logged`).
     payload: (v) => ({ ...v, amount: personal('account_membership_transaction.paid.amount', v.member, v.amount), ...(posting ? { posting: logged(posting) } : {}) }),
   })
 }

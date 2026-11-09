@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -15,13 +15,20 @@ truth for balances, which are summed from it and never stored.
 | Entity | Fields | Notes |
 |---|---|---|
 | entry | `id`, `date`, `label`, `lines[]`, `corrects?` | `date` is the accounting date; `corrects` names an earlier entry of this journal |
-| line | `account`, `debit` or `credit` | amounts in positive cents; `account` is a code, as text |
+| line | `account`, `debit` or `credit`, `person?` | amounts in positive cents; `account` is a code, as text; `person` names whose own figure the line is, where it is a person's |
 
 A line names its account by code and holds no key into `account`; the
 `account-transaction` graft resolves the code and refuses one that does not
 exist. Where an entry came from (an invoice, a distribution, a payroll run)
 is the producing graft's junction, not a field here: the journal records
 what happened, the grafts record why.
+
+A line that posts a person's own figure, such as a member's draw, a
+payment in of their capital, its withdrawal or the shares their work
+share buys, names them as its `person`: its amount is personal data of
+theirs, of class `books` (`sql/010-personal.sql`), which the journal
+shows as it shows every line, and a write's payload commits to. Erasing
+them redacts it once their clock runs out, the one change a line takes.
 
 ## Lifecycle
 
@@ -110,12 +117,15 @@ journal at rung 3.
   `corrects` and the receipt it was posted at; an entry carried over from
   before the log has no receipt.
 - `transaction.line`: the entry, its line number, the account code, a
-  side (`debit` or `credit`) and one positive `cella.amount`.
+  side (`debit` or `credit`), one positive `cella.amount` and the
+  `person` whose own figure it is, if anyone's.
 
 A deferred constraint trigger checks that every entry balances over two
-lines or more; the db library makes it immediate before the verdict, so an
-unbalanced entry is refused inside the write. Another trigger refuses any
-update or delete: the journal is permanent. A third numbers each entry
+lines or more, and that each line holds an amount but in a fold, which
+posts a person's line with none; the db library makes it immediate
+before the verdict, so an unbalanced entry is refused inside the write.
+Another trigger refuses any update or delete, but the notary's redaction
+of a person's line: the journal is permanent. A third numbers each entry
 (below). A fourth runs, before each line is inserted, whichever write
 posts it, every check an extender registered by
 `transaction.register_line_check(check, owner)`, the feat's published
@@ -154,11 +164,15 @@ A post, a payment to a supplier and a correction fold by
 [folds](../../../../_corpus/doc/architecture.md#folds)): the entry the payload names, posted
 as the log keeps it. Every write that posts, this feat's or a graft's,
 carries its entry in its payload as `logged` gives it, its date, its
-label and its lines, as the journal shows them; `transaction.fold_record`
-posts it again under its id, which the journal's trigger refuses unless
-it is the next, with the receipt of the write its entry is in
-(`transaction.receipt_of`). A graft's fold calls it as its handler
-calls `record`.
+label and its lines, as the journal shows them, but for a person's line,
+whose amount it keeps as its commitment beside the person, so no entry
+shows a person's figure in plain. `transaction.fold_record` posts it
+again under its id, which the journal's trigger refuses unless it is the
+next, with the receipt of the write its entry is in
+(`transaction.receipt_of`): a person's line with no amount, its
+commitment applied, since a folded scope opens none, and such lines
+balance among themselves, each figure posted on both sides. A graft's
+fold calls it as its handler calls `record`.
 
 ## Handlers
 
@@ -186,8 +200,10 @@ slice transaction`), runs on the app's core and this feat alone: an entry
 balances or is refused, ids are gapless and a refused entry returns its
 number, nothing posted changes, `transaction.pays` takes a payment and
 nothing else, `transaction.corrects` refuses a second correction from the same base,
-and the journal numbers on past four digits, `je-10000` after `je-9999`,
-and lists `je-10000` before `je-9999`, the latest first.
+the journal numbers on past four digits, `je-10000` after `je-9999`,
+and lists `je-10000` before `je-9999`, the latest first; and a person's
+line is logged as its commitment, folds with no amount, and is refused
+with none outside a fold.
 
 ## Reads
 

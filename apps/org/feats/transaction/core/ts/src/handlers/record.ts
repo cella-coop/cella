@@ -1,4 +1,4 @@
-import type { Db } from '@cella/org-db'
+import { personal, type Db } from '@cella/org-db'
 import type { Entry, Posted } from '../models/transaction.ts'
 
 // Writes an entry and its lines inside a write's transaction, numbered from
@@ -15,10 +15,10 @@ export async function record(tx: Db, entry: Entry, corrects?: string): Promise<P
   )
   const { id, receipt } = rows[0]
   await tx.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, x.n, x.account, x.side, cella.amount(x.cents)
-     FROM ROWS FROM (jsonb_to_recordset($2::jsonb) AS (account text, side text, cents bigint))
-       WITH ORDINALITY AS x (account, side, cents, n)`,
+    `INSERT INTO transaction.line (entry, n, account, side, amount, person)
+     SELECT $1, x.n, x.account, x.side, cella.amount(x.cents), x.person
+     FROM ROWS FROM (jsonb_to_recordset($2::jsonb) AS (account text, side text, cents bigint, person text))
+       WITH ORDINALITY AS x (account, side, cents, person, n)`,
     [id, JSON.stringify(entry.lines)],
   )
   return { entry: id, receipt: Number(receipt) }
@@ -26,12 +26,14 @@ export async function record(tx: Db, entry: Entry, corrects?: string): Promise<P
 
 // What the log keeps of an entry so its fold posts it again
 // (`transaction.fold_record`): its date, its label and its lines, as the
-// journal shows them. A write that posts, this feat's or a graft's,
-// carries it in its payload.
+// journal shows them, but a person's line, whose amount it commits to
+// beside the person, so the vault keeps their figure and no entry shows
+// it. A write that posts, this feat's or a graft's, carries it in its
+// payload.
 export const logged = (entry: Entry) => ({
   date: entry.date,
   label: entry.label,
-  lines: entry.lines.map((l) => ({ ...l })),
+  lines: entry.lines.map((l) => (l.person ? { ...l, cents: personal('transaction.line.amount', l.person, l.cents) } : { ...l })),
 })
 
 // What the log commits to for an entry this feat posts: the entry as

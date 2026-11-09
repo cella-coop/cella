@@ -9,8 +9,9 @@
 // year's periods closed; a member erases her data; and a year after his
 // hire, Bastien applies to join. The log then names every op `cella.fold`
 // registers, and folds from its founding entry into a fresh database that
-// matches it row for row. A personal column a later write cleared reads
-// null on both sides. Run by `cella test e2e fold`; the runner folds it a
+// matches it row for row; no entry of the year keeps a personal figure in
+// plain beside its commitment. A personal column a later write cleared
+// reads null on both sides. Run by `cella test e2e fold`; the runner folds it a
 // second time after this scenario, so the same comparison applies to
 // every other scenario too.
 import { after, before, test } from 'node:test'
@@ -365,6 +366,34 @@ test('a year after his hire, Bastien applies by his right, and his candidacy ope
   settled(await apply({ member: bastien, shares: 20, deadline: '2027-11-16', body: 'I have worked with the co-op for a year and ask to join.' }, as(bastien)))
   head = Number((await one<{ n: string }>('SELECT n FROM cella.head')).n)
   console.log(`# the year wrote ${head - 1} entries in ${((performance.now() - started) / 1000).toFixed(1)}s`)
+})
+
+test('no entry the year writes carries a personal figure in plain beside its commitment', async () => {
+  // Each figure a commitment of the entry opens to, and every number its
+  // payload keeps in plain, outside its commitments.
+  const figures = (form: unknown, open: unknown, into: Set<number>) => {
+    if (form && typeof form === 'object' && '$commit' in form) {
+      if (typeof open === 'number') into.add(open)
+    } else if (form && typeof form === 'object') {
+      for (const [k, v] of Object.entries(form)) figures(v, (open as Record<string, unknown> | null)?.[k], into)
+    }
+    return into
+  }
+  const plain = (form: unknown, into: Set<number>) => {
+    if (typeof form === 'number') into.add(form)
+    else if (form && typeof form === 'object' && !('$commit' in form)) for (const v of Object.values(form)) plain(v, into)
+    return into
+  }
+  const found: string[] = []
+  for (const e of await all<{ n: string; op: string; form: unknown; open: unknown }>(
+    'SELECT n, op, form, cella.opened(n) AS open FROM cella.log WHERE n > 1 AND settled ORDER BY n',
+  )) {
+    const shown = plain(e.form, new Set())
+    for (const figure of figures(e.form, e.open, new Set())) {
+      if (shown.has(figure)) found.push(`${e.op} (entry ${e.n}) keeps ${figure} in plain beside its commitment`)
+    }
+  }
+  assert.deepEqual(found, [])
 })
 
 test('its log names every op cella.fold registers, and folds from its founding into a fresh scope, every state table exactly', async () => {

@@ -23,15 +23,16 @@ export async function draw(input: Draw, deps: Deps): Promise<Outcome<(typeof act
         date: rows[0].day,
         label: 'Draw on a member’s account',
         lines: [
-          { account: '455', side: 'debit', cents: input.cents },
-          { account: '512', side: 'credit', cents: input.cents },
+          { account: '455', side: 'debit', cents: input.cents, person: input.member },
+          { account: '512', side: 'credit', cents: input.cents, person: input.member },
         ],
       }
       const { entry } = await record(tx, posting)
       await tx.query('INSERT INTO account_membership_transaction.draw (entry, member, amount) VALUES ($1, $2, cella.amount($3))', [entry, input.member, input.cents])
       return { member: input.member, amount: input.cents, entry }
     },
-    // The amount is the member's capital: the log keeps its commitment.
+    // The amount is the member's capital: the log keeps its commitment,
+    // and its lines', which are theirs (`logged`).
     payload: (v) => ({ ...v, amount: personal('account_membership_transaction.draw.amount', v.member, v.amount), ...(posting ? { posting: logged(posting) } : {}) }),
   })
 }

@@ -1,10 +1,12 @@
 export type Side = 'debit' | 'credit'
 
-// One positive amount, in cents, on one side of one account, by its code.
+// One positive amount, in cents, on one side of one account, by its code;
+// `person`, where the amount is a person's own figure, whose it is.
 export interface Line {
   account: string
   side: Side
   cents: number
+  person?: string
 }
 
 export interface Entry {

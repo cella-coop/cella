@@ -1,6 +1,6 @@
 +++
 title = "account-membership-transaction"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 Members' capital in the books: what a member subscribes on joining and
@@ -167,10 +167,15 @@ the entry it posts by `transaction.fold_record` and a subscription's
 capital account by `account.fold_holding`, as its handler calls
 `record` and `holding`; each payload keeps the entry it posts as
 `logged` gives it, and a subscription the account's label as its
-commitment. A payment in and a draw keep their amount as its commitment;
-a repayment is paid on its entry's day; a withdrawal cancels what its
-entry says and draws up its repayments by the SQL its handler runs, on
-what its entry owes, which must draw as many as it says.
+commitment. A payment in, a draw and a withdrawal post the member's own
+figures, each line naming them, so the entry keeps each line's amount as
+its commitment, which the line folds as. A payment in and a draw keep
+their amount as its commitment; a repayment is paid on its entry's day,
+its amount logged as given; a withdrawal keeps what it cancelled of the
+subscription as its commitment and never what it owes, and its
+repayments as drawn up, each logged as given, as its repayment is, which
+must fall due as the terms governing the day the member exited draw them
+up.
 
 ## Tests
 

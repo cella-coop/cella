@@ -40,11 +40,14 @@ END;
 
 -- What the grafts above add to a run's payment, as they register it: for
 -- each, a function of the run's month answering the lines its entry also
--- carries, `(text) → TABLE (account text, side text, cents bigint)`, and
--- one of the month and the posted entry, `(text, text) → void`, by which
--- the graft records in its own schema what it keeps of them. This graft
--- knows none of them by name, and no graft above puts a trigger on
--- `posting`.
+-- carries, `(text) → TABLE (account text, side text, cents bigint,
+-- person text)`, `person` naming whose own figure a line is, where it is
+-- a person's, and one of the month and the posted entry, `(text, text) →
+-- TABLE (field text, subject text, cents bigint)`, by which the graft
+-- records in its own schema what it keeps of them and answers each
+-- personal figure it kept, by its personal column and its subject, which
+-- the payment's payload commits to. This graft knows none of them by
+-- name, and no graft above puts a trigger on `posting`.
 CREATE TABLE payslip_transaction.payment_lines (
   lines regprocedure PRIMARY KEY,
   keeps regprocedure NOT NULL,
@@ -69,13 +72,13 @@ REVOKE EXECUTE ON FUNCTION payslip_transaction.register_payment_lines(regprocedu
 -- overloaded under its name runs the overload registered; `keep` calls
 -- the functions that keep the same way.
 CREATE FUNCTION payslip_transaction.added(month text)
-RETURNS TABLE (account text, side text, cents bigint)
+RETURNS TABLE (account text, side text, cents bigint, person text)
 LANGUAGE plpgsql STABLE AS $$
 DECLARE
   call text;
 BEGIN
   FOR call IN
-    SELECT format('SELECT x.account, x.side, x.cents FROM %I.%I($1::%s) x', n.nspname, f.proname, f.proargtypes[0]::regtype)
+    SELECT format('SELECT x.account, x.side, x.cents, x.person FROM %I.%I($1::%s) x', n.nspname, f.proname, f.proargtypes[0]::regtype)
     FROM payslip_transaction.payment_lines p
     JOIN pg_catalog.pg_proc f ON f.oid = p.lines
     JOIN pg_catalog.pg_namespace n ON n.oid = f.pronamespace
@@ -87,20 +90,22 @@ END
 $$;
 
 -- Once a run's payment is posted, in the write that pays it, each
--- registrant records what it keeps of the lines it added.
-CREATE FUNCTION payslip_transaction.keep(month text, entry text) RETURNS void
+-- registrant records what it keeps of the lines it added, and the
+-- personal figures it kept, which the payment's payload commits to.
+CREATE FUNCTION payslip_transaction.keep(month text, entry text)
+RETURNS TABLE (field text, subject text, cents bigint)
 LANGUAGE plpgsql AS $$
 DECLARE
   call text;
 BEGIN
   FOR call IN
-    SELECT format('SELECT %I.%I($1::%s, $2::%s)', n.nspname, f.proname, f.proargtypes[0]::regtype, f.proargtypes[1]::regtype)
+    SELECT format('SELECT x.field, x.subject, x.cents FROM %I.%I($1::%s, $2::%s) x', n.nspname, f.proname, f.proargtypes[0]::regtype, f.proargtypes[1]::regtype)
     FROM payslip_transaction.payment_lines p
     JOIN pg_catalog.pg_proc f ON f.oid = p.keeps
     JOIN pg_catalog.pg_namespace n ON n.oid = f.pronamespace
     ORDER BY p.owner, p.lines::text
   LOOP
-    EXECUTE call USING month, entry;
+    RETURN QUERY EXECUTE call USING month, entry;
   END LOOP;
 END
 $$;

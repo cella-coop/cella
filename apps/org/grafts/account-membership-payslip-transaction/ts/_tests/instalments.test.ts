@@ -40,12 +40,12 @@ async function paying(month: string, date: string, extra: [string, string, numbe
   const { rows } = await db.query<{ id: string }>(`INSERT INTO transaction.entry (date, label) VALUES ($1, $2) RETURNING id`, [date, `Payroll paid, ${month}`])
   const entry = rows[0].id
   await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount)
-     SELECT $1, row_number() OVER (ORDER BY x.k, x.o), x.account, x.side, cella.amount(x.cents)
+    `INSERT INTO transaction.line (entry, n, account, side, amount, person)
+     SELECT $1, row_number() OVER (ORDER BY x.k, x.o), x.account, x.side, cella.amount(x.cents), x.person
      FROM (
-       SELECT 1 AS k, l.o, l.account, l.side, l.cents FROM payslip_transaction.lines($2, 'payment') WITH ORDINALITY l (account, side, cents, o)
-       UNION ALL SELECT 2, a.o, a.account, a.side, a.cents FROM payslip_transaction.added($2) WITH ORDINALITY a (account, side, cents, o)
-       UNION ALL SELECT 3, e.o, e.account, e.side, e.cents FROM ROWS FROM (jsonb_to_recordset($3::jsonb) AS (account text, side text, cents bigint)) WITH ORDINALITY e (account, side, cents, o)
+       SELECT 1 AS k, l.o, l.account, l.side, l.cents, NULL::text AS person FROM payslip_transaction.lines($2, 'payment') WITH ORDINALITY l (account, side, cents, o)
+       UNION ALL SELECT 2, a.o, a.account, a.side, a.cents, a.person FROM payslip_transaction.added($2) WITH ORDINALITY a (account, side, cents, person, o)
+       UNION ALL SELECT 3, e.o, e.account, e.side, e.cents, NULL FROM ROWS FROM (jsonb_to_recordset($3::jsonb) AS (account text, side text, cents bigint)) WITH ORDINALITY e (account, side, cents, o)
      ) x`,
     [entry, month, JSON.stringify(extra.map(([account, side, cents]) => ({ account, side, cents })))],
   )
@@ -248,23 +248,28 @@ test('payslip-transaction\'s register calls the functions it holds, never an ove
     await db.query(`CREATE SCHEMA extender`)
     await db.query(`CREATE TABLE extender.kept (month text, entry text)`)
     await db.query(
-      `CREATE FUNCTION extender.lines(month varchar) RETURNS TABLE (account text, side text, cents bigint)
-       LANGUAGE sql STABLE AS $$ VALUES ('4562', 'credit', 1::bigint) $$`,
+      `CREATE FUNCTION extender.lines(month varchar) RETURNS TABLE (account text, side text, cents bigint, person text)
+       LANGUAGE sql STABLE AS $$ VALUES ('4562', 'credit', 1::bigint, NULL::text) $$`,
     )
     await db.query(
-      `CREATE FUNCTION extender.lines(month text) RETURNS TABLE (account text, side text, cents bigint)
-       LANGUAGE sql STABLE AS $$ VALUES ('666', 'debit', 1::bigint) $$`,
+      `CREATE FUNCTION extender.lines(month text) RETURNS TABLE (account text, side text, cents bigint, person text)
+       LANGUAGE sql STABLE AS $$ VALUES ('666', 'debit', 1::bigint, NULL::text) $$`,
     )
-    await db.query(`CREATE FUNCTION extender.keeps(month varchar, entry varchar) RETURNS void LANGUAGE sql AS $$ INSERT INTO extender.kept VALUES (month, entry) $$`)
     await db.query(
-      `CREATE FUNCTION extender.keeps(month text, entry text) RETURNS void LANGUAGE plpgsql AS $$
+      `CREATE FUNCTION extender.keeps(month varchar, entry varchar) RETURNS TABLE (field text, subject text, cents bigint) LANGUAGE plpgsql AS $$
+       BEGIN
+         INSERT INTO extender.kept VALUES (month, entry);
+       END $$`,
+    )
+    await db.query(
+      `CREATE FUNCTION extender.keeps(month text, entry text) RETURNS TABLE (field text, subject text, cents bigint) LANGUAGE plpgsql AS $$
        BEGIN
          RAISE EXCEPTION 'the overload ran';
        END $$`,
     )
     await db.query(`SELECT payslip_transaction.register_payment_lines('extender.lines(varchar)', 'extender.keeps(varchar, varchar)', 'test')`)
-    assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.added('2027-03')`)).rows, [{ account: '4562', side: 'credit', cents: '1' }])
-    await db.query(`SELECT payslip_transaction.keep('2027-03', 'je-none')`)
+    assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.added('2027-03')`)).rows, [{ account: '4562', side: 'credit', cents: '1', person: null }])
+    assert.deepEqual((await db.query(`SELECT * FROM payslip_transaction.keep('2027-03', 'je-none')`)).rows, [])
     assert.deepEqual((await db.query(`SELECT * FROM extender.kept`)).rows, [{ month: '2027-03', entry: 'je-none' }])
   } finally {
     await db.query('ROLLBACK')
@@ -284,20 +289,26 @@ test('a spread folds into her plan, its instalment as its commitment; a payment\
   assert.equal((await one<{ n: string }>(`SELECT count(*) AS n FROM cella.commitment WHERE field = 'account_membership_payslip_transaction.plan.each' AND subject = $1`, [ines])).n, '1')
   const id = (await one<{ id: string }>(`SELECT 'je-' || lpad((last + 1)::text, 4, '0') AS id FROM transaction.journal`)).id
   await db.query(`INSERT INTO transaction.entry (id, date, label) VALUES ($1, '2027-01-05', 'Payroll paid, 2027-12')`, [id])
-  await db.query(
-    `INSERT INTO transaction.line (entry, n, account, side, amount) VALUES
-       ($1, 1, '512', 'debit', cella.amount(5000)), ($1, 2, '4562', 'credit', cella.amount(5000)),
-       ($1, 3, '1012', 'debit', cella.amount(5000)), ($1, 4, '101301', 'credit', cella.amount(5000))`,
-    [id],
-  )
+  const withheldAt = { $commit: 'cd'.repeat(32) }
+  const paidAt = { $commit: 'ef'.repeat(32) }
   await db.query('SELECT account_membership_payslip_transaction.fold_pay($1)', [
     entry(2, 'payslip:run:pay', {
       month: '2027-12',
       entry: id,
-      posting: { date: '2027-01-05', label: 'Payroll paid, 2027-12', lines: [{ account: '512', side: 'debit', cents: 5000 }, { account: '4562', side: 'credit', cents: 5000 }, { account: '1012', side: 'debit', cents: 5000 }, { account: '101301', side: 'credit', cents: 5000 }] },
+      kept: [
+        { field: 'account_membership_payslip_transaction.withheld.amount', subject: ines, cents: withheldAt },
+        { field: 'account_membership_transaction.paid.amount', subject: ines, cents: paidAt },
+      ],
     }),
   ])
-  assert.deepEqual(await one(`SELECT member, cella.cents(amount) AS cents, entry FROM account_membership_payslip_transaction.withheld WHERE month = '2027-12'`), { member: ines, cents: '5000', entry: id })
-  assert.deepEqual(await one(`SELECT member, cella.cents(amount) AS cents, via FROM account_membership_transaction.paid WHERE entry = $1`, [id]), { member: ines, cents: '5000', via: 'pay' })
+  assert.deepEqual(await one(`SELECT member, amount, entry FROM account_membership_payslip_transaction.withheld WHERE month = '2027-12'`), { member: ines, amount: null, entry: id })
+  assert.deepEqual(await one(`SELECT member, amount, via FROM account_membership_transaction.paid WHERE entry = $1`, [id]), { member: ines, amount: null, via: 'pay' })
+  assert.deepEqual(
+    (await db.query(`SELECT field, encode(commitment, 'hex') AS c FROM cella.commitment WHERE n = 2 AND subject = $1 ORDER BY field`, [ines])).rows,
+    [
+      { field: 'account_membership_payslip_transaction.withheld.amount', c: 'cd'.repeat(32) },
+      { field: 'account_membership_transaction.paid.amount', c: 'ef'.repeat(32) },
+    ],
+  )
   await db.query('ROLLBACK')
 })

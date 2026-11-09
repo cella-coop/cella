@@ -128,8 +128,10 @@ suspension, an exclusion or a withdrawal, the member's status and day,
 unless they stand so already; and an erasure nothing of its own, its
 erasure folding as the notary carried it out. What `crediting`
 writes for an extender that credits shares folds by
-`membership.fold_credit`, which its fold calls: the shares added to
-what the member holds while they are active.
+`membership.fold_credit`, which its fold calls: what the member holds
+once it credits them, the register's figure its entry keeps, while they
+are active, since the shares it credits are theirs and logged as their
+commitment.
 
 ## Handlers
 

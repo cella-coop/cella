@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-09
+updated = 2026-11-11
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -51,7 +51,8 @@ A run's approval and its payment fold by `sql/003-folds.sql`
 ([folds](../../../../_corpus/doc/architecture.md#folds)), once the payslip feat's fold has
 moved the run: the entry each posted, as its payload keeps it, linked as
 the event it is. What a graft above kept of a payment's lines its own
-fold of the payment rebuilds.
+fold of the payment rebuilds, from the personal figures the payload
+keeps as `kept`.
 
 ## Handlers
 
@@ -60,14 +61,18 @@ the entry through the transaction feat's `record`, then the posting, then
 `cella.submit` once. `pay`'s entry carries, beside the event's own lines,
 those `added(month)` answers: the lines of each function a graft above
 registered, a function of the run's month answering lines, in the order
-of their owners and names. Once the entry is posted, `pay` calls
-`keep(month, entry)`, which runs each registrant's `keeps`, a function of
-the month and the entry, by which the graft records in its own schema
-what it keeps of its lines. Each is called by the schema and name its
-function has, its arguments cast to the types it was registered with, so
-a function overloaded under its name runs the overload registered. This
-graft knows none of them by name, and no graft above puts a trigger on
-`posting`.
+of their owners and names, each naming whose own figure it is where it
+is a person's, so the entry keeps its amount as its commitment. Once the
+entry is posted, `pay` calls `keep(month, entry)`, which runs each
+registrant's `keeps`, a function of the month and the entry, by which
+the graft records in its own schema what it keeps of its lines and
+answers each personal figure it kept, by its personal column and its
+subject; the payment's payload keeps them as `kept`, each figure as its
+commitment, so no entry shows an associate's instalment in plain.
+Each is called by the schema and name its function has, its arguments
+cast to the types it was registered with, so a function overloaded
+under its name runs the overload registered. This graft knows none of
+them by name, and no graft above puts a trigger on `posting`.
 
 ## Shell
 

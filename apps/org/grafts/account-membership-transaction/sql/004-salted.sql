@@ -1,11 +1,12 @@
 -- The amount of a payment in and of a draw is personal data of its member,
 -- of class `books`: the write's payload commits to it, and the vault keeps
 -- it, so the log's digest confirms no guess at a colleague's capital; the
--- journal shows it on the bank's line as the books do. Once a former
--- member's clock runs out the sweep redacts it to NULL, so the amounts are
--- nullable. A repayment's amount is logged as given: it falls due after
--- its member left, perhaps after their erasure, which refuses any later
--- value of their class.
+-- journal shows it as the books do, on lines that name the member, which
+-- the payload commits to as well (the transaction feat's `logged`). Once a
+-- former member's clock runs out the sweep redacts it to NULL, so the
+-- amounts are nullable. A repayment's amount is logged as given: it falls
+-- due after its member left, perhaps after their erasure, which refuses
+-- any later value of their class.
 ALTER TABLE account_membership_transaction.paid ALTER COLUMN amount DROP NOT NULL;
 ALTER TABLE account_membership_transaction.draw ALTER COLUMN amount DROP NOT NULL;
 
@@ -68,3 +69,9 @@ BEGIN ATOMIC
   LEFT JOIN (SELECT d.entry, d.member, cella.cents(d.amount) AS amount FROM account_membership_transaction.paid d WHERE d.via = 'bank') d
     ON d.entry = x.entry AND d.member = x.member;
 END;
+
+-- What an exit cancelled of a subscription is what its member had not
+-- paid, so personal data of theirs, of class `books`, as their payments
+-- are: the withdrawal's payload commits to it, and the vault keeps it.
+INSERT INTO cella.personal (schema, tab, col, class, subject, owner) VALUES
+  ('account_membership_transaction', 'subscription', 'cancelled', 'books', 'member', 'account-membership-transaction');

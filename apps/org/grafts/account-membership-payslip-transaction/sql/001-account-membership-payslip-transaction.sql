@@ -56,13 +56,14 @@ END;
 -- from the pay, posted as lines of the payment's own entry, since a write
 -- posts one, as a payment in through the bank, 512 debited and 4562
 -- credited, which nets what the bank pays the associate, and 1012
--- debited and their capital account credited. Registered with
+-- debited and their capital account credited, each line naming them,
+-- since the instalment is their figure. Registered with
 -- payslip-transaction, whose pay write asks for them.
 CREATE FUNCTION account_membership_payslip_transaction.withholds(month text)
-RETURNS TABLE (account text, side text, cents bigint)
+RETURNS TABLE (account text, side text, cents bigint, person text)
 LANGUAGE sql STABLE
 BEGIN ATOMIC
-  SELECT p.account, p.side, p.cents
+  SELECT p.account, p.side, p.cents, d.member
   FROM account_membership_payslip_transaction.due(withholds.month) d
   CROSS JOIN LATERAL account_membership_transaction.paying(d.account, d.cents) WITH ORDINALITY p (account, side, cents, n)
   WHERE d.cents > 0
@@ -72,16 +73,26 @@ END;
 -- Once the payment's entry is posted, in the write that pays the run,
 -- each instalment it withheld is recorded in this graft's own withheld,
 -- and as paid in through their pay by account-membership-transaction's
--- published pay_in.
-CREATE FUNCTION account_membership_payslip_transaction.keeps(month text, entry text) RETURNS void
-LANGUAGE sql
-BEGIN ATOMIC
+-- published pay_in; it answers each, what it withheld and what it paid
+-- in, as the personal figure it is, which the payment's payload commits
+-- to.
+CREATE FUNCTION account_membership_payslip_transaction.keeps(month text, entry text)
+RETURNS TABLE (field text, subject text, cents bigint)
+LANGUAGE plpgsql AS $$
+BEGIN
   INSERT INTO account_membership_payslip_transaction.withheld (month, member, amount, entry)
   SELECT keeps.month, d.member, cella.amount(d.cents), keeps.entry
   FROM account_membership_payslip_transaction.due(keeps.month) d WHERE d.cents > 0;
-  SELECT account_membership_transaction.pay_in(keeps.entry, w.member, w.amount, 'pay')
+  PERFORM account_membership_transaction.pay_in(keeps.entry, w.member, w.amount, 'pay')
   FROM account_membership_payslip_transaction.withheld w WHERE w.month = keeps.month;
-END;
+  RETURN QUERY
+  SELECT x.field, w.member, cella.cents(w.amount)
+  FROM account_membership_payslip_transaction.withheld w
+  CROSS JOIN (VALUES ('account_membership_payslip_transaction.withheld.amount'), ('account_membership_transaction.paid.amount')) x (field)
+  WHERE w.month = keeps.month
+  ORDER BY w.member, x.field;
+END
+$$;
 
 SELECT payslip_transaction.register_payment_lines(
   'account_membership_payslip_transaction.withholds(text)',

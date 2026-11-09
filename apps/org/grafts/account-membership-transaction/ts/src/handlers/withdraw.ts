@@ -1,5 +1,5 @@
 import type { Outcome } from '@cella/org-actions'
-import { done, write, type Deps, type Done, type Write } from '@cella/org-db'
+import { done, personal, write, type Deps, type Done, type Write } from '@cella/org-db'
 import type { actions } from '@cella/org-account/models'
 import { logged, record } from '@cella/org-transaction/api'
 import type { Entry, Line } from '@cella/org-transaction/models'
@@ -18,8 +18,10 @@ type Op = 'account:capital:withdraw' | 'account:own:withdraw'
 // repayments are exactly that;
 // account-transaction's guard, that the month is open.
 export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'): Write<Withdrawn> {
-  // The entry it posts, which its payload keeps for its fold.
+  // The entry it posts and the repayments it draws up, which its payload
+  // keeps for its fold.
   let posting: Entry | null = null
+  let drawn: { n: number; due: string; cents: number }[] = []
   return {
     op,
     request: input,
@@ -43,12 +45,12 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
       const owed = held.rows.reduce((sum, r) => sum + Number(r.cents), 0)
       const cancelled = Number(rows[0].unpaid ?? 0)
       const lines: Line[] = [
-        ...held.rows.map((r) => ({ account: r.account, side: 'debit' as const, cents: Number(r.cents) })),
-        ...(owed > 0 ? [{ account: '4567', side: 'credit' as const, cents: owed }] : []),
+        ...held.rows.map((r) => ({ account: r.account, side: 'debit' as const, cents: Number(r.cents), person: input.member })),
+        ...(owed > 0 ? [{ account: '4567', side: 'credit' as const, cents: owed, person: input.member }] : []),
         ...(cancelled > 0
           ? [
-              { account: '1012', side: 'debit' as const, cents: cancelled },
-              { account: '4562', side: 'credit' as const, cents: cancelled },
+              { account: '1012', side: 'debit' as const, cents: cancelled, person: input.member },
+              { account: '4562', side: 'credit' as const, cents: cancelled, person: input.member },
             ]
           : []),
       ]
@@ -60,7 +62,7 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
       if (cancelled > 0) {
         await tx.query('UPDATE account_membership_transaction.subscription SET cancelled = cella.amount($2) WHERE member = $1', [input.member, cancelled])
       }
-      const drawn = owed > 0
+      const made = owed > 0
         ? await tx.query(
             `INSERT INTO account_membership_transaction.repayment (member, n, due, amount)
              SELECT $1, r.n, r.due, cella.amount((cella.allocate(cella.amount($2), array_fill(1::bigint, ARRAY[t.repayments])))[r.n])
@@ -72,9 +74,27 @@ export function withdrawing(input: Withdraw, op: Op = 'account:capital:withdraw'
           )
         : { rowCount: 0 }
       await tx.query('INSERT INTO account_membership_transaction.withdrawal (member, entry) VALUES ($1, $2)', [input.member, entry])
-      return { member: input.member, owed, cancelled, repayments: drawn.rowCount ?? 0, entry }
+      drawn = (
+        await tx.query<{ n: number; due: string; cents: string }>(
+          `SELECT n, to_char(due, 'YYYY-MM-DD') AS due, cella.cents(amount) AS cents
+           FROM account_membership_transaction.repayment WHERE member = $1 ORDER BY n`,
+          [input.member],
+        )
+      ).rows.map((r) => ({ n: r.n, due: r.due, cents: Number(r.cents) }))
+      return { member: input.member, owed, cancelled, repayments: made.rowCount ?? 0, entry }
     },
-    payload: (v) => ({ ...v, ...(input.motion ? { motion: input.motion } : {}), ...(posting ? { posting: logged(posting) } : {}) }),
+    // What the associate held and had not paid is theirs: the log keeps
+    // what the exit cancelled as its commitment and the entry's lines as
+    // theirs (`logged`), never what it owes them, and the repayments as
+    // drawn up, each logged as given, as its repayment is.
+    payload: (v) => ({
+      member: v.member,
+      entry: v.entry,
+      ...(input.motion ? { motion: input.motion } : {}),
+      cancelled: v.cancelled > 0 ? personal('account_membership_transaction.subscription.cancelled', v.member, v.cancelled) : null,
+      repayments: drawn,
+      ...(posting ? { posting: logged(posting) } : {}),
+    }),
   }
 }
 

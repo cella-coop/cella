@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Frame, Section, Settings, type Declared } from '@cella/org-ui'
+  import { Frame, Section, Settings, useWrites, type Declared } from '@cella/org-ui'
+  import { onSettings } from '#lib/writes.ts'
 
   // DEV ONLY. Two settings as a circle's page would declare them for its
   // manager: their own name, which their write saves, and the circle's
@@ -21,6 +22,9 @@
       },
     },
   ]
+
+  // Its writes are sent as a settings page's, which a test answers.
+  useWrites().serve(() => onSettings(() => 'specimen'))
 </script>
 
 <Frame title="Settings specimen">

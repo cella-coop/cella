@@ -80,7 +80,7 @@ async function own(browser: Browser, actor: string) {
   return {
     errors,
     async rename(name: string) {
-      const form = page.locator('form[action^="?/profile"]')
+      const form = page.locator('form[data-write="profile"]')
       await form.getByLabel('Name').fill(name)
       await form.getByRole('button', { name: 'Rename' }).click()
       const shown = page.locator('.outcome')

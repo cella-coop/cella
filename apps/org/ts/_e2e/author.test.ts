@@ -94,19 +94,23 @@ unseeded('the New form puts a motion as a held role or as its circle, and the pa
             await page.goto(`${dev.base}/motions`)
             await page.getByRole('button', { name: 'New' }).click()
             const form = page.locator('form').filter({ has: page.getByRole('button', { name: 'Propose' }) })
-            await form.locator('select[name="circle"]').selectOption('ag')
-            const putBy = form.locator('select[name="author"]')
+            await form.locator('select[name^="f.circle["]').selectOption('ag')
+            const putBy = form.locator('select[name^="f.author["]')
             assert.equal(await putBy.inputValue(), '', 'the circle is the default')
             if (author) await putBy.selectOption(author)
             assert.equal(await putBy.locator('option:checked').textContent(), author ? name : 'The circle')
             const title = `Author from form ${engine} ${author || 'circle'} ${scheme}`
             await form.getByLabel('Title').fill(title)
             await form.getByLabel('Deadline').fill('07/11/2026')
-            assert.equal(await form.locator('[name="deadline"]').inputValue(), '2026-11-07', 'the date posts as ISO')
+            assert.equal(await form.locator('[name^="f.deadline["]').inputValue(), '2026-11-07', 'the date posts as ISO')
             assert.equal(await form.evaluate((el) => (el as HTMLFormElement).checkValidity()), true, 'the form is valid')
             await form.screenshot({ path: `${shots}/${engine}-${author || 'circle'}-${scheme}-form.png` })
             await form.getByRole('button', { name: 'Propose' }).click()
             await page.getByText(title, { exact: true }).waitFor({ timeout: 10000 })
+            // The row comes back with the write; the shell's counts are read
+            // after it, and the outcome shows once they are, so the page is
+            // left only then.
+            await page.getByRole('status').filter({ hasText: /Settled/ }).waitFor()
             const made = (await summaries(as(who).db)).find((m) => m.title === title)
             assert.ok(made, `${engine} ${scheme}: the form proposed a motion: ${await page.locator('body').innerText()}`)
             assert.equal(made.author, author || 'ag')

@@ -1,6 +1,6 @@
 // The built shell as a scenario drives it, outside dev mode as a scope's
 // server runs: started on a day of the notary's choosing, its pages
-// fetched and its form actions posted as an enhanced form posts them,
+// fetched and its writes posted as the page's script posts them,
 // signed in as a member and signing each write as their browser does,
 // with their TEST-ONLY fixture device, which the test holds as a browser
 // holds its key.
@@ -9,7 +9,8 @@ import assert from 'node:assert/strict'
 import { spawn, type ChildProcess } from 'node:child_process'
 import { createServer } from 'node:net'
 import type pg from 'pg'
-import { parse } from 'devalue'
+import { parse, stringify } from 'devalue'
+import { bound } from '@cella/org-ui/models'
 import { fixture, open, signer, type Device, type Json } from '@cella/org-sign'
 
 const entry = new URL('../build/index.js', import.meta.url).pathname
@@ -212,23 +213,66 @@ export class Shell {
       const proof = await signer(ask.scope, ask.actor, s.device)(ask.op, ask.request)
       result = await this.post(path, action, new URLSearchParams({ 'cella-run': ask.run, 'cella-proof': JSON.stringify(proof) }), s.cookie)
     }
-    assert.ok(result.done, `${path}?/${action}: ${JSON.stringify(result)}`)
+    assert.ok(result.done, `${path} ${action}: ${JSON.stringify(result)}`)
     return result.done
   }
 
-  // One post of a page's action as an enhanced form posts it, with a
-  // session's cookie or none: what the action answered, a signature it
-  // asks for or the write's outcome.
+  // One post of a page's write as its script posts it, with a session's
+  // cookie or none: its fields to the route's `write` form, bound to it
+  // by name, or a proof, `cella-run` and `cella-proof`, by `prove`, an
+  // invitation's link's by its `accept`; what the server answered, a
+  // signature it asks for or the write's outcome, and the status it says.
   async post(path: string, action: string, body: URLSearchParams | FormData, cookie?: string): Promise<{ sign?: Ask; done?: Done; status: number }> {
-    const res = await fetch(`${this.#base}${path}?/${action}`, {
-      method: 'POST',
-      body,
-      headers: { origin: this.#base, 'x-forwarded-proto': 'http', 'x-sveltekit-action': 'true', ...(cookie ? { cookie } : {}) },
-    })
+    const [first, second] = path.split('/').filter(Boolean).map(decodeURIComponent)
+    const run = body.get('cella-run')
+    const headers = { origin: this.#base, 'x-forwarded-proto': 'http', ...(cookie ? { cookie } : {}) }
+    let res: Response
+    if (first === 'join') {
+      const given = run
+        ? { secret: second, key: '', label: '', run, proof: String(body.get('cella-proof') ?? '') }
+        : { secret: second, key: String(body.get('key') ?? ''), label: String(body.get('label') ?? ''), run: '', proof: '' }
+      res = await this.#command('session', 'accept', given, headers)
+    } else if (typeof run === 'string') {
+      res = await this.#command('session', 'prove', { run, proof: String(body.get('cella-proof') ?? '') }, headers)
+    } else {
+      const [family, at] = first === 'settings' ? ['settings', { settings: second }] : ['collection', second ? { collection: first, id: second } : { collection: first }]
+      const form = `${remote(family!)}/write`
+      const posted = new FormData()
+      for (const [k, v] of body) {
+        posted.append(bound(k, form), v)
+      }
+      const key = encodeURIComponent(JSON.stringify(JSON.stringify({ at, write: action, n: 'e2e' })))
+      res = await fetch(`${this.#base}/_app/remote/${form}/${key}`, { method: 'POST', body: posted, headers })
+    }
     if (res.status === 401) {
       return { status: 401 }
     }
-    const result = await res.json()
-    return { ...(result.data ? parse(result.data) : {}), status: res.status }
+    const out = (await res.json()) as { type: string; data?: string; error?: { message: string } }
+    if (out.type !== 'result' || !out.data) {
+      return { status: res.status, done: { op: 'none:none:none', state: 'failed', reason: out.error?.message ?? res.statusText, then: [] } }
+    }
+    const answer = parse(out.data)._ as { result?: unknown } & { sign?: Ask; done?: Done; status?: number }
+    const a = (first === 'join' || typeof run === 'string' ? answer : answer.result) as { sign?: Ask; done?: Done; status?: number }
+    return { ...a, status: a.status ?? res.status }
   }
+
+  // A command of the shell's, its argument as SvelteKit's client sends it.
+  #command(family: string, name: string, arg: unknown, headers: Record<string, string>) {
+    return fetch(`${this.#base}/_app/remote/${remote(family)}/${name}`, {
+      method: 'POST',
+      body: JSON.stringify({ payload: Buffer.from(stringify(arg)).toString('base64url'), refreshes: [] }),
+      headers: { ...headers, 'content-type': 'application/json' },
+    })
+  }
+}
+
+// A remote module's id, as SvelteKit names it: the djb2 hash of its path
+// from the shell's root, in base 36. SvelteKit is pinned, so this holds.
+function remote(family: string): string {
+  const file = `src/lib/remote/${family}.remote.ts`
+  let h = 5381
+  for (let i = file.length; i; ) {
+    h = (h * 33) ^ file.charCodeAt(--i)
+  }
+  return (h >>> 0).toString(36)
 }

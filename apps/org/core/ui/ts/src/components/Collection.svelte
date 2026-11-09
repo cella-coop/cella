@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount, tick, type Component } from 'svelte'
-  import { applyAction } from '$app/forms'
-  import { goto, refreshAll } from '$app/navigation'
+  import { goto } from '$app/navigation'
   import { page } from '$app/state'
   import SlidersHorizontal from 'phosphor-svelte/lib/SlidersHorizontal'
   import Plus from 'phosphor-svelte/lib/Plus'
@@ -26,7 +25,7 @@
   import { control, focused, typing } from '../models/keys.ts'
   import { mark } from '../marks.ts'
   import { sortable } from '../attachments/sortable.ts'
-  import { post } from '../post.ts'
+  import { useWrites } from '../hooks/useWrites.ts'
   import { useCollection } from '../hooks/useCollection.ts'
   import { useDrag } from '../hooks/useDrag.ts'
   import { useRow } from '../hooks/useRow.ts'
@@ -162,6 +161,7 @@
     () => kept,
   )
   const drag = useDrag()
+  const writes = useWrites()
 
   const hidden = $derived(new Set(spec.hide))
   const titled = $derived(columns.find((c) => c.role === 'title') ?? columns[0])
@@ -233,16 +233,12 @@
   }
 
   // A card dropped in another column: the collection's write for that
-  // move, posted to the item's page as its button posts it, signed as the
-  // acting member, with the column it entered as `to`, for a write that
-  // takes a card into any of several. The outcome shows as any write's;
-  // the rows are read again, so a refused move leaves the card where it
-  // was.
+  // move, sent for the item as its button posts it, signed as the acting
+  // member, with the column it entered as `to`, for a write that takes a
+  // card into any of several. The outcome shows as any write's; the rows
+  // come back with it, so a refused move leaves the card where it was.
   async function move(id: string, s: Shift, to: string) {
-    const body = new FormData()
-    body.set('to', to)
-    await applyAction(await post(`${page.url.pathname}/${encodeURIComponent(id)}?/${s.action}`, body))
-    await refreshAll()
+    await writes.shown(writes.send(s.action, [['to', to]], id))
   }
 
   function open(i: number) {

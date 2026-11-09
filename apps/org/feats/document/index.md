@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -278,11 +278,11 @@ document's stream, `/documents/<id>/live`, opens with one update holding
 everything the client lacks by the version vector it sends, then relays
 each settled edit; listening starts before the catch-up is read, and what
 arrives twice Loro imports once. The browser posts its own edits, every
-quarter second while it types, as one update through the page's `edit`
-action, signed as the acting member; offline they wait, and the stream
+quarter second while it types, as one update through the document's `edit`
+write, sent by the page's `send` and signed as the acting member; offline they wait, and the stream
 reopens from the client's version vector, so nothing is missed whatever
 order writes committed in. Server-sent events rather than a WebSocket:
-edits already go up as signed writes through the form actions, so the
+edits already go up as signed writes through the remote functions, so the
 stream only carries what settled, one way, over plain HTTP the shell
 already serves. The relay lives in the server process; a second process
 would relay through Postgres's `LISTEN` and `NOTIFY`.

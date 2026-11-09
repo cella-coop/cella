@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { date, Form, Note, Section, Table, type Column } from '@cella/org-ui'
+  import { date, Form, Hidden, Note, Section, Table, type Column } from '@cella/org-ui'
   import type { Membership } from '../../models/member.ts'
   import { useLink } from '../../hooks/useLink.ts'
 
@@ -36,7 +36,7 @@
   <Table {columns} rows={steps} />
   {#if offered}
     <Form action="link" submit="New invitation link" tone="quiet" inline ready={link.digest !== ''}>
-      <input type="hidden" name="link" value={link.digest} />
+      <Hidden name="link" value={link.digest} />
     </Form>
     {#if link.made}
       <Note text="The new link, to pass on; it is shown once, and taken up once: {link.made}" />

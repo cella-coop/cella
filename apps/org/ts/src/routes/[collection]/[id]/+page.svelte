@@ -1,12 +1,15 @@
 <script lang="ts">
   import { browser } from '$app/env'
   import { page as here } from '$app/state'
-  import { Detail, Failed, Skeleton, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
+  import { Detail, Failed, Skeleton, useWrites, type Block, type Embeds, type Placed, type Tab } from '@cella/org-ui'
   import { item as read } from '#lib/remote/item.remote.ts'
   import { collection, extensions } from '#lib/slices.ts'
+  import { onCollection } from '#lib/writes.ts'
 
   const name = $derived(here.params.collection ?? '')
   const id = $derived(here.params.id ?? '')
+  // Its writes post to the item's.
+  useWrites().serve(() => onCollection(() => name, () => id))
   // What the skeleton names while the item loads.
   const opening = $derived(collection(name))
   // The item as the address asks for it, read by its query, which a write

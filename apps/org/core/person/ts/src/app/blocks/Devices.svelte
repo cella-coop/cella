@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Form, Note, Section, Table, type Viewer } from '@cella/org-ui'
+  import { Form, Hidden, Note, Section, Table, type Viewer } from '@cella/org-ui'
   import type { Device } from '../../models/device.ts'
   import { columns } from '../views/devices.ts'
 
@@ -23,7 +23,7 @@
   <Table columns={shown} rows={data.devices} />
   {#each others as d (d.key)}
     <Form action="revoke" submit="Revoke {d.label}" tone="danger" inline>
-      <input type="hidden" name="key" value={d.key} />
+      <Hidden name="key" value={d.key} />
     </Form>
   {/each}
   {#if own && !others.length}

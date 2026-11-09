@@ -1,5 +1,6 @@
 <script lang="ts">
   import DateField from './DateField.svelte'
+  import { useForm } from '../hooks/useForm.ts'
 
   let {
     label,
@@ -31,12 +32,15 @@
   } = $props()
 
   const id = $props.id()
+  // Its name as the form it is in posts it.
+  const form = useForm()
+  const posted = $derived(form.name(name))
 </script>
 
 <label class="field" class:wide for={id}>
   <span class="label">{label}</span>
   {#if options}
-    <select {id} {name} {required} bind:value>
+    <select {id} name={posted} {required} bind:value>
       {#if placeholder}
         <option value="" disabled>{placeholder}</option>
       {/if}
@@ -45,13 +49,13 @@
       {/each}
     </select>
   {:else if type === 'date'}
-    <DateField {id} {name} {required} bind:value />
+    <DateField {id} name={posted} {required} bind:value />
   {:else if type === 'file'}
-    <input {id} {name} type="file" {required} {accept} />
+    <input {id} name={posted} type="file" {required} {accept} />
   {:else if rows}
-    <textarea {id} {name} {rows} {required} {placeholder} bind:value></textarea>
+    <textarea {id} name={posted} {rows} {required} {placeholder} bind:value></textarea>
   {:else}
-    <input {id} {name} {type} {required} {placeholder} {step} bind:value list={list ? `${id}-list` : undefined} />
+    <input {id} name={posted} {type} {required} {placeholder} {step} bind:value list={list ? `${id}-list` : undefined} />
     {#if list}
       <datalist id="{id}-list">
         {#each list as l (l)}

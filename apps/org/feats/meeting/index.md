@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the

@@ -1,12 +1,15 @@
 <script lang="ts">
-  import { Frame } from '@cella/org-ui'
+  import { Frame, useWrites } from '@cella/org-ui'
   import { settings } from '#lib/slices.ts'
+  import { onSettings } from '#lib/writes.ts'
   import type { PageProps } from './$types'
 
   let { data }: PageProps = $props()
 
-  // A settings page in the one page frame, drawn by its slice's block.
+  // A settings page in the one page frame, drawn by its slice's block,
+  // its writes posted to the page's.
   const page = $derived(settings(data.name))
+  useWrites().serve(() => onSettings(() => data.name))
 </script>
 
 {#if page}

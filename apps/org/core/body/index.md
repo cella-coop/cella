@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-11
+updated = 2026-11-12
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -117,7 +117,8 @@ styles itself. `Reader` draws a canonical form read-only, for a version on
 a motion's page.
 
 A slice mounts the editor over its own draft: it hands it the Loro
-document, the action that posts an update and the live stream it
+document, the write that takes an update, sent by the page's `send`, and
+the live stream it
 listens on, and the editor knows nothing of where the bytes are kept.
 
 ## The live session

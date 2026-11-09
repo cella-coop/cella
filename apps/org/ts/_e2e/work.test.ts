@@ -133,9 +133,10 @@ test('Thomas drags it into Doing, then Done, each drop a write signed as him', a
   assert.equal(into.state, 'failed', 'done is a completion, not a move')
 })
 
-// The options a select of the page's offers, in order, by its name.
+// The options a select of the page's offers, in order, by its name, as
+// its form binds it (`f.<name>[]/<form>`).
 const offered = (html: string, name: string) =>
-  [...(html.split(`name="${name}"`)[1]?.split('</select>')[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1])
+  [...(html.split(`name="f.${name}[]/`)[1]?.split('</select>')[0] ?? '').matchAll(/<option value="([^"]*)"/g)].map((m) => m[1])
 
 test('Thomas logs time against the shop for Web, its circle, which the page offers him first', async () => {
   const { text } = await shell.page('/projects/halles-shop?tab=time', thomas)

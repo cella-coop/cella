@@ -2,11 +2,14 @@
   import { browser } from '$app/env'
   import { snapshot } from '$app/navigation'
   import { page } from '$app/state'
-  import { Collection, Failed, Skeleton, useRow } from '@cella/org-ui'
+  import { Collection, Failed, Skeleton, useRow, useWrites } from '@cella/org-ui'
   import { collection as read } from '#lib/remote/collection.remote.ts'
   import { collection, columns, extensions, shifts } from '#lib/slices.ts'
+  import { onCollection } from '#lib/writes.ts'
 
   const name = $derived(page.params.collection ?? '')
+  // Its writes post to the collection's, and a dropped card's to its item's.
+  useWrites().serve(() => onCollection(() => name, () => undefined))
   // What the skeleton names while the collection loads.
   const opening = $derived(collection(name))
   // The collection as the address asks for it, read by its query, which

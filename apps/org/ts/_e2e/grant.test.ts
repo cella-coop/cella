@@ -193,7 +193,7 @@ unseeded('in every browser, light and dark, Operations\' page refuses a grant wi
         await page.goto(`${dev.base}/circles/operations`)
         await page.waitForLoadState('networkidle')
         await page.getByRole('button', { name: 'Propose…' }).click()
-        const form = page.locator('form', { has: page.locator('select[name="kind"] option[value="change"]') })
+        const form = page.locator('form', { has: page.locator('select[name^="f.kind["] option[value="change"]') })
         await form.getByLabel('Proposes to').selectOption('grant')
         await form.getByLabel('Grantee').selectOption('role:finance')
         await form.getByLabel('Power', { exact: true }).fill('send-quote')

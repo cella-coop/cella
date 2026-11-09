@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-10
+updated = 2026-11-12
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -311,10 +311,12 @@ The theme is light, dark or the system's, a cookie the server writes into
   `pick` gives each row a choice in a column after its label, the
   first of its options chosen, as the circle a row's time is worked
   for),
-  `Button`, `Form` (a write, posting to a named form action, files and
-  all, through `post`; `ready` false keeps its button disabled while
+  `Button`, `Form` (a write, posting to the route's `write` form for a
+  named write, files and all, through `post`, its fields bound to it; `ready` false keeps its button disabled while
   there is nothing to post; the fields a refused write names as `spent`,
   written before it stopped, are emptied),
+  `Hidden` (a value a form posts that no one types, named through the
+  form it is in),
   `Field` (text, a number, a date, a time, an address, an email or a
   file; a date is typed in the app's locale and posts as an ISO day, the
   browser's own calendar a button beside it (`DateField`); a day typed
@@ -416,13 +418,25 @@ Its fields are all the reader's own, so none opens a motion.
 
 ## Posting a write
 
-`post(url, body)` is how every write leaves a page, a form's, a dropped
-card's, an agenda's move and a document's edit: it posts to the page's
-action, and while the server answers with what to sign it signs it with
-the device this browser keeps for that scope, actor and device, and posts
-the proof back naming the run it answers ([trust](../../../../_corpus/doc/trust.md#keys-and-addresses)).
-It ends with the write's outcome, as SvelteKit's action result, which
-the caller applies. A post that gets no answer it can read, the
+`post(start, prove)` is how every write leaves a page, a form's, a
+dropped card's, an agenda's move and a document's edit: `start` is its
+first post, the route's `write` form submitted or its `send` command,
+and while the server answers with what to sign it signs it with the
+device this browser keeps for that scope, actor and device, and sends
+the proof back by `prove`, naming the run it answers ([trust](../../../../_corpus/doc/trust.md#keys-and-addresses)).
+It ends with the write's outcome, Settled, Refused or Pending. The
+page's writes are `useWrites` (`WriteState`): the root layout makes it
+and shows its last outcome, until the next page; each route names how
+its page writes (`serve`, a `Route`: its `write` form, an instance a
+form, `send`, `prove`, the queries it reads and how it reads again);
+`post` there asks for the page's queries with each proof, so its
+outcome comes back with them refreshed in the same flight, and `send`
+posts a write by the page's script, as a drop does. A `Form` spreads its
+instance on its element and submits through it; each field in it is
+named through its `FormState` (`useForm`), bound to the instance's
+form, so `Field`, `Grid` and `Hidden` post as SvelteKit's remote forms
+ask, and a field outside a form keeps its name. A post that gets no
+answer it can read, the
 connection dropped or a proxy answering in the server's place, throws,
 which the editor's sync reads as being offline; a `Form` shows it as an
 `unknown` outcome (`lost`), since the write may have been made, keeps

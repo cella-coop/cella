@@ -1,6 +1,6 @@
 +++
 title = "employment-project-timesheet"
-updated = 2026-11-06
+updated = 2026-11-12
 +++
 
 A worker's week of time on projects, and the time they import, by their

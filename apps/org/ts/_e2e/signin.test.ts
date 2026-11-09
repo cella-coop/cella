@@ -96,7 +96,7 @@ for (const [name, launch] of browsers()) {
         assert.equal((await visit(`/join/${secret}`))?.status(), 404, 'the link is spent')
 
         await visit(`/people/${encodeURIComponent(sam)}`)
-        const profile = page.locator('form[action^="?/profile"]')
+        const profile = page.locator('form[data-write="profile"]')
         await profile.getByLabel('Name').fill('Sam Petit-Roux')
         await profile.getByRole('button', { name: 'Rename' }).click()
         for (let i = 0; i < 50 && (await one<{ name: string }>('SELECT name FROM person.person WHERE address = $1', [sam])).name !== 'Sam Petit-Roux'; i++) {

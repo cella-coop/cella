@@ -41,7 +41,36 @@ BEGIN ATOMIC
   WHERE id = fold_body_save.entry -> 'payload' ->> 'task';
 END;
 
+-- task:comment:post: the comment under the receipt its entry names, by
+-- its actor on its day, in its task's circle, and each mention its entry
+-- names in order; a reply reopens its root.
+CREATE FUNCTION task.fold_comment_post(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  INSERT INTO task.comment (id, task, author, parent, text, posted)
+  VALUES ((p ->> 'comment')::bigint, p ->> 'task', entry ->> 'actor', (p ->> 'parent')::bigint, p ->> 'text', (entry ->> 'date')::date);
+  INSERT INTO task.mention (comment, n, person)
+  SELECT (p ->> 'comment')::bigint, m.n, m.person
+  FROM jsonb_array_elements_text(coalesce(p -> 'mentions', '[]')) WITH ORDINALITY AS m (person, n);
+  UPDATE task.comment SET resolved = NULL WHERE id = (p ->> 'parent')::bigint AND resolved IS NOT NULL;
+END
+$$;
+
+-- task:comment:resolve: the root resolved on the entry's day, or
+-- reopened.
+CREATE FUNCTION task.fold_comment_resolve(entry jsonb) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE task.comment
+  SET resolved = CASE WHEN (fold_comment_resolve.entry -> 'payload' ->> 'resolved')::boolean THEN (fold_comment_resolve.entry ->> 'date')::date END
+  WHERE id = (fold_comment_resolve.entry -> 'payload' ->> 'comment')::bigint;
+END;
+
 SELECT cella.lets_fold('task:task:create', 1, 'task.fold_create(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:move', 1, 'task.fold_move(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:complete', 1, 'task.fold_complete(jsonb)', 'task');
 SELECT cella.lets_fold('task:body:save', 1, 'task.fold_body_save(jsonb)', 'task');
+SELECT cella.lets_fold('task:comment:post', 1, 'task.fold_comment_post(jsonb)', 'task');
+SELECT cella.lets_fold('task:comment:resolve', 1, 'task.fold_comment_resolve(jsonb)', 'task');

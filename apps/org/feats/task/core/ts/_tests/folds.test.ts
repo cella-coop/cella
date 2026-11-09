@@ -2,13 +2,16 @@
 // app's core and this feat, in a transaction rolled back after: a task
 // folds created under its id on the entry's day, its title as its
 // commitment; moved, completed keeping its first day, and reopened; its
-// body set to each save's snapshot, one with no canonical form refused. Run
+// body set to each save's snapshot, one with no canonical form refused;
+// its comments posted and resolved, a reply to a reply refused, and a
+// mention read by its person's name, erased once their name is. Run
 // by `cella test slice task`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
-import { createDoc, edits } from '@cella/org-body/models'
+import { createDoc, edits, thread } from '@cella/org-body/models'
+import { comments } from '../src/drivers/comment.ts'
 
 const db = new pg.Client()
 const sacha = 'sacha@folded.example'
@@ -72,4 +75,50 @@ test('a save naming a contributor who holds no discuss in the task’s circle is
     (await one<{ why: string | null }>(`SELECT task.contributed($1) AS why`, [{ task: 't-9002', circle: 'ag', snapshot: '', contributors }])).why
   assert.equal(await guard([]), null)
   assert.match((await guard([sacha])) ?? '', /holds no discuss in ag: sacha@folded\.example; a mandate granting it there/)
+})
+
+test('a comment folds posted under its receipt with its mentions; a reply reopens its root, and a resolve resolves or reopens it', async () => {
+  await db.query(`INSERT INTO person.person (circle, address, name) VALUES (circle.assembly(), $1, 'Sacha Folded'), (circle.assembly(), 'noor@folded.example', 'Noor Folded')`, [sacha])
+  await fold('fold_create', 9, 'task:task:create', '2041-01-22', { task: 't-9003', created: '2041-01-22', title: commitment, priority: 'normal', due: null, status: 'todo' })
+  const root = { task: 't-9003', circle: 'ag', comment: 9010, parent: null, text: 'Ready for @[noor@folded.example]?', mentions: ['noor@folded.example'] }
+  await fold('fold_comment_post', 10, 'task:comment:post', '2041-01-22', root)
+  const comment = (id: number) =>
+    one<{ author: string; parent: string | null; text: string; posted: string; resolved: string | null }>(
+      `SELECT author, parent, text, to_char(posted, 'YYYY-MM-DD') AS posted, to_char(resolved, 'YYYY-MM-DD') AS resolved FROM task.comment WHERE id = $1`,
+      [id],
+    )
+  assert.deepEqual(await comment(9010), { author: sacha, parent: null, text: root.text, posted: '2041-01-22', resolved: null })
+  assert.deepEqual((await db.query(`SELECT n, person FROM task.mention WHERE comment = 9010`)).rows, [{ n: 1, person: 'noor@folded.example' }])
+  await fold('fold_comment_resolve', 11, 'task:comment:resolve', '2041-01-23', { comment: 9010, task: 't-9003', circle: 'ag', resolved: true })
+  assert.equal((await comment(9010)).resolved, '2041-01-23')
+  await fold('fold_comment_post', 12, 'task:comment:post', '2041-01-24', { task: 't-9003', circle: 'ag', comment: 9012, parent: 9010, text: 'One more thing', mentions: [] })
+  assert.deepEqual(await comment(9012), { author: sacha, parent: '9010', text: 'One more thing', posted: '2041-01-24', resolved: null })
+  assert.equal((await comment(9010)).resolved, null, 'a reply reopens its root')
+  await fold('fold_comment_resolve', 13, 'task:comment:resolve', '2041-01-25', { comment: 9010, task: 't-9003', circle: 'ag', resolved: true })
+  await fold('fold_comment_resolve', 14, 'task:comment:resolve', '2041-01-26', { comment: 9010, task: 't-9003', circle: 'ag', resolved: false })
+  assert.equal((await comment(9010)).resolved, null, 'a later reopen wins')
+})
+
+test('a reply to a reply, resolving a reply and a mention of no one are refused, each saying what would do', async () => {
+  const posts = async (payload: unknown) => (await one<{ why: string | null }>(`SELECT task.posts($1) AS why`, [payload])).why
+  const resolves = async (payload: unknown) => (await one<{ why: string | null }>(`SELECT task.resolves($1) AS why`, [payload])).why
+  await db.query(`INSERT INTO task.comment (id, task, author, parent, text, posted) VALUES (9020, 't-9003', $1, 9012, 'A reply to a reply', '2041-01-27')`, [sacha])
+  assert.equal(await posts({ task: 't-9003', comment: 9020, parent: 9012, text: 'A reply to a reply', mentions: [] }), 'comment 9012 is a reply: reply to its root, comment 9010')
+  assert.equal(await resolves({ comment: 9012, resolved: true }), 'comment 9012 is a reply: resolve its root, comment 9010')
+  assert.equal(await resolves({ comment: 9010, resolved: true }), null)
+  assert.equal(await posts({ task: 't-9003', comment: 9030 }), 'no comment 9030')
+  await db.query(`INSERT INTO task.comment (id, task, author, parent, text, posted) VALUES (9031, 't-9003', $1, NULL, 'For @[nobody@folded.example]', '2041-01-27')`, [sacha])
+  assert.match(
+    (await posts({ task: 't-9003', comment: 9031, parent: null, text: 'For @[nobody@folded.example]', mentions: ['nobody@folded.example'] })) ?? '',
+    /^@\[nobody@folded\.example\] names no one the co-op knows/,
+  )
+})
+
+test('a comment reads its mentions by the person’s name as it stands, and as erased once their name is', async () => {
+  const read = async () => (await comments(db, 't-9003')).find((c) => c.id === 9010)?.mentions
+  assert.deepEqual(await read(), [{ person: 'noor@folded.example', name: 'Noor Folded' }])
+  await db.query(`SELECT cella.redact('noor@folded.example', 'profile')`)
+  const erased = await read()
+  assert.deepEqual(erased, [{ person: 'noor@folded.example', name: 'redacted' }])
+  assert.equal(thread.label(erased?.[0], 'noor@folded.example'), 'erased')
 })

@@ -3,7 +3,7 @@
 // tree declares at least once. People keep their profiles and devices and
 // are invited; the books take an import, invoices, bills, expenses, a
 // payroll and the capital paid in, drawn on, repaid and withdrawn; the
-// projects, their tasks and time, the files, documents and meetings go
+// projects, their tasks, a body and a thread, and time, the files, documents and meetings go
 // on; the assembly passes motions whose closes carry their effects, one
 // forgoing one; the 2025 and 2026 distributions are approved and the
 // year's periods closed; a member erases her data; and a year after his
@@ -36,7 +36,7 @@ import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-t
 import { rebill } from '@cella/org-graft-expense-project/api'
 import { add as milestone, archive, budget, complete as reach, create as createProject } from '@cella/org-project/api'
 import { share } from '@cella/org-graft-membership-project/api'
-import { complete, create as createTask, move, save as saveBody } from '@cella/org-task/api'
+import { complete, create as createTask, move, post as postComment, resolve, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
 import { assign } from '@cella/org-graft-membership-task/api'
 import { approve as approveTime, correct, log as logTime, submit as submitTime } from '@cella/org-timesheet/api'
@@ -173,7 +173,7 @@ test('24 October: people keep their profiles and devices, Nadia and Yara are inv
   }
 })
 
-test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, tasks and a body, time and files', async () => {
+test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, tasks, a body and a thread, time and files', async () => {
   settled(await updateContact({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe)))
   settled(await archiveContact({ id: 'velo' }, as(camille)))
   settled(await eraseContact({ id: 'halles-roux' }, as(camille)))
@@ -192,6 +192,9 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   notes.commit()
   settled(await saveBody({ task, snapshot: notes.export({ mode: 'snapshot' }), contributors: [sofia] }, as(sofia)))
   settled(await complete({ task }, as(sofia)))
+  const { comment: root } = settled(await postComment({ task, parent: null, text: `@[${hugo}] the vine is redrawn: does it print?` }, as(sofia))) as { comment: number }
+  settled(await postComment({ task, parent: root, text: 'It prints well.' }, as(hugo)))
+  settled(await resolve({ comment: root, resolved: true }, as(sofia)))
   const { entry } = settled(await logTime({ member: thomas, day: '2026-10-23', minutes: 90, billable: true, note: 'Proofs for the Halles shop' }, as(thomas))) as { entry: string }
   settled(await correct({ entry, minutes: 60 }, as(thomas)))
   settled(await book({ member: sofia, day: '2026-10-23', minutes: 120, billable: true, project }, as(sofia)))

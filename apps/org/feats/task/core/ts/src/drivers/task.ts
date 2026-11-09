@@ -1,6 +1,7 @@
 import type { Db, Read } from '@cella/org-db'
 import { b64, type Canon } from '@cella/org-body/models'
 import type { Page, Task } from '../models/task.ts'
+import { comments, discusses, readers } from './comment.ts'
 
 const columns = `id, title, status, priority, to_char(due, 'YYYY-MM-DD') AS due,
   to_char(created, 'YYYY-MM-DD') AS created, to_char(completed, 'YYYY-MM-DD') AS completed`
@@ -21,7 +22,7 @@ export async function task(db: Db, id: string): Promise<Task | null> {
   return rows[0] ?? null
 }
 
-// A task as its page reads it, with its body.
+// A task as its page reads it, with its body and its threads.
 export async function page(db: Db, id: string): Promise<Page | null> {
   const { rows } = await db.query<Task & { body: Uint8Array | null; canon: string | null }>(
     `SELECT ${columns}, body, cella.document_canonical(body) AS canon FROM task.task WHERE id = $1`,
@@ -32,7 +33,14 @@ export async function page(db: Db, id: string): Promise<Page | null> {
     return null
   }
   const { body, canon, ...rest } = t
-  return { ...rest, snapshot: body ? b64.encode(new Uint8Array(body)) : null, canon: canon ? (JSON.parse(canon) as Canon) : null }
+  return {
+    ...rest,
+    snapshot: body ? b64.encode(new Uint8Array(body)) : null,
+    canon: canon ? (JSON.parse(canon) as Canon) : null,
+    comments: await comments(db, id),
+    readers: await readers(db, id),
+    discuss: await discusses(db, id),
+  }
 }
 
 // What core body's session reads of a task: its circle, and its saved

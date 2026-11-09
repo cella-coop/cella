@@ -1,6 +1,6 @@
 +++
 title = "Person"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 Everyone the co-op knows, by the address they sign with, and their
@@ -319,7 +319,8 @@ core's, as the person it waits on is: this core keeps it, its `./api`
 and `./app` slices serve it to the shell, and it adds nothing of its own; each slice that knows a kind
 adds its rows (`rows`): an invitation to take up (`membership`), a stance
 to take on an open motion (`membership-motion`), a mention not
-yet answered (`membership-motion`), a meeting to say whether they will
+yet answered on a motion (`membership-motion`) or in a task's thread
+(`task`), a meeting to say whether they will
 come to (`meeting-membership`), time, expenses and pay runs to
 approve or pay (`membership-timesheet`, `expense-membership`,
 `membership-payslip`). An ask is a row of its kind, what it says,

@@ -9,4 +9,8 @@ export const actions = {
   'task:task:complete': confluent({ power: 'edit-task' }),
   // each save carries the whole merged snapshot, so the later receipt holds every edit before it
   'task:body:save': confluent({ power: 'discuss' }),
+  // a fact: comments are appended, each numbered by receipt
+  'task:comment:post': confluent({ power: 'discuss' }),
+  // resolving a root or reopening it is a register: the last writer wins
+  'task:comment:resolve': confluent({ power: 'discuss' }),
 } satisfies Actions

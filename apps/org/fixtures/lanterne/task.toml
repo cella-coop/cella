@@ -52,6 +52,22 @@ text = "Watch the first orders come in, and the provider's dashboard"
 type = "bullet"
 text = "Keep the sandbox keys for the staging shop"
 
+# Its thread, which the founding carries in with the task: each comment
+# by its author on its day, a reply naming the root it answers by its
+# place among the task's comments, and a mention in its text
+# `@[address]`.
+[[task.comment]]
+author = "yusuf@lanterne.example"
+posted = 2026-10-05
+text = "Before we switch tomorrow: has anyone checked the payout account is the Halles shop's?"
+
+[[task.comment]]
+author = "amina@lanterne.example"
+reply = 1
+posted = 2026-10-05
+text = "Checked it with Thomas this afternoon, @[yusuf@lanterne.example]: it is theirs. Can you confirm the refund test?"
+
+
 [[task]]
 id = "t-2"
 circle = "web"

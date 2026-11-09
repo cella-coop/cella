@@ -311,3 +311,12 @@ SELECT cella.lets_fold('invoice:invoice:issue', 1, 'invoice.fold_issue(jsonb)', 
   assert.match(e, /invoice:invoice:send has no fold: register how its entry applies to the state before it, by cella.lets_fold/)
   assert.deepEqual(unfolded(ops, [...found.folds, { op: 'invoice:invoice:send', version: 1, fn: 'invoice_member.fold_send(jsonb)', owner: 'invoice-member' }]), [])
 })
+
+test('no migration drops the cella extension, the notary\'s neither: the notary changes by its upgrade', async () => {
+  for (const [owner, sql] of [['invoice', 'DROP EXTENSION cella CASCADE;'], ['invoice-member', 'DROP EXTENSION IF EXISTS cella;'], ['core/notary', 'DROP EXTENSION cella;\nCREATE EXTENSION cella;']]) {
+    const { errors } = await check({ [owner]: sql })
+    assert.match(errors.join('\n'), /drops the cella extension: the notary changes by its upgrade, ALTER EXTENSION cella UPDATE, never by a drop/, owner)
+  }
+  const upgrade = await check({ 'core/notary': 'ALTER EXTENSION cella UPDATE;' })
+  assert.deepEqual(upgrade.errors, [])
+})

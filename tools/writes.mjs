@@ -1,10 +1,12 @@
 // Foreign writes: a feat's rows change only through its own code, and a
 // graft writes only its own schema, changing a feat by calling that feat's
-// published write from its handler. sql-check.mjs collects what a slice's
-// SQL still writes or triggers on a table it does not own, net of what a
-// later migration drops or replaces; `scanTs` does the same for the SQL a
-// slice's TypeScript sends. `refuse` refuses every one of both: there
-// are no exceptions.
+// published write from its handler; a core library is held to the same,
+// and only the notary writes the log. sql-check.mjs collects what a
+// slice's or a core library's SQL still writes or triggers on a table it
+// does not own, net of what a later migration drops or replaces; `scanTs`
+// does the same for the SQL their TypeScript sends, and finds a call of
+// the notary's write functions outside `write`. `refuse` refuses every
+// one: there are no exceptions.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
@@ -185,17 +187,23 @@ const sources = (dir) => {
   return out
 }
 
-// Each foreign write or trigger in the TypeScript of a slice's package:
-// `own` is its schema, and only `cella.*` beside it, which the notary
-// guards, is not foreign.
-export async function scanTs(repo, dir, owner, own) {
+// Each foreign write or trigger in the TypeScript of a slice's or a core
+// library's package, and each call of the notary's write functions: `own`
+// is its schema. Only the notary writes `cella.*` (`notary`), and only
+// `@cella/org-db`, whose `write` is the one path a handler writes by,
+// calls `cella.begin`, `cella.submit` or `cella.follow` (`writer`).
+export async function scanTs(repo, dir, owner, own, { notary = false, writer = false } = {}) {
   await pg.loadModule?.()
   const out = []
   for (const file of sources(join(repo, dir, 'src'))) {
+    const at = relative(repo, file)
+    const where = relative(join(repo, dir), file)
     for (const sql of literals(readFileSync(file, 'utf8'), file)) {
       let found
+      let tree = null
       try {
-        found = targets(pg.parseSync(sql))
+        tree = pg.parseSync(sql)
+        found = targets(tree)
       } catch {
         // Do not pass a literal merely because its SET, VALUES or column
         // list could not be represented as a parameter by the parser.
@@ -203,17 +211,62 @@ export async function scanTs(repo, dir, owner, own) {
       }
       for (const { relation, verb } of found) {
         const schema = relation?.schemaname
-        if (schema && schema !== own && schema !== 'cella') {
-          const at = relative(repo, file)
-          out.push({ owner, what: `${relative(join(repo, dir), file)} ${verb} ${schema}.${relation.relname}`, path: at })
+        if (schema === 'cella' && !notary) {
+          out.push({ owner, what: `${where} ${verb} cella.${relation.relname}`, path: at, rule: 'log' })
+        } else if (schema && schema !== own && schema !== 'cella') {
+          out.push({ owner, what: `${where} ${verb} ${schema}.${relation.relname}`, path: at })
         }
+      }
+      for (const fn of writer ? [] : calls(tree, sql)) {
+        out.push({ owner, what: `${where} calls cella.${fn}`, path: at, rule: 'write' })
       }
     }
   }
   return out
 }
 
+// The notary's write functions: a write opens with `cella.begin`, settles
+// with `cella.submit`, and an effect follows its cause by `cella.follow`.
+const settling = new Set(['begin', 'submit', 'follow'])
+
+// The notary's write functions a literal calls, from its parse tree, or
+// its tokens where it does not parse whole.
+function calls(tree, sql) {
+  const out = new Set()
+  if (tree) {
+    const walk = (node) => {
+      if (!node || typeof node !== 'object') return
+      if (Array.isArray(node)) return node.forEach(walk)
+      for (const [kind, body] of Object.entries(node)) {
+        if (kind === 'FuncCall') {
+          const [schema, name] = (body.funcname ?? []).map((n) => n.String?.sval)
+          if (schema === 'cella' && settling.has(name)) out.add(name)
+        }
+        walk(body)
+      }
+    }
+    walk(tree)
+    return [...out]
+  }
+  let tokens
+  try {
+    tokens = pg.scanSync(sql.replace(/\$\$\d+/g, ' $1 ')).tokens
+  } catch {
+    return []
+  }
+  const word = (i) => tokens[i]?.text?.toLowerCase()
+  for (let i = 0; i + 3 < tokens.length; i++) {
+    if (word(i) === 'cella' && word(i + 1) === '.' && settling.has(word(i + 2)) && word(i + 3) === '(') out.add(word(i + 2))
+  }
+  return [...out]
+}
+
 // Every foreign write found, refused.
 export function refuse(found) {
-  return found.map((f) => `${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
+  return found.map((f) =>
+    f.rule === 'log'
+      ? `${f.path}: ${f.owner} ${f.what}, the notary's: only the notary writes cella.*, and a slice or a core library registers there from its migrations alone`
+      : f.rule === 'write'
+        ? `${f.path}: ${f.owner} ${f.what}, which only write in @cella/org-db calls: a handler writes through write`
+        : `${f.path}: ${f.owner} ${f.what}, a table it does not own: a slice writes only its own schema, and changes a feat only by calling that feat's published write`)
 }

@@ -22,8 +22,10 @@
 //
 // A core library's SQL keeps the own-schema, clock and wording rules below
 // as a slice's does, acting as in its own in the schemas of the core
-// libraries its package depends on (`sideways`); the notary's SQL alone is
-// exempt (`privileged`).
+// libraries its package depends on (`sideways`), and writes and triggers
+// on no table outside its own schema, as a slice's, nor in cella.* but to
+// register; the notary's SQL alone is exempt (`privileged`). No SQL drops
+// the cella extension, the notary's own neither: it changes by its upgrade.
 //
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
@@ -1058,6 +1060,11 @@ function statement(type, b, o, s, fail, owned, named, found) {
       break
     }
     case 'DropStmt':
+      // The notary changes by its extension's upgrade, never by a drop,
+      // which takes the log, its receipts and the vault with it.
+      if (b.removeType === 'OBJECT_EXTENSION' && (b.objects ?? []).some((obj) => obj.String?.sval === 'cella')) {
+        fail('drops the cella extension: the notary changes by its upgrade, ALTER EXTENSION cella UPDATE, never by a drop')
+      }
       for (const obj of b.objects ?? []) {
         const parts = strings(obj.List?.items ?? obj.ObjectWithArgs?.objname ?? (obj.String ? [obj] : []))
         // Its own trigger on another's table, which it drops to stop
@@ -1109,9 +1116,15 @@ function statement(type, b, o, s, fail, owned, named, found) {
     // falls through
     case 'UpdateStmt':
     case 'DeleteStmt':
-      if (b.relation.schemaname === 'cella' && o.kind === 'core' && type === 'InsertStmt' && o.lib) {
-        collects(b, o.lib, found)
-      } else if (b.relation.schemaname === 'cella' && o.kind !== 'core') {
+      if (b.relation.schemaname === 'cella' && privileged(o)) {
+        // The notary makes cella.* and writes the log.
+      } else if (b.relation.schemaname === 'cella' && o.kind === 'core') {
+        if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
+          fail(`writes ${named(b.relation)}: a core library writes cella.* only to register its guards, its powers, its personal columns or who reads; only the notary writes the log`)
+        } else {
+          collects(b, o.lib, found)
+        }
+      } else if (b.relation.schemaname === 'cella') {
         if (type !== 'InsertStmt' || !registries.has(b.relation.relname)) {
           fail(`writes ${named(b.relation)}: a ${o.kind} writes cella.* only to register its guards, its powers, its personal columns, the keyring or who reads`)
         } else if (b.relation.relname === 'keyring' && o.kind !== 'feat') {
@@ -1661,7 +1674,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
       for (const body of bodies) {
         inspect(body, o, s, known, fail, found)
       }
-      if (o.kind !== 'core') {
+      if (!privileged(o)) {
         foreignIn(lib, tree, bytes, file, path, o, s, foreign)
       }
     }
@@ -1671,7 +1684,7 @@ export async function checkSql(repo, apps, known, found = { powers: [], guards: 
 }
 
 // A table outside the owner's schema and the notary's: a feat's, a
-// lower-order graft's, a parent feat's.
+// lower-order graft's, a parent feat's, another core library's.
 const foreignTable = (rv, s) => rv?.schemaname && rv.schemaname !== s.own && rv.schemaname !== 'cella'
 
 // The tables a statement tree writes, its data-modifying CTEs among them.
@@ -1694,7 +1707,7 @@ function written(tree) {
 // trigger or the function, or replacing the function, takes its entries
 // away.
 function foreignIn(lib, tree, bytes, file, path, o, s, foreign) {
-  const add = (what) => foreign.set(what, { owner: o.name, what, path })
+  const add = (what) => foreign.set(what, { owner: o.name ?? o.lib, what, path })
   const drop = (prefix) => [...foreign.keys()].filter((k) => k.startsWith(prefix)).forEach((k) => foreign.delete(k))
   const fnKey = (parts) => `${parts.join('.')}()`
   for (const { stmt, stmt_location: at = 0, stmt_len: len = 0 } of tree.stmts ?? []) {

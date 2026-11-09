@@ -1,6 +1,6 @@
 +++
 title = "meeting-motion"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 Motions on an agenda: an item that tables a motion, and where the
@@ -59,7 +59,9 @@ The embed's card is the motion feat's `Card`, the one
 Coordination tabled the rate card, m-2026-011, on 12 and 19 October,
 and Inès's admission, m-2026-012, on 19 October, once it was proposed;
 the assembly of 31 October tables both. The assembly of 20 June tabled m-2026-006 and
-m-2026-007.
+m-2026-007. Operations tabled Brand's print buyer's mandate, m-2026-010,
+on 5 October, and Web its accessibility floor, m-2026-017, on 20
+October: nine tablings in all.
 
 Slice tests: the trigger's two sides.
 

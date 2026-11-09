@@ -422,7 +422,7 @@ and names its end where it has one, and that each candidacy's probation
 falls within its worker's employment and ended before their admission.
 
 Time is written as runs: one entry a working day from one day to another
-(`timesheet.toml`), which the seed expands into the 838 entries of
+(`timesheet.toml`), which the seed expands into the 848 entries of
 September and October; which project a run is for is
 `graft.project-timesheet.toml`'s.
 

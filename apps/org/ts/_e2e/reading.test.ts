@@ -236,7 +236,7 @@ test('a view the app reads reads as its reader: Inès, in Web and no member, and
   const claims = async (member: string) => (await reading(member, 'SELECT expense FROM expense_membership.claim ORDER BY expense')).map((r) => r.expense)
   assert.deepEqual(await claims(ines), ['ex-0002', 'ex-0004'], 'Inès reads the claims on Web\'s and the assembly\'s expenses, and not Brand\'s or Marketing\'s')
   assert.deepEqual(await claims(paul), [], 'Paul reads none')
-  assert.deepEqual(await claims(chloe), ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004'], 'Chloé, a member, reads every one by open books')
+  assert.deepEqual(await claims(chloe), ['ex-0001', 'ex-0002', 'ex-0003', 'ex-0004', 'ex-0005', 'ex-0006', 'ex-0007'], 'Chloé, a member, reads every one by open books')
 
   // A document's adoption: Coordination's rate card, adopted by its motion.
   const adoption = `SELECT motion, version, hash FROM document_motion.adoption WHERE motion = 'm-2026-011'`

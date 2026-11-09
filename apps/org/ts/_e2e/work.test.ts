@@ -44,7 +44,7 @@ test('the seed holds Lanterne\'s work: its projects, tasks and two months of tim
             (SELECT count(*) FROM timesheet.entry) AS entries,
             (SELECT count(*) FROM timesheet.period WHERE month = '2026-09' AND approved IS NOT NULL) AS approved`,
   )
-  assert.deepEqual(counts, { projects: '8', tasks: '33', entries: '838', approved: '11' })
+  assert.deepEqual(counts, { projects: '11', tasks: '37', entries: '848', approved: '11' })
   const days = await one<{ off: string }>(
     `SELECT count(*) AS off FROM (SELECT member, day FROM timesheet.entry GROUP BY member, day HAVING sum(minutes) <> 420) d`,
   )
@@ -70,11 +70,11 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.equal(status, 200, path)
     assert.ok(text.includes(says), `${path} says ${says}`)
   }
-  // An invoice is the whole co-op's and reads for every seat; the project
-  // it charges is its circle's, so Inès, in Web and no member, reads no
-  // Brand title on it, while Thomas, a member, reads it by open books.
+  // An invoice is the circle's whose project it bills: F-2026-0052 is
+  // Brand's, so Inès, in Web and no member, reads none of it and finds no
+  // page, while Thomas, a member, reads it by open books.
   const brands = await shell.page('/invoices/F-2026-0052', ines)
-  assert.equal(brands.status, 200)
+  assert.equal(brands.status, 404, 'a Brand invoice is none to Inès')
   assert.ok(!brands.text.includes('Maison Ferrand, packaging'), 'a Brand project\'s title is none to Inès')
   assert.ok((await shell.page('/invoices/F-2026-0052', thomas)).text.includes('Maison Ferrand, packaging'), 'Thomas reads it by open books')
   assert.ok((await shell.page('/invoices/F-2026-0052', hugo)).text.includes('Maison Ferrand, packaging'), 'and Brand\'s lead reads it')

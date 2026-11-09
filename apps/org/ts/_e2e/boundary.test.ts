@@ -2,7 +2,8 @@
 // built shell: a collection's page and an item's read through their
 // queries, the server rendering their content with its queries awaited
 // and what is missing as a 404 drawn inside the shell. Then, in every
-// browser, Camille opens a motion from the motions, then the documents,
+// browser, Camille opens a motion from the motions, then the documents
+// and a project's tasks, read through a query written in SQL,
 // their queries held: each page draws its skeleton, then its content
 // once the query answers, and reading again keeps it, busy; and an item
 // that is not there draws its failed snippet in the shell, which stays,
@@ -119,6 +120,9 @@ test('in every browser, a page opened draws its skeleton while its query is held
       // since one the browser holds answers at once.
       await open('/motions/m-2026-012', 'passes by consent')
       await open('/documents', 'Rate card 2027')
+      // A project's tasks, which its graft reads through a query written
+      // in SQL, render on its page as any item's data.
+      await open('/projects/halles-shop?tab=tasks', 'Fix VAT display on mixed baskets')
       // A settings page reads through its own query, as a collection does.
       await open('/settings/account', 'Profile')
       await follow('/settings/nowhere')

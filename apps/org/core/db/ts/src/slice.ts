@@ -1,6 +1,7 @@
 import type { Pending, Permission, Refused, Settled } from '@cella/org-actions'
 import type { Db, Deps } from './index.ts'
 import type { Read } from './read.ts'
+import type { Query } from './query.ts'
 
 // What one write did, as the shell shows it: the op, its outcome, and its
 // effects, the writes that reacted to it in its transaction, such as the
@@ -254,4 +255,7 @@ export interface Slice {
   imports?: Record<string, Importer>
   settings?: Record<string, SettingsPage>
   joins?: Joining
+  // Its queries written in SQL, by name, each a view of its own schema,
+  // which the shell serves as any query.
+  queries?: Record<string, Query>
 }

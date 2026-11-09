@@ -84,7 +84,9 @@
 //     it is declared 'audience: shared by <columns>: why' or 'audience:
 //     shared: why' and keeps it: it sums by exactly the columns it names
 //     and none that says whose a row is, or filters its rows by its
-//     reader's test; every other view is security_invoker (`unshared`).
+//     reader's test; every other view is security_invoker (`unshared`),
+//     and so is every query, a view commented 'query: <what it reads>',
+//     whatever else it says (architecture.md, "Queries in SQL").
 //     A node's core keeps the same rule on the views its migrations make,
 //     since the app role reads them as it reads a slice's.
 //   What a declared share shows, a view's or a function's, is read through
@@ -792,7 +794,11 @@ export function unshared(found) {
     if (v.invoker) {
       continue
     }
-    const aud = /^audience: shared(?: by [^:]+)?: \S/.test(v.comment ?? '') ? audience(v.comment) : null
+    if (/^query: /.test(v.comment ?? '')) {
+      out.push(`${v.path}: ${v.name} is a query and reads as its owner, past every row-level policy: a query reads as its reader, WITH (security_invoker = true) (architecture.md, "Queries in SQL")`)
+      continue
+    }
+    const aud =/^audience: shared(?: by [^:]+)?: \S/.test(v.comment ?? '') ? audience(v.comment) : null
     if (!aud || aud.scoped) {
       out.push(`${v.path}: ${v.name} reads as its owner, past every row-level policy: make it WITH (security_invoker = true), or comment it 'audience: shared by <columns>: why' where it sums the whole (architecture.md, "SQL")`)
       continue

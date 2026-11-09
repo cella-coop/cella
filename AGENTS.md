@@ -217,9 +217,13 @@ contract; only shells import its app.**
   which `writes` refuses in its TypeScript. See
   [the shell](_corpus/doc/architecture.md#the-shell).
 - *accepted*: a slice's api is its calls, each a query or a command,
-  framework-free and validated by a Standard Schema; a query may be
-  written in SQL, as a view. Built for every read the web shell makes,
-  which `ui-check` holds by refusing a route's `load`.
+  framework-free and validated by a Standard Schema. Built for every
+  read the web shell makes, which `ui-check` holds by refusing a route's
+  `load`.
+- *enforced* (`sql-check`, the shell's registry): a query may be written
+  in SQL, as a view in its slice's own schema that reads as its reader,
+  which the slice declares as a call and the web shell serves as any
+  query ([queries in SQL](_corpus/doc/architecture.md#queries-in-sql)).
 - *proposed*: a slice declares sockets in its bindings, which a graft
   or another module fills with a plug from its own app; a slice's
   folders are its layers, its SQL following them.

@@ -46,6 +46,22 @@ SELECT f.project, count(*)::integer AS tasks, (count(*) FILTER (WHERE t.status =
 FROM project_task.filing f JOIN task.task t ON t.id = f.task
 GROUP BY f.project;
 
+-- A query (architecture.md, "Queries in SQL"): each filed task with its
+-- project, its milestone's title and `n`, its place in its project's
+-- list, open ones first, then by priority, due day and id. It reads as
+-- its reader, so a reader reads only the tasks whose circle they read.
+CREATE VIEW project_task.tasks WITH (security_invoker = true) AS
+SELECT f.project, t.id, t.title, t.status, t.priority, to_char(t.due, 'YYYY-MM-DD') AS due, m.title AS phase,
+  (row_number() OVER (
+    PARTITION BY f.project
+    ORDER BY t.status = 'done', array_position(ARRAY['urgent', 'high', 'normal', 'low'], t.priority), t.due NULLS LAST, t.id
+  ))::integer AS n
+FROM project_task.filing f JOIN task.task t ON t.id = f.task
+LEFT JOIN project.milestone m ON m.project = f.project AND m.n = f.milestone;
+
+COMMENT ON VIEW project_task.tasks IS 'query: a project''s tasks, open ones first';
+
 GRANT USAGE ON SCHEMA project_task TO cella_app, cella_guards;
 GRANT SELECT ON project_task.filing, project_task.count TO cella_app, cella_guards;
+GRANT SELECT ON project_task.tasks TO cella_app;
 GRANT INSERT, UPDATE ON project_task.filing TO cella_app;

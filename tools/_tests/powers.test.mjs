@@ -10,7 +10,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { agree, covered, granted, mandates, unfolded } from '../powers.mjs'
-import { checkSql, undeclared, unowned } from '../sql-check.mjs'
+import { checkSql, placed, undeclared, unowned } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
 const op = (o, power = null, amount = null, check = null) => ({ op: o, power, amount, check, file })
@@ -332,4 +332,83 @@ test('no migration drops the cella extension, the notary\'s neither: the notary 
   }
   const upgrade = await check({ 'core/notary': 'ALTER EXTENSION cella UPDATE;' })
   assert.deepEqual(upgrade.errors, [])
+})
+
+test('a slice\'s SQL reads no clock and no randomness, in a guard or a migration: it reads cella.verdict_date()', async () => {
+  const guard = (body) => `CREATE FUNCTION invoice.due(payload jsonb) RETURNS boolean LANGUAGE sql STABLE RETURN ${body};`
+  for (const [body, refused] of [['now() > now()', /calls now\(\): guards read cella.verdict_date\(\), never the clock or randomness/], ['current_date > current_date', /reads current_date: guards read cella.verdict_date\(\), never the clock/], ['random() > 0.5', /calls random\(\): guards read cella.verdict_date\(\), never the clock or randomness/]]) {
+    for (const owner of ['invoice', 'invoice-member']) {
+      const { errors } = await check({ [owner]: guard(body).replaceAll('invoice.', owner === 'invoice' ? 'invoice.' : 'invoice_member.') })
+      assert.match(errors.join('\n'), refused, `${owner}: ${body}`)
+    }
+  }
+  const plpgsql = await check({ invoice: `CREATE FUNCTION invoice.stamp() RETURNS date LANGUAGE plpgsql AS $$ BEGIN RETURN pg_catalog.now()::date; END $$;` })
+  assert.match(plpgsql.errors.join('\n'), /calls pg_catalog.now\(\)/, 'a PL/pgSQL body is read statement by statement')
+  const verdict = await check({ invoice: guard('cella.verdict_date() > \'2026-01-01\'::date') })
+  assert.deepEqual(verdict.errors, [])
+})
+
+test('a slice\'s SQL holds no DO block and sets no search_path: the check cannot see into either', async () => {
+  for (const owner of ['invoice', 'invoice-member']) {
+    const block = await check({ [owner]: `DO $$ BEGIN INSERT INTO invoice.invoice VALUES (1); END $$;` })
+    assert.match(block.errors.join('\n'), /holds a DO block, which the SQL check cannot see into; write a function/, owner)
+  }
+  const path = await check({ invoice: 'SET search_path = invoice, public;' })
+  assert.match(path.errors.join('\n'), /sets search_path: every name is qualified instead/)
+})
+
+test('a slice\'s function is LANGUAGE sql or plpgsql, and nothing else', async () => {
+  const python = await check({ invoice: `CREATE FUNCTION invoice.total(n integer) RETURNS integer LANGUAGE plpython3u AS $$ return n $$;` })
+  assert.match(python.errors.join('\n'), /invoice.total is LANGUAGE plpython3u; a feat's SQL is sql or plpgsql/)
+  const c = await check({ 'invoice-member': `CREATE FUNCTION invoice_member.link(text) RETURNS text LANGUAGE c AS 'link', 'link';` })
+  assert.match(c.errors.join('\n'), /invoice_member.link is LANGUAGE c/)
+})
+
+test('a slice\'s SQL file that does not parse is refused, and read no further', async () => {
+  const { errors } = await check({ invoice: 'CREATE TABEL invoice.invoice (id text);' })
+  assert.equal(errors.length, 1)
+  assert.match(errors[0], /apps\/org\/feats\/invoice\/core\/sql\/001.sql: does not parse: syntax error at or near "TABEL"/)
+})
+
+test('SQL sits directly in a core\'s, a feat\'s core\'s or a graft\'s sql/ directory, and nowhere else on the tree', async () => {
+  const repo = mkdtempSync(join(tmpdir(), 'cella-placed-'))
+  const put = (path, text = 'SELECT 1;') => {
+    mkdirSync(join(repo, path, '..'), { recursive: true })
+    writeFileSync(join(repo, path), text)
+  }
+  try {
+    put('apps/org/feat.toml', 'name = "org"\n')
+    put('apps/org/feats/invoice/feat.toml', 'name = "invoice"\n')
+    put('apps/org/feats/invoice/core/sql/001.sql')
+    put('apps/org/grafts/invoice-member/sql/001.sql')
+    put('apps/org/core/notary/cella.control', '')
+    put('apps/org/core/notary/sql/cella--1.0.sql')
+    put('apps/org/feats/invoice/node_modules/pkg/seed.sql')
+    assert.deepEqual(placed(repo, ['apps/org']), [])
+
+    put('apps/org/feats/invoice/core/ts/src/models/schema.sql')
+    put('apps/org/feats/invoice/core/sql/old/001.sql')
+    put('apps/org/feats/invoice/sql/001.sql')
+    assert.deepEqual(placed(repo, ['apps/org']).sort(), [
+      'apps/org/feats/invoice/core/sql/old/001.sql: SQL sits in a sql/ directory, where the SQL check reads it',
+      'apps/org/feats/invoice/core/ts/src/models/schema.sql: SQL sits in a sql/ directory, where the SQL check reads it',
+      'apps/org/feats/invoice/sql: SQL sits in a node\'s core/sql/, a feat\'s core/sql/ or a graft\'s sql/',
+    ])
+  } finally {
+    rmSync(repo, { recursive: true, force: true })
+  }
+})
+
+test('a slice reads neither a peer feat\'s schema nor a graft\'s of equal or higher order', async () => {
+  const reads = (schema, what) => `CREATE FUNCTION ${schema}.seen() RETURNS boolean LANGUAGE sql STABLE RETURN EXISTS (SELECT FROM ${what});`
+  const peer = await check({ invoice: reads('invoice', 'member.member') })
+  assert.match(peer.errors.join('\n'), /reads member.member: member is outside/)
+  const lower = await check({ 'invoice-member': 'SELECT 1;', 'circle-invoice-member': reads('circle_invoice_member', 'invoice_member.link') })
+  assert.deepEqual(lower.errors, [], 'a graft reads the lower-order grafts it builds on')
+  const higher = await check({ 'invoice-member': reads('invoice_member', 'circle_invoice_member.roll'), 'circle-invoice-member': 'SELECT 1;' })
+  assert.match(higher.errors.join('\n'), /reads circle_invoice_member.roll: circle_invoice_member is outside/)
+  const beside = await check({ 'invoice-member': reads('invoice_member', 'circle_member.seat'), 'circle-member': 'SELECT 1;' })
+  assert.match(beside.errors.join('\n'), /reads circle_member.seat: circle_member is outside/)
+  const byFeat = await check({ invoice: reads('invoice', 'invoice_member.link'), 'invoice-member': 'SELECT 1;' })
+  assert.match(byFeat.errors.join('\n'), /reads invoice_member.link: invoice_member is outside/, 'a feat reads no graft that joins it')
 })

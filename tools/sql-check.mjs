@@ -122,7 +122,7 @@
 // atomic or quoted, are parsed whole.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { basename, dirname, join } from 'node:path'
 
 const catalog = new Set(['pg_catalog', 'pg_temp', 'information_schema'])
 const clock = new Set([
@@ -1825,7 +1825,8 @@ function foreignIn(lib, tree, bytes, file, path, o, s, foreign) {
 // Every sql/ directory sits beside a core package or in a graft, but an
 // extension's: beside its control file, its install and upgrade scripts,
 // `<extension>--<version>.sql` and `<extension>--<from>--<to>.sql`, which
-// Postgres runs and no migration does.
+// Postgres runs and no migration does. A .sql file sits directly in a
+// sql/ directory: anywhere else no check reads it, and it is refused.
 const extension = (repo, dir) =>
   readdirSync(join(repo, dirname(dir))).some((f) => f.endsWith('.control')) &&
   readdirSync(join(repo, dir)).every((f) => /^[a-z_]+--[0-9a-z.-]+\.sql$/.test(f))
@@ -1835,10 +1836,13 @@ export function placed(repo, apps) {
   const errors = []
   const visit = (dir) => {
     for (const name of readdirSync(join(repo, dir), { withFileTypes: true })) {
+      const path = join(dir, name.name)
+      if (name.isFile() && name.name.endsWith('.sql') && basename(dir) !== 'sql') {
+        errors.push(`${path}: SQL sits in a sql/ directory, where the SQL check reads it`)
+      }
       if (!name.isDirectory() || ['node_modules', 'target'].includes(name.name)) {
         continue
       }
-      const path = join(dir, name.name)
       if (name.name === 'sql' && !dirs.has(path) && !extension(repo, path)) {
         errors.push(`${path}: SQL sits in a node's core/sql/, a feat's core/sql/ or a graft's sql/`)
       }

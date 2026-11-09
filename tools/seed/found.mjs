@@ -342,22 +342,23 @@ export async function seed(db, read, { from, dir }) {
     for (const i of invoices) {
       const number = Number(i.id.slice(invoicing.series.length + 1))
       await db.query(
-        `INSERT INTO invoice.invoice (id, series, number, issued, due, bill_to, bill_address, label, net, vat, total, voided, reason)
-         VALUES ($1, $2, $3, $4, $5, $6, $13, $7, cella.amount($8), cella.amount($9), cella.amount($10), $11, $12)`,
-        [i.id, invoicing.series, number, day(i.issued), day(i.due), i.bill_to, i.label, i.net, i.vat || null, i.total, day(i.voided), i.reason ?? null, i.bill_address ?? null],
+        `INSERT INTO invoice.invoice (id, series, number, issued, due, bill_to, bill_address, label, net, vat, total, voided, reason, circle)
+         VALUES ($1, $2, $3, $4, $5, $6, $13, $7, cella.amount($8), cella.amount($9), cella.amount($10), $11, $12, coalesce($14, circle.assembly()))`,
+        [i.id, invoicing.series, number, day(i.issued), day(i.due), i.bill_to, i.label, i.net, i.vat || null, i.total, day(i.voided), i.reason ?? null, i.bill_address ?? null, i.circle ?? null],
       )
-      // The fixture keeps totals; each invoice carries them as one line.
+      // The fixture keeps totals; each invoice carries them as one line,
+      // its lines and payments the circle the invoice names.
       await db.query(
-        `INSERT INTO invoice.line (invoice, n, description, quantity, unit_price, amount, vat_rate)
-         VALUES ($1, 1, $2, 1, cella.amount($3), cella.amount($3), $4)`,
-        [i.id, i.label, i.net, (i.vat * 100) / i.net],
+        `INSERT INTO invoice.line (invoice, n, description, quantity, unit_price, amount, vat_rate, circle)
+         VALUES ($1, 1, $2, 1, cella.amount($3), cella.amount($3), $4, coalesce($5, circle.assembly()))`,
+        [i.id, i.label, i.net, (i.vat * 100) / i.net, i.circle ?? null],
       )
       const ids = []
       for (const [n, p] of (i.payment ?? []).entries()) {
         const { rows } = await db.query(
-          `INSERT INTO invoice.payment (invoice, receipt, at, amount, method, reference)
-           VALUES ($1, ${receipt}, $2, cella.amount($3), $4, $5) RETURNING id`,
-          [i.id, day(p.at), p.amount, p.method ?? 'transfer', p.reference ?? `${i.id}/${n + 1}`],
+          `INSERT INTO invoice.payment (invoice, receipt, at, amount, method, reference, circle)
+           VALUES ($1, ${receipt}, $2, cella.amount($3), $4, $5, coalesce($6, circle.assembly())) RETURNING id`,
+          [i.id, day(p.at), p.amount, p.method ?? 'transfer', p.reference ?? `${i.id}/${n + 1}`, i.circle ?? null],
         )
         ids.push(rows[0].id)
       }

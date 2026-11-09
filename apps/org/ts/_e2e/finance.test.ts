@@ -97,7 +97,7 @@ test('beyond Hugo\'s 1 000 € a month, an approval is refused; beyond the manag
   const plotter = await capture({ member: sofia, day: '2026-10-24', label: 'Plotter repair', category: '606', net: 800_00, vat: 160_00, receipt: null }, as(sofia))
   assert.equal(plotter.state, 'settled')
   const id = plotter.state === 'settled' ? plotter.value.expense : ''
-  assert.equal(id, 'ex-0005')
+  assert.equal(id, 'ex-0008')
   assert.equal((await claim({ expense: id }, as(sofia))).state, 'settled')
   const over = await approveExpense({ expense: id }, as(hugo))
   assert.equal(over.state, 'refused')

@@ -76,7 +76,7 @@ test('the seed carries the books over: the trial balance is the fixture\'s', asy
   for (const [code, cents] of want) {
     assert.equal(have.get(code), cents, `account ${code}`)
   }
-  assert.equal(have.get('512'), 39_296_00, 'the bank holds 39 296 €')
+  assert.equal(have.get('512'), 39_190_40, 'the bank holds 39 190,40 €')
   assert.equal(have.get('411'), 57_180_00, 'clients owe 57 180 €')
 })
 
@@ -94,10 +94,10 @@ test('issuing F-2026-0056 takes the next number and posts a balanced entry', asy
   assert.deepEqual(issued, {
     state: 'settled',
     entry: 2,
-    value: { invoice: 'F-2026-0056', issued: '2026-10-24', net: 1480_00, vat: 296_00, total: 1776_00, entry: 'je-0041' },
+    value: { invoice: 'F-2026-0056', issued: '2026-10-24', net: 1480_00, vat: 296_00, total: 1776_00, entry: 'je-0044' },
   })
   assert.equal(Number((await one<{ next: number }>(`SELECT next FROM invoice.series WHERE name = 'F-2026'`)).next), 57)
-  assert.deepEqual(await lines('je-0041'), [
+  assert.deepEqual(await lines('je-0044'), [
     { account: '411', side: 'debit', cents: 1776_00 },
     { account: '706', side: 'credit', cents: 1480_00 },
     { account: '44571', side: 'credit', cents: 296_00 },

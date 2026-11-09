@@ -196,7 +196,7 @@ pub enum Command {
 pub enum Part {
     /// The feat tree's dependencies, imports, actions and SQL boundaries
     Feats,
-    /// The mock co-ops balance and their links resolve
+    /// The mock co-ops balance, their links resolve, and they show every feature and every circle a slice of its own
     Fixtures,
     /// The TypeScript type check of the server layers and tools
     Types,

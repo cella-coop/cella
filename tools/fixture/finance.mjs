@@ -19,7 +19,7 @@ const iso = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null)
 // written), from the year it applies in and adopted the day the motion
 // closed.
 const number = (literal) => Number(literal.replace(/[\s  ]/g, '').replace(/[€%]$/, '').replace(',', '.'))
-function rules(read, feat) {
+export function rules(read, feat) {
   const out = []
   for (const d of (read('motion').motion ?? []).filter((d) => d.closed)) {
     for (const [i, m] of (d.action ?? []).entries()) {

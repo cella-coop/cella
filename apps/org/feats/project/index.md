@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -110,7 +110,8 @@ line a `project:project:create` as the importing member
 
 ## Lanterne
 
-Eight projects, one for each piece of work its clients commissioned:
+Eleven projects: eight, one for each piece of work its clients
+commissioned, and three of the circles' own, for no client:
 
 | Project | Circle | Budget | Milestones |
 |---|---|---|---|
@@ -122,6 +123,9 @@ Eight projects, one for each piece of work its clients commissioned:
 | Maison Ferrand, packaging | brand | 14 000 € | range concept and print-ready files done; print supervision open |
 | Fondation Terres Vives, annual report and microsite | brand | 18 000 € | report design done; microsite open |
 | Atelier Ondine, online shop | web | 9 500 € | delivered; archived on 1 September |
+| The statutes, revised for 2027 | ag | none | draft amendments done; members' comments and the extraordinary assembly open |
+| Pipeline and staffing for 2027 | coordination | none | client review done; rate card and staffing plan open |
+| The books move into cella | operations | none | chart and opening balances, pay runs and expenses done; October's close open |
 
 ## Analytics
 

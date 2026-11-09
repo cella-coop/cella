@@ -104,7 +104,7 @@ test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'
   const created = await shell.act('/tasks', 'create', { title: 'Audit the checkout for RGAA', priority: 'high', due: '2026-10-30' }, thomas)
   assert.equal(created.state, 'settled', created.reason)
   task = (await one<{ id: string }>(`SELECT id FROM task.task WHERE title = 'Audit the checkout for RGAA'`)).id
-  assert.equal(task, 't-34', 'numbered on from the seed')
+  assert.equal(task, 't-38', 'numbered on from the seed')
   const assigned = await shell.act(`/tasks/${task}`, 'assign', { member: thomas }, yusuf)
   assert.equal(assigned.state, 'settled', assigned.reason)
   const filed = await shell.act(`/tasks/${task}`, 'file', { place: 'halles-shop#4' }, yusuf)

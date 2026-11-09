@@ -275,7 +275,8 @@ not verified.
 
 ## Lanterne
 
-- Series F-2026 runs from 0041 to 0055; the next is 0056.
+- Series F-2026 runs from 0041 to 0055; the next is 0056. Each is the
+  circle's whose project it bills, Web's, Brand's or Marketing's.
 - Clients owe 57 180 €. Compagnie Mauve Horizon's posters (0044, 7 440 €)
   are three months overdue.
 - Vélo Solidaire has paid 1 980 € of 0051's 3 960 €: the invoice is

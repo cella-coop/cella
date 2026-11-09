@@ -1,5 +1,5 @@
 // seed, work: loads a mock co-op's projects with their milestones,
-// budgets and shares, its tasks, and its timesheets into the project,
+// budgets and shares, its tasks, each its circle's, and its timesheets into the project,
 // task and timesheet schemas and their grafts' (contact-project,
 // invoice-project, membership-project, membership-task, project-task,
 // membership-timesheet, project-timesheet), and the report feat's margin
@@ -54,8 +54,8 @@ export async function work(db, read, day) {
   const tasks = read('task').task ?? []
   for (const t of tasks) {
     await db.query(
-      'INSERT INTO task.task (id, title, status, priority, due, created, completed) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed)],
+      'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()))',
+      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null],
     )
   }
   // New tasks number on from the fixture's last.

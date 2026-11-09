@@ -153,9 +153,12 @@ write; its receipts and its postings are the tabs `expense-file` and
 
 ## Lanterne
 
-Four October expenses: Sofia's print proofs, 180 €, Chloé's workshop
-coffee and Léa's font licence, submitted; Thomas's train to Clairval, a
-draft.
+Seven October expenses, every circle's own: Sofia's print proofs, 180 €,
+Chloé's workshop coffee and Léa's font licence, submitted; Thomas's
+train to Clairval, a draft; Yusuf's train to the federation's regional
+day, coordination's, approved by Camille and reimbursed; Julien's label
+printer, Operations', approved and owed him; and Chloé's taxi, refused
+by Malik. Each approval and the reimbursement posted its entry.
 
 ## Analytics
 

@@ -4,9 +4,10 @@
 // membership and employment is a person's,
 // every vote and seat a member's, every record's owning circle one the
 // co-op has, the books agree with the invoices,
-// and every document version is an outline of blocks the document model
+// every document version is an outline of blocks the document model
 // takes, whose embeds name what exists and whose comments quote text one of
-// its blocks holds.
+// its blocks holds, and the co-op is rich enough to show every feature,
+// every circle a slice of its own (`fixture/rich.mjs`).
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -16,9 +17,11 @@ import { finance } from './fixture/finance.mjs'
 import { governance } from './fixture/governance.mjs'
 import { meeting, meetingIds } from './fixture/meeting.mjs'
 import { people } from './fixture/people.mjs'
+import { rich } from './fixture/rich.mjs'
 import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
 
-const root = join(process.argv[2] ?? process.cwd(), 'apps/org/fixtures')
+const repo = process.argv[2] ?? process.cwd()
+const root = join(repo, 'apps/org/fixtures')
 const errors = []
 
 const check = (name) => {
@@ -310,6 +313,7 @@ const check = (name) => {
   governance(read, fail)
   meeting(read, fail)
   people(read, fail)
+  rich(read, fail, repo)
 }
 
 const names = existsSync(root) ? readdirSync(root) : []

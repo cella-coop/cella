@@ -1,7 +1,11 @@
 # What members spent for the co-op in October, amounts in cents: before
 # VAT and the deductible VAT. A category is the account of class 6 it is
-# charged to. Nothing is approved yet: approving one charges it to the
-# books, and the leads approve within 1 000 € a month each. Each names
+# charged to. A decided one says how it was decided, `approved` or
+# `refused`, by whom and on which day, and one approved and since paid
+# back the day it was reimbursed: approving one charges it to the books,
+# and reimbursing it pays it from the bank, each in an entry of the
+# journal (graft.expense-transaction.toml). The leads approve within
+# 1 000 € a month each, the manager what the leads may not. Each names
 # the circle it was spent for, its project's; one spent for no circle's
 # work names none and is the assembly's.
 
@@ -50,3 +54,48 @@ net = 12000
 vat = 2400
 receipt = "foundry-invoice-2291.pdf"
 submitted = 2026-10-23
+
+[[expense]]
+id = "ex-0005"
+circle = "coordination"
+member = "yusuf@lanterne.example"
+day = 2026-10-07
+label = "Train to Lyon and back, the federation's regional day"
+category = "6251"
+net = 9600
+vat = 960
+receipt = "train-lyon-1007.pdf"
+submitted = 2026-10-07
+decided = 2026-10-08
+decider = "camille@lanterne.example"
+status = "approved"
+reimbursed = 2026-10-15
+
+[[expense]]
+id = "ex-0006"
+circle = "operations"
+member = "julien@lanterne.example"
+day = 2026-10-13
+label = "Label printer for the post"
+category = "606"
+net = 8900
+vat = 1780
+receipt = "label-printer-1013.pdf"
+submitted = 2026-10-13
+decided = 2026-10-16
+decider = "camille@lanterne.example"
+status = "approved"
+
+[[expense]]
+id = "ex-0007"
+circle = "marketing"
+member = "chloe@lanterne.example"
+day = 2026-10-22
+label = "Taxi back from the Nuvola workshop"
+category = "6251"
+net = 3800
+vat = 380
+submitted = 2026-10-22
+decided = 2026-10-23
+decider = "malik@lanterne.example"
+status = "refused"

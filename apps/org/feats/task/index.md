@@ -1,6 +1,6 @@
 +++
 title = "Task"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Assignable work items: the atomic unit of the co-op's work. A task stands
@@ -92,12 +92,14 @@ set in its content.
 
 ## Lanterne
 
-Thirty-three tasks across the projects and the co-op's own work, each
-given to a member of the circle that runs its project: the Halles shop's
+Thirty-seven tasks across the projects and the co-op's own work, each
+its circle's, its project's where it is filed in one, so each circle's
+lens shows its own, and most given to a member of that circle: the Halles shop's
 launch checklist and its care (Yusuf, Thomas, Amina, Léa), Ferrand's
 proofs and press check (Hugo), Terres Vives's microsite (Léa, Amina),
-Nuvola's newsletter and social calendar (Chloé, Malik), and Julien's
-October close.
+Nuvola's newsletter and social calendar (Chloé, Malik), Julien's
+October close, the amendments the assembly drafts (Camille, Chloé) and
+coordination's staffing plan (Yusuf).
 
 ## Analytics
 

@@ -2,14 +2,14 @@ import type { Db } from '@cella/org-db'
 import type { Commissioned, For } from '../models/commission.ts'
 
 // The contact each project is for, by project.
-export const contactOf = 'SELECT m.project AS id, c.name AS contact FROM contact_project.commission m JOIN contact.contact c ON c.id = m.contact'
+export const contactOf = 'SELECT m.project AS id, c.name AS contact FROM contact_project.commission m JOIN contact.named c ON c.id = m.contact'
 
 export async function commissioner(db: Db, project: string): Promise<For> {
   const linked = await db.query<{ id: string; name: string }>(
-    'SELECT c.id, c.name FROM contact_project.commission m JOIN contact.contact c ON c.id = m.contact WHERE m.project = $1',
+    'SELECT c.id, c.name FROM contact_project.commission m JOIN contact.named c ON c.id = m.contact WHERE m.project = $1',
     [project],
   )
-  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.contact WHERE client IS NOT NULL AND NOT archived ORDER BY name`)
+  const all = await db.query<{ id: string; name: string }>(`SELECT id, name FROM contact.named WHERE client IS NOT NULL AND NOT archived ORDER BY name`)
   return { contact: linked.rows[0] ?? null, contacts: all.rows }
 }
 

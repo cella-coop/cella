@@ -35,11 +35,11 @@ after(async () => {
 
 test('a client is a contact the co-op bills: the Clients view keeps them, and an invoice offers only them', async () => {
   const all = await page('/contacts')
-  assert.ok(all.text.includes('Margaux Roux') && all.text.includes('Vélo Solidaire'), 'All lists every contact')
+  assert.ok(all.text.includes('href="/contacts/halles-roux"') && all.text.includes('Vélo Solidaire'), 'All lists every contact')
   const clients = await page('/contacts?v=clients')
   assert.equal(clients.status, 200)
   assert.ok(clients.text.includes('Vélo Solidaire') && clients.text.includes('Atelier Ondine'), 'the Clients view keeps the clients')
-  assert.ok(!clients.text.includes('Margaux Roux'), 'and leaves out a contact that is no client')
+  assert.ok(!clients.text.includes('href="/contacts/halles-roux"'), 'and leaves out a contact that is no client')
   const roux = await page('/contacts/halles-roux')
   assert.ok(roux.text.includes('No client: set the role to bill it'), 'a contact\'s page shows its role')
   const invoice = await page('/invoices/F-2026-0044', julien)
@@ -52,11 +52,11 @@ test('a client is a contact the co-op bills: the Clients view keeps them, and an
 
   const set = await act('/contacts/halles-roux', 'client', { client: 'lead' }, camille)
   assert.equal(set.state, 'settled')
-  assert.ok((await page('/contacts?v=clients')).text.includes('Margaux Roux'), 'a contact given the role is a client')
+  assert.ok((await page('/contacts?v=clients')).text.includes('href="/contacts/halles-roux"'), 'a contact given the role is a client')
   assert.ok((await page('/contacts/halles-roux')).text.includes('Client, lead'))
   assert.match((await page('/invoices/F-2026-0044', julien)).text, /<option value="halles-roux"/)
   const cleared = await act('/contacts/halles-roux', 'client', { client: '' }, camille)
   assert.equal(cleared.state, 'settled')
   assert.equal((await one<{ client: string | null }>(`SELECT client FROM contact.contact WHERE id = 'halles-roux'`)).client, null)
-  assert.ok(!(await page('/contacts?v=clients')).text.includes('Margaux Roux'), 'and one cleared of it is no client')
+  assert.ok(!(await page('/contacts?v=clients')).text.includes('href="/contacts/halles-roux"'), 'and one cleared of it is no client')
 })

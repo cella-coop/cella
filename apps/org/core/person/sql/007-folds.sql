@@ -104,6 +104,26 @@ BEGIN
 END
 $$;
 
+-- contact:contact:add enters a person contact new to the scope, whose
+-- entry then carries, as `entered`, the commitments to their name and
+-- to the email and phone it gave; a company, or a person the scope knew
+-- already, carries none and enters no one.
+CREATE FUNCTION person.fold_contact(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+  who text := p -> 'values' ->> 'person';
+  n bigint := (entry ->> 'n')::bigint;
+BEGIN
+  IF p -> 'entered' IS NOT NULL THEN
+    INSERT INTO person.person (address, name, email, phone)
+    VALUES (who, cella.commits('person.person.name', who, n, p -> 'entered' -> 'name'),
+            cella.commits('person.person.email', who, n, p -> 'entered' -> 'email'),
+            cella.commits('person.person.phone', who, n, p -> 'entered' -> 'phone'));
+  END IF;
+END
+$$;
+
 SELECT cella.lets_fold('person:device:enrol', 1, 'person.fold_enrol(jsonb)', 'person');
 SELECT cella.lets_fold('person:device:revoke', 1, 'person.fold_revoke(jsonb)', 'person');
 SELECT cella.lets_fold('person:person:profile', 1, 'person.fold_profile(jsonb)', 'person');
@@ -111,3 +131,4 @@ SELECT cella.lets_fold('person:person:forget', 1, 'person.fold_forget(jsonb)', '
 SELECT cella.lets_fold('membership:member:invite', 1, 'person.fold_entering(jsonb)', 'person');
 SELECT cella.lets_fold('membership:member:accept', 1, 'person.fold_enrolling(jsonb)', 'person');
 SELECT cella.lets_fold('employment:worker:hire', 1, 'person.fold_hire(jsonb)', 'person');
+SELECT cella.lets_fold('contact:contact:add', 1, 'person.fold_contact(jsonb)', 'person');

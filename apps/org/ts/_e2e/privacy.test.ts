@@ -27,6 +27,7 @@ const julien = 'julien@lanterne.example'
 const lea = 'lea@lanterne.example'
 const chloe = 'chloe@lanterne.example'
 const margaux = 'halles-roux'
+const roux = 'margaux.roux@halles-paysannes.example'
 
 async function on(date: string) {
   await su.query(`ALTER ROLE cella_app IN DATABASE ${su.escapeIdentifier(su.database ?? '')} SET cella.clock = '${date}'`)
@@ -80,17 +81,23 @@ test('only a holder of erase-personal-data erases a contact: Julien may not, Cam
   assert.match(reason(await eraseContact({ id: margaux }, as(julien))), /erase-personal-data/)
   const done = settled(await eraseContact({ id: margaux }, as(camille)))
   assert.deepEqual(
-    await one('SELECT name, email, phone, note, archived FROM contact.contact WHERE id = $1', [margaux]),
-    { name: 'redacted', email: 'redacted', phone: 'redacted', note: 'redacted', archived: true },
+    await one('SELECT note, archived FROM contact.contact WHERE id = $1', [margaux]),
+    { note: 'redacted', archived: true },
   )
+  // She is a core person: her contact details there are erased with her
+  // contact's data, and her name, of class profile, stays.
+  assert.deepEqual(await one('SELECT name, email, phone FROM person.person WHERE address = $1', [roux]), { name: 'Margaux Roux', email: 'redacted', phone: 'redacted' })
   assert.deepEqual(await erased(margaux), { contact: false })
-  assert.deepEqual((await opened(done.entry)).erasure, { $erasure: { subject: margaux, erased: ['contact'], restricted: [] } })
+  assert.deepEqual(await erased(roux), { contact: false })
+  const logged = await opened(done.entry)
+  assert.deepEqual(logged.erasure, { $erasure: { subject: margaux, erased: ['contact'], restricted: [] } })
+  assert.deepEqual(logged.details, { $erasure: { subject: roux, erased: ['contact'], restricted: [] } })
   // The company she worked for keeps its name.
   assert.equal((await one<{ name: string }>(`SELECT name FROM contact.contact WHERE id = 'halles'`)).name, 'Les Halles Paysannes')
 })
 
-test('erasure wins: a later update of Margaux\'s email is refused', async () => {
-  assert.match(reason(await update({ id: margaux, fields: { email: 'margaux@new.example' } }, as(camille))), /erasure wins/)
+test('erasure wins: a later note on Margaux is refused', async () => {
+  assert.match(reason(await update({ id: margaux, fields: { note: 'call in the afternoon' } }, as(camille))), /erasure wins/)
 })
 
 test('Léa gives her email and phone, which the log commits to and the vault opens; then she erases them herself', async () => {

@@ -309,8 +309,8 @@ export async function seed(db, read, { from, dir }) {
     const contacts = read('contact').contact ?? []
     for (const c of contacts) {
       await db.query(
-        'INSERT INTO contact.contact (id, kind, name, form, note, email, phone, parent, client) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)',
-        [c.id, c.kind ?? 'company', c.name, c.form ?? null, c.note ?? '', c.email ?? null, c.phone ?? null, c.parent ?? null, c.client ?? null],
+        'INSERT INTO contact.contact (id, kind, person, name, form, note, email, phone, parent, client) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [c.id, c.kind ?? 'company', c.person ?? null, c.name ?? null, c.form ?? null, c.note ?? '', c.email ?? null, c.phone ?? null, c.parent ?? null, c.client ?? null],
       )
     }
 

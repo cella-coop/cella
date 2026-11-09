@@ -73,7 +73,7 @@ test('only the app\'s core, the contact and invoice feats and this graft are mig
 
 test('a contact with no client role is refused as whom an invoice bills, and no row is left', async () => {
   settled(await add({ id: 'halles', name: 'Les Halles Paysannes', form: 'SCIC SA' }, as))
-  settled(await add({ id: 'halles-roux', kind: 'person', parent: 'halles', name: 'Margaux Roux' }, as))
+  settled(await add({ id: 'halles-roux', kind: 'person', person: 'margaux.roux@halles-paysannes.example', parent: 'halles', name: 'Margaux Roux' }, as))
   const invoice = await issued('Les Halles Paysannes')
   for (const contact of ['halles', 'halles-roux']) {
     assert.match(reason(await link({ invoice, contact }, as)), new RegExp(`${contact} is no client, so no invoice bills it: set its client role on its page first`))

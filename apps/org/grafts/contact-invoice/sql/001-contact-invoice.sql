@@ -38,7 +38,7 @@ CREATE VIEW contact_invoice.standing WITH (security_invoker = true) AS
 SELECT c.id AS contact, c.name,
        coalesce(sum(s.owed), 0)::bigint AS owed,
        coalesce(sum(s.credit), 0)::bigint AS credit
-FROM contact.contact c
+FROM contact.named c
 LEFT JOIN contact_invoice.billing b ON b.contact = c.id
 LEFT JOIN invoice.standing s ON s.id = b.invoice
 GROUP BY c.id, c.name;

@@ -143,9 +143,10 @@ registry, and the inbox, what waits on the acting person. Its tables are
 in the `person` schema, which every feat's and graft's SQL may reference
 as it references `circle.*`, a foreign key into `person.person` among
 them; its actions are named for it and declared in its
-`models/actions.ts`. It knows no feat: membership and employment are
+`models/actions.ts`. It knows no feat: membership, employment and contact are
 feats of the app whose rows name a core person, as a feat's rows name a
-circle, and each registers the right its people hold
+circle, and membership and employment each register the right their
+people hold
 ([person](../../apps/org/core/person/index.md)). No graft joins
 `person`, and `cella check feats` refuses one that does
 (`tools/_tests/tree.test.mjs`); what joins the people to the circles

@@ -74,7 +74,8 @@ test('the seed carries July to September\'s pay runs, each posted in its carried
     { month: '2026-08', gross: '2600000', entry: 'je-0019' },
     { month: '2026-09', gross: '2600000', entry: 'je-0031' },
   ])
-  assert.equal(await balance('512'), 39_296_00)
+  // After the runs, je-0042 reimbursed ex-0005 from the bank on 15 October.
+  assert.equal(await balance('512'), 39_190_40)
   await balanced()
 })
 
@@ -147,12 +148,16 @@ test('once every October is approved, Julien prepares the run from the approved 
   const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary WHERE "from" <= '2026-10-01' GROUP BY member ORDER BY member`)).map((r) => r.member)
   for (const m of members) {
     // A month of each circle the worker logged October's time for.
-    for (const { circle } of await all<{ circle: string }>(`SELECT circle FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
-      const submitted = await submitTime({ member: m, month: '2026-10', circle }, as(m))
-      assert.equal(submitted.state, 'settled', reason(submitted))
+    for (const { circle, submitted: early } of await all<{ circle: string; submitted: string | null }>(`SELECT circle, submitted FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
+      // Sofia's brand month is submitted already.
+      if (!early) {
+        const submitted = await submitTime({ member: m, month: '2026-10', circle }, as(m))
+        assert.equal(submitted.state, 'settled', reason(submitted))
+      }
       // The manager approves time over the assembly, where everyone sits;
-      // her own month, Brand's lead.
-      const approved = await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? hugo : camille))
+      // her own, in coordination and the assembly, the treasurer, whose
+      // approve-time holds on the whole co-op as no lead's does.
+      const approved = await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? julien : camille))
       assert.equal(approved.state, 'settled', reason(approved))
     }
   }

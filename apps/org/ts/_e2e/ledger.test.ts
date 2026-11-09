@@ -23,7 +23,6 @@ const su = new pg.Client()
 let app: pg.Client
 
 const camille = 'camille@lanterne.example'
-const hugo = 'hugo@lanterne.example'
 const julien = 'julien@lanterne.example'
 const thomas = 'thomas@lanterne.example'
 
@@ -52,9 +51,12 @@ after(async () => {
 test('October\'s time is submitted and approved, and its run prepared, approved and paid', async () => {
   const members = (await all<{ member: string }>(`SELECT member FROM payslip.salary WHERE "from" <= '2026-10-01' GROUP BY member ORDER BY member`)).map((r) => r.member)
   for (const m of members) {
-    for (const { circle } of await all<{ circle: string }>(`SELECT circle FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
-      settled(await submitTime({ member: m, month: '2026-10', circle }, as(m)))
-      settled(await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? hugo : camille)))
+    for (const { circle, submitted } of await all<{ circle: string; submitted: string | null }>(`SELECT circle, submitted FROM timesheet.period WHERE member = $1 AND month = '2026-10'`, [m])) {
+      // Sofia's brand month is submitted already.
+      if (!submitted) settled(await submitTime({ member: m, month: '2026-10', circle }, as(m)))
+      // Camille's own, in coordination and the assembly, the treasurer's,
+      // whose approve-time holds on the whole co-op as no lead's does.
+      settled(await approveTime({ member: m, month: '2026-10', circle }, as(m === camille ? julien : camille)))
     }
   }
   settled(await generate({ month: '2026-10' }, as(julien)))

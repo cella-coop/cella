@@ -60,7 +60,7 @@ test('only the app\'s core and this feat are migrated', async () => {
 })
 
 test('a file of the co-op\'s own is named by the BLAKE3 of its bytes, which the log commits to', async () => {
-  const out = await upload({ class: 'none', subject: null, name: 'statuts.txt', type: 'text/plain', bytes: abc }, as)
+  const out = await upload({ class: 'none', subject: null, name: 'statutes.txt', type: 'text/plain', bytes: abc }, as)
   assert.equal(out.state, 'settled', out.state === 'refused' ? out.reason : '')
   const f = await file(db, 'fi-0001')
   // BLAKE3("abc"), the reference vector anyone can compute again.
@@ -70,7 +70,7 @@ test('a file of the co-op\'s own is named by the BLAKE3 of its bytes, which the 
   })
   const { rows } = await db.query<{ form: Record<string, unknown> }>(`SELECT form FROM cella.log WHERE op = 'file:file:upload'`)
   assert.equal(rows[0].form.hash, f?.hash)
-  assert.equal(rows[0].form.name, 'statuts.txt')
+  assert.equal(rows[0].form.name, 'statutes.txt')
 })
 
 test('a file never changes, holds what its size says, and at most 10 MiB', async () => {
@@ -123,7 +123,7 @@ test('a personal file\'s name and hash are committed to, and the co-op\'s own ar
   const logged = committed(stored, 'ticket.png')
   assert.deepEqual(logged.name, { $personal: { field: 'file.receipt.name', subject: sofia, value: 'ticket.png' } })
   assert.deepEqual(logged.hash, { $personal: { field: 'file.receipt.bytes', subject: sofia, value: 'ab' } })
-  assert.equal(committed({ ...stored, class: 'none', subject: null }, 'statuts.txt').name, 'statuts.txt')
+  assert.equal(committed({ ...stored, class: 'none', subject: null }, 'statutes.txt').name, 'statutes.txt')
 })
 
 test('as the app role, the co-op\'s own files are their circle\'s readers\', a personal one its person\'s, its uploader\'s and a reading power\'s; the parts only through file.file', async () => {

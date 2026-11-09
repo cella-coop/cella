@@ -1,6 +1,6 @@
 +++
 title = "Lanterne"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 # Lanterne
@@ -9,11 +9,13 @@ A mock co-op to build the prototype against: a creative agency in Montreuil,
 in the EU, run as a worker co-operative by its ten worker-members since
 2021, its members living around the world. Every word a reader sees in it
 is English: its titles, descriptions, motions, documents, minutes,
-policies, rights, roles and account labels; its people's names are
-international. The founding legal form reads “worker co-operative limited company
+policies, rights, roles and account labels, as is every word the
+slices themselves show on it, their labels, notes and refusals, and no
+test asserts a French one; its people's names are international. The founding legal form reads “worker co-operative limited company
 with variable capital”; its `scop-sarl-fr` identifier, French street addresses,
-people's and clients' names, registration numbers and account codes stay as
-recorded, not translated. The fixture's imported sample files use English
+people's and clients' names, registration numbers, account codes and the
+French statutes a figure or a refusal cites by name stay as recorded, not
+translated. The fixture's imported sample files use English
 headings and labels too, while retaining their source formats and figures.
 It builds websites
 and online shops, designs brands, print and packaging, and runs marketing for

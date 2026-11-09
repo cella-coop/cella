@@ -1277,7 +1277,7 @@ the rest. One guard reads it on every action, the membership feat's
 day)` against the record's owning circle, `about`, which the write's
 payload names, and core's `circle.covers`: Web's lead, whose mandates
 are on their own circle, runs Web's projects and approves Web's time
-and is refused Brand's, and the gérante's, on the whole co-op, cover
+and is refused Brand's, and the manager's, on the whole co-op, cover
 every circle's records. Ownership grants nothing by itself, and a seat
 in a circle nothing over its records without a mandate
 ([membership](../../apps/org/feats/person/feats/membership/index.md#seats)).

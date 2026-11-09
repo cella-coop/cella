@@ -27,7 +27,7 @@ after(async () => {
 test('a mandate three deep reads its chain from the assembly\'s root down to itself, and the root what was issued under it', async () => {
   await db.query('BEGIN')
   try {
-    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée', true) ON CONFLICT DO NOTHING`)
+    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
     for (const [id, name] of [['coordination', 'Coordination'], ['operations', 'Operations'], ['brand', 'Brand']]) {
       await db.query('INSERT INTO circle.circle (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING', [id, name])
     }
@@ -73,7 +73,7 @@ test('a mandate three deep reads its chain from the assembly\'s root down to its
 test('a reader who holds a role and is no member reads the chain from the highest link they read, withheld above, and a member reads it from the root', async () => {
   await db.query('BEGIN')
   try {
-    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée', true) ON CONFLICT DO NOTHING`)
+    await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
     for (const [id, name] of [['coordination', 'Coordination'], ['operations', 'Operations'], ['brand', 'Brand']]) {
       await db.query('INSERT INTO circle.circle (id, name) VALUES ($1, $2) ON CONFLICT DO NOTHING', [id, name])
     }

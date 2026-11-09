@@ -10,7 +10,7 @@ const db = new pg.Client()
 
 before(async () => {
   await db.connect()
-  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée générale', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
 })
 
 after(async () => {

@@ -40,7 +40,7 @@ const mandate = async (policy: string) =>
 // the circles test's on the same database, and rolls them back.
 const staged = async () => {
   await db.query('BEGIN')
-  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'Assemblée', true) ON CONFLICT DO NOTHING`)
+  await db.query(`INSERT INTO circle.circle (id, name, assembly) VALUES ('ag', 'General assembly', true) ON CONFLICT DO NOTHING`)
   await db.query(`INSERT INTO circle.circle (id, name) VALUES ('operations', 'Operations') ON CONFLICT DO NOTHING`)
   await db.query(`INSERT INTO circle.role (id, circle, name) VALUES ('finance', 'operations', 'Finance'), ('lead', '*', 'Circle lead') ON CONFLICT DO NOTHING`)
 }

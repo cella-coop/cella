@@ -31,7 +31,7 @@ before(async () => {
     await db.query(`INSERT INTO membership.member (address, status, since) VALUES ($1, 'active', '2024-01-10')`, [address])
   }
   await db.query(
-    `INSERT INTO circle.role (id, circle, name) VALUES ('lead', '*', 'Circle lead'), ('manager', 'ag', 'Gérante'), ('finance', 'operations', 'Finance')`,
+    `INSERT INTO circle.role (id, circle, name) VALUES ('lead', '*', 'Circle lead'), ('manager', 'ag', 'Manager'), ('finance', 'operations', 'Finance')`,
   )
   await db.query(
     `INSERT INTO circle.mandate (grantee, issuer, power, policy, "from", scope) VALUES
@@ -64,7 +64,7 @@ test('a mandate on a circle covers that circle alone, wherever its holder sits',
   assert.equal(await may(julien, 'approve-time', 'operations'), false)
 })
 
-test('the gérante\'s, on the whole co-op, covers every circle\'s records, the root\'s among them', async () => {
+test('the manager\'s, on the whole co-op, covers every circle\'s records, the root\'s among them', async () => {
   for (const c of ['ag', 'coordination', 'brand', 'web']) {
     assert.equal(await may(camille, 'approve-time', c), true, c)
   }

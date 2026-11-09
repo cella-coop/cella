@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Component, Snippet } from 'svelte'
+  import { navigating } from '$app/state'
   import CaretLeft from 'phosphor-svelte/lib/CaretLeft'
   import SidebarSimple from 'phosphor-svelte/lib/SidebarSimple'
   import type { Panel, Tone } from '../models/view.ts'
@@ -112,7 +113,7 @@
     {/if}
   </header>
 
-  <div class="content" {@attach scroller(title)}>
+  <div class="content" aria-busy={navigating.to !== null} {@attach scroller(title)}>
     {#if subtitle}<p class="subtitle">{subtitle}</p>{/if}
     {@render children()}
   </div>
@@ -267,6 +268,10 @@
     align-content: start;
     gap: var(--space-4);
     min-width: 0;
+  }
+  .content[aria-busy='true'] {
+    opacity: 0.6;
+    transition: opacity var(--fast);
   }
   /* What the content holds shrinks with it rather than pushing it wide. */
   .content > :global(*) {

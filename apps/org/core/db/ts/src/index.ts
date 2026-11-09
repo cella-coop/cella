@@ -5,6 +5,7 @@ import { forgone, outcomes, type Done } from './slice.ts'
 export * from './slice.ts'
 export * from './import.ts'
 export * from './read.ts'
+export * from './schema.ts'
 
 // The one thing a handler needs of a connection; a `pg` Client or pool
 // client fits it.

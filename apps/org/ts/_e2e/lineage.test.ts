@@ -92,10 +92,13 @@ test('in every browser, light and dark, the walk is clicked through from Brand\'
         await page.waitForLoadState('networkidle')
         await open(deep)
         const chain = page.locator('section', { has: page.getByRole('heading', { name: 'Chain' }) })
+        // A page is drawn once its query answers, after the address.
+        await chain.getByText('this one').first().waitFor()
         assert.match((await chain.textContent()) ?? '', /this one/, `${engine}, ${scheme}: the chain marks its mandate`)
         await page.screenshot({ path: `${shots}/chain-${engine}-${scheme}.png`, fullPage: true })
         await open(root)
         const under = page.locator('section', { has: page.getByRole('heading', { name: 'Issued under it' }) })
+        await under.getByText('Print buyer').first().waitFor()
         assert.match((await under.textContent()) ?? '', /Print buyer/, `${engine}, ${scheme}: the root lists the print buyer's under it`)
         await page.screenshot({ path: `${shots}/under-${engine}-${scheme}.png`, fullPage: true })
         await open(mid)

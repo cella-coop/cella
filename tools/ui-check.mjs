@@ -125,12 +125,17 @@ const mutable = (path, text) => {
 
 // A shell's collection page renders the UI core's one Collection and
 // nothing beside it: what a collection shows is configured on it, never a
-// page's own markup. The tags its markup opens, past control blocks.
+// page's own markup. The tags its markup opens, past control blocks; the
+// boundary its content sits in, with the UI core's Skeleton and Failed in
+// its snippets, is the page's frame, as on an item's page.
 const collectionPage = /(^|\/)ts\/src\/routes\/\[collection\]\/\+page\.svelte$/
 // A shell's item page renders the UI core's one Detail, and in it only
 // the blocks its slices declare (`b.block`): no page frames a record
 // itself.
 const itemPage = /(^|\/)ts\/src\/routes\/\[collection\]\/\[id\]\/\+page\.svelte$/
+// The boundary a page's queries are awaited in, and what it draws while
+// they load and when one throws.
+const bounded = new Set(['svelte:boundary', 'Skeleton', 'Failed'])
 const tags = (text) =>
   [...text.replace(/<script[\s\S]*?<\/script>/g, '').replace(/<!--[\s\S]*?-->/g, '').matchAll(/<([A-Za-z][\w.:-]*)/g)].map((m) => m[1])
 
@@ -178,7 +183,7 @@ export function problems(path, text, ui) {
     }
   }
   if (collectionPage.test(path)) {
-    for (const tag of new Set(tags(text).filter((t) => t !== 'Collection'))) {
+    for (const tag of new Set(tags(text).filter((t) => t !== 'Collection' && !bounded.has(t)))) {
       out.push(`${path}: renders <${tag}> beside the Collection; configure the collection's view instead`)
     }
   }
@@ -187,7 +192,7 @@ export function problems(path, text, ui) {
     if (!drawn.includes('Detail')) {
       out.push(`${path}: draws no <Detail>; every record opens on the UI core's one record page`)
     }
-    for (const tag of new Set(drawn.filter((t) => t !== 'Detail' && !t.includes('.')))) {
+    for (const tag of new Set(drawn.filter((t) => t !== 'Detail' && !t.includes('.') && !bounded.has(t)))) {
       out.push(`${path}: renders <${tag}> beside the Detail; a record's page is the Detail and its slices' blocks`)
     }
   }

@@ -9,8 +9,12 @@ const repo = fileURLToPath(new URL('../../..', import.meta.url))
 
 export default defineConfig({
   plugins: [
+    // Remote functions and async Svelte, both experimental: svelte and the
+    // kit are pinned to exact versions in package.json.
     sveltekit({
       adapter: adapter(),
+      compilerOptions: { experimental: { async: true } },
+      experimental: { remoteFunctions: true },
     }),
   ],
   server: {

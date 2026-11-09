@@ -1056,6 +1056,8 @@ for (const [name, launch] of browsers()) {
         const href = await rows.nth(2).locator('a').getAttribute('href')
         await page.keyboard.press('Enter')
         await page.waitForURL(`${base}${href}`)
+        // The item is drawn once its query answers, after the address.
+        await page.locator('h1.record').waitFor()
         await page.goBack()
         await page.waitForURL(`${base}/people`)
         await rows.nth(2).waitFor()

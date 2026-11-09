@@ -256,6 +256,34 @@ export class Shell {
     return { ...a, status: a.status ?? res.status }
   }
 
+  // A command over HTTP, as a client with no page posts it: its body as
+  // JSON to `POST /api/<feat>/<verb>`, signed in as `actor`, and each
+  // signature the server asks for signed by their device and posted back
+  // to the same address. The outcome, the status it came with, and the
+  // status of each answer that asked for a signature.
+  async api(feat: string, verb: string, body: object, actor: string): Promise<{ done: Done; status: number; asked: number[] }> {
+    const s = await this.#session(actor)
+    const post = async (b: object) => {
+      const res = await fetch(`${this.#base}/api/${feat}/${verb}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', cookie: s.cookie },
+        body: JSON.stringify(b),
+      })
+      return { status: res.status, ...((await res.json()) as { sign?: Ask; done?: Done }) }
+    }
+    const asked: number[] = []
+    let result = await post(body)
+    while (result.sign) {
+      const ask = result.sign
+      asked.push(result.status)
+      assert.equal(ask.device, s.device.key, 'the server asks the signed-in device to sign')
+      const proof = await signer(ask.scope, ask.actor, s.device)(ask.op, ask.request)
+      result = await post({ run: ask.run, proof })
+    }
+    assert.ok(result.done, `${feat}/${verb}: ${JSON.stringify(result)}`)
+    return { done: result.done, status: result.status, asked }
+  }
+
   // A command of the shell's, its argument as SvelteKit's client sends it.
   #command(family: string, name: string, arg: unknown, headers: Record<string, string>) {
     return fetch(`${this.#base}/_app/remote/${remote(family)}/${name}`, {

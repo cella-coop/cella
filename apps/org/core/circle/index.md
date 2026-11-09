@@ -455,7 +455,10 @@ what its every paper prints. The invoice feat keeps them with an invoice
 as its seller as it issues (`invoice.seller()`), so a motion replacing
 the particulars changes the invoices issued once it applies and never
 one issued before ([invoice](../../feats/invoice/index.md#the-pdf)); and
-the shell calls the co-op by its name (`named` in `@cella/org-log`).
+the shell calls the co-op by its name (`named` in `@cella/org-log`)
+and shows the particulars on Settings' Organization page, whose Save
+proposes the assembly's motion replacing them
+([settings](../ui/index.md#settings)).
 The scope's address and its timezone are no particulars: the notary
 signs by the one and dates by the other, so a host sets them
 ([the notary](../notary/index.md#settings)). Circle-policy's

@@ -1,6 +1,6 @@
 +++
 title = "UI"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 The shell's design system (`@cella/org-ui`): the tokens, the one shell,
@@ -415,6 +415,21 @@ and their theme, light, dark or the system's, saved in its cookie and worn at on
 under it their devices, the one their session signs with marked as this
 device and each other current one with its revoke, as on their page.
 Its fields are all the reader's own, so none opens a motion.
+
+Organization, the co-op's own, comes first under Organization at
+`/settings/organization`, which the co-op menu's Settings opens: a
+`Settings` form of the co-op's particulars in force, its name, legal
+name, legal form, capital, seat, SIREN, trade register and VAT number,
+none saved by anyone's write, since only a motion of the assembly
+adopts them ([the co-op's
+particulars](../circle/index.md#the-co-ops-particulars)). Save opens
+the dialog proposing a motion of the assembly, each value changed its
+own field, which carries Adopt a policy replacing the particulars with
+them, its procedure the one their protection fixes; and under the form,
+read-only, the scope's address and its timezone, each saying a host
+sets it ([the notary](../notary/index.md#settings)). Membership-motion
+serves it, as the graft that proposes the assembly's motions
+([membership-motion](../../grafts/membership-motion/index.md#shell-of-the-roll)).
 
 ## Posting a write
 

@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Amending, Appointing, Decider, Duty, Standing } from '../models/asking.ts'
+import type { Amending, Appointing, Decider, Duty, Organization, Standing } from '../models/asking.ts'
 
 const decider = `json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure)`
 
@@ -98,4 +98,21 @@ export async function amending(db: Db, circle: string): Promise<Amending | null>
     [circle],
   )
   return { ...rows[0], roles: roles.rows }
+}
+
+// The co-op's particulars in force and the procedure protecting them, the
+// assembly that alone replaces them, and the scope's address and
+// timezone, as Settings' Organization page shows them to every member.
+export async function organization(db: Db): Promise<Organization> {
+  const { rows } = await db.query<Organization>(
+    `SELECT (SELECT to_jsonb(p) FROM circle.particulars() p) AS particulars,
+            (SELECT r.protected FROM circle.particulars() p JOIN policy.policy r ON r.id = p.policy) AS protected,
+            CASE WHEN a.id IS NOT NULL THEN json_build_object('circle', a.id, 'name', a.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) END AS decider,
+            'The co-op''s particulars change only by a motion of ' || coalesce(a.name, 'the assembly')
+              || ', which adopts them as a policy: no one''s own write changes them' AS refused,
+            nullif(current_setting('cella.scope', true), '') AS scope,
+            nullif(current_setting('cella.timezone', true), '') AS timezone
+     FROM (SELECT) one LEFT JOIN circle.applied() a ON true`,
+  )
+  return rows[0]
 }

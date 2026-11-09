@@ -86,3 +86,23 @@ export interface Duty {
 export interface OnCircle extends Appointing {
   amending: Amending
 }
+
+// The co-op's particulars, as core's row keeps them, in the order the
+// Organization page shows them and the founding words them.
+export const particulars = ['name', 'legal_name', 'form', 'capital', 'seat', 'siren', 'rcs', 'vat'] as const
+export type Particular = (typeof particulars)[number]
+export type Particulars = Record<Particular, string | null> & { policy: string }
+
+// Settings' Organization page: the particulars in force, if a rule
+// stands, and the procedure protecting it; the assembly, which alone
+// adopts them, and the deadline asked, two weeks on; why no write of the
+// reader's changes them; and the scope's address and timezone, which a
+// host sets.
+export interface Organization {
+  particulars: Particulars | null
+  protected: string | null
+  decider: { circle: string; name: string; deadline: string } | null
+  refused: string
+  scope: string | null
+  timezone: string | null
+}

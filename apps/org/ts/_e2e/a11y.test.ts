@@ -95,7 +95,7 @@ for (const [name, launch] of browsers()) {
           const menus = nav.locator('a[role="menuitem"]', { hasText: 'Settings' })
           const organization = await menus.nth(0).getAttribute('href')
           const settings = await menus.nth(1).getAttribute('href')
-          assert.equal(organization, '/imports', 'the co-op menu opens Settings at Organization')
+          assert.equal(organization, '/settings/organization', 'the co-op menu opens Settings at Organization, on its Organization page')
           assert.equal(settings, '/settings/account', 'the account menu opens Settings at Personal, on Account')
           await visit(settings)
           assert.deepEqual(await nav.locator('p.group').allTextContents(), ['Personal', 'Organization'], "Settings groups the member's pages, then the co-op's")

@@ -1,4 +1,4 @@
-import type { App, Tone } from '@cella/org-ui'
+import { icons, type App, type Tone } from '@cella/org-ui'
 import { outcome, states, type Roll, type State } from '../models/roll.ts'
 import type { Standing } from '../models/asking.ts'
 import Appoint from './blocks/Appoint.svelte'
@@ -7,6 +7,7 @@ import Roles from './blocks/Roles.svelte'
 import Electorate from './blocks/Electorate.svelte'
 import Membership from './blocks/Membership.svelte'
 import Outcome from './blocks/Outcome.svelte'
+import Organization from './blocks/Organization.svelte'
 
 const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejected: 'negative' }
 
@@ -14,8 +15,9 @@ const tones: Record<State, Tone> = { open: 'accent', passed: 'positive', rejecte
 // rejected, its views and its board, on which dragging an open motion
 // into Passed or Rejected is its close; a motion's roll, each member's
 // stance and its outcome, and the form a member on the roll casts their
-// stance with; and a circle's Settings tab, its terms and its roles,
-// which a motion amends and makes.
+// stance with; a circle's Settings tab, its terms and its roles, which a
+// motion amends and makes; and Settings' Organization page, the co-op's
+// particulars, which a motion of the assembly replaces.
 export const app: App = {
   name: 'membership-motion/circles',
   extends: {
@@ -59,6 +61,18 @@ export const app: App = {
           { tab: 'settings', block: Roles },
         ],
       },
+    },
+  },
+  // The co-op's own settings, first under Organization: its particulars,
+  // which the assembly's motion replaces, and the scope's address and
+  // timezone, which a host sets.
+  settings: {
+    organization: {
+      subgroup: 'Organization',
+      title: 'Organization',
+      caption: 'What the co-op is called and what its papers print, which a motion of the assembly changes.',
+      icon: icons.Buildings,
+      block: Organization,
     },
   },
 }

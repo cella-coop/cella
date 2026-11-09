@@ -20,6 +20,11 @@
 // wording, policy.wording: a guard reads a policy's values from its own
 // columns, copied there at adoption, and never parses the sentence.
 //
+// A core library's SQL keeps the own-schema, clock and wording rules below
+// as a slice's does, acting as in its own in the schemas of the core
+// libraries its package depends on (`sideways`); the notary's SQL alone is
+// exempt (`privileged`).
+//
 // Beyond the references, a feat's or a graft's SQL:
 //   - creates, alters, drops, indexes and grants only in its own schema;
 //   - holds no foreign key out of its own schema, but its owning circle's
@@ -159,7 +164,11 @@ function uses(repo, core, lib) {
 // The schemas an owner's SQL may reference, and its own.
 function scope(o) {
   if (o.kind === 'core') {
-    return { own: null, allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
+    // A core library's own schema is named for it. Until core's feats that
+    // use one another are joined by core grafts, it acts in the schemas of
+    // the core libraries its package depends on as in its own (`sideways`):
+    // `circle` puts `policy`'s register under its row-level policies.
+    return { own: o.lib ? schemaOf(o.lib) : null, sideways: new Set(o.lib ? o.uses.map(schemaOf) : []), allowed: new Set(['cella', 'vault', ...catalog, ...(o.lib ? [o.lib, ...o.uses] : [])]), feats: [], ops: [] }
   }
   if (o.kind === 'feat') {
     return { own: o.name, allowed: new Set([o.name, ...o.lineage, 'cella', CIRCLES, REGISTER, ...catalog]), feats: [o.name], ops: [o.name, CIRCLES] }
@@ -173,7 +182,16 @@ function scope(o) {
   return { own: schemaOf(o.name), allowed: new Set([schemaOf(o.name), ...feats, ...outer, ...lower.map(schemaOf), 'cella', CIRCLES, REGISTER, ...catalog]), feats, ops: [o.name, ...feats, ...lower, CIRCLES] }
 }
 
-// Core's circles, org's core library `circle`: the circles, roles,
+// The notary, the `cella` extension in org's core: the layer under every
+// slice that writes the log, whose SQL makes cella.* and the vault and
+// reads the clock to stamp what it notarises. Its SQL alone is exempt
+// from the own-schema, clock and wording refusals; a core library's other
+// SQL, as a feat's, creates and grants only in its own schema, named for
+// it, and never reads the clock nor a policy's wording.
+const NOTARY = 'notary'
+const privileged = (o) => o.kind === 'core' && o.lib === NOTARY
+
+// Core's circles, org's core library `circle`:the circles, roles,
 // tenures, seats and mandates, which every feat and graft builds on and
 // whose ops each may guard, as groups are in standard RBAC.
 const CIRCLES = 'circle'
@@ -202,15 +220,15 @@ function inspect(tree, o, s, known, fail, found) {
     }
   }
   const owned = (schema, what) => {
-    if (o.kind !== 'core' && schema !== s.own) {
-      fail(`${what}: ${o.kind} ${o.name} creates and grants only in its own schema, ${s.own}`)
+    if (!privileged(o) && schema !== s.own && !s.sideways?.has(schema)) {
+      fail(`${what}: ${o.kind} ${o.name ?? o.lib} creates and grants only in its own schema, ${s.own}`)
     }
   }
   const named = (rv) => (rv.schemaname ? `${rv.schemaname}.${rv.relname}` : rv.relname)
   walk(tree, (key, n) => {
     if (n.relname !== undefined) {
       ref(n.schemaname, `reads ${named(n)}`)
-      if (n.schemaname === REGISTER && n.relname === 'wording' && o.kind !== 'core') {
+      if (n.schemaname === REGISTER && n.relname === 'wording' && !privileged(o) && s.own !== REGISTER && !s.sideways?.has(REGISTER)) {
         fail(`reads ${named(n)}: a guard reads a policy's values from its own columns, never its wording`)
       }
     }
@@ -241,7 +259,7 @@ function inspect(tree, o, s, known, fail, found) {
     if (m && known.has(m[1])) {
       ref(m[1], `names ${text}`)
     }
-    if (n.FuncCall && o.kind !== 'core') {
+    if (n.FuncCall && !privileged(o)) {
       const f = strings(n.FuncCall.funcname)
       if ((f.length === 1 || f[0] === 'pg_catalog') && clock.has(f.at(-1))) {
         fail(`calls ${f.join('.')}(): guards read cella.verdict_date(), never the clock or randomness`)
@@ -250,8 +268,15 @@ function inspect(tree, o, s, known, fail, found) {
     if (n.FuncCall) {
       registersBy(n.FuncCall, o, fail, found)
     }
-    if (n.SQLValueFunction && o.kind !== 'core') {
-      fail(`reads ${n.SQLValueFunction.op.replace('SVFOP_', '').toLowerCase()}: guards read cella.verdict_date(), never the clock`)
+    // current_date, localtimestamp and the rest are the clock; current_user,
+    // session_user and the rest the role, which a slice never reads, and
+    // core's circles read to let a superuser's session past row-level
+    // security (circle.whole).
+    const svf = n.SQLValueFunction?.op.replace('SVFOP_', '').toLowerCase()
+    if (svf && /^(current_(date|time|timestamp)|local(time|timestamp))/.test(svf) && !privileged(o)) {
+      fail(`reads ${svf}: guards read cella.verdict_date(), never the clock`)
+    } else if (svf && o.kind !== 'core') {
+      fail(`reads ${svf}: a slice reads whom it reads for by cella.reader(), never the role`)
     }
     if (n.TypeCast && regtypes.has(strings(n.TypeCast.typeName?.names).at(-1))) {
       const name = n.TypeCast.arg?.A_Const?.sval?.sval ?? ''

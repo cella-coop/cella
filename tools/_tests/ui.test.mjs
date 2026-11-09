@@ -49,6 +49,31 @@ test('an effect outside a hook\'s state class is refused', () => {
   assert.deepEqual(problems('apps/org/core/ui/ts/src/hooks/ScrollState.svelte.ts', 'export class S {\n  constructor() {\n    $effect(() => {})\n  }\n}\n', true), [])
 })
 
+test('an effect that writes a $state field of its class is refused; a $derived holds it', () => {
+  const hook = 'apps/org/core/ui/ts/src/hooks/ViewsState.svelte.ts'
+  const state = (effect) => `export class S {\n  list: string[] = $state([])\n  #seen = $state.raw(null)\n  count = $state(0)\n  plain = 0\n  constructor() {\n${effect}\n  }\n}\n`
+  const refused = [
+    ['    $effect(() => {\n      this.list = read()\n    })', 'list'],
+    ['    $effect.pre(() => {\n      this.#seen ??= now()\n    })', '#seen'],
+    ['    $effect(() => {\n      this.count++\n    })', 'count'],
+    ['    $effect(() => {\n      ++this.count\n    })', 'count'],
+    ['    $effect(() => {\n      const stop = start()\n      return () => {\n        stop()\n        this.list = []\n      }\n    })', 'list'],
+  ]
+  for (const [effect, field] of refused) {
+    const found = problems(hook, state(effect), false)
+    assert.equal(found.length, 1, `${effect}: ${found}`)
+    assert.equal(found[0], `${hook}: writes the $state field ${field} in an $effect; derive it with $derived, or set what only the browser holds in onMount or afterNavigate`)
+  }
+  const kept = [
+    '    $effect(() => {\n      void this.list\n      this.plain = 1\n      if (this.count === 2 || this.count >= 3) tally(this.count)\n    })',
+    '    $effect(() => this.#tally($state.snapshot(this.list)))',
+    "    onMount(() => {\n      this.list = read()\n    })\n    $effect(() => {\n      const doc = make()\n      return () => doc.free()\n    })",
+  ]
+  for (const effect of kept) {
+    assert.deepEqual(problems(hook, state(effect), false), [], effect)
+  }
+})
+
 test('legacy Svelte and SvelteKit forms are refused, wherever they are written', () => {
   const refused = [
     [component('', '<button on:click={go}>Go</button>'), /uses on:event; use an onevent attribute/],
@@ -63,7 +88,11 @@ test('legacy Svelte and SvelteKit forms are refused, wherever they are written',
     [component("  import { page } from '$app/stores'"), /uses \$app\/stores; use \$app\/state/],
     [component("  import { x } from '$lib/x'"), /uses \$lib; use #lib/],
     [component("  import { A } from '$env/static/private'"), /uses \$env; use \$app\/env/],
-    [component("  setContext('k', 1)"), /uses setContext and getContext; use createContext in a hook/],
+    [component("  setContext('k', 1)"), /uses setContext, getContext or hasContext; use createContext in a hook/],
+    [component('  const v = getContext(key)'), /uses setContext, getContext or hasContext/],
+    [component('  if (hasContext(Symbol.for("k"))) {}'), /uses setContext, getContext or hasContext/],
+    [component("  import { getContext as read } from 'svelte'"), /uses setContext, getContext or hasContext/],
+    [component("  import { writable } from 'svelte/store'"), /uses svelte\/store; use \$state in a hook's state class/],
   ]
   for (const [text, message] of refused) {
     const found = problems(block, text, false)
@@ -75,7 +104,7 @@ test('legacy Svelte and SvelteKit forms are refused, wherever they are written',
 
 test('the forms that replace them pass, and prose that names them does not trip the check', () => {
   const modern = component(
-    "  import { page } from '$app/state'\n  import { fromAction } from 'svelte/attachments'\n  let { data, children } = $props()\n  // never on:click, use:enhance or $app/stores here",
+    "  import { page } from '$app/state'\n  import { fromAction } from 'svelte/attachments'\n  import { createContext } from 'svelte'\n  let { data, children } = $props()\n  const pixels = canvas.getContext('2d')\n  // never on:click, use:enhance, $app/stores or setContext here",
     '<button onclick={go}>Go</button>\n<form {@attach enhanced}></form>\n{#each xs as x (x)}{const y = $derived(x * 2)}{y}{/each}\n{@render children()}\n<!-- not <slot />, not {@html} -->\n<p>Decided on: the close</p>',
   )
   assert.deepEqual(problems(block, modern, false), [])

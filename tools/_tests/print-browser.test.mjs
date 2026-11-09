@@ -5,8 +5,10 @@
 // how it was captured). A second page widens a <cella-print> printed
 // narrower and one laid out at zero width, and swaps a third's src for a
 // missing file. The element's TypeScript is served as the browser asks
-// for it, its types stripped. `BROWSERS` (comma-separated) narrows
-// the browsers run.
+// for it, its types stripped, and print.css is made for the explorer's
+// own settings, brand/explorer-house.json, as brand.test.mjs holds the
+// port, since the house's inks have grown past the explorer's.
+// `BROWSERS` (comma-separated) narrows the browsers run.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -16,13 +18,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium, firefox, webkit } from 'playwright-core'
 import ts from 'typescript'
-import { printMarkup, PRINT_STYLES } from '../../packages/brand/src/index.ts'
+import { printCss, printMarkup, PRINT_STYLES, resolve } from '../../packages/brand/src/index.ts'
 import { dataUrl, printFile } from '../../packages/brand/src/print-file.ts'
 
 const brand = new URL('../../packages/brand/', import.meta.url).pathname
 const sharp = createRequire(join(brand, 'package.json'))('sharp')
 const printed = JSON.parse(readFileSync(new URL('brand/explorer-print.json', import.meta.url), 'utf8'))
 const { width, height } = printed
+const css = printCss(resolve(JSON.parse(readFileSync(new URL('brand/explorer-house.json', import.meta.url), 'utf8'))))
 const want = (style, ink) => Buffer.from(printed.prints.find((c) => c.style === style && c.ink === ink && c.scale === 1).rgb, 'base64')
 
 // Firefox's profile goes under a home of its own and its content runs
@@ -56,6 +59,9 @@ async function serve(route) {
   const path = new URL(route.request().url()).pathname
   if (path === '/' || path === '/resizing') {
     return route.fulfill({ contentType: 'text/html', body: path === '/' ? page : resizing })
+  }
+  if (path === '/print.css') {
+    return route.fulfill({ contentType: 'text/css', body: css })
   }
   if (!existsSync(join(brand, path))) {
     return route.fulfill({ status: 404 })

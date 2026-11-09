@@ -1,6 +1,6 @@
 +++
 title = "Brand"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 `@cella/brand` is cella's house style as one package: the tones and
@@ -206,10 +206,13 @@ drift.
 `tools/_tests/print-browser.test.mjs` lays it in Chromium, Firefox and
 WebKit: a `<cella-print>` of the fixture and two `.cella-print`s over
 `printFile()`'s PNGs, the poster's three multiplied inks and the screen
-print's opaque two, each within three levels in 255 of what the explorer
-paints at every pixel and under one on the mean, since a browser blends
-each layer in eight bits. In each it widens a `<cella-print>` printed
-narrower, and one laid out at zero width, which has no layers until it
+print's opaque two, laid in the inks of a `print.css` it makes for the
+explorer's own settings, `explorer-house.json`, as the port's test holds
+them, since the house's inks have grown past the explorer's; each within
+three levels in 255 of what the explorer paints at every pixel and
+under one on the mean, since a browser blends each layer in eight
+bits. In each it widens a `<cella-print>` printed narrower, and one
+laid out at zero width, which has no layers until it
 has a width; each then has masks at its new width and paints the
 explorer's print within the same bounds. It swaps a third's `src` for a
 missing file, which leaves it with no layers.

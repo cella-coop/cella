@@ -1,6 +1,6 @@
 +++
 title = "employment-file"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A worker's employment records, such as their signed contract and its
@@ -45,8 +45,8 @@ someone the co-op does not employ.
 
 ## Shell
 
-Employment records on a person's page, each opening as its file, and
-another filed.
+Employment records in a person's Employment tab, each opening as its
+file, and another filed.
 
 ## Lanterne
 

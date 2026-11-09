@@ -112,7 +112,7 @@ test('Inès, seated in Web and no member, logs her own time and books it to a We
   assert.match(reason(forHer), /thomas@lanterne\.example may not log time for ines@lanterne\.example/)
   const assembly = await put({ kind: 'seat', args: { circle: 'ag', member: ines }, deadline: '2026-11-07', body: '' }, as(camille))
   assert.match(reason(assembly), /ines@lanterne\.example may not sit in ag: its seats are its active members'/)
-  const shown = await shell.page('/people/ines@lanterne.example', ines)
+  const shown = await shell.page('/people/ines@lanterne.example?tab=employment', ines)
   assert.ok(shown.text.includes('Timesheets') && shown.text.includes('2026-10'), 'her page lists her months')
 })
 

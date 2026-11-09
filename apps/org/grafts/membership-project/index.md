@@ -1,6 +1,6 @@
 +++
 title = "membership-project"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 Shares of a project's budget: a right granted to a member to spend up to
@@ -68,8 +68,8 @@ against the member and what is left of the budget again, as it did.
 ## Shell
 
 Adds to each project what was shared out (a hidden column), and to a
-project's overview its shares, what is left, and the form that grants
-one; to a person's page, the shares they hold.
+project's Budget tab its shares, what is left, and the form that grants
+one; to a person's Own and decide tab, the shares they hold.
 
 ## Lanterne
 

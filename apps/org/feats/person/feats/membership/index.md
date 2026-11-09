@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-08
+updated = 2026-11-09
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -391,7 +391,12 @@ ends (`employment-membership-motion`); the texts to read
 capital (`account-membership`). Own and decide reads back in plain
 sentences what membership is, one member, one vote; what the member owns,
 from the statutes' terms (`account-membership`); and what they decide,
-from their seats and mandates ([seats](#seats)). Each slice writes its
+from their seats and mandates ([seats](#seats)); and holds what the
+member owns in figures: their capital (`account-membership`), what they
+paid in and drew (`account-membership-transaction`), their instalments
+from pay (`account-membership-payslip-transaction`), their work share
+statements (`account-membership-patronage-transaction`) and the
+projects' budget shares they hold (`membership-project`). Each slice writes its
 sentences from its own guards and parameters, so the page says what the
 guards say. For a person who is no member, both say what joining would be.
 

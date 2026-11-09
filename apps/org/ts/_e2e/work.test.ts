@@ -54,15 +54,15 @@ test('the seed holds Lanterne\'s work: its projects, tasks and two months of tim
 test('the work pages render, each collection in its own layout', async () => {
   const pages: [string, string][] = [
     ['/projects', 'Les Halles Paysannes, online shop'],
-    ['/projects/halles-shop', 'Care and handover'],
+    ['/projects/halles-shop?tab=milestones', 'Care and handover'],
     ['/projects/halles-shop?tab=tasks', 'Fix VAT display on mixed baskets'],
     ['/projects/halles-shop?tab=time', 'Spent of the budget'],
     ['/tasks', 'Press check at the printer'],
     ['/tasks/t-6', 'Fix VAT display on mixed baskets'],
     ['/timesheets', 'Shop: VAT fixes'],
     ['/timesheets?view=dashboard', 'Hours by project'],
-    [`/people/${yusuf}`, 'Timesheets'],
-    ['/contacts/halles', 'Les Halles Paysannes, online shop'],
+    [`/people/${yusuf}?tab=employment`, 'Timesheets'],
+    ['/contacts/halles?tab=projects', 'Les Halles Paysannes, online shop'],
     ['/invoices/F-2026-0054', 'Les Halles Paysannes, online shop'],
   ]
   for (const [path, says] of pages) {
@@ -94,10 +94,12 @@ test('the work pages render, each collection in its own layout', async () => {
     assert.ok(dashboard.text.includes(says), `the timesheets' dashboard says ${says}`)
   }
   const tabs = await shell.page('/projects/halles-shop', thomas)
-  for (const tab of ['Overview', 'Tasks', 'Time']) {
+  for (const tab of ['Overview', 'Milestones', 'Budget', 'Tasks', 'Time', 'Expenses', 'Invoices']) {
     assert.ok(tabs.text.includes(`>${tab}<`), `a project's page has its ${tab} tab`)
   }
-  assert.ok(/>Invoices</.test(tabs.text) && />Net<\/dt>.*?36\s000,00\s€/s.test(tabs.text) && tabs.text.includes('F-2026-0054'), 'its overview lists what it invoiced, the net as a figure')
+  assert.ok(!tabs.text.includes('href="/invoices/F-2026-0054"'),'its overview leaves its invoices to their tab')
+  const invoiced = await shell.page('/projects/halles-shop?tab=invoices', thomas)
+  assert.ok(/>Net<\/dt>.*?36\s000,00\s€/s.test(invoiced.text) && invoiced.text.includes('F-2026-0054'), 'its Invoices tab lists what it invoiced, the net as a figure')
 })
 
 test('Thomas creates a task; Yusuf gives it to him and files it under the shop\'s care', async () => {
@@ -225,7 +227,7 @@ test('in November Yusuf, Web\'s lead, approves Thomas\'s October for Web, all of
   const self = await shell.act(`/people/${yusuf}`, 'approve', { month: '2026-10/web' }, yusuf)
   assert.equal(self.state, 'refused')
   assert.match(self.reason ?? '', /yusuf@lanterne.example may not approve their own time/)
-  const { text } = await shell.page(`/people/${thomas}`, thomas)
+  const { text } = await shell.page(`/people/${thomas}?tab=employment`, thomas)
   assert.ok(text.includes('Yusuf Demir'), 'his page names who approved his month')
 })
 

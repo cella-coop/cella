@@ -256,7 +256,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   data is central to it puts that data in a tab of its own after the
   first (`tabs`): a motion's Stances and Effects, a meeting's Agenda, a
   circle's Roles, Seats and Policies, a document's Versions, a report's
-  Figures, an invoice's Lines, a period's Entries; the first tab is the
+  Figures, an invoice's Lines, a period's Entries, a project's
+  Milestones and Budget, a contact's Invoices, a person's Employment; the first tab is the
   content and its Activity, and a kind with no free-form content shows
   its overview's blocks there. The header's crumb names the record by
   its kind and reference (`subtitle`, its id), never a sentence about

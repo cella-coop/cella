@@ -87,8 +87,9 @@ priority and due day. Dragging a card into backlog, todo or doing is the
 `move`, into done the `complete`, posted with the column entered and
 signed as the acting member; a refused move leaves the card where it
 was. The board also groups by priority, assignee or project. A task's
-page moves and completes it in its header; its assignee and project are
-set in its content.
+page, its header's crumb its id, moves and completes it in its header;
+its assignee and project are set in its content, and it has no tab of
+its own, since its properties say all it holds.
 
 ## Lanterne
 

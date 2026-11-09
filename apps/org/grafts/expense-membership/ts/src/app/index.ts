@@ -3,7 +3,7 @@ import type { Claimed } from '../models/claim.ts'
 import Expenses from './blocks/Expenses.svelte'
 
 // The graft's client side: whose each expense is, on the board's cards and
-// the expense's page, and a member's expenses on theirs.
+// the expense's page, and a member's expenses in an Expenses tab on theirs.
 export const app: App = {
   name: 'expense-membership',
   extends: {
@@ -18,7 +18,7 @@ export const app: App = {
       },
     },
     people: {
-      page: { blocks: [Expenses] },
+      page: { tabs: [{ id: 'expenses', label: 'Expenses' }], blocks: [{ tab: 'expenses', block: Expenses }] },
     },
   },
 }

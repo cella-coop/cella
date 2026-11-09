@@ -149,7 +149,7 @@ test('a worker reads their own capital account and its lines, and no colleague\'
   assert.ok(!accounts.text.includes('101301'), 'and not Camille\'s')
   assert.ok(accounts.text.includes('Bank —'), 'the co-op\'s own accounts are every member\'s')
   assert.ok(accounts.text.includes('trial balance agrees'), 'and the whole trial balance agrees for her, as it does')
-  assert.ok(!(await page(`/people/${camille}`, chloe)).text.includes('101301'), 'Camille\'s page shows her no capital of Camille\'s')
+  assert.ok(!(await page(`/people/${camille}?tab=rights`, chloe)).text.includes('101301'), 'Camille\'s page shows her no capital of Camille\'s')
 
   // The opening balances carry every member's capital: Chloé reads the
   // entry and its lines on the co-op's own accounts and on her own.

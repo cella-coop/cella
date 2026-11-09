@@ -4,7 +4,7 @@ import Contact from './blocks/Contact.svelte'
 import Projects from './blocks/Projects.svelte'
 
 // The graft's client side: whom a project is for and the form that links
-// it, and the projects a contact commissioned.
+// it, and the projects a contact commissioned, in its Projects tab.
 export const app: App = {
   name: 'contact-project',
   extends: {
@@ -19,7 +19,8 @@ export const app: App = {
     contacts: {
       page: {
         properties: (ps: Commissioned[]) => [{ label: 'Projects', value: ps.length, kind: 'number' }],
-        blocks: [Projects],
+        tabs: [{ id: 'projects', label: 'Projects' }],
+        blocks: [{ tab: 'projects', block: Projects }],
       },
     },
   },

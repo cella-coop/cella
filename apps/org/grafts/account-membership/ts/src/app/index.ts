@@ -15,7 +15,7 @@ export const app: App = {
       columns: [{ key: 'capital', label: 'Capital', kind: 'money', role: 'hidden', value: (r: { capital?: number }) => r.capital ?? 0 }],
       page: {
         properties: (c: Rights | null) => (c?.allowance ? [{ label: 'Draw limit', value: c.allowance, kind: 'money' }] : []),
-        blocks: [Capital, { tab: 'joining', block: Subscribe }, { tab: 'rights', block: Owns }],
+        blocks: [{ tab: 'rights', block: Capital }, { tab: 'joining', block: Subscribe }, { tab: 'rights', block: Owns }],
       },
     },
     accounts: {

@@ -23,8 +23,8 @@ const as: Deps = { db, actor: julien, sign: signer(scope, julien, fixture(julien
 
 const settings = {
   scope: scope,
-  scope_legal_name: 'Lanterne SCOP SARL',
-  scope_form: 'SCOP SARL à capital variable',
+  scope_legal_name: 'Lanterne Worker Co-operative',
+  scope_form: 'worker co-operative limited company with variable capital',
   scope_siren: '123456789',
   scope_rcs: 'Bobigny',
   scope_vat: 'FR12123456789',
@@ -84,38 +84,45 @@ test('the PDF prints the seller, the buyer as issued, each line, the VAT by rate
   assert.equal(p.taxed.reduce((s, t) => s + t.tax, 0), p.invoice.vat, 'the rates add up to the VAT issued')
   const printedText = text(pdf(p))
   for (const mention of [
-    'Lanterne SCOP SARL, SCOP SARL à capital variable',
-    'Siège : 14 rue des Graviers, 93100 Montreuil, France',
+    'Lanterne Worker Co-operative, worker co-operative limited company with variable capital',
+    'Registered office: 14 rue des Graviers, 93100 Montreuil, France',
     `SIREN 123${nbsp}456${nbsp}789`,
-    'RCS Bobigny',
-    'TVA intracommunautaire FR12123456789',
-    'FACTURE',
-    'N° F-2026-0001',
-    'Date d’émission : 24/10/2026',
-    'Échéance : 23/11/2026',
-    'Facturé à',
+    'Trade register RCS Bobigny',
+    'EU VAT number FR12123456789',
+    'INVOICE',
+    'No. F-2026-0001',
+    `Date of issue: 24${nbsp}October${nbsp}2026`,
+    `Due date: 23${nbsp}November${nbsp}2026`,
+    'Bill to',
     '(Les Halles Paysannes)',
     '(8 place du Marché)',
     '(93100 Montreuil)',
-    'Objet : Online shop \\(milestone 1 of 4\\): design',
+    'Subject: Online shop \\(milestone 1 of 4\\): design',
     '(Design, 2.5 days)',
-    '(2,5)',
-    `(600,00${nbsp}€)`,
-    `(1${nbsp}500,00${nbsp}€)`,
-    `(10${nbsp}%)`,
-    `(TVA 20${nbsp}% sur 1${nbsp}500,00${nbsp}€)`,
-    `(300,00${nbsp}€)`,
-    `(TVA 10${nbsp}% sur 333,33${nbsp}€)`,
-    `(33,33${nbsp}€)`,
-    `(1${nbsp}833,33${nbsp}€)`,
-    `(2${nbsp}166,66${nbsp}€)`,
-    'Total TTC',
-    'Pas d’escompte pour paiement anticipé',
+    '(2.5)',
+    '(€600.00)',
+    '(€1,500.00)',
+    '(10%)',
+    '(VAT 20% on €1,500.00)',
+    '(€300.00)',
+    '(VAT 10% on €333.33)',
+    '(€33.33)',
+    '(€1,833.33)',
+    '(€2,166.66)',
+    '(Net unit price)',
+    '(Net amount)',
+    'Total excl. VAT',
+    'Total incl. VAT',
+    'Payment terms',
+    'No discount for early payment',
     'L441-10',
-    `40${nbsp}€`,
+    '€40.00',
     'D441-5',
   ]) {
     assert.ok(printedText.includes(mention), `the PDF prints ${mention}`)
+  }
+  for (const french of ['Facture', 'FACTURE', 'TVA', 'HT)', 'TTC', 'Siège', 'Échéance', 'Objet', 'escompte', 'pénalités']) {
+    assert.ok(!printedText.includes(french), `the PDF prints no French: ${french}`)
   }
   assert.equal(p.invoice.total, 2166_66)
 })
@@ -159,7 +166,15 @@ test('a long invoice breaks onto pages, each with the seller\'s mentions and its
     assert.ok(raw.includes(`${id} · page ${n}/${pages}`))
   }
   assert.equal(raw.split('RCS Bobigny').length - 1, pages, 'the seller\'s mentions close each page')
-  assert.equal(raw.split('(Désignation)').length - 1, pages, 'the lines\' header starts each page they run on')
+  assert.equal(raw.split('(Description)').length - 1, pages, 'the lines\' header starts each page they run on')
+})
+
+test('a voided invoice\'s PDF is marked VOID, with the day it was voided', async () => {
+  const p = await printed(db, 'F-2026-0001')
+  assert.ok(p)
+  assert.ok(!text(pdf(p)).includes('VOID'))
+  const voided = text(pdf({ ...p, invoice: { ...p.invoice, voided: '2026-10-25' } }))
+  assert.ok(voided.includes(`VOID on 25${nbsp}October${nbsp}2026`))
 })
 
 test('the address billed is issued with the invoice and never changes', async () => {
@@ -175,7 +190,7 @@ test('the seller is kept as issued: a seat that moves later never alters an issu
     const before = await printed(db, 'F-2026-0001')
     assert.ok(before)
     assert.equal(before.seller.seat, settings.scope_seat)
-    assert.ok(text(pdf(before)).includes(`Siège : ${settings.scope_seat}`))
+    assert.ok(text(pdf(before)).includes(`Registered office: ${settings.scope_seat}`))
     const id = await issued(draft([{ description: 'Upkeep', quantity: '1', unit_price: 300_00, vat_rate: 2000 }]))
     const moved = await printed(db, id)
     assert.equal(moved?.seller.seat, '3 avenue Gambetta, 75020 Paris, France', 'an invoice issued after the move names the new seat')
@@ -188,7 +203,7 @@ test('the seller is kept as issued: a seat that moves later never alters an issu
   }
 })
 
-test('a VAT rate with a decimal issues, sent in hundredths: 5,5 % and 2,1 %', async () => {
+test('a VAT rate with a decimal issues, sent in hundredths: 5.5% and 2.1%', async () => {
   const id = await issued(
     draft([
       { description: 'Books', quantity: '3', unit_price: 19_99, vat_rate: 550 },
@@ -207,8 +222,8 @@ test('a VAT rate with a decimal issues, sent in hundredths: 5,5 % and 2,1 %', as
   assert.equal(p.invoice.vat, 5_82)
   assert.deepEqual(p.invoice.lines.map((l) => l.vat_rate), ['5.50', '2.10'])
   const raw = text(pdf(p))
-  assert.ok(raw.includes(`(TVA 5,5${nbsp}% sur 59,97${nbsp}€)`))
-  assert.ok(raw.includes(`(TVA 2,1${nbsp}% sur 120,00${nbsp}€)`))
+  assert.ok(raw.includes('(VAT 5.5% on €59.97)'))
+  assert.ok(raw.includes('(VAT 2.1% on €120.00)'))
 })
 
 test('the form reads a VAT rate in percent into hundredths, and refuses more than two decimals', () => {
@@ -286,6 +301,6 @@ test('the seller\'s VAT number is required where a line carries VAT, and not on 
     assert.ok(p)
     assert.equal(p.seller.vat, null)
     assert.equal(p.invoice.vat, null)
-    assert.ok(!text(pdf(p)).includes('TVA intracommunautaire'))
+    assert.ok(!text(pdf(p)).includes('EU VAT number'))
   })
 })

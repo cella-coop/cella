@@ -359,7 +359,7 @@ test('Julien issues F-2026-0056, posted to the books, and its PDF opens from its
   const printed = await page('/invoices/F-2026-0056/content')
   assert.equal(printed.status, 200)
   assert.equal(printed.type, 'application/pdf')
-  for (const mention of ['%PDF-1.4', '(N', ' F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
+  for (const mention of ['%PDF-1.4', '(INVOICE)', '(No. F-2026-0056)', '(42 rue de Romainville)', '(93100 Montreuil)', 'RCS Bobigny', 'L441-10']) {
     assert.ok(printed.text.includes(mention), `the PDF prints ${mention}`)
   }
   const linked = await act('/invoices/F-2026-0056', 'link', { contact: 'velo' }, julien)

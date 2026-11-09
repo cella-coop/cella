@@ -15,7 +15,7 @@
     <a class="title" href="/motions/{d.id}">{d.title}</a>
     <div class="meta">
       <Badge tone={d.closed ? 'neutral' : 'accent'}>{d.closed ? `closed ${date(d.closed)}` : `open until ${date(d.deadline)}`}</Badge>
-      <span>{d.circle} · put by {d.authorName} · {d.method}</span>
+      <span>{d.circleName} · put by {d.authorName} · {d.method}</span>
     </div>
   {:else}
     <div class="title">No such motion</div>

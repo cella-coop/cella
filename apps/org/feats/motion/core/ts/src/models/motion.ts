@@ -46,10 +46,14 @@ export function terms(p: Procedure): string {
 export interface Motion {
   id: string
   circle: string
+  circleName: string
   // The grantee it was proposed as, its circle or a role, by id and by
   // name; the id where its reader reads no name.
   author: string
   authorName: string
+  // The circle whose page names its author: the circle itself, or the one
+  // its role is of.
+  authorCircle: string
   title: string
   method: Method
   // The procedure it was proposed under, whose method is its own.
@@ -119,8 +123,10 @@ export interface Summary {
   id: string
   title: string
   circle: string
+  circleName: string
   author: string
   authorName: string
+  authorCircle: string
   method: string
   deadline: string
   closed: string | null

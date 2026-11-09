@@ -57,7 +57,9 @@ export interface Detail extends Circle {
   issuers: { id: string; name: string }[]
   issued: { id: string; name: string }[]
   roles: Role[]
-  mandates: Mandate[]
+  // The mandates granted to its roles, as the Mandates collection reads
+  // them.
+  mandates: Standing[]
 }
 
 // A circle someone may work for, as a form offers it.
@@ -103,6 +105,10 @@ export interface Created {
 // ended, by its revocation or its term, and since when.
 export interface Standing extends Mandate {
   granteeName: string
+  // The issuer's name, and the name of the circle its scope covers, none
+  // for `own` or the whole co-op.
+  issuerName: string
+  scopeName: string | null
   circle: string | null
   procedure: string | null
   parent: string | null

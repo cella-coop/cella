@@ -863,13 +863,21 @@ a gallery of cards by default, and its structure drawn as the mandates
 link the circles, never as a tree: each circle with the circles that
 issued what it and its roles hold, and those it issued to. A circle's
 page lists its roles,
-those every working circle has among them, and the mandates granted to
-them, each its policy's sentence as it reads (`sentences` in
-`@cella/org-policy`), with their limits, budgets, scopes and days, and
-who issued each, each linking to its mandate's page.
+those every working circle has among them, each with its duty and the
+circle it is of, and the mandates granted to them in the Mandates
+collection's columns: its power, the role it is granted to, its cap,
+what it covers, who issued it and whether it stands, each linking to
+its mandate's page, which reads its policy's sentence (`sentences` in
+`@cella/org-policy`).
 
 The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date.
+Every page that shows a mandate says it in the same words: a role, a
+circle, an issuer and the circle a scope covers by name, never by id; a
+cap as `cap` in `app/words.ts` says it, "up to 1 200,00 € a write" or
+"within 1 000,00 € a month", an amount as `models/format.ts` writes
+one; and what it covers as `covers` says it, the whole co-op, its own
+circle or a circle by name.
 A mandate's page, `/mandates/<id>`, as the shell addresses an item,
 shows where its authority comes from: its sentence, grantee, power,
 caps, scope, days and procedure, whether it stands, is yet to be, or
@@ -887,7 +895,8 @@ link they read, under a line saying the links above it are withheld,
 and only a link issued under no mandate, its parent none, is called
 the root, the assembly's. It names roles and circles, never who holds
 them. A grantee's name links to its circle, its issuer to
-its own, and the motion to its page.
+its own, and the motion to its page; a link of the chain and a mandate
+under it opens its own page.
 
 Who sits in a circle is the membership feat's, which names people.
 Proposing to grant a mandate to one of its roles or to it, or to

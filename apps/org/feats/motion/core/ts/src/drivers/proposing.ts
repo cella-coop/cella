@@ -100,11 +100,11 @@ export async function revising(db: Db, mandate: string): Promise<Revising | null
   return p && held ? { circle: p.circle, circles: p.circles, held } : null
 }
 
-// A mandate as a motion's page names it: its power and grantee by name,
-// who issued it, its cap in words, and the circle whose page lists it, a
-// role every working circle has listed on the assembly's.
-const mandateColumns = `m.id::text AS id, m.power, coalesce(r.name, g.name, m.grantee) AS grantee, m.issuer,
-  circle.cap(m."limit", m.budget, m.per) AS cap, coalesce(nullif(r.circle, '*'), g.id, circle.assembly()) AS circle`
+// A mandate as a motion's page names it: its power, its grantee and
+// the circle that issued it by name, and its cap, in cents, which the page
+// says in words.
+const mandateColumns = `m.id::text AS id, m.power, coalesce(r.name, g.name, m.grantee) AS grantee, coalesce(i.name, m.issuer) AS issuer,
+  cella.cents(m."limit")::float8 AS "limit", cella.cents(m.budget)::float8 AS budget, m.per`
 
 // What a motion's actions do to the mandates (`motion.issues`): each
 // grant's mandate and parent, each end's or replacement's mandate and
@@ -118,6 +118,7 @@ export async function issuing(db: Db, motion: string): Promise<{ mandates: Issui
   const named = await db.query<Mandate>(
     `SELECT ${mandateColumns} FROM circle.mandate m
      LEFT JOIN circle.role r ON r.id = m.grantee LEFT JOIN circle.circle g ON g.id = m.grantee
+     LEFT JOIN circle.circle i ON i.id = m.issuer
      WHERE m.id = ANY($1::bigint[])`,
     [ids],
   )

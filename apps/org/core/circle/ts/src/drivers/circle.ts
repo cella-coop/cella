@@ -1,6 +1,6 @@
 import type { Db, Read } from '@cella/org-db'
 import { sentences } from '@cella/org-policy'
-import type { Circle, Depth, Detail, Lens, Standing, Mandate, Provenance, Role, Sat } from '../models/circle.ts'
+import type { Circle, Depth, Detail, Lens, Standing, Provenance, Role, Sat } from '../models/circle.ts'
 
 // Circles never nest, so they list the assembly first and the others by
 // name.
@@ -50,7 +50,8 @@ export async function lenses(db: Db, person: string, day: string): Promise<Lens[
 }
 
 // A circle, its roles, those every circle but the assembly has among
-// them, the mandates granted to those roles, each as its policy reads,
+// them, the mandates granted to those roles, each as the Mandates
+// collection reads it, with its policy's sentence,
 // and how the mandates link it to the other circles: those that issued
 // what it and its roles hold, and those it issued to.
 export async function circle(db: Db, id: string): Promise<Detail | null> {
@@ -63,10 +64,8 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
     `SELECT id, circle, name, duty FROM circle.role WHERE circle = $1 OR (circle = '*' AND NOT $2) ORDER BY circle = '*', name`,
     [id, c.assembly],
   )
-  const mandates = await db.query<Omit<Mandate, 'sentence'>>(
-    `SELECT id::text, grantee, issuer, power, policy, cella.cents("limit") AS "limit", cella.cents(budget) AS budget, per, scope,
-            to_char("from", 'YYYY-MM-DD') AS "from", to_char(until, 'YYYY-MM-DD') AS until, to_char(revoked, 'YYYY-MM-DD') AS revoked
-     FROM circle.mandate WHERE grantee = ANY($1) ORDER BY grantee, power, "from"`,
+  const mandates = await db.query<Omit<Standing, 'sentence'>>(
+    `SELECT ${held} FROM circle.mandate m ${joined} WHERE m.grantee = ANY($1) ORDER BY m.grantee, m.power, m."from"`,
     [roles.rows.map((r) => r.id)],
   )
   // A grantee is this circle's when it is the circle or one of its own
@@ -98,12 +97,13 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
 const num = (v: unknown) => (v === null || v === undefined ? null : Number(v))
 
 // A mandate's grant as its page reads it, `m` the mandate: its grantee's
-// name and circle, the motion that adopted its policy, and where it
+// name and circle, its issuer's name and that of the circle its scope
+// covers, the motion that adopted its policy, and where it
 // stands on the verdict date, an end by revocation or term since the day
 // it came.
 const held = `m.id::text, m.grantee, coalesce(r.name, g.name, m.grantee) AS "granteeName",
   CASE WHEN r.id IS NULL THEN g.id WHEN r.circle <> '*' THEN r.circle END AS circle,
-  m.issuer, m.parent::text, m.power, m.policy, p.motion, m.procedure,
+  m.issuer, coalesce(i.name, m.issuer) AS "issuerName", s.name AS "scopeName", m.parent::text, m.power, m.policy, p.motion, m.procedure,
   cella.cents(m."limit") AS "limit", cella.cents(m.budget) AS budget, m.per, m.scope,
   to_char(m."from", 'YYYY-MM-DD') AS "from", to_char(m.until, 'YYYY-MM-DD') AS until, to_char(m.revoked, 'YYYY-MM-DD') AS revoked,
   CASE WHEN m.revoked <= cella.verdict_date() AND (m.until IS NULL OR m.revoked <= m.until) THEN 'revoked'
@@ -115,6 +115,8 @@ const held = `m.id::text, m.grantee, coalesce(r.name, g.name, m.grantee) AS "gra
        ELSE m."from" END, 'YYYY-MM-DD') AS since`
 const joined = `LEFT JOIN circle.role r ON r.id = m.grantee
   LEFT JOIN circle.circle g ON g.id = m.grantee
+  LEFT JOIN circle.circle i ON i.id = m.issuer
+  LEFT JOIN circle.circle s ON s.id = m.scope
   LEFT JOIN policy.policy p ON p.id = m.policy`
 
 // The mandates as the collection lists them, by power, then by the day

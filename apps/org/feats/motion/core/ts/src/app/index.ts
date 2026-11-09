@@ -24,7 +24,7 @@ export const app: App = {
         columns: [
           { key: 'title', label: 'Motion', kind: 'title', role: 'title', value: (d: Motion) => d.title },
           { key: 'id', label: 'Id', kind: 'mono', role: 'sub', value: (d: Motion) => d.id },
-          { key: 'circle', label: 'Circle', kind: 'mono', role: 'meta', value: (d: Motion) => d.circle },
+          { key: 'circleName', label: 'Circle', role: 'meta', value: (d: Motion) => d.circleName },
           { key: 'method', label: 'Method', role: 'hidden', value: (d: Motion) => d.method },
           { key: 'procedure', label: 'Procedure', kind: 'badge', role: 'hidden', value: (d: Motion) => d.procedure },
           { key: 'deadline', label: 'Deadline', kind: 'date', role: 'meta', value: (d: Motion) => d.deadline },
@@ -33,18 +33,18 @@ export const app: App = {
       page: {
         eyebrow: 'Motion',
         title: (d: Detail) => d.title,
-        subtitle: (d: Detail) => `${d.id} · put by ${d.authorName} · by ${d.terms.label.toLowerCase()} in ${d.circle}`,
+        subtitle: (d: Detail) => `${d.id} · put by ${d.authorName} · by ${d.terms.label.toLowerCase()} in ${d.circleName}`,
         properties: (d: Detail) => [
           { label: 'Procedure', value: d.terms.label },
           ...(terms(d.terms) === d.terms.label.toLowerCase() ? [] : [{ label: 'Terms', value: terms(d.terms) }]),
-          { label: 'Circle', value: d.circle, href: `/circles/${d.circle}` },
-          { label: 'Put by', value: d.authorName },
+          { label: 'Circle', value: d.circleName, href: `/circles/${d.circle}` },
+          { label: 'Put by', value: d.authorName, href: `/circles/${d.authorCircle}` },
           { label: 'Proposed', value: d.proposed, kind: 'date' },
           { label: 'Deadline', value: d.deadline, kind: 'date' },
           { label: 'Closed', value: d.closed, kind: 'date' },
           { label: 'Cutoff', value: d.cutoff === null ? null : `receipt ${d.cutoff}`, kind: 'mono' },
         ],
-        related: (d: Detail) => [{ label: d.circle, sub: 'circle', href: `/circles/${d.circle}` }],
+        related: (d: Detail) => [{ label: d.circleName, sub: 'circle', href: `/circles/${d.circle}` }],
         activity: (d: Detail) => d.given.map((g) => ({ at: g.at, who: g.member, text: `${g.stance}, receipt ${g.receipt}` })),
         // The motion itself, who stands where on it, and what its members
         // say about it: the roll and the deliberation are the two views the

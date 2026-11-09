@@ -1,27 +1,27 @@
 <script lang="ts">
-  import { money, power, Section, Table, type Column } from '@cella/org-ui'
-  import type { Detail, Mandate, Role } from '../../models/circle.ts'
+  import { power, Section, Table, type Column } from '@cella/org-ui'
+  import type { Detail, Role, Standing } from '../../models/circle.ts'
+  import { cap, covers, tones } from '../words.ts'
 
-  // A circle's roles, and the mandates that grant them powers, each its
-  // policy's sentence, capped by a limit per write or a budget over a
-  // period, scoped to what it covers, and the circle that issued it;
-  // each opens its mandate's page, its chain.
+  // A circle's roles, each with its duty and the circle it is of, and the
+  // mandates that grant them powers in the Mandates collection's words:
+  // the power, the role by name, the cap, what it covers, the circle that
+  // issued it and whether it stands; each opens its mandate's page, its
+  // sentence and its chain.
   let { data }: { data: Detail; id: string } = $props()
 
   const roles: Column<Role>[] = [
     { key: 'name', label: 'Role', kind: 'title', value: (r) => r.name },
     { key: 'duty', label: 'Duty', value: (r) => r.duty },
-    { key: 'circle', label: 'Of', kind: 'mono', value: (r) => (r.circle === '*' ? 'every working circle' : r.circle) },
+    { key: 'circle', label: 'Of', value: (r) => (r.circle === '*' ? 'every working circle' : data.name) },
   ]
-  const mandates: Column<Mandate>[] = [
-    { key: 'power', label: 'Power', value: (m) => power(m.power) },
-    { key: 'sentence', label: 'Policy', value: (m) => m.sentence },
-    { key: 'grantee', label: 'Role', value: (m) => m.grantee },
-    { key: 'limit', label: 'Limit', kind: 'money', value: (m) => m.limit },
-    { key: 'budget', label: 'Budget', value: (m) => (m.budget === null ? null : `${money(m.budget)} a ${m.per}`) },
-    { key: 'scope', label: 'Covers', value: (m) => (m.scope === null ? 'the whole co-op' : m.scope === 'own' ? 'its own circle' : m.scope) },
-    { key: 'issuer', label: 'Issued by', kind: 'mono', value: (m) => m.issuer },
-    { key: 'until', label: 'Until', kind: 'date', value: (m) => m.revoked ?? m.until },
+  const mandates: Column<Standing>[] = [
+    { key: 'power', label: 'Power', kind: 'title', value: (m) => power(m.power) },
+    { key: 'grantee', label: 'Granted to', value: (m) => m.granteeName },
+    { key: 'cap', label: 'Cap', value: (m) => cap(m) },
+    { key: 'scope', label: 'Covers', value: (m) => covers(m) },
+    { key: 'issuer', label: 'Issued by', value: (m) => m.issuerName },
+    { key: 'state', label: 'State', kind: 'badge', value: (m) => m.state, tone: (m) => tones[m.state] },
   ]
 </script>
 

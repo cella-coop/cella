@@ -289,6 +289,9 @@ spans slices is a graft's.
 **A slice's layers import only inward. Other slices use only its
 contract; only shells import its app.**
 
+- *enforced* (`feat-check`, `tree.test.mjs`): a file in a layer imports
+  only its own layer and the layers inside it, by the layer each path
+  names ([inside a package](#inside-a-package)).
 - *enforced* (`feat-check`'s exports): a slice's package exports only
   `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`; the
   check reads the export keys, not what they re-export.
@@ -1606,10 +1609,9 @@ write begun, is refused, nothing committed and no number used.
 
 ## Inside a package
 
-Seedling's layers, innermost first; imports point inward only.
-`tools/ui-check.mjs` refuses a client layer's import of a server layer
-([client state](#client-state)); no tool sees an import from one server
-layer to another, or one client layer to another, and review holds it.
+Seedling's layers, innermost first; imports point inward only, and
+`cella check feats` refuses a file that imports a layer outside its own,
+by the layer each path names.
 
 - Server: `models` (types, schemas, invariants, `permissions`, `actions.ts`) →
   `interfaces` (repository contracts) → `handlers` (`(input, deps) → Result`,

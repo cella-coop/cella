@@ -206,6 +206,8 @@ a node's core only when it spans everything below.
 **A slice's layers import only inward. Other slices use only its
 contract; only shells import its app.**
 
+- *enforced* (`feat-check`): a file in a layer imports only its own
+  layer and the layers inside it, by the layer each path names.
 - *enforced* (`feat-check`'s exports): a slice's package exports only
   `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`.
 - *enforced* (`ui-check`, the shell's registry): **A slice's UI is its

@@ -146,11 +146,13 @@ repository's root becomes the top node and the library moves into its core.
 Architecture rules are enforced by tooling wherever a tool can see them.
 `tools/feat-check.mjs` (`cella check feats`) reads each `package.json` and
 `cargo metadata`, the manifests cargo and pnpm read, and not the lockfile.
-It places each package by its path and refuses any other edge; a package
-in `packages/` sits outside the tree, may be depended on by any, and may
-depend on no package of the repository; the site, `apps/site`, sits
-outside it too, may depend on such a package alone, and no package may
-depend on it. It also
+It places each package by its path and refuses any other edge, as the
+table above gives them: the brand, `packages/brand`, sits outside the
+tree, may be depended on by any, and depends on no package of the
+repository; the diagrams, `packages/diagrams`, sit outside it too,
+depend on the brand alone, and only the site depends on them; the site,
+`apps/site`, sits outside it as well, depends on the brand and the
+diagrams alone, and no package depends on it. It also
 checks that every graft is declared by a feat it joins, that its name is
 in order, that every feat it names is below its node and that no child of
 its node holds them all, that it joins no feat with one nested in it, that

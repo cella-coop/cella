@@ -72,14 +72,15 @@ const order = (g) => g.split('-').length
 const byOrder = (grafts) => grafts.sort((a, b) => order(a) - order(b) || a.localeCompare(b))
 
 // A core library's SQL calls the notary's, and the SQL of the libraries
-// its package depends on: `circle` reads `policy`'s register.
+// its package depends on. Core's grafts, which join its feats, run after
+// every library and feat of the core, lowest order first.
 const uses = (node, lib) => {
   const pkg = join(node, 'core', lib, 'ts', 'package.json')
   const deps = existsSync(pkg) ? Object.keys(JSON.parse(readFileSync(pkg, 'utf8')).dependencies ?? {}) : []
   return deps.map((d) => d.match(/^@cella\/[a-z]+-([a-z]+)$/)?.[1]).filter((d) => d && d !== lib)
 }
 const core = (node) => {
-  const libs = sorted(join(node, 'core')).filter((lib) => isDir(join(node, 'core', lib)))
+  const libs = sorted(join(node, 'core')).filter((lib) => lib !== 'grafts' && isDir(join(node, 'core', lib)))
   const out = []
   const visit = (lib) => {
     if (!out.includes(lib)) {
@@ -88,7 +89,11 @@ const core = (node) => {
     }
   }
   ;[...libs.filter((lib) => lib === 'notary'), ...libs].forEach(visit)
-  return [join(node, 'core', 'sql'), ...out.map((lib) => join(node, 'core', lib, 'sql'))]
+  return [
+    join(node, 'core', 'sql'),
+    ...out.map((lib) => join(node, 'core', lib, 'sql')),
+    ...byOrder(sorted(join(node, 'core', 'grafts'))).map((g) => join(node, 'core', 'grafts', g, 'sql')),
+  ]
 }
 const feats = (node) => sorted(join(node, 'feats')).map((f) => join(node, 'feats', f)).filter(isNode)
 const grafts = (node) => byOrder(sorted(join(node, 'grafts')))
@@ -110,7 +115,7 @@ const held = (node) => [...grafts(node).map((g) => ({ g, node })), ...feats(node
 // the slice nests in, then the slice's own SQL and what it reads. Null when
 // the app has no slice of that name.
 const part = (app, name) => {
-  if (isDir(join(app, 'core', name))) {
+  if (name !== 'grafts' && (isDir(join(app, 'core', name)) || isDir(join(app, 'core', 'grafts', name)))) {
     return core(app)
   }
   const feat = below(app).find((f) => basename(f) === name)

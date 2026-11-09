@@ -15,6 +15,7 @@
     "@cella/org-person": "workspace:*",
     "@cella/org-membership": "workspace:*",
     "@cella/org-circle": "workspace:*",
+    "@cella/org-graft-circle-policy": "workspace:*",
     "@cella/org-motion": "workspace:*",
     "@cella/org-document": "workspace:*",
     "@cella/org-account": "workspace:*",

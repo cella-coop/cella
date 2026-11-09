@@ -161,7 +161,7 @@ test('Julien\'s finance role and coordination each hold their mandates through a
   assert.equal((await one<{ n: number }>(`SELECT count(*)::int AS n FROM circle.grantee WHERE id LIKE '%@%'`)).n, 0, 'no person is a grantee')
 })
 
-test('a mandate policy naming a person is refused at its proposal by circle.mandate_flaw: the person\'s role holds it', async () => {
+test('a mandate policy naming a person is refused at its proposal by circle_policy.mandate_flaw: the person\'s role holds it', async () => {
   await on('2026-12-05')
   const personal = await propose(
     {

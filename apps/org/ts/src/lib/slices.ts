@@ -4,6 +4,7 @@ import { app as log } from '@cella/org-log/app'
 import { app as person } from '@cella/org-person/app'
 import { app as membership } from '@cella/org-membership/app'
 import { app as circle } from '@cella/org-circle/app'
+import { app as circlePolicy } from '@cella/org-graft-circle-policy/app'
 import { app as motion } from '@cella/org-motion/app'
 import { app as document } from '@cella/org-document/app'
 import { app as contact } from '@cella/org-contact/app'
@@ -82,6 +83,7 @@ export const apps: App[] = [
   person,
   membership,
   circle,
+  circlePolicy,
   motion,
   document,
   meeting,

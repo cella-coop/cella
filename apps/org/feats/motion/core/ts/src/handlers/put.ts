@@ -20,7 +20,7 @@ const fields: Record<string, string> = {
 
 // The legal wording of open books' disclosure rule a `disclose` proposes,
 // Lanterne's, each value marked once with the way it is stricter, as
-// core reads them (`circle.disclosure_flaw`): the fewest people a total
+// core reads them (`circle_policy.disclosure_flaw`): the fewest people a total
 // may count, and the most of it one person and two may put in.
 export function disclosed(args: Put['args']): string {
   for (const [name, says] of [

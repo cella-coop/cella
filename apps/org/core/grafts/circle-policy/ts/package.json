@@ -1,0 +1,16 @@
+{
+  "name": "@cella/org-graft-circle-policy",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./models": "./src/models/index.ts",
+    "./api": "./src/api/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-db": "workspace:*",
+    "@cella/org-ui": "workspace:*",
+    "@cella/org-circle": "workspace:*",
+    "@cella/org-policy": "workspace:*"
+  }
+}

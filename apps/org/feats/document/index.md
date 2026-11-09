@@ -268,7 +268,7 @@ circle whose policies it reads, which it names always.
   circle applying on the write's day or ended one that day; the version
   reads the day `document.reads` gives from the version it replaces, and
   one earlier is refused, naming the day that version reads; and it
-  reads, each as a line as it reads (`policy.says`), every policy of the
+  reads, each as a line as it reads (`circle_policy.says`), every policy of the
   circle in force on the day it reads and no other of its policies.
 - `document.handmade`, on `document:document:edit`, `:version` and
   `:adopt`: the document is not generated.

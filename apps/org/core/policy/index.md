@@ -1,6 +1,6 @@
 +++
 title = "Policy"
-updated = 2026-11-07
+updated = 2026-11-10
 +++
 
 The register of policies (`@cella/org-policy`): every binding sentence a
@@ -8,8 +8,9 @@ circle adopted by motion, a mandate, a right, a rule or a procedure, with the
 motion that adopted it, the days it applies and the default it takes, and
 the legal forms cella offers with their default policies
 ([policies](../../../../_corpus/doc/architecture.md#policies)). A core
-library, as the notary is: it knows no feat, and every feat and graft
-reads it.
+feat: it knows no other feat, core's circles among them, and every feat
+and graft reads it. What joins it to the circles is core's graft
+[circle-policy](../grafts/circle-policy/index.md).
 
 ## SQL
 
@@ -64,13 +65,16 @@ Its functions:
   which way is.
 - `policy.sentence(legal)`: the wording as it reads, each mark replaced
   by its value as written, without its direction.
-- `policy.says(id)`: a policy's sentence as it reads, which a guard may
-  quote in the reason it refuses; it runs with its owner's rights, and
-  the app role and the guards role may call it. It quotes a wording only
-  where the structure's reading would: in a write's transaction, where
-  every guard runs, to a member of the scope, and to anyone signed in
-  while the co-op publishes its register; anyone else reads null (core's
-  circles redefine it so in `011-structure.sql`).
+- `policy.says(id)`: a policy's sentence as it reads; it runs with its
+  owner's rights, and no role may call it. Who may read a policy is the
+  circles' to say, which the register knows nothing of, so a guard
+  quotes it in the reason it refuses, and a reader reads it, through
+  core's graft joining the circles to the register,
+  `circle_policy.says(id)`, which quotes a wording only where the
+  structure's reading would: in a write's transaction, where every guard
+  runs, to a member of the scope, and to anyone signed in while the
+  co-op publishes its register; anyone else reads null
+  ([circle-policy](../grafts/circle-policy/index.md#schema)).
 - `policy.hash(legal, friendly)`: what a motion adopts, the BLAKE3 of the
   two as a JSON array, the friendly wording trimmed and an empty one
   none, as `policy.wording` keeps it. It is the one canonical form:
@@ -122,14 +126,15 @@ reads only what the structure's reading lets it: a member of the scope
 reads the whole register, and anyone else signed in all of it while
 the co-op publishes its register by a rule of the assembly, and none
 of it otherwise
-([circle](../circle/index.md#who-reads-the-structure)), whose
-`011-structure.sql` puts the register's tables under row-level
-security, enabled and forced, since the register knows no circle. The
+([circle](../circle/index.md#who-reads-the-structure)): core's graft
+joining the circles to the register, circle-policy, puts its tables
+under row-level security, enabled and forced, in its
+`002-register.sql`, since the register knows no circle. The
 app reads the forms and their defaults whole, registries every reader
 reads, the guards role every column of a default but its wordings. A
 slice's SQL that reads `policy.wording` is refused by `cella check
 feats`: a guard reads a policy's values from its own columns, never its
-sentence, which it may only quote, by `policy.says`.
+sentence, which it may only quote, by `circle_policy.says`.
 
 ## Folds
 
@@ -149,7 +154,7 @@ hash, or ended on the day it says.
   transaction, as the motion feat's `end` calls it; returns the day it
   ends.
 - `sentences(db, ids)`: the legal wording of each policy named, as it
-  reads, by its id, as a circle's page shows a mandate.
+  reads, by its id, as circle-policy gives a mandate's page its sentence.
 - `inForce(db, circle)`: a circle's policies in force today, each with
   its sentence as it reads, its wordings, its values, its days and the
   procedure that alone changes it, if any, the default it takes, if

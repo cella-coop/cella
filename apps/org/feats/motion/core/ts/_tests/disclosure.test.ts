@@ -27,7 +27,7 @@ after(async () => {
 const flaw = async (wording: string) =>
   (
     await db.query<{ r: string | null }>(
-      `SELECT circle.disclosure_flaw(
+      `SELECT circle_policy.disclosure_flaw(
          (SELECT jsonb_object_agg(p.name, jsonb_build_object('literal', p.literal, 'stricter', p.stricter)) FROM policy.marks($1) p),
          circle.assembly()) AS r`,
       [wording],
@@ -72,7 +72,7 @@ test('a withholding ends the disclosure rule in force and nothing else: one nami
       const { id } = (
         await db.query<{ id: string }>(`SELECT policy.adopt('ag', 'rule', $1, NULL, 'm-2026-020', $2, cella.verdict_date(), NULL, NULL) AS id`, [wording, n])
       ).rows[0]
-      await db.query('SELECT circle.mandate_from($1)', [id])
+      await db.query('SELECT circle_policy.mandate_from($1)', [id])
       return id
     }
     const rule = await adopt(disclosed({ ...defaults }), 1)

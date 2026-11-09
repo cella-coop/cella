@@ -92,6 +92,10 @@ const place = (dir) => {
   if (basename(dirname(up)) === 'core' && isNode(dirname(dirname(up)))) {
     return { kind: 'core', node: dirname(dirname(up)) }
   }
+  // A core graft, `core/grafts/<graft>/<lang>`: core, joining core's feats.
+  if (basename(dirname(up)) === 'grafts' && basename(dirname(dirname(up))) === 'core' && isNode(dirname(dirname(dirname(up))))) {
+    return { kind: 'core', node: dirname(dirname(dirname(up))), graft: basename(up) }
+  }
   if (basename(dirname(up)) === 'grafts' && isNode(dirname(dirname(up)))) {
     return { kind: 'graft', node: dirname(dirname(up)), name: basename(up) }
   }
@@ -180,7 +184,7 @@ if (existsSync(join(repo, 'Cargo.toml'))) {
 
 for (const dir of dirs) {
   if (!place(dir)) {
-    fail(`${dir}: not on the tree; a package sits in a node's core/ or core/<lib>/, a graft or a node's root`)
+    fail(`${dir}: not on the tree; a package sits in a node's core/, core/<lib>/ or core/grafts/<graft>/, a graft or a node's root`)
   }
 }
 for (const [a, b] of edges) {
@@ -367,12 +371,16 @@ if (sql) {
     for (const g of existsSync(gdir) ? readdirSync(gdir) : []) {
       known.add(schemaName(g))
     }
-    // A core library's schema, which its SQL names: org's circle.
+    // A core library's schema, which its SQL names: org's circle; and a
+    // core graft's: org's circle_policy.
     const cdir = join(repo, node, 'core')
     for (const l of existsSync(cdir) ? readdirSync(cdir) : []) {
       if (existsSync(join(cdir, l, 'sql'))) {
         known.add(l)
       }
+    }
+    for (const g of existsSync(join(cdir, 'grafts')) ? readdirSync(join(cdir, 'grafts')) : []) {
+      known.add(schemaName(g))
     }
   }
   const found = { powers: [], guards: [], cites: [], stances: [], personal: [], impersonal: [], columns: [], foreign: [], follows: [] }

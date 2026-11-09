@@ -59,7 +59,7 @@ ALTER TABLE circle.role ADD FOREIGN KEY (id) REFERENCES circle.grantee;
 -- A grant of one power to one grantee, a role, an individual mandate, or
 -- a circle as a whole, a collective mandate its motions use, for a term:
 -- the values of the mandate policy that grants it, copied as it is
--- adopted (`circle.mandate_from`). `limit` caps a single write, `budget`
+-- adopted (`circle.issue`). `limit` caps a single write, `budget`
 -- a total over `per`; never both. `from` and `until` are the days its
 -- policy applies; `revoked`, the day its policy ended, from which it
 -- grants nothing. `issuer` is the circle whose motion adopted it, and
@@ -114,7 +114,7 @@ CREATE INDEX ON circle.right (power);
 
 -- Open books' disclosure values: what of a shared total of members' own
 -- figures every member reads, copied from the assembly's rule that marks
--- them as it is adopted (`circle.disclosure_from`), on its policy's days.
+-- them as it is adopted (`circle.disclose`), on its policy's days.
 -- `contributors` is the fewest people a cell may count, `largest` the
 -- most of it one may put in and `two` the most two may, in percent;
 -- `revoked`, the day its rule ended or was replaced.
@@ -133,7 +133,7 @@ CREATE TABLE circle.disclosure (
 
 -- What of the structure the co-op publishes to every person signed in,
 -- member or not: the parts its assembly's publication rule names,
--- copied as it is adopted (`circle.publication_from`), on its policy's
+-- copied as it is adopted (`circle.publish`), on its policy's
 -- days; `revoked`, the day its rule ended or was replaced.
 CREATE TABLE circle.publication (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

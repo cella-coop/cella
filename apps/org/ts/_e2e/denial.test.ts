@@ -18,11 +18,12 @@ import pg from 'pg'
 const root = join(import.meta.dirname, '../..')
 
 // Every slice that makes SQL, by its schema, with its SQL's directory: a
-// feat's `core/sql/` and a graft's `sql/`, at every node of the tree.
+// feat's `core/sql/` and a graft's `sql/`, at every node of the tree, and
+// a core graft's, `core/grafts/<graft>/sql/`.
 function slices(): Map<string, { name: string; sql: string }> {
   const out = new Map<string, { name: string; sql: string }>()
   const node = (dir: string) => {
-    for (const [kind, sql] of [['feats', 'core/sql'], ['grafts', 'sql']]) {
+    for (const [kind, sql] of [['feats', 'core/sql'], ['grafts', 'sql'], ['core/grafts', 'sql']]) {
       const under = join(dir, kind)
       if (!existsSync(under)) continue
       for (const name of readdirSync(under).sort()) {

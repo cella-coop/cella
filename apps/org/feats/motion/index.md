@@ -1,6 +1,6 @@
 +++
 title = "Motion"
-updated = 2026-11-09
+updated = 2026-11-10
 +++
 
 How a circle acts as a whole: motions, proposed, voted on and closed, each carrying the actions it decides beyond its text, or none. A passed motion is a decision in plain speech; the code keeps no row and no name called decision. An outcome is computed from the signed votes, never claimed; each member's latest vote counts once. Each action a passed motion carries is an effect in the close's transaction, citing it, its actor whoever closed it, judged by its own guards, and what follows it, such as the capital a departure moves, is the reaction of the graft that knows it ([trust](../../../../_corpus/doc/trust.md#three-kinds-of-action)). A motion may adopt a policy, a sentence its circle binds itself by, which the register in org's core keeps ([policies](../../../../_corpus/doc/architecture.md#policies)).
@@ -284,7 +284,7 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   a mandate policy of that wording a motion of `issuer` would adopt,
   applying from and until those days, as the field a form names it under
   and why, or nothing, which `putting` asks before it proposes a grant
-  or a change: its values are unsound (`circle.mandate_flaw`, under the
+  or a change: its values are unsound (`circle_policy.mandate_flaw`, under the
   field it is about); the issuer may not decide about its grantee's
   circle (`motion.decides`); or the issuer, not the assembly, holds no
   mandate for the power standing that day to issue it under, or none it
@@ -303,7 +303,7 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   open, and once closed those its close revoked, as its write's
   `revoked` says, never one another write revoked the same day.
 - `motion.circle_asks`, on `motion:motion:propose`: each mandate policy
-  marks sound values (`circle.mandate_flaw`: a role or a circle, a
+  marks sound values (`circle_policy.mandate_flaw`: a role or a circle, a
   power in lower case, a cap by limit or by budget per month or year,
   never both, perhaps a procedure, perhaps a scope, and nothing else), a
   mandate's procedure is one the motion feat holds, and the motion's circle may
@@ -313,7 +313,7 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   that issued a mandate it is issued under, the assembly on every chain.
   A rule marking open books' disclosure values, or the parts of the
   structure it publishes, is the assembly's and marks them soundly
-  (`circle.disclosure_flaw`, `circle.publication_flaw`), and, since one
+  (`circle_policy.disclosure_flaw`, `circle.publication_flaw`), and, since one
   of each stands at a time, replaces the one in force on days its own
   meet, which the refusal names, and is the motion's only one of its
   kind on those days (`circle.overlap_flaw`, `motion.standing_rules`).
@@ -352,15 +352,15 @@ so is a right. It reads as its reader, so it shows the actions of the motions it
   decided by what `required` fixes on the verdict date, so a proposal
   naming another, or whose requirements no one procedure meets, is
   refused saying what they ask.
-- On `motion:policy:adopt` and `motion:policy:end`, core's circles'
-  guards, which this feat attaches, its adoption and ending being the
+- On `motion:policy:adopt` and `motion:policy:end`, core's guards, the
+  circles' and circle-policy's, which this feat attaches, its adoption and ending being the
   writes that grant and revoke a mandate:
-  `circle.grants` that a mandate policy adopted has its mandate as its
-  values say, `circle.revokes` that one ended has its mandate revoked,
+  `circle_policy.grants` that a mandate policy adopted has its mandate as its
+  values say, `circle_policy.revokes` that one ended has its mandate revoked,
   with every mandate issued under it,
   and `circle.narrows` on both that every mandate standing is a root
   the assembly issued or is issued under a parent its issuer holds,
-  and is narrower than it, and `circle.sovereign` on both that the
+  and is narrower than it, and `circle_policy.sovereign` on both that the
   assembly still keeps a collective `adopt-policy` mandate in force
   on the verdict date with no `until`. So a motion of coordination grants a
   working circle's role a mandate only under one coordination holds for
@@ -415,7 +415,7 @@ a trigger on core's table
   the rule in force, if any; withholding is proposing to end the rule in
   force, so no total of members' own figures is shared beyond each
   reader's own rights. Both are put to the assembly, whose rule it is;
-  the values are judged by `circle.disclosure_flaw` as the motion is
+  the values are judged by `circle_policy.disclosure_flaw` as the motion is
   proposed, never here. A withholding ends the disclosure rule in force
   on the verdict date and nothing else: one naming any other policy,
   put on another circle's page, or put where no rule stands is refused
@@ -543,7 +543,7 @@ mandate issued under it the same day, and the form says so. Before
 anything is proposed, a grant or a change is judged by
 `motion.grant_flaw(issuer, wording, from, until)`, from the day it would
 apply, the deadline unless it names one: its values as core holds them
-sound (`circle.mandate_flaw`), its issuer one that may decide about the
+sound (`circle_policy.mandate_flaw`), its issuer one that may decide about the
 grantee's circle (`motion.decides`), and, for an issuer other than the
 assembly, a mandate it holds for the power standing that day that the
 grant is no wider than, found by the SQL that finds its parent as it is

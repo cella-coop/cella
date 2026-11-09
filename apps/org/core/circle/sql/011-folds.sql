@@ -85,63 +85,12 @@ BEGIN
 END
 $$;
 
--- The mandate, the right or the disclosure values its entry's policy
--- grants or revokes, by the SQL its handler runs, `circle.mandate_from`
--- or `circle.mandate_ended`, on the policy register as the entry's own
--- slice folded it, with the mandate's id the entry's; a mandate or a
--- revocation other than the entry's refuses.
-CREATE FUNCTION circle.folded_grant(entry jsonb, made bigint, gone bigint[]) RETURNS void
-LANGUAGE plpgsql AS $$
-DECLARE
-  p jsonb := entry -> 'payload';
-  said bigint[] := ARRAY(SELECT r::bigint FROM jsonb_array_elements_text(coalesce(p -> 'revoked', '[]')) r);
-BEGIN
-  IF made IS DISTINCT FROM (p ->> 'mandate')::bigint OR coalesce(gone, '{}') <> said THEN
-    RAISE EXCEPTION 'circle: entry % says mandate % revoking %, where the fold gives mandate % revoking %',
-      entry ->> 'n', coalesce(p ->> 'mandate', 'none'), said, coalesce(made::text, 'none'), coalesce(gone, '{}');
-  END IF;
-END
-$$;
-
-CREATE FUNCTION circle.fold_granting(entry jsonb) RETURNS void
-LANGUAGE plpgsql AS $$
-DECLARE
-  p jsonb := entry -> 'payload';
-  r record;
-BEGIN
-  IF nullif(p ->> 'policy', '') IS NULL THEN
-    RETURN;
-  END IF;
-  IF p ->> 'mandate' IS NOT NULL THEN
-    PERFORM setval(pg_get_serial_sequence('circle.mandate', 'id'), (p ->> 'mandate')::bigint, false);
-  END IF;
-  SELECT * INTO r FROM circle.mandate_from(p ->> 'policy');
-  PERFORM circle.folded_grant(entry, r.mandate, r.revoked);
-END
-$$;
-
-CREATE FUNCTION circle.fold_revoking(entry jsonb) RETURNS void
-LANGUAGE plpgsql AS $$
-DECLARE
-  p jsonb := entry -> 'payload';
-  r record;
-BEGIN
-  IF nullif(p ->> 'policy', '') IS NULL THEN
-    RETURN;
-  END IF;
-  SELECT * INTO r FROM circle.mandate_ended(p ->> 'policy');
-  PERFORM circle.folded_grant(entry, r.mandate, r.revoked);
-END
-$$;
-
 SELECT cella.lets_fold('circle:circle:create', 1, 'circle.fold_create(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:circle:message', 1, 'circle.fold_message(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:add', 1, 'circle.fold_seat_add(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:seat:remove', 1, 'circle.fold_seat_remove(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:seat', 1, 'circle.fold_role_seat(jsonb)', 'circle');
 SELECT cella.lets_fold('circle:role:unseat', 1, 'circle.fold_role_unseat(jsonb)', 'circle');
-SELECT cella.lets_fold('motion:policy:adopt', 1, 'circle.fold_granting(jsonb)', 'circle');
-SELECT cella.lets_fold('motion:policy:end', 1, 'circle.fold_revoking(jsonb)', 'circle');
 
 -- membership:member:admit, as a carried motion admits: the member seated
 -- in the motion's circle as a member, by the seat id, circle and day its

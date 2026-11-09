@@ -51,6 +51,9 @@
   const comment = $derived(
     page?.comment ? { block: page.comment, data: data.item } : added.map((a) => (a.page.comment ? { block: a.page.comment as Block, data: a.data } : undefined)).find(Boolean),
   )
+  // The record's subtitle: the owner's, or an extension's where the owner
+  // gives none.
+  const subtitle = $derived(page?.subtitle?.(data.item) ?? added.map((a) => a.page.subtitle?.(a.data)).find(Boolean))
   const writes = $derived([
     ...(page?.actions ? [{ block: page.actions, data: data.item }] : []),
     ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
@@ -73,7 +76,7 @@
   <Detail
     eyebrow={page.eyebrow}
     title={page.title(data.item)}
-    subtitle={page.subtitle?.(data.item)}
+    subtitle={subtitle}
     summary={page.summary?.(data.item)}
     back={{ href: `/${data.name}`, label: mounted.view.title }}
     {tabs}

@@ -275,7 +275,7 @@ test('Inès, no member, reads her own seat in Web and the mandates her seat hold
   for (const table of ['circle.right', 'circle.disclosure', 'circle.tenure', 'policy.policy', 'policy.wording', 'policy.value']) {
     assert.deepEqual(await read(ines, `SELECT count(*)::int AS n FROM ${table}`), [{ n: 0 }], `${table} is the members'`)
   }
-  assert.deepEqual(await read(ines, `SELECT policy.says('m-2021-001/1') AS s`), [{ s: null }], 'no wording quoted to her')
+  assert.deepEqual(await read(ines, `SELECT circle_policy.says('m-2021-001/1') AS s`), [{ s: null }], 'no wording quoted to her')
   assert.deepEqual(await read(ines, 'SELECT circle.assembly() AS a'), [{ a: 'ag' }], 'the assembly she would apply to')
   const whole = await one<{ seats: number; mandates: number; policies: number }>(
     'SELECT (SELECT count(*) FROM circle.seat)::int AS seats, (SELECT count(*) FROM circle.mandate)::int AS mandates, (SELECT count(*) FROM policy.policy)::int AS policies',

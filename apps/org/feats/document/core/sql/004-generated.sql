@@ -54,7 +54,7 @@ END;
 -- never an earlier one; and it reads, each as a line as it reads, every
 -- policy of the circle in force that day, and no other of its policies
 -- but one reading as one in force does. A guard reads no wording: it
--- compares the sentences `policy.says` quotes.
+-- compares the sentences `circle_policy.says` quotes.
 CREATE FUNCTION document.generates(payload jsonb) RETURNS text
 LANGUAGE sql STABLE
 BEGIN ATOMIC
@@ -75,13 +75,13 @@ BEGIN ATOMIC
       THEN v.id || ' reads ' || r.day || ', not ' || d.reads || ', the later of ' || p.day || ' and the day ' || coalesce(p.base, 'no version') || ' reads'
     ELSE coalesce(
       (SELECT v.id || ' does not read ' || f.id FROM policy.in_force(g.circle, d.reads) f
-       WHERE NOT policy.says(f.id) = ANY (string_to_array(v.plain, E'\n'))
+       WHERE NOT circle_policy.says(f.id) = ANY (string_to_array(v.plain, E'\n'))
        ORDER BY f.id LIMIT 1),
       (SELECT v.id || ' reads ' || c.id || ', not in force on ' || d.reads FROM policy.policy c
        WHERE c.circle = g.circle
          AND c.id NOT IN (SELECT f.id FROM policy.in_force(g.circle, d.reads) f)
-         AND policy.says(c.id) = ANY (string_to_array(v.plain, E'\n'))
-         AND policy.says(c.id) NOT IN (SELECT policy.says(f.id) FROM policy.in_force(g.circle, d.reads) f)
+         AND circle_policy.says(c.id) = ANY (string_to_array(v.plain, E'\n'))
+         AND circle_policy.says(c.id) NOT IN (SELECT circle_policy.says(f.id) FROM policy.in_force(g.circle, d.reads) f)
        ORDER BY c.id LIMIT 1)
     )
   END

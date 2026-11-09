@@ -1,5 +1,4 @@
 import type { Db, Read } from '@cella/org-db'
-import { sentences } from '@cella/org-policy'
 import type { Circle, Depth, Detail, Lens, Standing, Provenance, Role, Sat } from '../models/circle.ts'
 
 // Circles never nest, so they list the assembly first and the others by
@@ -51,8 +50,8 @@ export async function lenses(db: Db, person: string, day: string): Promise<Lens[
 
 // A circle, its roles, those every circle but the assembly has among
 // them, the mandates granted to those roles, each as the Mandates
-// collection reads it, with its policy's sentence,
-// and how the mandates link it to the other circles: those that issued
+// collection reads it, and how the mandates link it to the other
+// circles: those that issued
 // what it and its roles hold, and those it issued to.
 export async function circle(db: Db, id: string): Promise<Detail | null> {
   const found = await db.query<Circle>('SELECT c.id, c.name, c.assembly, c.purpose, c.procedure FROM circle.circle c WHERE c.id = $1', [id])
@@ -64,7 +63,7 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
     `SELECT id, circle, name, duty FROM circle.role WHERE circle = $1 OR (circle = '*' AND NOT $2) ORDER BY circle = '*', name`,
     [id, c.assembly],
   )
-  const mandates = await db.query<Omit<Standing, 'sentence'>>(
+  const mandates = await db.query<Standing>(
     `SELECT ${held} FROM circle.mandate m ${joined} WHERE m.grantee = ANY($1) ORDER BY m.grantee, m.power, m."from"`,
     [roles.rows.map((r) => r.id)],
   )
@@ -83,27 +82,25 @@ export async function circle(db: Db, id: string): Promise<Detail | null> {
      ORDER BY name`,
     [id],
   )
-  // Each mandate reads as its policy's sentence, from the register.
-  const read = await sentences(db, mandates.rows.map((m) => m.policy))
   return {
     ...c,
     issuers: links.rows.filter((l) => l.way === 'issuer').map(({ id, name }) => ({ id, name })),
     issued: links.rows.filter((l) => l.way === 'issued').map(({ id, name }) => ({ id, name })),
     roles: roles.rows,
-    mandates: mandates.rows.map((m) => ({ ...m, sentence: read.get(m.policy) ?? m.policy, limit: num(m.limit), budget: num(m.budget) })),
+    mandates: mandates.rows.map(capped),
   }
 }
 
 const num = (v: unknown) => (v === null || v === undefined ? null : Number(v))
+const capped = <T extends Standing>(m: T): T => ({ ...m, limit: num(m.limit), budget: num(m.budget) })
 
 // A mandate's grant as its page reads it, `m` the mandate: its grantee's
 // name and circle, its issuer's name and that of the circle its scope
-// covers, the motion that adopted its policy, and where it
-// stands on the verdict date, an end by revocation or term since the day
+// covers, and where it stands on the verdict date, an end by revocation or term since the day
 // it came.
 const held = `m.id::text, m.grantee, coalesce(r.name, g.name, m.grantee) AS "granteeName",
   CASE WHEN r.id IS NULL THEN g.id WHEN r.circle <> '*' THEN r.circle END AS circle,
-  m.issuer, coalesce(i.name, m.issuer) AS "issuerName", s.name AS "scopeName", m.parent::text, m.power, m.policy, p.motion, m.procedure,
+  m.issuer, coalesce(i.name, m.issuer) AS "issuerName", s.name AS "scopeName", m.parent::text, m.power, m.policy, m.procedure,
   cella.cents(m."limit") AS "limit", cella.cents(m.budget) AS budget, m.per, m.scope,
   to_char(m."from", 'YYYY-MM-DD') AS "from", to_char(m.until, 'YYYY-MM-DD') AS until, to_char(m.revoked, 'YYYY-MM-DD') AS revoked,
   CASE WHEN m.revoked <= cella.verdict_date() AND (m.until IS NULL OR m.revoked <= m.until) THEN 'revoked'
@@ -116,8 +113,7 @@ const held = `m.id::text, m.grantee, coalesce(r.name, g.name, m.grantee) AS "gra
 const joined = `LEFT JOIN circle.role r ON r.id = m.grantee
   LEFT JOIN circle.circle g ON g.id = m.grantee
   LEFT JOIN circle.circle i ON i.id = m.issuer
-  LEFT JOIN circle.circle s ON s.id = m.scope
-  LEFT JOIN policy.policy p ON p.id = m.policy`
+  LEFT JOIN circle.circle s ON s.id = m.scope`
 
 // The mandates as the collection lists them, by power, then by the day
 // each came.
@@ -136,22 +132,19 @@ export async function mandate(db: Db, id: string): Promise<Provenance | null> {
   if (!/^\d+$/.test(id)) {
     return null
   }
-  const found = await db.query<Omit<Standing, 'sentence'>>(`SELECT ${held} FROM circle.mandate m ${joined} WHERE m.id = $1`, [id])
+  const found = await db.query<Standing>(`SELECT ${held} FROM circle.mandate m ${joined} WHERE m.id = $1`, [id])
   const m = found.rows[0]
   if (!m) {
     return null
   }
-  const chain = await db.query<Omit<Depth, 'sentence'>>(
+  const chain = await db.query<Depth>(
     `SELECT ${held}, k.depth FROM circle.chain($1) k JOIN circle.mandate m ON m.id = k.id ${joined} ORDER BY k.depth`,
     [id],
   )
-  const under = await db.query<Omit<Depth, 'sentence'>>(
+  const under = await db.query<Depth>(
     `SELECT ${held}, u.depth FROM circle.under($1) u JOIN circle.mandate m ON m.id = u.id ${joined} WHERE u.depth > 0 ORDER BY u.depth, m.id`,
     [id],
   )
-  const all = [m, ...chain.rows, ...under.rows]
-  const read = await sentences(db, [...new Set(all.map((x) => x.policy))])
-  const worded = <T extends Omit<Standing, 'sentence'>>(x: T) => ({ ...x, sentence: read.get(x.policy) ?? x.policy, limit: num(x.limit), budget: num(x.budget) })
   const withheld = (chain.rows[0]?.parent ?? null) !== null
-  return { ...worded(m), chain: chain.rows.map(worded), under: under.rows.map(worded), withheld }
+  return { ...capped(m), chain: chain.rows.map(capped), under: under.rows.map(capped), withheld }
 }

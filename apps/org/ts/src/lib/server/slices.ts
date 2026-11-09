@@ -4,6 +4,7 @@ import { slice as log } from '@cella/org-log/api'
 import { slice as person } from '@cella/org-person/api'
 import { slice as membership } from '@cella/org-membership/api'
 import { slice as circle } from '@cella/org-circle/api'
+import { slice as circlePolicy } from '@cella/org-graft-circle-policy/api'
 import { slice as motion } from '@cella/org-motion/api'
 import { slice as document } from '@cella/org-document/api'
 import { slice as contact } from '@cella/org-contact/api'
@@ -90,6 +91,7 @@ export const slices: Slice[] = [
   person,
   membership,
   circle,
+  circlePolicy,
   motion,
   document,
   meeting,

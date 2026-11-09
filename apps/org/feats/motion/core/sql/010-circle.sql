@@ -114,7 +114,7 @@ END;
 -- What is wrong with a mandate policy of this wording that a motion of
 -- `issuer` would adopt, applying from `from` until `until`, as the field
 -- a form names it under and why, or no row: its values are unsound
--- (`circle.mandate_flaw`); the issuer may not decide about its grantee's
+-- (`circle_policy.mandate_flaw`); the issuer may not decide about its grantee's
 -- circle (`motion.decides`); or the issuer, not the assembly, holds no
 -- mandate for its power standing that day to issue it under, or none it
 -- is no wider than (`circle.parent_for`, `circle.wider`), the same SQL
@@ -134,7 +134,7 @@ BEGIN ATOMIC
              ELSE 'grantee'
            END AS field,
            x.flaw AS reason, 1 AS rank
-    FROM (SELECT circle.mandate_flaw(motion.marked(grant_flaw.wording)) AS flaw) x
+    FROM (SELECT circle_policy.mandate_flaw(motion.marked(grant_flaw.wording)) AS flaw) x
     WHERE x.flaw IS NOT NULL
     UNION ALL
     SELECT 'issuer', coalesce(grant_flaw.issuer, 'no circle') || ' may not decide to grant a mandate in '
@@ -274,10 +274,10 @@ END;
 
 -- motion:motion:propose — each action of these kinds names what it
 -- applies to, and the motion's circle may decide it: for a mandate
--- policy, whose values core's circles holds sound (`circle.mandate_flaw`),
+-- policy, whose values core's circles holds sound (`circle_policy.mandate_flaw`),
 -- about the role's circle, and the procedure it asks, if any, is one the
 -- motion feat holds or the motion adopts; for a right policy, whose
--- values it holds sound (`circle.right_flaw`), about every circle; for
+-- values it holds sound (`circle_policy.right_flaw`), about every circle; for
 -- the end of a mandate's policy, the motion's circle is on its chain as
 -- an issuer, the one that issued it or one that issued a mandate it is
 -- issued under, the assembly on every chain; for the end of a right's,
@@ -289,7 +289,7 @@ END;
 -- or one in force it holds that the motion does not end.
 -- A rule marking open books' disclosure values, or the parts of the
 -- structure it publishes, is the assembly's and marks them soundly
--- (`circle.disclosure_flaw`, `circle.publication_flaw`); one of each
+-- (`circle_policy.disclosure_flaw`, `circle.publication_flaw`); one of each
 -- stands at a time, so such a rule replaces the one its days meet
 -- (`circle.overlap_flaw`), and a motion adopts no two of a kind whose
 -- days meet.
@@ -298,10 +298,10 @@ LANGUAGE sql STABLE
 BEGIN ATOMIC
   SELECT r FROM (
     SELECT CASE
-      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'mandate' AND circle.mandate_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
-        THEN circle.mandate_flaw(motion.marked(m.args ->> 'wording'))
-      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'right' AND circle.right_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
-        THEN circle.right_flaw(motion.marked(m.args ->> 'wording'))
+      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'mandate' AND circle_policy.mandate_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
+        THEN circle_policy.mandate_flaw(motion.marked(m.args ->> 'wording'))
+      WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'right' AND circle_policy.right_flaw(motion.marked(m.args ->> 'wording')) IS NOT NULL
+        THEN circle_policy.right_flaw(motion.marked(m.args ->> 'wording'))
       WHEN m.kind = 'policy' AND m.args ->> 'kind' = 'mandate' AND v.procedure IS NOT NULL
         AND NOT EXISTS (SELECT FROM motion.procedure o WHERE o.id = v.procedure)
         AND NOT EXISTS (
@@ -338,7 +338,7 @@ BEGIN ATOMIC
     WHERE m.motion = payload ->> 'motion'
       AND circle.sovereign_by(CASE m.kind WHEN 'end' THEN m.args ->> 'policy' WHEN 'policy' THEN nullif(m.args ->> 'replaces', '') END)
     UNION ALL
-    SELECT circle.disclosure_flaw(k.marks, d.circle)
+    SELECT circle_policy.disclosure_flaw(k.marks, d.circle)
     FROM motion.action m
     JOIN motion.motion d ON d.id = m.motion
     CROSS JOIN LATERAL (
@@ -381,12 +381,12 @@ END;
 -- `until`.
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('motion:motion:propose', 'motion.circle_asks(jsonb)', 'motion'),
-  ('motion:policy:adopt', 'circle.grants(jsonb)', 'motion'),
+  ('motion:policy:adopt', 'circle_policy.grants(jsonb)', 'motion'),
   ('motion:policy:adopt', 'circle.narrows(jsonb)', 'motion'),
-  ('motion:policy:end', 'circle.revokes(jsonb)', 'motion'),
+  ('motion:policy:end', 'circle_policy.revokes(jsonb)', 'motion'),
   ('motion:policy:end', 'circle.narrows(jsonb)', 'motion'),
-  ('motion:policy:adopt', 'circle.sovereign(jsonb)', 'motion'),
-  ('motion:policy:end', 'circle.sovereign(jsonb)', 'motion');
+  ('motion:policy:adopt', 'circle_policy.sovereign(jsonb)', 'motion'),
+  ('motion:policy:end', 'circle_policy.sovereign(jsonb)', 'motion');
 
 GRANT USAGE ON SCHEMA motion TO cella_app, cella_guards;
 GRANT SELECT ON motion.circle_action TO cella_app, cella_guards;

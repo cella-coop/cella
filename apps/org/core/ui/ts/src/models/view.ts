@@ -216,7 +216,9 @@ export interface Added<E = any> {
   // `title`.
   create?: Component<{ rows: any[]; about: any }>
   title?: string
-  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle' | 'summary'>
+  // What it adds to the item's page; its subtitle stands where the
+  // owner's page gives none, as a mandate reads as its policy's sentence.
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'summary'>
 }
 
 // The sidebar's navigation, by group: a collection's `count` is its rows

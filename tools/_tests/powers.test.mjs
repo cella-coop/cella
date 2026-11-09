@@ -9,7 +9,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { agree, covered, granted, mandates, unfolded } from '../powers.mjs'
+import { agree, covered, granted, mandates, unfolded, unfollowed } from '../powers.mjs'
 import { checkSql, placed, undeclared, unowned } from '../sql-check.mjs'
 
 const file = 'apps/org/feats/invoice/core/ts/src/models/actions.ts'
@@ -411,4 +411,16 @@ test('a slice reads neither a peer feat\'s schema nor a graft\'s of equal or hig
   assert.match(beside.errors.join('\n'), /reads circle_member.seat: circle_member is outside/)
   const byFeat = await check({ invoice: reads('invoice', 'invoice_member.link'), 'invoice-member': 'SELECT 1;' })
   assert.match(byFeat.errors.join('\n'), /reads invoice_member.link: invoice_member is outside/, 'a feat reads no graft that joins it')
+})
+
+test('an on: cause is one a cella.lets_follow of the reacting slice\'s own registers', async () => {
+  const { errors, found } = await check({ 'invoice-member': `SELECT cella.lets_follow('member:member:admit', 'invoice:invoice:issue', 'invoice-member');` })
+  assert.deepEqual(errors, [])
+  const file = 'apps/org/grafts/invoice-member/ts/src/handlers/admit.ts'
+  const text = "export const reaction = {\n  on: {\n    'member:member:admit': issue,\n    'member:member:exclude': issue,\n  },\n}\n"
+  const [e, ...rest] = unfollowed([{ file, owner: 'invoice-member', text }], found.follows)
+  assert.deepEqual(rest, [])
+  assert.match(e, /handlers\/admit\.ts: reacts to member:member:exclude, which no cella\.lets_follow of invoice-member's lets an effect follow/)
+  // A row another slice registers lets none of this one's effects follow.
+  assert.equal(unfollowed([{ file, owner: 'invoice', text }], found.follows).length, 2)
 })

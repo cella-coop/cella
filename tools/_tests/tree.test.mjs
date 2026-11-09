@@ -2,9 +2,11 @@
 // parent's and never the other way; a graft sits at the lowest node that
 // holds every feat it joins, reads the cores those feats nest in and the
 // lower grafts at or below its node, and never joins a feat with one
-// nested in it; a feat's name is unique in its app. In a node's core, no
-// core feat builds on another, nor a core library on one: a core graft
-// joins them.
+// nested in it; a graft is named in order and declared by a feat it
+// joins; a feat's name is unique in its app and has no hyphen. In a
+// node's core, no core feat builds on another, nor a core library on one:
+// a core graft joins them. A package's relative imports stay inside it,
+// and it exports only its surface.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -184,4 +186,35 @@ test('an action declared outside models/actions.ts is refused, as is a models/op
 test('an action is its feat\'s own', () => {
   const errors = tree({ files: { [`${src}/models/actions.ts`]: declaring.replace('motion:motion', 'party:motion') } })
   assert.match(errors, /party:motion:propose is not an action of motion/)
+})
+
+test('a package\'s relative imports stay inside it', () => {
+  const ok = tree({ files: { [`${src}/handlers/propose.ts`]: "import { actions } from '../models/actions.ts'\n" } })
+  assert.doesNotMatch(ok, /outside its package/)
+  const errors = tree({ files: { [`${src}/handlers/propose.ts`]: "import { party } from '../../../../../party/core/ts/src/index.ts'\n" } })
+  assert.match(errors, /handlers\/propose\.ts: imports \.\.\/\.\.\/\.\.\/\.\.\/\.\.\/party\/core\/ts\/src\/index\.ts, outside its package apps\/org\/feats\/motion\/core\/ts; depend on the package instead/)
+})
+
+test('a package exports only its surface', () => {
+  const pkg = (exports) => ({ 'apps/org/feats/motion/core/ts/package.json': JSON.stringify({ name: '@t/motion', exports }) })
+  assert.equal(tree({ files: pkg({ './models': './src/models/index.ts', './api': './src/api/index.ts', './bindings': './src/bindings/index.ts', './app': './src/app/index.ts' }) }), '')
+  const errors = tree({ files: pkg({ './models': './src/models/index.ts', './internal': './src/internal.ts' }) })
+  assert.match(errors, /apps\/org\/feats\/motion\/core\/ts\/package\.json: exports \.\/internal; a package exports only \., \.\/models, \.\/api, \.\/bindings, \.\/app/)
+})
+
+test('a graft is named by the feats it joins, in alphabetical order', () => {
+  const errors = tree({ grafts: { 'motion-membership': { at: org, by: 'membership' } } })
+  assert.match(errors, /apps\/org\/grafts\/motion-membership: a graft is named by two or more distinct feats, in alphabetical order/)
+})
+
+test('a graft is declared by a feat it joins, and a feat declares only the grafts that join it', () => {
+  const errors = tree({ grafts: { 'membership-motion': { at: org } } })
+  assert.match(errors, /apps\/org\/grafts\/membership-motion: no feat it joins declares it in its feat\.toml/)
+  const stray = tree({ grafts: { 'membership-motion': { at: org, by: 'party' } } })
+  assert.match(stray, /apps\/org\/feats\/party: declares membership-motion, which does not join it; the feat that extends declares a graft/)
+})
+
+test('a feat\'s name has no hyphen', () => {
+  const errors = tree({ extra: [['apps/org/feats/motion-plan', 'motion-plan']] })
+  assert.match(errors, /apps\/org\/feats\/motion-plan: a feat's name has no hyphen; hyphens join feats in a graft's name/)
 })

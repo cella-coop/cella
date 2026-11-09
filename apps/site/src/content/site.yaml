@@ -1,19 +1,18 @@
 title: Cella
-description: Cella, the cooperative workspace.
+description: The cooperative workspace.
 titled: "{page} · {site}"
 nav:
   - { label: About, href: /about }
-  - { label: Concept, href: /concept }
   - { label: Blog, href: /blog }
   - { label: Contact, href: /contact }
 menu: Menu
 theme:
   toggle: Switch theme
 footer:
-  line: Cella, the cooperative workspace.
+  line: The cooperative workspace
+  disclaimer: Cella is an early prototype. We don't have any commercial offering at the moment, and are not yet incorporated as a coop. Stay tuned!
   links:
     - { label: About, href: /about }
-    - { label: Concept, href: /concept }
     - { label: Blog, href: /blog }
     - { label: Contact, href: /contact }
 blog:

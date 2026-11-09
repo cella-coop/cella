@@ -45,6 +45,8 @@ test('a write into the text by a shell command is refused, naming the path', () 
     `truncate -s 0 ${yaml}`,
     `git mv apps/site/src/content/sections/what.mdx apps/site/src/content/sections/that.mdx`,
     `git rm ${yaml}`,
+    `git rm -- ${yaml}`,
+    `git rm --cached -- ${yaml}`,
     `git checkout -- ${yaml}`,
     `git checkout main -- apps/site/src/content`,
     `git restore --source=HEAD~1 ${yaml}`,
@@ -150,6 +152,9 @@ test('a remove, move or restore of a directory holding the text is refused, by a
     'git mv apps/site apps/web',
     'git rm -r apps/site',
     'git rm -rf --cached .',
+    'git rm -r -- apps/site',
+    'git rm -rf -- .',
+    'git rm -r --cached -- apps',
     'find apps/site -name "*.mdx" -delete',
     'find . -name "*.bak" -delete',
     'find apps -type f -exec rm {} +',
@@ -209,6 +214,9 @@ test('the same commands on a directory beside the text, and a branch switched to
     'git checkout -b feature origin/main',
     'git checkout -B 26-11-07-x origin/26-11-07-x',
     'git checkout HEAD~1 -- apps/org',
+    'git rm -- apps/org/x',
+    'git rm -r -- apps/org',
+    'git rm -rf -- apps/site/dist',
     'git switch main',
     'git switch -c feature',
     'git clean -fd apps/org',
@@ -232,7 +240,7 @@ test('the same commands on a directory beside the text, and a branch switched to
   for (const command of passed) assert.equal(bash(command), null, `passes: ${command}`)
 })
 
-test('git reset --hard and git stash are refused while the text has changes git has not committed', () => {
+test('git reset --hard, git stash and a forced checkout or switch are refused while the text has changes git has not committed', () => {
   const root = mkdtempSync(join(tmpdir(), 'guard-repo-'))
   const git = (...args) => spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' })
   git('init', '-q')
@@ -243,7 +251,9 @@ test('git reset --hard and git stash are refused while the text has changes git 
   git('add', '.')
   git('-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-qm', 'init')
   const run = (command, cwd = root) => guard(root)({ tool_name: 'Bash', tool_input: { command }, cwd })
-  const forms = ['git reset --hard', 'git reset --hard HEAD~1', 'git stash', 'git stash -u', 'git stash push', 'git stash save wip', 'git stash push -m wip', 'git stash push -- apps/site', 'git -C apps/org stash']
+  const forms = ['git reset --hard', 'git reset --hard HEAD~1', 'git stash', 'git stash -u', 'git stash push', 'git stash save wip', 'git stash push -m wip', 'git stash push -- apps/site', 'git -C apps/org stash',
+    'git checkout -f main', 'git checkout --force main', 'git checkout -qf main', 'git checkout -f', 'git -C apps/org checkout -f main',
+    'git switch -f main', 'git switch --force main', 'git switch --discard-changes main', 'git switch -c fix --discard-changes']
 
   writeFileSync(join(root, 'apps/org/a.ts'), 'y\n')
   for (const command of forms) assert.equal(run(command), null, `passes while the text is committed: ${command}`)
@@ -257,6 +267,11 @@ test('git reset --hard and git stash are refused while the text has changes git 
   assert.equal(run('git stash push -- apps/org'), null)
   assert.equal(run('git stash push apps/org'), null)
   assert.equal(run('git stash list'), null)
+  assert.equal(run('git checkout main'), null)
+  assert.equal(run('git checkout -b fix'), null)
+  assert.equal(run('git switch main'), null)
+  assert.equal(run('git switch -c fix'), null)
+  assert.equal(run('git checkout -f main', tmpdir()), null)
   assert.equal(run('git reset --hard', tmpdir()), null)
 })
 

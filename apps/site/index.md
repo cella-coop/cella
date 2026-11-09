@@ -137,9 +137,12 @@ guards hold it, each routable around:
   above it, the repository's root among them, git's `rm -r` and `mv`
   too, and an `mv` or `cp` that lands on one; a `git restore`,
   `checkout` or `clean` whose pathspec holds the text, or a `git clean`
-  with none run from such a directory; and a `git reset --hard` or
-  `git stash` while the text has changes git has not committed. A
-  branch switched to, a git command in another repository, and every
+  with none run from such a directory; and a `git reset --hard`, a
+  `git stash`, and a `git checkout` or `git switch` forced by `-f`,
+  `--force` or `--discard-changes`, while the text has changes git has
+  not committed. It reads every pathspec of a `git rm`, before `--` and
+  after it, by the same rule. A branch checked out or switched to
+  unforced, a git command in another repository, and every
   such command on a directory beside the text, pass. It refuses a
   write and nothing else: a call that names the path without writing there
   passes, a search, a read, a commit message or a message sent through

@@ -18,7 +18,8 @@ export const app: App = {
       look: { cards: ['purpose', 'parent', 'seated'] },
       page: {
         properties: (s: Seat[]) => [{ label: 'Seated', value: new Set(s.filter((x) => !x.until).map((x) => x.member)).size, kind: 'number' }],
-        blocks: [Members],
+        tabs: [{ id: 'seats', label: 'Seats' }],
+        blocks: [{ tab: 'seats', block: Members }],
       },
     },
     people: {

@@ -293,8 +293,8 @@ since her hire: she holds Web's participant mandates there, proposing
 and discussing in Web, and none of the assembly's; beside them, a
 person's rights and an employee's. Paul, gone, holds a person's alone.
 
-In the shell, `membership/seats` adds a circle's seats to its page, one
-row per person with every role they hold in it, and how many sit in it
+In the shell, `membership/seats` adds a circle's seats to its page, in
+a Seats tab of their own, one row per person with every role they hold in it, and how many sit in it
 to the list and its gallery cards; and to a person's page their seats
 and the powers they hold through them, each power by its plain name
 and its policy's sentence, the mandates `membership.holds` gives on

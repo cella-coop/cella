@@ -9,11 +9,13 @@
   import Frame from './PageFrame.svelte'
   import Pill from './Pill.svelte'
   import Properties from './Properties.svelte'
+  import Prose from './Prose.svelte'
   import Related from './Related.svelte'
 
   // The one record page, as Linear's issue page: in the content, the
-  // record's title, large, its free-form content, and under a hairline
-  // its Activity, oldest first, with the box that adds a comment where
+  // record's title, large, its own words where it holds them as text,
+  // its free-form content, and under a hairline its Activity, oldest
+  // first, with the box that adds a comment where
   // its kind takes comments; in the drawer's Details panel, its
   // properties and Related on the drawer itself, nothing boxed. The
   // header names the record by its kind and reference, a crumb under its
@@ -22,6 +24,7 @@
     eyebrow,
     title,
     subtitle,
+    summary,
     back,
     tabs = [],
     tab,
@@ -35,6 +38,8 @@
     eyebrow: string
     title: string
     subtitle?: string
+    // The record's own words, under its title on the first tab.
+    summary?: string | null
     back: { href: string; label: string }
     // The page's tabs, as pills in the header when there are two or more,
     // and the open one, whose blocks the content holds; the first is the
@@ -92,6 +97,7 @@
     {/if}
   {/snippet}
   <h1 class="record">{title}</h1>
+  {#if first && summary}<Prose text={summary} />{/if}
   {@render children?.()}
   {#if first && (activity.length || comment)}
     <section class="activity" aria-labelledby="{id}-activity">

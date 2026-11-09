@@ -7,8 +7,8 @@ import History from './blocks/History.svelte'
 import Save from './blocks/Save.svelte'
 
 // The feat's client side: the documents, and a document's page with its
-// draft in the block editor, saved as a version from its header, its
-// versions and the comments on them.
+// draft in the block editor, saved as a version from its header, the
+// comments on its versions under it, and its versions in a tab.
 export const app: App = {
   name: 'document',
   collections: {
@@ -48,7 +48,13 @@ export const app: App = {
           ...d.comments.map((c) => ({ at: c.at, who: c.author, text: `commented on ${c.version}, quoting “${c.quote}”${c.resolved ? ', resolved' : ''}`, body: c.text })),
           ...d.updates.slice(0, 12).map((u) => ({ at: u.at, who: u.author ?? undefined, text: `${u.author ? 'edited' : 'carried over'}, receipt ${u.receipt}` })),
         ],
-        blocks: [Draft, History],
+        // The draft is the content; its saved versions, the data central to
+        // it, a tab after it.
+        tabs: [
+          { id: 'draft', label: 'Draft' },
+          { id: 'versions', label: 'Versions' },
+        ],
+        blocks: [Draft, { tab: 'versions', block: History }],
         comment: Comment,
         actions: Save,
       },

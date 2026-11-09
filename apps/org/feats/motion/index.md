@@ -435,8 +435,8 @@ under Shell). On a circle's page, which circle decides about it, the open motion
 about it, and Propose…: granting a mandate to one of its roles or to
 it, changing one of its mandates or revoking one, with a deadline and
 why, posted to the `put` membership-motion serves (below, under
-Shell); and its Policies,
-the policies it adopted that are in force, each as its legal wording
+Shell); and, in its Policies tab, the
+policies it adopted that are in force, each as its legal wording
 reads (`policy.sentence`), its kind, whether it takes a default of the
 co-op's legal form (Default, or Default, since updated, where cella has
 changed that default since) or is the co-op's own, the motion that
@@ -447,7 +447,7 @@ it left or never took, its sentence, its form, the motion's action that
 left it, linked, and the day (`departures`,
 [legal forms](../../../../_corpus/doc/forms.md)).
 
-On the assembly's page, Open books is where the co-op configures what
+On the assembly's page, in the same tab, Open books is where the co-op configures what
 it shares with every member of the totals of members' own figures,
 their pay, time, capital, work share and expenses (`disclosure`, read
 from `circle.disclosed` on the verdict date). It says whether a
@@ -568,15 +568,18 @@ The outcome is the graft's, so the state is too: `membership-motion`
 reads it in SQL and gives the collection its State column and its board.
 Of its outcome, this feat reads only whether and when a motion closed.
 
-A motion's page has three tabs: Overview, the proposal in full under its
-deadline, once closed the effects its close carried, and what the grafts
-say is decided (whom it admits, the
-version it adopts, the outcome); Stances, the roll and the acting
-member's stance; and Discussion, its deliberation, each message under
-the one it answers, a mention drawn by `membership-motion`'s `member` embed
-and a link by `document-motion`'s `document` embed, and while it is
-open a message as the acting member, or a reply to the one chosen. The stances given in time order stay in the drawer's
-Activity card, their one home.
+A motion's page, its header's crumb its id, has four tabs: Overview,
+the proposal in full under its deadline and what the grafts say is
+decided (whom it admits, the version it adopts, the outcome), and under
+them its Activity, the stances given in time order, their one home;
+Stances, the roll and the acting member's stance; Discussion, its
+deliberation, each message under the one it answers, a mention drawn by
+`membership-motion`'s `member` embed and a link by `document-motion`'s
+`document` embed, and while it is open a message as the acting member,
+or a reply to the one chosen; and Effects, what its actions do to the
+mandates and, once closed, the effects its close carried, or that it
+carries them at its close. Who put it, by what procedure and in which
+circle are its properties.
 
 A motion drawn elsewhere is one card, the feat's `Card` (`./app`):
 its title, the circle it is put in and who put it, each by name (the circle's name or the role's name), method and where it stands, linking to its page, over

@@ -69,9 +69,9 @@ test('the meeting pages render: a calendar of the month, an agenda with who came
     ['/meetings?at=2026-06-01', ['June 2026', 'Annual general assembly']],
     ['/meetings?span=week&at=2026-10-26', ['26 Oct – 1 Nov 2026', 'General assembly']],
     ['/meetings?view=list', ['Annual general assembly']],
-    ['/meetings/coordination-2026-10-19', ['The day rate: Malik', 'Motions tabled', 'm-2026-012', 'Attendance', '5 of 5, 3 needed']],
-    ['/meetings/coordination-2026-09-21', ['Léa Bernard', 'guest']],
-    ['/meetings/ag-2026-06-20?tab=minutes', ['61 400 €', 'Meeting · ag-2026-06-20', 'Motion · m-2026-006', 'Approve the 2025 accounts', 'Write in the editor']],
+    ['/meetings/coordination-2026-10-19?tab=agenda', ['The day rate: Malik', 'Motions tabled', 'm-2026-012', 'Attendance', '5 of 5, 3 needed']],
+    ['/meetings/coordination-2026-09-21?tab=agenda', ['Léa Bernard', 'guest']],
+    ['/meetings/ag-2026-06-20', ['61 400 €', 'Meeting · ag-2026-06-20', 'Motion · m-2026-006', 'Approve the 2025 accounts', 'Write in the editor']],
     ['/documents/minutes-ag-2026-06-20', ['Minutes, Annual general assembly', 'meeting, 20 Jun 2026']],
     ['/circles/coordination', ['Next meeting', 'Coordination']],
     ['/motions/m-2026-011', ['19 Oct 2026, held']],
@@ -84,7 +84,7 @@ test('the meeting pages render: a calendar of the month, an agenda with who came
     }
   }
   const page = await shell.page('/meetings/ag-2026-06-20', camille)
-  for (const tab of ['Agenda', 'Minutes']) {
+  for (const tab of ['Overview', 'Agenda']) {
     assert.ok(page.text.includes(`>${tab}<`), `a meeting's page has its ${tab} tab`)
   }
 })
@@ -130,7 +130,7 @@ test('its members draw up the agenda, reorder it and table the rate card; Thomas
   assert.deepEqual(await agenda(), ['The assembly, the day after', 'Staffing for November', 'Pipeline', 'Raise the day rate for 2027'])
   const removed = await shell.act(`/meetings/${meeting}`, 'remove', { item: await item('Staffing for November') }, yusuf)
   assert.equal(removed.state, 'settled', removed.reason)
-  const { text } = await shell.page(`/meetings/${meeting}`, malik)
+  const { text } = await shell.page(`/meetings/${meeting}?tab=agenda`, malik)
   assert.ok(text.includes('Raise the day rate for 2027') && text.includes('open until'), 'the page says where the tabled motion stands')
 })
 
@@ -174,7 +174,7 @@ test('on 2 November Malik holds it, which fixes its agenda and who came', async 
   const cancelled = await shell.act(`/meetings/${meeting}`, 'cancel', {}, camille)
   assert.equal(cancelled.state, 'refused')
   assert.match(cancelled.reason ?? '', /coordination-2026-11-02 was held on 2026-11-02/)
-  const { text } = await shell.page(`/meetings/${meeting}`, malik)
+  const { text } = await shell.page(`/meetings/${meeting}?tab=agenda`, malik)
   assert.ok(text.includes('4 of 5, 3 needed'), 'quorate: four of its five seats present, Thomas a guest')
 })
 
@@ -186,7 +186,7 @@ test('Malik begins the minutes: a document opening on the meeting\'s card and it
   const again = await shell.act(`/meetings/${meeting}`, 'minute', {}, malik)
   assert.equal(again.state, 'settled', 'begun again, they are the same minutes')
   assert.equal(Number((await one<{ n: string }>('SELECT count(*) AS n FROM document.document WHERE id LIKE $1', [`${minutes}%`])).n), 1)
-  const { text } = await shell.page(`/meetings/${meeting}?tab=minutes`, malik)
+  const { text } = await shell.page(`/meetings/${meeting}`, malik)
   for (const says of ['Minutes, Coordination', `Meeting · ${meeting}`, '1. The assembly, the day after', '3. Raise the day rate for 2027']) {
     assert.ok(text.includes(says), `the minutes say ${says}`)
   }
@@ -229,10 +229,10 @@ test('Malik writes them in the block editor, the meeting card drawn among the bl
     for (const [name, path] of [
       ['meetings-calendar', '/meetings?at=2026-10-01'],
       ['meetings-week', '/meetings?span=week&at=2026-10-26'],
-      ['meeting-agenda', `/meetings/${meeting}`],
-      ['meeting-agenda-open', '/meetings/coordination-2026-10-26'],
-      ['meeting-minutes', `/meetings/${meeting}?tab=minutes`],
-      ['assembly-minutes', '/meetings/ag-2026-06-20?tab=minutes'],
+      ['meeting-agenda', `/meetings/${meeting}?tab=agenda`],
+      ['meeting-agenda-open', '/meetings/coordination-2026-10-26?tab=agenda'],
+      ['meeting-minutes', `/meetings/${meeting}`],
+      ['assembly-minutes', '/meetings/ag-2026-06-20'],
     ]) {
       await page.goto(`${base}${path}`)
       await page.waitForLoadState('networkidle')

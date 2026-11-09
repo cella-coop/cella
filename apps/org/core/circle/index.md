@@ -862,13 +862,13 @@ The `circles` collection, the assembly first and the others by name, as
 a gallery of cards by default, and its structure drawn as the mandates
 link the circles, never as a tree: each circle with the circles that
 issued what it and its roles hold, and those it issued to. A circle's
-page lists its roles,
-those every working circle has among them, each with its duty and the
-circle it is of, and the mandates granted to them in the Mandates
-collection's columns: its power, the role it is granted to, its cap,
-what it covers, who issued it and whether it stands, each linking to
-its mandate's page, which reads its policy's sentence (`sentences` in
-`@cella/org-policy`).
+page, its header's crumb its id, opens on its purpose, as the record's
+own words; its Roles tab lists its roles, those every working circle
+has among them, each with its duty and the circle it is of, and the
+mandates granted to them in the Mandates collection's columns: its
+power, the role it is granted to, its cap, what it covers, who issued
+it and whether it stands, each linking to its mandate's page, which
+reads its policy's sentence (`sentences` in `@cella/org-policy`).
 
 The `mandates` collection lists every mandate, by power, with its
 grantee, cap, scope, issuer and whether it stands on the verdict date.

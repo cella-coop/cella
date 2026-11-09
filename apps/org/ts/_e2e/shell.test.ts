@@ -44,7 +44,7 @@ test('every main page renders on the seed', async () => {
     ['/people', 'Camille Martin'],
     [`/people/${camille}`, 'Powers held'],
     ['/circles', 'General assembly'],
-    ['/circles/ag', 'Manager'],
+    ['/circles/ag?tab=roles', 'Manager'],
     ['/motions', 'Admit Inès Haddad'],
     ['/motions/m-2026-012', 'passes by consent'],
     ['/documents', 'Rate card 2027'],
@@ -396,11 +396,11 @@ test('closed on 31 October, m-2026-012 admits Inès and seats her in the close\'
 })
 
 test("the assembly's page says what open books shares and what each value exposes; a value out of range is refused saying why, and Camille proposes new values as a motion of the assembly replacing the rule in force", async () => {
-  const { text } = await page('/circles/ag')
+  const { text } = await page('/circles/ag?tab=policies')
   for (const said of ['Open books', 'Fewest people in a total', 'A precaution, not a promise', 'Exposes personal data', 'Not checked']) {
     assert.ok(text.includes(said), `the assembly's page says ${said}`)
   }
-  assert.ok(!(await page('/circles/coordination')).text.includes('Open books'), "no other circle's page shows open books")
+  assert.ok(!(await page('/circles/coordination?tab=policies')).text.includes('Open books'), "no other circle's page shows open books")
   const values = (contributors: string) => ({ kind: 'disclose', 'arg.contributors': contributors, 'arg.largest': '40', 'arg.two': '70', deadline: '2026-11-14', body: '' })
   const low = await act('/circles/ag', 'put', values('1'), camille)
   assert.equal(low.state, 'refused')

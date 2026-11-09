@@ -95,7 +95,11 @@ export interface Page<T = any> {
   // The kind of item, the tooltip on its name.
   eyebrow: string
   title: (data: T) => string
+  // The record's reference, its id, the header's crumb.
   subtitle?: (data: T) => string
+  // The record's own words where it holds them as text, a circle's
+  // purpose or a report's caption, under its title.
+  summary?: (data: T) => string | null | undefined
   // The drawer's label and value rows, and the records it links to.
   properties?: (data: T) => Prop[]
   related?: (data: T) => Link[]
@@ -197,7 +201,7 @@ export interface Added<E = any> {
   // `title`.
   create?: Component<{ rows: any[]; about: any }>
   title?: string
-  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle'>
+  page?: Omit<Partial<Page<E>>, 'eyebrow' | 'title' | 'subtitle' | 'summary'>
 }
 
 // The sidebar's navigation, by group: a collection's `count` is its rows

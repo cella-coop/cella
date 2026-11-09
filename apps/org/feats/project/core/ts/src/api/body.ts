@@ -1,0 +1,32 @@
+import { action, type Body, type Db, type Form } from '@cella/org-db'
+import { b64 } from '@cella/org-body/models'
+import type { BodySave } from '../models/body.ts'
+import { saveBody } from '../handlers/body.ts'
+import { bodied, bodyCircle, savedBody } from '../drivers/body.ts'
+
+// A project's body, written by `cella scaffold body project`: the save its
+// page's editor posts, the mount handing core body's session the project's
+// bodies and that save, and its page's item with its body.
+
+// An editor's save, as its browser posts it: the merged snapshot in
+// base64 in `snapshot`, and one `contributor` an address.
+export function saving(form: Form, id: string): BodySave {
+  const snapshot = form.get('snapshot')
+  if (!snapshot) {
+    throw new Error('a save carries the body’s snapshot')
+  }
+  return { project: id, snapshot: b64.decode(snapshot), contributors: form.all('contributor') }
+}
+
+export const bodyActions = {
+  save: action('project:body:save', (form, id) => saving(form, id ?? ''), saveBody),
+}
+
+export const bodyMount: Body = { circle: bodyCircle, saved: savedBody, save: 'save' }
+
+export const withBody =
+  <T extends object>(read: (db: Db, id: string, query?: URLSearchParams) => Promise<T | null>) =>
+  async (db: Db, id: string, query?: URLSearchParams): Promise<(T & Awaited<ReturnType<typeof bodied>>) | null> => {
+    const item = await read(db, id, query)
+    return item && { ...item, ...(await bodied(db, id)) }
+  }

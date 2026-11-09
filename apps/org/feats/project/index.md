@@ -1,19 +1,25 @@
 +++
 title = "Project"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
 its own, with its milestones and its budget. A project is the container
 the work is planned and counted in; its tasks, its time, its client and
-the shares of its budget are the grafts'.
+the shares of its budget are the grafts'. Its body is its free-form
+content, and its threads the comments on it, which `cella scaffold body
+project` and `cella scaffold comments project` wrote as the task's are
+([threads](../../core/body/index.md#threads)).
 
 ## Entities
 
 | Entity | Fields | Notes |
 |---|---|---|
-| project | `id`, `title`, `circle?`, `summary`, `started`, `due?`, `budget?`, `archived?` | `id` is a slug of the title; `budget` in cents |
+| project | `id`, `title`, `circle?`, `summary`, `started`, `due?`, `budget?`, `archived?`, `body?` | `id` is a slug of the title; `budget` in cents; `body` a Loro snapshot of core body's blocks |
 | milestone | `project`, `n`, `title`, `due?`, `completed?` | numbered in the order added |
+| comment | `id`, `project`, `author`, `parent?`, `text`, `posted`, `resolved?` | numbered by its write's receipt; a reply's `parent` is a root of the same project |
+| mention | `comment`, `n`, `person` | each person a comment's text mentions, in order |
+| reaction | `comment`, `person`, `emoji` | one of core body's six, while it is on |
 
 `circle` names the circle that runs the project as text, as a motion
 does; nothing checks it against the circles. A project is **done** once it
@@ -29,12 +35,17 @@ archived project is hidden from lists, kept for the books and frozen.
 | `project:milestone:complete` | confluent | `manage-project` | idempotent: the first completion's day stands |
 | `project:project:budget` | ordered | `set-budget`, capped by its limit on `amount` | sets the pot the shares spend; ordered against them |
 | `project:project:archive` | confluent | `manage-project` | archiving twice changes nothing |
+| `project:body:save` | confluent | `discuss` | each save carries the whole merged snapshot |
+| `project:comment:post` | confluent | `discuss` | a fact: comments are appended, each numbered by receipt |
+| `project:comment:resolve` | confluent | `discuss` | resolving or reopening a root is a register |
+| `project:comment:react` | confluent | `discuss` | a toggle per comment, person and emoji |
 
 Setting a budget is ordered because a share spends it: a budget lowered
 while a share is granted could leave the shares above it, which the
 `membership-project` graft's guard refuses. Every other write commutes.
 `002-powers.sql` registers each power in `cella.power`, and the
-membership feat checks it.
+membership feat checks it; `005-body.sql` and `006-comments.sql`
+register the body's and the threads'.
 
 ## Powers
 
@@ -42,6 +53,7 @@ membership feat checks it.
 |---|---|
 | `manage-project` | the circle leads and the manager |
 | `set-budget` | the leads up to 15 000 €, the manager up to 50 000 € |
+| `discuss` | every seat, in every circle |
 
 ## Invariants
 
@@ -50,7 +62,13 @@ membership feat checks it.
   completed (`project.stays_archived`, `project.live`, SQLSTATE `09000`);
 - a budget is set by the write that names it (`project.budgets`); that it
   covers the shares granted from it is `membership-project`'s guard on the
-  same action.
+  same action;
+- a body's save names only contributors who discuss in its circle
+  (`project.contributed`); a reply answers a root, a mention names a
+  person the co-op knows, and only a root is resolved (`project.posts`,
+  `project.resolves`); a reaction is one of the six, refused where the
+  circle turned reactions off (`project.reacts`). An archived project's
+  body is frozen with the rest.
 
 ## What it does not know
 
@@ -73,7 +91,8 @@ circle](../../../../_corpus/doc/architecture.md#sql)): the root's, the
 assembly's, unless the write that makes it names another.
 `project.project.circle` is the circle that runs the project; its
 milestones are in its circle, which `project.in_its_circle` copies into
-each as it is made.
+each as it is made, as `project.in_its_thread` copies it into each
+comment, mention and reaction.
 Each write on a project, a milestone, its budget or its archive names
 the project's circle in its payload, which core's guard on every power
 reads a mandate's scope against, so a lead runs their own circle's
@@ -88,7 +107,12 @@ its entry carries; a milestone under the number its entry names, with
 its title and due day, the feat's trigger putting it in its project's
 circle as it did; a completion on the day its entry names, keeping the
 first; a budget set to the amount its entry names; and an archive on
-the day its entry names, archiving twice changing nothing.
+the day its entry names, archiving twice changing nothing. A body's
+save, a comment, its resolving and a reaction fold by
+`core/sql/005-body.sql` and `core/sql/006-comments.sql`: the body set to
+the snapshot its entry carries; the comment under its receipt, with its
+mentions, a reply reopening its root; the root resolved on its day or
+reopened; the reaction on or off.
 
 ## Shell
 
@@ -103,7 +127,10 @@ Milestones, completing one and adding the next; Budget, its budget, what
 is spent and left of it, and its shares (`membership-project`); Tasks
 (`project-task`); Time (`project-timesheet`); Expenses
 (`expense-project`); and Invoices (`invoice-project`). Archive is the
-header's write.
+header's write. Its Overview opens on its body, edited live over core
+body's session and saved by each editor's browser, and its threads sit
+under its Activity, a mention of a person waiting in their Inbox until
+they answer it.
 
 ## Import
 

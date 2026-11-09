@@ -219,6 +219,17 @@ their current name, an erased person's as erased. A thread's events sit in
 the record's Activity with the log's, and a mention is a row of the
 person's Inbox: no page gathers every comment.
 
+A feat gains a body or threads by `cella scaffold body|comments <feat>`
+([the CLI](../../rs/index.md#commands)), which writes them into its own
+folder, as the project feat's were; then `cella check feats` holds them
+whole: a feat whose table keeps a `body` of core body's, a `bytea`,
+declares `<feat>:body:save` with `discuss`, its fold and the session's
+mount, and a feat with a thread's comment table, `<feat>.comment` with
+replies by `parent`, declares post, resolve and react with theirs, and
+the mention table and the reaction guard, each refused by name where
+one is missing. A motion's text body and a document's anchored comments
+are their feats' own, and not held.
+
 ## Tests
 
 - Slice tests (`core/body/ts/_tests/`): the edits, marks, outlines,

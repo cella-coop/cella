@@ -44,8 +44,9 @@
 // with no exceptions, and through
 // powers.mjs that the power each action's label names is the one its SQL
 // registers, that a mandate a fixture adopts grants it, that an
-// action with no power declares a check its SQL backs, and that every
-// action folds.
+// action with no power declares a check its SQL backs, that every
+// action folds, and that a feat keeping a body or threads keeps them
+// whole.
 // `--no-sql` skips the SQL, which needs the npm install; the flake's check
 // runs without one.
 
@@ -53,7 +54,7 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { basename, dirname, join, relative, resolve } from 'node:path'
 import { checkSql, placed, schemaName, undeclared, unowned, unread, definers, unshared } from './sql-check.mjs'
-import { agree, covered, declared, granted, mandates, unfolded, unfollowed } from './powers.mjs'
+import { agree, covered, declared, granted, mandates, unfolded, unfollowed, whole } from './powers.mjs'
 import { checkUi } from './ui-check.mjs'
 import { refuse, scanTs } from './writes.mjs'
 
@@ -551,6 +552,17 @@ if (sql) {
   // is (architecture.md, "Folds").
   errors.push(...unfolded(ops, found.folds ?? []))
   actionCount = ops.length
+  // A feat's body or threads kept whole: their commands, powers, folds,
+  // the mention table, the reaction guard and the session's mount.
+  const feats = [...byName.values()]
+    .map((d) => [d, place(d)])
+    .filter(([, p]) => p?.kind === 'core' && parentOf(p.node) && !p.lib && !p.graft)
+    .map(([d, p]) => {
+      const api = join(repo, d, 'src', 'api')
+      const mounts = existsSync(api) && readdirSync(api).some((f) => /^\s+body:\s*[{\w]/m.test(readFileSync(join(api, f), 'utf8')))
+      return { name: basename(p.node), file: join(d, 'src', 'models', 'actions.ts'), mounts }
+    })
+  errors.push(...whole(feats, ops, found))
   // The mandates each app's fixtures adopt, which every power must be
   // among.
   const { parse } = await import('smol-toml')

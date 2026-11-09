@@ -14,6 +14,7 @@ mod key;
 mod pruned;
 mod repo;
 pub mod run;
+mod scaffold;
 mod secret;
 mod shell;
 mod site;
@@ -58,6 +59,7 @@ pub fn dispatch(command: Command, verbose: bool) -> Result {
             scenario,
             url,
         } => data::seed(&Repo::find()?, &steps, &fixture, url.as_deref(), &scenario),
+        Command::Scaffold { part, feat } => scaffold::run(&Repo::find()?, &steps, part, &feat),
         Command::Import {
             kind,
             file,

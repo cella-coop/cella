@@ -4,6 +4,8 @@ import Archive from './blocks/Archive.svelte'
 import Budget from './blocks/Budget.svelte'
 import Create from './blocks/Create.svelte'
 import Milestones from './blocks/Milestones.svelte'
+import Body from './blocks/Body.svelte'
+import Comments from './blocks/Comments.svelte'
 
 const tones: Record<State, Tone> = { active: 'accent', done: 'positive' }
 
@@ -35,6 +37,7 @@ export const app: App = {
         look: { layout: 'gallery', cards: ['circle', 'progress', 'budget'], lanes: { state: ['active', 'done'] } },
       },
       page: {
+        comment: Comments,
         eyebrow: 'Project',
         title: (p: Detail) => p.title,
         subtitle: (p: Detail) => p.id,
@@ -59,6 +62,7 @@ export const app: App = {
           { id: 'budget', label: 'Budget' },
         ],
         blocks: [
+          Body,
           { tab: 'milestones', block: Milestones },
           { tab: 'budget', block: Budget },
         ],

@@ -93,6 +93,15 @@ pub enum Command {
         url: Option<String>,
     },
 
+    /// Write a body or threads of comments into a feat's own folder, as the task feat's are; refused where it has them
+    Scaffold {
+        /// What to give the feat: its record's body, or threads of comments on it
+        part: Scaffolded,
+
+        /// The feat, by its name, such as project
+        feat: String,
+    },
+
     /// Bring a file from another tool into the scope as a member, each record through its signed write; --dry-run undoes them all
     Import {
         /// The kind of file: members, contacts, fec, invoices, toggl, harvest, projects or tasks
@@ -196,6 +205,14 @@ pub enum Command {
         #[command(subcommand)]
         command: Key,
     },
+}
+
+#[derive(Clone, Copy, ValueEnum)]
+pub enum Scaffolded {
+    /// The record's body column, its save, power, guard, fold and mount, and the block its page opens on
+    Body,
+    /// The comment, mention and reaction tables, post, resolve and react, the Inbox's mentions and the Activity's threads
+    Comments,
 }
 
 #[derive(Clone, Copy, ValueEnum)]

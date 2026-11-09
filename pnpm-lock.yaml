@@ -448,6 +448,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts

@@ -272,6 +272,35 @@ refuses a core feat's depending on another core feat
 ([core grafts](#core-grafts)).
 `cella test tools` holds their negative tests.
 
+### Removing a feat
+
+Every feat outside core can be removed, and removing one removes exactly
+the grafts that join it and what it registers: its schema and rows, its
+collections and what it adds to others', its reactions, importers and
+invitations, and the rights, powers and folds its SQL registers, each in
+its own packages and its own `sql/`. Nothing below it names it: core
+depends on no feat, in code or in SQL, and stands with nothing a feat
+registers; the shell imports the slices above core only in its
+composition root's `feats/` modules ([the shell](#the-shell)); and no
+other feat depends on it, but the grafts that join it ([what may depend
+on what](#what-may-depend-on-what)).
+
+Removing every one at once is the case that proves it, and it is
+enforced. `cella check pruned` copies the app with every feat and graft
+left out, the shell's composition root above core emptied and every
+manifest's dependency on them dropped (`tools/prune.mjs`), refusing a
+package it keeps whose source still imports one, then installs,
+svelte-checks and builds that tree. `cella test pruned` migrates a fresh
+database with that tree's migrate, which finds core's SQL alone, enrols
+one person and their device below the notary, since a scope's founding
+is a graft's write, starts the built server and signs in by the device's
+answer to its challenge, and the Inbox, the people and the circles must
+answer (`tools/pruned.mjs`). A core package or the shell that depends on
+a slice above core, by an import, in SQL, or by a registration or an
+effect only a feat makes, fails one or the other; `tools/_tests/prune.test.mjs`
+holds the negative tests, a core package and the shell each importing a
+feat.
+
 ## Grafts
 
 A graft owns a relationship between feats: its model, its junction table
@@ -1233,7 +1262,9 @@ two halves of one **slice**, matched by name:
   own writes, which the root runs as the importing member and records in
   the import feat; and the settings pages it serves (`settings`), each
   what it reads for the acting person and the writes that save it, as
-  core person's Account.
+  core person's Account; and how an invitation's link is taken up
+  (`joins`), whom it invites and the write that takes it up, which the
+  membership feat alone serves.
 - from `./app`, its client side (`App` in `@cella/org-ui`): for each
   collection it owns, a view (its columns, its New form, the status
   badge its header shows and its dashboard's widgets) and a page (its title, its Properties, Related and Activity cards, its
@@ -1246,8 +1277,12 @@ two halves of one **slice**, matched by name:
   of Settings it sits in, Personal or Organization, and the block that
   draws it.
 
-The root lists the slices, server and client, and mounts them on
-routes that are the same for every collection: `/[collection]`, the one collection
+The root lists the slices, server and client: core's in
+`lib/server/slices.ts` and `lib/slices.ts`, and every slice above core,
+with the root's own, in the `feats/` module beside each, its composition
+root above core, which the pruned build empties ([removing a
+feat](#removing-a-feat)). No other file of the shell imports a feat. It
+mounts them on routes that are the same for every collection: `/[collection]`, the one collection
 component, and `/[collection]/[id]`, the one detail view, each reading
 through the `collection` and `item` queries and writing through the form
 actions of the collection's slices; `/search` for the command menu;
@@ -1258,7 +1293,8 @@ bytes, such as a file's, which the collection's owner serves (`content`)
 to whom its guard or an extension's `allows` opens them; `/sign-in`,
 `/session`, the challenge and the device's answer to it, and
 `/sign-out`; `/join/[secret]`, an invitation's link, taken up through
-membership's `accept`; `/settings/[page]`, a settings page a slice
+the one slice that serves invitations, membership's `accept` as its slice
+serves it (`joins`), and no one's where none does; `/settings/[page]`, a settings page a slice
 serves, with its writes and `theme`, which saves the theme as `/theme`
 does; `/theme` for the user menu; `/lens` for the co-op selector's circles; `/journal`, the transactions' old address,
 which redirects to them; `/specimens/settings`, on the dev server alone, a

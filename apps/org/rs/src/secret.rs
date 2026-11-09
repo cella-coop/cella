@@ -34,5 +34,8 @@ pub fn get(repo: &Repo, key: &str) -> Result<Option<Zeroizing<String>>> {
     if err.contains("component") && err.contains("not found") {
         return Ok(None);
     }
-    Err(Fail::new(format!("{FILE}: sops cannot decrypt it: {}", err.trim())))
+    Err(Fail::new(format!(
+        "{FILE}: sops cannot decrypt it: {}",
+        err.trim()
+    )))
 }

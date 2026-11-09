@@ -221,9 +221,22 @@ export interface SettingsPage {
   actions?: Record<string, Action>
 }
 
+// How an invitation's link, `/join/<secret>`, is taken up: whom it
+// invites while they have not taken it up, and the write that takes it
+// up, which the invitee's first device signs, the device the browser made
+// and posts. The shell serves the link's page and knows no feat; the
+// membership feat serves this, and with no slice serving it a link is no
+// one's.
+export interface Joining {
+  op: Permission
+  invited(db: Db, secret: string): Promise<{ member: string; name: string } | null>
+  accept(input: { member: string; secret: string; key: string; label: string }, deps: Deps): Promise<Settled<unknown> | Pending | Refused>
+}
+
 // A slice's server side, which the root mounts: the collections it owns,
 // what it adds to the collections of the feats it joins or nests in, its reactions,
-// the kinds of file it imports, and the settings pages it serves.
+// the kinds of file it imports, the settings pages it serves, and how an
+// invitation's link is taken up.
 export interface Slice {
   // The feat's or graft's name, or `<name>/<part>` for one part of a
   // slice mounted in parts, as a feat a graft of the circles dissolved
@@ -240,4 +253,5 @@ export interface Slice {
   on?: Partial<Record<Permission, Reaction>>
   imports?: Record<string, Importer>
   settings?: Record<string, SettingsPage>
+  joins?: Joining
 }

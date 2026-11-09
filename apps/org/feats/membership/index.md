@@ -279,7 +279,8 @@ person's page gains the membership's days and shares and, once taken up,
 the first device the invitation enrolled and the day; while they are
 invited and have not, the Devices step offers a new link, shown the same
 way. Taking an invitation up is the shell's `/join/<secret>` page,
-through `accept`; proposing their admission,
+through `accept`, which the feat's slice serves it as `joins`, so the
+shell names no feat; proposing their admission,
 suspension or exclusion is `membership-motion`'s. A member's own
 page offers them Withdraw, which asks them to confirm and signs
 `withdraw`; no one else's page offers it. Once they have left, their own

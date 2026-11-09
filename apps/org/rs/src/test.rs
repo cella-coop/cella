@@ -4,6 +4,7 @@ use std::path::{Component, Path, PathBuf};
 use crate::cli::Test;
 use crate::db::Dev;
 use crate::fold;
+use crate::pruned;
 use crate::repo::Repo;
 use crate::run::{Fail, Result, Steps, quiet};
 use crate::shell;
@@ -22,6 +23,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
             rust(repo, steps, "cli", "cella-cli")?;
             notary(repo, steps)?;
             tools(repo, steps)?;
+            pruned::serve(repo, steps)?;
             slices(repo, steps, None)?;
             e2e(repo, steps, None)
         }
@@ -29,6 +31,7 @@ pub fn run(repo: &Repo, steps: &Steps, only: Option<Test>) -> Result {
         Some(Test::Cli) => rust(repo, steps, "cli", "cella-cli"),
         Some(Test::Notary) => notary(repo, steps),
         Some(Test::Tools) => tools(repo, steps),
+        Some(Test::Pruned) => pruned::serve(repo, steps),
         Some(Test::Slice { name }) => slices(repo, steps, name.as_deref()),
         Some(Test::E2e { name }) => e2e(repo, steps, name.as_deref()),
         Some(Test::Scale { members, years }) => scale(repo, steps, members, years),

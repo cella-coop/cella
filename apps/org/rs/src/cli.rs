@@ -16,7 +16,7 @@ pub struct Cli {
 
 #[derive(Subcommand)]
 pub enum Command {
-    /// What a commit must pass: feat check, fixture check, types, svelte-check, the brand check, the site check, cargo check and clippy
+    /// What a commit must pass: feat check, fixture check, types, svelte-check, the pruned build of core alone, the brand check, the site check, cargo check and clippy
     Check {
         /// Run one part alone
         part: Option<Part>,
@@ -147,7 +147,7 @@ pub enum Command {
         command: Site,
     },
 
-    /// The Rust and tool tests, then each slice's tests and the e2e scenarios on fresh databases
+    /// The Rust and tool tests, the org app of core alone signed in to, then each slice's tests and the e2e scenarios on fresh databases
     Test {
         #[command(subcommand)]
         only: Option<Test>,
@@ -208,6 +208,8 @@ pub enum Part {
     Types,
     /// svelte-check over the shell and every slice's client layers
     Shell,
+    /// The org app of core alone: every slice above core pruned from the tree and the shell's composition root, installed, svelte-checked and built
+    Pruned,
     /// The brand's generated files are what its house.json makes
     Brand,
     /// The landing site's copy check, astro check over it, its build, then the figure fixture's
@@ -345,6 +347,8 @@ pub enum Test {
     Notary,
     /// The node tools' tests, such as the feat check's
     Tools,
+    /// The org app of core alone, built as `cella check pruned` builds it, on a database migrated with core's SQL alone, served and signed in to; needs the dev cluster
+    Pruned,
     /// Each slice's own tests, or one slice's, on a database holding only its part of the tree; needs the dev cluster
     Slice {
         /// A feat or graft, such as transaction or membership-motion, or a library of the app's core with tests, such as circle

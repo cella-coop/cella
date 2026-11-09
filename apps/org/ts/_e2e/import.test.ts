@@ -20,7 +20,7 @@ import { readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import pg from 'pg'
 import type { Deps } from '@cella/org-db'
-import { imported } from '../src/lib/server/import.ts'
+import { imported } from '../src/lib/server/feats/import.ts'
 import { reader, sign } from './lanterne.ts'
 import { Shell } from './serve.ts'
 

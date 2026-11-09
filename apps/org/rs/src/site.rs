@@ -44,7 +44,11 @@ pub fn run(repo: &Repo, steps: &Steps, command: Site) -> Result {
             // reads too
             let mut fmt = Command::new("pnpm");
             fmt.current_dir(repo.site_dir())
-                .args(["exec", "prettier", if check { "--check" } else { "--write" }])
+                .args([
+                    "exec",
+                    "prettier",
+                    if check { "--check" } else { "--write" },
+                ])
                 .args(["src/content", "src/drafts"]);
             Steps::exec(&mut fmt)
         }

@@ -8,12 +8,11 @@
     "./app": "./src/app/index.ts"
   },
   "dependencies": {
+    "@cella/org-body": "workspace:*",
     "@cella/org-db": "workspace:*",
     "@cella/org-actions": "workspace:*",
     "@cella/org-policy": "workspace:*",
     "@cella/org-ui": "workspace:*",
-    "@noble/hashes": "2.4.0",
-    "loro-crdt": "1.17.1",
     "svelte": "5.57.2"
   }
 }

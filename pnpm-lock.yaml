@@ -50,6 +50,21 @@ importers:
         specifier: 2.0.0-r.1
         version: 2.0.0-r.1
 
+  apps/org/core/body/ts:
+    dependencies:
+      '@cella/org-ui':
+        specifier: workspace:*
+        version: link:../../ui/ts
+      '@noble/hashes':
+        specifier: 2.4.0
+        version: 2.4.0
+      loro-crdt:
+        specifier: 1.17.1
+        version: 1.17.1
+      svelte:
+        specifier: 5.57.2
+        version: 5.57.2
+
   apps/org/core/circle/ts:
     dependencies:
       '@cella/org-actions':
@@ -207,6 +222,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../../core/db/ts
@@ -216,12 +234,6 @@ importers:
       '@cella/org-ui':
         specifier: workspace:*
         version: link:../../../../core/ui/ts
-      '@noble/hashes':
-        specifier: 2.4.0
-        version: 2.4.0
-      loro-crdt:
-        specifier: 1.17.1
-        version: 1.17.1
       svelte:
         specifier: 5.57.2
         version: 5.57.2
@@ -730,6 +742,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -772,6 +787,9 @@ importers:
       '@cella/org-actions':
         specifier: workspace:*
         version: link:../../../core/actions/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../../../core/body/ts
       '@cella/org-db':
         specifier: workspace:*
         version: link:../../../core/db/ts
@@ -1393,6 +1411,9 @@ importers:
       '@cella/org-bill':
         specifier: workspace:*
         version: link:../feats/bill/core/ts
+      '@cella/org-body':
+        specifier: workspace:*
+        version: link:../core/body/ts
       '@cella/org-circle':
         specifier: workspace:*
         version: link:../core/circle/ts

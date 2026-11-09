@@ -1,22 +1,30 @@
 import { post } from '@cella/org-ui'
 import { VersionVector, type LoroDoc } from 'loro-crdt'
 import { hash } from '../models/canonical.ts'
-import { b64, type Relayed } from '../models/document.ts'
+import { b64, type Relayed } from '../models/body.ts'
 
 const pause = 250
 const retry = 2000
 
-// The draft kept live with the server. This peer's own edits are sent as
-// one Loro update every quarter second while it types, through the
-// document's `edit` write, signed as the acting member; everyone else's
-// arrive on the document's stream (`/documents/<id>/live`) as they
-// settle, and are imported. Offline, edits wait and go when the network
-// returns; the stream reopens with this peer's version vector, so it
-// misses nothing. The draft's canonical hash, what a version saved now
-// would be named by, follows every change.
+// Where a draft lives, as the slice that mounts it says: the URL of its
+// live stream, and of the form action that takes an edit, its update in
+// the `update` field.
+export interface Where {
+  live: () => string
+  edit: () => string
+}
+
+// A draft kept live with the server. This peer's own edits are sent as
+// one Loro update every quarter second while it types, through the edit
+// action the mounting slice names, signed as the acting member; everyone
+// else's arrive on the live stream it names as they settle, and are
+// imported. Offline, edits wait and go when the network returns; the
+// stream reopens with this peer's version vector, so it misses nothing.
+// The draft's canonical hash, what a version saved now would be named by,
+// follows every change.
 export class SyncState {
   readonly #doc: LoroDoc
-  readonly #path: () => string
+  readonly #at: Where
   online = $state(false)
   // Whether this peer has edits the server does not hold yet.
   waiting = $state(false)
@@ -29,9 +37,9 @@ export class SyncState {
   #source: EventSource | null = null
   #stopped = true
 
-  constructor(doc: LoroDoc, path: () => string) {
+  constructor(doc: LoroDoc, at: Where) {
     this.#doc = doc
-    this.#path = path
+    this.#at = at
     this.hash = hash(doc)
   }
 
@@ -79,7 +87,7 @@ export class SyncState {
       return
     }
     const vv = b64.encode(this.#doc.oplogVersion().encode())
-    const source = new EventSource(`${this.#path()}/live?vv=${encodeURIComponent(vv)}`)
+    const source = new EventSource(`${this.#at.live()}?vv=${encodeURIComponent(vv)}`)
     this.#source = source
     source.onopen = () => {
       this.online = true
@@ -106,7 +114,7 @@ export class SyncState {
   }
 
   // Everything of this peer's since the last update the server took, as
-  // one update, posted to the page's `edit` action.
+  // one update, posted to the slice's edit action.
   async #send(): Promise<void> {
     if (this.#sending || this.#stopped) {
       return
@@ -127,7 +135,7 @@ export class SyncState {
     form.set('update', b64.encode(update))
     this.#sending = true
     try {
-      const out = await post(`${this.#path()}?/edit`, form)
+      const out = await post(this.#at.edit(), form)
       if (out.type === 'success') {
         this.#sent = upto
         this.problem = null

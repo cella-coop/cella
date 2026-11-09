@@ -8,7 +8,7 @@ import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
 import pg from 'pg'
 import * as drag from '@cella/org-ui/models'
-import { b64, createDoc, order, text as text_ } from '@cella/org-document/models'
+import { b64, createDoc, order, text as text_ } from '@cella/org-body/models'
 import { Shell, type Done } from './serve.ts'
 
 const su = new pg.Client()

@@ -1,4 +1,4 @@
-import type { Canon } from '@cella/org-document/models'
+import type { Canon } from '@cella/org-body/models'
 
 // A meeting as an embed draws it inside a document, and as the slash menu
 // offers it.

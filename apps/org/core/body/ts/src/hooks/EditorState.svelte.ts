@@ -3,7 +3,7 @@ import { Cursor, UndoManager, type Delta, type LoroDoc, type LoroEventBatch } fr
 import type { DragState, Embeds } from '@cella/org-ui'
 import { atomic, exists, kind, order, props, text, type Kind, type Props, type TreeID } from '../models/blocks.ts'
 import * as ops from '../models/edits.ts'
-import { b64, type Anchor } from '../models/document.ts'
+import { b64, type Anchor } from '../models/body.ts'
 import { caretRect, offsetAt, paint, readSel, writeSel, type Sel, type Span } from './dom.ts'
 import { ChoiceState } from './ChoiceState.svelte.ts'
 import { MenuState } from './MenuState.svelte.ts'

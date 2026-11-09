@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
+import { canonical } from '@cella/org-body/models'
 import type { actions } from '../models/actions.ts'
-import { canonical } from '../models/canonical.ts'
 import type { Edit, Edited } from '../models/document.ts'
 import { merged } from './loro.ts'
 

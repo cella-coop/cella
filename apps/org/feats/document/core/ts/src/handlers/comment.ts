@@ -1,8 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps } from '@cella/org-db'
+import { anchor, createDoc } from '@cella/org-body/models'
 import type { actions } from '../models/actions.ts'
-import { createDoc } from '../models/blocks.ts'
-import { anchor } from '../models/anchor.ts'
 import type { Comment, Commented } from '../models/document.ts'
 
 const op = 'document:document:comment' satisfies keyof typeof actions

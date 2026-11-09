@@ -1,7 +1,5 @@
-import type { LoroDoc } from 'loro-crdt'
 import type { Db } from '@cella/org-db'
-import { createDoc } from '../models/blocks.ts'
-import { canonical, type Canon } from '../models/canonical.ts'
+import { canonical, createDoc, type Canon, type LoroDoc } from '@cella/org-body/models'
 import type { Frontier } from '../models/document.ts'
 
 // The draft: every update the document holds, merged. Loro merges updates

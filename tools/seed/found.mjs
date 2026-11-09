@@ -26,7 +26,8 @@
 // fixture is a directory (tools/seed.mjs) or a founding built in memory
 // (`founding.mjs`).
 
-import { anchor, createDoc, edits, fill, outline } from '../../apps/org/feats/document/core/ts/src/models/index.ts'
+import { anchor, createDoc, edits, outline } from '../../apps/org/core/body/ts/src/models/index.ts'
+import { fill } from '../../apps/org/feats/document/core/ts/src/models/index.ts'
 import { departures, inOrder } from '../../apps/org/core/policy/ts/src/index.ts'
 import { fixture, signer } from '../../apps/org/core/sign/ts/src/index.ts'
 import { found } from '../../apps/org/grafts/membership-motion/ts/src/handlers/found.ts'

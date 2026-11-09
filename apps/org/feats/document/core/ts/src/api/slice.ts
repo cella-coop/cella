@@ -1,7 +1,8 @@
 import { action, type Deps, type Slice } from '@cella/org-db'
+import { b64 } from '@cella/org-body/models'
 import { comment, create, edit, version } from '../handlers/index.ts'
 import { document, documents, listing } from '../drivers/document.ts'
-import { b64, type Edit } from '../models/document.ts'
+import type { Edit } from '../models/document.ts'
 import { live, publish } from './live.ts'
 
 // An edit, and once it settles, its update relayed to everyone with the

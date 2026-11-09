@@ -18,7 +18,7 @@ import { governance } from './fixture/governance.mjs'
 import { meeting, meetingIds } from './fixture/meeting.mjs'
 import { people } from './fixture/people.mjs'
 import { rich } from './fixture/rich.mjs'
-import { embedded, outline } from '../apps/org/feats/document/core/ts/src/models/outline.ts'
+import { embedded, outline } from '../apps/org/core/body/ts/src/models/outline.ts'
 
 const repo = process.argv[2] ?? process.cwd()
 const root = join(repo, 'apps/org/fixtures')

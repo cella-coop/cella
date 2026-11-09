@@ -347,8 +347,8 @@ The theme is light, dark or the system's, a cookie the server writes into
   items with their markers, to-dos, quotes, code, dividers, embeds' cards,
   a block chosen whole, where a dragged block lands), every kind set in
   the body font, Inter (`--font-ui`), headings and all, wherever the
-  editor or its reader stands. The document feat's components name its
-  classes and draw nothing of their own.
+  editor or its reader stands. Core body's components name its classes
+  and draw nothing of their own.
 - `icons`: the Phosphor icons slices may name.
 
 A view whose rows are not its own items links each where its `href`

@@ -1,9 +1,8 @@
 <script lang="ts">
   import { Note, Section, type Embeds } from '@cella/org-ui'
+  import { Editor, Reader } from '@cella/org-body/app'
   import type { Page } from '../../models/document.ts'
   import { useDraft } from '../../hooks/useDraft.ts'
-  import Editor from '../../components/Editor.svelte'
-  import Reader from '../../components/Reader.svelte'
 
   // The draft, edited together: every member with the document open sees
   // the others' edits as they settle. The server renders it to read; the

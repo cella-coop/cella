@@ -17,6 +17,7 @@
     "@cella/org-circle": "workspace:*",
     "@cella/org-graft-circle-policy": "workspace:*",
     "@cella/org-motion": "workspace:*",
+    "@cella/org-body": "workspace:*",
     "@cella/org-document": "workspace:*",
     "@cella/org-account": "workspace:*",
     "@cella/org-patronage": "workspace:*",

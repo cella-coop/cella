@@ -1,7 +1,7 @@
-// The document model alone, no database: the edits on a tree of blocks,
+// Core body's model alone, no database: the edits on a tree of blocks,
 // their marks, the canonical form, the outline fixtures are written in,
 // patching one version into the next, and three peers converging. Run by
-// `cella test slice document`.
+// `cella test slice body`.
 
 import { describe, it } from 'node:test'
 import assert from 'node:assert/strict'

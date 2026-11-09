@@ -1,0 +1,15 @@
+{
+  "name": "@cella/org-body",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./models": "./src/models/index.ts",
+    "./app": "./src/app/index.ts"
+  },
+  "dependencies": {
+    "@cella/org-ui": "workspace:*",
+    "@noble/hashes": "2.4.0",
+    "loro-crdt": "1.17.1",
+    "svelte": "5.57.2"
+  }
+}

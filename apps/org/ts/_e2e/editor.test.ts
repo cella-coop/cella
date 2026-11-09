@@ -16,7 +16,7 @@ import assert from 'node:assert/strict'
 import { mkdirSync } from 'node:fs'
 import pg from 'pg'
 import type { Browser, BrowserContext, Page } from 'playwright-core'
-import { createDoc, edits, type Fragment, type Run } from '@cella/org-document/models'
+import { createDoc, edits, type Fragment, type Run } from '@cella/org-body/models'
 import { browsers, serve, signIn } from './browser.ts'
 
 const shots = process.env.SHOTS ?? '/tmp/cella-editor-shots'

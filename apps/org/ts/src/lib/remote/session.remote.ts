@@ -1,15 +1,38 @@
 import { error } from '@sveltejs/kit'
-import { command, getRequestEvent } from '$app/server'
+import { command, getRequestEvent, query } from '$app/server'
 import { done as made, lent, texts, type Joining } from '@cella/org-db'
 import { scope } from '@cella/org-log/api'
+import { safe } from '#lib/server/back.ts'
+import { shell as call } from '#lib/server/calls.ts'
 import { using } from '#lib/server/db.ts'
+import { dev, fixtures } from '#lib/server/device.ts'
 import { answered, proof, relay } from '#lib/server/relay.ts'
 import { keep } from '#lib/server/session.ts'
 import { joining } from '#lib/server/slices.ts'
 import { failed, owner, reason, relayed, step, type Answer } from '#lib/server/write.ts'
 import { collection, index } from './collection.remote.ts'
 import { item } from './item.remote.ts'
+import { served } from './serve.ts'
 import { answer, poster } from './write.ts'
+
+// What the shell around every page reads, as the root layout awaits it,
+// read again after a write that took or reached a verdict, as its counts
+// may have moved: with the theme the viewer wears, whether the dev server
+// serves it, and whether the viewer left the drawer open, which the
+// shell's toggle keeps in a cookie. Signed out, the scope alone, which
+// the sign-in page and an invitation's link wear.
+export const shell = query(() =>
+  served(async (db, who) => ({
+    ...(await call.run(db, who)),
+    dev,
+    theme: getRequestEvent().locals.theme,
+    drawer: who.cookies.get('cella-drawer') !== 'closed',
+  })),
+)
+
+// The sign-in page: where to go once signed in, the Inbox unless asked,
+// and, on the dev server alone, the fixture members it offers.
+export const signing = query(texts(['back']), async ({ back }) => ({ back: safe(back || '/inbox'), fixtures: await fixtures() }))
 
 // The proof a device signed for a run that asked for it, posted back by
 // the session that started the run, which goes on to its next step; with
@@ -19,7 +42,7 @@ export const prove = command(texts(['run', 'proof']), async ({ run, proof: p }) 
   if (!who) {
     return failed(401, 'sign in first')
   }
-  return answer(await relayed(owner(who), run, p), [collection, item, index])
+  return answer(await relayed(owner(who), run, p), [collection, item, index, shell])
 })
 
 const gone = 'this invitation link is taken up already, or is no one’s'
@@ -27,6 +50,12 @@ const gone = 'this invitation link is taken up already, or is no one’s'
 // The slice that serves invitations (`joins`, the membership feat's); with
 // none mounted, every link is no one's.
 const serving = (): Joining => joining ?? error(404, gone)
+
+// An invitation's link: whom it invites, while they have not taken it up.
+export const invited = query(texts(['secret']), async ({ secret }) => {
+  const join = serving()
+  return (await using(null, (db) => join.invited(db, secret))) ?? error(404, gone)
+})
 
 // Taking up an invitation: the browser made the invitee's first device and
 // posts its public key; the acceptance is signed by that device through

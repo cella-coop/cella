@@ -1,9 +1,11 @@
-import { ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
 import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
-import { lensed } from '#lib/server/lens.ts'
+import { named } from '@cella/org-log/api'
+import { people, person } from '@cella/org-person/api'
+import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
 import { mounted, slices, source } from '#lib/server/slices.ts'
-import { columns, dashboard, look, views } from '#lib/slices.ts'
+import { columns, counted, dashboard, look, views } from '#lib/slices.ts'
 
 // The shell's queries over the slices' reads, as the slice registry
 // mounts them: framework-free, each with the schema its argument is
@@ -143,5 +145,39 @@ export const index = {
       }),
     )
     return items.flat()
+  },
+}
+
+// What the shell around every page reads: the scope, who is signed in,
+// everyone the co-op knows by address, so a person shows by name wherever
+// a page names them, the circles the co-op selector offers and the one the
+// member lensed the co-op on, and how many rows the counted collections
+// hold for them, as what waits on them, the owner's and its extensions',
+// counted in SQL. `waiting` is every one of them, whole whatever the lens,
+// as a shut section's dot reads it; `counts` those in the lensed circle,
+// the count the collection's page heads with, as its pill reads it. Signed
+// out, it is the scope alone.
+export const shell = {
+  async run(db: Db, who: Reader) {
+    const s = await named(db)
+    const someone = who.actor ? await person(db, who.actor) : null
+    const lensed = someone ? await lensing(db, who.cookies, someone.address) : { circles: [], lens: null }
+    const waiting: Record<string, number> = {}
+    const held: Record<string, number> = {}
+    for (const name of someone ? counted() : []) {
+      const whole = source(name)
+      const through = source(name, lensed.lens?.id ?? null)
+      waiting[`/${name}`] = whole ? ((await counts(db, whole, [{ where: [] }]))[0] ?? 0) : 0
+      held[`/${name}`] = through?.lens ? ((await counts(db, through, [{ where: [] }]))[0] ?? 0) : waiting[`/${name}`]
+    }
+    return {
+      scope: { address: s.address ?? 'no scope', name: s.name ?? s.address ?? 'No scope', legal: s.legal },
+      actor: someone && { address: someone.address, name: someone.name },
+      people: someone ? Object.fromEntries((await people(db)).map((p) => [p.address, p.name])) : ({} as Record<string, string>),
+      counts: held,
+      waiting,
+      circles: lensed.circles,
+      lens: lensed.lens,
+    }
   },
 }

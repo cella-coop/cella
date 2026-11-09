@@ -5,7 +5,9 @@
 // browser, Camille opens a motion from the motions, then the documents,
 // their queries held: each page draws its skeleton, then its content
 // once the query answers, and reading again keeps it, busy; and an item
-// that is not there draws its failed snippet in the shell, which stays.
+// that is not there draws its failed snippet in the shell, which stays,
+// as a settings page does, read through its own query. The sign-in and
+// an invitation's link read through theirs before anyone signs in.
 // Run by `cella test e2e boundary`.
 
 import { after, before, test } from 'node:test'
@@ -44,6 +46,25 @@ test('the server renders a page\'s content with its queries awaited, and what is
   const nowhere = await shell.page('/nowhere', camille)
   assert.equal(nowhere.status, 404)
   assert.ok(nowhere.text.includes('There is no collection nowhere'))
+})
+
+test('the server renders the sign-in, an invitation\'s link and a settings page through their queries, and what is not there as a 404', async () => {
+  const signing = await shell.page('/sign-in?back=/motions')
+  assert.equal(signing.status, 200)
+  assert.ok(signing.text.includes('Sign in') && !signing.text.includes('data-pending'), 'the sign-in is in the page the server sends, and no skeleton')
+  const link = await shell.page('/join/no-such-secret')
+  assert.equal(link.status, 404)
+  assert.ok(link.text.includes('data-failed') && link.text.includes('taken up already'), 'a link that is no one\'s draws the failed snippet')
+  const account = await shell.page('/settings/account', camille)
+  assert.equal(account.status, 200)
+  assert.ok(account.text.includes('Profile') && !account.text.includes('data-pending'), 'a settings page is in the page the server sends')
+  const nowhere = await shell.page('/settings/nowhere', camille)
+  assert.equal(nowhere.status, 404)
+  assert.ok(nowhere.text.includes('data-failed') && nowhere.text.includes('There is no settings page nowhere'), 'and one that is not there its failed snippet')
+  assert.ok(nowhere.text.includes('aria-label="Main"'), 'inside the shell, whose sidebar stays')
+  const home = await shell.page('/')
+  assert.equal(home.status, 303, 'with no session, the root asks for one')
+  assert.ok(home.location?.startsWith('/sign-in?back='))
 })
 
 test('in every browser, a page opened draws its skeleton while its query is held, then its content, and a missing item its failed snippet', async () => {
@@ -98,6 +119,13 @@ test('in every browser, a page opened draws its skeleton while its query is held
       // since one the browser holds answers at once.
       await open('/motions/m-2026-012', 'passes by consent')
       await open('/documents', 'Rate card 2027')
+      // A settings page reads through its own query, as a collection does.
+      await open('/settings/account', 'Profile')
+      await follow('/settings/nowhere')
+      await page.locator('[data-failed]').waitFor({ state: 'visible' })
+      assert.ok(await page.getByText('There is no settings page nowhere').isVisible(), `${engine}: a settings page that is not there draws its failed snippet`)
+      await follow('/documents')
+      await page.getByText('Rate card 2027').first().waitFor({ state: 'visible' })
 
       // The same page reading again, for another address: it keeps what
       // it shows, its frame busy, and draws no skeleton.

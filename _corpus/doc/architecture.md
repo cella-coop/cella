@@ -149,8 +149,24 @@ schema named for it, as any graft does. It reads, in code and in SQL,
 the core feats it joins and its core's libraries; it writes only its own
 schema, and changes a core feat by calling that feat's published write.
 Since it is core, every feat and graft below may build on it as on
-core's feats. Core migrates its libraries and feats first, then its
-grafts.
+core's feats. A core library builds on no core feat, so none routes one
+core feat to another. Core feats are not ordered among themselves, since
+none reads another: core migrates the notary first, then its core feats
+in any order, then its grafts, lowest order first
+([migrations](#migrations)).
+
+`cella check feats` holds a core to it, the core feats' packages, SQL and
+slices alike. A core feat is a core package whose directory holds a
+`sql/` of its own, the notary's aside, and a core library one that holds
+none. `tools/feat-check.mjs` refuses a core feat's package or a core
+library's depending on a core feat's, and a core graft's depending on a
+core feat it does not join (`tools/_tests/tree.test.mjs`);
+`tools/sql-check.mjs` refuses a core feat's SQL that names another core
+feat's schema, whatever its package depends on, and a core graft's that
+names a core feat it does not join (`tools/_tests/core.test.mjs`); and
+the shell's registry refuses, as the shell loads, a core feat's slice
+extending another core feat's collections, which only a core graft
+joining both may (`apps/org/ts/src/lib/server/slices.ts`).
 
 Org's core holds one, `circle-policy`
 ([its doc](../../apps/org/core/grafts/circle-policy/index.md)), joining
@@ -171,6 +187,9 @@ sentence and the motion that adopted it.
 
 | A package in | may depend on |
 |---|---|
+| a core library | the other libraries of its core; its ancestors' cores |
+| a core feat | its core's libraries; its ancestors' cores; never another core feat ([core grafts](#core-grafts)) |
+| a core graft | its core's libraries; the core feats it joins; its ancestors' cores |
 | a feat's core | the other packages of its own core; its ancestors' cores, a nested feat's parent's among them, and so org's core's circles |
 | a graft | the cores of the feats it joins and of their ancestors, its node's among them; the grafts at or below its node that join a proper subset of its feats ([graft order](#graft-order)) |
 | a node's root | its own and its ancestors' cores, the cores and roots of the feats below it, the grafts at or below it |
@@ -207,7 +226,9 @@ action with no power declares a check its SQL backs
 ([actions](#actions)), and
 through `tools/writes.mjs` that no feat or graft writes a table it does
 not own, with no exceptions ([writes stay
-home](#writes-stay-home)).
+home](#writes-stay-home)). It places a node's core packages too, and
+refuses a core feat's depending on another core feat
+([core grafts](#core-grafts)).
 `cella test tools` holds their negative tests.
 
 ## Grafts
@@ -699,9 +720,9 @@ compiled to WASM.
 ### Migrations
 
 Migrations cascade down the feat tree: a node's core first, the
-notary's library first and each library after those its package
-depends on, as `circle` after `policy`, then its feats, then its grafts,
-recursively, each versioned. They are plain SQL, and the
+notary's library first, then its core feats by name, in no order of
+their own since none reads another, then its core grafts lowest order
+first; then its feats, then its grafts, recursively, each versioned. They are plain SQL, and the
 TypeScript types are generated from the schema; seedling's Drizzle, where
 TypeScript owns the schema, is dropped. The generator is not chosen.
 

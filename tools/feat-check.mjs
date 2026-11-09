@@ -6,7 +6,11 @@
 // or is one package itself (core/rs|ts); it is what its feats inherit.
 //
 //   a package in      may depend on
-//   a node's core     its own core's packages; its ancestors' cores
+//   a node's core     its own core's packages; its ancestors' cores; but
+//                     a core feat, a core package with SQL of its own
+//                     (the notary's aside), is depended on by no other
+//                     core feat nor core library, and by a core graft
+//                     only if it joins it
 //   a graft           the cores of the feats it joins and of their
 //                     ancestors; the grafts at or below its node that join
 //                     a proper subset of its feats (the graft order)
@@ -90,7 +94,7 @@ const place = (dir) => {
     return { kind: 'core', node: dirname(up) }
   }
   if (basename(dirname(up)) === 'core' && isNode(dirname(dirname(up)))) {
-    return { kind: 'core', node: dirname(dirname(up)) }
+    return { kind: 'core', node: dirname(dirname(up)), lib: basename(up) }
   }
   // A core graft, `core/grafts/<graft>/<lang>`: core, joining core's feats.
   if (basename(dirname(up)) === 'grafts' && basename(dirname(dirname(up))) === 'core' && isNode(dirname(dirname(dirname(up))))) {
@@ -105,6 +109,10 @@ const place = (dir) => {
   return null
 }
 
+// A core feat: a core package whose directory holds SQL of its own, the
+// notary's aside, which is the layer under every slice and no feat.
+const coreFeat = (p) => p.kind === 'core' && p.lib && p.lib !== 'notary' && existsSync(join(repo, p.node, 'core', p.lib, 'sql'))
+
 const describe = (p, dir) => (p ? `${p.kind} ${p.name ?? p.node ?? ''}`.trim() : 'unplaced') + ` (${dir})`
 
 // A graft of lower order: at its node or below, a proper subset of the
@@ -118,6 +126,11 @@ const lower = (from, to) => {
 const allowed = (from, to) => {
   const lineage = [from.node, ...ancestors(from.node)]
   if (from.kind === 'core') {
+    // Core feats sit side by side: none builds on another, nor does a core
+    // library, and a core graft builds on the core feats it joins.
+    if (to.node === from.node && coreFeat(to) && to.lib !== from.lib) {
+      return Boolean(from.graft) && from.graft.split('-').includes(to.lib)
+    }
     return to.kind === 'core' && lineage.includes(to.node)
   }
   if (from.kind === 'graft') {
@@ -212,7 +225,9 @@ for (const [a, b] of edges) {
   const from = place(a)
   const to = place(b)
   if (from && to && !allowed(from, to)) {
-    fail(`${describe(from, a)} may not depend on ${describe(to, b)}`)
+    from.kind === 'core' && to.node === from.node && coreFeat(to)
+      ? fail(`${a}: depends on ${b}, the core feat ${to.lib}; ${from.graft ? `core graft ${from.graft} joins no ${to.lib}` : `no core feat nor core library builds on another core feat: a core graft joins them`} (architecture.md, "Core grafts")`)
+      : fail(`${describe(from, a)} may not depend on ${describe(to, b)}`)
   }
 }
 

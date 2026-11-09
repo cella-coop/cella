@@ -170,7 +170,11 @@ September is submitted by everyone and approved: each lead approved their
 circle's, Julien in finance the leads and Inès, who is no member yet
 and sits in Web, and Camille as manager Julien. Inès logs hers by her
 right as every worker does. October is open, but for Sofia's, submitted
-early for Hugo to approve.
+early for Hugo to approve. October's months are approved by the same
+hands: Camille as manager approves each worker's, Sofia's once it is
+submitted already, and Julien as treasurer approves Camille's own in
+coordination and the assembly, which no lead's mandate reaches, since
+a lead's `approve-time` holds on their own circle alone.
 
 ## Analytics
 

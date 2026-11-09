@@ -1,6 +1,6 @@
 +++
 title = "payslip-transaction"
-updated = 2026-11-07
+updated = 2026-11-09
 +++
 
 A pay run's approval and its payment post balanced entries, in the same
@@ -76,7 +76,9 @@ entries a payslip's run posted on its page.
 
 ## Lanterne
 
-`je-0009`, `je-0019` and `je-0031` are July to September's runs, carried.
+`je-0009`, `je-0019` and `je-0031` are July to September's runs, carried. The
+bank holds 39 190,40 € on 24 October, after them and after `je-0042`,
+the 105,60 € reimbursement of `ex-0005` on 15 October.
 
 ## Analytics
 

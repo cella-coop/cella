@@ -213,6 +213,7 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
     // which Julien's approve-time, as treasurer on the whole co-op, covers.
     settled(await approveTime({ member: m, month: '2026-11', circle: 'ag' }, as(m === julien ? camille : julien)))
   }
+  const owed = await balance('421')
   const run = settled(await generate({ month: '2026-11' }, as(julien)))
   assert.equal(run.payslips, 11)
   settled(await approveRun({ month: '2026-11' }, as(camille)))
@@ -230,7 +231,7 @@ test('November\'s run pays Inès, a member now, and its payment withholds her fi
     `SELECT sum(cella.cents(net)) AS net, sum(cella.cents(employee) + cella.cents(employer)) AS charges FROM payslip.payslip WHERE month = '2026-11'`,
   )
   assert.equal(await balance('512'), bank - Number(due.net) - Number(due.charges) + 100_00, 'the bank pays her less by the instalment')
-  assert.equal(await balance('421'), 0, 'her pay is settled whole')
+  assert.equal(await balance('421'), owed, 'her pay is settled whole')
 
   const c = await called(await reading(ines), ines)
   assert.deepEqual({ paid: c.paid, unpaid: c.unpaid, via: c.payments.map((p) => p.via) }, { paid: 100_00, unpaid: 900_00, via: ['pay'] })

@@ -117,4 +117,7 @@ its pay withheld for capital, beside the net pay and what the bank paid.
 ## Lanterne
 
 Once admitted, Inès spreads her 1 000 € over ten instalments of 100 €;
-November's run, the first to pay her, withholds the first.
+November's run, the first to pay her, withholds the first. Its payment
+settles the net pay the run accrued and nothing else: `421` holds after
+it what it held before, the 106,80 € Julien's approved expense `ex-0006`
+is still owed until it is reimbursed.

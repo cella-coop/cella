@@ -4,8 +4,9 @@
 // issued or issued under a parent its issuer holds, narrower than it in
 // cap, scope and term, and revoking one revokes every mandate issued
 // under it; a role's holder cap counts its holders on each day; and a
-// circle's features read from a listing and fold as an amendment says. Run
-// by `cella test slice circle`.
+// circle's features read from a listing and fold as an amendment says; and
+// a circle reads a setting as its own rule set it, else the assembly's,
+// else its default. Run by `cella test slice circle`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -240,4 +241,32 @@ test('a circle\'s features are read from a listing in order, under their accordi
   } finally {
     await db.query('ROLLBACK')
   }
+})
+
+test('a circle reads a setting as its own rule set it, else as the assembly did, else as its default', async () => {
+  const of = async (circle: string) =>
+    (await db.query<{ v: string; by: string }>(`SELECT circle.setting_of($1, 'reactions') AS v, (SELECT set_by FROM circle.settings($1) WHERE name = 'reactions') AS by`, [circle])).rows[0]
+  await db.query('BEGIN')
+  try {
+    assert.deepEqual(await of('coordination'), { v: 'on', by: 'default' })
+    await db.query(`INSERT INTO circle.setting_value (policy, circle, setting, value, "from") VALUES ('m-2000-001/1', 'ag', 'reactions', 'off', '2000-01-01')`)
+    assert.deepEqual(await of('coordination'), { v: 'off', by: 'assembly' })
+    assert.deepEqual(await of('ag'), { v: 'off', by: 'circle' })
+    await db.query(`INSERT INTO circle.setting_value (policy, circle, setting, value, "from") VALUES ('m-2000-002/1', 'coordination', 'reactions', 'on', '2000-01-01')`)
+    assert.deepEqual(await of('coordination'), { v: 'on', by: 'circle' })
+    assert.deepEqual(await of('brand'), { v: 'off', by: 'assembly' })
+    // A value its rule's end revoked is read no more.
+    await db.query(`UPDATE circle.setting_value SET revoked = '2000-01-02' WHERE policy = 'm-2000-002/1'`)
+    assert.deepEqual(await of('coordination'), { v: 'off', by: 'assembly' })
+    assert.equal((await db.query(`SELECT circle.setting_of('coordination', 'nothing') AS v`)).rows[0].v, null)
+    assert.match(
+      (await db.query<{ why: string }>(`SELECT circle.setting_overlap('ag', 'reactions', '2001-01-01', NULL, NULL, NULL) AS why`)).rows[0].why,
+      /^m-2000-001\/1 sets reactions off for ag from 2000-01-01: one rule sets a setting for a circle at a time, so one on days that meet its replaces m-2000-001\/1$/,
+    )
+    assert.equal((await db.query(`SELECT circle.setting_overlap('ag', 'reactions', '2001-01-01', NULL, 'm-2000-001/1', NULL) AS why`)).rows[0].why, null)
+  } finally {
+    await db.query('ROLLBACK')
+  }
+  await db.query(`INSERT INTO circle.setting_value (policy, circle, setting, value, "from") VALUES ('m-2000-003/1', 'brand', 'reactions', 'off', '2000-01-01')`)
+  await refused(`UPDATE circle.setting_value SET value = 'on' WHERE policy = 'm-2000-003/1'`, /keeps its grant, and stays revoked/)
 })

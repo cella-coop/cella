@@ -13,4 +13,6 @@ export const actions = {
   'task:comment:post': confluent({ power: 'discuss' }),
   // resolving a root or reopening it is a register: the last writer wins
   'task:comment:resolve': confluent({ power: 'discuss' }),
+  // a toggle: one reaction per comment, person and emoji, the last writer wins
+  'task:comment:react': confluent({ power: 'discuss' }),
 } satisfies Actions

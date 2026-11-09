@@ -1,6 +1,7 @@
 // A task's comments, as the task feat writes them: a root, or a reply to
 // a root of the same task, its text the author's, each `@[address]` in it
-// a mention of a core person; and a root resolved or reopened.
+// a mention of a core person; a root resolved or reopened; and a
+// reaction toggled.
 
 export interface Post {
   task: string
@@ -22,6 +23,20 @@ export interface Resolve {
 }
 
 export interface Resolved {
+  comment: number
+  task: string
+  circle: string
+}
+
+// A reaction of the actor's to a comment, one of core body's six, turned
+// on or off.
+export interface React {
+  comment: number
+  emoji: string
+  on: boolean
+}
+
+export interface Reacted {
   comment: number
   task: string
   circle: string

@@ -1,21 +1,29 @@
 <script lang="ts">
-  import { Button, Form, Hidden, Mention, Message, Note } from '@cella/org-ui'
-  import { label, parts, type Comment, type Thread } from '../models/thread.ts'
+  import { Button, Form, Hidden, Mention, Message, Note, Reactions } from '@cella/org-ui'
+  import { label, parts, tally, type Comment, type Thread } from '../models/thread.ts'
 
   // One thread: its root, and under it its replies, one level, each
   // drawing its mentions by the person's name as it stands. A resolved
   // root folds its replies away. One who may discuss the record replies
   // to the root and resolves or reopens it, through the feat's `resolve`
-  // write; one who may not reads it.
+  // write; one who may not reads it. At each comment's foot are its
+  // reactions, where the record's circle has them on: one who may discuss
+  // toggles their own through the feat's `react` write, one who may not
+  // reads those given.
   let {
     thread,
     resolve,
+    react = '',
+    reactions = false,
     discuss,
     replying = false,
     onreply,
   }: {
     thread: Thread
     resolve: string
+    // The feat's write toggling a reaction, and whether the circle takes them.
+    react?: string
+    reactions?: boolean
     discuss: boolean
     replying?: boolean
     onreply?: () => void
@@ -31,6 +39,9 @@
       {#snippet who()}<Mention label={label({ person: c.author, name: c.name }, c.author)} title={c.author} />{/snippet}
       {#each parts(c.text) as p, i (i)}{#if 'mention' in p}<Mention label="@{label(c.mentions.find((m) => m.person === p.mention), p.mention)}" title={p.mention} />{:else}{p.text}{/if}{/each}
       {#snippet actions()}
+        {#if reactions}
+          <Reactions items={tally(c.reactions)} action={discuss && react ? react : undefined} fields={{ comment: c.id }} />
+        {/if}
         {#if depth === 0 && discuss}
           {#if !root.resolved}
             <Button onclick={() => onreply?.()}>Reply</Button>

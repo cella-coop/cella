@@ -24,3 +24,9 @@ CREATE TRIGGER stays_granted BEFORE UPDATE ON circle.particulars
   FOR EACH ROW EXECUTE FUNCTION circle.stays_granted('particulars', 'policy');
 
 GRANT INSERT, UPDATE (revoked) ON circle.mandate, circle.right, circle.disclosure, circle.publication, circle.particulars TO cella_app;
+
+-- A circle's value of a setting keeps what its rule set, and stays revoked.
+CREATE TRIGGER stays_granted BEFORE UPDATE ON circle.setting_value
+  FOR EACH ROW EXECUTE FUNCTION circle.stays_granted('setting value', 'policy');
+
+GRANT INSERT, UPDATE (revoked) ON circle.setting_value TO cella_app;

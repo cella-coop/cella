@@ -9,19 +9,24 @@
   // root chosen; typing `@` opens the mention picker, which offers the
   // people who may read the record and inserts their `@name`, posted as
   // their `@[address]`. One who may not discuss the record reads the
-  // threads and has no box.
+  // threads and has no box. Each comment takes reactions where
+  // `reactions` says its circle has them on, toggled through `react`.
   let {
     comments,
     readers,
     discuss,
     post,
     resolve,
+    react = '',
+    reactions = false,
   }: {
     comments: Comment[]
     readers: Named[]
     discuss: boolean
     post: string
     resolve: string
+    react?: string
+    reactions?: boolean
   } = $props()
 
   const box = useThreads(
@@ -34,7 +39,7 @@
 </script>
 
 {#each shown as t (t.root.id)}
-  <Thread thread={t} {resolve} {discuss} replying={box.reply === t.root.id} onreply={() => box.answer(t.root.id)} />
+  <Thread thread={t} {resolve} {react} {reactions} {discuss} replying={box.reply === t.root.id} onreply={() => box.answer(t.root.id)} />
 {/each}
 {#if discuss}
   {#if answering}

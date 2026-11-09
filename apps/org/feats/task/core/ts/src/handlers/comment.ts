@@ -2,7 +2,7 @@ import type { Outcome } from '@cella/org-actions'
 import { write, type Deps } from '@cella/org-db'
 import { thread } from '@cella/org-body/models'
 import type { actions } from '../models/actions.ts'
-import type { Post, Posted, Resolve, Resolved } from '../models/comment.ts'
+import type { Post, Posted, React, Reacted, Resolve, Resolved } from '../models/comment.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -60,5 +60,33 @@ export async function resolve(input: Resolve, deps: Deps): Out<'task:comment:res
       return { comment: input.comment, task: rows[0].task, circle: rows[0].circle }
     },
     payload: (v) => ({ ...v, resolved: input.resolved }),
+  })
+}
+
+// Turns the actor's reaction to a task's comment on or off; the last
+// write wins. `task.reacts` refuses an emoji not of core body's six, and
+// any reaction where the comment's circle has `reactions` off, naming the
+// circle and the rule that turned them off.
+export async function react(input: React, deps: Deps): Out<'task:comment:react', Reacted> {
+  return write(deps, {
+    op: 'task:comment:react' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ task: string; circle: string }>('SELECT task, circle FROM task.comment WHERE id = $1', [input.comment])
+      if (!rows[0]) {
+        throw new Error(`no comment ${input.comment}`)
+      }
+      if (input.on) {
+        await tx.query('INSERT INTO task.reaction (comment, person, emoji) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING', [
+          input.comment,
+          deps.actor,
+          input.emoji,
+        ])
+      } else {
+        await tx.query('DELETE FROM task.reaction WHERE comment = $1 AND person = $2 AND emoji = $3', [input.comment, deps.actor, input.emoji])
+      }
+      return { comment: input.comment, task: rows[0].task, circle: rows[0].circle }
+    },
+    payload: (v) => ({ ...v, emoji: input.emoji, on: input.on }),
   })
 }

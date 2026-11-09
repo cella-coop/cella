@@ -208,7 +208,10 @@ a comment table in its schema, with a foreign key to its record and the
 author's to `person.person`, and its own post and resolve actions and
 folds. What every feat shares is drawn here: `Thread`, a root comment
 with its flat replies under it, one level as in Linear, and its resolve
-on the root; the box that posts one; and the mention picker, which
+on the root; under each comment its reactions, a fixed set of six,
+👍 ❤️ 😄 🎉 👀 🙏, each with its count and toggled by a click, shown
+where the record's circle has `reactions` on, the default
+([settings](../circle/index.md#settings)); the box that posts one; and the mention picker, which
 offers the people who may read the record and inserts a mention, a
 reference to a core person by address, `@[address]` in the comment's
 text and a row of the feat's mention table, that the thread draws by

@@ -13,8 +13,21 @@ export interface Named {
   name: string | null
 }
 
+// The reactions a comment takes, a fixed set of six, in the order drawn.
+export const reactions = ['👍', '❤️', '😄', '🎉', '👀', '🙏'] as const
+export type Emoji = (typeof reactions)[number]
+
+// A comment's reactions of one emoji: how many people gave it, and
+// whether the reader is one.
+export interface Reacted {
+  emoji: Emoji
+  count: number
+  mine: boolean
+}
+
 // A comment as a feat reads it: `id` is the receipt of its post, `parent`
-// the root it replies to, `resolved` a root's day of resolve.
+// the root it replies to, `resolved` a root's day of resolve, and its
+// reactions, each emoji given at least once.
 export interface Comment {
   id: number
   author: string
@@ -24,6 +37,13 @@ export interface Comment {
   mentions: Named[]
   posted: string
   resolved: string | null
+  reactions: Reacted[]
+}
+
+// A comment's reactions as drawn: each of the six in order, with its
+// count and whether the reader gave it, none given a count of nought.
+export function tally(given: Reacted[]): Reacted[] {
+  return reactions.map((emoji) => given.find((r) => r.emoji === emoji) ?? { emoji, count: 0, mine: false })
 }
 
 // A root and its replies, oldest first.

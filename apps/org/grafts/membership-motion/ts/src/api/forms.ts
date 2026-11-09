@@ -1,6 +1,6 @@
 import type { Db, Form } from '@cella/org-db'
 import type { Propose } from '@cella/org-motion/models'
-import { organization } from '../drivers/asking.ts'
+import { organization, ruling } from '../drivers/asking.ts'
 import { particulars as names, type Applying, type Asking, type Particular } from '../models/asking.ts'
 
 const when = (form: Form) => {
@@ -95,4 +95,36 @@ export async function particulars(form: Form, db: Db): Promise<Propose> {
   }
   const args = { kind: 'rule', wording: worded(values), replaces: now.particulars.policy, ...(now.protected ? { protected: now.protected } : {}) }
   return { circle: form.get('circle'), title: form.get('title'), ...when(form), actions: [{ kind: 'policy', args }] }
+}
+
+// A setting rule, worded: the circle adopting it sets the setting to its
+// value, for the circle it names where that is another, each marked once.
+export function ruled(adopting: string, setting: string, value: string, circle?: string): string {
+  return `${adopting} sets {setting: ${setting}} to {value: ${value}}${circle ? ` for {circle: ${circle}}` : ''}`
+}
+
+// A proposal from a circle's rules page: a motion of the circle that
+// decides carrying a `rule` for each setting typed (`arg.<setting>`) as
+// other than it stands, naming the circle where the assembly decides for
+// another, each replacing the rule that set the circle's value where one
+// stands.
+export async function settings(form: Form, circle: string, db: Db): Promise<Propose> {
+  const now = await ruling(db, circle)
+  if (!now) {
+    throw new Error(`no circle ${circle}`)
+  }
+  const actions = now.settings
+    .filter((s) => form.all(`arg.${s.name}`).length > 0 && form.get(`arg.${s.name}`).trim().toLowerCase() !== s.value)
+    .map((s) => ({
+      kind: 'policy',
+      args: {
+        kind: 'rule',
+        wording: ruled(now.decider.name, s.name, form.get(`arg.${s.name}`).trim().toLowerCase(), now.decider.circle === now.circle ? undefined : now.circle),
+        ...(s.set_by === 'circle' && s.policy ? { replaces: s.policy } : {}),
+      },
+    }))
+  if (!actions.length) {
+    throw new Error('change a setting to propose its rule')
+  }
+  return { circle: form.get('circle'), title: form.get('title'), ...when(form), actions }
 }

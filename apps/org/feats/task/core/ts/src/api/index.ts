@@ -3,13 +3,13 @@
 // slice, which the shell mounts, its bodies handed to core body's session
 // and the mentions waiting on a person to their Inbox.
 import { action, type Slice } from '@cella/org-db'
-import { complete, create, move, post, resolve, save } from '../handlers/index.ts'
+import { complete, create, move, post, react, resolve, save } from '../handlers/index.ts'
 import { circleOf, listing, page, saved, tasks } from '../drivers/task.ts'
 import { mentions } from '../drivers/comment.ts'
 import * as forms from './forms.ts'
 import { contract } from './contract.ts'
 
-export { complete, create, creating, move, post, resolve, save } from '../handlers/index.ts'
+export { complete, create, creating, move, post, react, resolve, save } from '../handlers/index.ts'
 export { task, tasks } from '../drivers/task.ts'
 export { comments, mentions } from '../drivers/comment.ts'
 export * as forms from './forms.ts'
@@ -29,6 +29,7 @@ export const slice: Slice = {
         save: action('task:body:save', (form, id) => forms.save(form, id ?? ''), save),
         post: action('task:comment:post', (form, id) => forms.post(form, id ?? ''), post),
         resolve: action('task:comment:resolve', (form) => forms.resolve(form), resolve),
+        react: action('task:comment:react', (form) => forms.react(form), react),
       },
       body: { circle: circleOf, saved, save: 'save' },
     },

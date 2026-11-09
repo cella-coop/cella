@@ -8,7 +8,7 @@ import { close } from '../handlers/close.ts'
 import { propose } from '../handlers/propose.ts'
 import { put } from '../handlers/put.ts'
 import { roll, turnout } from '../drivers/roll.ts'
-import { amending, appointing, featuring, organization, standing } from '../drivers/asking.ts'
+import { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 import { stances } from '../drivers/asks.ts'
 import * as forms from './forms.ts'
 
@@ -21,7 +21,7 @@ export type { Founded, Founding } from '../models/founding.ts'
 export { propose } from '../handlers/propose.ts'
 export { put } from '../handlers/put.ts'
 export { roll, turnout } from '../drivers/roll.ts'
-export { amending, appointing, featuring, organization, standing } from '../drivers/asking.ts'
+export { amending, appointing, featuring, organization, ruling, standing } from '../drivers/asking.ts'
 export { stances } from '../drivers/asks.ts'
 
 // A motion's roll and outcome on its page and its turnout in the list;
@@ -88,6 +88,12 @@ export const slice: Slice = {
       read: async (db, _, circle) => (circle ? featuring(db, circle) : null),
       actions: {
         propose: action('motion:motion:propose', (form, _, deps) => motionForms.propose(form, deps.db), propose),
+      },
+    },
+    rules: {
+      read: async (db, _, circle) => (circle ? ruling(db, circle) : null),
+      actions: {
+        propose: action('motion:motion:propose', (form, circle, deps) => forms.settings(form, circle ?? '', deps.db), propose),
       },
     },
   },

@@ -4,8 +4,9 @@
 // commitment; moved, completed keeping its first day, and reopened; its
 // body set to each save's snapshot, one with no canonical form refused;
 // its comments posted and resolved, a reply to a reply refused, and a
-// mention read by its person's name, erased once their name is. Run
-// by `cella test slice task`.
+// mention read by its person's name, erased once their name is; a
+// reaction folded on and off, and refused off the six or where its
+// circle has reactions off. Run by `cella test slice task`.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -121,4 +122,25 @@ test('a comment reads its mentions by the person’s name as it stands, and as e
   const erased = await read()
   assert.deepEqual(erased, [{ person: 'noor@folded.example', name: 'redacted' }])
   assert.equal(thread.label(erased?.[0], 'noor@folded.example'), 'erased')
+})
+
+test('a reaction folds on and off as its entry says, once per comment, person and emoji', async () => {
+  const given = async () => (await db.query(`SELECT person, emoji FROM task.reaction WHERE comment = 9010 ORDER BY emoji`)).rows
+  await fold('fold_comment_react', 15, 'task:comment:react', '2041-01-27', { comment: 9010, task: 't-9003', circle: 'ag', emoji: '👍', on: true })
+  await fold('fold_comment_react', 16, 'task:comment:react', '2041-01-27', { comment: 9010, task: 't-9003', circle: 'ag', emoji: '👍', on: true })
+  assert.deepEqual(await given(), [{ person: sacha, emoji: '👍' }])
+  await fold('fold_comment_react', 17, 'task:comment:react', '2041-01-28', { comment: 9010, task: 't-9003', circle: 'ag', emoji: '👍', on: false })
+  assert.deepEqual(await given(), [])
+})
+
+test('a reaction not of the six, or where the circle has reactions off, is refused, naming the circle and the rule', async () => {
+  const reacts = async (payload: unknown) => (await one<{ why: string | null }>(`SELECT task.reacts($1) AS why`, [payload])).why
+  assert.equal(await reacts({ comment: 9010, emoji: '👍', on: false }), null)
+  assert.equal(await reacts({ comment: 9010, emoji: '💩', on: true }), '💩 is no reaction: react with one of 👍 ❤️ 😄 🎉 👀 🙏')
+  const { a } = await one<{ a: string }>('SELECT circle.assembly() AS a')
+  await db.query(`INSERT INTO circle.setting_value (policy, circle, setting, value, "from") VALUES ('m-2041-001/1', $1, 'reactions', 'off', '2000-01-01')`, [a])
+  assert.equal(
+    await reacts({ comment: 9010, emoji: '👍', on: false }),
+    `reactions are off in ${a}, by rule m-2041-001/1: a rule turning them on, adopted by motion, lets a comment take them`,
+  )
 })

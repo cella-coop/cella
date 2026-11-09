@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Amending, Appointing, Decider, Duty, Featuring, Organization, Standing } from '../models/asking.ts'
+import type { Amending, Appointing, Decider, Duty, Featuring, Organization, Ruling, Standing } from '../models/asking.ts'
 
 const decider = `json_build_object('id', d.id, 'name', d.name, 'procedure', d.procedure)`
 
@@ -128,6 +128,24 @@ export async function featuring(db: Db, circle: string): Promise<Featuring | nul
             c.name || '''s features change only by a motion of ' || d.name || ', which holds amend-circle: no one''s own write changes them' AS refused
      FROM circle.circle c
      JOIN circle.circle d ON d.id = motion.decider(c.id, ARRAY['amend-circle'], cella.verdict_date())
+     WHERE c.id = $1`,
+    [circle],
+  )
+  return rows[0] ?? null
+}
+
+// A circle's rules page: its settings as it has them
+// (`circle.settings`), and the circle that decides a rule changing them,
+// the circle itself where it holds `adopt-policy`, else the assembly;
+// none for a circle there is not.
+export async function ruling(db: Db, circle: string): Promise<Ruling | null> {
+  const { rows } = await db.query<Ruling>(
+    `SELECT c.id AS circle, c.name, c.assembly,
+            (SELECT coalesce(json_agg(to_jsonb(s) ORDER BY s.name), '[]') FROM circle.settings(c.id) s) AS settings,
+            json_build_object('circle', d.id, 'name', d.name, 'deadline', to_char(cella.verdict_date() + 14, 'YYYY-MM-DD')) AS decider,
+            c.name || '''s settings change only by a rule a motion of ' || d.name || ' adopts: no one''s own write changes them' AS refused
+     FROM circle.circle c
+     JOIN circle.circle d ON d.id = CASE WHEN c.assembly OR circle.holds(c.id, 'adopt-policy', cella.verdict_date()) THEN c.id ELSE circle.assembly() END
      WHERE c.id = $1`,
     [circle],
   )

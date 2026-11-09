@@ -167,6 +167,35 @@ CREATE TABLE circle.particulars (
   CHECK (until IS NULL OR "from" < until)
 );
 
+-- The settings slices offer: each a value a co-op or a circle sets for
+-- itself, never one person, a switch, `on` or `off`, with its default and
+-- the slice that registered it (`circle.register_setting`), from its
+-- migration alone.
+CREATE TABLE circle.setting (
+  name text PRIMARY KEY CHECK (name ~ '^[a-z][a-z0-9_]*$'),
+  "default" text NOT NULL CHECK ("default" IN ('on', 'off')),
+  owner text NOT NULL CHECK (owner ~ '^[a-z][a-z-]*$')
+);
+
+COMMENT ON TABLE circle.setting IS 'registry: the settings the slices register from their migrations, the same in every scope';
+
+-- A circle's value of a setting, copied from the rule that marks it as
+-- it is adopted (`circle.set_setting`), on its policy's days; `revoked`, the day
+-- its rule ended or was replaced.
+CREATE TABLE circle.setting_value (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  policy text NOT NULL UNIQUE,
+  circle text NOT NULL REFERENCES circle.circle,
+  setting text NOT NULL REFERENCES circle.setting,
+  value text NOT NULL CHECK (value IN ('on', 'off')),
+  "from" date NOT NULL,
+  until date,
+  revoked date,
+  CHECK (until IS NULL OR "from" < until)
+);
+
+CREATE INDEX ON circle.setting_value (circle, setting);
+
 GRANT USAGE ON SCHEMA circle TO cella_app, cella_guards;
 GRANT SELECT ON ALL TABLES IN SCHEMA circle TO cella_app, cella_guards;
 

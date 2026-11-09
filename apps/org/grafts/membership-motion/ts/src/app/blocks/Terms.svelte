@@ -43,4 +43,8 @@
     <Note text="What {amending.name} shows in the sidebar, in its order, under its accordions, which a motion of {amending.decider.name} changes." />
     <Button href="/settings/features/{amending.circle}">Choose its features</Button>
   </Section>
+  <Section title="Rules">
+    <Note text="What {amending.name} sets for itself, as whether its comments take reactions, each by a rule a motion adopts." />
+    <Button href="/settings/rules/{amending.circle}">See its rules</Button>
+  </Section>
 {/if}

@@ -119,3 +119,17 @@ export interface Featuring {
   decider: { circle: string; name: string; deadline: string }
   refused: string
 }
+
+// A circle's rules page in Settings: each setting core circle registers,
+// `on` or `off`, with the value in force for the circle, the rule that
+// set it and who did, the circle, the assembly or neither, the default;
+// the circle that decides a rule changing it and the deadline asked; and
+// why no write of the reader's changes one.
+export interface Ruling {
+  circle: string
+  name: string
+  assembly: boolean
+  settings: { name: string; value: 'on' | 'off'; policy: string | null; set_by: 'circle' | 'assembly' | 'default'; default: 'on' | 'off' }[]
+  decider: { circle: string; name: string; deadline: string }
+  refused: string
+}

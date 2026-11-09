@@ -68,9 +68,26 @@ BEGIN ATOMIC
   WHERE id = (fold_comment_resolve.entry -> 'payload' ->> 'comment')::bigint;
 END;
 
+-- task:comment:react: the actor's reaction to the comment its entry
+-- names, on or off as it says.
+CREATE FUNCTION task.fold_comment_react(entry jsonb) RETURNS void
+LANGUAGE plpgsql AS $$
+DECLARE
+  p jsonb := entry -> 'payload';
+BEGIN
+  IF (p ->> 'on')::boolean THEN
+    INSERT INTO task.reaction (comment, person, emoji) VALUES ((p ->> 'comment')::bigint, entry ->> 'actor', p ->> 'emoji')
+    ON CONFLICT DO NOTHING;
+  ELSE
+    DELETE FROM task.reaction WHERE comment = (p ->> 'comment')::bigint AND person = entry ->> 'actor' AND emoji = p ->> 'emoji';
+  END IF;
+END
+$$;
+
 SELECT cella.lets_fold('task:task:create', 1, 'task.fold_create(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:move', 1, 'task.fold_move(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:complete', 1, 'task.fold_complete(jsonb)', 'task');
 SELECT cella.lets_fold('task:body:save', 1, 'task.fold_body_save(jsonb)', 'task');
 SELECT cella.lets_fold('task:comment:post', 1, 'task.fold_comment_post(jsonb)', 'task');
 SELECT cella.lets_fold('task:comment:resolve', 1, 'task.fold_comment_resolve(jsonb)', 'task');
+SELECT cella.lets_fold('task:comment:react', 1, 'task.fold_comment_react(jsonb)', 'task');

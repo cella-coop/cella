@@ -441,7 +441,10 @@ draws.
   slice puts at its end and a quiet removal when the slice offers one;
   `fixed` drops both once the list may not change), `Prose`, `Note` (a quiet line), `Message` (one message of a thread:
   who and when over what it says, set in by its depth as a reply, its
-  writes at its foot), `Mention` (a member or a document named inside a
+  writes at its foot), `Reactions` (a message's reactions, a line at its
+  foot: each emoji with its count, each a write toggling the reader's
+  own, theirs filled, or read alone where the reader may not react),
+  `Mention` (a member or a document named inside a
   text, a quiet chip linking to it), `Icon`
   (Phosphor, duotone), `Outcome` (the last write's outcome, floating
   until dismissed: each write with its verdict and reason; a write of

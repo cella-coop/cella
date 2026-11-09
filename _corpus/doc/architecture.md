@@ -2842,6 +2842,23 @@ reads, with the motion that adopted it and its days (the motion feat).
 A row-level policy, which says which rows a reader sees
 ([SQL](#sql)), is always called that, and is never a policy.
 
+### Settings
+
+A **setting** is a value a co-op or a circle sets for itself, never one
+person: whether its comments take reactions is the first. Settings are
+the one sanctioned use of a registry for what slices offer, and it is
+used sparingly: core circle keeps `circle.setting`, the settings slices
+register by `circle.register_setting(name, default, owner)`, and each
+circle's value of each, which a circle inherits from the assembly, the
+root, where it sets none, the assembly's being the co-op's. A value
+changes by a rule the circle adopts by motion, its value marked as
+every rule's is, and core's graft joining the circles to the register,
+circle-policy, copies it into the circle's row at adoption, so a guard
+reads `circle.setting_of(circle, name)` and never a policy's wording
+([circle](../../apps/org/core/circle/index.md#settings)). A slice
+offers a setting only where the operator ruled one; a preference of one
+person is no setting.
+
 ## Feat flags
 
 A feat's `feat.toml` names it, its group, the sidebar section it opens in

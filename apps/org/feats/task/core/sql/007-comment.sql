@@ -45,6 +45,32 @@ BEGIN ATOMIC
   LEFT JOIN task.comment c ON c.id::text = p.comment;
 END;
 
+-- task:comment:react: a reaction is one of core body's fixed six, to a
+-- comment there is, and is what its payload names, the actor's own on or
+-- off; it is refused where the comment's circle has `reactions` off
+-- (`circle.setting_of`), naming the circle and the rule that turned them
+-- off and what would turn them on. That the actor may discuss in the
+-- task's circle is the power's guard's.
+CREATE FUNCTION task.reacts(payload jsonb) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN c.id IS NULL THEN 'no comment ' || coalesce(p.comment, 'is named')
+    WHEN p.emoji IS NULL OR p.emoji NOT IN ('👍', '❤️', '😄', '🎉', '👀', '🙏')
+      THEN coalesce(p.emoji, 'nothing') || ' is no reaction: react with one of 👍 ❤️ 😄 🎉 👀 🙏'
+    WHEN circle.setting_of(c.circle, 'reactions') = 'off'
+      THEN 'reactions are off in ' || c.circle || coalesce(', by rule ' || s.policy || CASE s.set_by WHEN 'assembly' THEN ' of the assembly' ELSE '' END, '')
+        || ': a rule turning them on, adopted by motion, lets a comment take them'
+    WHEN p.turned IS NULL THEN 'a reaction is on or off'
+    WHEN p.turned <> EXISTS (SELECT FROM task.reaction r WHERE r.comment = c.id AND r.person = cella.actor() AND r.emoji = p.emoji)
+      THEN 'the reaction to comment ' || c.id || ' is not ' || CASE WHEN p.turned THEN 'on' ELSE 'off' END || ' as its payload names'
+  END
+  FROM (SELECT payload ->> 'comment' AS comment, payload ->> 'emoji' AS emoji, (payload ->> 'on')::boolean AS turned) p
+  LEFT JOIN task.comment c ON c.id::text = p.comment
+  LEFT JOIN LATERAL (SELECT x.policy, x.set_by FROM circle.settings(c.circle) x WHERE x.name = 'reactions') s ON true;
+END;
+
 INSERT INTO cella.guard (op, fn, owner) VALUES
   ('task:comment:post', 'task.posts(jsonb)', 'task'),
-  ('task:comment:resolve', 'task.resolves(jsonb)', 'task');
+  ('task:comment:resolve', 'task.resolves(jsonb)', 'task'),
+  ('task:comment:react', 'task.reacts(jsonb)', 'task');

@@ -295,14 +295,92 @@ BEGIN
 END
 $$;
 
+-- What is wrong with a setting rule, by its values as written
+-- (`{"setting": "reactions", "value": "off"}`), adopted by `issuer`
+-- from `day`, perhaps until `until`, replacing `replaces`, or null:
+-- null too for a rule marking no `setting`. It marks a setting a slice
+-- registered, its value, `on` or `off`, perhaps the circle it is for,
+-- which only the assembly names other than itself, and nothing else; and
+-- one rule sets a setting for a circle at a time
+-- (`circle.setting_overlap`). `made` is the rule itself, once adopted.
+CREATE FUNCTION circle_policy.setting_flaw(marked jsonb, issuer text, day date, until date, replaces text, made text) RETURNS text
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT CASE
+    WHEN NOT coalesce(marked, '{}') ? 'setting' THEN NULL
+    WHEN x.other IS NOT NULL THEN 'a setting rule marks its setting, its value and perhaps its circle, not ' || x.other
+    WHEN NOT EXISTS (SELECT FROM circle.setting s WHERE s.name = v.setting)
+      THEN 'no setting ' || v.setting || ': a rule sets one a slice offers, as {setting: reactions}'
+    WHEN v.value IS NULL OR v.value NOT IN ('on', 'off')
+      THEN 'a setting is on or off, as {value: off}, not ' || coalesce(marked ->> 'value', 'unmarked')
+    WHEN NOT EXISTS (SELECT FROM circle.circle c WHERE c.id = v.circle) THEN 'no circle ' || v.circle
+    WHEN v.circle <> setting_flaw.issuer AND setting_flaw.issuer IS DISTINCT FROM circle.assembly()
+      THEN setting_flaw.issuer || ' sets its own settings, not ' || v.circle || '''s: only the assembly sets another circle''s'
+    ELSE circle.setting_overlap(v.circle, v.setting, setting_flaw.day, setting_flaw.until, setting_flaw.replaces, setting_flaw.made)
+  END
+  FROM (
+    SELECT btrim(marked ->> 'setting') AS setting, lower(btrim(marked ->> 'value')) AS value,
+           coalesce(btrim(marked ->> 'circle'), setting_flaw.issuer) AS circle
+  ) v,
+  LATERAL (
+    SELECT (SELECT k FROM jsonb_object_keys(coalesce(marked, '{}')) k
+            WHERE k NOT IN ('setting', 'value', 'circle') ORDER BY k LIMIT 1) AS other
+  ) x;
+END;
+
+-- A setting rule's values as it marks them, the circle it is for, the
+-- one adopting it where it names none, and its days; no row for a policy
+-- that marks no `setting`.
+CREATE FUNCTION circle_policy.setting_marked(ref text) RETURNS TABLE (setting text, value text, circle text, "from" date, until date)
+LANGUAGE sql STABLE
+BEGIN ATOMIC
+  SELECT max(btrim(v.literal)) FILTER (WHERE v.name = 'setting'),
+         max(lower(btrim(v.literal))) FILTER (WHERE v.name = 'value'),
+         coalesce(max(btrim(v.literal)) FILTER (WHERE v.name = 'circle'), p.circle),
+         p.applies, p.ends
+  FROM policy.policy p
+  JOIN policy.value v ON v.policy = p.id
+  WHERE p.id = setting_marked.ref AND p.kind = 'rule'
+  GROUP BY p.id, p.circle, p.applies, p.ends
+  HAVING bool_or(v.name = 'setting');
+END;
+
+-- Copies a setting rule into `circle.setting_value` in the write that
+-- adopts it (`circle.set_setting`). Returns the row it made, or null for
+-- a policy that marks no `setting`; a rule whose values are unsound, or
+-- whose days meet another's for the same setting and circle it does not
+-- replace, is refused (SQLSTATE 09000).
+CREATE FUNCTION circle_policy.setting_from(ref text) RETURNS bigint
+LANGUAGE plpgsql AS $$
+DECLARE
+  wrong text;
+  made bigint;
+BEGIN
+  IF NOT EXISTS (SELECT FROM circle_policy.setting_marked(ref)) THEN
+    RETURN NULL;
+  END IF;
+  SELECT circle_policy.setting_flaw((SELECT jsonb_object_agg(v.name, v.literal) FROM policy.value v WHERE v.policy = ref),
+                                    p.circle, p.applies, p.ends, p.replaces, p.id) INTO wrong
+  FROM policy.policy p WHERE p.id = ref;
+  IF wrong IS NOT NULL THEN
+    RAISE EXCEPTION '%', wrong USING ERRCODE = 'triggered_action_exception';
+  END IF;
+  SELECT circle.set_setting(ref, o.circle, o.setting, o.value, o."from", o.until) INTO made
+  FROM circle_policy.setting_marked(ref) o;
+  RETURN made;
+END
+$$;
+
 -- Revokes what the policy it replaces granted, the day it applies,
 -- whatever it is (`circle.withdraw`), with every mandate issued under
 -- that one's mandate; then copies a mandate policy's values into the
 -- mandate they grant, with its issuer and the mandate it is issued under
 -- (`circle.issue`), or a right policy's into the right (`circle.give`),
 -- a disclosure rule's into open books (`circle_policy.disclosure_from`), a
--- publication's into its parts (`circle_policy.publication_from`) and the
--- particulars' into theirs (`circle_policy.particulars_from`), in the write
+-- publication's into its parts (`circle_policy.publication_from`), the
+-- particulars' into theirs (`circle_policy.particulars_from`) and a
+-- setting rule's into the circle's value (`circle_policy.setting_from`),
+-- in the write
 -- that adopts it. Returns the mandate, or null for a right or a policy of
 -- another kind, and the mandates it revoked; values that grant nothing
 -- are refused (SQLSTATE 09000).
@@ -323,6 +401,7 @@ BEGIN
   PERFORM circle_policy.disclosure_from(ref);
   PERFORM circle_policy.publication_from(ref);
   PERFORM circle_policy.particulars_from(ref);
+  PERFORM circle_policy.setting_from(ref);
   SELECT p.kind INTO k FROM policy.policy p WHERE p.id = ref AND p.kind IN ('mandate', 'right');
   IF k IS NULL THEN
     RETURN QUERY SELECT NULL::bigint, gone;
@@ -416,11 +495,19 @@ BEGIN ATOMIC
     ) THEN r.id || ' sets no particulars the co-op''s papers read: its values are copied as it is adopted'
     WHEN EXISTS (SELECT FROM circle.particulars s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle_policy.particulars_of(r.id))
       THEN r.id || ' marks no particulars, and sets some'
+    WHEN r.kind = 'rule' AND EXISTS (SELECT FROM circle_policy.setting_marked(r.id)) AND NOT EXISTS (
+      SELECT FROM circle_policy.setting_marked(r.id) v
+      JOIN circle.setting_value s ON s.policy = r.id
+      WHERE (s.circle, s.setting, s.value, s."from", s.until) IS NOT DISTINCT FROM (v.circle, v.setting, v.value, v."from", v.until)
+    ) THEN r.id || ' sets no setting a circle reads: its value is copied as it is adopted'
+    WHEN EXISTS (SELECT FROM circle.setting_value s WHERE s.policy = r.id) AND NOT EXISTS (SELECT FROM circle_policy.setting_marked(r.id))
+      THEN r.id || ' marks no setting, and sets one'
     WHEN EXISTS (SELECT FROM circle.mandate o WHERE o.policy = r.replaces AND (o.revoked IS NULL OR o.revoked > r.applies))
       OR EXISTS (SELECT FROM circle.right o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.disclosure o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.publication o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       OR EXISTS (SELECT FROM circle.particulars o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
+      OR EXISTS (SELECT FROM circle.setting_value o WHERE o.policy = r.replaces AND o.revoked IS DISTINCT FROM r.applies)
       THEN 'what ' || r.replaces || ' granted is not revoked the day ' || r.id || ' applies'
     ELSE (SELECT circle.outlives(o.id, r.applies) FROM circle.mandate o WHERE o.policy = r.replaces)
   END
@@ -447,7 +534,9 @@ BEGIN ATOMIC
     (SELECT 'the publication of ' || r.id || ' is not revoked the day it ends'
      FROM circle.publication s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends),
     (SELECT 'the particulars of ' || r.id || ' are not revoked the day it ends'
-     FROM circle.particulars s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
+     FROM circle.particulars s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends),
+    (SELECT 'the setting value of ' || r.id || ' is not revoked the day it ends'
+     FROM circle.setting_value s WHERE s.policy = r.id AND s.revoked IS DISTINCT FROM r.ends)
   )
   FROM policy.policy r
   WHERE r.id = payload ->> 'policy';

@@ -1,15 +1,20 @@
 import type { Db, Read } from '@cella/org-db'
 import type { Comment, Named } from '@cella/org-body/models'
 
-// A task's comments, oldest first, each with its author's name and the
-// names of those it mentions as they stand now, `redacted` once erased.
+// A task's comments, oldest first, each with its author's name, the
+// names of those it mentions as they stand now, `redacted` once erased,
+// and its reactions, each emoji given with its count and whether the
+// reader gave it.
 export async function comments(db: Db, task: string): Promise<Comment[]> {
   const { rows } = await db.query<Omit<Comment, 'id' | 'parent'> & { id: string; parent: string | null }>(
     `SELECT c.id, c.author, a.name, c.parent, c.text, to_char(c.posted, 'YYYY-MM-DD') AS posted,
             to_char(c.resolved, 'YYYY-MM-DD') AS resolved,
             coalesce((SELECT json_agg(json_build_object('person', m.person, 'name', p.name) ORDER BY m.n)
                       FROM task.mention m LEFT JOIN person.person p ON p.address = m.person
-                      WHERE m.comment = c.id), '[]') AS mentions
+                      WHERE m.comment = c.id), '[]') AS mentions,
+            coalesce((SELECT json_agg(json_build_object('emoji', r.emoji, 'count', r.count, 'mine', r.mine) ORDER BY r.emoji)
+                      FROM (SELECT x.emoji, count(*)::int AS count, bool_or(x.person = cella.reader()) AS mine
+                            FROM task.reaction x WHERE x.comment = c.id GROUP BY x.emoji) r), '[]') AS reactions
      FROM task.comment c LEFT JOIN person.person a ON a.address = c.author
      WHERE c.task = $1 ORDER BY c.id`,
     [task],
@@ -58,4 +63,14 @@ export const mentions: Read = {
         WHERE m.person = cella.reader() AND c.author <> cella.reader() AND r.resolved IS NULL
           AND NOT EXISTS (SELECT FROM task.comment y WHERE coalesce(y.parent, y.id) = r.id AND y.author = cella.reader() AND y.id > c.id)`,
   order: 'comment',
+}
+
+// Whether a task's comments take reactions: its circle's `reactions`
+// setting, on unless a rule of the circle or the assembly turned it off.
+export async function reacting(db: Db, task: string): Promise<boolean> {
+  const { rows } = await db.query<{ taking: boolean }>(
+    `SELECT circle.setting_of(t.circle, 'reactions') = 'on' AS taking FROM task.task t WHERE t.id = $1`,
+    [task],
+  )
+  return rows[0]?.taking ?? false
 }

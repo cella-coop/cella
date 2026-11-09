@@ -13,6 +13,7 @@ the grafts'.
 |---|---|---|
 | task | `id`, `title`, `status`, `priority`, `due?`, `created`, `completed?`, `body?` | `id` is `t-<n>`, numbered by the server; `body` is its free-form content, a Loro snapshot ([body](../../core/body/index.md)) |
 | comment | `id`, `task`, `author`, `parent?`, `text`, `mentions[]`, `posted`, `resolved?` | `task` a foreign key into `task.task`, `author` into `person.person`; `parent` a root comment, never a reply, so replies are flat, one level; `resolved` only on a root |
+| reaction | `comment`, `person`, `emoji` | one row per comment, person and emoji of core body's fixed set; toggled |
 
 | Status | Meaning |
 |---|---|
@@ -35,6 +36,7 @@ the backlog, and subtasks wait for a need.
 | `task:body:save` | confluent | `discuss` | an editor's save of the merged body, signed by its device: each save carries the whole snapshot, so the later receipt holds every edit before it |
 | `task:comment:post` | confluent | `discuss` | a fact: comments are appended, each numbered by receipt |
 | `task:comment:resolve` | confluent | `discuss` | resolving a root or reopening it is a register: the last writer wins |
+| `task:comment:react` | confluent | `discuss` | a toggle: one reaction per comment, person and emoji, the last writer wins |
 
 Each field is its own register: a move and a change of priority both
 stand, and two moves of one task resolve to the later receipt. A move
@@ -57,7 +59,9 @@ is a structured reference to a core person, `@[address]` in the text
 and a row of `task.mention` for each person it names, in the order
 given: the person's address, the pseudonym every entry names them by,
 never their name, which the thread draws as it stands, so erasing the
-person's name erases what it reads.
+person's name erases what it reads. A reaction is refused where the
+task's circle has `reactions` off, read by `circle.setting_of`, the
+refusal naming the circle and the rule that turned it off.
 Nothing a task write changes is read by an ordered write's guard, so none
 waits. `002-powers.sql` registers the power in `cella.power`, and the
 membership feat checks it.

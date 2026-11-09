@@ -74,6 +74,7 @@ Short names: fc `tools/feat-check.mjs`, sc `tools/sql-check.mjs`, pw
 | Only core's circles and the notary read the role a session runs as | [SQL](architecture.md#sql) | sc | `T/core.test.mjs`: a core library other than the circles reading the role; a core graft reading the role; a slice reading the role |
 | A slice's SQL holds no `DO` block and sets no `search_path` but a function's, to the catalog; it is `sql` or `plpgsql`, sits in a `sql/` directory and parses | [SQL](architecture.md#sql) | sc | `T/powers.test.mjs`: a `DO` block, a `search_path`, a `plpython3u` function, a `.sql` file outside `sql/`, a file that does not parse |
 | A guard never reads `policy.wording` | [policies](architecture.md#policies) | sc | `T/policy.test.mjs`: a guard that reads a policy's wording |
+| A slice reads a setting by `circle.setting_of`, never `circle.setting_value` | [settings](architecture.md#settings) | sc | `T/settings.test.mjs`: a guard that reads `circle.setting_value` |
 | A guard is never re-implemented in TypeScript | [SQL](architecture.md#sql) | no tool can see it | none |
 | A guard refuses early, says what would fix it, and names no person | [early and actionable](architecture.md#early-and-actionable) | no tool can see it | none |
 | A guard lives at the lowest level that owns it | [guards](architecture.md#guards) | sc, a graft guards only the ops of the feats it joins; the lowest level itself no tool can see | `T/powers.test.mjs`: a graft registers guards on the ops it joins |

@@ -1,7 +1,7 @@
 import type { Form } from '@cella/org-db'
 import { b64 } from '@cella/org-body/models'
 import { priorities, statuses, type Create, type Move, type Priority, type Save } from '../models/task.ts'
-import type { Post, Resolve } from '../models/comment.ts'
+import type { Post, React, Resolve } from '../models/comment.ts'
 
 // What the shell's forms send, read into the handlers' inputs.
 
@@ -62,4 +62,14 @@ export function resolve(form: Form): Resolve {
     throw new Error(`“${comment}” is no comment to resolve`)
   }
   return { comment: Number(comment), resolved: form.get('resolved') === 'true' }
+}
+
+// A reaction toggled: the comment, the emoji, and `on` set to turn it on
+// or empty to turn it off.
+export function react(form: Form): React {
+  const comment = form.get('comment')
+  if (!/^\d+$/.test(comment)) {
+    throw new Error(`“${comment}” is no comment to react to`)
+  }
+  return { comment: Number(comment), emoji: form.get('emoji'), on: form.get('on') === 'true' }
 }

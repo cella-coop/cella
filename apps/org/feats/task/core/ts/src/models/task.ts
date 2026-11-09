@@ -48,13 +48,15 @@ export interface Moved {
 // which the browser's editor opens, and its canonical form, which the
 // page draws until it does; null both where it has none yet. Its
 // comments, oldest first, the people who may read it, whom a mention
-// may name, and whether the reader may discuss it, posting and resolving.
+// may name, whether the reader may discuss it, posting, resolving and
+// reacting, and whether its circle has reactions on.
 export interface Page extends Task {
   snapshot: string | null
   canon: Canon | null
   comments: Comment[]
   readers: Named[]
   discuss: boolean
+  reactions: boolean
 }
 
 // An editor's save of a task's body: the merged snapshot as its browser

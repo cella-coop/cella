@@ -63,6 +63,17 @@ CREATE TABLE task.mention (
 
 CREATE INDEX ON task.mention (person);
 
+-- A person's reaction to a task's comment, one of core body's fixed six:
+-- one row per comment, person and emoji, there while it is on, the person
+-- by their address. It is in its comment's circle, copied as it is made.
+CREATE TABLE task.reaction (
+  circle text NOT NULL DEFAULT circle.assembly() REFERENCES circle.circle,
+  comment bigint NOT NULL REFERENCES task.comment,
+  person text NOT NULL REFERENCES person.person,
+  emoji text NOT NULL CHECK (emoji IN ('👍', '❤️', '😄', '🎉', '👀', '🙏')),
+  PRIMARY KEY (comment, person, emoji)
+);
+
 CREATE FUNCTION task.in_its_circle() RETURNS trigger LANGUAGE plpgsql AS $$
 BEGIN
   IF TG_TABLE_NAME = 'comment' THEN
@@ -80,6 +91,10 @@ CREATE TRIGGER in_its_circle BEFORE INSERT ON task.comment
 CREATE TRIGGER in_its_circle BEFORE INSERT ON task.mention
   FOR EACH ROW EXECUTE FUNCTION task.in_its_circle();
 
+CREATE TRIGGER in_its_circle BEFORE INSERT ON task.reaction
+  FOR EACH ROW EXECUTE FUNCTION task.in_its_circle();
+
 GRANT SELECT, INSERT ON task.comment, task.mention TO cella_app;
 GRANT UPDATE (resolved) ON task.comment TO cella_app;
-GRANT SELECT ON task.comment, task.mention TO cella_guards;
+GRANT SELECT, INSERT, DELETE ON task.reaction TO cella_app;
+GRANT SELECT ON task.comment, task.mention, task.reaction TO cella_guards;

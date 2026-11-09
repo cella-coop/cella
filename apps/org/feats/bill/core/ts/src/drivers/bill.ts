@@ -1,5 +1,6 @@
 import { literal, numbered, today, type Db, type Read } from '@cella/org-db'
-import { categories, type Detail, type Lined, type Listed, type Recording, type Taxed } from '../models/bill.ts'
+import type { Taxed } from '@cella/org-vat'
+import { categories, type Detail, type Lined, type Listed, type Recording } from '../models/bill.ts'
 
 // A bill is overdue when it is not paid past its due date, the scope's
 // day (`cella.verdict_date()`): a read, so no guard depends on it.

@@ -2,7 +2,7 @@
   import { Properties, Section, short, type Embed } from '@cella/org-ui'
   import { Reader } from '@cella/org-body/app'
   import type { OnMotion } from '../../models/adoption.ts'
-  import { Card } from '@cella/org-motion/app'
+  import { Card } from '@cella/org-motion/bindings'
 
   // The document version a motion asks to adopt, in full: read from the
   // version's canonical form, which the database computed from its

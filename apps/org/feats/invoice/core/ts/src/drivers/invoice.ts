@@ -1,5 +1,6 @@
 import type { Db, Read } from '@cella/org-db'
-import type { Detail, Issuing, Lined, Listed, Printed, Received, Seller, Taxed } from '../models/invoice.ts'
+import type { Taxed } from '@cella/org-vat'
+import type { Detail, Issuing, Lined, Listed, Printed, Received, Seller } from '../models/invoice.ts'
 
 // An invoice is overdue when something is owed past its due date, the
 // scope's day (`cella.verdict_date()`): a read, so no guard depends on it.

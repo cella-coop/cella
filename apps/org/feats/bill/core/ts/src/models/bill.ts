@@ -1,9 +1,5 @@
 import type { Line, Taxed } from '@cella/org-vat'
 
-// A line and the VAT by rate, as the VAT core library counts them for
-// bills and invoices alike.
-export type { Line, Taxed }
-
 // In the lifecycle's order.
 export const statuses = ['recorded', 'approved', 'paid'] as const
 export type Status = (typeof statuses)[number]

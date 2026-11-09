@@ -2,9 +2,7 @@ import { icons, power, type App } from '@cella/org-ui'
 import type { Circle, Detail, Standing, Provenance } from '../models/circle.ts'
 import Chain from './blocks/Chain.svelte'
 import Structure from './blocks/Structure.svelte'
-import { cap, covers, tones } from './words.ts'
-
-export { cap } from './words.ts'
+import { cap, covers, tones } from '../bindings/words.ts'
 
 // The feat's client side: the circles, none within another, and a
 // circle's page with its roles, the mandates granted to them, and the

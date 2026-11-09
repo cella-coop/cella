@@ -1,6 +1,6 @@
 +++
 title = "document-motion"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 Adoption by motion: what content of which document a motion asks to

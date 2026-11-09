@@ -614,7 +614,7 @@ stands, or once closed the mandate it granted and its parent; for each
 end or replacement of a mandate's policy, that mandate and every one
 below it its close revokes the same day (`circle.under`), or once
 closed those it revoked; each by its power, its grantee and its issuer
-by name, and its cap in the words of core circle's `cap`, linking to
+by name, and its cap in the words of core circle's `cap` (`./bindings`), linking to
 its own page and its chain.
 
 A motion's state is open, passed or rejected: open until its close,
@@ -636,7 +636,7 @@ mandates and, once closed, the effects its close carried, or that it
 carries them at its close. Who put it, by what procedure and in which
 circle are its properties.
 
-A motion drawn elsewhere is one card, the feat's `Card` (`./app`):
+A motion drawn elsewhere is one card, the feat's `Card` (`./bindings`, since only a shell imports its `./app`):
 its title, the circle it is put in and who put it, each by name (the circle's name or the role's name), method and where it stands, linking to its page, over
 the motions `summaries` (`./api`) reads, including each motion's author and its readable name. `document-motion` embeds
 it in documents, `meeting-motion` in a meeting's minutes.

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { Section, Table, type Column } from '@cella/org-ui'
-  import type { Detail, Lined, Taxed } from '../../models/bill.ts'
+  import type { Taxed } from '@cella/org-vat'
+  import type { Detail, Lined } from '../../models/bill.ts'
 
   // What the bill charges, line by line, and its VAT by rate.
   let { data }: { data: Detail; id: string } = $props()

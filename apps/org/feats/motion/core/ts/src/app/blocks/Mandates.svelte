@@ -1,6 +1,6 @@
 <script lang="ts">
   import { Note, power, Properties, Section, type Prop } from '@cella/org-ui'
-  import { cap } from '@cella/org-circle/app'
+  import { cap } from '@cella/org-circle/bindings'
   import type { Issuing, Mandate } from '../../models/circles.ts'
 
   // What the motion's actions do to the mandates: for each grant, the

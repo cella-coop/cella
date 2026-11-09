@@ -1,9 +1,5 @@
 import type { Line, Taxed } from '@cella/org-vat'
 
-// A line and the VAT by rate, as the VAT core library counts them for
-// invoices and bills alike.
-export type { Line, Taxed }
-
 export type Standing = 'unpaid' | 'partial' | 'paid' | 'overpaid' | 'voided'
 
 // An invoice as the feat lists it, amounts in cents, its standing read

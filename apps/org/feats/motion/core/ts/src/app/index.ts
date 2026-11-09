@@ -6,9 +6,6 @@ import Discussion from './blocks/Discussion.svelte'
 import Effects from './blocks/Effects.svelte'
 import Proposal from './blocks/Proposal.svelte'
 
-// The motion card, which the grafts that draw a motion elsewhere embed.
-export { default as Card } from './blocks/Card.svelte'
-
 // The feat's client side: the motions, open first, a new one with what
 // it decides, and a motion's page with its proposal, the stances given
 // and its close, with what it does and what the close carried.

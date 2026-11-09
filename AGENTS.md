@@ -209,7 +209,15 @@ contract; only shells import its app.**
 - *enforced* (`feat-check`): a file in a layer imports only its own
   layer and the layers inside it, by the layer each path names.
 - *enforced* (`feat-check`'s exports): a slice's package exports only
-  `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`.
+  `./models`, `./api`, `./bindings` and `./app`, a core lib's `.`, each
+  export's target inside the layer its key names.
+- *enforced* (`feat-check`): **Nothing re-exports around the tree, and
+  only a shell imports a slice's app.** No module re-exports another
+  package of the tree, by `export … from` or by exporting a name it
+  imported; a slice's `./app` is imported by a node's root alone, and
+  what another slice's client shares of it, a card or a word, sits in
+  its `./bindings`. The check resolves each import through a
+  dependency's alias and the package's `imports`.
 - *enforced* (`ui-check`, the shell's registry): **A slice's UI is its
   own.** A feat mounts its collections in the shell through its `./api`
   and `./app` slices; a graft extends only the collections of the feats

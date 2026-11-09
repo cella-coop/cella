@@ -1,6 +1,6 @@
 import type { App, Embed } from '@cella/org-ui'
 import type { OnMotion, OnDocument } from '../models/adoption.ts'
-import { Card } from '@cella/org-motion/app'
+import { Card } from '@cella/org-motion/bindings'
 import Adoption from './blocks/Adoption.svelte'
 import Linked from './blocks/Linked.svelte'
 

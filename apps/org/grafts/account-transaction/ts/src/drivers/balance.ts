@@ -1,5 +1,5 @@
 import type { Db } from '@cella/org-db'
-import type { Balance, Ledger, Movement } from '../models/balance.ts'
+import type { Balance, Dated, Ledger, Movement } from '../models/balance.ts'
 
 const number = (b: Record<string, unknown>): Balance => ({ debit: Number(b.debit), credit: Number(b.credit), balance: Number(b.balance) })
 
@@ -23,4 +23,16 @@ export async function ledger(db: Db, code: string): Promise<Ledger> {
     [code],
   )
   return { ...number(total.rows[0] ?? { debit: 0, credit: 0, balance: 0 }), movements: rows.map((r) => ({ ...r, cents: Number(r.cents) })) }
+}
+
+// The entries dated in a period, its month, the earliest first, each
+// with what it moved; the journal's own policies keep the ones its reader
+// reads.
+export async function entries(db: Db, month: string): Promise<Dated[]> {
+  const { rows } = await db.query<Dated>(
+    `SELECT e.id, to_char(e.date, 'YYYY-MM-DD') AS date, e.label, transaction.amount(e.id) AS amount
+     FROM transaction.entry e WHERE to_char(e.date, 'YYYY-MM') = $1 ORDER BY e.date, e.id`,
+    [month],
+  )
+  return rows.map((r) => ({ ...r, amount: Number(r.amount) }))
 }

@@ -215,8 +215,10 @@ dashboard shows what is owed and overdue, what was invoiced this year,
 the amounts by month and the invoices by standing; overdue reads the
 server's clock, a read no guard depends on. New issues one (`issue`) in a
 series the feat offers, to a name and the address billed. An invoice's
-page shows its lines and payments, marks it sent (`send`) and links its
-PDF. `api/forms.ts` reads the shell's forms into the handlers' inputs,
+page, its header's crumb its number, is titled by what it bills for,
+with whom it bills among its properties; it marks it sent (`send`) and
+links its PDF, and its Lines tab holds its lines and payments, the data
+central to it. `api/forms.ts` reads the shell's forms into the handlers' inputs,
 amounts typed in euros and VAT rates in percent (`5,5`), so a graft's writes read the same forms:
 `invoice-transaction` replaces issue, payment and void with the writes
 that post them. Whom an invoice bills is `contact-invoice`'s.

@@ -8,7 +8,8 @@ const tones: { [s in Listed['standing']]: Tone } = { recorded: 'accent', approve
 const category = (b: Listed) => categories.find((c) => c.code === b.category)?.label ?? b.category
 
 // The feat's client side: the bills, a new one recorded with its lines,
-// and a bill's page with its lines, its VAT by rate and its next write.
+// and a bill's page with its next write, its lines and its VAT by rate in
+// a tab of their own.
 export const app: App = {
   name: 'bill',
   collections: {
@@ -43,23 +44,28 @@ export const app: App = {
       page: {
         eyebrow: 'Bill',
         title: (b: Detail) => b.supplier,
-        subtitle: (b: Detail) => `${b.reference} · ${b.label}`,
+        subtitle: (b: Detail) => b.id,
         properties: (b: Detail) => [
           { label: 'Status', value: b.standing, kind: 'badge', tone: tones[b.standing] },
+          { label: 'For', value: b.label },
+          { label: 'Their reference', value: b.reference, kind: 'mono' },
           { label: 'Total', value: b.total, kind: 'money' },
           { label: 'Before VAT', value: b.net, kind: 'money' },
           { label: 'VAT', value: b.vat, kind: 'money' },
           { label: 'Category', value: `${category(b)}, ${b.category}` },
           { label: 'Dated', value: b.issued, kind: 'date' },
           { label: 'Due', value: b.due, kind: 'date', tone: b.standing === 'overdue' ? 'warning' : undefined },
-          { label: 'Id', value: b.id, kind: 'mono' },
         ],
         activity: (b: Detail) => [
           ...(b.paid ? [{ at: b.paid, text: 'paid' }] : []),
           ...(b.approved ? [{ at: b.approved, text: 'approved', who: b.approver ?? undefined }] : []),
           { at: b.recorded, text: 'recorded', who: b.recorder },
         ],
-        blocks: [Lines],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'lines', label: 'Lines' },
+        ],
+        blocks: [{ tab: 'lines', block: Lines }],
         actions: Status,
       },
     },

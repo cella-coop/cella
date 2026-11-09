@@ -4,11 +4,11 @@ import Withheld from './blocks/Withheld.svelte'
 
 // The graft's client side: an associate's instalments from their pay and
 // spreading their subscription, on their page; what a payslip's pay
-// withheld, on the payslip's.
+// withheld, beside the payslip's lines.
 export const app: App = {
   name: 'account-membership-payslip-transaction',
   extends: {
     people: { page: { blocks: [Instalments] } },
-    payslips: { page: { blocks: [Withheld] } },
+    payslips: { page: { blocks: [{ tab: 'lines', block: Withheld }] } },
   },
 }

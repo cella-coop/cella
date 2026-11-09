@@ -3,7 +3,7 @@ import type { Detail, Journaled } from '../models/transaction.ts'
 import Lines from './blocks/Lines.svelte'
 
 // The feat's client side: the journal as the shell's transactions, and an
-// entry's page with its lines.
+// entry's page, named by its label, its lines in a tab of their own.
 export const app: App = {
   name: 'transaction',
   collections: {
@@ -23,8 +23,8 @@ export const app: App = {
       },
       page: {
         eyebrow: 'Transaction',
-        title: (e: Detail) => e.id,
-        subtitle: (e: Detail) => e.label,
+        title: (e: Detail) => e.label,
+        subtitle: (e: Detail) => e.id,
         properties: (e: Detail) => [
           { label: 'Date', value: e.date, kind: 'date' },
           { label: 'Amount', value: e.amount, kind: 'money' },
@@ -32,7 +32,11 @@ export const app: App = {
           { label: 'Corrects', value: e.corrects, kind: 'mono', href: e.corrects ? `/transactions/${e.corrects}` : undefined },
         ],
         related: (e: Detail) => e.corrected.map((c) => ({ label: c, sub: 'corrects it', href: `/transactions/${c}` })),
-        blocks: [Lines],
+        tabs: [
+          { id: 'overview', label: 'Overview' },
+          { id: 'lines', label: 'Lines' },
+        ],
+        blocks: [{ tab: 'lines', block: Lines }],
       },
     },
   },

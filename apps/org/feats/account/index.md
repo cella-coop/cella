@@ -336,11 +336,12 @@ The `accounts` collection, the chart by code; `periods`, the latest month
 first, its New form opening the month after the latest, and a period's
 page closing it; `terms`, the statutes' capital
 clauses, the latest first, governing, to apply or replaced, titled
-Capital. The financial
+Capital, a terms' page its header's crumb its id. The financial
 statements are the `report` feat's, drawn in the rubrics and over the
 spans this feat publishes.
 Printed, a page drops the shell and reads as a document. Balances, the trial
-balance and each account's ledger are `account-transaction`'s; the
+balance, each account's ledger and each period's entries are
+`account-transaction`'s, in a tab of the page's own; the
 motion that adopted a terms' rule, `account-motion`'s.
 
 ## Lanterne

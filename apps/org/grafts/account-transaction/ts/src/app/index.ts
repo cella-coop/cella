@@ -1,9 +1,11 @@
 import type { App } from '@cella/org-ui'
 import type { Balance, Ledger } from '../models/balance.ts'
+import Entries from './blocks/Entries.svelte'
 import Movements from './blocks/Movements.svelte'
 
 // The graft's client side: each account's debits, credits and balance in
-// the chart, whether the trial balance agrees, and an account's ledger.
+// the chart, whether the trial balance agrees, an account's
+// ledger in its Ledger tab, and a period's entries in its Entries tab.
 export const app: App = {
   name: 'account-transaction',
   extends: {
@@ -32,7 +34,14 @@ export const app: App = {
           { label: 'Credit', value: l.credit, kind: 'money' },
           { label: 'Balance', value: l.balance, kind: 'money', tone: l.balance < 0 ? 'negative' : undefined },
         ],
-        blocks: [Movements],
+        tabs: [{ id: 'ledger', label: 'Ledger' }],
+        blocks: [{ tab: 'ledger', block: Movements }],
+      },
+    },
+    periods: {
+      page: {
+        tabs: [{ id: 'entries', label: 'Entries' }],
+        blocks: [{ tab: 'entries', block: Entries }],
       },
     },
   },

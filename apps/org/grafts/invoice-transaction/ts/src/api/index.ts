@@ -5,6 +5,7 @@ import { forms } from '@cella/org-invoice/api'
 import { annul, issue, payment } from '../handlers/post.ts'
 import { postings } from '../drivers/posting.ts'
 import { invoices } from './imports.ts'
+import { contract } from './contract.ts'
 
 export { annul, issue, payment } from '../handlers/post.ts'
 export { postings } from '../drivers/posting.ts'
@@ -14,6 +15,7 @@ export { postings } from '../drivers/posting.ts'
 // and invoices imported to issue, each posted.
 export const slice: Slice = {
   name: 'invoice-transaction',
+  queries: contract,
   imports: { invoices },
   extends: {
     invoices: {

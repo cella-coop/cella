@@ -6,6 +6,7 @@ import { file, within } from '../handlers/file.ts'
 import { counts, filed, projectOf, tasks, tasksOf } from '../drivers/filing.ts'
 import type { File } from '../models/actions.ts'
 import { tasks as imported } from './imports.ts'
+import { contract } from './contract.ts'
 
 export { file, within } from '../handlers/file.ts'
 export { counts, filed, projectOf, tasks, tasksOf } from '../drivers/filing.ts'
@@ -25,7 +26,7 @@ function placed(form: Form, task: string): File {
 export const slice: Slice = {
   name: 'project-task',
   imports: { tasks: imported },
-  queries: { tasks },
+  queries: { tasks, ...contract },
   extends: {
     tasks: {
       list: projectOf,

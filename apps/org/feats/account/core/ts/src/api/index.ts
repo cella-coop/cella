@@ -5,6 +5,7 @@ import { action, type Slice } from '@cella/org-db'
 import { close, nextPeriod, open } from '../handlers/index.ts'
 import { account, accounts, chart, period, periods } from '../drivers/account.ts'
 import { term, terms } from '../drivers/terms.ts'
+import { contract } from './contract.ts'
 
 export { adopt, close, freeze, freezeOwn, freezing, holding, nextPeriod, open, opening } from '../handlers/index.ts'
 export { account, accounts, period, periods } from '../drivers/account.ts'
@@ -18,6 +19,7 @@ export { report, reports } from '../drivers/report.ts'
 // by `adopt`, which account-motion carries.
 export const slice: Slice = {
   name: 'account',
+  queries: contract,
   collections: {
     accounts: {
       list: chart,

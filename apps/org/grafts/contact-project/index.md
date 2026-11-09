@@ -1,6 +1,6 @@
 +++
 title = "contact-project"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 Whom a project is for: a client, a contact holding the client role
@@ -58,4 +58,4 @@ statutes, the 2027 pipeline and the books' move, are for no contact.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `contact_project.commissions` to the analytics shell: which contact commissioned each project. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `contact_project.commissions` to the analytics shell: which contact commissioned each project. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

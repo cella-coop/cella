@@ -1,6 +1,6 @@
 +++
 title = "Transaction"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The journal: every movement of money in the co-op, as balanced
@@ -236,4 +236,4 @@ bills and expenses, through their grafts.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `transaction.months` to the analytics shell: the transaction feat's analytical contract. A line on a member's capital account is theirs, and only the account-transaction graft knows which accounts are held, so the journal shows here only as sums over every line: each month's entries and what they moved. It is shared by `month`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `transaction.months` to the analytics shell: the transaction feat's analytical contract. A line on a member's capital account is theirs, and only the account-transaction graft knows which accounts are held, so the journal shows here only as sums over every line: each month's entries and what they moved. It is shared by `month`. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

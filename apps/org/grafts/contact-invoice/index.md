@@ -1,6 +1,6 @@
 +++
 title = "contact-invoice"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 Who an invoice bills: a client, a contact holding the client role
@@ -69,4 +69,4 @@ that bill it.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `contact_invoice.billings` to the analytics shell: which contact each invoice is billed to. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `contact_invoice.billings` to the analytics shell: which contact each invoice is billed to. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

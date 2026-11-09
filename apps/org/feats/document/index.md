@@ -1,6 +1,6 @@
 +++
 title = "Document"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 The co-op's texts: statutes, internal rules, rate cards, policies and
@@ -403,4 +403,4 @@ too, draws a version read-only on a motion's page.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `document.documents` to the analytics shell: each document, how many versions it has, when it was last saved and adopted. It is scoped by `circle`, the circle that owns the document.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `document.documents` to the analytics shell: each document, how many versions it has, when it was last saved and adopted. It is scoped by `circle`, the circle that owns the document. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

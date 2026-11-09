@@ -1,6 +1,6 @@
 +++
 title = "Meeting"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 Circles meeting: when and where, what is on the agenda, and whether the
@@ -212,4 +212,4 @@ header's writes.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `meeting.meetings` and `meeting.items` to the analytics shell: each meeting, its circle and its days, and the items on its agenda with their time. Both are scoped by `circle`, the circle that owns the meeting or the item.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `meeting.meetings` and `meeting.items` to the analytics shell: each meeting, its circle and its days, and the items on its agenda with their time. Both are scoped by `circle`, the circle that owns the meeting or the item. Each of its views is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

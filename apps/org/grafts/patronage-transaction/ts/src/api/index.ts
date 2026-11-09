@@ -5,6 +5,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { distribute, distributed } from '../handlers/distribute.ts'
 import { posted } from '../drivers/posted.ts'
+import { contract } from './contract.ts'
 
 export { distribute, distributed } from '../handlers/distribute.ts'
 export { posted } from '../drivers/posted.ts'
@@ -12,6 +13,7 @@ export type { Posted } from '../models/posted.ts'
 
 export const slice: Slice = {
   name: 'patronage-transaction',
+  queries: contract,
   extends: {
     distributions: {
       item: posted,

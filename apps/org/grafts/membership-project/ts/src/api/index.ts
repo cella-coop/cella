@@ -3,6 +3,7 @@
 import { action, cents, type Slice } from '@cella/org-db'
 import { share } from '../handlers/share.ts'
 import { held, pot, shared } from '../drivers/share.ts'
+import { contract } from './contract.ts'
 
 export { share } from '../handlers/share.ts'
 export { held, pot, shared } from '../drivers/share.ts'
@@ -10,6 +11,7 @@ export { held, pot, shared } from '../drivers/share.ts'
 // A project's pot, its shares and granting one; a member's shares.
 export const slice: Slice = {
   name: 'membership-project',
+  queries: contract,
   extends: {
     projects: {
       list: shared,

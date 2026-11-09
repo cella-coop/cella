@@ -4,6 +4,7 @@ import { action, type Form, type Slice } from '@cella/org-db'
 import { mark, record } from '../handlers/attend.ts'
 import { attended, marks, present } from '../drivers/attendance.ts'
 import type { Attend, Status } from '../models/attendance.ts'
+import { contract } from './contract.ts'
 
 export { mark, record } from '../handlers/attend.ts'
 export { attended, marks, present } from '../drivers/attendance.ts'
@@ -15,6 +16,7 @@ const attend = (form: Form, meeting: string, member: string): Attend => ({ meeti
 // member's page, the meetings they were marked at.
 export const slice: Slice = {
   name: 'meeting-membership',
+  queries: contract,
   extends: {
     meetings: {
       list: present,

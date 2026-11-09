@@ -4,6 +4,7 @@ import { action, type Slice } from '@cella/org-db'
 import { forms } from '@cella/org-meeting/api'
 import { table } from '../handlers/table.ts'
 import { onMeeting, sittings } from '../drivers/tabled.ts'
+import { contract } from './contract.ts'
 
 export { table } from '../handlers/table.ts'
 export { onMeeting, sittings } from '../drivers/tabled.ts'
@@ -12,6 +13,7 @@ export { onMeeting, sittings } from '../drivers/tabled.ts'
 // motion's page the meetings it is tabled at.
 export const slice: Slice = {
   name: 'meeting-motion',
+  queries: contract,
   extends: {
     meetings: {
       item: (db, meeting) => onMeeting(db, meeting),

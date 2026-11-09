@@ -4,12 +4,14 @@
 import { action, type Slice } from '@cella/org-db'
 import { approve, reimburse } from '../handlers/post.ts'
 import { postings } from '../drivers/posting.ts'
+import { contract } from './contract.ts'
 
 export { approve, reimburse } from '../handlers/post.ts'
 export { postings } from '../drivers/posting.ts'
 
 export const slice: Slice = {
   name: 'expense-transaction',
+  queries: contract,
   extends: {
     expenses: {
       item: postings,

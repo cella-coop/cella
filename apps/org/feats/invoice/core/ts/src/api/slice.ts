@@ -3,6 +3,7 @@ import { annul, issue, payment, send } from '../handlers/index.ts'
 import { invoice, invoices, listing, offered, printed } from '../drivers/invoice.ts'
 import * as forms from './forms.ts'
 import { pdf } from './pdf.ts'
+import { contract } from './contract.ts'
 
 // The feat's server side as the shell mounts it: the invoices, what a new
 // one may be issued in, and its writes. A graft that posts an invoice's
@@ -11,6 +12,7 @@ import { pdf } from './pdf.ts'
 // made from it as issued, which whoever reads the invoice may open.
 export const slice: Slice = {
   name: 'invoice',
+  queries: contract,
   collections: {
     invoices: {
       list: listing,

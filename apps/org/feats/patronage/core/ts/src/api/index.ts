@@ -7,6 +7,7 @@ import { distribution, distributions, years } from '../drivers/distribution.ts'
 import { basis, bases } from '../drivers/terms.ts'
 import { parts, statement, statements } from '../drivers/statement.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { adopt, approve, distributing, draft } from '../handlers/index.ts'
 export { distribution, distributions } from '../drivers/distribution.ts'
@@ -21,6 +22,7 @@ export { statement, statements } from '../drivers/statement.ts'
 // write is patronage-transaction's.
 export const slice: Slice = {
   name: 'patronage',
+  queries: contract,
   collections: {
     distributions: {
       list: years,

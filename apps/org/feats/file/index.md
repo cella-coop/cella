@@ -1,6 +1,6 @@
 +++
 title = "File"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 The files the co-op keeps: its own papers, members' receipts, workers'
@@ -130,4 +130,4 @@ on their October expenses ([the fixture](../../fixtures/lanterne/index.md)).
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `file.classes` to the analytics shell: how many files each class keeps and their size. A file is personal data whole, so only these sums are shared. It is shared by `class`.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `file.classes` to the analytics shell: how many files each class keeps and their size. A file is personal data whole, so only these sums are shared. It is shared by `class`. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

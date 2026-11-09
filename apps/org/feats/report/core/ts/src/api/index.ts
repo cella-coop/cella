@@ -6,6 +6,7 @@ import type { Saved } from '../models/report.ts'
 import { save } from '../handlers/index.ts'
 import { draw, listing, reports } from '../drivers/report.ts'
 import { margins } from '../drivers/margin.ts'
+import { contract } from './contract.ts'
 
 export { save, saving } from '../handlers/index.ts'
 export { draw, report, reports } from '../drivers/report.ts'
@@ -43,6 +44,7 @@ const definition = (text: string): Saved => {
 export function reporting(port: Analytics): Slice {
   return {
     name: 'report',
+    queries: contract,
     collections: {
       reports: {
         list: listing,

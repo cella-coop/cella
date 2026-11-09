@@ -5,6 +5,7 @@ import { action, type Form, type Slice } from '@cella/org-db'
 import { hire } from '../handlers/index.ts'
 import { employments, today, worker } from '../drivers/worker.ts'
 import type { Contract, Hire } from '../models/worker.ts'
+import { contract } from './contract.ts'
 
 export { hire, hiring } from '../handlers/index.ts'
 export { employments, today, worker } from '../drivers/worker.ts'
@@ -37,6 +38,7 @@ export const hired = (form: Form): Hire => ({
 // device, as the people collection's New form.
 export const slice: Slice = {
   name: 'employment',
+  queries: contract,
   extends: {
     people: {
       list: employments,

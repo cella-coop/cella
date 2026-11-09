@@ -4,6 +4,7 @@
 import { action, type Slice } from '@cella/org-db'
 import { minute } from '../handlers/minute.ts'
 import { onDocument, onMeeting } from '../drivers/minutes.ts'
+import { contract } from './contract.ts'
 
 export { minute } from '../handlers/minute.ts'
 export { onDocument, onMeeting, summaries } from '../drivers/minutes.ts'
@@ -13,6 +14,7 @@ export { onDocument, onMeeting, summaries } from '../drivers/minutes.ts'
 // meetings it may embed.
 export const slice: Slice = {
   name: 'document-meeting',
+  queries: contract,
   extends: {
     meetings: {
       item: (db, meeting) => onMeeting(db, meeting),

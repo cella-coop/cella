@@ -4,12 +4,14 @@ import { close, post, propose, vote } from '../handlers/index.ts'
 import { authors, motion, motions, kinds, listing, procedures } from '../drivers/motion.ts'
 import type { Stance } from '../models/motion.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 // The feat's server side as the shell mounts it: the motions, a new
 // one with what it decides, a stance and a message as the acting member,
 // and closing a motion.
 export const slice: Slice = {
   name: 'motion',
+  queries: contract,
   collections: {
     motions: {
       list: listing,

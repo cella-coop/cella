@@ -4,6 +4,7 @@
 import type { Form, Slice } from '@cella/org-db'
 import { listing, next, payslip, payslips } from '../drivers/payslip.ts'
 import type { Run } from '../models/payslip.ts'
+import { contract } from './contract.ts'
 
 export { approve, approving, generate, generating, pay, paying, timing } from '../handlers/index.ts'
 export { next, payslip, payslips } from '../drivers/payslip.ts'
@@ -22,6 +23,7 @@ export function run(form: Form, id: string | undefined): Run {
 // payslip-timesheet and payslip-transaction grafts'.
 export const slice: Slice = {
   name: 'payslip',
+  queries: contract,
   collections: {
     payslips: {
       list: listing,

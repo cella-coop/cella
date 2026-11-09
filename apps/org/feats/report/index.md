@@ -1,6 +1,6 @@
 +++
 title = "Report"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 The co-op's reports: what the books and the work add up to, read through
@@ -217,4 +217,4 @@ invoiced less 172 hours at 23,64 €.
 
 Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts),
 `core/sql/analytics.sql`, publishes the thresholds as `report.thresholds`,
-which the margins read. It is scoped by `circle`, the circle that owns the threshold.
+which the margins read. It is scoped by `circle`, the circle that owns the threshold. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

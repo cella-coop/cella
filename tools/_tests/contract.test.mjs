@@ -4,8 +4,9 @@
 // only as sums over everyone, or as the rows its policy opens by their
 // circle alone; each view declares its audience, scoped by the circle
 // that owns each row or shared as sums by the columns it names; nothing
-// else grants the analytics role anything; and no core publishes a
-// contract but the analytics port, in its own schema.
+// else grants the analytics role anything; no core publishes a contract
+// but the analytics port, in its own schema; and each view is declared by
+// its slice as a published query.
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -36,6 +37,15 @@ CREATE VIEW claim.rows AS SELECT c.id, c.kind, c.circle FROM claim.claim c;
 CREATE VIEW claim.kinds AS SELECT c.kind, sum(c.amount)::bigint AS amount FROM claim.claim c GROUP BY c.kind;`,
 }
 
+// Every view a contract makes, declared by its slice as a published query
+// in its server slice, as `ts/src/api/contract.ts` declares it; `as`
+// writes the declaration otherwise, as `{ view, by, … }` or none.
+function declare(dir, contract, as = (v) => `  ${v.split('.')[1]}: { view: '${v}', published: true, by: [], columns: [], order: [] },`) {
+  const views = [...contract.matchAll(/CREATE (?:OR REPLACE )?VIEW ([a-z_]+\.[a-z_]+)/g)].map((m) => m[1])
+  mkdirSync(join(dir, '..', 'ts/src/api'), { recursive: true })
+  writeFileSync(join(dir, '..', 'ts/src/api/contract.ts'), `export const contract = {\n${views.map(as).join('\n')}\n}\n`)
+}
+
 // A view's audience, as its contract comments it.
 const as = (view, audience = 'shared') => `\nCOMMENT ON VIEW ${view} IS 'audience: ${audience}';`
 
@@ -49,6 +59,7 @@ async function check(contracts, extra = {}) {
       writeFileSync(join(dir, '001.sql'), extra[feat] ?? migrations[feat])
       if (contracts[feat]) {
         writeFileSync(join(dir, 'analytics.sql'), contracts[feat])
+        declare(dir, contracts[feat], extra.declared)
       }
     }
     for (const [lib, sql] of Object.entries(extra.core ?? {})) {
@@ -56,6 +67,7 @@ async function check(contracts, extra = {}) {
       mkdirSync(dir, { recursive: true })
       writeFileSync(join(dir, '001.sql'), sql.migration)
       writeFileSync(join(dir, 'analytics.sql'), sql.contract)
+      declare(dir, sql.contract)
     }
     writeFileSync(join(repo, 'apps/org/feat.toml'), 'name = "org"\n')
     const known = new Set(['cella', 'person', 'ledger', 'claim'])
@@ -71,6 +83,16 @@ test('a contract of plain views, its personal column declared, passes', async ()
 COMMENT ON COLUMN person.people.name IS 'personal: shown on statements';${as('person.people')}`,
   })
   assert.equal(errors, '')
+})
+
+test('a slice\'s analytical contract is its SQL queries: a view no query declares published is refused', async () => {
+  const contract = `CREATE VIEW ledger.months AS SELECT l.day, sum(l.amount)::bigint AS amount FROM ledger.line l GROUP BY l.day;${as('ledger.months', 'shared by day')}`
+  const none = await check({ ledger: contract }, { declared: () => '' })
+  assert.match(none, /ledger.months is declared by no query: .*declare it in its server slice's queries, ts\/src\/api\/contract.ts, as \{ view: 'ledger.months', published: true, … \}/)
+  const unpublished = await check({ ledger: contract }, { declared: (v) => `  months: { view: '${v}', by: [], columns: [], order: [] },` })
+  assert.match(unpublished, /ledger.months is declared by no query/, 'a query over the view not marked published is no declaration of it')
+  const multiline = await check({ ledger: contract }, { declared: (v) => `  months: {\n    view: '${v}',\n    published: true,\n    by: [],\n    columns: ['day', 'amount'],\n    order: ['day'],\n  },` })
+  assert.equal(multiline, '')
 })
 
 test('a contract holds only views and comments on them, in its own schema, read as their owner', async () => {

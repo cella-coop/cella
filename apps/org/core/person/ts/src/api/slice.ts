@@ -3,6 +3,7 @@ import { forget, profile, revoke } from '../handlers/index.ts'
 import { devices, listing as listed } from '../drivers/device.ts'
 import { listing, people, person } from '../drivers/person.ts'
 import type { Profile } from '../models/person.ts'
+import { contract } from './contract.ts'
 
 // Core's people as the shell mounts them: the people collection, read
 // from its schema, each person's devices on their page, and the profile
@@ -15,6 +16,7 @@ import type { Profile } from '../models/person.ts'
 // later device is not offered yet.
 export const slice: Slice = {
   name: 'person',
+  queries: contract,
   core: true,
   collections: {
     people: {

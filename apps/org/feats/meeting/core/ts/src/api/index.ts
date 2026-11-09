@@ -5,6 +5,7 @@ import { action, type Slice } from '@cella/org-db'
 import { add, cancel, hold, minute, move, remove, schedule } from '../handlers/index.ts'
 import { item, listing, meetings, offered } from '../drivers/meeting.ts'
 import * as forms from './forms.ts'
+import { contract } from './contract.ts'
 
 export { add, adding, cancel, hold, minute, minuting, move, remove, schedule } from '../handlers/index.ts'
 export { agenda, item as meeting, meetings, offered } from '../drivers/meeting.ts'
@@ -12,6 +13,7 @@ export * as forms from './forms.ts'
 
 export const slice: Slice = {
   name: 'meeting',
+  queries: contract,
   collections: {
     meetings: {
       list: listing,

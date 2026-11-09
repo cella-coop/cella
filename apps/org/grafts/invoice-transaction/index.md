@@ -1,6 +1,6 @@
 +++
 title = "invoice-transaction"
-updated = 2026-11-09
+updated = 2026-11-13
 +++
 
 An issued invoice, its payments and its void post balanced transactions,
@@ -90,4 +90,4 @@ FEC as entries, so nothing is posted twice
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_transaction.postings` to the analytics shell: which entry posted which invoice or payment, and on what event. It is scoped by `circle`, the circle that owns each row.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `sql/analytics.sql`, publishes `invoice_transaction.postings` to the analytics shell: which entry posted which invoice or payment, and on what event. It is scoped by `circle`, the circle that owns each row. Its view is declared a published query, in `ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

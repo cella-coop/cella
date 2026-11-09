@@ -1,6 +1,6 @@
 +++
 title = "Import"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 What a co-op brings in from the tools it leaves, the five to eight a small
@@ -113,4 +113,4 @@ file of each kind.
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `import.runs` to the analytics shell: each run, its kind and day, and how many of its records settled and were refused. It is scoped by `circle`, the circle that owns the run.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `import.runs` to the analytics shell: each run, its kind and day, and how many of its records settled and were refused. It is scoped by `circle`, the circle that owns the run. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

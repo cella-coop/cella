@@ -4,8 +4,10 @@
 // report joins them in the shell and reconciles with what the slices
 // say, stamped with the log's head on the snapshot it read, which a write
 // landing meanwhile does not move; and the port refuses every report
-// that reads past the catalog, before the shell sees it. Run by `cella
-// test` on a fresh database.
+// that reads past the catalog, before the shell sees it. The catalog is
+// the queries the slices publish, declared once, which the web shell
+// serves through the port as their reader reads them there. Run by
+// `cella test` on a fresh database.
 
 import { after, before, test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -18,9 +20,11 @@ import { DuckDBInstance } from '@duckdb/node-api'
 import { check, compile, Invalid, scoped, type Analytics, type Catalog, type Report } from '@cella/org-analytics'
 import { shell } from '@cella/org-analytics/api'
 import { profile } from '@cella/org-person/api'
-import type { Deps } from '@cella/org-db'
+import { ask, type Deps, type Query } from '@cella/org-db'
 import { reader, sign } from './lanterne.ts'
 import { own } from './port.ts'
+import { queried, slices } from '../src/lib/server/slices.ts'
+import { published } from '../src/lib/server/published.ts'
 
 const repo = new URL('../../../../', import.meta.url).pathname
 const bin = process.env.CELLA_BIN ?? 'cella'
@@ -39,6 +43,7 @@ let catalog: Catalog
 let camilles: Analytics
 const hugo = 'hugo@lanterne.example'
 const camille = 'camille@lanterne.example'
+const ines = 'ines@lanterne.example'
 const as = (actor: string): Deps => ({ db: reader(app, actor), actor, sign: sign(actor) })
 
 before(async () => {
@@ -118,6 +123,53 @@ test('the catalog is the views the slices publish, with their plain types and pe
   assert.deepEqual(catalog['account_transaction.movements'].audience, { kind: 'shared', by: ['code', 'day'] })
   assert.equal(catalog['account_transaction.movements'].columns.debit.type, 'bigint')
   assert.ok(!Object.keys(catalog).some((v) => v.startsWith('analytics.')), 'the head stamps a run; no report reads it')
+})
+
+test('the catalog is the queries the slices publish, each declared once with its columns and its personal columns', () => {
+  const declared = slices.flatMap((s) => Object.values(s.queries ?? {})).filter((q) => q.published)
+  const counted = Object.entries(catalog).filter(([, v]) => v.audience.kind === 'contributions')
+  assert.ok(counted.length > 0)
+  assert.deepEqual(
+    declared.map((q) => q.view).sort(),
+    Object.keys(catalog).filter((v) => catalog[v].audience.kind !== 'contributions').sort(),
+    'every view the role reads but a contributions view is a published query, and no published query is outside the catalog',
+  )
+  for (const q of declared) {
+    const columns = catalog[q.view].columns
+    assert.deepEqual([...q.columns].sort(), Object.keys(columns).sort(), `${q.view} declares every column it shares`)
+    assert.deepEqual(
+      [...(q.personal ?? [])].sort(),
+      Object.keys(columns).filter((c) => columns[c].personal).sort(),
+      `${q.view} declares the columns its contract comments personal`,
+    )
+  }
+})
+
+test('the web shell serves a published query through the port, as its reader reads it there, and a connection refuses it', async () => {
+  const projects = queried('project', 'projects') as Query
+  assert.equal(projects?.published, true, 'the project feat declares its contract\'s view as a query')
+  const through = async (actor: string) => {
+    const rows = (await published(scoped(analytics, reader(app, actor)), projects, {})) as { id: string; circle: string }[]
+    return rows.map((r) => `${r.circle}/${r.id}`).sort()
+  }
+  const all = (await rows<{ id: string; circle: string }>('SELECT id, circle FROM project.projects')).map((r) => `${r.circle}/${r.id}`).sort()
+  const web = await through(ines)
+  assert.ok(web.some((p) => p.startsWith('web/')), 'Inès, in Web, reads Web\'s projects')
+  assert.ok(!web.some((p) => p.startsWith('marketing/')), 'and none of Marketing\'s')
+  assert.deepEqual(web, all.filter((p) => /^(web|ag)\//.test(p)), 'only the rows of the circles she reads it in, as the report reads them')
+  assert.deepEqual(await through(camille), all, 'Camille reads every circle\'s by open books')
+
+  // A shared view reads whole, by its declared names; a person's name only
+  // as its query declares it.
+  const people = queried('person', 'people') as Query
+  assert.deepEqual(people.personal, ['name'])
+  const own = (await published(scoped(analytics, reader(app, hugo)), people, {})) as { address: string; name: string }[]
+  assert.ok(own.some((p) => p.address === hugo && 'name' in p), 'Hugo reads his own row, his name with it')
+  const months = (await published(analytics, queried('transaction', 'months') as Query, {})) as { month: string }[]
+  assert.ok(months.length > 0 && months.every((m) => 'month' in m))
+
+  // Its view reads as its owner, so no reader's connection reads it.
+  await assert.rejects(ask(reader(app, ines), projects, {}), /project.projects is published .* read through the analytics port/)
 })
 
 test('a report joins slices in the shell and reconciles with the books to the cent, stamped with the head', async () => {

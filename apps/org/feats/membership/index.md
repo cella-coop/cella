@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-12
+updated = 2026-11-13
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -355,4 +355,4 @@ Inès's invited on 30 September 2026, who took up her invitation on
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `membership.members` to the analytics shell: each member's standing, shares and days, by address. It is scoped by `circle`, the circle that owns the member's row, and by `address`, whose row it is.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `membership.members` to the analytics shell: each member's standing, shares and days, by address. It is scoped by `circle`, the circle that owns the member's row, and by `address`, whose row it is. Its view is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

@@ -1,6 +1,6 @@
 +++
 title = "Project"
-updated = 2026-11-11
+updated = 2026-11-13
 +++
 
 The co-op's initiatives: a piece of work a client commissioned, or one of
@@ -133,4 +133,4 @@ commissioned, and three of the circles' own, for no client:
 
 ## Analytics
 
-Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `project.projects` and `project.milestones` to the analytics shell: each project with its circle, days and budget, and its milestones. Both are scoped by `circle`, the circle that owns the project or the milestone.
+Its [analytical contract](../../../../_corpus/doc/architecture.md#analytical-contracts), `core/sql/analytics.sql`, publishes `project.projects` and `project.milestones` to the analytics shell: each project with its circle, days and budget, and its milestones. Both are scoped by `circle`, the circle that owns the project or the milestone. Each of its views is declared a published query, in `core/ts/src/api/contract.ts`, which the web shell serves through the port as the analytics shell reads it.

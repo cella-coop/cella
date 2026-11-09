@@ -1,9 +1,12 @@
 import { ask as asking, counts, ordered, read, texts, today, type Db, type Source } from '@cella/org-db'
+import { scoped } from '@cella/org-analytics'
 import { anchor, defaults, fields, period, resolve, wheres, widgets, type Field, type Spec } from '@cella/org-ui/models'
 import { named } from '@cella/org-log/api'
 import { people, person } from '@cella/org-person/api'
 import { lensed, lensing } from '#lib/server/lens.ts'
 import { drawn, keeping, run } from '#lib/server/reads.ts'
+import { port } from '#lib/server/analytics.ts'
+import { published } from '#lib/server/published.ts'
 import { mounted, queried, slices, source } from '#lib/server/slices.ts'
 import { columns, counted, dashboard, look, views } from '#lib/slices.ts'
 
@@ -185,7 +188,11 @@ export const shell = {
 // A query a slice writes in SQL, by the slice and its name, its own
 // argument given as an address's query string (`search`), which the
 // query's schema validates: its rows as the reader reads them through its
-// view. One no slice declares is none.
+// view. One no slice declares is none. One the slice publishes in its
+// analytical contract reads as its owner, so it is read through the
+// analytics port as a report of its one view for the
+// reader of `db`: the rows of a scoped view whose circles they read it in
+// and their own, the cells of a counted view open books shares with them.
 export const ask = {
   schema: texts(['slice', 'name', 'search']),
   async run(db: Db, { slice, name, search }: { slice: string; name: string; search: string }) {
@@ -193,6 +200,7 @@ export const ask = {
     if (!q) {
       throw new Missing(`${slice} has no query ${name}`)
     }
-    return asking(db, q, Object.fromEntries(new URLSearchParams(search)))
+    const arg = Object.fromEntries(new URLSearchParams(search))
+    return q.published ? published(scoped(port, db), q, arg) : asking(db, q, arg)
   },
 }

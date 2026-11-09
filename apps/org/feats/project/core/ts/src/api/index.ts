@@ -6,6 +6,7 @@ import { add, archive, budget, complete, create } from '../handlers/index.ts'
 import { item, listing, offered, projects } from '../drivers/project.ts'
 import * as forms from './forms.ts'
 import { projects as imported } from './imports.ts'
+import { contract } from './contract.ts'
 
 export { add, archive, budget, complete, create, slug } from '../handlers/index.ts'
 export { item as project, offered, projects } from '../drivers/project.ts'
@@ -13,6 +14,7 @@ export * as forms from './forms.ts'
 
 export const slice: Slice = {
   name: 'project',
+  queries: contract,
   imports: { projects: imported },
   collections: {
     projects: {

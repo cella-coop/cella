@@ -14,10 +14,13 @@
 // from one, and an rsync --delete into one; a git restore, checkout or
 // clean whose pathspec holds the text or lies in it (., :/, an
 // ancestor, a glob matching one), and a git clean with none run from
-// such a directory; and a git reset --hard or git stash (bare, push or
-// save) while git status prints a change in the text. A git command run
-// outside the text's repository, a branch checked out or switched to,
-// and each of these on a directory beside the text pass.
+// such a directory; and a git reset --hard, a git stash (bare, push or
+// save), and a git checkout or switch forced by -f, --force or
+// --discard-changes, while git status prints a change in the text. A
+// git rm's pathspecs are judged before -- and after it alike. A git
+// command run outside the text's repository, a branch checked out or
+// switched to unforced, and each of these on a directory beside the
+// text pass.
 // It refuses a write and nothing else: a read passes, and so does a call
 // that names the path without writing there, a search, a commit message
 // or a message sent through corpus among them, and every write elsewhere.
@@ -351,7 +354,9 @@ export function guard(root = REPO) {
     }
     // checkout's words before `--` name the tree it reads.
     const specs = dash < 0 ? plain : [...(sub === 'checkout' ? [] : plain), ...rest.slice(dash + 1)]
-    const flag = (long, short) => rest.some((a) => a === long || new RegExp(`^-[a-zA-Z]*${short}`).test(a))
+    // An option is read before `--`; what follows it is a pathspec.
+    const flag = (long, short) =>
+      rest.slice(0, dash < 0 ? rest.length : dash).some((a) => a === long || (short && new RegExp(`^-[a-zA-Z]*${short}`).test(a)))
     /** Why `verb` changes the text, done to the first pathspec of `list`
      * that holds it or lies in it, or null. */
     const first = (list, verb) => {
@@ -370,14 +375,19 @@ export function guard(root = REPO) {
 
     if (sub === 'mv') return move('mv', rest, cwd)?.replace(/^mv/, 'git mv') ?? null
     if (sub === 'rm') {
-      if (flag('-r', 'r')) return first(plain, 'git rm -r removes')
-      for (const s of plain) {
+      if (flag('-r', 'r')) return first(specs, 'git rm -r removes')
+      for (const s of specs) {
         const hit = names(s, cwd)
         if (hit) return `git rm removes ${hit}`
       }
       return null
     }
-    if (sub === 'checkout') return first(specs, 'git checkout overwrites')
+    if (sub === 'checkout') {
+      return first(specs, 'git checkout overwrites') ?? (flag('--force', 'f') ? uncommitted('git checkout --force discards') : null)
+    }
+    if (sub === 'switch') {
+      return flag('--force', 'f') || flag('--discard-changes') ? uncommitted('git switch --discard-changes discards') : null
+    }
     if (sub === 'restore') return flag('--staged', 'S') && !flag('--worktree', 'W') ? null : first(specs, 'git restore overwrites')
     if (sub === 'clean') return flag('--dry-run', 'n') ? null : first(specs.length ? specs : ['.'], 'git clean removes')
     if (sub === 'reset') return rest.includes('--hard') ? uncommitted('git reset --hard discards') : null

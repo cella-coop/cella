@@ -18,7 +18,8 @@
   // its free-form content, and under a hairline its Activity, oldest
   // first, with the box that adds a comment where
   // its kind takes comments; in the drawer's Details panel, its
-  // properties and Related on the drawer itself, nothing boxed. The
+  // properties, under the fields its slices set there, and Related on
+  // the drawer itself, nothing boxed. The
   // header names the record by its kind and reference, a crumb under its
   // collection, since the content holds its title.
   let {
@@ -34,6 +35,7 @@
     activity = [],
     actions,
     comment,
+    fields,
     children,
   }: {
     eyebrow: string
@@ -53,6 +55,8 @@
     actions?: Snippet
     // The box that adds a comment, under the Activity.
     comment?: Snippet
+    // What the record's slices set in the Details, over its properties.
+    fields?: Snippet
     children?: Snippet
   } = $props()
 
@@ -69,6 +73,7 @@
 <svelte:window {onkeydown} />
 
 {#snippet details()}
+  {@render fields?.()}
   {#if properties.length}
     <Properties items={properties} />
   {/if}

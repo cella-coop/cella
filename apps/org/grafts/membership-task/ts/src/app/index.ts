@@ -5,7 +5,7 @@ import Doing from './blocks/Doing.svelte'
 
 // The graft's client side: who does each task, a column a board may group
 // by, giving a task to someone on its page, and the tasks a member does,
-// in a Tasks tab on theirs.
+// in a Tasks tab on theirs; the assignee is set in the task's Details.
 export const app: App = {
   name: 'membership-task',
   extends: {
@@ -15,7 +15,7 @@ export const app: App = {
         properties: (a: Assigned) => [
           { label: 'Assignee', value: a.assignee?.name ?? 'no one', href: a.assignee ? `/people/${a.assignee.address}` : undefined },
         ],
-        blocks: [Assignee],
+        details: [Assignee],
       },
     },
     people: {

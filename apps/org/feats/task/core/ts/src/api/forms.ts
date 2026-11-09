@@ -1,5 +1,6 @@
 import type { Form } from '@cella/org-db'
-import { priorities, statuses, type Create, type Move, type Priority } from '../models/task.ts'
+import { b64 } from '@cella/org-body/models'
+import { priorities, statuses, type Create, type Move, type Priority, type Save } from '../models/task.ts'
 
 // What the shell's forms send, read into the handlers' inputs.
 
@@ -27,4 +28,14 @@ export function move(form: Form, task: string): Move {
     throw new Error(`a task moves to ${statuses.filter((s) => s !== 'done').join(', ')}; done is a completion`)
   }
   return { task, status: status as Move['status'] }
+}
+
+// An editor's save of a task's body, as its browser posts it: the merged
+// snapshot in base64 in `snapshot`, and one `contributor` an address.
+export function save(form: Form, task: string): Save {
+  const snapshot = form.get('snapshot')
+  if (!snapshot) {
+    throw new Error('a save carries the body’s snapshot')
+  }
+  return { task, snapshot: b64.decode(snapshot), contributors: form.all('contributor') }
 }

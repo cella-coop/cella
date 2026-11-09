@@ -379,8 +379,10 @@ draws.
   takes comments (`comment`). Each slice gives its events newest first
   (`activity`), a comment's words as its `body`; the page merges every
   slice's and shows them oldest first, the box last. The drawer's
-  Details panel holds its properties, label and value rows on the
-  drawer itself, with no card or panel around them, ending with the
+  Details panel holds first the forms that set its structured fields,
+  where its slices set them there (`details`), as a task's assignee and
+  project, since a record whose content is its body keeps the main area
+  for it; then its properties, label and value rows on the drawer itself, with no card or panel around them, ending with the
   record's Created, Updated, Created by and Updated by as the log has
   them (`stamps`), the dates and actors of its first and latest
   entries, which the item's read gives beside its data, but those its

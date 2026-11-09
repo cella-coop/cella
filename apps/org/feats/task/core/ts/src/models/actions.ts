@@ -7,4 +7,6 @@ export const actions = {
   'task:task:move': confluent({ power: 'edit-task' }),
   // the status register, set done with its day; the last writer wins
   'task:task:complete': confluent({ power: 'edit-task' }),
+  // each save carries the whole merged snapshot, so the later receipt holds every edit before it
+  'task:body:save': confluent({ power: 'discuss' }),
 } satisfies Actions

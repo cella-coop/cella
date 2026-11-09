@@ -33,6 +33,15 @@ BEGIN ATOMIC
   WHERE id = fold_complete.entry -> 'payload' ->> 'task';
 END;
 
+-- task:body:save: the body set to the snapshot its entry carries, in hex.
+CREATE FUNCTION task.fold_body_save(entry jsonb) RETURNS void
+LANGUAGE sql
+BEGIN ATOMIC
+  UPDATE task.task SET body = decode(fold_body_save.entry -> 'payload' ->> 'snapshot', 'hex')
+  WHERE id = fold_body_save.entry -> 'payload' ->> 'task';
+END;
+
 SELECT cella.lets_fold('task:task:create', 1, 'task.fold_create(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:move', 1, 'task.fold_move(jsonb)', 'task');
 SELECT cella.lets_fold('task:task:complete', 1, 'task.fold_complete(jsonb)', 'task');
+SELECT cella.lets_fold('task:body:save', 1, 'task.fold_body_save(jsonb)', 'task');

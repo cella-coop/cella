@@ -1,6 +1,6 @@
 +++
 title = "Membership"
-updated = 2026-11-13
+updated = 2026-11-15
 +++
 
 A person's membership, from invited to exited, with the shares they hold.
@@ -193,6 +193,11 @@ act](../../core/grafts/circle-person/index.md#who-may-act)), which
 asks each kind of person what bars a seat. This feat says it of the
 members, and holds the shares, the capital, the joining and the
 leaving; it holds no authority, and a scope without it bars no seat.
+Its slice serves the shell `may`, whether a person holds a power over a
+circle's records on the verdict date, by a mandate or a right, as
+circle-person's guard asks it, which core body's live session asks as
+its editors edit ([the live
+session](../../core/body/index.md#the-live-session)).
 Its SQL is `010-standing.sql`; its part of the shell, `membership/seats`,
 is `api/seats.ts` and `app/seats.ts`.
 

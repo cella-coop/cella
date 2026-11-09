@@ -1,7 +1,7 @@
 import type { Outcome } from '@cella/org-actions'
 import { personal, write, type Deps, type Write } from '@cella/org-db'
 import type { actions } from '../models/actions.ts'
-import type { Complete, Create, Created, Move, Moved } from '../models/task.ts'
+import type { Complete, Create, Created, Move, Moved, Save, Saved } from '../models/task.ts'
 
 type Action = keyof typeof actions
 type Out<O extends Action, T> = Promise<Outcome<(typeof actions)[O], T>>
@@ -71,5 +71,32 @@ export async function complete(input: Complete, deps: Deps): Out<'task:task:comp
       return { task: input.task, status: 'done' as const, completed: rows[0].completed }
     },
     payload: (v) => ({ ...v }),
+  })
+}
+
+// Saves a task's body: the merged snapshot an editor's browser signs,
+// with who contributed since the last save, each of whom the feat's guard
+// asks holds `discuss` in the task's circle, as the saver must. The
+// payload names the circle the handler read, which the power's guard
+// reads. A snapshot with no canonical form is refused by the column.
+export async function save(input: Save, deps: Deps): Out<'task:body:save', Saved> {
+  let snapshot = ''
+  return write(deps, {
+    op: 'task:body:save' satisfies Action,
+    request: input,
+    state: async (tx) => {
+      const { rows } = await tx.query<{ circle: string; snapshot: string }>(
+        `UPDATE task.task SET body = $2 WHERE id = $1 RETURNING circle, encode(body, 'hex') AS snapshot`,
+        [input.task, input.snapshot],
+      )
+      if (!rows[0]) {
+        throw new Error(`no task ${input.task}`)
+      }
+      snapshot = rows[0].snapshot
+      return { task: input.task, circle: rows[0].circle }
+    },
+    // The log keeps the snapshot, in hex, which its fold sets the body to,
+    // and who contributed to it since the last.
+    payload: (v) => ({ ...v, snapshot, contributors: [...new Set(input.contributors)].sort() }),
   })
 }

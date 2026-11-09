@@ -67,6 +67,12 @@
     // The record's subtitle: the owner's, or an extension's where the owner
     // gives none.
     const subtitle = page?.subtitle?.(data.item) ?? added.map((a) => a.page.subtitle?.(a.data)).find(Boolean)
+    // What the slices set in the Details: the owner's fields, then each
+    // extension's, as a graft sets a task's assignee.
+    const fields = [
+      ...(page?.details ?? []).map((block) => ({ block, data: data.item })),
+      ...added.flatMap((a) => (a.page.details ?? []).map((block) => ({ block: block as Block, data: a.data }))),
+    ]
     const writes = [
       ...(page?.actions ? [{ block: page.actions, data: data.item }] : []),
       ...added.flatMap((a) => (a.page.actions ? [{ block: a.page.actions as Block, data: a.data }] : [])),
@@ -87,6 +93,7 @@
       comment,
       subtitle,
       writes,
+      fields,
     }
   }
 </script>
@@ -112,6 +119,12 @@
       {/each}
     {/snippet}
 
+    {#snippet setting()}
+      {#each v.fields as f}
+        <f.block data={f.data} id={data.id} viewer={data.viewer} />
+      {/each}
+    {/snippet}
+
     {#snippet commenting()}
       {#if v.comment}
         <v.comment.block data={v.comment.data} id={data.id} viewer={data.viewer} />
@@ -131,6 +144,7 @@
       activity={v.activity}
       actions={v.writes.length ? header : undefined}
       comment={v.comment ? commenting : undefined}
+      fields={v.fields.length ? setting : undefined}
     >
       {#each v.blocks as b}
         <b.block data={b.data} id={data.id} embeds={v.embeds} viewer={data.viewer} />

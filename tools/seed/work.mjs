@@ -5,9 +5,12 @@
 // membership-timesheet, project-timesheet), and the report feat's margin
 // thresholds. Invoices load first. A run of time in the fixture is logged as one entry
 // on each working day, Monday to Friday, from its first day to its last.
+// A task's body is its blocks as one Loro snapshot, carried in with it.
 // Members and contacts load first; an archived project is archived after
 // its milestones are in, and periods are submitted and approved after
 // their entries are in.
+
+import { createDoc, edits, outline } from '../../apps/org/core/body/ts/src/models/index.ts'
 
 // The working days from one ISO day to another, both included.
 export function weekdays(from, to) {
@@ -54,8 +57,8 @@ export async function work(db, read, day) {
   const tasks = read('task').task ?? []
   for (const t of tasks) {
     await db.query(
-      'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()))',
-      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null],
+      'INSERT INTO task.task (id, title, status, priority, due, created, completed, circle, body) VALUES ($1, $2, $3, $4, $5, $6, $7, coalesce($8, circle.assembly()), $9)',
+      [t.id, t.title, t.status, t.priority, day(t.due), day(t.created), day(t.completed), t.circle ?? null, t.body ? body(t) : null],
     )
   }
   // New tasks number on from the fixture's last.
@@ -115,4 +118,12 @@ export async function work(db, read, day) {
   }
 
   return `${projects.length} projects, ${shares.length} shares, ${tasks.length} tasks, ${entries} time entries`
+}
+
+// A task's body, as the snapshot of one Loro document holding its blocks.
+function body(t) {
+  const loro = createDoc(1n)
+  edits.patch(loro, undefined, outline(t.body, `task ${t.id}'s body`))
+  loro.commit()
+  return loro.export({ mode: 'snapshot' })
 }

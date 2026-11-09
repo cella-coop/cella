@@ -51,6 +51,9 @@ export class LiveState {
   readonly #live: Live
   readonly #at: Seat
   online = $state(false)
+  // Whether the session said what this browser may do, and whether it may
+  // edit.
+  joined = $state(false)
   writable = $state(false)
   // Whether this browser holds edits no save carries yet.
   unsaved = $state(false)
@@ -73,6 +76,7 @@ export class LiveState {
   }
 
   #show(): void {
+    this.joined = this.#live.actor !== ''
     this.writable = this.#live.writable
     this.problem = this.#live.problem
     this.unsaved = this.#live.unsaved

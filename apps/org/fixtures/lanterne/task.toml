@@ -1,7 +1,9 @@
 # Lanterne's tasks as they stand on 24 October 2026, numbered as created.
 # Who does each is the membership-task graft's; which project and milestone it
 # is in, the project-task graft's. Each names the circle that owns it, its
-# project's where it is filed in one, else the circle whose work it is.
+# project's where it is filed in one, else the circle whose work it is. A
+# task's body is its blocks, as a document's version's are, which the seed
+# carries in with the task, in the founding.
 
 [[task]]
 id = "t-1"
@@ -12,6 +14,43 @@ priority = "high"
 created = 2026-09-14
 due = 2026-10-06
 completed = 2026-10-06
+
+[[task.body]]
+type = "heading"
+level = 2
+text = "Before go-live"
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "Switch the payment provider from its sandbox to live keys"
+
+[[task.body]]
+type = "todo"
+checked = true
+text = "Test a card payment, a refund and a failed payment on the live shop"
+
+[[task.body]]
+type = "todo"
+checked = true
+runs = [
+  { text = "Check the payout account is the " },
+  { text = "Halles", bold = true },
+  { text = " shop's, not the studio's" },
+]
+
+[[task.body]]
+type = "heading"
+level = 2
+text = "On the day"
+
+[[task.body]]
+type = "bullet"
+text = "Watch the first orders come in, and the provider's dashboard"
+
+[[task.body]]
+type = "bullet"
+text = "Keep the sandbox keys for the staging shop"
 
 [[task]]
 id = "t-2"

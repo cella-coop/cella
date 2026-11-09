@@ -1,6 +1,6 @@
 +++
 title = "Body"
-updated = 2026-11-14
+updated = 2026-11-15
 +++
 
 Core's body: free-form content as a Loro tree of blocks, its
@@ -9,7 +9,8 @@ draws it, which every slice that keeps a body builds on. It is a
 library of org's core, `apps/org/core/body` (`@cella/org-body`), pure
 TypeScript, and no feat: it has no schema, no SQL and no actions of its
 own. The document feat keeps its drafts and versions in it
-([document](../../feats/document/index.md)); it knows no slice.
+([document](../../feats/document/index.md)), and the task feat each
+task's body ([task](../../feats/task/index.md)); it knows no slice.
 
 ## The model
 
@@ -111,7 +112,9 @@ again from Loro. Its parts:
   draft's hash;
 - `LiveState`: a record's body kept live over its session and saved by
   this browser through the save write the slice hands it (`Live`, the
-  same without Svelte, on a clock of its own), and the body's hash.
+  same without Svelte, on a clock of its own), whether the session has
+  said what this browser may do (`joined`) and whether it may edit, and
+  the body's hash.
 
 Blocks reorder by their grips with the UI core's `sortable`, by pointer
 or keyboard; where the slice anchors comments to quotes, the quotes are
@@ -133,9 +136,11 @@ snapshot, signed by its device as every write is. The session is core
 body's (`./api`, `Session`), and it knows no feat: a feat that keeps
 bodies hands it, when its `./api` mounts, its kind (the collection its
 records are served under), how to read a record's circle and its saved
-body as the reader sees them, and the name of its save action; the
-shell, which starts it, hands it its connections and membership's
-`may`. The session calls what it was handed and imports nothing, and
+body as the reader sees them, and the name of its save action, as the
+collection's `body`, which the shell mounts in the session by the
+collection's name; the shell, which starts it, hands it its connections
+and membership's `may`, the slice's `may`, with which no one holds a
+power where no slice serves it. The session calls what it was handed and imports nothing, and
 saves nothing itself, since the server signs with none
 ([signatures](../../../../_corpus/doc/signatures.md)).
 
@@ -215,4 +220,7 @@ nothing of where the bytes are kept.
   posts.
 - The editor's browser walk stays the document feat's
   (`_e2e/editor.test.ts`), since a document's page is where it is
-  driven; a record's page drives the same editor.
+  driven; a record's page drives the same editor, over the live
+  session, in the task feat's walk (`_e2e/body.test.ts`): two members
+  editing one task's body in two tabs, each browser's saves signed and
+  naming both, and a reload opening on the save.

@@ -1,5 +1,6 @@
 import { icons, type App, type Tone } from '@cella/org-ui'
-import { priorities, statuses, type Priority, type Status as Stage, type Task } from '../models/task.ts'
+import { priorities, statuses, type Page, type Priority, type Status as Stage, type Task } from '../models/task.ts'
+import Body from './blocks/Body.svelte'
 import Create from './blocks/Create.svelte'
 import Status from './blocks/Status.svelte'
 
@@ -8,7 +9,9 @@ const urgency: Record<Priority, Tone> = { urgent: 'negative', high: 'warning', n
 
 // The feat's client side: the tasks as a board by status, on which a card
 // dragged between columns is the move, or into Done the completion; a new
-// task; and a task's page with its status, which has no tab of its own.
+// task; and a task's page with its status in its header, its body in
+// its content, edited live over core body's session, and no tab of its
+// own.
 export const app: App = {
   name: 'task',
   collections: {
@@ -34,7 +37,7 @@ export const app: App = {
       },
       page: {
         eyebrow: 'Task',
-        title: (t: Task) => t.title,
+        title: (t: Page) => t.title,
         subtitle: (t: Task) => t.id,
         properties: (t: Task) => [
           { label: 'Status', value: t.status, kind: 'badge', tone: tones[t.status] },
@@ -44,6 +47,7 @@ export const app: App = {
           { label: 'Completed', value: t.completed, kind: 'date' },
         ],
         activity: (t: Task) => [...(t.completed ? [{ at: t.completed, text: 'completed' }] : []), { at: t.created, text: 'created' }],
+        blocks: [Body],
         actions: Status,
       },
     },

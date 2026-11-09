@@ -36,7 +36,7 @@ import { approve as approveExpense, reimburse } from '@cella/org-graft-expense-t
 import { rebill } from '@cella/org-graft-expense-project/api'
 import { add as milestone, archive, budget, complete as reach, create as createProject } from '@cella/org-project/api'
 import { share } from '@cella/org-graft-membership-project/api'
-import { complete, create as createTask, move } from '@cella/org-task/api'
+import { complete, create as createTask, move, save as saveBody } from '@cella/org-task/api'
 import { file as fileTask } from '@cella/org-graft-project-task/api'
 import { assign } from '@cella/org-graft-membership-task/api'
 import { approve as approveTime, correct, log as logTime, submit as submitTime } from '@cella/org-timesheet/api'
@@ -46,7 +46,7 @@ import { attach as contract } from '@cella/org-graft-employment-file/api'
 import { upload } from '@cella/org-file/api'
 import { attach as record } from '@cella/org-graft-file-membership/api'
 import { adopt as adoptVersion, comment, create as createDocument, edit, merged, version } from '@cella/org-document/api'
-import { edits, order } from '@cella/org-body/models'
+import { createDoc, edits, order } from '@cella/org-body/models'
 import { read } from '@cella/org-graft-document-membership/api'
 import { add as item, cancel, hold, move as moveItem, remove, schedule } from '@cella/org-meeting/api'
 import { table } from '@cella/org-graft-meeting-motion/api'
@@ -173,7 +173,7 @@ test('24 October: people keep their profiles and devices, Nadia and Yara are inv
   }
 })
 
-test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, tasks, time and files', async () => {
+test('24 October: contacts are kept, archived and erased, and the work goes on: a project, its milestones, tasks and a body, time and files', async () => {
   settled(await updateContact({ id: 'nuvola', fields: { note: 'Renews in January' } }, as(chloe)))
   settled(await archiveContact({ id: 'velo' }, as(camille)))
   settled(await eraseContact({ id: 'halles-roux' }, as(camille)))
@@ -187,6 +187,10 @@ test('24 October: contacts are kept, archived and erased, and the work goes on: 
   settled(await fileTask({ task, project }, as(hugo)))
   settled(await assign({ task, member: sofia }, as(hugo)))
   settled(await move({ task, status: 'doing' }, as(sofia)))
+  const notes = createDoc()
+  edits.paste(notes, undefined, 0, [{ type: 'todo', checked: false, runs: [{ text: 'Send the redrawn vine to the printer' }], children: [] }])
+  notes.commit()
+  settled(await saveBody({ task, snapshot: notes.export({ mode: 'snapshot' }), contributors: [sofia] }, as(sofia)))
   settled(await complete({ task }, as(sofia)))
   const { entry } = settled(await logTime({ member: thomas, day: '2026-10-23', minutes: 90, billable: true, note: 'Proofs for the Halles shop' }, as(thomas))) as { entry: string }
   settled(await correct({ entry, minutes: 60 }, as(thomas)))
